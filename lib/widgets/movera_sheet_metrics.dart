@@ -119,6 +119,21 @@ class MoveraSheetMetrics {
     return targetPosition(position: position, velocityPxPerSec: 0, snap: snap);
   }
 
+  /// Two-stop sheets (closed and open, nothing in between): a flick
+  /// follows its direction, a small push already goes to the other end,
+  /// otherwise the nearest end wins.
+  static double twoStopTarget({
+    required double start,
+    required double position,
+    required double velocityPxPerSec,
+  }) {
+    if (velocityPxPerSec < -flickVelocity) { return 1; }
+    if (velocityPxPerSec > flickVelocity) { return 0; }
+    if (position > start + 0.03) { return 1; }
+    if (position < start - 0.03) { return 0; }
+    return position >= 0.5 ? 1 : 0;
+  }
+
   static double notchDepthFor(double position) {
     const collapsed = 58.0;
     const expanded = 8.0;
