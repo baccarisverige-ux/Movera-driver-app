@@ -55,4 +55,16 @@ void main() {
     expect(target(snap, 0.34), 0);
     expect(target(snap, 0.41), snap);
   });
+
+  test('Home sheet has two stops: a small push goes to the other end', () {
+    double target(double start, double pos, [double v = 0]) =>
+        MoveraSheetMetrics.twoStopTarget(
+            start: start, position: pos, velocityPxPerSec: v);
+    expect(target(0, 0.06), 1);
+    expect(target(1, 0.94), 0);
+    expect(target(0, 0.02), 0);
+    expect(target(1, 0.99), 1);
+    expect(target(0.5, 0.5, -400), 1);
+    expect(target(0.5, 0.5, 400), 0);
+  });
 }

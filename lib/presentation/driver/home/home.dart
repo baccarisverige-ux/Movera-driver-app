@@ -34,12 +34,14 @@ import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/session/driving_time_clock.dart';
+import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
+import 'package:movera/presentation/driver/home/components/driving_time_row.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/movera_line_icon.dart';
 import 'package:movera/widgets/map_control_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:movera/constants/appfontweight.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
@@ -58,7 +60,6 @@ import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dar
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/side%20menu/side_menu.dart';
 import 'package:movera/presentation/driver/waybill/waybill_sheet.dart';
-import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/responsive_size.dart';
 import 'package:movera/widgets/layout_viewport.dart';
@@ -373,6 +374,7 @@ class _DriverHomeState extends State<DriverHome>
     _driverSession = widget.sessionController ??
         DriverSessionController(initialOnline: widget.initialOnline);
     _driverSession.addListener(_onDriverSessionChanged);
+    DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
     _driverLocationService =
         widget.locationRepository ?? const DriverLocationService();
     _roadRouteService = widget.routeRepository ?? RoadRouteService();
@@ -615,6 +617,7 @@ class _DriverHomeState extends State<DriverHome>
   }
 
   void _onDriverSessionChanged() {
+    DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
     if (!mounted) { return; }
     if (_driverSession.consumeResumeHomeAfterTrip()) {
       setState(() {
@@ -774,7 +777,10 @@ class _DriverHomeState extends State<DriverHome>
               },
               body: _HomeMapSheet(this).body(isDestinationPanel: true),
             )
-          : SlidingUpPanel(
+          : Stack(
+              fit: StackFit.expand,
+              children: [
+          SlidingUpPanel(
               color: Colors.transparent,
               backdropColor: Colors.transparent,
               backdropOpacity: 0,
@@ -788,9 +794,9 @@ class _DriverHomeState extends State<DriverHome>
               padding: EdgeInsets.zero,
               boxShadow: [],
               isDraggable: _outsideRadarOffer == null,
-              // Our spring settles the sheet (see _snapHomeSheet).
+              // Our spring settles the sheet (see _snapHomeSheet): closed or
+              // open, never in between.
               panelSnapping: false,
-              snapPoint: _HomeMapSheet(this)._homeSnapPoint(context),
               defaultPanelState: PanelState.CLOSED,
               maxHeight: _HomeMapSheet(this)._homeExpandedHeight(context),
               parallaxEnabled: false,
@@ -834,30 +840,15 @@ class _DriverHomeState extends State<DriverHome>
                 }
                 _HomeMapSheet(this)._setMapGesturesBlocked(false);
               },
+              // Account on hold keeps its red dock face.
               collapsed: _outsideRadarOffer != null
-                  ? const SizedBox.shrink()
-                  : PointerInterceptor(
-                      child: Listener(
-                        behavior: HitTestBehavior.opaque,
-                        onPointerDown: _HomeMapSheet(this)._onSheetPointerDown,
-                        onPointerMove: _HomeMapSheet(this)._onSheetPointerMove,
-                        onPointerUp: _HomeMapSheet(this)._onSheetPointerEnd,
-                        onPointerCancel: _HomeMapSheet(this)._onSheetPointerEnd,
-                        child: DriverSheetNav.collapsedDock(
-                          context: context,
-                          scaffoldKey: _scaffoldKey,
-                          isOnline: _isOnline,
-                          hasRideOffers:
-                              _hasRideOffers || _radarHomeOffers.isNotEmpty,
-                          hasScheduledRideOffers: _hasScheduledRideOffers,
-                          goOnlinePulseController: _goOnlinePulseController,
-                          onOpenScheduledRides: _openScheduledRides,
-                          inactive: _activationHold && !isAccountActivated,
-                          tone: _mainPanelPosition <= 0.04 ? _sheetTone : null,
-                          toneShown: _mainPanelPosition <= 0.04 && _sheetToneShown,
-                        ),
-                      ),
-                    ),
+                  ? null
+                  : _HomeMapSheet(this)._inactiveDock(),
+              // The dock is the sheet's own bottom: it never moves or fades,
+              // so the sheet keeps one shape from closed to open.
+              footer: _outsideRadarOffer != null
+                  ? null
+                  : _HomeMapSheet(this)._homeDockFooter(),
 
               panelBuilder: (ScrollController sc) => _outsideRadarOffer != null
                   ? const SizedBox.shrink()
@@ -873,10 +864,19 @@ class _DriverHomeState extends State<DriverHome>
                             : _HomeMapSheet(this).panelColumn(sc),
                       ),
                     ),
-              body: AbsorbPointer(
-                absorbing: _blockMapGestures,
-                child: _HomeMapSheet(this).body(),
+              body: Stack(
+                fit: StackFit.expand,
+                children: [
+                  AbsorbPointer(
+                    absorbing: _blockMapGestures,
+                    child: _HomeMapSheet(this).body(),
+                  ),
+                  _HomeMapSheet(this)._homeMapDim(),
+                ],
               ),
+            ),
+          if (_outsideRadarOffer == null) _HomeMapSheet(this)._homeRadarLayer(),
+              ],
             ),
       ),
     );

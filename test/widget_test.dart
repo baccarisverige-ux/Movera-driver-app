@@ -123,6 +123,23 @@ Future<void> _closePanel(WidgetTester tester) async {
   await _advanceAnimation(tester, const Duration(milliseconds: 520));
 }
 
+/// With the Home sheet open and Radar on, the radar reads "Hold · OFF";
+/// holding it one second goes offline and closes the sheet.
+Future<void> _holdRadarOff(WidgetTester tester) async {
+  final radar = find.byKey(const ValueKey<String>('home-radar-hold-off'));
+  expect(radar, findsOneWidget);
+  final gesture = await tester.startGesture(tester.getCenter(radar));
+  for (var i = 0; i < 6; i++) {
+    await tester.pump(const Duration(milliseconds: 250));
+  }
+  await gesture.up();
+  await _advanceAnimation(tester, const Duration(milliseconds: 520));
+}
+
+/// Home's sheet body is the map (behind an AbsorbPointer) plus the dim.
+AbsorbPointer _homeMapAbsorber(SlidingUpPanel panel) =>
+    (panel.body! as Stack).children.first as AbsorbPointer;
+
 SlidingUpPanel _activeRidePanel(WidgetTester tester) {
   return tester.widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel)).last;
 }
@@ -268,7 +285,7 @@ void main() {
       var latestPanel = tester.widget<SlidingUpPanel>(
         find.byType(SlidingUpPanel),
       );
-      expect((latestPanel.body! as AbsorbPointer).absorbing, isFalse,
+      expect(_homeMapAbsorber(latestPanel).absorbing, isFalse,
           reason: 'Map remains zoomable after interrupted sheet open/close/open');
       expect(
         find.byKey(const ValueKey<String>('home-sheet-today')).hitTestable(),
@@ -280,7 +297,7 @@ void main() {
       await _advanceAnimation(tester, const Duration(milliseconds: 520));
 
       latestPanel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-      expect((latestPanel.body! as AbsorbPointer).absorbing, isFalse);
+      expect(_homeMapAbsorber(latestPanel).absorbing, isFalse);
       _expectNoException(tester);
     },
   );
@@ -421,30 +438,30 @@ void main() {
     SlidingUpPanel panel = tester.widget<SlidingUpPanel>(
       find.byType(SlidingUpPanel),
     );
-    expect(panel.body, isA<AbsorbPointer>());
-    expect((panel.body! as AbsorbPointer).absorbing, isFalse);
+    expect(panel.body, isA<Stack>());
+    expect(_homeMapAbsorber(panel).absorbing, isFalse);
 
     await _openPanel(tester);
     panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    expect((panel.body! as AbsorbPointer).absorbing, isFalse,
+    expect(_homeMapAbsorber(panel).absorbing, isFalse,
         reason: 'A settled sheet must not block zoom on exposed map');
     final drag = await tester.startGesture(
       tester.getCenter(find.byKey(const ValueKey<String>('home-sheet-today'))),
     );
     await tester.pump();
     panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    expect((panel.body! as AbsorbPointer).absorbing, isTrue,
+    expect(_homeMapAbsorber(panel).absorbing, isTrue,
         reason: 'An active sheet pointer cannot simultaneously pan the map');
     await drag.up();
     await tester.pump();
     panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    expect((panel.body! as AbsorbPointer).absorbing, isFalse,
+    expect(_homeMapAbsorber(panel).absorbing, isFalse,
         reason: 'Releasing a sheet touch restores map zoom even while open');
     _expectNoException(tester);
 
     await _closePanel(tester);
     panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    expect((panel.body! as AbsorbPointer).absorbing, isFalse);
+    expect(_homeMapAbsorber(panel).absorbing, isFalse);
     _expectNoException(tester);
   });
 
@@ -974,23 +991,27 @@ void main() {
     _expectNoException(tester);
 
     await _openPanel(tester);
-    final goOfflineText = find.text('Go offline');
-    expect(goOfflineText, findsOneWidget);
-    final goOfflineButton = find.ancestor(
-      of: goOfflineText,
-      matching: find.byType(OutlinedButton),
-    );
-    expect(goOfflineButton, findsOneWidget);
-    final button = tester.widget<OutlinedButton>(goOfflineButton);
-    expect(button.onPressed, isNotNull);
-    button.onPressed!.call();
-    await _advanceAnimation(tester, const Duration(milliseconds: 520));
+    await tester.pump(const Duration(milliseconds: 400));
+    // Same radar, now "Hold · OFF · Go offline".
+    expect(find.text('Hold'), findsOneWidget);
+    expect(find.text('Go offline'), findsOneWidget);
+    expect(find.text('LIVE'), findsNothing);
 
+    // A short tap does nothing.
+    await tester.tap(find.byKey(const ValueKey<String>('home-radar-hold-off')));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Hold'), findsOneWidget);
+
+    await _holdRadarOff(tester);
+    expect(find.text('Tap to scan'), findsOneWidget);
     expect(find.text('OFF'), findsOneWidget);
+    final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
+    expect(panel.controller!.panelPosition, closeTo(0, 0.02),
+        reason: 'Going offline brings the sheet down by itself');
     _expectNoException(tester);
   });
 
-  testWidgets('Home sheet lists today and opens reservations', (
+  testWidgets('Home sheet shows Today: driving time, Performance, waybill', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -1001,26 +1022,59 @@ void main() {
       find.byKey(const ValueKey<String>('home-sheet-today')),
       findsOneWidget,
     );
+    expect(find.text('Today'), findsOneWidget);
+    expect(find.text('Right now'), findsOneWidget);
+    expect(find.textContaining('left to drive'), findsOneWidget);
+    expect(find.text('Performance'), findsOneWidget);
+    expect(find.text('Latest waybill'), findsOneWidget);
+    // Only these three rows; details open on tap.
+    expect(find.text('Rating'), findsNothing);
+    expect(find.text('Reservations'), findsNothing);
+    expect(find.text('Events'), findsNothing);
+    _expectNoException(tester);
+
+    await tester.tap(find.byKey(const ValueKey<String>('home-sheet-performance')));
+    await _advanceAnimation(tester, const Duration(milliseconds: 420));
     expect(find.text('Rating'), findsOneWidget);
     expect(find.text('4.88'), findsWidgets);
     expect(find.text('Acceptance'), findsOneWidget);
     expect(find.text('94%'), findsOneWidget);
     expect(find.text('Cancellation'), findsOneWidget);
     expect(find.text('2.4%'), findsOneWidget);
-    expect(find.text('Waybill'), findsOneWidget);
-    expect(find.text('Events'), findsOneWidget);
-    // The old cards are gone.
-    expect(find.text('Performance'), findsNothing);
-    expect(find.text('Work in Stockholm'), findsNothing);
-    expect(find.text('What’s happening'), findsNothing);
     _expectNoException(tester);
+  });
 
-    final reservations = find.text('Reservations');
-    await tester.ensureVisible(reservations);
-    await tester.tap(reservations);
+  testWidgets('Driving time row opens today\'s driving time', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pumpHome(tester, const Size(375, 812));
+    await _openPanel(tester);
+
+    await tester.tap(find.byKey(const ValueKey<String>('home-sheet-driving-time')));
     await _advanceAnimation(tester, const Duration(milliseconds: 420));
+    expect(find.text('Driving time'), findsOneWidget);
+    expect(find.text('Driven today'), findsOneWidget);
+    expect(find.text('Left today'), findsOneWidget);
+    expect(find.text('10 h'), findsOneWidget);
+    _expectNoException(tester);
+  });
 
-    expect(find.byType(ScheduledRidesScreen), findsOneWidget);
+  testWidgets('Home sheet has one shape: the dock stays and the map dims', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pumpHome(tester, const Size(375, 812));
+    final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
+    expect(panel.footer, isNotNull, reason: 'The dock is the sheet bottom');
+    expect(panel.collapsed, isNull, reason: 'No second face to cross-fade');
+    expect(find.byKey(const ValueKey<String>('home-map-dim')), findsNothing);
+    final wallet = tester.getCenter(find.byTooltip('Wallet'));
+
+    await _openPanel(tester);
+    expect(find.byKey(const ValueKey<String>('home-map-dim')), findsOneWidget);
+    expect(tester.getCenter(find.byTooltip('Wallet')), wallet,
+        reason: 'Dock icons do not move with the sheet');
     _expectNoException(tester);
   });
 
@@ -1047,35 +1101,6 @@ void main() {
       _expectNoException(tester);
     },
   );
-
-  testWidgets('Events row opens the event cards and their details', (
-    WidgetTester tester,
-  ) async {
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await _pumpHome(tester, const Size(375, 812));
-    await _openPanel(tester);
-
-    final events = find.text('Events');
-    await tester.ensureVisible(events);
-    await tester.tap(events);
-    await _advanceAnimation(tester, const Duration(milliseconds: 420));
-    expect(
-      find.byKey(const ValueKey<String>('driver-events-page')),
-      findsOneWidget,
-    );
-
-    final event = find.text('Stockholm evening demand');
-    expect(event, findsOneWidget);
-    await tester.tap(event);
-    await _advanceAnimation(tester, const Duration(milliseconds: 420));
-
-    expect(find.text('Fri 25 Sep'), findsOneWidget);
-    expect(find.text('18:00–22:30'), findsOneWidget);
-    expect(find.text('Best time to be online'), findsOneWidget);
-    expect(find.text('18:30–22:00'), findsOneWidget);
-    expect(find.text('Higher demand expected'), findsOneWidget);
-    _expectNoException(tester);
-  });
 
   testWidgets('Home sheet exposes the last completed waybill', (
     WidgetTester tester,
@@ -1109,7 +1134,7 @@ void main() {
     );
     await tester.ensureVisible(lastWaybill);
     expect(lastWaybill, findsOneWidget);
-    expect(find.text('259,00 kr'), findsOneWidget);
+    expect(find.text('Latest waybill'), findsOneWidget);
 
     await tester.tap(lastWaybill);
     await tester.pump(const Duration(milliseconds: 320));
@@ -1174,7 +1199,8 @@ void main() {
     await _advanceAnimation(tester, const Duration(milliseconds: 420));
 
     expect(find.byType(DriverHome), findsOneWidget);
-    expect(find.text('LIVE'), findsOneWidget);
+    // Still online: with the sheet open the radar reads "Hold · OFF".
+    expect(find.text('Hold'), findsOneWidget);
     expect(find.text('Go offline'), findsOneWidget);
     _expectNoException(tester);
   });
@@ -1190,14 +1216,7 @@ void main() {
     expect(find.text('LIVE'), findsOneWidget);
 
     await _openPanel(tester);
-    final goOfflineText = find.text('Go offline');
-    final goOfflineButton = find.ancestor(
-      of: goOfflineText,
-      matching: find.byType(OutlinedButton),
-    );
-    final button = tester.widget<OutlinedButton>(goOfflineButton);
-    button.onPressed!.call();
-    await _advanceAnimation(tester, const Duration(milliseconds: 520));
+    await _holdRadarOff(tester);
 
     expect(find.text('OFF'), findsOneWidget);
 
@@ -2435,7 +2454,7 @@ void main() {
     _expectNoException(tester);
   });
 
-  testWidgets('Home sheet exposes three snap positions', (
+  testWidgets('Home sheet has two positions: closed and open', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -2444,8 +2463,7 @@ void main() {
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
     expect(panel.minHeight, 108);
     expect(panel.maxHeight, closeTo(812 * 0.86, 0.5));
-    expect(panel.snapPoint, isNotNull);
-    expect(panel.snapPoint!, inInclusiveRange(0.08, 0.92));
+    expect(panel.snapPoint, isNull, reason: 'No middle stop');
     // The sheet's own spring settles it (immediately, in the finger's
     // direction), not the panel's built-in snap.
     expect(panel.panelSnapping, isFalse);
@@ -2459,17 +2477,13 @@ void main() {
     await _pumpHome(tester, const Size(375, 812));
 
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    final snap = panel.snapPoint!;
 
     await tester.drag(find.byType(SlidingUpPanel), const Offset(0, -220));
     await tester.pump(const Duration(milliseconds: 520));
     await tester.pump(const Duration(milliseconds: 520));
 
     final position = panel.controller!.panelPosition;
-    expect(
-      position,
-      anyOf(closeTo(0, 0.04), closeTo(snap, 0.04), closeTo(1, 0.04)),
-    );
+    expect(position, anyOf(closeTo(0, 0.04), closeTo(1, 0.04)));
     _expectNoException(tester);
   });
 

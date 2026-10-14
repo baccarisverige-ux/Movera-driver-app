@@ -6,10 +6,6 @@ part of 'home.dart';
 /// One size for the floating controls on Home: recenter, safety and the
 /// top island.
 const double _homeMapButtonSize = 48;
-// White island, same family as the reservation popup and the Home sheet.
-const Color _islandFg = Color(0xFF111614);
-const Color _islandMuted = Color(0xFF5E6461);
-const Color _islandShadow = Color(0x38172027);
 
 /// Faces of the top island's screen, in tap order.
 enum _IslandFace { hidden, lastTrip, today, history }
@@ -540,11 +536,13 @@ extension _HomeMapSheet on _DriverHomeState {
         }
 
         final position = _panelController.panelPosition.clamp(0.0, 1.0);
-        final snap = _homeSnapPoint(context);
-        final nearestDistance = math.min(
-          position.abs(),
-          math.min((position - snap).abs(), (1 - position).abs()),
-        );
+        var nearestDistance = math.min(position.abs(), (1 - position).abs());
+        if (_homeSheetInactive) {
+          nearestDistance = math.min(
+            nearestDistance,
+            (position - _inactiveSheetStop).abs(),
+          );
+        }
 
         if (nearestDistance <= 0.025) { return; }
         unawaited(_snapHomeSheet(velocity: 0));
@@ -553,15 +551,10 @@ extension _HomeMapSheet on _DriverHomeState {
     Future<void> _closeDriverSheet() async {
       await _springPanelTo(0);
     }
-    double _homeSnapPoint(BuildContext context) {
-      final viewportHeight = MediaQuery.sizeOf(context).height;
-      final maxHeight = _homeExpandedHeight(context);
-      final middleHeight = MoveraSheetMetrics.middleHeight(viewportHeight);
-      final span = maxHeight - MoveraSheetMetrics.collapsedHeight;
-      if (span <= 0) { return 0.5; }
-      return ((middleHeight - MoveraSheetMetrics.collapsedHeight) / span)
-          .clamp(0.08, 0.92);
-    }
+    /// Account on hold: the red sheet still rests a little open to show
+    /// its buttons. Every other Home sheet is closed or open, nothing else.
+    bool get _homeSheetInactive => _activationHold && !isAccountActivated;
+    static const double _inactiveSheetStop = 0.28;
     double _homeExpandedHeight(BuildContext context) {
       return MediaQuery.sizeOf(context).height * _DriverHomeState._homeExpandedFraction;
     }
@@ -579,13 +572,20 @@ extension _HomeMapSheet on _DriverHomeState {
       if (!_panelController.isAttached) { return; }
       _snapSheet.rangePx =
           _homeExpandedHeight(context) - MoveraSheetMetrics.collapsedHeight;
-      final snap = _homeSnapPoint(context);
-      final target = MoveraSheetMetrics.directionalTarget(
-        start: _sheetPointerStartPos,
-        position: _panelController.panelPosition.clamp(0.0, 1.0),
-        velocityPxPerSec: velocity ?? _sheetPointerVelocity,
-        snap: snap,
-      );
+      final position = _panelController.panelPosition.clamp(0.0, 1.0);
+      final v = velocity ?? _sheetPointerVelocity;
+      final target = _homeSheetInactive
+          ? MoveraSheetMetrics.directionalTarget(
+              start: _sheetPointerStartPos,
+              position: position,
+              velocityPxPerSec: v,
+              snap: _inactiveSheetStop,
+            )
+          : MoveraSheetMetrics.twoStopTarget(
+              start: _sheetPointerStartPos,
+              position: position,
+              velocityPxPerSec: v,
+            );
       if ((target - _lastSnapHapticAt).abs() > 0.04) {
         unawaited(HapticFeedback.lightImpact());
         _lastSnapHapticAt = target;
@@ -859,71 +859,6 @@ extension _HomeMapSheet on _DriverHomeState {
               ),
             ),
 
-            if (!isDestinationPanel && _outsideRadarOffer == null)
-              ValueListenableBuilder<double>(
-                valueListenable: _panelSlidePosition,
-                builder: (context, panelPosition, child) {
-                  final maxPanelHeight = _homeExpandedHeight(context);
-                  const minPanelHeight = MoveraSheetMetrics.collapsedHeight;
-                  final currentPanelHeight =
-                      minPanelHeight +
-                      ((maxPanelHeight - minPanelHeight) * panelPosition);
-
-                  // The 104px radar remains locked into the sheet's centre notch.
-                  // At the collapsed position this resolves to the existing
-                  // offline position (bottom: 58), and it follows the sheet
-                  // continuously while the driver drags it.
-                  final radarBottom = currentPanelHeight - 50;
-
-                  return Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: radarBottom,
-                    child: Center(
-                      child: _radarDragToSheet(
-                        child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 480),
-                        reverseDuration: const Duration(milliseconds: 320),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) {
-                          final scale = Tween<double>(
-                            begin: 0.97,
-                            end: 1.0,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            ),
-                          );
-                          return FadeTransition(
-                            opacity: animation,
-                            child: ScaleTransition(
-                              scale: scale,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: KeyedSubtree(
-                          key: ValueKey<String>(
-                            _isOnline
-                                ? 'radar-online'
-                                : _isGoingOnline
-                                ? 'radar-connecting'
-                                : 'radar-offline',
-                          ),
-                          child: _isOnline
-                              ? _buildTripRadarButton()
-                              : _isGoingOnline
-                              ? _buildGoingOnlineButton()
-                              : _buildGoOnlineButton(),
-                        ),
-                      ),
-                      ),
-                    ),
-                  );
-                },
-              ),
             if (!isDestinationPanel)
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 320),
@@ -974,8 +909,8 @@ extension _HomeMapSheet on _DriverHomeState {
                 left: 0,
                 right: 0,
                 top: math.max(MediaQuery.paddingOf(context).top - 4, 10.0),
-                // Sliding the sheet up from the middle stage pushes the
-                // island off the top; it comes back as the sheet goes down.
+                // Opening the sheet pushes the island off the top; it comes
+                // back as the sheet goes down.
                 child: ValueListenableBuilder<double>(
                   valueListenable: _panelSlidePosition,
                   child: Transform.scale(
@@ -984,9 +919,8 @@ extension _HomeMapSheet on _DriverHomeState {
                     child: _buildTopIsland(viewportWidth / _islandScale),
                   ),
                   builder: (context, panelPosition, island) {
-                    final snap = _homeSnapPoint(context);
                     final push = Curves.easeIn.transform(
-                      ((panelPosition - snap) / (1 - snap)).clamp(0.0, 1.0),
+                      ((panelPosition - 0.12) / 0.6).clamp(0.0, 1.0),
                     );
                     final lift = MediaQuery.paddingOf(context).top +
                         DigitalIslandParts.height + 24;
@@ -1387,348 +1321,6 @@ extension _HomeMapSheet on _DriverHomeState {
         },
       );
     }
-    Future<void> _openDriverEvent(DriverEventConfig event) {
-      return showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        barrierColor: _islandShadow,
-        builder: (sheetContext) {
-          return DraggableScrollableSheet(
-            initialChildSize: 0.76,
-            minChildSize: 0.52,
-            maxChildSize: 0.92,
-            expand: false,
-            builder: (context, controller) {
-              return Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF9FBFA),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                ),
-                child: ListView(
-                  controller: controller,
-                  padding: EdgeInsets.zero,
-                  children: [
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(28),
-                          ),
-                          child: AspectRatio(
-                            aspectRatio: 1.72,
-                            child: Image.network(
-                              event.imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: const Color(0xFFE8EFEC),
-                                child: const MoveraLineIcon(
-                                  mark: MoveraMark.calendar,
-                                  color: Color(0xFF1C242C),
-                                  size: 34,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 14,
-                          top: 14,
-                          child: _eventChip(event.category),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event.title,
-                            style: const TextStyle(
-                              color: Color(0xFF252E3A),
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          _eventDetailRow(
-                            mark: MoveraMark.calendar,
-                            title: event.dateLabel,
-                            subtitle: event.timeLabel,
-                          ),
-                          const SizedBox(height: 10),
-                          _eventDetailRow(
-                            mark: MoveraMark.place,
-                            title: event.location,
-                            subtitle: 'Area',
-                          ),
-                          const SizedBox(height: 18),
-                          Text(
-                            event.description,
-                            style: const TextStyle(
-                              color: Color(0xFF58656C),
-                              fontSize: 12,
-                              height: 1.55,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.fromLTRB(14, 13, 14, 14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF252E3A),
-                              borderRadius: BorderRadius.circular(19),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Row(
-                                  children: [
-                                    MoveraLineIcon(
-                                      mark: MoveraMark.bolt,
-                                      color: _islandFg,
-                                      size: 19,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Best time to be online',
-                                      style: TextStyle(
-                                        color: _islandFg,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  event.recommendedWindow,
-                                  style: const TextStyle(
-                                    color: _islandFg,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: -0.4,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  event.demandLabel,
-                                  style: const TextStyle(
-                                    color: Color(0xFF9ED9BD),
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  event.driverNote,
-                                  style: const TextStyle(
-                                    color: Color(0xFFD5DDDA),
-                                    fontSize: 10.5,
-                                    height: 1.42,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          Text(
-                            'Photo · ${event.imageCredit}',
-                            style: const TextStyle(
-                              color: _islandMuted,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      );
-    }
-    Widget _eventDetailRow({
-      required MoveraMark mark,
-      required String title,
-      required String subtitle,
-    }) {
-      return Row(
-        children: [
-          Container(
-            width: 37,
-            height: 37,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4F5F6),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: MoveraLineIcon(
-              mark: mark,
-              color: const Color(0xFF1C242C),
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF252E3A),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF7D898F),
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
-    Widget _eventChip(String text) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF4F5F6),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Color(0xFF1C242C),
-            fontSize: 8.5,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.6,
-          ),
-        ),
-      );
-    }
-    Widget _driverEventCard(DriverEventConfig event, {double width = 252}) {
-      return SizedBox(
-        width: width,
-        child: Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () => _openDriverEvent(event),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Stack(
-                  children: [
-                    SizedBox(
-                      height: 104,
-                      width: double.infinity,
-                      child: Image.network(
-                        event.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: const Color(0xFFE8EFEC),
-                          alignment: Alignment.center,
-                          child: const MoveraLineIcon(
-                            mark: MoveraMark.calendar,
-                            color: Color(0xFF1C242C),
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: 10,
-                      top: 10,
-                      child: _eventChip(event.category),
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF252E3A),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      Row(
-                        children: [
-                          const MoveraLineIcon(
-                            mark: MoveraMark.calendar,
-                            size: 13,
-                            color: Color(0xFF1C242C),
-                          ),
-                          const SizedBox(width: 5),
-                          Expanded(
-                            child: Text(
-                              '${event.dateLabel} · ${event.timeLabel}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Color(0xFF66737A),
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          const MoveraLineIcon(
-                            mark: MoveraMark.place,
-                            size: 13,
-                            color: Color(0xFF8D989D),
-                          ),
-                          const SizedBox(width: 5),
-                          Expanded(
-                            child: Text(
-                              event.location,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Color(0xFF8D989D),
-                                fontSize: 9.2,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
     /// One quiet row of the Home sheet list: line icon, label, and a value
     /// or a chevron when the row opens something.
     Widget _todayRow({
@@ -1818,213 +1410,504 @@ extension _HomeMapSheet on _DriverHomeState {
         ),
       );
     }
-    /// Home sheet, open: "Today" numbers, then Waybill, Reservations and
-    /// Events. Nothing else.
-    List<Widget> _todayList() {
-      final performance = _adminHomeConfig.performance;
-      final events = _adminHomeConfig.events
-          .where((event) => event.enabled)
-          .toList(growable: false);
-      final stats = <Widget Function(bool)>[
-        if (performance.showRating)
-          (last) => _todayRow(
-                mark: MoveraMark.star,
-                label: 'Rating',
-                value: performance.rating.toStringAsFixed(2),
-                last: last,
-              ),
-        if (performance.showAcceptanceRate)
-          (last) => _todayRow(
-                mark: MoveraMark.check,
-                label: 'Acceptance',
-                value: '${performance.acceptanceRate.toStringAsFixed(0)}%',
-                last: last,
-              ),
-        if (performance.showCancellationRate)
-          (last) => _todayRow(
-                mark: MoveraMark.close,
-                label: 'Cancellation',
-                value: '${performance.cancellationRate.toStringAsFixed(1)}%',
-                last: last,
-              ),
-      ];
-      return [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(4, 2, 4, 12),
-          child: Text(
-            'Today',
-            key: ValueKey<String>('home-sheet-today'),
-            style: TextStyle(
-              color: Color(0xFF111614),
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.4,
-            ),
-          ),
+    /// How far the open sheet has covered the dock's notch: 0 closed,
+    /// 1 once the sheet has risen a little. The notch flattens over it.
+    static double _notchCover(double position) =>
+        (position / 0.10).clamp(0.0, 1.0);
+
+    Widget _sheetPointer(Widget child) {
+      return PointerInterceptor(
+        child: Listener(
+          behavior: HitTestBehavior.opaque,
+          onPointerDown: _onSheetPointerDown,
+          onPointerMove: _onSheetPointerMove,
+          onPointerUp: _onSheetPointerEnd,
+          onPointerCancel: _onSheetPointerEnd,
+          child: child,
         ),
-        if (stats.isNotEmpty) _todayGroup(stats),
-        const SizedBox(height: 22),
-        ValueListenableBuilder<WaybillRecord?>(
-          valueListenable: _waybills.lastListenable,
-          builder: (context, lastWaybill, _) => _todayGroup([
-            (last) => _todayRow(
-                  key: const ValueKey<String>('home-sheet-last-waybill'),
-                  mark: MoveraMark.receipt,
-                  label: 'Waybill',
-                  value: lastWaybill == null ? 'None yet' : lastWaybill.fare,
-                  valueColor: lastWaybill == null
-                      ? const Color(0xFF8A9390)
-                      : const Color(0xFF111614),
-                  onTap: lastWaybill == null
-                      ? null
-                      : () => showMoveraWaybillSheet(
-                            context,
-                            lastWaybill,
-                            title: 'Last waybill',
-                          ),
-                  last: last,
-                ),
-            if (_adminHomeConfig.scheduledRides.enabled)
-              (last) => _todayRow(
-                    key: const ValueKey<String>('home-sheet-reservations'),
-                    mark: MoveraMark.calendar,
-                    label: 'Reservations',
-                    value: _hasScheduledRideOffers ? 'New' : null,
-                    valueColor: const Color(0xFF1FA463),
-                    dot: _hasScheduledRideOffers,
-                    onTap: _openScheduledRides,
-                    last: last,
-                  ),
-            if (events.isNotEmpty)
-              (last) => _todayRow(
-                    key: const ValueKey<String>('home-sheet-events'),
-                    mark: MoveraMark.city,
-                    label: 'Events',
-                    value: '${events.length}',
-                    valueColor: const Color(0xFF8A9390),
-                    onTap: () => _openDriverEvents(events),
-                    last: last,
-                  ),
-          ]),
-        ),
-      ];
+      );
     }
-    /// The event cards, one under the other, on their own page.
-    void _openDriverEvents(List<DriverEventConfig> events) {
-      pushSingle(
-        context,
-        MaterialPageRoute<void>(
-          builder: (pageContext) => Scaffold(
-            key: const ValueKey<String>('driver-events-page'),
-            backgroundColor: const Color(0xFFF6F7F7),
-            appBar: AppBar(
-              automaticallyImplyLeading: false,
-              backgroundColor: Colors.white,
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                tooltip: 'Back',
-                onPressed: () => maybePopOwned(pageContext),
-                icon: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: Color(0xFF111614),
+
+    /// The four dock icons, fixed at the bottom of the sheet from closed to
+    /// open. Closed, it carries the notch for the radar; as the sheet opens
+    /// over it the notch flattens into plain white.
+    Widget? _homeDockFooter() {
+      if (_homeSheetInactive) { return null; }
+      return _sheetPointer(SizedBox(
+        width: MediaQuery.sizeOf(context).width,
+        height: MoveraSheetMetrics.collapsedHeight,
+        child: ValueListenableBuilder<double>(
+          valueListenable: _panelSlidePosition,
+          builder: (context, position, _) {
+            final cover = _notchCover(position);
+            final closed = position <= 0.04;
+            return DriverSheetNav.collapsedDock(
+              context: context,
+              scaffoldKey: _scaffoldKey,
+              isOnline: _isOnline,
+              hasRideOffers: _hasRideOffers || _radarHomeOffers.isNotEmpty,
+              hasScheduledRideOffers: _hasScheduledRideOffers,
+              goOnlinePulseController: _goOnlinePulseController,
+              onOpenScheduledRides: _openScheduledRides,
+              notchDepth: 58 * (1 - cover),
+              elevation: 8 * (1 - cover),
+              edgeOpacity: 1 - cover,
+              topRuleOpacity: cover,
+              tone: closed ? _sheetTone : null,
+              toneShown: closed && _sheetToneShown,
+            );
+          },
+        ),
+      ));
+    }
+
+    /// The map darkens a little as the sheet rises over it.
+    Widget _homeMapDim() {
+      return IgnorePointer(
+        child: ValueListenableBuilder<double>(
+          valueListenable: _panelSlidePosition,
+          builder: (context, position, _) => position <= 0.001
+              ? const SizedBox.shrink()
+              : ColoredBox(
+                  key: const ValueKey<String>('home-map-dim'),
+                  color: const Color(0xFF0A0E10)
+                      .withValues(alpha: 0.22 * position.clamp(0.0, 1.0)),
                 ),
-              ),
-              centerTitle: true,
-              title: Text(
-                _adminHomeConfig.eventsSectionTitle,
-                style: const TextStyle(
-                  color: Color(0xFF111614),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            body: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-              itemCount: events.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (_, index) =>
-                  _driverEventCard(events[index], width: double.infinity),
+        ),
+      );
+    }
+
+    /// The radar never moves: it sits in the dock, closed or open. With the
+    /// sheet open and Radar on, the same radar reads "Hold · OFF" and a
+    /// one-second hold goes offline.
+    Widget _homeRadarLayer() {
+      if (_homeSheetInactive) {
+        // Account on hold: the radar rides the red sheet's notch.
+        return ValueListenableBuilder<double>(
+          valueListenable: _panelSlidePosition,
+          builder: (context, position, child) => Positioned(
+            left: 0,
+            right: 0,
+            bottom: MoveraSheetMetrics.collapsedHeight - 50 +
+                (_homeExpandedHeight(context) -
+                        MoveraSheetMetrics.collapsedHeight) *
+                    position,
+            child: child!,
+          ),
+          child: Center(child: _radarDragToSheet(child: _buildGoOnlineButton())),
+        );
+      }
+      return Positioned(
+        left: 0,
+        right: 0,
+        bottom: MoveraSheetMetrics.collapsedHeight - 50,
+        child: Center(
+          child: _radarDragToSheet(
+            child: ValueListenableBuilder<double>(
+              valueListenable: _panelSlidePosition,
+              builder: (context, position, _) {
+                final holdOff = _isOnline && position >= 0.5;
+                final face = _isOnline
+                    ? (holdOff ? 'radar-hold-off' : 'radar-online')
+                    : _isGoingOnline
+                    ? 'radar-connecting'
+                    : 'radar-offline';
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 420),
+                  reverseDuration: const Duration(milliseconds: 280),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 0.97, end: 1.0)
+                          .animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  child: KeyedSubtree(
+                    key: ValueKey<String>(face),
+                    child: _isOnline
+                        ? (holdOff ? _holdOffRadar() : _buildTripRadarButton())
+                        : _isGoingOnline
+                        ? _buildGoingOnlineButton()
+                        : _buildGoOnlineButton(),
+                  ),
+                );
+              },
             ),
           ),
         ),
       );
     }
-    Widget panelColumn(ScrollController sc) {
-      return Stack(
-        clipBehavior: Clip.hardEdge,
-        children: [
-          PhysicalShape(
-            clipper: const RadarSheetClipper(
-              notchWidth: 126,
-              notchDepth: 58,
-              cornerRadius: 24,
-            ),
-            color: Colors.white,
-            elevation: 8,
-            shadowColor: const Color(0x3311181C),
-            clipBehavior: Clip.antiAlias,
-            child: Container(
-              color: Colors.white,
-              child: Column(
-                children: [
-                  const SizedBox(height: 88),
-                  Expanded(
-                    child: ListView(
-                      key: const PageStorageKey<String>('driver-overview-list'),
-                      controller: sc,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
-                      children: [
-                        ..._todayList(),
-                      ],
+
+    /// The online radar with the sheet open: same look, "Hold · OFF ·
+    /// Go offline"; a one-second hold vibrates and goes offline.
+    Widget _holdOffRadar() {
+      return RadarHoldOff(
+        onConfirmed: () => unawaited(_goOffline()),
+        child: AnimatedBuilder(
+          animation: Listenable.merge([
+            _goOnlinePulseController,
+            _radarSweepController,
+          ]),
+          builder: (context, child) => _buildRadarOrb(
+            title: "Hold",
+            status: "OFF",
+            subtitle: "Go offline",
+            active: true,
+            offer: _hasRideOffers ||
+                _radarHomeOffers.isNotEmpty ||
+                _pendingRadarHomeOffers.isNotEmpty,
+            pulse: _goOnlinePulseController.value,
+            sweep: _radarSweepController.value,
+          ),
+        ),
+      );
+    }
+
+    /// Account on hold: the red dock, faded out as the red sheet opens.
+    Widget? _inactiveDock() {
+      if (!_homeSheetInactive) { return null; }
+      return _sheetPointer(
+        DriverSheetNav.collapsedDock(
+          context: context,
+          scaffoldKey: _scaffoldKey,
+          isOnline: _isOnline,
+          hasRideOffers: _hasRideOffers || _radarHomeOffers.isNotEmpty,
+          hasScheduledRideOffers: _hasScheduledRideOffers,
+          goOnlinePulseController: _goOnlinePulseController,
+          onOpenScheduledRides: _openScheduledRides,
+          inactive: true,
+        ),
+      );
+    }
+
+    static const Color _sheetInk = Color(0xFF121619);
+    static const Color _sheetText = Color(0xFF3A4247);
+    static const Color _sheetSub = Color(0xFF80888E);
+    static const Color _sheetLine = Color(0xFFEEF0F2);
+
+    Widget _sheetRow({
+      required Key key,
+      required Widget icon,
+      required String label,
+      Widget? trailing,
+      VoidCallback? onTap,
+    }) {
+      return InkWell(
+        key: key,
+        onTap: onTap,
+        child: SizedBox(
+          height: 72,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                SizedBox(width: 32, child: Center(child: icon)),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _sheetText,
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  if (_isOnline)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 8, 18, 10),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: OutlinedButton(
-                          onPressed: _goOffline,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF3F454A),
-                            backgroundColor: Colors.white,
-                            side: const BorderSide(
-                              color: Color(0xFFD5DCDF),
-                              width: 1,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                ),
+                if (trailing != null) trailing,
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget _solarIcon(String asset) => SvgPicture.asset(
+          asset,
+          width: 26,
+          height: 26,
+          colorFilter: const ColorFilter.mode(_sheetInk, BlendMode.srcIn),
+        );
+
+    /// Home sheet, open: "Today", then one card with driving time,
+    /// Performance and the latest waybill. Each row opens its details.
+    List<Widget> _todayList() {
+      final performance = _adminHomeConfig.performance;
+      final showPerformance = performance.showRating ||
+          performance.showAcceptanceRate ||
+          performance.showCancellationRate;
+      return [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 14),
+          child: Text(
+            'Right now',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _sheetSub,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _sheetLine),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0811181C),
+                blurRadius: 6,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              DrivingTimeRow(
+                clock: DrivingTimeClock.instance,
+                running: _isOnline,
+                onTap: _openDrivingTime,
+              ),
+              if (showPerformance)
+                _sheetRow(
+                  key: const ValueKey<String>('home-sheet-performance'),
+                  icon: _solarIcon(AppAssets.solarMedalRibbonStar),
+                  label: 'Performance',
+                  onTap: _openPerformance,
+                ),
+              ValueListenableBuilder<WaybillRecord?>(
+                valueListenable: _waybills.lastListenable,
+                builder: (context, lastWaybill, _) => _sheetRow(
+                  key: const ValueKey<String>('home-sheet-last-waybill'),
+                  icon: _solarIcon(AppAssets.solarBillList),
+                  label: 'Latest waybill',
+                  trailing: lastWaybill == null
+                      ? const Text(
+                          'None yet',
+                          style: TextStyle(
+                            color: _sheetSub,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
-                          child: TextWidget(
-                            text: "Go offline",
-                            color: const Color(0xFF3F454A),
-                            fontSize: 14,
-                            fontWeight: fwSemiBold,
+                        )
+                      : null,
+                  onTap: lastWaybill == null
+                      ? null
+                      : () => showMoveraWaybillSheet(
+                            context,
+                            lastWaybill,
+                            title: 'Latest waybill',
                           ),
-                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ];
+    }
+
+    Future<void> _openDetailsSheet({
+      required String title,
+      required List<Widget Function(bool last)> rows,
+      String? note,
+    }) {
+      return showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: Colors.white,
+        showDragHandle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (sheetContext) => SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: _sheetInk,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                _todayGroup(rows),
+                if (note != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
+                    child: Text(
+                      note,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: _sheetSub,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
                       ),
                     ),
-                  DriverSheetNav.sheetQuickActionsBar(
-                    context: context,
-                    scaffoldKey: _scaffoldKey,
-                    hasScheduledRideOffers: _hasScheduledRideOffers,
-                    goOnlinePulseController: _goOnlinePulseController,
-                    onOpenScheduledRides: _openScheduledRides,
                   ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    void _openPerformance() {
+      final performance = _adminHomeConfig.performance;
+      unawaited(_openDetailsSheet(
+        title: 'Performance',
+        rows: [
+          if (performance.showRating)
+            (last) => _todayRow(
+                  mark: MoveraMark.star,
+                  label: 'Rating',
+                  value: performance.rating.toStringAsFixed(2),
+                  last: last,
+                ),
+          if (performance.showAcceptanceRate)
+            (last) => _todayRow(
+                  mark: MoveraMark.check,
+                  label: 'Acceptance',
+                  value: '${performance.acceptanceRate.toStringAsFixed(0)}%',
+                  last: last,
+                ),
+          if (performance.showCancellationRate)
+            (last) => _todayRow(
+                  mark: MoveraMark.close,
+                  label: 'Cancellation',
+                  value: '${performance.cancellationRate.toStringAsFixed(1)}%',
+                  last: last,
+                ),
+        ],
+      ));
+    }
+
+    void _openDrivingTime() {
+      final clock = DrivingTimeClock.instance;
+      unawaited(_openDetailsSheet(
+        title: 'Driving time',
+        rows: [
+          (last) => _todayRow(
+                mark: MoveraMark.timer,
+                label: 'Driven today',
+                value: DrivingTimeClock.hoursMinutes(clock.drivenToday),
+                last: last,
+              ),
+          (last) => _todayRow(
+                mark: MoveraMark.route,
+                label: 'Left today',
+                value: DrivingTimeClock.hoursMinutes(clock.leftToday),
+                last: last,
+              ),
+          (last) => _todayRow(
+                mark: MoveraMark.calendar,
+                label: 'Daily limit',
+                value: '${clock.dailyLimit.inHours} h',
+                last: last,
+              ),
+        ],
+        note: 'Counts while Radar is on. It starts again from zero each day.',
+      ));
+    }
+
+    Widget panelColumn(ScrollController sc) {
+      final content = Container(
+        color: Colors.white,
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDADEE1),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            Container(
+              height: 56,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: _sheetLine)),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    key: const ValueKey<String>('home-sheet-close'),
+                    tooltip: 'Close sheet',
+                    onPressed: () => unawaited(_closeDriverSheet()),
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: _sheetInk,
+                      size: 28,
+                    ),
+                  ),
+                  const Expanded(
+                    child: Text(
+                      'Today',
+                      key: ValueKey<String>('home-sheet-today'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: _sheetInk,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 48),
                 ],
               ),
             ),
+            Expanded(
+              child: ListView(
+                key: const PageStorageKey<String>('driver-overview-list'),
+                controller: sc,
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  12,
+                  20,
+                  12,
+                  MoveraSheetMetrics.collapsedHeight + 70,
+                ),
+                children: _todayList(),
+              ),
+            ),
+          ],
+        ),
+      );
+      // One white shape from closed to open: the top notch the radar sits
+      // in closed flattens as soon as the sheet rises.
+      return ValueListenableBuilder<double>(
+        valueListenable: _panelSlidePosition,
+        child: content,
+        builder: (context, position, child) => PhysicalShape(
+          clipper: RadarSheetClipper(
+            notchWidth: 126,
+            notchDepth: 58 * (1 - _notchCover(position)),
+            cornerRadius: 24,
           ),
-          DriverSheetNav.onlineEdgeDashOverlay(
-            isOnline: _isOnline,
-            hasRideOffers: _hasRideOffers || _radarHomeOffers.isNotEmpty,
-          ),
-        ],
+          color: Colors.white,
+          elevation: 8,
+          shadowColor: const Color(0x3311181C),
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        ),
       );
     }
 }

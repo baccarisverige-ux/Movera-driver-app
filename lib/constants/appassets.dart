@@ -14,6 +14,8 @@ class AppAssets {
   static const String navMenuBranch = 'assets/icons/nav_menu_branch.svg';
   static const String navCreditCard = 'assets/icons/nav_credit_card.svg';
   static const String navMessagesSquare = 'assets/icons/nav_messages_square.svg';
+  static const String solarMedalRibbonStar = 'assets/icons/solar_medal_ribbon_star.svg';
+  static const String solarBillList = 'assets/icons/solar_bill_list.svg';
   static const String navScheduledRide = 'assets/icons/nav_scheduled_ride.png';
   static const String navScheduledRideAlert =
       'assets/icons/nav_scheduled_ride_alert.png';

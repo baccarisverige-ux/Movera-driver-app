@@ -20,6 +20,12 @@ class DriverSheetNav {
     required AnimationController goOnlinePulseController,
     required VoidCallback onOpenScheduledRides,
     double notchDepth = 58,
+    double elevation = 8,
+    // Outline and online dash along the notch; they fade as the sheet
+    // opens over the dock.
+    double edgeOpacity = 1,
+    // Thin line on top once the open sheet sits above the dock.
+    double topRuleOpacity = 0,
     bool inactive = false,
     Color? tone,
     bool toneShown = false,
@@ -39,7 +45,7 @@ class DriverSheetNav {
             cornerRadius: 24,
           ),
           color: inactive ? sheetRed : Colors.white,
-          elevation: 8,
+          elevation: elevation,
           shadowColor: const Color(0x3311181C),
           clipBehavior: Clip.antiAlias,
           child: Container(
@@ -145,20 +151,41 @@ class DriverSheetNav {
             ),
           ),
         ),
-        if (!inactive)
-          const Positioned.fill(
-            child: IgnorePointer(child: RadarSheetOutline()),
+        if (topRuleOpacity > 0)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: IgnorePointer(
+              child: Container(
+                height: 1,
+                color: const Color(0xFFEEF0F2)
+                    .withValues(alpha: topRuleOpacity.clamp(0.0, 1.0)),
+              ),
+            ),
           ),
-        if (isOnline)
+        if (!inactive && edgeOpacity > 0)
           Positioned.fill(
             child: IgnorePointer(
+              child: Opacity(
+                opacity: edgeOpacity.clamp(0.0, 1.0),
+                child: RadarSheetOutline(notchDepth: notchDepth),
+              ),
+            ),
+          ),
+        if (isOnline && edgeOpacity > 0)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Opacity(
+              opacity: edgeOpacity.clamp(0.0, 1.0),
               child: RadarEdgeDash(
                 notchWidth: 126,
-                notchDepth: 58,
+                notchDepth: notchDepth,
                 cornerRadius: 24,
                 color: hasRideOffers
                     ? const Color(0xFFFFA94D)
                     : const Color(0xFF1FA463),
+              ),
               ),
             ),
           ),
