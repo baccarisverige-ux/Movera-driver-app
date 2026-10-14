@@ -86,7 +86,7 @@ jobs:
           PY
 
       - name: Build Drider web
-        run: flutter build web --release --base-href "/Movera-drider-/"
+        run: flutter build web --release --base-href "/Movera-driver-app/"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
