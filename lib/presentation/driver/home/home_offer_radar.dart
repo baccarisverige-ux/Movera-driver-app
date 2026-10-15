@@ -208,6 +208,7 @@ extension _HomeOfferRadar on _DriverHomeState {
               (_pendingRadarHomeOffers.isNotEmpty || _hasRideOffers)) ||
           !_directOfferFollowsDestination(offer) ||
           !_HomeScheduled(this)._fitsSchedule(offer) ||
+          !_HomeOfferRules(this)._paymentAllowed(offer) ||
           (offer.reservation &&
               (offer.driverSigned ||
                   !_HomeScheduled(this)._exclusiveStepReached(offer.id))) ||
@@ -234,7 +235,8 @@ extension _HomeOfferRadar on _DriverHomeState {
         lifetime,
         () {
           if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
-          _dismissOutsideRadarOffer();
+          // Ran out without Accept: it counts as missed (Q16).
+          _dismissOutsideRadarOffer(missed: true);
         },
       );
 
@@ -243,7 +245,9 @@ extension _HomeOfferRadar on _DriverHomeState {
         offer.dropoffPosition,
       );
     }
-    void _dismissOutsideRadarOffer() {
+    /// The Exclusive offer leaves. [missed]: it ran out or the driver
+    /// tapped ×; a row of those takes the driver offline (Q16).
+    void _dismissOutsideRadarOffer({bool missed = false}) {
       _outsideOfferTimeoutTimer?.cancel();
       _outsideOfferTimeoutTimer = null;
       if (!mounted) { return; }
@@ -263,12 +267,14 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
       // A ride Movera assigned may be waiting for this place.
       _HomeScheduled(this)._maybeShowAssignment();
+      if (missed && gone != null) { _HomeOfferRules(this)._exclusiveMissed(); }
     }
     void _showRadarHomeOffer(_HomeDirectOffer offer) {
       if (!mounted ||
           !_isOnline ||
           !_directOfferFollowsDestination(offer) ||
           !_HomeScheduled(this)._fitsSchedule(offer) ||
+          !_HomeOfferRules(this)._paymentAllowed(offer) ||
           _radarHomeOffers.any((item) => item.id == offer.id) ||
           _pendingRadarHomeOffers.any((item) => item.id == offer.id) ||
           _radarHomeOffers.length + _pendingRadarHomeOffers.length >=
@@ -628,6 +634,8 @@ extension _HomeOfferRadar on _DriverHomeState {
     void _acceptOutsideRadarOffer() {
       final offer = _outsideRadarOffer;
       if (offer == null) { return; }
+      // Answered: the row of missed Exclusive offers starts again (Q16).
+      ExclusiveAnswers.instance.accepted();
       // A ride Movera assigned is kept for later, through dispatch (Q29).
       if (offer.assigned) {
         _HomeScheduled(this)._acceptAssignment(offer);
@@ -683,6 +691,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             ],
             pickupPosition: offer.pickupPosition,
             dropoffPosition: offer.dropoffPosition,
+            pickupKm: offer.pickupKm,
             destinationModeActive: _destinationModeActive,
             destinationAddress: _destinationAddress,
             destinationPosition: _destinationPosition,
@@ -716,7 +725,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           .where((offer) =>
               offer.isNearby &&
               (!_destinationModeActive || offer.followsDestination) &&
-              _HomeScheduled(this)._rideFitsSchedule(offer))
+              _HomeOfferRules(this)._rideAllowed(offer))
           .length;
       return math.max(listed + _pendingRadarHomeOffers.length, nearby);
     }
@@ -759,6 +768,8 @@ extension _HomeOfferRadar on _DriverHomeState {
           bags: offer.bags,
           reservationTime: offer.reservation ? offer.pickupTime : null,
           fareBoost: offer.fareBoost,
+          stops: offer.stops.length,
+          riderTrips: offer.riderTrips,
         );
     /// Radar offers on Home: a deck of cards above the radar, with the
     /// total count on top (tap it for the full-screen list).
@@ -827,13 +838,14 @@ extension _HomeOfferRadar on _DriverHomeState {
         key: ValueKey<String>('direct-offer-${offer.id}'),
         offer: _radarOfferView(offer),
         lifetime: offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
-        reason: offer.reason.isEmpty ? null : offer.reason,
+        // The reason's text comes from the admin's list (Q15).
+        reason: offer.reason.isEmpty ? null : ExclusiveReasons.text(offer.reason),
         reservation: reservation,
         reservationTime: reservation ? offer.pickupTime : null,
         // Destination mode, or trips toward the next scheduled pickup.
         onYourWay: _destinationModeActive ||
             (!offer.assigned && _HomeScheduled(this)._towardPickupTime != null),
-        onDismiss: _dismissOutsideRadarOffer,
+        onDismiss: () => _dismissOutsideRadarOffer(missed: true),
         onRoute: () => _previewDirectOfferRoute(
           offer.pickupPosition,
           offer.dropoffPosition,

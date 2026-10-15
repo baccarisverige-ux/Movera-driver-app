@@ -167,7 +167,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         riderName: offer.riderName,
         pickup: offer.pickup,
         dropoff: offer.dropoff,
-        source: 'Demo Radar',
+        source: 'Exclusive offer',
         driverName: 'Movera Driver',
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
@@ -674,6 +674,17 @@ extension _AcceptRideTrip on _AcceptRideState {
       // manually browsed viewport. Recenter is the sole manual resume action.
       await _followVehicle();
     }
+    /// Q24: shows the cash to collect; "Complete ride" there completes it.
+    Future<void> _collectCash() async {
+      if (!_collectsCashNow || _stageTransitioning || _rideLifecycle.terminal) { return; }
+      final complete = await showCashCollectSheet(
+        context,
+        fare: widget.fare,
+        riderName: widget.riderName,
+      );
+      if (!complete || !mounted || !_collectsCashNow) { return; }
+      await _advanceRide();
+    }
     Future<void> _advanceRide() async {
       if (_stageTransitioning || !mounted || _rideLifecycle.terminal) { return; }
 
@@ -836,7 +847,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       final next = queuedNext ? _snapshotForOffer(offer) : null;
       try {
         await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
-          _waybills.current ?? _buildCurrentWaybill(), next: next);
+          _waybills.current ?? _buildCurrentWaybill(), next: next,
+          paymentMethod: widget.paidByCash ? 'Cash' : null);
         if (!mounted) { return; }
         if (await _yieldToAuthoritativeTerminal()) return;
         if (!await _rideLifecycle.complete(clearSnapshot: false)) {
@@ -861,7 +873,7 @@ extension _AcceptRideTrip on _AcceptRideState {
               riderRating: offer.rating,
               fare: offer.fare,
               category: offer.category,
-              matchedVia: 'Demo Radar',
+              matchedVia: 'Exclusive offer',
               pickupAddress: offer.pickup,
               pickupArea: offer.pickup.split(',').last.trim(),
               dropoffAddress: offer.dropoff,
@@ -893,7 +905,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         destinationModeActive: _destinationActive,
         destinationAddress: _destinationAddress,
         destinationPoint: _destinationPosition == null ? null : GeoPointMaps.fromLatLng(_destinationPosition!), riderName: offer.riderName,
-      riderRating: offer.rating, fare: offer.fare, category: offer.category, matchedVia: 'Demo Radar',
+      riderRating: offer.rating, fare: offer.fare, category: offer.category, matchedVia: 'Exclusive offer',
       pickupAddress: offer.pickup, dropoffAddress: offer.dropoff,
       pickupLat: offer.pickupPosition.latitude, pickupLng: offer.pickupPosition.longitude,
       dropoffLat: offer.dropoffPosition.latitude, dropoffLng: offer.dropoffPosition.longitude);
@@ -991,6 +1003,12 @@ extension _AcceptRideTrip on _AcceptRideState {
       });
     }
     void _maybeScheduleOnTripRadarDemoOffer() {
+      // Q18: while driving a rider only Exclusive offers come, when admin
+      // allows them; never Radar trips.
+      if (!DriverOfferRules.current.exclusiveWhileDriving ||
+          DriverOfferRules.current.exclusiveWhileDrivingCount < 1) {
+        return;
+      }
       if (!mounted ||
           _stage != ActiveRideStage.onTrip ||
           _onTripRadarState != _OnTripRadarState.scanning ||
@@ -1061,6 +1079,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         return;
       }
       _rebuild(() => _onTripRadarState = _OnTripRadarState.matching);
+      ExclusiveAnswers.instance.accepted();
       _nextTripOfferExpiry?.cancel();
       _restoreRideSheet();
       _nextTripRadarMatchTimer?.cancel();
@@ -1086,6 +1105,14 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState = _OnTripRadarState.scanning;
       });
       _restoreRideSheet();
+      // Q16: a declined or missed Exclusive offer counts; at the admin's
+      // number in a row the driver goes offline after this trip.
+      if (ExclusiveAnswers.instance.missed()) {
+        widget.sessionController?.setOnline(false);
+        IslandMessages.show(HomeIslandNotices.offlineAfterMissed(
+          DriverOfferRules.current.autoOfflineAfter,
+        ));
+      }
     }
     void _startWaitTimer() {
       _waitTimer?.cancel();
@@ -1229,7 +1256,7 @@ extension _AcceptRideTrip on _AcceptRideState {
               riderRating: offer.rating,
               fare: offer.fare,
               category: offer.category,
-              matchedVia: 'Demo Radar',
+              matchedVia: 'Exclusive offer',
               pickupAddress: offer.pickup,
               pickupArea: offer.pickup.split(',').last.trim(),
               dropoffAddress: offer.dropoff,

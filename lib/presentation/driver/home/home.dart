@@ -25,6 +25,7 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
@@ -84,6 +85,7 @@ part 'home_offer_radar.dart';
 part 'home_map_sheet.dart';
 part 'home_reservation.dart';
 part 'home_scheduled.dart';
+part 'home_offer_rules.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -338,7 +340,7 @@ class _DriverHomeState extends State<DriverHome>
   static const _HomeDirectOffer _expandedDirectOffer = _HomeDirectOffer(
     id: 'home-direct-expanded',
     category: 'Premium',
-    reason: ExclusiveReasons.nearby,
+    reason: ExclusiveReasons.bestMatch,
     riderName: 'Maja',
     riderTrips: 175,
     fare: '176,20 kr',
@@ -706,7 +708,7 @@ class _DriverHomeState extends State<DriverHome>
                   routeRepository: _roadRouteService,
                   dispatchRepository: _dispatch,
                   activeRideRepository: widget.activeRideRepository,
-                  fitsSchedule: _HomeScheduled(this)._rideFitsSchedule,
+                  offerFilter: _HomeOfferRules(this)._rideAllowed,
                   towardPickupTime: _HomeScheduled(this)._towardPickupTime,
                   onCloseRides: (hasOffers) {
                     setState(() {
@@ -1024,7 +1026,7 @@ class _DriverHomeState extends State<DriverHome>
         final radarTrips = _latestDispatchOffers
             .where((offer) =>
                 offer.isNearby &&
-                (!_destinationModeActive || offer.followsDestination) && _HomeScheduled(this)._rideFitsSchedule(offer))
+                (!_destinationModeActive || offer.followsDestination) && _HomeOfferRules(this)._rideAllowed(offer))
             .length;
         final openListed = _radarHomeOffers
             .where((offer) =>

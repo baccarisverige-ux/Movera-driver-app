@@ -37,6 +37,11 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/rider_contact.dart';
+import 'package:movera/core/dispatch/exclusive_reasons.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/ride/cancel_reasons.dart';
+import 'package:movera/core/ride/waiting_rules.dart';
+import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
 import 'package:movera/core/safety/ride_check_detector.dart';
@@ -47,6 +52,7 @@ import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_banner.dart';
 import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
+import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_bottom_bar.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
@@ -111,7 +117,12 @@ class AcceptRide extends StatefulWidget {
     this.destinationAddress,
     this.destinationPosition,
     this.rideCheck,
+    this.pickupKm,
   });
+
+  /// How far the pickup was when the trip was accepted, for the waiting
+  /// rule by pickup distance (Q20); null when not known.
+  final double? pickupKm;
 
   final Future<bool> Function(Uri)? launchExternalMap;
 
@@ -267,12 +278,21 @@ class _TripCancellationReason {
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.counts = true,
   });
 
   final String code;
   final String title;
   final String subtitle;
   final MoveraMark icon;
+
+  /// False: "Doesn't count" in the cancel rate (Q21).
+  final bool counts;
+
+  /// The line under the title; a reason that doesn't count says so.
+  String get detail => counts
+      ? subtitle
+      : [if (subtitle.isNotEmpty) subtitle, 'Doesn’t count'].join(' · ');
 }
 
 class _AcceptRideState extends State<AcceptRide>
@@ -286,95 +306,45 @@ class _AcceptRideState extends State<AcceptRide>
   static const Color _line = Color(0xFFE5E9EB);
   static const double _nextTripRadarRadiusMeters = 30000;
 
-  static const List<_TripCancellationReason> _preTripCancellationReasons = [
-    _TripCancellationReason(
-      code: 'rider_requested_cancel',
-      title: 'Rider asked to cancel',
-      subtitle: 'The rider doesn’t want to continue',
-      icon: MoveraMark.user,
-    ),
-    _TripCancellationReason(
-      code: 'rider_not_at_pickup',
-      title: 'Rider not at pickup',
-      subtitle: 'You arrived but couldn’t find the rider',
-      icon: MoveraMark.pin,
-    ),
-    _TripCancellationReason(
-      code: 'unsafe_pickup',
-      title: 'Pickup unsafe',
-      subtitle: 'You can’t stop there safely',
-      icon: MoveraMark.warning,
-    ),
-    _TripCancellationReason(
-      code: 'vehicle_issue_before_start',
-      title: 'Vehicle problem',
-      subtitle: 'Your car can’t make the trip',
-      icon: MoveraMark.car,
-    ),
-    _TripCancellationReason(
-      code: 'driver_emergency_before_start',
-      title: 'Personal emergency',
-      subtitle: 'Something urgent came up',
-      icon: MoveraMark.bolt,
-    ),
-    _TripCancellationReason(
-      code: 'other_before_start',
-      title: 'Other reason',
-      subtitle: 'Something else stops this pickup',
-      icon: MoveraMark.more,
-    ),
+  /// Q21: the reasons come from the admin's list for this country and
+  /// language; the app only adds an icon to each.
+  static const Map<String, MoveraMark> _reasonIcons = {
+    'rider_requested_cancel': MoveraMark.user,
+    'rider_not_at_pickup': MoveraMark.pin,
+    'unsafe_pickup': MoveraMark.warning,
+    'vehicle_issue_before_start': MoveraMark.car,
+    'driver_emergency_before_start': MoveraMark.bolt,
+    'rider_no_show': MoveraMark.user,
+    'rider_requested_early_end': MoveraMark.user,
+    'safety_concern_on_trip': MoveraMark.shield,
+    'vehicle_issue_on_trip': MoveraMark.car,
+    'accident_or_road_emergency': MoveraMark.warning,
+    'rider_behavior': MoveraMark.message,
+    'trip_or_destination_issue': MoveraMark.route,
+  };
+
+  static _TripCancellationReason _reason(CancelReason reason) =>
+      _TripCancellationReason(
+        code: reason.code,
+        title: reason.title,
+        subtitle: reason.subtitle,
+        icon: _reasonIcons[reason.code] ?? MoveraMark.more,
+        counts: reason.counts,
+      );
+
+  static List<_TripCancellationReason> get _preTripCancellationReasons => [
+    for (final reason
+        in CancelReasons.current.of(CancelReasonGroup.driverBeforeTrip))
+      _reason(reason),
   ];
 
-  static const _TripCancellationReason _noShowReason = _TripCancellationReason(
-    code: 'rider_no_show',
-    title: 'Rider did not arrive',
-    subtitle: 'Five minutes have passed and the rider is not here',
-    icon: MoveraMark.user,
-  );
+  static _TripCancellationReason get _noShowReason =>
+      _reason(CancelReasons.current.noShow);
 
-  static const List<_TripCancellationReason> _onTripCancellationReasons = [
-    _TripCancellationReason(
-      code: 'rider_requested_early_end',
-      title: 'Rider asked to end the trip',
-      subtitle: 'The rider wants to leave before the destination',
-      icon: MoveraMark.user,
-    ),
-    _TripCancellationReason(
-      code: 'safety_concern_on_trip',
-      title: 'Safety concern',
-      subtitle: 'Continuing the trip may be unsafe',
-      icon: MoveraMark.shield,
-    ),
-    _TripCancellationReason(
-      code: 'vehicle_issue_on_trip',
-      title: 'Vehicle problem',
-      subtitle: 'A vehicle issue makes it unsafe to continue',
-      icon: MoveraMark.car,
-    ),
-    _TripCancellationReason(
-      code: 'accident_or_road_emergency',
-      title: 'Accident or road emergency',
-      subtitle: 'An incident or emergency prevents continuing',
-      icon: MoveraMark.warning,
-    ),
-    _TripCancellationReason(
-      code: 'rider_behavior',
-      title: 'Rider behavior',
-      subtitle: 'The rider’s behavior requires the trip to end',
-      icon: MoveraMark.message,
-    ),
-    _TripCancellationReason(
-      code: 'trip_or_destination_issue',
-      title: 'Trip or destination issue',
-      subtitle: 'A trip detail or destination problem prevents continuing',
-      icon: MoveraMark.route,
-    ),
-    _TripCancellationReason(
-      code: 'other_on_trip',
-      title: 'Other reason',
-      subtitle: 'Another issue requires the trip to end early',
-      icon: MoveraMark.more,
-    ),
+  static List<_TripCancellationReason> get _onTripCancellationReasons => [
+    for (final reason
+        in CancelReasons.current.of(CancelReasonGroup.driverDuringTrip))
+      _reason(reason),
   ];
 
   static const LatLng _fallbackDriverPosition = LatLng(59.3262, 18.0595);
@@ -542,6 +512,8 @@ class _AcceptRideState extends State<AcceptRide>
     _paidStopWait = restored?.paidStopWait == true;
     _onTripStartedAt = restored?.startedAt;
     _waitSeconds = widget.initialWaitSeconds;
+    // The waiting clocks on this trip follow its terms.
+    WaitingTerms.active = _waitTerms;
     if (restored?.savedAt != null &&
         (widget.initialStage == ActiveRideStage.waitingForRider || _paidStopWait)) {
       final elapsed = DateTime.now().difference(restored!.savedAt!).inSeconds;
@@ -932,8 +904,26 @@ class _AcceptRideState extends State<AcceptRide>
 
 
 
-  static const int _includedWaitSeconds = 120;
-  static const int _noShowWaitSeconds = 300;
+  /// Q19/Q20: free wait, price per minute, no-show time and fee, and the
+  /// driver's share, from the waiting rules for this pickup (distance,
+  /// ride type, category).
+  late final WaitingTerms _waitTerms = WaitingRules.current.termsFor(
+    category: widget.category,
+    type: WaitingRules.typeOf(
+      matchedVia: widget.matchedVia,
+      pickupAddress: widget.pickupAddress,
+    ),
+    pickupKm: widget.pickupKm,
+  );
+  /// Q24: the last leg of a cash trip, cash not collected yet: the main
+  /// button is "Collect cash" instead of the slide.
+  bool get _collectsCashNow =>
+      widget.paidByCash &&
+      _stage == ActiveRideStage.onTrip &&
+      !_paidStopWait &&
+      _stopCursor >= widget.stopAddresses.length;
+  int get _includedWaitSeconds => _waitTerms.freeSeconds;
+  int get _noShowWaitSeconds => _waitTerms.noShowSeconds;
 
   bool get _inIncludedWait =>
       !_paidStopWait && _waitSeconds < _includedWaitSeconds;

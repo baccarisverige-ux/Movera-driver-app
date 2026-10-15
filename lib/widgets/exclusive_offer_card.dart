@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 
@@ -24,7 +25,11 @@ class ExclusiveOfferCard extends StatelessWidget {
     this.reservationTime,
     this.onYourWay = false,
     this.reason,
+    this.details,
   });
+
+  /// Which details show (Q14); the admin's choice by default.
+  final OfferCardDetails? details;
 
   /// The short reason next to the "Exclusive" mark, from the offer; see
   /// [ExclusiveReasons].
@@ -65,9 +70,12 @@ class ExclusiveOfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final comma = offer.fare.indexOf(',');
-    final whole = comma > 0 ? offer.fare.substring(0, comma) : offer.fare;
-    final rest = comma > 0 ? offer.fare.substring(comma) : '';
+    final show = details ?? DriverOfferRules.current.card;
+    final fare = show.fare(offer.fare);
+    final comma = fare.indexOf(',');
+    final whole = comma > 0 ? fare.substring(0, comma) : fare;
+    final rest = comma > 0 ? fare.substring(comma) : '';
+    final why = reason ?? ExclusiveReasons.defaultFor(reservation: reservation);
     const detailStyle = TextStyle(
       color: Color(0xFF3A444B),
       fontSize: 12.5,
@@ -97,20 +105,20 @@ class ExclusiveOfferCard extends StatelessWidget {
                         'exclusive-offer-category-${offer.id}',
                       ),
                     ),
-                    if (reservation)
+                    if (show.badges && reservation)
                       OfferBadge.reservation(
                         reservationTime,
                         key: ValueKey<String>(
                           'exclusive-offer-reservation-${offer.id}',
                         ),
                       ),
-                    if (offer.cash)
+                    if (show.badges && offer.cash)
                       OfferBadge.cash(
                         key: ValueKey<String>(
                           'exclusive-offer-cash-${offer.id}',
                         ),
                       ),
-                    if (offer.fareBoost case final boost?)
+                    if (offer.fareBoost case final boost? when show.badges)
                       OfferBadge.boost(
                         boost,
                         key: ValueKey<String>(
@@ -156,10 +164,10 @@ class ExclusiveOfferCard extends StatelessWidget {
                 key: ValueKey<String>('exclusive-offer-mark-${offer.id}'),
               ),
               const SizedBox(width: 8),
+              if (why.isNotEmpty)
               Flexible(
                 child: Text(
-                  reason ??
-                      ExclusiveReasons.defaultFor(reservation: reservation),
+                  why,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -172,6 +180,20 @@ class ExclusiveOfferCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          if (show.netFare)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Text(
+                'YOUR SHARE',
+                key: ValueKey<String>('exclusive-offer-net-fare'),
+                style: TextStyle(
+                  color: label,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -226,13 +248,20 @@ class ExclusiveOfferCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          if (show.riderRating || (show.badges && offer.bags > 0))
+            const SizedBox(height: 10),
           Row(
             children: [
-              _icon(AppAssets.offerStar, 13, const Color(0xFF3A444B)),
-              const SizedBox(width: 4),
-              Text(offer.rating, style: detailStyle),
-              if (offer.bags > 0) ...[
+              if (show.riderRating) ...[
+                _icon(AppAssets.offerStar, 13, const Color(0xFF3A444B)),
+                const SizedBox(width: 4),
+                Text(
+                  offer.ratingLabel,
+                  key: ValueKey<String>('exclusive-offer-rating-${offer.id}'),
+                  style: detailStyle,
+                ),
+              ],
+              if (show.badges && offer.bags > 0) ...[
                 const SizedBox(width: 12),
                 Row(
                   key: ValueKey<String>('exclusive-offer-bags-${offer.id}'),
@@ -270,8 +299,14 @@ class ExclusiveOfferCard extends StatelessWidget {
       required String value,
       required String detail,
     }) {
-      final place = RadarOfferView.street(address);
-      final area = RadarOfferView.area(address);
+      final hidden = !dropoff && !show.pickupAddress;
+      final areaOnly = dropoff && show.dropoffAreaOnly;
+      final place = hidden
+          ? 'Pickup nearby'
+          : areaOnly
+          ? RadarOfferView.area(address)
+          : RadarOfferView.street(address);
+      final area = hidden || areaOnly ? '' : RadarOfferView.area(address);
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -330,6 +365,7 @@ class ExclusiveOfferCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
+          if (value.isNotEmpty || detail.isNotEmpty)
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -425,14 +461,19 @@ class ExclusiveOfferCard extends StatelessWidget {
               dropoff: false,
               address: offer.pickup,
               value: '${offer.pickupMinutes} min',
-              detail: '${offer.pickupKm.toStringAsFixed(1)} km away',
+              detail: show.pickupDistance
+                  ? '${offer.pickupKm.toStringAsFixed(1)} km away'
+                  : '',
             ),
           ),
           stop(
             dropoff: true,
             address: offer.dropoff,
-            value: '${offer.tripMinutes} min',
-            detail: '${offer.tripKm.toStringAsFixed(1)} km ride',
+            value: show.tripMinutesKm ? '${offer.tripMinutes} min' : '',
+            detail: [
+              if (show.tripMinutesKm) '${offer.tripKm.toStringAsFixed(1)} km ride',
+              if (show.stops && offer.stops > 0) offer.stopsLabel,
+            ].join(' · '),
           ),
           const SizedBox(height: 18),
           Row(

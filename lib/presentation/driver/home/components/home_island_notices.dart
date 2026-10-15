@@ -171,6 +171,35 @@ class HomeIslandNotices {
     group: 'scheduled',
   );
 
+  /// Q23: the driver's Cash switch in the Home sheet.
+  static const IslandMessage cashOn = IslandMessage(
+    title: 'Cash rides on',
+    tone: IslandTone.success,
+    priority: IslandPriority.low,
+    group: 'cash',
+  );
+
+  static const IslandMessage cashOff = IslandMessage(
+    title: 'Cash rides off',
+    priority: IslandPriority.low,
+    group: 'cash',
+  );
+
+  /// Q16: one more missed Exclusive offer takes the driver offline.
+  static const IslandMessage lastMissedBeforeOffline = IslandMessage(
+    title: 'Next missed offer: offline',
+    tone: IslandTone.warning,
+    group: 'missed',
+  );
+
+  /// Q16: [count] Exclusive offers in a row went without Accept.
+  static IslandMessage offlineAfterMissed(int count) => IslandMessage(
+    title: 'Offline: $count offers missed',
+    tone: IslandTone.alert,
+    priority: IslandPriority.high,
+    group: 'missed',
+  );
+
   static const IslandMessage recoveryPending = IslandMessage(
     title: 'Saved trip open',
     tone: IslandTone.warning,

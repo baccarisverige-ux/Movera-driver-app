@@ -283,10 +283,11 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(find.byKey(const ValueKey('trip-guidance-island')), findsOneWidget);
       expect(find.byKey(const ValueKey('island-radar')), findsNothing);
-      expect(find.byTooltip('Turn radar on'), findsNothing);
+      expect(find.byTooltip('Turn Exclusive offers on'), findsNothing);
       await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Turn radar on'));
+      // While driving a rider only Exclusive offers come (Q18).
+      await tester.tap(find.text('Turn Exclusive offers on'));
       await tester.pumpAndSettle();
       expect(radar, 1);
       await tester.pumpWidget(const SizedBox());

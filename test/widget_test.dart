@@ -2183,7 +2183,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Next trip waybill'), findsOneWidget);
-      expect(find.text('Demo Radar'), findsOneWidget);
+      // While driving a rider only Exclusive offers come (Q18).
+      expect(find.text('Exclusive offer'), findsOneWidget);
       _expectNoException(tester);
     },
   );

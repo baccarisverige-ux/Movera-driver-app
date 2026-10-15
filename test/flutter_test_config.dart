@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 
@@ -34,7 +36,13 @@ DateTime _testNow() {
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   DriverRuntimeConfig.current = testRuntimeConfig;
   ScheduledClock.realNow = _testNow;
-  // Every test starts the demo day again (07:00 at its first reading).
-  setUp(ScheduledClock.instance.reset);
+  // Every test starts the demo day again (07:00 at its first reading),
+  // with cash rides on, no missed Exclusive offers and the zone's waiting
+  // terms.
+  setUp(() {
+    ScheduledClock.instance.reset();
+    DriverOfferPreferences.reset();
+    WaitingTerms.active = WaitingRules.current.base;
+  });
   await testMain();
 }

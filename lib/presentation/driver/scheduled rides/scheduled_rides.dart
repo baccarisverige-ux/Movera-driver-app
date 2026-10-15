@@ -2,6 +2,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
@@ -219,9 +220,13 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       // tab says why.
       ScheduledRideStore._changed();
       _notice('Reservation accepted');
-    } else if (action == _ScheduledRideAction.cancelled) {
+    } else if (action == _ScheduledRideAction.cancelled ||
+        action == _ScheduledRideAction.cancelledNotCounted) {
       if (!_accepted.contains(ride)) return;
-      ScheduledRideStore._cancelAccepted(ride);
+      ScheduledRideStore._cancelAccepted(
+        ride,
+        counts: action == _ScheduledRideAction.cancelled,
+      );
       // An open reservation goes back out to drivers (notes R24): where it
       // goes follows the admin rule, Radar trips too close to pickup.
       if (ride.id.isNotEmpty && !ride.assigned) {
@@ -646,9 +651,10 @@ class ScheduledRideStore {
   );
 
   /// The driver cancelled [ride], which they had accepted. A late cancel is
-  /// counted (drivers never pay); true when it paused Scheduled rides.
-  static bool _cancelAccepted(_ScheduledRide ride) {
-    final late = isLateCancel(ride.route);
+  /// counted (drivers never pay), unless its reason doesn't count
+  /// ([counts], Q21); true when it paused Scheduled rides.
+  static bool _cancelAccepted(_ScheduledRide ride, {bool counts = true}) {
+    final late = counts && isLateCancel(ride.route);
     if (!_accepted.remove(ride)) {
       return false;
     }
@@ -1133,7 +1139,7 @@ class _ScheduledRide {
   }
 }
 
-enum _ScheduledRideAction { accepted, cancelled }
+enum _ScheduledRideAction { accepted, cancelled, cancelledNotCounted }
 
 class _ScheduledRideDetailsScreen extends StatelessWidget {
   const _ScheduledRideDetailsScreen({required this.ride});
@@ -1777,7 +1783,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
     if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) {
       return;
     }
-    final reason = await showModalBottomSheet<String>(
+    final reason = await showModalBottomSheet<CancelReason>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -1799,7 +1805,12 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      _popScheduledRoute(context, _ScheduledRideAction.cancelled);
+      _popScheduledRoute(
+        context,
+        reason.counts
+            ? _ScheduledRideAction.cancelled
+            : _ScheduledRideAction.cancelledNotCounted,
+      );
     }
   }
 }
@@ -1925,16 +1936,11 @@ class _CancelReasonSheet extends StatefulWidget {
 }
 
 class _CancelReasonSheetState extends State<_CancelReasonSheet> {
-  String? _selected;
+  CancelReason? _selected;
 
-  static const _reasons = <String>[
-    'I can no longer make the pickup time',
-    'Vehicle issue',
-    'Personal emergency',
-    'Pickup is too far from me',
-    'Trip details no longer work for me',
-    'Other reason',
-  ];
+  /// Q21: from the admin's list for this country and language.
+  List<CancelReason> get _reasons =>
+      CancelReasons.current.of(CancelReasonGroup.scheduled);
 
   @override
   Widget build(BuildContext context) {
@@ -2058,15 +2064,21 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(
-                                reason,
-                                style: TextStyle(
-                                  color: const Color(0xFF303B42),
-                                  fontSize: 13,
-                                  fontWeight: selected
-                                      ? FontWeight.w800
-                                      : FontWeight.w600,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    reason.title,
+                                    style: TextStyle(
+                                      color: const Color(0xFF303B42),
+                                      fontSize: 13,
+                                      fontWeight: selected
+                                          ? FontWeight.w800
+                                          : FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (!reason.counts) const _NotCountedTag(),
+                                ],
                               ),
                             ),
                           ],
@@ -2114,7 +2126,7 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
 class _CancelConfirmationSheet extends StatelessWidget {
   const _CancelConfirmationSheet({required this.reason, this.ride});
 
-  final String reason;
+  final CancelReason reason;
   final ReservationRequestPreview? ride;
 
   @override
@@ -2167,14 +2179,26 @@ class _CancelConfirmationSheet extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                reason,
+                reason.title,
                 style: const TextStyle(
                   color: Color(0xFF59656C),
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              if (ScheduledRideStore.isLateCancel(ride)) ...[
+              if (!reason.counts) ...[
+                const SizedBox(height: 12),
+                const Text(
+                  'This reason doesn’t count against you.',
+                  key: ValueKey<String>('scheduled-cancel-not-counted'),
+                  style: TextStyle(
+                    color: Color(0xFF19865C),
+                    fontSize: 12.5,
+                    height: 1.4,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ] else if (ScheduledRideStore.isLateCancel(ride)) ...[
                 const SizedBox(height: 12),
                 _LateCancelWarning(ride: ride),
               ],

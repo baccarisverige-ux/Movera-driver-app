@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -33,9 +34,10 @@ class RideRequests extends StatefulWidget {
   final DispatchRepository? dispatchRepository;
   final ActiveRideRepository? activeRideRepository;
 
-  /// Before an accepted scheduled ride, only trips that still leave time
-  /// for it (the smart gap) and head toward its pickup are listed.
-  final bool Function(RideOffer offer)? fitsSchedule;
+  /// Trips this driver gets now: before an accepted scheduled ride only
+  /// the ones that leave time for it and head toward its pickup; with
+  /// cash rides off, no cash trips.
+  final bool Function(RideOffer offer)? offerFilter;
 
   /// That ride's pickup time, e.g. "07:40", while trips head toward it.
   final String? towardPickupTime;
@@ -52,7 +54,7 @@ class RideRequests extends StatefulWidget {
     this.routeRepository,
     this.dispatchRepository,
     this.activeRideRepository,
-    this.fitsSchedule,
+    this.offerFilter,
     this.towardPickupTime,
   });
 
@@ -90,10 +92,30 @@ class _RideRequestsState extends State<RideRequests> {
   /// Trips the driver removed with ×.
   final Set<String> _dismissed = <String>{};
 
+  /// Q17: a trip hidden with × comes back after the admin's minutes if it
+  /// is still open in Radar. Hiding never counts against the driver.
+  final Map<String, Timer> _comeBackTimers = <String, Timer>{};
+
+  void _hide(_RadarTrip trip) {
+    setState(() => _dismissed.add(trip.id));
+    _comeBackTimers.remove(trip.id)?.cancel();
+    _comeBackTimers[trip.id] = Timer(
+      DriverOfferRules.current.hiddenComesBackAfter,
+      () {
+        _comeBackTimers.remove(trip.id);
+        final open = _latestDispatchOffers.any((offer) => offer.id == trip.id);
+        if (!mounted || !open || _stateFor(trip.id) != _RadarOfferState.available) {
+          return;
+        }
+        setState(() => _dismissed.remove(trip.id));
+      },
+    );
+  }
+
   List<_RadarTrip> get _visibleOffers {
     final nearby = _offers.where((offer) {
       if (!offer.isNearby || _dismissed.contains(offer.id)) { return false; }
-      if (!(widget.fitsSchedule?.call(offer.source) ?? true)) { return false; }
+      if (!(widget.offerFilter?.call(offer.source) ?? true)) { return false; }
       if (!widget.destinationModeActive) { return true; }
       return offer.followsDestination;
     }).toList()
@@ -138,6 +160,9 @@ class _RideRequestsState extends State<RideRequests> {
     _nearbySubscription?.cancel();
     _matchNoticeTimer?.cancel();
     for (final timer in _claimedRemovalTimers.values) {
+      timer.cancel();
+    }
+    for (final timer in _comeBackTimers.values) {
       timer.cancel();
     }
     if (_ownsDispatch) {
@@ -329,6 +354,7 @@ class _RideRequestsState extends State<RideRequests> {
           stopPositions: [for (final stop in rider.stops) stop.point.toLatLng()],
           pickupPosition: trip.pickupPosition,
           dropoffPosition: trip.dropoffPosition,
+          pickupKm: trip.pickupKm,
           destinationModeActive: widget.destinationModeActive,
           destinationAddress: widget.destinationAddress,
           destinationPosition: widget.destinationPosition,
@@ -659,6 +685,8 @@ class _RideRequestsState extends State<RideRequests> {
         bags: trip.bags,
         reservationTime: trip.reservationTime,
         fareBoost: trip.source.fareBoost,
+        stops: trip.source.stops.length,
+        riderTrips: trip.source.riderTrips,
       ),
       state: claimed
           ? RadarOfferCardState.taken
@@ -668,9 +696,7 @@ class _RideRequestsState extends State<RideRequests> {
       onMatch: claimed || resolving || blockOtherOffers
           ? null
           : () => _matchTrip(trip),
-      onDismiss: claimed || resolving
-          ? null
-          : () => setState(() => _dismissed.add(trip.id)),
+      onDismiss: claimed || resolving ? null : () => _hide(trip),
     );
     // A trip another driver took fades out of the list.
     return TweenAnimationBuilder<double>(

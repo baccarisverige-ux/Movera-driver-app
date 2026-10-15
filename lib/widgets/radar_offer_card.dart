@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/widgets/offer_badges.dart';
 
 /// What a Radar offer card shows. The same card is used on Home (the deck
@@ -21,6 +22,8 @@ class RadarOfferView {
     this.bags = 0,
     this.reservationTime,
     this.fareBoost,
+    this.stops = 0,
+    this.riderTrips = 0,
   });
 
   final String id;
@@ -48,6 +51,12 @@ class RadarOfferView {
   /// "+40 kr". [fare] is already the new fare (Q13).
   final String? fareBoost;
 
+  /// Stops between pickup and drop-off.
+  final int stops;
+
+  /// The rider's trips; 0 when not known.
+  final int riderTrips;
+
   /// The rider pays cash in the car (not paid in the app).
   bool get cash => isCash(payment);
 
@@ -65,6 +74,14 @@ class RadarOfferView {
     final first = address.split(',').first.trim();
     return first.isEmpty ? address.trim() : first;
   }
+
+  /// "1 stop", "2 stops"; '' with none.
+  String get stopsLabel =>
+      stops <= 0 ? '' : '$stops stop${stops == 1 ? '' : 's'}';
+
+  /// "4.95" or, with the trips known, "4.95 · 86 trips".
+  String get ratingLabel =>
+      riderTrips > 0 ? '$rating · $riderTrips trips' : rating;
 }
 
 enum RadarOfferCardState { available, matching, expired, taken }
@@ -81,9 +98,13 @@ class RadarOfferCard extends StatelessWidget {
     this.onMatch,
     this.onRoute,
     this.onDismiss,
+    this.details,
   });
 
   final RadarOfferView offer;
+
+  /// Which details show (Q14); the admin's choice by default.
+  final OfferCardDetails? details;
   final RadarOfferCardState state;
   final VoidCallback? onMatch;
   final VoidCallback? onRoute;
@@ -105,9 +126,11 @@ class RadarOfferCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final comma = offer.fare.indexOf(',');
-    final whole = comma > 0 ? offer.fare.substring(0, comma) : offer.fare;
-    final rest = comma > 0 ? offer.fare.substring(comma) : '';
+    final show = details ?? DriverOfferRules.current.card;
+    final fare = show.fare(offer.fare);
+    final comma = fare.indexOf(',');
+    final whole = comma > 0 ? fare.substring(0, comma) : fare;
+    final rest = comma > 0 ? fare.substring(comma) : '';
     final matching = state == RadarOfferCardState.matching;
     final enabled = state == RadarOfferCardState.available && onMatch != null;
 
@@ -150,23 +173,35 @@ class RadarOfferCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (offer.reservationTime != null)
+                    if (show.badges && offer.reservationTime != null)
                       OfferBadge.reservation(
                         offer.reservationTime,
                         key: ValueKey<String>(
                           'radar-offer-reservation-${offer.id}',
                         ),
                       ),
-                    if (offer.cash)
+                    if (show.badges && offer.cash)
                       OfferBadge.cash(
                         key: ValueKey<String>('radar-offer-cash-${offer.id}'),
                       ),
-                    if (offer.fareBoost case final boost?)
+                    if (offer.fareBoost case final boost? when show.badges)
                       OfferBadge.boost(
                         boost,
                         key: ValueKey<String>('radar-offer-boost-${offer.id}'),
                       ),
-                    if (offer.bags > 0)
+                    // The rider's trips, next to the badges so the header
+                    // still fits a narrow phone.
+                    if (show.riderRating && offer.riderTrips > 0)
+                      Text(
+                        '${offer.riderTrips} trips',
+                        key: ValueKey<String>('radar-offer-trips-${offer.id}'),
+                        style: const TextStyle(
+                          color: Color(0xFF3A444B),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    if (show.badges && offer.bags > 0)
                       Row(
                         key: ValueKey<String>('radar-offer-bags-${offer.id}'),
                         mainAxisSize: MainAxisSize.min,
@@ -186,8 +221,10 @@ class RadarOfferCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (show.riderRating) ...[
               const SizedBox(width: 8),
               Container(
+                key: ValueKey<String>('radar-offer-rating-${offer.id}'),
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -210,6 +247,7 @@ class RadarOfferCard extends StatelessWidget {
                   ],
                 ),
               ),
+              ],
               if (onDismiss != null) ...[
                 const SizedBox(width: 6),
                 Material(
@@ -236,6 +274,20 @@ class RadarOfferCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
+          if (show.netFare)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Text(
+                'YOUR SHARE',
+                key: ValueKey<String>('radar-offer-net-fare'),
+                style: TextStyle(
+                  color: label,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.4,
+                ),
+              ),
+            ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -360,13 +412,21 @@ class RadarOfferCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     stop(
-                      RadarOfferView.area(offer.pickup),
-                      '${offer.pickupKm.toStringAsFixed(1)} km away',
+                      show.pickupAddress
+                          ? RadarOfferView.area(offer.pickup)
+                          : 'Pickup nearby',
+                      show.pickupDistance
+                          ? '${offer.pickupKm.toStringAsFixed(1)} km away'
+                          : 'Pickup',
                     ),
                     const SizedBox(height: 14),
                     stop(
                       RadarOfferView.area(offer.dropoff),
-                      '${offer.tripMinutes} min trip · ${offer.tripKm.toStringAsFixed(1)} km',
+                      [
+                        if (show.tripMinutesKm)
+                          '${offer.tripMinutes} min trip · ${offer.tripKm.toStringAsFixed(1)} km',
+                        if (show.stops && offer.stops > 0) offer.stopsLabel,
+                      ].join(' · ').ifEmpty('Drop-off'),
                     ),
                   ],
                 ),
@@ -484,4 +544,8 @@ class RadarOfferCard extends StatelessWidget {
       ),
     );
   }
+}
+
+extension on String {
+  String ifEmpty(String other) => isEmpty ? other : this;
 }

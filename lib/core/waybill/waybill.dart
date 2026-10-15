@@ -224,26 +224,31 @@ class WaybillStore {
 /// The fare text is the one shown to the driver ("128,40 kr" or
 /// "126.75 kr"). Amounts are kept in öre and keep its decimal separator.
 class WaybillPayment {
-  const WaybillPayment._(this._fareOre, this._comma);
+  const WaybillPayment._(this._fareOre, this._comma, this._feeRate);
 
   /// Movera's share of each fare. Placeholder until per-trip pricing comes
   /// from the backend; change here.
   static const double serviceFeeRate = 0.25;
 
-  /// Null when [fare] holds no amount (for example "—").
-  static WaybillPayment? fromFare(String fare) {
+  /// Null when [fare] holds no amount (for example "—"). [feeRate] is
+  /// Movera's share.
+  static WaybillPayment? fromFare(
+    String fare, {
+    double feeRate = serviceFeeRate,
+  }) {
     final match = RegExp(r'\d+(?:[.,]\d{1,2})?').firstMatch(fare);
     if (match == null) return null;
     final text = match.group(0)!;
     final value = double.tryParse(text.replaceAll(',', '.'));
     if (value == null) return null;
-    return WaybillPayment._((value * 100).round(), text.contains(','));
+    return WaybillPayment._((value * 100).round(), text.contains(','), feeRate);
   }
 
   final int _fareOre;
   final bool _comma;
+  final double _feeRate;
 
-  int get _feeOre => (_fareOre * serviceFeeRate).round();
+  int get _feeOre => (_fareOre * _feeRate).round();
 
   String get fare => _format(_fareOre);
   String get serviceFee => _format(_feeOre);

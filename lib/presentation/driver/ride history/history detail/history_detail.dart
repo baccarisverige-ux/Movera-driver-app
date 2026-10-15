@@ -393,6 +393,27 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
         _detailRow('Payment Method', _ride.paymentMethod, paymentIcon: true),
         16.height,
         _detailRow('Ride Type', _ride.category),
+        // Q23: on a cash trip, the cash the driver collected and what they
+        // owe Movera, taken from the next payout.
+        if (_ride.owedToMovera case final owed?) ...[
+          16.height,
+          _detailRow('Cash collected', _ride.fare),
+          16.height,
+          _detailRow('Owed to Movera', owed),
+          8.height,
+          const Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              'Taken from your next payout',
+              key: ValueKey<String>('history-owed-note'),
+              style: TextStyle(
+                color: Color(0xFF7D898F),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

@@ -6,6 +6,7 @@ import 'package:movera/constants/appfontweight.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/expantion_tile.dart';
 import 'package:movera/widgets/responsive_size.dart';
+import 'package:movera/widgets/rate_rule_note.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
 class CancelationRate extends StatelessWidget {
@@ -186,6 +187,12 @@ class CancelationRate extends StatelessWidget {
             color: AppColor.title,
             fontSize: 12,
             fontWeight: fwMedium,
+          ),
+          16.height,
+          const RateRuleNote(
+            key: ValueKey<String>('cancel-rate-rule'),
+            title: 'Keep your cancel rate low to keep full access to trips',
+            body: 'Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.',
           ),
           16.height,
           Divider(color: AppColor.subtitle, height: 0, thickness: 0.2),

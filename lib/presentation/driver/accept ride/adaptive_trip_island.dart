@@ -689,7 +689,9 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
               ListTile(
                 leading: const Icon(Icons.radar_rounded),
                 title: Text(
-                  widget.radarOn ? 'Turn radar off' : 'Turn radar on',
+                  widget.radarOn
+                      ? 'Turn Exclusive offers off'
+                      : 'Turn Exclusive offers on',
                 ),
                 onTap: () => popOwned(context, 'radar'),
               ),

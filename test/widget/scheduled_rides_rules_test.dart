@@ -22,12 +22,16 @@ Future<void> _openRide(WidgetTester tester, String pickup) async {
   await tester.pumpAndSettle();
 }
 
-/// From an accepted ride's details: Cancel reservation → a reason →
-/// Continue. Leaves the confirmation open.
-Future<void> _toConfirmation(WidgetTester tester) async {
+/// From an accepted ride's details: Cancel reservation → [reason] →
+/// Continue. Leaves the confirmation open. "Personal emergency" counts.
+Future<void> _toConfirmation(
+  WidgetTester tester, {
+  String reason = 'Personal emergency',
+}) async {
   await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel reservation'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Vehicle issue'));
+  await tester.ensureVisible(find.text(reason));
+  await tester.tap(find.text(reason));
   await tester.pumpAndSettle();
   await tester.ensureVisible(find.text('Continue'));
   await tester.tap(find.text('Continue'));
@@ -151,7 +155,8 @@ void main() {
       find.text('You never pay to cancel, but this late cancel counts.'),
       findsOneWidget,
     );
-    await tester.tap(find.text('Vehicle issue'));
+    await tester.ensureVisible(find.text('Personal emergency'));
+    await tester.tap(find.text('Personal emergency'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Continue'));
     await tester.tap(find.text('Continue'));
@@ -162,6 +167,33 @@ void main() {
     expect(ScheduledRideStore.lateCancelsInPeriod(), 1);
     // One late cancel does not pause anything.
     expect(ScheduledRideStore.block(), isNull);
+  });
+
+  testWidgets('a reason that doesn\'t count says so and is not a late cancel', (
+    tester,
+  ) async {
+    ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+    await _open(tester);
+    await tester.tap(find.text('Accepted'));
+    await tester.pumpAndSettle();
+    await _openRide(tester, 'Gamla vägen, Stockholm');
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel reservation'));
+    await tester.pumpAndSettle();
+    // Q21: the admin list marks a car breakdown as not counting.
+    expect(find.text('Doesn’t count'), findsOneWidget);
+    await tester.tap(find.text('Vehicle issue'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Continue'));
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<String>('scheduled-cancel-not-counted')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey<String>('scheduled-late-cancel')),
+        findsNothing);
+    await _confirmCancel(tester);
+    expect(ScheduledRideStore.lateCancelsInPeriod(), 0);
   });
 
   testWidgets('too many late cancels pause Scheduled rides until a date', (

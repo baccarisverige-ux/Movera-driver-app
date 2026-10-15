@@ -376,7 +376,7 @@ void main() {
       expect(
         find.descendant(
           of: card,
-          matching: find.text('Pickup soon · no driver yet'),
+          matching: find.text('Pickup soon'),
         ),
         findsOneWidget,
       );
