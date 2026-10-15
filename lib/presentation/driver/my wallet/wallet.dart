@@ -1,21 +1,29 @@
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
+
+Widget _solarIcon(String asset, {double size = 20, Color color = const Color(0xFF1F2933)}) =>
+    SvgPicture.asset(
+      asset,
+      width: size,
+      height: size,
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+    );
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
 
-  static const Color _page = Color(0xFFF7F9F8);
+  static const Color _page = Color(0xFFFFFFFF);
   static const Color _white = Color(0xFFFFFFFF);
-  static const Color _green = Color(0xFF235F49);
-  static const Color _greenMid = Color(0xFF4A876F);
-  static const Color _mint = Color(0xFFEAF4EF);
-  static const Color _mintStrong = Color(0xFFDCEDE5);
-  static const Color _blueSoft = Color(0xFFEAF1F6);
-  static const Color _text = Color(0xFF26312B);
-  static const Color _muted = Color(0xFF7C8982);
-  static const Color _line = Color(0xFFE4EAE7);
+  static const Color _tile = Color(0xFFF4F5F6);
+  static const Color _text = Color(0xFF1F2933);
+  static const Color _subtle = Color(0xFF5F6B72);
+  static const Color _muted = Color(0xFF7C868D);
+  static const Color _dot = Color(0xFF9AA3A8);
+  static const Color _line = Color(0xFFECEEF0);
 
   @override
   Widget build(BuildContext context) {
@@ -59,18 +67,17 @@ class WalletScreen extends StatelessWidget {
         child: Row(
           children: [
             Material(
-              color: const Color(0xFFF0F3F1),
-              shape: const CircleBorder(),
+              color: _white,
+              shape: const CircleBorder(side: BorderSide(color: _line)),
               child: InkWell(
+                key: const ValueKey<String>('wallet-back'),
                 onTap: () => popOwned(context),
                 customBorder: const CircleBorder(),
-                child: const SizedBox(
+                child: SizedBox(
                   height: 42,
                   width: 42,
-                  child: Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: _text,
-                    size: 18,
+                  child: Center(
+                    child: _solarIcon(AppAssets.solarAltArrowLeft),
                   ),
                 ),
               ),
@@ -99,20 +106,9 @@ class WalletScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF3FAF7), Color(0xFFE6F3ED)],
-        ),
+        color: _white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFD8E9E1)),
-        boxShadow: [
-          BoxShadow(
-            color: _green.withValues(alpha: 0.07),
-            blurRadius: 20,
-            offset: const Offset(0, 9),
-          ),
-        ],
+        border: Border.all(color: _line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,8 +124,9 @@ class WalletScreen extends StatelessWidget {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: _white.withValues(alpha: 0.88),
+                  color: _white,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _line),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -139,7 +136,7 @@ class WalletScreen extends StatelessWidget {
                       height: 7,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Color(0xFF55B38A),
+                          color: _dot,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -149,9 +146,9 @@ class WalletScreen extends StatelessWidget {
                       child: Text(
                         'Preview only',
                         style: TextStyle(
-                          color: _green,
+                          color: _text,
                           fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -161,15 +158,12 @@ class WalletScreen extends StatelessWidget {
               Container(
                 width: 34,
                 height: 34,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: _white.withValues(alpha: 0.88),
+                  color: _tile,
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: const Icon(
-                  Icons.account_balance_wallet_outlined,
-                  color: _green,
-                  size: 18,
-                ),
+                child: _solarIcon(AppAssets.solarWallet),
               ),
             ],
           ),
@@ -212,11 +206,12 @@ class WalletScreen extends StatelessWidget {
           Container(
             width: 38,
             height: 38,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: _mintStrong,
+              color: _tile,
               borderRadius: BorderRadius.circular(13),
             ),
-            child: const Icon(Icons.autorenew_rounded, color: _green, size: 20),
+            child: _solarIcon(AppAssets.solarRefresh),
           ),
           const SizedBox(width: 11),
           const Expanded(
@@ -246,15 +241,16 @@ class WalletScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
-              color: _mint,
+              color: _white,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _line),
             ),
             child: const Text(
               'Not set',
               style: TextStyle(
-                color: _green,
+                color: _subtle,
                 fontSize: 10.5,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -289,7 +285,7 @@ class WalletScreen extends StatelessWidget {
               child: Text(
                 action,
                 style: const TextStyle(
-                  color: _greenMid,
+                  color: _text,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
@@ -348,15 +344,12 @@ class WalletScreen extends StatelessWidget {
                   Container(
                     width: 42,
                     height: 42,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: _blueSoft,
+                      color: _tile,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(
-                      Icons.account_balance_outlined,
-                      color: Color(0xFF496C86),
-                      size: 21,
-                    ),
+                    child: _solarIcon(AppAssets.solarCard, size: 21),
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
@@ -383,11 +376,7 @@ class WalletScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Icon(
-                    Icons.info_outline_rounded,
-                    color: _muted,
-                    size: 20,
-                  ),
+                  _solarIcon(AppAssets.solarInfoCircle, color: _subtle),
                 ],
               ),
             ),

@@ -16,6 +16,18 @@ class AppAssets {
   static const String navMessagesSquare = 'assets/icons/nav_messages_square.svg';
   static const String solarMedalRibbonStar = 'assets/icons/solar_medal_ribbon_star.svg';
   static const String solarBillList = 'assets/icons/solar_bill_list.svg';
+  // Solar (CC BY 4.0) — Earnings & Wallet pages, see assets/icons/SOLAR_LICENSE.txt
+  static const String solarAltArrowLeft = 'assets/icons/solar_alt_arrow_left.svg';
+  static const String solarAltArrowRight = 'assets/icons/solar_alt_arrow_right.svg';
+  static const String solarWallet = 'assets/icons/solar_wallet.svg';
+  static const String solarGraphUp = 'assets/icons/solar_graph_up.svg';
+  static const String solarClockCircle = 'assets/icons/solar_clock_circle.svg';
+  static const String solarCar = 'assets/icons/solar_car.svg';
+  static const String solarList = 'assets/icons/solar_list.svg';
+  static const String solarRefresh = 'assets/icons/solar_refresh.svg';
+  static const String solarCard = 'assets/icons/solar_card.svg';
+  static const String solarInfoCircle = 'assets/icons/solar_info_circle.svg';
+  static const String solarTuning2 = 'assets/icons/solar_tuning_2.svg';
   static const String navScheduledRide = 'assets/icons/nav_scheduled_ride.png';
   static const String navScheduledRideAlert =
       'assets/icons/nav_scheduled_ride_alert.png';
