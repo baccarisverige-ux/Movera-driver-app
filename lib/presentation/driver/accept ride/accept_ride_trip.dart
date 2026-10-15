@@ -82,6 +82,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         case ActiveRideStage.waitingForRider:
           unawaited(_focusWaitingPickup());
         case ActiveRideStage.onTrip:
+          _rideCheckDetector.startTrip(_rideCheckNow);
           if (_onTripRadarState != _OnTripRadarState.secured) {
             _startOnTripRadar();
           }
@@ -470,6 +471,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       final mappedRoute = route;
       final routeCleared = route == null && _roadGeoPoints.isNotEmpty;
       if (!routeCleared && !pointsChanged && status == _locationStatus) { return; }
+      if (pointsChanged && mappedRoute != null) { _rideCheckPlan(mappedRoute); }
       _rebuild(() {
         if (pointsChanged && mappedRoute != null) {
           _roadGeoPoints = mappedRoute.points;
@@ -574,6 +576,7 @@ extension _AcceptRideTrip on _AcceptRideState {
 
       if (_stage == ActiveRideStage.onTrip) {
         _maybeScheduleOnTripRadarDemoOffer();
+        _rideCheckObserve();
       }
     }
     Future<void> _refreshRoadRoute({bool force = false}) async {
@@ -599,6 +602,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!mounted) { return; }
 
       final route = _navigation.route;
+      if (route != null && route.points.length >= 2) { _rideCheckPlan(route); }
       _rebuild(() {
         if (route != null && route.points.length >= 2) {
           _roadGeoPoints = route.points;
@@ -691,6 +695,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           _nextTripRadarDemoTimer?.cancel();
           _nextTripRadarMatchTimer?.cancel();
           _onTripStartedAt = DateTime.now();
+          _rideCheckDetector.startTrip(_rideCheckNow);
           await _rideLifecycle.persistNow();
           _onTripRadarState = _OnTripRadarState.scanning;
           _nextTripRadarOffer = null;
@@ -714,6 +719,14 @@ extension _AcceptRideTrip on _AcceptRideState {
           if (_stopCursor < widget.stopAddresses.length) {
             _stageTransitioning = false;
             return;
+          }
+          final farDrop = _rideCheckFarDrop();
+          if (farDrop != null) {
+            // Ask first; the trip finishes once the driver has answered.
+            _stageTransitioning = false;
+            await _rideCheck.open(farDrop, instant: MediaQuery.disableAnimationsOf(context));
+            if (!mounted || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
+            _stageTransitioning = true;
           }
           if (_tripEndedTooQuickly) {
             _stageTransitioning = false;
@@ -1261,5 +1274,68 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (navigator.canPop()) {
         navigator.pop();
       }
+    }
+    // Ride check: the trip screen feeds the detector, and opens the card
+    // when a trigger fires. Never during pickup, and never on top of an open card.
+    DateTime get _rideCheckNow => _rideCheckServices!.now();
+    bool get _rideCheckWatching => mounted && _stage == ActiveRideStage.onTrip &&
+        !_rideCheck.active && !_rideLifecycle.terminal &&
+        !_completionInFlight && !_cancellationInFlight;
+    /// Waiting at a stop or close to the next point is not a long stop.
+    bool get _rideCheckAtPlannedStop {
+      if (_paidStopWait) { return true; }
+      final target = _routeTarget;
+      return target != null && GeoPointMaps.fromLatLng(_driverPosition).distanceMetersTo(
+        GeoPointMaps.fromLatLng(target)) <= RideCheckRules.plannedStopRadiusMeters;
+    }
+    String? get _rideCheckPlace {
+      final road = _navigation.snapshot.banner?.roadName?.trim();
+      return road == null || road.isEmpty ? null : road;
+    }
+    SafetyAlertTrip _safetyAlertTrip() => SafetyAlertTrip(
+      tripId: widget.offerId, riderName: widget.riderName, riderRating: widget.riderRating,
+      pickup: widget.pickupAddress, dropoff: widget.dropoffAddress, fare: widget.fare,
+      category: widget.category, driverName: 'Movera Driver', vehicle: _vehicleLabel,
+      plate: _vehiclePlate,
+      position: _hasLiveLocation ? GeoPointMaps.fromLatLng(_driverPosition) : null);
+    void _openRideCheck(RideCheckEvent? event) {
+      if (event == null || !mounted) { return; }
+      unawaited(_rideCheck.open(event, instant: MediaQuery.disableAnimationsOf(context)));
+    }
+    void _rideCheckPlan(RoadRoute route) {
+      if (_stage != ActiveRideStage.onTrip || _paidStopWait) { return; }
+      _rideCheckDetector.planLeg('$_stopCursor', route.points, route.durationSeconds,
+        wholeTrip: widget.stopAddresses.isEmpty);
+    }
+    void _rideCheckObserve() {
+      if (!_rideCheckWatching || !_hasLiveLocation) { return; }
+      _openRideCheck(_rideCheckDetector.observe(GeoPointMaps.fromLatLng(_driverPosition), _rideCheckNow,
+        atPlannedStop: _rideCheckAtPlannedStop, place: _rideCheckPlace, destination: _onwardAddress));
+    }
+    /// GPS can stay quiet while the car stands still.
+    void _rideCheckTick() {
+      if (!_rideCheckWatching || _liveUpdatesPaused) { return; }
+      _openRideCheck(_rideCheckDetector.tick(_rideCheckNow, gps: _hasLiveLocation,
+        atPlannedStop: _rideCheckAtPlannedStop, place: _rideCheckPlace));
+    }
+    /// Possible-crash hook: a very hard stop from a motion sensor adapter.
+    void _rideCheckHardStop(DateTime at) {
+      if (!_rideCheckWatching) { return; }
+      _openRideCheck(_rideCheckDetector.hardStop(at, place: _rideCheckPlace));
+    }
+    /// Dropped far away: the trip is finished away from the drop-off. Demo
+    /// arrival is simulated, so its position says nothing about the drop-off.
+    RideCheckEvent? _rideCheckFarDrop() {
+      if (_arrivalDemo || _rideCheck.active || !_hasLiveLocation ||
+          _lastLocation?.isUsableAt(DateTime.now()) != true) { return null; }
+      return _rideCheckDetector.finish(driver: GeoPointMaps.fromLatLng(_driverPosition),
+        dropoff: GeoPointMaps.fromLatLng(widget.dropoffPosition),
+        dropoffAddress: widget.dropoffAddress, at: _rideCheckNow);
+    }
+    /// Demo tools on the island: shows the card for [trigger].
+    void _openRideCheckDemo(RideCheckTrigger trigger) {
+      if (!mounted || _rideCheck.active || _rideLifecycle.terminal) { return; }
+      _openRideCheck(_rideCheckDetector.demo(trigger, _rideCheckNow,
+        place: _rideCheckPlace, destination: widget.dropoffAddress));
     }
 }

@@ -8,6 +8,8 @@ import 'island_icons.dart';
 import 'island_waiting_motion.dart';
 
 import 'package:movera/core/routing/route_instruction.dart';
+import 'package:movera/core/safety/ride_check.dart';
+import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_banner.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 import 'package:movera/presentation/driver/accept%20ride/island_morph.dart';
@@ -43,7 +45,16 @@ class AdaptiveTripIsland extends StatefulWidget {
     required this.onRoute,
     required this.onSafety,
     required this.onWait,
+    this.rideCheck = false,
+    this.onRideCheckDemo,
   });
+
+  /// A Ride check is open: the island turns into its pulsing pill and the
+  /// card grows from there (see [RideCheckLayer]).
+  final bool rideCheck;
+
+  /// Demo tools: opens the Ride check card for a trigger.
+  final ValueChanged<RideCheckTrigger>? onRideCheckDemo;
 
   final NavigationBanner? banner;
   final String status, address, detail, eta, waitingMessage, lastTripLabel;
@@ -182,7 +193,10 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
         Size size;
         double? radius;
         Widget content;
-        if (_controller.defaultFace) {
+        if (widget.rideCheck) {
+          size = RideCheckPillFace.sizeFor(available);
+          content = const RideCheckPillFace();
+        } else if (_controller.defaultFace) {
           size = home;
           content = TripIsland(
             key: const ValueKey('trip-default-island'),
@@ -282,7 +296,9 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
             ),
           );
         }
-        final face = _controller.defaultFace
+        final face = widget.rideCheck
+            ? 'ride-check'
+            : _controller.defaultFace
             ? 'default'
             : presentation.identity;
         return Align(
@@ -293,12 +309,12 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
             onPointerUp: (_) => _controller.release(),
             onPointerCancel: (_) => _controller.release(),
             child: GestureDetector(
-              onLongPress: waiting ? null : _showTools,
+              onLongPress: waiting || widget.rideCheck ? null : _showTools,
               child: IslandMorph(
                 size: size,
                 radius: radius,
                 // The Home island draws its own shell: no double outline.
-                shell: !_controller.defaultFace,
+                shell: widget.rideCheck || !_controller.defaultFace,
                 face: face,
                 reducedMotion: MediaQuery.disableAnimationsOf(context),
                 child: content,
@@ -655,7 +671,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => SafeArea(
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
@@ -686,7 +703,35 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
                 widget.paidByCash ? 'Cash: collect in the car' : 'Paid by card',
               ),
             ),
+            if (widget.onRideCheckDemo != null) ...[
+              const Divider(height: 1),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 2),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Ride check demo',
+                    style: TextStyle(
+                      color: Color(0xFF7D898F),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              for (final (trigger, icon) in _rideCheckDemos)
+                ListTile(
+                  key: ValueKey('ride-check-demo-${trigger.name}'),
+                  leading: RideCheckStyle.icon(
+                    icon,
+                    color: const Color(0xFF45525A),
+                  ),
+                  title: Text('Demo: ${trigger.label.toLowerCase()}'),
+                  onTap: () => popOwned(context, 'ride-check-${trigger.name}'),
+                ),
+            ],
           ],
+          ),
         ),
       ),
     );
@@ -699,7 +744,17 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
       case 'radar':
         widget.onRadar();
     }
+    for (final trigger in RideCheckTrigger.values) {
+      if (action == 'ride-check-${trigger.name}') {
+        widget.onRideCheckDemo?.call(trigger);
+      }
+    }
   }
+
+  static final _rideCheckDemos = [
+    for (final trigger in RideCheckTrigger.values)
+      (trigger, RideCheckStyle.triggerIcon(trigger)),
+  ];
 
   /// Route fraction belongs to the active leg. Waiting uses its own activity lane.
   Widget _routeProgress(Color accent, bool available) => Semantics(

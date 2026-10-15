@@ -1,5 +1,7 @@
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/emergency_dial.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -152,7 +154,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                               ),
                               SizedBox(height: 3),
                               Text(
-                                'Preview only. These safeguards are not active.',
+                                'Ride check is on. The others are preview only.',
                                 style: TextStyle(
                                   color: _muted,
                                   fontSize: 11,
@@ -188,10 +190,12 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                     ),
                     const SizedBox(height: 10),
                     _preferenceTile(
-                      icon: Icons.route_outlined,
-                      title: 'RideCheck alerts',
-                      subtitle: 'Unavailable without route monitoring',
-                      value: false,
+                      key: const ValueKey('ride-check-preference'),
+                      icon: Icons.shield_outlined,
+                      leading: _rideCheckIcon(),
+                      title: 'Ride check',
+                      subtitle: 'On · set by Movera for every trip',
+                      value: true,
                       onChanged: null,
                     ),
                   ],
@@ -204,14 +208,93 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
     );
   }
 
+  static Widget _rideCheckIcon({double size = 21}) => SvgPicture.asset(
+    AppAssets.solarShieldWarning,
+    width: size,
+    height: size,
+    colorFilter: const ColorFilter.mode(Color(0xFF4D5A61), BlendMode.srcIn),
+  );
+
+  /// Ride check is live: what it checks, in short.
+  Widget _rideCheckInfo() => Container(
+    key: const ValueKey('ride-check-info'),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(19),
+      border: Border.all(color: _line),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _rideCheckIcon(size: 22),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Ride check',
+                      style: TextStyle(
+                        color: _ink,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE7F4EE),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: const Text(
+                      'On',
+                      style: TextStyle(
+                        color: _green,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'On for every trip. Asks "Is everything OK?" after a long '
+                'stop, a drop-off far from the destination, a big detour or '
+                'a very hard stop.',
+                style: TextStyle(
+                  color: _muted,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w500,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
   Widget _preferenceTile({
+    Key? key,
     required IconData icon,
+    Widget? leading,
     required String title,
     required String subtitle,
     required bool value,
     required ValueChanged<bool>? onChanged,
   }) {
     return Container(
+      key: key,
       padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -220,7 +303,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF4D5A61), size: 21),
+          leading ?? Icon(icon, color: const Color(0xFF4D5A61), size: 21),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -388,6 +471,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                 ),
               ],
               const SizedBox(height: 14),
+              _rideCheckInfo(),
+              const SizedBox(height: 10),
               Material(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(19),
@@ -422,7 +507,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                               ),
                               SizedBox(height: 3),
                               Text(
-                                'Unavailable in this demo',
+                                'Ride check on · the others are preview only',
                                 style: TextStyle(
                                   color: _muted,
                                   fontSize: 10,

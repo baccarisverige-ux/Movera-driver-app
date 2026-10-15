@@ -78,7 +78,7 @@ void main() {
     preferences();
     await tester.pumpAndSettle();
     expect(
-      find.text('Preview only. These safeguards are not active.'),
+      find.text('Ride check is on. The others are preview only.'),
       findsOneWidget,
     );
     await tester.pumpWidget(const SizedBox());
