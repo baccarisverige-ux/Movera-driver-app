@@ -3,9 +3,19 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
+
+Widget _solarIcon(String asset, {double size = 18, Color color = const Color(0xFF1F2933)}) =>
+    SvgPicture.asset(
+      asset,
+      width: size,
+      height: size,
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+    );
 
 class DriverRideHistory extends StatefulWidget {
   const DriverRideHistory({super.key, this.loadHistory});
@@ -20,11 +30,11 @@ enum _HistoryView { overview, rides }
 enum _HistoryPeriod { today, week, month }
 
 class _DriverRideHistoryState extends State<DriverRideHistory> {
-  static const Color _ink = Color(0xFF252E3A);
-  static const Color _muted = Color(0xFF7D898F);
-  static const Color _green = Color(0xFF315E4D);
-  static const Color _mint = Color(0xFF58E5A6);
-  static const Color _line = Color(0xFFE7EBE9);
+  static const Color _ink = Color(0xFF1F2933);
+  static const Color _muted = Color(0xFF7C868D);
+  static const Color _subtle = Color(0xFF5F6B72);
+  static const Color _tile = Color(0xFFF4F5F6);
+  static const Color _line = Color(0xFFECEEF0);
 
   _HistoryView _view = _HistoryView.overview;
   _HistoryPeriod _period = _HistoryPeriod.week;
@@ -151,7 +161,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         if (!didPop && _view == _HistoryView.rides) _showOverview();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFFBFCFB),
+        backgroundColor: Colors.white,
         body: SafeArea(
           bottom: false,
           child: Column(
@@ -218,18 +228,12 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         children: [
           Material(
             color: Colors.white,
-            elevation: 1,
-            shadowColor: Colors.black.withValues(alpha: 0.08),
-            shape: const CircleBorder(),
+            shape: const CircleBorder(side: BorderSide(color: _line)),
             child: IconButton(tooltip: 'Back', 
               onPressed: _view == _HistoryView.rides
                   ? _showOverview
                   : _closeHistory,
-              icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: 17,
-                color: _ink,
-              ),
+              icon: _solarIcon(AppAssets.solarAltArrowLeft, size: 20),
             ),
           ),
           const SizedBox(width: 12),
@@ -270,15 +274,12 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
             Container(
               height: 36,
               width: 36,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: const Color(0xFFF0F3F2),
+                color: _tile,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
-                Icons.tune_rounded,
-                size: 18,
-                color: _ink,
-              ),
+              child: _solarIcon(AppAssets.solarTuning2),
             ),
         ],
       ),
@@ -301,7 +302,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           children: [
             Expanded(
               child: _MetricCard(
-                icon: Icons.schedule_rounded,
+                icon: AppAssets.solarClockCircle,
                 label: 'Online',
                 value: _periodHours,
               ),
@@ -309,7 +310,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
             const SizedBox(width: 10),
             Expanded(
               child: _MetricCard(
-                icon: Icons.local_taxi_outlined,
+                icon: AppAssets.solarCar,
                 label: 'Rides',
                 value: _periodRides,
               ),
@@ -346,24 +347,24 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               key: const ValueKey<String>('history-all-rides-button'),
               onPressed: _showAllRides,
               style: TextButton.styleFrom(
-                foregroundColor: _green,
+                foregroundColor: _ink,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,
                   vertical: 6,
                 ),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  const Text(
                     'All rides',
                     style: TextStyle(
                       fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(width: 3),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 10),
+                  const SizedBox(width: 3),
+                  _solarIcon(AppAssets.solarAltArrowRight, size: 14),
                 ],
               ),
             ),
@@ -382,7 +383,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           child: OutlinedButton.icon(
             key: const ValueKey<String>('history-view-all-rides'),
             onPressed: _showAllRides,
-            icon: const Icon(Icons.list_alt_rounded, size: 18),
+            icon: _solarIcon(AppAssets.solarList),
             label: Text('View all $visibleRideCount rides'),
             style: OutlinedButton.styleFrom(
               foregroundColor: _ink,
@@ -393,7 +394,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               ),
               textStyle: const TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -418,16 +419,13 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         Container(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F3),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _line),
           ),
           child: Row(
             children: [
-              const Icon(
-                Icons.receipt_long_outlined,
-                color: _green,
-                size: 18,
-              ),
+              _solarIcon(AppAssets.solarBillList),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -442,7 +440,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               Text(
                 _periodEarnings,
                 style: const TextStyle(
-                  color: _green,
+                  color: _ink,
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
                 ),
@@ -478,7 +476,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       height: 40,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F3F2),
+        color: _tile,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -515,32 +513,21 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 15, 16, 15),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF1F7F3),
-              Color(0xFFEAF3EE),
-            ],
-          ),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFDCE8E1)),
+          border: Border.all(color: _line),
         ),
         child: Row(
           children: [
             Container(
               height: 48,
               width: 48,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _tile,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFDCE5E0)),
               ),
-              child: const Icon(
-                Icons.account_balance_wallet_outlined,
-                color: _green,
-                size: 21,
-              ),
+              child: _solarIcon(AppAssets.solarWallet, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -570,26 +557,24 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
                   const Text(
                     'Recorded fares',
                     style: TextStyle(
-                      color: _green,
+                      color: _subtle,
                       fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
               ),
             ),
             Container(
-              height: 34,
-              width: 34,
-              decoration: const BoxDecoration(
-                color: _mint,
+              height: 38,
+              width: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white,
                 shape: BoxShape.circle,
+                border: Border.all(color: _line),
               ),
-              child: const Icon(
-                Icons.trending_up_rounded,
-                color: Color(0xFF1F4B3C),
-                size: 18,
-              ),
+              child: _solarIcon(AppAssets.solarGraphUp),
             ),
           ],
         ),
@@ -654,8 +639,8 @@ class _PeriodButton extends StatelessWidget {
             label,
             style: TextStyle(
               color: selected
-                  ? const Color(0xFF252E3A)
-                  : const Color(0xFF7D898F),
+                  ? const Color(0xFF1F2933)
+                  : const Color(0xFF7C868D),
               fontSize: 11.5,
               fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
             ),
@@ -673,7 +658,7 @@ class _MetricCard extends StatelessWidget {
     required this.value,
   });
 
-  final IconData icon;
+  final String icon;
   final String label;
   final String value;
 
@@ -684,22 +669,19 @@ class _MetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: const Color(0xFFE7EBE9)),
+        border: Border.all(color: const Color(0xFFECEEF0)),
       ),
       child: Row(
         children: [
           Container(
             height: 34,
             width: 34,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F4F3),
+              color: const Color(0xFFF4F5F6),
               borderRadius: BorderRadius.circular(11),
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF4E5B55),
-              size: 18,
-            ),
+            child: _solarIcon(icon),
           ),
           const SizedBox(width: 9),
           Expanded(
@@ -709,7 +691,7 @@ class _MetricCard extends StatelessWidget {
                 Text(
                   label,
                   style: const TextStyle(
-                    color: Color(0xFF7D898F),
+                    color: Color(0xFF7C868D),
                     fontSize: 9.5,
                     fontWeight: FontWeight.w600,
                   ),
@@ -720,7 +702,7 @@ class _MetricCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: Color(0xFF252E3A),
+                    color: Color(0xFF1F2933),
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
                   ),
@@ -755,8 +737,8 @@ class _BreakdownRow extends StatelessWidget {
             label,
             style: TextStyle(
               color: strong
-                  ? const Color(0xFF252E3A)
-                  : const Color(0xFF6F7B82),
+                  ? const Color(0xFF1F2933)
+                  : const Color(0xFF7C868D),
               fontSize: strong ? 12.5 : 11.5,
               fontWeight: strong ? FontWeight.w900 : FontWeight.w600,
             ),
@@ -765,7 +747,7 @@ class _BreakdownRow extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            color: valueColor ?? const Color(0xFF252E3A),
+            color: valueColor ?? const Color(0xFF1F2933),
             fontSize: strong ? 13 : 11.5,
             fontWeight: strong ? FontWeight.w900 : FontWeight.w800,
           ),
@@ -810,7 +792,7 @@ class _HistoryRideCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: const Color(0xFFE7EBE9)),
+        border: Border.all(color: const Color(0xFFECEEF0)),
       ),
       child: Column(
         children: [
@@ -819,15 +801,12 @@ class _HistoryRideCard extends StatelessWidget {
               Container(
                 height: compact ? 34 : 38,
                 width: compact ? 34 : 38,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F4F2),
+                  color: const Color(0xFFF4F5F6),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.local_taxi_rounded,
-                  color: Color(0xFF315E4D),
-                  size: 18,
-                ),
+                child: _solarIcon(AppAssets.solarCar),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -839,7 +818,7 @@ class _HistoryRideCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF252E3A),
+                        color: Color(0xFF1F2933),
                         fontSize: 12.5,
                         fontWeight: FontWeight.w800,
                       ),
@@ -850,7 +829,7 @@ class _HistoryRideCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF7D898F),
+                        color: Color(0xFF7C868D),
                         fontSize: 9.5,
                         fontWeight: FontWeight.w600,
                       ),
@@ -865,7 +844,7 @@ class _HistoryRideCard extends StatelessWidget {
                   Text(
                     ride.earnings,
                     style: const TextStyle(
-                      color: Color(0xFF252E3A),
+                      color: Color(0xFF1F2933),
                       fontSize: 12.5,
                       fontWeight: FontWeight.w900,
                     ),
@@ -874,7 +853,7 @@ class _HistoryRideCard extends StatelessWidget {
                   Text(
                     ride.time,
                     style: const TextStyle(
-                      color: Color(0xFF8B969B),
+                      color: Color(0xFF7C868D),
                       fontSize: 9.5,
                       fontWeight: FontWeight.w600,
                     ),
@@ -892,7 +871,7 @@ class _HistoryRideCard extends StatelessWidget {
                   width: 6,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: Color(0xFF58E5A6),
+                      color: Color(0xFF9AA3A8),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -901,7 +880,7 @@ class _HistoryRideCard extends StatelessWidget {
                 Text(
                   ride.status == TripStatus.completed ? 'Completed' : ride.status.wireName,
                   style: TextStyle(
-                    color: Color(0xFF315E4D),
+                    color: Color(0xFF5F6B72),
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
                   ),
