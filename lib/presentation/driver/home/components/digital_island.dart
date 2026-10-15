@@ -571,7 +571,7 @@ class _DigitalMessageFaceState extends State<DigitalMessageFace>
             ),
             child: Icon(widget.icon, size: 14, color: color),
           );
-    return Center(
+    final face = Center(
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -586,6 +586,17 @@ class _DigitalMessageFaceState extends State<DigitalMessageFace>
                 color: Color(0xFF9AA4AA))) : null),
         ],
       ),
+    );
+    // While the island morphs it can be narrower than the lamp and arrow
+    // for a frame; the face is clipped then instead of overflowing.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const least = 2 * (DigitalMessageFace._lamp + DigitalMessageFace._gap);
+        if (constraints.maxWidth >= least) { return face; }
+        return ClipRect(
+          child: OverflowBox(minWidth: 0, maxWidth: least, child: face),
+        );
+      },
     );
   }
 }
