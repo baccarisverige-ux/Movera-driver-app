@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 
 /// What the island says, in one place. Kept to the essential words so the
@@ -72,6 +72,20 @@ class HomeIslandNotices {
   static const IslandMessage newReservation = IslandMessage(
     title: 'New reservation',
     group: 'reservation',
+  );
+
+  /// An Exclusive offer arrives on Home: info blue, with a bolt.
+  static const IslandMessage exclusiveRide = IslandMessage(
+    title: 'Exclusive ride',
+    icon: Icons.bolt_rounded,
+    group: 'exclusive',
+  );
+
+  /// The Exclusive offer is a reservation close to pickup.
+  static const IslandMessage exclusiveReservation = IslandMessage(
+    title: 'Exclusive reservation',
+    icon: Icons.bolt_rounded,
+    group: 'exclusive',
   );
 
   static const IslandMessage reservationAccepted = IslandMessage(

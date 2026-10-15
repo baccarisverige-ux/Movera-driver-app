@@ -500,7 +500,7 @@ void main() {
       // Exclusive Radar offer uses its own exclusive surface.
       await tester.pump(const Duration(milliseconds: 2300));
       expect(find.text('104,80 kr'), findsOneWidget);
-      expect(find.text('Exclusive offer for you · nearby'), findsOneWidget);
+      expect(find.text('Only for you · nearby'), findsOneWidget);
       expect(
         find.byKey(const ValueKey<String>('radar-home-deck')),
         findsNothing,
@@ -515,7 +515,7 @@ void main() {
         const ValueKey<String>('radar-offer-card-nearby-1'),
       );
       expect(card, findsOneWidget);
-      expect(find.text('Exclusive offer for you · nearby'), findsNothing);
+      expect(find.text('Only for you · nearby'), findsNothing);
       // While Radar offers show, the radar reads Accept for the front card.
       expect(
         find.byKey(const ValueKey<String>('home-radar-accept')),
@@ -1224,7 +1224,7 @@ void main() {
     // Advance beyond the first direct-offer timer. Nothing may appear offline.
     await tester.pump(const Duration(milliseconds: 4200));
     expect(find.text('104,80 kr'), findsNothing);
-    expect(find.text('Exclusive offer for you · nearby'), findsNothing);
+    expect(find.text('Only for you · nearby'), findsNothing);
     expect(find.text('OFF'), findsOneWidget);
     _expectNoException(tester);
   });
@@ -1249,7 +1249,7 @@ void main() {
     }
 
     expect(find.text('104,80 kr'), findsNothing);
-    expect(find.text('Exclusive offer for you · nearby'), findsNothing);
+    expect(find.text('Only for you · nearby'), findsNothing);
     expect(find.text('LIVE'), findsOneWidget);
     _expectNoException(tester);
   });
@@ -1584,7 +1584,7 @@ void main() {
       await tester.tap(find.text('OFF'));
       await tester.pump(const Duration(milliseconds: 3800));
 
-      expect(find.text('Exclusive offer for you · nearby'), findsOneWidget);
+      expect(find.text('Only for you · nearby'), findsOneWidget);
       expect(
         find.byKey(const ValueKey<String>('trip-radar-touch-target')),
         findsNothing,
@@ -1684,7 +1684,7 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 3800));
 
-    expect(find.text('Exclusive offer for you · nearby'), findsOneWidget);
+    expect(find.text('Only for you · nearby'), findsOneWidget);
     expect(safetyPosition().bottom, 138);
     _expectNoException(tester);
   });
@@ -1777,7 +1777,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 3800));
 
       expect(find.text('104,80 kr'), findsOneWidget);
-      expect(find.text('Exclusive offer for you · nearby'), findsOneWidget);
+      expect(find.text('Only for you · nearby'), findsOneWidget);
 
       final route = tester.widget<TextButton>(
         find.byKey(const ValueKey<String>('direct-offer-route')),
@@ -2432,7 +2432,7 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 3800));
 
-    expect(find.text('Exclusive offer for you · nearby'), findsOneWidget);
+    expect(find.text('Only for you · nearby'), findsOneWidget);
     expect(find.textContaining(RegExp(r'^\d+s$')), findsOneWidget);
     expect(
       find.byKey(const ValueKey<String>('direct-offer-countdown-fill')),
@@ -2451,7 +2451,60 @@ void main() {
     await tester.pump(const Duration(milliseconds: 3800));
 
     expect(find.text('104,80 kr'), findsOneWidget);
-    expect(find.text('Exclusive offer for you · nearby'), findsOneWidget);
+    expect(find.text('Only for you · nearby'), findsOneWidget);
+    _expectNoException(tester);
+  });
+
+  testWidgets('Exclusive offer on Home: Radar-style card and an island note', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pumpHome(tester, const Size(375, 812));
+
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 3800));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // The card: Comfort badge, black Exclusive mark, × to hide; card
+    // payment, so no Cash badge, and not a reservation.
+    final card = find.byKey(
+      const ValueKey<String>('exclusive-offer-card-home-direct-close'),
+    );
+    expect(card, findsOneWidget);
+    Finder inCard(Finder finder) =>
+        find.descendant(of: card, matching: finder);
+    expect(inCard(find.text('Exclusive')), findsOneWidget);
+    expect(inCard(find.text('Comfort')), findsOneWidget);
+    expect(inCard(find.text('Cash')), findsNothing);
+    expect(inCard(find.textContaining('Reservation')), findsNothing);
+    expect(inCard(find.byTooltip('Hide offer')), findsOneWidget);
+
+    // The island says it too: info blue, with a bolt instead of the "i".
+    expect(
+      IslandMessages.posted.map((m) => m.title),
+      contains('Exclusive ride'),
+    );
+    final face = find.byType(DigitalMessageFace);
+    expect(find.descendant(of: face, matching: find.text('Exclusive ride')),
+        findsOneWidget);
+    expect(
+      find.descendant(of: face, matching: find.byIcon(Icons.bolt_rounded)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: face,
+        matching: find.byIcon(Icons.info_outline_rounded),
+      ),
+      findsNothing,
+    );
+    _expectNoException(tester);
+
+    // × hides it and the radar comes back.
+    await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Only for you · nearby'), findsNothing);
+    expect(find.text('LIVE'), findsOneWidget);
     _expectNoException(tester);
   });
 

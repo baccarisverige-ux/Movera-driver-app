@@ -14,7 +14,7 @@ import 'package:movera/core/session/driver_route_observer.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-
+import 'package:movera/widgets/exclusive_offer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -312,7 +312,7 @@ class _DriverHomeState extends State<DriverHome>
     id: 'home-direct-close',
     category: 'Comfort',
     reason: 'Exclusive nearby offer',
-    detail: 'Exclusive Radar priority match',
+    detail: 'Exclusive priority match',
     fare: '104,80 kr',
     rating: '4.96',
     pickupMinutes: 3,
@@ -329,7 +329,7 @@ class _DriverHomeState extends State<DriverHome>
     id: 'home-direct-expanded',
     category: 'Premium',
     reason: 'Extended coverage offer',
-    detail: 'Exclusive Radar extended match',
+    detail: 'Exclusive extended match',
     fare: '176,20 kr',
     rating: '4.98',
     pickupMinutes: 8,
@@ -359,8 +359,8 @@ class _DriverHomeState extends State<DriverHome>
     pickupPosition: LatLng(59.3362, 18.0714),
     dropoffPosition: LatLng(59.3603, 18.0009),
     reservation: true,
+    pickupTime: '07:40',
   );
-
 
   late final SheetTrace _sheetTrace = SheetTrace('home', () => _panelController.isAttached ? _panelController.panelPosition : 0);
 

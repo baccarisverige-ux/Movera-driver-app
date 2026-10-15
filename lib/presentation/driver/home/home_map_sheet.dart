@@ -1090,12 +1090,12 @@ extension _HomeMapSheet on _DriverHomeState {
       }
     }
     Widget _islandMessageView(IslandMessage message) {
-      final (color, icon) = DigitalIslandParts.toneLook(message.tone);
+      final (color, toneIcon) = DigitalIslandParts.toneLook(message.tone);
       return DigitalMessageFace(
         key: ValueKey<String>('island-message-$_islandMessageSeq'),
         title: message.title,
         color: color,
-        icon: icon,
+        icon: message.icon ?? toneIcon,
         pulse: message.live,
       );
     }

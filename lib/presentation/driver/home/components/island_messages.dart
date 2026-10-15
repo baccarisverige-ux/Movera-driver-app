@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show IconData;
 
 /// Colour and icon of a message on the top island.
 enum IslandTone { info, success, warning, alert }
@@ -30,6 +31,7 @@ class IslandMessage {
     this.onTap,
     this.live = false,
     this.group,
+    this.icon,
   });
 
   /// A few essential words, e.g. "Rider cancelled" or "Radar online".
@@ -46,6 +48,10 @@ class IslandMessage {
   /// Messages of one group replace each other at once: "Matching trip"
   /// gives way to "Trip matched" without waiting out its time.
   final String? group;
+
+  /// Drawn instead of the tone's own icon, in the tone's colour, e.g. a
+  /// bolt for "Exclusive ride".
+  final IconData? icon;
 }
 
 /// Messages waiting for the Home island. Any screen can post one; the
