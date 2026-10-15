@@ -233,7 +233,6 @@ class _DriverHomeState extends State<DriverHome>
   double _mainPanelPosition = 0;
   final ValueNotifier<double> _panelSlidePosition = ValueNotifier<double>(0);
 
-  static const double _homeExpandedFraction = 0.86;
   static const Duration _outsideOfferLifetime = Duration(milliseconds: 8500);
 
   /// How long a Radar trip can be picked once it shows in the Home list.
@@ -799,7 +798,10 @@ class _DriverHomeState extends State<DriverHome>
               panelSnapping: false,
               defaultPanelState: PanelState.CLOSED,
               maxHeight: _HomeMapSheet(this)._homeExpandedHeight(context),
-              parallaxEnabled: false,
+              // The map rises with the sheet, about a third as far, on the
+              // same spring.
+              parallaxEnabled: true,
+              parallaxOffset: 0.3,
               onPanelSlide: (double pos) {
                 _mainPanelPosition = pos;
                 _panelSlidePosition.value = pos;

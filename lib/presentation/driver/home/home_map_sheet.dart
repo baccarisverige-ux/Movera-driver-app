@@ -555,8 +555,10 @@ extension _HomeMapSheet on _DriverHomeState {
     /// its buttons. Every other Home sheet is closed or open, nothing else.
     bool get _homeSheetInactive => _activationHold && !isAccountActivated;
     static const double _inactiveSheetStop = 0.28;
+    /// Open, the sheet fills the screen up to the status bar.
     double _homeExpandedHeight(BuildContext context) {
-      return MediaQuery.sizeOf(context).height * _DriverHomeState._homeExpandedFraction;
+      return MediaQuery.sizeOf(context).height -
+          MediaQuery.paddingOf(context).top;
     }
     void _trackSheetPointer(PointerEvent event) {
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -1900,7 +1902,8 @@ extension _HomeMapSheet on _DriverHomeState {
           clipper: RadarSheetClipper(
             notchWidth: 126,
             notchDepth: 58 * (1 - _notchCover(position)),
-            cornerRadius: 24,
+            // The top corners flatten as the sheet reaches the top.
+            cornerRadius: 24 * (1 - ((position - 0.9) / 0.1).clamp(0.0, 1.0)),
           ),
           color: Colors.white,
           elevation: 8,

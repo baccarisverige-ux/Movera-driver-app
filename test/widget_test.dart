@@ -2462,7 +2462,10 @@ void main() {
 
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
     expect(panel.minHeight, 108);
-    expect(panel.maxHeight, closeTo(812 * 0.86, 0.5));
+    expect(panel.maxHeight, closeTo(812, 0.5),
+        reason: "Open, the sheet reaches the status bar");
+    expect(panel.parallaxEnabled, isTrue,
+        reason: "The map rises with the sheet");
     expect(panel.snapPoint, isNull, reason: 'No middle stop');
     // The sheet's own spring settles it (immediately, in the finger's
     // direction), not the panel's built-in snap.
