@@ -447,9 +447,9 @@ extension _AcceptRidePanel on _AcceptRideState {
                         ),
                         minimumSize: const Size(0, 42),
                       ),
-                      child: const Text(
-                        'Accept',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                      child: Text(
+                        driverText(DriverTexts.offerAccept),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                       ),
                     ),
                   ),
@@ -1139,9 +1139,9 @@ extension _AcceptRidePanel on _AcceptRideState {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
-              "I've arrived",
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            child: Text(
+              driverText(DriverTexts.tripArrived),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
         );
@@ -1167,9 +1167,9 @@ extension _AcceptRidePanel on _AcceptRideState {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
-              'Collect cash',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            child: Text(
+              driverText(DriverTexts.tripCollectCash),
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
         );

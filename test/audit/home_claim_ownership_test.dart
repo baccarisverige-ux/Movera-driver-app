@@ -94,7 +94,7 @@ Future<void> _mount(WidgetTester tester, _Dispatch dispatch) async {
   await tester.tap(find.text('OFF'));
   await tester.pump(const Duration(milliseconds: 1550));
   await tester.pump(const Duration(milliseconds: 2300));
-  await tester.pump(const Duration(milliseconds: 8500));
+  await tester.pump(const Duration(seconds: 15));
   await tester.pump(const Duration(milliseconds: 900));
   await tester.pump(const Duration(milliseconds: 3100));
   await _frames(tester);

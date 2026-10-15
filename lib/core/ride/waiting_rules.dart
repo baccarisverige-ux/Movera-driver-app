@@ -1,4 +1,5 @@
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
 /// Waiting at pickup (Round 3, Q19/Q20), the same rules admin sets in
 /// Dispatch › Waiting for one zone or all zones. Today the app uses
@@ -94,10 +95,9 @@ class WaitingRules {
       noShowFee: Money(minorUnits: 8500),
     ),
     this.rideTypes = const {
-      WaitingRideType.scheduled: WaitingRule(
-        label: 'Scheduled ride',
-        freeMinutes: 5,
-      ),
+      // Its free wait is the reservation policy's included waiting
+      // (ScheduledRideRules.includedWaitingMinutes).
+      WaitingRideType.scheduled: WaitingRule(label: 'Scheduled ride'),
       WaitingRideType.airport: WaitingRule(
         label: 'Airport pickup',
         freeMinutes: 15,
@@ -147,7 +147,15 @@ class WaitingRules {
     }
     final byType = rideTypes[type];
     if (byType != null) {
-      terms = terms._with(byType);
+      terms = terms._with(type == WaitingRideType.scheduled
+          ? WaitingRule(
+              label: byType.label,
+              freeMinutes: ScheduledRideRules.current.includedWaitingMinutes,
+              perMinute: byType.perMinute,
+              noShowAfterMinutes: byType.noShowAfterMinutes,
+              noShowFee: byType.noShowFee,
+            )
+          : byType);
     }
     if (pickupKm != null && pickupKm > farPickupKm) {
       final km = farPickupKm == farPickupKm.roundToDouble()

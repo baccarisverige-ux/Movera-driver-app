@@ -5,6 +5,7 @@ import 'package:flutter/physics.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
@@ -395,6 +396,10 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
   }
 
   Widget _header() {
+    // Narrow phones (320–347 px) give the picture less room, so the badges
+    // and the pickup time keep theirs.
+    return LayoutBuilder(builder: (context, constraints) {
+    final pictureWidth = constraints.maxWidth < 310 ? 72.0 : 96.0;
     return Padding(
       padding: const EdgeInsets.only(right: 40),
       child: Row(
@@ -404,11 +409,11 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'RESERVATION REQUEST',
+                Text(
+                  driverText(DriverTexts.offerReservationRequest).toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: _label,
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,
@@ -416,12 +421,12 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const FittedBox(
+                FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Your next ride',
-                    style: TextStyle(
+                    driverText(DriverTexts.offerYourNextRide),
+                    style: const TextStyle(
                       color: _ink,
                       fontSize: 26,
                       height: 1.15,
@@ -442,12 +447,15 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
                       children: [
                         _solar(AppAssets.solarCalendar, 15),
                         const SizedBox(width: 5),
-                        Text(
-                          '${request.pickupDay}, ${request.pickupTime}',
-                          style: const TextStyle(
-                            color: _text,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
+                        Flexible(
+                          child: Text(
+                            '${request.pickupDay}, ${request.pickupTime}',
+                            maxLines: 2,
+                            style: const TextStyle(
+                              color: _text,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -475,13 +483,14 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
               child: SvgPicture.asset(
                 AppAssets.orderRide,
                 key: const ValueKey<String>('reservation-picture'),
-                width: 96,
+                width: pictureWidth,
               ),
             ),
           ),
         ],
       ),
     );
+    });
   }
 
   Widget _categoryBadge() {
@@ -529,7 +538,9 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
   /// or has passed.
   String _fareLine() {
     final left = request.untilPickup((widget.clock ?? DateTime.now)());
-    final what = _show.netFare ? 'Your share' : 'Fare';
+    final what = driverText(
+      _show.netFare ? DriverTexts.offerYourShare : DriverTexts.offerFare,
+    );
     if (left == null) return what;
     // Whole minutes, rounded up: 1 h 32 min 40 s reads "1 h 33 min".
     final total = (left.inSeconds + 59) ~/ 60;
@@ -669,7 +680,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
     final rows = <Widget>[
       _stopRow(
         dot: const _StopDot.pickup(),
-        label: 'PICKUP',
+        label: driverText(DriverTexts.offerPickup).toUpperCase(),
         address: show.pickupAddress
             ? request.pickupAddress
             : RadarOfferView.area(request.pickupAddress),
@@ -687,7 +698,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
         ),
       _stopRow(
         dot: const _StopDot.dropoff(),
-        label: 'DROP-OFF',
+        label: driverText(DriverTexts.offerDropoff).toUpperCase(),
         address: show.dropoffAreaOnly
             ? RadarOfferView.area(request.dropoffAddress)
             : request.dropoffAddress,
@@ -798,9 +809,9 @@ class _ViewRouteChip extends StatelessWidget {
         children: [
           _solar(AppAssets.solarRoute, 12),
           const SizedBox(width: 4),
-          const Text(
-            'View route',
-            style: TextStyle(
+          Text(
+            driverText(DriverTexts.offerViewRoute),
+            style: const TextStyle(
               color: _ink,
               fontSize: 11.5,
               fontWeight: FontWeight.w600,

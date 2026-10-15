@@ -15,6 +15,8 @@ class DriverOfferRules {
     this.exclusiveWhileDriving = true,
     this.exclusiveWhileDrivingCount = 1,
     this.commissionRate = WaybillPayment.serviceFeeRate,
+    this.exclusiveAcceptTime = const Duration(seconds: 15),
+    this.radarTime = const Duration(seconds: 15),
   });
 
   /// The rules in use. Mirrors the admin defaults until a backend sets it.
@@ -43,6 +45,14 @@ class DriverOfferRules {
   /// Movera's share of a fare: the driver's share is the rest, and on a
   /// cash trip this is what the driver owes Movera.
   final double commissionRate;
+
+  /// Dispatch › Exclusive "time to accept": how long an Exclusive offer
+  /// waits for Accept, on Home and while driving a rider.
+  final Duration exclusiveAcceptTime;
+
+  /// Dispatch › Radar "time on the radar": how long a Radar trip on Home
+  /// can be taken before its Match fades.
+  final Duration radarTime;
 
   /// The text of Exclusive reason [id], or '' when admin switched it off
   /// or it is unknown.

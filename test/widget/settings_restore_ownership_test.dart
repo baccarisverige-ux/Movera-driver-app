@@ -34,7 +34,7 @@ void _expectBlocked(WidgetTester tester) {
   if (save.evaluate().isNotEmpty) {
     expect(tester.widget<OutlinedButton>(save).onPressed, isNull);
     final category = find.ancestor(
-      of: find.text('Movera XL'),
+      of: find.text('Movera Pet'),
       matching: find.byType(InkWell),
     );
     expect(tester.widget<InkWell>(category).onTap, isNull);
@@ -90,7 +90,7 @@ void main() {
           });
         } else {
           final category = find.ancestor(
-            of: find.text('Movera XL'),
+            of: find.text('Movera Pet'),
             matching: find.byType(InkWell),
           );
           tester.widget<InkWell>(category).onTap!();
@@ -100,9 +100,9 @@ void main() {
             true,
             false,
             true,
-            true,
-            true,
             false,
+            true,
+            true,
             true,
           ]);
         }

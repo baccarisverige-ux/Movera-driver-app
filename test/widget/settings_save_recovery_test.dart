@@ -31,7 +31,7 @@ VoidCallback _edit(WidgetTester tester, String surface) {
   return tester
       .widget<InkWell>(
         find.ancestor(
-          of: find.text('Movera XL'),
+          of: find.text('Movera Pet'),
           matching: find.byType(InkWell),
         ),
       )

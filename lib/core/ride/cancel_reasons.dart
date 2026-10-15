@@ -179,15 +179,28 @@ class CancelReasons {
       ),
       CancelReason(code: 'scheduled_other', title: 'Other reason'),
     ],
+    // The rider app's own reasons and codes (CancellationReason there).
     CancelReasonGroup.rider: [
-      CancelReason(code: 'rider_changed_plans', title: 'Plans changed'),
-      CancelReason(code: 'rider_driver_too_far', title: 'Driver too far away'),
+      CancelReason(code: 'pickup_incorrect', title: 'Pickup point is incorrect'),
       CancelReason(
-        code: 'rider_driver_asked',
-        title: 'The driver asked me to cancel',
-        counts: false,
+        code: 'wrong_ride_option',
+        title: 'I chose the wrong ride option',
       ),
-      CancelReason(code: 'rider_other', title: 'Other reason'),
+      CancelReason(
+        code: 'requested_by_mistake',
+        title: 'I requested the ride by mistake',
+      ),
+      CancelReason(code: 'wait_too_long', title: 'The wait is taking too long'),
+      CancelReason(
+        code: 'destination_change',
+        title: 'Destination needs to be changed',
+      ),
+      CancelReason(
+        code: 'driver_not_suitable',
+        title: 'Driver/ride details are not suitable',
+      ),
+      CancelReason(code: 'plans_changed', title: 'Plans changed'),
+      CancelReason(code: 'something_else', title: 'Something else'),
     ],
   };
 }

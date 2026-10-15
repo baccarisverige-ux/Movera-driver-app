@@ -51,7 +51,8 @@ void main() {
     expect(repo.writes, hasLength(2));
     repo.writes.last.complete();
     await tester.pumpAndSettle();
-    expect(find.text('8 ride categories saved'), findsOneWidget);
+    // The six categories admin allows for the car (Q27).
+    expect(find.text('6 ride categories saved'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -64,7 +65,7 @@ void main() {
     final edit = tester
         .widget<InkWell>(
           find.ancestor(
-            of: find.text('Movera XL'),
+            of: find.text('Movera Pet'),
             matching: find.byType(InkWell),
           ),
         )

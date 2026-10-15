@@ -4,6 +4,7 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/presentation/driver/sheets/sheet_trace.dart';
 import 'package:movera/core/location/location_freshness.dart';
 import 'package:movera/core/ride/completion_journal.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'dart:async';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/navigation/driver_map_zoom_change_detector.dart';
@@ -439,7 +440,8 @@ class _AcceptRideState extends State<AcceptRide>
   Timer? _nextTripRadarDemoTimer;
   Timer? _nextTripRadarMatchTimer;
   Timer? _nextTripOfferExpiry;
-  static const Duration _onTripOfferLifetime = Duration(milliseconds: 8500);
+  /// An Exclusive offer while driving a rider: Dispatch's time to accept.
+  static Duration get _onTripOfferLifetime => DriverOfferRules.current.exclusiveAcceptTime;
   DateTime? _lastGpsAppliedAt;
   DateTime? _lastSnapshotAt;
   bool _liveUpdatesPaused = false;
@@ -947,22 +949,25 @@ class _AcceptRideState extends State<AcceptRide>
 
 
   String get _slideLabel {
+    // Q30: the main trip buttons read admin's Driver app texts.
     if (_paidStopWait) {
       final next = _stopCursor + 2;
       if (next <= widget.stopAddresses.length) {
-        return 'Go to ${_AcceptRideTrip(this)._stopWord(next)} stop';
+        return driverText(DriverTexts.tripGoToStop, {
+          'stop': _AcceptRideTrip(this)._stopWord(next),
+        });
       }
-      return 'Go to drop-off';
+      return driverText(DriverTexts.tripGoToDropoff);
     }
-    return switch (_stage) {
-      ActiveRideStage.headingToPickup => "I've arrived",
+    return driverText(switch (_stage) {
+      ActiveRideStage.headingToPickup => DriverTexts.tripArrived,
       ActiveRideStage.waitingForRider => widget.stopAddresses.isEmpty
-          ? 'Start trip'
-          : 'Start first stop',
+          ? DriverTexts.tripStart
+          : DriverTexts.tripStartFirstStop,
       ActiveRideStage.onTrip => _stopCursor < widget.stopAddresses.length
-          ? 'Arrive at the stop'
-          : 'Complete trip',
-    };
+          ? DriverTexts.tripArriveAtStop
+          : DriverTexts.tripComplete,
+    });
   }
 
   String get _slideConfirmedLabel {

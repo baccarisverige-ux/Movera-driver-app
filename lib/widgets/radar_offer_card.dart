@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/widgets/offer_badges.dart';
 
@@ -275,12 +276,12 @@ class RadarOfferCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           if (show.netFare)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 4),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
               child: Text(
-                'YOUR SHARE',
-                key: ValueKey<String>('radar-offer-net-fare'),
-                style: TextStyle(
+                driverText(DriverTexts.offerYourShare).toUpperCase(),
+                key: const ValueKey<String>('radar-offer-net-fare'),
+                style: const TextStyle(
                   color: label,
                   fontSize: 10.5,
                   fontWeight: FontWeight.w600,
@@ -320,9 +321,9 @@ class RadarOfferCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
-                    'PICKUP',
-                    style: TextStyle(
+                  Text(
+                    driverText(DriverTexts.offerPickup).toUpperCase(),
+                    style: const TextStyle(
                       color: label,
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
@@ -414,19 +415,24 @@ class RadarOfferCard extends StatelessWidget {
                     stop(
                       show.pickupAddress
                           ? RadarOfferView.area(offer.pickup)
-                          : 'Pickup nearby',
+                          : driverText(DriverTexts.offerPickupNearby),
                       show.pickupDistance
-                          ? '${offer.pickupKm.toStringAsFixed(1)} km away'
-                          : 'Pickup',
+                          ? driverText(DriverTexts.offerKmAway, {
+                              'km': offer.pickupKm.toStringAsFixed(1),
+                            })
+                          : driverText(DriverTexts.offerPickup),
                     ),
                     const SizedBox(height: 14),
                     stop(
                       RadarOfferView.area(offer.dropoff),
                       [
                         if (show.tripMinutesKm)
-                          '${offer.tripMinutes} min trip · ${offer.tripKm.toStringAsFixed(1)} km',
+                          driverText(DriverTexts.offerTripLength, {
+                            'minutes': offer.tripMinutes,
+                            'km': offer.tripKm.toStringAsFixed(1),
+                          }),
                         if (show.stops && offer.stops > 0) offer.stopsLabel,
-                      ].join(' · ').ifEmpty('Drop-off'),
+                      ].join(' · ').ifEmpty(driverText(DriverTexts.offerDropoff)),
                     ),
                   ],
                 ),
@@ -478,10 +484,10 @@ class RadarOfferCard extends StatelessWidget {
                       ),
                     ),
                     child: matching
-                        ? const Row(
+                        ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              SizedBox(
+                              const SizedBox(
                                 width: 14,
                                 height: 14,
                                 child: CircularProgressIndicator(
@@ -489,19 +495,19 @@ class RadarOfferCard extends StatelessWidget {
                                   color: Color(0xFF727E83),
                                 ),
                               ),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
-                                'Matching…',
-                                style: TextStyle(
+                                driverText(DriverTexts.offerMatching),
+                                style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           )
-                        : const Text(
-                            'Match',
-                            style: TextStyle(
+                        : Text(
+                            driverText(DriverTexts.offerMatch),
+                            style: const TextStyle(
                               fontSize: 16.5,
                               fontWeight: FontWeight.w700,
                             ),

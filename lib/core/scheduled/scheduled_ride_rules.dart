@@ -82,6 +82,7 @@ class ScheduledRideRules {
     this.lateCancelPeriodDays = 7,
     this.pauseDays = 7,
     this.assignAcceptTime = const Duration(seconds: 30),
+    this.includedWaitingMinutes = 5,
   });
 
   /// The rules in use. Mirrors the admin defaults until a backend sets it.
@@ -125,6 +126,10 @@ class ScheduledRideRules {
 
   /// How long the driver has to accept a ride Movera assigned to them.
   final Duration assignAcceptTime;
+
+  /// Reservation policy "Included waiting": free waiting at the pickup of
+  /// a booked ride. The waiting rules read it for scheduled rides.
+  final int includedWaitingMinutes;
 
   ScheduledRideKindRule ruleFor(ScheduledRideKind kind) =>
       kinds[kind] ??

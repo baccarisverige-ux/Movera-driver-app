@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
 import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
+import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/profile/profile.dart';
 import 'package:movera/presentation/driver/promotions/promotions.dart';
@@ -41,6 +43,11 @@ class DriverSideMenu extends StatelessWidget {
   // (which would make Back / [Navigator.pop] a no-op in widget tests).
   void _open(BuildContext context, Widget page) {
     pushSingle(context, _DriverMenuRoute(page), rootNavigator: true);
+  }
+
+  static String? _unreadBadge() {
+    final unread = DriverNotificationFeed.instance.unread;
+    return unread == 0 ? null : '$unread';
   }
 
   @override
@@ -94,6 +101,19 @@ class DriverSideMenu extends StatelessWidget {
                         title: 'Ride history',
                         subtitle: 'Completed and previous rides',
                         onTap: () => _open(context, const DriverRideHistory()),
+                      ),
+                      // Q31: ride alerts, demand and account messages.
+                      _MenuAction(
+                        asset: AppAssets.solarBellBing,
+                        badge: _unreadBadge(),
+                        title: 'Notifications',
+                        subtitle: 'Ride alerts, demand and account',
+                        onTap: () => _open(
+                          context,
+                          DriverNotificationsScreen(
+                            dispatchRepository: dispatchRepository,
+                          ),
+                        ),
                       ),
                     ],
                   ),

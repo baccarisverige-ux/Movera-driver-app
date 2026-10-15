@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -153,9 +154,9 @@ class CashCollectSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text(
-                    'Complete ride',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                  child: Text(
+                    driverText(DriverTexts.tripCompleteRide),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),

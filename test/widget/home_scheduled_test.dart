@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
@@ -257,8 +258,13 @@ void main() {
         find.byKey(const ValueKey<String>('exclusive-offer-card-home-direct-close')),
         findsNothing,
       );
-      // The demo puts the first Radar trips on Home 11.5 s and 14.5 s in.
-      await _frames(tester, const Duration(seconds: 12));
+      // The demo puts the first Radar trips on Home 3 s and 6 s after the
+      // Exclusive offer's time to accept.
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(milliseconds: 3500),
+      );
       final deck = tester.widget<RadarOfferDeck>(
         find.byKey(const ValueKey<String>('radar-home-deck')),
       );
@@ -287,8 +293,13 @@ void main() {
       final dispatch = _Dispatch();
       await _pumpHome(tester, dispatch);
       await _goOnline(tester);
-      // After the demo's own Exclusive offer has gone.
-      await _frames(tester, const Duration(seconds: 11));
+      // After the demo's own Exclusive offer has gone (its time to accept
+      // is Dispatch's, 15 s).
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(milliseconds: 2500),
+      );
       dispatch.assignments.add(demoAssignedReservation);
       await _frames(tester, const Duration(milliseconds: 600));
       return dispatch;

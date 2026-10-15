@@ -2,10 +2,12 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
+import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:movera/presentation/driver/home/components/reservation_route_map.dart';
 import 'package:movera/widgets/led_count_badge.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -223,10 +225,19 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     } else if (action == _ScheduledRideAction.cancelled ||
         action == _ScheduledRideAction.cancelledNotCounted) {
       if (!_accepted.contains(ride)) return;
-      ScheduledRideStore._cancelAccepted(
+      final paused = ScheduledRideStore._cancelAccepted(
         ride,
         counts: action == _ScheduledRideAction.cancelled,
       );
+      // Q31, N3: the pause is in Notifications and on the island.
+      if (paused) {
+        final until = ScheduledRideStore.pausedUntil(ScheduledRideStore._now);
+        final feed = DriverNotificationFeed.instance;
+        feed.add(DriverNotices.scheduledPaused(
+          feed.now,
+          until: until == null ? 'later' : _dayMonth(until),
+        ));
+      }
       // An open reservation goes back out to drivers (notes R24): where it
       // goes follows the admin rule, Radar trips too close to pickup.
       if (ride.id.isNotEmpty && !ride.assigned) {
@@ -535,11 +546,19 @@ class ScheduledRideStore {
     return null;
   }
 
-  /// Requests this driver can take now: none while blocked, and none whose
-  /// time clashes with a ride they accepted (Q9).
+  /// Requests this driver can take now: none while blocked, only in the
+  /// categories they drive (Q27), and none whose time clashes with a ride
+  /// they accepted (Q9).
   static List<_ScheduledRide> get _visibleRequests => block() != null
       ? const <_ScheduledRide>[]
-      : _requests.where((ride) => _clashWith(ride) == null).toList();
+      : _requests
+          .where((ride) =>
+              DriverCategoryChoice.takes(ride.category) &&
+              _clashWith(ride) == null)
+          .toList();
+
+  /// The driver's categories changed (Q27).
+  static void categoriesChanged() => _changed();
 
   /// Requests left out because they clash with an accepted ride.
   static List<(_ScheduledRide, _ScheduledRide)> get _clashing => [

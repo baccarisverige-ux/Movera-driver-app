@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
@@ -23,7 +24,8 @@ void main() {
     // feed (rider cancelled, expired…) shortly after it appears.
     final dispatch = DemoDispatchRepository(
       externalClaimOfferId: 'nearby-1',
-      externalClaimDelay: const Duration(milliseconds: 12500),
+      externalClaimDelay: DriverOfferRules.current.exclusiveAcceptTime +
+          const Duration(milliseconds: 4000),
     );
     await tester.pumpWidget(
       LayoutViewport(
@@ -50,7 +52,7 @@ void main() {
         .call();
     await tester.pump(const Duration(milliseconds: 1550));
     await tester.pump(const Duration(milliseconds: 2300));
-    await tester.pump(const Duration(milliseconds: 8500));
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
     await tester.pump(const Duration(milliseconds: 900));
     final card = find.byKey(const ValueKey<String>('radar-offer-card-nearby-1'));
     expect(card, findsOneWidget);
@@ -104,12 +106,13 @@ void main() {
         .call();
     await tester.pump(const Duration(milliseconds: 1550));
     await tester.pump(const Duration(milliseconds: 2300));
-    await tester.pump(const Duration(milliseconds: 8500));
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
     await tester.pump(const Duration(milliseconds: 900));
     final match = find.byKey(const ValueKey<String>('radar-match-nearby-1'));
     expect(tester.widget<FilledButton>(match).onPressed, isNotNull);
 
-    await tester.pump(const Duration(seconds: 31));
+    // Past Dispatch's time on the radar (15 s).
+    await tester.pump(DriverOfferRules.current.radarTime + const Duration(seconds: 1));
     await tester.pump(const Duration(milliseconds: 100));
     expect(match, findsOneWidget);
     expect(tester.widget<FilledButton>(match).onPressed, isNull);
@@ -155,7 +158,7 @@ void main() {
         .call();
     await tester.pump(const Duration(milliseconds: 1550));
     await tester.pump(const Duration(milliseconds: 2300));
-    await tester.pump(const Duration(milliseconds: 8500));
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
     await tester.pump(const Duration(milliseconds: 900));
     await tester.pump(const Duration(milliseconds: 6200));
     await tester.pump(const Duration(milliseconds: 400));
@@ -174,7 +177,9 @@ void main() {
       find.descendant(of: badge, matching: find.text('ALL OFFERS')),
       findsOneWidget,
     );
-    expect(find.descendant(of: badge, matching: find.text('05')), findsOneWidget);
+    // Four, not five: the Electric trip is not a category the demo car
+    // drives (Q27).
+    expect(find.descendant(of: badge, matching: find.text('04')), findsOneWidget);
 
     // The radar reads Accept while the deck shows.
     expect(find.byKey(const ValueKey<String>('home-radar-accept')), findsOneWidget);

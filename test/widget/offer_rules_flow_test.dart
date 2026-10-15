@@ -160,7 +160,12 @@ void main() {
       final session = await _pumpHome(tester, _Dispatch());
       await _frames(tester, const Duration(milliseconds: 2600));
       expect(find.byKey(_closeOffer), findsOneWidget);
-      await _frames(tester, const Duration(seconds: 9));
+      // It runs out after Dispatch's time to accept (15 s).
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(milliseconds: 500),
+      );
       expect(find.byKey(_closeOffer), findsNothing);
       expect(_said, contains('Offline: 2 offers missed'));
       expect(session.availableForOffers, isFalse);
@@ -208,8 +213,13 @@ void main() {
       final dispatch = _Dispatch()
         ..publish([_trip('cash-trip', payment: 'Cash'), _trip('card-trip')]);
       await _pumpHome(tester, dispatch);
-      // The demo's first Radar trips reach Home 11.5 s and 14.5 s in.
-      await _frames(tester, const Duration(seconds: 16));
+      // The demo's first Radar trips reach Home 3 s and 6 s after the
+      // Exclusive offer's time to accept.
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(milliseconds: 7500),
+      );
       final deck = tester.widget<RadarOfferDeck>(
         find.byKey(const ValueKey<String>('radar-home-deck')),
       );

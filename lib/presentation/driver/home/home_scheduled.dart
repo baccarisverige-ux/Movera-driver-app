@@ -192,6 +192,10 @@ extension _HomeScheduled on _DriverHomeState {
         ScheduledRideStore.reminder.value =
             'Head to your ${ride.pickupTime} pickup now: '
             '${ride.pickupAddress}.';
+        _noteRideAlert(
+          'Head to your ${ride.pickupTime} pickup',
+          ride.pickupAddress,
+        );
       }
       final backupAt = _scheduled.lateSince!.add(
         Duration(minutes: _rules.backupAfterMinutes),
@@ -215,6 +219,11 @@ extension _HomeScheduled on _DriverHomeState {
         ..lateSince = null;
       ScheduledRideStore.reminder.value = null;
       IslandMessages.show(HomeIslandNotices.leaveNow(ride.pickupTime));
+      _noteRideAlert(
+        'Leave now for ${ride.pickupTime} pickup',
+        ride.pickupAddress,
+        leaveNow: true,
+      );
       final offer = RideOffer.reservation(ride);
       _HomeOfferRadar(this)._openOfferTrip(
         _HomeDirectOffer.fromRide(offer),
@@ -248,6 +257,22 @@ extension _HomeScheduled on _DriverHomeState {
       );
       ScheduledRideStore.reminder.value =
           'Pickup at ${ride.pickupTime} in $left: ${ride.pickupAddress}.';
+      _noteRideAlert('${ride.pickupTime} pickup in $left', ride.pickupAddress);
+    }
+
+    /// Reminders and "Leave now" are in Notifications too (Q31, N1); the
+    /// island already said them.
+    void _noteRideAlert(String title, String body, {bool leaveNow = false}) {
+      final feed = DriverNotificationFeed.instance;
+      feed.add(
+        DriverNotices.scheduledReminder(
+          at: feed.now,
+          title: title,
+          body: body,
+          leaveNow: leaveNow,
+        ),
+        popup: false,
+      );
     }
 
     void _remindOnline(ReservationRequestPreview ride) {
@@ -255,6 +280,10 @@ extension _HomeScheduled on _DriverHomeState {
       IslandMessages.show(HomeIslandNotices.goOnlineFor(ride.pickupTime));
       ScheduledRideStore.reminder.value =
           'Go online now for your ${ride.pickupTime} pickup.';
+      _noteRideAlert(
+        'Go online for ${ride.pickupTime} pickup',
+        ride.pickupAddress,
+      );
     }
 
     /// Radar went live: a late ride can start now; a waiting assigned ride

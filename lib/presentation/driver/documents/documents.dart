@@ -2,6 +2,7 @@ import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
 import 'document_preview.dart';
+import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
 enum DocStatus { approved, inReview, needed }
@@ -63,6 +64,8 @@ class DriverDocuments extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 30),
         children: [
+          // Q26: documents that run out soon, with "Upload new".
+          const DocumentExpiryList(),
           Padding(
             padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
             child: Column(
