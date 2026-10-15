@@ -90,24 +90,20 @@ Future<void> _mount(WidgetTester tester, _Dispatch dispatch) async {
   await tester.pump(const Duration(milliseconds: 8500));
   await tester.pump(const Duration(milliseconds: 900));
   await tester.pump(const Duration(milliseconds: 3100));
-  await tester.tap(find.byKey(const ValueKey<String>('radar-home-refresh')));
   await _frames(tester);
+  // Both trips are on the Home deck, "first" in front.
   expect(
-    find.byKey(const ValueKey<String>('radar-offer-first')),
+    find.byKey(const ValueKey<String>('radar-offer-card-first')),
     findsOneWidget,
   );
   expect(
-    find.byKey(const ValueKey<String>('radar-offer-second')),
+    find.byKey(const ValueKey<String>('radar-offer-card-second')),
     findsOneWidget,
   );
 }
 
 Future<void> _match(WidgetTester tester, String id) async {
-  final match = find.descendant(
-    of: find.byKey(ValueKey<String>('radar-offer-$id')),
-    matching: find.text('Match'),
-  );
-  await tester.ensureVisible(match);
+  final match = find.byKey(ValueKey<String>('radar-match-$id'));
   await tester.tap(match);
   await tester.pump();
 }
@@ -206,9 +202,8 @@ void main() {
     await _match(tester, 'first');
     dispatch.claims.single.complete(ClaimResult.success(_offer('first')));
     await tester.pump();
-    final secondButton = find.descendant(
-      of: find.byKey(const ValueKey<String>('radar-offer-second')),
-      matching: find.byType(FilledButton),
+    final secondButton = find.byKey(
+      const ValueKey<String>('radar-match-second'),
     );
     expect(tester.widget<FilledButton>(secondButton).onPressed, isNull);
     // The dispatch removal of our own claimed offer must not cancel opening.

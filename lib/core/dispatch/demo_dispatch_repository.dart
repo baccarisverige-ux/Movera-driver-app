@@ -56,6 +56,7 @@ class DemoDispatchRepository implements DispatchRepository {
       dropoffPosition: GeoPoint(59.2705, 18.0515),
       isNearby: true,
       followsDestination: false,
+      bags: 2,
     ),
     RideOffer(
       id: 'nearby-2',
@@ -88,6 +89,8 @@ class DemoDispatchRepository implements DispatchRepository {
       dropoffPosition: GeoPoint(59.3599, 18.0002),
       isNearby: true,
       followsDestination: true,
+      bags: 1,
+      payment: 'Apple Pay',
     ),
   ];
 

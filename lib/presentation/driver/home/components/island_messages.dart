@@ -62,7 +62,12 @@ class IslandMessages {
 
   static bool get hasPending => _queue.isNotEmpty;
 
+  /// Every message posted since the last [reset], oldest first.
+  @visibleForTesting
+  static final List<IslandMessage> posted = <IslandMessage>[];
+
   static void show(IslandMessage message) {
+    posted.add(message);
     if (message.priority == IslandPriority.high) {
       final at = _queue.indexWhere(
         (queued) => queued.priority != IslandPriority.high,
@@ -81,5 +86,8 @@ class IslandMessages {
   static IslandMessage? take() => _queue.isEmpty ? null : _queue.removeAt(0);
 
   @visibleForTesting
-  static void reset() => _queue.clear();
+  static void reset() {
+    _queue.clear();
+    posted.clear();
+  }
 }

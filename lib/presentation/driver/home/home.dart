@@ -36,6 +36,9 @@ import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
+import 'package:movera/presentation/driver/home/components/radar_offer_deck.dart';
+import 'package:movera/widgets/radar_offer_card.dart';
+import 'package:movera/widgets/led_count_badge.dart';
 import 'package:movera/presentation/driver/home/components/driving_time_row.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/constants/appassets.dart';
@@ -359,8 +362,6 @@ class _DriverHomeState extends State<DriverHome>
   );
 
 
-
-
   late final SheetTrace _sheetTrace = SheetTrace('home', () => _panelController.isAttached ? _panelController.panelPosition : 0);
 
   @override
@@ -626,10 +627,6 @@ class _DriverHomeState extends State<DriverHome>
     }
     setState(() {});
   }
-
-
-
-
 
 
 

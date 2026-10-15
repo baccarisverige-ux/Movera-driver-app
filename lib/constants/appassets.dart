@@ -16,6 +16,13 @@ class AppAssets {
   static const String navMessagesSquare = 'assets/icons/nav_messages_square.svg';
   static const String solarMedalRibbonStar = 'assets/icons/solar_medal_ribbon_star.svg';
   static const String solarBillList = 'assets/icons/solar_bill_list.svg';
+  // Radar offer card and Live list (Solar, CC BY 4.0).
+  static const String offerRoute = 'assets/icons/offer_route.svg';
+  static const String offerBags = 'assets/icons/offer_bags.svg';
+  static const String offerStar = 'assets/icons/offer_star.svg';
+  static const String offerRefresh = 'assets/icons/offer_refresh.svg';
+  static const String offerBack = 'assets/icons/offer_back.svg';
+  static const String offerChevron = 'assets/icons/offer_chevron.svg';
   static const String solarArrowLeft = 'assets/icons/solar_arrow_left.svg';
   static const String solarCalendar = 'assets/icons/solar_calendar.svg';
   static const String solarCalendarMark = 'assets/icons/solar_calendar_mark.svg';

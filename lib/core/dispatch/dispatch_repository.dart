@@ -24,6 +24,8 @@ class RideOffer {
     required this.dropoffPosition,
     required this.isNearby,
     required this.followsDestination,
+    this.bags = 0,
+    this.payment = 'Card',
   });
 
   final String id;
@@ -40,6 +42,12 @@ class RideOffer {
   final GeoPoint dropoffPosition;
   final bool isNearby;
   final bool followsDestination;
+
+  /// Bags the rider said they bring; 0 when none.
+  final int bags;
+
+  /// How the rider pays, e.g. "Card", "Apple Pay", "Swish".
+  final String payment;
 }
 
 class ClaimResult {

@@ -501,23 +501,38 @@ void main() {
       await tester.pump(const Duration(milliseconds: 2300));
       expect(find.text('104,80 kr'), findsOneWidget);
       expect(find.text('Exclusive offer for you · nearby'), findsOneWidget);
-      expect(find.textContaining('Radar offers · '), findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('radar-home-deck')),
+        findsNothing,
+      );
       _expectNoException(tester);
 
       // Let the outside offer expire, then allow the first Radar offer to arrive.
       await tester.pump(const Duration(milliseconds: 8500));
       await tester.pump(const Duration(milliseconds: 900));
 
-      expect(find.text('Radar offers · 1'), findsOneWidget);
+      final card = find.byKey(
+        const ValueKey<String>('radar-offer-card-nearby-1'),
+      );
+      expect(card, findsOneWidget);
       expect(find.text('Exclusive offer for you · nearby'), findsNothing);
-      // The Radar button shows how many Radar trips are open.
-      final radarCount = find.textContaining(RegExp(r'^\d trips?$'));
-      expect(radarCount, findsOneWidget);
-      expect(find.text('NEW'), findsOneWidget);
+      // While Radar offers show, the radar reads Accept for the front card.
+      expect(
+        find.byKey(const ValueKey<String>('home-radar-accept')),
+        findsOneWidget,
+      );
+      expect(find.text('MATCH'), findsOneWidget);
       _expectNoException(tester);
 
-      // Radar orb still opens the legacy/full Radar list.
-      await tester.tap(radarCount);
+      // The ALL OFFERS badge opens the full Radar list.
+      final allOffers = find.byKey(
+        const ValueKey<String>('radar-home-all-offers'),
+      );
+      expect(
+        find.descendant(of: allOffers, matching: find.text('ALL OFFERS')),
+        findsOneWidget,
+      );
+      await tester.tap(allOffers);
       await tester.pump(const Duration(milliseconds: 160));
       expect(find.byType(RideRequests), findsOneWidget);
       _expectNoException(tester);
@@ -527,17 +542,19 @@ void main() {
 
       // Returning to Home keeps the Home Radar opportunity alive.
       expect(find.byType(RideRequests), findsNothing);
-      expect(find.text('Radar offers · 1'), findsOneWidget);
-      expect(find.text('NEW'), findsOneWidget);
+      expect(card, findsOneWidget);
       _expectNoException(tester);
     },
   );
 
-  testWidgets('Home Radar keeps a stable snapshot until driver refreshes', (
+  testWidgets('Home Radar deck takes new trips and drops a taken one', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await _pumpHome(tester, const Size(320, 700));
+    IslandMessages.reset();
+    Finder card(String id) =>
+        find.byKey(ValueKey<String>('radar-offer-card-$id'));
 
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 1550));
@@ -545,90 +562,50 @@ void main() {
     // Outside offer first, still isolated from Radar.
     await tester.pump(const Duration(milliseconds: 2300));
     expect(find.text('104,80 kr'), findsOneWidget);
-    expect(find.textContaining('Radar offers · '), findsNothing);
+    expect(find.byKey(const ValueKey<String>('radar-home-deck')), findsNothing);
     _expectNoException(tester);
 
     // Expire outside offer and receive the first Radar offer.
     await tester.pump(const Duration(milliseconds: 8500));
     await tester.pump(const Duration(milliseconds: 900));
-    expect(find.text('Radar offers · 1'), findsOneWidget);
+    expect(card('nearby-1'), findsOneWidget);
     _expectNoException(tester);
 
-    // A second Radar match must NOT mutate the visible list.
+    // New Radar matches join the deck behind it; no refresh on Home.
     await tester.pump(const Duration(milliseconds: 3100));
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey<String>('radar-home-refresh')),
-        matching: find.text('1 new'),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey<String>('radar-offer-nearby-2')),
-      findsNothing,
-    );
-    _expectNoException(tester);
-
-    // A third match also waits behind the refresh action.
-    await tester.pump(const Duration(milliseconds: 3100));
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey<String>('radar-home-refresh')),
-        matching: find.text('2 new'),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey<String>('radar-offer-nearby-4')),
-      findsNothing,
-    );
-    _expectNoException(tester);
-
-    // One explicit refresh updates the snapshot atomically.
-    await tester.tap(find.byKey(const ValueKey<String>('radar-home-refresh')));
-    await tester.pump(const Duration(milliseconds: 160));
-
-    expect(find.text('Radar offers · 3'), findsOneWidget);
+    expect(card('nearby-2'), findsOneWidget);
     expect(
       find.byKey(const ValueKey<String>('radar-home-refresh')),
       findsNothing,
     );
-    expect(find.text('Match'), findsWidgets);
-    _expectNoException(tester);
-
-    final radarList = find.byKey(
-      const PageStorageKey<String>('radar-home-offers-list'),
-    );
-    expect(radarList, findsOneWidget);
-    await tester.drag(radarList, const Offset(0, -360));
-    await tester.pump(const Duration(milliseconds: 160));
+    await tester.pump(const Duration(milliseconds: 3100));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(card('nearby-4'), findsOneWidget);
+    // The first trip stays in front: it sits lowest, the others peek above.
     expect(
-      find.byKey(const ValueKey<String>('radar-offer-nearby-4')),
-      findsOneWidget,
+      tester.getTopLeft(card('nearby-1')).dy,
+      greaterThan(tester.getTopLeft(card('nearby-4')).dy),
     );
     _expectNoException(tester);
 
+    // Another driver takes nearby-4 while it is behind: it leaves at once,
+    // with no island message.
     await tester.pump(const Duration(milliseconds: 4300));
-    // Another driver took it: one slim grey line, no dead button.
-    expect(find.text('Taken by another driver'), findsOneWidget);
-    expect(find.text('Matched'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(card('nearby-4'), findsNothing);
+    expect(card('nearby-1'), findsOneWidget);
     expect(
-      find.byKey(const ValueKey<String>('radar-taken-nearby-4')),
-      findsOneWidget,
+      IslandMessages.posted.map((m) => m.title),
+      isNot(contains('Taken by another driver')),
     );
     _expectNoException(tester);
 
-    // A moment later it leaves the list.
     await tester.pump(const Duration(milliseconds: 3000));
-    expect(
-      find.byKey(const ValueKey<String>('radar-offer-nearby-4')),
-      findsNothing,
-    );
-    expect(find.text('Radar offers · 2'), findsOneWidget);
+    expect(card('nearby-4'), findsNothing);
     _expectNoException(tester);
   });
 
-  testWidgets('Tapping a Radar offer brings it to the top with its details', (
+  testWidgets('Swiping the front Radar card sends it to the back', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -640,40 +617,36 @@ void main() {
     await tester.pump(const Duration(milliseconds: 8500));
     await tester.pump(const Duration(milliseconds: 900));
     await tester.pump(const Duration(milliseconds: 6200));
-    await tester.tap(find.byKey(const ValueKey<String>('radar-home-refresh')));
-    await tester.pump(const Duration(milliseconds: 160));
-    expect(find.text('Radar offers · 3'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1000));
 
-    Finder card(String id) => find.byKey(ValueKey<String>('radar-offer-$id'));
+    Finder card(String id) =>
+        find.byKey(ValueKey<String>('radar-offer-card-$id'));
     final ids = [
       'nearby-1',
       'nearby-2',
       'nearby-4',
     ].where((id) => card(id).evaluate().isNotEmpty).toList();
     expect(ids.length, 3);
-    final first = ids.first;
-    final last = ids.last;
-    // Only the first trip shows its addresses.
-    expect(find.text('Pickup'), findsOneWidget);
+    String front() => ids.reduce(
+      (a, b) =>
+          tester.getTopLeft(card(a)).dy >= tester.getTopLeft(card(b)).dy
+          ? a
+          : b,
+    );
+    final first = front();
+    expect(first, 'nearby-1');
+
+    await tester.drag(card(first), const Offset(-260, 0));
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+
+    // The next one is in front; the swiped one went to the back.
+    final next = front();
+    expect(next, isNot(first));
     expect(
       tester.getTopLeft(card(first)).dy,
-      lessThan(tester.getTopLeft(card(last)).dy),
-    );
-
-    final lastInk = find
-        .descendant(of: card(last), matching: find.byType(InkWell))
-        .first;
-    tester.widget<InkWell>(lastInk).onTap!.call();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(
-      tester.getTopLeft(card(last)).dy,
-      lessThan(tester.getTopLeft(card(first)).dy),
-    );
-    expect(find.text('Pickup'), findsOneWidget);
-    expect(
-      find.descendant(of: card(last), matching: find.text('Pickup')),
-      findsOneWidget,
+      lessThan(tester.getTopLeft(card(next)).dy),
     );
     _expectNoException(tester);
   });
@@ -713,15 +686,19 @@ void main() {
 
     // Demo: nearby-3 is claimed remotely after 13 seconds.
     await tester.pump(const Duration(seconds: 13));
-    // It folds into one grey line: no dead Match button.
+    // Its card fades out: Match and × are off.
     final card = find.byKey(const ValueKey<String>('nearby-3'));
     expect(card, findsOneWidget);
     expect(
-      find.descendant(of: card, matching: find.text('No longer available')),
-      findsOneWidget,
+      tester
+          .widget<FilledButton>(
+            find.byKey(const ValueKey<String>('radar-match-nearby-3')),
+          )
+          .onPressed,
+      isNull,
     );
     expect(
-      find.descendant(of: card, matching: find.byType(FilledButton)),
+      find.byKey(const ValueKey<String>('radar-offer-dismiss-nearby-3')),
       findsNothing,
     );
     _expectNoException(tester);
@@ -742,7 +719,7 @@ void main() {
     // Demo: nearby-2 represents two drivers tapping Match at nearly
     // the same time, with the other driver winning the atomic claim.
     final card = find.byKey(const ValueKey<String>('nearby-2'));
-    final match = find.descendant(of: card, matching: find.text('Match'));
+    final match = find.byKey(const ValueKey<String>('radar-match-nearby-2'));
     await tester.tap(match);
     await tester.pump();
 
@@ -754,14 +731,11 @@ void main() {
     _expectNoException(tester);
 
     await tester.pump(const Duration(milliseconds: 1500));
-    // No banner: the trip's own row says what happened.
-    expect(find.text('Request taken'), findsNothing);
+    // A short banner says why; the card fades out of the list.
+    expect(find.text('Taken by another driver'), findsOneWidget);
     expect(
-      find.descendant(
-        of: card,
-        matching: find.text('Another driver got it first'),
-      ),
-      findsOneWidget,
+      tester.widget<FilledButton>(match).onPressed,
+      isNull,
     );
     expect(find.byType(AcceptRide), findsNothing);
     _expectNoException(tester);
@@ -775,28 +749,55 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: RideRequests()));
     await tester.pump(const Duration(milliseconds: 120));
 
-    expect(find.text('Trip radar'), findsOneWidget);
-    final cards = ['nearby-1', 'nearby-2', 'nearby-3']
-        .map((id) => find.byKey(ValueKey<String>(id)))
-        .where((card) => card.evaluate().isNotEmpty)
+    // Header: back, small live dot, "Live" and the OFFERS count.
+    expect(find.text('Live'), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('radar-live-dot')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('radar-live-count')),
+        matching: find.text('OFFERS'),
+      ),
+      findsOneWidget,
+    );
+    final ids = ['nearby-1', 'nearby-2', 'nearby-3']
+        .where(
+          (id) => find
+              .byKey(ValueKey<String>('radar-offer-card-$id'))
+              .evaluate()
+              .isNotEmpty,
+        )
         .toList();
-    expect(cards, isNotEmpty);
-    // No compact rows: every trip shows pickup, drop-off and Match.
-    for (final card in cards) {
+    expect(ids, isNotEmpty);
+    // Same card as Home: pickup distance, trip length, Match and ×.
+    for (final id in ids) {
+      final card = find.byKey(ValueKey<String>('radar-offer-card-$id'));
       expect(
-        find.descendant(of: card, matching: find.text('Pickup')),
+        find.descendant(of: card, matching: find.textContaining('km away')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: card, matching: find.text('Drop-off')),
+        find.descendant(of: card, matching: find.textContaining('min trip')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: card, matching: find.text('Match')),
+        find.byKey(ValueKey<String>('radar-match-$id')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(ValueKey<String>('radar-offer-dismiss-$id')),
         findsOneWidget,
       );
     }
-    expect(find.text('Pickup'), findsNWidgets(cards.length));
+    _expectNoException(tester);
+
+    // × removes a card from the list.
+    final dismiss = find.byKey(ValueKey<String>('radar-offer-dismiss-${ids.first}'));
+    await tester.tap(dismiss);
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(
+      find.byKey(ValueKey<String>('radar-offer-card-${ids.first}')),
+      findsNothing,
+    );
     _expectNoException(tester);
   });
 

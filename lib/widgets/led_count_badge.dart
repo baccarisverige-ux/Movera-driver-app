@@ -10,11 +10,15 @@ class LedCountBadge extends StatelessWidget {
     required this.count,
     this.label = 'NEW',
     this.tone = LedCountTone.mint,
+    this.trailing,
   });
 
   final int count;
   final String label;
   final LedCountTone tone;
+
+  /// Small mark after the label, e.g. a chevron when the badge opens a list.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +77,10 @@ class LedCountBadge extends StatelessWidget {
                 letterSpacing: 1.3,
               ),
             ),
+            if (trailing != null) ...[
+              const SizedBox(width: 4),
+              trailing!,
+            ],
           ],
         ),
       ),
