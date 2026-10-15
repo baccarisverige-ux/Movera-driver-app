@@ -2,35 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// Radar: a dot with waves to the left and right.
-class RadarWavesPainter extends CustomPainter {
-  const RadarWavesPainter(this.color);
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final centre = size.center(Offset.zero);
-    final unit = size.shortestSide / 2;
-    canvas.drawCircle(centre, unit * .2, Paint()..color = color);
-    final wave = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = unit * .11
-      ..strokeCap = StrokeCap.round
-      ..color = color;
-    for (var i = 0; i < 2; i++) {
-      final ring = Rect.fromCircle(
-        center: centre,
-        radius: unit * (.45 + i * .3),
-      );
-      canvas.drawArc(ring, -math.pi / 4, math.pi / 2, false, wave);
-      canvas.drawArc(ring, math.pi * .75, math.pi / 2, false, wave);
-    }
-  }
-
-  @override
-  bool shouldRepaint(RadarWavesPainter old) => old.color != color;
-}
-
 /// Roundabout for right-hand traffic (Sweden): enter from the bottom, drive
 /// counterclockwise, leave at the exit's direction, exit number on a badge.
 class RoundaboutCuePainter extends CustomPainter {

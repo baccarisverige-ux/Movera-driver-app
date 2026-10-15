@@ -22,7 +22,6 @@ class AdaptiveTripIsland extends StatefulWidget {
     required this.address,
     required this.detail,
     required this.eta,
-    this.distance,
     this.arrival,
     this.arrived = false,
     required this.progress,
@@ -30,6 +29,7 @@ class AdaptiveTripIsland extends StatefulWidget {
     this.paidSeconds,
     this.waitingAtStop = false,
     this.navigationStatus,
+    this.reroutes = 0,
     required this.waitingMessage,
     this.paidWait = false,
     this.paidByCash = false,
@@ -47,12 +47,19 @@ class AdaptiveTripIsland extends StatefulWidget {
 
   final NavigationBanner? banner;
   final String status, address, detail, eta, waitingMessage, lastTripLabel;
-  final String? distance, arrival;
+  final String? arrival;
   final double progress;
   final int? waitingSeconds, paidSeconds;
   final bool waitingAtStop;
   final String? navigationStatus;
-  final bool paidWait, paidByCash, arrived, radarVisible, radarOn;
+
+  /// Completed reroutes, see [TripIslandInput.reroutes].
+  final int reroutes;
+  final bool paidWait, paidByCash, arrived;
+
+  /// Radar on/off during the trip: in the long-press tools sheet only
+  /// (the island has no radar button).
+  final bool radarVisible, radarOn;
   final VoidCallback onRadar,
       onMenu,
       onSearch,
@@ -89,6 +96,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
     paidWait: widget.paidWait,
     waitingAtStop: widget.waitingAtStop,
     navigationStatus: widget.navigationStatus,
+    reroutes: widget.reroutes,
   );
   void _changed() {
     if (mounted) setState(() {});
@@ -319,15 +327,18 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
   }
 
   /// Route island: top information (cue, large distance, instruction,
-  /// street, radar) and a darker strip with the arrival time and progress.
+  /// street) and a darker strip with the arrival time and progress.
   Widget _routeIsland(TripIslandFace face, Color accent, Size size) {
     final live = widget.banner;
     final arrival = face.kind == TripIslandKind.arrival;
+    // The large number is the distance to the next maneuver, or to the
+    // point itself while arriving; never the whole route. At the point
+    // (near it, waiting there) or without a known distance: icon only.
     final distance = arrival
-        ? (_distanceParts(widget.distance) ?? _distanceParts(widget.eta))
-        : (_distanceParts(live?.distanceLabel) ??
-              _distanceParts(face.title) ??
-              _distanceParts(widget.distance));
+        ? (widget.arrived || live?.symbol != NavigationBannerSymbol.arrive
+              ? null
+              : _distanceParts(live?.distanceLabel))
+        : (_distanceParts(live?.distanceLabel) ?? _distanceParts(face.title));
     // The instruction without the distance; the distance is shown large.
     var title = face.title
         .replaceAll(_distanceText, '')
@@ -463,10 +474,6 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
                       ),
                     ),
                   ),
-                  if (widget.radarVisible) ...[
-                    const SizedBox(width: 6),
-                    _radarButton(),
-                  ],
                 ],
               ),
             ),
@@ -518,44 +525,6 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
     String two(int v) => v.toString().padLeft(2, '0');
     return '${widget.eta} · ${two(at.hour)}:${two(at.minute)}';
   }
-
-  /// Radar on/off on the route island: a dot with waves, green when on.
-  Widget _radarButton() => Tooltip(
-    message: widget.radarOn ? 'Turn radar off' : 'Turn radar on',
-    child: InkResponse(
-      key: const ValueKey('island-radar'),
-      onTap: widget.onRadar,
-      radius: 26,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: widget.radarOn
-              ? const Color(0x2934D399)
-              : const Color(0xFF23262B),
-          border: Border.all(
-            color: widget.radarOn
-                ? const Color(0xFF34D399)
-                : const Color(0x33FFFFFF),
-            width: widget.radarOn ? 1.6 : 1,
-          ),
-          boxShadow: widget.radarOn
-              ? const [BoxShadow(color: Color(0x7334D399), blurRadius: 14)]
-              : null,
-        ),
-        child: Center(
-          child: CustomPaint(
-            size: const Size.square(23),
-            painter: RadarWavesPainter(
-              widget.radarOn ? const Color(0xFF34D399) : _muted,
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
 
   Widget _message(
     String title,

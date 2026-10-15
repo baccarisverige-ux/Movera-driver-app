@@ -781,10 +781,45 @@ class NavigationCuePainter extends CustomPainter {
       arrowHead(p(11, 3), -math.pi / 2);
       return;
     }
-    if (kind == NavigationBannerSymbol.exit) {
-      canvas.drawLine(p(8, 19), p(8, 6), stroke);
-      canvas.drawLine(p(8, 12), p(15, 6.5), stroke);
-      arrowHead(p(17.2, 4.8), -0.67);
+    // Left is right mirrored: x becomes 22 - x, an angle a becomes pi - a.
+    if (kind == NavigationBannerSymbol.mergeLeft ||
+        kind == NavigationBannerSymbol.mergeRight) {
+      final left = kind == NavigationBannerSymbol.mergeLeft;
+      double x(double v) => left ? 22 - v : v;
+      // The road being joined, faint; the driver's lane bends into it.
+      canvas.drawLine(
+        p(x(14.5), 19),
+        p(x(14.5), 11.5),
+        Paint()
+          ..color = color.withValues(alpha: color.a * .45)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.6 * s
+          ..strokeCap = StrokeCap.round,
+      );
+      final path = Path()
+        ..moveTo(p(x(7.5), 19).dx, p(x(7.5), 19).dy)
+        ..lineTo(p(x(7.5), 15.5).dx, p(x(7.5), 15.5).dy)
+        ..cubicTo(
+          p(x(7.5), 12.4).dx,
+          p(x(7.5), 12.4).dy,
+          p(x(14.5), 12.6).dx,
+          p(x(14.5), 12.6).dy,
+          p(x(14.5), 9.6).dx,
+          p(x(14.5), 9.6).dy,
+        )
+        ..lineTo(p(x(14.5), 7.4).dx, p(x(14.5), 7.4).dy);
+      canvas.drawPath(path, stroke);
+      arrowHead(p(x(14.5), 2.9), -math.pi / 2);
+      return;
+    }
+    if (kind == NavigationBannerSymbol.exit ||
+        kind == NavigationBannerSymbol.exitRight ||
+        kind == NavigationBannerSymbol.exitLeft) {
+      final left = kind == NavigationBannerSymbol.exitLeft;
+      double x(double v) => left ? 22 - v : v;
+      canvas.drawLine(p(x(8), 19), p(x(8), 6), stroke);
+      canvas.drawLine(p(x(8), 12), p(x(15), 6.5), stroke);
+      arrowHead(p(x(17.2), 4.8), left ? math.pi + 0.67 : -0.67);
       return;
     }
     if (kind == NavigationBannerSymbol.arrive || icon == Icons.flag_outlined) {
