@@ -27,12 +27,7 @@ void main() {
     'wallet': (
       const WalletScreen(),
       (tester) => tester
-          .widget<InkWell>(
-            find.ancestor(
-              of: find.byIcon(Icons.arrow_back_ios_new_rounded),
-              matching: find.byType(InkWell),
-            ),
-          )
+          .widget<InkWell>(find.byKey(const ValueKey<String>('wallet-back')))
           .onTap!,
     ),
     'acceptance': (const AcceptanceRate(), (tester) => _icon(tester, 'Back')),

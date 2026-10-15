@@ -215,10 +215,11 @@ void main() {
   ) async {
     await tester.pumpWidget(const MaterialApp(home: ScheduledRidesScreen()));
     await tester.pumpAndSettle();
-    expect(find.text('2 new'), findsOneWidget);
+    expect(find.text('02'), findsOneWidget);
+    expect(find.text('NEW'), findsOneWidget);
     ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: false);
     await tester.pumpAndSettle();
-    expect(find.text('1 new'), findsOneWidget);
+    expect(find.text('01'), findsOneWidget);
     expect(find.text('Gamla vägen, Stockholm'), findsNothing);
   });
 

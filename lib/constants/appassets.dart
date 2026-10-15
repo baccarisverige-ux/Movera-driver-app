@@ -23,6 +23,30 @@ class AppAssets {
   static const String offerRefresh = 'assets/icons/offer_refresh.svg';
   static const String offerBack = 'assets/icons/offer_back.svg';
   static const String offerChevron = 'assets/icons/offer_chevron.svg';
+  static const String solarArrowLeft = 'assets/icons/solar_arrow_left.svg';
+  static const String solarCalendar = 'assets/icons/solar_calendar.svg';
+  static const String solarCalendarMark = 'assets/icons/solar_calendar_mark.svg';
+  static const String solarCalendarMinimalistic = 'assets/icons/solar_calendar_minimalistic.svg';
+  static const String solarClockCircle = 'assets/icons/solar_clock_circle.svg';
+  static const String solarCar = 'assets/icons/solar_car.svg';
+  static const String solarRoute = 'assets/icons/solar_route.svg';
+  static const String solarRouting2 = 'assets/icons/solar_routing_2.svg';
+  static const String solarMapPoint = 'assets/icons/solar_map_point.svg';
+  static const String solarGps = 'assets/icons/solar_gps.svg';
+  static const String solarAltArrowRight = 'assets/icons/solar_alt_arrow_right.svg';
+  static const String solarArrowRight = 'assets/icons/solar_arrow_right.svg';
+  static const String solarCheckCircle = 'assets/icons/solar_check_circle.svg';
+  static const String solarAlarm = 'assets/icons/solar_alarm.svg';
+  static const String solarBellBing = 'assets/icons/solar_bell_bing.svg';
+  // Solar (CC BY 4.0) — Earnings & Wallet pages, see assets/icons/SOLAR_LICENSE.txt
+  static const String solarAltArrowLeft = 'assets/icons/solar_alt_arrow_left.svg';
+  static const String solarWallet = 'assets/icons/solar_wallet.svg';
+  static const String solarGraphUp = 'assets/icons/solar_graph_up.svg';
+  static const String solarList = 'assets/icons/solar_list.svg';
+  static const String solarRefresh = 'assets/icons/solar_refresh.svg';
+  static const String solarCard = 'assets/icons/solar_card.svg';
+  static const String solarInfoCircle = 'assets/icons/solar_info_circle.svg';
+  static const String solarTuning2 = 'assets/icons/solar_tuning_2.svg';
   static const String navScheduledRide = 'assets/icons/nav_scheduled_ride.png';
   static const String navScheduledRideAlert =
       'assets/icons/nav_scheduled_ride_alert.png';
