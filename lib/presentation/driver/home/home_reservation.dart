@@ -77,6 +77,8 @@ extension _HomeReservation on _DriverHomeState {
       return request != null &&
           _recoveryResolved &&
           _driverSession.availableForOffers &&
+          // Only a category this driver drives (Q27).
+          DriverCategoryChoice.takes(request.category) &&
           _outsideRadarOffer == null &&
           _radarHomeOffers.isEmpty &&
           !showRideRequests &&
@@ -134,6 +136,19 @@ extension _HomeReservation on _DriverHomeState {
       if (_reservation.announced) { return; }
       _reservation.announced = true;
       IslandMessages.show(HomeIslandNotices.newReservation);
+      // And it is in Notifications (Q31, N1).
+      if (_reservation.request case final request?) {
+        final feed = DriverNotificationFeed.instance;
+        feed.add(
+          DriverNotices.newScheduledRide(
+            at: feed.now,
+            day: request.pickupDay,
+            time: request.pickupTime,
+            fare: request.fare,
+          ),
+          popup: false,
+        );
+      }
     }
 
     /// While the reservation is up the radar reads "Accept · TAP" on a

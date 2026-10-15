@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
@@ -27,7 +28,7 @@ class DemoDispatchRepository implements DispatchRepository {
   DemoDispatchRepository({
     Duration claimDelay = const Duration(milliseconds: 1450),
     Duration newOfferDelay = const Duration(seconds: 7),
-    Duration externalClaimDelay = const Duration(seconds: 13),
+    Duration? externalClaimDelay,
     this.losingOfferId = 'nearby-2',
     this.externalClaimOfferId = 'nearby-3',
     List<ReservationRequestPreview> reservations = const [
@@ -40,7 +41,11 @@ class DemoDispatchRepository implements DispatchRepository {
     ScheduledRideRules? rules,
   }) : _claimDelay = claimDelay,
        _newOfferDelay = newOfferDelay,
-       _externalClaimDelay = externalClaimDelay,
+       // Another driver takes a trip soon after Home shows Radar trips,
+       // which follow the Exclusive offer's time to accept.
+       _externalClaimDelay = externalClaimDelay ??
+           DriverOfferRules.current.exclusiveAcceptTime +
+               const Duration(milliseconds: 4500),
        _reservationRadarDelay = reservationRadarDelay,
        _assignmentDelay = assignmentDelay,
        _clock = clock,

@@ -1,136 +1,138 @@
 import 'package:flutter/material.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 
 /// What the island says, in one place. Kept to the essential words so the
-/// island stays about its normal size: same or a little longer.
+/// island stays about its normal size: same or a little longer. Each text
+/// comes from Driver app texts (Q30): admin's text or the default.
 class HomeIslandNotices {
   const HomeIslandNotices._();
 
-  static const IslandMessage online = IslandMessage(
-    title: 'Radar online',
+  static IslandMessage get online => IslandMessage(
+    title: driverText(DriverTexts.islandOnline),
     tone: IslandTone.success,
     priority: IslandPriority.low,
     live: true,
     group: 'online',
   );
 
-  static const IslandMessage offline = IslandMessage(
-    title: 'Radar offline',
+  static IslandMessage get offline => IslandMessage(
+    title: driverText(DriverTexts.islandOffline),
     priority: IslandPriority.low,
     group: 'online',
   );
 
-  static const IslandMessage riderCancelled = IslandMessage(
-    title: 'Rider cancelled',
+  static IslandMessage get riderCancelled => IslandMessage(
+    title: driverText(DriverTexts.islandRiderCancelled),
     tone: IslandTone.alert,
     priority: IslandPriority.high,
   );
 
-  static const IslandMessage riderEndedTrip = IslandMessage(
-    title: 'Rider ended trip',
+  static IslandMessage get riderEndedTrip => IslandMessage(
+    title: driverText(DriverTexts.islandRiderEndedTrip),
     tone: IslandTone.alert,
     priority: IslandPriority.high,
   );
 
-  static const IslandMessage matching = IslandMessage(
-    title: 'Matching…',
+  static IslandMessage get matching => IslandMessage(
+    title: driverText(DriverTexts.islandMatching),
     priority: IslandPriority.low,
     group: 'radar-match',
   );
 
-  static const IslandMessage matched = IslandMessage(
-    title: 'Trip matched',
+  static IslandMessage get matched => IslandMessage(
+    title: driverText(DriverTexts.islandMatched),
     tone: IslandTone.success,
     priority: IslandPriority.low,
     group: 'radar-match',
   );
 
-  static const IslandMessage takenByOther = IslandMessage(
-    title: 'Taken by another driver',
+  static IslandMessage get takenByOther => IslandMessage(
+    title: driverText(DriverTexts.islandTakenByOther),
     tone: IslandTone.warning,
     group: 'radar-match',
   );
 
-  static const IslandMessage tripUnavailable = IslandMessage(
-    title: 'Trip unavailable',
+  static IslandMessage get tripUnavailable => IslandMessage(
+    title: driverText(DriverTexts.islandTripUnavailable),
     tone: IslandTone.warning,
     group: 'radar-match',
   );
 
-  static const IslandMessage noConnection = IslandMessage(
-    title: 'No connection',
+  static IslandMessage get noConnection => IslandMessage(
+    title: driverText(DriverTexts.islandNoConnection),
     tone: IslandTone.warning,
     group: 'radar-match',
   );
 
-  static const IslandMessage accountOnHold = IslandMessage(
-    title: 'Contact support',
+  static IslandMessage get accountOnHold => IslandMessage(
+    title: driverText(DriverTexts.islandContactSupport),
     tone: IslandTone.alert,
     priority: IslandPriority.high,
   );
 
-  static const IslandMessage newReservation = IslandMessage(
-    title: 'New reservation',
+  static IslandMessage get newReservation => IslandMessage(
+    title: driverText(DriverTexts.islandNewReservation),
     group: 'reservation',
   );
 
   /// An Exclusive offer arrives on Home: info blue, with a bolt.
-  static const IslandMessage exclusiveRide = IslandMessage(
-    title: 'Exclusive ride',
+  static IslandMessage get exclusiveRide => IslandMessage(
+    title: driverText(DriverTexts.islandExclusiveRide),
     icon: Icons.bolt_rounded,
     group: 'exclusive',
   );
 
   /// The Exclusive offer is a reservation close to pickup.
-  static const IslandMessage exclusiveReservation = IslandMessage(
-    title: 'Exclusive reservation',
+  static IslandMessage get exclusiveReservation => IslandMessage(
+    title: driverText(DriverTexts.islandExclusiveReservation),
     icon: Icons.bolt_rounded,
     group: 'exclusive',
   );
 
-  static const IslandMessage reservationAccepted = IslandMessage(
-    title: 'Reservation accepted',
+  static IslandMessage get reservationAccepted => IslandMessage(
+    title: driverText(DriverTexts.islandReservationAccepted),
     tone: IslandTone.success,
     group: 'reservation',
   );
 
   /// The driver tapped Accept on the radar; the server picks one driver.
-  static const IslandMessage reservationMatching = IslandMessage(
-    title: 'Matching…',
+  static IslandMessage get reservationMatching => IslandMessage(
+    title: driverText(DriverTexts.islandMatching),
     priority: IslandPriority.low,
     group: 'reservation',
   );
 
   /// This driver's claim lost (R25): another driver was first, or was
   /// picked at the same moment; or it was cancelled or expired.
-  static const IslandMessage reservationUnavailable = IslandMessage(
-    title: 'No longer available',
+  static IslandMessage get reservationUnavailable => IslandMessage(
+    title: driverText(DriverTexts.islandNoLongerAvailable),
     tone: IslandTone.warning,
     group: 'reservation',
   );
 
-  static const IslandMessage reservationNoConnection = IslandMessage(
-    title: 'No connection',
+  static IslandMessage get reservationNoConnection => IslandMessage(
+    title: driverText(DriverTexts.islandNoConnection),
     tone: IslandTone.warning,
     group: 'reservation',
   );
 
   /// Q29: Movera assigned a scheduled ride; it needs Accept in time.
-  static const IslandMessage assignedRide = IslandMessage(
-    title: 'Assigned by Movera',
+  static IslandMessage get assignedRide => IslandMessage(
+    title: driverText(DriverTexts.islandAssignedByMovera),
     group: 'exclusive',
   );
 
-  static const IslandMessage assignmentAccepted = IslandMessage(
-    title: 'Scheduled ride accepted',
+  static IslandMessage get assignmentAccepted => IslandMessage(
+    title: driverText(DriverTexts.islandAssignmentAccepted),
     tone: IslandTone.success,
     group: 'reservation',
   );
 
   /// The assigned ride was not accepted in time; Movera picks another
   /// driver.
-  static const IslandMessage assignmentNotAccepted = IslandMessage(
-    title: 'Assignment not accepted',
+  static IslandMessage get assignmentNotAccepted => IslandMessage(
+    title: driverText(DriverTexts.islandAssignmentNotAccepted),
     tone: IslandTone.warning,
     group: 'reservation',
   );
@@ -138,18 +140,24 @@ class HomeIslandNotices {
   /// Q10: a reminder before a scheduled pickup, e.g. "07:40 pickup in 15
   /// min".
   static IslandMessage scheduledReminder(String time, String left) =>
-      IslandMessage(title: '$time pickup in $left', group: 'scheduled');
+      IslandMessage(
+        title: driverText(
+          DriverTexts.islandPickupIn,
+          {'time': time, 'left': left},
+        ),
+        group: 'scheduled',
+      );
 
   /// The "be online before" time of a scheduled ride, while offline.
   static IslandMessage goOnlineFor(String time) => IslandMessage(
-    title: 'Go online for $time pickup',
+    title: driverText(DriverTexts.islandGoOnlineFor, {'time': time}),
     tone: IslandTone.warning,
     group: 'scheduled',
   );
 
   /// "Leave now": the scheduled ride is on screen as the active trip.
   static IslandMessage leaveNow(String time) => IslandMessage(
-    title: 'Leave now for $time pickup',
+    title: driverText(DriverTexts.islandLeaveNow, {'time': time}),
     tone: IslandTone.success,
     priority: IslandPriority.high,
     group: 'scheduled',
@@ -157,86 +165,128 @@ class HomeIslandNotices {
 
   /// "Leave now" passed and the driver is not on the way.
   static IslandMessage headToPickup(String time) => IslandMessage(
-    title: 'Head to your $time pickup',
+    title: driverText(DriverTexts.islandHeadToPickup, {'time': time}),
     tone: IslandTone.warning,
     priority: IslandPriority.high,
     group: 'scheduled',
   );
 
   /// Still not on the way: the ride went to a backup driver.
-  static const IslandMessage givenToBackup = IslandMessage(
-    title: 'Given to backup driver',
+  static IslandMessage get givenToBackup => IslandMessage(
+    title: driverText(DriverTexts.islandGivenToBackup),
     tone: IslandTone.alert,
     priority: IslandPriority.high,
     group: 'scheduled',
   );
 
   /// Q23: the driver's Cash switch in the Home sheet.
-  static const IslandMessage cashOn = IslandMessage(
-    title: 'Cash rides on',
+  static IslandMessage get cashOn => IslandMessage(
+    title: driverText(DriverTexts.islandCashOn),
     tone: IslandTone.success,
     priority: IslandPriority.low,
     group: 'cash',
   );
 
-  static const IslandMessage cashOff = IslandMessage(
-    title: 'Cash rides off',
+  static IslandMessage get cashOff => IslandMessage(
+    title: driverText(DriverTexts.islandCashOff),
     priority: IslandPriority.low,
     group: 'cash',
   );
 
   /// Q16: one more missed Exclusive offer takes the driver offline.
-  static const IslandMessage lastMissedBeforeOffline = IslandMessage(
-    title: 'Next missed offer: offline',
+  static IslandMessage get lastMissedBeforeOffline => IslandMessage(
+    title: driverText(DriverTexts.islandLastMissed),
     tone: IslandTone.warning,
     group: 'missed',
   );
 
   /// Q16: [count] Exclusive offers in a row went without Accept.
   static IslandMessage offlineAfterMissed(int count) => IslandMessage(
-    title: 'Offline: $count offers missed',
+    title: driverText(DriverTexts.islandOfflineMissed, {'count': count}),
     tone: IslandTone.alert,
     priority: IslandPriority.high,
     group: 'missed',
   );
 
-  static const IslandMessage recoveryPending = IslandMessage(
-    title: 'Saved trip open',
+  /// Q25: [minutes] left before the rest (the admin's 30 and 10).
+  static IslandMessage drivingLeft(int minutes) => IslandMessage(
+        title: driverText(DriverTexts.islandDrivingLeft, {'minutes': minutes}),
+        tone: IslandTone.warning,
+        priority: minutes <= 10 ? IslandPriority.high : IslandPriority.normal,
+        group: 'driving-limit',
+      );
+
+  /// Q25: the limit is reached, or the driver tried to go online before
+  /// the rest is over.
+  static IslandMessage restUntil(String time) => IslandMessage(
+        title: driverText(DriverTexts.islandRestUntil, {'time': time}),
+        tone: IslandTone.alert,
+        priority: IslandPriority.high,
+        group: 'driving-limit',
+      );
+
+  /// Q26: a document expired; going online waits for the new one.
+  static IslandMessage documentExpired(String document) => IslandMessage(
+        title: driverText(DriverTexts.islandDocumentExpired, {'document': document}),
+        tone: IslandTone.alert,
+        priority: IslandPriority.high,
+        group: 'documents',
+      );
+
+  /// Q26: the new document is with Movera; going online waits for it.
+  static IslandMessage get documentInReview => IslandMessage(
+        title: driverText(DriverTexts.islandDocumentInReview),
+        tone: IslandTone.warning,
+        priority: IslandPriority.high,
+        group: 'documents',
+      );
+
+  /// Q31: a notification popup, in its own few words. Tapping it opens
+  /// what it is about.
+  static IslandMessage notice(
+    String title, {
+    IslandTone tone = IslandTone.info,
+    VoidCallback? onTap,
+  }) =>
+      IslandMessage(title: title, tone: tone, onTap: onTap);
+
+  static IslandMessage get recoveryPending => IslandMessage(
+    title: driverText(DriverTexts.islandSavedTripOpen),
     tone: IslandTone.warning,
     priority: IslandPriority.high,
   );
 
-  static const IslandMessage newerTripKept = IslandMessage(
-    title: 'Newer trip kept',
+  static IslandMessage get newerTripKept => IslandMessage(
+    title: driverText(DriverTexts.islandNewerTripKept),
     tone: IslandTone.warning,
     priority: IslandPriority.high,
   );
 
-  static const IslandMessage recordSetAside = IslandMessage(
-    title: 'Trip record set aside',
+  static IslandMessage get recordSetAside => IslandMessage(
+    title: driverText(DriverTexts.islandRecordSetAside),
     tone: IslandTone.warning,
   );
 
-  static const IslandMessage recoveryFailed = IslandMessage(
-    title: 'Recovery failed',
+  static IslandMessage get recoveryFailed => IslandMessage(
+    title: driverText(DriverTexts.islandRecoveryFailed),
     tone: IslandTone.alert,
     priority: IslandPriority.high,
   );
 
-  static const IslandMessage savedTripNotClosed = IslandMessage(
-    title: 'Trip not closed',
+  static IslandMessage get savedTripNotClosed => IslandMessage(
+    title: driverText(DriverTexts.islandTripNotClosed),
     tone: IslandTone.alert,
     priority: IslandPriority.high,
   );
 
-  static const IslandMessage unreadableTripOpen = IslandMessage(
-    title: 'Close saved trip',
+  static IslandMessage get unreadableTripOpen => IslandMessage(
+    title: driverText(DriverTexts.islandCloseSavedTrip),
     tone: IslandTone.warning,
     priority: IslandPriority.high,
   );
 
-  static const IslandMessage unreadableTripNotClosed = IslandMessage(
-    title: 'Trip not closed',
+  static IslandMessage get unreadableTripNotClosed => IslandMessage(
+    title: driverText(DriverTexts.islandTripNotClosed),
     tone: IslandTone.alert,
     priority: IslandPriority.high,
   );
@@ -244,7 +294,7 @@ class HomeIslandNotices {
   /// First launch only. The one message whose tap does more than close
   /// it: it shows the earnings, as its words say.
   static IslandMessage earningsHint(VoidCallback show) => IslandMessage(
-        title: 'Tap to see earnings',
+        title: driverText(DriverTexts.islandSeeEarnings),
         priority: IslandPriority.high,
         onTap: show,
       );

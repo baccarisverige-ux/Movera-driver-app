@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/widgets/offer_badges.dart';
@@ -125,14 +126,14 @@ class ExclusiveOfferCard extends StatelessWidget {
                           'exclusive-offer-boost-${offer.id}',
                         ),
                       ),
-                    if (onYourWay) const OfferBadge.note('On your way'),
+                    if (onYourWay) OfferBadge.note(driverText(DriverTexts.offerOnYourWay)),
                   ],
                 ),
               ),
               if (onDismiss != null) ...[
                 const SizedBox(width: 8),
                 Tooltip(
-                  message: 'Hide offer',
+                  message: driverText(DriverTexts.offerHide),
                   child: Material(
                     color: Colors.white,
                     shape: const CircleBorder(
@@ -181,12 +182,12 @@ class ExclusiveOfferCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (show.netFare)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 4),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
               child: Text(
-                'YOUR SHARE',
-                key: ValueKey<String>('exclusive-offer-net-fare'),
-                style: TextStyle(
+                driverText(DriverTexts.offerYourShare).toUpperCase(),
+                key: const ValueKey<String>('exclusive-offer-net-fare'),
+                style: const TextStyle(
                   color: label,
                   fontSize: 10.5,
                   fontWeight: FontWeight.w600,
@@ -226,9 +227,9 @@ class ExclusiveOfferCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
-                    'PICKUP',
-                    style: TextStyle(
+                  Text(
+                    driverText(DriverTexts.offerPickup).toUpperCase(),
+                    style: const TextStyle(
                       color: label,
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
@@ -302,7 +303,7 @@ class ExclusiveOfferCard extends StatelessWidget {
       final hidden = !dropoff && !show.pickupAddress;
       final areaOnly = dropoff && show.dropoffAreaOnly;
       final place = hidden
-          ? 'Pickup nearby'
+          ? driverText(DriverTexts.offerPickupNearby)
           : areaOnly
           ? RadarOfferView.area(address)
           : RadarOfferView.street(address);
@@ -420,9 +421,9 @@ class ExclusiveOfferCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Accept',
-                      style: TextStyle(
+                    Text(
+                      driverText(DriverTexts.offerAccept),
+                      style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                       ),
@@ -462,7 +463,9 @@ class ExclusiveOfferCard extends StatelessWidget {
               address: offer.pickup,
               value: '${offer.pickupMinutes} min',
               detail: show.pickupDistance
-                  ? '${offer.pickupKm.toStringAsFixed(1)} km away'
+                  ? driverText(DriverTexts.offerKmAway, {
+                      'km': offer.pickupKm.toStringAsFixed(1),
+                    })
                   : '',
             ),
           ),

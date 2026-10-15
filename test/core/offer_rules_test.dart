@@ -8,6 +8,7 @@ import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -123,6 +124,22 @@ void main() {
       expect(rules.termsFor(pickupKm: 4).rule, '');
     });
 
+    test('a scheduled ride waits the reservation policy\'s included time', () {
+      addTearDown(() => ScheduledRideRules.current = const ScheduledRideRules());
+      expect(const ScheduledRideRules().includedWaitingMinutes, 5);
+      ScheduledRideRules.current = const ScheduledRideRules(
+        includedWaitingMinutes: 7,
+      );
+      expect(rules.termsFor(type: WaitingRideType.scheduled).freeMinutes, 7);
+      expect(rules.termsFor().freeMinutes, 2);
+    });
+
+    test('Dispatch\'s offer times: 15 s to accept, 15 s on the radar', () {
+      const offers = DriverOfferRules();
+      expect(offers.exclusiveAcceptTime, const Duration(seconds: 15));
+      expect(offers.radarTime, const Duration(seconds: 15));
+    });
+
     test('the kind of trip from how it was matched and where it starts', () {
       expect(
         WaitingRules.typeOf(
@@ -159,7 +176,17 @@ void main() {
       expect(reasons.of(CancelReasonGroup.driverBeforeTrip), hasLength(6));
       expect(reasons.of(CancelReasonGroup.driverDuringTrip), hasLength(7));
       expect(reasons.of(CancelReasonGroup.scheduled), hasLength(6));
-      expect(reasons.of(CancelReasonGroup.rider), isNotEmpty);
+      // The rider app's codes, from pickup_incorrect to something_else.
+      expect(reasons.of(CancelReasonGroup.rider).map((r) => r.code), [
+        'pickup_incorrect',
+        'wrong_ride_option',
+        'requested_by_mistake',
+        'wait_too_long',
+        'destination_change',
+        'driver_not_suitable',
+        'plans_changed',
+        'something_else',
+      ]);
       expect(reasons.counts('rider_no_show'), isFalse);
       expect(reasons.counts('unsafe_pickup'), isFalse);
       expect(reasons.counts('safety_concern_on_trip'), isFalse);

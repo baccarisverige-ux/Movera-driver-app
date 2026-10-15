@@ -1149,7 +1149,8 @@ extension _HomeMapSheet on _DriverHomeState {
         onAction: () => unawaited(_restoreActiveRideIfNeeded()),
       ));
     }
-    /// Tapping a message closes it; only the first-launch hint also acts.
+    /// Tapping a message closes it; the first-launch hint and notification
+    /// popups also open what they are about.
     void _onIslandMessageTap(IslandMessage message) {
       _endIslandMessage();
       message.onTap?.call();
@@ -1877,24 +1878,39 @@ extension _HomeMapSheet on _DriverHomeState {
         rows: [
           (last) => _todayRow(
                 mark: MoveraMark.timer,
-                label: 'Driven today',
-                value: DrivingTimeClock.hoursMinutes(clock.drivenToday),
+                label: 'Worked',
+                value: DrivingTimeClock.hoursMinutes(clock.worked),
                 last: last,
               ),
           (last) => _todayRow(
                 mark: MoveraMark.route,
-                label: 'Left today',
-                value: DrivingTimeClock.hoursMinutes(clock.leftToday),
+                label: switch (clock.restUntil) {
+                  null => 'Left before rest',
+                  _ => 'Rest until',
+                },
+                value: switch (clock.restUntil) {
+                  final until? => clockLabel(until),
+                  null => DrivingTimeClock.hoursMinutes(clock.left),
+                },
                 last: last,
               ),
           (last) => _todayRow(
                 mark: MoveraMark.calendar,
-                label: 'Daily limit',
-                value: '${clock.dailyLimit.inHours} h',
+                label: 'Work limit',
+                value: '${clock.rule.workHours} h',
+                last: last,
+              ),
+          (last) => _todayRow(
+                mark: MoveraMark.timer,
+                label: 'Rest after it',
+                value: '${clock.rule.restHours} h',
                 last: last,
               ),
         ],
-        note: 'Counts while Radar is on. It starts again from zero each day.',
+        // Q25: the admin's rule for the country.
+        note: 'Counts while Radar is on. After ${clock.rule.workHours} h you '
+            'rest ${clock.rule.restHours} h before going online again. A '
+            '${clock.rule.restHours} h break starts it from zero.',
       ));
     }
 

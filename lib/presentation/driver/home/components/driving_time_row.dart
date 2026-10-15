@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/widgets/driving_time_gauge.dart';
 
-/// Driving time row: the small stopwatch, time left today and the seconds
-/// running while Radar is on.
+/// Driving time row: the small stopwatch, time left before the rest (or
+/// "Rest until 04:30") and the seconds running while Radar is on.
 class DrivingTimeRow extends StatefulWidget {
   const DrivingTimeRow({
     super.key,
@@ -74,7 +75,10 @@ class _DrivingTimeRowState extends State<DrivingTimeRow> {
               const SizedBox(width: 18),
               Expanded(
                 child: Text(
-                  '${DrivingTimeClock.hoursMinutes(clock.leftToday)} left to drive',
+                  switch (clock.restUntil) {
+                    final until? => 'Rest until ${clockLabel(until)}',
+                    null => '${DrivingTimeClock.hoursMinutes(clock.left)} left to drive',
+                  },
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -97,7 +101,7 @@ class _DrivingTimeRowState extends State<DrivingTimeRow> {
               const SizedBox(width: 6),
               Text(
                 widget.running
-                    ? DrivingTimeClock.clock(clock.drivenToday)
+                    ? DrivingTimeClock.clock(clock.worked)
                     : 'Paused',
                 style: const TextStyle(
                   color: sub,

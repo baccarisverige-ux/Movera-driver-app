@@ -2,10 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/documents/document_expiry.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/core/session/driving_time_clock.dart';
+import 'package:movera/core/vehicle/ride_categories.dart';
 
 /// Widget tests run without GPS hardware, network routing or an activated
 /// demo account. These are explicit test policies, not binding detection.
@@ -38,11 +43,20 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   ScheduledClock.realNow = _testNow;
   // Every test starts the demo day again (07:00 at its first reading),
   // with cash rides on, no missed Exclusive offers and the zone's waiting
-  // terms.
+  // terms. The account is quiet: no driving time yet, no documents that
+  // run out, no notifications, every allowed category on and the app's
+  // own texts.
   setUp(() {
     ScheduledClock.instance.reset();
     DriverOfferPreferences.reset();
     WaitingTerms.active = WaitingRules.current.base;
+    DrivingTimeClock.instance.reset();
+    DocumentExpiryStore.instance.load(const <TrackedDocument>[]);
+    DriverNotificationFeed.instance
+      ..load(const <DriverNotice>[])
+      ..arrivals = const [];
+    DriverCategoryChoice.reset();
+    DriverAppTexts.reset();
   });
   await testMain();
 }

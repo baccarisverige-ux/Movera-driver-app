@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/main.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -508,7 +509,8 @@ void main() {
       _expectNoException(tester);
 
       // Let the outside offer expire, then allow the first Radar offer to arrive.
-      await tester.pump(const Duration(milliseconds: 8500));
+      // The Exclusive offer's time to accept (Dispatch, 15 s).
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
       await tester.pump(const Duration(milliseconds: 900));
 
       final card = find.byKey(
@@ -566,7 +568,8 @@ void main() {
     _expectNoException(tester);
 
     // Expire outside offer and receive the first Radar offer.
-    await tester.pump(const Duration(milliseconds: 8500));
+    // The Exclusive offer's time to accept (Dispatch, 15 s).
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
     await tester.pump(const Duration(milliseconds: 900));
     expect(card('nearby-1'), findsOneWidget);
     _expectNoException(tester);
@@ -614,7 +617,8 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 1550));
     await tester.pump(const Duration(milliseconds: 2300));
-    await tester.pump(const Duration(milliseconds: 8500));
+    // The Exclusive offer's time to accept (Dispatch, 15 s).
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
     await tester.pump(const Duration(milliseconds: 900));
     await tester.pump(const Duration(milliseconds: 6200));
     await tester.pump(const Duration(milliseconds: 1000));
@@ -663,7 +667,8 @@ void main() {
 
     expect(find.byType(RadarEdgeDash), findsNothing);
 
-    await tester.pump(const Duration(milliseconds: 8500));
+    // The Exclusive offer's time to accept (Dispatch, 15 s).
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
     await tester.pump(const Duration(milliseconds: 900));
 
     final radarDashes = tester.widgetList<RadarEdgeDash>(
@@ -684,8 +689,12 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: RideRequests()));
     await tester.pump(const Duration(milliseconds: 120));
 
-    // Demo: nearby-3 is claimed remotely after 13 seconds.
-    await tester.pump(const Duration(seconds: 13));
+    // Demo: nearby-3 is claimed remotely 4.5 s after the Exclusive offer's
+    // time to accept (15 s), so soon after Home shows Radar trips.
+    await tester.pump(
+      DriverOfferRules.current.exclusiveAcceptTime +
+          const Duration(milliseconds: 4500),
+    );
     // Its card fades out: Match and × are off.
     final card = find.byKey(const ValueKey<String>('nearby-3'));
     expect(card, findsOneWidget);
@@ -1045,7 +1054,7 @@ void main() {
     _expectNoException(tester);
   });
 
-  testWidgets('Driving time row opens today\'s driving time', (
+  testWidgets('Driving time row opens the driving time and the rest rule', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -1055,9 +1064,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey<String>('home-sheet-driving-time')));
     await _advanceAnimation(tester, const Duration(milliseconds: 420));
     expect(find.text('Driving time'), findsOneWidget);
-    expect(find.text('Driven today'), findsOneWidget);
-    expect(find.text('Left today'), findsOneWidget);
-    expect(find.text('10 h'), findsOneWidget);
+    expect(find.text('Worked'), findsOneWidget);
+    expect(find.text('Left before rest'), findsOneWidget);
+    expect(find.text('12 h'), findsOneWidget);
+    expect(find.text('6 h'), findsOneWidget);
     _expectNoException(tester);
   });
 
@@ -1242,8 +1252,8 @@ void main() {
     expect(find.text('LIVE'), findsNothing);
 
     // Advance in small frames so the async route-preview continuation can
-    // install and then fire the 8.5s timeout timer.
-    for (var i = 0; i < 20; i++) {
+    // install and then fire the 15 s timeout timer.
+    for (var i = 0; i < 40; i++) {
       if (find.text('104,80 kr').evaluate().isEmpty) break;
       await tester.pump(const Duration(milliseconds: 500));
     }

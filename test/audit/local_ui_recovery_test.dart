@@ -60,14 +60,15 @@ void main() {
   testWidgets('ride preferences restore changed selection after screen recreation', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: Preferences()));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Movera XL'));
-    await tester.tap(find.text('Electric'));
+    // Admin allows six categories for the car (Q27).
+    await tester.tap(find.text('Comfort'));
+    await tester.tap(find.text('Premium'));
     await tester.pumpAndSettle();
-    expect(find.text('6 of 8 active'), findsOneWidget);
+    expect(find.text('4 of 6 active'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     await tester.pumpWidget(const MaterialApp(home: Preferences()));
     await tester.pumpAndSettle();
-    expect(find.text('6 of 8 active'), findsOneWidget);
+    expect(find.text('4 of 6 active'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets('ride preferences keep older saves and enable new categories', (tester) async {
@@ -75,6 +76,8 @@ void main() {
     await SettingsRepository().save('categories', {'selected': [false, true, true, true, true, true, true]});
     await tester.pumpWidget(const MaterialApp(home: Preferences()));
     await tester.pumpAndSettle();
-    expect(find.text('7 of 8 active'), findsOneWidget);
+    // Movera off; Booster Seat, added later, on. XL and Electric are not
+    // allowed for the car.
+    expect(find.text('5 of 6 active'), findsOneWidget);
   });
 }

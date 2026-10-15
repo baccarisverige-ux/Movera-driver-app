@@ -68,6 +68,9 @@ class AppAssets {
   static const String solarForbiddenCircle = 'assets/icons/solar_forbidden_circle.svg';
   static const String solarMicrophone = 'assets/icons/solar_microphone.svg';
   static const String solarStopCircle = 'assets/icons/solar_stop_circle.svg';
+  // Solar (CC BY 4.0) — Documents that run out and notifications.
+  static const String solarDocumentText = 'assets/icons/solar_document_text.svg';
+  static const String solarUploadMinimalistic = 'assets/icons/solar_upload_minimalistic.svg';
   static const String navScheduledRide = 'assets/icons/nav_scheduled_ride.png';
   static const String navScheduledRideAlert =
       'assets/icons/nav_scheduled_ride_alert.png';

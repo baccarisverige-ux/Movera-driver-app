@@ -26,6 +26,10 @@ import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/documents/document_expiry.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
+import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
@@ -54,6 +58,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
+import 'package:movera/presentation/driver/documents/document_renewal.dart';
+import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/home/components/destination_set_panel.dart';
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
@@ -86,6 +92,7 @@ part 'home_map_sheet.dart';
 part 'home_reservation.dart';
 part 'home_scheduled.dart';
 part 'home_offer_rules.dart';
+part 'home_account.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -207,6 +214,7 @@ class _DriverHomeState extends State<DriverHome>
   final _HomeReservationState _reservation = _HomeReservationState();
   /// The smart gap before accepted rides, and rides Movera assigns.
   final _HomeScheduledState _scheduled = _HomeScheduledState();
+  final _HomeAccountState _account = _HomeAccountState();
   Timer? _radarOfferTwoTimer;
   Timer? _radarOfferThreeTimer;
   Timer? _homeRadarMatchResolutionTimer;
@@ -247,10 +255,12 @@ class _DriverHomeState extends State<DriverHome>
   double _mainPanelPosition = 0;
   final ValueNotifier<double> _panelSlidePosition = ValueNotifier<double>(0);
 
-  static const Duration _outsideOfferLifetime = Duration(milliseconds: 8500);
+  /// Dispatch's time to accept an Exclusive offer (15 s by default).
+  static Duration get _outsideOfferLifetime => DriverOfferRules.current.exclusiveAcceptTime;
 
-  /// How long a Radar trip can be picked once it shows in the Home list.
-  static const Duration _radarOfferPickWindow = Duration(seconds: 30);
+  /// How long a Radar trip can be picked once it shows in the Home list:
+  /// Dispatch's time on the radar (15 s by default).
+  static Duration get _radarOfferPickWindow => DriverOfferRules.current.radarTime;
   static const int _maxHomeRadarOffers = 4;
   double _sheetPointerVelocity = 0;
   double _sheetPointerTravel = 0;
@@ -385,6 +395,7 @@ class _DriverHomeState extends State<DriverHome>
     final access = _adminHomeConfig.scheduledRides.driverAccess;
     if (!identical(ScheduledRideStore.driverAccess, access)) { ScheduledRideStore.driverAccess = access; }
     ScheduledRideStore.openRequests.addListener(_onScheduledRequests);
+    _HomeAccount(this)._startAccount();
     _goOnlinePulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
@@ -572,6 +583,7 @@ class _DriverHomeState extends State<DriverHome>
 
   void _onDriverSessionChanged() {
     DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
+    _HomeAccount(this)._syncDrivingLimit();
     if (!mounted) { return; }
     if (_driverSession.consumeResumeHomeAfterTrip()) {
       setState(() {
@@ -877,6 +889,7 @@ class _DriverHomeState extends State<DriverHome>
       });
       return;
     }
+    if (_HomeAccount(this)._blocksGoingOnline()) { return; }
 
     _onlineTransitionTimer?.cancel();
     _offerSimulationTimer?.cancel();
@@ -974,20 +987,22 @@ class _DriverHomeState extends State<DriverHome>
       animation: _goOnlinePulseController,
       builder: (context, child) {
         final suspended = _driverSession.isSuspended;
+        // Q25/Q26: resting after the driving limit, or an expired document.
+        final hold = suspended ? null : _HomeAccount(this)._onlineHold();
         return _buildRadarOrb(
           title: suspended ? "Account" : "Radar",
           status: suspended
               ? "PAUSED"
-              : _activationHold
+              : hold?.status ?? (_activationHold
                   ? "HOLD"
-                  : "OFF",
+                  : "OFF"),
           subtitle: suspended
               ? "Tap for details"
-              : _activationHold
+              : hold?.subtitle ?? (_activationHold
                   ? "Not active"
-                  : "Tap to scan",
+                  : "Tap to scan"),
           onTap: _goOnline,
-          blocked: _activationHold && !suspended,
+          blocked: (_activationHold || hold != null) && !suspended,
           pulse: suspended ? 0 : _goOnlinePulseController.value,
         );
       },
@@ -1109,6 +1124,7 @@ class _DriverHomeState extends State<DriverHome>
     _reservationPopupTimer?.cancel();
     _reservation.release?.cancel();
     _scheduled.dispose();
+    _HomeAccount(this)._stopAccount();
     WidgetsBinding.instance.removeObserver(this);
     driverRouteObserver.unsubscribe(this);
     _sheetTrace.dispose();

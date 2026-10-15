@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/core/vehicle/ride_categories.dart';
 
 class Preferences extends StatefulWidget {
   const Preferences({super.key, this.repository});
@@ -68,6 +69,13 @@ class _PreferencesState extends State<Preferences> {
 
   static const List<int> _displayOrder = [4, 5, 6, 0, 1, 2, 3, 7];
 
+  /// Only the categories admin allows from the car (Q27), in grid order.
+  List<int> get _visible => [
+        for (final index in _displayOrder)
+          if (DriverCategoryAccess.current.allows(_categories[index].title))
+            index,
+      ];
+
   late List<bool> _selected;
 
   late final _settings = widget.repository ?? SettingsRepository();
@@ -108,6 +116,7 @@ class _PreferencesState extends State<Preferences> {
           ];
         }
       });
+      _publishChoice();
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -153,13 +162,22 @@ class _PreferencesState extends State<Preferences> {
     _restoreSettings();
   }
 
-  int get _selectedCount => _selected.where((selected) => selected).length;
+  int get _selectedCount => _visible.where((index) => _selected[index]).length;
+
+  /// Offers follow the choice (Q27).
+  void _publishChoice() {
+    DriverCategoryChoice.off.value = {
+      for (final index in _visible)
+        if (!_selected[index]) _categories[index].title,
+    };
+  }
 
   void _toggle(int index) {
     if (!_canEdit) return;
     setState(() {
       _selected[index] = !_selected[index];
     });
+    _publishChoice();
     _persistSettings();
   }
 
@@ -206,7 +224,7 @@ class _PreferencesState extends State<Preferences> {
                 padding: EdgeInsets.symmetric(horizontal: side),
                 children: [
                   _buildHeader(context),
-                  for (final index in _displayOrder)
+                  for (final index in _visible)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: _buildCategory(index),
@@ -223,9 +241,11 @@ class _PreferencesState extends State<Preferences> {
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        // Shrink the cards so all four rows fit on screen.
+                        // Shrink the cards so all rows fit on screen.
+                        final visible = _visible;
+                        final rows = (visible.length / 2).ceil().clamp(1, 4);
                         final extent =
-                            ((constraints.maxHeight - 8 - 3 * 12) / 4).clamp(
+                            ((constraints.maxHeight - 8 - (rows - 1) * 12) / rows).clamp(
                               100.0,
                               137.0,
                             );
@@ -238,9 +258,9 @@ class _PreferencesState extends State<Preferences> {
                                 crossAxisSpacing: 14,
                                 mainAxisExtent: extent,
                               ),
-                          itemCount: _displayOrder.length,
+                          itemCount: visible.length,
                           itemBuilder: (context, i) =>
-                              _buildCategory(_displayOrder[i], extent: extent),
+                              _buildCategory(visible[i], extent: extent),
                         );
                       },
                     ),
@@ -292,7 +312,7 @@ class _PreferencesState extends State<Preferences> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '$_selectedCount of ${_categories.length} active',
+                  '$_selectedCount of ${_visible.length} active',
                   textAlign: TextAlign.end,
                   style: const TextStyle(
                     color: _text,
@@ -324,6 +344,16 @@ class _PreferencesState extends State<Preferences> {
             height: 1.3,
             fontWeight: FontWeight.w400,
             letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Movera sets these from your car. Switch off any you don’t want.',
+          key: ValueKey<String>('preferences-categories-note'),
+          style: TextStyle(
+            color: Color(0xFF6F7673),
+            fontSize: 12.5,
+            height: 1.3,
           ),
         ),
         const SizedBox(height: 12),

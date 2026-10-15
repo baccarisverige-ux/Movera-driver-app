@@ -17,9 +17,14 @@ void main() {
     expect(offers, contains("part of 'home.dart';"));
     expect(offers, contains('extension _HomeOfferRadar on _DriverHomeState'));
     expect(offers, contains('Duration(milliseconds: 2200)'));
-    expect(offers, contains('Duration(milliseconds: 11500)'));
-    expect(offers, contains('Duration(milliseconds: 14500)'));
-    expect(offers, contains('Duration(milliseconds: 17500)'));
+    // Radar trips follow the Exclusive offer's time to accept (Dispatch,
+    // 15 s): 3 s after it, then 3 s apart.
+    expect(offers, contains('const Duration(milliseconds: 3000) +'));
+    expect(offers, contains('_DriverHomeState._outsideOfferLifetime;'));
+    expect(offers, contains('radarFrom + const Duration(seconds: 3)'));
+    expect(offers, contains('radarFrom + const Duration(seconds: 6)'));
+    expect(home, contains('DriverOfferRules.current.exclusiveAcceptTime'));
+    expect(home, contains('DriverOfferRules.current.radarTime'));
     expect(offers, contains('Duration(milliseconds: 50000)'));
     // The reservation's near-pickup step counts the minutes before its
     // pickup time on the demo day, with the admin's minutes; the demo day

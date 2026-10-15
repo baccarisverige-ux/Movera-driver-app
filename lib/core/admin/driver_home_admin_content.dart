@@ -1,3 +1,4 @@
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
@@ -10,6 +11,7 @@ class DriverHomeAdminConfig {
     required this.eventsSectionSubtitle,
     required this.events,
     required this.stockholmWork,
+    this.appTexts = const DriverAppTextOverrides(),
   });
 
   final DriverPerformanceConfig performance;
@@ -19,6 +21,10 @@ class DriverHomeAdminConfig {
   final String eventsSectionSubtitle;
   final List<DriverEventConfig> events;
   final StockholmWorkStatsConfig stockholmWork;
+
+  /// Content › Driver app texts (Q30): admin's texts per language. The
+  /// demo has none, so the app shows its defaults.
+  final DriverAppTextOverrides appTexts;
 }
 
 class DriverPerformanceConfig {

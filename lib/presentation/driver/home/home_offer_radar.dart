@@ -208,7 +208,7 @@ extension _HomeOfferRadar on _DriverHomeState {
               (_pendingRadarHomeOffers.isNotEmpty || _hasRideOffers)) ||
           !_directOfferFollowsDestination(offer) ||
           !_HomeScheduled(this)._fitsSchedule(offer) ||
-          !_HomeOfferRules(this)._paymentAllowed(offer) ||
+          !_HomeOfferRules(this)._offerAllowed(offer) ||
           (offer.reservation &&
               (offer.driverSigned ||
                   !_HomeScheduled(this)._exclusiveStepReached(offer.id))) ||
@@ -229,6 +229,12 @@ extension _HomeOfferRadar on _DriverHomeState {
             : offer.reservation
             ? HomeIslandNotices.exclusiveReservation
             : HomeIslandNotices.exclusiveRide);
+        // And it is in Notifications (Q31, N1).
+        final feed = DriverNotificationFeed.instance;
+        feed.add(
+          DriverNotices.exclusiveOffer(at: feed.now, seconds: lifetime.inSeconds),
+          popup: false,
+        );
       }
 
       _outsideOfferTimeoutTimer = Timer(
@@ -274,7 +280,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           !_isOnline ||
           !_directOfferFollowsDestination(offer) ||
           !_HomeScheduled(this)._fitsSchedule(offer) ||
-          !_HomeOfferRules(this)._paymentAllowed(offer) ||
+          !_HomeOfferRules(this)._offerAllowed(offer) ||
           _radarHomeOffers.any((item) => item.id == offer.id) ||
           _pendingRadarHomeOffers.any((item) => item.id == offer.id) ||
           _radarHomeOffers.length + _pendingRadarHomeOffers.length >=
@@ -876,9 +882,12 @@ extension _HomeOfferRadar on _DriverHomeState {
           );
 
           // Radar offers start only after the exclusive outside-Radar offer
-          // has had its own presentation window.
+          // has had its own presentation window: its time to accept from
+          // Dispatch, then 3 s apart.
+          final radarFrom = const Duration(milliseconds: 3000) +
+              _DriverHomeState._outsideOfferLifetime;
           _offerSimulationTimer = Timer(
-            const Duration(milliseconds: 11500),
+            radarFrom,
             () {
               if (!mounted || !_isOnline) { return; }
               _showDispatchOfferAt(0);
@@ -886,7 +895,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           );
 
           _radarOfferTwoTimer = Timer(
-            const Duration(milliseconds: 14500),
+            radarFrom + const Duration(seconds: 3),
             () {
               if (!mounted || !_isOnline) { return; }
               _showDispatchOfferAt(1);
@@ -894,7 +903,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           );
 
           _radarOfferThreeTimer = Timer(
-            const Duration(milliseconds: 17500),
+            radarFrom + const Duration(seconds: 6),
             () {
               if (!mounted || !_isOnline) { return; }
               _showDispatchOfferAt(2);

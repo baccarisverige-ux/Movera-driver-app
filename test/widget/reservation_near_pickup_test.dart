@@ -7,6 +7,7 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -194,8 +195,13 @@ void main() {
       expect(find.text('Your next ride'), findsNothing);
       expect(ScheduledRideStore.isOpen(demoReservationId), isTrue);
 
-      // Untaken, the Exclusive offer goes and it joins the Home deck.
-      await _frames(tester, const Duration(seconds: 9));
+      // Untaken, the Exclusive offer goes after Dispatch's time to accept
+      // and it joins the Home deck.
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(milliseconds: 500),
+      );
       expect(card, findsNothing);
       final deckCard = find.byKey(_radarCard);
       expect(deckCard, findsOneWidget);
@@ -255,7 +261,11 @@ void main() {
       expect(find.text('Your next ride'), findsNothing);
 
       // Untaken: the waiting Radar trips come in, the reservation with them.
-      await _frames(tester, const Duration(seconds: 9));
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(milliseconds: 500),
+      );
       expect(find.byKey(_exclusiveCard), findsNothing);
       final deck = tester.widget<RadarOfferDeck>(
         find.byKey(const ValueKey<String>('radar-home-deck')),
