@@ -47,6 +47,9 @@ class CustomGoogleMap extends StatefulWidget {
   /// Web only: Google's camera (zoom / pan) control in the corner.
   final bool webCameraControlEnabled;
 
+  /// The "2D map · 3D unavailable" note when 3D cannot be shown.
+  final bool show3DNotice;
+
   const CustomGoogleMap({
     super.key,
     this.initialPosition,
@@ -77,6 +80,7 @@ class CustomGoogleMap extends StatefulWidget {
     this.cameraAnchor = .5,
     this.customMapStyle,
     this.webCameraControlEnabled = false,
+    this.show3DNotice = true,
   });
 
   @override
@@ -287,7 +291,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
             onCameraMove: widget.onCameraMove,
             onCameraIdle: widget.onCameraIdle,
           ),
-          if (!_supports3D)
+          if (!_supports3D && widget.show3DNotice)
             Positioned(
               left: 12,
               bottom: widget.padding.bottom + 8,

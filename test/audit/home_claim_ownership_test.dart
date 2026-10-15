@@ -45,6 +45,8 @@ class _Dispatch implements DispatchRepository {
   @override
   void refreshOffers() {}
   @override
+  void releaseReservation(String reservationId) {}
+  @override
   Future<ClaimResult> claimOffer(String offerId) {
     final claim = Completer<ClaimResult>();
     claims.add(claim);

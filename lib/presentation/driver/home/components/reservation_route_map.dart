@@ -7,9 +7,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/geo/geo_point_maps.dart';
+import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/widgets/custom_google_map.dart';
+import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/widgets/map_control_button.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
@@ -49,6 +51,39 @@ Future<List<GeoPoint>> loadReservationRoute(
   }
 }
 
+/// Opens the full route screen of [request] (the Home reservation popup
+/// and the Reservation details screen share it). Without [route] the road
+/// route loads here. Back returns to the screen that opened it.
+void openReservationRoute(
+  BuildContext context,
+  ReservationRequestPreview request, {
+  Future<List<GeoPoint>>? route,
+  Widget Function(BuildContext context, List<GeoPoint> route)? mapBuilder,
+}) {
+  if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) return;
+  var roadRoute = route;
+  if (roadRoute == null) {
+    final routes = DriverRuntimeConfig.current.externalRouting
+        ? RoadRouteService()
+        : null;
+    roadRoute = loadReservationRoute(request, routes);
+    if (routes != null) {
+      unawaited(roadRoute.whenComplete(routes.dispose));
+    }
+  }
+  final opened = roadRoute;
+  pushSingle(
+    context,
+    MaterialPageRoute<void>(
+      builder: (_) => ReservationRouteMapPage(
+        request: request,
+        route: opened,
+        mapBuilder: mapBuilder,
+      ),
+    ),
+  );
+}
+
 /// Live map of a reservation: route line and classic marks. With
 /// [labelled], the marks carry bubbles: pickup time, stop number and
 /// arrival time.
@@ -62,6 +97,7 @@ class ReservationRouteMap extends StatefulWidget {
     this.fitPadding = 28,
     this.interactive = false,
     this.markerIcon,
+    this.show3DNotice = true,
   });
 
   final ReservationRequestPreview request;
@@ -76,6 +112,9 @@ class ReservationRouteMap extends StatefulWidget {
   final bool interactive;
   final Future<BitmapDescriptor> Function(RouteMarkKind, String, String?)?
   markerIcon;
+
+  /// The "2D map · 3D unavailable" note; off on the small popup map.
+  final bool show3DNotice;
 
   @override
   State<ReservationRouteMap> createState() => _ReservationRouteMapState();
@@ -253,6 +292,7 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
       rotateGesturesEnabled: false,
       tiltGesturesEnabled: false,
       webCameraControlEnabled: false,
+      show3DNotice: widget.show3DNotice,
       onMapCreated: (controller) {
         _controller = controller;
         _fit();

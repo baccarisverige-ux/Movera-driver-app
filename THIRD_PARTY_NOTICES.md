@@ -22,3 +22,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 The Lucide navigation icon is derived from Feather and remains covered by the
 MIT license terms included by the Lucide project.
+
+## unDraw illustrations
+
+`assets/images/order_ride.svg` is an unDraw illustration (unDraw licence:
+free to use, no attribution required), recoloured in Movera colours and shared
+with the Movera rider app.

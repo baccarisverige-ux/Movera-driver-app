@@ -29,6 +29,9 @@ class DriverSheetNav {
     bool inactive = false,
     Color? tone,
     bool toneShown = false,
+    // A plain contour in this colour instead of the grey outline and the
+    // online dash, e.g. black while a reservation sits on the dock.
+    Color? contourColor,
   }) {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
     const sheetRed = Color(0xFF8E2E28);
@@ -169,11 +172,17 @@ class DriverSheetNav {
             child: IgnorePointer(
               child: Opacity(
                 opacity: edgeOpacity.clamp(0.0, 1.0),
-                child: RadarSheetOutline(notchDepth: notchDepth),
+                child: RadarSheetOutline(
+                  key: contourColor == null
+                      ? null
+                      : const ValueKey<String>('dock-contour-custom'),
+                  notchDepth: notchDepth,
+                  color: contourColor ?? const Color(0xFFCDD2D6),
+                ),
               ),
             ),
           ),
-        if (isOnline && edgeOpacity > 0)
+        if (isOnline && edgeOpacity > 0 && contourColor == null)
           Positioned.fill(
             child: IgnorePointer(
               child: Opacity(

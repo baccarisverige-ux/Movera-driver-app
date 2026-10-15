@@ -13,6 +13,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/overlays/trip_status_banner.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/layout_viewport.dart';
@@ -109,6 +110,7 @@ class _RideRequestsState extends State<RideRequests> {
       followsDestination: offer.followsDestination,
       bags: offer.bags,
       payment: offer.payment,
+      reservationTime: offer.reservationTime,
     );
   }
 
@@ -246,6 +248,11 @@ class _RideRequestsState extends State<RideRequests> {
       result = const ClaimResult.networkError();
     }
     if (!mounted || _matchingOfferId != trip.id) { return; }
+    // A reservation taken from Radar, won or lost, leaves Scheduled rides.
+    if (trip.reservationTime != null &&
+        result.outcome != ClaimOutcome.networkError) {
+      ScheduledRideStore.take(trip.id);
+    }
 
     switch (result.outcome) {
       case ClaimOutcome.success:
@@ -621,6 +628,7 @@ class _RideRequestsState extends State<RideRequests> {
         pickup: trip.pickup,
         dropoff: trip.dropoff,
         bags: trip.bags,
+        reservationTime: trip.reservationTime,
       ),
       state: claimed
           ? RadarOfferCardState.taken
@@ -745,10 +753,14 @@ class _RadarTrip {
     this.followsDestination = false,
     this.bags = 0,
     this.payment = 'Card',
+    this.reservationTime,
   });
 
   final int bags;
   final String payment;
+
+  /// A reservation close to pickup: its pickup time.
+  final String? reservationTime;
 
   final String id;
   final String category;

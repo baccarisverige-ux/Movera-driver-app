@@ -66,9 +66,16 @@ extension _HomeOfferRadar on _DriverHomeState {
     void _maybeShowSoonReservation() {
       if (!_soonReservationReady || !mounted || !_isOnline) { return; }
       final offer = _DriverHomeState._soonReservationOffer;
-      if (offer.driverSigned || offer.pickupMinutes > 30) { return; }
+      if (offer.driverSigned ||
+          offer.pickupMinutes > ReservationDemoTimings.nearPickupWithinMinutes) {
+        return;
+      }
+      // Taken already (here or elsewhere): it is gone everywhere (R23).
+      if (!ScheduledRideStore.isOpen(offer.id)) { return; }
       if (!_directOfferFollowsDestination(offer)) { return; }
 
+      // Close to pickup it is an Exclusive offer, no longer the popup.
+      _HomeReservation(this)._reservationBecomesExclusive(offer.id);
       _showOutsideRadarOffer(offer);
       if (_outsideRadarOffer?.id == offer.id) {
         _soonReservationReady = false;
@@ -113,17 +120,36 @@ extension _HomeOfferRadar on _DriverHomeState {
       });
     }
     Future<void> _showOutsideRadarOffer(
-      _HomeDirectOffer offer,
-    ) async {
+      _HomeDirectOffer offer, {
+      int held = 0,
+    }) async {
+      // The reservation up on the dock holds the offer back, but not longer
+      // than it would have lasted on screen: then it has expired.
+      const wait = Duration(seconds: 2);
+      if (wait * held > _DriverHomeState._outsideOfferLifetime) { return; }
+      if (mounted && _HomeReservation(this)._reservationUp) {
+        _directOfferTimer?.cancel();
+        _directOfferTimer = Timer(
+          wait,
+          () => _showOutsideRadarOffer(offer, held: held + 1),
+        );
+        return;
+      }
       if (!mounted ||
           !_isOnline ||
           showRideRequests ||
+          // One Exclusive offer at a time: a waiting one never replaces it.
+          (_outsideRadarOffer != null && _outsideRadarOffer!.id != offer.id) ||
           _radarHomeOffers.isNotEmpty ||
-          _pendingRadarHomeOffers.isNotEmpty ||
-          _hasRideOffers ||
+          // Radar trips waiting off screen hold an Exclusive offer back,
+          // but not a reservation close to pickup: it needs a driver soon.
+          (!offer.reservation &&
+              (_pendingRadarHomeOffers.isNotEmpty || _hasRideOffers)) ||
           !_directOfferFollowsDestination(offer) ||
           (offer.reservation &&
-              (offer.driverSigned || offer.pickupMinutes > 30)) ||
+              (offer.driverSigned ||
+                  offer.pickupMinutes >
+                      ReservationDemoTimings.nearPickupWithinMinutes)) ||
           _mainPanelPosition > 0.04 ||
           isPanelOpen) {
         return;
@@ -159,11 +185,16 @@ extension _HomeOfferRadar on _DriverHomeState {
       _outsideOfferTimeoutTimer = null;
       if (!mounted) { return; }
 
+      final gone = _outsideRadarOffer;
       _rebuild(() {
         _outsideRadarOffer = null;
       });
       _clearDirectOfferRoute();
       _releasePendingRadarOffers();
+      // An untaken reservation stays a Radar trip (R22).
+      if (gone != null && gone.reservation) {
+        _HomeReservation(this)._reservationToDeck(gone.id);
+      }
     }
     void _showRadarHomeOffer(_HomeDirectOffer offer) {
       if (!mounted ||
@@ -178,7 +209,7 @@ extension _HomeOfferRadar on _DriverHomeState {
 
       // Dispatch owns offer expiry and claim state for both Home and Radar.
 
-      if (_outsideRadarOffer != null) {
+      if (_outsideRadarOffer != null || _HomeReservation(this)._reservationUp) {
         _rebuild(() {
           _hasRideOffers = true;
           _pendingRadarHomeOffers.add(offer);
@@ -219,6 +250,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (!mounted ||
           !_isOnline ||
           _outsideRadarOffer != null ||
+          _HomeReservation(this)._reservationUp ||
           _pendingRadarHomeOffers.isEmpty) {
         return;
       }
@@ -274,6 +306,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (!mounted ||
           !_isOnline ||
           _outsideRadarOffer != null ||
+          _HomeReservation(this)._reservationUp ||
           _pendingRadarHomeOffers.isEmpty) {
         return;
       }
@@ -335,6 +368,9 @@ extension _HomeOfferRadar on _DriverHomeState {
         result = const ClaimResult.networkError();
       }
       if (!mounted || _homeRadarMatchingOfferId != offer.id) { return; }
+      if (offer.reservation) {
+        _HomeReservation(this)._reservationClaimedOnRadar(offer.id, result);
+      }
       switch (result.outcome) {
         case ClaimOutcome.success:
           _resolveHomeRadarMatchWon(offer);
@@ -372,27 +408,32 @@ extension _HomeOfferRadar on _DriverHomeState {
       final offers = _latestDispatchOffers.where((offer) => offer.isNearby &&
           (!_destinationModeActive || offer.followsDestination)).toList();
       if (index >= offers.length) { return; }
-      final offer = offers[index];
-      _showRadarHomeOffer(_HomeDirectOffer(
-        id: offer.id,
-        category: offer.category,
-        reason: 'Trip Radar match',
-        detail: 'Detected in your live radar coverage',
-        fare: offer.fare,
-        rating: offer.rating,
-        pickupMinutes: offer.pickupMinutes,
-        pickupKm: offer.pickupKm,
-        tripMinutes: offer.tripMinutes,
-        tripKm: offer.tripKm,
-        pickup: offer.pickup,
-        dropoff: offer.dropoff,
-        pickupPosition: offer.pickupPosition.toLatLng(),
-        dropoffPosition: offer.dropoffPosition.toLatLng(),
-        bags: offer.bags,
-        payment: offer.payment,
-        cash: RadarOfferView.isCash(offer.payment),
-      ));
+      _showRadarHomeOffer(_homeOfferFromDispatch(offers[index]));
     }
+    /// A Radar trip from dispatch as a Home deck card. A reservation keeps
+    /// its pickup time for its "Reservation" badge.
+    _HomeDirectOffer _homeOfferFromDispatch(RideOffer offer) =>
+        _HomeDirectOffer(
+          id: offer.id,
+          category: offer.category,
+          reason: 'Trip Radar match',
+          detail: 'Detected in your live radar coverage',
+          fare: offer.fare,
+          rating: offer.rating,
+          pickupMinutes: offer.pickupMinutes,
+          pickupKm: offer.pickupKm,
+          tripMinutes: offer.tripMinutes,
+          tripKm: offer.tripKm,
+          pickup: offer.pickup,
+          dropoff: offer.dropoff,
+          pickupPosition: offer.pickupPosition.toLatLng(),
+          dropoffPosition: offer.dropoffPosition.toLatLng(),
+          bags: offer.bags,
+          payment: offer.payment,
+          cash: RadarOfferView.isCash(offer.payment),
+          reservation: offer.isReservation,
+          pickupTime: offer.reservationTime,
+        );
     void _resolveHomeRadarMatchWon(_HomeDirectOffer offer) {
       _homeRadarNoticeTimer?.cancel();
 
@@ -526,6 +567,11 @@ extension _HomeOfferRadar on _DriverHomeState {
     void _acceptOutsideRadarOffer() {
       final offer = _outsideRadarOffer;
       if (offer == null) { return; }
+      // A reservation goes to the first driver who claims it (R25).
+      if (offer.reservation &&
+          _HomeReservation(this)._exclusiveNeedsClaim(offer)) {
+        return;
+      }
 
       _cancelAllOfferTimers();
       _expandedDirectOfferTimer?.cancel();
@@ -675,6 +721,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           pickup: offer.pickup,
           dropoff: offer.dropoff,
           bags: offer.bags,
+          reservationTime: offer.reservation ? offer.pickupTime : null,
         );
     /// Radar offers on Home: a deck of cards above the radar, with the
     /// total count on top (tap it for the full-screen list).
@@ -817,11 +864,13 @@ extension _HomeOfferRadar on _DriverHomeState {
             },
           );
 
-          _soonReservationReady = true;
+          // Close to pickup (job L3) the untaken reservation becomes an
+          // Exclusive offer; it waits while other offers are on screen.
           _reservationOfferTimer = Timer(
-            const Duration(milliseconds: 40000),
+            ReservationDemoTimings.nearPickupAfter,
             () {
               if (!mounted || !_isOnline) { return; }
+              _soonReservationReady = true;
               _maybeShowSoonReservation();
             },
           );

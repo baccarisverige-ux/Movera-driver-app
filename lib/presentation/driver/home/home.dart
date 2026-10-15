@@ -77,6 +77,7 @@ import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 part 'home_offer_radar.dart';
 part 'home_map_sheet.dart';
+part 'home_reservation.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -194,8 +195,8 @@ class _DriverHomeState extends State<DriverHome>
   Timer? _expandedDirectOfferTimer;
   Timer? _reservationOfferTimer;
   Timer? _reservationPopupTimer;
-  bool _reservationPopupShown = false;
-  int _reservationPopupTries = 0;
+  /// The reservation sent to Home: it rises from the dock while online.
+  final _HomeReservationState _reservation = _HomeReservationState();
   Timer? _radarOfferTwoTimer;
   Timer? _radarOfferThreeTimer;
   Timer? _homeRadarMatchResolutionTimer;
@@ -343,8 +344,9 @@ class _DriverHomeState extends State<DriverHome>
     cash: true,
   );
 
+  /// The demo reservation close to pickup, as its Exclusive offer.
   static const _HomeDirectOffer _soonReservationOffer = _HomeDirectOffer(
-    id: 'home-reservation-soon',
+    id: demoReservationId,
     category: 'Comfort',
     reason: 'Reservation',
     detail: 'No driver signed · leaving soon',
@@ -408,50 +410,7 @@ class _DriverHomeState extends State<DriverHome>
       unawaited(_restoreActiveRideIfNeeded());
       _HomeMapSheet(this)._maybeShowAppUpdatePrompt();
       _HomeMapSheet(this)._showNextIslandMessage();
-      _scheduleReservationPopup();
-    });
-  }
-
-  /// Reservation requests arrive outside Radar, so Home announces the newest
-  /// one once, a few seconds after opening, when nothing else is in front.
-  /// It shows whether Radar is on or off, and waits while a Radar offer is
-  /// on screen.
-  void _scheduleReservationPopup() {
-    final request = _adminHomeConfig.scheduledRides.newRequest;
-    if (!DriverRuntimeConfig.current.reservationPopup ||
-        !_hasScheduledRideOffers ||
-        request == null ||
-        _reservationPopupShown ||
-        _reservationPopupTries >= 6) {
-      return;
-    }
-    _reservationPopupTimer?.cancel();
-    _reservationPopupTimer = Timer(const Duration(seconds: 3), () async {
-      if (!mounted || _reservationPopupShown) { return; }
-      // Reservations are independent of Radar: they show online or offline,
-      // but never on top of a Radar offer the driver is deciding on.
-      final radarOfferOnScreen = _hasRideOffers ||
-          _radarHomeOffers.isNotEmpty ||
-          _outsideRadarOffer != null;
-      if (radarOfferOnScreen) {
-        _scheduleReservationPopup();
-        return;
-      }
-      _reservationPopupTries++;
-      final onTop = ModalRoute.of(context)?.isCurrent ?? false;
-      if (!onTop || isPanelOpen) {
-        _scheduleReservationPopup();
-        return;
-      }
-      _reservationPopupShown = true;
-      IslandMessages.show(HomeIslandNotices.newReservation);
-      final decision = await showReservationRequestSheet(context, request);
-      if (!mounted || decision == ReservationDecision.dismissed) { return; }
-      final accepted = decision == ReservationDecision.accepted;
-      ScheduledRideStore.answer(request.pickupAddress, accepted: accepted);
-      IslandMessages.show(accepted
-          ? HomeIslandNotices.reservationAccepted
-          : HomeIslandNotices.reservationDeclined);
+      _HomeReservation(this)._scheduleReservationPopup();
     });
   }
 
@@ -713,6 +672,7 @@ class _DriverHomeState extends State<DriverHome>
       drawer: DriverSideMenu(
         isOnline: _isOnline,
         accountActive: isAccountActivated,
+        dispatchRepository: _dispatch,
       ),
       body: showRideRequests
           ? Stack(
@@ -1000,14 +960,14 @@ class _DriverHomeState extends State<DriverHome>
   }
 
   void _onScheduledRequests() {
-    if (mounted) { setState(() {}); }
+    if (mounted) { _HomeReservation(this)._onScheduledRequestsChanged(); }
   }
 
   void _openScheduledRides() {
     pushSingle(
       context,
       MaterialPageRoute(
-        builder: (_) => const ScheduledRidesScreen(),
+        builder: (_) => ScheduledRidesScreen(dispatchRepository: _dispatch),
       ),
     );
   }
@@ -1150,6 +1110,7 @@ class _DriverHomeState extends State<DriverHome>
     ScheduledRideStore.openRequests.removeListener(_onScheduledRequests);
     _locationEpoch++;
     _reservationPopupTimer?.cancel();
+    _reservation.release?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     driverRouteObserver.unsubscribe(this);
     _sheetTrace.dispose();

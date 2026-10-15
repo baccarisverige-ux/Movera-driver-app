@@ -906,6 +906,9 @@ extension _HomeMapSheet on _DriverHomeState {
                 bottom: 138 + _homeMapButtonSize + 12,
                 child: _HomeOfferRadar(this)._buildRadarOffersTray(),
               ),
+            // Reservation request: the Home sheet grows taller behind the
+            // dock, over the map buttons, under the top island.
+            if (!isDestinationPanel) _HomeReservation(this)._reservationLayer(),
             if (!isDestinationPanel) ...[
               // As high as the phone allows: tucked just under the clock
               // and notch (the safe area keeps a few spare pixels below).
@@ -1459,6 +1462,10 @@ extension _HomeMapSheet on _DriverHomeState {
               topRuleOpacity: cover,
               tone: closed ? _sheetTone : null,
               toneShown: closed && _sheetToneShown,
+              // Reservation on the dock: thin black contour, no mint.
+              contourColor: _HomeReservation(this)._reservationOnDock
+                  ? const Color(0xFF111518)
+                  : null,
             );
           },
         ),
@@ -1511,13 +1518,19 @@ extension _HomeMapSheet on _DriverHomeState {
               valueListenable: _panelSlidePosition,
               builder: (context, position, _) {
                 final holdOff = _isOnline && position >= 0.5;
+                // A reservation on the dock: the radar is its Accept.
+                final reserve = !holdOff && _isOnline &&
+                    _HomeReservation(this)._reservationOnDock;
                 // Offers on the deck: the radar takes the front trip.
-                final front = !holdOff && _isOnline && _outsideRadarOffer == null
+                final front = !holdOff && !reserve && _isOnline &&
+                        _outsideRadarOffer == null
                     ? _HomeOfferRadar(this)._radarFrontOffer()
                     : null;
                 final face = _isOnline
                     ? (holdOff
                         ? 'radar-hold-off'
+                        : reserve
+                        ? 'radar-reserve'
                         : front != null
                         ? 'radar-accept'
                         : 'radar-online')
@@ -1542,6 +1555,8 @@ extension _HomeMapSheet on _DriverHomeState {
                     child: _isOnline
                         ? (holdOff
                             ? _holdOffRadar()
+                            : reserve
+                            ? _HomeReservation(this)._reserveRadar()
                             : front != null
                             ? _acceptRadar(front)
                             : _buildTripRadarButton())

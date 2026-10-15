@@ -21,7 +21,13 @@ void main() {
     expect(offers, contains('Duration(milliseconds: 14500)'));
     expect(offers, contains('Duration(milliseconds: 17500)'));
     expect(offers, contains('Duration(milliseconds: 50000)'));
-    expect(offers, contains('Duration(milliseconds: 40000)'));
+    // The reservation's near-pickup step reads its demo timing from the
+    // one place that holds every reservation timing (admin jobs L1–L3).
+    expect(offers, contains('ReservationDemoTimings.nearPickupAfter'));
+    expect(
+      File('lib/core/admin/driver_home_admin_content.dart').readAsStringSync(),
+      contains('nearPickupAfter = Duration(milliseconds: 40000)'),
+    );
     expect(home, contains('Duration(milliseconds: 1400)'));
     expect(home, contains('void _rebuild('));
     expect(offers, isNot(contains('setState(')));
