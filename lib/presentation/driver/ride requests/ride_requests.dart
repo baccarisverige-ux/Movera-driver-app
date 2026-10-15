@@ -33,6 +33,13 @@ class RideRequests extends StatefulWidget {
   final DispatchRepository? dispatchRepository;
   final ActiveRideRepository? activeRideRepository;
 
+  /// Before an accepted scheduled ride, only trips that still leave time
+  /// for it (the smart gap) and head toward its pickup are listed.
+  final bool Function(RideOffer offer)? fitsSchedule;
+
+  /// That ride's pickup time, e.g. "07:40", while trips head toward it.
+  final String? towardPickupTime;
+
   const RideRequests({
     super.key,
     this.onCloseRides,
@@ -45,6 +52,8 @@ class RideRequests extends StatefulWidget {
     this.routeRepository,
     this.dispatchRepository,
     this.activeRideRepository,
+    this.fitsSchedule,
+    this.towardPickupTime,
   });
 
   @override
@@ -84,6 +93,7 @@ class _RideRequestsState extends State<RideRequests> {
   List<_RadarTrip> get _visibleOffers {
     final nearby = _offers.where((offer) {
       if (!offer.isNearby || _dismissed.contains(offer.id)) { return false; }
+      if (!(widget.fitsSchedule?.call(offer.source) ?? true)) { return false; }
       if (!widget.destinationModeActive) { return true; }
       return offer.followsDestination;
     }).toList()
@@ -111,6 +121,7 @@ class _RideRequestsState extends State<RideRequests> {
       bags: offer.bags,
       payment: offer.payment,
       reservationTime: offer.reservationTime,
+      source: offer,
     );
   }
 
@@ -296,8 +307,12 @@ class _RideRequestsState extends State<RideRequests> {
       () {
         if (!mounted) { return; }
         final navigator = Navigator.of(context);
+        final rider = trip.source;
         final ride = AcceptRide(
           offerId: tripOccurrenceId(trip.id),
+          riderName: rider.riderName.isEmpty ? 'Rider' : rider.riderName,
+          riderRating: double.tryParse(rider.rating) ?? 4.9,
+          riderTrips: rider.riderTrips,
           fare: trip.fare,
           paidByCash: RadarOfferView.isCash(trip.payment),
           category: trip.category,
@@ -310,6 +325,8 @@ class _RideRequestsState extends State<RideRequests> {
           pickupAddress: trip.pickup,
           pickupArea: trip.pickup.split(',').last.trim(),
           dropoffAddress: trip.dropoff,
+          stopAddresses: [for (final stop in rider.stops) stop.address],
+          stopPositions: [for (final stop in rider.stops) stop.point.toLatLng()],
           pickupPosition: trip.pickupPosition,
           dropoffPosition: trip.dropoffPosition,
           destinationModeActive: widget.destinationModeActive,
@@ -409,6 +426,11 @@ class _RideRequestsState extends State<RideRequests> {
               children: [
                 _header(openCount),
                 if (widget.destinationModeActive) _destinationModeBanner(),
+                if (widget.towardPickupTime case final time?)
+                  _onYourWayBanner(
+                    'Trips toward your $time pickup',
+                    key: const ValueKey<String>('radar-schedule-filter'),
+                  ),
                 Expanded(
                   child: offers.isEmpty
                       ? _emptyState()
@@ -561,11 +583,18 @@ class _RideRequestsState extends State<RideRequests> {
     final label = destination == null || destination.isEmpty
         ? 'Destination route'
         : destination.split(',').first.trim();
+    return _onYourWayBanner(
+      'Trips toward $label',
+      key: const ValueKey<String>('radar-destination-filter'),
+    );
+  }
 
+  /// "On your way" and what the trips head toward.
+  Widget _onYourWayBanner(String text, {Key? key}) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       child: Container(
-        key: const ValueKey<String>('radar-destination-filter'),
+        key: key,
         padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -592,7 +621,7 @@ class _RideRequestsState extends State<RideRequests> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Trips toward $label',
+                text,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -629,6 +658,7 @@ class _RideRequestsState extends State<RideRequests> {
         dropoff: trip.dropoff,
         bags: trip.bags,
         reservationTime: trip.reservationTime,
+        fareBoost: trip.source.fareBoost,
       ),
       state: claimed
           ? RadarOfferCardState.taken
@@ -754,7 +784,11 @@ class _RadarTrip {
     this.bags = 0,
     this.payment = 'Card',
     this.reservationTime,
+    required this.source,
   });
+
+  /// The dispatch offer: rider, stops and fare boost come from it.
+  final RideOffer source;
 
   final int bags;
   final String payment;

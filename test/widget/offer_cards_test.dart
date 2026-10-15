@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/widgets/exclusive_offer_card.dart';
@@ -276,6 +277,80 @@ void main() {
       await tester.pump(const Duration(milliseconds: 4300));
       expect(tester.getSize(dark).width, closeTo(0, 0.5));
       expect(find.text('0s'), findsOneWidget);
+    });
+  });
+
+  group('Round 3: fare boost (Q13) and one reason source', () {
+    RadarOfferView boosted() => const RadarOfferView(
+      id: 'o1',
+      category: 'Premium',
+      payment: 'Card',
+      rating: '4.97',
+      fare: '249,25 kr',
+      pickupMinutes: 6,
+      pickupKm: 2.4,
+      tripMinutes: 21,
+      tripKm: 12,
+      pickup: 'Högsätravägen, Lidingö',
+      dropoff: 'Central Station, Stockholm',
+      fareBoost: '+40 kr',
+    );
+
+    testWidgets('the Radar card shows the boost and only the new fare', (
+      tester,
+    ) async {
+      await _pump(tester, RadarOfferCard(offer: boosted(), onMatch: () {}));
+      final badge = find.byKey(const ValueKey<String>('radar-offer-boost-o1'));
+      expect(badge, findsOneWidget);
+      expect(find.descendant(of: badge, matching: find.text('+40 kr')),
+          findsOneWidget);
+      expect(find.text('249,25 kr', findRichText: true), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the Exclusive card shows it too, at 320 wide', (tester) async {
+      await _pump(
+        tester,
+        _exclusive(offer: boosted(), reservation: true, reservationTime: '08:05'),
+        width: 320,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-offer-boost-o1')),
+        findsOneWidget,
+      );
+      expect(find.text('+40 kr'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('no boost, no badge', (tester) async {
+      await _pump(tester, RadarOfferCard(offer: _offer(), onMatch: () {}));
+      expect(find.textContaining('+'), findsNothing);
+    });
+
+    testWidgets('the card shows the reason the offer brings', (tester) async {
+      await _pump(
+        tester,
+        ExclusiveOfferCard(
+          offer: _offer(),
+          lifetime: const Duration(seconds: 30),
+          reservation: true,
+          reservationTime: '09:30',
+          reason: ExclusiveReasons.assigned,
+          onAccept: () {},
+        ),
+      );
+      expect(find.text('Assigned by Movera'), findsOneWidget);
+      expect(find.text('Pickup soon · no driver yet'), findsNothing);
+      expect(find.text('30s'), findsOneWidget);
+      // Without one, the default from the same place.
+      expect(
+        ExclusiveReasons.defaultFor(reservation: false),
+        'Only for you · nearby',
+      );
+      expect(
+        ExclusiveReasons.defaultFor(reservation: true),
+        'Pickup soon · no driver yet',
+      );
     });
   });
 

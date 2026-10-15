@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
-import 'package:movera/core/money/money.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
 /// Frontend/demo dispatch. A backend implementation replaces this class.
 ///
@@ -16,8 +17,12 @@ import 'package:movera/core/money/money.dart';
 ///   through the same [claimOffer]: the first claim wins, later ones get
 ///   [ClaimOutcome.unavailable]; a reservation id equal to [losingOfferId]
 ///   is won by another driver
-/// - close to pickup ([ReservationDemoTimings.nearPickupAfter]) untaken
-///   reservations also join the nearby Radar trips, marked as reservations
+/// - untaken reservations join the nearby Radar trips, marked as
+///   reservations, [ScheduledRideRules.radarBeforeMinutes] before their
+///   pickup on [ScheduledClock.instance]; a cancelled one goes back where
+///   [ScheduledRideRules.stepAfterDriverCancel] says, Radar trips included
+/// - [assignedRides] are assigned to this driver
+///   [ReservationDemoTimings.assignedAfter] after the demo starts (Q29)
 class DemoDispatchRepository implements DispatchRepository {
   DemoDispatchRepository({
     Duration claimDelay = const Duration(milliseconds: 1450),
@@ -28,15 +33,26 @@ class DemoDispatchRepository implements DispatchRepository {
     List<ReservationRequestPreview> reservations = const [
       demoReservationRequest,
     ],
-    Duration reservationRadarDelay = ReservationDemoTimings.nearPickupAfter,
+    Duration? reservationRadarDelay,
+    this.assignedRides = const [demoAssignedReservation],
+    Duration assignmentDelay = ReservationDemoTimings.assignedAfter,
+    ScheduledClock? clock,
+    ScheduledRideRules? rules,
   }) : _claimDelay = claimDelay,
        _newOfferDelay = newOfferDelay,
        _externalClaimDelay = externalClaimDelay,
        _reservationRadarDelay = reservationRadarDelay,
+       _assignmentDelay = assignmentDelay,
+       _clock = clock,
+       _rules = rules,
+       _seedPreviews = {
+         for (final reservation in reservations)
+           if (reservation.id.isNotEmpty) reservation.id: reservation,
+       },
        _seedReservations = {
          for (final reservation in reservations)
            if (reservation.id.isNotEmpty)
-             reservation.id: _reservationOffer(reservation),
+             reservation.id: RideOffer.reservation(reservation),
        } {
     _reservations = Map<String, RideOffer>.of(_seedReservations);
   }
@@ -44,9 +60,20 @@ class DemoDispatchRepository implements DispatchRepository {
   final Duration _claimDelay;
   final Duration _newOfferDelay;
   final Duration _externalClaimDelay;
-  final Duration _reservationRadarDelay;
+
+  /// A fixed delay instead of the clock for when reservations join Radar.
+  final Duration? _reservationRadarDelay;
+  final Duration _assignmentDelay;
+  final ScheduledClock? _clock;
+  final ScheduledRideRules? _rules;
   final String losingOfferId;
   final String externalClaimOfferId;
+
+  /// Rides Movera assigns to this driver in the demo.
+  final List<ReservationRequestPreview> assignedRides;
+
+  ScheduledClock get clock => _clock ?? ScheduledClock.instance;
+  ScheduledRideRules get rules => _rules ?? ScheduledRideRules.current;
 
   final StreamController<List<RideOffer>> _nearby =
       StreamController<List<RideOffer>>.broadcast();
@@ -58,41 +85,30 @@ class DemoDispatchRepository implements DispatchRepository {
 
   /// Every reservation of this demo, by id, and the ones no driver has
   /// taken yet.
+  final Map<String, ReservationRequestPreview> _seedPreviews;
   final Map<String, RideOffer> _seedReservations;
   late Map<String, RideOffer> _reservations;
 
-  /// A reservation as a Radar trip. Demo: the driver's distance to the
-  /// pickup is not known here, so it uses a fixed one.
-  static RideOffer _reservationOffer(ReservationRequestPreview reservation) =>
-      RideOffer(
-        id: reservation.id,
-        category: reservation.category,
-        fare: Money.parseSekLabel(reservation.fare)?.formatted ??
-            reservation.fare,
-        rating: reservation.rating,
-        pickupMinutes: 16,
-        pickupKm: 2.1,
-        tripMinutes: reservation.tripMinutes,
-        tripKm: reservation.tripKm,
-        pickup: reservation.pickupAddress,
-        dropoff: reservation.dropoffAddress,
-        pickupPosition: reservation.pickup,
-        dropoffPosition: reservation.dropoff,
-        isNearby: true,
-        followsDestination: false,
-        payment: reservation.paidByCash ? 'Cash' : 'Card',
-        reservationTime: reservation.pickupTime,
-      );
+  /// Assigned rides not answered yet.
+  final Set<String> _openAssignments = <String>{};
+  final StreamController<ReservationRequestPreview> _assignments =
+      StreamController<ReservationRequestPreview>.broadcast();
+  Timer? _assignmentTimer;
+
+  /// When each untaken reservation joins Radar.
+  final Map<String, Timer> _radarJoinTimers = <String, Timer>{};
+
   bool _demoStarted = false;
   int _generation = 0;
   bool _disposed = false;
   Timer? _newOfferTimer;
   Timer? _externalClaimTimer;
-  Timer? _reservationRadarTimer;
 
   static const List<RideOffer> _immediateOffers = [
     RideOffer(
       id: 'nearby-1',
+      riderName: 'Sara',
+      riderTrips: 86,
       category: 'Comfort',
       fare: '111,02 kr',
       rating: '4.95',
@@ -110,6 +126,8 @@ class DemoDispatchRepository implements DispatchRepository {
     ),
     RideOffer(
       id: 'nearby-2',
+      riderName: 'Johan',
+      riderTrips: 203,
       category: 'Movera',
       fare: '96,40 kr',
       rating: '4.91',
@@ -127,6 +145,8 @@ class DemoDispatchRepository implements DispatchRepository {
     ),
     RideOffer(
       id: 'nearby-3',
+      riderName: 'Elin',
+      riderTrips: 57,
       category: 'Premium',
       fare: '184,60 kr',
       rating: '4.98',
@@ -148,6 +168,8 @@ class DemoDispatchRepository implements DispatchRepository {
   static const List<RideOffer> _laterOffers = [
     RideOffer(
       id: 'nearby-4',
+      riderName: 'Omar',
+      riderTrips: 142,
       category: 'Priority',
       fare: '128,70 kr',
       rating: '4.93',
@@ -164,6 +186,8 @@ class DemoDispatchRepository implements DispatchRepository {
     ),
     RideOffer(
       id: 'nearby-5',
+      riderName: 'Lina',
+      riderTrips: 31,
       category: 'Electric',
       fare: '139,20 kr',
       rating: '4.97',
@@ -237,10 +261,17 @@ class DemoDispatchRepository implements DispatchRepository {
     final reservation = _reservations.remove(offerId);
     if (reservation != null) {
       // One winner: it leaves the open reservations and Radar at once.
+      _radarJoinTimers.remove(offerId)?.cancel();
       _removeOffer(offerId);
       return offerId == losingOfferId
           ? const ClaimResult.alreadyClaimed()
           : ClaimResult.success(reservation);
+    }
+    if (_openAssignments.remove(offerId)) {
+      final assigned = assignedRides.firstWhere((ride) => ride.id == offerId);
+      return offerId == losingOfferId
+          ? const ClaimResult.expired()
+          : ClaimResult.success(RideOffer.reservation(assigned));
     }
     RideOffer? offer;
     for (final item in _offers) {
@@ -265,9 +296,10 @@ class DemoDispatchRepository implements DispatchRepository {
     _emitNearby();
   }
 
-  /// Demo (L3): a cancelled reservation goes back to the open ones, so
-  /// Scheduled rides and the Home popup can offer it again. It does not go
-  /// straight back into Radar.
+  /// A cancelled reservation goes back to the open ones, so Scheduled
+  /// rides and the Home popup can offer it again, and to Radar where the
+  /// admin rule "After a driver cancels" says: at once when it is that
+  /// close to pickup, otherwise at its Radar time.
   @override
   void releaseReservation(String reservationId) {
     final reservation = _seedReservations[reservationId];
@@ -277,19 +309,59 @@ class DemoDispatchRepository implements DispatchRepository {
       return;
     }
     _reservations[reservationId] = reservation;
+    final left = _minutesBeforePickup(reservationId);
+    final step = left == null
+        ? ReservationStep.list
+        : rules.stepAfterDriverCancel(
+            sinceBookedMinutes: 0,
+            beforePickupMinutes: left,
+          );
+    if (step == ReservationStep.radar) {
+      _joinRadar(reservationId);
+    } else if (_demoStarted) {
+      _scheduleRadarJoin(reservationId);
+    }
   }
 
-  /// Close to pickup: untaken reservations join the nearby Radar trips.
-  void _reservationsToRadar() {
-    final known = {for (final offer in _offers) offer.id};
-    final joining = [
-      for (final reservation in _reservations.values)
-        if (!known.contains(reservation.id)) reservation,
-    ];
-    if (joining.isEmpty) {
+  @override
+  Stream<ReservationRequestPreview> watchAssignments() => _assignments.stream;
+
+  /// Minutes left before [id]'s pickup on the clock; null when unknown.
+  int? _minutesBeforePickup(String id) {
+    final now = clock.now();
+    return _seedPreviews[id]?.untilPickup(now)?.inMinutes;
+  }
+
+  /// [id] joins Radar at its Radar step; at once when that has passed.
+  void _scheduleRadarJoin(String id) {
+    _radarJoinTimers.remove(id)?.cancel();
+    final fixed = _reservationRadarDelay;
+    final preview = _seedPreviews[id];
+    final pickupAt = preview?.pickupAt(clock.now());
+    final wait = fixed ??
+        (pickupAt == null
+            ? null
+            : clock.realUntil(
+                pickupAt.subtract(Duration(minutes: rules.radarBeforeMinutes)),
+              ));
+    if (wait == null) {
       return;
     }
-    _offers = [..._offers, ...joining];
+    _radarJoinTimers[id] = Timer(wait, () {
+      _radarJoinTimers.remove(id);
+      _joinRadar(id);
+    });
+  }
+
+  /// Close to pickup: an untaken reservation joins the nearby Radar trips.
+  void _joinRadar(String id) {
+    final reservation = _reservations[id];
+    if (_disposed ||
+        reservation == null ||
+        _offers.any((offer) => offer.id == id)) {
+      return;
+    }
+    _offers = [..._offers, reservation];
     _emitNearby();
   }
 
@@ -302,10 +374,18 @@ class DemoDispatchRepository implements DispatchRepository {
     _externalClaimTimer = Timer(_externalClaimDelay, () {
       _removeOffer(externalClaimOfferId);
     });
-    _reservationRadarTimer = Timer(
-      _reservationRadarDelay,
-      _reservationsToRadar,
-    );
+    for (final id in _reservations.keys) {
+      _scheduleRadarJoin(id);
+    }
+    if (assignedRides.isNotEmpty) {
+      _assignmentTimer = Timer(_assignmentDelay, () {
+        for (final ride in assignedRides) {
+          if (_openAssignments.add(ride.id) && !_assignments.isClosed) {
+            _assignments.add(ride);
+          }
+        }
+      });
+    }
   }
 
   void _releaseQueuedOffers() {
@@ -339,12 +419,11 @@ class DemoDispatchRepository implements DispatchRepository {
       return;
     }
     _generation++;
-    _newOfferTimer?.cancel();
-    _externalClaimTimer?.cancel();
-    _reservationRadarTimer?.cancel();
+    _cancelDemoTimers();
     _offers = List<RideOffer>.from(_immediateOffers);
     _queued = List<RideOffer>.from(_laterOffers);
     _reservations = Map<String, RideOffer>.of(_seedReservations);
+    _openAssignments.clear();
     _demoStarted = false;
     _emitNearby();
   }
@@ -355,10 +434,19 @@ class DemoDispatchRepository implements DispatchRepository {
     }
     _disposed = true;
     _generation++;
-    _newOfferTimer?.cancel();
-    _externalClaimTimer?.cancel();
-    _reservationRadarTimer?.cancel();
+    _cancelDemoTimers();
     _nearby.close();
     _nextTrip.close();
+    _assignments.close();
+  }
+
+  void _cancelDemoTimers() {
+    _newOfferTimer?.cancel();
+    _externalClaimTimer?.cancel();
+    _assignmentTimer?.cancel();
+    for (final timer in _radarJoinTimers.values) {
+      timer.cancel();
+    }
+    _radarJoinTimers.clear();
   }
 }

@@ -1,0 +1,392 @@
+part of 'home.dart';
+
+// Scheduled rides on Home (notes Q9–Q13, Q29), on the demo day of
+// [ScheduledClock.instance]:
+// - the open reservation's near-pickup steps count the minutes before its
+//   pickup time, never the drive to it;
+// - the smart gap before the next accepted ride: reminders, "leave now"
+//   (the ride lands on screen as the active trip, heading to pickup), then
+//   the late warning and the backup driver;
+// - before that ride, only trips that leave the gap and head toward its
+//   pickup;
+// - rides Movera assigns arrive like an Exclusive offer: Accept in time.
+
+class _HomeScheduledState {
+  /// Reminder, "leave now" and backup timers of [ride].
+  final List<Timer> timers = <Timer>[];
+
+  /// The accepted ride the timers are for.
+  ReservationRequestPreview? ride;
+
+  /// "Leave now" passed and the trip could not open: since then the
+  /// driver was warned; the backup driver follows.
+  DateTime? lateSince;
+
+  /// Planning right now: a store change it causes waits for the next plan.
+  bool planning = false;
+
+  VoidCallback? storeListener;
+  StreamSubscription<ReservationRequestPreview>? assignments;
+
+  /// Assigned rides by id, and the ones still waiting for their card.
+  final Map<String, ReservationRequestPreview> assigned = {};
+  final List<String> waiting = <String>[];
+
+  /// Answered assignments: their card leaving is not a miss.
+  final Set<String> answered = <String>{};
+
+  /// The assignment whose Accept is with dispatch.
+  String? claimingId;
+
+  void cancelTimers() {
+    for (final timer in timers) {
+      timer.cancel();
+    }
+    timers.clear();
+  }
+
+  void dispose() {
+    cancelTimers();
+    final listener = storeListener;
+    if (listener != null) {
+      ScheduledRideStore.changes.removeListener(listener);
+    }
+    assignments?.cancel();
+    assignments = null;
+  }
+}
+
+extension _HomeScheduled on _DriverHomeState {
+    ScheduledClock get _clock => ScheduledClock.instance;
+    ScheduledRideRules get _rules => ScheduledRideRules.current;
+    GeoPoint get _driverPoint => GeoPointMaps.fromLatLng(_driverPosition);
+
+    /// After the first frame: follow Scheduled rides and plan.
+    void _startScheduled() {
+      void changed() {
+        if (mounted && !_scheduled.planning) { _planScheduled(); }
+      }
+      _scheduled.storeListener = changed;
+      ScheduledRideStore.changes.addListener(changed);
+      _planScheduled();
+      _watchAssignments();
+    }
+
+    /// The open reservation Home shows (the admin's newest request), as
+    /// its Exclusive offer.
+    _HomeDirectOffer? _soonReservationOffer() {
+      final request = _HomeReservation(this)._homeRequest;
+      if (request == null || request.id.isEmpty) { return null; }
+      return _HomeDirectOffer.fromRide(
+        RideOffer.reservation(request),
+        reason: ExclusiveReasons.pickupSoon,
+      );
+    }
+
+    /// Reservation [id] is close enough to its pickup time for its
+    /// Exclusive step. True for offers whose pickup time Home does not
+    /// know: dispatch already decided those.
+    bool _exclusiveStepReached(String id) {
+      final request = _HomeReservation(this)._homeRequest;
+      if (request == null || request.id != id) { return true; }
+      final left = request.untilPickup(_clock.now());
+      return left != null &&
+          left <= Duration(minutes: _rules.exclusiveBeforeMinutes);
+    }
+
+    /// Real time until the open reservation's Exclusive step; null when
+    /// its time is unknown or its pickup has passed.
+    Duration? _untilExclusiveStep() {
+      final request = _HomeReservation(this)._homeRequest;
+      if (request == null || request.id.isEmpty) { return null; }
+      final now = _clock.now();
+      final at = request.pickupAt(now);
+      if (at == null || !at.isAfter(now)) { return null; }
+      return _clock.realUntil(
+        at.subtract(Duration(minutes: _rules.exclusiveBeforeMinutes)),
+      );
+    }
+
+    /// The next accepted ride the smart gap works for.
+    ReservationRequestPreview? get _nextScheduledRide {
+      final upcoming = ScheduledRideStore.upcoming;
+      return upcoming.isEmpty ? null : upcoming.first;
+    }
+
+    /// Plans reminders, "be online", "leave now" and the backup for the
+    /// next accepted ride.
+    void _planScheduled() {
+      final state = _scheduled;
+      state.cancelTimers();
+      final ride = _nextScheduledRide;
+      if (!identical(ride, state.ride)) {
+        state
+          ..ride = ride
+          ..lateSince = null;
+      }
+      if (ride == null || !mounted) { return; }
+      final now = _clock.now();
+      final pickupAt = ride.pickupAt(now);
+      final leave = SmartGap.leaveAt(
+        ride,
+        driver: _driverPoint,
+        now: now,
+        rules: _rules,
+      );
+      if (pickupAt == null || leave == null) { return; }
+      void at(DateTime time, VoidCallback run) =>
+          state.timers.add(Timer(_clock.realUntil(time), run));
+      final rule = SmartGap.ruleOf(ride, _rules);
+      for (final minutes in rule.reminderMinutes) {
+        final time = pickupAt.subtract(Duration(minutes: minutes));
+        if (time.isAfter(now) && time.isBefore(leave)) {
+          at(time, () => _remindScheduled(ride, minutes));
+        }
+      }
+      final onlineBy = pickupAt.subtract(
+        Duration(minutes: rule.onlineBeforeMinutes),
+      );
+      if (onlineBy.isAfter(now) && onlineBy.isBefore(leave)) {
+        at(onlineBy, () => _remindOnline(ride));
+      }
+      if (state.lateSince != null || !now.isBefore(leave)) {
+        _leaveNow(ride);
+      } else {
+        at(leave, () => _leaveNow(ride));
+      }
+    }
+
+    /// The driver can take the ride onto the screen now.
+    bool get _canStartScheduled =>
+        _recoveryResolved &&
+        _driverSession.availableForOffers &&
+        _claimedHomeOffer == null &&
+        _homeRadarMatchingOfferId == null;
+
+    /// "Leave now" (Q10 S1): the ride lands on screen as the active trip,
+    /// heading to pickup. Not possible (offline, busy): the island warns
+    /// once, and after the admin's minutes it goes to a backup driver.
+    void _leaveNow(ReservationRequestPreview ride) {
+      if (!mounted || !identical(_scheduled.ride, ride)) { return; }
+      if (!_canStartScheduled) {
+        _lateScheduled(ride);
+        return;
+      }
+      // Outside the current build or navigation: the trip opens next.
+      Timer.run(() {
+        if (!mounted || !identical(_scheduled.ride, ride)) { return; }
+        if (_canStartScheduled) {
+          _startScheduledTrip(ride);
+        } else {
+          _lateScheduled(ride);
+        }
+      });
+    }
+
+    /// Q10 S3: "Head to your 07:40 pickup", then the backup driver.
+    void _lateScheduled(ReservationRequestPreview ride) {
+      final now = _clock.now();
+      if (_scheduled.lateSince == null) {
+        _scheduled.lateSince = now;
+        IslandMessages.show(HomeIslandNotices.headToPickup(ride.pickupTime));
+        ScheduledRideStore.reminder.value =
+            'Head to your ${ride.pickupTime} pickup now: '
+            '${ride.pickupAddress}.';
+      }
+      final backupAt = _scheduled.lateSince!.add(
+        Duration(minutes: _rules.backupAfterMinutes),
+      );
+      if (!now.isBefore(backupAt)) {
+        _giveToBackup(ride);
+        return;
+      }
+      _scheduled.timers.add(
+        Timer(_clock.realUntil(backupAt), () => _giveToBackup(ride)),
+      );
+    }
+
+    void _startScheduledTrip(ReservationRequestPreview ride) {
+      _scheduled.planning = true;
+      final started = ScheduledRideStore.start(ride);
+      _scheduled.planning = false;
+      if (!started) { return; }
+      _scheduled
+        ..ride = null
+        ..lateSince = null;
+      ScheduledRideStore.reminder.value = null;
+      IslandMessages.show(HomeIslandNotices.leaveNow(ride.pickupTime));
+      final offer = RideOffer.reservation(ride);
+      _HomeOfferRadar(this)._openOfferTrip(
+        _HomeDirectOffer.fromRide(offer),
+        'Scheduled ride',
+      );
+      _planScheduled();
+    }
+
+    /// Late and still not on the way (Q10 S3).
+    void _giveToBackup(ReservationRequestPreview ride) {
+      if (!mounted || !identical(_scheduled.ride, ride)) { return; }
+      if (_canStartScheduled) {
+        _leaveNow(ride);
+        return;
+      }
+      _scheduled.planning = true;
+      ScheduledRideStore.giveToBackup(ride);
+      ScheduledRideStore.reminder.value = null;
+      _scheduled.planning = false;
+      IslandMessages.show(HomeIslandNotices.givenToBackup);
+      _planScheduled();
+    }
+
+    void _remindScheduled(ReservationRequestPreview ride, int minutes) {
+      if (!mounted) { return; }
+      final left = minutes >= 60 && minutes % 60 == 0
+          ? '${minutes ~/ 60} h'
+          : '$minutes min';
+      IslandMessages.show(
+        HomeIslandNotices.scheduledReminder(ride.pickupTime, left),
+      );
+      ScheduledRideStore.reminder.value =
+          'Pickup at ${ride.pickupTime} in $left: ${ride.pickupAddress}.';
+    }
+
+    void _remindOnline(ReservationRequestPreview ride) {
+      if (!mounted || _driverSession.isOnline) { return; }
+      IslandMessages.show(HomeIslandNotices.goOnlineFor(ride.pickupTime));
+      ScheduledRideStore.reminder.value =
+          'Go online now for your ${ride.pickupTime} pickup.';
+    }
+
+    /// Radar went live: a late ride can start now; a waiting assigned ride
+    /// shows.
+    void _onRadarLive() {
+      _planScheduled();
+      _maybeShowAssignment();
+    }
+
+    /// Before the next accepted ride, a trip must leave the smart gap; in
+    /// its "be online before" window it must also head toward the pickup
+    /// (like destination mode, aimed at the pickup).
+    bool _fitsSchedule(_HomeDirectOffer offer) {
+      final ride = _nextScheduledRide;
+      if (offer.assigned || ride == null || ride.id == offer.id) {
+        return true;
+      }
+      final now = _clock.now();
+      final dropoff = GeoPointMaps.fromLatLng(offer.dropoffPosition);
+      final fits = SmartGap.offerFits(
+        offerPickupMinutes: offer.pickupMinutes,
+        offerTripMinutes: offer.tripMinutes,
+        offerDropoff: dropoff,
+        ride: ride,
+        now: now,
+        rules: _rules,
+      );
+      if (!fits) { return false; }
+      final pickupAt = ride.pickupAt(now);
+      final window = SmartGap.ruleOf(ride, _rules).onlineBeforeMinutes;
+      final inWindow = pickupAt != null &&
+          now.isAfter(pickupAt.subtract(Duration(minutes: window)));
+      return !_rules.towardPickupBeforeRide ||
+          !inWindow ||
+          SmartGap.headsToward(
+            from: _driverPoint,
+            dropoff: dropoff,
+            target: ride.pickup,
+          );
+    }
+
+    bool _rideFitsSchedule(RideOffer offer) =>
+        _fitsSchedule(_HomeDirectOffer.fromRide(offer));
+
+    /// "07:40" while trips are filtered toward that pickup, else null.
+    String? get _towardPickupTime {
+      final ride = _nextScheduledRide;
+      if (ride == null || !_rules.towardPickupBeforeRide) { return null; }
+      final now = _clock.now();
+      final pickupAt = ride.pickupAt(now);
+      final window = SmartGap.ruleOf(ride, _rules).onlineBeforeMinutes;
+      return pickupAt != null &&
+              now.isAfter(pickupAt.subtract(Duration(minutes: window)))
+          ? ride.pickupTime
+          : null;
+    }
+
+    void _watchAssignments() {
+      if (_scheduled.assignments != null) { return; }
+      _scheduled.assignments = _dispatch.watchAssignments().listen((ride) {
+        if (!mounted || _scheduled.assigned.containsKey(ride.id)) { return; }
+        _scheduled.assigned[ride.id] = ride;
+        _scheduled.waiting.add(ride.id);
+        _maybeShowAssignment();
+      });
+    }
+
+    /// The next assigned ride shows as its Exclusive card, "Assigned by
+    /// Movera", with the admin's time to accept.
+    void _maybeShowAssignment() {
+      if (_scheduled.waiting.isEmpty || !mounted || !_isOnline) { return; }
+      final ride = _scheduled.assigned[_scheduled.waiting.first];
+      if (ride == null) { return; }
+      unawaited(_HomeOfferRadar(this)._showOutsideRadarOffer(
+        _HomeDirectOffer.fromRide(
+          RideOffer.reservation(ride),
+          reason: ExclusiveReasons.assigned,
+          assigned: true,
+          lifetime: _rules.assignAcceptTime,
+        ),
+      ));
+      if (_outsideRadarOffer?.id == ride.id) { _scheduled.waiting.remove(ride.id); }
+    }
+
+    void _acceptAssignment(_HomeDirectOffer offer) {
+      if (_scheduled.claimingId != null) { return; }
+      unawaited(_claimAssignment(offer));
+    }
+
+    Future<void> _claimAssignment(_HomeDirectOffer offer) async {
+      _outsideOfferTimeoutTimer?.cancel();
+      _rebuild(() => _scheduled.claimingId = offer.id);
+      ClaimResult result;
+      try {
+        result = await _dispatch.claimOffer(offer.id);
+      } catch (_) {
+        result = const ClaimResult.networkError();
+      }
+      if (!mounted) { return; }
+      _rebuild(() => _scheduled.claimingId = null);
+      final ride = _scheduled.assigned[offer.id];
+      if (result.outcome == ClaimOutcome.networkError) {
+        IslandMessages.show(HomeIslandNotices.reservationNoConnection);
+        // Nothing decided: the card counts down again.
+        _outsideOfferTimeoutTimer = Timer(
+          offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
+          () {
+            if (mounted && _outsideRadarOffer?.id == offer.id) {
+              _HomeOfferRadar(this)._dismissOutsideRadarOffer();
+            }
+          },
+        );
+        return;
+      }
+      _scheduled.answered.add(offer.id);
+      if (result.isSuccess && ride != null) {
+        ScheduledRideStore.acceptAssigned(ride);
+        IslandMessages.show(HomeIslandNotices.assignmentAccepted);
+      } else {
+        IslandMessages.show(HomeIslandNotices.reservationUnavailable);
+      }
+      if (_outsideRadarOffer?.id == offer.id) {
+        _HomeOfferRadar(this)._dismissOutsideRadarOffer();
+      }
+    }
+
+    /// The assigned ride's card left without Accept: admin sees it and
+    /// picks someone else.
+    void _assignmentMissed(_HomeDirectOffer offer) {
+      _scheduled.waiting.remove(offer.id);
+      if (_scheduled.answered.remove(offer.id)) { return; }
+      _scheduled.answered.add(offer.id);
+      IslandMessages.show(HomeIslandNotices.assignmentNotAccepted);
+    }
+}

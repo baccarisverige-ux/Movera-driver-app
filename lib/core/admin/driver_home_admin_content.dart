@@ -1,4 +1,5 @@
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
 class DriverHomeAdminConfig {
   const DriverHomeAdminConfig({
@@ -45,6 +46,7 @@ class ScheduledRidesAdminConfig {
     required this.title,
     required this.subtitle,
     this.newRequest,
+    this.driverAccess = const ScheduledRidesDriverAccess(),
   });
 
   final bool enabled;
@@ -54,6 +56,27 @@ class ScheduledRidesAdminConfig {
 
   /// Newest reservation request, shown as a Home popup when present.
   final ReservationRequestPreview? newRequest;
+
+  /// Admin's on/off for this driver (Admin › Drivers).
+  final ScheduledRidesDriverAccess driverAccess;
+}
+
+/// Scheduled rides on or off for one driver, set by admin on the driver's
+/// page (also in Reservations and Dispatch).
+class ScheduledRidesDriverAccess {
+  const ScheduledRidesDriverAccess({this.enabled = true, this.offUntil});
+
+  final bool enabled;
+
+  /// When admin turned them off: back on at this time; null means until
+  /// admin turns them on again.
+  final DateTime? offUntil;
+
+  /// Off right now, at [now].
+  bool offAt(DateTime now) {
+    final until = offUntil;
+    return !enabled && (until == null || now.isBefore(until));
+  }
 }
 
 class ReservationRequestPreview {
@@ -73,6 +96,10 @@ class ReservationRequestPreview {
     this.id = '',
     this.paidByCash = false,
     this.rating = '',
+    this.riderName = '',
+    this.riderTrips = 0,
+    this.fareBoost,
+    this.kind,
   });
 
   /// Dispatch id; claiming it decides which driver gets the reservation.
@@ -84,6 +111,18 @@ class ReservationRequestPreview {
 
   /// The rider's rating, e.g. "4.94"; empty when not known.
   final String rating;
+
+  /// The rider's first name and trip count; empty / 0 when not known.
+  final String riderName;
+  final int riderTrips;
+
+  /// Admin raised the fare because no driver was near the pickup, e.g.
+  /// "+40 kr" (paid from Movera's commission). [fare] already includes it.
+  final String? fareBoost;
+
+  /// Set when admin gave the ride a kind; otherwise it follows from the
+  /// ride (see `SmartGap.kindOf`).
+  final ScheduledRideKind? kind;
 
   final String category;
   final String fare;
@@ -135,34 +174,44 @@ class ReservationRequestPreview {
   /// Time left until pickup at [now], or null when the pickup day is not
   /// "Today" / "Tomorrow", the time is not "HH:mm" or it has passed.
   Duration? untilPickup(DateTime now) {
+    final at = pickupAt(now);
+    if (at == null) {
+      return null;
+    }
+    final left = at.difference(now);
+    return left.isNegative ? null : left;
+  }
+
+  /// When the rider is picked up, seen from [now]; null when the pickup
+  /// day is not "Today" / "Tomorrow" or the time is not "HH:mm".
+  DateTime? pickupAt(DateTime now) {
     final minute = minuteOfDay;
     final day = pickupDay.trim().toLowerCase();
     final offset = day == 'today' ? 0 : day == 'tomorrow' ? 1 : null;
     if (minute == null || offset == null) {
       return null;
     }
-    final pickupAt = DateTime(now.year, now.month, now.day + offset)
+    return DateTime(now.year, now.month, now.day + offset)
         .add(Duration(minutes: minute));
-    final left = pickupAt.difference(now);
-    return left.isNegative ? null : left;
   }
 }
 
-/// Where an untaken reservation shows, step by step (notes R21–R25), all
-/// in one place. The admin panel sets each step later (jobs L1–L3 in the
-/// design notes, "Later jobs (admin panel)"); until then the demo app uses
-/// these fixed values.
+/// Where an untaken reservation shows, step by step (notes R21–R25). The
+/// minutes come from [ScheduledRideRules] (admin Dispatch › Reservations);
+/// the demo day runs on `ScheduledClock.instance`.
 ///
-/// 1. L1: it is listed in every driver's Scheduled rides (no setting yet).
+/// 1. L1: it is listed in every driver's Scheduled rides.
 /// 2. L2: untaken after [homePopupAfter], it also shows as the Home popup
 ///    to drivers who are online; it stays listed.
-/// 3. L3: close to pickup ([nearPickupAfter], pickup within
-///    [nearPickupWithinMinutes]) it becomes an Exclusive offer and joins
-///    the Radar trips, where it only says "Reservation".
+/// 3. L3: [ScheduledRideRules.exclusiveBeforeMinutes] before its pickup
+///    time it becomes an Exclusive offer, and
+///    [ScheduledRideRules.radarBeforeMinutes] before it joins the Radar
+///    trips, where it only says "Reservation".
 /// 4. Taken by a driver it leaves every place; the server gives it to the
 ///    first claim (R25).
-/// 5. L3: the driver who took it cancels: it goes back to Scheduled rides
-///    and, after [homePopupAfter], to the Home popup again.
+/// 5. The driver who took it cancels: it goes back where the admin rule
+///    "After a driver cancels" says, Radar trips too when it is close to
+///    pickup.
 class ReservationDemoTimings {
   const ReservationDemoTimings._();
 
@@ -171,13 +220,13 @@ class ReservationDemoTimings {
   /// start, or from when it went back out after a cancel.
   static const Duration homePopupAfter = Duration(seconds: 3);
 
-  /// L3: the demo stand-in for "minutes before pickup": still untaken this
-  /// long after Radar goes live, it becomes an Exclusive offer and joins
-  /// the Radar trips.
+  /// L3: when the demo day (07:00 at start, 30 times faster) reaches the
+  /// Exclusive step of the 07:40 reservation, 20 minutes before pickup.
   static const Duration nearPickupAfter = Duration(milliseconds: 40000);
 
-  /// L3: only a pickup at most this many minutes away counts as close.
-  static const int nearPickupWithinMinutes = 30;
+  /// Q29: the demo ride Movera assigns to this driver arrives this long
+  /// after the Radar demo starts.
+  static const Duration assignedAfter = Duration(seconds: 90);
 }
 
 /// Dispatch id of [demoReservationRequest].
@@ -192,6 +241,8 @@ const ReservationRequestPreview demoReservationRequest =
   id: demoReservationId,
   category: 'Comfort',
   rating: '4.94',
+  riderName: 'Karin',
+  riderTrips: 128,
   fare: '126.75 kr',
   pickupLabel: 'Pickup today at 07:40',
   pickupAddress: 'Gamla vägen, Stockholm',
@@ -208,6 +259,30 @@ const ReservationRequestPreview demoReservationRequest =
       point: GeoPoint(59.3430, 18.0496),
     ),
   ],
+);
+
+/// Dispatch id of [demoAssignedReservation].
+const String demoAssignedReservationId = 'reservation-assigned-kungsholmen-0930';
+
+/// Q29: a scheduled ride Movera assigns to this driver. It arrives like an
+/// Exclusive offer, "Assigned by Movera", and needs Accept in time.
+const ReservationRequestPreview demoAssignedReservation =
+    ReservationRequestPreview(
+  id: demoAssignedReservationId,
+  category: 'Comfort',
+  rating: '4.88',
+  riderName: 'Erik',
+  riderTrips: 64,
+  fare: '312.40 kr',
+  pickupLabel: 'Pickup today at 09:30',
+  pickupAddress: 'Kungsholmstorg, Stockholm',
+  dropoffAddress: 'Arlanda Terminal 5, Arlanda',
+  pickupTime: '09:30',
+  pickupDay: 'Today',
+  tripMinutes: 38,
+  tripKm: 41.6,
+  pickup: GeoPoint(59.3297, 18.0436),
+  dropoff: GeoPoint(59.6497, 17.9237),
 );
 
 class ReservationStop {

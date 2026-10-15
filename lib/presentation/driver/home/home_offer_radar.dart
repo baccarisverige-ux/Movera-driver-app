@@ -18,8 +18,9 @@ enum _RadarOfferGone {
 class _HomeDirectOffer {
   final String id;
   final String category;
+
+  /// Why it is Exclusive, shown on its card (see [ExclusiveReasons]).
   final String reason;
-  final String detail;
   final String fare;
   final String rating;
   final int pickupMinutes;
@@ -39,11 +40,27 @@ class _HomeDirectOffer {
   final String? pickupTime;
   final bool driverSigned = false;
 
+  /// The rider, for the trip screen.
+  final String riderName;
+  final int riderTrips;
+
+  /// Stops between pickup and drop-off, passed into the trip.
+  final List<ReservationStop> stops;
+
+  /// Admin raised the fare, e.g. "+40 kr" (Q13).
+  final String? fareBoost;
+
+  /// A scheduled ride Movera assigned to this driver (Q29): Accept keeps
+  /// it for later instead of opening a trip.
+  final bool assigned;
+
+  /// How long its Exclusive card stays; null for the usual offer time.
+  final Duration? lifetime;
+
   const _HomeDirectOffer({
     required this.id,
     required this.category,
-    required this.reason,
-    required this.detail,
+    this.reason = '',
     required this.fare,
     required this.rating,
     required this.pickupMinutes,
@@ -59,15 +76,58 @@ class _HomeDirectOffer {
     this.bags = 0,
     this.payment = 'Card',
     this.pickupTime,
+    this.riderName = '',
+    this.riderTrips = 0,
+    this.stops = const <ReservationStop>[],
+    this.fareBoost,
+    this.assigned = false,
+    this.lifetime,
   });
+
+  /// A dispatch offer on Home. A reservation keeps its pickup time for
+  /// its "Reservation" badge.
+  factory _HomeDirectOffer.fromRide(
+    RideOffer offer, {
+    String reason = '',
+    bool assigned = false,
+    Duration? lifetime,
+  }) => _HomeDirectOffer(
+    id: offer.id,
+    category: offer.category,
+    reason: reason,
+    fare: offer.fare,
+    rating: offer.rating,
+    pickupMinutes: offer.pickupMinutes,
+    pickupKm: offer.pickupKm,
+    tripMinutes: offer.tripMinutes,
+    tripKm: offer.tripKm,
+    pickup: offer.pickup,
+    dropoff: offer.dropoff,
+    pickupPosition: offer.pickupPosition.toLatLng(),
+    dropoffPosition: offer.dropoffPosition.toLatLng(),
+    bags: offer.bags,
+    payment: offer.payment,
+    cash: RadarOfferView.isCash(offer.payment),
+    reservation: offer.isReservation,
+    pickupTime: offer.reservationTime,
+    riderName: offer.riderName,
+    riderTrips: offer.riderTrips,
+    stops: offer.stops,
+    fareBoost: offer.fareBoost,
+    assigned: assigned,
+    lifetime: lifetime,
+  );
 }
 
 extension _HomeOfferRadar on _DriverHomeState {
     void _maybeShowSoonReservation() {
       if (!_soonReservationReady || !mounted || !_isOnline) { return; }
-      final offer = _DriverHomeState._soonReservationOffer;
-      if (offer.driverSigned ||
-          offer.pickupMinutes > ReservationDemoTimings.nearPickupWithinMinutes) {
+      final offer = _HomeScheduled(this)._soonReservationOffer();
+      // Close to pickup means minutes before its pickup time, not the
+      // drive to it.
+      if (offer == null ||
+          offer.driverSigned ||
+          !_HomeScheduled(this)._exclusiveStepReached(offer.id)) {
         return;
       }
       // Taken already (here or elsewhere): it is gone everywhere (R23).
@@ -126,7 +186,8 @@ extension _HomeOfferRadar on _DriverHomeState {
       // The reservation up on the dock holds the offer back, but not longer
       // than it would have lasted on screen: then it has expired.
       const wait = Duration(seconds: 2);
-      if (wait * held > _DriverHomeState._outsideOfferLifetime) { return; }
+      final lifetime = offer.lifetime ?? _DriverHomeState._outsideOfferLifetime;
+      if (wait * held > lifetime) { return; }
       if (mounted && _HomeReservation(this)._reservationUp) {
         _directOfferTimer?.cancel();
         _directOfferTimer = Timer(
@@ -146,10 +207,10 @@ extension _HomeOfferRadar on _DriverHomeState {
           (!offer.reservation &&
               (_pendingRadarHomeOffers.isNotEmpty || _hasRideOffers)) ||
           !_directOfferFollowsDestination(offer) ||
+          !_HomeScheduled(this)._fitsSchedule(offer) ||
           (offer.reservation &&
               (offer.driverSigned ||
-                  offer.pickupMinutes >
-                      ReservationDemoTimings.nearPickupWithinMinutes)) ||
+                  !_HomeScheduled(this)._exclusiveStepReached(offer.id))) ||
           _mainPanelPosition > 0.04 ||
           isPanelOpen) {
         return;
@@ -162,13 +223,15 @@ extension _HomeOfferRadar on _DriverHomeState {
       });
       // The island says it too while the card arrives.
       if (arriving) {
-        IslandMessages.show(offer.reservation
+        IslandMessages.show(offer.assigned
+            ? HomeIslandNotices.assignedRide
+            : offer.reservation
             ? HomeIslandNotices.exclusiveReservation
             : HomeIslandNotices.exclusiveRide);
       }
 
       _outsideOfferTimeoutTimer = Timer(
-        _DriverHomeState._outsideOfferLifetime,
+        lifetime,
         () {
           if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
           _dismissOutsideRadarOffer();
@@ -191,15 +254,21 @@ extension _HomeOfferRadar on _DriverHomeState {
       });
       _clearDirectOfferRoute();
       _releasePendingRadarOffers();
+      // Not accepted in time: Movera picks another driver (Q29).
+      if (gone != null && gone.assigned) {
+        _HomeScheduled(this)._assignmentMissed(gone);
       // An untaken reservation stays a Radar trip (R22).
-      if (gone != null && gone.reservation) {
+      } else if (gone != null && gone.reservation) {
         _HomeReservation(this)._reservationToDeck(gone.id);
       }
+      // A ride Movera assigned may be waiting for this place.
+      _HomeScheduled(this)._maybeShowAssignment();
     }
     void _showRadarHomeOffer(_HomeDirectOffer offer) {
       if (!mounted ||
           !_isOnline ||
           !_directOfferFollowsDestination(offer) ||
+          !_HomeScheduled(this)._fitsSchedule(offer) ||
           _radarHomeOffers.any((item) => item.id == offer.id) ||
           _pendingRadarHomeOffers.any((item) => item.id == offer.id) ||
           _radarHomeOffers.length + _pendingRadarHomeOffers.length >=
@@ -341,6 +410,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
       if (_radarHomeOffers.isEmpty && _pendingRadarHomeOffers.isEmpty) {
         _maybeShowSoonReservation();
+        _HomeScheduled(this)._maybeShowAssignment();
       }
     }
     _HomeRadarMatchState _homeRadarStateFor(String id) =>
@@ -392,7 +462,19 @@ extension _HomeOfferRadar on _DriverHomeState {
       _radarSubscription?.cancel();
       _radarSubscription = _dispatch.watchNearbyOffers().listen((offers) {
         if (!mounted || !_isOnline) { return; }
+        final known = {for (final offer in _latestDispatchOffers) offer.id};
         _latestDispatchOffers = offers;
+        // A reservation that just joined Radar (its Radar time, or back
+        // after a cancel) comes onto the deck too, once its Exclusive step
+        // on this phone is over.
+        for (final offer in offers) {
+          if (offer.isReservation &&
+              !known.contains(offer.id) &&
+              _outsideRadarOffer?.id != offer.id &&
+              _HomeScheduled(this)._exclusiveStepReached(offer.id)) {
+            _HomeReservation(this)._reservationToDeck(offer.id);
+          }
+        }
         final ids = offers.map((item) => item.id).toSet();
         for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
           if (!ids.contains(offer.id) &&
@@ -410,30 +492,9 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (index >= offers.length) { return; }
       _showRadarHomeOffer(_homeOfferFromDispatch(offers[index]));
     }
-    /// A Radar trip from dispatch as a Home deck card. A reservation keeps
-    /// its pickup time for its "Reservation" badge.
+    /// A Radar trip from dispatch as a Home deck card.
     _HomeDirectOffer _homeOfferFromDispatch(RideOffer offer) =>
-        _HomeDirectOffer(
-          id: offer.id,
-          category: offer.category,
-          reason: 'Trip Radar match',
-          detail: 'Detected in your live radar coverage',
-          fare: offer.fare,
-          rating: offer.rating,
-          pickupMinutes: offer.pickupMinutes,
-          pickupKm: offer.pickupKm,
-          tripMinutes: offer.tripMinutes,
-          tripKm: offer.tripKm,
-          pickup: offer.pickup,
-          dropoff: offer.dropoff,
-          pickupPosition: offer.pickupPosition.toLatLng(),
-          dropoffPosition: offer.dropoffPosition.toLatLng(),
-          bags: offer.bags,
-          payment: offer.payment,
-          cash: RadarOfferView.isCash(offer.payment),
-          reservation: offer.isReservation,
-          pickupTime: offer.reservationTime,
-        );
+        _HomeDirectOffer.fromRide(offer);
     void _resolveHomeRadarMatchWon(_HomeDirectOffer offer) {
       _homeRadarNoticeTimer?.cancel();
 
@@ -567,62 +628,28 @@ extension _HomeOfferRadar on _DriverHomeState {
     void _acceptOutsideRadarOffer() {
       final offer = _outsideRadarOffer;
       if (offer == null) { return; }
+      // A ride Movera assigned is kept for later, through dispatch (Q29).
+      if (offer.assigned) {
+        _HomeScheduled(this)._acceptAssignment(offer);
+        return;
+      }
       // A reservation goes to the first driver who claims it (R25).
       if (offer.reservation &&
           _HomeReservation(this)._exclusiveNeedsClaim(offer)) {
         return;
       }
-
-      _cancelAllOfferTimers();
-      _expandedDirectOfferTimer?.cancel();
-      _offerSimulationTimer?.cancel();
-      _radarOfferTwoTimer?.cancel();
-      _radarOfferThreeTimer?.cancel();
-
-      pushSingle(
-        context,
-        ActiveRideTransition(
-          AcceptRide(
-            offerId: tripOccurrenceId(offer.id),
-            fare: offer.fare,
-            paidByCash: offer.cash,
-            category: offer.category,
-            matchedVia: offer.reservation ? 'Exclusive reservation' : 'Exclusive offer',
-            waybillRepository: _waybills,
-            sessionController: _driverSession,
-            locationRepository: _driverLocationService,
-            routeRepository: _roadRouteService,
-            activeRideRepository: widget.activeRideRepository,
-            pickupAddress: offer.pickup,
-            pickupArea: offer.pickup.split(',').last.trim(),
-            dropoffAddress: offer.dropoff,
-            pickupPosition: offer.pickupPosition,
-            dropoffPosition: offer.dropoffPosition,
-            destinationModeActive: _destinationModeActive,
-            destinationAddress: _destinationAddress,
-            destinationPosition: _destinationPosition,
-          ),
-        ),
+      _openOfferTrip(
+        offer,
+        offer.reservation ? 'Exclusive reservation' : 'Exclusive offer',
       );
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) { return; }
-        _rebuild(() {
-          _outsideRadarOffer = null;
-          _radarHomeOffers.clear();
-          _pendingRadarHomeOffers.clear();
-          _hasRideOffers = false;
-          _mapPreviews.cancel();
-        _camera.endPreview();
-        _isDirectOfferRoutePreview = false;
-          _directOfferRouteMarkers = {};
-          _directOfferRoutePolylines = {};
-        });
-      });
     }
     void _acceptRadarHomeOffer(_HomeDirectOffer offer) {
       if (!_radarHomeOffers.any((item) => item.id == offer.id)) { return; }
-
+      _openOfferTrip(offer, 'Movera Radar');
+    }
+    /// Opens the trip for [offer], with its rider and stops, and clears
+    /// the offers on Home behind it.
+    void _openOfferTrip(_HomeDirectOffer offer, String matchedVia) {
       _cancelAllOfferTimers();
       _expandedDirectOfferTimer?.cancel();
       _offerSimulationTimer?.cancel();
@@ -633,11 +660,15 @@ extension _HomeOfferRadar on _DriverHomeState {
         context,
         ActiveRideTransition(
           AcceptRide(
-            offerId: tripOccurrenceId(offer.id),
+            // A sample scheduled ride has no dispatch id.
+            offerId: tripOccurrenceId(offer.id.isEmpty ? 'scheduled' : offer.id),
+            riderName: offer.riderName.isEmpty ? 'Rider' : offer.riderName,
+            riderRating: double.tryParse(offer.rating) ?? 4.9,
+            riderTrips: offer.riderTrips,
             fare: offer.fare,
             paidByCash: offer.cash,
             category: offer.category,
-            matchedVia: 'Movera Radar',
+            matchedVia: matchedVia,
             waybillRepository: _waybills,
             sessionController: _driverSession,
             locationRepository: _driverLocationService,
@@ -646,6 +677,10 @@ extension _HomeOfferRadar on _DriverHomeState {
             pickupAddress: offer.pickup,
             pickupArea: offer.pickup.split(',').last.trim(),
             dropoffAddress: offer.dropoff,
+            stopAddresses: [for (final stop in offer.stops) stop.address],
+            stopPositions: [
+              for (final stop in offer.stops) stop.point.toLatLng(),
+            ],
             pickupPosition: offer.pickupPosition,
             dropoffPosition: offer.dropoffPosition,
             destinationModeActive: _destinationModeActive,
@@ -680,7 +715,8 @@ extension _HomeOfferRadar on _DriverHomeState {
       final nearby = _latestDispatchOffers
           .where((offer) =>
               offer.isNearby &&
-              (!_destinationModeActive || offer.followsDestination))
+              (!_destinationModeActive || offer.followsDestination) &&
+              _HomeScheduled(this)._rideFitsSchedule(offer))
           .length;
       return math.max(listed + _pendingRadarHomeOffers.length, nearby);
     }
@@ -722,6 +758,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           dropoff: offer.dropoff,
           bags: offer.bags,
           reservationTime: offer.reservation ? offer.pickupTime : null,
+          fareBoost: offer.fareBoost,
         );
     /// Radar offers on Home: a deck of cards above the radar, with the
     /// total count on top (tap it for the full-screen list).
@@ -789,10 +826,13 @@ extension _HomeOfferRadar on _DriverHomeState {
       return ExclusiveOfferCard(
         key: ValueKey<String>('direct-offer-${offer.id}'),
         offer: _radarOfferView(offer),
-        lifetime: _DriverHomeState._outsideOfferLifetime,
+        lifetime: offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
+        reason: offer.reason.isEmpty ? null : offer.reason,
         reservation: reservation,
         reservationTime: reservation ? offer.pickupTime : null,
-        onYourWay: _destinationModeActive,
+        // Destination mode, or trips toward the next scheduled pickup.
+        onYourWay: _destinationModeActive ||
+            (!offer.assigned && _HomeScheduled(this)._towardPickupTime != null),
         onDismiss: _dismissOutsideRadarOffer,
         onRoute: () => _previewDirectOfferRoute(
           offer.pickupPosition,
@@ -864,15 +904,19 @@ extension _HomeOfferRadar on _DriverHomeState {
             },
           );
 
-          // Close to pickup (job L3) the untaken reservation becomes an
+          // Close to pickup (job L3, [ScheduledRideRules.exclusiveBeforeMinutes]
+          // before its pickup time) the untaken reservation becomes an
           // Exclusive offer; it waits while other offers are on screen.
-          _reservationOfferTimer = Timer(
-            ReservationDemoTimings.nearPickupAfter,
-            () {
+          final untilExclusive = _HomeScheduled(this)._untilExclusiveStep();
+          if (untilExclusive != null) {
+            _reservationOfferTimer = Timer(untilExclusive, () {
               if (!mounted || !_isOnline) { return; }
               _soonReservationReady = true;
               _maybeShowSoonReservation();
-            },
-          );
+            });
+          }
+          // Radar is live: the smart gap may start the next scheduled ride,
+          // and rides Movera assigns come in.
+          _HomeScheduled(this)._onRadarLive();
     }
 }

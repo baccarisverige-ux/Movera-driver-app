@@ -75,6 +75,10 @@ class _Radar implements DispatchRepository {
   void releaseReservation(String reservationId) {}
 
   @override
+  Stream<ReservationRequestPreview> watchAssignments() =>
+      const Stream<ReservationRequestPreview>.empty();
+
+  @override
   Future<ClaimResult> claimOffer(String offerId) async {
     claims.add(offerId);
     await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -385,7 +389,8 @@ void main() {
           await tester.pump(const Duration(milliseconds: 200));
           await tester.pumpAndSettle();
           expect(ScheduledRideStore.isOpen(demoReservationId), isFalse);
-          expect(ScheduledRideStore.openRequests.value, 1);
+          // Won, the 08:05 request clashes with it and leaves the list.
+          expect(ScheduledRideStore.openRequests.value, won ? 0 : 1);
           if (won) {
             expect(find.text('Reservation accepted'), findsOneWidget);
             expect(find.text('Upcoming'), findsOneWidget);

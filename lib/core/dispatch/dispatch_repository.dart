@@ -1,4 +1,6 @@
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 
 enum ClaimOutcome {
   success,
@@ -27,7 +29,38 @@ class RideOffer {
     this.bags = 0,
     this.payment = 'Card',
     this.reservationTime,
+    this.riderName = '',
+    this.riderTrips = 0,
+    this.stops = const <ReservationStop>[],
+    this.fareBoost,
   });
+
+  /// A reservation as a Radar trip. The driver's distance to the pickup is
+  /// not known here, so the demo uses a fixed one.
+  factory RideOffer.reservation(ReservationRequestPreview reservation) =>
+      RideOffer(
+        id: reservation.id,
+        category: reservation.category,
+        fare: Money.parseSekLabel(reservation.fare)?.formatted ??
+            reservation.fare,
+        rating: reservation.rating,
+        pickupMinutes: 16,
+        pickupKm: 2.1,
+        tripMinutes: reservation.tripMinutes,
+        tripKm: reservation.tripKm,
+        pickup: reservation.pickupAddress,
+        dropoff: reservation.dropoffAddress,
+        pickupPosition: reservation.pickup,
+        dropoffPosition: reservation.dropoff,
+        isNearby: true,
+        followsDestination: false,
+        payment: reservation.paidByCash ? 'Cash' : 'Card',
+        reservationTime: reservation.pickupTime,
+        riderName: reservation.riderName,
+        riderTrips: reservation.riderTrips,
+        stops: reservation.stops,
+        fareBoost: reservation.fareBoost,
+      );
 
   final String id;
   final String category;
@@ -54,6 +87,17 @@ class RideOffer {
   /// a driver: its pickup time, e.g. "07:40". Radar shows it as a
   /// "Reservation" trip, never as Exclusive.
   final String? reservationTime;
+
+  /// The rider's first name and trips, for the trip screen; empty / 0
+  /// when not known.
+  final String riderName;
+  final int riderTrips;
+
+  /// Stops between pickup and drop-off, in driving order.
+  final List<ReservationStop> stops;
+
+  /// Admin raised the fare, e.g. "+40 kr"; [fare] already includes it.
+  final String? fareBoost;
 
   bool get isReservation => reservationTime != null;
 }
@@ -90,6 +134,11 @@ abstract interface class DispatchRepository {
   void refreshOffers();
 
   /// The driver who took reservation [reservationId] cancelled it: it goes
-  /// back out to drivers (which step it returns to is admin job L3).
+  /// back out to drivers, to the step the admin rule "After a driver
+  /// cancels" says (Radar trips too when it is close to pickup).
   void releaseReservation(String reservationId);
+
+  /// Scheduled rides Movera assigns to this driver (Q29). Each needs the
+  /// driver's Accept, claimed through [claimOffer], in time.
+  Stream<ReservationRequestPreview> watchAssignments();
 }
