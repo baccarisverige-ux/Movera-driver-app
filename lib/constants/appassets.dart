@@ -23,6 +23,9 @@ class AppAssets {
   static const String offerRefresh = 'assets/icons/offer_refresh.svg';
   static const String offerBack = 'assets/icons/offer_back.svg';
   static const String offerChevron = 'assets/icons/offer_chevron.svg';
+  // Exclusive badge and the Cash badge on offer cards (Solar, CC BY 4.0).
+  static const String solarBolt = 'assets/icons/solar_bolt.svg';
+  static const String solarWadOfMoney = 'assets/icons/solar_wad_of_money.svg';
   static const String solarArrowLeft = 'assets/icons/solar_arrow_left.svg';
   static const String solarCalendar = 'assets/icons/solar_calendar.svg';
   static const String solarCalendarMark = 'assets/icons/solar_calendar_mark.svg';

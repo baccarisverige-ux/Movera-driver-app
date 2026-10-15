@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/widgets/offer_badges.dart';
 
 /// What a Radar offer card shows. The same card is used on Home (the deck
 /// above the radar) and in the full-screen Live list.
@@ -22,6 +23,9 @@ class RadarOfferView {
 
   final String id;
   final String category;
+
+  /// How the rider pays, e.g. "Card", "Apple Pay" or "Cash". The card only
+  /// says it when it is cash (see [cash]).
   final String payment;
   final String rating;
   final String fare;
@@ -33,19 +37,30 @@ class RadarOfferView {
   final String dropoff;
   final int bags;
 
+  /// The rider pays cash in the car (not paid in the app).
+  bool get cash => isCash(payment);
+
+  static bool isCash(String payment) => payment.trim().toLowerCase() == 'cash';
+
   /// "Hantverkargatan 4, Stockholm" → "Stockholm".
   static String area(String address) {
     final parts = address.split(',');
     final last = parts.last.trim();
     return last.isEmpty ? address.trim() : last;
   }
+
+  /// "Hantverkargatan 4, Stockholm" → "Hantverkargatan 4".
+  static String street(String address) {
+    final first = address.split(',').first.trim();
+    return first.isEmpty ? address.trim() : first;
+  }
 }
 
 enum RadarOfferCardState { available, matching, expired, taken }
 
-/// Soft grey header with a fine black outline: category badge, payment,
-/// bags, rating; big price and pickup time; then pickup → drop-off and
-/// Route + Match.
+/// Soft grey header with a fine black outline: category badge, a Cash
+/// badge only when the rider pays cash, bags, rating; big price and pickup
+/// time; then pickup → drop-off and Route + Match.
 class RadarOfferCard extends StatelessWidget {
   const RadarOfferCard({
     super.key,
@@ -95,60 +110,59 @@ class RadarOfferCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                key: ValueKey<String>('radar-offer-category-${offer.id}'),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(99),
-                  border: Border.all(color: ink),
-                ),
-                child: Text(
-                  offer.category,
-                  style: const TextStyle(
-                    color: ink,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+              // Payment shows only when it is cash; narrow phones wrap the
+              // badges instead of cutting them.
+              Expanded(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Container(
+                      key: ValueKey<String>('radar-offer-category-${offer.id}'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(color: ink),
+                      ),
+                      child: Text(
+                        offer.category,
+                        style: const TextStyle(
+                          color: ink,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (offer.cash)
+                      OfferBadge.cash(
+                        key: ValueKey<String>('radar-offer-cash-${offer.id}'),
+                      ),
+                    if (offer.bags > 0)
+                      Row(
+                        key: ValueKey<String>('radar-offer-bags-${offer.id}'),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _icon(AppAssets.offerBags, 15, const Color(0xFF3A444B)),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${offer.bags}',
+                            style: const TextStyle(
+                              color: Color(0xFF3A444B),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  offer.payment.toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: label,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ),
-              if (offer.bags > 0) ...[
-                const SizedBox(width: 8),
-                Row(
-                  key: ValueKey<String>('radar-offer-bags-${offer.id}'),
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _icon(AppAssets.offerBags, 15, const Color(0xFF3A444B)),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${offer.bags}',
-                      style: const TextStyle(
-                        color: Color(0xFF3A444B),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(

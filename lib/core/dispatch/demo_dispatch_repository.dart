@@ -73,6 +73,7 @@ class DemoDispatchRepository implements DispatchRepository {
       dropoffPosition: GeoPoint(59.3125, 18.0750),
       isNearby: true,
       followsDestination: true,
+      payment: 'Cash',
     ),
     RideOffer(
       id: 'nearby-3',
