@@ -7,6 +7,7 @@ Minimum set for the current Driver frontend:
 | `INTERNET` | Demo road routing and map tiles |
 | `ACCESS_FINE_LOCATION` | When-in-use driver location while the app is open |
 | `ACCESS_COARSE_LOCATION` | Coarse fallback for the same when-in-use location |
+| `RECORD_AUDIO` | Ride check "Record audio", only when the driver taps it. The file is saved only on this phone and never sent to Movera |
 
 Camera and document photos use the image picker. That API does not need
 `READ_EXTERNAL_STORAGE` or `WRITE_EXTERNAL_STORAGE` on current target SDKs.

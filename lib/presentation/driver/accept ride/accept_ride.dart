@@ -37,6 +37,13 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/rider_contact.dart';
+import 'package:movera/core/safety/ride_check.dart';
+import 'package:movera/core/safety/ride_check_controller.dart';
+import 'package:movera/core/safety/ride_check_detector.dart';
+import 'package:movera/core/safety/ride_check_services.dart';
+import 'package:movera/core/safety/safety_alert_repository.dart';
+import 'package:movera/core/session/driver_composition_guard.dart';
+import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_banner.dart';
 import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
@@ -103,9 +110,13 @@ class AcceptRide extends StatefulWidget {
     this.destinationModeActive = false,
     this.destinationAddress,
     this.destinationPosition,
+    this.rideCheck,
   });
 
   final Future<bool> Function(Uri)? launchExternalMap;
+
+  /// Ride check services; the app's [RideCheckScope] when omitted.
+  final RideCheckServices? rideCheck;
   final String offerId;
   /// Clock for elapsed waiting time; injectable for lifecycle verification.
   final DateTime Function()? waitNow;
@@ -494,6 +505,12 @@ class _AcceptRideState extends State<AcceptRide>
   late final AnimationController _radarPulseController;
   late final AnimationController _radarSweepController;
   String? _locationStatus;
+  // Ride check: the safety card that opens when a trip looks wrong.
+  RideCheckServices? _rideCheckServices;
+  late final RideCheckController _rideCheck;
+  late final RideCheckDetector _rideCheckDetector;
+  Timer? _rideCheckTicker;
+  StreamSubscription<DateTime>? _hardStops;
 
   late final SheetTrace _sheetTrace = SheetTrace('active', () => _ridePanelController.isAttached ? _ridePanelController.panelPosition : 0);
 
@@ -573,12 +590,24 @@ class _AcceptRideState extends State<AcceptRide>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_rideCheckServices == null) {
+      final services = widget.rideCheck ?? RideCheckScope.read(context) ?? RideCheckServices.fallback;
+      _rideCheckServices = services;
+      _rideCheckDetector = RideCheckDetector(rules: services.rules);
+      _rideCheck = RideCheckController(services: services, tripId: widget.offerId,
+        tripDetails: _AcceptRideTrip(this)._safetyAlertTrip);
+      _rideCheckTicker = Timer.periodic(const Duration(seconds: 20), (_) => _AcceptRideTrip(this)._rideCheckTick());
+      _hardStops = services.hardStops?.listen(_AcceptRideTrip(this)._rideCheckHardStop);
+    }
     if(MediaQuery.disableAnimationsOf(context)) { _radarPulseController.stop(); _radarSweepController.stop(); }
     else if(!_liveUpdatesPaused) { _radarPulseController.repeat(reverse:true); _radarSweepController.repeat(); }
   }
 
   @override
   void dispose() {
+    _rideCheckTicker?.cancel();
+    _hardStops?.cancel();
+    _rideCheck.dispose();
     _camera.dispose();
     final ownedRouting = _routeService;
     if (widget.routeRepository == null && ownedRouting is RoadRouteService) { ownedRouting.dispose(); }
@@ -1160,8 +1189,10 @@ class _AcceptRideState extends State<AcceptRide>
                   top: 0,
                   child: _AcceptRidePanel(this)._mapOverlay(
                     child: ListenableBuilder(
-                      listenable: _navigation,
-                      builder: (context, _) => AdaptiveTripIsland(
+                      listenable: Listenable.merge([_navigation, _rideCheck]),
+                      // The Ride check card grows out of the island and covers it.
+                      builder: (context, _) => IgnorePointer(ignoring: _rideCheck.covering, child: Opacity(
+                        opacity: _rideCheck.covering ? 0 : 1, child: AdaptiveTripIsland(
                         banner: _navigation.snapshot.banner,
                         status: _navigation.snapshot.status ?? _islandStatus,
                         address: _showArrivalApproach ? _approachAddress : _nextStopAddress,
@@ -1189,7 +1220,9 @@ class _AcceptRideState extends State<AcceptRide>
                         onRoute: _AcceptRidePanel(this)._showTripOptions,
                         onSafety: () => showSafetyToolKitSheet(context),
                         onWait: _AcceptRidePanel(this)._openWaitingTime,
-                      ),
+                        rideCheck: _rideCheck.active,
+                        onRideCheckDemo: driverProductionRequested ? null : _AcceptRideTrip(this)._openRideCheckDemo,
+                      ))),
                     ),
                   ),
                 ),
@@ -1227,6 +1260,17 @@ class _AcceptRideState extends State<AcceptRide>
                   bottom: MediaQuery.paddingOf(context).bottom + 12,
                   child: _AcceptRidePanel(this)._buildIncomingRideCard(),
                 ),
+              // Above the sheet and offers; nothing under it works until
+              // the driver answers.
+              Positioned.fill(child: ListenableBuilder(listenable: _rideCheck,
+                builder: (context, _) => !_rideCheck.active ? const SizedBox.shrink()
+                    : _AcceptRidePanel(this)._mapOverlay(child: RideCheckLayer(
+                        key: const ValueKey<String>('ride-check-layer'),
+                        controller: _rideCheck,
+                        top: AdaptiveTripIsland.islandTop(context),
+                        maxHeight: viewport - AdaptiveTripIsland.islandTop(context) -
+                            math.max(12.0, MediaQuery.paddingOf(context).bottom + 8),
+                      )))),
             ],
           );
         },

@@ -7,6 +7,8 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
 import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/core/safety/ride_check.dart';
+import 'package:movera/presentation/driver/ride%20history/history%20detail/ride_check_history_entry.dart';
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/responsive_size.dart';
@@ -14,9 +16,16 @@ import 'package:movera/widgets/sizedbox_extention.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class DriverRideHistoryDetail extends StatefulWidget {
-  const DriverRideHistoryDetail({super.key, required this.record});
+  const DriverRideHistoryDetail({
+    super.key,
+    required this.record,
+    this.loadRideChecks,
+  });
 
   final TripHistoryRecord record;
+
+  /// Ride checks of this trip; the ones saved on this phone by default.
+  final Future<List<RideCheckRecord>> Function(String tripId)? loadRideChecks;
 
   @override
   State<DriverRideHistoryDetail> createState() =>
@@ -212,6 +221,13 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
             color: Color(0xffF9F9F9),
           ),
           16.height,
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
+            child: RideCheckHistoryEntry(
+              tripId: _ride.tripId,
+              load: widget.loadRideChecks,
+            ),
+          ),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
             child: _buildMetaRows(),

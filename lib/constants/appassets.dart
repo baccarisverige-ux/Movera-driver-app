@@ -54,7 +54,20 @@ class AppAssets {
   // Solar (CC BY 4.0) — Scheduled rides: fare boost, paused and off notices.
   static const String solarRoundArrowUp = 'assets/icons/solar_round_arrow_up.svg';
   static const String solarPauseCircle = 'assets/icons/solar_pause_circle.svg';
+  // Solar (CC BY 4.0) — Ride check card on the trip screen.
+  static const String solarShieldWarning = 'assets/icons/solar_shield_warning.svg';
+  static const String solarPhoneCalling = 'assets/icons/solar_phone_calling.svg';
+  static const String solarDangerTriangle = 'assets/icons/solar_danger_triangle.svg';
+  static const String solarHeartPulse = 'assets/icons/solar_heart_pulse.svg';
+  static const String solarShieldUser = 'assets/icons/solar_shield_user.svg';
+  static const String solarMapPointWave = 'assets/icons/solar_map_point_wave.svg';
+  static const String solarRouting3 = 'assets/icons/solar_routing_3.svg';
+  static const String solarChatRoundDots = 'assets/icons/solar_chat_round_dots.svg';
+  static const String solarLockKeyholeMinimalistic = 'assets/icons/solar_lock_keyhole_minimalistic.svg';
+  static const String solarMapArrowSquare = 'assets/icons/solar_map_arrow_square.svg';
   static const String solarForbiddenCircle = 'assets/icons/solar_forbidden_circle.svg';
+  static const String solarMicrophone = 'assets/icons/solar_microphone.svg';
+  static const String solarStopCircle = 'assets/icons/solar_stop_circle.svg';
   static const String navScheduledRide = 'assets/icons/nav_scheduled_ride.png';
   static const String navScheduledRideAlert =
       'assets/icons/nav_scheduled_ride_alert.png';
