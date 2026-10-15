@@ -68,14 +68,20 @@ class _RadarOfferDeckState extends State<RadarOfferDeck>
     _sync();
     _fly.addListener(() {
       final a = _flyAnim;
-      if (a != null) { setState(() => _dx = a.value); }
+      if (a != null) {
+        setState(() => _dx = a.value);
+      }
     });
     _hint.addListener(() => setState(() {}));
     _blur.addListener(() => setState(() {}));
     _blur.addStatusListener((status) {
-      if (status != AnimationStatus.completed) { return; }
+      if (status != AnimationStatus.completed) {
+        return;
+      }
       final id = _blurring;
-      if (id == null) { return; }
+      if (id == null) {
+        return;
+      }
       setState(() {
         _gone.add(id);
         _blurring = null;
@@ -84,9 +90,13 @@ class _RadarOfferDeckState extends State<RadarOfferDeck>
       _reportFront();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) { return; }
+      if (!mounted) {
+        return;
+      }
       _reportFront();
-      if (_visible.length > 1) { _hint.forward(); }
+      if (_visible.length > 1) {
+        _hint.forward();
+      }
     });
   }
 
@@ -95,7 +105,9 @@ class _RadarOfferDeckState extends State<RadarOfferDeck>
     super.didUpdateWidget(oldWidget);
     _sync();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) { _reportFront(); }
+      if (mounted) {
+        _reportFront();
+      }
     });
   }
 
@@ -105,12 +117,16 @@ class _RadarOfferDeckState extends State<RadarOfferDeck>
     _order.removeWhere((id) => !ids.contains(id));
     _gone.removeWhere((id) => !ids.contains(id));
     for (final id in widget.ids) {
-      if (!_order.contains(id)) { _order.add(id); }
+      if (!_order.contains(id)) {
+        _order.add(id);
+      }
     }
     final front = _visible.isEmpty ? null : _visible.first;
     // Taken behind: leaves at once. Taken in front: blurs out first.
     for (final id in widget.taken) {
-      if (!_order.contains(id) || _gone.contains(id)) { continue; }
+      if (!_order.contains(id) || _gone.contains(id)) {
+        continue;
+      }
       if (id == front) {
         if (_blurring != id) {
           _blurring = id;
@@ -127,13 +143,17 @@ class _RadarOfferDeckState extends State<RadarOfferDeck>
 
   void _reportFront() {
     final front = _visible.isEmpty ? null : _visible.first;
-    if (front == _reportedFront) { return; }
+    if (front == _reportedFront) {
+      return;
+    }
     _reportedFront = front;
     widget.onFrontChanged(front);
   }
 
   void _onDragUpdate(DragUpdateDetails d) {
-    if (_blurring != null || _visible.length < 2) { return; }
+    if (_blurring != null || _visible.length < 2) {
+      return;
+    }
     _fly.stop();
     _hint.stop();
     setState(() => _dx += d.delta.dx);
@@ -155,16 +175,22 @@ class _RadarOfferDeckState extends State<RadarOfferDeck>
   }
 
   void _animateTo(double target, {VoidCallback? then}) {
-    _flyAnim = Tween<double>(begin: _dx, end: target)
-        .animate(CurvedAnimation(parent: _fly, curve: Curves.easeOutCubic));
+    _flyAnim = Tween<double>(
+      begin: _dx,
+      end: target,
+    ).animate(CurvedAnimation(parent: _fly, curve: Curves.easeOutCubic));
     _fly.forward(from: 0).whenComplete(() {
-      if (mounted && then != null) { then(); }
+      if (mounted && then != null) {
+        then();
+      }
     });
   }
 
   void _sendFrontToBack() {
     final visible = _visible;
-    if (visible.length < 2) { return; }
+    if (visible.length < 2) {
+      return;
+    }
     HapticFeedback.selectionClick();
     setState(() {
       _order.remove(visible.first);
@@ -185,7 +211,9 @@ class _RadarOfferDeckState extends State<RadarOfferDeck>
   @override
   Widget build(BuildContext context) {
     final visible = _visible;
-    if (visible.isEmpty) { return const SizedBox.shrink(); }
+    if (visible.isEmpty) {
+      return const SizedBox.shrink();
+    }
     final shown = visible.take(3).toList();
     final h = _hint.value;
     final hintDx = _hint.isAnimating
@@ -257,7 +285,13 @@ class _RadarOfferDeckState extends State<RadarOfferDeck>
             if (widget.top != null)
               Padding(
                 padding: EdgeInsets.only(
-                  bottom: 8 + (shown.length > 2 ? 54 : shown.length > 1 ? 27 : 0),
+                  bottom:
+                      8 +
+                      (shown.length > 2
+                          ? 54
+                          : shown.length > 1
+                          ? 27
+                          : 0),
                 ),
                 child: Center(child: widget.top),
               ),

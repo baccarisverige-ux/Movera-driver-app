@@ -70,11 +70,11 @@ class RadarOfferCard extends StatelessWidget {
   static const Color headerTint = Color(0xFFF5F6F7);
 
   Widget _icon(String asset, double size, Color color) => SvgPicture.asset(
-        asset,
-        width: size,
-        height: size,
-        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-      );
+    asset,
+    width: size,
+    height: size,
+    colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +97,10 @@ class RadarOfferCard extends StatelessWidget {
             children: [
               Container(
                 key: ValueKey<String>('radar-offer-category-${offer.id}'),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(99),
@@ -254,27 +257,27 @@ class RadarOfferCard extends StatelessWidget {
     );
 
     Widget stop(String place, String detail) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              place,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: ink,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              detail,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: muted, fontSize: 12.5),
-            ),
-          ],
-        );
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          place,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: ink,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          detail,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(color: muted, fontSize: 12.5),
+        ),
+      ],
+    );
 
     final body = Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -335,21 +338,25 @@ class RadarOfferCard extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Material(
-                color: const Color(0xFFF2F3F5),
-                borderRadius: BorderRadius.circular(17),
-                child: InkWell(
-                  key: ValueKey<String>('radar-route-${offer.id}'),
+              if (onRoute != null) ...[
+                Material(
+                  color: const Color(0xFFF2F3F5),
                   borderRadius: BorderRadius.circular(17),
-                  onTap: matching ? null : onRoute,
-                  child: SizedBox(
-                    width: 54,
-                    height: 54,
-                    child: Center(child: _icon(AppAssets.offerRoute, 22, ink)),
+                  child: InkWell(
+                    key: ValueKey<String>('radar-route-${offer.id}'),
+                    borderRadius: BorderRadius.circular(17),
+                    onTap: matching ? null : onRoute,
+                    child: SizedBox(
+                      width: 54,
+                      height: 54,
+                      child: Center(
+                        child: _icon(AppAssets.offerRoute, 22, ink),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
+                const SizedBox(width: 10),
+              ],
               Expanded(
                 child: SizedBox(
                   height: 54,
@@ -360,12 +367,12 @@ class RadarOfferCard extends StatelessWidget {
                       elevation: 0,
                       backgroundColor: ink,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: state ==
-                              RadarOfferCardState.expired
+                      disabledBackgroundColor:
+                          state == RadarOfferCardState.expired
                           ? ink.withValues(alpha: 0.28)
                           : const Color(0xFFD9DEDF),
-                      disabledForegroundColor: state ==
-                              RadarOfferCardState.expired
+                      disabledForegroundColor:
+                          state == RadarOfferCardState.expired
                           ? Colors.white
                           : const Color(0xFF727E83),
                       shape: RoundedRectangleBorder(

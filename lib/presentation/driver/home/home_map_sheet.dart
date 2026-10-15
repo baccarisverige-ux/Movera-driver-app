@@ -896,6 +896,8 @@ extension _HomeMapSheet on _DriverHomeState {
                 _outsideRadarOffer == null &&
                 _radarHomeOffers.isNotEmpty)
               Positioned(
+                // Keyed so the deck keeps its order when siblings come and go.
+                key: const ValueKey<String>('radar-home-deck-slot'),
                 left: 14,
                 width: math.max(0, viewportWidth - 28),
                 // Clears the safety and recenter buttons below it.
@@ -1507,8 +1509,16 @@ extension _HomeMapSheet on _DriverHomeState {
               valueListenable: _panelSlidePosition,
               builder: (context, position, _) {
                 final holdOff = _isOnline && position >= 0.5;
+                // Offers on the deck: the radar takes the front trip.
+                final front = !holdOff && _isOnline && _outsideRadarOffer == null
+                    ? _HomeOfferRadar(this)._radarFrontOffer()
+                    : null;
                 final face = _isOnline
-                    ? (holdOff ? 'radar-hold-off' : 'radar-online')
+                    ? (holdOff
+                        ? 'radar-hold-off'
+                        : front != null
+                        ? 'radar-accept'
+                        : 'radar-online')
                     : _isGoingOnline
                     ? 'radar-connecting'
                     : 'radar-offline';
@@ -1528,7 +1538,11 @@ extension _HomeMapSheet on _DriverHomeState {
                   child: KeyedSubtree(
                     key: ValueKey<String>(face),
                     child: _isOnline
-                        ? (holdOff ? _holdOffRadar() : _buildTripRadarButton())
+                        ? (holdOff
+                            ? _holdOffRadar()
+                            : front != null
+                            ? _acceptRadar(front)
+                            : _buildTripRadarButton())
                         : _isGoingOnline
                         ? _buildGoingOnlineButton()
                         : _buildGoOnlineButton(),
@@ -1561,6 +1575,33 @@ extension _HomeMapSheet on _DriverHomeState {
                 _pendingRadarHomeOffers.isNotEmpty,
             pulse: _goOnlinePulseController.value,
             sweep: _radarSweepController.value,
+          ),
+        ),
+      );
+    }
+
+    /// While offers show, the radar reads "Accept · MATCH" and tapping it
+    /// matches the deck's front trip, same as its Match button.
+    Widget _acceptRadar(_HomeDirectOffer front) {
+      final busy = _homeRadarMatchingOfferId != null;
+      return KeyedSubtree(
+        key: const ValueKey<String>('home-radar-accept'),
+        child: AnimatedBuilder(
+          animation: Listenable.merge([
+            _goOnlinePulseController,
+            _radarSweepController,
+          ]),
+          builder: (context, child) => _buildRadarOrb(
+            title: busy ? "Matching" : "Accept",
+            status: "MATCH",
+            subtitle: busy ? "Please wait" : "Tap to accept",
+            active: true,
+            offer: true,
+            pulse: _goOnlinePulseController.value,
+            sweep: _radarSweepController.value,
+            onTap: busy
+                ? null
+                : () => _HomeOfferRadar(this)._startHomeRadarMatch(front),
           ),
         ),
       );

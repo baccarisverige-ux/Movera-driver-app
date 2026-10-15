@@ -3,14 +3,18 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    IslandMessages.reset();
+  });
 
-  testWidgets('a Radar trip that disappears shows No longer available', (
+  testWidgets('a front Radar trip that disappears blurs out with an island note', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(375, 812));
@@ -48,16 +52,20 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2300));
     await tester.pump(const Duration(milliseconds: 8500));
     await tester.pump(const Duration(milliseconds: 900));
-    expect(find.text('Radar offers · 1'), findsOneWidget);
+    final card = find.byKey(const ValueKey<String>('radar-offer-card-nearby-1'));
+    expect(card, findsOneWidget);
 
+    // It was the front card: the island says why, the card blurs out.
     await tester.pump(const Duration(milliseconds: 1500));
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('No longer available'), findsOneWidget);
-    expect(find.text('Taken by another driver'), findsNothing);
+    final said = IslandMessages.posted.map((m) => m.title);
+    expect(said, contains('Trip unavailable'));
+    expect(said, isNot(contains('Taken by another driver')));
+    expect(find.byType(ImageFiltered), findsWidgets);
 
     await tester.pump(const Duration(milliseconds: 3000));
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('No longer available'), findsNothing);
+    expect(card, findsNothing);
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();
@@ -105,13 +113,16 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(match, findsOneWidget);
     expect(tester.widget<FilledButton>(match).onPressed, isNull);
-    expect(find.text('Radar offers · 1'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('radar-offer-card-nearby-1')),
+      findsOneWidget,
+    );
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();
   });
 
-  testWidgets('new Radar trips open the offers popup by themselves', (
+  testWidgets('new Radar trips join the deck by themselves', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(375, 812));
@@ -147,25 +158,26 @@ void main() {
     await tester.pump(const Duration(milliseconds: 8500));
     await tester.pump(const Duration(milliseconds: 900));
     await tester.pump(const Duration(milliseconds: 6200));
-    // One trip listed, more waiting: the Radar button counts every open
-    // Radar trip, the same ones the full Radar screen lists.
-    expect(find.text('Radar offers · 1'), findsOneWidget);
-    expect(find.text('5 trips'), findsOneWidget);
-    expect(find.text('New Radar trips'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 400));
+    // New trips join the deck by themselves, no refresh on Home; the
+    // badge on top counts every open Radar trip.
+    final cards = find.byWidgetPredicate(
+      (w) =>
+          w.key is ValueKey<String> &&
+          (w.key! as ValueKey<String>).value.startsWith('radar-offer-card-'),
+    );
+    expect(cards.evaluate().length, greaterThan(1));
+    expect(find.byKey(const ValueKey<String>('radar-home-refresh')), findsNothing);
+    final badge = find.byKey(const ValueKey<String>('radar-home-all-offers'));
+    expect(badge, findsOneWidget);
+    expect(
+      find.descendant(of: badge, matching: find.text('ALL OFFERS')),
+      findsOneWidget,
+    );
+    expect(find.descendant(of: badge, matching: find.text('05')), findsOneWidget);
 
-    // The driver hides the listed trip: the waiting ones open by themselves.
-    final hide = find.byTooltip('Hide offer');
-    tester
-        .widget<InkWell>(
-          find.descendant(of: hide, matching: find.byType(InkWell)).first,
-        )
-        .onTap!
-        .call();
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Radar offers · 2'), findsOneWidget);
-    // Hiding a trip on Home does not take it off Radar: the count stays.
-    expect(find.text('5 trips'), findsOneWidget);
-    expect(find.text('New Radar trips'), findsNothing);
+    // The radar reads Accept while the deck shows.
+    expect(find.byKey(const ValueKey<String>('home-radar-accept')), findsOneWidget);
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();

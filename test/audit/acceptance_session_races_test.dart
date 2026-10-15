@@ -55,10 +55,7 @@ Future<void> _mount(WidgetTester tester, _ControlledDispatch dispatch) async {
 }
 
 Future<void> _tapMatch(WidgetTester tester) async {
-  final match = find.descendant(
-    of: find.byKey(const ValueKey<String>('controlled-offer')),
-    matching: find.text('Match'),
-  );
+  final match = find.byKey(const ValueKey<String>('radar-match-controlled-offer'));
   await tester.ensureVisible(match);
   await tester.tap(match);
   await tester.pump();
@@ -140,7 +137,10 @@ void main() {
         await _mount(tester, dispatch);
         await _tapMatch(tester);
         // A second tap must not dispatch another claim while the first is pending.
-        await tester.tap(find.text('Matching…'));
+        await tester.tap(
+          find.byKey(const ValueKey<String>('radar-match-controlled-offer')),
+          warnIfMissed: false,
+        );
         await tester.pump();
         expect(dispatch.requests, hasLength(1));
         dispatch.requests.single.complete(result);

@@ -8,9 +8,6 @@ enum _HomeRadarMatchState { available, resolving, claimedElsewhere }
 
 /// Why a Radar offer is leaving the list.
 enum _RadarOfferGone {
-  /// Another driver took it while this driver looked at it.
-  takenByOther,
-
   /// This driver tapped Match and another driver won.
   lostOwnMatch,
 
@@ -204,6 +201,8 @@ extension _HomeOfferRadar on _DriverHomeState {
         _pendingRadarHomeOffers.removeWhere((item) => item.id == offer.id);
       });
       _startRadarPickWindow(offer);
+      // Demo: with a full deck, one trip behind gets taken elsewhere.
+      if (_radarHomeOffers.length >= 3) { _scheduleHomeRadarExternalClaimDemo(); }
     }
     void _refreshRadarHomeOffers() {
       if (!mounted ||
@@ -411,8 +410,6 @@ extension _HomeOfferRadar on _DriverHomeState {
       _HomeDirectOffer offer,
       _RadarOfferGone reason,
     ) {
-      // The row itself says what happened; the island adds a line when
-      // this driver was the one matching.
       final wasMatching = _homeRadarMatchingOfferId == offer.id;
       if (wasMatching) { _homeRadarNoticeTimer?.cancel(); }
       _rebuild(() {
@@ -426,10 +423,8 @@ extension _HomeOfferRadar on _DriverHomeState {
       final wasFront = offer.id == _radarExpandedOfferId;
       if (reason == _RadarOfferGone.lostOwnMatch) {
         IslandMessages.show(HomeIslandNotices.takenByOther);
-      } else if (wasMatching) {
+      } else if (wasMatching || wasFront) {
         IslandMessages.show(HomeIslandNotices.tripUnavailable);
-      } else if (wasFront) {
-        IslandMessages.show(HomeIslandNotices.takenByOther);
       }
 
       _homeRadarLostMatchTimer?.cancel();
