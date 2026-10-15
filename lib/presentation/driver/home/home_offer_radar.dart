@@ -541,7 +541,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             fare: offer.fare,
             paidByCash: offer.cash,
             category: offer.category,
-            matchedVia: offer.reservation ? 'Reservation' : 'Exclusive Radar',
+            matchedVia: offer.reservation ? 'Exclusive reservation' : 'Exclusive offer',
             waybillRepository: _waybills,
             sessionController: _driverSession,
             locationRepository: _driverLocationService,

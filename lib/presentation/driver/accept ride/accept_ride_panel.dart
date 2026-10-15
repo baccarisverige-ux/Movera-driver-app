@@ -336,7 +336,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              'Exclusive offer · ${seconds}s',
+                              'Radar trip · ${seconds}s',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
