@@ -30,6 +30,10 @@ class DigitalIslandShell extends StatefulWidget {
 
   static const Color screen = Color(0xFF060708);
 
+  /// Fine white contour around the whole island. Home and the trip draw
+  /// the island at 80 %, so this is 0.5 px on screen.
+  static const double contourWidth = 0.5 / 0.8;
+
   /// Text on the screen glows a little, like lit pixels.
   static const List<Shadow> glow = [
     Shadow(color: Color(0x59FFFFFF), blurRadius: 8),
@@ -89,7 +93,6 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
           end: Alignment.bottomCenter,
           colors: [Color(0xFF111316), DigitalIslandShell.screen],
         ),
-        border: Border.all(color: const Color(0x1FFFFFFF)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x47000000),
@@ -97,6 +100,14 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
             offset: Offset(0, 7),
           ),
         ],
+      ),
+      // On top of the screen, so nothing inside covers the contour.
+      foregroundDecoration: BoxDecoration(
+        borderRadius: radius,
+        border: Border.all(
+          color: Colors.white,
+          width: DigitalIslandShell.contourWidth,
+        ),
       ),
       child: ClipRRect(
         borderRadius: radius,

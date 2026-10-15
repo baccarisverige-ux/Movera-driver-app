@@ -12,6 +12,8 @@ import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 import 'package:movera/core/routing/route_instruction.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/accept%20ride/island_icons.dart';
+import 'package:movera/presentation/driver/accept%20ride/island_morph.dart';
+import 'package:movera/presentation/driver/home/components/digital_island.dart';
 
 Widget surface({
   int? seconds,
@@ -22,8 +24,11 @@ Widget surface({
   double textScale = 1,
   String? fontFamily,
   String? arrival,
+  bool arrived = false,
   NavigationBanner? banner,
   double progress = .4,
+  bool radarVisible = false,
+  VoidCallback? radar,
 }) => MaterialApp(
   theme: ThemeData(fontFamily: fontFamily),
   builder: (context, child) => MediaQuery(
@@ -51,14 +56,15 @@ Widget surface({
           address: 'Sveavägen 20',
           detail: 'Picking up Angelica',
           eta: '2 min',
-          distance: '1.4 km',
           arrival: arrival,
+          arrived: arrived,
           progress: progress,
           waitingSeconds: seconds,
           waitingAtStop: waitingAtStop,
           waitingMessage: waitingMessage,
           lastTripLabel: '120 kr',
-          onRadar: () {},
+          radarVisible: radarVisible,
+          onRadar: radar ?? () {},
           onMenu: () {},
           onSearch: () {},
           onHistory: () {},
@@ -267,6 +273,151 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+  testWidgets(
+    'No radar button on the route island; radar stays in the long-press tools',
+    (tester) async {
+      var radar = 0;
+      await tester.pumpWidget(
+        surface(radarVisible: true, radar: () => radar++),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byKey(const ValueKey('trip-guidance-island')), findsOneWidget);
+      expect(find.byKey(const ValueKey('island-radar')), findsNothing);
+      expect(find.byTooltip('Turn radar on'), findsNothing);
+      await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Turn radar on'));
+      await tester.pumpAndSettle();
+      expect(radar, 1);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
+  testWidgets('Large number is the distance to the point, never the route', (
+    tester,
+  ) async {
+    String? number() {
+      final distance = find.byKey(const ValueKey('island-distance'));
+      if (distance.evaluate().isEmpty) return null;
+      return tester.widget<Text>(distance).textSpan!.toPlainText();
+    }
+
+    Future<void> show({
+      required NavigationBanner banner,
+      String? arrival,
+      bool arrived = false,
+    }) async {
+      await tester.pumpWidget(
+        surface(banner: banner, arrival: arrival, arrived: arrived),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byKey(const ValueKey('trip-guidance-island')), findsOneWidget);
+    }
+
+    // Arriving soon: the distance to the pickup itself.
+    await show(
+      arrival: 'Pickup',
+      banner: const NavigationBanner(
+        primary: 'Pickup',
+        distanceLabel: 'in 150 m',
+        symbol: NavigationBannerSymbol.arrive,
+      ),
+    );
+    expect(find.text('Arriving soon'), findsOneWidget);
+    expect(number(), '150m');
+    // At the pickup, waiting there, or no distance known: icon only.
+    await show(
+      arrival: 'Pickup',
+      arrived: true,
+      banner: const NavigationBanner(
+        primary: 'Pickup ahead',
+        distanceLabel: 'in 30 m',
+        symbol: NavigationBannerSymbol.arrive,
+      ),
+    );
+    expect(find.text('Near pickup'), findsOneWidget);
+    expect(number(), isNull);
+    await show(
+      banner: const NavigationBanner(
+        primary: 'Pickup',
+        distanceLabel: 'Waiting for rider',
+        symbol: NavigationBannerSymbol.arrive,
+      ),
+    );
+    expect(number(), isNull);
+    await show(
+      banner: const NavigationBanner(
+        primary: 'Navigate to pickup',
+        distanceLabel: 'Route updating…',
+      ),
+    );
+    expect(number(), isNull);
+    // A turn: the distance to the turn.
+    await show(
+      banner: const NavigationBanner(
+        primary: 'Exit left in 700 m',
+        distanceLabel: '700 m',
+        symbol: NavigationBannerSymbol.exitLeft,
+      ),
+    );
+    expect(number(), '700m');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets('Every island has one 0.5 px white contour', (tester) async {
+    List<Border> contours() => [
+      for (final box in tester.widgetList<DecoratedBox>(
+        find.descendant(
+          of: find.byKey(const ValueKey('island-morph-shell')),
+          matching: find.byType(DecoratedBox),
+        ),
+      ))
+        if ((box.decoration as BoxDecoration?)?.border case final Border b
+            when b.top.color.a > 0)
+          b,
+    ];
+    // Route panel, status pill and waiting pill: the morph draws it.
+    for (final island in [
+      surface(),
+      surface(
+        banner: const NavigationBanner(
+          primary: 'Turn right',
+          distanceLabel: '',
+          status: 'Recalculating route…',
+        ),
+      ),
+      surface(seconds: 125),
+    ]) {
+      await tester.pumpWidget(island);
+      await tester.pump(const Duration(seconds: 1));
+      final border = contours().single;
+      expect(border.top.width, IslandMorph.contourWidth);
+      expect(border.top.color, Colors.white);
+      expect(border.isUniform, isTrue);
+    }
+    // The Home island inside: its own contour only, 0.5 px once scaled.
+    await tester.tap(find.byKey(const ValueKey('island-morph-shell')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(find.byKey(const ValueKey('trip-default-island')), findsOneWidget);
+    final border = contours().single;
+    expect(border.top.color, Colors.white);
+    expect(
+      border.top.width * TripIslandGeometry.scale,
+      closeTo(IslandMorph.contourWidth, 1e-9),
+    );
+    expect(
+      tester.widget<AnimatedContainer>(
+        find.descendant(
+          of: find.byType(DigitalIslandShell),
+          matching: find.byType(AnimatedContainer),
+        ).first,
+      ).decoration,
+      isA<BoxDecoration>().having((d) => d.border, 'no second border', isNull),
+    );
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 3));
+  });
   testWidgets('Same size: only the text changes, no morph', (tester) async {
     const right = NavigationBanner(
       primary: 'Turn right in 180 m',

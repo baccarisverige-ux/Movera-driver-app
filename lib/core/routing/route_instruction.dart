@@ -95,8 +95,16 @@ enum NavigationBannerSymbol {
   uTurn,
   roundabout,
   arrive,
+
+  /// Merge or exit whose side is unknown.
   merge,
   exit,
+
+  /// Merge and exit keep their side, so the arrow points the right way.
+  mergeLeft,
+  mergeRight,
+  exitLeft,
+  exitRight,
 }
 
 extension RouteManeuverTypeX on RouteManeuverType {
@@ -347,11 +355,22 @@ class RouteInstructionCopy {
         type == RouteManeuverType.roundaboutTurn) {
       return NavigationBannerSymbol.roundabout;
     }
+    // Same side test as the words ("Exit left", "Merge right").
+    final left = modifier.contains('left');
+    final right = modifier.contains('right');
     if (type == RouteManeuverType.offRamp || type == RouteManeuverType.ramp) {
-      return NavigationBannerSymbol.exit;
+      return left
+          ? NavigationBannerSymbol.exitLeft
+          : right
+          ? NavigationBannerSymbol.exitRight
+          : NavigationBannerSymbol.exit;
     }
     if (type == RouteManeuverType.merge || type == RouteManeuverType.onRamp) {
-      return NavigationBannerSymbol.merge;
+      return left
+          ? NavigationBannerSymbol.mergeLeft
+          : right
+          ? NavigationBannerSymbol.mergeRight
+          : NavigationBannerSymbol.merge;
     }
     switch (modifier) {
       case 'uturn':

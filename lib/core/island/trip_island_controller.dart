@@ -18,12 +18,17 @@ class TripIslandInput {
     this.paidSeconds,
     this.waitingAtStop = false,
     this.navigationStatus,
+    this.reroutes = 0,
   });
   final NavigationBanner? banner;
   final String status, address, waitingMessage;
   final String? arrival, navigationStatus;
   final bool arrived, paidWait, waitingAtStop;
   final int? waitingSeconds, paidSeconds;
+
+  /// Routes replaced after the driver left the route; each new one says
+  /// "Route updated". A first route, a retry or a silent refresh does not.
+  final int reroutes;
 }
 
 class TripIslandFace {
@@ -65,10 +70,13 @@ class TripIslandController extends ChangeNotifier {
     }
     if (wasWaiting && input.waitingSeconds == null) {
       _showNotice(previous.waitingAtStop ? input.status : 'Trip started');
-    } else if (previousFault != null && fault == null) {
-      _showNotice(
-        previousFault.contains('Location') ? 'GPS restored' : 'Route updated',
-      );
+    } else if (input.reroutes > previous.reroutes) {
+      // Only after a real reroute. It never hides a maneuver (see [face]).
+      _showNotice('Route updated');
+    } else if (previousFault != null &&
+        fault == null &&
+        previousFault.contains('Location')) {
+      _showNotice('GPS restored');
     } else if (wasWaiting &&
         input.waitingSeconds != null &&
         previous.waitingAtStop == input.waitingAtStop &&
