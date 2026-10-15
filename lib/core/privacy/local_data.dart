@@ -1,6 +1,7 @@
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
+import 'package:movera/core/safety/ride_check_log.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_quarantine.dart';
 import 'package:movera/core/support/local_support_repository.dart';
@@ -62,6 +63,13 @@ const localDataInventory = <LocalDataRecord>[
     retention: 'Until logout. Not sent to a server.',
   ),
   LocalDataRecord(
+    key: PrefsRideCheckLog.key,
+    dataClass: LocalDataClass.personal,
+    purpose: 'Ride checks for the trip details: time, trigger and answers.',
+    retention: 'Newest ${PrefsRideCheckLog.maxRows} checks, until logout. '
+        'Audio recordings are separate files on the phone.',
+  ),
+  LocalDataRecord(
     key: LocalSupportRepository.key,
     dataClass: LocalDataClass.personal,
     purpose: 'Unsent support draft text.',
@@ -102,12 +110,14 @@ Future<void> clearLocalUserData({
     await CompletionJournal.settle();
     await SettingsRepository.settle();
     await PrefsTripHistoryRepository.settle();
+    await PrefsRideCheckLog.settle();
     await LocalSupportRepository.settle();
     final prefs = await (load ?? SharedPreferences.getInstance)();
     const exact = <String>[
       PrefsActiveRideRepository.key,
       CompletionJournal.key,
       PrefsTripHistoryRepository.key,
+      PrefsRideCheckLog.key,
       LocalSupportRepository.key,
       SettingsRepository.key,
       PrefsActiveRideRepository.terminalKey,

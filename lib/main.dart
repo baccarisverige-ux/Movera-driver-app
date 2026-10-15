@@ -21,6 +21,9 @@ import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/routing/road_route_service.dart';
+import 'package:movera/core/safety/demo_safety_alert_repository.dart';
+import 'package:movera/core/safety/ride_check_log.dart';
+import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/session/driver_session_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
@@ -60,6 +63,8 @@ class _MoveraAppState extends State<MoveraApp> {
   late final DispatchRepository _dispatch;
   late final DriverHomeConfigRepository _homeConfig;
   late ActiveRideRepository _activeRide;
+  late final DemoSafetyAlertRepository _safetyAlerts;
+  late final RideCheckServices _rideCheck;
 
   @override
   void initState() {
@@ -73,6 +78,13 @@ class _MoveraAppState extends State<MoveraApp> {
     _dispatch = DemoDispatchRepository();
     _homeConfig = const LocalDriverHomeConfigRepository();
     _activeRide = PrefsActiveRideRepository();
+    // Ride check alerts go to admin and Dispatch; demo outbox until a
+    // backend exists.
+    _safetyAlerts = DemoSafetyAlertRepository();
+    _rideCheck = RideCheckServices(
+      alerts: _safetyAlerts,
+      log: PrefsRideCheckLog(),
+    );
     unawaited(_session.restore());
   }
 
@@ -84,6 +96,7 @@ class _MoveraAppState extends State<MoveraApp> {
     if (dispatch is DemoDispatchRepository) {
       dispatch.dispose();
     }
+    _safetyAlerts.dispose();
     super.dispose();
   }
 
@@ -104,16 +117,19 @@ class _MoveraAppState extends State<MoveraApp> {
             theme: ThemeData.light(useMaterial3: true)
                 .copyWith(scaffoldBackgroundColor: AppColor.bg),
             builder: (context, child) {
-              return DriverRuntimeScope(
-                session: _session,
-                homeBuilder: _home,
-                logout: _logout,
-                child: LayoutViewport(
-                  child: Column(
-                    children: [
-                      const DemoModeBanner(),
-                      Expanded(child: child ?? const SizedBox.shrink()),
-                    ],
+              return RideCheckScope(
+                services: _rideCheck,
+                child: DriverRuntimeScope(
+                  session: _session,
+                  homeBuilder: _home,
+                  logout: _logout,
+                  child: LayoutViewport(
+                    child: Column(
+                      children: [
+                        const DemoModeBanner(),
+                        Expanded(child: child ?? const SizedBox.shrink()),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -136,6 +152,7 @@ class _MoveraAppState extends State<MoveraApp> {
     if (dispatch is DemoDispatchRepository) {
       dispatch.reset();
     }
+    _safetyAlerts.reset();
     _session.reset();
   }
 

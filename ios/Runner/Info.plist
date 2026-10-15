@@ -6,6 +6,8 @@
     <string>$(GOOGLE_MAPS_API_KEY)</string>
     <key>NSCameraUsageDescription</key>
     <string>Movera Driver uses the camera to capture vehicle and document photos you choose to attach.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Movera Driver uses the microphone only when you choose to record audio during a Ride check. The recording is saved only on this phone.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>Movera Driver uses your location while the app is open to show nearby trips and navigation. Background location is not used.</string>
 	<key>CFBundleDevelopmentRegion</key>

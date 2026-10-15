@@ -9,6 +9,7 @@ Logout calls `clearLocalUserData` and returns the driver offline. That removes:
 - active-trip recovery and terminal markers
 - completion journal
 - trip history
+- Ride checks shown in the trip details (time, trigger, answers)
 - support drafts
 - settings, including trusted-contact phone numbers and vehicle drafts
 
