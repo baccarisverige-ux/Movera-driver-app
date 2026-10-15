@@ -86,6 +86,13 @@ flutter:
     - assets/icons/
     - assets/images/
 
+  # DSEG7 Classic (SIL OFL 1.1) — see assets/fonts/DSEG-LICENSE.txt
+  fonts:
+    - family: DSEG7
+      fonts:
+        - asset: assets/fonts/DSEG7Classic-Bold.ttf
+          weight: 700
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

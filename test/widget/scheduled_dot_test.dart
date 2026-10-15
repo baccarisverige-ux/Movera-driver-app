@@ -18,7 +18,7 @@ void main() {
 
   testWidgets('Opening Scheduled rides keeps the requests open', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ScheduledRidesScreen()));
-    expect(find.text('2 new'), findsOneWidget);
+    expect(find.text('02'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     expect(ScheduledRideStore.openRequests.value, 2);
   });
