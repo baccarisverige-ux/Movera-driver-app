@@ -1,5 +1,16 @@
+import 'package:movera/constants/appassets.dart';
+import 'package:movera/widgets/led_count_badge.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+// Solar line icons (stroke 1.5), tinted to match the surrounding text.
+Widget _solar(String asset, Color color, double size) => SvgPicture.asset(
+  asset,
+  width: size,
+  height: size,
+  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+);
 
 // A route remains mounted during its reverse transition. A second callback
 // must not pop the route underneath it or return a second decision.
@@ -76,24 +87,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                         ),
                         const SizedBox(width: 8),
                         if (_selectedTab == 0 && _requests.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 9,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE4F5ED),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${_requests.length} new',
-                              style: TextStyle(
-                                color: Color(0xFF16885B),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
+                          LedCountBadge(count: _requests.length),
                       ],
                     ),
                   );
@@ -173,8 +167,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
           IconButton(
             tooltip: 'Back',
             onPressed: () => _popScheduledRoute<void>(context),
-            icon: const Icon(Icons.arrow_back_rounded),
-            color: const Color(0xFF252E3A),
+            icon: _solar(AppAssets.solarArrowLeft, const Color(0xFF252E3A), 24),
           ),
           const SizedBox(width: 2),
           const Expanded(
@@ -209,11 +202,8 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               color: const Color(0xFFF3F5F6),
               borderRadius: BorderRadius.circular(13),
             ),
-            child: const Icon(
-              Icons.calendar_month_outlined,
-              color: Color(0xFF425058),
-              size: 20,
-            ),
+            alignment: Alignment.center,
+            child: _solar(AppAssets.solarCalendar, const Color(0xFF425058), 20),
           ),
         ],
       ),
@@ -374,20 +364,20 @@ class _ScheduledRideCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        color: Color(0xFFA3ADB2),
-                        size: 16,
+                      _solar(
+                        AppAssets.solarAltArrowRight,
+                        const Color(0xFFA3ADB2),
+                        18,
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.schedule_rounded,
-                        color: Color(0xFF19865C),
-                        size: 17,
+                      _solar(
+                        AppAssets.solarClockCircle,
+                        const Color(0xFF19865C),
+                        17,
                       ),
                       const SizedBox(width: 6),
                       Expanded(
@@ -409,14 +399,14 @@ class _ScheduledRideCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: _RideMeta(
-                          icon: Icons.directions_car_outlined,
+                          icon: AppAssets.solarCar,
                           label: ride.category,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Flexible(
                         child: _RideMeta(
-                          icon: Icons.route_outlined,
+                          icon: AppAssets.solarRoute,
                           label: ride.distance,
                         ),
                       ),
@@ -431,26 +421,33 @@ class _ScheduledRideCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     width: 24,
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.radio_button_checked_rounded,
-                          color: Color(0xFF2FBE7B),
-                          size: 16,
+                        Container(
+                          height: 14,
+                          width: 14,
+                          margin: const EdgeInsets.all(1),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF2FBE7B),
+                              width: 3,
+                            ),
+                          ),
                         ),
-                        SizedBox(
+                        const SizedBox(
                           height: 27,
                           child: VerticalDivider(
                             color: Color(0xFFCAD2D6),
                             thickness: 1.4,
                           ),
                         ),
-                        Icon(
-                          Icons.location_on_rounded,
-                          color: Color(0xFFDF5A62),
-                          size: 18,
+                        _solar(
+                          AppAssets.solarMapPoint,
+                          const Color(0xFFDF5A62),
+                          18,
                         ),
                       ],
                     ),
@@ -493,7 +490,7 @@ class _ScheduledRideCard extends StatelessWidget {
 class _RideMeta extends StatelessWidget {
   const _RideMeta({required this.icon, required this.label});
 
-  final IconData icon;
+  final String icon;
   final String label;
 
   @override
@@ -501,7 +498,7 @@ class _RideMeta extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: const Color(0xFF89949B), size: 15),
+        _solar(icon, const Color(0xFF89949B), 15),
         const SizedBox(width: 4),
         Flexible(
           child: Text(
@@ -714,8 +711,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
         leading: IconButton(
           tooltip: 'Back',
           onPressed: () => _popScheduledRoute<void>(context),
-          icon: const Icon(Icons.arrow_back_rounded),
-          color: _ink,
+          icon: _solar(AppAssets.solarArrowLeft, _ink, 24),
         ),
         titleSpacing: 0,
         title: Text(
@@ -787,12 +783,12 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.route_rounded, size: 16, color: _green),
-                    SizedBox(width: 6),
-                    Expanded(
+                    _solar(AppAssets.solarRoute, _green, 16),
+                    const SizedBox(width: 6),
+                    const Expanded(
                       child: Text(
                         'Illustrative route — sample data',
                         style: TextStyle(
@@ -823,7 +819,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.near_me_rounded, size: 18, color: _ink),
+                alignment: Alignment.center,
+                child: _solar(AppAssets.solarGps, _ink, 19),
               ),
             ),
             Positioned(
@@ -862,12 +859,12 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 14,
-                        color: Color(0xFFB9C4C8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: _solar(
+                        AppAssets.solarArrowRight,
+                        const Color(0xFFB9C4C8),
+                        14,
                       ),
                     ),
                     Expanded(
@@ -958,12 +955,12 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                _solar(
                                   ride.accepted
-                                      ? Icons.check_circle_rounded
-                                      : Icons.schedule_rounded,
-                                  size: 15,
-                                  color: ride.accepted ? _green : _muted,
+                                      ? AppAssets.solarCheckCircle
+                                      : AppAssets.solarClockCircle,
+                                  ride.accepted ? _green : _muted,
+                                  15,
                                 ),
                                 const SizedBox(width: 5),
                                 Flexible(
@@ -1014,11 +1011,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                   color: const Color(0xFFF1F5F3),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: const Icon(
-                  Icons.event_available_rounded,
-                  color: _green,
-                  size: 27,
-                ),
+                alignment: Alignment.center,
+                child: _solar(AppAssets.solarCalendarMark, _green, 27),
               ),
             ],
           ),
@@ -1029,7 +1023,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: _DetailMetric(
-                  icon: Icons.directions_car_outlined,
+                  icon: AppAssets.solarCar,
                   label: 'Ride type',
                   value: ride.category,
                 ),
@@ -1037,7 +1031,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
               Container(height: 34, width: 1, color: const Color(0xFFE5E9EB)),
               Expanded(
                 child: _DetailMetric(
-                  icon: Icons.route_rounded,
+                  icon: AppAssets.solarRoute,
                   label: 'Trip',
                   value: ride.distance,
                 ),
@@ -1092,10 +1086,10 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const Icon(
-                      Icons.location_on_rounded,
-                      size: 19,
-                      color: Color(0xFFDF5A62),
+                    _solar(
+                      AppAssets.solarMapPoint,
+                      const Color(0xFFDF5A62),
+                      19,
                     ),
                   ],
                 ),
@@ -1170,19 +1164,19 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           const _PlanRow(
-            icon: Icons.online_prediction_rounded,
+            icon: AppAssets.solarAlarm,
             title: 'Be ready early',
             body: 'Go online 30 min before pickup so the app can guide you in time.',
           ),
           const SizedBox(height: 15),
           const _PlanRow(
-            icon: Icons.alt_route_rounded,
+            icon: AppAssets.solarRouting2,
             title: 'Trips on the way',
             body: 'You can still receive suitable rides before the scheduled pickup.',
           ),
           const SizedBox(height: 15),
           const _PlanRow(
-            icon: Icons.event_busy_outlined,
+            icon: AppAssets.solarCalendarMinimalistic,
             title: 'Plans changed?',
             body: 'This is a local preview. Cancelling removes the sample reservation until the app restarts.',
           ),
@@ -1199,16 +1193,12 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFF1E4CE)),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.notifications_active_outlined,
-            color: Color(0xFF9B6B24),
-            size: 22,
-          ),
-          SizedBox(width: 12),
-          Expanded(
+          _solar(AppAssets.solarBellBing, const Color(0xFF9B6B24), 22),
+          const SizedBox(width: 12),
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1330,7 +1320,7 @@ class _DetailMetric extends StatelessWidget {
     required this.value,
   });
 
-  final IconData icon;
+  final String icon;
   final String label;
   final String value;
 
@@ -1345,7 +1335,8 @@ class _DetailMetric extends StatelessWidget {
             color: const Color(0xFFF1F5F3),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(icon, size: 18, color: const Color(0xFF19865C)),
+          alignment: Alignment.center,
+          child: _solar(icon, const Color(0xFF19865C), 18),
         ),
         const SizedBox(width: 9),
         Expanded(
@@ -1382,7 +1373,7 @@ class _DetailMetric extends StatelessWidget {
 class _PlanRow extends StatelessWidget {
   const _PlanRow({required this.icon, required this.title, required this.body});
 
-  final IconData icon;
+  final String icon;
   final String title;
   final String body;
 
@@ -1398,7 +1389,8 @@ class _PlanRow extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.09),
             borderRadius: BorderRadius.circular(13),
           ),
-          child: Icon(icon, color: Colors.white, size: 20),
+          alignment: Alignment.center,
+          child: _solar(icon, Colors.white, 20),
         ),
         const SizedBox(width: 12),
         Expanded(
