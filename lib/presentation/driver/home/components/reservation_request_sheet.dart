@@ -5,6 +5,7 @@ import 'package:flutter/physics.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/routing/road_route_service.dart';
@@ -12,6 +13,7 @@ import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/home/components/reservation_route_map.dart';
 import 'package:movera/widgets/offer_badges.dart';
+import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 const Color _ink = Color(0xFF111518);
@@ -256,9 +258,13 @@ class ReservationRequestSheet extends StatefulWidget {
     this.mapBuilder,
     this.routes,
     this.clock,
+    this.details,
   });
 
   final ReservationRequestPreview request;
+
+  /// Which details show (Q14); the admin's choice by default.
+  final OfferCardDetails? details;
 
   /// The ×; null shows it disabled.
   final VoidCallback? onHide;
@@ -279,6 +285,7 @@ class ReservationRequestSheet extends StatefulWidget {
 
 class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
   ReservationRequestPreview get request => widget.request;
+  OfferCardDetails get _show => widget.details ?? DriverOfferRules.current.card;
   RoadRouteService? _ownRoutes;
   late Future<List<GeoPoint>> _route;
 
@@ -446,12 +453,12 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
                       ],
                     ),
                     // Payment only when the rider pays cash (notes R2).
-                    if (request.paidByCash)
+                    if (_show.badges && request.paidByCash)
                       const OfferBadge.cash(
                         key: ValueKey<String>('reservation-cash'),
                       ),
                     // Admin raised the fare (Q13); the price has it.
-                    if (request.fareBoost case final boost?)
+                    if (request.fareBoost case final boost? when _show.badges)
                       OfferBadge.boost(
                         boost,
                         key: const ValueKey<String>('reservation-boost'),
@@ -509,7 +516,9 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
 
   /// "126,75 kr" → "126" and ",75 kr", for the grey decimals.
   (String, String) _fareParts() {
-    final fare = Money.parseSekLabel(request.fare)?.formatted ?? request.fare;
+    final fare = _show.fare(
+      Money.parseSekLabel(request.fare)?.formatted ?? request.fare,
+    );
     final comma = fare.lastIndexOf(',');
     return comma > 0
         ? (fare.substring(0, comma), fare.substring(comma))
@@ -520,7 +529,8 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
   /// or has passed.
   String _fareLine() {
     final left = request.untilPickup((widget.clock ?? DateTime.now)());
-    if (left == null) return 'Fare';
+    final what = _show.netFare ? 'Your share' : 'Fare';
+    if (left == null) return what;
     // Whole minutes, rounded up: 1 h 32 min 40 s reads "1 h 33 min".
     final total = (left.inSeconds + 59) ~/ 60;
     final hours = total ~/ 60;
@@ -528,7 +538,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
     final when = hours > 0
         ? (minutes > 0 ? '$hours h $minutes min' : '$hours h')
         : '$minutes min';
-    return 'Fare · in $when';
+    return '$what · in $when';
   }
 
   static String _km(double km) => '${km.toStringAsFixed(km < 10 ? 1 : 0)} km';
@@ -581,10 +591,12 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
             ],
           ),
         ),
-        const SizedBox(width: 8),
-        _rideFact(AppAssets.solarClockCircle, '${request.tripMinutes} min'),
-        const SizedBox(width: 10),
-        _rideFact(AppAssets.solarRoute, _km(request.tripKm)),
+        if (_show.tripMinutesKm) ...[
+          const SizedBox(width: 8),
+          _rideFact(AppAssets.solarClockCircle, '${request.tripMinutes} min'),
+          const SizedBox(width: 10),
+          _rideFact(AppAssets.solarRoute, _km(request.tripKm)),
+        ],
       ],
     );
   }
@@ -651,13 +663,16 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
   }
 
   Widget _stops() {
-    final stops = request.stops;
+    final show = _show;
+    final stops = show.stops ? request.stops : const <ReservationStop>[];
     final eta = request.estimatedArrival;
     final rows = <Widget>[
       _stopRow(
         dot: const _StopDot.pickup(),
         label: 'PICKUP',
-        address: request.pickupAddress,
+        address: show.pickupAddress
+            ? request.pickupAddress
+            : RadarOfferView.area(request.pickupAddress),
         trailing: request.pickupTime,
       ),
       for (var i = 0; i < stops.length; i++)
@@ -673,7 +688,9 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
       _stopRow(
         dot: const _StopDot.dropoff(),
         label: 'DROP-OFF',
-        address: request.dropoffAddress,
+        address: show.dropoffAreaOnly
+            ? RadarOfferView.area(request.dropoffAddress)
+            : request.dropoffAddress,
         trailing: eta == null ? null : '~$eta',
         mutedTrailing: true,
       ),

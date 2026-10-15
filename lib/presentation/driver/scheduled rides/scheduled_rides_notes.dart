@@ -227,3 +227,29 @@ class _LateCancelWarning extends StatelessWidget {
     );
   }
 }
+
+/// "Doesn't count" next to a cancel reason that does not hurt the cancel
+/// rate or the late-cancel rule (Q21).
+class _NotCountedTag extends StatelessWidget {
+  const _NotCountedTag();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE9F4EF),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: const Text(
+        'Doesn’t count',
+        style: TextStyle(
+          color: Color(0xFF19865C),
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}

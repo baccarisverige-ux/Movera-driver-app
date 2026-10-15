@@ -85,6 +85,7 @@ class CompletionJournal {
     String? cancellationReasonCode,
     String? cancellationActor,
     bool authoritative = false,
+    String? paymentMethod,
   }) => _serial(() async {
     final prefs = await load();
     // Do not overwrite an earlier unfinished transaction.
@@ -105,6 +106,9 @@ class CompletionJournal {
         'service': record.service,
         'pickup': record.pickup,
         'dropoff': record.dropoff,
+        // "Cash" for a cash trip: its details show the cash collected and
+        // what is owed to Movera (Q23).
+        if (paymentMethod != null) 'paymentMethod': paymentMethod,
       },
       if (cancellationReasonCode != null)
         'cancellation': {
@@ -173,6 +177,9 @@ class CompletionJournal {
         ),
         completedAt: at,
         status: status,
+        paymentMethod: row['paymentMethod'] is String
+            ? row['paymentMethod'] as String
+            : null,
         authoritative: data['authoritative'] == true,
         cancellationActor: data['cancellation'] is Map
             ? (data['cancellation'] as Map)['actor'] as String?

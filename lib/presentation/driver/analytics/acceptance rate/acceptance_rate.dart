@@ -6,6 +6,7 @@ import 'package:movera/constants/appfontweight.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/expantion_tile.dart';
 import 'package:movera/widgets/responsive_size.dart';
+import 'package:movera/widgets/rate_rule_note.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
 class AcceptanceRate extends StatelessWidget {
@@ -188,6 +189,12 @@ class AcceptanceRate extends StatelessWidget {
             fontWeight: fwMedium,
           ),
           16.height,
+          const RateRuleNote(
+            key: ValueKey<String>('acceptance-rate-rule'),
+            title: 'Only Exclusive offers count',
+            body: 'Exclusive offers and other offers sent only to you count. Radar trips never count.',
+          ),
+          16.height,
           Divider(color: AppColor.subtitle, height: 0, thickness: 0.2),
         ],
       ),
@@ -211,7 +218,7 @@ class AcceptanceRate extends StatelessWidget {
             iconAsset: AppAssets.calculator,
             title: 'How your acceptance rate is calculated',
             child: TextWidget(
-              text: 'Your acceptance rate is calculated based on the number of trip requests you accept compared to the total trip requests you receive. We use your last 100 trip requests to determine this percentage.',
+              text: 'Your acceptance rate is the Exclusive offers you accept compared with all the Exclusive offers you receive. Radar trips never count. We use your last 100 Exclusive offers.',
               color: AppColor.subtitle,
               fontSize: 14,
               fontWeight: fwNormal,

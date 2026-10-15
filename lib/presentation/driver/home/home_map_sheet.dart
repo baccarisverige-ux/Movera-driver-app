@@ -1733,6 +1733,21 @@ extension _HomeMapSheet on _DriverHomeState {
                 running: _isOnline,
                 onTap: _openDrivingTime,
               ),
+              // Q23: cash rides on or off. Off: no cash offers.
+              _sheetRow(
+                key: const ValueKey<String>('home-sheet-cash'),
+                icon: _solarIcon(AppAssets.solarWadOfMoney),
+                label: 'Cash rides',
+                trailing: Switch.adaptive(
+                  key: const ValueKey<String>('home-sheet-cash-switch'),
+                  value: DriverOfferPreferences.acceptsCash.value,
+                  activeTrackColor: const Color(0xFF1C6B45),
+                  onChanged: _HomeOfferRules(this)._setAcceptsCash,
+                ),
+                onTap: () => _HomeOfferRules(this)._setAcceptsCash(
+                  !DriverOfferPreferences.acceptsCash.value,
+                ),
+              ),
               if (showPerformance)
                 _sheetRow(
                   key: const ValueKey<String>('home-sheet-performance'),

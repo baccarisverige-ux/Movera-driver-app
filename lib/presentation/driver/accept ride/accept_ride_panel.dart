@@ -271,6 +271,28 @@ extension _AcceptRidePanel on _AcceptRideState {
                   ),
                 ],
               ),
+              const SizedBox(height: 10),
+              // Q18: while driving a rider, only Exclusive offers.
+              Row(
+                children: [
+                  const OfferBadge.exclusive(
+                    key: ValueKey<String>('on-trip-exclusive-mark'),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      ExclusiveReasons.text(ExclusiveReasons.finishingNearby),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF5F6B72),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 11),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -336,7 +358,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              'Radar trip · ${seconds}s',
+                              'Exclusive · ${seconds}s',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -642,10 +664,11 @@ extension _AcceptRidePanel on _AcceptRideState {
         context,
         readSeconds: () => _waitSeconds,
         fullyPaid: _paidStopWait,
+        terms: _waitTerms,
         onNoShow: _paidStopWait
             ? null
             : () {
-                if (_waitSeconds < 300 || !mounted) { return; }
+                if (_waitSeconds < _noShowWaitSeconds || !mounted) { return; }
                 _AcceptRideTrip(this)._confirmCancellationReason(_AcceptRideState._noShowReason);
               },
       );
@@ -660,7 +683,7 @@ extension _AcceptRidePanel on _AcceptRideState {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(_freshRadarLocation ? 'Demo Radar' : 'Demo Radar — live location unavailable/stale', style: const TextStyle(fontSize: 10)),
+          Text(_freshRadarLocation ? 'Demo offers' : 'Demo offers — live location unavailable/stale', style: const TextStyle(fontSize: 10)),
           const SizedBox(height: 4),
           MapControlButton(
             key: const ValueKey<String>('active-ride-safety-button'),
@@ -1124,6 +1147,34 @@ extension _AcceptRidePanel on _AcceptRideState {
         );
       }
 
+      // Q24: at the drop-off of a cash trip, collect the cash first; the
+      // amount shows, then "Complete ride".
+      if (_collectsCashNow) {
+        return SizedBox(
+          width: double.infinity,
+          height: 58,
+          child: FilledButton(
+            key: const ValueKey<String>('active-ride-collect-cash'),
+            onPressed: () {
+              _setMapGesturesBlocked(false);
+              unawaited(_AcceptRideTrip(this)._collectCash());
+            },
+            style: FilledButton.styleFrom(
+              elevation: 0,
+              backgroundColor: const Color(0xFF7A5200),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text(
+              'Collect cash',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            ),
+          ),
+        );
+      }
+
       return _SlideRideAction(
         key: const ValueKey<String>('active-ride-slide-action'),
         semanticsKey: const ValueKey<String>('active-ride-primary-action'),
@@ -1293,7 +1344,7 @@ extension _AcceptRidePanel on _AcceptRideState {
           ? _AcceptRideState._onTripCancellationReasons
           : _stage == ActiveRideStage.waitingForRider &&
                   !_paidStopWait &&
-                  _waitSeconds >= 300
+                  _waitSeconds >= _noShowWaitSeconds
               ? <_TripCancellationReason>[_AcceptRideState._noShowReason, ..._AcceptRideState._preTripCancellationReasons]
               : _AcceptRideState._preTripCancellationReasons;
 
@@ -1331,7 +1382,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                         'trip-cancel-reason-${reasons[i].code}',
                       ),
                       title: reasons[i].title,
-                      subtitle: reasons[i].subtitle,
+                      subtitle: reasons[i].detail,
                       last: i == reasons.length - 1,
                       onTap: () => popOwned(sheetContext, reasons[i]),
                     ),

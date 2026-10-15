@@ -189,7 +189,7 @@ void main() {
       expect(find.byKey(_reservationKey), findsOneWidget);
       expect(find.text('Reservation · 07:40'), findsOneWidget);
       expect(find.text('Exclusive'), findsOneWidget);
-      expect(find.text('Pickup soon · no driver yet'), findsOneWidget);
+      expect(find.text('Pickup soon'), findsOneWidget);
       expect(find.text('Only for you · nearby'), findsNothing);
       expect(find.byKey(_cashKey), findsNothing);
       expect(tester.takeException(), isNull);
@@ -335,12 +335,12 @@ void main() {
           lifetime: const Duration(seconds: 30),
           reservation: true,
           reservationTime: '09:30',
-          reason: ExclusiveReasons.assigned,
+          reason: ExclusiveReasons.text(ExclusiveReasons.assigned),
           onAccept: () {},
         ),
       );
       expect(find.text('Assigned by Movera'), findsOneWidget);
-      expect(find.text('Pickup soon · no driver yet'), findsNothing);
+      expect(find.text('Pickup soon'), findsNothing);
       expect(find.text('30s'), findsOneWidget);
       // Without one, the default from the same place.
       expect(
@@ -349,7 +349,7 @@ void main() {
       );
       expect(
         ExclusiveReasons.defaultFor(reservation: true),
-        'Pickup soon · no driver yet',
+        'Pickup soon',
       );
     });
   });

@@ -1,5 +1,6 @@
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/waybill/waybill.dart';
 
 /// Completed-trip projection for History (D7).
 ///
@@ -41,6 +42,15 @@ class TripHistoryRecord {
   final int? fareMinorUnits;
   final String? cancellationActor;
   final String? cancellationReasonCode;
+  /// The rider paid cash in the car (Q23).
+  bool get paidByCash => paymentMethod.trim().toLowerCase() == 'cash';
+
+  /// On a completed cash trip: what the driver owes Movera, its fee on the
+  /// fare. It is taken from the next payout. Null otherwise.
+  String? get owedToMovera => paidByCash && status == TripStatus.completed
+      ? WaybillPayment.fromFare(fare)?.serviceFee
+      : null;
+
   Money? get fareMoney => status != TripStatus.completed
       ? null
       : fareMinorUnits == null
