@@ -14,6 +14,7 @@ class MoveraRadarOrb extends StatelessWidget {
     this.pulse = 0,
     this.sweep = 0,
     this.blocked = false,
+    this.reserve = false,
     this.size = 104,
     this.touchSize,
     this.touchKey = const ValueKey<String>('trip-radar-touch-target'),
@@ -29,6 +30,10 @@ class MoveraRadarOrb extends StatelessWidget {
   final double pulse;
   final double sweep;
   final bool blocked;
+
+  /// A reservation on Home: black orb, grey rings, no mint, and only
+  /// [title] over a small [status] ("Accept" · "TAP").
+  final bool reserve;
   final double size;
   final double? touchSize;
   final Key touchKey;
@@ -39,7 +44,10 @@ class MoveraRadarOrb extends StatelessWidget {
     const detectedGold = Color(0xFFFFD166);
     const detectedAmber = Color(0xFFFFA94D);
     const holdRed = Color(0xFFE15B4A);
-    final accent = blocked
+    const reserveInk = Color(0xFF111518);
+    final accent = reserve
+        ? reserveInk
+        : blocked
         ? holdRed
         : offer
             ? Color.lerp(detectedGold, detectedAmber, pulse) ?? detectedGold
@@ -131,7 +139,10 @@ class MoveraRadarOrb extends StatelessWidget {
                     height: 79 * s,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFFBFD9CF).withValues(alpha: 0.12),
+                      color: (reserve
+                              ? const Color(0xFFD5D9DC)
+                              : const Color(0xFFBFD9CF))
+                          .withValues(alpha: 0.12),
                       border: Border.all(
                         color: accent.withValues(alpha: active ? 0.38 : 0.19),
                         width: 1.1,
@@ -145,7 +156,7 @@ class MoveraRadarOrb extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (active)
+                  if (active && !reserve)
                     Transform.rotate(
                       angle: sweep * 6.283185307179586,
                       child: SizedBox(
@@ -185,7 +196,13 @@ class MoveraRadarOrb extends StatelessWidget {
                         gradient: RadialGradient(
                           center: const Alignment(-0.24, -0.32),
                           radius: 0.98,
-                          colors: blocked
+                          colors: reserve
+                              ? const [
+                                  Color(0xFF2A3136),
+                                  Color(0xFF161B1E),
+                                  Color(0xFF0D1113),
+                                ]
+                              : blocked
                               ? const [
                                   Color(0xD9C45A52),
                                   Color(0xD98E3A34),
@@ -213,6 +230,38 @@ class MoveraRadarOrb extends StatelessWidget {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
+                            if (reserve)
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10.6 * s,
+                                      height: 1.1,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2 * s),
+                                  Text(
+                                    status,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: const Color(0xFF8F9AA0),
+                                      fontSize: 6.4 * s,
+                                      height: 1,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
                             Padding(
                               padding: EdgeInsets.fromLTRB(6 * s, 16 * s, 6 * s, 4 * s),
                               child: Column(
@@ -273,7 +322,9 @@ class MoveraRadarOrb extends StatelessWidget {
                                   height: 8 * s,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 1.1,
-                                    color: accent.withValues(alpha: 0.90),
+                                    // White on the black reservation orb.
+                                    color: (reserve ? Colors.white : accent)
+                                        .withValues(alpha: 0.90),
                                   ),
                                 ),
                               ),

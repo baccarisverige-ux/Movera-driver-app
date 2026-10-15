@@ -94,9 +94,24 @@ class HomeIslandNotices {
     group: 'reservation',
   );
 
-  static const IslandMessage reservationDeclined = IslandMessage(
-    title: 'Reservation declined',
+  /// The driver tapped Accept on the radar; the server picks one driver.
+  static const IslandMessage reservationMatching = IslandMessage(
+    title: 'Matching…',
     priority: IslandPriority.low,
+    group: 'reservation',
+  );
+
+  /// This driver's claim lost (R25): another driver was first, or was
+  /// picked at the same moment; or it was cancelled or expired.
+  static const IslandMessage reservationUnavailable = IslandMessage(
+    title: 'No longer available',
+    tone: IslandTone.warning,
+    group: 'reservation',
+  );
+
+  static const IslandMessage reservationNoConnection = IslandMessage(
+    title: 'No connection',
+    tone: IslandTone.warning,
     group: 'reservation',
   );
 
