@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 
 /// Frontend/demo dispatch. A backend implementation replaces this class.
 ///
@@ -10,6 +12,12 @@ import 'package:movera/core/geo/geo_point.dart';
 /// - nearby-4 and nearby-5 arrive later and wait for an explicit refresh
 /// - nearby-2 loses the atomic claim race
 /// - nearby-3 is claimed by another driver without this driver tapping Match
+/// - open reservations (Scheduled rides, the Home popup) are claimed
+///   through the same [claimOffer]: the first claim wins, later ones get
+///   [ClaimOutcome.unavailable]; a reservation id equal to [losingOfferId]
+///   is won by another driver
+/// - close to pickup ([ReservationDemoTimings.nearPickupAfter]) untaken
+///   reservations also join the nearby Radar trips, marked as reservations
 class DemoDispatchRepository implements DispatchRepository {
   DemoDispatchRepository({
     Duration claimDelay = const Duration(milliseconds: 1450),
@@ -17,13 +25,26 @@ class DemoDispatchRepository implements DispatchRepository {
     Duration externalClaimDelay = const Duration(seconds: 13),
     this.losingOfferId = 'nearby-2',
     this.externalClaimOfferId = 'nearby-3',
+    List<ReservationRequestPreview> reservations = const [
+      demoReservationRequest,
+    ],
+    Duration reservationRadarDelay = ReservationDemoTimings.nearPickupAfter,
   }) : _claimDelay = claimDelay,
        _newOfferDelay = newOfferDelay,
-       _externalClaimDelay = externalClaimDelay;
+       _externalClaimDelay = externalClaimDelay,
+       _reservationRadarDelay = reservationRadarDelay,
+       _seedReservations = {
+         for (final reservation in reservations)
+           if (reservation.id.isNotEmpty)
+             reservation.id: _reservationOffer(reservation),
+       } {
+    _reservations = Map<String, RideOffer>.of(_seedReservations);
+  }
 
   final Duration _claimDelay;
   final Duration _newOfferDelay;
   final Duration _externalClaimDelay;
+  final Duration _reservationRadarDelay;
   final String losingOfferId;
   final String externalClaimOfferId;
 
@@ -34,11 +55,40 @@ class DemoDispatchRepository implements DispatchRepository {
 
   List<RideOffer> _offers = List<RideOffer>.from(_immediateOffers);
   List<RideOffer> _queued = List<RideOffer>.from(_laterOffers);
+
+  /// Every reservation of this demo, by id, and the ones no driver has
+  /// taken yet.
+  final Map<String, RideOffer> _seedReservations;
+  late Map<String, RideOffer> _reservations;
+
+  /// A reservation as a Radar trip. Demo: the driver's distance to the
+  /// pickup is not known here, so it uses a fixed one.
+  static RideOffer _reservationOffer(ReservationRequestPreview reservation) =>
+      RideOffer(
+        id: reservation.id,
+        category: reservation.category,
+        fare: Money.parseSekLabel(reservation.fare)?.formatted ??
+            reservation.fare,
+        rating: reservation.rating,
+        pickupMinutes: 16,
+        pickupKm: 2.1,
+        tripMinutes: reservation.tripMinutes,
+        tripKm: reservation.tripKm,
+        pickup: reservation.pickupAddress,
+        dropoff: reservation.dropoffAddress,
+        pickupPosition: reservation.pickup,
+        dropoffPosition: reservation.dropoff,
+        isNearby: true,
+        followsDestination: false,
+        payment: reservation.paidByCash ? 'Cash' : 'Card',
+        reservationTime: reservation.pickupTime,
+      );
   bool _demoStarted = false;
   int _generation = 0;
   bool _disposed = false;
   Timer? _newOfferTimer;
   Timer? _externalClaimTimer;
+  Timer? _reservationRadarTimer;
 
   static const List<RideOffer> _immediateOffers = [
     RideOffer(
@@ -184,6 +234,14 @@ class DemoDispatchRepository implements DispatchRepository {
     if (_disposed || generation != _generation) {
       return const ClaimResult.unavailable();
     }
+    final reservation = _reservations.remove(offerId);
+    if (reservation != null) {
+      // One winner: it leaves the open reservations and Radar at once.
+      _removeOffer(offerId);
+      return offerId == losingOfferId
+          ? const ClaimResult.alreadyClaimed()
+          : ClaimResult.success(reservation);
+    }
     RideOffer? offer;
     for (final item in _offers) {
       if (item.id == offerId) {
@@ -207,6 +265,34 @@ class DemoDispatchRepository implements DispatchRepository {
     _emitNearby();
   }
 
+  /// Demo (L3): a cancelled reservation goes back to the open ones, so
+  /// Scheduled rides and the Home popup can offer it again. It does not go
+  /// straight back into Radar.
+  @override
+  void releaseReservation(String reservationId) {
+    final reservation = _seedReservations[reservationId];
+    if (_disposed ||
+        reservation == null ||
+        _reservations.containsKey(reservationId)) {
+      return;
+    }
+    _reservations[reservationId] = reservation;
+  }
+
+  /// Close to pickup: untaken reservations join the nearby Radar trips.
+  void _reservationsToRadar() {
+    final known = {for (final offer in _offers) offer.id};
+    final joining = [
+      for (final reservation in _reservations.values)
+        if (!known.contains(reservation.id)) reservation,
+    ];
+    if (joining.isEmpty) {
+      return;
+    }
+    _offers = [..._offers, ...joining];
+    _emitNearby();
+  }
+
   void _ensureDemoSchedule() {
     if (_disposed || _demoStarted) {
       return;
@@ -216,6 +302,10 @@ class DemoDispatchRepository implements DispatchRepository {
     _externalClaimTimer = Timer(_externalClaimDelay, () {
       _removeOffer(externalClaimOfferId);
     });
+    _reservationRadarTimer = Timer(
+      _reservationRadarDelay,
+      _reservationsToRadar,
+    );
   }
 
   void _releaseQueuedOffers() {
@@ -251,8 +341,10 @@ class DemoDispatchRepository implements DispatchRepository {
     _generation++;
     _newOfferTimer?.cancel();
     _externalClaimTimer?.cancel();
+    _reservationRadarTimer?.cancel();
     _offers = List<RideOffer>.from(_immediateOffers);
     _queued = List<RideOffer>.from(_laterOffers);
+    _reservations = Map<String, RideOffer>.of(_seedReservations);
     _demoStarted = false;
     _emitNearby();
   }
@@ -265,6 +357,7 @@ class DemoDispatchRepository implements DispatchRepository {
     _generation++;
     _newOfferTimer?.cancel();
     _externalClaimTimer?.cancel();
+    _reservationRadarTimer?.cancel();
     _nearby.close();
     _nextTrip.close();
   }

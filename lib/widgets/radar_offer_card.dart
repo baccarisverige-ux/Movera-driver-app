@@ -19,6 +19,7 @@ class RadarOfferView {
     required this.pickup,
     required this.dropoff,
     this.bags = 0,
+    this.reservationTime,
   });
 
   final String id;
@@ -36,6 +37,11 @@ class RadarOfferView {
   final String pickup;
   final String dropoff;
   final int bags;
+
+  /// A reservation close to pickup that joined the Radar trips: its pickup
+  /// time, e.g. "07:40". The card then shows a "Reservation" badge, and
+  /// never "Exclusive" (notes E5).
+  final String? reservationTime;
 
   /// The rider pays cash in the car (not paid in the app).
   bool get cash => isCash(payment);
@@ -58,8 +64,9 @@ class RadarOfferView {
 
 enum RadarOfferCardState { available, matching, expired, taken }
 
-/// Soft grey header with a fine black outline: category badge, a Cash
-/// badge only when the rider pays cash, bags, rating; big price and pickup
+/// Soft grey header with a fine black outline: category badge, a
+/// Reservation badge for a reservation, a Cash badge only when the rider
+/// pays cash, bags, rating; big price and pickup
 /// time; then pickup → drop-off and Route + Match.
 class RadarOfferCard extends StatelessWidget {
   const RadarOfferCard({
@@ -138,6 +145,13 @@ class RadarOfferCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (offer.reservationTime != null)
+                      OfferBadge.reservation(
+                        offer.reservationTime,
+                        key: ValueKey<String>(
+                          'radar-offer-reservation-${offer.id}',
+                        ),
+                      ),
                     if (offer.cash)
                       OfferBadge.cash(
                         key: ValueKey<String>('radar-offer-cash-${offer.id}'),

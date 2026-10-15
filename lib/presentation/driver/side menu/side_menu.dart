@@ -2,6 +2,7 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
 import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
@@ -17,10 +18,14 @@ class DriverSideMenu extends StatelessWidget {
     super.key,
     this.isOnline = false,
     this.accountActive = true,
+    this.dispatchRepository,
   });
 
   final bool isOnline;
   final bool accountActive;
+
+  /// Scheduled rides claims open reservations through it.
+  final DispatchRepository? dispatchRepository;
 
   static const Color _ink = Color(0xFF252E3A);
   static const Color _muted = Color(0xFF7D898F);
@@ -101,8 +106,12 @@ class DriverSideMenu extends StatelessWidget {
                         highlight: true,
                         title: 'Scheduled rides',
                         subtitle: 'Reservations and accepted trips',
-                        onTap: () =>
-                            _open(context, const ScheduledRidesScreen()),
+                        onTap: () => _open(
+                          context,
+                          ScheduledRidesScreen(
+                            dispatchRepository: dispatchRepository,
+                          ),
+                        ),
                       ),
                       _MenuAction(
                         asset: AppAssets.navMenuBranch,

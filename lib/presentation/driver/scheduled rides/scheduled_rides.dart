@@ -1,4 +1,8 @@
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/presentation/driver/home/components/reservation_route_map.dart';
 import 'package:movera/widgets/led_count_badge.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +26,12 @@ void _popScheduledRoute<T>(BuildContext context, [T? result]) {
 }
 
 class ScheduledRidesScreen extends StatefulWidget {
-  const ScheduledRidesScreen({super.key});
+  const ScheduledRidesScreen({super.key, this.dispatchRepository});
+
+  /// Claims an open reservation before it is accepted: the server gives it
+  /// to the first driver (notes R25). Without it the screen decides
+  /// locally, as a preview.
+  final DispatchRepository? dispatchRepository;
 
   @override
   State<ScheduledRidesScreen> createState() => _ScheduledRidesScreenState();
@@ -30,6 +39,9 @@ class ScheduledRidesScreen extends StatefulWidget {
 
 class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   int _selectedTab = 0;
+
+  /// Requests whose claim is with the server right now.
+  final Set<String> _claiming = <String>{};
 
   @override
   void initState() {
@@ -93,9 +105,12 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                   );
                 }
                 final ride = rides[index - 1];
+                final claiming =
+                    ride.id.isNotEmpty && _claiming.contains(ride.id);
                 return _ScheduledRideCard(
                   ride: ride,
-                  onTap: () => _openRideDetails(ride),
+                  claiming: claiming,
+                  onTap: claiming ? null : () => _openRideDetails(ride),
                 );
               },
             );
@@ -136,26 +151,64 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     if (action == _ScheduledRideAction.accepted) {
       // The request may have been answered on Home, or replaced by a new
       // session while this details route was open. Only its current owner can act.
+      if (!_requests.contains(ride)) return;
+      if (!await _claim(ride) || !mounted) return;
       if (!_requests.remove(ride)) return;
       _accepted.insert(0, ride.copyWith(accepted: true));
       setState(() => _selectedTab = 1);
       ScheduledRideStore._changed();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Reservation accepted'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _notice('Reservation accepted');
     } else if (action == _ScheduledRideAction.cancelled) {
       if (!_accepted.remove(ride)) return;
+      // An open reservation goes back out to drivers (notes R24).
+      if (ride.id.isNotEmpty) {
+        _requests.insert(0, ride.copyWith(accepted: false));
+        widget.dispatchRepository?.releaseReservation(ride.id);
+      }
       ScheduledRideStore._changed();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Reservation cancelled'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _notice('Reservation cancelled');
     }
+  }
+
+  /// Asks the server for [ride] when it is an open reservation. True when
+  /// this driver got it (or there is no server to ask); lost, it leaves
+  /// the list and the driver is told it is no longer available.
+  Future<bool> _claim(_ScheduledRide ride) async {
+    final dispatch = widget.dispatchRepository;
+    if (dispatch == null || ride.id.isEmpty) return true;
+    if (!_claiming.add(ride.id)) return false;
+    setState(() {});
+    ClaimResult result;
+    try {
+      result = await dispatch.claimOffer(ride.id);
+    } catch (_) {
+      result = const ClaimResult.networkError();
+    }
+    _claiming.remove(ride.id);
+    if (!mounted) return false;
+    setState(() {});
+    switch (result.outcome) {
+      case ClaimOutcome.success:
+        return true;
+      case ClaimOutcome.networkError:
+        _notice('No connection');
+        return false;
+      case ClaimOutcome.alreadyClaimed:
+      case ClaimOutcome.expired:
+      case ClaimOutcome.unavailable:
+        ScheduledRideStore.take(ride.id);
+        _notice('No longer available');
+        return false;
+    }
+  }
+
+  void _notice(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -264,13 +317,15 @@ class ScheduledRideStore {
 
   static final List<_ScheduledRide> _requests = _seedRequests();
   static List<_ScheduledRide> _seedRequests() => [
+    // The same reservation the Home popup shows later (notes R21).
     _ScheduledRide(
       price: '126.75 kr',
       time: 'Today, 07:40–07:45',
       category: 'Comfort',
-      distance: '5.8 km',
-      pickup: 'Gamla vägen, Stockholm',
-      destination: 'Rådans gårdsväg, Stockholm',
+      distance: '9.4 km',
+      pickup: demoReservationRequest.pickupAddress,
+      destination: demoReservationRequest.dropoffAddress,
+      route: demoReservationRequest,
     ),
     _ScheduledRide(
       price: '209.25 kr',
@@ -279,6 +334,19 @@ class ScheduledRideStore {
       distance: '12 km',
       pickup: 'Högsätravägen, Lidingö',
       destination: 'Central Station, Stockholm',
+      route: ReservationRequestPreview(
+        category: 'Premium',
+        fare: '209.25 kr',
+        pickupLabel: 'Pickup today at 10:20',
+        pickupAddress: 'Högsätravägen, Lidingö',
+        dropoffAddress: 'Central Station, Stockholm',
+        pickupTime: '10:20',
+        pickupDay: 'Today',
+        tripMinutes: 21,
+        tripKm: 12,
+        pickup: GeoPoint(59.3584, 18.1567),
+        dropoff: GeoPoint(59.3303, 18.0586),
+      ),
     ),
   ];
 
@@ -292,6 +360,19 @@ class ScheduledRideStore {
       pickup: 'Södermalm, Stockholm',
       destination: 'Bromma Airport',
       accepted: true,
+      route: ReservationRequestPreview(
+        category: 'Comfort',
+        fare: '184.00 kr',
+        pickupLabel: 'Pickup tomorrow at 08:15',
+        pickupAddress: 'Södermalm, Stockholm',
+        dropoffAddress: 'Bromma Airport',
+        pickupTime: '08:15',
+        pickupDay: 'Tomorrow',
+        tripMinutes: 20,
+        tripKm: 9.4,
+        pickup: GeoPoint(59.3134, 18.0727),
+        dropoff: GeoPoint(59.3544, 17.9416),
+      ),
     ),
   ];
 
@@ -306,7 +387,28 @@ class ScheduledRideStore {
     _revision.value++;
   }
 
-  /// A request answered outside this screen (the Home popup).
+  /// Whether reservation [id] is still open to take here.
+  static bool isOpen(String id) =>
+      id.isNotEmpty && _requests.any((ride) => ride.id == id);
+
+  /// Reservation [id] was taken. By this driver for later ([upcoming]) it
+  /// moves to Accepted; taken now (an Exclusive or Radar trip) or by
+  /// another driver it only leaves the requests (notes R23).
+  static void take(String id, {bool upcoming = false}) {
+    final index = _requests.indexWhere((ride) => ride.id == id);
+    if (id.isEmpty || index < 0) {
+      return;
+    }
+    final ride = _requests.removeAt(index);
+    if (upcoming) {
+      _accepted.insert(0, ride.copyWith(accepted: true));
+    }
+    _changed();
+  }
+
+  /// A request answered outside this screen, found by its pickup. Taken
+  /// by this driver ([accepted]) it moves to Accepted; otherwise it only
+  /// leaves the requests.
   static void answer(String pickup, {required bool accepted}) {
     final index = _requests.indexWhere((ride) => ride.pickup == pickup);
     if (index < 0) {
@@ -332,10 +434,17 @@ class ScheduledRideStore {
 }
 
 class _ScheduledRideCard extends StatelessWidget {
-  const _ScheduledRideCard({required this.ride, required this.onTap});
+  const _ScheduledRideCard({
+    required this.ride,
+    required this.onTap,
+    this.claiming = false,
+  });
 
   final _ScheduledRide ride;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+
+  /// Its claim is with the server: "Matching…" until the answer comes.
+  final bool claiming;
 
   @override
   Widget build(BuildContext context) {
@@ -364,11 +473,36 @@ class _ScheduledRideCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      _solar(
-                        AppAssets.solarAltArrowRight,
-                        const Color(0xFFA3ADB2),
-                        18,
-                      ),
+                      if (claiming)
+                        const Row(
+                          key: ValueKey<String>('scheduled-ride-matching'),
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.6,
+                                color: Color(0xFF4E5A61),
+                              ),
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Matching…',
+                              style: TextStyle(
+                                color: Color(0xFF4E5A61),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        _solar(
+                          AppAssets.solarAltArrowRight,
+                          const Color(0xFFA3ADB2),
+                          18,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -664,6 +798,7 @@ class _ScheduledRide {
     required this.pickup,
     required this.destination,
     this.accepted = false,
+    this.route,
   });
 
   final String price;
@@ -674,6 +809,12 @@ class _ScheduledRide {
   final String destination;
   final bool accepted;
 
+  /// Route details for the full route screen, when known.
+  final ReservationRequestPreview? route;
+
+  /// Dispatch id of an open reservation; empty for a sample ride.
+  String get id => route?.id ?? '';
+
   _ScheduledRide copyWith({bool? accepted}) {
     return _ScheduledRide(
       price: price,
@@ -683,6 +824,7 @@ class _ScheduledRide {
       pickup: pickup,
       destination: destination,
       accepted: accepted ?? this.accepted,
+      route: route,
     );
   }
 }
@@ -715,7 +857,9 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
         ),
         titleSpacing: 0,
         title: Text(
-          ride.accepted ? 'Sample reservation' : 'Reservation details',
+          ride.accepted && ride.id.isEmpty
+              ? 'Sample reservation'
+              : 'Reservation details',
           style: const TextStyle(
             color: _ink,
             fontSize: 18,
@@ -754,6 +898,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildRouteMap(BuildContext context) {
+    final route = ride.route;
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: SizedBox(
@@ -915,6 +1060,22 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                 ),
               ),
             ),
+            // Tapping the map opens the same full route screen as the Home
+            // reservation popup (notes R26).
+            if (route != null)
+              Positioned.fill(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Semantics(
+                    label: 'View reservation route',
+                    button: true,
+                    child: InkWell(
+                      key: const ValueKey<String>('scheduled-route-open'),
+                      onTap: () => openReservationRoute(context, route),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

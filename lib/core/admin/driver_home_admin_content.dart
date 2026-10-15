@@ -70,7 +70,20 @@ class ReservationRequestPreview {
     required this.pickup,
     required this.dropoff,
     this.stops = const <ReservationStop>[],
+    this.id = '',
+    this.paidByCash = false,
+    this.rating = '',
   });
+
+  /// Dispatch id; claiming it decides which driver gets the reservation.
+  /// Empty for sample rides that are not open to take.
+  final String id;
+
+  /// The rider pays cash in the car (not in the app).
+  final bool paidByCash;
+
+  /// The rider's rating, e.g. "4.94"; empty when not known.
+  final String rating;
 
   final String category;
   final String fare;
@@ -94,24 +107,108 @@ class ReservationRequestPreview {
 
   /// Expected drop-off time: [pickupTime] plus [tripMinutes], e.g. "07:59".
   /// Falls back to [pickupTime] if it is not "HH:mm".
-  String get arrivalTime {
-    final parts = pickupTime.split(':');
-    final h = parts.length == 2 ? int.tryParse(parts[0]) : null;
-    final m = parts.length == 2 ? int.tryParse(parts[1]) : null;
-    if (h == null ||
-        m == null ||
-        h < 0 ||
-        h > 23 ||
-        m < 0 ||
-        m > 59 ||
-        tripMinutes < 0) {
-      return pickupTime;
+  String get arrivalTime => estimatedArrival ?? pickupTime;
+
+  /// Expected drop-off time, or null when [pickupTime] is not "HH:mm" or
+  /// the ride time is unknown.
+  String? get estimatedArrival {
+    final pickupMinute = minuteOfDay;
+    if (pickupMinute == null || tripMinutes < 0) {
+      return null;
     }
-    final total = (h * 60 + m + tripMinutes) % (24 * 60);
+    final total = (pickupMinute + tripMinutes) % (24 * 60);
     String two(int v) => v.toString().padLeft(2, '0');
     return '${two(total ~/ 60)}:${two(total % 60)}';
   }
+
+  /// [pickupTime] as minutes after midnight, or null if it is not "HH:mm".
+  int? get minuteOfDay {
+    final parts = pickupTime.split(':');
+    final h = parts.length == 2 ? int.tryParse(parts[0]) : null;
+    final m = parts.length == 2 ? int.tryParse(parts[1]) : null;
+    if (h == null || m == null || h < 0 || h > 23 || m < 0 || m > 59) {
+      return null;
+    }
+    return h * 60 + m;
+  }
+
+  /// Time left until pickup at [now], or null when the pickup day is not
+  /// "Today" / "Tomorrow", the time is not "HH:mm" or it has passed.
+  Duration? untilPickup(DateTime now) {
+    final minute = minuteOfDay;
+    final day = pickupDay.trim().toLowerCase();
+    final offset = day == 'today' ? 0 : day == 'tomorrow' ? 1 : null;
+    if (minute == null || offset == null) {
+      return null;
+    }
+    final pickupAt = DateTime(now.year, now.month, now.day + offset)
+        .add(Duration(minutes: minute));
+    final left = pickupAt.difference(now);
+    return left.isNegative ? null : left;
+  }
 }
+
+/// Where an untaken reservation shows, step by step (notes R21–R25), all
+/// in one place. The admin panel sets each step later (jobs L1–L3 in the
+/// design notes, "Later jobs (admin panel)"); until then the demo app uses
+/// these fixed values.
+///
+/// 1. L1: it is listed in every driver's Scheduled rides (no setting yet).
+/// 2. L2: untaken after [homePopupAfter], it also shows as the Home popup
+///    to drivers who are online; it stays listed.
+/// 3. L3: close to pickup ([nearPickupAfter], pickup within
+///    [nearPickupWithinMinutes]) it becomes an Exclusive offer and joins
+///    the Radar trips, where it only says "Reservation".
+/// 4. Taken by a driver it leaves every place; the server gives it to the
+///    first claim (R25).
+/// 5. L3: the driver who took it cancels: it goes back to Scheduled rides
+///    and, after [homePopupAfter], to the Home popup again.
+class ReservationDemoTimings {
+  const ReservationDemoTimings._();
+
+  /// L2: how long an untaken reservation sits only in Scheduled rides
+  /// before it is also sent to the Home popup. The demo counts from app
+  /// start, or from when it went back out after a cancel.
+  static const Duration homePopupAfter = Duration(seconds: 3);
+
+  /// L3: the demo stand-in for "minutes before pickup": still untaken this
+  /// long after Radar goes live, it becomes an Exclusive offer and joins
+  /// the Radar trips.
+  static const Duration nearPickupAfter = Duration(milliseconds: 40000);
+
+  /// L3: only a pickup at most this many minutes away counts as close.
+  static const int nearPickupWithinMinutes = 30;
+}
+
+/// Dispatch id of [demoReservationRequest].
+const String demoReservationId = 'reservation-gamla-vagen-0740';
+
+/// The demo reservation: listed in Scheduled rides at launch, later also
+/// sent as the Home popup, close to pickup an Exclusive offer and a Radar
+/// trip (see [ReservationDemoTimings]). It is one ride everywhere, so
+/// taking it in one place takes it everywhere.
+const ReservationRequestPreview demoReservationRequest =
+    ReservationRequestPreview(
+  id: demoReservationId,
+  category: 'Comfort',
+  rating: '4.94',
+  fare: '126.75 kr',
+  pickupLabel: 'Pickup today at 07:40',
+  pickupAddress: 'Gamla vägen, Stockholm',
+  dropoffAddress: 'Solna centrum, Solna',
+  pickupTime: '07:40',
+  pickupDay: 'Today',
+  tripMinutes: 19,
+  tripKm: 9.4,
+  pickup: GeoPoint(59.3362, 18.0714),
+  dropoff: GeoPoint(59.3603, 18.0009),
+  stops: [
+    ReservationStop(
+      address: 'Odenplan, Stockholm',
+      point: GeoPoint(59.3430, 18.0496),
+    ),
+  ],
+);
 
 class ReservationStop {
   const ReservationStop({required this.address, required this.point});
@@ -223,25 +320,7 @@ class DriverHomeAdminContentService {
         hasOpenRequests: true,
         title: 'Scheduled rides available',
         subtitle: 'View open requests in your area',
-        newRequest: ReservationRequestPreview(
-          category: 'Comfort',
-          fare: '126.75 kr',
-          pickupLabel: 'Pickup today at 07:40',
-          pickupAddress: 'Gamla vägen, Stockholm',
-          dropoffAddress: 'Solna centrum, Solna',
-          pickupTime: '07:40',
-          pickupDay: 'Today',
-          tripMinutes: 19,
-          tripKm: 9.4,
-          pickup: GeoPoint(59.3362, 18.0714),
-          dropoff: GeoPoint(59.3603, 18.0009),
-          stops: [
-            ReservationStop(
-              address: 'Odenplan, Stockholm',
-              point: GeoPoint(59.3430, 18.0496),
-            ),
-          ],
-        ),
+        newRequest: demoReservationRequest,
       ),
       update: AppUpdateAdminConfig(
         enabled: false,

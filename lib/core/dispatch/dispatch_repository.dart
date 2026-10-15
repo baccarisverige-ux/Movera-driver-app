@@ -26,6 +26,7 @@ class RideOffer {
     required this.followsDestination,
     this.bags = 0,
     this.payment = 'Card',
+    this.reservationTime,
   });
 
   final String id;
@@ -48,6 +49,13 @@ class RideOffer {
 
   /// How the rider pays, e.g. "Card", "Apple Pay", "Swish".
   final String payment;
+
+  /// Set when the trip is a reservation close to pickup that still needs
+  /// a driver: its pickup time, e.g. "07:40". Radar shows it as a
+  /// "Reservation" trip, never as Exclusive.
+  final String? reservationTime;
+
+  bool get isReservation => reservationTime != null;
 }
 
 class ClaimResult {
@@ -75,7 +83,13 @@ abstract interface class DispatchRepository {
 
   Stream<List<RideOffer>> watchNextTripOffers();
 
+  /// Radar trips and open reservations alike: the server gives each one
+  /// to the first driver who claims it.
   Future<ClaimResult> claimOffer(String offerId);
 
   void refreshOffers();
+
+  /// The driver who took reservation [reservationId] cancelled it: it goes
+  /// back out to drivers (which step it returns to is admin job L3).
+  void releaseReservation(String reservationId);
 }

@@ -36,6 +36,8 @@ class _ControlledDispatch implements DispatchRepository {
   @override
   void refreshOffers() {}
   @override
+  void releaseReservation(String reservationId) {}
+  @override
   Future<ClaimResult> claimOffer(String offerId) {
     final response = Completer<ClaimResult>();
     requests.add(response);
