@@ -54,9 +54,11 @@ extension _HomeReservation on _DriverHomeState {
       _reservationPopupTimer?.cancel();
       _reservationPopupTimer = Timer(ReservationDemoTimings.homePopupAfter, () {
         // Taken in the meantime, here or by another driver: nothing to send.
+        // Close to pickup it is an Exclusive offer, no longer the popup.
         if (!mounted ||
             _reservation.sent ||
-            !ScheduledRideStore.isOpen(request.id)) {
+            !ScheduledRideStore.isOpen(request.id) ||
+            _HomeScheduled(this)._exclusiveStepReached(request.id)) {
           return;
         }
         _rebuild(() {

@@ -450,6 +450,12 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
                       const OfferBadge.cash(
                         key: ValueKey<String>('reservation-cash'),
                       ),
+                    // Admin raised the fare (Q13); the price has it.
+                    if (request.fareBoost case final boost?)
+                      OfferBadge.boost(
+                        boost,
+                        key: const ValueKey<String>('reservation-boost'),
+                      ),
                   ],
                 ),
               ],

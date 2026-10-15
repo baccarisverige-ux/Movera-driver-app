@@ -2,11 +2,18 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
+import 'package:movera/core/scheduled/smart_gap.dart';
 import 'package:movera/presentation/driver/home/components/reservation_route_map.dart';
 import 'package:movera/widgets/led_count_badge.dart';
 import 'package:movera/widgets/single_route_entry.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:movera/widgets/offer_badges.dart';
+
+part 'scheduled_rides_notes.dart';
 
 // Solar line icons (stroke 1.5), tinted to match the surrounding text.
 Widget _solar(String asset, Color color, double size) => SvgPicture.asset(
@@ -43,10 +50,16 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   /// Requests whose claim is with the server right now.
   final Set<String> _claiming = <String>{};
 
+  late final Listenable _store = Listenable.merge([
+    ScheduledRideStore._revision,
+    ScheduledRideStore.reminder,
+    ScheduledRideStore.backupNote,
+  ]);
+
   @override
   void initState() {
     super.initState();
-    ScheduledRideStore._revision.addListener(_storeChanged);
+    _store.addListener(_storeChanged);
   }
 
   void _storeChanged() {
@@ -55,16 +68,56 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
 
   @override
   void dispose() {
-    ScheduledRideStore._revision.removeListener(_storeChanged);
+    _store.removeListener(_storeChanged);
     super.dispose();
   }
 
-  List<_ScheduledRide> get _requests => ScheduledRideStore._requests;
+  /// Requests this driver can take: clashing ones and every request while
+  /// Scheduled rides are paused or off are left out.
+  List<_ScheduledRide> get _requests => ScheduledRideStore._visibleRequests;
   List<_ScheduledRide> get _accepted => ScheduledRideStore._accepted;
+
+  /// Notes above the rides: paused or off, clashing rides left out, the
+  /// latest reminder, a ride given to a backup driver.
+  List<Widget> _notes() {
+    final block = ScheduledRideStore.block();
+    final reminder = ScheduledRideStore.reminder.value;
+    final backup = ScheduledRideStore.backupNote.value;
+    final clashing = ScheduledRideStore._clashing;
+    return [
+      if (block != null) _BlockNotice(block: block),
+      if (_selectedTab == 0 && block == null && clashing.isNotEmpty)
+        _ScheduledNote(
+          key: const ValueKey<String>('scheduled-clash-note'),
+          icon: AppAssets.solarCalendarMinimalistic,
+          title: clashing.length == 1
+              ? '1 ride hidden'
+              : '${clashing.length} rides hidden',
+          body:
+              'It clashes with your ${clashing.first.$2.route?.pickupTime ?? ''} '
+              'pickup: not enough time to get there.',
+        ),
+      if (_selectedTab == 1 && reminder != null)
+        _ScheduledNote(
+          key: const ValueKey<String>('scheduled-reminder'),
+          icon: AppAssets.solarBellBing,
+          title: 'Reminder',
+          body: reminder,
+        ),
+      if (_selectedTab == 1 && backup != null)
+        _ScheduledNote(
+          key: const ValueKey<String>('scheduled-backup-note'),
+          icon: AppAssets.solarInfoCircle,
+          title: 'Given to backup driver',
+          body: backup,
+        ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final rides = _selectedTab == 0 ? _requests : _accepted;
+    final notes = _notes();
     return Scaffold(
       backgroundColor: const Color(0xFFF3F5F6),
       body: SafeArea(
@@ -79,9 +132,15 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               shrinkWrap: compact,
               physics: compact ? const NeverScrollableScrollPhysics() : null,
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
-              itemCount: rides.length + 1,
+              itemCount: rides.length + notes.length + 1,
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
+                if (index > 0 && index <= notes.length) {
+                  return notes[index - 1];
+                }
+                if (index > notes.length) {
+                  index -= notes.length;
+                }
                 if (index == 0) {
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(2, 2, 2, 0),
@@ -153,19 +212,21 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       // session while this details route was open. Only its current owner can act.
       if (!_requests.contains(ride)) return;
       if (!await _claim(ride) || !mounted) return;
-      if (!_requests.remove(ride)) return;
+      if (!ScheduledRideStore._requests.remove(ride)) return;
       _accepted.insert(0, ride.copyWith(accepted: true));
       setState(() => _selectedTab = 1);
+      // Requests whose time now clashes leave the list (Q9); the Requests
+      // tab says why.
       ScheduledRideStore._changed();
       _notice('Reservation accepted');
     } else if (action == _ScheduledRideAction.cancelled) {
-      if (!_accepted.remove(ride)) return;
-      // An open reservation goes back out to drivers (notes R24).
-      if (ride.id.isNotEmpty) {
-        _requests.insert(0, ride.copyWith(accepted: false));
+      if (!_accepted.contains(ride)) return;
+      ScheduledRideStore._cancelAccepted(ride);
+      // An open reservation goes back out to drivers (notes R24): where it
+      // goes follows the admin rule, Radar trips too close to pickup.
+      if (ride.id.isNotEmpty && !ride.assigned) {
         widget.dispatchRepository?.releaseReservation(ride.id);
       }
-      ScheduledRideStore._changed();
       _notice('Reservation cancelled');
     }
   }
@@ -327,20 +388,26 @@ class ScheduledRideStore {
       destination: demoReservationRequest.dropoffAddress,
       route: demoReservationRequest,
     ),
+    // No driver near Lidingö: admin raised the fare (Q13). Its time
+    // clashes with the 07:40 ride (Q9).
     _ScheduledRide(
-      price: '209.25 kr',
-      time: 'Today, 10:20–10:30',
+      price: '249.25 kr',
+      time: 'Today, 08:05–08:15',
       category: 'Premium',
       distance: '12 km',
       pickup: 'Högsätravägen, Lidingö',
       destination: 'Central Station, Stockholm',
       route: ReservationRequestPreview(
         category: 'Premium',
-        fare: '209.25 kr',
-        pickupLabel: 'Pickup today at 10:20',
+        fare: '249.25 kr',
+        fareBoost: '+40 kr',
+        rating: '4.97',
+        riderName: 'Anna',
+        riderTrips: 211,
+        pickupLabel: 'Pickup today at 08:05',
         pickupAddress: 'Högsätravägen, Lidingö',
         dropoffAddress: 'Central Station, Stockholm',
-        pickupTime: '10:20',
+        pickupTime: '08:05',
         pickupDay: 'Today',
         tripMinutes: 21,
         tripKm: 12,
@@ -363,6 +430,9 @@ class ScheduledRideStore {
       route: ReservationRequestPreview(
         category: 'Comfort',
         fare: '184.00 kr',
+        rating: '4.90',
+        riderName: 'Lars',
+        riderTrips: 47,
         pickupLabel: 'Pickup tomorrow at 08:15',
         pickupAddress: 'Södermalm, Stockholm',
         dropoffAddress: 'Bromma Airport',
@@ -376,20 +446,120 @@ class ScheduledRideStore {
     ),
   ];
 
+  /// Admin's on/off for this driver. Home sets it from the admin config.
+  static ScheduledRidesDriverAccess get driverAccess => _driverAccess;
+  static set driverAccess(ScheduledRidesDriverAccess value) {
+    _driverAccess = value;
+    _changed();
+  }
+
+  static ScheduledRidesDriverAccess _driverAccess =
+      const ScheduledRidesDriverAccess();
+
+  /// This driver's late cancels, oldest first.
+  static final List<DateTime> _lateCancels = <DateTime>[];
+
+  /// Records a late cancel made at [at] (a backend sends the count).
+  static void addLateCancel(DateTime at) {
+    _lateCancels
+      ..add(at)
+      ..sort();
+    _changed();
+  }
+
+  static DateTime get _now => ScheduledClock.instance.now();
+  static ScheduledRideRules get _rules => ScheduledRideRules.current;
+
+  /// Why this driver gets no scheduled rides right now, or null.
+  static ScheduledRidesBlock? block() {
+    final now = _now;
+    if (_driverAccess.offAt(now)) {
+      return ScheduledRidesBlock(
+        byAdmin: true,
+        until: _driverAccess.offUntil,
+      );
+    }
+    final until = pausedUntil(now);
+    return until == null ? null : ScheduledRidesBlock(until: until);
+  }
+
+  /// Too many late cancels: Scheduled rides are paused until then.
+  static DateTime? pausedUntil(DateTime now) {
+    final rules = _rules;
+    final since = now.subtract(Duration(days: rules.lateCancelPeriodDays));
+    final recent = _lateCancels.where((at) => at.isAfter(since)).toList();
+    if (recent.length < rules.lateCancelLimit) {
+      return null;
+    }
+    final until = recent.last.add(Duration(days: rules.pauseDays));
+    return now.isBefore(until) ? until : null;
+  }
+
+  /// Late cancels inside the current period.
+  static int lateCancelsInPeriod() {
+    final since = _now.subtract(Duration(days: _rules.lateCancelPeriodDays));
+    return _lateCancels.where((at) => at.isAfter(since)).length;
+  }
+
+  /// A cancel of [ride] now is late: under the admin's hours to pickup.
+  static bool isLateCancel(ReservationRequestPreview? ride) {
+    final until = freeCancelUntil(ride);
+    return until != null && !_now.isBefore(until);
+  }
+
+  /// Until when cancelling [ride] is free; null when its time is unknown.
+  static DateTime? freeCancelUntil(ReservationRequestPreview? ride) =>
+      ride
+          ?.pickupAt(_now)
+          ?.subtract(Duration(hours: _rules.driverLateCancelHours));
+
+  /// [ride] clashes with an accepted ride: the accepted one, else null.
+  static _ScheduledRide? _clashWith(_ScheduledRide ride) {
+    final route = ride.route;
+    if (route == null || !_rules.removeClashing) {
+      return null;
+    }
+    final now = _now;
+    for (final taken in _accepted) {
+      final other = taken.route;
+      if (other != null &&
+          SmartGap.clash(route, other, now: now, rules: _rules)) {
+        return taken;
+      }
+    }
+    return null;
+  }
+
+  /// Requests this driver can take now: none while blocked, and none whose
+  /// time clashes with a ride they accepted (Q9).
+  static List<_ScheduledRide> get _visibleRequests => block() != null
+      ? const <_ScheduledRide>[]
+      : _requests.where((ride) => _clashWith(ride) == null).toList();
+
+  /// Requests left out because they clash with an accepted ride.
+  static List<(_ScheduledRide, _ScheduledRide)> get _clashing => [
+    for (final ride in _requests)
+      if (_clashWith(ride) case final taken?) (ride, taken),
+  ];
+
   /// Requests the driver has not accepted or declined yet.
   static final ValueNotifier<int> openRequests = ValueNotifier<int>(
-    _requests.length,
+    _visibleRequests.length,
   );
 
   static final ValueNotifier<int> _revision = ValueNotifier<int>(0);
+
+  /// Notifies when anything here changes.
+  static ValueListenable<int> get changes => _revision;
+
   static void _changed() {
-    openRequests.value = _requests.length;
+    openRequests.value = _visibleRequests.length;
     _revision.value++;
   }
 
   /// Whether reservation [id] is still open to take here.
   static bool isOpen(String id) =>
-      id.isNotEmpty && _requests.any((ride) => ride.id == id);
+      id.isNotEmpty && _visibleRequests.any((ride) => ride.id == id);
 
   /// Reservation [id] was taken. By this driver for later ([upcoming]) it
   /// moves to Accepted; taken now (an Exclusive or Radar trip) or by
@@ -421,6 +591,79 @@ class ScheduledRideStore {
     _changed();
   }
 
+  /// Q29: the driver accepted a ride Movera assigned to them.
+  static void acceptAssigned(ReservationRequestPreview ride) {
+    if (_accepted.any((item) => identical(item.route, ride))) {
+      return;
+    }
+    _accepted.insert(0, _ScheduledRide.fromRoute(ride, assigned: true));
+    _changed();
+  }
+
+  /// Accepted rides with a known pickup time, soonest first.
+  static List<ReservationRequestPreview> get upcoming {
+    final now = _now;
+    final rides = [
+      for (final ride in _accepted)
+        if (ride.route case final route? when route.pickupAt(now) != null)
+          route,
+    ]..sort((a, b) => a.pickupAt(now)!.compareTo(b.pickupAt(now)!));
+    return rides;
+  }
+
+  /// "Leave now" put [ride] on screen as the active trip: it leaves
+  /// Accepted. False when it was not there.
+  static bool start(ReservationRequestPreview ride) =>
+      _removeAccepted(ride) != null;
+
+  /// The driver was not on the way in time: [ride] went to a backup
+  /// driver (Q10 S3).
+  static void giveToBackup(ReservationRequestPreview ride) {
+    if (_removeAccepted(ride) == null) {
+      return;
+    }
+    backupNote.value =
+        'Your ${ride.pickupTime} pickup was given to a backup driver.';
+    _changed();
+  }
+
+  static _ScheduledRide? _removeAccepted(ReservationRequestPreview ride) {
+    final index = _accepted.indexWhere((item) => identical(item.route, ride));
+    if (index < 0) {
+      return null;
+    }
+    final removed = _accepted.removeAt(index);
+    _changed();
+    return removed;
+  }
+
+  /// The latest reminder for an accepted ride, shown in Scheduled rides.
+  static final ValueNotifier<String?> reminder = ValueNotifier<String?>(null);
+
+  /// Set when a ride went to a backup driver.
+  static final ValueNotifier<String?> backupNote = ValueNotifier<String?>(
+    null,
+  );
+
+  /// The driver cancelled [ride], which they had accepted. A late cancel is
+  /// counted (drivers never pay); true when it paused Scheduled rides.
+  static bool _cancelAccepted(_ScheduledRide ride) {
+    final late = isLateCancel(ride.route);
+    if (!_accepted.remove(ride)) {
+      return false;
+    }
+    final wasPaused = pausedUntil(_now) != null;
+    if (late) {
+      _lateCancels.add(_now);
+    }
+    // An open reservation goes back out to drivers (notes R24).
+    if (ride.id.isNotEmpty && !ride.assigned) {
+      _requests.insert(0, ride.copyWith(accepted: false));
+    }
+    _changed();
+    return !wasPaused && pausedUntil(_now) != null;
+  }
+
   @visibleForTesting
   static void reset() {
     _requests
@@ -429,8 +672,24 @@ class ScheduledRideStore {
     _accepted
       ..clear()
       ..addAll(_seedAccepted());
+    _driverAccess = const ScheduledRidesDriverAccess();
+    _lateCancels.clear();
+    reminder.value = null;
+    backupNote.value = null;
     _changed();
   }
+}
+
+/// Why a driver gets no scheduled rides right now.
+class ScheduledRidesBlock {
+  const ScheduledRidesBlock({this.byAdmin = false, this.until});
+
+  /// Admin turned them off for this driver; otherwise too many late
+  /// cancels paused them.
+  final bool byAdmin;
+
+  /// Back on at this time; null until admin turns them on.
+  final DateTime? until;
 }
 
 class _ScheduledRideCard extends StatelessWidget {
@@ -463,14 +722,29 @@ class _ScheduledRideCard extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          ride.price,
-                          style: const TextStyle(
-                            color: Color(0xFF252E3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.4,
-                          ),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              ride.price,
+                              style: const TextStyle(
+                                color: Color(0xFF252E3A),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.4,
+                              ),
+                            ),
+                            // Admin raised the fare; the price has it.
+                            if (ride.route?.fareBoost case final boost?)
+                              OfferBadge.boost(
+                                boost,
+                                key: ValueKey<String>(
+                                  'scheduled-boost-${ride.pickup}',
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       if (claiming)
@@ -544,6 +818,15 @@ class _ScheduledRideCard extends StatelessWidget {
                           label: ride.distance,
                         ),
                       ),
+                      if (ride.assigned) ...[
+                        const SizedBox(width: 12),
+                        const Flexible(
+                          child: _RideMeta(
+                            icon: AppAssets.solarBolt,
+                            label: 'Assigned by Movera',
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],
@@ -798,8 +1081,28 @@ class _ScheduledRide {
     required this.pickup,
     required this.destination,
     this.accepted = false,
+    this.assigned = false,
     this.route,
   });
+
+  /// An accepted ride built from its route details.
+  factory _ScheduledRide.fromRoute(
+    ReservationRequestPreview route, {
+    bool assigned = false,
+  }) => _ScheduledRide(
+    price: route.fare,
+    time: '${route.pickupDay}, ${route.pickupTime}',
+    category: route.category,
+    distance: '${route.tripKm.toStringAsFixed(1)} km',
+    pickup: route.pickupAddress,
+    destination: route.dropoffAddress,
+    accepted: true,
+    assigned: assigned,
+    route: route,
+  );
+
+  /// Movera assigned it to this driver (Q29).
+  final bool assigned;
 
   final String price;
   final String time;
@@ -824,6 +1127,7 @@ class _ScheduledRide {
       pickup: pickup,
       destination: destination,
       accepted: accepted ?? this.accepted,
+      assigned: assigned,
       route: route,
     );
   }
@@ -1143,15 +1447,24 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 14),
-                    Text(
-                      ride.price,
-                      style: const TextStyle(
-                        color: _ink,
-                        fontSize: 31,
-                        height: 1,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1,
-                      ),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          ride.price,
+                          style: const TextStyle(
+                            color: _ink,
+                            fontSize: 31,
+                            height: 1,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        if (ride.route?.fareBoost case final boost?)
+                          OfferBadge.boost(boost),
+                      ],
                     ),
                     const SizedBox(height: 7),
                     Text(
@@ -1324,26 +1637,42 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const _PlanRow(
+          _PlanRow(
             icon: AppAssets.solarAlarm,
             title: 'Be ready early',
-            body: 'Go online 30 min before pickup so the app can guide you in time.',
+            body: 'Go online ${_onlineBefore()} min before pickup so the app '
+                'can guide you in time.',
           ),
           const SizedBox(height: 15),
-          const _PlanRow(
+          _PlanRow(
             icon: AppAssets.solarRouting2,
             title: 'Trips on the way',
-            body: 'You can still receive suitable rides before the scheduled pickup.',
+            body: ScheduledRideRules.current.towardPickupBeforeRide
+                ? 'Before pickup you only get trips that head toward it and '
+                    'leave time to get there.'
+                : 'You can still receive suitable rides before the scheduled pickup.',
           ),
           const SizedBox(height: 15),
-          const _PlanRow(
+          _PlanRow(
             icon: AppAssets.solarCalendarMinimalistic,
             title: 'Plans changed?',
-            body: 'This is a local preview. Cancelling removes the sample reservation until the app restarts.',
+            body: ride.accepted
+                ? '${_freeCancelLine(ride.route)} Drivers never pay to cancel.'
+                : 'This is a local preview. Cancelling removes the sample '
+                    'reservation until the app restarts.',
           ),
         ],
       ),
     );
+  }
+
+  /// Minutes to be online before pickup for this kind of ride (Q10 S4).
+  int _onlineBefore() {
+    final route = ride.route;
+    final rules = ScheduledRideRules.current;
+    return route == null
+        ? rules.ruleFor(ScheduledRideKind.normal).onlineBeforeMinutes
+        : SmartGap.ruleOf(route, rules).onlineBeforeMinutes;
   }
 
   Widget _buildCommitmentCard() {
@@ -1452,7 +1781,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => const _CancelReasonSheet(),
+      builder: (sheetContext) => _CancelReasonSheet(ride: ride.route),
     );
 
     if (reason == null ||
@@ -1465,7 +1794,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => _CancelConfirmationSheet(reason: reason),
+      builder: (sheetContext) =>
+          _CancelConfirmationSheet(reason: reason, ride: ride.route),
     );
 
     if (confirmed == true && context.mounted) {
@@ -1585,7 +1915,10 @@ class _PlanRow extends StatelessWidget {
 }
 
 class _CancelReasonSheet extends StatefulWidget {
-  const _CancelReasonSheet();
+  const _CancelReasonSheet({this.ride});
+
+  /// The ride being cancelled, for its free-cancel time.
+  final ReservationRequestPreview? ride;
 
   @override
   State<_CancelReasonSheet> createState() => _CancelReasonSheetState();
@@ -1665,6 +1998,10 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
                     ),
                   ],
                 ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: _CancelRulesBox(ride: widget.ride),
               ),
               ListView.separated(
                 shrinkWrap: true,
@@ -1775,9 +2112,10 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
 }
 
 class _CancelConfirmationSheet extends StatelessWidget {
-  const _CancelConfirmationSheet({required this.reason});
+  const _CancelConfirmationSheet({required this.reason, this.ride});
 
   final String reason;
+  final ReservationRequestPreview? ride;
 
   @override
   Widget build(BuildContext context) {
@@ -1836,6 +2174,10 @@ class _CancelConfirmationSheet extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
+              if (ScheduledRideStore.isLateCancel(ride)) ...[
+                const SizedBox(height: 12),
+                _LateCancelWarning(ride: ride),
+              ],
               const SizedBox(height: 8),
               const Text(
                 'This removes the sample reservation from this session. It does not cancel a real booking or change account access.',

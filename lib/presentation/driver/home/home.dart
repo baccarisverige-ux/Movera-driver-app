@@ -24,6 +24,11 @@ import 'package:movera/core/admin/driver_home_config_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/trip_occurrence.dart';
+import 'package:movera/core/dispatch/exclusive_reasons.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
+import 'package:movera/core/scheduled/smart_gap.dart';
 import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/routing/route_maps.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -78,6 +83,7 @@ import 'package:pointer_interceptor/pointer_interceptor.dart';
 part 'home_offer_radar.dart';
 part 'home_map_sheet.dart';
 part 'home_reservation.dart';
+part 'home_scheduled.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -197,6 +203,8 @@ class _DriverHomeState extends State<DriverHome>
   Timer? _reservationPopupTimer;
   /// The reservation sent to Home: it rises from the dock while online.
   final _HomeReservationState _reservation = _HomeReservationState();
+  /// The smart gap before accepted rides, and rides Movera assigns.
+  final _HomeScheduledState _scheduled = _HomeScheduledState();
   Timer? _radarOfferTwoTimer;
   Timer? _radarOfferThreeTimer;
   Timer? _homeRadarMatchResolutionTimer;
@@ -312,8 +320,9 @@ class _DriverHomeState extends State<DriverHome>
   static const _HomeDirectOffer _veryCloseDirectOffer = _HomeDirectOffer(
     id: 'home-direct-close',
     category: 'Comfort',
-    reason: 'Exclusive nearby offer',
-    detail: 'Exclusive priority match',
+    reason: ExclusiveReasons.nearby,
+    riderName: 'Nils',
+    riderTrips: 93,
     fare: '104,80 kr',
     rating: '4.96',
     pickupMinutes: 3,
@@ -329,8 +338,9 @@ class _DriverHomeState extends State<DriverHome>
   static const _HomeDirectOffer _expandedDirectOffer = _HomeDirectOffer(
     id: 'home-direct-expanded',
     category: 'Premium',
-    reason: 'Extended coverage offer',
-    detail: 'Exclusive extended match',
+    reason: ExclusiveReasons.nearby,
+    riderName: 'Maja',
+    riderTrips: 175,
     fare: '176,20 kr',
     rating: '4.98',
     pickupMinutes: 8,
@@ -342,26 +352,6 @@ class _DriverHomeState extends State<DriverHome>
     pickupPosition: LatLng(59.3449, 18.0472),
     dropoffPosition: LatLng(59.3603, 18.0009),
     cash: true,
-  );
-
-  /// The demo reservation close to pickup, as its Exclusive offer.
-  static const _HomeDirectOffer _soonReservationOffer = _HomeDirectOffer(
-    id: demoReservationId,
-    category: 'Comfort',
-    reason: 'Reservation',
-    detail: 'No driver signed · leaving soon',
-    fare: '126,75 kr',
-    rating: '4.94',
-    pickupMinutes: 16,
-    pickupKm: 2.1,
-    tripMinutes: 19,
-    tripKm: 9.4,
-    pickup: 'Gamla vägen, Stockholm',
-    dropoff: 'Solna centrum, Solna',
-    pickupPosition: LatLng(59.3362, 18.0714),
-    dropoffPosition: LatLng(59.3603, 18.0009),
-    reservation: true,
-    pickupTime: '07:40',
   );
 
   late final SheetTrace _sheetTrace = SheetTrace('home', () => _panelController.isAttached ? _panelController.panelPosition : 0);
@@ -390,6 +380,8 @@ class _DriverHomeState extends State<DriverHome>
     _adminHomeConfig = (widget.homeConfigRepository ??
             const LocalDriverHomeConfigRepository())
         .load();
+    final access = _adminHomeConfig.scheduledRides.driverAccess;
+    if (!identical(ScheduledRideStore.driverAccess, access)) { ScheduledRideStore.driverAccess = access; }
     ScheduledRideStore.openRequests.addListener(_onScheduledRequests);
     _goOnlinePulseController = AnimationController(
       vsync: this,
@@ -411,6 +403,7 @@ class _DriverHomeState extends State<DriverHome>
       _HomeMapSheet(this)._maybeShowAppUpdatePrompt();
       _HomeMapSheet(this)._showNextIslandMessage();
       _HomeReservation(this)._scheduleReservationPopup();
+      _HomeScheduled(this)._startScheduled();
     });
   }
 
@@ -713,6 +706,8 @@ class _DriverHomeState extends State<DriverHome>
                   routeRepository: _roadRouteService,
                   dispatchRepository: _dispatch,
                   activeRideRepository: widget.activeRideRepository,
+                  fitsSchedule: _HomeScheduled(this)._rideFitsSchedule,
+                  towardPickupTime: _HomeScheduled(this)._towardPickupTime,
                   onCloseRides: (hasOffers) {
                     setState(() {
                       showRideRequests = false;
@@ -1029,7 +1024,7 @@ class _DriverHomeState extends State<DriverHome>
         final radarTrips = _latestDispatchOffers
             .where((offer) =>
                 offer.isNearby &&
-                (!_destinationModeActive || offer.followsDestination))
+                (!_destinationModeActive || offer.followsDestination) && _HomeScheduled(this)._rideFitsSchedule(offer))
             .length;
         final openListed = _radarHomeOffers
             .where((offer) =>
@@ -1111,6 +1106,7 @@ class _DriverHomeState extends State<DriverHome>
     _locationEpoch++;
     _reservationPopupTimer?.cancel();
     _reservation.release?.cancel();
+    _scheduled.dispose();
     WidgetsBinding.instance.removeObserver(this);
     driverRouteObserver.unsubscribe(this);
     _sheetTrace.dispose();

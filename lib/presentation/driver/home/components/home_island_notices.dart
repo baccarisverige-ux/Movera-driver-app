@@ -115,6 +115,62 @@ class HomeIslandNotices {
     group: 'reservation',
   );
 
+  /// Q29: Movera assigned a scheduled ride; it needs Accept in time.
+  static const IslandMessage assignedRide = IslandMessage(
+    title: 'Assigned by Movera',
+    group: 'exclusive',
+  );
+
+  static const IslandMessage assignmentAccepted = IslandMessage(
+    title: 'Scheduled ride accepted',
+    tone: IslandTone.success,
+    group: 'reservation',
+  );
+
+  /// The assigned ride was not accepted in time; Movera picks another
+  /// driver.
+  static const IslandMessage assignmentNotAccepted = IslandMessage(
+    title: 'Assignment not accepted',
+    tone: IslandTone.warning,
+    group: 'reservation',
+  );
+
+  /// Q10: a reminder before a scheduled pickup, e.g. "07:40 pickup in 15
+  /// min".
+  static IslandMessage scheduledReminder(String time, String left) =>
+      IslandMessage(title: '$time pickup in $left', group: 'scheduled');
+
+  /// The "be online before" time of a scheduled ride, while offline.
+  static IslandMessage goOnlineFor(String time) => IslandMessage(
+    title: 'Go online for $time pickup',
+    tone: IslandTone.warning,
+    group: 'scheduled',
+  );
+
+  /// "Leave now": the scheduled ride is on screen as the active trip.
+  static IslandMessage leaveNow(String time) => IslandMessage(
+    title: 'Leave now for $time pickup',
+    tone: IslandTone.success,
+    priority: IslandPriority.high,
+    group: 'scheduled',
+  );
+
+  /// "Leave now" passed and the driver is not on the way.
+  static IslandMessage headToPickup(String time) => IslandMessage(
+    title: 'Head to your $time pickup',
+    tone: IslandTone.warning,
+    priority: IslandPriority.high,
+    group: 'scheduled',
+  );
+
+  /// Still not on the way: the ride went to a backup driver.
+  static const IslandMessage givenToBackup = IslandMessage(
+    title: 'Given to backup driver',
+    tone: IslandTone.alert,
+    priority: IslandPriority.high,
+    group: 'scheduled',
+  );
+
   static const IslandMessage recoveryPending = IslandMessage(
     title: 'Saved trip open',
     tone: IslandTone.warning,

@@ -231,6 +231,34 @@ void main() {
     expect(badge, findsOneWidget);
     expect(find.descendant(of: badge, matching: find.text('Cash')), findsOneWidget);
     expect(find.text('STOP'), findsNothing);
+    expect(find.byKey(const ValueKey<String>('reservation-boost')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a raised fare shows its "+X kr" boost on the popup (Q13)', (
+    tester,
+  ) async {
+    const boosted = ReservationRequestPreview(
+      category: 'Comfort',
+      fare: '166.75 kr',
+      fareBoost: '+40 kr',
+      pickupLabel: '',
+      pickupAddress: 'Gamla vägen, Stockholm',
+      dropoffAddress: 'Solna centrum, Solna',
+      pickupTime: '07:40',
+      pickupDay: 'Today',
+      tripMinutes: 19,
+      tripKm: 9.4,
+      pickup: GeoPoint(59.3362, 18.0714),
+      dropoff: GeoPoint(59.3603, 18.0009),
+    );
+    await _pumpSheet(tester, boosted);
+    final badge = find.byKey(const ValueKey<String>('reservation-boost'));
+    expect(badge, findsOneWidget);
+    expect(find.descendant(of: badge, matching: find.text('+40 kr')), findsOneWidget);
+    // The driver sees only the new fare.
+    expect(find.byKey(const ValueKey<String>('reservation-fare')), findsOneWidget);
+    expect(find.textContaining('126'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -363,9 +391,10 @@ void main() {
     expect(_said, contains('Reservation accepted'));
     expect(find.text('Your next ride'), findsNothing);
     expect(find.byKey(_reserveRadar), findsNothing);
-    // It left the requests and waits in Accepted.
+    // It left the requests and waits in Accepted; the 08:05 request
+    // clashes with it and leaves this driver's list (Q9).
     expect(ScheduledRideStore.isOpen(demoReservationId), isFalse);
-    expect(ScheduledRideStore.openRequests.value, 1);
+    expect(ScheduledRideStore.openRequests.value, 0);
     // Taken once, the server gives it to nobody else.
     final again = dispatch.claimOffer(demoReservationId);
     await tester.pump(const Duration(milliseconds: 700));

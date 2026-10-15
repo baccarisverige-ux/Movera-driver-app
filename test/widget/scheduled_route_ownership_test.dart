@@ -54,7 +54,8 @@ void main() {
     accept();
     await tester.pumpAndSettle();
     expect(find.byType(ScheduledRidesScreen), findsOneWidget);
-    expect(ScheduledRideStore.openRequests.value, 1);
+    // The 08:05 request clashes with it, so it left the list too (Q9).
+    expect(ScheduledRideStore.openRequests.value, 0);
     expect(find.text('Gamla vägen, Stockholm'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

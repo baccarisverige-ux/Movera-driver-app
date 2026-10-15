@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -46,6 +47,10 @@ class _Dispatch implements DispatchRepository {
   void refreshOffers() {}
   @override
   void releaseReservation(String reservationId) {}
+
+  @override
+  Stream<ReservationRequestPreview> watchAssignments() =>
+      const Stream<ReservationRequestPreview>.empty();
   @override
   Future<ClaimResult> claimOffer(String offerId) {
     final claim = Completer<ClaimResult>();

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 
-/// An Exclusive offer on Home: a trip offered to this driver only, or a
-/// reservation close to pickup that still has no driver. Same look as the
+/// An Exclusive offer on Home: a trip offered to this driver only, a
+/// reservation close to pickup that still has no driver, or a scheduled
+/// ride Movera assigned to this driver. Same look as the
 /// Radar cards, a little bigger: soft grey header with the badges, the
 /// black "Exclusive" mark and its reason, the price and pickup time; then
 /// pickup → drop-off and Route + Accept, whose darker part shrinks with the
@@ -21,7 +23,12 @@ class ExclusiveOfferCard extends StatelessWidget {
     this.reservation = false,
     this.reservationTime,
     this.onYourWay = false,
+    this.reason,
   });
+
+  /// The short reason next to the "Exclusive" mark, from the offer; see
+  /// [ExclusiveReasons].
+  final String? reason;
 
   final RadarOfferView offer;
 
@@ -46,10 +53,6 @@ class ExclusiveOfferCard extends StatelessWidget {
   static const Color muted = RadarOfferCard.muted;
   static const Color label = RadarOfferCard.label;
   static const Color headerTint = RadarOfferCard.headerTint;
-
-  /// The short reason next to the "Exclusive" mark.
-  static String reasonFor({required bool reservation}) =>
-      reservation ? 'Pickup soon · no driver yet' : 'Only for you · nearby';
 
   Widget _icon(String asset, double size, Color color, {String? semantics}) =>
       SvgPicture.asset(
@@ -107,6 +110,13 @@ class ExclusiveOfferCard extends StatelessWidget {
                           'exclusive-offer-cash-${offer.id}',
                         ),
                       ),
+                    if (offer.fareBoost case final boost?)
+                      OfferBadge.boost(
+                        boost,
+                        key: ValueKey<String>(
+                          'exclusive-offer-boost-${offer.id}',
+                        ),
+                      ),
                     if (onYourWay) const OfferBadge.note('On your way'),
                   ],
                 ),
@@ -148,7 +158,8 @@ class ExclusiveOfferCard extends StatelessWidget {
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
-                  reasonFor(reservation: reservation),
+                  reason ??
+                      ExclusiveReasons.defaultFor(reservation: reservation),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

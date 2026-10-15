@@ -7,12 +7,19 @@ void main() {
 
   test('The dot stays until every request is answered', () {
     expect(ScheduledRideStore.openRequests.value, 2);
-    ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+    ScheduledRideStore.answer('Högsätravägen, Lidingö', accepted: false);
     expect(ScheduledRideStore.openRequests.value, 1);
     // Answering the same request twice changes nothing.
-    ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: false);
+    ScheduledRideStore.answer('Högsätravägen, Lidingö', accepted: true);
     expect(ScheduledRideStore.openRequests.value, 1);
-    ScheduledRideStore.answer('Högsätravägen, Lidingö', accepted: false);
+    ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+    expect(ScheduledRideStore.openRequests.value, 0);
+  });
+
+  test('a taken ride hides the requests whose time clashes (Q9)', () {
+    ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+    // The 08:05 Lidingö ride cannot follow the 07:40 one: it leaves the
+    // dot too.
     expect(ScheduledRideStore.openRequests.value, 0);
   });
 

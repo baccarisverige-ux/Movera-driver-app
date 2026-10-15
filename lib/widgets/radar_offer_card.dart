@@ -20,6 +20,7 @@ class RadarOfferView {
     required this.dropoff,
     this.bags = 0,
     this.reservationTime,
+    this.fareBoost,
   });
 
   final String id;
@@ -42,6 +43,10 @@ class RadarOfferView {
   /// time, e.g. "07:40". The card then shows a "Reservation" badge, and
   /// never "Exclusive" (notes E5).
   final String? reservationTime;
+
+  /// Admin raised the fare because no driver was near the pickup, e.g.
+  /// "+40 kr". [fare] is already the new fare (Q13).
+  final String? fareBoost;
 
   /// The rider pays cash in the car (not paid in the app).
   bool get cash => isCash(payment);
@@ -155,6 +160,11 @@ class RadarOfferCard extends StatelessWidget {
                     if (offer.cash)
                       OfferBadge.cash(
                         key: ValueKey<String>('radar-offer-cash-${offer.id}'),
+                      ),
+                    if (offer.fareBoost case final boost?)
+                      OfferBadge.boost(
+                        boost,
+                        key: ValueKey<String>('radar-offer-boost-${offer.id}'),
                       ),
                     if (offer.bags > 0)
                       Row(
