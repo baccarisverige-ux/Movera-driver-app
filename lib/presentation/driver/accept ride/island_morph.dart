@@ -20,6 +20,9 @@ class IslandMorph extends StatefulWidget {
   /// outline is never doubled. Fades with the morph.
   final bool shell;
 
+  /// The fine white contour around every island shape, 0.5 px.
+  static const double contourWidth = 0.5;
+
   final Size size;
 
   /// Corner radius; a pill (half the height) when omitted. Morphs with size.
@@ -198,11 +201,6 @@ class _IslandMorphState extends State<IslandMorph>
                   const Color(0xFF060708).withValues(alpha: _visibleShell),
                 ],
               ),
-              border: Border.all(
-                color: const Color(
-                  0x1FFFFFFF,
-                ).withValues(alpha: .12 * _visibleShell),
-              ),
               boxShadow: [
                 BoxShadow(
                   color: const Color(
@@ -213,21 +211,33 @@ class _IslandMorphState extends State<IslandMorph>
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(_visibleRadius),
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-                children: [
-                  if (t < .35)
-                    for (final layer in _outgoing)
-                      _face(
-                        layer.child,
-                        layer.size,
-                        layer.opacity * (1 - t / .35).clamp(0, 1),
-                        outgoing: true,
-                      ),
-                  _face(widget.child, widget.size, _incomingOpacity),
-                ],
+            // The contour sits on top of the faces, around the whole
+            // shape, and fades with the shell.
+            child: DecoratedBox(
+              position: DecorationPosition.foreground,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(_visibleRadius),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: _visibleShell),
+                  width: IslandMorph.contourWidth,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(_visibleRadius),
+                clipBehavior: Clip.antiAlias,
+                child: Stack(
+                  children: [
+                    if (t < .35)
+                      for (final layer in _outgoing)
+                        _face(
+                          layer.child,
+                          layer.size,
+                          layer.opacity * (1 - t / .35).clamp(0, 1),
+                          outgoing: true,
+                        ),
+                    _face(widget.child, widget.size, _incomingOpacity),
+                  ],
+                ),
               ),
             ),
           ),

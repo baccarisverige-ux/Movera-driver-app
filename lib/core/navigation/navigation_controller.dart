@@ -43,13 +43,18 @@ class NavigationController extends ChangeNotifier {
   NavigationController({
     required this.routeRepository,
     this.offRouteThresholdMeters = 50,
-  }) : _progress = RouteProgressCalculator(
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now,
+       _progress = RouteProgressCalculator(
          offRouteThresholdMeters: offRouteThresholdMeters,
        );
 
   final RouteRepository routeRepository;
   final double offRouteThresholdMeters;
   final RouteProgressCalculator _progress;
+
+  /// Clock for when routes are asked for.
+  final DateTime Function() _now;
 
   NavigationSnapshot _snapshot = const NavigationSnapshot(
     vehicle: NavigationSnapshot.stockholm,
@@ -62,7 +67,6 @@ class NavigationController extends ChangeNotifier {
   ActiveRideStage _stage = ActiveRideStage.headingToPickup;
   int _routeRequestToken = 0;
   DateTime? _lastRouteAt;
-  GeoPoint? _lastRouteOrigin;
   int _instructionHint = 0;
   double? _progressAlong;
   DateTime? _lastMeasuredAt;
@@ -78,6 +82,16 @@ class NavigationController extends ChangeNotifier {
   ActiveRideStage? _lastRouteStage;
   RouteLoadState _routeState = RouteLoadState.idle;
   RouteLoadState get routeState => _routeState;
+  int _reroutes = 0;
+
+  /// Routes replaced because the driver left the route. The island says
+  /// "Route updated" only when this grows, never after a silent refresh.
+  int get reroutes => _reroutes;
+
+  /// Driving along the route never asks for a new one; only this slow,
+  /// silent refresh keeps the time to arrival fresh. The route and its
+  /// instructions stay on screen while it loads.
+  static const silentRefreshInterval = Duration(seconds: 90);
 
   Future<void> retryRoute() async {
     final destination = _destination;
@@ -117,7 +131,6 @@ class NavigationController extends ChangeNotifier {
       _destination = null;
       _targetLabel = null;
       _lastRouteAt = null;
-      _lastRouteOrigin = null;
       _lastRouteStage = null;
       _status = null;
       _routeState = RouteLoadState.idle;
@@ -240,33 +253,45 @@ class NavigationController extends ChangeNotifier {
         previousDestination.longitude == destination.longitude &&
         _lastRouteStage == _stage;
     _destination = destination;
-    final now = DateTime.now();
-    final lastOrigin = _lastRouteOrigin;
+    final now = _now();
     final lastAt = _lastRouteAt;
-    if (!force &&
-        sameDestination &&
-        _routeState != RouteLoadState.failed &&
-        lastOrigin != null &&
-        lastAt != null) {
-      final moved = lastOrigin.distanceMetersTo(origin);
-      if (moved < 20 && now.difference(lastAt) < const Duration(seconds: 8)) {
+    // The route being followed to this same point. It stays on screen,
+    // instructions included, while a new one loads.
+    final kept = sameDestination ? _route : null;
+    if (!force && sameDestination) {
+      if (kept != null) {
+        // On the route: keep it. Leaving it is the reroute's job.
+        if (_routeInFlight ||
+            _snapshot.offRoute ||
+            lastAt == null ||
+            now.difference(lastAt) < silentRefreshInterval) {
+          return;
+        }
+      } else if (lastAt != null &&
+          now.difference(lastAt) < const Duration(seconds: 8)) {
+        // No route yet: the request on its way (or one that just failed)
+        // gets a few seconds before another one replaces it.
         return;
       }
     }
+    final silent = kept != null && !force;
+    final rerouting = kept != null && _snapshot.offRoute;
 
     _rerouteDebounce?.cancel();
     _rerouteDebounce = null;
     _lastRouteStage = _stage;
-    _lastRouteOrigin = origin;
     _lastRouteAt = now;
     final token = ++_routeRequestToken;
     _routeInFlight = true;
-    _routeState = RouteLoadState.loading;
-    _route = null;
-    _instructionHint = 0;
-    _progressAlong = null;
-    _status = 'Route updating…';
-    _rebuildBanner();
+    if (kept == null) {
+      // Nothing to follow yet: only then does the island say so.
+      _routeState = RouteLoadState.loading;
+      _route = null;
+      _instructionHint = 0;
+      _progressAlong = null;
+      _status = 'Route updating…';
+      _rebuildBanner();
+    }
 
     try {
       final route = await routeRepository.drivingRoute(
@@ -307,10 +332,15 @@ class NavigationController extends ChangeNotifier {
       }
       _instructionHint = 0;
       _progressAlong = null;
+      if (rerouting) _reroutes++;
       _status = null;
       _rebuildBanner();
     } catch (_) {
       if (_disposed || token != _routeRequestToken) {
+        return;
+      }
+      if (kept != null && (silent || !_snapshot.offRoute)) {
+        // The route on screen still leads there: keep following it.
         return;
       }
       _routeState = RouteLoadState.failed;
@@ -400,7 +430,12 @@ class NavigationController extends ChangeNotifier {
         primary: arrivingToPickup
             ? 'Navigate to pickup'
             : 'Navigate to ${_targetLabel ?? 'drop-off'}',
-        distanceLabel: _displayStatus ?? 'Route updating…',
+        // A route without turns: the distance left to the point.
+        distanceLabel:
+            _displayStatus ??
+            (progress == null
+                ? 'Route updating…'
+                : _toPoint(progress.remainingMeters)),
         symbol: arrivingToPickup
             ? NavigationBannerSymbol.straight
             : NavigationBannerSymbol.arrive,
@@ -414,7 +449,7 @@ class NavigationController extends ChangeNotifier {
       if (arrivingToPickup) {
         return NavigationBanner(
           primary: meters < 25 ? 'Pickup ahead' : 'Pickup',
-          distanceLabel: 'in ${RouteInstructionCopy.formatDistance(meters)}',
+          distanceLabel: _toPoint(meters),
           roadName: instruction.roadName,
           symbol: NavigationBannerSymbol.arrive,
           status: _displayStatus,
@@ -424,7 +459,7 @@ class NavigationController extends ChangeNotifier {
         primary: _targetLabel != null
             ? '${_targetLabel!}${meters < 25 ? ' ahead' : ''}'
             : (meters < 25 ? 'Drop-off ahead' : 'Drop-off'),
-        distanceLabel: 'in ${RouteInstructionCopy.formatDistance(meters)}',
+        distanceLabel: _toPoint(meters),
         roadName: instruction.roadName,
         symbol: NavigationBannerSymbol.arrive,
         status: _displayStatus,
@@ -448,6 +483,12 @@ class NavigationController extends ChangeNotifier {
       ),
       status: _displayStatus,
     );
+  }
+
+  /// "in 150 m", or "now" at the point.
+  static String _toPoint(double meters) {
+    final distance = RouteInstructionCopy.formatDistance(meters);
+    return distance == 'now' ? distance : 'in $distance';
   }
 
   void _scheduleReroute() {

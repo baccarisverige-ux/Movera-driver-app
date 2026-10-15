@@ -775,13 +775,6 @@ class _AcceptRideState extends State<AcceptRide>
 
 
 
-  String? get _routeDistanceText {
-    final meters = _remainingMeters;
-    if (meters == null) { return null; }
-    if (meters < 1000) { return '${(meters / 10).round() * 10} m'; }
-    return '${(meters / 1000).toStringAsFixed(1)} km';
-  }
-
   /// One line under the time and distance in the collapsed trip bar.
   String get _tripBarStatus {
     switch (_stage) {
@@ -1174,7 +1167,6 @@ class _AcceptRideState extends State<AcceptRide>
                         address: _showArrivalApproach ? _approachAddress : _nextStopAddress,
                         detail: _nextStopDetail,
                         eta: _routeEtaText,
-                        distance: _routeDistanceText,
                         arrival: _showArrivalApproach ? _approachLabel : null,
                         arrived: _arrivalApproachArrived,
                         progress: _legFraction ?? 0,
@@ -1182,6 +1174,7 @@ class _AcceptRideState extends State<AcceptRide>
                         paidSeconds: _countingWait ? (_paidStopWait ? _waitSeconds : math.max(0, _waitSeconds - _includedWaitSeconds)) : null,
                         waitingAtStop: _paidStopWait,
                         navigationStatus: _locationStatus ?? _navigation.snapshot.status,
+                        reroutes: _navigation.reroutes,
                         waitingMessage: _tripBarStatus,
                         paidWait: _paidStopWait || (_countingWait && !_inIncludedWait),
                         paidByCash: widget.paidByCash,
