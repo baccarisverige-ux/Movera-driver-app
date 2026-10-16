@@ -915,6 +915,35 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
                   child: (widget.mapBuilder ?? _tiltedMap)(context),
                 ),
               ),
+              Positioned(
+                right: 8,
+                bottom: 8,
+                child: IgnorePointer(
+                  child: Container(
+                    key: const ValueKey<String>('reservation-map-see-details'),
+                    padding: const EdgeInsets.fromLTRB(10, 5, 8, 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(99),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x290F1214),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Text(
+                      'See details ›',
+                      style: TextStyle(
+                        color: _ink,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               Positioned.fill(
                 child: PointerInterceptor(
                   child: Material(

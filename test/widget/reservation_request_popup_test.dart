@@ -382,6 +382,7 @@ void main() {
     await _pumpSheet(tester, _request);
     final strip = find.byKey(const ValueKey<String>('reservation-map-strip'));
     expect(strip, findsOneWidget);
+    expect(find.text('See details ›'), findsOneWidget);
     expect(
       find.descendant(
         of: strip,
