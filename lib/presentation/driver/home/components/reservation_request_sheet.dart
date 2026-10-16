@@ -607,8 +607,6 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
               const SizedBox(height: 22),
               _card(),
               const SizedBox(height: 14),
-              _viewDetailsButton(),
-              const SizedBox(height: 12),
               _mapStrip(context),
             ],
           ),
@@ -880,35 +878,8 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
     );
   }
 
-  Widget _viewDetailsButton() {
-    return Semantics(
-      button: true,
-      child: Material(
-        color: _soft,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          key: const ValueKey<String>('reservation-view-details'),
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _openDetails(true),
-          child: SizedBox(
-            height: 52,
-            child: Center(
-              child: Text(
-                driverText(DriverTexts.offerViewDetails),
-                style: const TextStyle(
-                  color: _ink,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// A small tilted 3D route map in a white frame; a tap opens the details.
+  /// The tilted 3D route map in a white frame, in place of a View details
+  /// button; a tap opens the details.
   Widget _mapStrip(BuildContext context) {
     return Container(
       key: const ValueKey<String>('reservation-map-strip'),
@@ -934,7 +905,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: SizedBox(
-          height: 60,
+          height: 124,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -952,7 +923,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
                       label: 'View reservation details',
                       button: true,
                       child: InkWell(
-                        key: const ValueKey<String>('reservation-map-strip-open'),
+                        key: const ValueKey<String>('reservation-view-details'),
                         onTap: () => _openDetails(true),
                       ),
                     ),
