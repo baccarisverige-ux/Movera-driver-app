@@ -38,12 +38,16 @@ class RadarSheetOutline extends StatelessWidget {
   final double cornerRadius;
   final Color color;
 
+  /// The line's width; 2 while an Exclusive offer turns it blue.
+  final double strokeWidth;
+
   const RadarSheetOutline({
     super.key,
     this.notchWidth = 126,
     this.notchDepth = 58,
     this.cornerRadius = 24,
     this.color = const Color(0xFFCDD2D6),
+    this.strokeWidth = 1,
   });
 
   @override
@@ -54,6 +58,7 @@ class RadarSheetOutline extends StatelessWidget {
         notchDepth: notchDepth,
         cornerRadius: cornerRadius,
         color: color,
+        strokeWidth: strokeWidth,
       ),
       child: const SizedBox.expand(),
     );
@@ -65,12 +70,14 @@ class _RadarSheetOutlinePainter extends CustomPainter {
   final double notchDepth;
   final double cornerRadius;
   final Color color;
+  final double strokeWidth;
 
   const _RadarSheetOutlinePainter({
     required this.notchWidth,
     required this.notchDepth,
     required this.cornerRadius,
     required this.color,
+    required this.strokeWidth,
   });
 
   @override
@@ -83,14 +90,14 @@ class _RadarSheetOutlinePainter extends CustomPainter {
       cornerRadius: cornerRadius,
       includeCorners: true,
     );
-    // Half a pixel inside the sheet so the clip does not cut the line.
-    canvas.translate(0, 0.5);
+    // Half the line inside the sheet so the clip does not cut it.
+    canvas.translate(0, strokeWidth / 2);
     canvas.drawPath(
       edge,
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
+        ..strokeWidth = strokeWidth
         ..isAntiAlias = true,
     );
   }
@@ -100,7 +107,8 @@ class _RadarSheetOutlinePainter extends CustomPainter {
     return oldDelegate.notchWidth != notchWidth ||
         oldDelegate.notchDepth != notchDepth ||
         oldDelegate.cornerRadius != cornerRadius ||
-        oldDelegate.color != color;
+        oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth;
   }
 }
 

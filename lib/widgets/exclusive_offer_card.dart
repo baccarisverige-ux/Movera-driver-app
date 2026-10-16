@@ -4,6 +4,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/pickup_pay_line.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
@@ -32,6 +33,7 @@ class ExclusiveOfferCard extends StatelessWidget {
     this.details,
     this.bottomInset = 22,
     this.maxContentHeight,
+    this.contour = 0,
   });
 
   /// Which details show (Q14); the admin's choice by default.
@@ -63,8 +65,27 @@ class ExclusiveOfferCard extends StatelessWidget {
   /// On a short phone the content scrolls above this height.
   final double? maxContentHeight;
 
+  /// The contour, 0 black → 1 blue: on Home it turns blue with the card
+  /// sliding up while the offer is live, and back as it slides down.
+  final double contour;
+
   static const Color ink = RadarOfferCard.ink;
-  static const Color blue = Color(0xFF1769E8);
+
+  /// The radar's Exclusive blue, shared by the card, dock and island.
+  static const Color blue = MoveraRadarOrb.exclusiveBlue;
+
+  /// The contour while the offer is live: 2 px blue, a soft blue shadow.
+  static const double liveContourWidth = 2;
+  static const BoxShadow _blackShadow = BoxShadow(
+    color: Color(0x14000000),
+    blurRadius: 26,
+    offset: Offset(0, -10),
+  );
+  static const BoxShadow _blueShadow = BoxShadow(
+    color: Color(0x1F1769E8),
+    blurRadius: 26,
+    offset: Offset(0, -10),
+  );
   static const Color blueTint = Color(0xFFEAF1FD);
   static const Color fareGrey = Color(0xFFA2AAB0);
   static const Color lineGrey = Color(0xFF5B656C);
@@ -517,20 +538,20 @@ class ExclusiveOfferCard extends StatelessWidget {
       );
     }
 
+    final t = contour.clamp(0.0, 1.0);
     return Container(
       key: ValueKey<String>('exclusive-offer-card-${offer.id}'),
       padding: EdgeInsets.fromLTRB(22, 24, 22, bottomInset),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border.fromBorderSide(BorderSide(color: ink)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 26,
-            offset: Offset(0, -10),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        border: Border.fromBorderSide(
+          BorderSide(
+            color: Color.lerp(ink, blue, t)!,
+            width: 1 + (liveContourWidth - 1) * t,
           ),
-        ],
+        ),
+        boxShadow: [BoxShadow.lerp(_blackShadow, _blueShadow, t)!],
       ),
       child: content,
     );

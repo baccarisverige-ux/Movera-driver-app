@@ -49,6 +49,13 @@ extension _HomeExclusive on _DriverHomeState {
     bool get _exclusiveLive =>
         _outsideRadarOffer != null && !_exclusive.leaving;
 
+    /// How blue the Exclusive contours are (card, dock line, island):
+    /// 0 black, 1 blue. It follows the card's slide, so the blue comes in
+    /// as it rises and goes as it sinks (×, Accept, time out); with
+    /// reduced motion the slide, and so the blue, just switches.
+    double get _exclusiveBlue =>
+        _exclusive.shown == null ? 0 : _exclusive.slide.value.clamp(0.0, 1.0);
+
     /// The offer arrived: the card slides up and its clock starts.
     void _raiseExclusive(_HomeDirectOffer offer, Duration lifetime) {
       _rebuild(() {
@@ -123,20 +130,21 @@ extension _HomeExclusive on _DriverHomeState {
         bottom: 0,
         child: AnimatedBuilder(
           animation: _exclusive.slide,
-          child: PointerInterceptor(
-            child: _HomeOfferRadar(this)._buildOutsideRadarOfferCard(
-              offer,
-              bottomInset: bottomInset,
-              // Leaves the top island and some map above the card.
-              maxContentHeight: math.max(
-                160.0,
-                viewport.height - safeTop - 72 - bottomInset - 46,
+          // The contour turns blue with the slide, and back with it.
+          builder: (context, _) => FractionalTranslation(
+            translation: Offset(0, 1 - _exclusive.slide.value),
+            child: PointerInterceptor(
+              child: _HomeOfferRadar(this)._buildOutsideRadarOfferCard(
+                offer,
+                bottomInset: bottomInset,
+                // Leaves the top island and some map above the card.
+                maxContentHeight: math.max(
+                  160.0,
+                  viewport.height - safeTop - 72 - bottomInset - 46,
+                ),
+                contour: _exclusiveBlue,
               ),
             ),
-          ),
-          builder: (context, child) => FractionalTranslation(
-            translation: Offset(0, 1 - _exclusive.slide.value),
-            child: child,
           ),
         ),
       );

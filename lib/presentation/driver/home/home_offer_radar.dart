@@ -874,6 +874,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       _HomeDirectOffer offer, {
       double bottomInset = 22,
       double? maxContentHeight,
+      double contour = 0,
     }) {
       final reservation = offer.reservation && !offer.driverSigned;
       return ExclusiveOfferCard(
@@ -881,6 +882,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         offer: _radarOfferView(offer),
         bottomInset: bottomInset,
         maxContentHeight: maxContentHeight,
+        contour: contour,
         // The reason's text comes from the admin's list (Q15).
         reason: offer.reason.isEmpty ? null : ExclusiveReasons.text(offer.reason),
         reservation: reservation,

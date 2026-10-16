@@ -32,6 +32,8 @@ class DriverSheetNav {
     // A plain contour in this colour instead of the grey outline and the
     // online dash, e.g. black while a reservation sits on the dock.
     Color? contourColor,
+    // Its width: 2 while an Exclusive offer turns it blue.
+    double contourWidth = 1,
   }) {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
     const sheetRed = Color(0xFF8E2E28);
@@ -178,6 +180,7 @@ class DriverSheetNav {
                       : const ValueKey<String>('dock-contour-custom'),
                   notchDepth: notchDepth,
                   color: contourColor ?? const Color(0xFFCDD2D6),
+                  strokeWidth: contourColor == null ? 1 : contourWidth,
                 ),
               ),
             ),
