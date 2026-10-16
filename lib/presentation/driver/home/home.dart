@@ -26,6 +26,8 @@ import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/dispatch/pickup_pay.dart';
+import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';

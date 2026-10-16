@@ -299,7 +299,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                 children: [
                   Flexible(
                     child: Text(
-                      offer.fare,
+                      offer.shownFare,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -328,6 +328,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                   ),
                 ],
               ),
+              PickupPayLine(quote: offer.pickupPay),
               const SizedBox(height: 5),
               const Text(
                 'Available after your current drop-off',
@@ -543,7 +544,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                   ),
                 ),
                 Text(
-                  offer.fare,
+                  offer.shownFare,
                   style: const TextStyle(
                     color: _AcceptRideState._ink,
                     fontSize: 12.5,
