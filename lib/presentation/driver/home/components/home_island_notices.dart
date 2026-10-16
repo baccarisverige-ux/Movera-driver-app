@@ -96,6 +96,14 @@ class HomeIslandNotices {
     group: 'reservation',
   );
 
+  /// Taken for later: it waits in Scheduled rides › Accepted until its
+  /// time, e.g. "Reservation accepted · pickup 19:30".
+  static IslandMessage reservationAcceptedAt(String time) => IslandMessage(
+    title: driverText(DriverTexts.islandReservationAcceptedAt, {'time': time}),
+    tone: IslandTone.success,
+    group: 'reservation',
+  );
+
   /// The driver tapped Accept on the radar; the server picks one driver.
   static IslandMessage get reservationMatching => IslandMessage(
     title: driverText(DriverTexts.islandMatching),

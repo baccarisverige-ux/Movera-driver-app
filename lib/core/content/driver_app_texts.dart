@@ -100,6 +100,10 @@ class DriverTexts {
       'island.reservationAccepted',
       'Reservation accepted',
       DriverTextArea.island);
+  static const islandReservationAcceptedAt = DriverTextKey(
+      'island.reservationAcceptedAt',
+      'Reservation accepted · pickup {time}',
+      DriverTextArea.island);
   static const islandNoLongerAvailable = DriverTextKey(
       'island.noLongerAvailable', 'No longer available', DriverTextArea.island);
   static const islandAssignedByMovera = DriverTextKey(
@@ -194,6 +198,10 @@ class DriverTexts {
       DriverTextKey('offer.yourNextRide', 'Your next ride', DriverTextArea.offer);
   static const offerViewRoute =
       DriverTextKey('offer.viewRoute', 'View route', DriverTextArea.offer);
+  static const offerNewReservation = DriverTextKey(
+      'offer.newReservation', 'New reservation', DriverTextArea.offer);
+  static const offerViewDetails =
+      DriverTextKey('offer.viewDetails', 'View details', DriverTextArea.offer);
 
   // Main trip buttons.
   static const tripArrived =
@@ -231,6 +239,7 @@ class DriverTexts {
     islandExclusiveRide,
     islandExclusiveReservation,
     islandReservationAccepted,
+    islandReservationAcceptedAt,
     islandNoLongerAvailable,
     islandAssignedByMovera,
     islandAssignmentAccepted,
@@ -275,6 +284,8 @@ class DriverTexts {
     offerReservationRequest,
     offerYourNextRide,
     offerViewRoute,
+    offerNewReservation,
+    offerViewDetails,
     tripArrived,
     tripStart,
     tripStartFirstStop,

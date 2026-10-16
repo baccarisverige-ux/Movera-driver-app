@@ -59,7 +59,8 @@ void main() {
     await _openRide(tester, 'Gamla vägen, Stockholm');
     await tester.tap(find.text('Accept  •  126.75 kr'));
     await tester.pumpAndSettle();
-    expect(find.text('Reservation accepted'), findsOneWidget);
+    // Only saved for later: the trip opens at its time.
+    expect(find.text('Reservation accepted · pickup 07:40'), findsOneWidget);
 
     await tester.tap(find.text('Requests'));
     await tester.pumpAndSettle();

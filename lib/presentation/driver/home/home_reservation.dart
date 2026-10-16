@@ -14,7 +14,14 @@ class _HomeReservationState {
   /// Sent to Home and not hidden: it rises while Radar is live.
   ReservationRequestPreview? request;
 
-  /// It was sent to Home once; × does not bring it back.
+  /// The requests sent to Home this round, in order. One shows at a time;
+  /// after Accept or × the next one rises ("2 of 2").
+  List<ReservationRequestPreview> round = const <ReservationRequestPreview>[];
+
+  /// Hidden (×) or answered this round: it does not rise again.
+  final Set<String> passed = <String>{};
+
+  /// A round was sent to Home; × does not bring it back.
   bool sent = false;
 
   /// The island said "New reservation" for this round.
@@ -25,7 +32,7 @@ class _HomeReservationState {
 
   /// Seen taken (not open in Scheduled rides). Open again later means the
   /// driver cancelled it and it went back out (R24).
-  bool seenTaken = false;
+  final Set<String> seenTaken = <String>{};
 
   /// The reservation whose claim is with dispatch right now.
   String? claimingId;
@@ -33,39 +40,73 @@ class _HomeReservationState {
   /// Won through its Exclusive offer: Accept may open the ride.
   String? wonId;
 
-  /// Lets the Radar trips that waited behind the sheet come in.
+  /// Lets the Radar trips that waited behind the sheet come in, or the
+  /// next request rise.
   Timer? release;
 }
 
 extension _HomeReservation on _DriverHomeState {
-    ReservationRequestPreview? get _homeRequest =>
-        _adminHomeConfig.scheduledRides.newRequest;
+    /// The requests admin sends to the Home popup, in order.
+    List<ReservationRequestPreview> get _homeRequests =>
+        _adminHomeConfig.scheduledRides.homeRequests;
 
-    /// Sends the open reservation to Home once it has waited in Scheduled
-    /// rides for [ReservationDemoTimings.homePopupAfter] (job L2).
-    void _scheduleReservationPopup() {
-      final request = _homeRequest;
+    /// The first of them: the one whose Exclusive step Home runs.
+    ReservationRequestPreview? get _homeRequest =>
+        _homeRequests.isEmpty ? null : _homeRequests.first;
+
+    ReservationRequestPreview? _homeRequestById(String id) {
+      for (final request in _homeRequests) {
+        if (request.id.isNotEmpty && request.id == id) { return request; }
+      }
+      return null;
+    }
+
+    /// Sends the open reservations to Home once they have waited in
+    /// Scheduled rides for [ReservationDemoTimings.homePopupAfter] (job L2):
+    /// all of them, or [only] the ones that went back out.
+    void _scheduleReservationPopup([List<ReservationRequestPreview>? only]) {
+      final requests = only ?? _homeRequests;
       if (!DriverRuntimeConfig.current.reservationPopup ||
           !_adminHomeConfig.scheduledRides.hasOpenRequests ||
-          request == null ||
+          requests.isEmpty ||
           _reservation.sent) {
         return;
       }
       _reservationPopupTimer?.cancel();
       _reservationPopupTimer = Timer(ReservationDemoTimings.homePopupAfter, () {
+        if (!mounted || _reservation.sent) { return; }
         // Taken in the meantime, here or by another driver: nothing to send.
         // Close to pickup it is an Exclusive offer, no longer the popup.
-        if (!mounted ||
-            _reservation.sent ||
-            !ScheduledRideStore.isOpen(request.id) ||
-            _HomeScheduled(this)._exclusiveStepReached(request.id)) {
-          return;
-        }
+        final round = [
+          for (final request in requests)
+            if (_waitsForHome(request)) request,
+        ];
+        if (round.isEmpty) { return; }
         _rebuild(() {
-          _reservation.sent = true;
-          _reservation.request = request;
+          _reservation
+            ..sent = true
+            ..round = round
+            ..request = round.first;
+          _reservation.passed.clear();
         });
       });
+    }
+
+    /// [request] can still rise on Home.
+    bool _waitsForHome(ReservationRequestPreview request) =>
+        ScheduledRideStore.isOpen(request.id) &&
+        DriverCategoryChoice.takes(request.category) &&
+        !_HomeScheduled(this)._exclusiveStepReached(request.id);
+
+    /// The next request of this round still waiting, or null.
+    ReservationRequestPreview? _nextHomeRequest() {
+      for (final request in _reservation.round) {
+        if (!_reservation.passed.contains(request.id) &&
+            _waitsForHome(request)) {
+          return request;
+        }
+      }
+      return null;
     }
 
     /// The reservation is up on Home right now: only while Radar is live
@@ -99,9 +140,11 @@ extension _HomeReservation on _DriverHomeState {
       const bottomInset = 178.0;
       return Positioned(
         key: const ValueKey<String>('home-reservation-slot'),
-        // One pixel past each side: only the top contour shows.
+        // One pixel past each side: only the top contour shows. The map
+        // behind is dimmed while it is up.
         left: -1,
         right: -1,
+        top: 0,
         bottom: 0,
         child: ValueListenableBuilder<double>(
           valueListenable: _panelSlidePosition,
@@ -109,10 +152,19 @@ extension _HomeReservation on _DriverHomeState {
             request: _reservation.request,
             visible: _reservationUp,
             bottomInset: bottomInset,
+            clock: ScheduledClock.instance.now,
+            position: _reservationPosition,
+            count: _reservation.round.length,
+            picture: _reservationPicture,
             // Leaves the top island and some map above the sheet.
             maxContentHeight: math.max(
               160.0,
               viewport.height - safeTop - 72 - bottomInset,
+            ),
+            // View details: full height, just under the top island.
+            fullContentHeight: math.max(
+              160.0,
+              viewport.height - safeTop - 40 - bottomInset,
             ),
             onHide: _reservation.claimingId != null
                 ? null
@@ -126,6 +178,28 @@ extension _HomeReservation on _DriverHomeState {
           ),
         ),
       );
+    }
+
+    /// "2 of 2": the shown request's place in this round.
+    int get _reservationPosition {
+      final request = _reservation.request;
+      if (request == null) { return 1; }
+      final index = _reservation.round.indexWhere((r) => r.id == request.id);
+      return index < 0 ? 1 : index + 1;
+    }
+
+    /// Airport rides get the plane; the others switch pictures, one after
+    /// another.
+    ReservationPicture? get _reservationPicture {
+      final request = _reservation.request;
+      if (request == null) { return null; }
+      var order = 0;
+      for (final other in _reservation.round) {
+        if (other.id == request.id) { break; }
+        if (ReservationPicture.forRequest(other) !=
+            ReservationPicture.airport) { order++; }
+      }
+      return ReservationPicture.forRequest(request, order: order);
     }
 
     /// The sheet is nearly up: the radar turns into Accept; once per round
@@ -191,8 +265,10 @@ extension _HomeReservation on _DriverHomeState {
       return result;
     }
 
-    /// The radar's Accept: won, the reservation moves to Accepted in
-    /// Scheduled rides; lost, it is gone. Either way the sheet goes down.
+    /// The radar's Accept: won, the reservation is only saved to Scheduled
+    /// rides › Accepted; it becomes the trip at its time ("Leave now" by
+    /// the real clock), never right after Accept. Lost, it is gone. Either
+    /// way the sheet goes down and the next request, if any, rises.
     Future<void> _acceptHomeReservation() async {
       final request = _reservation.request;
       if (request == null ||
@@ -207,7 +283,9 @@ extension _HomeReservation on _DriverHomeState {
       }
       if (result.isSuccess) {
         ScheduledRideStore.take(request.id, upcoming: true);
-        IslandMessages.show(HomeIslandNotices.reservationAccepted);
+        IslandMessages.show(
+          HomeIslandNotices.reservationAcceptedAt(request.pickupTime),
+        );
       }
       _closeHomeReservation();
     }
@@ -221,36 +299,48 @@ extension _HomeReservation on _DriverHomeState {
 
     void _closeHomeReservation() {
       if (!mounted) { return; }
-      final wasUp = _reservation.request != null;
+      final shown = _reservation.request;
       _rebuild(() {
         _reservation.request = null;
         _reservation.raised = false;
+        if (shown != null) { _reservation.passed.add(shown.id); }
       });
-      if (!wasUp) { return; }
-      // Radar trips that waited behind it come in once it is down.
+      if (shown == null) { return; }
+      // Once it is down the next request rises; with none left, Radar
+      // trips that waited behind it come in.
       _reservation.release?.cancel();
       _reservation.release = Timer(const Duration(milliseconds: 320), () {
-        if (mounted) { _HomeOfferRadar(this)._releasePendingRadarOffers(); }
+        if (!mounted) { return; }
+        final next = _nextHomeRequest();
+        if (next != null) {
+          _rebuild(() => _reservation.request = next);
+          return;
+        }
+        _HomeOfferRadar(this)._releasePendingRadarOffers();
       });
     }
 
     /// Scheduled rides changed. Taken there while on Home, it goes; open
     /// again after this driver cancelled it, it is sent to Home again.
     void _onScheduledRequestsChanged() {
-      final request = _homeRequest;
-      if (request != null) {
-        final open = ScheduledRideStore.isOpen(request.id);
-        if (!open) {
-          _reservation.seenTaken = true;
-          if (_reservation.claimingId == null) { _closeHomeReservation(); }
-        } else if (_reservation.seenTaken) {
-          _reservation
-            ..seenTaken = false
-            ..sent = false
-            ..announced = false
-            ..wonId = null;
-          _scheduleReservationPopup();
+      final back = <ReservationRequestPreview>[];
+      for (final request in _homeRequests) {
+        if (!ScheduledRideStore.isOpen(request.id)) {
+          _reservation.seenTaken.add(request.id);
+          if (_reservation.request?.id == request.id &&
+              _reservation.claimingId == null) {
+            _closeHomeReservation();
+          }
+        } else if (_reservation.seenTaken.remove(request.id)) {
+          back.add(request);
         }
+      }
+      if (back.isNotEmpty) {
+        _reservation
+          ..sent = false
+          ..announced = false
+          ..wonId = null;
+        _scheduleReservationPopup(back);
       }
       _rebuild(() {});
     }
@@ -279,7 +369,20 @@ extension _HomeReservation on _DriverHomeState {
       if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
       switch (result.outcome) {
         case ClaimOutcome.success:
-          // Taken now: it is this driver's trip, not a later one.
+          final ride = _homeRequestById(offer.id) ??
+              ScheduledRideStore.routeOf(offer.id);
+          if (ride != null &&
+              !_HomeScheduled(this)._exclusiveStepReached(offer.id)) {
+            // Pickup is not near yet by the real clock: it is only saved
+            // for later, like an Accept on the popup.
+            ScheduledRideStore.take(offer.id, upcoming: true);
+            IslandMessages.show(
+              HomeIslandNotices.reservationAcceptedAt(ride.pickupTime),
+            );
+            _HomeOfferRadar(this)._dismissOutsideRadarOffer();
+            return;
+          }
+          // Inside its Exclusive window: it is this driver's trip now.
           ScheduledRideStore.take(offer.id);
           _reservation.wonId = offer.id;
           IslandMessages.show(HomeIslandNotices.reservationAccepted);

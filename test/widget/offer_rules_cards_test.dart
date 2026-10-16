@@ -187,10 +187,20 @@ void main() {
       );
       await tester.binding.setSurfaceSize(const Size(375, 812));
       addTearDown(() => tester.binding.setSurfaceSize(null));
+      // The popup card: badges and the price; View details has the rest.
+      Future<void> details() async {
+        await tester.tap(
+          find.byKey(const ValueKey<String>('reservation-view-details')),
+        );
+        await tester.pumpAndSettle();
+      }
+
       await show(sheet(const OfferCardDetails()));
+      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsOneWidget);
+      await details();
       expect(find.text('Odenplan, Stockholm'), findsOneWidget);
       expect(find.text('19 min'), findsOneWidget);
-      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsOneWidget);
+      await show(const SizedBox());
       await show(
         sheet(
           const OfferCardDetails(
@@ -202,9 +212,13 @@ void main() {
           ),
         ),
       );
+      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsNothing);
+      // Only the area of the drop-off, on the card and in the details.
+      expect(find.text('Solna'), findsOneWidget);
+      expect(find.text('95,06 kr', findRichText: true), findsOneWidget);
+      await details();
       expect(find.text('Odenplan, Stockholm'), findsNothing);
       expect(find.text('19 min'), findsNothing);
-      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsNothing);
       expect(find.text('Solna'), findsOneWidget);
       expect(find.textContaining('Your share'), findsOneWidget);
       expect(find.text('95,06 kr', findRichText: true), findsOneWidget);

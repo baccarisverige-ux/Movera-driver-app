@@ -163,7 +163,7 @@ void main() {
   test('Movera assigns a ride; Accept claims it once (Q29)', () async {
     final dispatch = _onDay(
       const Duration(hours: 7),
-      assigned: const [demoAssignedReservation],
+      assigned: [demoAssignedReservation],
       assignmentDelay: const Duration(milliseconds: 5),
     );
     final assigned = <ReservationRequestPreview>[];

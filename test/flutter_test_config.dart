@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/documents/document_expiry.dart';
@@ -41,6 +42,11 @@ DateTime _testNow() {
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   DriverRuntimeConfig.current = testRuntimeConfig;
   ScheduledClock.realNow = _testNow;
+  // The app runs on the real clock and books its demo reservations from
+  // now. Tests run the fast test day instead: 07:00 at the first reading,
+  // 30 times faster, with the rides at 07:40, 08:05 and 09:30.
+  ScheduledClock.instance = ScheduledClock.fastDay();
+  DemoReservations.plan = DemoReservationPlan.testDay;
   // Every test starts the demo day again (07:00 at its first reading),
   // with cash rides on, no missed Exclusive offers and the zone's waiting
   // terms. The account is quiet: no driving time yet, no documents that

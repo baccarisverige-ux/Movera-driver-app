@@ -11,17 +11,24 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/routing/route_repository.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
+import 'package:movera/core/scheduled/smart_gap.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/home/components/reservation_route_map.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
-const Color _ink = Color(0xFF111518);
-const Color _text = Color(0xFF3A444B);
-const Color _label = Color(0xFF8A9399);
-const Color _muted = Color(0xFF7C868D);
-const Color _hairline = Color(0xFFF0F1F2);
+const Color _ink = Color(0xFF0F1214);
+const Color _text = Color(0xFF5B656C);
+const Color _label = Color(0xFF8B949A);
+const Color _decimals = Color(0xFFA2AAB0);
+const Color _soft = Color(0xFFF2F4F5);
+const Color _cardLine = Color(0xFFE6E9EB);
+const Color _hairline = Color(0xFFEEF0F1);
+
+/// How dark the map gets behind the reservation.
+const double reservationBarrierOpacity = 0.44;
 
 Widget _solar(String asset, double size, [Color color = _ink]) =>
     SvgPicture.asset(
@@ -31,10 +38,35 @@ Widget _solar(String asset, double size, [Color color = _ink]) =>
       colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
     );
 
+/// The flat picture on the reservation card.
+enum ReservationPicture {
+  /// A booked calendar with ticks.
+  booked,
+
+  /// A woman beside a big calendar.
+  calendar,
+
+  /// A plane seen from the front and a traveller with a bag.
+  airport;
+
+  /// Airport rides (pickup or drop-off at an airport) get the plane and
+  /// the traveller; the others switch between [booked] and [calendar] by
+  /// [order], the number of normal rides shown before this one.
+  static ReservationPicture forRequest(
+    ReservationRequestPreview request, {
+    int order = 0,
+  }) {
+    final kind = SmartGap.kindOf(request, ScheduledRideRules.current);
+    if (kind == ScheduledRideKind.airport) return airport;
+    return order.isEven ? booked : calendar;
+  }
+}
+
 /// The reservation request on Home (notes R11–R26): an extension of the
 /// Home sheet, full width with rounded top corners and a fine black
-/// contour. It sits behind the dock and rises out from under it with a
-/// short spring while [visible]; it goes back down when it is not.
+/// contour, over the dimmed map. It sits behind the dock and rises out
+/// from under it with a short spring while [visible]; it goes back down
+/// when it is not. View details grows it to full height.
 ///
 /// Its bottom stays behind the dock, so the dock and the radar (the
 /// Accept button while it shows) keep their place under the content.
@@ -49,8 +81,12 @@ class HomeReservationSheet extends StatefulWidget {
     this.mapBuilder,
     this.routes,
     this.clock,
+    this.position = 1,
+    this.count = 1,
+    this.picture,
     this.bottomInset = 178,
     this.maxContentHeight = double.infinity,
+    this.fullContentHeight,
   });
 
   /// The reservation to show; null takes the sheet down.
@@ -72,12 +108,22 @@ class HomeReservationSheet extends StatefulWidget {
   final RouteRepository? routes;
   final DateTime Function()? clock;
 
+  /// "1 of 2": this request's place among the ones waiting.
+  final int position;
+  final int count;
+
+  /// The card's picture; by default from the ride.
+  final ReservationPicture? picture;
+
   /// Space under the content, from the screen bottom: the dock and the
   /// radar orb sit there.
   final double bottomInset;
 
   /// Taller content (many stops, large text) scrolls inside the sheet.
   final double maxContentHeight;
+
+  /// Height of the details view; [maxContentHeight] when null.
+  final double? fullContentHeight;
 
   /// Once it may show, the sheet waits this long before it rises, so the
   /// driver sees Radar go live first (and its green flash fade).
@@ -105,6 +151,9 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
   ReservationRequestPreview? _shown;
   bool _up = false;
   Timer? _riseTimer;
+
+  /// The details view is open: the sheet stands at full height.
+  bool _details = false;
 
   /// [HomeReservationSheet.onShown] ran for this rise.
   bool _told = false;
@@ -137,6 +186,7 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
 
   void _sync() {
     if (_wantUp) {
+      if (!identical(_shown, widget.request)) _details = false;
       _shown = widget.request;
       if (!_up) {
         _up = true;
@@ -171,13 +221,19 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
   /// Called from [didUpdateWidget], so a build follows anyway.
   void _sink() {
     void drop() {
-      if (mounted && !_up) setState(() => _shown = null);
+      if (mounted && !_up) {
+        setState(() {
+          _shown = null;
+          _details = false;
+        });
+      }
     }
 
     if (_rise.value <= 0 || _reduceMotion) {
       _rise.stop();
       _rise.value = 0;
       _shown = null;
+      _details = false;
       return;
     }
     _rise
@@ -200,12 +256,13 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
   Widget build(BuildContext context) {
     final request = _shown;
     if (request == null) return const SizedBox.shrink();
+    final full = widget.fullContentHeight ?? widget.maxContentHeight;
     final sheet = PointerInterceptor(
       child: DecoratedBox(
         key: const ValueKey<String>('home-reservation-sheet'),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           border: Border.all(color: _ink),
           boxShadow: const [
             BoxShadow(
@@ -217,16 +274,34 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
         ),
         child: Padding(
           padding: EdgeInsets.only(bottom: widget.bottomInset),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: widget.maxContentHeight),
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              child: ReservationRequestSheet(
-                request: request,
-                onHide: widget.onHide,
-                mapBuilder: widget.mapBuilder,
-                routes: widget.routes,
-                clock: widget.clock,
+          child: AnimatedSize(
+            duration: _reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.bottomCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: _details ? full : widget.maxContentHeight,
+              ),
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: ReservationRequestSheet(
+                  request: request,
+                  onHide: widget.onHide,
+                  mapBuilder: widget.mapBuilder,
+                  routes: widget.routes,
+                  clock: widget.clock,
+                  position: widget.position,
+                  count: widget.count,
+                  picture: widget.picture,
+                  detailsHeight: full.isFinite ? full : null,
+                  onDetailsChanged: (open) {
+                    if (mounted && _details != open) {
+                      setState(() => _details = open);
+                    }
+                  },
+                ),
               ),
             ),
           ),
@@ -236,21 +311,42 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
     return AnimatedBuilder(
       animation: _rise,
       child: sheet,
-      builder: (context, child) => _rise.value <= 0 && !_up
-          ? const SizedBox.shrink()
-          : FractionalTranslation(
-              // Hidden: the whole sheet is below the screen edge, under
-              // the dock. Up: its top edge stands above the dock.
-              translation: Offset(0, 1 - _rise.value),
-              child: child,
+      builder: (context, child) {
+        if (_rise.value <= 0 && !_up) return const SizedBox.shrink();
+        final dim = _rise.value.clamp(0.0, 1.0) * reservationBarrierOpacity;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            // The map behind is dimmed; a tap there does nothing (only
+            // the × hides the reservation).
+            PointerInterceptor(
+              child: GestureDetector(
+                key: const ValueKey<String>('home-reservation-barrier'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () {},
+                child: ColoredBox(color: Colors.black.withValues(alpha: dim)),
+              ),
             ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionalTranslation(
+                // Hidden: the whole sheet is below the screen edge, under
+                // the dock. Up: its top edge stands above the dock.
+                translation: Offset(0, 1 - _rise.value),
+                child: child,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
-/// Content of the reservation request: title and picture, Comfort badge
-/// and pickup day, price and ride, the real route map and the stops. No
-/// Accept or Decline buttons: the radar accepts, the × only hides.
+/// Content of the reservation request: the title and "1 of 2", one card
+/// (category, big price, pickup time, from → to and a flat picture) and
+/// View details, which opens the route, the stops and the trip numbers.
+/// No Accept or Decline buttons: the radar accepts, the × only hides.
 class ReservationRequestSheet extends StatefulWidget {
   const ReservationRequestSheet({
     super.key,
@@ -260,6 +356,12 @@ class ReservationRequestSheet extends StatefulWidget {
     this.routes,
     this.clock,
     this.details,
+    this.position = 1,
+    this.count = 1,
+    this.picture,
+    this.showDetails = false,
+    this.detailsHeight,
+    this.onDetailsChanged,
   });
 
   final ReservationRequestPreview request;
@@ -270,7 +372,8 @@ class ReservationRequestSheet extends StatefulWidget {
   /// The ×; null shows it disabled.
   final VoidCallback? onHide;
 
-  /// Replaces the live maps (card and full route), for tests and previews.
+  /// Replaces the live maps (details and full route), for tests and
+  /// previews.
   final WidgetBuilder? mapBuilder;
 
   /// Road routing; defaults to [RoadRouteService].
@@ -278,6 +381,22 @@ class ReservationRequestSheet extends StatefulWidget {
 
   /// Now, for the time left until pickup; defaults to [DateTime.now].
   final DateTime Function()? clock;
+
+  /// "1 of 2" under the title; hidden while only one request waits.
+  final int position;
+  final int count;
+
+  /// The card's picture; by default from the ride.
+  final ReservationPicture? picture;
+
+  /// Opens on the details view (route, stops, trip numbers).
+  final bool showDetails;
+
+  /// Height of the details view; its own height when null.
+  final double? detailsHeight;
+
+  /// The details view opened or closed.
+  final ValueChanged<bool>? onDetailsChanged;
 
   @override
   State<ReservationRequestSheet> createState() =>
@@ -289,6 +408,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
   OfferCardDetails get _show => widget.details ?? DriverOfferRules.current.card;
   RoadRouteService? _ownRoutes;
   late Future<List<GeoPoint>> _route;
+  late bool _details = widget.showDetails;
 
   @override
   void initState() {
@@ -314,12 +434,22 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
         oldWidget.routes != widget.routes) {
       _loadRoute();
     }
+    if (!identical(oldWidget.request, widget.request) &&
+        widget.request.id != oldWidget.request.id) {
+      _details = widget.showDetails;
+    }
   }
 
   @override
   void dispose() {
     _ownRoutes?.dispose();
     super.dispose();
+  }
+
+  void _openDetails(bool open) {
+    if (!mounted || _details == open) return;
+    setState(() => _details = open);
+    widget.onDetailsChanged?.call(open);
   }
 
   /// The full route screen that already exists (notes R26), unchanged.
@@ -336,31 +466,120 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
     );
   }
 
+  /// "126,75 kr" → "126" and ",75 kr", for the grey decimals.
+  (String, String) _fareParts() {
+    final fare = _show.fare(
+      Money.parseSekLabel(request.fare)?.formatted ?? request.fare,
+    );
+    final comma = fare.lastIndexOf(',');
+    return comma > 0
+        ? (fare.substring(0, comma), fare.substring(comma))
+        : (fare, '');
+  }
+
+  /// "in 3 h 20 min", "in 1 day"; null once the pickup time is unknown or
+  /// has passed.
+  String? _inLabel() {
+    final left = request.untilPickup((widget.clock ?? DateTime.now)());
+    if (left == null) return null;
+    // Whole minutes, rounded up: 1 h 32 min 40 s reads "1 h 33 min".
+    final total = (left.inSeconds + 59) ~/ 60;
+    final days = total ~/ (24 * 60);
+    if (days > 0) return 'in $days day${days == 1 ? '' : 's'}';
+    final hours = total ~/ 60;
+    final minutes = total % 60;
+    final when = hours > 0
+        ? (minutes > 0 ? '$hours h $minutes min' : '$hours h')
+        : '$minutes min';
+    return 'in $when';
+  }
+
+  /// "today 19:30"; another day keeps its own name.
+  String get _whenLabel {
+    final day = request.pickupDay.trim();
+    final lower = day.toLowerCase();
+    final shown = lower == 'today' || lower == 'tomorrow' ? lower : day;
+    return shown.isEmpty ? request.pickupTime : '$shown ${request.pickupTime}';
+  }
+
+  String get _pickupShort => _short(_show.pickupAddress
+      ? RadarOfferView.street(request.pickupAddress)
+      : RadarOfferView.area(request.pickupAddress));
+
+  String get _dropoffShort => _short(_show.dropoffAreaOnly
+      ? RadarOfferView.area(request.dropoffAddress)
+      : RadarOfferView.street(request.dropoffAddress));
+
+  /// Short place names for the card: "Arlanda Terminal 5" → "Arlanda T5".
+  static String _short(String place) =>
+      place.replaceAllMapped(RegExp(r'\bTerminal (\w+)'), (m) => 'T${m[1]}');
+
+  static String _km(double km) => '${km.toStringAsFixed(km < 10 ? 1 : 0)} km';
+
   @override
   Widget build(BuildContext context) {
     // Tight lines like the design, not the theme's body line height.
     return DefaultTextStyle.merge(
       style: const TextStyle(height: 1.2),
-      child: Stack(
+      child: _details ? _detailsView(context) : _popup(),
+    );
+  }
+
+  // The popup ---------------------------------------------------------------
+
+  Widget _popup() {
+    return Stack(
+      key: const ValueKey<String>('reservation-popup'),
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          padding: const EdgeInsets.fromLTRB(22, 26, 22, 14),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _header(),
-              const SizedBox(height: 12),
-              _priceRow(),
-              const SizedBox(height: 12),
-              _routeCard(context),
-              const SizedBox(height: 6),
-              _stops(),
+              _title(),
+              const SizedBox(height: 22),
+              _card(),
+              const SizedBox(height: 14),
+              _viewDetailsButton(),
             ],
           ),
         ),
-        Positioned(right: 14, top: 14, child: _hideButton()),
+        Positioned(right: 18, top: 18, child: _hideButton()),
       ],
+    );
+  }
+
+  Widget _title() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Column(
+        children: [
+          Text(
+            driverText(DriverTexts.offerNewReservation),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: _ink,
+              fontSize: 24,
+              height: 1.15,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.7,
+            ),
+          ),
+          if (widget.count > 1) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${widget.position} of ${widget.count}',
+              key: const ValueKey<String>('reservation-counter'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: _label,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -374,19 +593,21 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
         button: true,
         enabled: onHide != null,
         child: Material(
-          color: Colors.white,
-          shape: const CircleBorder(side: BorderSide(color: Color(0xFFE3E6E8))),
+          color: _soft,
+          shape: const CircleBorder(),
           child: InkWell(
             key: const ValueKey<String>('reservation-hide'),
             customBorder: const CircleBorder(),
             onTap: onHide,
             child: SizedBox(
-              width: 34,
-              height: 34,
-              child: Icon(
-                Icons.close_rounded,
-                size: 19,
-                color: onHide == null ? const Color(0xFFB7BEC3) : _ink,
+              width: 32,
+              height: 32,
+              child: Center(
+                child: _solar(
+                  AppAssets.solarClose,
+                  17,
+                  onHide == null ? const Color(0xFFB7BEC3) : _ink,
+                ),
               ),
             ),
           ),
@@ -395,126 +616,156 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
     );
   }
 
-  Widget _header() {
-    // Narrow phones (320–347 px) give the picture less room, so the badges
-    // and the pickup time keep theirs.
-    return LayoutBuilder(builder: (context, constraints) {
-    final pictureWidth = constraints.maxWidth < 310 ? 72.0 : 96.0;
-    return Padding(
-      padding: const EdgeInsets.only(right: 40),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  driverText(DriverTexts.offerReservationRequest).toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _label,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2,
+  Widget _card() {
+    final (whole, rest) = _fareParts();
+    final inLabel = _inLabel();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Narrow phones give the picture less room, so the price keeps its.
+        final pictureWidth = (constraints.maxWidth * 0.42).clamp(84.0, 130.0);
+        return Container(
+          key: const ValueKey<String>('reservation-card'),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: _cardLine, width: 1.5),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Positioned(
+                right: 12,
+                top: 14,
+                width: pictureWidth,
+                height: pictureWidth * 100 / 130,
+                child: ExcludeSemantics(
+                  child: _ReservationPictureView(
+                    picture: widget.picture ??
+                        ReservationPicture.forRequest(request),
                   ),
                 ),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    driverText(DriverTexts.offerYourNextRide),
-                    style: const TextStyle(
-                      color: _ink,
-                      fontSize: 26,
-                      height: 1.15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.7,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _categoryBadge(),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _solar(AppAssets.solarCalendar, 15),
-                        const SizedBox(width: 5),
-                        Flexible(
-                          child: Text(
-                            '${request.pickupDay}, ${request.pickupTime}',
-                            maxLines: 2,
+                    Padding(
+                      padding: EdgeInsets.only(right: pictureWidth * 0.5),
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          _categoryLabel(),
+                          // Payment only when the rider pays cash (notes R2).
+                          if (_show.badges && request.paidByCash)
+                            const OfferBadge.cash(
+                              key: ValueKey<String>('reservation-cash'),
+                            ),
+                          // Admin raised the fare (Q13); the price has it.
+                          if (request.fareBoost case final boost?
+                              when _show.badges)
+                            OfferBadge.boost(
+                              boost,
+                              key: const ValueKey<String>('reservation-boost'),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    Padding(
+                      padding: EdgeInsets.only(right: pictureWidth * 0.35),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text.rich(
+                          key: const ValueKey<String>('reservation-fare'),
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: whole,
+                                style: const TextStyle(
+                                  color: _ink,
+                                  fontSize: 46,
+                                  height: 1,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -2,
+                                ),
+                              ),
+                              TextSpan(
+                                text: rest,
+                                style: const TextStyle(
+                                  color: _decimals,
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text.rich(
+                      key: const ValueKey<String>('reservation-when'),
+                      TextSpan(
+                        style: const TextStyle(
+                          color: _text,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Pickup '),
+                          TextSpan(
+                            text: _whenLabel,
                             style: const TextStyle(
-                              color: _text,
-                              fontSize: 12.5,
+                              color: _ink,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
-                      ],
+                          if (inLabel != null) TextSpan(text: ' · $inLabel'),
+                        ],
+                      ),
+                      maxLines: 2,
                     ),
-                    // Payment only when the rider pays cash (notes R2).
-                    if (_show.badges && request.paidByCash)
-                      const OfferBadge.cash(
-                        key: ValueKey<String>('reservation-cash'),
-                      ),
-                    // Admin raised the fare (Q13); the price has it.
-                    if (request.fareBoost case final boost? when _show.badges)
-                      OfferBadge.boost(
-                        boost,
-                        key: const ValueKey<String>('reservation-boost'),
-                      ),
+                    const SizedBox(height: 14),
+                    const Divider(height: 1, thickness: 1, color: _hairline),
+                    const SizedBox(height: 12),
+                    _fromTo(),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: ExcludeSemantics(
-              child: SvgPicture.asset(
-                AppAssets.orderRide,
-                key: const ValueKey<String>('reservation-picture'),
-                width: pictureWidth,
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
-    });
   }
 
-  Widget _categoryBadge() {
+  Widget _categoryLabel() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(9, 3, 10, 3),
+      padding: const EdgeInsets.fromLTRB(9, 5, 9, 5),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: _ink),
+        color: _ink,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _solar(AppAssets.solarUser, 13),
-          const SizedBox(width: 5),
+          _solar(AppAssets.solarUser, 13, Colors.white),
+          const SizedBox(width: 6),
           Flexible(
             child: Text(
               request.category,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: _ink,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -523,128 +774,240 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
     );
   }
 
-  /// "126,75 kr" → "126" and ",75 kr", for the grey decimals.
-  (String, String) _fareParts() {
-    final fare = _show.fare(
-      Money.parseSekLabel(request.fare)?.formatted ?? request.fare,
+  /// "○ Gamla vägen — ■ Solna centrum".
+  Widget _fromTo() {
+    const style = TextStyle(
+      color: Color(0xFF3A444B),
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
     );
-    final comma = fare.lastIndexOf(',');
-    return comma > 0
-        ? (fare.substring(0, comma), fare.substring(comma))
-        : (fare, '');
-  }
-
-  /// "Fare · in 1 h 33 min"; just "Fare" once the pickup time is unknown
-  /// or has passed.
-  String _fareLine() {
-    final left = request.untilPickup((widget.clock ?? DateTime.now)());
-    final what = driverText(
-      _show.netFare ? DriverTexts.offerYourShare : DriverTexts.offerFare,
-    );
-    if (left == null) return what;
-    // Whole minutes, rounded up: 1 h 32 min 40 s reads "1 h 33 min".
-    final total = (left.inSeconds + 59) ~/ 60;
-    final hours = total ~/ 60;
-    final minutes = total % 60;
-    final when = hours > 0
-        ? (minutes > 0 ? '$hours h $minutes min' : '$hours h')
-        : '$minutes min';
-    return '$what · in $when';
-  }
-
-  static String _km(double km) => '${km.toStringAsFixed(km < 10 ? 1 : 0)} km';
-
-  Widget _priceRow() {
-    final (whole, rest) = _fareParts();
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      key: const ValueKey<String>('reservation-from-to'),
       children: [
+        const _StopDot.pickup(size: 7),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            _pickupShort,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(width: 16, height: 1.5, color: const Color(0xFFC9CED2)),
+        const SizedBox(width: 8),
+        const _StopDot.dropoff(size: 7),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            _dropoffShort,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _viewDetailsButton() {
+    return Semantics(
+      button: true,
+      child: Material(
+        color: _soft,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          key: const ValueKey<String>('reservation-view-details'),
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _openDetails(true),
+          child: SizedBox(
+            height: 52,
+            child: Center(
+              child: Text(
+                driverText(DriverTexts.offerViewDetails),
+                style: const TextStyle(
+                  color: _ink,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // The details view --------------------------------------------------------
+
+  Widget _detailsView(BuildContext context) {
+    final height = widget.detailsHeight;
+    final body = <Widget>[
+      _routeMap(context, height == null ? 200 : null),
+      const SizedBox(height: 14),
+      _stops(),
+      if (_show.tripMinutesKm || _show.stops) ...[
+        const SizedBox(height: 14),
+        _stats(),
+      ],
+    ];
+    final header = Padding(
+      padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
+      child: _detailsHeader(),
+    );
+    if (height == null) {
+      return Column(
+        key: const ValueKey<String>('reservation-details'),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          header,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(22, 14, 22, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: body,
+            ),
+          ),
+        ],
+      );
+    }
+    // Full height: the map takes the room the stops leave; long content
+    // scrolls.
+    return SizedBox(
+      key: const ValueKey<String>('reservation-details'),
+      height: height,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          header,
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final mapHeight = (constraints.maxHeight * 0.45).clamp(
+                  120.0,
+                  240.0,
+                );
+                return SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _routeMap(context, mapHeight),
+                      ...body.skip(1),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailsHeader() {
+    final (whole, rest) = _fareParts();
+    final inLabel = _inLabel();
+    final subtitle = [
+      ?inLabel,
+      request.category,
+      if (_show.netFare) driverText(DriverTexts.offerYourShare),
+    ].join(' · ');
+    return Row(
+      children: [
+        Semantics(
+          label: 'Back to the reservation',
+          button: true,
+          child: Material(
+            color: _soft,
+            shape: const CircleBorder(),
+            child: InkWell(
+              key: const ValueKey<String>('reservation-details-back'),
+              customBorder: const CircleBorder(),
+              onTap: () => _openDetails(false),
+              child: SizedBox(
+                width: 34,
+                height: 34,
+                child: Center(child: _solar(AppAssets.solarAltArrowLeft, 18)),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text.rich(
-                  key: const ValueKey<String>('reservation-fare'),
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: whole,
-                        style: const TextStyle(
-                          color: _ink,
-                          fontSize: 28,
-                          height: 1,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1,
-                        ),
-                      ),
-                      TextSpan(
-                        text: rest,
-                        style: const TextStyle(
-                          color: _label,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 3),
               Text(
-                _fareLine(),
+                '${request.pickupDay}, ${request.pickupTime}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: _muted, fontSize: 12.5),
+                style: const TextStyle(
+                  color: _ink,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _label,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
         ),
-        if (_show.tripMinutesKm) ...[
-          const SizedBox(width: 8),
-          _rideFact(AppAssets.solarClockCircle, '${request.tripMinutes} min'),
-          const SizedBox(width: 10),
-          _rideFact(AppAssets.solarRoute, _km(request.tripKm)),
-        ],
-      ],
-    );
-  }
-
-  Widget _rideFact(String icon, String value) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _solar(icon, 15),
-        const SizedBox(width: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: _text,
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
+        const SizedBox(width: 8),
+        Text.rich(
+          key: const ValueKey<String>('reservation-details-fare'),
+          TextSpan(
+            children: [
+              TextSpan(
+                text: whole,
+                style: const TextStyle(
+                  color: _ink,
+                  fontSize: 26,
+                  height: 1,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1,
+                ),
+              ),
+              TextSpan(
+                text: rest,
+                style: const TextStyle(
+                  color: _decimals,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _routeCard(BuildContext context) {
+  /// The grey route map; a tap opens the full route screen (R26).
+  Widget _routeMap(BuildContext context, double? height) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(22),
       child: SizedBox(
-        height: 124,
+        height: height ?? 200,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            IgnorePointer(child: (widget.mapBuilder ?? _liveMap)(context)),
             IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0x0F000000)),
-                ),
+              child: ColorFiltered(
+                colorFilter: const ColorFilter.matrix(_greyscale),
+                child: (widget.mapBuilder ?? _liveMap)(context),
               ),
             ),
             Positioned.fill(
@@ -662,24 +1025,26 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
                 ),
               ),
             ),
-            const Positioned(
-              right: 6,
-              top: 6,
-              child: IgnorePointer(child: _ViewRouteChip()),
-            ),
           ],
         ),
       ),
     );
   }
 
+  static const List<double> _greyscale = <double>[
+    0.2126, 0.7152, 0.0722, 0, 0, //
+    0.2126, 0.7152, 0.0722, 0, 0, //
+    0.2126, 0.7152, 0.0722, 0, 0, //
+    0, 0, 0, 1, 0, //
+  ];
+
   Widget _stops() {
     final show = _show;
     final stops = show.stops ? request.stops : const <ReservationStop>[];
     final eta = request.estimatedArrival;
-    final rows = <Widget>[
-      _stopRow(
-        dot: const _StopDot.pickup(),
+    final rows = <_StopRowData>[
+      _StopRowData(
+        dot: const _StopDot.pickup(size: 10),
         label: driverText(DriverTexts.offerPickup).toUpperCase(),
         address: show.pickupAddress
             ? request.pickupAddress
@@ -687,17 +1052,14 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
         trailing: request.pickupTime,
       ),
       for (var i = 0; i < stops.length; i++)
-        _stopRow(
+        _StopRowData(
           dot: const _StopDot.stop(),
           label: stops.length == 1 ? 'STOP' : 'STOP ${i + 1}',
           address: stops[i].address,
-          trailing: i == 0
-              ? '${stops.length} stop${stops.length == 1 ? '' : 's'}'
-              : null,
           quiet: true,
         ),
-      _stopRow(
-        dot: const _StopDot.dropoff(),
+      _StopRowData(
+        dot: const _StopDot.dropoff(size: 10),
         label: driverText(DriverTexts.offerDropoff).toUpperCase(),
         address: show.dropoffAreaOnly
             ? RadarOfferView.area(request.dropoffAddress)
@@ -709,66 +1071,159 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
     return Column(
       key: const ValueKey<String>('reservation-stops'),
       children: [
-        for (var i = 0; i < rows.length; i++) ...[
-          if (i > 0) const Divider(height: 1, thickness: 1, color: _hairline),
-          rows[i],
-        ],
+        for (var i = 0; i < rows.length; i++)
+          _stopRow(rows[i], first: i == 0, last: i == rows.length - 1),
       ],
     );
   }
 
-  Widget _stopRow({
-    required Widget dot,
-    required String label,
-    required String address,
-    String? trailing,
-    bool quiet = false,
-    bool mutedTrailing = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+  Widget _stopRow(_StopRowData row, {required bool first, required bool last}) {
+    // The dot sits on the address line; one line runs through the dots.
+    const dotY = 27.0;
+    const line = Color(0xFFE1E4E6);
+    return IntrinsicHeight(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(width: 22, child: Align(alignment: Alignment.centerLeft, child: dot)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          SizedBox(
+            width: 20,
+            child: Stack(
+              alignment: Alignment.topCenter,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: _label,
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
+                if (!first)
+                  const Positioned(
+                    top: 0,
+                    height: dotY,
+                    child: SizedBox(
+                      width: 1.5,
+                      child: ColoredBox(color: line),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  address,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: _ink,
-                    fontSize: 14.5,
-                    fontWeight: quiet ? FontWeight.w500 : FontWeight.w600,
+                if (!last)
+                  const Positioned(
+                    top: dotY,
+                    bottom: 0,
+                    child: SizedBox(
+                      width: 1.5,
+                      child: ColoredBox(color: line),
+                    ),
                   ),
+                Positioned(
+                  top: dotY - 5,
+                  height: 10,
+                  child: Center(child: row.dot),
                 ),
               ],
             ),
           ),
-          if (trailing != null) ...[
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(6, 6, 0, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    row.label,
+                    style: const TextStyle(
+                      color: _label,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    row.address,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: _ink,
+                      fontSize: 15.5,
+                      fontWeight: row.quiet ? FontWeight.w500 : FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (row.trailing case final trailing?) ...[
             const SizedBox(width: 8),
-            Text(
-              trailing,
-              style: TextStyle(
-                color: quiet || mutedTrailing ? _label : _text,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+            Padding(
+              padding: const EdgeInsets.only(top: 19),
+              child: Text(
+                trailing,
+                style: TextStyle(
+                  color: row.mutedTrailing ? _label : _ink,
+                  fontSize: 13.5,
+                  fontWeight: row.mutedTrailing
+                      ? FontWeight.w600
+                      : FontWeight.w700,
+                ),
               ),
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  /// TRIP / DISTANCE / STOPS.
+  Widget _stats() {
+    final cells = <(String, String)>[
+      if (_show.tripMinutesKm) ('TRIP', '${request.tripMinutes} min'),
+      if (_show.tripMinutesKm) ('DISTANCE', _km(request.tripKm)),
+      if (_show.stops) ('STOPS', '${request.stops.length}'),
+    ];
+    return Container(
+      key: const ValueKey<String>('reservation-stats'),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _hairline),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < cells.length; i++)
+              Expanded(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: i == 0
+                        ? null
+                        : const Border(left: BorderSide(color: _hairline)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          cells[i].$1,
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: _label,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          cells[i].$2,
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: _ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -781,86 +1236,126 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
       builder: (context, snapshot) => ReservationRouteMap(
         request: request,
         route: snapshot.data ?? reservationWaypoints(request),
-        // Keeps the route clear of the "View route" chip.
-        padding: const EdgeInsets.only(top: 26),
-        fitPadding: 18,
+        fitPadding: 22,
         show3DNotice: false,
       ),
     );
   }
 }
 
-class _ViewRouteChip extends StatelessWidget {
-  const _ViewRouteChip();
+class _StopRowData {
+  const _StopRowData({
+    required this.dot,
+    required this.label,
+    required this.address,
+    this.trailing,
+    this.quiet = false,
+    this.mutedTrailing = false,
+  });
+
+  final Widget dot;
+  final String label;
+  final String address;
+  final String? trailing;
+  final bool quiet;
+  final bool mutedTrailing;
+}
+
+/// The flat picture top-right of the card. Airport rides combine the
+/// plane (top left) with the traveller walking with a bag (bottom right).
+class _ReservationPictureView extends StatelessWidget {
+  const _ReservationPictureView({required this.picture});
+
+  final ReservationPicture picture;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(99),
-        boxShadow: const [
-          BoxShadow(color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _solar(AppAssets.solarRoute, 12),
-          const SizedBox(width: 4),
-          Text(
-            driverText(DriverTexts.offerViewRoute),
-            style: const TextStyle(
-              color: _ink,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+    final key = ValueKey<String>('reservation-picture-${picture.name}');
+    return KeyedSubtree(
+      key: const ValueKey<String>('reservation-picture'),
+      child: switch (picture) {
+        ReservationPicture.booked => SvgPicture.asset(
+          AppAssets.reservationBooked,
+          key: key,
+          fit: BoxFit.contain,
+        ),
+        ReservationPicture.calendar => SvgPicture.asset(
+          AppAssets.reservationCalendar,
+          key: key,
+          fit: BoxFit.contain,
+        ),
+        ReservationPicture.airport => LayoutBuilder(
+          key: key,
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final h = constraints.maxHeight;
+            return Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  width: w * 0.6,
+                  height: h * 0.48,
+                  child: SvgPicture.asset(
+                    AppAssets.reservationAircraft,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                Positioned(
+                  left: w * 0.5,
+                  top: h * 0.22,
+                  width: w * 0.5,
+                  height: h * 0.78,
+                  child: SvgPicture.asset(
+                    AppAssets.reservationTraveller,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      },
     );
   }
 }
 
 /// Small dot before each stop: pickup ring, grey stop ring, drop-off square.
 class _StopDot extends StatelessWidget {
-  const _StopDot.pickup() : _kind = 0;
-  const _StopDot.stop() : _kind = 1;
-  const _StopDot.dropoff() : _kind = 2;
+  const _StopDot.pickup({this.size = 9}) : _kind = 0;
+  const _StopDot.stop() : _kind = 1, size = 7;
+  const _StopDot.dropoff({this.size = 9}) : _kind = 2;
 
   final int _kind;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return switch (_kind) {
       0 => Container(
-        width: 9,
-        height: 9,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: _ink, width: 2),
+          border: Border.all(color: _ink, width: size >= 10 ? 2.2 : 2),
         ),
       ),
-      1 => Padding(
-        padding: const EdgeInsets.only(left: 1),
-        child: Container(
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFF9AA3A9), width: 2),
-          ),
+      1 => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: _decimals, width: 2),
         ),
       ),
       _ => Container(
-        width: 9,
-        height: 9,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           color: _ink,
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(size >= 10 ? 2.5 : 2),
         ),
       ),
     };

@@ -1,12 +1,13 @@
 part of 'home.dart';
 
-// Scheduled rides on Home (notes Q9–Q13, Q29), on the demo day of
-// [ScheduledClock.instance]:
+// Scheduled rides on Home (notes Q9–Q13, Q29), on the real clock of
+// [ScheduledClock.instance] (a fast day only in tests):
 // - the open reservation's near-pickup steps count the minutes before its
 //   pickup time, never the drive to it;
 // - the smart gap before the next accepted ride: reminders, "leave now"
-//   (the ride lands on screen as the active trip, heading to pickup), then
-//   the late warning and the backup driver;
+//   (the ride lands on screen as the active trip, heading to pickup, at
+//   its time and never before its "be online" window), then the late
+//   warning and the backup driver;
 // - before that ride, only trips that leave the gap and head toward its
 //   pickup;
 // - rides Movera assigns arrive like an Exclusive offer: Accept in time.
@@ -84,11 +85,12 @@ extension _HomeScheduled on _DriverHomeState {
     }
 
     /// Reservation [id] is close enough to its pickup time for its
-    /// Exclusive step. True for offers whose pickup time Home does not
-    /// know: dispatch already decided those.
+    /// Exclusive step, by the clock. True for offers whose pickup time Home
+    /// does not know: dispatch already decided those.
     bool _exclusiveStepReached(String id) {
-      final request = _HomeReservation(this)._homeRequest;
-      if (request == null || request.id != id) { return true; }
+      final request = _HomeReservation(this)._homeRequestById(id) ??
+          ScheduledRideStore.routeOf(id);
+      if (request == null) { return true; }
       final left = request.untilPickup(_clock.now());
       return left != null &&
           left <= Duration(minutes: _rules.exclusiveBeforeMinutes);
@@ -134,6 +136,8 @@ extension _HomeScheduled on _DriverHomeState {
         rules: _rules,
       );
       if (pickupAt == null || leave == null) { return; }
+      // A pickup that has passed never lands as the trip by itself.
+      if (state.lateSince == null && !pickupAt.isAfter(now)) { return; }
       void at(DateTime time, VoidCallback run) =>
           state.timers.add(Timer(_clock.realUntil(time), run));
       final rule = SmartGap.ruleOf(ride, _rules);
@@ -149,10 +153,12 @@ extension _HomeScheduled on _DriverHomeState {
       if (onlineBy.isAfter(now) && onlineBy.isBefore(leave)) {
         at(onlineBy, () => _remindOnline(ride));
       }
-      if (state.lateSince != null || !now.isBefore(leave)) {
+      // "Leave now" by the clock, and never before the "be online" window.
+      final start = leave.isBefore(onlineBy) ? onlineBy : leave;
+      if (state.lateSince != null || !now.isBefore(start)) {
         _leaveNow(ride);
       } else {
-        at(leave, () => _leaveNow(ride));
+        at(start, () => _leaveNow(ride));
       }
     }
 

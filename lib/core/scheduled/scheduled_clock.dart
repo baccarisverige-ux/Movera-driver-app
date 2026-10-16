@@ -1,26 +1,33 @@
 /// The time scheduled rides are measured against: reminders, "leave now",
 /// late cancels, the near-pickup steps.
 ///
-/// The demo has no server time and its rides are booked for fixed times
-/// (the main one at 07:40 today). So it runs its own day: the first reading
-/// is [startTime] on today's date, and from there it runs [speed] times
-/// faster than real time. A backend build reads the server time instead.
+/// The demo has no server time, so it reads the phone's real clock and
+/// books its reservations relative to now (see `DemoReservations`). A
+/// backend build reads the server time instead.
+///
+/// A fast day ([ScheduledClock.fastDay]: 07:00 at the first reading, 30
+/// times faster) exists only for tests and behind the explicit demo switch
+/// `--dart-define=MOVERA_DEMO_FAST_CLOCK=true`.
 class ScheduledClock {
-  ScheduledClock({required this.startTime, this.speed = 1});
+  ScheduledClock({this.startTime, this.speed = 1});
 
-  /// The demo day: 07:00 at the first reading, 30 times faster, so the
-  /// 07:40 reservation is 20 minutes before pickup (its Exclusive step)
-  /// after 40 seconds.
-  static ScheduledClock instance = ScheduledClock(
-    startTime: const Duration(hours: 7),
-    speed: 30,
-  );
+  /// 07:00 at the first reading and 30 times faster than real time.
+  factory ScheduledClock.fastDay() =>
+      ScheduledClock(startTime: const Duration(hours: 7), speed: 30);
+
+  /// The explicit demo/test switch for the fast day.
+  static const bool fastDemo = bool.fromEnvironment('MOVERA_DEMO_FAST_CLOCK');
+
+  /// The real clock; the fast day only behind [fastDemo]. Tests set their
+  /// own clock here.
+  static ScheduledClock instance =
+      fastDemo ? ScheduledClock.fastDay() : ScheduledClock();
 
   /// Where real time comes from. Tests point it at their fake clock.
   static DateTime Function() realNow = DateTime.now;
 
-  /// Time of day at the first reading.
-  final Duration startTime;
+  /// Time of day at the first reading; null follows the real time.
+  final Duration? startTime;
 
   /// How much faster than real time the clock runs.
   final int speed;
@@ -30,9 +37,14 @@ class ScheduledClock {
 
   DateTime now() {
     final real = realNow();
+    final startTime = this.startTime;
+    if (startTime == null && speed == 1) {
+      return real;
+    }
     final realStart = _realStart ??= real;
-    final start = _start ??=
-        DateTime(real.year, real.month, real.day).add(startTime);
+    final start = _start ??= startTime == null
+        ? realStart
+        : DateTime(real.year, real.month, real.day).add(startTime);
     return start.add(real.difference(realStart) * speed);
   }
 

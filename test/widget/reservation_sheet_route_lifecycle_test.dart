@@ -87,6 +87,7 @@ void main() {
               builder: (_, setState) {
                 update = setState;
                 return ReservationRequestSheet(
+                  showDetails: true,
                   request: request,
                   routes: routes,
                 );
@@ -145,6 +146,7 @@ void main() {
               builder: (context, setState) {
                 update = setState;
                 return ReservationRequestSheet(
+                  showDetails: true,
                   request: request,
                   mapBuilder: _map,
                 );
@@ -178,6 +180,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ReservationRequestSheet(
+              showDetails: true,
               request: _request(59.3),
               mapBuilder: _map,
             ),
@@ -243,6 +246,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ReservationRequestSheet(
+              showDetails: true,
               request: _request(59.3),
               mapBuilder: _map,
             ),
