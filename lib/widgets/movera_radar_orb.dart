@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// Shared Radar orb used on Home (104px) and on an active trip (smaller).
@@ -15,6 +17,8 @@ class MoveraRadarOrb extends StatelessWidget {
     this.sweep = 0,
     this.blocked = false,
     this.reserve = false,
+    this.exclusive = false,
+    this.timeLeft = 1,
     this.size = 104,
     this.touchSize,
     this.touchKey = const ValueKey<String>('trip-radar-touch-target'),
@@ -34,6 +38,12 @@ class MoveraRadarOrb extends StatelessWidget {
   /// A reservation on Home: black orb, grey rings, no mint, and only
   /// [title] over a small [status] ("Accept" · "TAP").
   final bool reserve;
+
+  /// An Exclusive offer is live: a blue orb that is its Accept, with
+  /// [title] ("Accept") over [status] (the seconds left), inside a blue
+  /// ring that empties clockwise as [timeLeft] runs from 1 to 0.
+  final bool exclusive;
+  final double timeLeft;
   final double size;
   final double? touchSize;
   final Key touchKey;
@@ -73,6 +83,7 @@ class MoveraRadarOrb extends StatelessWidget {
             : 0.86 + ((1 - pulse) * 0.16);
     final s = size / 104;
     final hit = touchSize ?? size;
+    if (exclusive) { return _exclusiveOrb(s, hit); }
 
     return Semantics(
       button: true,
@@ -341,4 +352,161 @@ class MoveraRadarOrb extends StatelessWidget {
       ),
     );
   }
+
+  static const Color exclusiveBlue = Color(0xFF1769E8);
+  static const Color exclusiveTrack = Color(0xFFE3E9F0);
+
+  Widget _exclusiveOrb(double s, double hit) {
+    return Semantics(
+      button: true,
+      label: "$title, $status. $subtitle",
+      child: GestureDetector(
+        key: touchKey,
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox(
+          width: hit,
+          height: hit,
+          child: Center(
+            child: SizedBox(
+              width: size,
+              height: size,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // White gap, blue glow, then the time-left ring.
+                  Container(
+                    width: 94 * s,
+                    height: 94 * s,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: exclusiveBlue.withValues(alpha: 0.33),
+                          blurRadius: 26 * s,
+                          spreadRadius: 6 * s,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    width: 88 * s,
+                    height: 88 * s,
+                    child: CustomPaint(
+                      key: const ValueKey<String>('radar-exclusive-ring'),
+                      painter: ExclusiveTimeRingPainter(
+                        timeLeft: timeLeft,
+                        stroke: 6 * s,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    key: const ValueKey<String>('radar-exclusive-core'),
+                    width: 72 * s,
+                    height: 72 * s,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const RadialGradient(
+                        center: Alignment(-0.2, -0.36),
+                        radius: 0.9,
+                        colors: [
+                          Color(0xFF3F86F2),
+                          exclusiveBlue,
+                          Color(0xFF0E4FB8),
+                        ],
+                        stops: [0, 0.55, 1],
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14 * s,
+                            height: 1,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(height: 4 * s),
+                        if (loading)
+                          SizedBox(
+                            width: 10 * s,
+                            height: 10 * s,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 1.2,
+                              color: Colors.white,
+                            ),
+                          )
+                        else
+                          Text(
+                            status,
+                            style: TextStyle(
+                              color: const Color(0xFFCFE0FB),
+                              fontSize: 11.5 * s,
+                              height: 1,
+                              fontWeight: FontWeight.w600,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The Exclusive radar's time left: a blue arc on a light track. The
+/// spent part grows clockwise from twelve o'clock.
+class ExclusiveTimeRingPainter extends CustomPainter {
+  const ExclusiveTimeRingPainter({required this.timeLeft, required this.stroke});
+
+  /// 1 full, 0 empty.
+  final double timeLeft;
+  final double stroke;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = (Offset.zero & size).deflate(stroke / 2);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+    canvas.drawArc(
+      rect,
+      0,
+      math.pi * 2,
+      false,
+      paint..color = MoveraRadarOrb.exclusiveTrack,
+    );
+    final left = timeLeft.clamp(0.0, 1.0);
+    if (left <= 0) { return; }
+    final spent = (1 - left) * math.pi * 2;
+    canvas.drawArc(
+      rect,
+      -math.pi / 2 + spent,
+      left * math.pi * 2,
+      false,
+      paint..color = MoveraRadarOrb.exclusiveBlue,
+    );
+  }
+
+  @override
+  bool shouldRepaint(ExclusiveTimeRingPainter oldDelegate) =>
+      oldDelegate.timeLeft != timeLeft || oldDelegate.stroke != stroke;
 }

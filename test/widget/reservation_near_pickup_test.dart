@@ -291,7 +291,7 @@ void main() {
     );
     final card = find.byKey(_exclusiveCard);
     expect(card, findsOneWidget);
-    await tester.tap(find.descendant(of: card, matching: find.text('Accept')));
+    await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
     await _frames(tester, const Duration(milliseconds: 900));
 
     expect(radar.claims, [demoReservationId]);

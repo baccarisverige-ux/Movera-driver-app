@@ -171,6 +171,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     void _clearDirectOfferRoute() {
       if (!mounted) { return; }
+      _HomeExclusive(this)._sinkExclusiveIfGone();
       _rebuild(() {
         _mapPreviews.cancel();
         _camera.endPreview();
@@ -201,6 +202,8 @@ extension _HomeOfferRadar on _DriverHomeState {
           showRideRequests ||
           // One Exclusive offer at a time: a waiting one never replaces it.
           (_outsideRadarOffer != null && _outsideRadarOffer!.id != offer.id) ||
+          // Its card is sliding down: it is leaving.
+          _exclusive.leaving ||
           _radarHomeOffers.isNotEmpty ||
           // Radar trips waiting off screen hold an Exclusive offer back,
           // but not a reservation close to pickup: it needs a driver soon.
@@ -222,6 +225,8 @@ extension _HomeOfferRadar on _DriverHomeState {
       _rebuild(() {
         _outsideRadarOffer = offer;
       });
+      // The card grows out of the sheet; the radar's ring starts full.
+      _HomeExclusive(this)._raiseExclusive(offer, lifetime);
       // The island says it too while the card arrives.
       if (arriving) {
         IslandMessages.show(offer.assigned
@@ -252,13 +257,27 @@ extension _HomeOfferRadar on _DriverHomeState {
       );
     }
     /// The Exclusive offer leaves. [missed]: it ran out or the driver
-    /// tapped ×; a row of those takes the driver offline (Q16).
+    /// tapped ×; a row of those takes the driver offline (Q16). Its card
+    /// slides back into the sheet first; the offer clears once it is down.
     void _dismissOutsideRadarOffer({bool missed = false}) {
       _outsideOfferTimeoutTimer?.cancel();
       _outsideOfferTimeoutTimer = null;
       if (!mounted) { return; }
 
       final gone = _outsideRadarOffer;
+      if (gone != null) {
+        if (_exclusive.leaving) { return; }
+        _rebuild(() => _exclusive.leaving = true);
+        _HomeExclusive(this)._sinkExclusive(then: () {
+          if (mounted && _outsideRadarOffer?.id == gone.id) {
+            _outsideRadarOfferGone(gone, missed: missed);
+          }
+        });
+        return;
+      }
+      _outsideRadarOfferGone(null, missed: missed);
+    }
+    void _outsideRadarOfferGone(_HomeDirectOffer? gone, {bool missed = false}) {
       _rebuild(() {
         _outsideRadarOffer = null;
       });
@@ -665,6 +684,8 @@ extension _HomeOfferRadar on _DriverHomeState {
     /// the offers on Home behind it.
     void _openOfferTrip(_HomeDirectOffer offer, String matchedVia) {
       _cancelAllOfferTimers();
+      // An Exclusive card slides back down behind the trip.
+      _HomeExclusive(this)._sinkExclusive();
       _expandedDirectOfferTimer?.cancel();
       _offerSimulationTimer?.cancel();
       _radarOfferTwoTimer?.cancel();
@@ -847,14 +868,19 @@ extension _HomeOfferRadar on _DriverHomeState {
         ),
       );
     }
-    /// The Exclusive offer on Home, in the Radar card style. Its Accept
-    /// counts down the offer's lifetime; × hides it.
-    Widget _buildOutsideRadarOfferCard(_HomeDirectOffer offer) {
+    /// The Exclusive offer's card on top of the Home sheet. The radar is
+    /// its Accept; × hides it.
+    Widget _buildOutsideRadarOfferCard(
+      _HomeDirectOffer offer, {
+      double bottomInset = 22,
+      double? maxContentHeight,
+    }) {
       final reservation = offer.reservation && !offer.driverSigned;
       return ExclusiveOfferCard(
         key: ValueKey<String>('direct-offer-${offer.id}'),
         offer: _radarOfferView(offer),
-        lifetime: offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
+        bottomInset: bottomInset,
+        maxContentHeight: maxContentHeight,
         // The reason's text comes from the admin's list (Q15).
         reason: offer.reason.isEmpty ? null : ExclusiveReasons.text(offer.reason),
         reservation: reservation,
@@ -867,7 +893,6 @@ extension _HomeOfferRadar on _DriverHomeState {
           offer.pickupPosition,
           offer.dropoffPosition,
         ),
-        onAccept: _acceptOutsideRadarOffer,
       );
     }
     void _scheduleVisibleOffers() {

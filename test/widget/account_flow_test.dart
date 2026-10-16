@@ -360,16 +360,18 @@ void main() {
           'en': {
             'island.online': 'Radar is on',
             'offer.accept': 'Take ride',
-            'offer.pickup': '  ',
+            'offer.viewRoute': '  ',
           },
         })),
       );
       expect(_said, contains('Radar is on'));
       await _frames(tester, const Duration(milliseconds: 2600));
       final card = find.byKey(_closeOffer);
-      expect(find.descendant(of: card, matching: find.text('Take ride')),
+      // Accept is the blue radar now.
+      final radar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
+      expect(find.descendant(of: radar, matching: find.text('Take ride')),
           findsOneWidget);
-      expect(find.descendant(of: card, matching: find.text('PICKUP')),
+      expect(find.descendant(of: card, matching: find.text('View route')),
           findsOneWidget);
       tester.takeException();
       await tester.pumpWidget(const SizedBox());

@@ -47,15 +47,12 @@ ExclusiveOfferCard _exclusive({
   RadarOfferView? offer,
   bool reservation = false,
   String? reservationTime,
-  VoidCallback? onAccept,
   VoidCallback? onRoute,
   VoidCallback? onDismiss,
 }) => ExclusiveOfferCard(
   offer: offer ?? _offer(),
-  lifetime: const Duration(milliseconds: 8500),
   reservation: reservation,
   reservationTime: reservationTime,
-  onAccept: onAccept ?? () {},
   onRoute: onRoute ?? () {},
   onDismiss: onDismiss ?? () {},
 );
@@ -146,36 +143,62 @@ void main() {
   });
 
   group('Exclusive offer card (E1/E2)', () {
-    testWidgets('plain exclusive: mark, reason, price, timeline, Accept', (
+    testWidgets('plain exclusive: tags, price, one line, stops, no Accept', (
       tester,
     ) async {
       await _pump(tester, _exclusive());
 
       expect(find.text('Comfort'), findsOneWidget);
       expect(find.text('Exclusive'), findsOneWidget);
-      expect(find.text('Only for you · nearby'), findsOneWidget);
+      expect(
+        find.text('Only for you · pickup 3 min away', findRichText: true),
+        findsOneWidget,
+      );
       expect(find.byKey(_reservationKey), findsNothing);
       expect(find.byKey(_cashKey), findsNothing);
       expect(find.textContaining('Reservation'), findsNothing);
 
-      // Big whole kronor with grey decimals, pickup time on the right.
-      expect(find.text('104,80 kr'), findsOneWidget);
-      expect(find.text('PICKUP'), findsOneWidget);
+      // Big whole kronor with grey decimals, the rating on the right.
+      expect(find.text('104,80 kr', findRichText: true), findsOneWidget);
       expect(find.text('4.96'), findsOneWidget);
 
-      // Street in bold, area under it; times and distances on the right.
+      // Place over its city; time and km on the right.
       expect(find.text('Kungsgatan 42'), findsOneWidget);
       expect(find.text('Hornstull'), findsOneWidget);
       expect(find.text('Stockholm'), findsNWidgets(2));
-      expect(find.text('3 min'), findsNWidgets(2));
-      expect(find.text('0.9 km away'), findsOneWidget);
+      expect(find.text('3 min'), findsOneWidget);
+      expect(find.text('0.9 km'), findsOneWidget);
       expect(find.text('14 min'), findsOneWidget);
-      expect(find.text('7.6 km ride'), findsOneWidget);
+      expect(find.text('7.6 km'), findsOneWidget);
+      expect(find.text('View route'), findsOneWidget);
 
-      expect(find.text('Accept'), findsOneWidget);
-      expect(find.text('9s'), findsOneWidget);
+      // The radar is the Accept now: none in the card, no countdown.
+      expect(find.text('Accept'), findsNothing);
+      expect(find.byType(FilledButton), findsNothing);
+      expect(find.textContaining(RegExp(r'^\d+s$')), findsNothing);
       expect(find.byTooltip('Hide offer'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('pure white, top radius 30, thin black contour', (
+      tester,
+    ) async {
+      await _pump(tester, _exclusive());
+      final box = tester.widget<Container>(
+        find.byKey(const ValueKey<String>('exclusive-offer-card-o1')),
+      );
+      final decoration = box.decoration! as BoxDecoration;
+      expect(decoration.color, const Color(0xFFFFFFFF));
+      expect(
+        decoration.borderRadius,
+        const BorderRadius.vertical(top: Radius.circular(30)),
+      );
+      expect((decoration.border! as Border).top.color, ExclusiveOfferCard.ink);
+      // The Exclusive tag is blue on light blue.
+      final tag = tester.widget<Container>(
+        find.byKey(const ValueKey<String>('exclusive-offer-mark-o1')),
+      );
+      expect((tag.decoration! as BoxDecoration).color, const Color(0xFFEAF1FD));
     });
 
     testWidgets('reservation: "Reservation · 07:40" badge and its reason', (
@@ -189,8 +212,11 @@ void main() {
       expect(find.byKey(_reservationKey), findsOneWidget);
       expect(find.text('Reservation · 07:40'), findsOneWidget);
       expect(find.text('Exclusive'), findsOneWidget);
-      expect(find.text('Pickup soon'), findsOneWidget);
-      expect(find.text('Only for you · nearby'), findsNothing);
+      expect(
+        find.text('Pickup soon · pickup 3 min away', findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Only for you'), findsNothing);
       expect(find.byKey(_cashKey), findsNothing);
       expect(tester.takeException(), isNull);
     });
@@ -231,52 +257,23 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Accept counts down as a shrinking darker part', (
-      tester,
-    ) async {
-      var accepted = 0, routed = 0, dismissed = 0;
+    testWidgets('View route and × call back', (tester) async {
+      var routed = 0, dismissed = 0;
       await _pump(
         tester,
         _exclusive(
-          onAccept: () => accepted++,
           onRoute: () => routed++,
           onDismiss: () => dismissed++,
         ),
       );
-
-      final dark = find.descendant(
-        of: find.byKey(const ValueKey<String>('direct-offer-countdown-fill')),
-        matching: find.byType(ColoredBox),
-      );
-      final button = tester.getSize(
-        find.ancestor(
-          of: find.text('Accept'),
-          matching: find.byType(FilledButton),
-        ),
-      );
-      expect(tester.getSize(dark).width, closeTo(button.width, 1));
-
-      await tester.pump(const Duration(milliseconds: 4250));
-      expect(tester.getSize(dark).width, closeTo(button.width / 2, 2));
-      expect(find.text('5s'), findsOneWidget);
-      expect(
-        tester.getTopLeft(dark).dx,
-        closeTo(tester.getTopLeft(find.byType(FilledButton)).dx, 1),
-      );
-
-      await tester.tap(find.text('Accept'));
-      await tester.tap(
-        find.byKey(const ValueKey<String>('direct-offer-route')),
-      );
+      final route = find.byKey(const ValueKey<String>('direct-offer-route'));
+      expect(tester.getSize(route).height, 48);
+      await tester.tap(route);
       await tester.tap(
         find.byKey(const ValueKey<String>('direct-offer-dismiss')),
       );
       await tester.pump();
-      expect((accepted, routed, dismissed), (1, 1, 1));
-
-      await tester.pump(const Duration(milliseconds: 4300));
-      expect(tester.getSize(dark).width, closeTo(0, 0.5));
-      expect(find.text('0s'), findsOneWidget);
+      expect((routed, dismissed), (1, 1));
     });
   });
 
@@ -332,16 +329,16 @@ void main() {
         tester,
         ExclusiveOfferCard(
           offer: _offer(),
-          lifetime: const Duration(seconds: 30),
           reservation: true,
           reservationTime: '09:30',
           reason: ExclusiveReasons.text(ExclusiveReasons.assigned),
-          onAccept: () {},
         ),
       );
-      expect(find.text('Assigned by Movera'), findsOneWidget);
-      expect(find.text('Pickup soon'), findsNothing);
-      expect(find.text('30s'), findsOneWidget);
+      expect(
+        find.text('Assigned by Movera · pickup 3 min away', findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Pickup soon'), findsNothing);
       // Without one, the default from the same place.
       expect(
         ExclusiveReasons.defaultFor(reservation: false),

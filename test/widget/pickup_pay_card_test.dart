@@ -55,8 +55,6 @@ Widget _radar(PickupPayDisplay display) =>
 
 Widget _exclusive(PickupPayDisplay display) => ExclusiveOfferCard(
   offer: _offer(display),
-  lifetime: const Duration(seconds: 8),
-  onAccept: () {},
   onRoute: () {},
   onDismiss: () {},
 );

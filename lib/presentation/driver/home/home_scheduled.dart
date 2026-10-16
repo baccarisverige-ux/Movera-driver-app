@@ -375,6 +375,7 @@ extension _HomeScheduled on _DriverHomeState {
 
     Future<void> _claimAssignment(_HomeDirectOffer offer) async {
       _outsideOfferTimeoutTimer?.cancel();
+      _exclusive.clock.stop();
       _rebuild(() => _scheduled.claimingId = offer.id);
       ClaimResult result;
       try {
@@ -388,6 +389,9 @@ extension _HomeScheduled on _DriverHomeState {
       if (result.outcome == ClaimOutcome.networkError) {
         IslandMessages.show(HomeIslandNotices.reservationNoConnection);
         // Nothing decided: the card counts down again.
+        _HomeExclusive(this)._startExclusiveClock(
+          offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
+        );
         _outsideOfferTimeoutTimer = Timer(
           offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
           () {

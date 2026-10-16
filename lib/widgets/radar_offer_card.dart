@@ -100,7 +100,7 @@ class RadarOfferView {
 
 enum RadarOfferCardState { available, matching, expired, taken }
 
-/// Soft grey header with a fine black outline: category badge, a
+/// Pure white card with a fine black outline: category badge, a
 /// Reservation badge for a reservation, a Cash badge only when the rider
 /// pays cash, bags, rating; big price and pickup
 /// time; then pickup → drop-off and Route + Match.
@@ -129,7 +129,8 @@ class RadarOfferCard extends StatelessWidget {
   static const Color ink = Color(0xFF111518);
   static const Color muted = Color(0xFF7C868D);
   static const Color label = Color(0xFF8A9399);
-  static const Color headerTint = Color(0xFFF5F6F7);
+  /// Offer cards are pure white; the header keeps only its hairline.
+  static const Color headerTint = Colors.white;
 
   Widget _icon(String asset, double size, Color color) => SvgPicture.asset(
     asset,
