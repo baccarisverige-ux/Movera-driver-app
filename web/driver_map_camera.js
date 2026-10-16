@@ -5,8 +5,10 @@
  */
 (() => {
   'use strict';
-  const sdk = globalThis.google?.maps;
-  if (!sdk) throw new Error('Load Maps JavaScript before driver_map_camera.js');
+  // Maps JavaScript may arrive after this file (async/defer or slow network).
+  // Install once it is there; until then ready() is false, so Flutter keeps
+  // its map widgets unbuilt instead of throwing over Home's overlays.
+  let sdk = null;
   const states = new Map();
   const byMap = new WeakMap();
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -341,76 +343,91 @@
     });
     observer.observe(document.body, {childList: true, subtree: true});
   }
-  const NativeMap = sdk.Map;
-  sdk.Map = new Proxy(NativeMap, {
-    construct(target, args) {
-      const [div, options = {}] = args;
-      const match = /^plugins\.flutter\.io\/google_maps_(\d+)$/.exec(div.id);
-      const configuredId = globalThis.document?.querySelector?.('meta[name="movera-google-map-id"]')?.content?.trim();
-      let driverOptions = options;
-      if (match) {
-        if (configuredId && configuredId !== 'DRIVER_GOOGLE_MAP_ID') {
-          const {styles, ...cloudOptions} = options;
-          driverOptions = {...cloudOptions, mapId: configuredId,
-            renderingType: sdk.RenderingType.VECTOR,
-            isFractionalZoomEnabled: true,
-            headingInteractionEnabled: true, tiltInteractionEnabled: true};
-        } else {
-          // Explicit 2D preview preserves the approved inline palette. Styled
-          // vector navigation stays gated until its cloud style is configured.
-          // Google Maps raster tiles default to integer-only zoom. The
-          // custom pinch handler issues fractional steps, so enable smooth
-          // fractional zoom even without the configured vector Map ID.
-          driverOptions = {...options, renderingType: sdk.RenderingType.RASTER,
-            isFractionalZoomEnabled: true};
+  function installSdk() {
+    sdk = globalThis.google.maps;
+    const NativeMap = sdk.Map;
+    sdk.Map = new Proxy(NativeMap, {
+      construct(target, args) {
+        const [div, options = {}] = args;
+        const match = /^plugins\.flutter\.io\/google_maps_(\d+)$/.exec(div.id);
+        const configuredId = globalThis.document?.querySelector?.('meta[name="movera-google-map-id"]')?.content?.trim();
+        let driverOptions = options;
+        if (match) {
+          if (configuredId && configuredId !== 'DRIVER_GOOGLE_MAP_ID') {
+            const {styles, ...cloudOptions} = options;
+            driverOptions = {...cloudOptions, mapId: configuredId,
+              renderingType: sdk.RenderingType.VECTOR,
+              isFractionalZoomEnabled: true,
+              headingInteractionEnabled: true, tiltInteractionEnabled: true};
+          } else {
+            // Explicit 2D preview preserves the approved inline palette. Styled
+            // vector navigation stays gated until its cloud style is configured.
+            // Google Maps raster tiles default to integer-only zoom. The
+            // custom pinch handler issues fractional steps, so enable smooth
+            // fractional zoom even without the configured vector Map ID.
+            driverOptions = {...options, renderingType: sdk.RenderingType.RASTER,
+              isFractionalZoomEnabled: true};
+          }
         }
+        const map = Reflect.construct(target, [div, driverOptions]);
+        if (match) install(map, div, Number(match[1]));
+        return map;
       }
-      const map = Reflect.construct(target, [div, driverOptions]);
-      if (match) install(map, div, Number(match[1]));
-      return map;
-    }
-  });
-  const NativeMarker = sdk.Marker;
-  sdk.Marker = class extends NativeMarker {
-    constructor(options) {
-      super(options);
-      if (options.title !== 'Driver camera vehicle' || !options.icon?.url) return;
-      const marker = this;
-      let state;
-      const car = new sdk.OverlayView();
-      const image = document.createElement('img');
-      image.src = options.icon.url;
-      image.style.cssText = 'position:absolute;pointer-events:none;transform-origin:50% 50%;';
-      const size = options.icon.scaledSize || options.icon.size;
-      if (size) { image.style.width = `${size.width}px`; image.style.height = `${size.height}px`; }
-      car.onAdd = () => car.getPanes().overlayLayer.appendChild(image);
-      car.draw = () => {
-        const pixel = car.getProjection()?.fromLatLngToDivPixel(marker.getPosition());
-        if (!pixel) return;
-        image.style.left = `${pixel.x}px`; image.style.top = `${pixel.y}px`;
-        image.style.transform = `translate(-50%,-50%) rotateX(${state.map.getTilt() || 0}deg) rotate(${state.heading - (state.map.getHeading() || 0)}deg)`;
-      };
-      car.onRemove = () => image.remove();
-      this.addListener('position_changed', () => car.draw());
-      this.addListener('icon_changed', () => { image.src = this.getIcon().url; });
-      const attach = () => {
-        car.setMap(null);
-        state = byMap.get(this.getMap());
-        if (!state) return;
-        state.car?.setMap(null); state.car = car;
-        car.setMap(this.getMap());
-      };
-      this.addListener('map_changed', attach);
-      this.addListener('visible_changed', () => {
-        if (this.getVisible()) this.setVisible(false);
-      });
-      attach();
-      this.setVisible(false);
-    }
-  };
+    });
+    const NativeMarker = sdk.Marker;
+    sdk.Marker = class extends NativeMarker {
+      constructor(options) {
+        super(options);
+        if (options.title !== 'Driver camera vehicle' || !options.icon?.url) return;
+        const marker = this;
+        let state;
+        const car = new sdk.OverlayView();
+        const image = document.createElement('img');
+        image.src = options.icon.url;
+        image.style.cssText = 'position:absolute;pointer-events:none;transform-origin:50% 50%;';
+        const size = options.icon.scaledSize || options.icon.size;
+        if (size) { image.style.width = `${size.width}px`; image.style.height = `${size.height}px`; }
+        car.onAdd = () => car.getPanes().overlayLayer.appendChild(image);
+        car.draw = () => {
+          const pixel = car.getProjection()?.fromLatLngToDivPixel(marker.getPosition());
+          if (!pixel) return;
+          image.style.left = `${pixel.x}px`; image.style.top = `${pixel.y}px`;
+          image.style.transform = `translate(-50%,-50%) rotateX(${state.map.getTilt() || 0}deg) rotate(${state.heading - (state.map.getHeading() || 0)}deg)`;
+        };
+        car.onRemove = () => image.remove();
+        this.addListener('position_changed', () => car.draw());
+        this.addListener('icon_changed', () => { image.src = this.getIcon().url; });
+        const attach = () => {
+          car.setMap(null);
+          state = byMap.get(this.getMap());
+          if (!state) return;
+          state.car?.setMap(null); state.car = car;
+          car.setMap(this.getMap());
+        };
+        this.addListener('map_changed', attach);
+        this.addListener('visible_changed', () => {
+          if (this.getVisible()) this.setVisible(false);
+        });
+        attach();
+        this.setVisible(false);
+      }
+    };
+  }
+  const sdkLoaded = () => typeof globalThis.google?.maps?.Map === 'function' &&
+    typeof globalThis.google.maps.OverlayView === 'function';
+  if (sdkLoaded()) installSdk();
+  else {
+    const poll = setInterval(() => {
+      if (!sdkLoaded()) return;
+      clearInterval(poll);
+      installSdk();
+    }, 25);
+  }
   globalThis.driverMapCamera = {
+    ready() { return sdk !== null; },
     supports3D(id) {
-      return states.get(id)?.map.getRenderingType?.() === sdk.RenderingType.VECTOR;
+      const state = states.get(id);
+      return !!state && state.map.getRenderingType?.() === sdk.RenderingType.VECTOR;
     },
     listenRenderer(id, callback) {
       const state = states.get(id); state?.rendererCallbacks.add(callback);
