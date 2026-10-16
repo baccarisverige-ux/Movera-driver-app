@@ -5,6 +5,7 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/widgets/offer_badges.dart';
+import 'package:movera/widgets/pickup_pay_line.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 
 /// An Exclusive offer on Home: a trip offered to this driver only, a
@@ -152,7 +153,8 @@ class ExclusiveOfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final show = details ?? DriverOfferRules.current.card;
-    final fare = show.fare(offer.fare);
+    // The fare with any pickup pay added: one total.
+    final fare = offer.shownFare(show);
     final comma = fare.indexOf(',');
     final whole = comma > 0 ? fare.substring(0, comma) : fare;
     final rest = comma > 0 ? fare.substring(comma) : '';
@@ -494,6 +496,8 @@ class ExclusiveOfferCard extends StatelessWidget {
         header,
         const SizedBox(height: 22),
         price,
+        // "incl. … pickup" under the total, when admin shows it.
+        PickupPayLine(quote: offer.pickupPay),
         const SizedBox(height: 8),
         line,
         const SizedBox(height: 18),

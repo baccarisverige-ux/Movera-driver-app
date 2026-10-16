@@ -797,6 +797,17 @@ extension _HomeOfferRadar on _DriverHomeState {
           fareBoost: offer.fareBoost,
           stops: offer.stops.length,
           riderTrips: offer.riderTrips,
+          // Worked out now, from the offer's pickup leg (never cached).
+          pickupPay: PickupPayCalculator.quote(
+            category: offer.category,
+            kind: PickupPayOfferKind.forHomeOffer(
+              onRadar: _radarHomeOffers.any((item) => item.id == offer.id),
+              reservation: offer.reservation,
+              assigned: offer.assigned,
+              driverSigned: offer.driverSigned,
+            ),
+            leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
+          ),
         );
     /// Radar offers on Home: a deck of cards above the radar, with the
     /// total count on top (tap it for the full-screen list).

@@ -3,7 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/widgets/offer_badges.dart';
+import 'package:movera/widgets/pickup_pay_line.dart';
 
 /// What a Radar offer card shows. The same card is used on Home (the deck
 /// above the radar) and in the full-screen Live list.
@@ -25,6 +27,7 @@ class RadarOfferView {
     this.fareBoost,
     this.stops = 0,
     this.riderTrips = 0,
+    this.pickupPay,
   });
 
   final String id;
@@ -57,6 +60,16 @@ class RadarOfferView {
 
   /// The rider's trips; 0 when not known.
   final int riderTrips;
+
+  /// Pickup pay worked out when the offer shows; null for none.
+  final PickupPayQuote? pickupPay;
+
+  /// The fare as the card shows it ([OfferCardDetails.fare]) with the
+  /// pickup pay added: one total.
+  String shownFare(OfferCardDetails show) {
+    final base = show.fare(fare);
+    return pickupPay?.totalOf(base) ?? base;
+  }
 
   /// The rider pays cash in the car (not paid in the app).
   bool get cash => isCash(payment);
@@ -129,7 +142,7 @@ class RadarOfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final show = details ?? DriverOfferRules.current.card;
-    final fare = show.fare(offer.fare);
+    final fare = offer.shownFare(show);
     final comma = fare.indexOf(',');
     final whole = comma > 0 ? fare.substring(0, comma) : fare;
     final rest = comma > 0 ? fare.substring(comma) : '';
@@ -344,6 +357,7 @@ class RadarOfferCard extends StatelessWidget {
               ),
             ],
           ),
+          PickupPayLine(quote: offer.pickupPay),
         ],
       ),
     );
