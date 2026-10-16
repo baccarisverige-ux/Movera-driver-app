@@ -232,7 +232,7 @@ void main() {
 
     test('the demo 07:40 reservation reaches Exclusive at nearPickupAfter', () {
       final clock = ScheduledClock.instance;
-      final start = DateTime(2026, 1, 1).add(clock.startTime);
+      final start = DateTime(2026, 1, 1).add(clock.startTime!);
       final exclusiveAt = demoReservationRequest
           .pickupAt(start)!
           .subtract(Duration(minutes: _rules.exclusiveBeforeMinutes));

@@ -57,11 +57,9 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
 
 ExclusiveOfferCard _exclusive(OfferCardDetails details) => ExclusiveOfferCard(
   offer: _offer,
-  lifetime: const Duration(seconds: 8),
   reservation: true,
   reservationTime: '07:40',
   details: details,
-  onAccept: () {},
 );
 
 void main() {
@@ -72,8 +70,8 @@ void main() {
       expect(find.text('YOUR SHARE'), findsNothing);
       expect(find.text('Gamla vägen'), findsOneWidget);
       expect(find.text('Solna centrum'), findsOneWidget);
-      expect(find.text('1.6 km away'), findsOneWidget);
-      expect(find.text('9.4 km ride · 1 stop'), findsOneWidget);
+      expect(find.text('1.6 km'), findsOneWidget);
+      expect(find.text('9.4 km · 1 stop'), findsOneWidget);
       expect(find.text('4.94 · 128 trips'), findsOneWidget);
       expect(find.text('Cash'), findsOneWidget);
       expect(find.text('Reservation · 07:40'), findsOneWidget);
@@ -105,8 +103,7 @@ void main() {
       // Only the area of the drop-off.
       expect(find.text('Solna'), findsOneWidget);
       expect(find.text('Solna centrum'), findsNothing);
-      expect(find.textContaining('km away'), findsNothing);
-      expect(find.textContaining('km ride'), findsNothing);
+      expect(find.textContaining(RegExp(r'\d km')), findsNothing);
       expect(find.textContaining('stop'), findsNothing);
       expect(find.textContaining('4.94'), findsNothing);
       expect(find.text('Cash'), findsNothing);
@@ -187,10 +184,20 @@ void main() {
       );
       await tester.binding.setSurfaceSize(const Size(375, 812));
       addTearDown(() => tester.binding.setSurfaceSize(null));
+      // The popup card: badges and the price; View details has the rest.
+      Future<void> details() async {
+        await tester.tap(
+          find.byKey(const ValueKey<String>('reservation-view-details')),
+        );
+        await tester.pumpAndSettle();
+      }
+
       await show(sheet(const OfferCardDetails()));
+      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsOneWidget);
+      await details();
       expect(find.text('Odenplan, Stockholm'), findsOneWidget);
       expect(find.text('19 min'), findsOneWidget);
-      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsOneWidget);
+      await show(const SizedBox());
       await show(
         sheet(
           const OfferCardDetails(
@@ -202,9 +209,13 @@ void main() {
           ),
         ),
       );
+      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsNothing);
+      // Only the area of the drop-off, on the card and in the details.
+      expect(find.text('Solna'), findsOneWidget);
+      expect(find.text('95,06 kr', findRichText: true), findsOneWidget);
+      await details();
       expect(find.text('Odenplan, Stockholm'), findsNothing);
       expect(find.text('19 min'), findsNothing);
-      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsNothing);
       expect(find.text('Solna'), findsOneWidget);
       expect(find.textContaining('Your share'), findsOneWidget);
       expect(find.text('95,06 kr', findRichText: true), findsOneWidget);

@@ -182,8 +182,9 @@ extension _HomeMapSheet on _DriverHomeState {
     }
     double _homeMapObscuredBottom(BuildContext context) {
       if (_outsideRadarOffer != null) {
+        // The Exclusive card on top of the sheet, down to the screen edge.
         final height = MediaQuery.sizeOf(context).height;
-        return math.max(320.0, height * 0.48);
+        return math.min(height * 0.7, 520.0);
       }
       if (_isDirectOfferRoutePreview || _radarHomeOffers.isNotEmpty) {
         return 188;
@@ -516,7 +517,8 @@ extension _HomeMapSheet on _DriverHomeState {
       if (!_panelController.isAttached) { return; }
       // A drag settles at once toward where the finger went, with the same
       // spring as a tap; no late correction afterwards.
-      if (_sheetPointerTravel > 6) {
+      // An Exclusive card on top holds the sheet closed.
+      if (_sheetPointerTravel > 6 && _outsideRadarOffer == null) {
         unawaited(_snapHomeSheet(velocity: _sheetPointerVelocity));
       }
     }
@@ -883,16 +885,8 @@ extension _HomeMapSheet on _DriverHomeState {
                   child: SvgPicture.asset(AppAssets.mapSafety, width: 24, height: 24),
                 ),
               ),
-            if (!isDestinationPanel &&
-                _mainPanelPosition <= 0.04 &&
-                _outsideRadarOffer != null &&
-                _radarHomeOffers.isEmpty)
-              Positioned(
-                left: 14,
-                right: 14,
-                bottom: MediaQuery.paddingOf(context).bottom + 24,
-                child: _HomeOfferRadar(this)._buildOutsideRadarOfferCard(_outsideRadarOffer!),
-              ),
+            // The Exclusive card grows out of the sheet, behind the dock.
+            if (!isDestinationPanel) _HomeExclusive(this)._exclusiveLayer(),
             if (!isDestinationPanel &&
                 _mainPanelPosition <= 0.04 &&
                 _outsideRadarOffer == null &&
@@ -1246,7 +1240,7 @@ extension _HomeMapSheet on _DriverHomeState {
           _panelController.isAttached ? _panelController.panelPosition : 0;
     }
     void _onRadarSheetDragUpdate(DragUpdateDetails details) {
-      if (!_panelController.isAttached) { return; }
+      if (!_panelController.isAttached || _outsideRadarOffer != null) { return; }
       _snapSheet.stopSpring();
       final range = _homeExpandedHeight(context) - MoveraSheetMetrics.collapsedHeight;
       if (range <= 0) { return; }
@@ -1464,7 +1458,8 @@ extension _HomeMapSheet on _DriverHomeState {
               tone: closed ? _sheetTone : null,
               toneShown: closed && _sheetToneShown,
               // Reservation on the dock: thin black contour, no mint.
-              contourColor: _HomeReservation(this)._reservationOnDock
+              contourColor: _HomeReservation(this)._reservationOnDock ||
+                      _exclusive.shown != null
                   ? const Color(0xFF111518)
                   : null,
             );
@@ -1519,8 +1514,11 @@ extension _HomeMapSheet on _DriverHomeState {
               valueListenable: _panelSlidePosition,
               builder: (context, position, _) {
                 final holdOff = _isOnline && position >= 0.5;
+                // An Exclusive offer: the blue radar is its Accept.
+                final exclusive = !holdOff && _isOnline &&
+                    _HomeExclusive(this)._exclusiveLive;
                 // A reservation on the dock: the radar is its Accept.
-                final reserve = !holdOff && _isOnline &&
+                final reserve = !holdOff && !exclusive && _isOnline &&
                     _HomeReservation(this)._reservationOnDock;
                 // Offers on the deck: the radar takes the front trip.
                 final front = !holdOff && !reserve && _isOnline &&
@@ -1530,6 +1528,8 @@ extension _HomeMapSheet on _DriverHomeState {
                 final face = _isOnline
                     ? (holdOff
                         ? 'radar-hold-off'
+                        : exclusive
+                        ? 'radar-exclusive'
                         : reserve
                         ? 'radar-reserve'
                         : front != null
@@ -1556,6 +1556,8 @@ extension _HomeMapSheet on _DriverHomeState {
                     child: _isOnline
                         ? (holdOff
                             ? _holdOffRadar()
+                            : exclusive
+                            ? _HomeExclusive(this)._exclusiveRadar()
                             : reserve
                             ? _HomeReservation(this)._reserveRadar()
                             : front != null

@@ -168,7 +168,7 @@ void main() {
       final radar = _Radar();
       await _pumpHome(tester, radar);
       await _frames(tester, const Duration(seconds: 3));
-      expect(find.text('Your next ride').hitTestable(), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('reservation-popup')).hitTestable(), findsOneWidget);
 
       // Dispatch lists it among the Radar trips close to pickup …
       await _frames(tester, const Duration(seconds: 33));
@@ -192,7 +192,7 @@ void main() {
       );
       expect(_said, contains('Exclusive reservation'));
       // The popup gave it its place; it is still in Scheduled rides.
-      expect(find.text('Your next ride'), findsNothing);
+      expect(find.byKey(const ValueKey<String>('reservation-popup')), findsNothing);
       expect(ScheduledRideStore.isOpen(demoReservationId), isTrue);
 
       // Untaken, the Exclusive offer goes after Dispatch's time to accept
@@ -248,7 +248,7 @@ void main() {
       await _pumpHome(tester, dispatch);
       await _frames(tester, const Duration(seconds: 15));
       // The popup holds the dock; the demo's first Radar trips wait.
-      expect(find.text('Your next ride').hitTestable(), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('reservation-popup')).hitTestable(), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('radar-home-deck')), findsNothing);
 
       await _frames(
@@ -258,7 +258,7 @@ void main() {
             const Duration(milliseconds: 600),
       );
       expect(find.byKey(_exclusiveCard), findsOneWidget);
-      expect(find.text('Your next ride'), findsNothing);
+      expect(find.byKey(const ValueKey<String>('reservation-popup')), findsNothing);
 
       // Untaken: the waiting Radar trips come in, the reservation with them.
       await _frames(
@@ -291,7 +291,7 @@ void main() {
     );
     final card = find.byKey(_exclusiveCard);
     expect(card, findsOneWidget);
-    await tester.tap(find.descendant(of: card, matching: find.text('Accept')));
+    await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
     await _frames(tester, const Duration(milliseconds: 900));
 
     expect(radar.claims, [demoReservationId]);
@@ -402,7 +402,7 @@ void main() {
           // Won, the 08:05 request clashes with it and leaves the list.
           expect(ScheduledRideStore.openRequests.value, won ? 0 : 1);
           if (won) {
-            expect(find.text('Reservation accepted'), findsOneWidget);
+            expect(find.text('Reservation accepted · pickup 07:40'), findsOneWidget);
             expect(find.text('Upcoming'), findsOneWidget);
             expect(find.text('Gamla vägen, Stockholm'), findsOneWidget);
           } else {

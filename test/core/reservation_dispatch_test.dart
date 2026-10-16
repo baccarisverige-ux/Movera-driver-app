@@ -163,14 +163,17 @@ void main() {
   test('Movera assigns a ride; Accept claims it once (Q29)', () async {
     final dispatch = _onDay(
       const Duration(hours: 7),
-      assigned: const [demoAssignedReservation],
+      assigned: [demoAssignedReservation],
       assignmentDelay: const Duration(milliseconds: 5),
     );
     final assigned = <ReservationRequestPreview>[];
     final sub = dispatch.watchAssignments().listen(assigned.add);
     addTearDown(sub.cancel);
     dispatch.watchNearbyOffers().listen((_) {});
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    // Real timers: a busy machine can be slow, so wait up to a second.
+    for (var i = 0; i < 100 && assigned.isEmpty; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
     expect(assigned.single.id, demoAssignedReservationId);
     final result = await dispatch.claimOffer(demoAssignedReservationId);
     expect(result.outcome, ClaimOutcome.success);
