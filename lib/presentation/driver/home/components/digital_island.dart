@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 
 /// Black glass shell of the Home island, drawn like a small live screen:
 /// faint scan lines, a glass highlight on top and a slow light sweep.
@@ -14,6 +15,7 @@ class DigitalIslandShell extends StatefulWidget {
     this.duration = const Duration(milliseconds: 620),
     this.curve = Curves.easeOutBack,
     this.calm = false,
+    this.exclusive = 0,
   });
 
   /// Only the width ever changes; the height stays the same.
@@ -27,6 +29,18 @@ class DigitalIslandShell extends StatefulWidget {
 
   /// No light sweep, e.g. while the driver is on the road.
   final bool calm;
+
+  /// How much of the Exclusive blue ring and glow shows, 0 → 1, while an
+  /// Exclusive offer is live on Home; it follows the card's slide.
+  final double exclusive;
+
+  /// The radar's Exclusive blue.
+  static const Color exclusiveBlue = MoveraRadarOrb.exclusiveBlue;
+
+  /// The Exclusive ring is 2 px and its glow blurs 14 px on screen (the
+  /// island is drawn at 80 %).
+  static const double exclusiveRingWidth = 2 / 0.8;
+  static const double exclusiveGlowBlur = 14 / 0.8;
 
   static const Color screen = Color(0xFF060708);
 
@@ -81,6 +95,44 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(widget.height / 2);
+    final blue = widget.exclusive.clamp(0.0, 1.0);
+    // The Exclusive ring and glow sit outside the shell's own easing, so
+    // they follow the card's slide frame by frame. Always in the tree,
+    // so the shell keeps its state when they come and go.
+    return DecoratedBox(
+      key: const ValueKey<String>('island-exclusive-glow'),
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: blue <= 0
+            ? null
+            : [
+                BoxShadow(
+                  color: DigitalIslandShell.exclusiveBlue
+                      .withValues(alpha: 0.40 * blue),
+                  blurRadius: DigitalIslandShell.exclusiveGlowBlur,
+                ),
+              ],
+      ),
+      position: DecorationPosition.background,
+      child: DecoratedBox(
+        key: const ValueKey<String>('island-exclusive-ring'),
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          border: blue <= 0
+              ? null
+              : Border.all(
+                  color: DigitalIslandShell.exclusiveBlue
+                      .withValues(alpha: blue),
+                  width: DigitalIslandShell.exclusiveRingWidth,
+                ),
+        ),
+        position: DecorationPosition.foreground,
+        child: _shell(radius),
+      ),
+    );
+  }
+
+  Widget _shell(BorderRadius radius) {
     return AnimatedContainer(
       width: widget.width,
       height: widget.height,

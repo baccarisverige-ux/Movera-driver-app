@@ -13,6 +13,7 @@ import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:movera/presentation/driver/home/components/digital_island.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/components/radar_edge_dash.dart';
 import 'package:movera/presentation/driver/home/components/reservation_request_sheet.dart';
@@ -557,6 +558,14 @@ void main() {
       find.byKey(const ValueKey<String>('dock-contour-custom')),
     );
     expect(outline.color, const Color(0xFF111518));
+    // Only an Exclusive offer turns the contours blue: the reservation
+    // keeps its thin black line and the island stays plain.
+    expect(outline.strokeWidth, 1);
+    expect(
+      tester.widget<DigitalIslandShell>(find.byType(DigitalIslandShell))
+          .exclusive,
+      0,
+    );
     expect(find.byType(RadarEdgeDash), findsNothing);
     await _end(tester, dispatch);
   });

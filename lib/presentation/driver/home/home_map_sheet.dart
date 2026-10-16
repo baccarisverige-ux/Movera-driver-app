@@ -991,14 +991,20 @@ extension _HomeMapSheet on _DriverHomeState {
             ),
           );
       return PointerInterceptor(
-        child: DigitalIslandShell(
-          width: width,
-          height: height,
-          // Online, the driver is on the road: no light passing over it.
-          calm: _isOnline,
-          // Every size change, out and back, glides with a soft spring.
-          duration: const Duration(milliseconds: 680),
-          curve: Curves.easeOutCubic,
+        child: AnimatedBuilder(
+          // A live Exclusive offer rings the island blue, with its card.
+          animation: _exclusive.rise,
+          builder: (context, row) => DigitalIslandShell(
+            width: width,
+            height: height,
+            // Online, the driver is on the road: no light passing over it.
+            calm: _isOnline,
+            // Every size change, out and back, glides with a soft spring.
+            duration: const Duration(milliseconds: 680),
+            curve: Curves.easeOutCubic,
+            exclusive: _HomeExclusive(this)._exclusiveBlue,
+            child: row!,
+          ),
           child: Row(
             children: [
               side(Builder(
@@ -1433,16 +1439,21 @@ extension _HomeMapSheet on _DriverHomeState {
     /// The four dock icons, fixed at the bottom of the sheet from closed to
     /// open. Closed, it carries the notch for the radar; as the sheet opens
     /// over it the notch flattens into plain white.
+    static const Color _dockInk = Color(0xFF111518);
+
     Widget? _homeDockFooter() {
       if (_homeSheetInactive) { return null; }
       return _sheetPointer(SizedBox(
         width: MediaQuery.sizeOf(context).width,
         height: MoveraSheetMetrics.collapsedHeight,
-        child: ValueListenableBuilder<double>(
-          valueListenable: _panelSlidePosition,
-          builder: (context, position, _) {
+        child: AnimatedBuilder(
+          // The Exclusive card's slide fades the dock line black ↔ blue.
+          animation: Listenable.merge([_panelSlidePosition, _exclusive.rise]),
+          builder: (context, _) {
+            final position = _panelSlidePosition.value;
             final cover = _notchCover(position);
             final closed = position <= 0.04;
+            final blue = _HomeExclusive(this)._exclusiveBlue;
             return DriverSheetNav.collapsedDock(
               context: context,
               scaffoldKey: _scaffoldKey,
@@ -1457,11 +1468,15 @@ extension _HomeMapSheet on _DriverHomeState {
               topRuleOpacity: cover,
               tone: closed ? _sheetTone : null,
               toneShown: closed && _sheetToneShown,
-              // Reservation on the dock: thin black contour, no mint.
-              contourColor: _HomeReservation(this)._reservationOnDock ||
-                      _exclusive.shown != null
-                  ? const Color(0xFF111518)
+              // Reservation on the dock: thin black contour, no mint. The
+              // Exclusive offer turns it blue, all the way round the radar.
+              contourColor: _exclusive.shown != null
+                  ? Color.lerp(_dockInk, ExclusiveOfferCard.blue, blue)
+                  : _HomeReservation(this)._reservationOnDock
+                  ? _dockInk
                   : null,
+              contourWidth: 1 +
+                  (ExclusiveOfferCard.liveContourWidth - 1) * blue,
             );
           },
         ),
