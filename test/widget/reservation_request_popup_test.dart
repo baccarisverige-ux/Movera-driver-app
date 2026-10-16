@@ -6,7 +6,9 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -305,6 +307,7 @@ void main() {
         .firstWhere((ink) => ink.splashColor != null);
     final orb = ink.splashColor!.withValues(alpha: 1);
     expect(orb.toARGB32(), reservationAcceptOrbColor.toARGB32());
+    expect(reservationAcceptOrbColor, MoveraRadarOrb.reserveInk);
 
     for (final request in [_request, _airportRequest]) {
       await _pumpSheet(tester, request);
@@ -328,6 +331,40 @@ void main() {
         expect(mapper.substitute(null, 'path', 'fill', grey), grey);
       }
     }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('only an exclusive reservation adds pickup pay to the price', (
+    tester,
+  ) async {
+    Future<String> priceWith(PickupPayQuote? pay) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ReservationRequestSheet(
+              request: _request,
+              mapBuilder: _fakeMap,
+              clock: _sixOhSeven,
+              pickupPay: pay,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      return tester
+          .widget<Text>(find.byKey(const ValueKey<String>('reservation-fare')))
+          .textSpan!
+          .toPlainText();
+    }
+
+    final pay = PickupPayQuote(
+      pay: Money.ore(2160),
+      leg: const PickupLeg(km: 4.2, minutes: 9),
+    );
+    // An exclusive reservation: one total, fare + pickup pay.
+    expect(await priceWith(pay), '148,35 kr');
+    // A normal reservation (the Home popup, Scheduled rides): the fare.
+    expect(await priceWith(null), '126,75 kr');
     expect(tester.takeException(), isNull);
   });
 

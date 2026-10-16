@@ -3,7 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/widgets/offer_badges.dart';
+import 'package:movera/widgets/pickup_pay_line.dart';
 
 /// What a Radar offer card shows. The same card is used on Home (the deck
 /// above the radar) and in the full-screen Live list.
@@ -25,6 +27,7 @@ class RadarOfferView {
     this.fareBoost,
     this.stops = 0,
     this.riderTrips = 0,
+    this.pickupPay,
   });
 
   final String id;
@@ -58,6 +61,16 @@ class RadarOfferView {
   /// The rider's trips; 0 when not known.
   final int riderTrips;
 
+  /// Pickup pay worked out when the offer shows; null for none.
+  final PickupPayQuote? pickupPay;
+
+  /// The fare as the card shows it ([OfferCardDetails.fare]) with the
+  /// pickup pay added: one total.
+  String shownFare(OfferCardDetails show) {
+    final base = show.fare(fare);
+    return pickupPay?.totalOf(base) ?? base;
+  }
+
   /// The rider pays cash in the car (not paid in the app).
   bool get cash => isCash(payment);
 
@@ -87,7 +100,7 @@ class RadarOfferView {
 
 enum RadarOfferCardState { available, matching, expired, taken }
 
-/// Soft grey header with a fine black outline: category badge, a
+/// Pure white card with a fine black outline: category badge, a
 /// Reservation badge for a reservation, a Cash badge only when the rider
 /// pays cash, bags, rating; big price and pickup
 /// time; then pickup → drop-off and Route + Match.
@@ -116,7 +129,8 @@ class RadarOfferCard extends StatelessWidget {
   static const Color ink = Color(0xFF111518);
   static const Color muted = Color(0xFF7C868D);
   static const Color label = Color(0xFF8A9399);
-  static const Color headerTint = Color(0xFFF5F6F7);
+  /// Offer cards are pure white; the header keeps only its hairline.
+  static const Color headerTint = Colors.white;
 
   Widget _icon(String asset, double size, Color color) => SvgPicture.asset(
     asset,
@@ -128,7 +142,7 @@ class RadarOfferCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final show = details ?? DriverOfferRules.current.card;
-    final fare = show.fare(offer.fare);
+    final fare = offer.shownFare(show);
     final comma = fare.indexOf(',');
     final whole = comma > 0 ? fare.substring(0, comma) : fare;
     final rest = comma > 0 ? fare.substring(comma) : '';
@@ -343,6 +357,7 @@ class RadarOfferCard extends StatelessWidget {
               ),
             ],
           ),
+          PickupPayLine(quote: offer.pickupPay),
         ],
       ),
     );

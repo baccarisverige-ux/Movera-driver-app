@@ -981,6 +981,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         fare: _AcceptRideState._demoNextTripOffer.fare,
         rating: _AcceptRideState._demoNextTripOffer.rating,
         pickupMinutes: _AcceptRideState._demoNextTripOffer.pickupMinutes,
+        pickupKm: _AcceptRideState._demoNextTripOffer.pickupKm,
         tripMinutes: _AcceptRideState._demoNextTripOffer.tripMinutes,
         riderName: _AcceptRideState._demoNextTripOffer.riderName,
         pickup: _AcceptRideState._demoNextTripOffer.pickup,

@@ -7,6 +7,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/routing/road_route_service.dart';
@@ -15,6 +16,7 @@ import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/home/components/reservation_route_map.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -27,11 +29,9 @@ const Color _soft = Color(0xFFF2F4F5);
 const Color _cardLine = Color(0xFFE6E9EB);
 const Color _hairline = Color(0xFFEEF0F1);
 
-/// The radar orb's colour while a reservation is up: `MoveraRadarOrb`
-/// with `reserve: true` (its reserve ink, the dark Accept orb in the dock).
-/// The pictures' accent always follows it; a test reads the real orb to
-/// keep the two equal.
-const Color reservationAcceptOrbColor = Color(0xFF111518);
+/// The radar orb's colour while a reservation is up (the dark Accept orb
+/// in the dock). The pictures' accent always follows it.
+const Color reservationAcceptOrbColor = MoveraRadarOrb.reserveInk;
 
 /// The accent colour drawn in the flat picture files; replaced at render
 /// time by the orb's colour. The other greys stay as drawn.
@@ -125,6 +125,7 @@ class HomeReservationSheet extends StatefulWidget {
     this.count = 1,
     this.picture,
     this.accent = reservationAcceptOrbColor,
+    this.pickupPay,
     this.bottomInset = 178,
     this.maxContentHeight = double.infinity,
     this.fullContentHeight,
@@ -158,6 +159,12 @@ class HomeReservationSheet extends StatefulWidget {
 
   /// The pictures' accent: the colour of the radar orb in the dock.
   final Color accent;
+
+  /// Pickup pay added to the price: only for an exclusive reservation
+  /// (`PickupPayOfferKind.exclusiveReservation`). A normal reservation
+  /// sent from the Scheduled rides list never gets it, so the Home popup
+  /// leaves this null.
+  final PickupPayQuote? pickupPay;
 
   /// Space under the content, from the screen bottom: the dock and the
   /// radar orb sit there.
@@ -340,6 +347,7 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
                   count: widget.count,
                   picture: widget.picture,
                   accent: widget.accent,
+                  pickupPay: widget.pickupPay,
                   detailsHeight: full.isFinite ? full : null,
                   onDetailsChanged: (open) {
                     if (mounted && _details != open) {
@@ -405,6 +413,7 @@ class ReservationRequestSheet extends StatefulWidget {
     this.count = 1,
     this.picture,
     this.accent = reservationAcceptOrbColor,
+    this.pickupPay,
     this.showDetails = false,
     this.detailsHeight,
     this.onDetailsChanged,
@@ -437,6 +446,12 @@ class ReservationRequestSheet extends StatefulWidget {
 
   /// The pictures' accent: the colour of the radar orb in the dock.
   final Color accent;
+
+  /// Pickup pay added to the price: only for an exclusive reservation
+  /// (`PickupPayOfferKind.exclusiveReservation`). A normal reservation
+  /// sent from the Scheduled rides list never gets it, so the Home popup
+  /// leaves this null.
+  final PickupPayQuote? pickupPay;
 
   /// Opens on the details view (route, stops, trip numbers).
   final bool showDetails;
@@ -517,9 +532,11 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
 
   /// "126,75 kr" → "126" and ",75 kr", for the grey decimals.
   (String, String) _fareParts() {
-    final fare = _show.fare(
+    final base = _show.fare(
       Money.parseSekLabel(request.fare)?.formatted ?? request.fare,
     );
+    // One total, like the Radar and Exclusive cards.
+    final fare = widget.pickupPay?.totalOf(base) ?? base;
     final comma = fare.lastIndexOf(',');
     return comma > 0
         ? (fare.substring(0, comma), fare.substring(comma))

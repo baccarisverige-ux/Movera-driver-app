@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/documents/document_expiry.dart';
@@ -63,6 +64,7 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
       ..arrivals = const [];
     DriverCategoryChoice.reset();
     DriverAppTexts.reset();
+    PickupPayConfig.current = const PickupPayConfig();
   });
   await testMain();
 }

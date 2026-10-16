@@ -367,6 +367,7 @@ extension _HomeReservation on _DriverHomeState {
     Future<void> _claimExclusiveReservation(_HomeDirectOffer offer) async {
       // The offer stays on screen while the server decides.
       _outsideOfferTimeoutTimer?.cancel();
+      _exclusive.clock.stop();
       final result = await _claimReservation(offer.id);
       if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
       switch (result.outcome) {
@@ -391,6 +392,9 @@ extension _HomeReservation on _DriverHomeState {
           _HomeOfferRadar(this)._acceptOutsideRadarOffer();
         case ClaimOutcome.networkError:
           // Nothing decided: the offer counts down again.
+          _HomeExclusive(this)._startExclusiveClock(
+            _DriverHomeState._outsideOfferLifetime,
+          );
           _outsideOfferTimeoutTimer = Timer(
             _DriverHomeState._outsideOfferLifetime,
             () {

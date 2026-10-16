@@ -176,9 +176,8 @@ void main() {
       ExclusiveAnswers.instance.missed();
       await _pumpHome(tester, _Dispatch());
       await _frames(tester, const Duration(milliseconds: 2600));
-      await tester.tap(
-        find.descendant(of: find.byKey(_closeOffer), matching: find.text('Accept')),
-      );
+      // The blue radar is the Accept.
+      await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
       await _frames(tester, const Duration(milliseconds: 600));
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       tester.takeException();
