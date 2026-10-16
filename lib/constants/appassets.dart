@@ -44,6 +44,8 @@ class AppAssets {
   static const String solarBellBing = 'assets/icons/solar_bell_bing.svg';
   // Solar (CC BY 4.0) — Earnings & Wallet pages, see assets/icons/SOLAR_LICENSE.txt
   static const String solarAltArrowLeft = 'assets/icons/solar_alt_arrow_left.svg';
+  // The cross of Solar's close-circle, for a soft round × button.
+  static const String solarClose = 'assets/icons/solar_close.svg';
   static const String solarWallet = 'assets/icons/solar_wallet.svg';
   static const String solarGraphUp = 'assets/icons/solar_graph_up.svg';
   static const String solarList = 'assets/icons/solar_list.svg';
@@ -132,5 +134,10 @@ class AppAssets {
       'assets/images/destination_selected.png';
   static const String direction = 'assets/images/direction.png';
   /// Rider-app menu illustration (unDraw, Movera colours).
-  static const String orderRide = 'assets/images/order_ride.svg';
+  // Flat unDraw pictures on the reservation popup (accent grey #4A555E).
+  static const String reservationBooked = 'assets/images/booked.svg';
+  static const String reservationCalendar = 'assets/images/calendar_8r6s.svg';
+  static const String reservationAircraft = 'assets/images/aircraft_usu4.svg';
+  static const String reservationTraveller =
+      'assets/images/travel_mode_103y.svg';
 }

@@ -8,6 +8,8 @@ import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
+import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/components/reservation_route_map.dart';
 import 'package:movera/widgets/led_count_badge.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -221,7 +223,15 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       // Requests whose time now clashes leave the list (Q9); the Requests
       // tab says why.
       ScheduledRideStore._changed();
-      _notice('Reservation accepted');
+      // Only saved for later: it becomes the trip at its time ("Leave now"
+      // by the real clock), never right after Accept.
+      final time = ride.route?.pickupTime;
+      if (time == null) {
+        _notice('Reservation accepted');
+      } else {
+        IslandMessages.show(HomeIslandNotices.reservationAcceptedAt(time));
+        _notice('Reservation accepted · pickup $time');
+      }
     } else if (action == _ScheduledRideAction.cancelled ||
         action == _ScheduledRideAction.cancelledNotCounted) {
       if (!_accepted.contains(ride)) return;
@@ -394,43 +404,19 @@ class ScheduledRideStore {
 
   static final List<_ScheduledRide> _requests = _seedRequests();
   static List<_ScheduledRide> _seedRequests() => [
-    // The same reservation the Home popup shows later (notes R21).
-    _ScheduledRide(
-      price: '126.75 kr',
-      time: 'Today, 07:40–07:45',
-      category: 'Comfort',
-      distance: '9.4 km',
-      pickup: demoReservationRequest.pickupAddress,
-      destination: demoReservationRequest.dropoffAddress,
-      route: demoReservationRequest,
-    ),
+    // The same reservation the Home popup shows later (notes R21). The
+    // demo books them relative to now.
+    _ScheduledRide.request(DemoReservations.main),
     // No driver near Lidingö: admin raised the fare (Q13). Its time
-    // clashes with the 07:40 ride (Q9).
-    _ScheduledRide(
-      price: '249.25 kr',
-      time: 'Today, 08:05–08:15',
-      category: 'Premium',
+    // clashes with the first ride (Q9).
+    _ScheduledRide.request(
+      DemoReservations.clashing,
+      window: const Duration(minutes: 10),
       distance: '12 km',
-      pickup: 'Högsätravägen, Lidingö',
-      destination: 'Central Station, Stockholm',
-      route: ReservationRequestPreview(
-        category: 'Premium',
-        fare: '249.25 kr',
-        fareBoost: '+40 kr',
-        rating: '4.97',
-        riderName: 'Anna',
-        riderTrips: 211,
-        pickupLabel: 'Pickup today at 08:05',
-        pickupAddress: 'Högsätravägen, Lidingö',
-        dropoffAddress: 'Central Station, Stockholm',
-        pickupTime: '08:05',
-        pickupDay: 'Today',
-        tripMinutes: 21,
-        tripKm: 12,
-        pickup: GeoPoint(59.3584, 18.1567),
-        dropoff: GeoPoint(59.3303, 18.0586),
-      ),
     ),
+    // An airport ride, sent to the Home popup after the first.
+    if (DemoReservations.airport case final airport?)
+      _ScheduledRide.request(airport),
   ];
 
   static final List<_ScheduledRide> _accepted = _seedAccepted();
@@ -579,6 +565,15 @@ class ScheduledRideStore {
   static void _changed() {
     openRequests.value = _visibleRequests.length;
     _revision.value++;
+  }
+
+  /// The ride of reservation [id], open or accepted; null when unknown.
+  static ReservationRequestPreview? routeOf(String id) {
+    if (id.isEmpty) return null;
+    for (final ride in [..._requests, ..._accepted]) {
+      if (ride.id == id) return ride.route;
+    }
+    return null;
   }
 
   /// Whether reservation [id] is still open to take here.
@@ -1125,6 +1120,30 @@ class _ScheduledRide {
     assigned: assigned,
     route: route,
   );
+
+  /// An open request: "Today, 07:40–07:45", its pickup [window].
+  factory _ScheduledRide.request(
+    ReservationRequestPreview route, {
+    Duration window = const Duration(minutes: 5),
+    String? distance,
+  }) {
+    final start = route.minuteOfDay;
+    var time = '${route.pickupDay}, ${route.pickupTime}';
+    if (start != null) {
+      final end = (start + window.inMinutes) % (24 * 60);
+      String two(int v) => v.toString().padLeft(2, '0');
+      time = '$time–${two(end ~/ 60)}:${two(end % 60)}';
+    }
+    return _ScheduledRide(
+      price: route.fare,
+      time: time,
+      category: route.category,
+      distance: distance ?? '${route.tripKm.toStringAsFixed(1)} km',
+      pickup: route.pickupAddress,
+      destination: route.dropoffAddress,
+      route: route,
+    );
+  }
 
   /// Movera assigned it to this driver (Q29).
   final bool assigned;

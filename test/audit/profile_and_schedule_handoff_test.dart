@@ -313,7 +313,7 @@ void main() {
         }
         await tester.tap(find.text('Accept  •  126.75 kr'));
         await tester.pumpAndSettle();
-        expect(find.text('Reservation accepted'), findsNothing);
+        expect(find.textContaining('Reservation accepted'), findsNothing);
         expect(ScheduledRideStore.openRequests.value, reset ? 2 : 1);
         await tester.tap(find.text('Accepted'));
         await tester.pumpAndSettle();

@@ -48,13 +48,16 @@ class MoveraRadarOrb extends StatelessWidget {
   final double? touchSize;
   final Key touchKey;
 
+  /// The orb's colour while a reservation is up ([reserve]): the dark
+  /// Accept. The reservation popup's pictures use it for their accent.
+  static const Color reserveInk = Color(0xFF111518);
+
   @override
   Widget build(BuildContext context) {
     const mint = Color(0xFF58E5A6);
     const detectedGold = Color(0xFFFFD166);
     const detectedAmber = Color(0xFFFFA94D);
     const holdRed = Color(0xFFE15B4A);
-    const reserveInk = Color(0xFF111518);
     final accent = reserve
         ? reserveInk
         : blocked

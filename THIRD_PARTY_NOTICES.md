@@ -25,6 +25,8 @@ MIT license terms included by the Lucide project.
 
 ## unDraw illustrations
 
-`assets/images/order_ride.svg` is an unDraw illustration (unDraw licence:
-free to use, no attribution required), recoloured in Movera colours and shared
-with the Movera rider app.
+`assets/images/booked.svg`, `assets/images/calendar_8r6s.svg`,
+`assets/images/aircraft_usu4.svg` and `assets/images/travel_mode_103y.svg`
+(the Home reservation popup pictures) are unDraw illustrations (unDraw
+licence: free to use, no attribution required), recoloured with the Movera
+accent grey `#4A555E`, like the rider app menu.

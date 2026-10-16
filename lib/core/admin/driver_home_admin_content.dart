@@ -1,5 +1,6 @@
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
 class DriverHomeAdminConfig {
@@ -52,6 +53,7 @@ class ScheduledRidesAdminConfig {
     required this.title,
     required this.subtitle,
     this.newRequest,
+    this.newRequests = const <ReservationRequestPreview>[],
     this.driverAccess = const ScheduledRidesDriverAccess(),
   });
 
@@ -62,6 +64,15 @@ class ScheduledRidesAdminConfig {
 
   /// Newest reservation request, shown as a Home popup when present.
   final ReservationRequestPreview? newRequest;
+
+  /// Every request sent to the Home popup, shown one at a time; empty
+  /// means just [newRequest].
+  final List<ReservationRequestPreview> newRequests;
+
+  /// The Home popup's requests, in order.
+  List<ReservationRequestPreview> get homeRequests => newRequests.isNotEmpty
+      ? newRequests
+      : [if (newRequest case final request?) request];
 
   /// Admin's on/off for this driver (Admin › Drivers).
   final ScheduledRidesDriverAccess driverAccess;
@@ -204,7 +215,7 @@ class ReservationRequestPreview {
 
 /// Where an untaken reservation shows, step by step (notes R21–R25). The
 /// minutes come from [ScheduledRideRules] (admin Dispatch › Reservations);
-/// the demo day runs on `ScheduledClock.instance`.
+/// the demo runs on `ScheduledClock.instance` (the real clock).
 ///
 /// 1. L1: it is listed in every driver's Scheduled rides.
 /// 2. L2: untaken after [homePopupAfter], it also shows as the Home popup
@@ -226,8 +237,11 @@ class ReservationDemoTimings {
   /// start, or from when it went back out after a cancel.
   static const Duration homePopupAfter = Duration(seconds: 3);
 
-  /// L3: when the demo day (07:00 at start, 30 times faster) reaches the
-  /// Exclusive step of the 07:40 reservation, 20 minutes before pickup.
+  /// L3: when the fast test day ([DemoReservationPlan.testDay] on
+  /// `ScheduledClock.fastDay`: 07:00 at start, 30 times faster) reaches the
+  /// Exclusive step of its 07:40 reservation, 20 minutes before pickup. The
+  /// app runs on the real clock: there it is 20 minutes before the real
+  /// pickup.
   static const Duration nearPickupAfter = Duration(milliseconds: 40000);
 
   /// Q29: the demo ride Movera assigns to this driver arrives this long
@@ -236,60 +250,224 @@ class ReservationDemoTimings {
 }
 
 /// Dispatch id of [demoReservationRequest].
-const String demoReservationId = 'reservation-gamla-vagen-0740';
+const String demoReservationId = 'reservation-gamla-vagen';
+
+/// Dispatch id of [DemoReservations.airport].
+const String demoAirportReservationId = 'reservation-arlanda-t5';
+
+/// Dispatch id of [demoAssignedReservation].
+const String demoAssignedReservationId = 'reservation-assigned-kungsholmen';
+
+/// When the demo reservations are picked up, counted from the first
+/// reading of `ScheduledClock.instance` (rounded up to 5 minutes).
+class DemoReservationPlan {
+  const DemoReservationPlan({
+    required this.main,
+    required this.clashing,
+    required this.assigned,
+    this.airport,
+  });
+
+  /// The app: booked relative to now, pickups in 2 h and 5 h.
+  static const DemoReservationPlan app = DemoReservationPlan(
+    main: Duration(hours: 2),
+    clashing: Duration(hours: 2, minutes: 25),
+    airport: Duration(hours: 5),
+    assigned: Duration(hours: 8, minutes: 30),
+  );
+
+  /// The fixed test day: from 07:00 the rides are at 07:40, 08:05 and
+  /// 09:30, with no airport request unless a test adds it.
+  static const DemoReservationPlan testDay = DemoReservationPlan(
+    main: Duration(minutes: 40),
+    clashing: Duration(minutes: 65),
+    assigned: Duration(minutes: 150),
+  );
+
+  /// The Home popup's reservation (Gamla vägen → Solna).
+  final Duration main;
+
+  /// The Lidingö request whose time clashes with [main] (Q9).
+  final Duration clashing;
+
+  /// The airport request (→ Arlanda T5), also sent to Home; null leaves it
+  /// out.
+  final Duration? airport;
+
+  /// The ride Movera assigns to this driver (Q29).
+  final Duration assigned;
+}
+
+/// The demo's reservations, booked relative to the clock's first reading
+/// by [plan]. Each is one object everywhere (Scheduled rides, the Home
+/// popup, dispatch), so taking it in one place takes it everywhere.
+class DemoReservations {
+  const DemoReservations._();
+
+  static DemoReservationPlan plan = DemoReservationPlan.app;
+
+  static _DemoReservationSet? _set;
+  static _DemoReservationSet get _rides =>
+      _set ??= _DemoReservationSet(_anchor(), plan);
+
+  /// Books them again from the clock's next reading.
+  static void reset() => _set = null;
+
+  /// When the demo was booked: now, rounded up to 5 minutes.
+  static DateTime _anchor() {
+    final now = ScheduledClock.instance.now();
+    final base = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+    final up = (5 - base.minute % 5) % 5;
+    return base.add(Duration(minutes: up));
+  }
+
+  /// Gamla vägen → Solna centrum, with a stop at Odenplan.
+  static ReservationRequestPreview get main => _rides.main;
+
+  /// Lidingö → Central Station: no driver near, so admin raised the fare
+  /// (Q13); its time clashes with [main] (Q9).
+  static ReservationRequestPreview get clashing => _rides.clashing;
+
+  /// Fridhemsplan → Arlanda T5; null when [plan] has none.
+  static ReservationRequestPreview? get airport => _rides.airport;
+
+  /// Q29: the ride Movera assigns to this driver.
+  static ReservationRequestPreview get assigned => _rides.assigned;
+
+  /// The open reservations sent to the Home popup, one after another.
+  static List<ReservationRequestPreview> get homeRequests => [
+    main,
+    if (airport case final airport?) airport,
+  ];
+
+  /// Every open reservation of the demo, as dispatch holds them.
+  static List<ReservationRequestPreview> get dispatchReservations =>
+      homeRequests;
+}
+
+class _DemoReservationSet {
+  _DemoReservationSet(DateTime anchor, DemoReservationPlan plan)
+    : main = _at(
+        anchor,
+        plan.main,
+        (time, day) => ReservationRequestPreview(
+          id: demoReservationId,
+          category: 'Comfort',
+          rating: '4.94',
+          riderName: 'Karin',
+          riderTrips: 128,
+          fare: '126.75 kr',
+          pickupLabel: 'Pickup ${day.toLowerCase()} at $time',
+          pickupAddress: 'Gamla vägen, Stockholm',
+          dropoffAddress: 'Solna centrum, Solna',
+          pickupTime: time,
+          pickupDay: day,
+          tripMinutes: 19,
+          tripKm: 9.4,
+          pickup: const GeoPoint(59.3362, 18.0714),
+          dropoff: const GeoPoint(59.3603, 18.0009),
+          stops: const [
+            ReservationStop(
+              address: 'Odenplan, Stockholm',
+              point: GeoPoint(59.3430, 18.0496),
+            ),
+          ],
+        ),
+      ),
+      clashing = _at(
+        anchor,
+        plan.clashing,
+        (time, day) => ReservationRequestPreview(
+          category: 'Premium',
+          fare: '249.25 kr',
+          fareBoost: '+40 kr',
+          rating: '4.97',
+          riderName: 'Anna',
+          riderTrips: 211,
+          pickupLabel: 'Pickup ${day.toLowerCase()} at $time',
+          pickupAddress: 'Högsätravägen, Lidingö',
+          dropoffAddress: 'Central Station, Stockholm',
+          pickupTime: time,
+          pickupDay: day,
+          tripMinutes: 21,
+          tripKm: 12,
+          pickup: const GeoPoint(59.3584, 18.1567),
+          dropoff: const GeoPoint(59.3303, 18.0586),
+        ),
+      ),
+      airport = plan.airport == null
+          ? null
+          : _at(
+              anchor,
+              plan.airport!,
+              (time, day) => ReservationRequestPreview(
+                id: demoAirportReservationId,
+                category: 'Premium',
+                rating: '4.91',
+                riderName: 'Maja',
+                riderTrips: 73,
+                fare: '248.40 kr',
+                pickupLabel: 'Pickup ${day.toLowerCase()} at $time',
+                pickupAddress: 'Fridhemsplan, Stockholm',
+                dropoffAddress: 'Arlanda Terminal 5, Arlanda',
+                pickupTime: time,
+                pickupDay: day,
+                tripMinutes: 36,
+                tripKm: 40.8,
+                pickup: const GeoPoint(59.3324, 18.0290),
+                dropoff: const GeoPoint(59.6497, 17.9237),
+              ),
+            ),
+      assigned = _at(
+        anchor,
+        plan.assigned,
+        (time, day) => ReservationRequestPreview(
+          id: demoAssignedReservationId,
+          category: 'Comfort',
+          rating: '4.88',
+          riderName: 'Erik',
+          riderTrips: 64,
+          fare: '312.40 kr',
+          pickupLabel: 'Pickup ${day.toLowerCase()} at $time',
+          pickupAddress: 'Kungsholmstorg, Stockholm',
+          dropoffAddress: 'Arlanda Terminal 5, Arlanda',
+          pickupTime: time,
+          pickupDay: day,
+          tripMinutes: 38,
+          tripKm: 41.6,
+          pickup: const GeoPoint(59.3297, 18.0436),
+          dropoff: const GeoPoint(59.6497, 17.9237),
+        ),
+      );
+
+  final ReservationRequestPreview main;
+  final ReservationRequestPreview clashing;
+  final ReservationRequestPreview? airport;
+  final ReservationRequestPreview assigned;
+
+  /// The ride [lead] after [anchor], as "HH:mm" and "Today"/"Tomorrow".
+  static ReservationRequestPreview _at(
+    DateTime anchor,
+    Duration lead,
+    ReservationRequestPreview Function(String time, String day) build,
+  ) {
+    final at = anchor.add(lead);
+    final days = DateTime(at.year, at.month, at.day)
+        .difference(DateTime(anchor.year, anchor.month, anchor.day))
+        .inDays;
+    return build(clockLabel(at), days == 0 ? 'Today' : 'Tomorrow');
+  }
+}
 
 /// The demo reservation: listed in Scheduled rides at launch, later also
 /// sent as the Home popup, close to pickup an Exclusive offer and a Radar
-/// trip (see [ReservationDemoTimings]). It is one ride everywhere, so
-/// taking it in one place takes it everywhere.
-const ReservationRequestPreview demoReservationRequest =
-    ReservationRequestPreview(
-  id: demoReservationId,
-  category: 'Comfort',
-  rating: '4.94',
-  riderName: 'Karin',
-  riderTrips: 128,
-  fare: '126.75 kr',
-  pickupLabel: 'Pickup today at 07:40',
-  pickupAddress: 'Gamla vägen, Stockholm',
-  dropoffAddress: 'Solna centrum, Solna',
-  pickupTime: '07:40',
-  pickupDay: 'Today',
-  tripMinutes: 19,
-  tripKm: 9.4,
-  pickup: GeoPoint(59.3362, 18.0714),
-  dropoff: GeoPoint(59.3603, 18.0009),
-  stops: [
-    ReservationStop(
-      address: 'Odenplan, Stockholm',
-      point: GeoPoint(59.3430, 18.0496),
-    ),
-  ],
-);
-
-/// Dispatch id of [demoAssignedReservation].
-const String demoAssignedReservationId = 'reservation-assigned-kungsholmen-0930';
+/// trip (see [ReservationDemoTimings]). Booked relative to now.
+ReservationRequestPreview get demoReservationRequest => DemoReservations.main;
 
 /// Q29: a scheduled ride Movera assigns to this driver. It arrives like an
 /// Exclusive offer, "Assigned by Movera", and needs Accept in time.
-const ReservationRequestPreview demoAssignedReservation =
-    ReservationRequestPreview(
-  id: demoAssignedReservationId,
-  category: 'Comfort',
-  rating: '4.88',
-  riderName: 'Erik',
-  riderTrips: 64,
-  fare: '312.40 kr',
-  pickupLabel: 'Pickup today at 09:30',
-  pickupAddress: 'Kungsholmstorg, Stockholm',
-  dropoffAddress: 'Arlanda Terminal 5, Arlanda',
-  pickupTime: '09:30',
-  pickupDay: 'Today',
-  tripMinutes: 38,
-  tripKm: 41.6,
-  pickup: GeoPoint(59.3297, 18.0436),
-  dropoff: GeoPoint(59.6497, 17.9237),
-);
+ReservationRequestPreview get demoAssignedReservation =>
+    DemoReservations.assigned;
 
 class ReservationStop {
   const ReservationStop({required this.address, required this.point});
@@ -390,8 +568,8 @@ class DriverHomeAdminContentService {
   const DriverHomeAdminContentService();
 
   DriverHomeAdminConfig load() {
-    return const DriverHomeAdminConfig(
-      performance: DriverPerformanceConfig(
+    return DriverHomeAdminConfig(
+      performance: const DriverPerformanceConfig(
         rating: 4.88,
         acceptanceRate: 94.0,
         cancellationRate: 2.4,
@@ -401,9 +579,10 @@ class DriverHomeAdminContentService {
         hasOpenRequests: true,
         title: 'Scheduled rides available',
         subtitle: 'View open requests in your area',
-        newRequest: demoReservationRequest,
+        newRequest: DemoReservations.main,
+        newRequests: DemoReservations.homeRequests,
       ),
-      update: AppUpdateAdminConfig(
+      update: const AppUpdateAdminConfig(
         enabled: false,
         latestVersion: '1.0.0',
         minimumVersion: '1.0.0',
@@ -415,7 +594,7 @@ class DriverHomeAdminContentService {
       ),
       eventsSectionTitle: 'What’s happening',
       eventsSectionSubtitle: 'Plan your shift around busy periods',
-      events: [
+      events: const [
         DriverEventConfig(
           id: 'stockholm-night-demand',
           title: 'Stockholm evening demand',
@@ -462,7 +641,7 @@ class DriverHomeAdminContentService {
           enabled: true,
         ),
       ],
-      stockholmWork: StockholmWorkStatsConfig(
+      stockholmWork: const StockholmWorkStatsConfig(
         title: 'Work in Stockholm',
         subtitle: 'Inner city and the area around',
         innerAreas: [

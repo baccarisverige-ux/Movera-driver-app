@@ -31,11 +31,9 @@ class DemoDispatchRepository implements DispatchRepository {
     Duration? externalClaimDelay,
     this.losingOfferId = 'nearby-2',
     this.externalClaimOfferId = 'nearby-3',
-    List<ReservationRequestPreview> reservations = const [
-      demoReservationRequest,
-    ],
+    List<ReservationRequestPreview>? reservations,
     Duration? reservationRadarDelay,
-    this.assignedRides = const [demoAssignedReservation],
+    List<ReservationRequestPreview>? assignedRides,
     Duration assignmentDelay = ReservationDemoTimings.assignedAfter,
     ScheduledClock? clock,
     ScheduledRideRules? rules,
@@ -50,15 +48,17 @@ class DemoDispatchRepository implements DispatchRepository {
        _assignmentDelay = assignmentDelay,
        _clock = clock,
        _rules = rules,
+       // The demo's own reservations, booked relative to now.
+       assignedRides = assignedRides ?? [DemoReservations.assigned],
        _seedPreviews = {
-         for (final reservation in reservations)
+         for (final reservation
+             in reservations ?? DemoReservations.dispatchReservations)
            if (reservation.id.isNotEmpty) reservation.id: reservation,
-       },
-       _seedReservations = {
-         for (final reservation in reservations)
-           if (reservation.id.isNotEmpty)
-             reservation.id: RideOffer.reservation(reservation),
        } {
+    _seedReservations = {
+      for (final reservation in _seedPreviews.values)
+        reservation.id: RideOffer.reservation(reservation),
+    };
     _reservations = Map<String, RideOffer>.of(_seedReservations);
   }
 
@@ -91,7 +91,7 @@ class DemoDispatchRepository implements DispatchRepository {
   /// Every reservation of this demo, by id, and the ones no driver has
   /// taken yet.
   final Map<String, ReservationRequestPreview> _seedPreviews;
-  final Map<String, RideOffer> _seedReservations;
+  late final Map<String, RideOffer> _seedReservations;
   late Map<String, RideOffer> _reservations;
 
   /// Assigned rides not answered yet.
