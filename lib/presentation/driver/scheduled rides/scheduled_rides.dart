@@ -230,7 +230,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
         _notice('Reservation accepted');
       } else {
         IslandMessages.show(HomeIslandNotices.reservationAcceptedAt(time));
-        _notice('Reservation accepted · pickup $time');
+        _notice('Accepted · pickup $time');
       }
     } else if (action == _ScheduledRideAction.cancelled ||
         action == _ScheduledRideAction.cancelledNotCounted) {

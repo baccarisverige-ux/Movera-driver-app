@@ -429,7 +429,7 @@ class RadarOfferCard extends StatelessWidget {
                   children: [
                     stop(
                       show.pickupAddress
-                          ? RadarOfferView.area(offer.pickup)
+                          ? RadarOfferView.street(offer.pickup)
                           : driverText(DriverTexts.offerPickupNearby),
                       show.pickupDistance
                           ? driverText(DriverTexts.offerKmAway, {

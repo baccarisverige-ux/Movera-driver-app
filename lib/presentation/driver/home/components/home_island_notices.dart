@@ -97,7 +97,7 @@ class HomeIslandNotices {
   );
 
   /// Taken for later: it waits in Scheduled rides › Accepted until its
-  /// time, e.g. "Reservation accepted · pickup 19:30".
+  /// time, e.g. "Accepted · pickup 19:30".
   static IslandMessage reservationAcceptedAt(String time) => IslandMessage(
     title: driverText(DriverTexts.islandReservationAcceptedAt, {'time': time}),
     tone: IslandTone.success,
