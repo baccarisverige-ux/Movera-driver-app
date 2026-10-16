@@ -98,6 +98,7 @@ class ReservationRouteMap extends StatefulWidget {
     this.interactive = false,
     this.markerIcon,
     this.show3DNotice = true,
+    this.tilt = 0,
   });
 
   final ReservationRequestPreview request;
@@ -115,6 +116,9 @@ class ReservationRouteMap extends StatefulWidget {
 
   /// The "2D map · 3D unavailable" note; off on the small popup map.
   final bool show3DNotice;
+
+  /// Camera tilt in degrees after fitting the route; 0 keeps it flat.
+  final double tilt;
 
   @override
   State<ReservationRouteMap> createState() => _ReservationRouteMapState();
@@ -251,6 +255,22 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
         await controller.moveCamera(
           CameraUpdate.newLatLngBounds(_bounds(), widget.fitPadding),
         );
+        if (widget.tilt > 0 && mounted) {
+          final b = _bounds();
+          final zoom = await controller.getZoomLevel();
+          await controller.moveCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: LatLng(
+                  (b.southwest.latitude + b.northeast.latitude) / 2,
+                  (b.southwest.longitude + b.northeast.longitude) / 2,
+                ),
+                zoom: zoom,
+                tilt: widget.tilt,
+              ),
+            ),
+          );
+        }
       } catch (_) {}
     });
   }
@@ -272,6 +292,7 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
           (b.southwest.longitude + b.northeast.longitude) / 2,
         ),
         zoom: 12,
+        tilt: widget.tilt,
       ),
       markers: _markers,
       polylines: {
