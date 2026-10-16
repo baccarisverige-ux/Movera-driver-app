@@ -225,7 +225,8 @@ void main() {
     // From → to with short place names.
     expect(find.text('Gamla vägen'), findsOneWidget);
     expect(find.text('Solna centrum'), findsOneWidget);
-    expect(find.text('View details'), findsOneWidget);
+    // The framed map replaces the View details button.
+    expect(find.text('View details'), findsNothing);
     // Only the small framed map shows; the stops wait behind View details.
     expect(
       find.descendant(
@@ -381,6 +382,7 @@ void main() {
     await _pumpSheet(tester, _request);
     final strip = find.byKey(const ValueKey<String>('reservation-map-strip'));
     expect(strip, findsOneWidget);
+    expect(find.text('See details ›'), findsOneWidget);
     expect(
       find.descendant(
         of: strip,
@@ -389,7 +391,7 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(
-      find.byKey(const ValueKey<String>('reservation-map-strip-open')),
+      find.byKey(_viewDetails),
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey<String>('reservation-details')), findsOneWidget);
@@ -435,7 +437,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey<String>('reservation-details-back')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey<String>('reservation-details')), findsNothing);
-    expect(find.text('View details'), findsOneWidget);
+    // The framed map replaces the View details button.
+    expect(find.text('View details'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
