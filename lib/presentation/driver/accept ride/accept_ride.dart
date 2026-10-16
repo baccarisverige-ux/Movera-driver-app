@@ -40,6 +40,9 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/rider_contact.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/dispatch/pickup_pay.dart';
+import 'package:movera/core/admin/pickup_pay_config.dart';
+import 'package:movera/widgets/pickup_pay_line.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/widgets/offer_badges.dart';
@@ -258,6 +261,7 @@ class _NextTripRadarOffer {
     required this.dropoff,
     required this.pickupPosition,
     required this.dropoffPosition,
+    this.pickupKm = 1.6,
   });
 
   final String id;
@@ -265,6 +269,19 @@ class _NextTripRadarOffer {
   final String fare;
   final double rating;
   final int pickupMinutes;
+
+  /// From the current trip's drop-off to this pickup.
+  final double pickupKm;
+
+  /// Pickup pay, worked out each time the offer shows.
+  PickupPayQuote get pickupPay => PickupPayCalculator.quote(
+    category: category,
+    kind: PickupPayOfferKind.nextTripWhileDriving,
+    leg: PickupLeg(km: pickupKm, minutes: pickupMinutes),
+  );
+
+  /// The fare plus the pickup pay: one total.
+  String get shownFare => pickupPay.totalOf(fare);
   final int tripMinutes;
   final String riderName;
   final String pickup;
@@ -357,6 +374,7 @@ class _AcceptRideState extends State<AcceptRide>
     fare: '128,40 kr',
     rating: 4.94,
     pickupMinutes: 4,
+    pickupKm: 1.6,
     tripMinutes: 16,
     riderName: 'Maya',
     pickup: 'Vasagatan 10, Stockholm',
@@ -885,7 +903,7 @@ class _AcceptRideState extends State<AcceptRide>
 
   _NextTripRadarOffer get _uniqueDemoNext => _NextTripRadarOffer(
     id:'${widget.offerId}-next',category:_demoNextTripOffer.category,fare:_demoNextTripOffer.fare,rating:_demoNextTripOffer.rating,
-    pickupMinutes:_demoNextTripOffer.pickupMinutes,tripMinutes:_demoNextTripOffer.tripMinutes,riderName:_demoNextTripOffer.riderName,
+    pickupMinutes:_demoNextTripOffer.pickupMinutes,pickupKm:_demoNextTripOffer.pickupKm,tripMinutes:_demoNextTripOffer.tripMinutes,riderName:_demoNextTripOffer.riderName,
     pickup:_demoNextTripOffer.pickup,dropoff:_demoNextTripOffer.dropoff,pickupPosition:_demoNextTripOffer.pickupPosition,dropoffPosition:_demoNextTripOffer.dropoffPosition);
 
 

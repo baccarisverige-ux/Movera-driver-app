@@ -7,6 +7,8 @@ import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/dispatch/pickup_pay.dart';
+import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -687,6 +689,14 @@ class _RideRequestsState extends State<RideRequests> {
         fareBoost: trip.source.fareBoost,
         stops: trip.source.stops.length,
         riderTrips: trip.source.riderTrips,
+        pickupPay: PickupPayCalculator.quote(
+          category: trip.category,
+          kind: PickupPayOfferKind.forHomeOffer(
+            onRadar: true,
+            reservation: trip.reservationTime != null,
+          ),
+          leg: PickupLeg(km: trip.pickupKm, minutes: trip.pickupMinutes),
+        ),
       ),
       state: claimed
           ? RadarOfferCardState.taken

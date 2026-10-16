@@ -500,7 +500,9 @@ void main() {
 
       // Exclusive Radar offer uses its own exclusive surface.
       await tester.pump(const Duration(milliseconds: 2300));
-      expect(find.text('104,80 kr'), findsOneWidget);
+      // One total: the 104,80 kr fare plus 1,00 kr pickup pay (Comfort,
+      // 0.9 km / 3 min: 1 km and 2 min free, 1 kr/min).
+      expect(find.text('105,80 kr'), findsOneWidget);
       expect(find.text('Only for you · nearby'), findsOneWidget);
       expect(
         find.byKey(const ValueKey<String>('radar-home-deck')),
@@ -563,7 +565,7 @@ void main() {
 
     // Outside offer first, still isolated from Radar.
     await tester.pump(const Duration(milliseconds: 2300));
-    expect(find.text('104,80 kr'), findsOneWidget);
+    expect(find.text('105,80 kr'), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('radar-home-deck')), findsNothing);
     _expectNoException(tester);
 
@@ -1233,7 +1235,7 @@ void main() {
 
     // Advance beyond the first direct-offer timer. Nothing may appear offline.
     await tester.pump(const Duration(milliseconds: 4200));
-    expect(find.text('104,80 kr'), findsNothing);
+    expect(find.text('105,80 kr'), findsNothing);
     expect(find.text('Only for you · nearby'), findsNothing);
     expect(find.text('OFF'), findsOneWidget);
     _expectNoException(tester);
@@ -1248,17 +1250,17 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 3800));
 
-    expect(find.text('104,80 kr'), findsOneWidget);
+    expect(find.text('105,80 kr'), findsOneWidget);
     expect(find.text('LIVE'), findsNothing);
 
     // Advance in small frames so the async route-preview continuation can
     // install and then fire the 15 s timeout timer.
     for (var i = 0; i < 40; i++) {
-      if (find.text('104,80 kr').evaluate().isEmpty) break;
+      if (find.text('105,80 kr').evaluate().isEmpty) break;
       await tester.pump(const Duration(milliseconds: 500));
     }
 
-    expect(find.text('104,80 kr'), findsNothing);
+    expect(find.text('105,80 kr'), findsNothing);
     expect(find.text('Only for you · nearby'), findsNothing);
     expect(find.text('LIVE'), findsOneWidget);
     _expectNoException(tester);
@@ -1786,7 +1788,7 @@ void main() {
       await tester.tap(find.text('OFF'));
       await tester.pump(const Duration(milliseconds: 3800));
 
-      expect(find.text('104,80 kr'), findsOneWidget);
+      expect(find.text('105,80 kr'), findsOneWidget);
       expect(find.text('Only for you · nearby'), findsOneWidget);
 
       final route = tester.widget<TextButton>(
@@ -1795,7 +1797,7 @@ void main() {
       expect(route.onPressed, isNotNull);
       route.onPressed!.call();
       await tester.pump(const Duration(milliseconds: 120));
-      expect(find.text('104,80 kr'), findsOneWidget);
+      expect(find.text('105,80 kr'), findsOneWidget);
       _expectNoException(tester);
 
       final acceptButton = find.ancestor(
@@ -2461,7 +2463,7 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 3800));
 
-    expect(find.text('104,80 kr'), findsOneWidget);
+    expect(find.text('105,80 kr'), findsOneWidget);
     expect(find.text('Only for you · nearby'), findsOneWidget);
     _expectNoException(tester);
   });
