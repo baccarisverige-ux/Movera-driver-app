@@ -598,7 +598,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
       key: const ValueKey<String>('reservation-popup'),
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(22, 26, 22, 14),
+          padding: const EdgeInsets.fromLTRB(22, 26, 22, 0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -608,6 +608,8 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
               _card(),
               const SizedBox(height: 14),
               _viewDetailsButton(),
+              const SizedBox(height: 12),
+              _mapStrip(context),
             ],
           ),
         ),
@@ -902,6 +904,79 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// A small tilted 3D route map in a white frame; a tap opens the details.
+  Widget _mapStrip(BuildContext context) {
+    return Container(
+      key: const ValueKey<String>('reservation-map-strip'),
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0x0D0F1214)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x380F1214),
+            blurRadius: 22,
+            spreadRadius: -8,
+            offset: Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Color(0x1F0F1214),
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(
+          height: 60,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              IgnorePointer(
+                child: ColorFiltered(
+                  colorFilter: const ColorFilter.matrix(_greyscale),
+                  child: (widget.mapBuilder ?? _tiltedMap)(context),
+                ),
+              ),
+              Positioned.fill(
+                child: PointerInterceptor(
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Semantics(
+                      label: 'View reservation details',
+                      button: true,
+                      child: InkWell(
+                        key: const ValueKey<String>('reservation-map-strip-open'),
+                        onTap: () => _openDetails(true),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tiltedMap(BuildContext context) {
+    return FutureBuilder<List<GeoPoint>>(
+      key: ValueKey(_route),
+      future: _route,
+      initialData: reservationWaypoints(request),
+      builder: (context, snapshot) => ReservationRouteMap(
+        request: request,
+        route: snapshot.data ?? reservationWaypoints(request),
+        fitPadding: 14,
+        show3DNotice: false,
+        tilt: 45,
       ),
     );
   }

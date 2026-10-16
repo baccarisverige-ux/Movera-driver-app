@@ -226,8 +226,14 @@ void main() {
     expect(find.text('Gamla vägen'), findsOneWidget);
     expect(find.text('Solna centrum'), findsOneWidget);
     expect(find.text('View details'), findsOneWidget);
-    // The route and the stops wait behind View details.
-    expect(find.byKey(const ValueKey<String>('fake-map')), findsNothing);
+    // Only the small framed map shows; the stops wait behind View details.
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('reservation-map-strip')),
+        matching: find.byKey(const ValueKey<String>('fake-map')),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('PICKUP'), findsNothing);
     // The radar accepts and the × only hides: no buttons on the card.
     for (final word in ['Accept', 'Accept ride', 'Decline', 'Deny']) {
@@ -367,6 +373,27 @@ void main() {
     // A normal reservation (the Home popup, Scheduled rides): the fare.
     expect(await priceWith(null), '126,75 kr');
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the framed 3D map under View details opens the details', (
+    tester,
+  ) async {
+    await _pumpSheet(tester, _request);
+    final strip = find.byKey(const ValueKey<String>('reservation-map-strip'));
+    expect(strip, findsOneWidget);
+    expect(
+      find.descendant(
+        of: strip,
+        matching: find.byKey(const ValueKey<String>('fake-map')),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(
+      find.byKey(const ValueKey<String>('reservation-map-strip-open')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey<String>('reservation-details')), findsOneWidget);
+    expect(strip, findsNothing);
   });
 
   testWidgets('View details opens the route, the stops and the numbers', (
