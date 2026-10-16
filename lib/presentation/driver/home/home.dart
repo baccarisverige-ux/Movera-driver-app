@@ -93,6 +93,7 @@ part 'home_reservation.dart';
 part 'home_scheduled.dart';
 part 'home_offer_rules.dart';
 part 'home_account.dart';
+part 'home_exclusive.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -215,6 +216,7 @@ class _DriverHomeState extends State<DriverHome>
   /// The smart gap before accepted rides, and rides Movera assigns.
   final _HomeScheduledState _scheduled = _HomeScheduledState();
   final _HomeAccountState _account = _HomeAccountState();
+  late final _HomeExclusiveState _exclusive = _HomeExclusiveState(this);
   Timer? _radarOfferTwoTimer;
   Timer? _radarOfferThreeTimer;
   Timer? _homeRadarMatchResolutionTimer;
@@ -753,9 +755,7 @@ class _DriverHomeState extends State<DriverHome>
               backdropTapClosesPanel: false,
               controller: _panelController,
               margin: EdgeInsets.all(0),
-              minHeight: _outsideRadarOffer != null
-                  ? 0
-                  : MoveraSheetMetrics.collapsedHeight,
+              minHeight: MoveraSheetMetrics.collapsedHeight,
               padding: EdgeInsets.zero,
               boxShadow: [],
               isDraggable: _outsideRadarOffer == null,
@@ -809,29 +809,23 @@ class _DriverHomeState extends State<DriverHome>
                 _HomeMapSheet(this)._setMapGesturesBlocked(false);
               },
               // Account on hold keeps its red dock face.
-              collapsed: _outsideRadarOffer != null
-                  ? null
-                  : _HomeMapSheet(this)._inactiveDock(),
+              collapsed: _HomeMapSheet(this)._inactiveDock(),
               // The dock is the sheet's own bottom: it never moves or fades,
               // so the sheet keeps one shape from closed to open.
-              footer: _outsideRadarOffer != null
-                  ? null
-                  : _HomeMapSheet(this)._homeDockFooter(),
+              footer: _HomeMapSheet(this)._homeDockFooter(),
 
-              panelBuilder: (ScrollController sc) => _outsideRadarOffer != null
-                  ? const SizedBox.shrink()
-                  : PointerInterceptor(
-                      child: Listener(
-                        behavior: HitTestBehavior.opaque,
-                        onPointerDown: _HomeMapSheet(this)._onSheetPointerDown,
-                        onPointerMove: _HomeMapSheet(this)._onSheetPointerMove,
-                        onPointerUp: _HomeMapSheet(this)._onSheetPointerEnd,
-                        onPointerCancel: _HomeMapSheet(this)._onSheetPointerEnd,
-                        child: _activationHold && !isAccountActivated
-                            ? _HomeMapSheet(this)._inactiveSheetFace()
-                            : _HomeMapSheet(this).panelColumn(sc),
-                      ),
-                    ),
+              panelBuilder: (ScrollController sc) => PointerInterceptor(
+                  child: Listener(
+                    behavior: HitTestBehavior.opaque,
+                    onPointerDown: _HomeMapSheet(this)._onSheetPointerDown,
+                    onPointerMove: _HomeMapSheet(this)._onSheetPointerMove,
+                    onPointerUp: _HomeMapSheet(this)._onSheetPointerEnd,
+                    onPointerCancel: _HomeMapSheet(this)._onSheetPointerEnd,
+                    child: _activationHold && !isAccountActivated
+                        ? _HomeMapSheet(this)._inactiveSheetFace()
+                        : _HomeMapSheet(this).panelColumn(sc),
+                  ),
+                ),
               body: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -843,7 +837,7 @@ class _DriverHomeState extends State<DriverHome>
                 ],
               ),
             ),
-          if (_outsideRadarOffer == null) _HomeMapSheet(this)._homeRadarLayer(),
+          _HomeMapSheet(this)._homeRadarLayer(),
               ],
             ),
       ),
@@ -1155,6 +1149,7 @@ class _DriverHomeState extends State<DriverHome>
     _radarSweepController.dispose();
     _panelSlidePosition.dispose();
     _snapSheet.dispose();
+    _exclusive.dispose();
     _mapController = null;
     _driverSession.removeListener(_onDriverSessionChanged);
     if (_ownsDriverSession) {

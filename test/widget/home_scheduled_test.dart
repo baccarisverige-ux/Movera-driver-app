@@ -166,6 +166,9 @@ const _assignedCard = ValueKey<String>(
   'exclusive-offer-card-$demoAssignedReservationId',
 );
 
+/// While an Exclusive offer is live the blue radar is its Accept.
+final _exclusiveRadar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -312,18 +315,21 @@ void main() {
       final card = find.byKey(_assignedCard);
       expect(card, findsOneWidget);
       expect(
-        find.descendant(of: card, matching: find.text('Assigned by Movera')),
+        find.descendant(of: card, matching: find.textContaining('Assigned by Movera')),
         findsOneWidget,
       );
       expect(
         find.descendant(of: card, matching: find.text('Reservation · 09:30')),
         findsOneWidget,
       );
-      // The admin's time to accept, counting down on Accept.
-      expect(find.descendant(of: card, matching: find.text('30s')), findsOneWidget);
+      // The admin's time to accept, counting down on the radar.
+      expect(
+        find.descendant(of: _exclusiveRadar, matching: find.text('30s')),
+        findsOneWidget,
+      );
       expect(_said, contains('Assigned by Movera'));
 
-      await tester.tap(find.descendant(of: card, matching: find.text('Accept')));
+      await tester.tap(_exclusiveRadar);
       await _frames(tester, const Duration(milliseconds: 600));
       expect(dispatch.claims, [demoAssignedReservationId]);
       expect(_said, contains('Scheduled ride accepted'));
@@ -359,10 +365,10 @@ void main() {
       );
       expect(card, findsOneWidget);
       expect(
-        find.descendant(of: card, matching: find.text('Only for you · nearby')),
+        find.descendant(of: card, matching: find.text('Only for you · pickup 3 min away')),
         findsOneWidget,
       );
-      await tester.tap(find.descendant(of: card, matching: find.text('Accept')));
+      await tester.tap(_exclusiveRadar);
       await _frames(tester, const Duration(milliseconds: 800));
       final trip = _trip0(tester);
       expect(trip.riderName, 'Nils');
@@ -387,11 +393,11 @@ void main() {
       expect(
         find.descendant(
           of: card,
-          matching: find.text('Pickup soon'),
+          matching: find.textContaining('Pickup soon'),
         ),
         findsOneWidget,
       );
-      await tester.tap(find.descendant(of: card, matching: find.text('Accept')));
+      await tester.tap(_exclusiveRadar);
       await _frames(tester, const Duration(milliseconds: 1200));
       expect(dispatch.claims, [demoReservationId]);
       final trip = _trip0(tester);

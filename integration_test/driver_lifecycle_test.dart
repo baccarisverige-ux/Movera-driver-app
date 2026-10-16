@@ -142,11 +142,8 @@ void main() {
       findsWidgets,
       reason: 'The demo offer did not appear after going online.',
     );
-    final acceptButton = find.ancestor(
-      of: find.text('Accept'),
-      matching: find.byType(FilledButton),
-    );
-    tester.widget<FilledButton>(acceptButton).onPressed!.call();
+    // The Exclusive offer's Accept is the blue radar in the dock.
+    await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
     await _elapse(tester, const Duration(milliseconds: 520));
     expect(find.byType(AcceptRide), findsOneWidget);
 
