@@ -27,6 +27,46 @@ const Color _soft = Color(0xFFF2F4F5);
 const Color _cardLine = Color(0xFFE6E9EB);
 const Color _hairline = Color(0xFFEEF0F1);
 
+/// The radar orb's colour while a reservation is up: `MoveraRadarOrb`
+/// with `reserve: true` (its reserve ink, the dark Accept orb in the dock).
+/// The pictures' accent always follows it; a test reads the real orb to
+/// keep the two equal.
+const Color reservationAcceptOrbColor = Color(0xFF111518);
+
+/// The accent colour drawn in the flat picture files; replaced at render
+/// time by the orb's colour. The other greys stay as drawn.
+const Color reservationPictureAccent = Color(0xFF4A555E);
+
+/// Replaces the pictures' accent with [accent] while the SVG is parsed.
+@immutable
+class ReservationAccentMapper extends ColorMapper {
+  const ReservationAccentMapper(this.accent);
+
+  final Color accent;
+
+  @override
+  Color substitute(
+    String? id,
+    String elementName,
+    String attributeName,
+    Color color,
+  ) {
+    if (color.toARGB32() | 0xFF000000 !=
+        reservationPictureAccent.toARGB32()) {
+      return color;
+    }
+    // Keeps the drawn opacity.
+    return accent.withValues(alpha: color.a * accent.a);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ReservationAccentMapper && other.accent == accent;
+
+  @override
+  int get hashCode => accent.hashCode;
+}
+
 /// How dark the map gets behind the reservation.
 const double reservationBarrierOpacity = 0.44;
 
@@ -84,6 +124,7 @@ class HomeReservationSheet extends StatefulWidget {
     this.position = 1,
     this.count = 1,
     this.picture,
+    this.accent = reservationAcceptOrbColor,
     this.bottomInset = 178,
     this.maxContentHeight = double.infinity,
     this.fullContentHeight,
@@ -114,6 +155,9 @@ class HomeReservationSheet extends StatefulWidget {
 
   /// The card's picture; by default from the ride.
   final ReservationPicture? picture;
+
+  /// The pictures' accent: the colour of the radar orb in the dock.
+  final Color accent;
 
   /// Space under the content, from the screen bottom: the dock and the
   /// radar orb sit there.
@@ -295,6 +339,7 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
                   position: widget.position,
                   count: widget.count,
                   picture: widget.picture,
+                  accent: widget.accent,
                   detailsHeight: full.isFinite ? full : null,
                   onDetailsChanged: (open) {
                     if (mounted && _details != open) {
@@ -359,6 +404,7 @@ class ReservationRequestSheet extends StatefulWidget {
     this.position = 1,
     this.count = 1,
     this.picture,
+    this.accent = reservationAcceptOrbColor,
     this.showDetails = false,
     this.detailsHeight,
     this.onDetailsChanged,
@@ -388,6 +434,9 @@ class ReservationRequestSheet extends StatefulWidget {
 
   /// The card's picture; by default from the ride.
   final ReservationPicture? picture;
+
+  /// The pictures' accent: the colour of the radar orb in the dock.
+  final Color accent;
 
   /// Opens on the details view (route, stops, trip numbers).
   final bool showDetails;
@@ -642,6 +691,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
                   child: _ReservationPictureView(
                     picture: widget.picture ??
                         ReservationPicture.forRequest(request),
+                    accent: widget.accent,
                   ),
                 ),
               ),
@@ -1264,13 +1314,17 @@ class _StopRowData {
 /// The flat picture top-right of the card. Airport rides combine the
 /// plane (top left) with the traveller walking with a bag (bottom right).
 class _ReservationPictureView extends StatelessWidget {
-  const _ReservationPictureView({required this.picture});
+  const _ReservationPictureView({required this.picture, required this.accent});
 
   final ReservationPicture picture;
+
+  /// Drawn in place of [reservationPictureAccent].
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
     final key = ValueKey<String>('reservation-picture-${picture.name}');
+    final colors = ReservationAccentMapper(accent);
     return KeyedSubtree(
       key: const ValueKey<String>('reservation-picture'),
       child: switch (picture) {
@@ -1278,11 +1332,13 @@ class _ReservationPictureView extends StatelessWidget {
           AppAssets.reservationBooked,
           key: key,
           fit: BoxFit.contain,
+          colorMapper: colors,
         ),
         ReservationPicture.calendar => SvgPicture.asset(
           AppAssets.reservationCalendar,
           key: key,
           fit: BoxFit.contain,
+          colorMapper: colors,
         ),
         ReservationPicture.airport => LayoutBuilder(
           key: key,
@@ -1299,6 +1355,7 @@ class _ReservationPictureView extends StatelessWidget {
                   child: SvgPicture.asset(
                     AppAssets.reservationAircraft,
                     fit: BoxFit.contain,
+                    colorMapper: colors,
                   ),
                 ),
                 Positioned(
@@ -1309,6 +1366,7 @@ class _ReservationPictureView extends StatelessWidget {
                   child: SvgPicture.asset(
                     AppAssets.reservationTraveller,
                     fit: BoxFit.contain,
+                    colorMapper: colors,
                   ),
                 ),
               ],

@@ -18,6 +18,7 @@ import 'package:movera/presentation/driver/home/components/reservation_route_map
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/layout_viewport.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
@@ -40,6 +41,20 @@ const _request = ReservationRequestPreview(
       point: GeoPoint(59.3430, 18.0496),
     ),
   ],
+);
+
+const _airportRequest = ReservationRequestPreview(
+  category: 'Premium',
+  fare: '248.40 kr',
+  pickupLabel: '',
+  pickupAddress: 'Kungsholmstorg, Stockholm',
+  dropoffAddress: 'Arlanda Terminal 5, Arlanda',
+  pickupTime: '07:40',
+  pickupDay: 'Today',
+  tripMinutes: 36,
+  tripKm: 40.8,
+  pickup: GeoPoint(59.3297, 18.0436),
+  dropoff: GeoPoint(59.6497, 17.9237),
 );
 
 Widget _fakeMap(BuildContext context) =>
@@ -242,19 +257,7 @@ void main() {
   testWidgets('airport rides get the plane and traveller picture', (
     tester,
   ) async {
-    const airport = ReservationRequestPreview(
-      category: 'Premium',
-      fare: '248.40 kr',
-      pickupLabel: '',
-      pickupAddress: 'Kungsholmstorg, Stockholm',
-      dropoffAddress: 'Arlanda Terminal 5, Arlanda',
-      pickupTime: '07:40',
-      pickupDay: 'Today',
-      tripMinutes: 36,
-      tripKm: 40.8,
-      pickup: GeoPoint(59.3297, 18.0436),
-      dropoff: GeoPoint(59.6497, 17.9237),
-    );
+    const airport = _airportRequest;
     expect(ReservationPicture.forRequest(airport), ReservationPicture.airport);
     expect(ReservationPicture.forRequest(_request), ReservationPicture.booked);
     expect(
@@ -272,6 +275,59 @@ void main() {
       findsNWidgets(2),
     );
     expect(find.text('Arlanda T5'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the pictures\' accent is the colour of the Accept orb', (
+    tester,
+  ) async {
+    // The real orb in the dock while a reservation is up.
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Center(
+          child: MoveraRadarOrb(
+            title: 'Accept',
+            status: 'TAP',
+            subtitle: 'Accept the reservation',
+            reserve: true,
+            active: true,
+          ),
+        ),
+      ),
+    );
+    final ink = tester
+        .widgetList<InkWell>(
+          find.descendant(
+            of: find.byType(MoveraRadarOrb),
+            matching: find.byType(InkWell),
+          ),
+        )
+        .firstWhere((ink) => ink.splashColor != null);
+    final orb = ink.splashColor!.withValues(alpha: 1);
+    expect(orb.toARGB32(), reservationAcceptOrbColor.toARGB32());
+
+    for (final request in [_request, _airportRequest]) {
+      await _pumpSheet(tester, request);
+      final pictures = tester.widgetList<SvgPicture>(
+        find.descendant(
+          of: find.byKey(const ValueKey<String>('reservation-picture')),
+          matching: find.byType(SvgPicture),
+        ),
+      );
+      expect(pictures, isNotEmpty);
+      for (final picture in pictures) {
+        final mapper = (picture.bytesLoader as SvgAssetLoader).colorMapper!;
+        // The accent becomes the orb's colour; the other greys stay.
+        expect(
+          mapper
+              .substitute(null, 'path', 'fill', reservationPictureAccent)
+              .toARGB32(),
+          orb.toARGB32(),
+        );
+        const grey = Color(0xFF3F3D56);
+        expect(mapper.substitute(null, 'path', 'fill', grey), grey);
+      }
+    }
     expect(tester.takeException(), isNull);
   });
 

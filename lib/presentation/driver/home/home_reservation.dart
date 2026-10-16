@@ -156,6 +156,8 @@ extension _HomeReservation on _DriverHomeState {
             position: _reservationPosition,
             count: _reservation.round.length,
             picture: _reservationPicture,
+            // The pictures' accent is always the orb's colour in the dock.
+            accent: reservationAcceptOrbColor,
             // Leaves the top island and some map above the sheet.
             maxContentHeight: math.max(
               160.0,
