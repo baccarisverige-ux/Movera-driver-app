@@ -878,34 +878,19 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
     );
   }
 
-  /// The tilted 3D route map in a white frame, in place of a View details
+  /// The tilted 3D route map with a light contour, in place of a View details
   /// button; a tap opens the details.
   Widget _mapStrip(BuildContext context) {
     return Container(
       key: const ValueKey<String>('reservation-map-strip'),
-      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0x0D0F1214)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x380F1214),
-            blurRadius: 22,
-            spreadRadius: -8,
-            offset: Offset(0, 12),
-          ),
-          BoxShadow(
-            color: Color(0x1F0F1214),
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _cardLine, width: 1.5),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16.5),
         child: SizedBox(
-          height: 124,
+          height: 133,
           child: Stack(
             fit: StackFit.expand,
             children: [
