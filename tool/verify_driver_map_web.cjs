@@ -63,7 +63,26 @@ const context = {google: {maps}, performance: {now: () => clock},
     const image = new Element(); images.push(image); return image;
   }},
   MutationObserver: class {observe() {} disconnect() {}}};
+// Maps JavaScript loaded after the adapter (async/defer, slow network): the
+// adapter must not throw, must report not ready, and must install itself
+// once the SDK arrives. Flutter builds no map until ready().
+{
+  const ticks = [];
+  const late = {performance: context.performance, queueMicrotask,
+    document: context.document, MutationObserver: context.MutationObserver,
+    setInterval: callback => ticks.push(callback), clearInterval: () => ticks.length = 0};
+  vm.runInNewContext(fs.readFileSync('web/driver_map_camera.js', 'utf8'), late);
+  assert.equal(late.driverMapCamera.ready(), false, 'No SDK yet: adapter waits');
+  assert.equal(late.driverMapCamera.supports3D(1), false);
+  late.driverMapCamera.configure(1, 0, 0, .5);
+  late.google = {maps: {...maps}};
+  ticks[0]();
+  assert.equal(late.driverMapCamera.ready(), true, 'Adapter installs when SDK lands');
+  assert.notEqual(late.google.maps.Map, MapMock, 'Late SDK Map is wrapped');
+  assert.equal(ticks.length, 0, 'Polling stops after install');
+}
 vm.runInNewContext(fs.readFileSync('web/driver_map_camera.js', 'utf8'), context);
+assert.equal(context.driverMapCamera.ready(), true);
 const div = new Element('plugins.flutter.io/google_maps_7');
 const style = [{featureType: 'water'}];
 const map = new maps.Map(div, {styles: style});

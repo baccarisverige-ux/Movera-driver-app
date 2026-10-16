@@ -1,3 +1,4 @@
+bool get ready => true;
 void applyAnchor(int mapId) {}
 void claim(int mapId) {}
 void gestures(int mapId, bool enabled) {}
