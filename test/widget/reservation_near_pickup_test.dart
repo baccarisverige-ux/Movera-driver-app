@@ -402,7 +402,7 @@ void main() {
           // Won, the 08:05 request clashes with it and leaves the list.
           expect(ScheduledRideStore.openRequests.value, won ? 0 : 1);
           if (won) {
-            expect(find.text('Reservation accepted · pickup 07:40'), findsOneWidget);
+            expect(find.text('Accepted · pickup 07:40'), findsOneWidget);
             expect(find.text('Upcoming'), findsOneWidget);
             expect(find.text('Gamla vägen, Stockholm'), findsOneWidget);
           } else {

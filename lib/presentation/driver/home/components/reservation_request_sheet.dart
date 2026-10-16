@@ -902,7 +902,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
               ),
               Positioned(
                 right: 8,
-                bottom: 8,
+                top: 8,
                 child: IgnorePointer(
                   child: Container(
                     key: const ValueKey<String>('reservation-map-see-details'),
@@ -959,9 +959,11 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
       builder: (context, snapshot) => ReservationRouteMap(
         request: request,
         route: snapshot.data ?? reservationWaypoints(request),
-        fitPadding: 14,
+        fitPadding: 30,
         show3DNotice: false,
         tilt: 45,
+        mapStyle: _greyMapStyle,
+        routeColor: _ink,
       ),
     );
   }
@@ -1157,6 +1159,13 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
       ),
     );
   }
+
+  /// Grey, calm map for the popup: Google's web map ignores the Flutter
+  /// greyscale filter, so the style itself drops the colour.
+  static const String _greyMapStyle =
+      '[{"stylers":[{"saturation":-100},{"lightness":8}]},'
+      '{"featureType":"poi","stylers":[{"visibility":"off"}]},'
+      '{"featureType":"transit","stylers":[{"visibility":"off"}]}]';
 
   static const List<double> _greyscale = <double>[
     0.2126, 0.7152, 0.0722, 0, 0, //

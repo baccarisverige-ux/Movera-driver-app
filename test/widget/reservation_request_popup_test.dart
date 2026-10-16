@@ -638,7 +638,7 @@ void main() {
     await _frames(tester, const Duration(milliseconds: 1400));
 
     // Only saved for later: Scheduled rides › Accepted.
-    expect(_said, contains('Reservation accepted · pickup 07:40'));
+    expect(_said, contains('Accepted · pickup 07:40'));
     expect(_popup, findsNothing);
     expect(find.byKey(_reserveRadar), findsNothing);
     // It left the requests and waits in Accepted; the 08:05 request
@@ -814,7 +814,7 @@ void main() {
       // Accept takes the airport ride for later; nothing else waits.
       await tester.tap(find.byKey(_reserveRadar));
       await _frames(tester, const Duration(milliseconds: 1500));
-      expect(_said, contains('Reservation accepted · pickup 12:00'));
+      expect(_said, contains('Accepted · pickup 12:00'));
       expect(ScheduledRideStore.isOpen(demoAirportReservationId), isFalse);
       expect(ScheduledRideStore.isOpen(demoReservationId), isTrue);
       await _frames(tester, const Duration(seconds: 3));
@@ -857,7 +857,7 @@ void main() {
       expect(find.text('1 of 2'), findsOneWidget);
       await tester.tap(find.byKey(_reserveRadar));
       await _frames(tester, const Duration(milliseconds: 1500));
-      expect(_said, contains('Reservation accepted · pickup ${ride.pickupTime}'));
+      expect(_said, contains('Accepted · pickup ${ride.pickupTime}'));
       expect(ScheduledRideStore.upcoming, contains(ride));
 
       // Minutes later (the old fast day was at its Exclusive step after

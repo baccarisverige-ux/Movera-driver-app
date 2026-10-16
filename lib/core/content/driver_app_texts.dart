@@ -102,7 +102,7 @@ class DriverTexts {
       DriverTextArea.island);
   static const islandReservationAcceptedAt = DriverTextKey(
       'island.reservationAcceptedAt',
-      'Reservation accepted · pickup {time}',
+      'Accepted · pickup {time}',
       DriverTextArea.island);
   static const islandNoLongerAvailable = DriverTextKey(
       'island.noLongerAvailable', 'No longer available', DriverTextArea.island);
