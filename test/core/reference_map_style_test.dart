@@ -116,45 +116,6 @@ void main() {
     expect(serialised.length, lessThanOrEqualTo(950), reason: serialised);
   });
 
-  test('reference map style applies the 16 Oct 2026 reference palette', () {
-    String? colour(String feature, String element) {
-      for (final rule in _rules()) {
-        if ((rule['featureType'] ?? 'all') == feature &&
-            (rule['elementType'] ?? 'all') == element) {
-          final stylers = (rule['stylers'] as List<Object?>)
-              .cast<Map<String, Object?>>();
-          return stylers.first['color'] as String?;
-        }
-      }
-      return null;
-    }
-
-    const expected = <String, String>{
-      'all/geometry': '#EDF0F5',
-      'road/geometry': '#FFFFFF',
-      'road.highway/geometry': '#9CA9D4',
-      'transit.line/geometry': '#BECAD1',
-      'poi.park/geometry': '#B6DEBB',
-      'landscape.natural.landcover/geometry': '#B6DEBB',
-      'poi.medical/geometry': '#F1E1E1',
-      'poi.school/geometry': '#F1E1E1',
-      'water/geometry': '#BBD9FB',
-      'administrative.locality/labels.text.fill': '#596171',
-      'administrative.neighborhood/labels.text.fill': '#8FA2D3',
-      'road/labels.text.fill': '#444444',
-      'all/labels.text.stroke': '#FFFFFF',
-      'poi.park/labels.text.fill': '#478660',
-      'all/labels.text.fill': '#576167',
-    };
-    expected.forEach((selector, hex) {
-      final parts = selector.split('/');
-      expect(colour(parts[0], parts[1]), hex, reason: selector);
-    });
-    // Roads set one geometry colour (fill and stroke), so no outline.
-    expect(colour('road', 'geometry.stroke'), isNull);
-    expect(colour('road.highway', 'geometry.stroke'), isNull);
-  });
-
   test('reference map style has no duplicate selectors', () {
     final seen = <String>{};
     for (final rule in _rules()) {

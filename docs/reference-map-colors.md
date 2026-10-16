@@ -1,42 +1,33 @@
-# Reference map palette — October 16, 2026
+# Reference map palette — October 6, 2026
 
-Driver day map (`lib/styles/reference_map_style.dart`). Picked pixel by pixel
-with Pillow from four user screenshots of 16 Oct 2026 (Märsta, E20, Norra
-Djurgården, Kungsholmen; 1206x2622). This replaces the 10 Oct Waze day
-palette. The same string is passed to `GoogleMap.style`, so it styles web,
-iOS and Android alike. There is no separate dark map style yet.
+The same JSON is used in Rider and Driver. Rider Home shares its fallback
+constant. These values come from original map references, not the Map Color Lab
+editor screenshots (those display the previous palette and an edited background).
 
-| Layer | Applied color | Google selector |
+| Layer | Applied color | Evidence / confidence |
 | --- | --- | --- |
-| Land / background | `#EDF0F5` | all / geometry |
-| Streets and roads (no outline) | `#FFFFFF` | road / geometry (fill and stroke) |
-| Motorways and ramps | `#9CA9D4` | road.highway / geometry (includes controlled_access) |
-| Railway | `#BECAD1` | transit.line / geometry |
-| Parks and forest | `#B6DEBB` | poi.park, landscape.natural.landcover / geometry |
-| Hospital / school / campus | `#F1E1E1` | poi.medical, poi.school / geometry |
-| Water | `#BBD9FB` | water / geometry |
-| Water labels | `#4A6C9B` | water / labels.text.fill (readable blue, not sampled) |
-| Town names | `#596171` | administrative.locality / labels.text.fill |
-| District names | `#8FA2D3` | administrative.neighborhood / labels.text.fill |
-| Street names / road numbers | `#444444` on `#FFFFFF` halo | road / labels.text.fill, all / labels.text.stroke |
-| Park names | `#478660` | poi.park / labels.text.fill (icon: Google's own green) |
-| Restaurants and other businesses | `#576167`, greyscale icons | poi.business labels on, labels.icon saturation -100 |
-
-Other POI labels (attractions, government, worship, medical, school,
-sports) stay off. Administrative boundary lines stay off.
-
-Not expressible in Google JSON styles:
-
-- Restaurants cannot be isolated: `poi.business` also shows shops, hotels
-  and other businesses.
-- Motorway shields (E20 green `#509E85`, white text) are Google's own
-  icons; a style can hide or desaturate them but not set their colour.
-- Tunnels / closed roads (`#D5D8DB` in the references) have no feature type.
-- The reference's thinner city-zoom motorway shade (`#8998CC`) needs a
-  zoom-dependent style; JSON styles are zoom-independent.
-
-The web style string is about 510 characters, well inside the Maps
-JavaScript 1000-character limit guarded by `test/core/reference_map_style_test.dart`.
+| Land / background | `#FAFCFA` | Exact dominant PNG fill |
+| General labels | `#565C61` | Dark text core in IMG_7405 |
+| Label halo | `#FFFFFF` | White outline pixels; antialiasing adds intermediate shades |
+| Administrative boundaries | `#D2DBE1` | Retained previous value; unconfirmed, not newly sampled |
+| Built areas / buildings | `#E1E4E5` | Exact urban fill in IMG_7405 and IMG_7406 |
+| POI areas | `#E1E4E5` | Exact station and parking-area fill in close-ups |
+| POI labels | `#8E9496` | Text core at Spånga Station / parking |
+| Parks | `#BEF2C9` | Exact green fill in PNGs |
+| Park labels | `#118742` | Most frequent green text core in IMG_7395 and IMG_7404 |
+| Natural areas | `#DDF7E3` | Exact pale green fill in wider IMG_7390/IMG_7393; feature assignment inferred |
+| Local roads | `#D1D6DA` | Frequent road pixel in close-up; textured rather than uniform |
+| Local road edges | `#D1D6DA` | Separate border not distinguishable; reuse fill, not an independently detected edge |
+| Main roads | `#B6BBC0` | Frequent road pixel in close-ups; wider views include `#C0C5CB` |
+| Main road edges | `#B6BBC0` | Separate border not distinguishable; reuse fill |
+| Highway fill | `#8E9496` | Frequent dark highway pixel in wider PNG |
+| Highway edge | `#8C939A` | Frequent adjacent grey highway shade; edge assignment inferred |
+| Road labels | `#565C61` | Same dark text core, white halo |
+| Transit areas | `#E1E4E5` | Exact Spånga Station area fill |
+| Railway lines | `#D2CECC` | Exact track/tie pixels in IMG_7405 |
+| Transit labels | `#8E9496` | Spånga Station text core |
+| Water | `#9EE4FF` | Exact dominant PNG water fill |
+| Water labels | `#1360A7` | Most frequent blue text core in IMG_7395 |
 
 ## Separate overlay colors observed
 
@@ -47,6 +38,12 @@ keep traffic disabled because present traffic does not describe a past ride. The
 is controlled by the provider, not the park-label rule.
 
 ## Limits of matching
+
+The previous palette missed the close-up built-area, transit, railway and label
+samples. This revision corrects those and adds explicit road and transit labels.
+The 16 Map Color Lab categories are mapped in code, but detection remains incomplete for
+boundaries and undistinguished edges. Additional park, road and transit labels
+and railway rules prevent those elements from inheriting the generic color.
 
 Screenshots do not reveal the source provider's layer metadata. Google Maps
 can classify polygons differently and use different geometry, label placement,
