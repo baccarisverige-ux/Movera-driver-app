@@ -1,3 +1,5 @@
+/// Not applied: the driver app uses Google's original map colours (17 Oct 2026).
+/// Kept for reference and its size test.
 /// Waze iPhone app day palette, sampled 2026-10-10 with Pillow from eight
 /// user-supplied Waze app screenshots (Södertälje, Tumba, Stockholm/Västberga;
 /// 1206x2622). Hex values are dominant pixels of clean map regions (UI,

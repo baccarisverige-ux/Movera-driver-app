@@ -7,7 +7,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'dart:math' as math;
 
-import '../styles/reference_map_style.dart';
 import '../core/navigation/map_double_tap_policy.dart';
 import 'driver_map_web_bridge_stub.dart'
     if (dart.library.js_interop) 'driver_map_web_bridge.dart'
@@ -44,7 +43,6 @@ class CustomGoogleMap extends StatefulWidget {
 
   /// Vertical screen anchor; .72 drives, clamped above sheet overlays.
   final double cameraAnchor;
-  final String? customMapStyle;
 
   /// Web only: Google's camera (zoom / pan) control in the corner.
   final bool webCameraControlEnabled;
@@ -80,7 +78,6 @@ class CustomGoogleMap extends StatefulWidget {
     this.onUserGesture,
     this.padding = EdgeInsets.zero,
     this.cameraAnchor = .5,
-    this.customMapStyle,
     this.webCameraControlEnabled = false,
     this.show3DNotice = true,
   });
@@ -279,7 +276,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               },
               webGestureHandling: WebGestureHandling.greedy,
               webCameraControlEnabled: widget.webCameraControlEnabled,
-              style: widget.customMapStyle ?? moveraReferenceMapStyle,
               onMapCreated: (GoogleMapController controller) {
                 _mapController = controller;
                 _supports3D = web.supports3D(controller.mapId);
