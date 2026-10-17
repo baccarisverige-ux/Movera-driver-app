@@ -743,7 +743,7 @@ extension _AcceptRideTrip on _AcceptRideState {
             if (!mounted || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
             _stageTransitioning = true;
           }
-          if (_tripEndedTooQuickly) {
+          if (_tripEndedTooQuickly && farDrop?.demo != true) {
             _stageTransitioning = false;
             await _askBeforeShortFinish();
             return;
@@ -1356,9 +1356,14 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!_rideCheckWatching) { return; }
       _openRideCheck(_rideCheckDetector.hardStop(at, place: _rideCheckPlace));
     }
-    /// Dropped far away: the trip is finished away from the drop-off. Demo
-    /// arrival is simulated, so its position says nothing about the drop-off.
+    /// Finished far from drop-off: Finish tapped more than admin's km from
+    /// the drop-off. Demo arrival is simulated, so its position says nothing about the drop-off.
     RideCheckEvent? _rideCheckFarDrop() {
+      if (_rideCheckFinishDemo) {
+        _rideCheckFinishDemo = false;
+        return _rideCheck.active ? null : _rideCheckDetector.demo(RideCheckTrigger.droppedFar,
+          _rideCheckNow, destination: widget.dropoffAddress);
+      }
       if (_arrivalDemo || _rideCheck.active || !_hasLiveLocation ||
           _lastLocation?.isUsableAt(DateTime.now()) != true) { return null; }
       return _rideCheckDetector.finish(driver: GeoPointMaps.fromLatLng(_driverPosition),
@@ -1368,6 +1373,14 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// Demo tools on the island: shows the card for [trigger].
     void _openRideCheckDemo(RideCheckTrigger trigger) {
       if (!mounted || _rideCheck.active || _rideLifecycle.terminal) { return; }
+      // Finished far from drop-off: plays the real Finish, so the card opens
+      // right as the trip ends and the trip completes once answered.
+      if (trigger == RideCheckTrigger.droppedFar && _stage == ActiveRideStage.onTrip &&
+          !_paidStopWait && !_stageTransitioning && _stopCursor >= widget.stopAddresses.length) {
+        _rideCheckFinishDemo = true;
+        unawaited(_advanceRide().whenComplete(() => _rideCheckFinishDemo = false));
+        return;
+      }
       _openRideCheck(_rideCheckDetector.demo(trigger, _rideCheckNow,
         place: _rideCheckPlace, destination: widget.dropoffAddress));
     }

@@ -506,6 +506,8 @@ class _AcceptRideState extends State<AcceptRide>
   late final RideCheckController _rideCheck;
   late final RideCheckDetector _rideCheckDetector;
   Timer? _rideCheckTicker;
+  /// Island demo: the next Finish opens "Finished far from drop-off".
+  bool _rideCheckFinishDemo = false;
   StreamSubscription<DateTime>? _hardStops;
 
   late final SheetTrace _sheetTrace = SheetTrace('active', () => _ridePanelController.isAttached ? _ridePanelController.panelPosition : 0);

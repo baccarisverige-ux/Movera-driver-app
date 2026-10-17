@@ -51,7 +51,8 @@ class PickupPayQuote {
 
 /// Pure pickup pay maths:
 /// `max(0, km − freeKm) × kr/km + max(0, min − freeMin) × kr/min`,
-/// rounded to öre; 0 when the category or the offer kind is off.
+/// rounded to öre; 0 when the category or the offer kind is off. With
+/// distance ranges, kr/km and kr/min are the whole leg's range's.
 abstract final class PickupPayCalculator {
   static Money pay({
     required String category,
@@ -72,7 +73,9 @@ abstract final class PickupPayCalculator {
       0,
       leg.minutes - (rate.freeMinutesOn ? rate.freeMinutes : 0),
     );
-    final kronor = km * rate.krPerKm + minutes * rate.krPerMinute;
+    // The range is picked by the whole leg's km, before free km.
+    final kronor =
+        km * rate.krPerKmFor(leg.km) + minutes * rate.krPerMinuteFor(leg.km);
     // Round once, to öre; the tiny epsilon keeps 12.6 from being 12.5999….
     final ore = (kronor * 100 + 1e-6).round();
     return Money.ore(math.max(0, ore));
