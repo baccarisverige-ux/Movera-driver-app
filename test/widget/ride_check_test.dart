@@ -221,8 +221,8 @@ void main() {
 
   group('triggers open the right card', () {
     const reasons = {
-      RideCheckTrigger.longStop: 'Your car has stopped for 4 min',
-      RideCheckTrigger.droppedFar: 'Your trip ended 1.2 km from T-Centralen',
+      RideCheckTrigger.longStop: 'Your car has stopped for 5 min',
+      RideCheckTrigger.droppedFar: 'Your trip ended 4.2 km from T-Centralen',
       RideCheckTrigger.offRoute: 'You are 2.4 km off the route to T-Centralen',
       RideCheckTrigger.possibleCrash: 'A very hard stop was detected',
     };
@@ -292,7 +292,7 @@ void main() {
       });
     }
 
-    testWidgets('dropped far: finishing 1.2 km from the drop-off asks first', (
+    testWidgets('finished far: tapping Finish 4.2 km from the drop-off asks first', (
       tester,
     ) async {
       DriverRuntimeConfig.current = const DriverRuntimeConfig(
@@ -309,7 +309,7 @@ void main() {
         AcceptRide(
           offerId: 'far-trip',
           initialStage: ActiveRideStage.onTrip,
-          locationRepository: _Gps(_north(_dropoff, 1200)),
+          locationRepository: _Gps(_north(_dropoff, 4200)),
           activeRideRepository: MemoryActiveRideRepository(),
           rideCheck: kit.services,
         ),
@@ -329,7 +329,7 @@ void main() {
 
       expect(find.byType(DriverRideCompleted), findsNothing);
       expect(
-        find.text('Your trip ended 1.2 km from T-Centralen', findRichText: true),
+        find.text('Your trip ended 4.2 km from T-Centralen', findRichText: true),
         findsOneWidget,
       );
       expect(
@@ -387,7 +387,7 @@ void main() {
       await _frames(tester);
     });
 
-    testWidgets('long stop: no movement for 4 min mid-trip', (tester) async {
+    testWidgets('long stop: no movement for more than 5 min mid-trip', (tester) async {
       var now = DateTime(2026, 10, 15, 14, 30);
       final kit = _Kit(now: () => now);
       final gps = _Gps(_north(_dropoff, 1000));
@@ -404,11 +404,11 @@ void main() {
       gps.emit();
       await _frames(tester);
       expect(_cardFinder, findsNothing);
-      now = now.add(const Duration(minutes: 2));
+      now = now.add(const Duration(minutes: 3));
       gps.emit();
       await _frames(tester);
       expect(
-        find.text('Your car has stopped for 5 min', findRichText: true),
+        find.text('Your car has stopped for 6 min', findRichText: true),
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('ride-check-row-carProblem')), findsOneWidget);
@@ -821,7 +821,7 @@ void main() {
     final services = RideCheckServices.fallback;
     expect(services.alerts, isA<DemoSafetyAlertRepository>());
     expect(services.log, isA<PrefsRideCheckLog>());
-    expect(services.rules.farDropMeters, 500);
+    expect(services.rules.farDropMeters, 3000);
   });
 
   testWidgets('map position stays visible around the card', (tester) async {
@@ -856,7 +856,8 @@ void main() {
     for (final trigger in RideCheckTrigger.values) {
       expect(find.byKey(ValueKey('ride-check-demo-${trigger.name}')), findsOneWidget);
     }
-    expect(find.text('Demo: dropped far away'), findsOneWidget);
+    expect(find.text('Demo: finished far from drop-off'), findsOneWidget);
+    expect(find.text('Demo: long stop'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester);
   });
