@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/admin/ride_check_admin_config.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check.dart';
@@ -53,8 +54,8 @@ void main() {
   group('rules', () {
     test('app defaults match the owner spec and every trigger is on', () {
       const rules = RideCheckRules.defaults;
-      expect(rules.farDropMeters, 500);
-      expect(rules.longStopMinutes, 4);
+      expect(rules.farDropMeters, 3000);
+      expect(rules.longStopMinutes, 5);
       expect(rules.offRouteKm, 2);
       expect(rules.longerThanPercent, 50);
       for (final trigger in RideCheckTrigger.values) {
@@ -100,11 +101,11 @@ void main() {
   });
 
   group('detector', () {
-    test('dropped far: more than 500 m from the drop-off', () {
+    test('finished far: more than 3 km from the drop-off', () {
       final detector = RideCheckDetector();
       expect(
         detector.finish(
-          driver: _north(_dropoff, 400),
+          driver: _north(_dropoff, 2900),
           dropoff: _dropoff,
           dropoffAddress: 'T-Centralen, Stockholm',
           at: _t0,
@@ -112,14 +113,14 @@ void main() {
         isNull,
       );
       final event = detector.finish(
-        driver: _north(_dropoff, 1200),
+        driver: _north(_dropoff, 4200),
         dropoff: _dropoff,
         dropoffAddress: 'T-Centralen, Stockholm',
         at: _t0,
       )!;
       expect(event.trigger, RideCheckTrigger.droppedFar);
-      expect(event.reason.text, 'Your trip ended 1.2 km from T-Centralen');
-      expect(event.reason.bold, '1.2 km');
+      expect(event.reason.text, 'Your trip ended 4.2 km from T-Centralen');
+      expect(event.reason.bold, '4.2 km');
     });
 
     test('a trigger that is off never opens', () {
@@ -138,7 +139,7 @@ void main() {
       expect(detector.hardStop(_t0), isNull);
     });
 
-    test('long stop: no movement for 4 min mid-trip, once per trip', () {
+    test('long stop: no movement for more than 5 min mid-trip, once', () {
       final detector = RideCheckDetector()..startTrip(_t0);
       final car = _north(_dropoff, 1000);
       expect(detector.observe(car, _t0), isNull);
@@ -149,11 +150,11 @@ void main() {
       );
       final event = detector.observe(
         car,
-        _t0.add(const Duration(minutes: 4)),
+        _t0.add(const Duration(minutes: 6)),
         place: 'Odenplan',
       )!;
       expect(event.trigger, RideCheckTrigger.longStop);
-      expect(event.reason.text, 'Your car has stopped for 4 min · Odenplan');
+      expect(event.reason.text, 'Your car has stopped for 6 min · Odenplan');
       expect(
         detector.observe(car, _t0.add(const Duration(minutes: 9))),
         isNull,
@@ -184,11 +185,11 @@ void main() {
         isNull,
       );
       expect(
-        detector.tick(_t0.add(const Duration(minutes: 23))),
+        detector.tick(_t0.add(const Duration(minutes: 25))),
         isNull,
       );
       expect(
-        detector.tick(_t0.add(const Duration(minutes: 24)))?.trigger,
+        detector.tick(_t0.add(const Duration(minutes: 26)))?.trigger,
         RideCheckTrigger.longStop,
       );
     });
@@ -197,12 +198,12 @@ void main() {
       final detector = RideCheckDetector()..startTrip(_t0);
       detector.observe(_north(_dropoff, 1000), _t0);
       expect(
-        detector.tick(_t0.add(const Duration(minutes: 5)), gps: false),
+        detector.tick(_t0.add(const Duration(minutes: 6)), gps: false),
         isNull,
       );
       expect(
-        detector.tick(_t0.add(const Duration(minutes: 5)))?.reason.bold,
-        '5 min',
+        detector.tick(_t0.add(const Duration(minutes: 6)))?.reason.bold,
+        '6 min',
       );
     });
 
@@ -249,6 +250,75 @@ void main() {
         expect(demo.trigger, trigger);
         expect(demo.demo, isTrue);
       }
+    });
+
+    group('admin settings decide the trigger', () {
+      const admin = RideCheckAdminConfig(
+        finishFarFromDropoffKm: 5,
+        longStopMinutes: 10,
+      );
+      RideCheckEvent? finishAt(double meters, RideCheckRules rules) =>
+          RideCheckDetector(rules: rules).finish(
+            driver: _north(_dropoff, meters),
+            dropoff: _dropoff,
+            dropoffAddress: 'T-Centralen',
+            at: _t0,
+          );
+      RideCheckEvent? stoppedFor(Duration stopped, RideCheckRules rules) {
+        final detector = RideCheckDetector(rules: rules)..startTrip(_t0);
+        final car = _north(_dropoff, 1000);
+        detector.observe(car, _t0);
+        return detector.observe(car, _t0.add(stopped));
+      }
+
+      test('defaults: 3 km and 5 min', () {
+        const config = RideCheckAdminConfig();
+        expect(config.finishFarFromDropoffKm, 3);
+        expect(config.longStopMinutes, 5);
+        final rules = RideCheckRules.fromAdmin(config);
+        expect(rules.farDropMeters, 3000);
+        expect(rules.longStopMinutes, 5);
+      });
+
+      test('Finish just over / under the admin distance', () {
+        final rules = RideCheckRules.fromAdmin(admin);
+        expect(finishAt(4950, rules), isNull);
+        expect(finishAt(5050, rules)?.trigger, RideCheckTrigger.droppedFar);
+        final defaults = RideCheckRules.fromAdmin(const RideCheckAdminConfig());
+        expect(finishAt(2950, defaults), isNull);
+        expect(finishAt(3050, defaults)?.trigger, RideCheckTrigger.droppedFar);
+      });
+
+      test('stop just over / under the admin minutes', () {
+        final rules = RideCheckRules.fromAdmin(admin);
+        expect(stoppedFor(const Duration(minutes: 9, seconds: 50), rules), isNull);
+        expect(stoppedFor(const Duration(minutes: 10), rules), isNull);
+        expect(
+          stoppedFor(const Duration(minutes: 10, seconds: 10), rules)?.trigger,
+          RideCheckTrigger.longStop,
+        );
+        final defaults = RideCheckRules.fromAdmin(const RideCheckAdminConfig());
+        expect(stoppedFor(const Duration(minutes: 4, seconds: 50), defaults), isNull);
+        expect(
+          stoppedFor(const Duration(minutes: 5, seconds: 10), defaults)?.reason.bold,
+          '5 min',
+        );
+      });
+
+      test('services read the current admin config', () {
+        final previous = RideCheckAdminConfig.current;
+        addTearDown(() => RideCheckAdminConfig.current = previous);
+        RideCheckAdminConfig.current = admin;
+        final services = RideCheckServices(
+          alerts: DemoSafetyAlertRepository(),
+          log: MemoryRideCheckLog(),
+        );
+        expect(services.rules.farDropMeters, 5000);
+        expect(services.rules.longStopMinutes, 10);
+        final demo = RideCheckDetector(rules: services.rules)
+            .demo(RideCheckTrigger.longStop, _t0, destination: 'Solna');
+        expect(demo.reason.bold, '10 min');
+      });
     });
 
     test('distance to a route is measured to its nearest segment', () {

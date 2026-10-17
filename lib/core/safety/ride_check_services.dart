@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:movera/core/admin/ride_check_admin_config.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
@@ -12,18 +13,23 @@ class RideCheckServices {
   RideCheckServices({
     required this.alerts,
     required this.log,
-    this.rules = RideCheckRules.defaults,
+    RideCheckRules? rules,
     RideCheckRecorder Function()? recorder,
     Future<bool> Function(Uri uri)? launch,
     this.hardStops,
     DateTime Function()? now,
-  }) : createRecorder = recorder ?? createRideCheckRecorder,
+  }) : _rules = rules,
+       createRecorder = recorder ?? createRideCheckRecorder,
        launch = launch ?? launchUrl,
        now = now ?? DateTime.now;
 
   final SafetyAlertRepository alerts;
   final RideCheckLog log;
-  final RideCheckRules rules;
+  final RideCheckRules? _rules;
+
+  /// Read when a trip starts, so admin changes reach the next trip.
+  RideCheckRules get rules =>
+      _rules ?? RideCheckRules.fromAdmin(RideCheckAdminConfig.current);
   final RideCheckRecorder Function() createRecorder;
 
   /// Opens the phone dialer with tel:112. The person calls; Movera never does.
