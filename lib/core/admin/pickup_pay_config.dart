@@ -55,7 +55,51 @@ enum PickupPayDisplay {
   fareWithPickupLine,
 }
 
+/// One pickup-distance range of a category, with its own rate. Covers
+/// pickups of more than [fromKm] up to and including [toKm]; the first
+/// range also covers [fromKm] itself. A null [toKm] is "and above".
+class PickupPayRange {
+  const PickupPayRange({
+    required this.fromKm,
+    this.toKm,
+    required this.krPerKm,
+    required this.krPerMinute,
+  });
+
+  factory PickupPayRange.fromJson(Map<String, dynamic> json) =>
+      PickupPayRange(
+        fromKm: (json['fromKm'] as num?)?.toDouble() ?? 0,
+        toKm: (json['toKm'] as num?)?.toDouble(),
+        krPerKm: (json['krPerKm'] as num?)?.toDouble() ?? 0,
+        krPerMinute: (json['krPerMinute'] as num?)?.toDouble() ?? 0,
+      );
+
+  final double fromKm;
+
+  /// Null: no upper limit ("and above").
+  final double? toKm;
+  final double krPerKm;
+  final double krPerMinute;
+
+  bool get openEnded => toKm == null;
+
+  /// Whether a pickup of [km] stops in this range (up to and including
+  /// [toKm]).
+  bool reaches(double km) => toKm == null || km <= toKm!;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'fromKm': fromKm,
+    'toKm': toKm,
+    'krPerKm': krPerKm,
+    'krPerMinute': krPerMinute,
+  };
+}
+
 /// Admin's pickup pay for one ride category. No cap.
+///
+/// With [ranges], the whole pickup leg is paid at the rate of the range
+/// its km falls into (not split across ranges); without, at [krPerKm] and
+/// [krPerMinute].
 class PickupPayRate {
   const PickupPayRate({
     this.enabled = true,
@@ -65,6 +109,7 @@ class PickupPayRate {
     this.freeKmOn = false,
     this.freeMinutes = 0,
     this.freeMinutesOn = false,
+    this.ranges = const <PickupPayRange>[],
   });
 
   /// Off: no pickup pay for this category.
@@ -86,6 +131,34 @@ class PickupPayRate {
   final int freeMinutes;
   final bool freeMinutesOn;
 
+  /// Pickup-distance ranges, from the shortest. Empty: one rate for every
+  /// distance.
+  final List<PickupPayRange> ranges;
+
+  /// The range a pickup of [km] falls into: exactly 10 km is in 0–10,
+  /// 10.1 km in the next one. Beyond the last closed range, the last
+  /// range. Null when there are no ranges.
+  PickupPayRange? rangeFor(double km) {
+    if (ranges.isEmpty) {
+      return null;
+    }
+    final sorted = List<PickupPayRange>.of(ranges)
+      ..sort((a, b) => a.fromKm.compareTo(b.fromKm));
+    for (final range in sorted) {
+      if (range.reaches(km)) {
+        return range;
+      }
+    }
+    return sorted.last;
+  }
+
+  /// kr/km for a pickup of [km].
+  double krPerKmFor(double km) => rangeFor(km)?.krPerKm ?? krPerKm;
+
+  /// kr/min for a pickup of [km].
+  double krPerMinuteFor(double km) =>
+      rangeFor(km)?.krPerMinute ?? krPerMinute;
+
   PickupPayRate copyWith({
     bool? enabled,
     double? krPerKm,
@@ -94,6 +167,7 @@ class PickupPayRate {
     bool? freeKmOn,
     int? freeMinutes,
     bool? freeMinutesOn,
+    List<PickupPayRange>? ranges,
   }) => PickupPayRate(
     enabled: enabled ?? this.enabled,
     krPerKm: krPerKm ?? this.krPerKm,
@@ -102,6 +176,7 @@ class PickupPayRate {
     freeKmOn: freeKmOn ?? this.freeKmOn,
     freeMinutes: freeMinutes ?? this.freeMinutes,
     freeMinutesOn: freeMinutesOn ?? this.freeMinutesOn,
+    ranges: ranges ?? this.ranges,
   );
 }
 
@@ -142,6 +217,11 @@ class PickupPayConfig {
       freeKmOn: true,
       freeMinutes: 2,
       freeMinutesOn: true,
+      ranges: <PickupPayRange>[
+        PickupPayRange(fromKm: 0, toKm: 10, krPerKm: 2.5, krPerMinute: 0.8),
+        PickupPayRange(fromKm: 10, toKm: 20, krPerKm: 3, krPerMinute: 1),
+        PickupPayRange(fromKm: 20, toKm: 40, krPerKm: 3.5, krPerMinute: 1.2),
+      ],
     ),
     'Comfort': PickupPayRate(
       krPerKm: 3,
