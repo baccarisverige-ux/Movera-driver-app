@@ -292,7 +292,7 @@ void main() {
     });
   });
 
-  testWidgets('trip details of a cash trip: cash collected, owed to Movera', (
+  testWidgets('trip details of a cash trip: cash collected, +/- balance', (
     tester,
   ) async {
     final maps = GoogleMapsFlutterPlatform.instance;
@@ -314,6 +314,7 @@ void main() {
               fare: '126,75 kr',
               category: 'Comfort',
               paymentMethod: 'Cash',
+              cashCollected: '150 kr',
             ),
             loadRideChecks: (_) async => const [],
           ),
@@ -321,12 +322,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final owed = find.text('Owed to Movera');
+    // R8-4: balance = fare − cash = 126,75 − 150 = −23,25 kr.
+    final owed = find.text('You owe Movera');
     await tester.ensureVisible(owed);
     expect(find.text('Cash collected'), findsOneWidget);
+    expect(find.text('150,00 kr'), findsOneWidget);
     expect(owed, findsOneWidget);
-    expect(find.text('31,69 kr'), findsOneWidget);
-    expect(find.text('Taken from your next payout'), findsOneWidget);
+    expect(find.text('−23,25 kr'), findsOneWidget);
+    expect(find.text('Settled in your next payout'), findsOneWidget);
     tester.takeException();
   });
 }
