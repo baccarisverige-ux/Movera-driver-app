@@ -113,7 +113,10 @@ class RideCheckDetector {
     demo: true,
     reason: switch (trigger) {
       RideCheckTrigger.longStop => longStopReason(rules.longStopMinutes, place),
-      RideCheckTrigger.droppedFar => droppedFarReason(1200, destination),
+      RideCheckTrigger.droppedFar => droppedFarReason(
+        rules.farDropMeters + 1200,
+        destination,
+      ),
       RideCheckTrigger.offRoute => offRouteReason(
         rules.offRouteKm * 1000 + 400,
         destination,
@@ -125,9 +128,13 @@ class RideCheckDetector {
   RideCheckEvent? _longStop(DateTime at, String? place) {
     final since = _stillSince;
     if (since == null || _tripStartedAt == null) return null;
-    final minutes = at.difference(since).inMinutes;
-    if (minutes < rules.longStopMinutes) return null;
-    return _fire(RideCheckTrigger.longStop, at, longStopReason(minutes, place));
+    final stopped = at.difference(since);
+    if (stopped <= Duration(minutes: rules.longStopMinutes)) return null;
+    return _fire(
+      RideCheckTrigger.longStop,
+      at,
+      longStopReason(stopped.inMinutes, place),
+    );
   }
 
   RideCheckEvent? _offRoute(GeoPoint point, DateTime at, String? destination) {

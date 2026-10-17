@@ -4,9 +4,11 @@
 /// [RideCheckRules] and `RideCheckDetector`.
 library;
 
+import 'package:movera/core/admin/ride_check_admin_config.dart';
+
 /// Why a Ride check opened.
 enum RideCheckTrigger {
-  droppedFar('Dropped far away'),
+  droppedFar('Finished far from drop-off'),
   longStop('Long stop'),
   offRoute('Off the route'),
   possibleCrash('Possible crash');
@@ -17,14 +19,15 @@ enum RideCheckTrigger {
   final String label;
 }
 
-/// Admin-set triggers. Every trigger can be turned off; the numbers are the
-/// app defaults until Dispatch settings send their own.
+/// Admin-set triggers. Every trigger can be turned off; the distance and
+/// stop time come from [RideCheckAdminConfig].
 class RideCheckRules {
   const RideCheckRules({
     this.droppedFar = true,
-    this.farDropMeters = 500,
+    this.farDropMeters =
+        RideCheckAdminConfig.defaultFinishFarFromDropoffKm * 1000,
     this.longStop = true,
-    this.longStopMinutes = 4,
+    this.longStopMinutes = RideCheckAdminConfig.defaultLongStopMinutes,
     this.offRoute = true,
     this.offRouteKm = 2,
     this.longerThanPercent = 50,
@@ -33,11 +36,20 @@ class RideCheckRules {
 
   static const RideCheckRules defaults = RideCheckRules();
 
-  /// The trip ended more than [farDropMeters] from the drop-off.
+  /// The rules with admin's "finished far from drop-off" km and "unexpected
+  /// long stop" minutes.
+  factory RideCheckRules.fromAdmin(RideCheckAdminConfig config) =>
+      RideCheckRules(
+        farDropMeters: config.finishFarFromDropoffMeters,
+        longStopMinutes: config.longStopMinutes,
+      );
+
+  /// The driver tapped Finish more than [farDropMeters] from the drop-off.
   final bool droppedFar;
   final double farDropMeters;
 
-  /// No movement for [longStopMinutes] mid-trip, not at a planned stop.
+  /// No movement for more than [longStopMinutes] mid-trip, not at a
+  /// planned stop.
   final bool longStop;
   final int longStopMinutes;
 
