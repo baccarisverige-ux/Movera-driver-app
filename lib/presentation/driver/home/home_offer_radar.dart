@@ -33,6 +33,9 @@ class _HomeDirectOffer {
   final LatLng dropoffPosition;
   final bool reservation;
   final bool cash;
+
+  /// R8-4: cash to take from the rider when not the fare; see [RideOffer].
+  final String? cashToCollect;
   final int bags;
   final String payment;
 
@@ -73,6 +76,7 @@ class _HomeDirectOffer {
     required this.dropoffPosition,
     this.reservation = false,
     this.cash = false,
+    this.cashToCollect,
     this.bags = 0,
     this.payment = 'Card',
     this.pickupTime,
@@ -108,6 +112,7 @@ class _HomeDirectOffer {
     bags: offer.bags,
     payment: offer.payment,
     cash: RadarOfferView.isCash(offer.payment),
+    cashToCollect: offer.cashToCollect,
     reservation: offer.isReservation,
     pickupTime: offer.reservationTime,
     riderName: offer.riderName,
@@ -702,6 +707,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             riderTrips: offer.riderTrips,
             fare: offer.fare,
             paidByCash: offer.cash,
+            cashToCollect: offer.cashToCollect,
             category: offer.category,
             matchedVia: matchedVia,
             waybillRepository: _waybills,

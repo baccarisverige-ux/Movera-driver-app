@@ -21,7 +21,7 @@ void main() {
     expect(missing.outcome, ClaimOutcome.unavailable);
   });
 
-  test('demo dispatch snapshot starts with nearby-1..3 and queues 4-5', () async {
+  test('demo dispatch snapshot starts with nearby-1..3 and queues 4-7', () async {
     final dispatch = DemoDispatchRepository(
       claimDelay: Duration.zero,
       newOfferDelay: const Duration(days: 1),
@@ -52,6 +52,13 @@ void main() {
     expect(events.first, ['nearby-1', 'nearby-2', 'nearby-3']);
 
     await Future<void>.delayed(const Duration(milliseconds: 20));
-    expect(events.last, ['nearby-1', 'nearby-2', 'nearby-4', 'nearby-5']);
+    expect(events.last, [
+      'nearby-1',
+      'nearby-2',
+      'nearby-4',
+      'nearby-5',
+      'nearby-6',
+      'nearby-7',
+    ]);
   });
 }

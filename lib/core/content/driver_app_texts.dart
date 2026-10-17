@@ -223,6 +223,12 @@ class DriverTexts {
   static const tripCompleteRide =
       DriverTextKey('trip.completeRide', 'Complete ride', DriverTextArea.trip);
 
+  /// R8-4: the Collect cash sheet's button, e.g. "Finish Comfort".
+  static const tripFinishCategory = DriverTextKey(
+      'trip.finishCategory', 'Finish {category}', DriverTextArea.trip);
+  static const tripFinishRide =
+      DriverTextKey('trip.finishRide', 'Finish ride', DriverTextArea.trip);
+
   /// Every key, for admin's list.
   static const List<DriverTextKey> all = <DriverTextKey>[
     islandOnline,
@@ -295,5 +301,7 @@ class DriverTexts {
     tripGoToDropoff,
     tripCollectCash,
     tripCompleteRide,
+    tripFinishCategory,
+    tripFinishRide,
   ];
 }

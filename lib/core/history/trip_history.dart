@@ -1,4 +1,5 @@
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/earnings/cash_balance.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
 
@@ -24,6 +25,7 @@ class TripHistoryRecord {
     this.fareMinorUnits,
     this.cancellationActor,
     this.cancellationReasonCode,
+    this.cashCollected,
   });
 
   final String tripId;
@@ -42,13 +44,19 @@ class TripHistoryRecord {
   final int? fareMinorUnits;
   final String? cancellationActor;
   final String? cancellationReasonCode;
+
+  /// R8-4: the cash taken from the rider, e.g. "250 kr"; it can differ
+  /// from [fare] (rider promotions). Null when not recorded: an older
+  /// cash trip then counts as its fare.
+  final String? cashCollected;
+
   /// The rider paid cash in the car (Q23).
   bool get paidByCash => paymentMethod.trim().toLowerCase() == 'cash';
 
-  /// On a completed cash trip: what the driver owes Movera, its fee on the
-  /// fare. It is taken from the next payout. Null otherwise.
-  String? get owedToMovera => paidByCash && status == TripStatus.completed
-      ? WaybillPayment.fromFare(fare)?.serviceFee
+  /// On a completed cash trip: fare − cash collected, owed by (−) or to
+  /// (+) the driver. Null otherwise.
+  CashBalance? get cashBalance => paidByCash && status == TripStatus.completed
+      ? CashBalance.fromLabels(fare: fare, cashCollected: cashCollected ?? fare)
       : null;
 
   Money? get fareMoney => status != TripStatus.completed

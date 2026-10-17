@@ -400,11 +400,17 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('Q24: a cash trip ends with "Collect cash" → amount → '
-        '"Complete ride"', (tester) async {
+    testWidgets('Q24 / R8-4: a cash trip ends with "Collect cash" → amount → '
+        '"Finish Comfort"', (tester) async {
       await pumpTrip(
         tester,
-        const AcceptRide(fare: '126,75 kr', paidByCash: true, riderName: 'Karin'),
+        const AcceptRide(
+          fare: '200 kr',
+          cashToCollect: '250 kr',
+          paidByCash: true,
+          riderName: 'Karin',
+          category: 'Comfort',
+        ),
       );
       await startTrip(tester);
       final collect = find.byKey(
@@ -421,9 +427,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byKey(const ValueKey<String>('cash-collect-sheet')), findsOneWidget);
-      expect(find.text('Amount to collect from Karin'), findsOneWidget);
-      expect(find.text('126,75 kr'), findsWidgets);
-      expect(find.textContaining('31,69 kr'), findsOneWidget);
+      expect(find.text('250 kr'), findsWidgets);
+      expect(find.text('You owe Movera'), findsOneWidget);
+      expect(find.text('−50,00 kr'), findsOneWidget);
+      expect(find.text('Finish Comfort'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
       await tester.pump(const Duration(milliseconds: 400));
       final confirm = find.text('Confirm finish');

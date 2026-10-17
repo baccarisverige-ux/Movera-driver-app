@@ -22,6 +22,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         riderTrips: widget.riderTrips,
         fare: widget.fare,
         paidByCash: widget.paidByCash,
+        cashToCollect: widget.cashToCollect,
         category: widget.category,
         matchedVia: widget.matchedVia,
         pickupAddress: widget.pickupAddress,
@@ -674,13 +675,16 @@ extension _AcceptRideTrip on _AcceptRideState {
       // manually browsed viewport. Recenter is the sole manual resume action.
       await _followVehicle();
     }
-    /// Q24: shows the cash to collect; "Complete ride" there completes it.
+    /// Q24 / R8-4: shows the cash to collect; "Finish {category}" there
+    /// completes it.
     Future<void> _collectCash() async {
       if (!_collectsCashNow || _stageTransitioning || _rideLifecycle.terminal) { return; }
       final complete = await showCashCollectSheet(
         context,
         fare: widget.fare,
+        cash: _cashToCollect,
         riderName: widget.riderName,
+        category: widget.category,
       );
       if (!complete || !mounted || !_collectsCashNow) { return; }
       await _advanceRide();
@@ -848,7 +852,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       try {
         await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
           _waybills.current ?? _buildCurrentWaybill(), next: next,
-          paymentMethod: widget.paidByCash ? 'Cash' : null);
+          paymentMethod: widget.paidByCash ? 'Cash' : null,
+          cashCollected: widget.paidByCash ? _cashToCollect : null);
         if (!mounted) { return; }
         if (await _yieldToAuthoritativeTerminal()) return;
         if (!await _rideLifecycle.complete(clearSnapshot: false)) {

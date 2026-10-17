@@ -393,20 +393,26 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
         _detailRow('Payment Method', _ride.paymentMethod, paymentIcon: true),
         16.height,
         _detailRow('Ride Type', _ride.category),
-        // Q23: on a cash trip, the cash the driver collected and what they
-        // owe Movera, taken from the next payout.
-        if (_ride.owedToMovera case final owed?) ...[
+        // Q23 / R8-4: on a cash trip, the fare, the cash the driver
+        // collected, and the balance: fare − cash, owed by (−) or to (+)
+        // the driver, settled in the next payout.
+        if (_ride.cashBalance case final cash?) ...[
           16.height,
-          _detailRow('Cash collected', _ride.fare),
+          _detailRow('Cash collected', cash.cashCollected.formatted),
           16.height,
-          _detailRow('Owed to Movera', owed),
+          KeyedSubtree(
+            key: const ValueKey<String>('history-cash-balance'),
+            child: _detailRow(cash.directionLabel, cash.signedLabel),
+          ),
           8.height,
-          const Align(
+          Align(
             alignment: Alignment.centerRight,
             child: Text(
-              'Taken from your next payout',
-              key: ValueKey<String>('history-owed-note'),
-              style: TextStyle(
+              cash.balance.minorUnits == 0
+                  ? 'Cash matched your fare'
+                  : 'Settled in your next payout',
+              key: const ValueKey<String>('history-owed-note'),
+              style: const TextStyle(
                 color: Color(0xFF7D898F),
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,

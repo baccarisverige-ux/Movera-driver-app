@@ -55,6 +55,7 @@ class PrefsTripHistoryRepository {
             fareMinorUnits: data['fareMinorUnits'] as int?,
             cancellationActor: data['cancellationActor'] as String?,
             cancellationReasonCode: data['cancellationReasonCode'] as String?,
+            cashCollected: data['cashCollected'] as String?,
             completedAt: DateTime.tryParse(
               data['completedAt'] as String? ?? '',
             ),
@@ -106,6 +107,7 @@ class PrefsTripHistoryRepository {
             'paymentMethod',
             'cancellationActor',
             'cancellationReasonCode',
+            'cashCollected',
           ].every((key) => row[key] == null || row[key] is String) ||
           (row['fareMinorUnits'] != null && row['fareMinorUnits'] is! int) ||
           (row['status'] != null &&
@@ -159,6 +161,7 @@ class PrefsTripHistoryRepository {
     String? duration,
     String? tip,
     String? paymentMethod,
+    String? cashCollected,
     TripStatus status = TripStatus.completed,
     String? cancellationActor,
     String? cancellationReasonCode,
@@ -207,6 +210,8 @@ class PrefsTripHistoryRepository {
         if (tip?.trim().isNotEmpty == true) 'tip': tip!.trim(),
         if (paymentMethod?.trim().isNotEmpty == true)
           'paymentMethod': paymentMethod!.trim(),
+        if (cashCollected?.trim().isNotEmpty == true)
+          'cashCollected': cashCollected!.trim(),
         'completedAt': at.toIso8601String(),
       });
       rows.sort(

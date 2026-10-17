@@ -201,7 +201,7 @@ void main() {
   });
 
   group('cash (Q23)', () {
-    test('a cash trip owes Movera its fee, from the next payout', () {
+    test('a cash trip without a recorded cash amount balances to zero', () {
       const cash = TripHistoryRecord(
         tripId: 't1',
         riderName: 'Karin',
@@ -213,7 +213,7 @@ void main() {
         paymentMethod: 'Cash',
       );
       expect(cash.paidByCash, isTrue);
-      expect(cash.owedToMovera, '31,69 kr');
+      expect(cash.cashBalance?.balance.minorUnits, 0);
       const card = TripHistoryRecord(
         tripId: 't2',
         riderName: 'Karin',
@@ -223,7 +223,7 @@ void main() {
         fare: '126,75 kr',
         category: 'Comfort',
       );
-      expect(card.owedToMovera, isNull);
+      expect(card.cashBalance, isNull);
       const cancelled = TripHistoryRecord(
         tripId: 't3',
         riderName: 'Karin',
@@ -235,7 +235,7 @@ void main() {
         paymentMethod: 'Cash',
         status: TripStatus.cancelledByDriver,
       );
-      expect(cancelled.owedToMovera, isNull);
+      expect(cancelled.cashBalance, isNull);
     });
 
     test('the completed cash trip is saved as paid by cash', () async {
@@ -261,10 +261,12 @@ void main() {
           passengerCapacity: 4,
         ),
         paymentMethod: 'Cash',
+        cashCollected: '150 kr',
       );
       final row = (await history.list()).single;
       expect(row.paymentMethod, 'Cash');
-      expect(row.owedToMovera, '31,69 kr');
+      expect(row.cashCollected, '150 kr');
+      expect(row.cashBalance?.signedLabel, '−23,25 kr');
     });
   });
 }
