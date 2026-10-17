@@ -112,6 +112,7 @@ class ReservationRequestPreview {
     this.stops = const <ReservationStop>[],
     this.id = '',
     this.paidByCash = false,
+    this.cashToCollect,
     this.rating = '',
     this.riderName = '',
     this.riderTrips = 0,
@@ -125,6 +126,10 @@ class ReservationRequestPreview {
 
   /// The rider pays cash in the car (not in the app).
   final bool paidByCash;
+
+  /// R8-4: on a cash ride, the cash to take from the rider when it is not
+  /// [fare] (rider promotions), e.g. "300,00 kr". Null: the fare.
+  final String? cashToCollect;
 
   /// The rider's rating, e.g. "4.94"; empty when not known.
   final String rating;
@@ -403,6 +408,10 @@ class _DemoReservationSet {
               (time, day) => ReservationRequestPreview(
                 id: demoAirportReservationId,
                 category: 'Premium',
+                // R9 demo: a cash reservation; fare 248,40, cash 300, so
+                // the driver owes Movera 51,60.
+                paidByCash: true,
+                cashToCollect: '300,00 kr',
                 rating: '4.91',
                 riderName: 'Maja',
                 riderTrips: 73,

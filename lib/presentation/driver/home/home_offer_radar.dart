@@ -676,6 +676,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           _HomeReservation(this)._exclusiveNeedsClaim(offer)) {
         return;
       }
+      if (!offer.reservation) { _exclusiveDemoTaken = true; }
       _openOfferTrip(
         offer,
         offer.reservation ? 'Exclusive reservation' : 'Exclusive offer',
@@ -924,7 +925,12 @@ extension _HomeOfferRadar on _DriverHomeState {
             const Duration(milliseconds: 2200),
             () {
               if (!mounted || !_isOnline) { return; }
-              _showOutsideRadarOffer(_DriverHomeState._veryCloseDirectOffer);
+              // After one was accepted, the cash Exclusive (R9).
+              const cash = _DriverHomeState._expandedDirectOffer;
+              _showOutsideRadarOffer(_exclusiveDemoTaken &&
+                      _HomeOfferRules(this)._offerAllowed(cash)
+                  ? cash
+                  : _DriverHomeState._veryCloseDirectOffer);
             },
           );
 

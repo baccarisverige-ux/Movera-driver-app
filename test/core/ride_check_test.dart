@@ -55,7 +55,7 @@ void main() {
     test('app defaults match the owner spec and every trigger is on', () {
       const rules = RideCheckRules.defaults;
       expect(rules.farDropMeters, 3000);
-      expect(rules.longStopMinutes, 5);
+      expect(rules.longStopMinutes, 2);
       expect(rules.offRouteKm, 2);
       expect(rules.longerThanPercent, 50);
       for (final trigger in RideCheckTrigger.values) {
@@ -139,22 +139,25 @@ void main() {
       expect(detector.hardStop(_t0), isNull);
     });
 
-    test('long stop: no movement for more than 5 min mid-trip, once', () {
+    test('long stop: no movement for more than 2 min mid-trip, once', () {
       final detector = RideCheckDetector()..startTrip(_t0);
       final car = _north(_dropoff, 1000);
       expect(detector.observe(car, _t0), isNull);
       // GPS drift is not movement.
       expect(
-        detector.observe(_north(car, 10), _t0.add(const Duration(minutes: 3))),
+        detector.observe(
+          _north(car, 10),
+          _t0.add(const Duration(minutes: 1, seconds: 50)),
+        ),
         isNull,
       );
       final event = detector.observe(
         car,
-        _t0.add(const Duration(minutes: 6)),
+        _t0.add(const Duration(minutes: 3)),
         place: 'Odenplan',
       )!;
       expect(event.trigger, RideCheckTrigger.longStop);
-      expect(event.reason.text, 'Your car has stopped for 6 min · Odenplan');
+      expect(event.reason.text, 'Your car has stopped for 3 min · Odenplan');
       expect(
         detector.observe(car, _t0.add(const Duration(minutes: 9))),
         isNull,
@@ -162,7 +165,9 @@ void main() {
     });
 
     test('long stop: moving, or waiting at a planned stop, resets it', () {
-      final detector = RideCheckDetector()..startTrip(_t0);
+      final detector = RideCheckDetector(
+        rules: const RideCheckRules(longStopMinutes: 5),
+      )..startTrip(_t0);
       final car = _north(_dropoff, 1000);
       detector.observe(car, _t0);
       detector.observe(
@@ -271,13 +276,13 @@ void main() {
         return detector.observe(car, _t0.add(stopped));
       }
 
-      test('defaults: 3 km and 5 min', () {
+      test('defaults: 3 km and 2 min', () {
         const config = RideCheckAdminConfig();
         expect(config.finishFarFromDropoffKm, 3);
-        expect(config.longStopMinutes, 5);
+        expect(config.longStopMinutes, 2);
         final rules = RideCheckRules.fromAdmin(config);
         expect(rules.farDropMeters, 3000);
-        expect(rules.longStopMinutes, 5);
+        expect(rules.longStopMinutes, 2);
       });
 
       test('Finish just over / under the admin distance', () {
@@ -298,10 +303,26 @@ void main() {
           RideCheckTrigger.longStop,
         );
         final defaults = RideCheckRules.fromAdmin(const RideCheckAdminConfig());
-        expect(stoppedFor(const Duration(minutes: 4, seconds: 50), defaults), isNull);
+        expect(stoppedFor(const Duration(minutes: 1, seconds: 50), defaults), isNull);
+        expect(stoppedFor(const Duration(minutes: 2), defaults), isNull);
         expect(
-          stoppedFor(const Duration(minutes: 5, seconds: 10), defaults)?.reason.bold,
-          '5 min',
+          stoppedFor(const Duration(minutes: 2, seconds: 10), defaults)?.reason.bold,
+          '2 min',
+        );
+        // A quiet GPS: the trip clock finds it too.
+        final quiet = RideCheckDetector(rules: defaults)..startTrip(_t0);
+        quiet.observe(_north(_dropoff, 1000), _t0);
+        expect(quiet.tick(_t0.add(const Duration(minutes: 2))), isNull);
+        expect(
+          quiet.tick(_t0.add(const Duration(minutes: 2, seconds: 20)))?.trigger,
+          RideCheckTrigger.longStop,
+        );
+        // Waiting at a planned stop never is one.
+        final atStop = RideCheckDetector(rules: defaults)..startTrip(_t0);
+        atStop.observe(_dropoff, _t0, atPlannedStop: true);
+        expect(
+          atStop.tick(_t0.add(const Duration(minutes: 9)), atPlannedStop: true),
+          isNull,
         );
       });
 

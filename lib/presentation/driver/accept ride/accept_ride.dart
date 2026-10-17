@@ -24,6 +24,7 @@ import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/demo_trip_drive.dart';
 import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/navigation/live_vehicle_animator.dart';
 import 'package:movera/core/navigation/navigation_controller.dart';
@@ -516,7 +517,10 @@ class _AcceptRideState extends State<AcceptRide>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _locationService =
+    // A RideCheck demo trip drives its own scripted GPS (DemoTripDrive).
+    _locationService = DemoTripDrive.forTrip(widget.offerId,
+            pickup: GeoPointMaps.fromLatLng(widget.pickupPosition),
+            dropoff: GeoPointMaps.fromLatLng(widget.dropoffPosition)) ??
         widget.locationRepository ?? const DriverLocationService();
     _routeService = widget.routeRepository ?? RoadRouteService();
     _waybills =
@@ -672,6 +676,12 @@ class _AcceptRideState extends State<AcceptRide>
 
 
   bool get _arrivalDemo => DriverRuntimeConfig.current.simulatedArrival;
+
+  /// A RideCheck demo trip: its scripted GPS is the trip's own position.
+  DemoTripDrive? get _demoDrive {
+    final location = _locationService;
+    return location is DemoTripDrive ? location : null;
+  }
 
   LatLng? get _arrivalTarget {
     if (_stage == ActiveRideStage.headingToPickup) { return widget.pickupPosition; }

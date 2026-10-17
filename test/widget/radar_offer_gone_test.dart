@@ -177,9 +177,10 @@ void main() {
       find.descendant(of: badge, matching: find.text('ALL OFFERS')),
       findsOneWidget,
     );
-    // Six, not seven: the Electric trip is not a category the demo car
-    // drives (Q27). The two cash demo trips (R8-4) count too.
-    expect(find.descendant(of: badge, matching: find.text('06')), findsOneWidget);
+    // Eleven, not twelve: the Electric trip is not a category the demo
+    // car drives (Q27). The cash demo trips (R8-4, R9) and the two
+    // RideCheck demo trips count too.
+    expect(find.descendant(of: badge, matching: find.text('11')), findsOneWidget);
 
     // The radar reads Accept while the deck shows.
     expect(find.byKey(const ValueKey<String>('home-radar-accept')), findsOneWidget);

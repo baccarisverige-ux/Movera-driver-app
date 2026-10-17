@@ -295,6 +295,8 @@ class _DriverHomeState extends State<DriverHome>
   /// What the top island's screen shows; a tap moves to the next face.
   _IslandFace _islandFace = _IslandFace.hidden;
   _HomeDirectOffer? _outsideRadarOffer;
+  /// Demo: once an Exclusive offer was accepted, the next one is the cash one.
+  bool _exclusiveDemoTaken = false;
   final List<_HomeDirectOffer> _radarHomeOffers = <_HomeDirectOffer>[];
   final List<_HomeDirectOffer> _pendingRadarHomeOffers = <_HomeDirectOffer>[];
 
@@ -368,6 +370,8 @@ class _DriverHomeState extends State<DriverHome>
     pickupPosition: LatLng(59.3449, 18.0472),
     dropoffPosition: LatLng(59.3603, 18.0009),
     cash: true,
+    // A rider promotion: Movera owes the driver 26,20.
+    cashToCollect: '150,00 kr',
   );
 
   late final SheetTrace _sheetTrace = SheetTrace('home', () => _panelController.isAttached ? _panelController.panelPosition : 0);

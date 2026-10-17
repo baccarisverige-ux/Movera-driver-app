@@ -7,7 +7,7 @@ class RideCheckAdminConfig {
   });
 
   static const double defaultFinishFarFromDropoffKm = 3;
-  static const int defaultLongStopMinutes = 5;
+  static const int defaultLongStopMinutes = 2;
 
   /// The config in use. Mirrors the admin defaults until a backend sets it.
   static RideCheckAdminConfig current = const RideCheckAdminConfig();
