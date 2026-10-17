@@ -201,4 +201,71 @@ void main() {
       expect(quote(4.2, 9).totalOf('1 230,00 kr'), '1 246,60 kr');
     });
   });
+
+  group('pickup pay distance ranges', () {
+    const ranged = PickupPayRate(
+      krPerKm: 3,
+      krPerMinute: 1,
+      ranges: <PickupPayRange>[
+        PickupPayRange(fromKm: 0, toKm: 10, krPerKm: 2, krPerMinute: 1),
+        PickupPayRange(fromKm: 10, toKm: 20, krPerKm: 4, krPerMinute: 2),
+        PickupPayRange(fromKm: 20, toKm: 40, krPerKm: 5, krPerMinute: 3),
+      ],
+    );
+
+    test('exactly 10 km is in 0–10', () {
+      expect(ranged.rangeFor(10)!.toKm, 10);
+      // 10 × 2 + 9 × 1, whole leg at the first range.
+      expect(_pay(_config(rate: ranged), km: 10), '29,00 kr');
+    });
+
+    test('10.1 km is in >10–20, whole leg at that rate', () {
+      expect(ranged.rangeFor(10.1)!.fromKm, 10);
+      // 10.1 × 4 + 9 × 2.
+      expect(_pay(_config(rate: ranged), km: 10.1), '58,40 kr');
+    });
+
+    test('beyond the last closed range uses the last range', () {
+      expect(ranged.rangeFor(55)!.toKm, 40);
+      // 55 × 5 + 9 × 3.
+      expect(_pay(_config(rate: ranged), km: 55), '302,00 kr');
+    });
+
+    test('an open-ended last range takes any distance', () {
+      final rate = ranged.copyWith(
+        ranges: const <PickupPayRange>[
+          PickupPayRange(fromKm: 0, toKm: 10, krPerKm: 2, krPerMinute: 1),
+          PickupPayRange(fromKm: 10, krPerKm: 4, krPerMinute: 2),
+        ],
+      );
+      expect(rate.rangeFor(500)!.openEnded, isTrue);
+    });
+
+    test('no ranges pays the single rate as before', () {
+      expect(_comfort.rangeFor(10), isNull);
+      expect(_pay(_config(), km: 10.1), '39,30 kr');
+    });
+
+    test('free km come off the paid km, range by whole leg', () {
+      final rate = ranged.copyWith(freeKm: 1, freeKmOn: true);
+      // 10.1 km is in >10–20: (10.1 − 1) × 4 + 9 × 2.
+      expect(_pay(_config(rate: rate), km: 10.1), '54,40 kr');
+    });
+
+    test('a switched-off category with ranges pays nothing', () {
+      final rate = ranged.copyWith(enabled: false);
+      expect(_pay(_config(rate: rate), km: 15), '0,00 kr');
+    });
+
+    test('range JSON round-trips', () {
+      const range = PickupPayRange(fromKm: 20, krPerKm: 5, krPerMinute: 3);
+      final json = range.toJson();
+      expect(json.keys, <String>['fromKm', 'toKm', 'krPerKm', 'krPerMinute']);
+      final back = PickupPayRange.fromJson(json);
+      expect(back.fromKm, 20);
+      expect(back.toKm, isNull);
+      expect(back.krPerKm, 5);
+      expect(back.krPerMinute, 3);
+    });
+  });
 }
