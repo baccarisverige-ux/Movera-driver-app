@@ -97,6 +97,7 @@ class AcceptRide extends StatefulWidget {
     this.riderTrips = 312,
     this.fare = '—',
     this.paidByCash = false,
+    this.cashToCollect,
     this.category = 'Movera',
     this.matchedVia = 'Demo Radar',
     this.pickupAddress = 'Odlarvägen 22',
@@ -142,6 +143,10 @@ class AcceptRide extends StatefulWidget {
 
   /// Cash in the car; otherwise paid by card. Shown as a logo in the bar.
   final bool paidByCash;
+
+  /// R8-4: on a cash trip, the cash to take from the rider when it is not
+  /// [fare] (rider promotions). Null: the fare.
+  final String? cashToCollect;
   final String category;
   final String matchedVia;
   final String pickupAddress;
@@ -212,6 +217,7 @@ class AcceptRide extends StatefulWidget {
       riderTrips: snapshot.riderTrips ?? 312,
       fare: snapshot.fare ?? '—',
       paidByCash: snapshot.paidByCash,
+      cashToCollect: snapshot.cashToCollect,
       category: snapshot.category ?? 'Movera',
       matchedVia: snapshot.matchedVia ?? 'Demo Radar',
       pickupAddress: pickup,
@@ -944,6 +950,10 @@ class _AcceptRideState extends State<AcceptRide>
       _stage == ActiveRideStage.onTrip &&
       !_paidStopWait &&
       _stopCursor >= widget.stopAddresses.length;
+
+  /// R8-4: the cash taken from the rider; the fare unless a promotion
+  /// changed it.
+  String get _cashToCollect => widget.cashToCollect ?? widget.fare;
   int get _includedWaitSeconds => _waitTerms.freeSeconds;
   int get _noShowWaitSeconds => _waitTerms.noShowSeconds;
 

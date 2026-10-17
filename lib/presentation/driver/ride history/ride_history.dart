@@ -7,6 +7,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/earnings/cash_balance.dart';
+import 'package:movera/presentation/driver/ride%20history/cash_balance_sheet.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 
 Widget _solarIcon(String asset, {double size = 18, Color color = const Color(0xFF1F2933)}) =>
@@ -125,6 +127,18 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
     }
     return Money.ore(total).formatted;
   }
+
+  /// R8-4: completed cash trips of the period, for "Other earnings".
+  List<TripHistoryRecord> get _periodCashTrips => [
+    for (final ride in _periodRidesList)
+      if (ride.record.cashBalance != null) ride.record,
+  ];
+
+  /// Fare − cash over the period's cash trips: owed to (+) or by (−) the
+  /// driver.
+  Money get _periodCashBalance => CashBalance.total(
+    _periodCashTrips.map((trip) => trip.cashBalance!),
+  );
 
   String get _periodRides => _periodRidesList.where((ride)=>ride.status==TripStatus.completed).length.toString();
 
@@ -594,7 +608,35 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         children: [
           _BreakdownRow(label: 'Recorded fares', value: _periodEarnings, strong: true),
           const SizedBox(height: 10),
+          _buildOtherEarningsRow(),
+          const SizedBox(height: 10),
           const _BreakdownRow(label: 'Tips and fees', value: 'Not available'),
+        ],
+      ),
+    );
+  }
+
+  /// R8-4: the cash trips' balance; tap for each trip and the total.
+  Widget _buildOtherEarningsRow() {
+    final trips = _periodCashTrips;
+    final balance = _periodCashBalance;
+    return InkWell(
+      key: const ValueKey<String>('history-other-earnings'),
+      onTap: () => showCashBalanceSheet(context, trips),
+      borderRadius: BorderRadius.circular(8),
+      child: Row(
+        children: [
+          Expanded(
+            child: _BreakdownRow(
+              label: trips.isEmpty
+                  ? 'Other earnings'
+                  : 'Other earnings · ${trips.length} cash',
+              value: CashBalance.signed(balance),
+              valueColor: CashBalanceSheet.colorFor(balance.minorUnits),
+            ),
+          ),
+          const SizedBox(width: 4),
+          _solarIcon(AppAssets.solarAltArrowRight, size: 14, color: _muted),
         ],
       ),
     );
@@ -721,11 +763,12 @@ class _BreakdownRow extends StatelessWidget {
     required this.label,
     required this.value,
     this.strong = false,
+    this.valueColor,
   });
 
   final String label;
   final String value;
-  final Color? valueColor = null;
+  final Color? valueColor;
   final bool strong;
 
   @override

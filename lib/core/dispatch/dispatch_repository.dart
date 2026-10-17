@@ -33,6 +33,7 @@ class RideOffer {
     this.riderTrips = 0,
     this.stops = const <ReservationStop>[],
     this.fareBoost,
+    this.cashToCollect,
   });
 
   /// A reservation as a Radar trip. The driver's distance to the pickup is
@@ -98,6 +99,10 @@ class RideOffer {
 
   /// Admin raised the fare, e.g. "+40 kr"; [fare] already includes it.
   final String? fareBoost;
+
+  /// R8-4: on a cash trip, the cash to take from the rider when it is not
+  /// the fare (rider promotions), e.g. "250 kr". Null: the fare.
+  final String? cashToCollect;
 
   bool get isReservation => reservationTime != null;
 }

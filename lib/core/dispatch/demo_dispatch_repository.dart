@@ -11,7 +11,8 @@ import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 ///
 /// Snapshot rules the Radar UI already depends on:
 /// - nearby-1, nearby-2, nearby-3 are live immediately
-/// - nearby-4 and nearby-5 arrive later and wait for an explicit refresh
+/// - nearby-4 and nearby-5 arrive later and wait for an explicit refresh,
+///   with the cash demo trips nearby-6 and nearby-7 (R8-4)
 /// - nearby-2 loses the atomic claim race
 /// - nearby-3 is claimed by another driver without this driver tapping Match
 /// - open reservations (Scheduled rides, the Home popup) are claimed
@@ -206,6 +207,50 @@ class DemoDispatchRepository implements DispatchRepository {
       dropoffPosition: GeoPoint(59.3105, 18.0232),
       isNearby: true,
       followsDestination: false,
+    ),
+    // R8-4 demo: cash trips, so "Collect cash" can be tried end to end.
+    // A rider promotion makes the cash differ from the driver's fare.
+    // Fare 200, cash 250: the driver owes Movera 50.
+    RideOffer(
+      id: 'nearby-6',
+      riderName: 'Noah',
+      riderTrips: 18,
+      category: 'Movera',
+      fare: '200,00 kr',
+      cashToCollect: '250,00 kr',
+      rating: '4.89',
+      pickupMinutes: 6,
+      pickupKm: 1.8,
+      tripMinutes: 21,
+      tripKm: 13.4,
+      pickup: 'Götgatan 30, Stockholm',
+      dropoff: 'Kista Galleria, Kista',
+      pickupPosition: GeoPoint(59.3150, 18.0726),
+      dropoffPosition: GeoPoint(59.4032, 17.9445),
+      isNearby: true,
+      followsDestination: false,
+      payment: 'Cash',
+    ),
+    // Fare 300, cash 200: Movera owes the driver 100.
+    RideOffer(
+      id: 'nearby-7',
+      riderName: 'Ida',
+      riderTrips: 64,
+      category: 'Comfort',
+      fare: '300,00 kr',
+      cashToCollect: '200,00 kr',
+      rating: '4.96',
+      pickupMinutes: 5,
+      pickupKm: 1.5,
+      tripMinutes: 27,
+      tripKm: 19.8,
+      pickup: 'Sankt Eriksgatan 50, Stockholm',
+      dropoff: 'Nacka Forum, Nacka',
+      pickupPosition: GeoPoint(59.3380, 18.0330),
+      dropoffPosition: GeoPoint(59.3105, 18.1630),
+      isNearby: true,
+      followsDestination: false,
+      payment: 'Cash',
     ),
   ];
 

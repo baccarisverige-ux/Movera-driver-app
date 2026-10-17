@@ -342,6 +342,7 @@ class _RideRequestsState extends State<RideRequests> {
           riderTrips: rider.riderTrips,
           fare: trip.fare,
           paidByCash: RadarOfferView.isCash(trip.payment),
+          cashToCollect: rider.cashToCollect,
           category: trip.category,
           matchedVia: 'Movera Radar',
           sessionController: widget.sessionController,
