@@ -112,6 +112,8 @@ class RadarOfferCard extends StatelessWidget {
     this.onMatch,
     this.onRoute,
     this.onDismiss,
+    this.onClose,
+    this.contour,
     this.details,
   });
 
@@ -125,6 +127,13 @@ class RadarOfferCard extends StatelessWidget {
 
   /// Shows the × in the header (full-screen list only).
   final VoidCallback? onDismiss;
+
+  /// Shows the small bare × in the top-right corner (Home): removes the
+  /// offer.
+  final VoidCallback? onClose;
+
+  /// The card's contour; ink by default (Home: the radar's orange).
+  final Color? contour;
 
   static const Color ink = Color(0xFF111518);
   static const Color muted = Color(0xFF7C868D);
@@ -150,7 +159,8 @@ class RadarOfferCard extends StatelessWidget {
     final enabled = state == RadarOfferCardState.available && onMatch != null;
 
     final header = Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 18, 18),
+      // Room on the right for the corner × when it shows.
+      padding: EdgeInsets.fromLTRB(20, 16, onClose != null ? 34 : 18, 18),
       decoration: const BoxDecoration(
         color: headerTint,
         border: Border(bottom: BorderSide(color: Color(0xFFE6E8EA))),
@@ -536,12 +546,12 @@ class RadarOfferCard extends StatelessWidget {
       ),
     );
 
-    return Container(
+    final card = Container(
       key: ValueKey<String>('radar-offer-card-${offer.id}'),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: ink),
+        border: Border.all(color: contour ?? ink),
         boxShadow: const [
           BoxShadow(
             color: Color(0x290A0E10),
@@ -563,6 +573,34 @@ class RadarOfferCard extends StatelessWidget {
           children: [header, body],
         ),
       ),
+    );
+    final close = onClose;
+    if (close == null) { return card; }
+    return Stack(
+      children: [
+        card,
+        // In the corner, its tap area over the header's right padding,
+        // so the badges keep their width (no extra wrap on narrow phones).
+        Positioned(
+          top: 4,
+          right: 0,
+          child: Semantics(
+            button: true,
+            label: 'Close offer',
+            child: GestureDetector(
+              key: const ValueKey<String>('radar-offer-close'),
+              behavior: HitTestBehavior.opaque,
+              onTap: close,
+              // A tiny bare ×, with a comfortable tap area around it.
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Center(child: _icon(AppAssets.solarClose, 16, muted)),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

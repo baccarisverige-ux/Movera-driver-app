@@ -160,7 +160,12 @@ extension _HomeExclusive on _DriverHomeState {
       return KeyedSubtree(
         key: const ValueKey<String>('home-radar-exclusive'),
         child: AnimatedBuilder(
-          animation: _exclusive.clock,
+          // The normal radar's pulse and sweep, in blue.
+          animation: Listenable.merge([
+            _exclusive.clock,
+            _goOnlinePulseController,
+            _radarSweepController,
+          ]),
           builder: (context, child) {
             final left = _exclusive.clock.value;
             final seconds = (left * lifetime.inMilliseconds / 1000).ceil();
@@ -174,6 +179,8 @@ extension _HomeExclusive on _DriverHomeState {
               active: true,
               loading: claiming,
               timeLeft: left,
+              pulse: _goOnlinePulseController.value,
+              sweep: _radarSweepController.value,
               onTap: claiming
                   ? null
                   : _HomeOfferRadar(this)._acceptOutsideRadarOffer,
