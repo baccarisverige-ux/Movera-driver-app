@@ -84,6 +84,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           unawaited(_focusWaitingPickup());
         case ActiveRideStage.onTrip:
           _rideCheckDetector.startTrip(_rideCheckNow);
+          _demoDrive?.startTrip();
           if (_onTripRadarState != _OnTripRadarState.secured) {
             _startOnTripRadar();
           }
@@ -711,6 +712,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           _nextTripRadarMatchTimer?.cancel();
           _onTripStartedAt = DateTime.now();
           _rideCheckDetector.startTrip(_rideCheckNow);
+          _demoDrive?.startTrip();
           await _rideLifecycle.persistNow();
           _onTripRadarState = _OnTripRadarState.scanning;
           _nextTripRadarOffer = null;
@@ -743,7 +745,8 @@ extension _AcceptRideTrip on _AcceptRideState {
             if (!mounted || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
             _stageTransitioning = true;
           }
-          if (_tripEndedTooQuickly && farDrop?.demo != true) {
+          // A far-drop check already asked the driver about the finish.
+          if (_tripEndedTooQuickly && farDrop == null) {
             _stageTransitioning = false;
             await _askBeforeShortFinish();
             return;
@@ -1337,6 +1340,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     void _rideCheckPlan(RoadRoute route) {
       if (_stage != ActiveRideStage.onTrip || _paidStopWait) { return; }
+      _demoDrive?.followRoad(route.points);
       _rideCheckDetector.planLeg('$_stopCursor', route.points, route.durationSeconds,
         wholeTrip: widget.stopAddresses.isEmpty);
     }
@@ -1357,14 +1361,15 @@ extension _AcceptRideTrip on _AcceptRideState {
       _openRideCheck(_rideCheckDetector.hardStop(at, place: _rideCheckPlace));
     }
     /// Finished far from drop-off: Finish tapped more than admin's km from
-    /// the drop-off. Demo arrival is simulated, so its position says nothing about the drop-off.
+    /// the drop-off. Demo arrival is simulated, so its position says nothing about the drop-off,
+    /// except on a RideCheck demo trip, whose scripted GPS is the trip's own.
     RideCheckEvent? _rideCheckFarDrop() {
       if (_rideCheckFinishDemo) {
         _rideCheckFinishDemo = false;
         return _rideCheck.active ? null : _rideCheckDetector.demo(RideCheckTrigger.droppedFar,
           _rideCheckNow, destination: widget.dropoffAddress);
       }
-      if (_arrivalDemo || _rideCheck.active || !_hasLiveLocation ||
+      if ((_arrivalDemo && _demoDrive == null) || _rideCheck.active || !_hasLiveLocation ||
           _lastLocation?.isUsableAt(DateTime.now()) != true) { return null; }
       return _rideCheckDetector.finish(driver: GeoPointMaps.fromLatLng(_driverPosition),
         dropoff: GeoPointMaps.fromLatLng(widget.dropoffPosition),

@@ -61,6 +61,7 @@ class RideOffer {
         riderTrips: reservation.riderTrips,
         stops: reservation.stops,
         fareBoost: reservation.fareBoost,
+        cashToCollect: reservation.paidByCash ? reservation.cashToCollect : null,
       );
 
   final String id;

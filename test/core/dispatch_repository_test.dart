@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 
@@ -59,6 +60,29 @@ void main() {
       'nearby-5',
       'nearby-6',
       'nearby-7',
+      'nearby-8',
+      'nearby-9',
+      'nearby-10',
+      'ridecheck-demo-far-dropoff',
+      'ridecheck-demo-long-stop',
     ]);
+  });
+
+  test('R9: a cash reservation keeps its cash to collect as a trip', () {
+    final plan = DemoReservations.plan;
+    addTearDown(() {
+      DemoReservations.plan = plan;
+      DemoReservations.reset();
+    });
+    DemoReservations.plan = DemoReservationPlan.app;
+    DemoReservations.reset();
+    final airport = DemoReservations.airport!;
+    expect(airport.paidByCash, isTrue);
+    final offer = RideOffer.reservation(airport);
+    expect(offer.payment, 'Cash');
+    expect(offer.fare, '248,40 kr');
+    expect(offer.cashToCollect, '300,00 kr');
+    // A card reservation has none.
+    expect(RideOffer.reservation(DemoReservations.main).cashToCollect, isNull);
   });
 }

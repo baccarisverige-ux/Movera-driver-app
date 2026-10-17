@@ -5,8 +5,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
+import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/core/location/demo_trip_drive.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
@@ -221,7 +225,7 @@ void main() {
 
   group('triggers open the right card', () {
     const reasons = {
-      RideCheckTrigger.longStop: 'Your car has stopped for 5 min',
+      RideCheckTrigger.longStop: 'Your car has stopped for 2 min',
       RideCheckTrigger.droppedFar: 'Your trip ended 4.2 km from T-Centralen',
       RideCheckTrigger.offRoute: 'You are 2.4 km off the route to T-Centralen',
       RideCheckTrigger.possibleCrash: 'A very hard stop was detected',
@@ -387,7 +391,87 @@ void main() {
       await _frames(tester);
     });
 
-    testWidgets('long stop: no movement for more than 5 min mid-trip', (tester) async {
+    testWidgets('far drop-off demo trip: its drive ends far away and Finish '
+        'opens RideCheck through the real check', (tester) async {
+      DriverRuntimeConfig.current = const DriverRuntimeConfig(
+        simulatedArrival: true,
+        externalRouting: false,
+        skipAccountActivation: true,
+        liveMapTicker: false,
+        reservationPopup: false,
+        islandHint: false,
+      );
+      final kit = _Kit();
+      const offer = DemoRideCheckTrips.farDropoff;
+      final tripId = tripOccurrenceId(offer.id);
+      await _mountRide(
+        tester,
+        AcceptRide(
+          offerId: tripId,
+          riderName: offer.riderName,
+          fare: offer.fare,
+          category: offer.category,
+          pickupAddress: offer.pickup,
+          dropoffAddress: offer.dropoff,
+          pickupPosition: offer.pickupPosition.toLatLng(),
+          dropoffPosition: offer.dropoffPosition.toLatLng(),
+          activeRideRepository: MemoryActiveRideRepository(),
+          rideCheck: kit.services,
+        ),
+      );
+      Future<void> middle() async {
+        tester
+            .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+            .controller!
+            .animatePanelToSnapPoint();
+        await _frames(tester, 16);
+      }
+
+      Future<void> slide() async {
+        final action = find.byKey(
+          const ValueKey<String>('active-ride-primary-action'),
+        );
+        await tester.ensureVisible(action);
+        await tester.drag(action, const Offset(320, 0));
+        await _frames(tester, 30);
+      }
+
+      // A normal trip: arrive, start, drive.
+      await middle();
+      await tester.tap(
+        find.byKey(const ValueKey<String>('active-ride-arrived-button')),
+      );
+      await _frames(tester);
+      await middle();
+      await slide();
+      await _denyOnTripOffer(tester);
+      for (var i = 0; i < DemoTripDrive.driveTicks + 5; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+      expect(_cardFinder, findsNothing);
+      await middle();
+      await slide();
+
+      expect(find.byType(DriverRideCompleted), findsNothing);
+      expect(_cardFinder, findsOneWidget);
+      expect(
+        find.textContaining(
+          RegExp(r'Your trip ended \d+\.\d km from Kista Galleria'),
+          findRichText: true,
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('ride-check-ok')));
+      await _frames(tester, 40);
+      expect(find.byType(DriverRideCompleted), findsOneWidget);
+      final saved = await kit.log.forTrip(tripId);
+      expect(saved.single.trigger, RideCheckTrigger.droppedFar);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await _frames(tester);
+    });
+
+    testWidgets('long stop: no movement for more than 2 min mid-trip', (tester) async {
       var now = DateTime(2026, 10, 15, 14, 30);
       final kit = _Kit(now: () => now);
       final gps = _Gps(_north(_dropoff, 1000));
@@ -400,15 +484,15 @@ void main() {
           rideCheck: kit.services,
         ),
       );
-      now = now.add(const Duration(minutes: 3));
+      now = now.add(const Duration(minutes: 1, seconds: 50));
       gps.emit();
       await _frames(tester);
       expect(_cardFinder, findsNothing);
-      now = now.add(const Duration(minutes: 3));
+      now = now.add(const Duration(minutes: 1, seconds: 10));
       gps.emit();
       await _frames(tester);
       expect(
-        find.text('Your car has stopped for 6 min', findRichText: true),
+        find.text('Your car has stopped for 3 min', findRichText: true),
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('ride-check-row-carProblem')), findsOneWidget);

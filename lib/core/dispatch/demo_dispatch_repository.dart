@@ -4,15 +4,61 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/demo_trip_drive.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
+
+/// The two RideCheck demo trips on Radar, labelled in their pickup. Their
+/// ids give them a scripted drive (see [DemoTripDrive.forTrip]).
+class DemoRideCheckTrips {
+  const DemoRideCheckTrips._();
+
+  static const RideOffer farDropoff = RideOffer(
+    id: DemoTripDrive.farDropoffOfferId,
+    riderName: 'Leo',
+    riderTrips: 27,
+    category: 'Movera',
+    fare: '168,00 kr',
+    rating: '4.90',
+    pickupMinutes: 2,
+    pickupKm: 0.6,
+    tripMinutes: 22,
+    tripKm: 11.9,
+    pickup: 'RideCheck demo: far drop-off · Sveavägen 20, Stockholm',
+    dropoff: 'Kista Galleria, Kista',
+    pickupPosition: GeoPoint(59.3365, 18.0630),
+    dropoffPosition: GeoPoint(59.4032, 17.9445),
+    isNearby: true,
+    followsDestination: false,
+  );
+
+  static const RideOffer longStop = RideOffer(
+    id: DemoTripDrive.longStopOfferId,
+    riderName: 'Alva',
+    riderTrips: 51,
+    category: 'Comfort',
+    fare: '132,40 kr',
+    rating: '4.94',
+    pickupMinutes: 2,
+    pickupKm: 0.5,
+    tripMinutes: 18,
+    tripKm: 7.2,
+    pickup: 'RideCheck demo: long stop · Hornsgatan 100, Stockholm',
+    dropoff: 'Solna centrum, Solna',
+    pickupPosition: GeoPoint(59.3170, 18.0450),
+    dropoffPosition: GeoPoint(59.3599, 18.0002),
+    isNearby: true,
+    followsDestination: false,
+  );
+}
 
 /// Frontend/demo dispatch. A backend implementation replaces this class.
 ///
 /// Snapshot rules the Radar UI already depends on:
 /// - nearby-1, nearby-2, nearby-3 are live immediately
 /// - nearby-4 and nearby-5 arrive later and wait for an explicit refresh,
-///   with the cash demo trips nearby-6 and nearby-7 (R8-4)
+///   with the cash demo trips nearby-6 to nearby-10 (R8-4, R9) and the
+///   two RideCheck demo trips ([DemoRideCheckTrips])
 /// - nearby-2 loses the atomic claim race
 /// - nearby-3 is claimed by another driver without this driver tapping Match
 /// - open reservations (Scheduled rides, the Home popup) are claimed
@@ -252,6 +298,75 @@ class DemoDispatchRepository implements DispatchRepository {
       followsDestination: false,
       payment: 'Cash',
     ),
+    // More cash trips (R9). Fare 158,40, cash 120: Movera owes 38,40.
+    RideOffer(
+      id: 'nearby-8',
+      riderName: 'Hanna',
+      riderTrips: 40,
+      category: 'Comfort',
+      fare: '158,40 kr',
+      cashToCollect: '120,00 kr',
+      rating: '4.92',
+      pickupMinutes: 4,
+      pickupKm: 1.2,
+      tripMinutes: 19,
+      tripKm: 9.8,
+      pickup: 'Drottninggatan 71, Stockholm',
+      dropoff: 'Bromma flygplats, Bromma',
+      pickupPosition: GeoPoint(59.3365, 18.0590),
+      dropoffPosition: GeoPoint(59.3546, 17.9416),
+      isNearby: true,
+      followsDestination: false,
+      payment: 'Cash',
+    ),
+    // Fare 214,90, cash 260: the driver owes Movera 45,10.
+    RideOffer(
+      id: 'nearby-9',
+      riderName: 'Viktor',
+      riderTrips: 122,
+      category: 'Premium',
+      fare: '214,90 kr',
+      cashToCollect: '260,00 kr',
+      rating: '4.97',
+      pickupMinutes: 7,
+      pickupKm: 2.4,
+      tripMinutes: 24,
+      tripKm: 15.6,
+      pickup: 'Karlavägen 60, Stockholm',
+      dropoff: 'Täby centrum, Täby',
+      pickupPosition: GeoPoint(59.3380, 18.0850),
+      dropoffPosition: GeoPoint(59.4439, 18.0687),
+      isNearby: true,
+      followsDestination: false,
+      payment: 'Cash',
+    ),
+    // Fare 96, cash 130: the driver owes Movera 34.
+    RideOffer(
+      id: 'nearby-10',
+      riderName: 'Sofia',
+      riderTrips: 9,
+      category: 'Priority',
+      fare: '96,00 kr',
+      cashToCollect: '130,00 kr',
+      rating: '4.86',
+      pickupMinutes: 3,
+      pickupKm: 0.8,
+      tripMinutes: 17,
+      tripKm: 8.1,
+      pickup: 'Fleminggatan 20, Stockholm',
+      dropoff: 'Hammarby sjöstad, Stockholm',
+      pickupPosition: GeoPoint(59.3330, 18.0420),
+      dropoffPosition: GeoPoint(59.3030, 18.1000),
+      isNearby: true,
+      followsDestination: false,
+      payment: 'Cash',
+    ),
+    // RideCheck demo trips (R9): normal trips whose GPS is scripted by
+    // DemoTripDrive, so the real RideCheck checks open the card.
+    // Ends more than admin's km before the drop-off: Finish opens it.
+    DemoRideCheckTrips.farDropoff,
+    // Stands still mid-trip for more than admin's minutes: it opens.
+    DemoRideCheckTrips.longStop,
   ];
 
   @override
