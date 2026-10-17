@@ -268,17 +268,10 @@ extension _HomeMapSheet on _DriverHomeState {
 
       if (roadPoints.length >= 2) {
         _rebuild(() {
-          _directOfferRoutePolylines = {
-            Polyline(
-              polylineId: const PolylineId('direct_offer_road_route'),
-              points: roadPoints,
-              color: DriverRouteStyle.color,
-              width: DriverRouteStyle.width,
-              geodesic: false,
-              startCap: Cap.roundCap,
-              endCap: Cap.roundCap,
-            ),
-          };
+          _directOfferRoutePolylines = DriverRouteStyle.polylines(
+            id: 'direct_offer_road_route',
+            points: roadPoints,
+          );
         });
       }
 
@@ -369,17 +362,10 @@ extension _HomeMapSheet on _DriverHomeState {
         unawaited(_animateToDriverLocation());
 
         _rebuild(() {
-          _destinationRoutePolylines = {
-            Polyline(
-              polylineId: const PolylineId('destination_mode_road_route'),
-              points: route.latLngPoints,
-              color: DriverRouteStyle.color,
-              width: DriverRouteStyle.width,
-              geodesic: false,
-              startCap: Cap.roundCap,
-              endCap: Cap.roundCap,
-            ),
-          };
+          _destinationRoutePolylines = DriverRouteStyle.polylines(
+            id: 'destination_mode_road_route',
+            points: route.latLngPoints,
+          );
         });
       } catch (_) {
         if (!mounted || !_destinationModeActive ||

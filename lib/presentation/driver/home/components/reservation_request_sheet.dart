@@ -959,7 +959,6 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
         fitPadding: 30,
         show3DNotice: false,
         tilt: 45,
-        routeColor: _ink,
       ),
     );
   }
