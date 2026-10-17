@@ -52,31 +52,39 @@ class MoveraRadarOrb extends StatelessWidget {
   /// Accept. The reservation popup's pictures use it for their accent.
   static const Color reserveInk = Color(0xFF111518);
 
+  /// The radar's orange while a trip is found: its ring and glow. Home's
+  /// radar offer cards use it for their contour, so both stay in step.
+  static const Color offerAccent = Color(0xFFFFA94D);
+
   @override
   Widget build(BuildContext context) {
     const mint = Color(0xFF58E5A6);
     const detectedGold = Color(0xFFFFD166);
-    const detectedAmber = Color(0xFFFFA94D);
+    const detectedAmber = offerAccent;
     const holdRed = Color(0xFFE15B4A);
-    final accent = reserve
+    // Exclusive is the normal radar in blue, with its time ring.
+    final accent = exclusive
+        ? exclusiveBlue
+        : reserve
         ? reserveInk
         : blocked
         ? holdRed
         : offer
             ? Color.lerp(detectedGold, detectedAmber, pulse) ?? detectedGold
             : mint;
+    final hot = offer || exclusive;
     final glowStrength = !active
         ? 0.08
         : loading
             ? 0.10 + (pulse * 0.14)
-            : offer
+            : hot
                 ? 0.14 + (pulse * 0.26)
                 : 0.11 + (pulse * 0.16);
     final ringScale = !active
         ? 1.0
         : loading
             ? 0.96 + (pulse * 0.07)
-            : offer
+            : hot
                 ? 0.84 + (pulse * 0.22)
                 : 0.91 + (pulse * 0.12);
     final secondWaveScale = !active
@@ -86,7 +94,6 @@ class MoveraRadarOrb extends StatelessWidget {
             : 0.86 + ((1 - pulse) * 0.16);
     final s = size / 104;
     final hit = touchSize ?? size;
-    if (exclusive) { return _exclusiveOrb(s, hit); }
 
     return Semantics(
       button: true,
@@ -128,10 +135,10 @@ class MoveraRadarOrb extends StatelessWidget {
                         height: 96 * s,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: accent.withValues(alpha: offer ? 0.045 : 0.025),
+                          color: accent.withValues(alpha: hot ? 0.045 : 0.025),
                           border: Border.all(
-                            color: accent.withValues(alpha: offer ? 0.42 : 0.20),
-                            width: offer ? 1.35 : 1.0,
+                            color: accent.withValues(alpha: hot ? 0.42 : 0.20),
+                            width: hot ? 1.35 : 1.0,
                           ),
                         ),
                       ),
@@ -155,6 +162,8 @@ class MoveraRadarOrb extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: (reserve
                               ? const Color(0xFFD5D9DC)
+                              : exclusive
+                              ? const Color(0xFFCFE0FB)
                               : const Color(0xFFBFD9CF))
                           .withValues(alpha: 0.12),
                       border: Border.all(
@@ -170,6 +179,19 @@ class MoveraRadarOrb extends StatelessWidget {
                       ],
                     ),
                   ),
+                  // The time left runs on the normal ring.
+                  if (exclusive)
+                    SizedBox(
+                      width: 90 * s,
+                      height: 90 * s,
+                      child: CustomPaint(
+                        key: const ValueKey<String>('radar-exclusive-ring'),
+                        painter: ExclusiveTimeRingPainter(
+                          timeLeft: timeLeft,
+                          stroke: 5 * s,
+                        ),
+                      ),
+                    ),
                   if (active && !reserve)
                     Transform.rotate(
                       angle: sweep * 6.283185307179586,
@@ -188,7 +210,7 @@ class MoveraRadarOrb extends StatelessWidget {
                                 end: Alignment.bottomCenter,
                                 colors: [
                                   accent.withValues(alpha: 0),
-                                  accent.withValues(alpha: offer ? 0.95 : 0.78),
+                                  accent.withValues(alpha: hot ? 0.95 : 0.78),
                                 ],
                               ),
                             ),
@@ -203,6 +225,9 @@ class MoveraRadarOrb extends StatelessWidget {
                     shape: const CircleBorder(),
                     clipBehavior: Clip.antiAlias,
                     child: Ink(
+                      key: exclusive
+                          ? const ValueKey<String>('radar-exclusive-core')
+                          : null,
                       width: 73 * s,
                       height: 73 * s,
                       decoration: BoxDecoration(
@@ -210,7 +235,13 @@ class MoveraRadarOrb extends StatelessWidget {
                         gradient: RadialGradient(
                           center: const Alignment(-0.24, -0.32),
                           radius: 0.98,
-                          colors: reserve
+                          colors: exclusive
+                              ? const [
+                                  Color(0xFF3F86F2),
+                                  exclusiveBlue,
+                                  Color(0xFF0E4FB8),
+                                ]
+                              : reserve
                               ? const [
                                   Color(0xFF2A3136),
                                   Color(0xFF161B1E),
@@ -227,9 +258,16 @@ class MoveraRadarOrb extends StatelessWidget {
                                   Color(0xD9727D80),
                                   Color(0xE05A6468),
                                 ],
-                          stops: const [0, 0.58, 1],
+                          stops: exclusive
+                              ? const [0, 0.55, 1]
+                              : const [0, 0.58, 1],
                         ),
-                        border: Border.all(
+                        border: exclusive
+                            ? Border.all(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                width: 2,
+                              )
+                            : Border.all(
                           color: offer
                               ? accent.withValues(alpha: 0.82)
                               : const Color(0xD9E7ECEE),
@@ -244,7 +282,47 @@ class MoveraRadarOrb extends StatelessWidget {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            if (reserve)
+                            if (exclusive)
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14 * s,
+                                      height: 1,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4 * s),
+                                  if (loading)
+                                    SizedBox(
+                                      width: 10 * s,
+                                      height: 10 * s,
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 1.2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  else
+                                    Text(
+                                      status,
+                                      style: TextStyle(
+                                        color: const Color(0xFFCFE0FB),
+                                        fontSize: 11.5 * s,
+                                        height: 1,
+                                        fontWeight: FontWeight.w600,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              )
+                            else if (reserve)
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -328,7 +406,7 @@ class MoveraRadarOrb extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            if (loading)
+                            if (loading && !exclusive)
                               Positioned(
                                 bottom: 5 * s,
                                 child: SizedBox(
@@ -358,121 +436,6 @@ class MoveraRadarOrb extends StatelessWidget {
 
   static const Color exclusiveBlue = Color(0xFF1769E8);
   static const Color exclusiveTrack = Color(0xFFE3E9F0);
-
-  Widget _exclusiveOrb(double s, double hit) {
-    return Semantics(
-      button: true,
-      label: "$title, $status. $subtitle",
-      child: GestureDetector(
-        key: touchKey,
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: SizedBox(
-          width: hit,
-          height: hit,
-          child: Center(
-            child: SizedBox(
-              width: size,
-              height: size,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // White gap, blue glow, then the time-left ring.
-                  Container(
-                    width: 94 * s,
-                    height: 94 * s,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: exclusiveBlue.withValues(alpha: 0.33),
-                          blurRadius: 26 * s,
-                          spreadRadius: 6 * s,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    width: 88 * s,
-                    height: 88 * s,
-                    child: CustomPaint(
-                      key: const ValueKey<String>('radar-exclusive-ring'),
-                      painter: ExclusiveTimeRingPainter(
-                        timeLeft: timeLeft,
-                        stroke: 6 * s,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    key: const ValueKey<String>('radar-exclusive-core'),
-                    width: 72 * s,
-                    height: 72 * s,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const RadialGradient(
-                        center: Alignment(-0.2, -0.36),
-                        radius: 0.9,
-                        colors: [
-                          Color(0xFF3F86F2),
-                          exclusiveBlue,
-                          Color(0xFF0E4FB8),
-                        ],
-                        stops: [0, 0.55, 1],
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        width: 2,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14 * s,
-                            height: 1,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4 * s),
-                        if (loading)
-                          SizedBox(
-                            width: 10 * s,
-                            height: 10 * s,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 1.2,
-                              color: Colors.white,
-                            ),
-                          )
-                        else
-                          Text(
-                            status,
-                            style: TextStyle(
-                              color: const Color(0xFFCFE0FB),
-                              fontSize: 11.5 * s,
-                              height: 1,
-                              fontWeight: FontWeight.w600,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// The Exclusive radar's time left: a blue arc on a light track. The

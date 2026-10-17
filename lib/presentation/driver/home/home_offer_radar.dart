@@ -863,6 +863,9 @@ extension _HomeOfferRadar on _DriverHomeState {
                 offer.pickupPosition,
                 offer.dropoffPosition,
               ),
+              // The radar's orange, and a small × that removes the offer.
+              contour: MoveraRadarOrb.offerAccent,
+              onClose: () => _dismissRadarHomeOffer(offer),
             );
           },
         ),

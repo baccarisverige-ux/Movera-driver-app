@@ -223,7 +223,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    final core = tester.widget<Container>(
+    final core = tester.widget<Ink>(
       find.byKey(const ValueKey<String>('radar-exclusive-core')),
     );
     final gradient = (core.decoration! as BoxDecoration).gradient!;
