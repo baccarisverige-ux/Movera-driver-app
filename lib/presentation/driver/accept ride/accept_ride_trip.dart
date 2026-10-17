@@ -1044,16 +1044,53 @@ extension _AcceptRideTrip on _AcceptRideState {
             return;
           }
 
-          _rebuild(() {
-            final offer = _onTripRadarOfferForDestination();
-            if (!_dropoffFollowsDestination(offer.dropoffPosition)) { return; }
-            _nextTripRadarOffer = offer;
-            _onTripRadarState = _OnTripRadarState.offerAvailable;
-          });
-          _armOnTripOfferExpiry();
-          _hideRideSheetForOffer();
+          // R10-2: a Ride check is open; the offer waits for the answer.
+          if (RideCheckGate.open) {
+            _nextTripOfferHeldAt ??= DateTime.now();
+            return;
+          }
+          _presentOnTripOffer();
         },
       );
+    }
+    void _presentOnTripOffer() {
+      _rebuild(() {
+        final offer = _onTripRadarOfferForDestination();
+        if (!_dropoffFollowsDestination(offer.dropoffPosition)) { return; }
+        _nextTripRadarOffer = offer;
+        _onTripRadarState = _OnTripRadarState.offerAvailable;
+      });
+      _armOnTripOfferExpiry();
+      _hideRideSheetForOffer();
+    }
+    /// R10-2: no next-trip offer while the Ride check is open. One already
+    /// up steps back and waits; after the answer a waiting offer comes back
+    /// if its time has not passed, otherwise it drops and Radar goes on.
+    void _onRideCheckGate() {
+      if (!mounted || _stage != ActiveRideStage.onTrip) {
+        _nextTripOfferHeldAt = null;
+        return;
+      }
+      if (RideCheckGate.open) {
+        if (_onTripRadarState != _OnTripRadarState.offerAvailable) { return; }
+        _nextTripOfferExpiry?.cancel();
+        _nextTripOfferHeldAt = DateTime.now();
+        _rebuild(() {
+          _nextTripRadarOffer = null;
+          _onTripRadarState = _OnTripRadarState.scanning;
+        });
+        _restoreRideSheet();
+        return;
+      }
+      final heldAt = _nextTripOfferHeldAt;
+      if (heldAt == null) { return; }
+      _nextTripOfferHeldAt = null;
+      if (_onTripRadarState != _OnTripRadarState.scanning || _onTripRadarDeclined) { return; }
+      if (DateTime.now().difference(heldAt) >= _AcceptRideState._onTripOfferLifetime) {
+        _maybeScheduleOnTripRadarDemoOffer();
+        return;
+      }
+      _presentOnTripOffer();
     }
     void _armOnTripOfferExpiry() {
       _nextTripOfferExpiry?.cancel();

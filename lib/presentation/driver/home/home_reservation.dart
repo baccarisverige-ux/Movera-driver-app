@@ -118,6 +118,7 @@ extension _HomeReservation on _DriverHomeState {
       return request != null &&
           _recoveryResolved &&
           _driverSession.availableForOffers &&
+          !RideCheckGate.open &&
           // Only a category this driver drives (Q27).
           DriverCategoryChoice.takes(request.category) &&
           _outsideRadarOffer == null &&

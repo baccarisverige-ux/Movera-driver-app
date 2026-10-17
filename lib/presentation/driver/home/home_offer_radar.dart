@@ -126,7 +126,7 @@ class _HomeDirectOffer {
 
 extension _HomeOfferRadar on _DriverHomeState {
     void _maybeShowSoonReservation() {
-      if (!_soonReservationReady || !mounted || !_isOnline) { return; }
+      if (!_soonReservationReady || !mounted || !_isOnline || RideCheckGate.open) { return; }
       final offer = _HomeScheduled(this)._soonReservationOffer();
       // Close to pickup means minutes before its pickup time, not the
       // drive to it.
@@ -194,7 +194,8 @@ extension _HomeOfferRadar on _DriverHomeState {
       const wait = Duration(seconds: 2);
       final lifetime = offer.lifetime ?? _DriverHomeState._outsideOfferLifetime;
       if (wait * held > lifetime) { return; }
-      if (mounted && _HomeReservation(this)._reservationUp) {
+      // So does an open Ride check (R10-2) until the driver answers.
+      if (mounted && (RideCheckGate.open || _HomeReservation(this)._reservationUp)) {
         _directOfferTimer?.cancel();
         _directOfferTimer = Timer(
           wait,
@@ -314,7 +315,9 @@ extension _HomeOfferRadar on _DriverHomeState {
 
       // Dispatch owns offer expiry and claim state for both Home and Radar.
 
-      if (_outsideRadarOffer != null || _HomeReservation(this)._reservationUp) {
+      if (RideCheckGate.open ||
+          _outsideRadarOffer != null ||
+          _HomeReservation(this)._reservationUp) {
         _rebuild(() {
           _hasRideOffers = true;
           _pendingRadarHomeOffers.add(offer);
@@ -354,6 +357,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     void _refreshRadarHomeOffers() {
       if (!mounted ||
           !_isOnline ||
+          RideCheckGate.open ||
           _outsideRadarOffer != null ||
           _HomeReservation(this)._reservationUp ||
           _pendingRadarHomeOffers.isEmpty) {
@@ -410,6 +414,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     void _releasePendingRadarOffers() {
       if (!mounted ||
           !_isOnline ||
+          RideCheckGate.open ||
           _outsideRadarOffer != null ||
           _HomeReservation(this)._reservationUp ||
           _pendingRadarHomeOffers.isEmpty) {
@@ -426,6 +431,13 @@ extension _HomeOfferRadar on _DriverHomeState {
       _rebuild(() {
         _hasRideOffers = true;
       });
+    }
+    /// R10-2: offers that waited for the Ride check answer come up now.
+    void _onRideCheckGate() {
+      if (!mounted || RideCheckGate.open) { return; }
+      _rebuild(() {});
+      _releasePendingRadarOffers();
+      _maybeShowSoonReservation();
     }
     void _dismissRadarHomeOffer(_HomeDirectOffer offer) {
       _radarOfferTimeoutTimers.remove(offer.id)?.cancel();
