@@ -160,7 +160,7 @@ class RadarOfferCard extends StatelessWidget {
 
     final header = Container(
       // Room on the right for the corner × when it shows.
-      padding: EdgeInsets.fromLTRB(20, 16, onClose != null ? 44 : 18, 18),
+      padding: EdgeInsets.fromLTRB(20, 16, onClose != null ? 34 : 18, 18),
       decoration: const BoxDecoration(
         color: headerTint,
         border: Border(bottom: BorderSide(color: Color(0xFFE6E8EA))),
@@ -579,9 +579,11 @@ class RadarOfferCard extends StatelessWidget {
     return Stack(
       children: [
         card,
+        // In the corner, its tap area over the header's right padding,
+        // so the badges keep their width (no extra wrap on narrow phones).
         Positioned(
           top: 4,
-          right: 4,
+          right: 0,
           child: Semantics(
             button: true,
             label: 'Close offer',
