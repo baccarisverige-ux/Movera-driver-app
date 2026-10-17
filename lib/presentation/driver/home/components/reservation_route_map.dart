@@ -99,7 +99,6 @@ class ReservationRouteMap extends StatefulWidget {
     this.markerIcon,
     this.show3DNotice = true,
     this.tilt = 0,
-    this.mapStyle,
     this.routeColor,
   });
 
@@ -121,9 +120,6 @@ class ReservationRouteMap extends StatefulWidget {
 
   /// Camera tilt in degrees after fitting the route; 0 keeps it flat.
   final double tilt;
-
-  /// Google map style JSON; null keeps the app's day style.
-  final String? mapStyle;
 
   /// Route line colour; null keeps [DriverRouteStyle.color].
   final Color? routeColor;
@@ -322,7 +318,6 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
       tiltGesturesEnabled: false,
       webCameraControlEnabled: false,
       show3DNotice: widget.show3DNotice,
-      customMapStyle: widget.mapStyle,
       onMapCreated: (controller) {
         _controller = controller;
         _fit();

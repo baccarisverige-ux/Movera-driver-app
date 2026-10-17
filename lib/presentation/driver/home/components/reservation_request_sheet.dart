@@ -895,10 +895,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
             fit: StackFit.expand,
             children: [
               IgnorePointer(
-                child: ColorFiltered(
-                  colorFilter: const ColorFilter.matrix(_greyscale),
-                  child: (widget.mapBuilder ?? _tiltedMap)(context),
-                ),
+                child: (widget.mapBuilder ?? _tiltedMap)(context),
               ),
               Positioned(
                 right: 8,
@@ -962,7 +959,6 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
         fitPadding: 30,
         show3DNotice: false,
         tilt: 45,
-        mapStyle: _greyMapStyle,
         routeColor: _ink,
       ),
     );
@@ -1134,10 +1130,7 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
           fit: StackFit.expand,
           children: [
             IgnorePointer(
-              child: ColorFiltered(
-                colorFilter: const ColorFilter.matrix(_greyscale),
-                child: (widget.mapBuilder ?? _liveMap)(context),
-              ),
+              child: (widget.mapBuilder ?? _liveMap)(context),
             ),
             Positioned.fill(
               child: PointerInterceptor(
@@ -1159,20 +1152,6 @@ class _ReservationRequestSheetState extends State<ReservationRequestSheet> {
       ),
     );
   }
-
-  /// Grey, calm map for the popup: Google's web map ignores the Flutter
-  /// greyscale filter, so the style itself drops the colour.
-  static const String _greyMapStyle =
-      '[{"stylers":[{"saturation":-100},{"lightness":8}]},'
-      '{"featureType":"poi","stylers":[{"visibility":"off"}]},'
-      '{"featureType":"transit","stylers":[{"visibility":"off"}]}]';
-
-  static const List<double> _greyscale = <double>[
-    0.2126, 0.7152, 0.0722, 0, 0, //
-    0.2126, 0.7152, 0.0722, 0, 0, //
-    0.2126, 0.7152, 0.0722, 0, 0, //
-    0, 0, 0, 1, 0, //
-  ];
 
   Widget _stops() {
     final show = _show;
