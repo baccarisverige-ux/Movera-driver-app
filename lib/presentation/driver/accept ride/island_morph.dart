@@ -14,7 +14,13 @@ class IslandMorph extends StatefulWidget {
     this.radius,
     this.shell = true,
     this.reducedMotion = false,
+    this.followSize = false,
   });
+
+  /// The parent animates the size itself (the strip tucking under the
+  /// island): while the face stays the same, take each size as it comes,
+  /// without a spring or a crossfade.
+  final bool followSize;
 
   /// False when the child draws its own island (the Home island), so the
   /// outline is never doubled. Fades with the morph.
@@ -82,6 +88,17 @@ class _IslandMorphState extends State<IslandMorph>
     if (widget.size == _to &&
         _radiusOf(widget) == _toRadius &&
         (widget.shell ? 1 : 0) == _toShell) {
+      return;
+    }
+    if (widget.followSize &&
+        oldWidget.followSize &&
+        widget.face == oldWidget.face &&
+        !_motion.isAnimating) {
+      setState(() {
+        _from = _to = widget.size;
+        _fromRadius = _toRadius = _radiusOf(widget);
+        _fromShell = _toShell = widget.shell ? 1 : 0;
+      });
       return;
     }
     final visible = _visible;
