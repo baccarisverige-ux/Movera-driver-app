@@ -327,6 +327,7 @@ class _DriverHomeState extends State<DriverHome>
   Set<Polyline> _directOfferRoutePolylines = {};
   Set<Marker> _destinationRouteMarkers = {};
   Set<Polyline> _destinationRoutePolylines = {};
+  double _routeZoomStep = DriverRouteStyle.defaultZoom;
   bool _isDirectOfferRoutePreview = false;
   final MapPreviewGeneration _mapPreviews = MapPreviewGeneration();
   // Separate ownership for frequently refreshed GPS-to-destination roads.

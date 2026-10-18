@@ -624,6 +624,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     void _onCameraMove(CameraPosition position) {
       _cameraPort?.onMove(position);
+      final step = DriverRouteStyle.stepZoom(position.zoom);
+      if (step != _routeZoomStep) { _rebuild(() => _routeZoomStep = step); }
       // A native +/- control zoom has no Flutter pinch/wheel pointer signal.
       // Observe SDK zoom *deltas*, but only after physical input has already
       // transferred the camera to manual Browse. Pan-only moves stay quiet.

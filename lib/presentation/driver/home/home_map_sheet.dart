@@ -690,10 +690,10 @@ extension _HomeMapSheet on _DriverHomeState {
                 ..._destinationRouteMarkers,
                 ..._directOfferRouteMarkers,
               },
-              polylines: {
+              polylines: DriverRouteStyle.sized({
                 ..._destinationRoutePolylines,
                 ..._directOfferRoutePolylines,
-              },
+              }, _routeZoomStep),
               myLocationEnabled: false,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
@@ -704,7 +704,11 @@ extension _HomeMapSheet on _DriverHomeState {
               trafficEnabled: false,
               onUserGesture: _camera.userGesture,
               onCameraIdle: () => _cameraPort?.onIdle(),
-              onCameraMove: (position) => _cameraPort?.onMove(position),
+              onCameraMove: (position) {
+                _cameraPort?.onMove(position);
+                final step = DriverRouteStyle.stepZoom(position.zoom);
+                if (step != _routeZoomStep) _rebuild(() => _routeZoomStep = step);
+              },
               buildingsEnabled: true,
               indoorViewEnabled: false,
               mapType: MapType.normal,
