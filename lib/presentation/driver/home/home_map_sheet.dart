@@ -883,25 +883,6 @@ extension _HomeMapSheet on _DriverHomeState {
                   ),
                 ),
               ),
-            if (!isDestinationPanel && _destinationModeActive &&
-                _destinationTrip?.distanceMeters != null &&
-                _mainPanelPosition <= 0.04 && _radarHomeOffers.isEmpty &&
-                _outsideRadarOffer == null &&
-                !_HomeExclusive(this)._exclusiveLive &&
-                !_HomeReservation(this)._reservationOnDock)
-              Positioned(
-                left: 16,
-                right: 16,
-                // Above the map buttons, where the Radar deck would sit.
-                bottom: 138 + _homeMapButtonSize + 12,
-                child: Center(child: DestinationModeBar(
-                  key: ValueKey<String>('destination-bar-$_destinationAddress'),
-                  summary: _destinationSummary!,
-                  until: _destinationUntil == null ? '–' : clockLabel(_destinationUntil!),
-                  finding: _isOnline || _isGoingOnline,
-                  onTap: _fitDestinationRoute,
-                )),
-              ),
             if (!isDestinationPanel) ...[
               // As high as the phone allows: tucked just under the clock
               // and notch (the safe area keeps a few spare pixels below).
