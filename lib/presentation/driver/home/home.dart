@@ -59,6 +59,8 @@ import 'package:movera/widgets/map_control_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
+import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
+import 'package:movera/presentation/driver/home/components/destination_island.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
@@ -314,6 +316,8 @@ class _DriverHomeState extends State<DriverHome>
   bool _soonReservationReady = false;
   String? _destinationAddress;
   LatLng? _destinationPosition;
+  DriverDestinationResult? _destinationTrip; // Confirmed distance and time.
+  DateTime? _destinationUntil; // "Destination mode until 02:40".
 
   // ignore: prefer_final_fields
   Set<Marker> _markers = {};

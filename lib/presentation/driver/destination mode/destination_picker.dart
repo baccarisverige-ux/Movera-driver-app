@@ -1,3 +1,5 @@
+import 'package:movera/core/routing/route_repository.dart';
+import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -7,14 +9,29 @@ class DriverDestinationResult {
   const DriverDestinationResult({
     required this.position,
     required this.address,
+    this.name,
+    this.distanceMeters,
+    this.durationSeconds,
   });
 
   final LatLng position;
   final String address;
+
+  /// Place name shown on the confirm sheet ("Stockholm Central").
+  final String? name;
+
+  /// Road (or estimated) distance and time from the car when confirmed.
+  final double? distanceMeters;
+  final double? durationSeconds;
 }
 
 class DriverDestinationPicker extends StatefulWidget {
-  const DriverDestinationPicker({super.key});
+  const DriverDestinationPicker({super.key, this.origin, this.routeRepository});
+
+  /// The car. With it, a chosen place opens the confirm map (arc + one
+  /// "Fastest route" option) and only "Confirm destination" returns it.
+  final LatLng? origin;
+  final RouteRepository? routeRepository;
 
   static Future<DriverDestinationResult?> open(BuildContext context) {
     return pushSingle<DriverDestinationResult>(
@@ -120,9 +137,32 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
       return;
     }
     _selectionReturned = true;
-    Navigator.of(context).pop(
-      DriverDestinationResult(position: place.position, address: place.address),
+    final picked = DriverDestinationResult(
+      position: place.position,
+      address: place.address,
+      name: place.name,
     );
+    final origin = widget.origin;
+    if (origin == null) {
+      Navigator.of(context).pop(picked);
+      return;
+    }
+    Navigator.of(context)
+        .push<DriverDestinationResult>(MaterialPageRoute(
+          builder: (_) => DestinationConfirmScreen(
+            origin: origin,
+            destination: picked,
+            routeRepository: widget.routeRepository,
+          ),
+        ))
+        .then((confirmed) {
+          if (!mounted) { return; }
+          if (confirmed == null) {
+            _selectionReturned = false; // Back to the list: pick again.
+            return;
+          }
+          Navigator.of(context).pop(confirmed);
+        });
   }
 
   @override
