@@ -61,6 +61,9 @@ class MoveraRadarOrb extends StatelessWidget {
   static const Color reserveHalo = Color(0xFFD5D9DD);
   static const Color reserveInk = Color(0xFF2E3338);
 
+  /// A reservation's [title] ("Accept"): black.
+  static const Color reserveTitle = Color(0xFF111518);
+
   /// The radar's green while a trip is found: its ring, glow and sweep.
   /// Home's radar offer cards, the dock dash and the island use it for
   /// their contour, so all stay in step. The same green marks Radar on.
@@ -322,7 +325,10 @@ class MoveraRadarOrb extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      // A reservation's "Accept" is black.
+                                      color: reserve
+                                          ? reserveTitle
+                                          : Colors.white,
                                       fontSize: 8.8 * s,
                                       height: 1.1,
                                       fontWeight: FontWeight.w500,

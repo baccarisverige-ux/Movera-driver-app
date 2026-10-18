@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/scheduled/reservation_when.dart';
 
 const TextStyle _whenStyle = TextStyle(
   color: Colors.white,
@@ -16,29 +17,23 @@ const TextStyle _kindStyle = TextStyle(
 );
 
 /// A reservation request up on Home, on the island: a small calendar,
-/// "Today 06:35" and a grey "· Reservation".
+/// when it is ("Today 13:45", "In 2 h · 15:45") and a grey
+/// "· Reservation".
 class DigitalReservationFace extends StatelessWidget {
   const DigitalReservationFace({super.key, required this.when});
 
-  /// "Today 06:35", "Tomorrow 06:35" or "Mon 20 Oct 06:35".
+  /// "In 2 h · 15:45", "Today 13:45", "Tomorrow 11:55", "Saturday 14:33"
+  /// or "19-10 11:44".
   final String when;
 
   static const String kind = 'Reservation';
   static const double _icon = 18;
   static const double _gap = 8;
 
-  /// "Today 06:35": the pickup day ("Today", "Tomorrow" or its short
-  /// date) and time.
-  static String whenOf(ReservationRequestPreview request) {
-    final day = request.pickupDay.trim();
-    final lower = day.toLowerCase();
-    final shown = lower == 'today'
-        ? 'Today'
-        : lower == 'tomorrow'
-        ? 'Tomorrow'
-        : day;
-    return shown.isEmpty ? request.pickupTime : '$shown ${request.pickupTime}';
-  }
+  /// "In 2 h · 15:45", "Today 13:45", "Saturday 14:33": the same words
+  /// as the sheet's when-button, with the time added when it is soon.
+  static String whenOf(ReservationRequestPreview request, DateTime now) =>
+      ReservationWhen.ofRequest(request, now).island;
 
   static TextSpan _span(String when) => TextSpan(children: [
     TextSpan(text: when, style: _whenStyle),

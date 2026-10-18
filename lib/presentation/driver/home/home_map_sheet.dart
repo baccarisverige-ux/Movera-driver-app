@@ -641,8 +641,9 @@ extension _HomeMapSheet on _DriverHomeState {
           children: [
             if (!_HomeStartPosition(this)._mapReady) _HomeStartPosition(this)._locating() else CustomGoogleMap(
               initialPosition: _initialPosition,
-              markers: layers.markers,
-              polylines: DriverRouteStyle.sized(layers.polylines, _routeZoomStep),
+              markers: _HomeReservation(this)._fadedPins(layers.markers),
+              polylines: _HomeReservation(this)._fadedLines(
+                DriverRouteStyle.sized(layers.polylines, _routeZoomStep)),
               myLocationEnabled: false,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
@@ -865,7 +866,8 @@ extension _HomeMapSheet on _DriverHomeState {
       // A reservation request up: calendar and "Today 06:35 · Reservation".
       final reservation = message == null &&
               _HomeReservation(this)._reservationOnDock
-          ? DigitalReservationFace.whenOf(_reservation.request!)
+          ? DigitalReservationFace.whenOf(
+              _reservation.request!, ScheduledClock.instance.now())
           : null;
       // Destination mode: pin and "Centralplan 15 · 35 min", menu kept.
       final destination = message == null && reservation == null &&

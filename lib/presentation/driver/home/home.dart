@@ -78,6 +78,7 @@ import 'package:movera/presentation/driver/home/components/trip_problem_sheet.da
 import 'package:movera/presentation/driver/home/components/driver_sheet_nav.dart';
 import 'package:movera/presentation/driver/home/components/driver_suspended_sheet.dart';
 import 'package:movera/presentation/driver/home/components/reservation_request_sheet.dart';
+import 'package:movera/presentation/driver/home/components/route_fade.dart';
 import 'package:movera/presentation/driver/my%20queue%20position/components/in_airport_queue.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
@@ -1058,6 +1059,7 @@ class _DriverHomeState extends State<DriverHome>
     _locationEpoch++;
     _reservationPopupTimer?.cancel(); _offerRouteFrame.refit?.cancel(); _startWait?.cancel();
     _reservation.release?.cancel();
+    _reservation.fade.cancel();
     _scheduled.dispose();
     _HomeAccount(this)._stopAccount();
     WidgetsBinding.instance.removeObserver(this);

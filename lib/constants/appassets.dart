@@ -44,6 +44,8 @@ class AppAssets {
   static const String solarBellBing = 'assets/icons/solar_bell_bing.svg';
   // Solar (CC BY 4.0) — Earnings & Wallet pages, see assets/icons/SOLAR_LICENSE.txt
   static const String solarAltArrowLeft = 'assets/icons/solar_alt_arrow_left.svg';
+  // The reservation sheet's down chevron: back to Home.
+  static const String solarAltArrowDown = 'assets/icons/solar_alt_arrow_down.svg';
   // The cross of Solar's close-circle, for a soft round × button.
   static const String solarClose = 'assets/icons/solar_close.svg';
   static const String solarWallet = 'assets/icons/solar_wallet.svg';
@@ -133,4 +135,10 @@ class AppAssets {
   static const String destinationSelected =
       'assets/images/destination_selected.png';
   static const String direction = 'assets/images/direction.png';
+  // Flat unDraw pictures on the reservation sheet (accent grey #4A555E).
+  static const String reservationBooked = 'assets/images/booked.svg';
+  static const String reservationCalendar = 'assets/images/calendar_8r6s.svg';
+  static const String reservationAircraft = 'assets/images/aircraft_usu4.svg';
+  static const String reservationTraveller =
+      'assets/images/travel_mode_103y.svg';
 }
