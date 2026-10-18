@@ -451,6 +451,7 @@ class _AcceptRideState extends State<AcceptRide>
   ActiveRideStage get _stage => _rideLifecycle.stage;
   // Trip orchestration lives in an extension, which cannot call setState.
   void _rebuild(VoidCallback update) => setState(update);
+  double _routeZoomStep = DriverRouteStyle.defaultZoom;
   Timer? _waitTimer;
   StreamSubscription<DriverRealtimeEvent>? _realtimeSubscription;
   late final VoidCallback _onNavigationChangedListener =
@@ -806,6 +807,7 @@ class _AcceptRideState extends State<AcceptRide>
       ...DriverRouteStyle.polylines(
         id: 'active-road-route',
         points: geometry.remaining(along).map((p) => p.toLatLng()).toList(),
+        zoom: _routeZoomStep,
       ),
     };
   }
