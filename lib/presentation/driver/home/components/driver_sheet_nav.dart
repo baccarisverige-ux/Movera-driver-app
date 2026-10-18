@@ -193,7 +193,7 @@ class DriverSheetNav {
                 cornerRadius: 24,
                 color: hasRideOffers
                     ? MoveraRadarOrb.offerAccent
-                    : const Color(0xFF1FA463),
+                    : MoveraRadarOrb.onlineGreen,
               ),
               ),
             ),
@@ -284,7 +284,7 @@ class DriverSheetNav {
                   cornerRadius: 24,
                   color: hasRideOffers
                       ? MoveraRadarOrb.offerAccent
-                      : const Color(0xFF1FA463),
+                      : MoveraRadarOrb.onlineGreen,
                 ),
               ),
           ],

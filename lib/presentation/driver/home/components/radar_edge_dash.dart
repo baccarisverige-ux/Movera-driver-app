@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 
 /// Top lip of the radar sheet (left corner → notch cradle → right corner),
 /// matching [RadarSheetClipper].
@@ -127,7 +128,7 @@ class RadarEdgeDash extends StatefulWidget {
     this.notchWidth = 126,
     this.notchDepth = 58,
     this.cornerRadius = 24,
-    this.color = const Color(0xFF1FA463),
+    this.color = MoveraRadarOrb.onlineGreen,
     this.duration = const Duration(milliseconds: 2600),
   });
 
