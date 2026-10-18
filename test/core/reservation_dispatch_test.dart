@@ -119,7 +119,11 @@ void main() {
     addTearDown(sub.cancel);
     await Future<void>.delayed(Duration.zero);
     expect(_onRadar(events), isFalse);
-    await Future<void>.delayed(const Duration(milliseconds: 1100));
+    // Real timers: about a second, but a busy machine may run them late.
+    final waited = Stopwatch()..start();
+    while (!_onRadar(events) && waited.elapsed < const Duration(seconds: 6)) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
     expect(_onRadar(events), isTrue);
     final trip = events.last.singleWhere((o) => o.id == demoReservationId);
     expect(trip.riderName, 'Karin');

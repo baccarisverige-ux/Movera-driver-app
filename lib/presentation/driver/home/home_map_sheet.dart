@@ -172,25 +172,39 @@ extension _HomeMapSheet on _DriverHomeState {
           offer.pickupPosition,
           offer.dropoffPosition,
           () => _HomeOfferRoute(this)._offerRouteMarkers(offer),
+          labels: (
+            OfferRoutePins.minutes(offer.pickupMinutes),
+            OfferRoutePins.minutes(offer.tripMinutes),
+          ),
+          stops: [for (final stop in offer.stops) stop.point.toLatLng()],
         );
     /// A trip's route on the Home map, pickup → drop-off with [pins],
-    /// fitted into the free space above the card or sheet.
+    /// fitted into the free space above the card or sheet: at once on the
+    /// pins and [stops], again once the road is in.
     Future<void> _previewTripRoute(
       LatLng pickup,
       LatLng dropoff,
-      Future<Set<Marker>> Function() pins,
-    ) async {
+      Future<Set<Marker>> Function() pins, {
+      required (String, String) labels,
+      List<LatLng> stops = const <LatLng>[],
+    }) async {
       if (!mounted) { return; }
       final generation = _mapPreviews.begin();
       bool isCurrent() => mounted && _mapPreviews.owns(generation) &&
           _isDirectOfferRoutePreview;
 
-      _offerRouteFrame.framing = <LatLng>[pickup, dropoff];
+      final frame = _offerRouteFrame..stopGlow();
+      frame
+        ..framing = <LatLng>[pickup, dropoff, ...stops]
+        ..pickupLabel = labels.$1
+        ..dropoffLabel = labels.$2
+        ..fitted = null;
       _rebuild(() {
         _isDirectOfferRoutePreview = true;
         _directOfferRouteMarkers = {};
         _directOfferRoutePolylines = <Polyline>{};
       });
+      unawaited(_HomeOfferRoute(this)._fitOfferRoute());
 
       final markers = await pins();
       if (!isCurrent()) return;
@@ -219,10 +233,13 @@ extension _HomeMapSheet on _DriverHomeState {
             points: roadPoints,
           );
         });
+        _HomeOfferRoute(this)._startRouteGlow(roadPoints);
       }
 
-      _offerRouteFrame.framing =
-          MapPreviewGeneration.framingPoints(pickup, dropoff, roadPoints);
+      frame.framing = [
+        ...MapPreviewGeneration.framingPoints(pickup, dropoff, roadPoints),
+        ...stops,
+      ];
       await _HomeOfferRoute(this)._fitOfferRoute();
     }
     Future<void> _fitPoints(List<LatLng> points, {double padding = 80}) async {
@@ -382,17 +399,6 @@ extension _HomeMapSheet on _DriverHomeState {
         _destinationPosition = null;
         _destinationRouteMarkers = {};
         _destinationRoutePolylines = {};
-      });
-    }
-    void _flashSheet(Color color) {
-      _sheetToneTimer?.cancel();
-      _rebuild(() {
-        _sheetTone = color;
-        _sheetToneShown = true;
-      });
-      _sheetToneTimer = Timer(const Duration(seconds: 2), () {
-        if (!mounted) { return; }
-        _rebuild(() => _sheetToneShown = false);
       });
     }
     Widget _inactiveSheetFace() {
@@ -622,16 +628,23 @@ extension _HomeMapSheet on _DriverHomeState {
     Widget body({bool isDestinationPanel = false}) {
       final viewport = MediaQuery.sizeOf(context);
       final viewportWidth = viewport.width;
-      final layers = homeMapLayers(
+      final offerOnScreen = _HomeOfferRoute(this)._offerOnScreen;
+      // The travelling streak, once the route has faded fully in.
+      final glowShown = offerOnScreen &&
+          _exclusive.fade.value >= 1 &&
+          _reservation.fade.value >= 1;
+      ({Set<Marker> markers, Set<Polyline> polylines}) layersWith(
+        Set<Polyline> glow,
+      ) => homeMapLayers(
         car: _markers,
         destinationMode: _destinationModeActive,
         destinationMarkers: _destinationRouteMarkers,
         destinationPolylines: _destinationRoutePolylines,
         offerMarkers: _directOfferRouteMarkers,
-        offerPolylines: _directOfferRoutePolylines,
-        offerOnScreen: _isDirectOfferRoutePreview &&
-            (_outsideRadarOffer != null || _radarHomeOffers.isNotEmpty ||
-                _reservation.routeId != null),
+        offerPolylines: glowShown && glow.isNotEmpty
+            ? {..._directOfferRoutePolylines, ...glow}
+            : _directOfferRoutePolylines,
+        offerOnScreen: offerOnScreen,
       );
 
       return SizedBox(
@@ -639,8 +652,15 @@ extension _HomeMapSheet on _DriverHomeState {
         width: viewportWidth,
         child: Stack(
           children: [
-            if (!_HomeStartPosition(this)._mapReady) _HomeStartPosition(this)._locating() else CustomGoogleMap(
+            if (!_HomeStartPosition(this)._mapReady) _HomeStartPosition(this)._locating() else ValueListenableBuilder<Set<Polyline>>(
+              // Only the map redraws for each step of the streak.
+              valueListenable: _offerRouteFrame.glowLine,
+              builder: (context, glow, _) {
+              final layers = layersWith(glow);
+              return CustomGoogleMap(
               initialPosition: _initialPosition,
+              // The note would sit on the route: hidden while an offer is up.
+              show3DNotice: !offerOnScreen,
               markers: _HomeExclusive(this)._exclusiveFadedPins(
                   _HomeReservation(this)._fadedPins(layers.markers)),
               polylines: _HomeExclusive(this)._exclusiveFadedLines(
@@ -682,6 +702,8 @@ extension _HomeMapSheet on _DriverHomeState {
                 }
               },
               onTap: (LatLng position) {},
+            );
+              },
             ),
             isDestinationPanel
                 ? Align(
@@ -1463,7 +1485,6 @@ extension _HomeMapSheet on _DriverHomeState {
           builder: (context, _) {
             final position = _panelSlidePosition.value;
             final cover = _notchCover(position);
-            final closed = position <= 0.04;
             return DriverSheetNav.collapsedDock(
               context: context,
               scaffoldKey: _scaffoldKey,
@@ -1476,8 +1497,6 @@ extension _HomeMapSheet on _DriverHomeState {
               elevation: 8 * (1 - cover),
               edgeOpacity: 1 - cover,
               topRuleOpacity: cover,
-              tone: closed ? _sheetTone : null,
-              toneShown: closed && _sheetToneShown,
             );
           },
         ),

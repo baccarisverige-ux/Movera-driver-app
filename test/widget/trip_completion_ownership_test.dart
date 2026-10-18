@@ -106,18 +106,21 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('repeated Done returns Home with one offline command', (
+  testWidgets('repeated Done returns Home online, never offline', (
     tester,
   ) async {
     final session = _Session()..setOnline(true);
     addTearDown(session.dispose);
+    session.beginTrip('done-trip');
     await _open(tester, session);
     final done = _done(tester);
     done();
     done();
     await tester.pumpAndSettle();
-    expect(session.offlineCommands, 1);
-    expect(session.isOnline, isFalse);
+    // R13-5: the driver always stays online after a trip.
+    expect(session.stays, 1);
+    expect(session.offlineCommands, 0);
+    expect(session.isOnline, isTrue);
     expect(find.text('Home owner'), findsOneWidget);
     expect(find.byType(DriverRideCompleted), findsNothing);
     expect(tester.takeException(), isNull);
@@ -149,7 +152,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('ride-completed-done')));
     await tester.pumpAndSettle();
     expect(find.text('Home owner'), findsOneWidget);
-    expect(session.offlineCommands, 1);
+    expect(session.offlineCommands, 0);
+    expect(session.isOnline, isTrue);
     expect(tester.takeException(), isNull);
   });
 
@@ -165,6 +169,40 @@ void main() {
     await tester.pump();
     expect(session.offlineCommands, 0);
     expect(session.isOnline, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('missed-offers offline during the trip still wins after Done', (
+    tester,
+  ) async {
+    final session = _Session()..setOnline(true);
+    addTearDown(session.dispose);
+    session.beginTrip('missed-trip');
+    // The admin's missed-Exclusive rule fires on the trip.
+    session.setOnline(false);
+    await _open(tester, session);
+    await tester.tap(find.byKey(const ValueKey('ride-completed-done')));
+    await tester.pumpAndSettle();
+    expect(find.text('Home owner'), findsOneWidget);
+    expect(session.isOnline, isFalse);
+  });
+
+  testWidgets('Ride completed is plain: no rider photo, rows and Done', (
+    tester,
+  ) async {
+    final session = _Session()..setOnline(true);
+    addTearDown(session.dispose);
+    final repository = InMemoryWaybillRepository.instance;
+    repository.beginCurrent(_record('trip-1234567890123'));
+    repository.completeCurrent();
+    await _open(tester, session);
+    expect(find.byType(Image), findsNothing);
+    expect(find.byType(CircleAvatar), findsNothing);
+    expect(find.text('Ride completed'), findsOneWidget);
+    expect(find.text('Rate Demo rider'), findsOneWidget);
+    expect(find.text('Comfort · Demo'), findsOneWidget);
+    expect(find.text('Open'), findsOneWidget);
+    expect(find.text('…567890123'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

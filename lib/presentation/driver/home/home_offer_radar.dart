@@ -144,6 +144,9 @@ extension _HomeOfferRadar on _DriverHomeState {
       _showOutsideRadarOffer(offer);
       if (_outsideRadarOffer?.id == offer.id) {
         _soonReservationReady = false;
+      } else if (!_isDirectOfferRoutePreview) {
+        // Held back: the map follows the car until it comes.
+        _camera.endPreview();
       }
     }
     bool _directOfferFollowsDestination(_HomeDirectOffer offer) {
@@ -176,6 +179,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     void _clearDirectOfferRoute() {
       if (!mounted) { return; }
+      _offerRouteFrame.stopGlow();
       _HomeExclusive(this)._sinkExclusiveIfGone();
       _rebuild(() {
         _mapPreviews.cancel();
@@ -452,9 +456,27 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (_radarHomeOffers.isEmpty && _pendingRadarHomeOffers.isNotEmpty) {
         _releasePendingRadarOffers();
       }
+      // R13-3: the last card left (×, taken elsewhere, gone from dispatch):
+      // its route and pins go too, and the map follows the car again.
+      _clearRadarRouteIfNoCards();
       if (_radarHomeOffers.isEmpty && _pendingRadarHomeOffers.isEmpty) {
         _maybeShowSoonReservation();
         _HomeScheduled(this)._maybeShowAssignment();
+      }
+    }
+    /// No Radar card left and no other offer owns the route: clear it.
+    void _clearRadarRouteIfNoCards() {
+      if (!mounted ||
+          _radarHomeOffers.isNotEmpty ||
+          _outsideRadarOffer != null ||
+          _reservation.routeId != null) {
+        return;
+      }
+      _radarExpandedOfferId = null;
+      if (_isDirectOfferRoutePreview ||
+          _directOfferRouteMarkers.isNotEmpty ||
+          _directOfferRoutePolylines.isNotEmpty) {
+        _clearDirectOfferRoute();
       }
     }
     _HomeRadarMatchState _homeRadarStateFor(String id) =>
@@ -648,6 +670,38 @@ extension _HomeOfferRadar on _DriverHomeState {
         },
       );
     }
+    /// R13-3 (C): back on screen after a pause, which cancelled the offer
+    /// timers. The Exclusive offer gets its time left; Radar cards taken
+    /// elsewhere meanwhile leave; the others get their pick window again.
+    void _resumeOfferTimers() {
+      if (!mounted) { return; }
+      _HomeExclusive(this)._resumeExclusiveTimeout();
+      for (final offer in _radarHomeOffers) {
+        if (_homeRadarStateFor(offer.id) == _HomeRadarMatchState.available) {
+          _startRadarPickWindow(offer);
+        }
+      }
+      final taken = [
+        for (final offer in _radarHomeOffers)
+          if (_homeRadarStateFor(offer.id) ==
+              _HomeRadarMatchState.claimedElsewhere)
+            offer,
+      ];
+      if (taken.isEmpty) { return; }
+      _homeRadarExternalClaimCleanupTimer?.cancel();
+      _homeRadarExternalClaimCleanupTimer = Timer(
+        const Duration(milliseconds: 1200),
+        () {
+          for (final offer in taken) {
+            if (mounted &&
+                _homeRadarStateFor(offer.id) ==
+                    _HomeRadarMatchState.claimedElsewhere) {
+              _dismissRadarHomeOffer(offer);
+            }
+          }
+        },
+      );
+    }
     void _cancelAllOfferTimers({bool preserveClaim = false}) {
       _outsideOfferTimeoutTimer?.cancel();
       _outsideOfferTimeoutTimer = null;
@@ -734,6 +788,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             pickupPosition: offer.pickupPosition,
             dropoffPosition: offer.dropoffPosition,
             pickupKm: offer.pickupKm,
+            bags: offer.bags,
             destinationModeActive: _destinationModeActive,
             destinationAddress: _destinationAddress,
             destinationPosition: _destinationPosition,
@@ -786,7 +841,16 @@ extension _HomeOfferRadar on _DriverHomeState {
       return null;
     }
     void _onRadarDeckFront(String? id) {
-      if (!mounted || id == _radarExpandedOfferId) { return; }
+      if (!mounted) { return; }
+      if (id == null || !_radarHomeOffers.any((offer) => offer.id == id)) {
+        // No front card: nothing of a Radar route may stay on the map.
+        if (_radarExpandedOfferId != null) {
+          _rebuild(() => _radarExpandedOfferId = null);
+        }
+        _clearRadarRouteIfNoCards();
+        return;
+      }
+      if (id == _radarExpandedOfferId) { return; }
       _rebuild(() => _radarExpandedOfferId = id);
       for (final offer in _radarHomeOffers) {
         if (offer.id == id) {

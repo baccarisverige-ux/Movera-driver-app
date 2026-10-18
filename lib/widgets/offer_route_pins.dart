@@ -105,11 +105,21 @@ class OfferRoutePins {
     }
   }
 
-  static final Map<String, Future<BitmapDescriptor>> _cache = {};
+  static final Map<String, BitmapDescriptor> _cache = {};
 
-  /// The marker bitmap for [kind] with [label]; cached per label.
-  static Future<BitmapDescriptor> icon(OfferRoutePinKind kind, String label) =>
-      _cache.putIfAbsent('${kind.name}|$label', () => _toBitmap(kind, label));
+  /// The marker bitmap for [kind] with [label]; cached per label once
+  /// painted. A painting still under way is never shared: if its owner
+  /// goes away first (a test ending, a closed zone) the shared future
+  /// could never complete, and every later pin would wait on it forever.
+  static Future<BitmapDescriptor> icon(
+    OfferRoutePinKind kind,
+    String label,
+  ) async {
+    final key = '${kind.name}|$label';
+    final painted = _cache[key];
+    if (painted != null) return painted;
+    return _cache[key] = await _toBitmap(kind, label);
+  }
 
   static Future<BitmapDescriptor> _toBitmap(
     OfferRoutePinKind kind,

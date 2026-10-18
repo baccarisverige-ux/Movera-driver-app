@@ -446,12 +446,16 @@ class NavigationController extends ChangeNotifier {
     final meters =
         progress?.distanceToManeuverMeters ?? instruction.distanceMeters;
     if (instruction.isArrival) {
+      // The side of the street comes with the arrival step, when known.
+      final side = instruction.type == RouteManeuverType.arrive
+          ? instruction.symbol
+          : NavigationBannerSymbol.arrive;
       if (arrivingToPickup) {
         return NavigationBanner(
           primary: meters < 25 ? 'Pickup ahead' : 'Pickup',
           distanceLabel: _toPoint(meters),
           roadName: instruction.roadName,
-          symbol: NavigationBannerSymbol.arrive,
+          symbol: side,
           status: _displayStatus,
         );
       }
@@ -461,27 +465,45 @@ class NavigationController extends ChangeNotifier {
             : (meters < 25 ? 'Drop-off ahead' : 'Drop-off'),
         distanceLabel: _toPoint(meters),
         roadName: instruction.roadName,
-        symbol: NavigationBannerSymbol.arrive,
+        symbol: side,
         status: _displayStatus,
       );
     }
 
+    final towards = instruction.towards;
+    final shields = instruction.shields;
+    final exitRef = instruction.exitRef;
+    // "Exit 165 · Liljeholmen" names the first place; the rest go under it.
+    final named = exitRef != null &&
+        (instruction.type == RouteManeuverType.offRamp ||
+            instruction.type == RouteManeuverType.ramp);
     final action = RouteInstructionCopy.shortAction(
       type: instruction.type,
       modifier: instruction.modifier,
       exitNumber: instruction.exitNumber,
+      exitRef: exitRef,
+      towards: towards.isEmpty ? null : towards.first,
+      highway: instruction.highway,
+      hasRoad: shields.isNotEmpty || (instruction.roadName ?? '').isNotEmpty,
+      toll: instruction.toll,
+      tunnel: instruction.tunnel,
     );
+    final rest = named ? towards.skip(1) : towards;
     return NavigationBanner(
       primary: RouteInstructionCopy.livePrimary(action: action, meters: meters),
       distanceLabel: RouteInstructionCopy.formatDistance(meters),
       roadName: instruction.roadName,
       exitNumber: instruction.exitNumber,
       exitAngleDegrees: instruction.exitAngleDegrees,
-      symbol: RouteInstructionCopy.symbolFor(
-        type: instruction.type,
-        modifier: instruction.modifier,
-      ),
+      symbol: instruction.symbol,
       status: _displayStatus,
+      shields: shields,
+      towards: rest.isEmpty ? null : rest.join(', '),
+      lanes: RouteLane.matter(instruction.lanes)
+          ? instruction.lanes
+          : const <RouteLane>[],
+      laneModifier: instruction.modifier,
+      toll: instruction.toll,
     );
   }
 

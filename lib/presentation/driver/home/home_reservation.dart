@@ -294,6 +294,8 @@ extension _HomeReservation on _DriverHomeState {
           }
           return pins;
         },
+        labels: (request.pickupTime, request.arrivalTime),
+        stops: [for (final stop in request.stops) stop.point.toLatLng()],
       );
     }
 
@@ -453,6 +455,18 @@ extension _HomeReservation on _DriverHomeState {
     /// popup gives it its place.
     void _reservationBecomesExclusive(String id) {
       if (_reservation.request?.id == id) { _closeHomeReservation(); }
+      // Its route leaves the map at once: it must not stay drawn, fully
+      // visible, under the Exclusive sheet that rises in its place (R13-3).
+      if (_reservation.routeId == null) { return; }
+      _reservation.routeId = null;
+      _reservation.fade.set(1);
+      _offerRouteFrame.stopGlow();
+      _rebuild(() {
+        _mapPreviews.cancel();
+        _isDirectOfferRoutePreview = false;
+        _directOfferRouteMarkers = {};
+        _directOfferRoutePolylines = {};
+      });
     }
 
     /// Accept on a reservation's Exclusive offer asks dispatch first.

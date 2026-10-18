@@ -14,7 +14,7 @@ import 'driver_map_web_bridge_stub.dart'
 ///
 /// The logical pose (vehicle at the camera target) is never replaced by the
 /// web anchor shift. That shift is applied inside the same Maps update.
-class GoogleDriverCameraPort implements DriverCameraPort {
+class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
   GoogleDriverCameraPort(
     this.controller, {
     this.reducedMotion = false,
@@ -292,6 +292,29 @@ class GoogleDriverCameraPort implements DriverCameraPort {
       onStatus?.call('Map camera unavailable — tap recenter to retry');
       // The owner must know that fitting the route failed. Otherwise it
       // remains in Overview forever and suppresses subsequent GPS following.
+      rethrow;
+    }
+  }
+
+  /// The whole offer route: straight to its fitted target and zoom, flat.
+  /// Map padding is not needed: the fit already left the sheet free.
+  @override
+  Future<void> frame(GeoPoint target, double zoom) async {
+    if (_disposed) return;
+    interrupt();
+    final generation = _generation;
+    final position = CameraPosition(
+      target: LatLng(target.latitude, target.longitude),
+      zoom: zoom,
+    );
+    _logical = position;
+    try {
+      await controller.moveCamera(CameraUpdate.newCameraPosition(position));
+      if (_disposed || generation != _generation) return;
+      onStatus?.call(null);
+    } catch (_) {
+      if (_disposed || generation != _generation) return;
+      onStatus?.call('Map camera unavailable — tap recenter to retry');
       rethrow;
     }
   }
