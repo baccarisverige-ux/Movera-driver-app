@@ -33,7 +33,7 @@ class DriverSheetNav {
     // A plain contour in this colour instead of the grey outline and the
     // online dash, e.g. black while a reservation sits on the dock.
     Color? contourColor,
-    // Its width: 2 while an Exclusive offer turns it blue.
+    // Its width.
     double contourWidth = 1,
   }) {
     final safeBottom = MediaQuery.paddingOf(context).bottom;

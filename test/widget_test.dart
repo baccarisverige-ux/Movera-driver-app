@@ -510,7 +510,7 @@ void main() {
       // One total: the 104,80 kr fare plus 1,00 kr pickup pay (Comfort,
       // 0.9 km / 3 min: 1 km and 2 min free, 1 kr/min).
       expect(find.text('105,80 kr'), findsOneWidget);
-      expect(find.text('Only for you · pickup 3 min away'), findsOneWidget);
+      expect(find.text('Kungsgatan 42'), findsOneWidget);
       expect(
         find.byKey(const ValueKey<String>('radar-home-deck')),
         findsNothing,
@@ -526,7 +526,7 @@ void main() {
         const ValueKey<String>('radar-offer-card-nearby-1'),
       );
       expect(card, findsOneWidget);
-      expect(find.text('Only for you · pickup 3 min away'), findsNothing);
+      expect(find.text('Kungsgatan 42'), findsNothing);
       // While Radar offers show, the radar reads Accept for the front card.
       expect(
         find.byKey(const ValueKey<String>('home-radar-accept')),
@@ -674,7 +674,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1550));
     await tester.pump(const Duration(milliseconds: 2300));
 
-    expect(find.byType(RadarEdgeDash), findsNothing);
+    // The Exclusive sheet covers the dock and its dash, like a
+    // reservation request.
+    expect(
+      find.byKey(const ValueKey<String>('home-exclusive-sheet')),
+      findsOneWidget,
+    );
 
     // The Exclusive offer's time to accept (Dispatch, 15 s).
     await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
@@ -1288,7 +1293,7 @@ void main() {
     // Advance beyond the first direct-offer timer. Nothing may appear offline.
     await tester.pump(const Duration(milliseconds: 4200));
     expect(find.text('105,80 kr'), findsNothing);
-    expect(find.text('Only for you · pickup 3 min away'), findsNothing);
+    expect(find.text('Kungsgatan 42'), findsNothing);
     expect(find.text('OFF'), findsOneWidget);
     _expectNoException(tester);
   });
@@ -1303,7 +1308,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 3800));
 
     expect(find.text('105,80 kr'), findsOneWidget);
-    expect(find.text('LIVE'), findsNothing);
+    // The grey Exclusive orb is up on its sheet.
+    expect(find.byKey(const ValueKey<String>('home-radar-exclusive')),
+        findsOneWidget);
 
     // Advance in small frames so the async route-preview continuation can
     // install and then fire the 15 s timeout timer.
@@ -1313,8 +1320,12 @@ void main() {
     }
 
     expect(find.text('105,80 kr'), findsNothing);
-    expect(find.text('Only for you · pickup 3 min away'), findsNothing);
-    expect(find.text('LIVE'), findsOneWidget);
+    expect(find.text('Kungsgatan 42'), findsNothing);
+    // The radar is itself again (the demo's Radar trips may follow at
+    // once, their sheet having gone down first).
+    expect(find.byKey(const ValueKey<String>('home-radar-exclusive')),
+        findsNothing);
+    expect(find.byKey(const ValueKey<String>('radar-online')), findsOneWidget);
     _expectNoException(tester);
   });
 
@@ -1640,7 +1651,7 @@ void main() {
   });
 
   testWidgets(
-    'Exclusive card sits on the Home sheet; the dock and radar stay',
+    'Exclusive sheet rises over the dock, its grey orb on top',
     (WidgetTester tester) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await _pumpHome(tester, const Size(375, 812));
@@ -1648,8 +1659,8 @@ void main() {
       await tester.tap(find.text('OFF'));
       await tester.pump(const Duration(milliseconds: 3800));
 
-      expect(find.text('Only for you · pickup 3 min away'), findsOneWidget);
-      // The radar stays in the dock as the offer's blue Accept.
+      expect(find.text('Kungsgatan 42'), findsOneWidget);
+      // The grey orb on the Exclusive sheet is its Accept.
       expect(
         find.byKey(const ValueKey<String>('home-radar-exclusive')),
         findsOneWidget,
@@ -1659,7 +1670,6 @@ void main() {
       expect(panel.minHeight, 108);
       expect(panel.isDraggable, isFalse);
       expect(panel.panelSnapping, isFalse);
-      expect(find.byType(RadarEdgeDash), findsNothing);
       _expectNoException(tester);
     },
   );
@@ -1749,7 +1759,7 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 3800));
 
-    expect(find.text('Only for you · pickup 3 min away'), findsOneWidget);
+    expect(find.text('Kungsgatan 42'), findsOneWidget);
     expect(safetyPosition().bottom, 138);
     _expectNoException(tester);
   });
@@ -1842,18 +1852,15 @@ void main() {
       await tester.pump(const Duration(milliseconds: 3800));
 
       expect(find.text('105,80 kr'), findsOneWidget);
-      expect(find.text('Only for you · pickup 3 min away'), findsOneWidget);
+      expect(find.text('Kungsgatan 42'), findsOneWidget);
 
-      final route = tester.widget<TextButton>(
-        find.byKey(const ValueKey<String>('direct-offer-route')),
-      );
-      expect(route.onPressed, isNotNull);
-      route.onPressed!.call();
-      await tester.pump(const Duration(milliseconds: 120));
+      // The sheet settles, then the route is on the map.
+      await tester.pump(const Duration(milliseconds: 16));
+      await tester.pump(const Duration(milliseconds: 500));
       expect(find.text('105,80 kr'), findsOneWidget);
       _expectNoException(tester);
 
-      // The blue radar is the Accept.
+      // The grey orb is the Accept.
       await tester.tap(
         find.byKey(const ValueKey<String>('home-radar-exclusive')),
       );
@@ -2029,7 +2036,9 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 3800));
 
-    // The blue radar is the Exclusive offer's Accept.
+    // The grey orb on the Exclusive sheet is its Accept, once it is up.
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
     await _advanceAnimation(tester, const Duration(milliseconds: 520));
 
@@ -2043,8 +2052,7 @@ void main() {
     expect(find.byType(DriverRideCompleted), findsOneWidget);
     await tester.tap(find.text('Done'));
     await tester.pump(const Duration(milliseconds: 420));
-    // The radar's last face change (from the blue Exclusive Accept)
-    // finishes its fade on the next frame.
+    // The radar's last face change finishes its fade on the next frame.
     await tester.pump();
 
     expect(find.byType(DriverHome), findsOneWidget);
@@ -2494,7 +2502,7 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 3800));
 
-    expect(find.text('Only for you · pickup 3 min away'), findsOneWidget);
+    expect(find.text('Kungsgatan 42'), findsOneWidget);
     // The time left runs on the radar's hairline blue ring; the orb
     // itself reads MATCH (R11-8).
     final radar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
@@ -2523,11 +2531,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 3800));
 
     expect(find.text('105,80 kr'), findsOneWidget);
-    expect(find.text('Only for you · pickup 3 min away'), findsOneWidget);
+    expect(find.text('Kungsgatan 42'), findsOneWidget);
     _expectNoException(tester);
   });
 
-  testWidgets('Exclusive offer on Home: Radar-style card and an island note', (
+  testWidgets('Exclusive offer on Home: the request sheet and an island note', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -2537,19 +2545,20 @@ void main() {
     await tester.pump(const Duration(milliseconds: 3800));
     await tester.pump(const Duration(milliseconds: 300));
 
-    // The card: Comfort badge, black Exclusive mark, × to hide; card
-    // payment, so no Cash badge, and not a reservation.
+    // The sheet: Comfort chip, the grey countdown pill, the down arrow;
+    // card payment, so no Cash chip, and not a reservation.
     final card = find.byKey(
       const ValueKey<String>('exclusive-offer-card-home-direct-close'),
     );
     expect(card, findsOneWidget);
     Finder inCard(Finder finder) =>
         find.descendant(of: card, matching: finder);
-    expect(inCard(find.text('Exclusive')), findsOneWidget);
+    expect(inCard(find.textContaining('Exclusive for you · ')), findsOneWidget);
     expect(inCard(find.text('Comfort')), findsOneWidget);
     expect(inCard(find.text('Cash')), findsNothing);
     expect(inCard(find.textContaining('Reservation')), findsNothing);
-    expect(inCard(find.byTooltip('Hide offer')), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('direct-offer-dismiss')),
+        findsOneWidget);
 
     // The island says it too: info blue, with a bolt instead of the "i".
     expect(
@@ -2572,14 +2581,16 @@ void main() {
     );
     _expectNoException(tester);
 
-    // × hides it: the card slides back into the sheet, then the radar
-    // comes back.
+    // The down arrow skips it: the sheet slides down, then Home is
+    // normal again.
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Only for you · pickup 3 min away'), findsOneWidget);
+    expect(find.text('Kungsgatan 42'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 200));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump();
-    expect(find.text('Only for you · pickup 3 min away'), findsNothing);
+    expect(find.text('Kungsgatan 42'), findsNothing);
     expect(find.text('LIVE'), findsOneWidget);
     _expectNoException(tester);
   });

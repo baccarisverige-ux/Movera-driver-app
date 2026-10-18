@@ -10,9 +10,9 @@ import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
 import 'package:movera/presentation/driver/analytics/acceptance%20rate/acceptance_rate.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
+import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/presentation/driver/home/components/reservation_request_sheet.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
-import 'package:movera/widgets/exclusive_offer_card.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 
 import '../../integration_test/headless_map_platform.dart';
@@ -55,24 +55,25 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
   );
 }
 
-ExclusiveOfferCard _exclusive(OfferCardDetails details) => ExclusiveOfferCard(
-  offer: _offer,
-  reservation: true,
-  reservationTime: '07:40',
-  details: details,
-);
+ExclusiveRequestSheet _exclusive(OfferCardDetails details) =>
+    ExclusiveRequestSheet(
+      offer: _offer,
+      secondsLeft: 12,
+      reservation: true,
+      reservationTime: '07:40',
+      details: details,
+    );
 
 void main() {
   group('offer card details (Q14)', () {
-    testWidgets('everything on: the full Exclusive card', (tester) async {
+    testWidgets('everything on: the full Exclusive sheet', (tester) async {
       await _pump(tester, _exclusive(const OfferCardDetails()));
       expect(find.text('100,00 kr', findRichText: true), findsOneWidget);
-      expect(find.text('YOUR SHARE'), findsNothing);
       expect(find.text('Gamla vägen'), findsOneWidget);
       expect(find.text('Solna centrum'), findsOneWidget);
-      expect(find.text('1.6 km'), findsOneWidget);
-      expect(find.text('9.4 km · 1 stop'), findsOneWidget);
-      expect(find.text('4.94 · 128 trips'), findsOneWidget);
+      expect(find.text('19 min trip'), findsOneWidget);
+      expect(find.text('9.4 km'), findsOneWidget);
+      expect(find.text('1 stop'), findsOneWidget);
       expect(find.text('Cash'), findsOneWidget);
       expect(find.text('Reservation · 07:40'), findsOneWidget);
       expect(find.text('+20 kr'), findsOneWidget);
@@ -96,7 +97,6 @@ void main() {
         ),
       );
       // The driver's share after Movera's 25 %.
-      expect(find.text('YOUR SHARE'), findsOneWidget);
       expect(find.text('75,00 kr', findRichText: true), findsOneWidget);
       expect(find.text('Pickup nearby'), findsOneWidget);
       expect(find.text('Gamla vägen'), findsNothing);
@@ -104,14 +104,14 @@ void main() {
       expect(find.text('Solna'), findsOneWidget);
       expect(find.text('Solna centrum'), findsNothing);
       expect(find.textContaining(RegExp(r'\d km')), findsNothing);
+      expect(find.textContaining('min trip'), findsNothing);
       expect(find.textContaining('stop'), findsNothing);
-      expect(find.textContaining('4.94'), findsNothing);
       expect(find.text('Cash'), findsNothing);
       expect(find.textContaining('Reservation'), findsNothing);
       expect(find.text('+20 kr'), findsNothing);
-      // The Exclusive mark and the pickup minutes stay.
-      expect(find.text('Exclusive'), findsOneWidget);
-      expect(find.text('4 min'), findsWidgets);
+      // The pickup minutes and the countdown stay.
+      expect(find.text('4 min'), findsOneWidget);
+      expect(find.text('Exclusive for you · 12 s'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

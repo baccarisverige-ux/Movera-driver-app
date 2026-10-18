@@ -145,7 +145,8 @@ void main() {
       expect(find.byKey(_closeOffer), findsOneWidget);
       // × is a "no", like letting it run out.
       await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
-      await _frames(tester, const Duration(milliseconds: 400));
+      // Its sheet goes down first.
+      await _frames(tester, const Duration(milliseconds: 900));
       expect(_said, contains('Next missed offer: offline'));
       expect(session.availableForOffers, isTrue);
       expect(ExclusiveAnswers.instance.missedInRow, 1);

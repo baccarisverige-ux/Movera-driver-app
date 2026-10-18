@@ -13,7 +13,6 @@ import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
-import 'package:movera/presentation/driver/home/components/digital_island.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/components/reservation_island_face.dart';
 import 'package:movera/presentation/driver/home/components/reservation_request_sheet.dart';
@@ -575,11 +574,6 @@ void main() {
       of: radar, matching: find.byType(MoveraRadarOrb))).reserve, isTrue);
     expect(find.byKey(const ValueKey<String>('radar-reserve-icon')),
         findsNothing);
-    expect(
-      tester.widget<DigitalIslandShell>(find.byType(DigitalIslandShell))
-          .exclusive,
-      0,
-    );
 
     // The Home map shows the route with clock times on the pins.
     // The pins draw in real time and then fade in; a slow machine gets

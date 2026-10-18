@@ -47,6 +47,11 @@ class MoveraRadarOrb extends StatelessWidget {
   /// green turned blue ([exclusiveBlue]) and a small check over [title]
   /// ("Accept"), inside a hairline blue ring that empties clockwise as
   /// [timeLeft] runs from 1 to 0.
+  ///
+  /// With [reserve] as well it is the Exclusive offer on Home: the
+  /// reservation's grey look (grey waves and halo, black "Accept", MATCH in
+  /// [reserveInk], no icon) inside a hairline [reserveInk] time ring. No
+  /// blue anywhere.
   final bool exclusive;
   final double timeLeft;
   final double size;
@@ -90,18 +95,18 @@ class MoveraRadarOrb extends StatelessWidget {
     const detectedLight = Color(0xFF9ED6B0);
     const detectedGreen = offerAccent;
     // Exclusive is the normal radar in blue, with its time ring.
-    final accent = exclusive
-        ? exclusiveBlue
-        : reserve
+    final accent = reserve
         ? Color.lerp(reserveLight, reserveGrey, pulse) ?? reserveGrey
+        : exclusive
+        ? exclusiveBlue
         : blocked
         ? holdRed
         : offer
             ? Color.lerp(detectedLight, detectedGreen, pulse) ?? detectedGreen
             : mint;
     // Exclusive and reservation are the Radar-offer orb in their colour;
-    // only Exclusive carries a small icon.
-    final tinted = exclusive;
+    // only the blue Exclusive carries a small icon.
+    final tinted = exclusive && !reserve;
     final hot = offer || exclusive || reserve;
     final glowStrength = !active
         ? 0.08
@@ -219,6 +224,9 @@ class MoveraRadarOrb extends StatelessWidget {
                         painter: ExclusiveTimeRingPainter(
                           timeLeft: timeLeft,
                           stroke: 1.5 * s,
+                          // The grey Exclusive: a dark hairline.
+                          color: reserve ? reserveInk : exclusiveBlue,
+                          track: reserve ? reserveHalo : exclusiveTrack,
                         ),
                       ),
                     ),
@@ -403,14 +411,21 @@ class MoveraRadarOrb extends StatelessWidget {
   static const Color exclusiveTrack = Color(0xFFE3E9F0);
 }
 
-/// The Exclusive radar's time left: a hairline blue arc on a barely
-/// visible track. The spent part grows clockwise from twelve o'clock.
+/// The Exclusive radar's time left: a hairline arc in [color] on a barely
+/// visible [track]. The spent part grows clockwise from twelve o'clock.
 class ExclusiveTimeRingPainter extends CustomPainter {
-  const ExclusiveTimeRingPainter({required this.timeLeft, required this.stroke});
+  const ExclusiveTimeRingPainter({
+    required this.timeLeft,
+    required this.stroke,
+    this.color = MoveraRadarOrb.exclusiveBlue,
+    this.track = MoveraRadarOrb.exclusiveTrack,
+  });
 
   /// 1 full, 0 empty.
   final double timeLeft;
   final double stroke;
+  final Color color;
+  final Color track;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -424,7 +439,7 @@ class ExclusiveTimeRingPainter extends CustomPainter {
       0,
       math.pi * 2,
       false,
-      paint..color = MoveraRadarOrb.exclusiveTrack.withValues(alpha: 0.35),
+      paint..color = track.withValues(alpha: 0.35),
     );
     final left = timeLeft.clamp(0.0, 1.0);
     if (left <= 0) { return; }
@@ -434,11 +449,14 @@ class ExclusiveTimeRingPainter extends CustomPainter {
       -math.pi / 2 + spent,
       left * math.pi * 2,
       false,
-      paint..color = MoveraRadarOrb.exclusiveBlue,
+      paint..color = color,
     );
   }
 
   @override
   bool shouldRepaint(ExclusiveTimeRingPainter oldDelegate) =>
-      oldDelegate.timeLeft != timeLeft || oldDelegate.stroke != stroke;
+      oldDelegate.timeLeft != timeLeft ||
+      oldDelegate.stroke != stroke ||
+      oldDelegate.color != color ||
+      oldDelegate.track != track;
 }

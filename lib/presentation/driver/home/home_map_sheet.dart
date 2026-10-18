@@ -156,9 +156,9 @@ extension _HomeMapSheet on _DriverHomeState {
       final measured = _HomeOfferRoute(this)._offerCardObscured();
       if (measured != null) { return measured; }
       if (_outsideRadarOffer != null) {
-        // The Exclusive card on top of the sheet, down to the screen edge.
-        final height = MediaQuery.sizeOf(context).height;
-        return math.min(height * 0.7, 520.0);
+        // The Exclusive sheet, its orb's upper half over the map.
+        return MediaQuery.sizeOf(context).height * 0.4 +
+            HomeOfferSheet.orbSize / 2;
       }
       if (_isDirectOfferRoutePreview || _radarHomeOffers.isNotEmpty) {
         return 188;
@@ -641,9 +641,11 @@ extension _HomeMapSheet on _DriverHomeState {
           children: [
             if (!_HomeStartPosition(this)._mapReady) _HomeStartPosition(this)._locating() else CustomGoogleMap(
               initialPosition: _initialPosition,
-              markers: _HomeReservation(this)._fadedPins(layers.markers),
-              polylines: _HomeReservation(this)._fadedLines(
-                DriverRouteStyle.sized(layers.polylines, _routeZoomStep)),
+              markers: _HomeExclusive(this)._exclusiveFadedPins(
+                  _HomeReservation(this)._fadedPins(layers.markers)),
+              polylines: _HomeExclusive(this)._exclusiveFadedLines(
+                  _HomeReservation(this)._fadedLines(
+                DriverRouteStyle.sized(layers.polylines, _routeZoomStep))),
               myLocationEnabled: false,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
@@ -753,8 +755,6 @@ extension _HomeMapSheet on _DriverHomeState {
                   child: SvgPicture.asset(AppAssets.mapSafety, width: 24, height: 24),
                 ),
               ),
-            // The Exclusive card grows out of the sheet, behind the dock.
-            if (!isDestinationPanel) _HomeExclusive(this)._exclusiveLayer(),
             if (!isDestinationPanel &&
                 _mainPanelPosition <= 0.04 &&
                 _outsideRadarOffer == null &&
@@ -869,9 +869,14 @@ extension _HomeMapSheet on _DriverHomeState {
           ? DigitalReservationFace.whenOf(
               _reservation.request!, ScheduledClock.instance.now())
           : null;
+      // An Exclusive offer up: check and "Exclusive · Pickup 4 min".
+      final exclusive = message == null && reservation == null &&
+              _HomeExclusive(this)._exclusiveOnIsland
+          ? _exclusive.shown!.pickupMinutes
+          : null;
       // Destination mode: pin and "Centralplan 15 · 35 min", menu kept.
       final destination = message == null && reservation == null &&
-          _destinationModeActive;
+          exclusive == null && _destinationModeActive;
       // A message sizes the island to its words (never taller): the normal
       // size for short words, a little longer for longer ones. 14 + 14 for the
       // tucked sides, 2 for the border and some air on both ends.
@@ -890,6 +895,11 @@ extension _HomeMapSheet on _DriverHomeState {
                         14 + 14 + 2 + 36)
                     .clamp(math.min(200.0, maxWidth), maxWidth)
                     .toDouble()
+          : exclusive != null
+              ? (DigitalExclusiveFace.widthFor(context, exclusive) +
+                        14 + 14 + 2 + 36)
+                    .clamp(math.min(200.0, maxWidth), maxWidth)
+                    .toDouble()
           : destination
               ? (DigitalDestinationFace.widthFor(context, _destinationShortLabel, _destinationEta) +
                         54 + 14 + 2 + 28)
@@ -898,7 +908,8 @@ extension _HomeMapSheet on _DriverHomeState {
           : _islandWake >= 1
               ? math.min(maxWidth, 244.0)
               : 112.0;
-      final tucked = _islandMessage != null || reservation != null;
+      final tucked = _islandMessage != null || reservation != null ||
+          exclusive != null;
       Widget side(Widget button, {bool tuck = false}) => AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeOutCubic,
@@ -919,10 +930,7 @@ extension _HomeMapSheet on _DriverHomeState {
             ),
           );
       return PointerInterceptor(
-        child: AnimatedBuilder(
-          // A live Exclusive offer rings the island blue, with its card.
-          animation: _exclusive.rise,
-          builder: (context, row) => DigitalIslandShell(
+        child: DigitalIslandShell(
             width: width,
             height: height,
             // Online, the driver is on the road: no light passing over it.
@@ -930,12 +938,9 @@ extension _HomeMapSheet on _DriverHomeState {
             // Every size change, out and back, glides with a soft spring.
             duration: const Duration(milliseconds: 680),
             curve: Curves.easeOutCubic,
-            exclusive: _HomeExclusive(this)._exclusiveBlue,
             // Radar offers ring it green, like the radar.
             offers: _isOnline &&
                 (_hasRideOffers || _radarHomeOffers.isNotEmpty),
-            child: row!,
-          ),
           child: Row(
             children: [
               side(Builder(
@@ -966,14 +971,14 @@ extension _HomeMapSheet on _DriverHomeState {
                         ? hold.onTap
                         : message != null
                         ? () => _onIslandMessageTap(message)
-                        : reservation != null
+                        : reservation != null || exclusive != null
                         ? null
                         : destination
                         ? _openDestinationDetails
                         : _onIslandEarningsTap,
                     // Holding the middle goes straight to Ride history.
                     onLongPress: message != null || destination ||
-                            reservation != null
+                            reservation != null || exclusive != null
                         ? null
                         : () {
                             HapticFeedback.mediumImpact();
@@ -992,6 +997,13 @@ extension _HomeMapSheet on _DriverHomeState {
                                   'island-reservation-face',
                                 ),
                                 when: reservation,
+                              )
+                            : exclusive != null
+                            ? DigitalExclusiveFace(
+                                key: const ValueKey<String>(
+                                  'island-exclusive-face',
+                                ),
+                                pickupMinutes: exclusive,
                               )
                             : destination
                             ? DigitalDestinationFace(
@@ -1395,21 +1407,17 @@ extension _HomeMapSheet on _DriverHomeState {
     /// The four dock icons, fixed at the bottom of the sheet from closed to
     /// open. Closed, it carries the notch for the radar; as the sheet opens
     /// over it the notch flattens into plain white.
-    static const Color _dockInk = Color(0xFF111518);
-
     Widget? _homeDockFooter() {
       if (_homeSheetInactive) { return null; }
       return _sheetPointer(SizedBox(
         width: MediaQuery.sizeOf(context).width,
         height: MoveraSheetMetrics.collapsedHeight,
         child: AnimatedBuilder(
-          // The Exclusive card's slide fades the dock line black ↔ blue.
-          animation: Listenable.merge([_panelSlidePosition, _exclusive.rise]),
+          animation: _panelSlidePosition,
           builder: (context, _) {
             final position = _panelSlidePosition.value;
             final cover = _notchCover(position);
             final closed = position <= 0.04;
-            final blue = _HomeExclusive(this)._exclusiveBlue;
             return DriverSheetNav.collapsedDock(
               context: context,
               scaffoldKey: _scaffoldKey,
@@ -1424,13 +1432,6 @@ extension _HomeMapSheet on _DriverHomeState {
               topRuleOpacity: cover,
               tone: closed ? _sheetTone : null,
               toneShown: closed && _sheetToneShown,
-              // The Exclusive offer turns the contour blue, all the way
-              // round the radar.
-              contourColor: _exclusive.shown != null
-                  ? Color.lerp(_dockInk, ExclusiveOfferCard.blue, blue)
-                  : null,
-              contourWidth: 1 +
-                  (ExclusiveOfferCard.liveContourWidth - 1) * blue,
             );
           },
         ),
@@ -1483,11 +1484,8 @@ extension _HomeMapSheet on _DriverHomeState {
               valueListenable: _panelSlidePosition,
               builder: (context, position, _) {
                 final holdOff = _isOnline && position >= 0.5;
-                // An Exclusive offer: the blue radar is its Accept.
-                final exclusive = !holdOff && _isOnline &&
-                    _HomeExclusive(this)._exclusiveLive;
-                // A reservation request brings its own Accept orb on its
-                // sheet, over this one. Offers on the deck: the radar takes
+                // A reservation request or an Exclusive offer brings its
+                // own Accept orb on its sheet, over this one. Offers on the deck: the radar takes
                 // the front trip.
                 final front = !holdOff && _isOnline &&
                         _outsideRadarOffer == null
@@ -1496,8 +1494,6 @@ extension _HomeMapSheet on _DriverHomeState {
                 final face = _isOnline
                     ? (holdOff
                         ? 'radar-hold-off'
-                        : exclusive
-                        ? 'radar-exclusive'
                         : front != null
                         ? 'radar-accept'
                         : 'radar-online')
@@ -1522,8 +1518,6 @@ extension _HomeMapSheet on _DriverHomeState {
                     child: _isOnline
                         ? (holdOff
                             ? _holdOffRadar()
-                            : exclusive
-                            ? _HomeExclusive(this)._exclusiveRadar()
                             : front != null
                             ? _acceptRadar(front)
                             : _buildTripRadarButton())

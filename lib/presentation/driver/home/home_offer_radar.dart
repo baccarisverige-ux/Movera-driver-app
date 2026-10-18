@@ -231,7 +231,8 @@ extension _HomeOfferRadar on _DriverHomeState {
       _rebuild(() {
         _outsideRadarOffer = offer;
       });
-      // The card grows out of the sheet; the radar's ring starts full.
+      // The sheet rises over the dock; its orb's ring starts full. The
+      // route comes onto the map once the sheet has settled.
       _HomeExclusive(this)._raiseExclusive(offer, lifetime);
       // The island says it too while the card arrives.
       if (arriving) {
@@ -256,8 +257,6 @@ extension _HomeOfferRadar on _DriverHomeState {
           _dismissOutsideRadarOffer(missed: true);
         },
       );
-
-      await _previewDirectOfferRoute(offer);
     }
     /// The Exclusive offer leaves. [missed]: it ran out or the driver
     /// tapped ×; a row of those takes the driver offline (Q16). Its card
@@ -884,30 +883,26 @@ extension _HomeOfferRadar on _DriverHomeState {
         ),
       );
     }
-    /// The Exclusive offer's card on top of the Home sheet. The radar is
-    /// its Accept; × hides it.
+    /// The Exclusive offer's content on its Home sheet (the same sheet as
+    /// a reservation request). The grey orb on its top edge accepts; the
+    /// down arrow skips it.
     Widget _buildOutsideRadarOfferCard(
       _HomeDirectOffer offer, {
-      double bottomInset = 22,
-      double? maxContentHeight,
-      double contour = 0,
+      required int secondsLeft,
     }) {
       final reservation = offer.reservation && !offer.driverSigned;
-      return ExclusiveOfferCard(
-        key: ValueKey<String>('direct-offer-${offer.id}'),
+      return ExclusiveRequestSheet(
         offer: _radarOfferView(offer),
-        bottomInset: bottomInset,
-        maxContentHeight: maxContentHeight,
-        contour: contour,
-        // The reason's text comes from the admin's list (Q15).
-        reason: offer.reason.isEmpty ? null : ExclusiveReasons.text(offer.reason),
+        secondsLeft: secondsLeft,
         reservation: reservation,
         reservationTime: reservation ? offer.pickupTime : null,
         // Destination mode, or trips toward the next scheduled pickup.
         onYourWay: _destinationModeActive ||
             (!offer.assigned && _HomeScheduled(this)._towardPickupTime != null),
-        onDismiss: () => _dismissOutsideRadarOffer(missed: true),
-        onRoute: () => _previewDirectOfferRoute(offer),
+        // A ride Movera assigned says so (Q29).
+        lead: offer.assigned
+            ? ExclusiveReasons.text(ExclusiveReasons.assigned)
+            : ExclusiveRequestSheet.defaultLead,
       );
     }
     void _scheduleVisibleOffers() {
