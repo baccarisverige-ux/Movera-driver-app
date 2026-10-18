@@ -1,6 +1,10 @@
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/settings/map_traffic_setting.dart';
+import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/presentation/driver/pin%20verification/pin_verification.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/settings/accessibility/accessibility.dart';
@@ -9,7 +13,8 @@ import 'package:movera/presentation/driver/settings/sound%20&%20voice/sound_voic
 import 'package:movera/widgets/navigation_transition.dart';
 
 class Settings extends StatefulWidget {
-  const Settings({super.key});
+  const Settings({super.key, this.repository});
+  final SettingsRepository? repository;
 
   @override
   State<Settings> createState() => _SettingsState();
@@ -20,6 +25,13 @@ class _SettingsState extends State<Settings> {
   static const Color _muted = Color(0xFF7D898F);
   static const Color _line = Color(0xFFE6E8EA);
 
+  late final _settings = widget.repository ?? SettingsRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    MapTrafficSetting.restore(_settings);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +80,8 @@ class _SettingsState extends State<Settings> {
               detail: 'English (US) only',
             ),
           ]),
+          const SizedBox(height: 12),
+          _group([_trafficRow()]),
           const SizedBox(height: 12),
           _group([
             _row(
@@ -173,4 +187,73 @@ class _SettingsState extends State<Settings> {
     );
   }
 
+  /// "Show traffic on map": trip map only, ON by default (R13-17).
+  Widget _trafficRow() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: MapTrafficSetting.enabled,
+      builder: (context, on, _) {
+        void toggle(bool value) => MapTrafficSetting.set(value, _settings);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F5F6),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: SvgPicture.asset(
+                  AppAssets.solarMapArrowSquare,
+                  width: 18,
+                  height: 18,
+                  colorFilter: const ColorFilter.mode(_ink, BlendMode.srcIn),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Show traffic on map',
+                      style: TextStyle(
+                        color: _ink,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Traffic colours on the trip map',
+                      style: TextStyle(
+                        color: _muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Semantics(
+                label: 'Show traffic on map',
+                toggled: on,
+                onTap: () => toggle(!on),
+                child: ExcludeSemantics(
+                  child: Switch.adaptive(
+                    key: const ValueKey<String>('settings-show-traffic'),
+                    value: on,
+                    activeTrackColor: _ink,
+                    onChanged: toggle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }

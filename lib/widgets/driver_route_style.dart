@@ -67,4 +67,24 @@ abstract final class DriverRouteStyle {
           ? line.copyWith(widthParam: coreWidthAt(zoom))
           : line,
   };
+
+  /// Draws [path] in the route-line look on a drawn (non-Google) map
+  /// picture: a [casingColor] outline [outline] wide on each side of a
+  /// [color] core [coreWidth] wide.
+  static void paintOn(
+    Canvas canvas,
+    Path path, {
+    double coreWidth = 3.5,
+    double outline = 1.25,
+  }) {
+    Paint line(Color c, double w) => Paint()
+      ..color = c
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas
+      ..drawPath(path, line(casingColor, coreWidth + outline * 2))
+      ..drawPath(path, line(color, coreWidth));
+  }
 }
