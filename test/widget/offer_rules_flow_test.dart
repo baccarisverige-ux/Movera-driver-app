@@ -434,7 +434,7 @@ void main() {
       expect(find.text('Finish Comfort'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
       await tester.pump(const Duration(milliseconds: 400));
-      final confirm = find.text('Confirm finish');
+      final confirm = find.byKey(const ValueKey<String>('finish-soon-finish'));
       if (confirm.evaluate().isNotEmpty) {
         await tester.tap(confirm);
       }

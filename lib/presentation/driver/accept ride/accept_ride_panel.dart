@@ -81,10 +81,10 @@ extension _AcceptRidePanel on _AcceptRideState {
             MediaQuery.paddingOf(context).bottom,
           );
       final bannerReserve = MediaQuery.paddingOf(context).top + 210;
-      return math.min(
+      return _AcceptRideSheet(this)._fitRideExpanded(math.min(
         MoveraSheetMetrics.expandedHeight(viewport),
         math.max(collapsed + 160, viewport - bannerReserve),
-      );
+      ));
     }
     /// Panel position of the middle sheet: header, rider and slide action.
     double _rideSnapPoint(BuildContext context) {
@@ -511,154 +511,6 @@ extension _AcceptRidePanel on _AcceptRideState {
         ],
       );
     }
-    Widget _buildSecuredNextTripDetails() {
-      final offer = _nextTripRadarOffer;
-      if (_stage != ActiveRideStage.onTrip ||
-          _onTripRadarState != _OnTripRadarState.secured ||
-          offer == null) {
-        return const SizedBox.shrink();
-      }
-
-      return Container(
-        key: const ValueKey<String>('secured-next-trip-details'),
-        margin: const EdgeInsets.only(top: 10),
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAF9),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFDDE8E3)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Next trip secured',
-                    style: TextStyle(
-                      color: _AcceptRideState._ink,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                Text(
-                  offer.shownFare,
-                  style: const TextStyle(
-                    color: _AcceptRideState._ink,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 11),
-            _nextTripLocationRow(
-              color: _AcceptRideState._green,
-              label: 'Pickup · ${offer.pickupMinutes} min',
-              address: offer.pickup,
-            ),
-            const SizedBox(height: 9),
-            _nextTripLocationRow(
-              color: _AcceptRideState._ink,
-              label: 'Drop-off · ${offer.tripMinutes} min trip',
-              address: offer.dropoff,
-            ),
-            const SizedBox(height: 11),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${offer.category} · ${offer.riderName}',
-                    style: const TextStyle(
-                      color: _AcceptRideState._muted,
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                TextButton.icon(
-                  key: const ValueKey<String>('next-trip-waybill'),
-                  onPressed: () {
-                    final record = _waybills.next;
-                    if (record != null) {
-                      showMoveraWaybillSheet(
-                        context,
-                        record,
-                        title: 'Next trip waybill',
-                      );
-                    }
-                  },
-                  icon: const MoveraLineIcon(
-                    mark: MoveraMark.receipt,
-                    size: 15,
-                    color: Color(0xFF1C242C),
-                  ),
-                  label: const Text('Waybill'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: _AcceptRideState._ink,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-    Widget _nextTripLocationRow({
-      required Color color,
-      required String label,
-      required String address,
-    }) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 9,
-            height: 9,
-            margin: const EdgeInsets.only(top: 3),
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: _AcceptRideState._muted,
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  address,
-                  style: const TextStyle(
-                    color: _AcceptRideState._ink,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
-    }
     void _openWaitingTime() {
       if (!_countingWait) { return; }
       showWaitingTimeSheet(
@@ -788,6 +640,7 @@ extension _AcceptRidePanel on _AcceptRideState {
           final compact = pos < snap * 0.5;
           final full = pos > snap + (1 - snap) * 0.35;
           if (!compact && !full) { _measureRideMiddle(); }
+          if (full) { _AcceptRideSheet(this)._measureRideFull(); }
           return Container(
             key: const ValueKey<String>('active-ride-panel'),
             decoration: BoxDecoration(
@@ -851,38 +704,29 @@ extension _AcceptRidePanel on _AcceptRideState {
                     ] else
                       Expanded(
                         child: SingleChildScrollView(
-                          key: const PageStorageKey<String>('active-ride-scroll'),
+                          key: _fullScrollKey,
                           padding: const EdgeInsets.only(bottom: 16),
                           physics: const BouncingScrollPhysics(),
                           child: Column(
+                            key: _fullContentKey,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildRiderRow(),
-                              const SizedBox(height: 6),
-                              _sheetDivider(),
-                              _buildRouteList(),
-                              _sheetDivider(),
-                              _buildCurrentWaybillShortcut(),
-                              _sheetRow(
-                                key: const ValueKey<String>('active-ride-safety-tile'),
-                                label: 'Safety',
-                                onTap: () => showSafetyToolKitSheet(context),
-                              ),
-                              _sheetDivider(),
-                              _sheetRow(
-                                key: const ValueKey<String>('active-ride-trip-options'),
-                                label: 'Trip options',
-                                onTap: _showTripOptions,
-                              ),
-                              if (_stage == ActiveRideStage.onTrip)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: _buildSecuredNextTripDetails(),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Column(
+                                  children: [
+                                    _AcceptRideSheet(this)._buildCurrentTripCard(),
+                                    _AcceptRideSheet(this)._buildNextTripCard(),
+                                  ],
                                 ),
+                              ),
                               if (_countingWait) ...[
                                 const SizedBox(height: 12),
                                 Center(child: _waitPhaseChip()),
                               ],
+                              _AcceptRideSheet(this)._buildRadarDock(),
                             ],
                           ),
                         ),
@@ -893,51 +737,6 @@ extension _AcceptRidePanel on _AcceptRideState {
             ),
           );
         },
-      );
-    }
-    /// Every point of the trip as a plain list, a small dot before each.
-    Widget _buildRouteList() {
-      final points = <String>[
-        widget.pickupAddress,
-        ...widget.stopAddresses,
-        widget.dropoffAddress,
-      ];
-      return Padding(
-        key: const ValueKey<String>('active-ride-journey-card'),
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-        child: Column(
-          children: [
-            for (final point in points)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 7),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                        color: _AcceptRideState._ink,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        point,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: _AcceptRideState._ink,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
       );
     }
     Widget _waitPhaseChip() {
@@ -968,7 +767,7 @@ extension _AcceptRidePanel on _AcceptRideState {
     Widget _buildRiderRow() {
       return Padding(
         key: const ValueKey<String>('active-ride-rider-card'),
-        padding: const EdgeInsets.fromLTRB(12, 2, 8, 2),
+        padding: const EdgeInsets.fromLTRB(12, 2, 16, 2),
         child: Row(
           children: [
             Expanded(
@@ -990,53 +789,20 @@ extension _AcceptRidePanel on _AcceptRideState {
                 ),
               ),
             ),
-            _riderAction(
+            TripRoundButton(
               key: const ValueKey<String>('active-ride-call-rider'),
               tooltip: 'Call rider',
               onTap: _callRider,
-              asset: AppAssets.tripCall,
+              asset: AppAssets.solarPhoneCalling,
             ),
-            _riderAction(
+            const SizedBox(width: 12),
+            TripRoundButton(
               key: const ValueKey<String>('active-ride-message-rider'),
               tooltip: 'Message rider',
               onTap: _messageRider,
-              asset: AppAssets.tripMessage,
+              asset: AppAssets.solarChatRoundDots,
             ),
           ],
-        ),
-      );
-    }
-    Widget _riderAction({
-      required Key key,
-      required String tooltip,
-      required VoidCallback onTap,
-      required String asset,
-    }) {
-      return Tooltip(
-        key: key,
-        message: tooltip,
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          child: InkWell(
-            onTap: onTap,
-            customBorder: const CircleBorder(),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: Center(
-                child: SvgPicture.asset(
-                  asset,
-                  width: 23,
-                  height: 23,
-                  colorFilter: const ColorFilter.mode(
-                    _AcceptRideState._ink,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
-          ),
         ),
       );
     }
@@ -1058,55 +824,6 @@ extension _AcceptRidePanel on _AcceptRideState {
         BottomToTopTransition(
           Chat(riderDisplayName: widget.riderName),
         ),
-      );
-    }
-    Widget _sheetDivider() =>
-        const Divider(height: 1, thickness: 1, color: Color(0xFFECEEEF));
-    /// A plain text row of the full sheet.
-    Widget _sheetRow({
-      required Key key,
-      required String label,
-      required VoidCallback onTap,
-    }) {
-      return InkWell(
-        key: key,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: _AcceptRideState._ink,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    /// "Waybill" row, shown once the trip has one.
-    Widget _buildCurrentWaybillShortcut() {
-      return ValueListenableBuilder<WaybillRecord?>(
-        valueListenable: _waybills.currentListenable,
-        builder: (context, record, _) {
-          if (record == null) { return const SizedBox.shrink(); }
-          return Column(
-            children: [
-              _sheetRow(
-                key: const ValueKey<String>('current-waybill-shortcut'),
-                label: 'Waybill',
-                onTap: () => showMoveraWaybillSheet(context, record),
-              ),
-              _sheetDivider(),
-            ],
-          );
-        },
       );
     }
     Widget _buildPrimaryAction() {
@@ -1339,9 +1056,13 @@ extension _AcceptRidePanel on _AcceptRideState {
         },
       );
     }
-    Future<void> _showCancellationReasons() async {
-      final isOnTrip = _stage == ActiveRideStage.onTrip;
-      final reasons = isOnTrip
+    /// The trip's cancel reasons; with [nextTrip], the same sheet cancels
+    /// the secured next trip and the current one goes on.
+    Future<void> _showCancellationReasons({bool nextTrip = false}) async {
+      final isOnTrip = !nextTrip && _stage == ActiveRideStage.onTrip;
+      final reasons = nextTrip
+          ? _AcceptRideState._nextTripCancellationReasons
+          : isOnTrip
           ? _AcceptRideState._onTripCancellationReasons
           : _stage == ActiveRideStage.waitingForRider &&
                   !_paidStopWait &&
@@ -1356,7 +1077,7 @@ extension _AcceptRidePanel on _AcceptRideState {
         fitContent: true,
         builder: (sheetContext) {
           return _CleanSheet(
-            key: const ValueKey<String>('trip-cancellation-reasons-sheet'),
+            key: ValueKey<String>(nextTrip ? 'next-trip-cancellation-reasons-sheet' : 'trip-cancellation-reasons-sheet'),
             child: Flexible(
               child: ListView(
                 shrinkWrap: true,
@@ -1364,14 +1085,18 @@ extension _AcceptRidePanel on _AcceptRideState {
                 physics: const BouncingScrollPhysics(),
                 children: [
                   Text(
-                    isOnTrip
+                    nextTrip
+                        ? 'Why are you cancelling the next trip?'
+                        : isOnTrip
                         ? 'Why are you ending the trip?'
                         : 'Why are you cancelling?',
                     style: _CleanSheet.title,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isOnTrip
+                    nextTrip
+                        ? 'Your current trip continues.'
+                        : isOnTrip
                         ? 'Stop in a safe place first.'
                         : 'Pick the reason that fits best.',
                     style: _CleanSheet.note,
@@ -1395,7 +1120,7 @@ extension _AcceptRidePanel on _AcceptRideState {
       );
 
       if (!mounted || reason == null) { return; }
-      await _AcceptRideTrip(this)._confirmCancellationReason(reason);
+      await _AcceptRideTrip(this)._confirmCancellationReason(reason, nextTrip: nextTrip);
     }
 }
 

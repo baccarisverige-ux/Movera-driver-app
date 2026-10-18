@@ -76,6 +76,8 @@ class AppAssets {
   // Solar (CC BY 4.0) — Documents that run out and notifications.
   static const String solarDocumentText = 'assets/icons/solar_document_text.svg';
   static const String solarUploadMinimalistic = 'assets/icons/solar_upload_minimalistic.svg';
+  // Solar (CC BY 4.0) — the trip cards' ••• button.
+  static const String solarMenuDots = 'assets/icons/solar_menu_dots.svg';
   static const String navScheduledRide = 'assets/icons/nav_scheduled_ride.png';
   static const String navScheduledRideAlert =
       'assets/icons/nav_scheduled_ride_alert.png';
@@ -90,8 +92,6 @@ class AppAssets {
   static const String ridePet = 'assets/icons/ride_pet.svg';
   static const String rideBooster = 'assets/icons/ride_booster.svg';
   // Active ride sheet and map controls
-  static const String tripCall = 'assets/icons/trip_call.svg';
-  static const String tripMessage = 'assets/icons/trip_message.svg';
   static const String mapSafety = 'assets/icons/map_safety.svg';
   static const String mapGoogle = 'assets/icons/map_google.svg';
   static const String mapRecenter = 'assets/icons/map_recenter.svg';

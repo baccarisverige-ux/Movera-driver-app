@@ -17,6 +17,10 @@ enum CancelReasonGroup {
 
   /// The rider.
   rider,
+
+  /// The driver, cancelling the secured next trip during a trip. The
+  /// current trip goes on; the next one goes back to dispatch.
+  driverNextTrip,
 }
 
 class CancelReason {
@@ -178,6 +182,39 @@ class CancelReasons {
         title: 'Trip details no longer work for me',
       ),
       CancelReason(code: 'scheduled_other', title: 'Other reason'),
+    ],
+    CancelReasonGroup.driverNextTrip: [
+      CancelReason(
+        code: 'next_trip_current_running_late',
+        title: 'Current trip is taking longer',
+        subtitle: 'You can’t reach the next pickup in time',
+      ),
+      CancelReason(
+        code: 'next_trip_pickup_too_far',
+        title: 'Too far from the pickup',
+        subtitle: 'The next pickup is further than expected',
+      ),
+      CancelReason(
+        code: 'next_trip_rider_requested',
+        title: 'Rider asked me to cancel',
+        subtitle: 'The next rider doesn’t want the trip',
+      ),
+      CancelReason(
+        code: 'next_trip_vehicle_issue',
+        title: 'Problem with the car',
+        subtitle: 'Your car can’t make the next trip',
+        counts: false,
+      ),
+      CancelReason(
+        code: 'next_trip_driver_emergency',
+        title: 'Personal emergency',
+        subtitle: 'Something urgent came up',
+      ),
+      CancelReason(
+        code: 'next_trip_other',
+        title: 'Other reason',
+        subtitle: 'Something else stops the next trip',
+      ),
     ],
     // The rider app's own reasons and codes (CancellationReason there).
     CancelReasonGroup.rider: [

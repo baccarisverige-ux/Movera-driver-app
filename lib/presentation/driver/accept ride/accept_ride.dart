@@ -61,6 +61,10 @@ import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_
 import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_bottom_bar.dart';
+import 'package:movera/presentation/driver/accept%20ride/trip_card.dart';
+import 'package:movera/presentation/driver/accept%20ride/trip_radar_dock.dart';
+import 'package:movera/presentation/driver/accept%20ride/finish_soon_sheet.dart';
+import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
@@ -90,6 +94,7 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 part 'accept_ride_trip.dart';
 part 'accept_ride_panel.dart';
+part 'accept_ride_sheet.dart';
 
 class AcceptRide extends StatefulWidget {
   const AcceptRide({
@@ -333,7 +338,6 @@ class _AcceptRideState extends State<AcceptRide>
   static const Color _panel = Color(0xFFFFFFFF);
   static const Color _canvas = Color(0xFFF4F6F7);
   static const Color _muted = Color(0xFF7D898F);
-  static const Color _green = Color(0xFF19865C);
   static const Color _line = Color(0xFFE5E9EB);
   static const double _nextTripRadarRadiusMeters = 30000;
 
@@ -375,6 +379,13 @@ class _AcceptRideState extends State<AcceptRide>
   static List<_TripCancellationReason> get _onTripCancellationReasons => [
     for (final reason
         in CancelReasons.current.of(CancelReasonGroup.driverDuringTrip))
+      _reason(reason),
+  ];
+
+  /// R13: cancelling the secured next trip during a trip.
+  static List<_TripCancellationReason> get _nextTripCancellationReasons => [
+    for (final reason
+        in CancelReasons.current.of(CancelReasonGroup.driverNextTrip))
       _reason(reason),
   ];
 
@@ -441,6 +452,9 @@ class _AcceptRideState extends State<AcceptRide>
   final GlobalKey _middleActionKey = GlobalKey();
   final GlobalKey _ridePanelKey = GlobalKey();
   double? _middleMeasured;
+  double? _fullMeasured;
+  final GlobalKey _fullScrollKey = GlobalKey();
+  final GlobalKey _fullContentKey = GlobalKey();
   int _ridePointerLastMs = 0;
   bool _ridePointerActive = false;
   Timer? _rideSheetPositionGuardTimer;
@@ -1087,10 +1101,10 @@ class _AcceptRideState extends State<AcceptRide>
           );
           final safeTop = MediaQuery.paddingOf(context).top;
           final bannerReserve = safeTop + 210;
-          final expanded = math.min(
+          final expanded = _AcceptRideSheet(this)._fitRideExpanded(math.min(
             MoveraSheetMetrics.expandedHeight(viewport),
             math.max(collapsed + 160, viewport - bannerReserve),
-          );
+          ));
           final snap = MoveraSheetMetrics.activeSnapPoint(
             collapsed: collapsed,
             middle: _AcceptRidePanel(this)._rideMiddleTotal(context),
