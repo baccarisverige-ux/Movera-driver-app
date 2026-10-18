@@ -257,10 +257,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         },
       );
 
-      await _previewDirectOfferRoute(
-        offer.pickupPosition,
-        offer.dropoffPosition,
-      );
+      await _previewDirectOfferRoute(offer);
     }
     /// The Exclusive offer leaves. [missed]: it ran out or the driver
     /// tapped ×; a row of those takes the driver offline (Q16). Its card
@@ -794,7 +791,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       _rebuild(() => _radarExpandedOfferId = id);
       for (final offer in _radarHomeOffers) {
         if (offer.id == id) {
-          _previewDirectOfferRoute(offer.pickupPosition, offer.dropoffPosition);
+          _previewDirectOfferRoute(offer);
           return;
         }
       }
@@ -878,10 +875,7 @@ extension _HomeOfferRadar on _DriverHomeState {
               onMatch: blocked != null && blocked != id
                   ? null
                   : () => _startHomeRadarMatch(offer),
-              onRoute: () => _previewDirectOfferRoute(
-                offer.pickupPosition,
-                offer.dropoffPosition,
-              ),
+              onRoute: () => _previewDirectOfferRoute(offer),
               // The radar's orange, and a small × that removes the offer.
               contour: MoveraRadarOrb.offerAccent,
               onClose: () => _dismissRadarHomeOffer(offer),
@@ -913,10 +907,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         onYourWay: _destinationModeActive ||
             (!offer.assigned && _HomeScheduled(this)._towardPickupTime != null),
         onDismiss: () => _dismissOutsideRadarOffer(missed: true),
-        onRoute: () => _previewDirectOfferRoute(
-          offer.pickupPosition,
-          offer.dropoffPosition,
-        ),
+        onRoute: () => _previewDirectOfferRoute(offer),
       );
     }
     void _scheduleVisibleOffers() {
