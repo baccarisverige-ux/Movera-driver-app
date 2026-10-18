@@ -297,8 +297,8 @@ void main() {
         home: Center(
           child: MoveraRadarOrb(
             title: 'Accept',
-            status: 'TAP',
-            subtitle: 'Accept the reservation',
+            status: 'MATCH',
+            subtitle: 'Tap to accept',
             reserve: true,
             active: true,
           ),
@@ -579,24 +579,29 @@ void main() {
     );
     expect(barrier.color.a, inInclusiveRange(0.42, 0.45));
 
-    // While it shows the radar is a black orb: a calendar, Accept and
-    // the pickup day and time; the dock contour is black and the green
-    // online dash is gone.
+    // While it shows the radar is the offer orb in black: a small
+    // calendar over Accept / MATCH / Tap to accept, no pickup time; the
+    // dock contour is black and the green online dash is gone.
     final radar = find.byKey(_reserveRadar);
-    expect(find.descendant(of: radar, matching: find.text('Accept')), findsOneWidget);
-    expect(
-      find.descendant(
-        of: radar,
-        matching: find.byKey(const ValueKey<String>('radar-reserve-icon')),
-      ),
-      findsOneWidget,
+    for (final text in ['Accept', 'MATCH', 'Tap to accept']) {
+      expect(find.descendant(of: radar, matching: find.text(text)), findsOneWidget);
+    }
+    final match = tester.widget<Text>(
+      find.descendant(of: radar, matching: find.text('MATCH')),
     );
+    expect(match.style!.color, MoveraRadarOrb.reserveInk);
+    final icon = find.descendant(
+      of: radar,
+      matching: find.byKey(const ValueKey<String>('radar-reserve-icon')),
+    );
+    expect(icon, findsOneWidget);
+    expect(tester.getSize(icon).width, lessThanOrEqualTo(8));
     expect(
       find.descendant(
         of: radar,
         matching: find.textContaining(RegExp(r'^\w+ · \d{1,2}:\d{2}$')),
       ),
-      findsOneWidget,
+      findsNothing,
     );
     expect(find.descendant(of: radar, matching: find.text('TAP')), findsNothing);
     final outline = tester.widget<RadarSheetOutline>(

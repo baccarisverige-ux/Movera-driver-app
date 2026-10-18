@@ -2484,19 +2484,21 @@ void main() {
     await tester.pump(const Duration(milliseconds: 3800));
 
     expect(find.text('Only for you · pickup 3 min away'), findsOneWidget);
-    // The seconds left are on the radar, inside its blue ring.
+    // The time left runs on the radar's hairline blue ring; the orb
+    // itself reads MATCH (R11-8).
     final radar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
-    expect(
-      find.descendant(of: radar, matching: find.textContaining(RegExp(r'^\d+ s$'))),
-      findsOneWidget,
+    expect(find.descendant(of: radar, matching: find.text('MATCH')), findsOneWidget);
+    final ring = find.descendant(
+      of: radar,
+      matching: find.byKey(const ValueKey<String>('radar-exclusive-ring')),
     );
-    expect(
-      find.descendant(
-        of: radar,
-        matching: find.byKey(const ValueKey<String>('radar-exclusive-ring')),
-      ),
-      findsOneWidget,
-    );
+    expect(ring, findsOneWidget);
+    double left() =>
+        (tester.widget<CustomPaint>(ring).painter! as ExclusiveTimeRingPainter)
+            .timeLeft;
+    final before = left();
+    await tester.pump(const Duration(seconds: 2));
+    expect(left(), lessThan(before));
     _expectNoException(tester);
   });
 

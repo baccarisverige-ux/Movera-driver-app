@@ -37,14 +37,15 @@ class MoveraRadarOrb extends StatelessWidget {
   final double sweep;
   final bool blocked;
 
-  /// A reservation on Home: black orb, grey rings, no green; a calendar
-  /// over [title] ("Accept") over [status], the pickup day and time
-  /// ("Tue · 14:30").
+  /// A reservation on Home: the normal grey Radar-offer orb with its
+  /// green turned black ([reserveInk]) and a small calendar over
+  /// [title] ("Accept").
   final bool reserve;
 
-  /// An Exclusive offer is live: a blue orb that is its Accept, with a
-  /// check over [title] ("Accept") over [status] ("12 s"), inside a blue
-  /// ring that empties clockwise as [timeLeft] runs from 1 to 0.
+  /// An Exclusive offer is live: the normal grey Radar-offer orb with its
+  /// green turned blue ([exclusiveBlue]) and a small check over [title]
+  /// ("Accept"), inside a hairline blue ring that empties clockwise as
+  /// [timeLeft] runs from 1 to 0.
   final bool exclusive;
   final double timeLeft;
   final double size;
@@ -90,7 +91,9 @@ class MoveraRadarOrb extends StatelessWidget {
         : offer
             ? Color.lerp(detectedLight, detectedGreen, pulse) ?? detectedGreen
             : mint;
-    final hot = offer || exclusive;
+    // Exclusive and reservation are the Radar-offer orb in their colour.
+    final tinted = exclusive || reserve;
+    final hot = offer || tinted;
     final glowStrength = !active
         ? 0.08
         : loading
@@ -206,11 +209,11 @@ class MoveraRadarOrb extends StatelessWidget {
                         key: const ValueKey<String>('radar-exclusive-ring'),
                         painter: ExclusiveTimeRingPainter(
                           timeLeft: timeLeft,
-                          stroke: 5 * s,
+                          stroke: 1.5 * s,
                         ),
                       ),
                     ),
-                  if (active && !reserve)
+                  if (active)
                     Transform.rotate(
                       angle: sweep * 6.283185307179586,
                       child: SizedBox(
@@ -253,19 +256,7 @@ class MoveraRadarOrb extends StatelessWidget {
                         gradient: RadialGradient(
                           center: const Alignment(-0.24, -0.32),
                           radius: 0.98,
-                          colors: exclusive
-                              ? const [
-                                  Color(0xFF3F86F2),
-                                  exclusiveBlue,
-                                  Color(0xFF0E4FB8),
-                                ]
-                              : reserve
-                              ? const [
-                                  Color(0xFF2A3136),
-                                  Color(0xFF161B1E),
-                                  Color(0xFF0D1113),
-                                ]
-                              : blocked
+                          colors: blocked
                               ? const [
                                   Color(0xD9C4432A),
                                   Color(0xD9962A17),
@@ -276,20 +267,13 @@ class MoveraRadarOrb extends StatelessWidget {
                                   Color(0xD9727D80),
                                   Color(0xE05A6468),
                                 ],
-                          stops: exclusive
-                              ? const [0, 0.55, 1]
-                              : const [0, 0.58, 1],
+                          stops: const [0, 0.58, 1],
                         ),
-                        border: exclusive
-                            ? Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                width: 2,
-                              )
-                            : Border.all(
-                          color: offer
+                        border: Border.all(
+                          color: hot
                               ? accent.withValues(alpha: 0.82)
                               : const Color(0xD9E7ECEE),
-                          width: offer ? 1.9 : 1.6,
+                          width: hot ? 1.9 : 1.6,
                         ),
                       ),
                       child: InkWell(
@@ -300,117 +284,36 @@ class MoveraRadarOrb extends StatelessWidget {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            if (exclusive)
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SvgPicture.asset(
-                                    AppAssets.solarCheckCircle,
-                                    key: const ValueKey<String>(
-                                      'radar-exclusive-icon',
-                                    ),
-                                    width: 12 * s,
-                                    height: 12 * s,
-                                    colorFilter: const ColorFilter.mode(
-                                      Colors.white,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  SizedBox(height: 3 * s),
-                                  Text(
-                                    title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14 * s,
-                                      height: 1,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4 * s),
-                                  if (loading)
-                                    SizedBox(
-                                      width: 10 * s,
-                                      height: 10 * s,
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 1.2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  else
-                                    Text(
-                                      status,
-                                      style: TextStyle(
-                                        color: const Color(0xFFCFE0FB),
-                                        fontSize: 10 * s,
-                                        height: 1,
-                                        fontWeight: FontWeight.w600,
-                                        fontFeatures: const [
-                                          FontFeature.tabularFigures(),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              )
-                            else if (reserve)
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SvgPicture.asset(
-                                    AppAssets.solarCalendar,
-                                    key: const ValueKey<String>(
-                                      'radar-reserve-icon',
-                                    ),
-                                    width: 12 * s,
-                                    height: 12 * s,
-                                    colorFilter: const ColorFilter.mode(
-                                      Colors.white,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                  SizedBox(height: 3 * s),
-                                  Text(
-                                    title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14 * s,
-                                      height: 1,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4 * s),
-                                  SizedBox(
-                                    width: 60 * s,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        status,
-                                        maxLines: 1,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: const Color(0xFF9AA4AA),
-                                          fontSize: 9 * s,
-                                          height: 1,
-                                          fontWeight: FontWeight.w600,
-                                          fontFeatures: const [
-                                            FontFeature.tabularFigures(),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
                             Padding(
-                              padding: EdgeInsets.fromLTRB(6 * s, 16 * s, 6 * s, 4 * s),
+                              // The small icon takes some of the top room.
+                              padding: EdgeInsets.fromLTRB(
+                                6 * s,
+                                (tinted ? 10 : 16) * s,
+                                6 * s,
+                                4 * s,
+                              ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
+                                  if (tinted) ...[
+                                    SvgPicture.asset(
+                                      exclusive
+                                          ? AppAssets.solarCheckCircle
+                                          : AppAssets.solarCalendar,
+                                      key: ValueKey<String>(
+                                        exclusive
+                                            ? 'radar-exclusive-icon'
+                                            : 'radar-reserve-icon',
+                                      ),
+                                      width: 8 * s,
+                                      height: 8 * s,
+                                      colorFilter: const ColorFilter.mode(
+                                        Colors.white,
+                                        BlendMode.srcIn,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2 * s),
+                                  ],
                                   Text(
                                     title,
                                     maxLines: 1,
@@ -429,7 +332,7 @@ class MoveraRadarOrb extends StatelessWidget {
                                     status,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: offer
+                                      color: hot
                                           ? accent
                                           : const Color(0xFFE2E9E6),
                                       fontSize: 6.1 * s,
@@ -458,7 +361,7 @@ class MoveraRadarOrb extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            if (loading && !exclusive)
+                            if (loading)
                               Positioned(
                                 bottom: 5 * s,
                                 child: SizedBox(
@@ -490,8 +393,8 @@ class MoveraRadarOrb extends StatelessWidget {
   static const Color exclusiveTrack = Color(0xFFE3E9F0);
 }
 
-/// The Exclusive radar's time left: a blue arc on a light track. The
-/// spent part grows clockwise from twelve o'clock.
+/// The Exclusive radar's time left: a hairline blue arc on a barely
+/// visible track. The spent part grows clockwise from twelve o'clock.
 class ExclusiveTimeRingPainter extends CustomPainter {
   const ExclusiveTimeRingPainter({required this.timeLeft, required this.stroke});
 
@@ -511,7 +414,7 @@ class ExclusiveTimeRingPainter extends CustomPainter {
       0,
       math.pi * 2,
       false,
-      paint..color = MoveraRadarOrb.exclusiveTrack,
+      paint..color = MoveraRadarOrb.exclusiveTrack.withValues(alpha: 0.35),
     );
     final left = timeLeft.clamp(0.0, 1.0);
     if (left <= 0) { return; }
