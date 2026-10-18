@@ -42,17 +42,50 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
     if (_producingFrames || _followOwned) {
       return;
     }
-    _logical = position;
+    // A flat (raster) map always reports north-up. Keep the camera's own
+    // heading: it still decides on which side the road ahead is shown.
+    _logical = _threeD
+        ? position
+        : CameraPosition(
+            target: position.target,
+            zoom: position.zoom,
+            bearing: _logical?.bearing ?? 0,
+            tilt: _logical?.tilt ?? 0,
+          );
   }
 
   void onIdle() {} // Idle is not evidence of a user gesture.
 
+  /// Tilt and rotation exist only on a vector map (a Map ID on web).
+  bool get _threeD => web.supports3D(controller.mapId);
+
+  /// The camera's own pose: heading and tilt even when the map is flat.
   CameraPosition _at(DriverCameraPose pose, GeoPoint target) => CameraPosition(
     target: LatLng(target.latitude, target.longitude),
     zoom: pose.zoom,
-    bearing: web.supports3D(controller.mapId) ? pose.bearing : 0,
-    tilt: web.supports3D(controller.mapId) ? pose.tilt : 0,
+    bearing: pose.bearing,
+    tilt: pose.tilt,
   );
+
+  /// What the map is asked for: a flat map never gets heading or tilt.
+  CameraPosition _sdk(CameraPosition logical) => _threeD
+      ? logical
+      : CameraPosition(target: logical.target, zoom: logical.zoom);
+
+  /// Screen pixels the camera would slide across: beyond about three
+  /// screens a glide only smears the city, so the camera cuts instead.
+  static bool _far(CameraPosition a, CameraPosition b) {
+    final meters = GeoPoint(a.target.latitude, a.target.longitude)
+        .distanceMetersTo(GeoPoint(b.target.latitude, b.target.longitude));
+    final zoom = math.min(a.zoom, b.zoom);
+    final metersPerPixel = 156543.03392 *
+        math.cos(b.target.latitude * math.pi / 180).abs() /
+        math.pow(2, zoom);
+    return metersPerPixel > 0 && meters / metersPerPixel > 2400;
+  }
+
+  /// Offer and route previews fly in this long (eased in and out).
+  static const Duration previewFlight = Duration(milliseconds: 650);
 
   GeoPoint _coasted(DriverCameraPose goal) {
     if (!goal.coast || goal.speedMetersPerSecond < 1) {
@@ -134,11 +167,20 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
     CameraPosition logical, {
     required bool trackVehicle,
     required int generation,
+    bool anchored = true,
   }) async {
     if (_disposed || generation != _generation) return;
     _logical = logical;
-    web.claim(controller.mapId);
-    await controller.moveCamera(CameraUpdate.newCameraPosition(logical));
+    // Follow frames sit on the driving anchor, with the road ahead on the
+    // side the car drives to; preview frames are placed exactly.
+    web.claim(
+      controller.mapId,
+      anchored: anchored,
+      lead: anchored ? logical.bearing : null,
+    );
+    await controller.moveCamera(
+      CameraUpdate.newCameraPosition(_sdk(logical)),
+    );
     // A physical pan, app suspension, replaced map, or disposal can interrupt
     // this command while the Maps SDK still awaits acknowledgement. Never
     // publish an old camera frame or clear a newer error after that point.
@@ -190,6 +232,10 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
         return;
       }
       var dt = 16000;
+      // The first frame is always sent, even when the map already shows
+      // this pose: it puts the car on the anchor above the sheet (a map
+      // opens with the car in the middle of the whole view).
+      var first = true;
       while (!_disposed && generation == _generation) {
         final goal = _goal;
         if (goal == null || generation != _generation) {
@@ -197,9 +243,16 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
         }
         final destination = _at(goal, _coasted(goal));
         final from = _logical ?? destination;
+        if (_far(from, destination)) {
+          await _move(destination, trackVehicle: true, generation: generation);
+          break;
+        }
         final settled = _settled(from, destination);
-        if (!settled) {
-          final next = _approach(from, destination, dt, goal.duration);
+        if (!settled || first) {
+          first = false;
+          final next = settled
+              ? destination
+              : _approach(from, destination, dt, goal.duration);
           await _move(next,
             trackVehicle: _trackCar(next, goal), generation: generation);
         }
@@ -207,7 +260,7 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
           break;
         }
         final stamp = DateTime.now();
-        await Future<void>.delayed(Duration(milliseconds: settled ? 50 : 16));
+        await _sleep(Duration(milliseconds: settled ? 50 : 16));
         if (_disposed || generation != _generation) {
           break;
         }
@@ -265,6 +318,7 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
         ),
         trackVehicle: false,
         generation: generation,
+        anchored: false,
       );
     }
     if (_disposed || generation != _generation) {
@@ -296,7 +350,8 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
     }
   }
 
-  /// The whole offer route: straight to its fitted target and zoom, flat.
+  /// The whole offer route: to its fitted target and zoom, flat, in one
+  /// eased flight (zoom and position together, no zoom pop then slide).
   /// Map padding is not needed: the fit already left the sheet free.
   @override
   Future<void> frame(GeoPoint target, double zoom) async {
@@ -307,20 +362,69 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
       target: LatLng(target.latitude, target.longitude),
       zoom: zoom,
     );
-    _logical = position;
+    final from = _logical;
     try {
-      await controller.moveCamera(CameraUpdate.newCameraPosition(position));
+      if (reducedMotion || from == null || _far(from, position)) {
+        await _move(position,
+            trackVehicle: false, generation: generation, anchored: false);
+      } else {
+        _producingFrames = true;
+        final started = DateTime.now();
+        while (true) {
+          final t = (DateTime.now().difference(started).inMicroseconds /
+                  previewFlight.inMicroseconds)
+              .clamp(0.0, 1.0);
+          final e = t < .5 ? 4 * t * t * t : 1 - math.pow(2 - 2 * t, 3) / 2;
+          await _move(_blend(from, position, e),
+              trackVehicle: false, generation: generation, anchored: false);
+          if (_disposed || generation != _generation || t >= 1) break;
+          await _sleep(const Duration(milliseconds: 16));
+        }
+        if (generation == _generation) _producingFrames = false;
+      }
       if (_disposed || generation != _generation) return;
+      _logical = position;
       onStatus?.call(null);
     } catch (_) {
       if (_disposed || generation != _generation) return;
+      _producingFrames = false;
       onStatus?.call('Map camera unavailable — tap recenter to retry');
       rethrow;
     }
   }
 
+  static CameraPosition _blend(CameraPosition a, CameraPosition b, double t) =>
+      CameraPosition(
+        target: LatLng(
+          a.target.latitude + (b.target.latitude - a.target.latitude) * t,
+          a.target.longitude + (b.target.longitude - a.target.longitude) * t,
+        ),
+        zoom: a.zoom + (b.zoom - a.zoom) * t,
+        bearing: GeoPoint.shortestAngleLerp(a.bearing, b.bearing, t),
+        tilt: a.tilt + (b.tilt - a.tilt) * t,
+      );
+
+  Timer? _sleepTimer;
+  Completer<void>? _sleeping;
+
+  /// A frame pause that an interrupt (gesture, new preview, disposal)
+  /// ends at once, so no camera timer outlives the camera's owner.
+  Future<void> _sleep(Duration duration) {
+    final done = Completer<void>();
+    _sleeping = done;
+    _sleepTimer = Timer(duration, () {
+      if (!done.isCompleted) done.complete();
+    });
+    return done.future;
+  }
+
   @override
   void interrupt() {
+    _sleepTimer?.cancel();
+    _sleepTimer = null;
+    final sleeping = _sleeping;
+    _sleeping = null;
+    if (sleeping != null && !sleeping.isCompleted) sleeping.complete();
     _generation++;
     _producingFrames = false;
     _followOwned = false;

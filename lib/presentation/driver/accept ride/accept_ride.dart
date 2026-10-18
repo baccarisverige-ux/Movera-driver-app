@@ -11,6 +11,7 @@ import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/navigation/driver_map_zoom_change_detector.dart';
 import 'package:movera/core/navigation/map_zoom_sheet_settle.dart';
 import 'package:movera/core/navigation/route_camera_geometry.dart';
+import 'package:movera/core/navigation/trip_camera_sheet_inset.dart';
 import 'package:movera/widgets/google_driver_camera_port.dart';
 import 'dart:math' as math;
 
@@ -456,7 +457,8 @@ class _AcceptRideState extends State<AcceptRide>
   bool _ridePointerActive = false;
   Timer? _rideSheetPositionGuardTimer;
 
-  final DriverCameraController _camera = DriverCameraController();
+  final DriverCameraController _camera = DriverCameraController()..autoResumeAfter = DriverCameraController.tripAutoResume;
+  final TripCameraSheetInset _cameraSheet = TripCameraSheetInset();
   GoogleDriverCameraPort? _cameraPort;
   StreamSubscription<DriverLocation>? _positionSubscription;
   late final ActiveRideController _rideLifecycle = ActiveRideController(
@@ -559,6 +561,7 @@ class _AcceptRideState extends State<AcceptRide>
         });
     unawaited(_AcceptRideTrip(this)._resyncTrip());
     _rideLifecycle.snapshotBuilder = _AcceptRideTrip(this)._buildSnapshot;
+    _AcceptRideTrip(this)._setUpTripCamera();
     _rideLifecycle.addListener(_AcceptRideTrip(this)._onPersistenceChanged);
     _rideLifecycle.addListener(_syncNavigationStageListener);
     _syncNavigationStageListener();
@@ -638,6 +641,7 @@ class _AcceptRideState extends State<AcceptRide>
     _hardStops?.cancel();
     _rideCheck.dispose();
     _camera.dispose();
+    _cameraSheet.dispose();
     final ownedRouting = _routeService;
     if (widget.routeRepository == null && ownedRouting is RoadRouteService) { ownedRouting.dispose(); }
     _browsePulse.dispose();
@@ -1131,6 +1135,7 @@ class _AcceptRideState extends State<AcceptRide>
             margin: EdgeInsets.zero,
             onPanelSlide: (pos) {
               _ridePanelPosition.value = pos;
+              _cameraSheet.sheetMoved(collapsed + pos * (expanded - collapsed), maxInset: viewport - bannerReserve - TripCameraSheetInset.minFreeMap);
               if (!_ridePointerActive) {
                 _AcceptRidePanel(this)._scheduleRideSheetPositionGuard();
               }
@@ -1166,7 +1171,7 @@ class _AcceptRideState extends State<AcceptRide>
                   child: Listener(
                   onPointerDown: (event) {
                     _mapZoomSettle.pointerDown(event.pointer);
-                    _mapPointers = _mapZoomSettle.activePointers;
+                    _mapPointers = _mapZoomSettle.activePointers; _camera.touching = _mapPointers > 0;
                     if (_mapPointers >= 2) { _lastMapZoom = DateTime.now(); }
                   },
                   onPointerMove: (_) {
@@ -1176,13 +1181,13 @@ class _AcceptRideState extends State<AcceptRide>
                     if (_mapZoomSettle.pointerEnded(event.pointer)) {
                       _finishBrowseSheetCollapse();
                     }
-                    _mapPointers = _mapZoomSettle.activePointers;
+                    _mapPointers = _mapZoomSettle.activePointers; _camera.touching = _mapPointers > 0;
                   },
                   onPointerCancel: (event) {
                     if (_mapZoomSettle.pointerEnded(event.pointer)) {
                       _finishBrowseSheetCollapse();
                     }
-                    _mapPointers = _mapZoomSettle.activePointers;
+                    _mapPointers = _mapZoomSettle.activePointers; _camera.touching = _mapPointers > 0;
                   },
                   onPointerSignal: (_) => _lastMapZoom = DateTime.now(),
                   child: _ThrottledVehicleMap(
@@ -1200,7 +1205,7 @@ class _AcceptRideState extends State<AcceptRide>
                     polylines: _polylines,
                     padding: MapOverlayInsets.forActiveRide(
                       safeTop: safeTop,
-                      collapsedSheet: collapsed,
+                      collapsedSheet: _cameraSheet.resolve(collapsed),
                     ).drivingInsets(MediaQuery.sizeOf(context).height,
                       following: _camera.isGuidance &&
                           _camera.mode == DriverCameraMode.following),
@@ -1232,7 +1237,7 @@ class _AcceptRideState extends State<AcceptRide>
                           }
                         },
                         initialPosition: CameraPosition(target: _driverPosition,
-                          zoom: 15.8),
+                          zoom: DriverCameraPolicy.guidanceStartZoom),
                         reducedMotion: MediaQuery.disableAnimationsOf(context));
                       _camera.attach(_cameraPort!);
                       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1492,7 +1497,7 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
         key: const ValueKey<String>('active-ride-map'),
         initialPosition: CameraPosition(
           target: widget.initialTarget,
-          zoom: 15.8,
+          zoom: DriverCameraPolicy.guidanceStartZoom,
         ),
         markers: _markers,
         polylines: widget.polylines,

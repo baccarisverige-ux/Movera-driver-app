@@ -19,7 +19,7 @@ bool get ready {
 @JS('driverMapCamera.anchor')
 external void _anchor(JSNumber mapId);
 @JS('driverMapCamera.claim')
-external void _claim(JSNumber mapId);
+external void _claim(JSNumber mapId, JSBoolean anchored, JSNumber lead);
 @JS('driverMapCamera.vehicle')
 external void _vehicle(JSNumber mapId, JSNumber heading);
 @JS('driverMapCamera.configure')
@@ -41,9 +41,11 @@ void applyAnchor(int mapId) {
   if (ready) _anchor(mapId.toJS);
 }
 
-/// The next programmatic pan is a follow frame: instant, then anchored once.
-void claim(int mapId) {
-  if (ready) _claim(mapId.toJS);
+/// The next programmatic pan is ours: instant. A follow frame is then
+/// put on the driving anchor, the road ahead toward [lead] (the camera's
+/// heading, degrees); a preview frame ([anchored] false) stays exact.
+void claim(int mapId, {bool anchored = true, double? lead}) {
+  if (ready) _claim(mapId.toJS, anchored.toJS, (lead ?? double.nan).toJS);
 }
 
 void vehicle(int mapId, double heading) {

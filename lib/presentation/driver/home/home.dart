@@ -363,7 +363,7 @@ class _DriverHomeState extends State<DriverHome>
   LatLng _driverPosition = _fallbackDriverPosition;
   bool _startPositionKnown = false, _startLocationFailed = false;
   Timer? _startWait;
-  CameraPosition get _initialPosition => CameraPosition(target: _driverPosition, zoom: 14.0);
+  CameraPosition get _initialPosition => CameraPosition(target: _driverPosition, zoom: _startPositionKnown ? DriverCameraPolicy.exploreZoom : 14.0);
 
   static const _HomeDirectOffer _veryCloseDirectOffer = _HomeDirectOffer(
     id: 'home-direct-close',
