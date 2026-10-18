@@ -62,6 +62,8 @@ import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/home/components/destination_island.dart';
+import 'package:movera/presentation/driver/home/components/home_map_layers.dart';
+import 'package:movera/widgets/movera_destination_marker.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
