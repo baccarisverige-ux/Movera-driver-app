@@ -680,25 +680,200 @@ class NavigationCuePainter extends CustomPainter {
       slightTurn(left: false);
       return;
     }
-    if (kind == NavigationBannerSymbol.uTurn) {
+    // The road not taken, or the road going on: same line, faint.
+    final faint = Paint()
+      ..color = color.withValues(alpha: color.a * .45)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6 * s
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    // Mirrored shapes: x becomes 22 - x, an angle a becomes pi - a.
+    var mirrored = false;
+    double x(double v) => mirrored ? 22 - v : v;
+    Offset q(double vx, double vy) => p(x(vx), vy);
+
+    if (kind == NavigationBannerSymbol.uTurn ||
+        kind == NavigationBannerSymbol.uTurnLeft ||
+        kind == NavigationBannerSymbol.uTurnRight) {
+      mirrored = kind == NavigationBannerSymbol.uTurnRight;
       final path = Path()
-        ..moveTo(p(15, 19).dx, p(15, 19).dy)
-        ..lineTo(p(15, 10).dx, p(15, 10).dy)
+        ..moveTo(q(15, 19).dx, q(15, 19).dy)
+        ..lineTo(q(15, 10).dx, q(15, 10).dy)
         ..cubicTo(
-          p(15, 5).dx,
-          p(15, 5).dy,
-          p(7, 5).dx,
-          p(7, 5).dy,
-          p(7, 10).dx,
-          p(7, 10).dy,
+          q(15, 5).dx,
+          q(15, 5).dy,
+          q(7, 5).dx,
+          q(7, 5).dy,
+          q(7, 10).dx,
+          q(7, 10).dy,
         )
-        ..lineTo(p(7, 12).dx, p(7, 12).dy);
+        ..lineTo(q(7, 12).dx, q(7, 12).dy);
       canvas.drawPath(path, stroke);
-      arrowHead(p(7, 15), math.pi / 2);
+      arrowHead(q(7, 15), math.pi / 2);
       return;
     }
-    if (kind == NavigationBannerSymbol.roundabout) {
-      final exitAngle = exitAngleDegrees;
+    if (kind == NavigationBannerSymbol.onRampLeft ||
+        kind == NavigationBannerSymbol.onRampRight) {
+      // The local road goes on, faint; the ramp leaves it and runs up
+      // into the highway.
+      mirrored = kind == NavigationBannerSymbol.onRampLeft;
+      canvas.drawLine(q(7.5, 12.5), q(7.5, 4), faint);
+      canvas.drawPath(
+        Path()
+          ..moveTo(q(7.5, 19).dx, q(7.5, 19).dy)
+          ..lineTo(q(7.5, 14.5).dx, q(7.5, 14.5).dy)
+          ..cubicTo(
+            q(7.5, 11.2).dx,
+            q(7.5, 11.2).dy,
+            q(14.5, 11.6).dx,
+            q(14.5, 11.6).dy,
+            q(14.5, 8.6).dx,
+            q(14.5, 8.6).dy,
+          )
+          ..lineTo(q(14.5, 7.4).dx, q(14.5, 7.4).dy),
+        stroke,
+      );
+      arrowHead(q(14.5, 2.9), -math.pi / 2);
+      return;
+    }
+    if (kind == NavigationBannerSymbol.keepLeft ||
+        kind == NavigationBannerSymbol.keepRight) {
+      // A split: both branches run on; the one not taken is faint.
+      mirrored = kind == NavigationBannerSymbol.keepLeft;
+      canvas.drawPath(
+        Path()
+          ..moveTo(q(11, 13.6).dx, q(11, 13.6).dy)
+          ..cubicTo(
+            q(11, 11.2).dx,
+            q(11, 11.2).dy,
+            q(6.8, 11.4).dx,
+            q(6.8, 11.4).dy,
+            q(6.8, 8.6).dx,
+            q(6.8, 8.6).dy,
+          )
+          ..lineTo(q(6.8, 4.6).dx, q(6.8, 4.6).dy),
+        faint,
+      );
+      canvas.drawPath(
+        Path()
+          ..moveTo(q(11, 19).dx, q(11, 19).dy)
+          ..lineTo(q(11, 14).dx, q(11, 14).dy)
+          ..cubicTo(
+            q(11, 11.2).dx,
+            q(11, 11.2).dy,
+            q(15.2, 11.4).dx,
+            q(15.2, 11.4).dy,
+            q(15.2, 8.6).dx,
+            q(15.2, 8.6).dy,
+          )
+          ..lineTo(q(15.2, 7.6).dx, q(15.2, 7.6).dy),
+        stroke,
+      );
+      arrowHead(q(15.2, 3.1), -math.pi / 2);
+      return;
+    }
+    if (kind == NavigationBannerSymbol.forkLeft ||
+        kind == NavigationBannerSymbol.forkRight) {
+      // Two roads diverge; the slight turn taken, the other faint.
+      mirrored = kind == NavigationBannerSymbol.forkLeft;
+      canvas.drawPath(
+        Path()
+          ..moveTo(q(11, 13).dx, q(11, 13).dy)
+          ..quadraticBezierTo(
+            q(11, 10).dx,
+            q(11, 10).dy,
+            q(8.8, 8.2).dx,
+            q(8.8, 8.2).dy,
+          )
+          ..lineTo(q(5.2, 4.6).dx, q(5.2, 4.6).dy),
+        faint,
+      );
+      canvas.drawPath(
+        Path()
+          ..moveTo(q(11, 19).dx, q(11, 19).dy)
+          ..lineTo(q(11, 13).dx, q(11, 13).dy)
+          ..quadraticBezierTo(
+            q(11, 10).dx,
+            q(11, 10).dy,
+            q(13.2, 8.2).dx,
+            q(13.2, 8.2).dy,
+          )
+          ..lineTo(q(16.1, 4.9).dx, q(16.1, 4.9).dy),
+        stroke,
+      );
+      arrowHead(q(17.25, 3.55), mirrored ? -2.3 : -0.84);
+      return;
+    }
+    if (kind == NavigationBannerSymbol.arriveLeft ||
+        kind == NavigationBannerSymbol.arriveRight) {
+      // The road runs on (faint past the stop); the arrive marker sits at
+      // the side of the road where the destination is.
+      mirrored = kind == NavigationBannerSymbol.arriveLeft;
+      canvas.drawLine(q(8, 19), q(8, 9), stroke);
+      canvas.drawLine(q(8, 9), q(8, 3.5), faint);
+      canvas.drawCircle(q(15.6, 9), 4.3 * s, stroke);
+      canvas.drawCircle(q(15.6, 9), 1.5 * s, fill);
+      canvas.drawLine(q(11.3, 9), q(10, 9), stroke);
+      return;
+    }
+    if (kind == NavigationBannerSymbol.depart) {
+      // Start point, then straight on.
+      canvas.drawCircle(p(11, 17), 2.4 * s, stroke);
+      canvas.drawLine(p(11, 14.4), p(11, 7.5), stroke);
+      arrowHead(p(11, 2.6), -math.pi / 2);
+      return;
+    }
+    if (kind == NavigationBannerSymbol.toll) {
+      // Gantry over the road with a coin.
+      canvas.drawLine(p(3.5, 19), p(3.5, 4.5), stroke);
+      canvas.drawLine(p(18.5, 19), p(18.5, 4.5), stroke);
+      canvas.drawLine(p(3.5, 4.5), p(18.5, 4.5), stroke);
+      canvas.drawCircle(p(11, 12.6), 4.6 * s, stroke);
+      final text = TextPainter(
+        text: TextSpan(
+          text: 'kr',
+          style: TextStyle(
+            color: color,
+            fontSize: 4.9 * s,
+            fontWeight: FontWeight.w800,
+            fontFamily: fontFamily,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      text.paint(canvas, p(11, 12.5) - Offset(text.width / 2, text.height / 2));
+      return;
+    }
+    if (kind == NavigationBannerSymbol.tunnel) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(p(2.5, 19).dx, p(2.5, 19).dy)
+          ..lineTo(p(2.5, 11.5).dx, p(2.5, 11.5).dy)
+          ..arcToPoint(p(19.5, 11.5), radius: Radius.circular(8.5 * s))
+          ..lineTo(p(19.5, 19).dx, p(19.5, 19).dy),
+        stroke,
+      );
+      canvas.drawLine(p(8.6, 19), p(10, 12.5), faint);
+      canvas.drawLine(p(13.4, 19), p(12, 12.5), faint);
+      return;
+    }
+    if (kind == NavigationBannerSymbol.roundabout ||
+        kind == NavigationBannerSymbol.roundaboutUTurn ||
+        kind == NavigationBannerSymbol.roundaboutClockwise) {
+      // Clockwise (left-hand traffic) is the same drawing mirrored; the
+      // exit angle is mirrored with it so the arrow still leaves the right
+      // way. A roundabout U-turn without an angle goes back.
+      final clockwise = kind == NavigationBannerSymbol.roundaboutClockwise;
+      var exitAngle =
+          exitAngleDegrees ??
+          (kind == NavigationBannerSymbol.roundaboutUTurn ? 180.0 : null);
+      if (clockwise && exitAngle != null) exitAngle = -exitAngle;
+      canvas.save();
+      if (clockwise) {
+        canvas
+          ..translate(size.width, 0)
+          ..scale(-1, 1);
+      }
       // Three circulation arrows make the roundabout recognizable even at
       // compact sizes. The outgoing arrow still uses the provider's angle.
       final ring = Rect.fromCircle(center: p(10, 11), radius: 6.4 * s);
@@ -756,6 +931,7 @@ class NavigationCuePainter extends CustomPainter {
           stroke,
         );
       }
+      canvas.restore();
       if (exitNumber != null) {
         final badge = p(17.2, 4.3);
         canvas.drawCircle(badge, 4.2 * s, fill);

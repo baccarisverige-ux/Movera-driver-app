@@ -1,6 +1,7 @@
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/island/trip_island_controller.dart';
 
@@ -47,7 +48,34 @@ class AdaptiveTripIsland extends StatefulWidget {
     required this.onWait,
     this.rideCheck = false,
     this.onRideCheckDemo,
+    this.pointKind,
+    this.pointLabel,
+    this.bags = 0,
+    this.nextTripFare,
+    this.sheetPosition,
+    this.sheetRaisedAt = 1,
   });
+
+  /// The point the trip heads to now and its label ("Stop 1").
+  final ArrivalPointKind? pointKind;
+  final String? pointLabel;
+
+  /// Bags from the booking; said once while heading to the pickup.
+  final int bags;
+
+  /// Fare of a secured next trip; said once right after it is secured.
+  final String? nextTripFare;
+
+  /// The trip sheet's position (0 down .. 1 full). Above [sheetRaisedAt]
+  /// the strip tucks under the island.
+  final ValueListenable<double>? sheetPosition;
+  final double sheetRaisedAt;
+
+  /// Height of the lighter strip under the route island.
+  static const stripHeight = 34.0;
+
+  /// Arriving this close (or there): the strip tucks under the island.
+  static const tuckWithinMeters = 60.0;
 
   /// A Ride check is open: the island turns into its pulsing pill and the
   /// card grows from there (see [RideCheckLayer]).
@@ -93,8 +121,19 @@ class AdaptiveTripIsland extends StatefulWidget {
   State<AdaptiveTripIsland> createState() => _AdaptiveTripIslandState();
 }
 
-class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
+class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
+    with SingleTickerProviderStateMixin {
   late final TripIslandController _controller;
+  final _strip = TripStripController();
+
+  /// 0 strip shown .. 1 strip tucked under the island.
+  late final AnimationController _tuck = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 300),
+  );
+  bool _tuckTarget = false;
+  bool _sheetRaised = false;
+  String? _tuckFace;
   TripIslandInput get _input => TripIslandInput(
     status: widget.status,
     address: widget.address,
@@ -113,23 +152,139 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
     if (mounted) setState(() {});
   }
 
+  void _faceChanged() {
+    _syncTuck();
+    _changed();
+  }
+
   @override
   void initState() {
     super.initState();
-    _controller = TripIslandController(_input)..addListener(_changed);
+    _controller = TripIslandController(_input);
+    _sheetRaised = _raised;
+    _syncTuck();
+    // Listen only after the first sync: no rebuild requests in initState.
+    _controller.addListener(_faceChanged);
+    _strip.addListener(_changed);
+    _tuck.addListener(_changed);
+    widget.sheetPosition?.addListener(_sheetMoved);
   }
 
   @override
   void didUpdateWidget(AdaptiveTripIsland oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.sheetPosition != widget.sheetPosition) {
+      oldWidget.sheetPosition?.removeListener(_sheetMoved);
+      widget.sheetPosition?.addListener(_sheetMoved);
+    }
+    _sheetRaised = _raised;
     _controller.update(_input);
+    _syncTuck();
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_changed);
+    widget.sheetPosition?.removeListener(_sheetMoved);
+    _controller.removeListener(_faceChanged);
     _controller.dispose();
+    _strip.dispose();
+    _tuck.dispose();
     super.dispose();
+  }
+
+  bool get _raised =>
+      (widget.sheetPosition?.value ?? 0) > widget.sheetRaisedAt;
+
+  void _sheetMoved() {
+    final raised = _raised;
+    if (raised == _sheetRaised) return;
+    _sheetRaised = raised;
+    _syncTuck();
+  }
+
+  bool get _routeFace {
+    final kind = _controller.face.kind;
+    return !widget.rideCheck &&
+        !_controller.defaultFace &&
+        (kind == TripIslandKind.guidance || kind == TripIslandKind.arrival);
+  }
+
+  String get _faceIdentity => widget.rideCheck
+      ? 'ride-check'
+      : _controller.defaultFace
+      ? 'default'
+      : _controller.face.identity;
+
+  /// Meters to the point while arriving, from the live instruction.
+  double? get _arrivalMeters {
+    final parts = _distanceParts(widget.banner?.distanceLabel);
+    final value = double.tryParse(parts?.$1.replaceAll(',', '.') ?? '');
+    if (parts == null || value == null) return null;
+    return parts.$2 == 'km' ? value * 1000 : value;
+  }
+
+  /// The strip hides under the island only when arriving at the point or
+  /// while the driver has the trip sheet slid up.
+  void _syncTuck() {
+    final face = _controller.face;
+    final meters = _arrivalMeters;
+    final arriving =
+        face.kind == TripIslandKind.arrival &&
+        (widget.arrived ||
+            (widget.banner?.symbol.isArrival == true &&
+                meters != null &&
+                meters <= AdaptiveTripIsland.tuckWithinMeters));
+    final target = _routeFace && (arriving || _sheetRaised);
+    final identity = _faceIdentity;
+    final sameFace = identity == _tuckFace;
+    _tuckFace = identity;
+    _strip.update(_stripInput, hidden: target);
+    if (target == _tuckTarget) return;
+    _tuckTarget = target;
+    if (!sameFace || MediaQuery.maybeDisableAnimationsOf(context) == true) {
+      // A new face morphs on its own; only the same face slides the strip.
+      _tuck.value = target ? 1 : 0;
+    } else {
+      _tuck.animateTo(
+        target ? 1 : 0,
+        curve: target ? Curves.easeInCubic : Curves.easeOutCubic,
+      );
+    }
+  }
+
+  TripStripInput get _stripInput {
+    final b = widget.banner;
+    final leg = switch (widget.pointKind) {
+      ArrivalPointKind.pickup => TripLeg.pickup,
+      ArrivalPointKind.stop => TripLeg.stop,
+      ArrivalPointKind.destination => TripLeg.dropoff,
+      null => null,
+    };
+    final lanes = b?.lanes ?? const <RouteLane>[];
+    return TripStripInput(
+      leg: leg,
+      stopLabel: leg == TripLeg.stop ? widget.pointLabel : null,
+      etaMinutes: int.tryParse(
+        RegExp(r'^(\d+)\s*min').firstMatch(widget.eta)?.group(1) ?? '',
+      ),
+      bags: widget.bags,
+      nextTripFare: widget.nextTripFare,
+      pickupSide: b?.symbol == NavigationBannerSymbol.arriveLeft
+          ? 'left'
+          : b?.symbol == NavigationBannerSymbol.arriveRight
+          ? 'right'
+          : null,
+      // A toll the island already shows as the cue needs no message.
+      toll: (b?.toll ?? false) && b?.symbol != NavigationBannerSymbol.toll,
+      laneKey: !_routeFace || !RouteLane.matter(lanes)
+          ? null
+          : [
+              b!.symbol.name,
+              b.roadName,
+              b.exitNumber,
+              for (final l in lanes) l.valid ? 'u' : 'o',
+            ].join('-'),
+    );
   }
 
   static const _blue = Color(0xFF58A6FF);
@@ -208,10 +363,11 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
         } else if (route) {
           size = Size(
             math.min(available, AdaptiveTripIsland.routeWidth),
-            AdaptiveTripIsland.routeHeight,
+            AdaptiveTripIsland.routeHeight -
+                AdaptiveTripIsland.stripHeight * _tuck.value,
           );
           radius = 26;
-          content = _routeIsland(presentation, accent, size);
+          content = _routeIsland(presentation, size);
         } else {
           // A message sizes the island to its words; the height stays Home's.
           final measuredTitle = waiting && !waitingMessage
@@ -316,6 +472,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
                 // The Home island draws its own shell: no double outline.
                 shell: widget.rideCheck || !_controller.defaultFace,
                 face: face,
+                followSize: route,
                 reducedMotion: MediaQuery.disableAnimationsOf(context),
                 child: content,
               ),
@@ -343,46 +500,30 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
   }
 
   /// Route island: top information (cue, large distance, instruction,
-  /// street) and a darker strip with the arrival time and progress.
-  Widget _routeIsland(TripIslandFace face, Color accent, Size size) {
+  /// street) and the lighter strip with the arrival time and progress.
+  /// The strip slides up under the top part as it tucks.
+  Widget _routeIsland(TripIslandFace face, Size size) {
     final live = widget.banner;
     final arrival = face.kind == TripIslandKind.arrival;
     // The large number is the distance to the next maneuver, or to the
     // point itself while arriving; never the whole route. At the point
     // (near it, waiting there) or without a known distance: icon only.
     final distance = arrival
-        ? (widget.arrived || live?.symbol != NavigationBannerSymbol.arrive
+        ? (widget.arrived || live?.symbol.isArrival != true
               ? null
               : _distanceParts(live?.distanceLabel))
         : (_distanceParts(live?.distanceLabel) ?? _distanceParts(face.title));
-    // The instruction without the distance; the distance is shown large.
-    var title = face.title
-        .replaceAll(_distanceText, '')
-        .replaceAll(RegExp(r'\s*·\s*$'), '')
-        .trim();
-    if (title.isEmpty) title = face.title;
-    final road = live?.roadName?.trim() ?? '';
-    final line2 = arrival
-        ? widget.address
-        : [
-            for (final part in face.subtitle.split(' · '))
-              if (part.isNotEmpty &&
-                  _distanceParts(part) == null &&
-                  !title.contains(part))
-                part,
-            if (road.isNotEmpty &&
-                !title.contains(road) &&
-                !face.subtitle.contains(road))
-              road,
-          ].join(' · ');
-    final percent = (widget.progress.clamp(0, 1) * 100).round();
+    final pin = ArrivingRoadPainter.pinFor(widget.arrival);
+    const top = AdaptiveTripIsland.routeHeight - AdaptiveTripIsland.stripHeight;
+    final strip = math.max(0.0, size.height - top);
     return SizedBox(
       key: const ValueKey('trip-guidance-island'),
       width: size.width,
       height: size.height,
       child: Column(
         children: [
-          Expanded(
+          SizedBox(
+            height: math.min(top, size.height),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 10, 6),
               child: Row(
@@ -399,16 +540,21 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: 34,
-                              height: 34,
-                              child: _cue(
-                                face,
-                                live,
-                                Colors.white,
-                                arrivalColor: accent,
+                            if (arrival)
+                              Semantics(
+                                label: 'Arrival',
+                                child: CustomPaint(
+                                  key: const ValueKey('island-arriving-icon'),
+                                  size: const Size(46, 34),
+                                  painter: ArrivingRoadPainter(pin: pin),
+                                ),
+                              )
+                            else
+                              SizedBox(
+                                width: 34,
+                                height: 34,
+                                child: _cue(face, live, Colors.white),
                               ),
-                            ),
                             const SizedBox(height: 2),
                             if (distance != null)
                               FittedBox(
@@ -452,81 +598,255 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Semantics(
-                      label: [title, if (line2.isNotEmpty) line2].join(', '),
-                      excludeSemantics: true,
-                      child: MediaQuery.withClampedTextScaling(
-                        maxScaleFactor: 1.2,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              maxLines: line2.isEmpty ? 2 : 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15.5,
-                                fontWeight: FontWeight.w700,
-                                height: 1.15,
-                              ),
-                            ),
-                            if (line2.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                line2,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: _muted,
-                                  fontSize: 12.5,
-                                  height: 1.2,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
+                    child: MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: 1.2,
+                      child: arrival ? _arrivalText() : _guidanceText(face),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          // The darker strip: arrival time and the leg's progress.
-          Container(
-            key: const ValueKey('island-route-strip'),
-            height: 34,
-            color: const Color(0x14FFFFFF),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  _arrivalLine(),
-                  style: const TextStyle(
-                    color: Color(0xFF34D399),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(child: _routeProgress(arrival ? accent : _blue, true)),
-                const SizedBox(width: 8),
-                Text(
-                  '$percent%',
-                  style: const TextStyle(
-                    color: _muted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
+          // The lighter strip; aligned to its bottom so it slides up under
+          // the top part while the island shrinks.
+          ClipRect(
+            child: SizedBox(
+              height: strip,
+              child: OverflowBox(
+                alignment: Alignment.bottomCenter,
+                minHeight: AdaptiveTripIsland.stripHeight,
+                maxHeight: AdaptiveTripIsland.stripHeight,
+                child: _stripBody(arrival ? pin : _blue),
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Instruction without the distance, then the street with road signs.
+  Widget _guidanceText(TripIslandFace face) {
+    final live = widget.banner;
+    var title = face.title
+        .replaceAll(_distanceText, '')
+        .replaceAll(RegExp(r'\s*·\s*$'), '')
+        .trim();
+    if (title.isEmpty) title = face.title;
+    final road = live?.roadName?.trim() ?? '';
+    final shields = live?.shields ?? const <RoadShield>[];
+    final towards = live?.towards?.trim() ?? '';
+    final parts = [
+      for (final part in face.subtitle.split(' · '))
+        if (part.isNotEmpty &&
+            _distanceParts(part) == null &&
+            !title.contains(part))
+          part,
+      if (road.isNotEmpty &&
+          !title.contains(road) &&
+          !face.subtitle.contains(road))
+        road,
+    ];
+    // With signs the place reads "towards Södertälje"; the street stays
+    // when nothing is signposted.
+    final line2 = shields.isNotEmpty && towards.isNotEmpty
+        ? 'towards $towards'
+        : [...parts, if (towards.isNotEmpty) 'towards $towards'].join(' · ');
+    final hasLine2 = line2.isNotEmpty || shields.isNotEmpty;
+    return Semantics(
+      label: [
+        title,
+        for (final shield in shields) shield.label,
+        if (line2.isNotEmpty) line2,
+      ].join(', '),
+      excludeSemantics: true,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            maxLines: hasLine2 ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15.5,
+              fontWeight: FontWeight.w700,
+              height: 1.15,
+            ),
+          ),
+          if (hasLine2) ...[
+            const SizedBox(height: 3),
+            Text.rich(
+              TextSpan(
+                children: [
+                  for (final shield in shields)
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: RoadShieldChip(shield),
+                    ),
+                  TextSpan(text: line2),
+                ],
+              ),
+              maxLines: shields.isEmpty ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: _muted, fontSize: 12.5, height: 1.2),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// One small word ("Arriving", "Stop 1"), the address big, the area under.
+  Widget _arrivalText() {
+    final label = widget.arrival ?? '';
+    final word = label.toLowerCase().startsWith('stop') ? label : 'Arriving';
+    final address = widget.address.trim();
+    final comma = address.indexOf(',');
+    final street = comma < 0 ? address : address.substring(0, comma).trim();
+    final area = comma < 0 ? '' : address.substring(comma + 1).trim();
+    return Semantics(
+      label: [word, address].join(', '),
+      excludeSemantics: true,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            word,
+            key: const ValueKey('island-arrival-word'),
+            maxLines: 1,
+            style: const TextStyle(
+              color: _muted,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            street,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              height: 1.12,
+              letterSpacing: -.2,
+            ),
+          ),
+          if (area.isNotEmpty)
+            Text(
+              area,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: _muted, fontSize: 12.5, height: 1.2),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// The strip's content, rotated with a short crossfade and slide.
+  Widget _stripBody(Color progressColor) {
+    final item = _strip.current;
+    final lanes = widget.banner?.lanes ?? const <RouteLane>[];
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    Widget child;
+    if (item.kind == TripStripKind.lanes && lanes.isNotEmpty) {
+      child = Row(
+        key: ValueKey('strip-lanes-${item.text}'),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          LaneGuidanceRow(
+            lanes: lanes,
+            modifier: widget.banner?.laneModifier ?? '',
+          ),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              RouteLane.hint(lanes),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else if (item.kind == TripStripKind.message) {
+      child = Center(
+        key: ValueKey('strip-message-${item.text}'),
+        child: Text(
+          item.text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+            fontFeatures: [FontFeature.tabularFigures()],
+          ),
+        ),
+      );
+    } else {
+      final percent = (widget.progress.clamp(0, 1) * 100).round();
+      child = Row(
+        key: const ValueKey('strip-eta'),
+        children: [
+          Text(
+            _arrivalLine(),
+            style: const TextStyle(
+              color: Color(0xFF34D399),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: _routeProgress(progressColor, true)),
+          const SizedBox(width: 8),
+          Text(
+            '$percent%',
+            style: const TextStyle(
+              color: _muted,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      );
+    }
+    return Container(
+      key: const ValueKey('island-route-strip'),
+      height: AdaptiveTripIsland.stripHeight,
+      color: const Color(0x14FFFFFF),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: AnimatedSwitcher(
+        duration: reduced ? Duration.zero : const Duration(milliseconds: 250),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        layoutBuilder: (current, previous) => Stack(
+          fit: StackFit.expand,
+          children: [...previous, if (current != null) current],
+        ),
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween(
+              begin: const Offset(0, .35),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        child: child,
       ),
     );
   }
@@ -615,48 +935,44 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland> {
     },
   );
 
-  Widget _cue(
-    TripIslandFace face,
-    NavigationBanner? live,
-    Color accent, {
-    Color arrivalColor = const Color(0xFFFF818B),
-  }) {
-    final arrival = face.kind == TripIslandKind.arrival;
+  Widget _cue(TripIslandFace face, NavigationBanner? live, Color accent) {
     final exit =
         live?.exitNumber ??
         RegExp(
           r'exit\s+(\d+)',
           caseSensitive: false,
         ).firstMatch(live?.primary ?? '')?.group(1);
+    final symbol = live?.symbol;
     return Semantics(
-      label: arrival
-          ? 'Arrival'
-          : '${live?.symbol.name ?? 'To destination'}${exit == null ? '' : ', exit $exit'}',
-      child: arrival
-          ? Icon(Icons.location_on_rounded, color: arrivalColor, size: 24)
-          : live == null
+      label:
+          '${symbol?.name ?? 'To destination'}${exit == null ? '' : ', exit $exit'}',
+      child: live == null || symbol == null
           ? const Icon(
               Icons.person_outline_rounded,
               color: Colors.white,
               size: 24,
             )
-          : live.symbol == NavigationBannerSymbol.roundabout
+          : symbol.isRoundabout
           ? CustomPaint(
               size: const Size(24, 24),
               painter: RoundaboutCuePainter(
-                exitDegrees: RoundaboutCuePainter.degreesFor(
-                  exitAngle: live.exitAngleDegrees,
-                  exitNumber: exit,
-                ),
+                exitDegrees: symbol == NavigationBannerSymbol.roundaboutUTurn &&
+                        live.exitAngleDegrees == null
+                    ? 250
+                    : RoundaboutCuePainter.degreesFor(
+                        exitAngle: live.exitAngleDegrees,
+                        exitNumber: exit,
+                      ),
                 exitNumber: exit,
                 color: accent,
+                clockwise: symbol == NavigationBannerSymbol.roundaboutClockwise,
                 fontFamily: DefaultTextStyle.of(context).style.fontFamily,
               ),
             )
           : CustomPaint(
               size: const Size(24, 24),
               painter: NavigationCuePainter(
-                symbol: live.symbol,
+                symbol: symbol,
                 icon: Icons.navigation_rounded,
                 color: accent,
                 exitNumber: exit,

@@ -734,6 +734,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             pickupPosition: offer.pickupPosition,
             dropoffPosition: offer.dropoffPosition,
             pickupKm: offer.pickupKm,
+            bags: offer.bags,
             destinationModeActive: _destinationModeActive,
             destinationAddress: _destinationAddress,
             destinationPosition: _destinationPosition,
