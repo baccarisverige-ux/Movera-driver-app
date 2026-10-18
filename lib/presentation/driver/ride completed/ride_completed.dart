@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:movera/presentation/driver/accept%20ride/island_morph.dart';
-import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/presentation/driver/accept%20ride/island_morph.dart';
+import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
+import 'package:movera/presentation/driver/home/components/home_offer_sheet.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/waybill/waybill_sheet.dart';
-import 'package:movera/widgets/movera_line_icon.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
+/// Ride completed: a plain white page. Check, fare, rating, route, a few
+/// rows and Done. After Done the driver is back on Home, online.
 class DriverRideCompleted extends StatefulWidget {
   const DriverRideCompleted({
     super.key,
@@ -18,6 +21,7 @@ class DriverRideCompleted extends StatefulWidget {
     this.sessionController,
     this.activeRideRepository,
     this.nextRide,
+    this.paymentMethod,
   });
 
   final WaybillRepository? waybillRepository;
@@ -25,15 +29,21 @@ class DriverRideCompleted extends StatefulWidget {
   final ActiveRideRepository? activeRideRepository;
   final Widget? nextRide;
 
+  /// "Card" or "Cash"; unknown shows a dash.
+  final String? paymentMethod;
+
   @override
   State<DriverRideCompleted> createState() => _DriverRideCompletedState();
 }
 
 class _DriverRideCompletedState extends State<DriverRideCompleted> {
-  static const Color _ink = Color(0xFF252E3A);
-  static const Color _muted = Color(0xFF66737A);
-  static const Color _green = Color(0xFF19865C);
-  static const Color _line = Color(0xFFE7ECEA);
+  static const Color _ink = Color(0xFF111111);
+  static const Color _muted = Color(0xFF7A848A);
+  static const Color _green = Color(0xFF2E9E5B);
+  static const Color _soft = Color(0xFFF1F2F4);
+  static const Color _line = Color(0xFFECEEF0);
+  static const Color _star = Color(0xFFC3C8CD);
+  static const Color _starOn = Color(0xFFF2A12E);
 
   double _rating = 0;
   bool _finishing = false;
@@ -54,14 +64,16 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     setState(() => _finishing = true);
     final navigator = Navigator.of(context);
     final nextRide = widget.nextRide;
+    // R13-5: the driver always stays online after a trip. Only holding the
+    // radar or the missed-offers rule takes them offline; endTrip() keeps
+    // that rule's offline-after-trip and a suspension.
+    widget.sessionController?.stayOnlineAfterTrip();
     if (nextRide != null) {
-      widget.sessionController?.stayOnlineAfterTrip();
       _waybills.promoteNextToCurrent();
       navigator.pushReplacement(BottomToTopTransition(nextRide));
       return;
     }
     _waybills.clearNext();
-    widget.sessionController?.setOnline(false);
     if (navigator.canPop()) {
       navigator.popUntil((route) => route.isFirst);
       return;
@@ -70,7 +82,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     navigator.pushReplacement(
       BottomToTopTransition(
         DriverHome(
-          initialOnline: false,
+          initialOnline: widget.sessionController?.isOnline ?? true,
           waybillRepository: _waybills,
           sessionController: widget.sessionController,
           activeRideRepository: widget.activeRideRepository,
@@ -79,12 +91,30 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     );
   }
 
+  static String _two(int value) => value.toString().padLeft(2, '0');
+
+  static (String, String) _place(String text) {
+    final comma = text.indexOf(',');
+    if (comma <= 0) {
+      return (text.trim(), '');
+    }
+    return (text.substring(0, comma).trim(), text.substring(comma + 1).trim());
+  }
+
+  static String _shortId(String id) =>
+      id.length > 12 ? '…${id.substring(id.length - 9)}' : id;
+
   @override
   Widget build(BuildContext context) {
     final record = _record;
+    final rider = record?.riderName ?? 'Rider';
+    final issued = record?.issuedAt;
+    final when = issued == null
+        ? 'Just now'
+        : '${_two(issued.hour)}:${_two(issued.minute)}';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF9),
+      backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -93,74 +123,122 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
               child: SingleChildScrollView(
                 key: const PageStorageKey<String>('ride-completed-scroll'),
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Center(
-                      child: IslandMorph(
-                        size: Size(
-                          TripIslandGeometry.width,
-                          TripIslandGeometry.height,
+                    const Center(child: _CompletedIsland()),
+                    const SizedBox(height: 28),
+                    Center(
+                      child: Container(
+                        key: const ValueKey<String>('ride-completed-check'),
+                        width: 60,
+                        height: 60,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                          color: _soft,
+                          shape: BoxShape.circle,
                         ),
-                        face: 'trip-completed',
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.check_circle_rounded,
-                                color: Color(0xFF6EDBB0),
-                                size: 22,
-                              ),
-                              SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'Trip completed',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              SizedBox(width: 28),
-                            ],
+                        child: SvgPicture.asset(
+                          AppAssets.solarCheckCircle,
+                          width: 30,
+                          height: 30,
+                          colorFilter: const ColorFilter.mode(
+                            _green,
+                            BlendMode.srcIn,
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildHeader(),
-                    const SizedBox(height: 18),
-                    _buildRiderCard(record),
+                    const Text(
+                      'Ride completed',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: _ink,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.6,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$rider · $when',
+                      key: const ValueKey<String>('ride-completed-subtitle'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: _muted, fontSize: 14),
+                    ),
+                    const SizedBox(height: 22),
+                    _fare(record?.fare),
                     const SizedBox(height: 12),
-                    _buildRouteCard(record),
-                    const SizedBox(height: 12),
-                    _buildTripSummary(record),
-                    const SizedBox(height: 12),
-                    _buildMetaCard(record),
+                    Center(child: _chip(record)),
+                    const SizedBox(height: 26),
+                    _stars(rider),
+                    const SizedBox(height: 22),
+                    const Divider(height: 1, thickness: 1, color: _line),
+                    const SizedBox(height: 20),
+                    _stop(
+                      mark: const OfferStopMark.pickup(),
+                      text: record?.pickup ?? 'Pickup',
+                    ),
+                    const SizedBox(height: 14),
+                    _stop(
+                      mark: const OfferStopMark.dropoff(),
+                      text: record?.dropoff ?? 'Drop-off',
+                    ),
+                    const SizedBox(height: 20),
+                    const Divider(height: 1, thickness: 1, color: _line),
+                    const SizedBox(height: 16),
+                    _row('Payment', Text(widget.paymentMethod ?? '—',
+                        style: _value)),
+                    _row(
+                      'Waybill',
+                      record == null
+                          ? const Text('—', style: _value)
+                          : InkWell(
+                              key: const ValueKey<String>(
+                                'ride-completed-waybill',
+                              ),
+                              onTap: () => showMoveraWaybillSheet(
+                                context,
+                                record,
+                                title: 'Last waybill',
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 2),
+                                child: Text(
+                                  'Open',
+                                  style: TextStyle(
+                                    color: _ink,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                    _row(
+                      'Trip ID',
+                      Text(
+                        record == null ? '—' : _shortId(record.tripId),
+                        style: _value,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
-            Container(
+            Padding(
               padding: EdgeInsets.fromLTRB(
-                16,
+                24,
                 10,
-                16,
-                MediaQuery.paddingOf(context).bottom + 12,
-              ),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Color(0xFFEFF2F1))),
+                24,
+                MediaQuery.paddingOf(context).bottom + 16,
               ),
               child: SizedBox(
-                height: 52,
+                height: 56,
+                width: double.infinity,
                 child: FilledButton(
                   key: const ValueKey<String>('ride-completed-done'),
                   onPressed: _finishing ? null : _finish,
@@ -174,7 +252,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                   ),
                   child: const Text(
                     'Done',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                   ),
                 ),
               ),
@@ -185,52 +263,103 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     );
   }
 
-  Widget _buildHeader() {
+  static const TextStyle _value = TextStyle(
+    color: _ink,
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+  );
+
+  Widget _fare(String? fare) {
+    if (fare == null) {
+      return const Text(
+        'Completed',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: _ink,
+          fontSize: 34,
+          fontWeight: FontWeight.w800,
+        ),
+      );
+    }
+    final (whole, rest) = OfferSheetBody.fareParts(fare);
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text.rich(
+        key: const ValueKey<String>('ride-completed-fare'),
+        TextSpan(
+          children: [
+            TextSpan(
+              text: whole,
+              style: const TextStyle(
+                color: _ink,
+                fontSize: 52,
+                height: 1.05,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -2,
+              ),
+            ),
+            TextSpan(
+              text: rest,
+              style: const TextStyle(
+                color: _muted,
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _chip(WaybillRecord? record) {
+    final label = [
+      record?.service ?? 'Movera',
+      if (record != null && record.source.trim().isNotEmpty) record.source,
+    ].join(' · ');
+    return Container(
+      key: const ValueKey<String>('ride-completed-chip'),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: _soft,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: _ink,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _starIcon(String asset, Color color) => SvgPicture.asset(
+    asset,
+    width: 32,
+    height: 32,
+    colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+  );
+
+  Widget _stars(String rider) {
     return Column(
       children: [
-        Container(
-          width: 74,
-          height: 74,
-          padding: const EdgeInsets.all(11),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEAF6F0),
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFD7EBE1)),
-          ),
-          child: Image.asset(AppAssets.sucess, fit: BoxFit.contain),
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Ride completed',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: _ink,
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Rate your experience',
-          style: TextStyle(
-            color: _muted,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 10),
-        RatingBar.builder(
+        RatingBar(
           initialRating: _rating,
           minRating: 1,
           glow: false,
-          allowHalfRating: true,
           itemCount: 5,
-          itemSize: 30,
-          itemPadding: const EdgeInsets.symmetric(horizontal: 3),
-          unratedColor: const Color(0xFFD5DADC),
-          itemBuilder: (_, __) =>
-              const Icon(Icons.star_rounded, color: Color(0xFFF2A12E)),
+          itemSize: 34,
+          itemPadding: const EdgeInsets.symmetric(horizontal: 6),
+          ratingWidget: RatingWidget(
+            full: _starIcon(AppAssets.offerStar, _starOn),
+            half: _starIcon(AppAssets.offerStar, _starOn),
+            empty: _starIcon(AppAssets.solarStar, _star),
+          ),
           onRatingUpdate: (rating) {
             setState(() => _rating = rating);
             ScaffoldMessenger.of(context).showSnackBar(
@@ -239,225 +368,47 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
           },
           updateOnDrag: true,
         ),
+        const SizedBox(height: 8),
+        Text(
+          'Rate $rider',
+          style: const TextStyle(color: _muted, fontSize: 14),
+        ),
       ],
     );
   }
 
-  Widget _buildRiderCard(WaybillRecord? record) {
-    return _card(
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Image.asset(
-              AppAssets.profileImg,
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record?.riderName ?? 'Rider',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _ink,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  record?.service ?? 'Movera',
-                  style: const TextStyle(
-                    color: _muted,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              record?.fare ?? 'Completed',
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: _green,
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRouteCard(WaybillRecord? record) {
-    return _card(
-      title: 'Route',
-      child: Column(
-        children: [
-          _routeRow(
-            color: _green,
-            label: 'Pickup',
-            value: record?.pickup ?? 'Pickup',
-          ),
-          const Padding(
-            padding: EdgeInsets.only(left: 4),
-            child: SizedBox(
-              height: 18,
-              child: VerticalDivider(color: Color(0xFFD5DDDA), thickness: 1),
-            ),
-          ),
-          _routeRow(
-            color: _ink,
-            label: 'Drop-off',
-            value: record?.dropoff ?? 'Drop-off',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTripSummary(WaybillRecord? record) {
-    return _card(
-      title: 'Trip details',
-      child: Column(
-        children: [
-          _summaryRow('Ride cost', record?.fare ?? '—'),
-          const SizedBox(height: 12),
-          _summaryRow('Service', record?.service ?? 'Movera'),
-          const SizedBox(height: 12),
-          _summaryRow('Matched via', record?.source ?? 'Movera'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetaCard(WaybillRecord? record) {
-    final issued = record?.issuedAt;
-    final completedAt = issued == null
-        ? 'Just now'
-        : '${issued.year}-${issued.month.toString().padLeft(2, '0')}-'
-              '${issued.day.toString().padLeft(2, '0')} · '
-              '${issued.hour.toString().padLeft(2, '0')}:'
-              '${issued.minute.toString().padLeft(2, '0')}';
-
-    return _card(
-      title: 'Waybill',
-      trailing: record == null
-          ? null
-          : TextButton.icon(
-              onPressed: () {
-                showMoveraWaybillSheet(context, record, title: 'Last waybill');
-              },
-              icon: const MoveraLineIcon(
-                mark: MoveraMark.receipt,
-                size: 16,
-                color: Color(0xFF1C242C),
-              ),
-              label: const Text('Open'),
-              style: TextButton.styleFrom(
-                foregroundColor: _ink,
-                textStyle: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-      child: Column(
-        children: [
-          _summaryRow('Trip ID', record?.tripId ?? '—'),
-          const SizedBox(height: 12),
-          _summaryRow('Completed', completedAt),
-        ],
-      ),
-    );
-  }
-
-  Widget _card({String? title, Widget? trailing, required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: _line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title != null) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: _ink,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                if (trailing != null) trailing,
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _routeRow({
-    required Color color,
-    required String label,
-    required String value,
-  }) {
+  Widget _stop({required Widget mark, required String text}) {
+    final (street, area) = _place(text);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 9,
-          height: 9,
-          margin: const EdgeInsets.only(top: 4),
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        SizedBox(
+          width: 22,
+          height: 22,
+          child: Align(alignment: Alignment.centerLeft, child: mark),
         ),
-        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
-                style: const TextStyle(
-                  color: Color(0xFF8A959A),
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
+                street,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: _ink,
-                  fontSize: 12,
+                  fontSize: 16,
                   height: 1.35,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
+              if (area.isNotEmpty)
+                Text(
+                  area,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: _muted, fontSize: 13.5),
+                ),
             ],
           ),
         ),
@@ -465,35 +416,66 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     );
   }
 
-  Widget _summaryRow(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: _muted,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
+  Widget _row(String label, Widget value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: _muted, fontSize: 15),
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: _ink,
-              fontSize: 11.5,
-              fontWeight: FontWeight.w900,
+          const SizedBox(width: 12),
+          Flexible(child: Align(alignment: Alignment.centerRight, child: value)),
+        ],
+      ),
+    );
+  }
+}
+
+/// The trip island, closing on "Trip completed".
+class _CompletedIsland extends StatelessWidget {
+  const _CompletedIsland();
+
+  @override
+  Widget build(BuildContext context) {
+    return IslandMorph(
+      size: const Size(TripIslandGeometry.width, TripIslandGeometry.height),
+      face: 'trip-completed',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              AppAssets.solarCheckCircle,
+              width: 20,
+              height: 20,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFF6EDBB0),
+                BlendMode.srcIn,
+              ),
             ),
-          ),
+            const SizedBox(width: 6),
+            const Expanded(
+              child: Text(
+                'Trip completed',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 28),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

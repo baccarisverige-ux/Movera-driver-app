@@ -401,17 +401,6 @@ extension _HomeMapSheet on _DriverHomeState {
         _destinationRoutePolylines = {};
       });
     }
-    void _flashSheet(Color color) {
-      _sheetToneTimer?.cancel();
-      _rebuild(() {
-        _sheetTone = color;
-        _sheetToneShown = true;
-      });
-      _sheetToneTimer = Timer(const Duration(seconds: 2), () {
-        if (!mounted) { return; }
-        _rebuild(() => _sheetToneShown = false);
-      });
-    }
     Widget _inactiveSheetFace() {
       return PhysicalShape(
         clipper: const RadarSheetClipper(
@@ -1450,7 +1439,6 @@ extension _HomeMapSheet on _DriverHomeState {
           builder: (context, _) {
             final position = _panelSlidePosition.value;
             final cover = _notchCover(position);
-            final closed = position <= 0.04;
             return DriverSheetNav.collapsedDock(
               context: context,
               scaffoldKey: _scaffoldKey,
@@ -1463,8 +1451,6 @@ extension _HomeMapSheet on _DriverHomeState {
               elevation: 8 * (1 - cover),
               edgeOpacity: 1 - cover,
               topRuleOpacity: cover,
-              tone: closed ? _sheetTone : null,
-              toneShown: closed && _sheetToneShown,
             );
           },
         ),
