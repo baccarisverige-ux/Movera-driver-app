@@ -42,7 +42,7 @@ extension _HomeMapSheet on _DriverHomeState {
         }
       } catch (_) {
         if (!mounted || !_liveVisible || epoch != _locationEpoch) { return; }
-        _rebuild(() => _hasLiveDriverLocation = false);
+        _rebuild(() { _hasLiveDriverLocation = false; _startLocationFailed = true; });
         // A transient one-shot GPS failure must not leave Home without a
         // location subscription until the next app resume or recenter tap.
         // Continuous updates can recover when permissions/provider return.
@@ -67,7 +67,7 @@ extension _HomeMapSheet on _DriverHomeState {
         },
         onError: (_) {
           if (!mounted || !_liveVisible || epoch != _locationEpoch) { return; }
-          _rebuild(() => _hasLiveDriverLocation = false);
+          _rebuild(() { _hasLiveDriverLocation = false; _startLocationFailed = true; });
         },
       );
     }
@@ -85,19 +85,10 @@ extension _HomeMapSheet on _DriverHomeState {
         _driverPosition = next;
         _driverHeading = heading;
         _hasLiveDriverLocation = location.isUsableAt(DateTime.now());
-        _markers = {
-          Marker(
-            markerId: const MarkerId('driver_location'),
-            position: next,
-            infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
-            icon: _driverVehicleIcon,
-            flat: true,
-            anchor: MoveraVehicleMarker.anchor,
-            rotation: _driverHeading,
-            zIndexInt: 12,
-          ),
-        };
+        _startPositionKnown = true;
+        _markers = _HomeStartPosition(this)._driverMarkers();
       });
+      if (_hasLiveDriverLocation) { unawaited(DriverStartPosition.save(location.point)); }
 
       if (_destinationModeActive) {
         _refreshDestinationRoadRoute();
@@ -109,18 +100,8 @@ extension _HomeMapSheet on _DriverHomeState {
       if (!mounted) { return; }
       _rebuild(() {
         _driverVehicleIcon = icon;
-        _markers = {
-          Marker(
-            markerId: const MarkerId('driver_location'),
-            position: _driverPosition,
-            infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
-            icon: _driverVehicleIcon,
-            flat: true,
-            anchor: MoveraVehicleMarker.anchor,
-            rotation: _driverHeading,
-            zIndexInt: 12,
-          ),
-        };
+        // No car until the driver's position is known (no city fallback).
+        if (_startPositionKnown) { _markers = _HomeStartPosition(this)._driverMarkers(); }
       });
     }
     Future<void> _animateToDriverLocation() async {
@@ -167,16 +148,6 @@ extension _HomeMapSheet on _DriverHomeState {
               ),
             ),
           ],
-        ),
-      );
-    }
-    void _loadMarkers() {
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('driver_location'),
-          position: _driverPosition,
-          infoWindow: const InfoWindow(title: 'Your location'),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         ),
       );
     }
@@ -598,8 +569,8 @@ extension _HomeMapSheet on _DriverHomeState {
     }
     Widget _buildRadarMapBackdrop() {
       return SizedBox.expand(
-        child: CustomGoogleMap(
-          initialPosition: _DriverHomeState._initialPosition,
+        child: !_HomeStartPosition(this)._mapReady ? _HomeStartPosition(this)._locating() : CustomGoogleMap(
+          initialPosition: _initialPosition,
           markers: _markers,
           myLocationEnabled: false,
           myLocationButtonEnabled: false,
@@ -630,7 +601,7 @@ extension _HomeMapSheet on _DriverHomeState {
                               action: SnackBarAction(label: 'Retry', onPressed: _camera.recenter)));
                           }
                         },
-              initialPosition: _DriverHomeState._initialPosition,
+              initialPosition: _initialPosition,
               reducedMotion: MediaQuery.disableAnimationsOf(context));
             _camera.attach(_cameraPort!);
           },
@@ -657,8 +628,8 @@ extension _HomeMapSheet on _DriverHomeState {
         width: viewportWidth,
         child: Stack(
           children: [
-            CustomGoogleMap(
-              initialPosition: _DriverHomeState._initialPosition,
+            if (!_HomeStartPosition(this)._mapReady) _HomeStartPosition(this)._locating() else CustomGoogleMap(
+              initialPosition: _initialPosition,
               markers: layers.markers,
               polylines: DriverRouteStyle.sized(layers.polylines, _routeZoomStep),
               myLocationEnabled: false,
@@ -689,7 +660,7 @@ extension _HomeMapSheet on _DriverHomeState {
                               action: SnackBarAction(label: 'Retry', onPressed: _camera.recenter)));
                           }
                         },
-                  initialPosition: _DriverHomeState._initialPosition,
+                  initialPosition: _initialPosition,
                   reducedMotion: MediaQuery.disableAnimationsOf(context));
                 _camera.attach(_cameraPort!);
                 if (_hasLiveDriverLocation) {
