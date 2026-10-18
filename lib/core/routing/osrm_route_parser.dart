@@ -188,6 +188,43 @@ class OsrmRouteParser {
         ? parsedExit.toString()
         : null;
     final distance = step['distance'];
+    String? text(String key) {
+      final value = step[key];
+      return value is String && value.trim().isNotEmpty ? value.trim() : null;
+    }
+
+    // The first intersection is the maneuver itself: its lanes are the
+    // lanes leading into it. Classes anywhere on the step describe the
+    // road after the maneuver (toll, tunnel, motorway).
+    final intersections = step['intersections'];
+    final lanes = <RouteLane>[];
+    final classes = <String>{};
+    if (intersections is List) {
+      for (var i = 0; i < intersections.length; i++) {
+        final crossing = intersections[i];
+        if (crossing is! Map<String, dynamic>) continue;
+        final named = crossing['classes'];
+        if (named is List) classes.addAll(named.whereType<String>());
+        final rawLanes = crossing['lanes'];
+        if (i == 0 && rawLanes is List) {
+          for (final lane in rawLanes) {
+            if (lane is! Map<String, dynamic>) continue;
+            final indications = lane['indications'];
+            lanes.add(
+              RouteLane(
+                indications: indications is List
+                    ? indications.whereType<String>().toList()
+                    : const <String>[],
+                valid: lane['valid'] == true,
+              ),
+            );
+          }
+        }
+      }
+    }
+    final roadRef = text('ref');
+    final destinations = text('destinations');
+    final drivingSide = text('driving_side') == 'left' ? 'left' : 'right';
 
     return RouteInstruction(
       type: type,
@@ -205,6 +242,20 @@ class OsrmRouteParser {
       roadName: roadName?.trim().isEmpty == true ? null : roadName,
       exitNumber: exitNumber,
       exitAngleDegrees: exitAngleDegrees,
+      roadRef: roadRef,
+      destinations: destinations,
+      exitRef: text('exits')?.split(';').first.trim(),
+      lanes: lanes,
+      drivingSide: drivingSide,
+      highway:
+          classes.contains('motorway') ||
+          type == RouteManeuverType.onRamp ||
+          type == RouteManeuverType.offRamp ||
+          RoadShield.parse(
+            RoadShield.splitDestinations(destinations).$1 ?? roadRef,
+          ).isNotEmpty,
+      toll: classes.contains('toll'),
+      tunnel: classes.contains('tunnel'),
     );
   }
 }

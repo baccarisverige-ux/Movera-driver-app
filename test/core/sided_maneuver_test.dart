@@ -42,11 +42,27 @@ void main() {
       expect(symbol(type, 'right'), NavigationBannerSymbol.exitRight);
       expect(symbol(type, ''), NavigationBannerSymbol.exit);
     }
-    for (final type in [RouteManeuverType.merge, RouteManeuverType.onRamp]) {
-      expect(symbol(type, 'slight left'), NavigationBannerSymbol.mergeLeft);
-      expect(symbol(type, 'slight right'), NavigationBannerSymbol.mergeRight);
-      expect(symbol(type, 'straight'), NavigationBannerSymbol.merge);
-    }
+    expect(
+      symbol(RouteManeuverType.merge, 'slight left'),
+      NavigationBannerSymbol.mergeLeft,
+    );
+    expect(
+      symbol(RouteManeuverType.merge, 'slight right'),
+      NavigationBannerSymbol.mergeRight,
+    );
+    expect(
+      symbol(RouteManeuverType.merge, 'straight'),
+      NavigationBannerSymbol.merge,
+    );
+    // Entering a highway has its own ramp arrow.
+    expect(
+      symbol(RouteManeuverType.onRamp, 'slight left'),
+      NavigationBannerSymbol.onRampLeft,
+    );
+    expect(
+      symbol(RouteManeuverType.onRamp, 'right'),
+      NavigationBannerSymbol.onRampRight,
+    );
   });
 
   testWidgets('left arrows point left, right arrows point right', (

@@ -125,7 +125,11 @@ class AcceptRide extends StatefulWidget {
     this.destinationPosition,
     this.rideCheck,
     this.pickupKm,
+    this.bags = 0,
   });
+
+  /// Bags the rider said they bring; the trip island mentions them.
+  final int bags;
 
   /// How far the pickup was when the trip was accepted, for the waiting
   /// rule by pickup distance (Q20); null when not known.
@@ -1262,6 +1266,9 @@ class _AcceptRideState extends State<AcceptRide>
                         onWait: _AcceptRidePanel(this)._openWaitingTime,
                         rideCheck: _rideCheck.active,
                         onRideCheckDemo: driverProductionRequested ? null : _AcceptRideTrip(this)._openRideCheckDemo,
+                        pointKind: _approachKind, pointLabel: _approachLabel, bags: widget.bags,
+                        nextTripFare: _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer?.fare : null,
+                        sheetPosition: _ridePanelPosition, sheetRaisedAt: snap + 0.04,
                       ))),
                     ),
                   ),
