@@ -917,11 +917,12 @@ void main() {
       find.byKey(const ValueKey<String>('destination-mode-home-tab')),
       findsNothing,
     );
+    // R13-9: no white popup on the map; the island shows the destination.
     expect(
       find.byKey(const ValueKey<String>('destination-mode-bar')),
-      findsOneWidget,
+      findsNothing,
     );
-    expect(find.textContaining('Destination mode until '), findsOneWidget);
+    expect(find.textContaining('Destination mode until '), findsNothing);
     expect(find.text('STARTING'), findsOneWidget);
 
     final map = tester.widget<CustomGoogleMap>(
