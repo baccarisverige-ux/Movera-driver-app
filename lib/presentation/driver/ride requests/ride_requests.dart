@@ -42,6 +42,10 @@ class RideRequests extends StatefulWidget {
   /// cash rides off, no cash trips.
   final bool Function(RideOffer offer)? offerFilter;
 
+  /// R13-9: Home's on-the-way filter in Destination mode; without it the
+  /// offer's own flag.
+  final bool Function(RideOffer offer)? followsDestination;
+
   /// That ride's pickup time, e.g. "07:40", while trips head toward it.
   final String? towardPickupTime;
 
@@ -58,6 +62,7 @@ class RideRequests extends StatefulWidget {
     this.dispatchRepository,
     this.activeRideRepository,
     this.offerFilter,
+    this.followsDestination,
     this.towardPickupTime,
   });
 
@@ -127,6 +132,9 @@ class _RideRequestsState extends State<RideRequests> {
     return List<_RadarTrip>.unmodifiable(nearby);
   }
 
+  bool _follows(RideOffer offer) =>
+      widget.followsDestination?.call(offer) ?? offer.followsDestination;
+
   _RadarTrip _tripFromOffer(RideOffer offer) {
     return _RadarTrip(
       id: offer.id,
@@ -142,7 +150,7 @@ class _RideRequestsState extends State<RideRequests> {
       pickupPosition: offer.pickupPosition.toLatLng(),
       dropoffPosition: offer.dropoffPosition.toLatLng(),
       isNearby: offer.isNearby,
-      followsDestination: offer.followsDestination,
+      followsDestination: _follows(offer),
       bags: offer.bags,
       payment: offer.payment,
       reservationTime: offer.reservationTime,
@@ -499,7 +507,7 @@ class _RideRequestsState extends State<RideRequests> {
         .where((offer) =>
             offer.isNearby &&
             !shown.contains(offer.id) &&
-            (!widget.destinationModeActive || offer.followsDestination))
+            (!widget.destinationModeActive || _follows(offer)))
         .length;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),

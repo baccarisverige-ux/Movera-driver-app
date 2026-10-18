@@ -1,3 +1,4 @@
+import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -13,6 +14,8 @@ class DriverHomeAdminConfig {
     required this.events,
     required this.stockholmWork,
     this.appTexts = const DriverAppTextOverrides(),
+    this.destinationMode,
+    this.nextTrips,
   });
 
   final DriverPerformanceConfig performance;
@@ -26,6 +29,12 @@ class DriverHomeAdminConfig {
   /// Content › Driver app texts (Q30): admin's texts per language. The
   /// demo has none, so the app shows its defaults.
   final DriverAppTextOverrides appTexts;
+
+  /// R13-9 / R13-18: the zone's Destination mode and next-trip rules from
+  /// admin's rules file; null when none was sent (the app keeps its
+  /// defaults).
+  final DestinationModeRules? destinationMode;
+  final NextTripRules? nextTrips;
 }
 
 class DriverPerformanceConfig {
@@ -574,10 +583,26 @@ class StockholmWorkStatsConfig {
 /// Today this returns frontend seed data. When the backend/admin repository is
 /// connected, only this service should change; Home UI consumes the same model.
 class DriverHomeAdminContentService {
-  const DriverHomeAdminContentService();
+  const DriverHomeAdminContentService({
+    this.rulesExport,
+    this.zoneId = defaultZoneId,
+  });
+
+  /// Admin's Greater Stockholm service zone.
+  static const String defaultZoneId = 'svc-stockholm';
+
+  /// Admin's dispatch rules file (its `driverApp` part is read); null in
+  /// the demo, which runs on the defaults.
+  final Map<String, dynamic>? rulesExport;
+  final String zoneId;
 
   DriverHomeAdminConfig load() {
+    final export = rulesExport;
+    final tripRules =
+        export == null ? null : DriverTripRulesExport.forZone(export, zoneId);
     return DriverHomeAdminConfig(
+      destinationMode: tripRules?.$1,
+      nextTrips: tripRules?.$2,
       performance: const DriverPerformanceConfig(
         rating: 4.88,
         acceptanceRate: 94.0,

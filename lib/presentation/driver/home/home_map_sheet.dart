@@ -247,6 +247,14 @@ extension _HomeMapSheet on _DriverHomeState {
         padding: padding);
     }
     void _openDestinationModePicker() {
+      // R13-9: admin can switch the mode off per zone and limit it per day.
+      final refusal = DestinationModeSession.instance.refusal();
+      if (refusal != null) {
+        IslandMessages.show(refusal == DestinationRefusal.off
+            ? HomeIslandNotices.destinationOff
+            : HomeIslandNotices.destinationsUsed);
+        return;
+      }
       _closeHomeFloatingPopupsForSheet();
       if (_mainPanelPosition > 0.001 || isPanelOpen) {
         _panelController.close();
@@ -274,6 +282,17 @@ extension _HomeMapSheet on _DriverHomeState {
       _mapPreviews.cancel(); // An old offer cannot reclaim the destination map.
       _destinationRoadRequests.cancel();
       _cameraRoute = null;
+      final session = DestinationModeSession.instance..started();
+      _destinationLimitTimer?.cancel();
+      final left = session.timeLeft();
+      if (left != null) {
+        _destinationLimitTimer = Timer(left, () {
+          if (!mounted || !_destinationModeActive) { return; }
+          _endDestinationMode();
+          DestinationModeSession.instance.timedOut();
+          IslandMessages.show(HomeIslandNotices.destinationEnded);
+        });
+      }
       _rebuild(() {
         _destinationModeActive = true;
         _destinationAddress = result.address;
@@ -297,6 +316,7 @@ extension _HomeMapSheet on _DriverHomeState {
 
       await _refreshDestinationRoadRoute();
       await _fitDestinationRoute();
+      _seedDemoDestinationTrips();
       _HomeOfferRadar(this)._maybeShowSoonReservation();
 
       if (!_isOnline && !_isGoingOnline) {
@@ -327,6 +347,8 @@ extension _HomeMapSheet on _DriverHomeState {
             !_destinationRoadRequests.owns(generation)) { return; }
 
         _cameraRoute = route;
+        DestinationModeSession.instance.keepRoute(
+            GeoPointMaps.fromLatLng(destination), route.points);
         unawaited(_animateToDriverLocation());
 
         _rebuild(() {
@@ -386,8 +408,47 @@ extension _HomeMapSheet on _DriverHomeState {
         onTurnOff: _endDestinationMode,
       );
     }
+    /// R13-9 demo: with real filtering the fixed demo trips rarely head the
+    /// driver's way, so the demo adds trips along the route: an Exclusive
+    /// near the destination and Radar trips on the way (plus two outside).
+    void _seedDemoDestinationTrips() {
+      final demo = _dispatch, destination = _destinationPosition;
+      if (demo is! DemoDispatchRepository || destination == null ||
+          !_destinationModeActive) { return; }
+      final rules = DestinationModeRules.current;
+      final trips = DemoDestinationTrips.along(
+        driver: GeoPointMaps.fromLatLng(_driverPosition),
+        destination: GeoPointMaps.fromLatLng(destination),
+        route: _cameraRoute?.points ?? const <GeoPoint>[],
+        corridorKm: rules.corridorOn ? rules.corridorKm : DestinationFilter.defaultNearKm,
+        destinationLabel: _destinationShortLabel,
+      );
+      final exclusive = trips.firstWhere((t) => t.id == DemoDestinationTrips.exclusiveId);
+      _destinationDemoExclusive = _HomeDirectOffer.fromRide(exclusive,
+          reason: ExclusiveReasons.nearby);
+      demo.showDestinationTrips([for (final t in trips) if (t != exclusive) t]);
+      // Already online: the usual demo timers have run, so these come now.
+      if (!_isOnline || _outsideRadarOffer != null) { return; }
+      _directOfferTimer?.cancel();
+      _directOfferTimer = Timer(const Duration(milliseconds: 1500), () {
+        final offer = _destinationDemoExclusive;
+        if (!mounted || !_isOnline || !_destinationModeActive || offer == null) { return; }
+        unawaited(_HomeOfferRadar(this)._showOutsideRadarOffer(offer));
+        // Radar trips on the way wait behind it.
+        _HomeOfferRadar(this)._showDispatchOfferAt(0);
+        _HomeOfferRadar(this)._showDispatchOfferAt(1);
+      });
+    }
+    void _clearDemoDestinationTrips() {
+      _destinationDemoExclusive = null;
+      final demo = _dispatch;
+      if (demo is DemoDispatchRepository) { demo.clearDestinationTrips(); }
+    }
     void _endDestinationMode() {
       if (!_destinationModeActive) { return; }
+      _clearDemoDestinationTrips();
+      _destinationLimitTimer?.cancel();
+      DestinationModeSession.instance.ended();
       _mapPreviews.cancel();
       _destinationRoadRequests.cancel();
       _destinationRoadRefresh.cancelPending();

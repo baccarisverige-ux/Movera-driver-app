@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/dispatch/demo_destination_trips.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
@@ -460,6 +461,35 @@ class DemoDispatchRepository implements DispatchRepository {
   void refreshOffers() {
     _emitNearby();
   }
+
+  /// R13-9 demo: trips along the driver's destination route (see
+  /// [DemoDestinationTrips]) come first on Radar; they replace any earlier
+  /// set.
+  void showDestinationTrips(List<RideOffer> trips) {
+    if (_disposed) {
+      return;
+    }
+    _offers = [...trips, ..._withoutDestinationTrips()];
+    _emitNearby();
+  }
+
+  /// Destination mode ended: its demo trips leave Radar.
+  void clearDestinationTrips() {
+    if (_disposed) {
+      return;
+    }
+    final kept = _withoutDestinationTrips();
+    if (kept.length == _offers.length) {
+      return;
+    }
+    _offers = kept;
+    _emitNearby();
+  }
+
+  List<RideOffer> _withoutDestinationTrips() => [
+    for (final offer in _offers)
+      if (!offer.id.startsWith(DemoDestinationTrips.idPrefix)) offer,
+  ];
 
   /// A cancelled reservation goes back to the open ones, so Scheduled
   /// rides and the Home popup can offer it again, and to Radar where the

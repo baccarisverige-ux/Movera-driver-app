@@ -160,13 +160,21 @@ extension _AcceptRidePanel on _AcceptRideState {
             : 'To drop-off',
       };
     }
+    /// R13-18: a destination can be set during the trip too; next-trip
+    /// offers then follow it. Admin's daily limit applies here as well.
     void _openDestinationPicker() {
+      final refusal = OnTripDestination.refusalText();
+      if (refusal != null) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(refusal)));
+        return;
+      }
       Navigator.of(context)
           .push<DriverDestinationResult>(
             MaterialPageRoute(builder: (_) => const DriverDestinationPicker()),
           )
           .then((result) {
             if (!mounted || result == null) { return; }
+            OnTripDestination.started();
             _rebuild(() {
               _destinationActive = true;
               _destinationAddress = result.address;
@@ -1058,6 +1066,17 @@ extension _AcceptRidePanel on _AcceptRideState {
                         _waybills.next!,
                         title: 'Next trip waybill',
                       );
+                    },
+                  ),
+                if (onTrip)
+                  _CleanRow(
+                    key: const ValueKey<String>('trip-destination-option'),
+                    title: 'Destination',
+                    subtitle: _destinationActive
+                        ? (_destinationAddress ?? 'On your way')
+                        : 'Next trips on your way',
+                    onTap: () {
+                      if (popOwned(sheetContext)) { _openDestinationPicker(); }
                     },
                   ),
                 _CleanRow(
