@@ -242,9 +242,27 @@ extension _HomeMapSheet on _DriverHomeState {
       ];
       await _HomeOfferRoute(this)._fitOfferRoute();
     }
+    /// The whole route between the island and the sheet (web maps ignore
+    /// padding), zoomed by its length, like an offer's route. The driver
+    /// asked for it, so it takes the map even after a pan.
     Future<void> _fitPoints(List<LatLng> points, {double padding = 80}) async {
-      await _camera.preview(points.map(GeoPointMaps.fromLatLng).toList(),
-        padding: padding);
+      final geo = points.map(GeoPointMaps.fromLatLng).toList();
+      final size = MediaQuery.sizeOf(context);
+      final insets = _HomeOfferRoute(this)._homeMapInsets(context);
+      final fit = fitRouteCamera(
+        points: [
+          for (var i = 0; i < geo.length; i++)
+            // The destination pin stands above its point.
+            RouteFitPoint(geo[i], left: 20, right: 20, down: 20,
+                up: i == geo.length - 1 ? 56 : 20),
+        ],
+        free: _HomeOfferRoute(this)._offerFreeArea(size, insets),
+        targetAt: kIsWeb
+            ? size.center(Offset.zero)
+            : insets.edgeInsets.deflateRect(Offset.zero & size).center,
+      );
+      if (fit == null) { return _camera.preview(geo, padding: padding); }
+      await _camera.previewFit(fit, points: geo, padding: padding, takeOver: true);
     }
     void _openDestinationModePicker() {
       _closeHomeFloatingPopupsForSheet();

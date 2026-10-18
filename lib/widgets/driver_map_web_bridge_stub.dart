@@ -1,6 +1,6 @@
 bool get ready => true;
 void applyAnchor(int mapId) {}
-void claim(int mapId) {}
+void claim(int mapId, {bool anchored = true, double? lead}) {}
 void gestures(int mapId, bool enabled) {}
 void vehicle(int mapId, double heading) {}
 void configure(int mapId, double top, double bottom, double anchor) {}

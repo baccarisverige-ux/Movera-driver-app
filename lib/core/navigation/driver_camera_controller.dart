@@ -69,6 +69,48 @@ class DriverCameraPolicy {
   double get alongMeters => _along ?? 0;
   bool autoZoom = true;
 
+  /// Home's free-map zoom; also the zoom Home's map opens at, so the
+  /// first GPS frame does not zoom.
+  static const double exploreZoom = 16.8;
+
+  /// Parked at the pickup or a paid stop.
+  static const double waitingZoom = 17.2;
+
+  /// Guidance zoom at a standstill: the zoom the trip map opens at.
+  static const double guidanceStartZoom = 17.5;
+
+  /// Smoothed GPS speed: one noisy reading must not zoom the map.
+  double? _speed;
+
+  /// Cruise zoom (speed only, before turn and arrival framing).
+  double? _cruise;
+
+  /// Speed zoom changes smaller than this are ignored (no breathing);
+  /// larger ones move at most this far per GPS fix.
+  static const double zoomDeadBand = 0.1;
+  static const double maxZoomOutPerFix = 0.25;
+  static const double maxZoomInPerFix = 0.4;
+
+  double _smoothedSpeed(double raw, bool reset) {
+    final previous = _speed;
+    // About three fixes to follow a real change of speed.
+    return _speed = reset || previous == null
+        ? raw
+        : previous + (raw - previous) * 0.3;
+  }
+
+  double _cruiseZoom(double speed, bool reset) {
+    var zoom = zoomForSpeed(speed);
+    final previous = _cruise;
+    if (!reset && previous != null) {
+      final change = zoom - previous;
+      zoom = change.abs() < zoomDeadBand
+          ? previous
+          : previous + change.clamp(-maxZoomOutPerFix, maxZoomInPerFix);
+    }
+    return _cruise = zoom;
+  }
+
   static double zoomForSpeed(double speed) {
     // Step thresholds made the map zoom a whole level when GPS speed
     // fluctuated near 20/50/80 km/h. Interpolate between the same approved
@@ -106,15 +148,21 @@ class DriverCameraPolicy {
     _course = location.courseOr(_course);
     vehiclePoint = location.point;
     final rawSpeed = location.speedMetersPerSecond;
-    final speed = rawSpeed != null && rawSpeed.isFinite && rawSpeed >= 0
+    final rawUsable = rawSpeed != null && rawSpeed.isFinite && rawSpeed >= 0
         ? rawSpeed
         : 0.0;
-    var bearing = navigating && !waiting ? _course : 0.0;
+    final guiding = navigating && !waiting;
+    // Zoom and look-ahead use the smoothed speed; coasting the real one.
+    final speed = _smoothedSpeed(rawUsable, immediate || !guiding);
+    if (!guiding) _cruise = null;
+    var bearing = guiding ? _course : 0.0;
     var zoom = waiting
-        ? 17.2
+        ? waitingZoom
         : navigating
-        ? (autoZoom ? zoomForSpeed(speed) : (_previous?.zoom ?? 16.5))
-        : 16.8;
+        ? (autoZoom
+              ? _cruiseZoom(speed, immediate)
+              : (_previous?.zoom ?? 16.5))
+        : exploreZoom;
     var tilt = navigating && !waiting ? 45.0 : 0.0;
     var onRoute = false;
     if (navigating && !waiting && route != null && route.points.length > 1) {
@@ -187,8 +235,8 @@ class DriverCameraPolicy {
       bearing,
       tilt,
       duration: Duration(milliseconds: immediate ? 900 : 450),
-      speedMetersPerSecond: speed,
-      coast: onRoute && speed >= 1,
+      speedMetersPerSecond: rawUsable,
+      coast: onRoute && rawUsable >= 1,
     );
   }
 
@@ -280,6 +328,62 @@ class DriverCameraController {
   double get alongMeters => _policy.alongMeters;
   bool get isGuidance => _navigating && !_waiting;
   bool get autoZoom => _policy.autoZoom;
+  /// Trip guidance: how long the map may stay moved by the driver before
+  /// the camera returns to the car. Null keeps the map until Recenter.
+  Duration? autoResumeAfter;
+
+  /// The trip's own recenter (restores its sheet too). Returns false when
+  /// now is not the moment (an offer is open); the camera asks again later.
+  bool Function()? onAutoResume;
+
+  /// The trip camera's idle time before returning to the car.
+  static const Duration tripAutoResume = Duration(seconds: 12);
+
+  Timer? _resumeTimer;
+  bool _touching = false;
+
+  /// A finger is on the map: the camera never moves under it, and the
+  /// return to the car waits until the map is let go.
+  set touching(bool value) {
+    if (_touching == value) return;
+    _touching = value;
+    if (value) {
+      _resumeTimer?.cancel();
+      _resumeTimer = null;
+    } else {
+      _scheduleResume();
+    }
+  }
+
+  /// The driver is still moving the map (pan, zoom inertia): restart the
+  /// wait before the camera returns.
+  void mapActivity() {
+    if (_resumeTimer != null) _scheduleResume();
+  }
+
+  void _scheduleResume() {
+    _resumeTimer?.cancel();
+    _resumeTimer = null;
+    final after = autoResumeAfter;
+    if (after == null || _disposed || _touching || !isGuidance ||
+        mode != DriverCameraMode.browsing) {
+      return;
+    }
+    _resumeTimer = Timer(after, () {
+      _resumeTimer = null;
+      if (_disposed || _touching || _suspended || !isGuidance ||
+          mode != DriverCameraMode.browsing) {
+        return;
+      }
+      final resume = onAutoResume;
+      if (resume == null) {
+        recenter();
+      } else if (!resume()) {
+        _scheduleResume();
+      }
+    });
+  }
+
   void setAutoZoom(bool enabled) {
     _policy.autoZoom = enabled;
     _request();
@@ -307,6 +411,14 @@ class DriverCameraController {
     if (_disposed || !location.isUsableAt(_now())) {
       return;
     }
+    // The trip reports the same fix again once its route refresh is done.
+    // Resolving it twice would smooth the turn twice.
+    if (identical(location, _location) &&
+        identical(route, _route) &&
+        navigating == _navigating &&
+        waiting == _waiting) {
+      return;
+    }
     _location = location;
     _route = route;
     final enteringGuidance =
@@ -324,6 +436,9 @@ class DriverCameraController {
     if (enteringGuidance && mode == DriverCameraMode.overview) {
       _mode = DriverCameraMode.following;
     }
+    if (enteringGuidance && mode == DriverCameraMode.browsing) {
+      _scheduleResume();
+    }
     _request(immediate: enteringGuidance, resolved: pose);
   }
 
@@ -333,6 +448,7 @@ class DriverCameraController {
     }
     _mode = DriverCameraMode.browsing;
     _invalidate();
+    _scheduleResume();
   }
 
   void recenter() {
@@ -340,6 +456,8 @@ class DriverCameraController {
       return;
     }
     _mode = DriverCameraMode.following;
+    _resumeTimer?.cancel();
+    _resumeTimer = null;
     _invalidate();
     _request(immediate: true);
   }
@@ -507,6 +625,7 @@ class DriverCameraController {
 
   void dispose() {
     _disposed = true;
+    _resumeTimer?.cancel();
     _invalidate();
     _port?.dispose();
     _port = null;

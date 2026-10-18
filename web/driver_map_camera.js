@@ -20,22 +20,45 @@
       span: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
       angle: Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * 180 / Math.PI};
   };
+  // Where the car goes on screen: the middle of the map left free by the
+  // island and the sheet, or (driving) behind that middle so the road
+  // ahead shows. `lead` is the camera's heading: with a heading-up map it
+  // equals the map heading and the car sits low (72%); on a flat north-up
+  // map the car moves away from the side it drives to, so the road ahead
+  // is on screen whichever way the car goes.
+  function anchorPixel(state) {
+    const height = state.div.clientHeight, width = state.div.clientWidth || 0;
+    if (!height) return null;
+    const available = Math.max(0, height - state.top - state.bottom);
+    if (!available) return null;
+    const margin = Math.min(24, available / 2);
+    const middle = state.top + available / 2;
+    const y = state.anchor === .5 ? middle :
+      clamp(height * state.anchor, state.top + margin,
+        height - state.bottom - margin);
+    if (state.lead == null || !width) return {x: width / 2, y};
+    const behind = y - middle;
+    const turn = (state.lead - (state.map.getHeading() || 0)) * Math.PI / 180;
+    const side = Math.min(48, width / 4);
+    return {
+      x: clamp(width / 2 - Math.sin(turn) * behind, side, width - side),
+      y: clamp(middle + Math.cos(turn) * behind, state.top + margin,
+        height - state.bottom - margin),
+    };
+  }
   function shiftToAnchor(state, nativeMove) {
     const projection = state.overlay.getProjection();
     const height = state.div.clientHeight;
     if (!projection || !height) return;
-    const available = Math.max(0, height - state.top - state.bottom);
-    if (!available) return;
-    const margin = Math.min(24, available / 2);
-    const desiredY = state.anchor === .5 ? state.top + available / 2 :
-      clamp(height * state.anchor, state.top + margin,
-        height - state.bottom - margin);
+    const desired = anchorPixel(state);
+    if (!desired) return;
     const center = projection.fromLatLngToContainerPixel(state.map.getCenter());
     if (!center) return;
-    const dy = desiredY - height / 2;
-    if (Math.abs(dy) < 0.5) return;
+    const dx = state.div.clientWidth ? desired.x - state.div.clientWidth / 2 : 0;
+    const dy = desired.y - height / 2;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
     const target = projection.fromContainerPixelToLatLng(
-      new sdk.Point(center.x, center.y - dy));
+      new sdk.Point(center.x - dx, center.y - dy));
     if (!target) return;
     // Re-assert zoom/heading/tilt so a property write cannot keep animating.
     nativeMove({
@@ -56,7 +79,7 @@
   function install(map, div, id) {
     const state = {map, div, top: 0, bottom: 0, anchor: .5,
       callbacks: new Set(), rendererCallbacks: new Set(), heading: 0, car: null, claim: false, anchorToken: 0,
-      gesturesEnabled: true};
+      gesturesEnabled: true, lead: null, anchored: false};
     const rendererListener = map.addListener?.('renderingtype_changed', () => {
       state.rendererCallbacks.forEach(callback => callback());
     });
@@ -74,20 +97,30 @@
       ? map.panTo.bind(map)
       : latLng => nativeMove({center: latLng});
     // Flutter web applies a camera update with panTo, which animates. A follow
-    // frame claims the next pan so it is instant and anchored before paint.
+    // frame claims the next pan so it is instant and anchored before paint;
+    // a claimed preview frame is instant and exact.
     map.panTo = latLng => {
-      if (!state.claim) {
+      const claim = state.claim;
+      if (!claim) {
+        state.anchored = false;
         nativePanTo(latLng);
         return;
       }
       state.claim = false;
       nativeMove({center: latLng});
       const token = ++state.anchorToken;
+      state.anchored = claim !== 'free';
+      if (!state.anchored) return;
       queueMicrotask(() => {
         if (token !== state.anchorToken) return;
         shiftToAnchor(state, nativeMove);
       });
     };
+    // A bounds fit is not a follow frame: sheet changes must not shift it.
+    if (typeof map.fitBounds === 'function') {
+      const nativeFit = map.fitBounds.bind(map);
+      map.fitBounds = (...args) => { state.anchored = false; return nativeFit(...args); };
+    }
     let previous, travel = 0, startedAt = 0, maxTouches = 0, lastTap = -Infinity;
     let lastTapPoint = null, lastTwoFingerPoint = null;
     let touchReleased = false;
@@ -127,6 +160,7 @@
     const release = () => {
       if (!state.gesturesEnabled) return;
       state.claim = false;
+      state.anchored = false;
       state.anchorToken++;
       state.callbacks.forEach(callback => callback());
     };
@@ -433,9 +467,19 @@
       const state = states.get(id); state?.rendererCallbacks.add(callback);
       return () => state?.rendererCallbacks.delete(callback);
     },
+    // New island/sheet insets. While the camera follows the car, glide
+    // the car to its new place (Maps animates a short panBy) instead of
+    // jumping on the next GPS frame or staying under a raised sheet.
     configure(id, top, bottom, anchor) {
       const state = states.get(id); if (!state) return;
+      if (state.top === top && state.bottom === bottom &&
+          state.anchor === anchor) return;
+      const before = state.anchored ? anchorPixel(state) : null;
       Object.assign(state, {top, bottom, anchor});
+      const after = before && anchorPixel(state);
+      if (!after || typeof state.map.panBy !== 'function') return;
+      const dx = after.x - before.x, dy = after.y - before.y;
+      if (Math.abs(dx) >= .5 || Math.abs(dy) >= .5) state.map.panBy(-dx, -dy);
     },
     gestures(id, enabled) {
       states.get(id)?.setGesturesEnabled(enabled);
@@ -453,9 +497,10 @@
       const nativeMove = state.map.moveCamera.bind(state.map);
       shiftToAnchor(state, nativeMove);
     },
-    claim(id) {
+    claim(id, anchored, lead) {
       const state = states.get(id); if (!state) return;
-      state.claim = true;
+      state.claim = anchored === false ? 'free' : 'anchor';
+      if (anchored !== false) state.lead = Number.isFinite(lead) ? lead : null;
     },
   };
 })();

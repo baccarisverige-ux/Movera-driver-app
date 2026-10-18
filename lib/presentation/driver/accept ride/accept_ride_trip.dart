@@ -634,6 +634,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         position.zoom, browsing: browsing,
       );
       if (!browsing) { return; }
+      _camera.mapActivity();
       final zoom = _lastMapZoom;
       if (zoomChanged || _mapPointers >= 2 || (zoom != null &&
           DateTime.now().difference(zoom) < const Duration(milliseconds: 700))) {
@@ -672,6 +673,16 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (_browseReturnPos > 0.001) {
         unawaited(_snapSheet.springTo(_browseReturnPos));
       }
+    }
+    /// The trip camera returns to the car on its own after the driver
+    /// leaves the map alone, and keeps the car above the resting sheet.
+    void _setUpTripCamera() {
+      _camera.onAutoResume = () {
+        if (!mounted || _incomingOfferOpen) { return false; }
+        _exitBrowse();
+        return true;
+      };
+      _cameraSheet.addListener(() { if (mounted) { _rebuild(() {}); } });
     }
     Future<void> _fitRoute() async {
       // Starting/changing a leg updates route context without stealing a

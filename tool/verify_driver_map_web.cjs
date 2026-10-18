@@ -392,5 +392,41 @@ queueMicrotask(() => {
   assert.equal(map.getZoom(), 16);
   assert.equal(map.getHeading(), 12);
   assert.equal(map.getTilt(), 30);
-  console.log('PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, taps, anchor and vehicle overlay');
+  // Flat north-up map driving south (lead 180): the road ahead is below
+  // the car, so the car sits above the free middle (100 + 500 / 2 = 350).
+  rasterDiv.clientWidth = 400;
+  api.configure(8, 100, 200, .72);
+  raster.moveCamera({center: {x: 0, y: 400}, heading: 0});
+  api.claim(8, true, 180);
+  raster.panTo({x: 0, y: 400});
+  queueMicrotask(() => {
+    // Car (y 400) drawn at 124 px, above the free middle at 350 px.
+    assert.equal(raster.camera.center.y, 676, 'Lead south: car above the middle');
+    // Driving east (lead 90): the car moves left of the middle instead.
+    raster.moveCamera({center: {x: 0, y: 400}});
+    api.claim(8, true, 90);
+    raster.panTo({x: 0, y: 400});
+    queueMicrotask(() => {
+      assert.ok(raster.camera.center.x > 0, 'Lead east: road ahead to the right');
+      assert.equal(raster.camera.center.y, 450, 'Lead east: car on the free middle row');
+      // A preview frame is exact: no anchor shift.
+      raster.moveCamera({center: {x: 5, y: 5}});
+      api.claim(8, false);
+      raster.panTo({x: 0, y: 400});
+      queueMicrotask(() => {
+        assert.deepEqual(raster.camera.center, {x: 0, y: 400}, 'Preview frame not shifted');
+        let panned = null;
+        raster.panBy = (x, y) => { panned = {x, y}; };
+        api.configure(8, 100, 300, .72);
+        assert.equal(panned, null, 'Insets after a preview do not move the map');
+        api.claim(8, true, 0);
+        raster.panTo({x: 0, y: 400});
+        queueMicrotask(() => {
+          api.configure(8, 100, 400, .72);
+          assert.ok(panned && panned.y > 0, 'A raised sheet glides the followed car up');
+          console.log('PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, taps, anchor, look-ahead, sheet glide and vehicle overlay');
+        });
+      });
+    });
+  });
 });
