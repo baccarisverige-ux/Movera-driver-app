@@ -322,9 +322,16 @@ void main() {
         find.descendant(of: card, matching: find.text('Reservation · 09:30')),
         findsOneWidget,
       );
-      // The admin's time to accept, counting down on the radar.
+      // The admin's time to accept runs on the radar's hairline ring.
       expect(
-        find.descendant(of: _exclusiveRadar, matching: find.text('30 s')),
+        find.descendant(of: _exclusiveRadar, matching: find.text('MATCH')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: _exclusiveRadar,
+          matching: find.byKey(const ValueKey<String>('radar-exclusive-ring')),
+        ),
         findsOneWidget,
       );
       expect(_said, contains('Assigned by Movera'));
