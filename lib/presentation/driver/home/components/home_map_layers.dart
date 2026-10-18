@@ -15,12 +15,14 @@ Marker destinationModeMarker(LatLng position, String address) => Marker(
   zIndexInt: 6,
 );
 
-/// What the Home map draws. With Destination mode on, the map shows only
-/// the car, the one destination pin and the direct road route — unless an
-/// offer card is up right now: then that offer's preview replaces the
-/// destination layer, so pickup/drop-off pins and their route never mix
-/// with the destination route (which made it look like a loop through
-/// extra stops). A preview left over from an offer that is gone is dropped.
+/// What the Home map draws. An offer's pins and route are drawn only
+/// while that offer is on screen ([offerOnScreen]), in every mode: a
+/// preview left over from an offer that is gone is never drawn (R13-3).
+/// With Destination mode on, the map shows only the car, the one
+/// destination pin and the direct road route — unless an offer is up:
+/// then that offer's preview replaces the destination layer, so
+/// pickup/drop-off pins and their route never mix with the destination
+/// route (which made it look like a loop through extra stops).
 ({Set<Marker> markers, Set<Polyline> polylines}) homeMapLayers({
   required Set<Marker> car,
   required bool destinationMode,
@@ -30,7 +32,7 @@ Marker destinationModeMarker(LatLng position, String address) => Marker(
   required Set<Polyline> offerPolylines,
   required bool offerOnScreen,
 }) {
-  if (destinationMode && !offerOnScreen) {
+  if (!offerOnScreen) {
     return (
       markers: {...car, ...destinationMarkers},
       polylines: destinationPolylines,

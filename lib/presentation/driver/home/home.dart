@@ -17,6 +17,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:movera/core/navigation/route_camera_fit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -186,6 +188,7 @@ class _DriverHomeState extends State<DriverHome>
     _camera.resume();
     unawaited(_HomeMapSheet(this)._startDriverLocation());
     _HomeOfferRadar(this)._scheduleVisibleOffers();
+    _HomeOfferRadar(this)._resumeOfferTimers();
     if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); }
     setState(() {});
   }
@@ -1060,7 +1063,7 @@ class _DriverHomeState extends State<DriverHome>
     if (widget.routeRepository == null && ownedRouting is RoadRouteService) { ownedRouting.dispose(); }
     ScheduledRideStore.openRequests.removeListener(_onScheduledRequests);
     _locationEpoch++;
-    _reservationPopupTimer?.cancel(); _offerRouteFrame.refit?.cancel(); _startWait?.cancel();
+    _reservationPopupTimer?.cancel(); _offerRouteFrame.dispose(); _startWait?.cancel();
     _reservation.release?.cancel();
     _reservation.fade.cancel();
     _scheduled.dispose();
