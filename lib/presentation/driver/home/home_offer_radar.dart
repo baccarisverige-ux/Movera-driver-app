@@ -976,10 +976,12 @@ extension _HomeOfferRadar on _DriverHomeState {
               if (!mounted || !_isOnline) { return; }
               // After one was accepted, the cash Exclusive (R9).
               const cash = _DriverHomeState._expandedDirectOffer;
-              _showOutsideRadarOffer(_exclusiveDemoTaken &&
+              // R13-9 demo: in Destination mode, the trip toward it.
+              final toward = _destinationModeActive ? _destinationDemoExclusive : null;
+              _showOutsideRadarOffer(toward ?? (_exclusiveDemoTaken &&
                       _HomeOfferRules(this)._offerAllowed(cash)
                   ? cash
-                  : _DriverHomeState._veryCloseDirectOffer);
+                  : _DriverHomeState._veryCloseDirectOffer));
             },
           );
 

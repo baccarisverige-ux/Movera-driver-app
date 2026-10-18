@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
+import 'package:movera/core/dispatch/demo_destination_trips.dart';
+import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/destination_filter.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/next_trip_gate.dart';
@@ -51,6 +53,30 @@ void main() {
       expect(follows('Sollentuna', rules: finalOnly), isFalse);
       expect(follows('Sollentuna', rules: wayOnly), isTrue);
       expect(follows('Arlanda', rules: wayOnly), isFalse);
+    });
+
+    test('demo: trips along the route pass the filter, the outside ones do not', () async {
+      final trips = DemoDestinationTrips.along(
+        driver: stockholm, destination: arlanda, route: e4, destinationLabel: 'Arlanda');
+      for (final trip in trips) {
+        expect(
+          DestinationFilter.follows(driver: stockholm, destination: arlanda,
+              dropoff: trip.dropoffPosition, route: e4),
+          trip.followsDestination,
+          reason: trip.id,
+        );
+      }
+      expect(trips.where((t) => t.followsDestination), hasLength(3));
+      final repo = DemoDispatchRepository();
+      addTearDown(repo.dispose);
+      final seen = <List<String>>[];
+      final sub = repo.watchNearbyOffers().listen((o) => seen.add([for (final t in o) t.id]));
+      repo.showDestinationTrips(trips);
+      repo.clearDestinationTrips();
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+      expect(seen.any((ids) => ids.first == 'demo-destination-final'), isTrue);
+      expect(seen.last.any((id) => id.startsWith(DemoDestinationTrips.idPrefix)), isFalse);
     });
 
     test('daily limit and time limit', () {

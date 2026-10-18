@@ -26,6 +26,7 @@ import 'package:movera/core/admin/driver_home_config_repository.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
+import 'package:movera/core/dispatch/demo_destination_trips.dart';
 import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/dispatch/destination_filter.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
@@ -340,6 +341,7 @@ class _DriverHomeState extends State<DriverHome>
   DriverDestinationResult? _destinationTrip; // Confirmed distance and time.
   DateTime? _destinationUntil; // "Destination mode until 02:40".
   Timer? _destinationLimitTimer; // Admin's time limit (R13-9).
+  _HomeDirectOffer? _destinationDemoExclusive; // Demo trip toward it.
 
   // ignore: prefer_final_fields
   Set<Marker> _markers = {};
@@ -921,6 +923,7 @@ class _DriverHomeState extends State<DriverHome>
       _soonReservationReady = false;
     });
     _destinationLimitTimer?.cancel(); DestinationModeSession.instance.ended();
+    _HomeMapSheet(this)._clearDemoDestinationTrips();
     _HomeOfferRadar(this)._clearDirectOfferRoute();
     await _HomeMapSheet(this)._closeDriverSheet();
   }
