@@ -911,11 +911,16 @@ void main() {
       ),
       isFalse,
     );
+    // Exactly one destination pin and no offer stops in Destination mode.
     expect(
-      map.markers!.any(
+      map.markers!.where(
         (marker) => marker.markerId.value == 'destination_mode_target',
       ),
-      isTrue,
+      hasLength(1),
+    );
+    expect(
+      map.markers!.where((m) => m.markerId.value.startsWith('radar_')),
+      isEmpty,
     );
 
     await tester.pump(const Duration(milliseconds: 1550));

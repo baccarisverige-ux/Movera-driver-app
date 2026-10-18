@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -11,6 +10,7 @@ import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/widgets/custom_google_map.dart';
+import 'package:movera/widgets/movera_destination_marker.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 /// "38.1 km · 34 min" (confirm sheet).
@@ -23,10 +23,12 @@ String destinationTimeDistanceLabel(double meters, double seconds) =>
 
 int _minutes(double seconds) => math.max(1, (seconds / 60).round());
 
-/// Choose-destination step: a black arc draws from the car to the
-/// destination over a faint straight line, the place chip sits on the pin,
-/// and one option card ends in "Confirm destination". Pops the destination
-/// with its distance and time, or null on close.
+/// Choose-destination step: a black arc draws from the car (the driver's
+/// real position, [DestinationConfirmScreen.origin]) to the destination over
+/// a faint straight line, the place chip stands on the blue pin, and one
+/// option card ends in "Confirm destination". Arc, car, pin and chip are map
+/// objects, so they stay on their places when the map is dragged. Pops the
+/// destination with its distance and time, or null on close.
 class DestinationConfirmScreen extends StatefulWidget {
   const DestinationConfirmScreen({
     super.key,
@@ -56,9 +58,13 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
     vsync: this,
     duration: const Duration(milliseconds: 1100),
   );
-  GoogleMapController? _map;
-  Offset? _carPx;
-  Offset? _pinPx;
+  late final List<LatLng> _arc =
+      destinationArcPoints(widget.origin, widget.destination.position);
+  int _arcShown = 0; // Points of [_arc] drawn so far.
+  BitmapDescriptor? _carIcon;
+  BitmapDescriptor? _pinIcon = MoveraDestinationMarker.cachedPin;
+  BitmapDescriptor? _chipIcon;
+  Timer? _drawStart;
   late double _meters;
   late double _seconds;
   bool _done = false;
@@ -75,6 +81,42 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
     _meters = straight * 1.3;
     _seconds = _meters / (40 / 3.6);
     unawaited(_loadRoute());
+    unawaited(_loadIcons());
+    _draw.addListener(_grow);
+    // Draw once the map is up, or shortly anyway.
+    _drawStart = Timer(const Duration(milliseconds: 700), _startDraw);
+  }
+
+  Future<void> _loadIcons() async {
+    try {
+      final icons = await Future.wait([
+        MoveraDestinationMarker.car(),
+        MoveraDestinationMarker.pin(),
+        MoveraDestinationMarker.chip(_place),
+      ]);
+      if (!mounted) { return; }
+      setState(() {
+        _carIcon = icons[0];
+        _pinIcon = icons[1];
+        _chipIcon = icons[2];
+      });
+    } catch (_) {}
+  }
+
+  void _startDraw() {
+    _drawStart?.cancel();
+    if (!mounted || _draw.isAnimating || _draw.value > 0) { return; }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _draw.value = 1;
+    } else {
+      unawaited(_draw.forward(from: 0));
+    }
+  }
+
+  void _grow() {
+    final t = Curves.easeInOutCubic.transform(_draw.value);
+    final shown = (t * _arc.length).ceil().clamp(0, _arc.length);
+    if (shown != _arcShown) { setState(() => _arcShown = shown); }
   }
 
   Future<void> _loadRoute() async {
@@ -99,61 +141,87 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
 
   @override
   void dispose() {
+    _drawStart?.cancel();
     _draw.dispose();
     super.dispose();
   }
 
+  /// The arc and both ends, so the bulge and the chip fit too.
   LatLngBounds get _bounds {
-    final a = widget.origin;
-    final b = widget.destination.position;
+    final lats = _arc.map((p) => p.latitude);
+    final lngs = _arc.map((p) => p.longitude);
     return LatLngBounds(
-      southwest: LatLng(math.min(a.latitude, b.latitude),
-          math.min(a.longitude, b.longitude)),
-      northeast: LatLng(math.max(a.latitude, b.latitude),
-          math.max(a.longitude, b.longitude)),
+      southwest: LatLng(lats.reduce(math.min), lngs.reduce(math.min)),
+      northeast: LatLng(lats.reduce(math.max), lngs.reduce(math.max)),
     );
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    _map = controller;
     await Future<void>.delayed(const Duration(milliseconds: 120));
     if (!mounted) { return; }
     try {
-      await controller.moveCamera(CameraUpdate.newLatLngBounds(_bounds, 90));
+      await controller.moveCamera(CameraUpdate.newLatLngBounds(_bounds, 80));
     } catch (_) {}
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    await _measure();
+    if (mounted) { _startDraw(); }
   }
 
-  /// Screen points of the car and the pin, for the overlay arc. The map
-  /// takes no gestures here, so they stay put once measured.
-  Future<void> _measure() async {
-    final map = _map;
-    if (map == null || !mounted) { return; }
-    try {
-      final car = await map.getScreenCoordinate(widget.origin);
-      final pin = await map.getScreenCoordinate(widget.destination.position);
-      if (!mounted) { return; }
-      // Android answers in physical pixels; iOS and web in logical ones.
-      final scale = !kIsWeb && defaultTargetPlatform == TargetPlatform.android
-          ? MediaQuery.devicePixelRatioOf(context)
-          : 1.0;
-      final carPx = Offset(car.x / scale, car.y / scale);
-      final pinPx = Offset(pin.x / scale, pin.y / scale);
-      if (carPx == _carPx && pinPx == _pinPx) { return; }
-      final first = _carPx == null;
-      setState(() {
-        _carPx = carPx;
-        _pinPx = pinPx;
-      });
-      if (first) {
-        if (MediaQuery.disableAnimationsOf(context)) {
-          _draw.value = 1;
-        } else {
-          unawaited(_draw.forward(from: 0));
-        }
-      }
-    } catch (_) {}
+  /// Faint straight line under the black arc, grown to [_arcShown] points.
+  @visibleForTesting
+  Set<Polyline> get polylines => {
+    Polyline(
+      polylineId: const PolylineId('destination-straight'),
+      points: [widget.origin, widget.destination.position],
+      color: const Color(0x55888E94),
+      width: 3,
+      zIndex: 1,
+    ),
+    if (_arcShown >= 2)
+      Polyline(
+        polylineId: const PolylineId('destination-arc'),
+        points: _arc.sublist(0, _arcShown),
+        color: _ink,
+        width: 6,
+        zIndex: 2,
+        jointType: JointType.round,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+      ),
+  };
+
+  /// The car on the driver's position, the blue pin and its name chip on
+  /// the destination.
+  @visibleForTesting
+  Set<Marker> get markers {
+    final to = widget.destination.position;
+    final fallback = BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueAzure);
+    return {
+      Marker(
+        markerId: const MarkerId('destination-confirm-car'),
+        position: widget.origin,
+        icon: _carIcon ?? fallback,
+        anchor: MoveraDestinationMarker.carAnchor,
+        zIndexInt: 3,
+        consumeTapEvents: true,
+      ),
+      if (_chipIcon != null)
+        Marker(
+          markerId: const MarkerId('destination-confirm-chip'),
+          position: to,
+          icon: _chipIcon!,
+          anchor: MoveraDestinationMarker.chipAnchor,
+          zIndexInt: 4,
+          consumeTapEvents: true,
+        ),
+      Marker(
+        markerId: const MarkerId('destination-confirm-pin'),
+        position: to,
+        icon: _pinIcon ?? fallback,
+        anchor: MoveraDestinationMarker.pinAnchor,
+        zIndexInt: 5,
+        consumeTapEvents: true,
+      ),
+    };
   }
 
   void _confirm() {
@@ -183,54 +251,23 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
             right: 0,
             top: 0,
             bottom: _sheetOverlap,
-            child: Stack(
-              children: [
-                CustomGoogleMap(
-                  initialPosition: CameraPosition(
-                    target: LatLng(
-                      (widget.origin.latitude +
-                              widget.destination.position.latitude) / 2,
-                      (widget.origin.longitude +
-                              widget.destination.position.longitude) / 2,
-                    ),
-                    zoom: 10,
-                  ),
-                  myLocationEnabled: false,
-                  scrollGesturesEnabled: false,
-                  zoomGesturesEnabled: false,
-                  rotateGesturesEnabled: false,
-                  tiltGesturesEnabled: false,
-                  show3DNotice: false,
-                  onMapCreated: _onMapCreated,
-                  onCameraIdle: () => unawaited(_measure()),
+            child: CustomGoogleMap(
+              initialPosition: CameraPosition(
+                target: LatLng(
+                  (widget.origin.latitude +
+                          widget.destination.position.latitude) / 2,
+                  (widget.origin.longitude +
+                          widget.destination.position.longitude) / 2,
                 ),
-                if (_carPx != null && _pinPx != null) ...[
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: AnimatedBuilder(
-                        animation: _draw,
-                        builder: (context, _) => CustomPaint(
-                          key: const ValueKey<String>('destination-arc'),
-                          painter: DestinationArcPainter(
-                            from: _carPx!,
-                            to: _pinPx!,
-                            progress: Curves.easeInOutCubic
-                                .transform(_draw.value),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: _pinPx!.dx,
-                    top: _pinPx!.dy - 46,
-                    child: FractionalTranslation(
-                      translation: const Offset(-0.5, -1),
-                      child: IgnorePointer(child: _chip()),
-                    ),
-                  ),
-                ],
-              ],
+                zoom: 10,
+              ),
+              markers: markers,
+              polylines: polylines,
+              myLocationEnabled: false,
+              rotateGesturesEnabled: false,
+              tiltGesturesEnabled: false,
+              show3DNotice: false,
+              onMapCreated: _onMapCreated,
             ),
           ),
           Positioned(
@@ -258,44 +295,6 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
           Align(
             alignment: Alignment.bottomCenter,
             child: PointerInterceptor(child: _sheet(arrive)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _chip() {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 190),
-      padding: const EdgeInsets.fromLTRB(10, 7, 12, 7),
-      decoration: BoxDecoration(
-        color: _ink,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              _place,
-              key: const ValueKey<String>('destination-confirm-chip'),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
           ),
         ],
       ),
@@ -420,81 +419,4 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
       ),
     );
   }
-}
-
-/// Faint straight line, the black arc drawn to [progress], the car ring at
-/// [from] and the square destination pin with its stem at [to].
-class DestinationArcPainter extends CustomPainter {
-  DestinationArcPainter({
-    required this.from,
-    required this.to,
-    required this.progress,
-  });
-
-  final Offset from;
-  final Offset to;
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawLine(
-      from,
-      to,
-      Paint()
-        ..color = const Color(0x55888E94)
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round,
-    );
-
-    // Bulge sideways by a third of the distance, on the upper side.
-    final delta = to - from;
-    var normal = Offset(-delta.dy, delta.dx);
-    if (normal.dy > 0) { normal = -normal; }
-    final length = normal.distance;
-    final control = Offset.lerp(from, to, 0.5)! +
-        (length == 0 ? Offset.zero : normal / length * delta.distance * 0.32);
-    final arc = Path()
-      ..moveTo(from.dx, from.dy)
-      ..quadraticBezierTo(control.dx, control.dy, to.dx, to.dy);
-    if (progress > 0) {
-      final metric = arc.computeMetrics().first;
-      canvas.drawPath(
-        metric.extractPath(0, metric.length * progress),
-        Paint()
-          ..color = const Color(0xFF111315)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 6
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-
-    // Pin: stem up to the chip, small white square with a black edge.
-    final ink = Paint()..color = const Color(0xFF111315);
-    canvas.drawLine(to, to.translate(0, -46), ink..strokeWidth = 2.5);
-    canvas.drawRect(Rect.fromCenter(center: to, width: 13, height: 13), ink);
-    canvas.drawRect(Rect.fromCenter(center: to, width: 7, height: 7),
-        Paint()..color = Colors.white);
-
-    // Car: white disc, black ring, arrow.
-    canvas.drawCircle(from, 16, Paint()..color = Colors.white);
-    canvas.drawCircle(
-      from,
-      16,
-      Paint()
-        ..color = const Color(0xFF111315)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.5,
-    );
-    final arrow = Path()
-      ..moveTo(from.dx + 6, from.dy - 7)
-      ..lineTo(from.dx - 6, from.dy + 7)
-      ..lineTo(from.dx - 0.5, from.dy + 1.5)
-      ..lineTo(from.dx + 1, from.dy + 7)
-      ..close();
-    canvas.drawPath(arrow, Paint()..color = const Color(0xFF111315));
-  }
-
-  @override
-  bool shouldRepaint(DestinationArcPainter old) =>
-      old.progress != progress || old.from != from || old.to != to;
 }
