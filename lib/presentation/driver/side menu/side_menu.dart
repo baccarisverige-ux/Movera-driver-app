@@ -1,5 +1,6 @@
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
@@ -190,7 +191,7 @@ class DriverSideMenu extends StatelessWidget {
     const orange = Color(0xFFF08C2B);
     const green = Color(0xFF1FA463);
     final statusColor = isOnline
-        ? const Color(0xFF2FBE7B)
+        ? MoveraRadarOrb.onlineGreen
         : const Color(0xFF8A9390);
     final statusText = isOnline ? 'ONLINE' : 'OFFLINE';
 

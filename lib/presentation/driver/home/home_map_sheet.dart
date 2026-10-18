@@ -424,7 +424,7 @@ extension _HomeMapSheet on _DriverHomeState {
           notchDepth: 58,
           cornerRadius: 24,
         ),
-        color: const Color(0xFF8E2E28),
+        color: MoveraRadarOrb.holdSheet,
         elevation: 8,
         shadowColor: const Color(0x3311181C),
         clipBehavior: Clip.antiAlias,
@@ -1010,6 +1010,9 @@ extension _HomeMapSheet on _DriverHomeState {
             duration: const Duration(milliseconds: 680),
             curve: Curves.easeOutCubic,
             exclusive: _HomeExclusive(this)._exclusiveBlue,
+            // Radar offers ring it green, like the radar.
+            offers: _isOnline &&
+                (_hasRideOffers || _radarHomeOffers.isNotEmpty),
             child: row!,
           ),
           child: Row(

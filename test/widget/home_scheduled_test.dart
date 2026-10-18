@@ -324,7 +324,7 @@ void main() {
       );
       // The admin's time to accept, counting down on the radar.
       expect(
-        find.descendant(of: _exclusiveRadar, matching: find.text('30s')),
+        find.descendant(of: _exclusiveRadar, matching: find.text('30 s')),
         findsOneWidget,
       );
       expect(_said, contains('Assigned by Movera'));

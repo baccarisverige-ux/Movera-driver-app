@@ -2,9 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 
 /// Wraps the online radar while the Home sheet is open: holding it for
-/// [holdFor] fills a mint ring around it, gives one vibration and calls
+/// [holdFor] fills a green ring around it, gives one vibration and calls
 /// [onConfirmed]. Letting go early, or dragging, undoes the ring.
 class RadarHoldOff extends StatefulWidget {
   const RadarHoldOff({
@@ -110,7 +111,7 @@ class _HoldRingPainter extends CustomPainter {
       progress * 2 * math.pi,
       false,
       Paint()
-        ..color = const Color(0xFF58E5A6)
+        ..color = MoveraRadarOrb.onlineGreen
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3
         ..strokeCap = StrokeCap.round,

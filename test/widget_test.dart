@@ -29,6 +29,7 @@ import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dar
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/widgets/custom_google_map.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -677,7 +678,7 @@ void main() {
       find.byType(RadarEdgeDash),
     );
     expect(
-      radarDashes.any((dash) => dash.color == const Color(0xFFFFA94D)),
+      radarDashes.any((dash) => dash.color == MoveraRadarOrb.offerAccent),
       isTrue,
     );
     _expectNoException(tester);
@@ -2446,7 +2447,7 @@ void main() {
     // The seconds left are on the radar, inside its blue ring.
     final radar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
     expect(
-      find.descendant(of: radar, matching: find.textContaining(RegExp(r'^\d+s$'))),
+      find.descendant(of: radar, matching: find.textContaining(RegExp(r'^\d+ s$'))),
       findsOneWidget,
     );
     expect(

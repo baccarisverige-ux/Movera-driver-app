@@ -175,7 +175,7 @@ void main() {
       // The radar is the Accept now: none in the card, no countdown.
       expect(find.text('Accept'), findsNothing);
       expect(find.byType(FilledButton), findsNothing);
-      expect(find.textContaining(RegExp(r'^\d+s$')), findsNothing);
+      expect(find.textContaining(RegExp(r'^\d+ ?s$')), findsNothing);
       expect(find.byTooltip('Hide offer'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

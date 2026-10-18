@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:movera/constants/appassets.dart';
 
 /// Shared Radar orb used on Home (104px) and on an active trip (smaller).
 class MoveraRadarOrb extends StatelessWidget {
@@ -35,12 +37,13 @@ class MoveraRadarOrb extends StatelessWidget {
   final double sweep;
   final bool blocked;
 
-  /// A reservation on Home: black orb, grey rings, no mint, and only
-  /// [title] over a small [status] ("Accept" · "TAP").
+  /// A reservation on Home: black orb, grey rings, no green; a calendar
+  /// over [title] ("Accept") over [status], the pickup day and time
+  /// ("Tue · 14:30").
   final bool reserve;
 
-  /// An Exclusive offer is live: a blue orb that is its Accept, with
-  /// [title] ("Accept") over [status] (the seconds left), inside a blue
+  /// An Exclusive offer is live: a blue orb that is its Accept, with a
+  /// check over [title] ("Accept") over [status] ("12 s"), inside a blue
   /// ring that empties clockwise as [timeLeft] runs from 1 to 0.
   final bool exclusive;
   final double timeLeft;
@@ -52,16 +55,31 @@ class MoveraRadarOrb extends StatelessWidget {
   /// Accept. The reservation popup's pictures use it for their accent.
   static const Color reserveInk = Color(0xFF111518);
 
-  /// The radar's orange while a trip is found: its ring and glow. Home's
-  /// radar offer cards use it for their contour, so both stay in step.
-  static const Color offerAccent = Color(0xFFFFA94D);
+  /// The radar's green while a trip is found: its ring, glow and sweep.
+  /// Home's radar offer cards, the dock dash and the island use it for
+  /// their contour, so all stay in step. The same green marks Radar on.
+  static const Color offerAccent = Color(0xFF5FB87D);
+
+  /// Radar on, nothing found yet: the same green.
+  static const Color onlineGreen = offerAccent;
+
+  /// The radar on hold, and the red dock under it.
+  static const Color holdRed = Color(0xFFBB371F);
+
+  /// The red dock's face, a shade darker than [holdRed], and its gradient.
+  static const Color holdSheet = Color(0xFFA9311C);
+  static const List<Color> holdSheetGradient = [
+    holdRed,
+    holdSheet,
+    Color(0xFF922A18),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    const mint = Color(0xFF58E5A6);
-    const detectedGold = Color(0xFFFFD166);
-    const detectedAmber = offerAccent;
-    const holdRed = Color(0xFFE15B4A);
+    const mint = onlineGreen;
+    // A found trip breathes from a lighter green into the green.
+    const detectedLight = Color(0xFF9ED6B0);
+    const detectedGreen = offerAccent;
     // Exclusive is the normal radar in blue, with its time ring.
     final accent = exclusive
         ? exclusiveBlue
@@ -70,7 +88,7 @@ class MoveraRadarOrb extends StatelessWidget {
         : blocked
         ? holdRed
         : offer
-            ? Color.lerp(detectedGold, detectedAmber, pulse) ?? detectedGold
+            ? Color.lerp(detectedLight, detectedGreen, pulse) ?? detectedGreen
             : mint;
     final hot = offer || exclusive;
     final glowStrength = !active
@@ -249,9 +267,9 @@ class MoveraRadarOrb extends StatelessWidget {
                                 ]
                               : blocked
                               ? const [
-                                  Color(0xD9C45A52),
-                                  Color(0xD98E3A34),
-                                  Color(0xE05C2420),
+                                  Color(0xD9C4432A),
+                                  Color(0xD9962A17),
+                                  Color(0xE062190D),
                                 ]
                               : const [
                                   Color(0xD98F999C),
@@ -286,6 +304,19 @@ class MoveraRadarOrb extends StatelessWidget {
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
+                                  SvgPicture.asset(
+                                    AppAssets.solarCheckCircle,
+                                    key: const ValueKey<String>(
+                                      'radar-exclusive-icon',
+                                    ),
+                                    width: 12 * s,
+                                    height: 12 * s,
+                                    colorFilter: const ColorFilter.mode(
+                                      Colors.white,
+                                      BlendMode.srcIn,
+                                    ),
+                                  ),
+                                  SizedBox(height: 3 * s),
                                   Text(
                                     title,
                                     maxLines: 1,
@@ -312,7 +343,7 @@ class MoveraRadarOrb extends StatelessWidget {
                                       status,
                                       style: TextStyle(
                                         color: const Color(0xFFCFE0FB),
-                                        fontSize: 11.5 * s,
+                                        fontSize: 10 * s,
                                         height: 1,
                                         fontWeight: FontWeight.w600,
                                         fontFeatures: const [
@@ -326,6 +357,19 @@ class MoveraRadarOrb extends StatelessWidget {
                               Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
+                                  SvgPicture.asset(
+                                    AppAssets.solarCalendar,
+                                    key: const ValueKey<String>(
+                                      'radar-reserve-icon',
+                                    ),
+                                    width: 12 * s,
+                                    height: 12 * s,
+                                    colorFilter: const ColorFilter.mode(
+                                      Colors.white,
+                                      BlendMode.srcIn,
+                                    ),
+                                  ),
+                                  SizedBox(height: 3 * s),
                                   Text(
                                     title,
                                     maxLines: 1,
@@ -333,22 +377,30 @@ class MoveraRadarOrb extends StatelessWidget {
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 10.6 * s,
-                                      height: 1.1,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.2,
+                                      fontSize: 14 * s,
+                                      height: 1,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                  SizedBox(height: 2 * s),
-                                  Text(
-                                    status,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: const Color(0xFF8F9AA0),
-                                      fontSize: 6.4 * s,
-                                      height: 1,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 1.4,
+                                  SizedBox(height: 4 * s),
+                                  SizedBox(
+                                    width: 60 * s,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        status,
+                                        maxLines: 1,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: const Color(0xFF9AA4AA),
+                                          fontSize: 9 * s,
+                                          height: 1,
+                                          fontWeight: FontWeight.w600,
+                                          fontFeatures: const [
+                                            FontFeature.tabularFigures(),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -452,7 +504,8 @@ class ExclusiveTimeRingPainter extends CustomPainter {
     final rect = (Offset.zero & size).deflate(stroke / 2);
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke;
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
     canvas.drawArc(
       rect,
       0,

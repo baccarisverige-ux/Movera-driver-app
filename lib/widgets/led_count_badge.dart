@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 
 enum LedCountTone { mint, grey }
 
@@ -23,7 +24,7 @@ class LedCountBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mint = tone == LedCountTone.mint;
-    final digitColor = mint ? const Color(0xFF58E5A6) : const Color(0xFF3A444B);
+    final digitColor = mint ? MoveraRadarOrb.onlineGreen : const Color(0xFF3A444B);
     final digits = count.clamp(0, 99).toString().padLeft(2, '0');
     final digitStyle = TextStyle(
       fontFamily: 'DSEG7',

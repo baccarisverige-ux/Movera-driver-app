@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/widgets/driving_time_gauge.dart';
@@ -94,7 +95,7 @@ class _DrivingTimeRowState extends State<DrivingTimeRow> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: widget.running
-                      ? const Color(0xFF1FA463)
+                      ? MoveraRadarOrb.onlineGreen
                       : const Color(0xFFB6BDC2),
                 ),
               ),
