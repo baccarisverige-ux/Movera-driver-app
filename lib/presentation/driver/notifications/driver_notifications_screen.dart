@@ -6,6 +6,7 @@ import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/styles/movera_map_palette.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 
@@ -344,7 +345,7 @@ class DemandAreaMap extends StatelessWidget {
                   child: Text(
                     area.name,
                     style: const TextStyle(
-                      color: _ink,
+                      color: MoveraMapPalette.label,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -366,7 +367,16 @@ class _AreaMapPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFFEFF1EC));
+    // Home map colours (MoveraMapPalette): land, a park, water, white
+    // streets and one grey highway.
+    canvas.drawRect(Offset.zero & size, Paint()..color = MoveraMapPalette.land);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(w * 0.74, h * 0.06, w * 0.2, h * 0.3),
+        const Radius.circular(8),
+      ),
+      Paint()..color = MoveraMapPalette.park,
+    );
     final water = Path()
       ..moveTo(0, h * 0.72)
       ..quadraticBezierTo(w * 0.25, h * 0.58, w * 0.48, h * 0.7)
@@ -374,16 +384,19 @@ class _AreaMapPainter extends CustomPainter {
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();
-    canvas.drawPath(water, Paint()..color = const Color(0xFFCFE2EE));
-    final street = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(water, Paint()..color = MoveraMapPalette.water);
+    final street = MoveraMapPalette.street(4);
     canvas
       ..drawLine(Offset(w * 0.05, h * 0.2), Offset(w * 0.95, h * 0.32), street)
       ..drawLine(Offset(w * 0.3, 0), Offset(w * 0.42, h * 0.66), street)
-      ..drawLine(Offset(w * 0.7, 0), Offset(w * 0.62, h * 0.78), street)
-      ..drawLine(Offset(0, h * 0.48), Offset(w, h * 0.44), street);
+      ..drawLine(Offset(w * 0.7, 0), Offset(w * 0.62, h * 0.78), street);
+    MoveraMapPalette.drawHighway(
+      canvas,
+      Path()
+        ..moveTo(0, h * 0.48)
+        ..lineTo(w, h * 0.44),
+      4,
+    );
     final center = Offset(w * 0.52, h * 0.4);
     canvas
       ..drawCircle(center, h * 0.34, Paint()..color = const Color(0x33E0474C))
