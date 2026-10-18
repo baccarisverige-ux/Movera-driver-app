@@ -758,86 +758,9 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
     }
     Future<void> _askBeforeShortFinish() async {
-      final finish = await showMoveraModalSheet<bool>(
-        context: context,
-        barrierColor: Colors.black.withValues(alpha: 0.32),
-        heightFactor: 0.5,
-        builder: (sheetContext) {
-          return MoveraModalSheet(
-            key: const ValueKey<String>('short-trip-finish-sheet'),
-            heightFactor: 0.5,
-            color: Colors.white,
-            radius: 28,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'This ride just started',
-                    style: TextStyle(
-                      color: _AcceptRideState._ink,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Expanded(
-                    child: Text(
-                      'Very little time has passed since pickup. Go back if the rider is still with you, or confirm that the trip is finished.',
-                      style: TextStyle(
-                        color: _AcceptRideState._muted,
-                        fontSize: 13,
-                        height: 1.35,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: FilledButton(
-                      onPressed: () => popOwned(sheetContext, false),
-                      style: FilledButton.styleFrom(
-                        elevation: 0,
-                        backgroundColor: _AcceptRideState._ink,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'Go back to the ride',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton(
-                      onPressed: () => popOwned(sheetContext, true),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _AcceptRideState._ink,
-                        side: const BorderSide(color: Color(0xFFD5DCDF)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: const Text(
-                        'Confirm finish',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      );
+      final started = _onTripStartedAt;
+      final seconds = started == null ? 0 : DateTime.now().difference(started).inSeconds;
+      final finish = await showFinishSoonSheet(context, minutesSincePickup: (seconds / 60).ceil());
       if (finish != true || !mounted || _stage != ActiveRideStage.onTrip) { return; }
       await _completeCurrentTrip();
     }
@@ -1191,9 +1114,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       };
     }
     Future<void> _confirmCancellationReason(
-      _TripCancellationReason reason,
-    ) async {
-      final isOnTrip = _stage == ActiveRideStage.onTrip;
+      _TripCancellationReason reason, {
+      bool nextTrip = false,
+    }) async {
+      final isOnTrip = !nextTrip && _stage == ActiveRideStage.onTrip;
 
       final confirmed = await showMoveraModalSheet<bool>(
         context: context,
@@ -1208,11 +1132,20 @@ extension _AcceptRideTrip on _AcceptRideState {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  isOnTrip ? 'End this trip early?' : 'Cancel this trip?',
+                  nextTrip
+                      ? 'Cancel the next trip?'
+                      : isOnTrip ? 'End this trip early?' : 'Cancel this trip?',
                   style: _CleanSheet.title,
                 ),
                 const SizedBox(height: 6),
                 Text('Reason: ${reason.title}', style: _CleanSheet.note),
+                if (nextTrip) ...[
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Your current trip continues. The next trip goes back to dispatch for another driver.',
+                    style: _CleanSheet.note,
+                  ),
+                ],
                 if (isOnTrip) ...[
                   const SizedBox(height: 6),
                   const Text(
@@ -1233,7 +1166,9 @@ extension _AcceptRideTrip on _AcceptRideState {
                       shape: const StadiumBorder(),
                     ),
                     child: Text(
-                      isOnTrip ? 'End trip early' : 'Cancel trip',
+                      nextTrip
+                          ? 'Cancel next trip'
+                          : isOnTrip ? 'End trip early' : 'Cancel trip',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -1267,6 +1202,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       );
 
       if (confirmed != true || !mounted) { return; }
+      if (nextTrip) {
+        _AcceptRideSheet(this)._cancelNextTrip(reason);
+        return;
+      }
       _submitTripCancellation(reason);
     }
     Future<void> _submitTripCancellation(_TripCancellationReason reason) async {

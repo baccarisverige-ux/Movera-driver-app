@@ -74,7 +74,7 @@ Future<void> _advanceAnimation(WidgetTester tester, Duration duration) async {
 
 Future<void> _confirmShortTripIfAsked(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 220));
-  final confirm = find.text('Confirm finish');
+  final confirm = find.byKey(const ValueKey<String>('finish-soon-finish'));
   if (confirm.evaluate().isNotEmpty) {
     await tester.tap(confirm);
   }
@@ -2652,7 +2652,7 @@ void main() {
       await _expandActiveRideSheet(tester);
 
       expect(
-        find.byKey(const ValueKey<String>('active-ride-journey-card')),
+        find.byKey(const ValueKey<String>('active-ride-current-trip-card')),
         findsOneWidget,
       );
       // Every point, in order, as plain addresses.
@@ -2724,7 +2724,7 @@ void main() {
       );
       await _expandActiveRideSheet(tester);
       expect(
-        find.byKey(const ValueKey('active-ride-journey-card')),
+        find.byKey(const ValueKey('active-ride-current-trip-card')),
         findsOneWidget,
       );
       _expectNoException(tester);
@@ -2796,7 +2796,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
     }
     expect(
-      find.byKey(const ValueKey<String>('active-ride-journey-card')),
+      find.byKey(const ValueKey<String>('active-ride-current-trip-card')),
       findsOneWidget,
     );
 

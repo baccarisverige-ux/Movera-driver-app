@@ -14,12 +14,18 @@ class RadarHoldOff extends StatefulWidget {
     required this.onConfirmed,
     this.holdFor = const Duration(milliseconds: 1000),
     this.size = 104,
+    this.semanticsLabel = 'Hold to go offline',
+    this.holdKey = const ValueKey<String>('home-radar-hold-off'),
   });
 
   final Widget child;
   final VoidCallback onConfirmed;
   final Duration holdFor;
   final double size;
+
+  /// What a screen reader says, e.g. "Hold to stop next trips".
+  final String semanticsLabel;
+  final Key holdKey;
 
   @override
   State<RadarHoldOff> createState() => _RadarHoldOffState();
@@ -63,10 +69,10 @@ class _RadarHoldOffState extends State<RadarHoldOff>
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Hold to go offline',
+      label: widget.semanticsLabel,
       onLongPress: widget.onConfirmed,
       child: GestureDetector(
-        key: const ValueKey<String>('home-radar-hold-off'),
+        key: widget.holdKey,
         behavior: HitTestBehavior.opaque,
         onTapDown: (_) => _press(),
         onTapUp: (_) => _release(),
