@@ -22,6 +22,7 @@ import 'package:movera/presentation/driver/home/components/radar_offer_deck.dart
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -428,6 +429,55 @@ void main() {
       expect(notice.kind, DriverNoticeKind.exclusiveOffer);
       expect(notice.body, endsWith('s to accept'));
       expect(_said.where((t) => t == 'Exclusive ride'), hasLength(1));
+      tester.takeException();
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('R10-12: the Radar deck keeps its drags', () {
+    testWidgets('touches on the deck never reach the map', (tester) async {
+      final dispatch = _Dispatch()
+        ..publish([
+          _trip('premium-trip', 'Premium'),
+          _trip('premium-two', 'Premium'),
+          _trip('premium-three', 'Premium'),
+        ]);
+      await _pumpHome(tester, dispatch: dispatch);
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(seconds: 4),
+      );
+      final deck = find.byKey(const ValueKey<String>('radar-home-deck'));
+      expect(deck, findsOneWidget);
+      // The map's own pointer listener (its pan, pinch and gesture report).
+      final mapTarget = tester.renderObject(find
+          .descendant(
+            of: find.byType(CustomGoogleMap),
+            matching: find.byType(Listener),
+          )
+          .first);
+      bool reachesMap(Offset at) => tester
+          .hitTestOnBinding(at)
+          .path
+          .any((entry) => entry.target == mapTarget);
+
+      final box = tester.getRect(deck);
+      // Anywhere on the deck: the cards, the cards peeking above, the
+      // gaps beside them and beside the ALL OFFERS badge.
+      final leaks = <Offset>[
+        for (var y = box.top + 2; y < box.bottom; y += 8)
+          for (var x = box.left + 2; x < box.right; x += 8)
+            if (reachesMap(Offset(x, y))) Offset(x, y),
+      ];
+      expect(leaks, isEmpty);
+      // Outside the deck the map still pans.
+      expect(reachesMap(Offset(box.center.dx, box.top - 140)), isTrue);
+
+      // A vertical drag on the deck is the deck's; the cards stay.
+      await tester.dragFrom(box.center, const Offset(0, -120));
+      await _frames(tester, const Duration(milliseconds: 400));
+      expect(deck, findsOneWidget);
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     });

@@ -82,4 +82,43 @@ void main() {
     expect(session.isOnline, isFalse);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('R10-7: the island keeps the hold reason and opens its sheet', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final session = DriverSessionController()..suspend();
+
+    await tester.pumpWidget(
+      LayoutViewport(
+        child: ScreenUtilInit(
+          designSize: const Size(375, 812),
+          minTextAdapt: true,
+          splitScreenMode: true,
+          useInheritedMediaQuery: true,
+          builder: (_, __) => MaterialApp(
+            home: DriverHome(sessionController: session),
+          ),
+        ),
+      ),
+    );
+    // Past the island's wake-up and any message's time: still on hold.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump(const Duration(seconds: 1));
+
+    const reason = 'Account on hold · Contact support';
+    expect(find.text(reason), findsOneWidget);
+
+    await tester.tap(find.text(reason));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      find.byKey(const ValueKey<String>('driver-suspended-state')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -201,6 +201,33 @@ extension _HomeAccount on _DriverHomeState {
       return null;
     }
 
+    /// R10-7: offline and on hold, the island keeps the reason until it is
+    /// fixed; a tap opens the matching sheet. Same order as [_goOnline].
+    IslandMessage? _islandHold() {
+      if (_isOnline || _driverSession.activeTripId != null) { return null; }
+      if (_driverSession.isSuspended) {
+        return HomeIslandNotices.holdSuspended(
+            () => unawaited(showDriverSuspendedSheet(context)));
+      }
+      if (!isAccountActivated) {
+        return HomeIslandNotices.holdNotActive(_goOnline);
+      }
+      final rest = _drivingClock.restUntil;
+      if (rest != null) {
+        return HomeIslandNotices.holdRest(
+            clockLabel(rest), _HomeMapSheet(this)._openDrivingTime);
+      }
+      final document = DocumentExpiryStore.instance.blocking;
+      if (document != null) {
+        return HomeIslandNotices.holdDocument(
+          document.shortTitle,
+          inReview: document.inReview,
+          onTap: () => unawaited(showDocumentBlockedSheet(context, document)),
+        );
+      }
+      return null;
+    }
+
     // Notifications (Q31).
 
     /// New notifications show on the island, online or not. A tap opens
