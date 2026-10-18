@@ -63,6 +63,7 @@ import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart
 import 'package:movera/presentation/driver/accept%20ride/trip_bottom_bar.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_card.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_radar_dock.dart';
+import 'package:movera/presentation/driver/accept%20ride/trip_sheet_motion.dart';
 import 'package:movera/presentation/driver/accept%20ride/finish_soon_sheet.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
@@ -443,11 +444,7 @@ class _AcceptRideState extends State<AcceptRide>
   final PanelController _ridePanelController = PanelController();
   final ValueNotifier<double> _ridePanelPosition = ValueNotifier<double>(0);
   late final MoveraSnapSheetController _snapSheet;
-  double _ridePointerVelocity = 0;
-  double _ridePointerLastY = 0;
-  // Where a drag on the sheet started and how far the finger moved.
-  double _ridePointerStartPos = 0;
-  double _ridePointerTravel = 0;
+  late final TripSheetMotion _tripMotion = _AcceptRidePanel(this)._newTripMotion();
   // Measured middle sheet: down to the stage's main action.
   final GlobalKey _middleActionKey = GlobalKey();
   final GlobalKey _ridePanelKey = GlobalKey();
@@ -455,7 +452,6 @@ class _AcceptRideState extends State<AcceptRide>
   double? _fullMeasured;
   final GlobalKey _fullScrollKey = GlobalKey();
   final GlobalKey _fullContentKey = GlobalKey();
-  int _ridePointerLastMs = 0;
   bool _ridePointerActive = false;
   Timer? _rideSheetPositionGuardTimer;
 
@@ -667,6 +663,7 @@ class _AcceptRideState extends State<AcceptRide>
     _navigation.dispose();
     _vehicle.dispose();
     _snapSheet.dispose();
+    _tripMotion.dispose();
     _ridePanelPosition.dispose();
     super.dispose();
   }
@@ -1110,6 +1107,7 @@ class _AcceptRideState extends State<AcceptRide>
             middle: _AcceptRidePanel(this)._rideMiddleTotal(context),
             expanded: expanded,
           );
+          _tripMotion.keep(rangePx: expanded - collapsed, snap: snap);
 
           final offerOpen = _incomingOfferOpen;
           // Browsing keeps the collapsed sheet visible.
@@ -1123,7 +1121,8 @@ class _AcceptRideState extends State<AcceptRide>
             snapPoint: snap,
             panelSnapping: false,
             defaultPanelState: PanelState.CLOSED,
-            isDraggable: !offerOpen,
+            // The sheet's own pointer drag moves it (see TripSheetMotion).
+            isDraggable: false,
             color: Colors.transparent,
             boxShadow: const [],
             backdropEnabled: false,

@@ -21,38 +21,32 @@ extension _AcceptRidePanel on _AcceptRideState {
         ),
       );
     }
+    TripSheetMotion _newTripMotion() => TripSheetMotion(
+          sheet: _snapSheet,
+          position: _ridePanelPosition,
+          snap: () => _rideSnapPoint(context),
+          canDrag: () => !_incomingOfferOpen,
+          scrollArea: () => _fullScrollKey.currentContext?.findRenderObject(),
+          onRelease: _onRideSheetRelease,
+        );
     void _onRideSheetPointerDown(PointerDownEvent event) {
       _sheetTrace.down();
       _ridePointerActive = true;
-      _ridePointerLastY = event.position.dy;
-      _ridePointerLastMs = DateTime.now().millisecondsSinceEpoch;
-      _ridePointerVelocity = 0;
-      _ridePointerTravel = 0;
-      _ridePointerStartPos =
-          _ridePanelController.isAttached ? _ridePanelController.panelPosition : 0;
-      _snapSheet.stopSpring();
+      _rideSheetPositionGuardTimer?.cancel();
+      _tripMotion.drag.down(event);
       _setMapGesturesBlocked(true);
     }
-    void _onRideSheetPointerMove(PointerEvent event) {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      if (_ridePointerLastMs != 0) {
-        final dt = math.max(1, now - _ridePointerLastMs);
-        _ridePointerVelocity =
-            (event.position.dy - _ridePointerLastY) / dt * 1000;
-      }
-      _ridePointerTravel += (event.position.dy - _ridePointerLastY).abs();
-      _ridePointerLastY = event.position.dy;
-      _ridePointerLastMs = now;
-    }
+    void _onRideSheetPointerMove(PointerMoveEvent event) =>
+        _tripMotion.drag.move(event);
     void _onRideSheetPointerEnd(PointerEvent event) {
-      _sheetTrace.up(_ridePointerVelocity);
-      _onRideSheetPointerMove(event);
       _ridePointerActive = false;
-      // A drag settles at once, toward where the finger went; a tap is
-      // left to the buttons it hit.
-      if (_ridePointerTravel > 6 && _ridePanelController.isAttached) {
-        unawaited(_snapRideSheet(velocity: _ridePointerVelocity));
-      }
+      _tripMotion.drag.end(event);
+    }
+    /// A drag settles at once, toward where the finger went and with its
+    /// speed; a tap is left to the buttons it hit.
+    void _onRideSheetRelease(double velocity, double start) {
+      _sheetTrace.up(velocity);
+      unawaited(_snapRideSheet(velocity: velocity, start: start));
     }
     void _scheduleRideSheetPositionGuard({
       Duration delay = const Duration(milliseconds: 180),
@@ -61,6 +55,7 @@ extension _AcceptRidePanel on _AcceptRideState {
       _rideSheetPositionGuardTimer = Timer(delay, () {
         if (!mounted ||
             _ridePointerActive ||
+            _snapSheet.isSpringing ||
             !_ridePanelController.isAttached) {
           return;
         }
@@ -112,42 +107,39 @@ extension _AcceptRidePanel on _AcceptRideState {
         final bottom = action.localToGlobal(Offset(0, action.size.height)).dy -
             panel.localToGlobal(Offset.zero).dy;
         final safeBottom = MediaQuery.paddingOf(context).bottom;
-        final measured = bottom + 14 + math.max(safeBottom, 10);
+        final measured = bottom + _tripMotion.gripMissing() + 14 +
+            math.max(safeBottom, 10);
         final old = _middleMeasured;
         if (old != null && (old - measured).abs() < 2) { return; }
         final wasAtMiddle = _ridePanelController.isAttached &&
             (_ridePanelController.panelPosition - _rideSnapPoint(context)).abs() < 0.02;
         _rebuild(() => _middleMeasured = measured);
-        // Resting on the middle: stay on it at its new height.
+        // Resting on the middle: glide to its new height.
         if (wasAtMiddle && _ridePanelController.isAttached) {
-          _ridePanelController.panelPosition = _rideSnapPoint(context);
+          unawaited(_snapSheet.springTo(_rideSnapPoint(context), noOvershoot: true));
         }
       });
     }
     void _showRideMiddle() {
       if (!_ridePanelController.isAttached) { return; }
-      _snapSheet.rangePx = _rideRangePx(context);
       // Same spring as a drag, so a tap and a slide feel the same.
-      unawaited(_snapSheet.springTo(_rideSnapPoint(context)));
+      unawaited(_snapSheet.springTo(_rideSnapPoint(context), noOvershoot: true));
     }
     void _showRideFull() {
       if (!_ridePanelController.isAttached) { return; }
-      _snapSheet.stopSpring();
       _rideSheetPositionGuardTimer?.cancel();
-      unawaited(_ridePanelController.open());
+      unawaited(_snapSheet.springTo(1, noOvershoot: true));
     }
-    double _rideRangePx(BuildContext context) =>
-        _rideExpandedHeight(context) -
-        MoveraSheetMetrics.activeCollapsedTotal(MediaQuery.paddingOf(context).bottom);
-    Future<void> _snapRideSheet({double? velocity}) async {
+    // The sheet's travel (rangePx) is kept by TripSheetMotion.keep on
+    // every layout, so a re-measured sheet never jumps.
+    Future<void> _snapRideSheet({double velocity = 0, double? start}) async {
       if (!_ridePanelController.isAttached) { return; }
-      _snapSheet.rangePx = _rideRangePx(context);
       final snap = _rideSnapPoint(context);
       final pos = _ridePanelController.panelPosition.clamp(0.0, 1.0);
-      final v = velocity ?? _ridePointerVelocity;
       await _snapSheet.springTo(
-        _rideTarget(_ridePointerStartPos, pos, v, snap),
-        velocityPxPerSec: v,
+        _rideTarget(start ?? pos, pos, velocity, snap),
+        velocityPxPerSec: velocity,
+        noOvershoot: true,
       );
     }
     double _rideTarget(double start, double pos, double v, double snap) =>
@@ -631,23 +623,27 @@ extension _AcceptRidePanel on _AcceptRideState {
       }
     }
     Widget _buildRidePanel() {
-      return ValueListenableBuilder<double>(
+      // Each frame only the sheet's shape follows the finger; its content
+      // is built again when the face changes (or the trip does).
+      // The empty vertical drag keeps a sheet drag in the gesture arena, as
+      // the panel's own drag did, so a slide or a tap under it gives way;
+      // TripSheetMotion moves the sheet itself, from the first pixel.
+      return GestureDetector(
+        onVerticalDragUpdate: (_) {},
+        child: ValueListenableBuilder<double>(
         valueListenable: _ridePanelPosition,
-        builder: (context, pos, _) {
-          final snap = _rideSnapPoint(context);
-          // Three states: the flat bar, the middle sheet with the rider and
-          // the next action, and the clean full sheet with trip details.
-          final compact = pos < snap * 0.5;
-          final full = pos > snap + (1 - snap) * 0.35;
-          if (!compact && !full) { _measureRideMiddle(); }
-          if (full) { _AcceptRideSheet(this)._measureRideFull(); }
+        child: ValueListenableBuilder<TripSheetFace>(
+          valueListenable: _tripMotion.face,
+          builder: (context, face, _) => _buildRideFace(face),
+        ),
+        builder: (context, pos, content) {
           return Container(
             key: const ValueKey<String>('active-ride-panel'),
             decoration: BoxDecoration(
               color: _AcceptRideState._panel,
               // Flat and square like the bar; rounded only when full.
               borderRadius: BorderRadius.vertical(
-                top: Radius.circular(full ? 24 : 0),
+                top: Radius.circular(24 * _tripMotion.roundness(pos)),
               ),
               border: Border(top: BorderSide(color: _AcceptRideState._line)),
               boxShadow: [
@@ -658,7 +654,23 @@ extension _AcceptRidePanel on _AcceptRideState {
                 ),
               ],
             ),
-            child: SafeArea(
+            child: content,
+          );
+        },
+      ),
+      );
+    }
+    Widget _buildRideFace(TripSheetFace face) {
+          // Three faces: the flat bar, the middle sheet with the rider and
+          // the next action, and the clean full sheet with trip details.
+          final compact = face == TripSheetFace.compact;
+          final full = face == TripSheetFace.full;
+          if (face == TripSheetFace.middle) {
+            _measureRideMiddle();
+            _AcceptRideSheet(this)._measureRideFull(ahead: true);
+          }
+          if (full) { _AcceptRideSheet(this)._measureRideFull(); }
+          return SafeArea(
               top: false,
               child: Column(
                 children: [
@@ -666,17 +678,11 @@ extension _AcceptRidePanel on _AcceptRideState {
                     key: ValueKey<String>('active-ride-panel-${_stage.name}'),
                     child: const SizedBox.shrink(),
                   ),
-                  if (compact)
-                    TripBottomBar(
-                      key: const ValueKey<String>('active-ride-compact-dock'),
-                      instruction: _tripBarInstruction,
-                      address: _tripBarAddress,
-                      onPreferences: _openRidePreferences,
-                      onTap: _showRideMiddle,
-                    )
-                  else ...[
-                    // Grip line: the sheet can be pulled up for details.
-                    Padding(
+                  // Grip line: the sheet can be pulled up for details.
+                  TripSheetGrip(
+                    key: _tripMotion.gripKey,
+                    shown: !compact,
+                    child: Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Container(
                         width: 42,
@@ -687,6 +693,16 @@ extension _AcceptRidePanel on _AcceptRideState {
                         ),
                       ),
                     ),
+                  ),
+                  if (compact)
+                    TripBottomBar(
+                      key: const ValueKey<String>('active-ride-compact-dock'),
+                      instruction: _tripBarInstruction,
+                      address: _tripBarAddress,
+                      onPreferences: _openRidePreferences,
+                      onTap: _showRideMiddle,
+                    )
+                  else ...[
                     TripBottomBar(
                       key: const ValueKey<String>('active-ride-expanded-header'),
                       instruction: _tripBarInstruction,
@@ -695,50 +711,64 @@ extension _AcceptRidePanel on _AcceptRideState {
                       onTap: full ? _showRideMiddle : _showRideFull,
                     ),
                     if (!full) ...[
-                      _buildRiderRow(),
-                      Padding(
-                        key: _middleActionKey,
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                        child: _buildPrimaryAction(),
+                      _AcceptRideSheet(this)._buildFullAhead(),
+                      // Coming up from the bar the rider fades in; coming
+                      // down from the full sheet it is already there.
+                      if (_tripMotion.previousFace == TripSheetFace.compact)
+                        TripSheetFadeIn(child: _buildRiderRow())
+                      else
+                        _buildRiderRow(),
+                      TripSheetFadeIn(
+                        child: Padding(
+                          key: _middleActionKey,
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                          child: _buildPrimaryAction(),
+                        ),
                       ),
                     ] else
                       Expanded(
-                        child: SingleChildScrollView(
+                        child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(context)
+                              .copyWith(overscroll: false),
+                          child: SingleChildScrollView(
                           key: _fullScrollKey,
+                          controller: _tripMotion.fullScroll,
                           padding: const EdgeInsets.only(bottom: 16),
-                          physics: const BouncingScrollPhysics(),
+                          physics: const TopClampedBouncingScrollPhysics(),
                           child: Column(
                             key: _fullContentKey,
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildRiderRow(),
-                              const SizedBox(height: 8),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Column(
-                                  children: [
-                                    _AcceptRideSheet(this)._buildCurrentTripCard(),
-                                    _AcceptRideSheet(this)._buildNextTripCard(),
-                                  ],
-                                ),
-                              ),
-                              if (_countingWait) ...[
-                                const SizedBox(height: 12),
-                                Center(child: _waitPhaseChip()),
-                              ],
-                              _AcceptRideSheet(this)._buildRadarDock(),
-                            ],
+                            children: _fullDetails(),
+                          ),
                           ),
                         ),
                       ),
                   ],
                 ],
               ),
-            ),
           );
-        },
-      );
     }
+    /// The full sheet's details: rider, trip cards, wait phase and radar.
+    List<Widget> _fullDetails() => [
+          _buildRiderRow(),
+          const SizedBox(height: 8),
+          TripSheetFadeIn(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  _AcceptRideSheet(this)._buildCurrentTripCard(),
+                  _AcceptRideSheet(this)._buildNextTripCard(),
+                ],
+              ),
+            ),
+          ),
+          if (_countingWait) ...[
+            const SizedBox(height: 12),
+            Center(child: _waitPhaseChip()),
+          ],
+          _AcceptRideSheet(this)._buildRadarDock(),
+        ];
     Widget _waitPhaseChip() {
       final color = _waitBarColor;
       return InkWell(
