@@ -1468,7 +1468,7 @@ void main() {
     _expectNoException(tester);
   });
 
-  testWidgets('Going online shows on the island, then it returns', (
+  testWidgets('Going online: Radar online, then Finding trips after 2 s', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -1479,11 +1479,53 @@ void main() {
     await _advanceAnimation(tester, const Duration(milliseconds: 520));
     expect(find.text('Radar online'), findsOneWidget);
 
-    // A quick message: about 2 s, then the money display comes back.
+    // R13-1: "Radar online" for 2 s, then "Finding trips" with its dots.
     await tester.pump(const Duration(milliseconds: 1600));
     await _advanceAnimation(tester, const Duration(milliseconds: 520));
     expect(find.text('Radar online'), findsNothing);
+    expect(find.byKey(const ValueKey<String>('island-finding')), findsOneWidget);
+    expect(find.text('Finding trips'), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('island-finding-dots')),
+        findsOneWidget);
+    _expectNoException(tester);
+  });
+
+  testWidgets('Touching the island puts it back to normal at once', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pumpHome(tester, const Size(375, 812));
+    await _wakeIsland(tester);
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 2200));
+    await _advanceAnimation(tester, const Duration(milliseconds: 520));
+    expect(find.text('Finding trips'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey<String>('last-trip-launcher')));
+    await _advanceAnimation(tester, const Duration(milliseconds: 520));
+    expect(find.text('Finding trips'), findsNothing);
+    // The tap only closed it: the money display is on its hidden total.
     expect(find.text('•••• kr'), findsOneWidget);
+    _expectNoException(tester);
+  });
+
+  testWidgets('An offer clears the waiting messages from the island', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pumpHome(tester, const Size(375, 812));
+    await _wakeIsland(tester);
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 2200));
+    await _advanceAnimation(tester, const Duration(milliseconds: 520));
+    expect(find.text('Finding trips'), findsOneWidget);
+
+    // The demo's Exclusive offer arrives: the island is itself again.
+    await tester.pump(const Duration(milliseconds: 1500));
+    await _advanceAnimation(tester, const Duration(milliseconds: 900));
+    expect(find.text('105,80 kr'), findsOneWidget);
+    expect(find.text('Finding trips'), findsNothing);
+    expect(find.byKey(const ValueKey<String>('island-finding')), findsNothing);
     _expectNoException(tester);
   });
 

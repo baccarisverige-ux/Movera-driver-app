@@ -899,6 +899,14 @@ extension _HomeMapSheet on _DriverHomeState {
       // Destination mode: pin and "Centralplan 15 · 35 min", menu kept.
       final destination = message == null && reservation == null &&
           exclusive == null && _destinationModeActive;
+      // R13-1: online on Home with no offer and no trip, the island says
+      // "Finding trips" and now and then a short message. A message passing
+      // (e.g. "Radar online") goes first.
+      final waitingShown = _islandWaiting.sync(_waitingForTrips);
+      final waitingTip = _islandWaiting.tip;
+      final waiting = waitingShown && message == null && reservation == null &&
+          exclusive == null && !destination;
+      final waitingTitle = waitingTip?.title ?? DigitalWaitingFace.findingTitle;
       // A message sizes the island to its words (never taller): the normal
       // size for short words, a little longer for longer ones. 14 + 14 for the
       // tucked sides, 2 for the border and some air on both ends.
@@ -922,6 +930,11 @@ extension _HomeMapSheet on _DriverHomeState {
                         14 + 14 + 2 + 36)
                     .clamp(math.min(200.0, maxWidth), maxWidth)
                     .toDouble()
+          : waiting
+              ? (DigitalWaitingFace.widthFor(context, waitingTitle, dots: waitingTip == null) +
+                        14 + 14 + 2 + 36)
+                    .clamp(math.min(200.0, maxWidth), maxWidth)
+                    .toDouble()
           : destination
               ? (DigitalDestinationFace.widthFor(context, _destinationShortLabel, _destinationEta) +
                         54 + 14 + 2 + 28)
@@ -931,7 +944,7 @@ extension _HomeMapSheet on _DriverHomeState {
               ? math.min(maxWidth, 244.0)
               : 112.0;
       final tucked = _islandMessage != null || reservation != null ||
-          exclusive != null;
+          exclusive != null || waiting;
       Widget side(Widget button, {bool tuck = false}) => AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeOutCubic,
@@ -952,7 +965,10 @@ extension _HomeMapSheet on _DriverHomeState {
             ),
           );
       return PointerInterceptor(
-        child: DigitalIslandShell(
+        child: Listener(
+          // Any touch on the island: normal behaviour at once (R13-1).
+          onPointerDown: (_) => _islandWaiting.touch(),
+          child: DigitalIslandShell(
             width: width,
             height: height,
             // Online, the driver is on the road: no light passing over it.
@@ -1027,6 +1043,16 @@ extension _HomeMapSheet on _DriverHomeState {
                                 ),
                                 pickupMinutes: exclusive,
                               )
+                            : waiting
+                            ? (waitingTip == null
+                                ? const DigitalWaitingFace.finding(
+                                    key: ValueKey<String>('island-finding'),
+                                  )
+                                : DigitalWaitingFace(
+                                    key: ValueKey<String>('island-tip-${waitingTip.id}'),
+                                    title: waitingTip.title,
+                                    color: islandTipColor(waitingTip.look),
+                                  ))
                             : destination
                             ? DigitalDestinationFace(
                                 key: const ValueKey<String>('island-destination-face'),
@@ -1058,7 +1084,25 @@ extension _HomeMapSheet on _DriverHomeState {
             ],
           ),
         ),
+        ),
       );
+    }
+    /// Online on Home with no offer, no trip and no request up.
+    bool get _waitingForTrips =>
+        _isOnline && _islandWake >= 2 &&
+        _driverSession.activeTripId == null &&
+        !_hasRideOffers && _radarHomeOffers.isEmpty &&
+        _outsideRadarOffer == null &&
+        !_HomeExclusive(this)._exclusiveLive &&
+        !_HomeReservation(this)._reservationOnDock;
+    /// The short messages the app has facts for; in the demo, all of them.
+    List<IslandWaitingTip> _waitingTips() {
+      final dispatch = _dispatch;
+      final signals = _ownsDispatch && dispatch is DemoDispatchRepository
+          ? IslandWaitingSignals.demo(_adminHomeConfig)
+          : IslandWaitingSignals.fromHome(_adminHomeConfig,
+              now: ScheduledClock.instance.now());
+      return signals.tips();
     }
     Widget _islandFaceView() {
       switch (_islandFace) {
@@ -1148,6 +1192,8 @@ extension _HomeMapSheet on _DriverHomeState {
     /// Hidden total → last trip → today's total → Ride history → hidden.
     /// Left untouched for 5 s, the island goes back to the hidden total.
     void _onIslandEarningsTap() {
+      // The touch only closed "Finding trips" or a waiting message.
+      if (_islandWaiting.takeSwallowedTap()) { return; }
       if (_islandWake < 2) {
         // A tap during the launch animation just finishes it.
         _islandWakeTimer?.cancel();
