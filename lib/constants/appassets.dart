@@ -133,11 +133,4 @@ class AppAssets {
   static const String destinationSelected =
       'assets/images/destination_selected.png';
   static const String direction = 'assets/images/direction.png';
-  /// Rider-app menu illustration (unDraw, Movera colours).
-  // Flat unDraw pictures on the reservation popup (accent grey #4A555E).
-  static const String reservationBooked = 'assets/images/booked.svg';
-  static const String reservationCalendar = 'assets/images/calendar_8r6s.svg';
-  static const String reservationAircraft = 'assets/images/aircraft_usu4.svg';
-  static const String reservationTraveller =
-      'assets/images/travel_mode_103y.svg';
 }
