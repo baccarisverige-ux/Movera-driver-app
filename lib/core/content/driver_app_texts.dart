@@ -88,6 +88,11 @@ class DriverTexts {
       'island.noConnection', 'No connection', DriverTextArea.island);
   static const islandContactSupport = DriverTextKey(
       'island.contactSupport', 'Contact support', DriverTextArea.island);
+  /// R10-7: the hold reasons the island keeps while going online waits.
+  static const islandAccountOnHold = DriverTextKey('island.accountOnHold',
+      'Account on hold · Contact support', DriverTextArea.island);
+  static const islandAccountNotActive = DriverTextKey('island.accountNotActive',
+      'Account not active · Finish sign-up', DriverTextArea.island);
   static const islandNewReservation = DriverTextKey(
       'island.newReservation', 'New reservation', DriverTextArea.island);
   static const islandExclusiveRide = DriverTextKey(
@@ -241,6 +246,8 @@ class DriverTexts {
     islandTripUnavailable,
     islandNoConnection,
     islandContactSupport,
+    islandAccountOnHold,
+    islandAccountNotActive,
     islandNewReservation,
     islandExclusiveRide,
     islandExclusiveReservation,

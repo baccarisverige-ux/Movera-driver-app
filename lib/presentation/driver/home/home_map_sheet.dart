@@ -884,7 +884,17 @@ extension _HomeMapSheet on _DriverHomeState {
                 width: math.max(0, viewportWidth - 28),
                 // Clears the safety and recenter buttons below it.
                 bottom: 138 + _homeMapButtonSize + 12,
-                child: _HomeOfferRadar(this)._buildRadarOffersTray(),
+                // R10-12: the deck keeps its drags and flings, gaps and
+                // peeking cards included; the map moves only outside it.
+                // On web the interceptor keeps pointers off the map view.
+                child: PointerInterceptor(
+                  child: GestureDetector(
+                    key: const ValueKey<String>('radar-home-deck-guard'),
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragUpdate: (_) {},
+                    child: _HomeOfferRadar(this)._buildRadarOffersTray(),
+                  ),
+                ),
               ),
             // Reservation request: the Home sheet grows taller behind the
             // dock, over the map buttons, under the top island.
@@ -944,12 +954,22 @@ extension _HomeMapSheet on _DriverHomeState {
       const height = DigitalIslandParts.height;
       // At launch the island is small (menu and arrow), then grows; a
       // message widens it and moves the menu and arrow aside.
-      final message = _islandMessage;
+      // R10-7: with no message passing, a hold keeps its reason on the
+      // island, red, with the menu and search still beside it.
+      final hold = _islandMessage == null && _islandWake >= 2
+          ? _HomeAccount(this)._islandHold()
+          : null;
+      final message = _islandMessage ?? hold;
       final maxWidth = viewportWidth - 32;
       // A message sizes the island to its words (never taller): the normal
       // size for short words, a little longer for longer ones. 14 + 14 for the
       // tucked sides, 2 for the border and some air on both ends.
-      final width = message != null
+      final width = hold != null
+          ? (DigitalMessageFace.widthFor(context, hold.title, tappable: true) +
+                    54 + 54 + 2 + 8)
+                .clamp(math.min(244.0, maxWidth), maxWidth)
+                .toDouble()
+          : message != null
           ? (DigitalMessageFace.widthFor(context, message.title) +
                     14 + 14 + 2 + 36)
                 .clamp(math.min(244.0, maxWidth), math.min(244.0 * 1.15, maxWidth))
@@ -957,19 +977,20 @@ extension _HomeMapSheet on _DriverHomeState {
           : _islandWake >= 1
               ? math.min(maxWidth, 244.0)
               : 112.0;
+      final tucked = _islandMessage != null;
       Widget side(Widget button) => AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeOutCubic,
-            width: message == null ? 54 : 14,
+            width: tucked ? 14 : 54,
             child: ClipRect(
               child: OverflowBox(
                 minWidth: 54,
                 maxWidth: 54,
                 child: IgnorePointer(
-                  ignoring: message != null,
+                  ignoring: tucked,
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 200),
-                    opacity: message == null ? 1 : 0,
+                    opacity: tucked ? 0 : 1,
                     child: button,
                   ),
                 ),
@@ -1017,7 +1038,9 @@ extension _HomeMapSheet on _DriverHomeState {
                   },
                   child: InkWell(
                     key: const ValueKey<String>('last-trip-launcher'),
-                    onTap: message != null
+                    onTap: hold != null
+                        ? hold.onTap
+                        : message != null
                         ? () => _onIslandMessageTap(message)
                         : _onIslandEarningsTap,
                     // Holding the middle goes straight to Ride history.
@@ -1030,7 +1053,9 @@ extension _HomeMapSheet on _DriverHomeState {
                     child: SizedBox(
                       height: height,
                       child: DigitalFaceSwitcher(
-                        child: message != null
+                        child: hold != null
+                            ? _islandMessageView(hold, hold: true)
+                            : message != null
                             ? _islandMessageView(message)
                             : _islandWake >= 2
                                 ? _islandFaceView()
@@ -1078,14 +1103,17 @@ extension _HomeMapSheet on _DriverHomeState {
           return DigitalIslandParts.historyFace();
       }
     }
-    Widget _islandMessageView(IslandMessage message) {
+    Widget _islandMessageView(IslandMessage message, {bool hold = false}) {
       final (color, toneIcon) = DigitalIslandParts.toneLook(message.tone);
       return DigitalMessageFace(
-        key: ValueKey<String>('island-message-$_islandMessageSeq'),
+        key: ValueKey<String>(hold
+            ? 'island-hold-${message.title}'
+            : 'island-message-$_islandMessageSeq'),
         title: message.title,
         color: color,
         icon: message.icon ?? toneIcon,
         pulse: message.live,
+        tappable: hold,
       );
     }
     /// A posted message: show it now if the screen is free, or replace an
