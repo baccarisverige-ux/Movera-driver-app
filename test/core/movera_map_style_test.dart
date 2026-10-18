@@ -130,4 +130,32 @@ void main() {
       expect(seen.add(key), isTrue, reason: 'duplicate rule $key');
     }
   });
+
+  test('Movera map style uses the Fresh blue palette', () {
+    String? colorOf(String? feature, String element) {
+      for (final rule in _rules()) {
+        if (rule['featureType'] == feature && rule['elementType'] == element) {
+          return ((rule['stylers'] as List).first as Map)['color'] as String?;
+        }
+      }
+      return null;
+    }
+
+    expect(colorOf(null, 'geometry'), '#F0F2F4');
+    expect(colorOf(null, 'labels.text.fill'), '#2B3036');
+    expect(colorOf('water', 'geometry'), '#A9CBF2');
+    expect(colorOf('road.highway', 'geometry.fill'), '#BCC3CF');
+    expect(colorOf('road.highway', 'geometry.stroke'), '#A6AEBD');
+  });
+
+  test('Movera map style leaves highway shields unstyled (green E-roads)', () {
+    for (final rule in _rules()) {
+      expect(
+        rule['elementType'] == 'labels.icon' &&
+            (rule['featureType'] as String? ?? '').startsWith('road'),
+        isFalse,
+        reason: 'road shield rule: $rule',
+      );
+    }
+  });
 }

@@ -17,6 +17,7 @@ import 'dart:ui' as ui;
 import 'package:movera/widgets/exclusive_offer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -89,6 +90,7 @@ import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:movera/widgets/movera_sheet_metrics.dart';
 import 'package:movera/widgets/movera_vehicle_marker.dart';
+import 'package:movera/widgets/offer_route_pins.dart';
 import 'package:movera/presentation/driver/sheets/movera_snap_sheet_controller.dart';
 import 'package:movera/presentation/driver/overlays/map_overlay_insets.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -101,6 +103,7 @@ part 'home_scheduled.dart';
 part 'home_offer_rules.dart';
 part 'home_account.dart';
 part 'home_exclusive.dart';
+part 'home_offer_route.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -329,8 +332,10 @@ class _DriverHomeState extends State<DriverHome>
   Set<Polyline> _directOfferRoutePolylines = {};
   Set<Marker> _destinationRouteMarkers = {};
   Set<Polyline> _destinationRoutePolylines = {};
+  double _routeZoomStep = DriverRouteStyle.defaultZoom;
   bool _isDirectOfferRoutePreview = false;
   final MapPreviewGeneration _mapPreviews = MapPreviewGeneration();
+  final _OfferRouteFrame _offerRouteFrame = _OfferRouteFrame();
   // Separate ownership for frequently refreshed GPS-to-destination roads.
   // An old routing response must never replace a route from a newer fix.
   final MapPreviewGeneration _destinationRoadRequests = MapPreviewGeneration();
@@ -1130,7 +1135,7 @@ class _DriverHomeState extends State<DriverHome>
     if (widget.routeRepository == null && ownedRouting is RoadRouteService) { ownedRouting.dispose(); }
     ScheduledRideStore.openRequests.removeListener(_onScheduledRequests);
     _locationEpoch++;
-    _reservationPopupTimer?.cancel();
+    _reservationPopupTimer?.cancel(); _offerRouteFrame.refit?.cancel();
     _reservation.release?.cancel();
     _scheduled.dispose();
     _HomeAccount(this)._stopAccount();
