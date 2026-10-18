@@ -99,7 +99,6 @@ class ReservationRouteMap extends StatefulWidget {
     this.markerIcon,
     this.show3DNotice = true,
     this.tilt = 0,
-    this.routeColor,
   });
 
   final ReservationRequestPreview request;
@@ -120,9 +119,6 @@ class ReservationRouteMap extends StatefulWidget {
 
   /// Camera tilt in degrees after fitting the route; 0 keeps it flat.
   final double tilt;
-
-  /// Route line colour; null keeps [DriverRouteStyle.color].
-  final Color? routeColor;
 
   @override
   State<ReservationRouteMap> createState() => _ReservationRouteMapState();
@@ -299,17 +295,10 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
         tilt: widget.tilt,
       ),
       markers: _markers,
-      polylines: {
-        Polyline(
-          polylineId: const PolylineId('reservation-route'),
-          points: [for (final p in widget.route) p.toLatLng()],
-          color: widget.routeColor ?? DriverRouteStyle.color,
-          width: DriverRouteStyle.width,
-          jointType: JointType.round,
-          startCap: Cap.roundCap,
-          endCap: Cap.roundCap,
-        ),
-      },
+      polylines: DriverRouteStyle.polylines(
+        id: 'reservation-route',
+        points: [for (final p in widget.route) p.toLatLng()],
+      ),
       padding: widget.padding,
       myLocationEnabled: false,
       scrollGesturesEnabled: widget.interactive,

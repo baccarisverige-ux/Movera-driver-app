@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:movera/styles/reference_map_style.dart';
+import 'package:movera/styles/movera_map_style.dart';
 
 // Mirrors the Maps JavaScript API serialiser (maps-api-v3 map.js, v3.66):
 // each rule becomes "s.t:<id>|s.e:<code>|p.<key>:<value>", rules are joined
@@ -73,7 +73,7 @@ const _stylerKeys = <String, String>{
 };
 
 List<Map<String, Object?>> _rules() =>
-    (jsonDecode(moveraReferenceMapStyle) as List<Object?>)
+    (jsonDecode(moveraMapStyle) as List<Object?>)
         .cast<Map<String, Object?>>();
 
 String _webStyleString(List<Map<String, Object?>> rules) {
@@ -109,14 +109,19 @@ String _webStyleString(List<Map<String, Object?>> rules) {
 }
 
 void main() {
-  test('reference map style fits the Maps JavaScript 1000-char limit', () {
+  test('Movera map style minified JSON is under 1000 characters', () {
+    final minified = jsonEncode(jsonDecode(moveraMapStyle));
+    expect(minified.length, lessThan(1000), reason: minified);
+  });
+
+  test('Movera map style fits the Maps JavaScript 1000-char limit', () {
     final serialised = _webStyleString(_rules());
     // Leave headroom so a small palette tweak cannot silently disable all
     // web styling (the live site showed Google's default palette at 1051).
     expect(serialised.length, lessThanOrEqualTo(950), reason: serialised);
   });
 
-  test('reference map style has no duplicate selectors', () {
+  test('Movera map style has no duplicate selectors', () {
     final seen = <String>{};
     for (final rule in _rules()) {
       final key =

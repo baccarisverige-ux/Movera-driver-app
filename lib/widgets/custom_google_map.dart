@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:math' as math;
 
 import '../core/navigation/map_double_tap_policy.dart';
+import '../styles/movera_map_style.dart';
 import 'driver_map_web_bridge_stub.dart'
     if (dart.library.js_interop) 'driver_map_web_bridge.dart'
     as web;
@@ -247,7 +248,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
         fit: StackFit.expand,
         children: [
           if (!_mapsReady)
-            const ColoredBox(color: Color(0xFFE5E3DF))
+            const ColoredBox(color: Color(0xFFEEF0F2))
           else
             GoogleMap(
               initialCameraPosition: widget.initialPosition ?? _defaultPosition,
@@ -276,6 +277,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               },
               webGestureHandling: WebGestureHandling.greedy,
               webCameraControlEnabled: widget.webCameraControlEnabled,
+              style: moveraMapStyle,
               onMapCreated: (GoogleMapController controller) {
                 _mapController = controller;
                 _supports3D = web.supports3D(controller.mapId);

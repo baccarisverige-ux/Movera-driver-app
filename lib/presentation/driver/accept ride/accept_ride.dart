@@ -795,14 +795,9 @@ class _AcceptRideState extends State<AcceptRide>
         startCap: Cap.roundCap,
         endCap: Cap.roundCap,
       ),
-      Polyline(
-        polylineId: const PolylineId('active-road-route'),
+      ...DriverRouteStyle.polylines(
+        id: 'active-road-route',
         points: geometry.remaining(along).map((p) => p.toLatLng()).toList(),
-        width: DriverRouteStyle.width,
-        color: DriverRouteStyle.color,
-        geodesic: false,
-        startCap: Cap.roundCap,
-        endCap: Cap.roundCap,
       ),
     };
   }
