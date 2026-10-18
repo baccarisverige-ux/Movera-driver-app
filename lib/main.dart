@@ -20,6 +20,7 @@ import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/core/settings/map_traffic_setting.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
@@ -34,6 +35,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   validateDriverComposition(production: driverProductionRequested);
   installGlobalErrorHooks();
+  unawaited(MapTrafficSetting.restore());
   runApp(const MoveraApp());
 }
 
@@ -146,6 +148,7 @@ class _MoveraAppState extends State<MoveraApp> {
     await CompletionJournal.settle();
     await SettingsRepository.settle();
     await clearLocalUserData();
+    MapTrafficSetting.reset();
     _activeRide = PrefsActiveRideRepository();
     _waybills.reset();
     final dispatch = _dispatch;
