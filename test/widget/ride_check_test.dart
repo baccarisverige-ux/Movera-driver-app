@@ -18,6 +18,7 @@ import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
 import 'package:movera/core/safety/ride_check_detector.dart';
+import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
 import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/safety/safety_alert_repository.dart';
@@ -496,6 +497,39 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const ValueKey('ride-check-row-carProblem')), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await _frames(tester);
+    });
+
+    testWidgets('no new offer while the card is open; it comes after the answer', (
+      tester,
+    ) async {
+      final kit = _Kit();
+      await _mountRide(
+        tester,
+        AcceptRide(
+          offerId: 'gate-trip',
+          initialStage: ActiveRideStage.onTrip,
+          locationRepository: _Gps(_north(_dropoff, 1000)),
+          rideCheck: kit.services,
+        ),
+      );
+      final offer = find.byKey(const ValueKey<String>('on-trip-radar-deny'));
+      await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
+      await _frames(tester);
+      await tester.tap(find.byKey(const ValueKey('ride-check-demo-longStop')));
+      await _frames(tester, 10);
+      expect(_cardFinder, findsOneWidget);
+      expect(RideCheckGate.open, isTrue);
+      // The next-trip offer is due 2.2 s into the trip: it waits.
+      await tester.pump(const Duration(seconds: 3));
+      await _frames(tester);
+      expect(offer, findsNothing);
+      await tester.tap(find.byKey(const ValueKey('ride-check-ok')));
+      await _frames(tester, 20);
+      expect(_cardFinder, findsNothing);
+      expect(RideCheckGate.open, isFalse);
+      expect(offer, findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
       await _frames(tester);
     });
