@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
@@ -59,6 +61,50 @@ void main() {
     ExclusiveAnswers.instance.reset();
   });
   tearDown(() => DriverOfferRules.current = const DriverOfferRules());
+
+  testWidgets('Trip sheet follows the finger and a flick settles without a jump', (
+    tester,
+  ) async {
+    await _pumpRide(tester);
+    // Tap the bar: the middle sheet.
+    await tester.tap(find.byKey(const ValueKey('active-ride-compact-dock')));
+    await _settle(tester, 20);
+    double top() =>
+        tester.getTopLeft(find.byKey(const ValueKey('active-ride-panel'))).dy;
+    final controller = _panel(tester).controller!;
+    final middle = controller.panelPosition;
+    expect(middle, closeTo(_panel(tester).snapPoint!, 0.01));
+
+    // A quick flick up: 20 px a frame, then let go while still moving.
+    final gesture = await tester.createGesture();
+    var time = Duration.zero;
+    await gesture.down(Offset(300, top() + 40), timeStamp: time);
+    var last = top();
+    var biggest = 0.0;
+    for (var i = 0; i < 4; i++) {
+      time += const Duration(milliseconds: 16);
+      await gesture.moveBy(const Offset(0, -20), timeStamp: time);
+      await tester.pump(const Duration(milliseconds: 16));
+      // 1:1 with the finger from the first frame (no dead zone, no jump
+      // when the full sheet's content is measured).
+      expect(top() - last, closeTo(-20, 0.5));
+      last = top();
+    }
+    await gesture.up(timeStamp: time);
+    var settledAt = -1;
+    for (var frame = 1; frame <= 40; frame++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      biggest = math.max(biggest, (top() - last).abs());
+      // The release keeps going up: it never stops dead or turns back.
+      expect(top(), lessThanOrEqualTo(last + 0.01));
+      last = top();
+      if (settledAt < 0 && controller.panelPosition > 0.995) { settledAt = frame * 16; }
+    }
+    expect(controller.panelPosition, closeTo(1, 0.005));
+    expect(biggest, lessThan(20), reason: 'no step bigger than the finger moved');
+    expect(settledAt, inInclusiveRange(16, 400));
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('Pickup sheet shows the trip card; old rows are gone', (tester) async {
     await _pumpRide(tester);

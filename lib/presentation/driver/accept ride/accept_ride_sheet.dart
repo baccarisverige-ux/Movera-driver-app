@@ -16,11 +16,30 @@ extension _AcceptRideSheet on _AcceptRideState {
       );
       return measured.clamp(floor, expanded);
     }
-    void _measureRideFull() {
+    /// The full sheet's details, laid out but not shown, under the middle
+    /// sheet's header: measured ahead, the full sheet's height is right
+    /// from the first pull and never jumps when the sheet gets there.
+    Widget _buildFullAhead() {
+      return Offstage(
+        child: TickerMode(
+          enabled: false,
+          child: ExcludeSemantics(
+            child: Column(
+              key: _tripMotion.aheadKey,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _AcceptRidePanel(this)._fullDetails(),
+            ),
+          ),
+        ),
+      );
+    }
+    void _measureRideFull({bool ahead = false}) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) { return; }
-        final scroll = _fullScrollKey.currentContext?.findRenderObject();
-        final content = _fullContentKey.currentContext?.findRenderObject();
+        final scroll = (ahead ? _tripMotion.aheadKey : _fullScrollKey)
+            .currentContext?.findRenderObject();
+        final content = (ahead ? _tripMotion.aheadKey : _fullContentKey)
+            .currentContext?.findRenderObject();
         final panel = _ridePanelKey.currentContext?.findRenderObject();
         if (scroll is! RenderBox || content is! RenderBox || panel is! RenderBox ||
             !scroll.attached || !content.attached || !panel.attached) {
@@ -29,10 +48,12 @@ extension _AcceptRideSheet on _AcceptRideState {
         final top = scroll.localToGlobal(Offset.zero).dy -
             panel.localToGlobal(Offset.zero).dy;
         // Content, the scroll's bottom padding and the safe area.
-        final measured = top + content.size.height + 16 +
+        final measured = top + _tripMotion.gripMissing() +
+            content.size.height + 16 +
             MediaQuery.paddingOf(context).bottom;
         final old = _fullMeasured;
-        if (old != null && (old - measured).abs() < 2) { return; }
+        // Fine: a change keeps the sheet's height and glides (see keep).
+        if (old != null && (old - measured).abs() < 0.5) { return; }
         _rebuild(() => _fullMeasured = measured);
       });
     }
