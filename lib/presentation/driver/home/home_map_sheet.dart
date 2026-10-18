@@ -295,7 +295,10 @@ extension _HomeMapSheet on _DriverHomeState {
       Navigator.of(context)
           .push<DriverDestinationResult>(
             MaterialPageRoute(
-              builder: (_) => const DriverDestinationPicker(),
+              builder: (_) => DriverDestinationPicker(
+                origin: _driverPosition,
+                routeRepository: _roadRouteService,
+              ),
             ),
           )
           .then((result) {
@@ -314,6 +317,9 @@ extension _HomeMapSheet on _DriverHomeState {
         _destinationModeActive = true;
         _destinationAddress = result.address;
         _destinationPosition = destination;
+        _destinationTrip = result;
+        _destinationUntil = result.durationSeconds == null ? null
+            : DateTime.now().add(Duration(seconds: result.durationSeconds!.round()));
         _destinationRouteMarkers = {
           Marker(
             markerId: const MarkerId('destination_mode_target'),
@@ -390,6 +396,33 @@ extension _HomeMapSheet on _DriverHomeState {
           !_mapPreviews.owns(generation)) { return; }
 
       await _fitPoints(routePoints, padding: 74);
+    }
+    /// Live road route when GPS has one, else the confirmed figures.
+    (double, double)? get _destinationFigures {
+      final route = _cameraRoute;
+      if (route != null) { return (route.distanceMeters, route.durationSeconds); }
+      final trip = _destinationTrip;
+      final m = trip?.distanceMeters, sec = trip?.durationSeconds;
+      return m == null || sec == null ? null : (m, sec);
+    }
+    String? get _destinationSummary {
+      final f = _destinationFigures;
+      return f == null ? null : destinationTimeDistanceLabel(f.$1, f.$2);
+    }
+    String? get _destinationEta {
+      final f = _destinationFigures;
+      return f == null ? null : '${(f.$2 / 60).round().clamp(1, 9999)} min';
+    }
+    void _openDestinationDetails() {
+      showDestinationDetailsSheet(
+        context,
+        place: _destinationShortLabel,
+        address: _destinationAddress ?? '',
+        summary: _destinationSummary,
+        until: _destinationUntil == null ? null : clockLabel(_destinationUntil!),
+        onShowRoute: _fitDestinationRoute,
+        onTurnOff: _endDestinationMode,
+      );
     }
     void _endDestinationMode() {
       if (!_destinationModeActive) { return; }
@@ -737,109 +770,8 @@ extension _HomeMapSheet on _DriverHomeState {
                   children: [
                     // The top island is drawn above the scrim, further down.
                     const SizedBox(height: _homeMapButtonSize),
-                    if (_destinationModeActive && !isDestinationPanel)
-                      Padding(
-                        padding: EdgeInsets.only(top: ResSize.h * 10),
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: PointerInterceptor(
-                            child: Material(
-                              color: Colors.white,
-                              elevation: 3,
-                              shadowColor:
-                                  const Color(0xFF172027).withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(18),
-                              child: InkWell(
-                                key: const ValueKey<String>(
-                                  'destination-mode-home-tab',
-                                ),
-                                onTap: _fitDestinationRoute,
-                                borderRadius: BorderRadius.circular(18),
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                    maxWidth: ResSize.w * 252,
-                                  ),
-                                  padding: EdgeInsets.fromLTRB(
-                                    ResSize.w * 11,
-                                    ResSize.h * 8,
-                                    ResSize.w * 8,
-                                    ResSize.h * 8,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        height: ResSize.h * 30,
-                                        width: ResSize.h * 30,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF4F5F6),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: const Color(0xFFE6E8EA),
-                                          ),
-                                        ),
-                                        child: const Icon(
-                                          Icons.near_me_rounded,
-                                          size: 16,
-                                          color: Color(0xFF1C242C),
-                                        ),
-                                      ),
-                                      SizedBox(width: ResSize.w * 8),
-                                      Flexible(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'On your way',
-                                              style: TextStyle(
-                                                color: Color(0xFF1C242C),
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w800,
-                                                letterSpacing: 0.3,
-                                              ),
-                                            ),
-                                            Text(
-                                              _destinationShortLabel,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                color: Color(0xFF252E3A),
-                                                fontSize: 11.5,
-                                                fontWeight: FontWeight.w800,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      SizedBox(width: ResSize.w * 6),
-                                      InkWell(
-                                        key: const ValueKey<String>(
-                                          'destination-mode-end',
-                                        ),
-                                        onTap: _endDestinationMode,
-                                        borderRadius: BorderRadius.circular(15),
-                                        child: const SizedBox(
-                                          height: 28,
-                                          width: 28,
-                                          child: Icon(
-                                            Icons.close_rounded,
-                                            size: 17,
-                                            color: Color(0xFF7D898F),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      )
-                    else if (isDestinationPanel)
+                    // Destination mode shows on the island (R10-9).
+                    if (isDestinationPanel)
                       Padding(
                         padding: EdgeInsets.only(top: ResSize.h * 12),
                         child: InAirportQueue(),
@@ -895,6 +827,25 @@ extension _HomeMapSheet on _DriverHomeState {
                     child: _HomeOfferRadar(this)._buildRadarOffersTray(),
                   ),
                 ),
+              ),
+            if (!isDestinationPanel && _destinationModeActive &&
+                _destinationTrip?.distanceMeters != null &&
+                _mainPanelPosition <= 0.04 && _radarHomeOffers.isEmpty &&
+                _outsideRadarOffer == null &&
+                !_HomeExclusive(this)._exclusiveLive &&
+                !_HomeReservation(this)._reservationOnDock)
+              Positioned(
+                left: 16,
+                right: 16,
+                // Above the map buttons, where the Radar deck would sit.
+                bottom: 138 + _homeMapButtonSize + 12,
+                child: Center(child: DestinationModeBar(
+                  key: ValueKey<String>('destination-bar-$_destinationAddress'),
+                  summary: _destinationSummary!,
+                  until: _destinationUntil == null ? '–' : clockLabel(_destinationUntil!),
+                  finding: _isOnline || _isGoingOnline,
+                  onTap: _fitDestinationRoute,
+                )),
               ),
             // Reservation request: the Home sheet grows taller behind the
             // dock, over the map buttons, under the top island.
@@ -961,6 +912,8 @@ extension _HomeMapSheet on _DriverHomeState {
           : null;
       final message = _islandMessage ?? hold;
       final maxWidth = viewportWidth - 32;
+      // Destination mode: pin and "Centralplan 15 · 35 min", menu kept.
+      final destination = message == null && _destinationModeActive;
       // A message sizes the island to its words (never taller): the normal
       // size for short words, a little longer for longer ones. 14 + 14 for the
       // tucked sides, 2 for the border and some air on both ends.
@@ -974,23 +927,28 @@ extension _HomeMapSheet on _DriverHomeState {
                     14 + 14 + 2 + 36)
                 .clamp(math.min(244.0, maxWidth), math.min(244.0 * 1.15, maxWidth))
                 .toDouble()
+          : destination
+              ? (DigitalDestinationFace.widthFor(context, _destinationShortLabel, _destinationEta) +
+                        54 + 14 + 2 + 28)
+                    .clamp(math.min(200.0, maxWidth), maxWidth)
+                    .toDouble()
           : _islandWake >= 1
               ? math.min(maxWidth, 244.0)
               : 112.0;
       final tucked = _islandMessage != null;
-      Widget side(Widget button) => AnimatedContainer(
+      Widget side(Widget button, {bool tuck = false}) => AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeOutCubic,
-            width: tucked ? 14 : 54,
+            width: tucked || tuck ? 14 : 54,
             child: ClipRect(
               child: OverflowBox(
                 minWidth: 54,
                 maxWidth: 54,
                 child: IgnorePointer(
-                  ignoring: tucked,
+                  ignoring: tucked || tuck,
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 200),
-                    opacity: tucked ? 0 : 1,
+                    opacity: tucked || tuck ? 0 : 1,
                     child: button,
                   ),
                 ),
@@ -1045,9 +1003,11 @@ extension _HomeMapSheet on _DriverHomeState {
                         ? hold.onTap
                         : message != null
                         ? () => _onIslandMessageTap(message)
+                        : destination
+                        ? _openDestinationDetails
                         : _onIslandEarningsTap,
                     // Holding the middle goes straight to Ride history.
-                    onLongPress: message != null
+                    onLongPress: message != null || destination
                         ? null
                         : () {
                             HapticFeedback.mediumImpact();
@@ -1060,6 +1020,12 @@ extension _HomeMapSheet on _DriverHomeState {
                             ? _islandMessageView(hold, hold: true)
                             : message != null
                             ? _islandMessageView(message)
+                            : destination
+                            ? DigitalDestinationFace(
+                                key: const ValueKey<String>('island-destination-face'),
+                                place: _destinationShortLabel,
+                                eta: _destinationEta,
+                              )
                             : _islandWake >= 2
                                 ? _islandFaceView()
                                 : const SizedBox(
@@ -1081,7 +1047,7 @@ extension _HomeMapSheet on _DriverHomeState {
                     child: DigitalIslandParts.searchIcon,
                   ),
                 ),
-              )),
+              ), tuck: destination),
             ],
           ),
         ),

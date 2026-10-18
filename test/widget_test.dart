@@ -843,7 +843,7 @@ void main() {
     _expectNoException(tester);
   });
 
-  testWidgets('Destination Mode sets one route and auto-starts online', (
+  testWidgets('Destination Mode: confirm shows it on the island, no popup card', (
     WidgetTester tester,
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -874,13 +874,30 @@ void main() {
     await tester.tap(
       find.byKey(const ValueKey<String>('destination-result-solna')),
     );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 420));
+
+    // Choose-destination step: one option, then Confirm.
+    expect(find.text('Fastest route to your destination'), findsOneWidget);
+    expect(find.textContaining('closer to Solna centrum'), findsOneWidget);
+    expect(find.textContaining('Arrive by '), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey<String>('destination-confirm')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 420));
     await tester.pump(const Duration(milliseconds: 420));
 
     expect(find.byType(DriverHome), findsOneWidget);
+    // No popup card on the map.
+    expect(find.text('On your way'), findsNothing);
     expect(
       find.byKey(const ValueKey<String>('destination-mode-home-tab')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('destination-mode-bar')),
       findsOneWidget,
     );
+    expect(find.textContaining('Destination mode until '), findsOneWidget);
     expect(find.text('STARTING'), findsOneWidget);
 
     final map = tester.widget<CustomGoogleMap>(
@@ -905,15 +922,38 @@ void main() {
     expect(find.text('LIVE'), findsOneWidget);
     _expectNoException(tester);
 
-    final endDestination = find.byKey(
-      const ValueKey<String>('destination-mode-end'),
+    // Once the online notices pass, the island shows the destination.
+    final face = find.byKey(const ValueKey<String>('island-destination-face'));
+    for (var i = 0; i < 24 && face.evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+    expect(face, findsOneWidget);
+    expect(
+      find.descendant(of: face, matching: find.textContaining('Solna Torg')),
+      findsOneWidget,
     );
-    expect(endDestination, findsOneWidget);
-    tester.widget<InkWell>(endDestination).onTap!.call();
+    expect(find.text('On your way'), findsNothing);
+
+    // Tap the island: details with "Turn off destination".
+    tester
+        .widget<InkWell>(
+          find.byKey(const ValueKey<String>('last-trip-launcher')),
+        )
+        .onTap!
+        .call();
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 420));
+    expect(find.text('Turn off destination'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey<String>('destination-mode-end')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 420));
 
     expect(
-      find.byKey(const ValueKey<String>('destination-mode-home-tab')),
+      find.byKey(const ValueKey<String>('island-destination-face')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('destination-mode-bar')),
       findsNothing,
     );
     expect(find.text('LIVE'), findsOneWidget);
