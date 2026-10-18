@@ -26,6 +26,9 @@ class _HomeExclusiveState {
   /// The sheet is (nearly) up: the island says "Exclusive".
   bool raised = false;
 
+  /// When the offer's time runs out, so a paused tab can pick it up.
+  DateTime? deadline;
+
   /// Runs once the sheet is down.
   VoidCallback? onDown;
 
@@ -75,7 +78,38 @@ extension _HomeExclusive on _DriverHomeState {
 
     void _startExclusiveClock(Duration lifetime) {
       _exclusive.clock.duration = lifetime;
+      _exclusive.deadline = DateTime.now().add(lifetime);
       unawaited(_exclusive.clock.reverse(from: 1));
+    }
+
+    /// R13-3 (C): back from a hidden tab or locked phone, whose pause
+    /// cancelled the offer's time out. Gone if its time ran out meanwhile,
+    /// else it counts down the time it has left.
+    void _resumeExclusiveTimeout() {
+      final offer = _outsideRadarOffer;
+      final deadline = _exclusive.deadline;
+      if (!mounted ||
+          offer == null ||
+          deadline == null ||
+          _exclusive.leaving ||
+          _outsideOfferTimeoutTimer != null ||
+          _reservation.claimingId != null ||
+          _scheduled.claimingId != null) {
+        return;
+      }
+      final left = deadline.difference(DateTime.now());
+      if (left <= Duration.zero) {
+        // It ran out while the driver could not see it: not a miss.
+        _HomeOfferRadar(this)._dismissOutsideRadarOffer();
+        return;
+      }
+      final lifetime = _exclusive.clock.duration ?? left;
+      final share = left.inMilliseconds / math.max(1, lifetime.inMilliseconds);
+      unawaited(_exclusive.clock.reverse(from: share.clamp(0.0, 1.0)));
+      _outsideOfferTimeoutTimer = Timer(left, () {
+        if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
+        _HomeOfferRadar(this)._dismissOutsideRadarOffer(missed: true);
+      });
     }
 
     /// Takes the sheet down (route first, then the slide); [then] runs
@@ -223,6 +257,11 @@ extension _HomeExclusive on _DriverHomeState {
           }
           return pins;
         },
+        labels: (
+          OfferRoutePins.minutes(offer.pickupMinutes),
+          OfferRoutePins.minutes(offer.tripMinutes),
+        ),
+        stops: [for (final stop in offer.stops) stop.point.toLatLng()],
       );
     }
 

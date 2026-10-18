@@ -144,6 +144,19 @@ Future<void> _holdRadarOff(WidgetTester tester) async {
   await _advanceAnimation(tester, const Duration(milliseconds: 520));
 }
 
+/// No green or red wash on the Home sheet (R13-6).
+void _expectSheetNotTinted(WidgetTester tester) {
+  const tints = <Color>[Color(0xFF1C6B45), MoveraRadarOrb.holdSheet];
+  expect(
+    find.byWidgetPredicate(
+      (w) =>
+          (w is ColoredBox && tints.contains(w.color)) ||
+          (w is PhysicalShape && tints.contains(w.color)),
+    ),
+    findsNothing,
+  );
+}
+
 /// Home's sheet body is the map (behind an AbsorbPointer) plus the dim.
 AbsorbPointer _homeMapAbsorber(SlidingUpPanel panel) =>
     (panel.body! as Stack).children.first as AbsorbPointer;
@@ -1057,6 +1070,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1550));
 
     expect(find.text('LIVE'), findsOneWidget);
+    // R13-6: going online never tints the Home sheet.
+    _expectSheetNotTinted(tester);
     _expectNoException(tester);
 
     await _openPanel(tester);
@@ -1074,6 +1089,8 @@ void main() {
     await _holdRadarOff(tester);
     expect(find.text('Tap to scan'), findsOneWidget);
     expect(find.text('OFF'), findsOneWidget);
+    // Holding the radar still goes offline; the sheet stays white.
+    _expectSheetNotTinted(tester);
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
     expect(panel.controller!.panelPosition, closeTo(0, 0.02),
         reason: 'Going offline brings the sheet down by itself');
@@ -2023,7 +2040,7 @@ void main() {
     },
   );
 
-  testWidgets('Completing a trip returns home with radar offline', (
+  testWidgets('Completing a trip returns home with radar online', (
     WidgetTester tester,
   ) async {
     WaybillStore.reset();
@@ -2055,8 +2072,10 @@ void main() {
     // The radar's last face change finishes its fade on the next frame.
     await tester.pump();
 
+    // R13-5: Done goes back to Home online, the radar scanning.
     expect(find.byType(DriverHome), findsOneWidget);
-    expect(find.text('OFF'), findsOneWidget);
+    expect(find.text('LIVE'), findsOneWidget);
+    expect(find.text('OFF'), findsNothing);
     expect(find.text('Go offline'), findsNothing);
     await _openPanel(tester);
     final lastWaybill = find.byKey(

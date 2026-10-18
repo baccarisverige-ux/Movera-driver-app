@@ -829,6 +829,7 @@ extension _AcceptRideTrip on _AcceptRideState {
             sessionController: widget.sessionController,
             activeRideRepository: widget.activeRideRepository,
             nextRide: nextRide,
+            paymentMethod: widget.paidByCash ? 'Cash' : 'Card',
           ),
         ),
       );

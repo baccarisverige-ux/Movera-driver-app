@@ -17,6 +17,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:movera/core/navigation/route_camera_fit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -186,6 +188,7 @@ class _DriverHomeState extends State<DriverHome>
     _camera.resume();
     unawaited(_HomeMapSheet(this)._startDriverLocation());
     _HomeOfferRadar(this)._scheduleVisibleOffers();
+    _HomeOfferRadar(this)._resumeOfferTimers();
     if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); }
     setState(() {});
   }
@@ -290,9 +293,6 @@ class _DriverHomeState extends State<DriverHome>
   bool showRideRequests = false;
   bool isAccountActivated = true;
   bool _activationHold = false;
-  Color? _sheetTone;
-  bool _sheetToneShown = false;
-  Timer? _sheetToneTimer;
   late final DriverSessionController _driverSession;
   late final bool _ownsDriverSession;
   bool get _isOnline => _liveVisible && _recoveryResolved && _driverSession.availableForOffers;
@@ -863,7 +863,6 @@ class _DriverHomeState extends State<DriverHome>
       _pendingRadarHomeOffers.clear();
       _soonReservationReady = false;
     });
-    _HomeMapSheet(this)._flashSheet(const Color(0xFF1C6B45));
     _HomeOfferRadar(this)._clearDirectOfferRoute();
     unawaited(_HomeMapSheet(this)._startDriverLocation(moveCamera: true));
     IslandMessages.show(HomeIslandNotices.online);
@@ -887,7 +886,6 @@ class _DriverHomeState extends State<DriverHome>
     unawaited(_radarSubscription?.cancel() ?? Future<void>.value());
     _radarSubscription = null;
     _latestDispatchOffers = const <RideOffer>[];
-    _HomeMapSheet(this)._flashSheet(MoveraRadarOrb.holdSheet);
     _onlineTransitionTimer?.cancel();
     _offerSimulationTimer?.cancel();
     _directOfferTimer?.cancel();
@@ -1060,7 +1058,7 @@ class _DriverHomeState extends State<DriverHome>
     if (widget.routeRepository == null && ownedRouting is RoadRouteService) { ownedRouting.dispose(); }
     ScheduledRideStore.openRequests.removeListener(_onScheduledRequests);
     _locationEpoch++;
-    _reservationPopupTimer?.cancel(); _offerRouteFrame.refit?.cancel(); _startWait?.cancel();
+    _reservationPopupTimer?.cancel(); _offerRouteFrame.dispose(); _startWait?.cancel();
     _reservation.release?.cancel();
     _reservation.fade.cancel();
     _scheduled.dispose();
@@ -1071,7 +1069,6 @@ class _DriverHomeState extends State<DriverHome>
     _destinationOpenTimer?.cancel();
     _radarSubscription?.cancel();
     _homeSheetPositionGuardTimer?.cancel();
-    _sheetToneTimer?.cancel();
     _goOnlinePulseController.dispose();
     _onlineTransitionTimer?.cancel();
     _islandIdleTimer?.cancel();

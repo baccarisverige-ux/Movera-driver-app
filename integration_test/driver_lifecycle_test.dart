@@ -155,8 +155,10 @@ void main() {
 
     await tester.tap(find.text('Done'));
     await _elapse(tester, const Duration(milliseconds: 500));
+    // R13-5: after Done the driver is back on Home, still online.
     expect(find.byType(DriverHome), findsOneWidget);
-    expect(find.text('OFF'), findsOneWidget);
+    expect(find.text('LIVE'), findsOneWidget);
+    expect(find.text('OFF'), findsNothing);
     expect(find.byType(AcceptRide), findsNothing);
     expect(tester.takeException(), isNull);
   });
