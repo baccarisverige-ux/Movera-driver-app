@@ -27,9 +27,9 @@ class DriverSheetNav {
     double edgeOpacity = 1,
     // Thin line on top once the open sheet sits above the dock.
     double topRuleOpacity = 0,
+    // The account-on-hold sheet. Going online or offline never tints the
+    // sheet (R13-6): it stays white.
     bool inactive = false,
-    Color? tone,
-    bool toneShown = false,
     // A plain contour in this colour instead of the grey outline and the
     // online dash, e.g. black while a reservation sits on the dock.
     Color? contourColor,
@@ -38,8 +38,7 @@ class DriverSheetNav {
   }) {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
     const sheetRed = MoveraRadarOrb.holdSheet;
-    final tinted = inactive || (tone != null && toneShown);
-    final iconTint = tinted ? Colors.white : null;
+    final iconTint = inactive ? Colors.white : null;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -66,16 +65,6 @@ class DriverSheetNav {
             ),
             child: Stack(
               children: [
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: AnimatedOpacity(
-                      opacity: !inactive && tone != null && toneShown ? 1 : 0,
-                      duration: const Duration(milliseconds: 380),
-                      curve: Curves.easeOutCubic,
-                      child: ColoredBox(color: tone ?? Colors.transparent),
-                    ),
-                  ),
-                ),
                 Padding(
               padding: EdgeInsets.fromLTRB(
                 10,

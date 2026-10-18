@@ -39,6 +39,8 @@ class AppAssets {
   static const String solarAltArrowRight = 'assets/icons/solar_alt_arrow_right.svg';
   static const String solarArrowRight = 'assets/icons/solar_arrow_right.svg';
   static const String solarCheckCircle = 'assets/icons/solar_check_circle.svg';
+  // Solar (CC BY 4.0) — outline star for rating the rider.
+  static const String solarStar = 'assets/icons/solar_star.svg';
   static const String solarAlarm = 'assets/icons/solar_alarm.svg';
   static const String solarBellBing = 'assets/icons/solar_bell_bing.svg';
   // Solar (CC BY 4.0) — Earnings & Wallet pages, see assets/icons/SOLAR_LICENSE.txt
@@ -121,7 +123,6 @@ class AppAssets {
   static const String homeImage1 = 'assets/images/home_image2.png';
   static const String homeImage2 = 'assets/images/home_image1.png';
   static const String homeImage3 = 'assets/images/home_image3.png';
-  static const String sucess = 'assets/images/sucess.png';
   static const String earningStatsCardImg =
       'assets/images/earning_stats_card_img.png';
   static const String verify = 'assets/images/verify.png';

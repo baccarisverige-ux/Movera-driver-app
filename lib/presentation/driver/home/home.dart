@@ -290,9 +290,6 @@ class _DriverHomeState extends State<DriverHome>
   bool showRideRequests = false;
   bool isAccountActivated = true;
   bool _activationHold = false;
-  Color? _sheetTone;
-  bool _sheetToneShown = false;
-  Timer? _sheetToneTimer;
   late final DriverSessionController _driverSession;
   late final bool _ownsDriverSession;
   bool get _isOnline => _liveVisible && _recoveryResolved && _driverSession.availableForOffers;
@@ -863,7 +860,6 @@ class _DriverHomeState extends State<DriverHome>
       _pendingRadarHomeOffers.clear();
       _soonReservationReady = false;
     });
-    _HomeMapSheet(this)._flashSheet(const Color(0xFF1C6B45));
     _HomeOfferRadar(this)._clearDirectOfferRoute();
     unawaited(_HomeMapSheet(this)._startDriverLocation(moveCamera: true));
     IslandMessages.show(HomeIslandNotices.online);
@@ -887,7 +883,6 @@ class _DriverHomeState extends State<DriverHome>
     unawaited(_radarSubscription?.cancel() ?? Future<void>.value());
     _radarSubscription = null;
     _latestDispatchOffers = const <RideOffer>[];
-    _HomeMapSheet(this)._flashSheet(MoveraRadarOrb.holdSheet);
     _onlineTransitionTimer?.cancel();
     _offerSimulationTimer?.cancel();
     _directOfferTimer?.cancel();
@@ -1071,7 +1066,6 @@ class _DriverHomeState extends State<DriverHome>
     _destinationOpenTimer?.cancel();
     _radarSubscription?.cancel();
     _homeSheetPositionGuardTimer?.cancel();
-    _sheetToneTimer?.cancel();
     _goOnlinePulseController.dispose();
     _onlineTransitionTimer?.cancel();
     _islandIdleTimer?.cancel();
