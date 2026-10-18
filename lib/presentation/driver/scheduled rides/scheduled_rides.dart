@@ -11,7 +11,10 @@ import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/components/reservation_route_map.dart';
+import 'package:movera/styles/movera_map_palette.dart';
+import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/widgets/led_count_badge.dart';
+import 'package:movera/widgets/route_mark_pins.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1002,88 +1005,51 @@ class _RoutePreviewPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final background = Paint()..color = const Color(0xFFE9EFEC);
-    canvas.drawRect(Offset.zero & size, background);
-
-    final street = Paint()
-      ..color = Colors.white.withValues(alpha: 0.88)
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
-
-    final thinStreet = Paint()
-      ..color = const Color(0xFFD4DDDA)
-      ..strokeWidth = 1.2
-      ..style = PaintingStyle.stroke;
-
+    final w = size.width;
+    final h = size.height;
+    // Home map colours (MoveraMapPalette): land, a park, water in the
+    // corner, white streets and one grey highway.
+    canvas.drawRect(Offset.zero & size, Paint()..color = MoveraMapPalette.land);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(w * 0.42, h * 0.56, w * 0.2, h * 0.5),
+        const Radius.circular(10),
+      ),
+      Paint()..color = MoveraMapPalette.park,
+    );
     canvas.drawPath(
       Path()
-        ..moveTo(-10, size.height * 0.28)
-        ..quadraticBezierTo(
-          size.width * 0.28,
-          size.height * 0.05,
-          size.width * 0.58,
-          size.height * 0.38,
-        )
-        ..quadraticBezierTo(
-          size.width * 0.78,
-          size.height * 0.58,
-          size.width + 12,
-          size.height * 0.22,
-        ),
-      street,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.18, -5),
-      Offset(size.width * 0.36, size.height + 5),
-      thinStreet,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.72, -5),
-      Offset(size.width * 0.58, size.height + 5),
-      thinStreet,
-    );
-    canvas.drawLine(
-      Offset(-5, size.height * 0.72),
-      Offset(size.width + 5, size.height * 0.88),
-      thinStreet,
+        ..moveTo(w * 0.86, -2)
+        ..quadraticBezierTo(w * 0.9, h * 0.45, w + 2, h * 0.62)
+        ..lineTo(w + 2, -2)
+        ..close(),
+      Paint()..color = MoveraMapPalette.water,
     );
 
-    final route = Paint()
-      ..color = accepted ? const Color(0xFF36464F) : const Color(0xFF19865C)
-      ..strokeWidth = 3.5
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
+    final street = MoveraMapPalette.street(3);
+    canvas
+      ..drawLine(Offset(w * 0.18, -5), Offset(w * 0.36, h + 5), street)
+      ..drawLine(Offset(w * 0.72, -5), Offset(w * 0.58, h + 5), street)
+      ..drawLine(Offset(-5, h * 0.72), Offset(w + 5, h * 0.88), street);
+    MoveraMapPalette.drawHighway(
+      canvas,
+      Path()
+        ..moveTo(-10, h * 0.28)
+        ..quadraticBezierTo(w * 0.28, h * 0.05, w * 0.58, h * 0.38)
+        ..quadraticBezierTo(w * 0.78, h * 0.58, w + 12, h * 0.22),
+      4,
+    );
 
-    final routePath = Path()
-      ..moveTo(size.width * 0.19, size.height * 0.70)
-      ..cubicTo(
-        size.width * 0.30,
-        size.height * 0.22,
-        size.width * 0.64,
-        size.height * 0.82,
-        size.width * 0.82,
-        size.height * 0.31,
-      );
-    canvas.drawPath(routePath, route);
-
-    final start = Paint()..color = const Color(0xFF2FBE7B);
-    final end = Paint()..color = const Color(0xFFDF5A62);
-    canvas.drawCircle(
-      Offset(size.width * 0.19, size.height * 0.70),
-      7,
-      Paint()..color = Colors.white,
+    final pickup = Offset(w * 0.19, h * 0.70);
+    final dropoff = Offset(w * 0.82, h * 0.31);
+    DriverRouteStyle.paintOn(
+      canvas,
+      Path()
+        ..moveTo(pickup.dx, pickup.dy)
+        ..cubicTo(w * 0.30, h * 0.22, w * 0.64, h * 0.82, dropoff.dx, dropoff.dy),
     );
-    canvas.drawCircle(
-      Offset(size.width * 0.19, size.height * 0.70),
-      4.5,
-      start,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.82, size.height * 0.31),
-      7,
-      Paint()..color = Colors.white,
-    );
-    canvas.drawCircle(Offset(size.width * 0.82, size.height * 0.31), 4.5, end);
+    RouteMarkPins.paintMark(canvas, pickup, RouteMarkKind.pickup);
+    RouteMarkPins.paintMark(canvas, dropoff, RouteMarkKind.dropoff);
   }
 
   @override
