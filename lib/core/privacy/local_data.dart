@@ -1,4 +1,5 @@
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
@@ -89,6 +90,12 @@ const localDataInventory = <LocalDataRecord>[
     retention: 'Until logout.',
   ),
   LocalDataRecord(
+    key: DriverStartPosition.key,
+    dataClass: LocalDataClass.personal,
+    purpose: 'Last known driver position, so the map opens there.',
+    retention: 'Overwritten while driving, until logout.',
+  ),
+  LocalDataRecord(
     key: '${LocalQuarantine.prefix}*',
     dataClass: LocalDataClass.personal,
     purpose: 'Unreadable or conflicting trip/settings records set aside so the driver is not blocked.',
@@ -121,7 +128,9 @@ Future<void> clearLocalUserData({
       LocalSupportRepository.key,
       SettingsRepository.key,
       PrefsActiveRideRepository.terminalKey,
+      DriverStartPosition.key,
     ];
+    DriverStartPosition.clearMemory();
     for (final key in exact) {
       if (!await prefs.remove(key)) {
         throw StateError('Could not clear local data: $key');

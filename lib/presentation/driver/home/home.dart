@@ -41,6 +41,7 @@ import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/routing/route_maps.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
@@ -101,6 +102,7 @@ part 'home_scheduled.dart';
 part 'home_offer_rules.dart';
 part 'home_account.dart';
 part 'home_exclusive.dart';
+part 'home_start_position.dart';
 part 'home_offer_route.dart';
 
 class DriverHome extends StatefulWidget {
@@ -339,12 +341,12 @@ class _DriverHomeState extends State<DriverHome>
   final MapPreviewGeneration _destinationRoadRequests = MapPreviewGeneration();
   final CoalescingMapRouteRefresh _destinationRoadRefresh = CoalescingMapRouteRefresh();
 
+  // Placeholder only: the map and car wait for a known position.
   static const LatLng _fallbackDriverPosition = LatLng(59.3293, 18.0686);
   LatLng _driverPosition = _fallbackDriverPosition;
-  static const CameraPosition _initialPosition = CameraPosition(
-    target: _fallbackDriverPosition,
-    zoom: 14.0,
-  );
+  bool _startPositionKnown = false, _startLocationFailed = false;
+  Timer? _startWait;
+  CameraPosition get _initialPosition => CameraPosition(target: _driverPosition, zoom: 14.0);
 
   static const _HomeDirectOffer _veryCloseDirectOffer = _HomeDirectOffer(
     id: 'home-direct-close',
@@ -424,7 +426,7 @@ class _DriverHomeState extends State<DriverHome>
       duration: const Duration(milliseconds: 1600),
     )..repeat();
     _snapSheet = MoveraSnapSheetController(panel: _panelController, vsync: this, reduceMotion: () => mounted && MediaQuery.disableAnimationsOf(context));
-    _HomeMapSheet(this)._loadMarkers();
+    _HomeStartPosition(this)._restoreStartPosition();
     _HomeMapSheet(this)._prepareDriverVehicleMarker();
     _HomeMapSheet(this)._startDriverLocation();
     _HomeMapSheet(this)._startIslandWake();
@@ -1133,7 +1135,7 @@ class _DriverHomeState extends State<DriverHome>
     if (widget.routeRepository == null && ownedRouting is RoadRouteService) { ownedRouting.dispose(); }
     ScheduledRideStore.openRequests.removeListener(_onScheduledRequests);
     _locationEpoch++;
-    _reservationPopupTimer?.cancel(); _offerRouteFrame.refit?.cancel();
+    _reservationPopupTimer?.cancel(); _offerRouteFrame.refit?.cancel(); _startWait?.cancel();
     _reservation.release?.cancel();
     _scheduled.dispose();
     _HomeAccount(this)._stopAccount();
