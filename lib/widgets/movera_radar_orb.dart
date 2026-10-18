@@ -37,9 +37,10 @@ class MoveraRadarOrb extends StatelessWidget {
   final double sweep;
   final bool blocked;
 
-  /// A reservation on Home: the normal grey Radar-offer orb with its
-  /// green turned black ([reserveInk]) and a small calendar over
-  /// [title] ("Accept").
+  /// A reservation request on Home: the normal grey Radar-offer orb with
+  /// its green waves turned grey ([reserveLight] pulsing to [reserveGrey],
+  /// halo [reserveHalo]) and [status] ("MATCH") in [reserveInk]. Same
+  /// core, sizes, pulse and sweep; no icon.
   final bool reserve;
 
   /// An Exclusive offer is live: the normal grey Radar-offer orb with its
@@ -52,9 +53,13 @@ class MoveraRadarOrb extends StatelessWidget {
   final double? touchSize;
   final Key touchKey;
 
-  /// The orb's colour while a reservation is up ([reserve]): the dark
-  /// Accept. The reservation popup's pictures use it for their accent.
-  static const Color reserveInk = Color(0xFF111518);
+  /// A reservation request ([reserve]): grey waves, breathing from
+  /// [reserveLight] into [reserveGrey], a soft grey halo and "MATCH" in
+  /// light black.
+  static const Color reserveLight = Color(0xFFC6CBD0);
+  static const Color reserveGrey = Color(0xFF8E959C);
+  static const Color reserveHalo = Color(0xFFD5D9DD);
+  static const Color reserveInk = Color(0xFF2E3338);
 
   /// The radar's green while a trip is found: its ring, glow and sweep.
   /// Home's radar offer cards, the dock dash and the island use it for
@@ -85,15 +90,16 @@ class MoveraRadarOrb extends StatelessWidget {
     final accent = exclusive
         ? exclusiveBlue
         : reserve
-        ? reserveInk
+        ? Color.lerp(reserveLight, reserveGrey, pulse) ?? reserveGrey
         : blocked
         ? holdRed
         : offer
             ? Color.lerp(detectedLight, detectedGreen, pulse) ?? detectedGreen
             : mint;
-    // Exclusive and reservation are the Radar-offer orb in their colour.
-    final tinted = exclusive || reserve;
-    final hot = offer || tinted;
+    // Exclusive and reservation are the Radar-offer orb in their colour;
+    // only Exclusive carries a small icon.
+    final tinted = exclusive;
+    final hot = offer || exclusive || reserve;
     final glowStrength = !active
         ? 0.08
         : loading
@@ -182,7 +188,7 @@ class MoveraRadarOrb extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: (reserve
-                              ? const Color(0xFFD5D9DC)
+                              ? reserveHalo
                               : exclusive
                               ? const Color(0xFFCFE0FB)
                               : const Color(0xFFBFD9CF))
@@ -297,13 +303,9 @@ class MoveraRadarOrb extends StatelessWidget {
                                 children: [
                                   if (tinted) ...[
                                     SvgPicture.asset(
-                                      exclusive
-                                          ? AppAssets.solarCheckCircle
-                                          : AppAssets.solarCalendar,
-                                      key: ValueKey<String>(
-                                        exclusive
-                                            ? 'radar-exclusive-icon'
-                                            : 'radar-reserve-icon',
+                                      AppAssets.solarCheckCircle,
+                                      key: const ValueKey<String>(
+                                        'radar-exclusive-icon',
                                       ),
                                       width: 8 * s,
                                       height: 8 * s,
@@ -332,7 +334,9 @@ class MoveraRadarOrb extends StatelessWidget {
                                     status,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: hot
+                                      color: reserve
+                                          ? reserveInk
+                                          : hot
                                           ? accent
                                           : const Color(0xFFE2E9E6),
                                       fontSize: 6.1 * s,
@@ -369,7 +373,7 @@ class MoveraRadarOrb extends StatelessWidget {
                                   height: 8 * s,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 1.1,
-                                    // White on the black reservation orb.
+                                    // White on the grey reservation orb.
                                     color: (reserve ? Colors.white : accent)
                                         .withValues(alpha: 0.90),
                                   ),

@@ -64,6 +64,7 @@ import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/home/components/destination_island.dart';
+import 'package:movera/presentation/driver/home/components/reservation_island_face.dart';
 import 'package:movera/presentation/driver/home/components/home_map_layers.dart';
 import 'package:movera/widgets/movera_destination_marker.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
@@ -618,18 +619,6 @@ class _DriverHomeState extends State<DriverHome>
     setState(() {});
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
   String get _destinationShortLabel {
     final address = _destinationAddress?.trim();
     if (address == null || address.isEmpty) { return 'Destination'; }
@@ -637,29 +626,6 @@ class _DriverHomeState extends State<DriverHome>
     if (firstPart.length <= 24) { return firstPart; }
     return '${firstPart.substring(0, 21)}…';
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   void _skipActivationDemo() {
     setState(() {
@@ -678,22 +644,8 @@ class _DriverHomeState extends State<DriverHome>
     );
   }
 
-
   bool hideMainPanel = false;
   Timer? _destinationOpenTimer;
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -860,30 +812,13 @@ class _DriverHomeState extends State<DriverHome>
               ),
             ),
           _HomeMapSheet(this)._homeRadarLayer(),
+          // A reservation request: its sheet over the dock, its orb on top.
+          _HomeReservation(this)._reservationLayer(),
               ],
             ),
       ),
     );
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   void _goOnline() {
     if (_driverSession.isSuspended) {
@@ -940,7 +875,6 @@ class _DriverHomeState extends State<DriverHome>
       },
     );
   }
-
 
   Future<void> _goOffline() async {
     _destinationOpenTimer?.cancel();
@@ -1114,21 +1048,6 @@ class _DriverHomeState extends State<DriverHome>
       blocked: blocked,
     );
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   @override
   void dispose() {
