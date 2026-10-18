@@ -172,6 +172,15 @@ class DriverTexts {
   static const islandSeeEarnings = DriverTextKey(
       'island.seeEarnings', 'Tap to see earnings', DriverTextArea.island);
 
+  /// R13-9: admin's destinations per day are used up, or the mode is off
+  /// in this zone, or its time limit ended it.
+  static const islandDestinationsUsed = DriverTextKey('island.destinationsUsed',
+      "Today's destinations used", DriverTextArea.island);
+  static const islandDestinationOff = DriverTextKey(
+      'island.destinationOff', 'Destination mode is off here', DriverTextArea.island);
+  static const islandDestinationEnded = DriverTextKey(
+      'island.destinationEnded', 'Destination mode ended', DriverTextArea.island);
+
   // Offer cards: Radar, Exclusive and the reservation popup.
   static const offerYourShare =
       DriverTextKey('offer.yourShare', 'Your share', DriverTextArea.offer);
@@ -282,6 +291,9 @@ class DriverTexts {
     islandTripNotClosed,
     islandCloseSavedTrip,
     islandSeeEarnings,
+    islandDestinationsUsed,
+    islandDestinationOff,
+    islandDestinationEnded,
     offerYourShare,
     offerFare,
     offerPickup,

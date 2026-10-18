@@ -4,7 +4,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
+import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
@@ -65,6 +67,9 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     DriverCategoryChoice.reset();
     DriverAppTexts.reset();
     PickupPayConfig.current = const PickupPayConfig();
+    DestinationModeRules.current = const DestinationModeRules();
+    NextTripRules.current = const NextTripRules();
+    DestinationModeSession.instance = DestinationModeSession();
   });
   await testMain();
 }

@@ -149,33 +149,20 @@ extension _HomeOfferRadar on _DriverHomeState {
         _camera.endPreview();
       }
     }
-    bool _directOfferFollowsDestination(_HomeDirectOffer offer) {
+    bool _directOfferFollowsDestination(_HomeDirectOffer offer) =>
+        _followsDestination(offer.dropoffPosition);
+    /// R13-9: a drop-off near the road route to the destination (admin
+    /// corridor) that brings the driver closer, by admin's focus.
+    bool _followsDestination(LatLng dropoff) {
       if (!_destinationModeActive) { return true; }
       final destination = _destinationPosition;
       if (destination == null) { return true; }
-
-      final latitudeRadians = _driverPosition.latitude * math.pi / 180;
-      final longitudeScale = math.cos(latitudeRadians);
-
-      final destinationX =
-          (destination.longitude - _driverPosition.longitude) * longitudeScale;
-      final destinationY = destination.latitude - _driverPosition.latitude;
-      final offerX =
-          (offer.dropoffPosition.longitude - _driverPosition.longitude) *
-          longitudeScale;
-      final offerY =
-          offer.dropoffPosition.latitude - _driverPosition.latitude;
-
-      final destinationLength = math.sqrt(
-        destinationX * destinationX + destinationY * destinationY,
+      return DestinationFilter.follows(
+        driver: GeoPointMaps.fromLatLng(_driverPosition),
+        destination: GeoPointMaps.fromLatLng(destination),
+        dropoff: GeoPointMaps.fromLatLng(dropoff),
+        route: _cameraRoute?.points ?? const <GeoPoint>[],
       );
-      final offerLength = math.sqrt(offerX * offerX + offerY * offerY);
-      if (destinationLength == 0 || offerLength == 0) { return true; }
-
-      final cosine =
-          (destinationX * offerX + destinationY * offerY) /
-          (destinationLength * offerLength);
-      return cosine >= 0.45;
     }
     void _clearDirectOfferRoute() {
       if (!mounted) { return; }
@@ -554,7 +541,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     void _showDispatchOfferAt(int index) {
       final offers = _latestDispatchOffers.where((offer) => offer.isNearby &&
-          (!_destinationModeActive || offer.followsDestination)).toList();
+          _followsDestination(offer.dropoffPosition.toLatLng())).toList();
       if (index >= offers.length) { return; }
       _showRadarHomeOffer(_homeOfferFromDispatch(offers[index]));
     }
@@ -821,7 +808,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       final nearby = _latestDispatchOffers
           .where((offer) =>
               offer.isNearby &&
-              (!_destinationModeActive || offer.followsDestination) &&
+              _followsDestination(offer.dropoffPosition.toLatLng()) &&
               _HomeOfferRules(this)._rideAllowed(offer))
           .length;
       return math.max(listed + _pendingRadarHomeOffers.length, nearby);

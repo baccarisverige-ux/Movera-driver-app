@@ -23,9 +23,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/driver_home_config_repository.dart';
+import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/trip_occurrence.dart';
+import 'package:movera/core/dispatch/destination_filter.dart';
+import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
@@ -336,6 +339,7 @@ class _DriverHomeState extends State<DriverHome>
   LatLng? _destinationPosition;
   DriverDestinationResult? _destinationTrip; // Confirmed distance and time.
   DateTime? _destinationUntil; // "Destination mode until 02:40".
+  Timer? _destinationLimitTimer; // Admin's time limit (R13-9).
 
   // ignore: prefer_final_fields
   Set<Marker> _markers = {};
@@ -424,6 +428,8 @@ class _DriverHomeState extends State<DriverHome>
     _adminHomeConfig = (widget.homeConfigRepository ??
             const LocalDriverHomeConfigRepository())
         .load();
+    if (_adminHomeConfig.destinationMode case final rules?) { DestinationModeRules.current = rules; }
+    if (_adminHomeConfig.nextTrips case final rules?) { NextTripRules.current = rules; }
     final access = _adminHomeConfig.scheduledRides.driverAccess;
     if (!identical(ScheduledRideStore.driverAccess, access)) { ScheduledRideStore.driverAccess = access; }
     ScheduledRideStore.openRequests.addListener(_onScheduledRequests);
@@ -705,6 +711,7 @@ class _DriverHomeState extends State<DriverHome>
                   dispatchRepository: _dispatch,
                   activeRideRepository: widget.activeRideRepository,
                   offerFilter: _HomeOfferRules(this)._rideAllowed,
+                  followsDestination: (o) => _HomeOfferRadar(this)._followsDestination(o.dropoffPosition.toLatLng()),
                   towardPickupTime: _HomeScheduled(this)._towardPickupTime,
                   onCloseRides: (hasOffers) {
                     setState(() {
@@ -913,6 +920,7 @@ class _DriverHomeState extends State<DriverHome>
       _destinationRoutePolylines = {};
       _soonReservationReady = false;
     });
+    _destinationLimitTimer?.cancel(); DestinationModeSession.instance.ended();
     _HomeOfferRadar(this)._clearDirectOfferRoute();
     await _HomeMapSheet(this)._closeDriverSheet();
   }
@@ -999,7 +1007,8 @@ class _DriverHomeState extends State<DriverHome>
         final radarTrips = _latestDispatchOffers
             .where((offer) =>
                 offer.isNearby &&
-                (!_destinationModeActive || offer.followsDestination) && _HomeOfferRules(this)._rideAllowed(offer))
+                _HomeOfferRadar(this)._followsDestination(offer.dropoffPosition.toLatLng()) &&
+                _HomeOfferRules(this)._rideAllowed(offer))
             .length;
         final openListed = _radarHomeOffers
             .where((offer) =>
@@ -1064,7 +1073,7 @@ class _DriverHomeState extends State<DriverHome>
     if (widget.routeRepository == null && ownedRouting is RoadRouteService) { ownedRouting.dispose(); }
     ScheduledRideStore.openRequests.removeListener(_onScheduledRequests);
     _locationEpoch++;
-    _reservationPopupTimer?.cancel(); _offerRouteFrame.dispose(); _startWait?.cancel();
+    _reservationPopupTimer?.cancel(); _offerRouteFrame.dispose(); _startWait?.cancel(); _destinationLimitTimer?.cancel();
     _reservation.release?.cancel();
     _reservation.fade.cancel();
     _scheduled.dispose();

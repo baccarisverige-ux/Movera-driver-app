@@ -103,6 +103,24 @@ class HomeIslandNotices {
         onTap,
       );
 
+  /// R13-9: no destination now, or the time limit ended it.
+  static IslandMessage get destinationsUsed => IslandMessage(
+    title: driverText(DriverTexts.islandDestinationsUsed),
+    tone: IslandTone.warning,
+    group: 'destination',
+  );
+
+  static IslandMessage get destinationOff => IslandMessage(
+    title: driverText(DriverTexts.islandDestinationOff),
+    tone: IslandTone.warning,
+    group: 'destination',
+  );
+
+  static IslandMessage get destinationEnded => IslandMessage(
+    title: driverText(DriverTexts.islandDestinationEnded),
+    group: 'destination',
+  );
+
   static IslandMessage get newReservation => IslandMessage(
     title: driverText(DriverTexts.islandNewReservation),
     group: 'reservation',

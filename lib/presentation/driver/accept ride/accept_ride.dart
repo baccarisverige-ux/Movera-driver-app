@@ -42,6 +42,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/rider_contact.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/dispatch/next_trip_gate.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/widgets/pickup_pay_line.dart';

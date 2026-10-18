@@ -247,6 +247,14 @@ extension _HomeMapSheet on _DriverHomeState {
         padding: padding);
     }
     void _openDestinationModePicker() {
+      // R13-9: admin can switch the mode off per zone and limit it per day.
+      final refusal = DestinationModeSession.instance.refusal();
+      if (refusal != null) {
+        IslandMessages.show(refusal == DestinationRefusal.off
+            ? HomeIslandNotices.destinationOff
+            : HomeIslandNotices.destinationsUsed);
+        return;
+      }
       _closeHomeFloatingPopupsForSheet();
       if (_mainPanelPosition > 0.001 || isPanelOpen) {
         _panelController.close();
@@ -274,6 +282,17 @@ extension _HomeMapSheet on _DriverHomeState {
       _mapPreviews.cancel(); // An old offer cannot reclaim the destination map.
       _destinationRoadRequests.cancel();
       _cameraRoute = null;
+      final session = DestinationModeSession.instance..started();
+      _destinationLimitTimer?.cancel();
+      final left = session.timeLeft();
+      if (left != null) {
+        _destinationLimitTimer = Timer(left, () {
+          if (!mounted || !_destinationModeActive) { return; }
+          _endDestinationMode();
+          DestinationModeSession.instance.timedOut();
+          IslandMessages.show(HomeIslandNotices.destinationEnded);
+        });
+      }
       _rebuild(() {
         _destinationModeActive = true;
         _destinationAddress = result.address;
@@ -327,6 +346,8 @@ extension _HomeMapSheet on _DriverHomeState {
             !_destinationRoadRequests.owns(generation)) { return; }
 
         _cameraRoute = route;
+        DestinationModeSession.instance.keepRoute(
+            GeoPointMaps.fromLatLng(destination), route.points);
         unawaited(_animateToDriverLocation());
 
         _rebuild(() {
@@ -388,6 +409,8 @@ extension _HomeMapSheet on _DriverHomeState {
     }
     void _endDestinationMode() {
       if (!_destinationModeActive) { return; }
+      _destinationLimitTimer?.cancel();
+      DestinationModeSession.instance.ended();
       _mapPreviews.cancel();
       _destinationRoadRequests.cancel();
       _destinationRoadRefresh.cancelPending();

@@ -883,26 +883,17 @@ extension _AcceptRideTrip on _AcceptRideState {
       _rebuild(() => _onTripRadarState = _OnTripRadarState.off);
       _startOnTripRadar();
     }
+    /// R13-18: the same on-the-way filter as Home (R13-9); the next trip
+    /// starts at this trip's drop-off.
     bool _dropoffFollowsDestination(LatLng dropoff) {
       if (!_destinationActive) { return true; }
       final destination = _destinationPosition;
       if (destination == null) { return true; }
-
-      final latitudeRadians = _driverPosition.latitude * math.pi / 180;
-      final longitudeScale = math.cos(latitudeRadians);
-      final destinationX =
-          (destination.longitude - _driverPosition.longitude) * longitudeScale;
-      final destinationY = destination.latitude - _driverPosition.latitude;
-      final offerX = (dropoff.longitude - _driverPosition.longitude) * longitudeScale;
-      final offerY = dropoff.latitude - _driverPosition.latitude;
-      final destinationLength = math.sqrt(
-        destinationX * destinationX + destinationY * destinationY,
+      return OnTripDestination.follows(
+        from: GeoPointMaps.fromLatLng(widget.dropoffPosition),
+        destination: GeoPointMaps.fromLatLng(destination),
+        dropoff: GeoPointMaps.fromLatLng(dropoff),
       );
-      final offerLength = math.sqrt(offerX * offerX + offerY * offerY);
-      if (destinationLength == 0 || offerLength == 0) { return true; }
-      final cosine = (destinationX * offerX + destinationY * offerY) /
-          (destinationLength * offerLength);
-      return cosine >= 0.45;
     }
     _NextTripRadarOffer _onTripRadarOfferForDestination() {
       if (!_destinationActive) { return _uniqueDemoNext; }
@@ -953,12 +944,25 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
 
       // Offers are explicitly simulated. A future live adapter must pass the freshness gate.
+      double? metersToDropoff;
       if (_hasLiveLocation) {
-        final metersToDropoff =
+        metersToDropoff =
             GeoPointMaps.fromLatLng(_driverPosition).distanceMetersTo(
           GeoPointMaps.fromLatLng(widget.dropoffPosition),
         );
         if (metersToDropoff > _AcceptRideState._nextTripRadarRadiusMeters) { return; }
+      }
+      // R13-18: only on the way to the final drop-off, within admin's km
+      // and/or minutes of it. The demo keeps next trips as they were.
+      final toFinal = _stopCursor >= widget.stopAddresses.length;
+      if (!NextTripGate.allows(
+        demo: !driverProductionRequested,
+        onTrip: _stage == ActiveRideStage.onTrip,
+        toFinalDropoff: toFinal,
+        metersToDropoff: metersToDropoff,
+        secondsToDropoff: toFinal ? _routeDurationSeconds : null,
+      )) {
+        return;
       }
 
       _nextTripRadarDemoTimer = Timer(
