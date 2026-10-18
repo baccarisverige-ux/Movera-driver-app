@@ -129,6 +129,7 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
   GoogleMapController? _controller;
   int _markerGeneration = 0;
   Timer? _fitTimer;
+  double _routeZoomStep = DriverRouteStyle.defaultZoom;
 
   @override
   void initState() {
@@ -298,6 +299,7 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
       polylines: DriverRouteStyle.polylines(
         id: 'reservation-route',
         points: [for (final p in widget.route) p.toLatLng()],
+        zoom: _routeZoomStep,
       ),
       padding: widget.padding,
       myLocationEnabled: false,
@@ -307,6 +309,10 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
       tiltGesturesEnabled: false,
       webCameraControlEnabled: false,
       show3DNotice: widget.show3DNotice,
+      onCameraMove: (position) {
+        final step = DriverRouteStyle.stepZoom(position.zoom);
+        if (step != _routeZoomStep) setState(() => _routeZoomStep = step);
+      },
       onMapCreated: (controller) {
         _controller = controller;
         _fit();
