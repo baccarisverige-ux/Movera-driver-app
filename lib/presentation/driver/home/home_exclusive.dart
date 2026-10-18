@@ -173,7 +173,7 @@ extension _HomeExclusive on _DriverHomeState {
               title: claiming
                   ? driverText(DriverTexts.offerMatching)
                   : driverText(DriverTexts.offerAccept),
-              status: '${seconds}s',
+              status: '$seconds s',
               subtitle: 'Accept the Exclusive offer',
               exclusive: true,
               active: true,

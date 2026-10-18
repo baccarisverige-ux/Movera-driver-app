@@ -71,6 +71,38 @@ class HomeIslandNotices {
     priority: IslandPriority.high,
   );
 
+  /// R10-7: why going online waits, kept on the island (red) until it is
+  /// fixed. A tap opens what fixes it.
+  static IslandMessage _hold(String title, VoidCallback onTap) =>
+      IslandMessage(
+        title: title,
+        tone: IslandTone.alert,
+        priority: IslandPriority.high,
+        onTap: onTap,
+        group: 'hold',
+      );
+
+  static IslandMessage holdSuspended(VoidCallback onTap) =>
+      _hold(driverText(DriverTexts.islandAccountOnHold), onTap);
+
+  static IslandMessage holdNotActive(VoidCallback onTap) =>
+      _hold(driverText(DriverTexts.islandAccountNotActive), onTap);
+
+  static IslandMessage holdRest(String time, VoidCallback onTap) =>
+      _hold(driverText(DriverTexts.islandRestUntil, {'time': time}), onTap);
+
+  static IslandMessage holdDocument(
+    String document, {
+    required bool inReview,
+    required VoidCallback onTap,
+  }) =>
+      _hold(
+        inReview
+            ? driverText(DriverTexts.islandDocumentInReview)
+            : driverText(DriverTexts.islandDocumentExpired, {'document': document}),
+        onTap,
+      );
+
   static IslandMessage get newReservation => IslandMessage(
     title: driverText(DriverTexts.islandNewReservation),
     group: 'reservation',

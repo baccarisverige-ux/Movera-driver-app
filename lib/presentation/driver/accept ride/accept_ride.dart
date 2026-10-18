@@ -50,6 +50,7 @@ import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
 import 'package:movera/core/safety/ride_check_detector.dart';
+import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/safety/safety_alert_repository.dart';
 import 'package:movera/core/session/driver_composition_guard.dart';
@@ -454,6 +455,8 @@ class _AcceptRideState extends State<AcceptRide>
   StreamSubscription<DriverRealtimeEvent>? _realtimeSubscription;
   late final VoidCallback _onNavigationChangedListener =
       _AcceptRideTrip(this)._onNavigationChanged;
+  late final VoidCallback _onRideCheckGateListener =
+      _AcceptRideTrip(this)._onRideCheckGate;
   late final VoidCallback _syncNavigationStageListener =
       _AcceptRideTrip(this)._syncNavigationStage;
   late final void Function(CameraPosition) _onCameraMoveListener =
@@ -479,6 +482,9 @@ class _AcceptRideState extends State<AcceptRide>
   _OnTripRadarState _onTripRadarState = _OnTripRadarState.off;
   _NextTripRadarOffer? _nextTripRadarOffer;
   bool _onTripRadarDeclined = false;
+  /// R10-2: a next-trip offer came while a Ride check was open; it waits
+  /// for the answer from this moment, and drops once its time has passed.
+  DateTime? _nextTripOfferHeldAt;
 
   LatLng _driverPosition = _fallbackDriverPosition;
   List<GeoPoint> _roadGeoPoints = <GeoPoint>[];
@@ -527,6 +533,7 @@ class _AcceptRideState extends State<AcceptRide>
         widget.waybillRepository ?? InMemoryWaybillRepository.instance;
     _navigation = NavigationController(routeRepository: _routeService);
     _navigation.addListener(_onNavigationChangedListener);
+    RideCheckGate.listenable.addListener(_onRideCheckGateListener);
     _ownsRealtime = widget.realtime == null;
     _realtime = widget.realtime ?? MemoryDriverRealtime();
     _realtimeSubscription =
@@ -609,6 +616,7 @@ class _AcceptRideState extends State<AcceptRide>
 
   @override
   void dispose() {
+    RideCheckGate.listenable.removeListener(_onRideCheckGateListener);
     _rideCheckTicker?.cancel();
     _hardStops?.cancel();
     _rideCheck.dispose();
@@ -795,14 +803,9 @@ class _AcceptRideState extends State<AcceptRide>
         startCap: Cap.roundCap,
         endCap: Cap.roundCap,
       ),
-      Polyline(
-        polylineId: const PolylineId('active-road-route'),
+      ...DriverRouteStyle.polylines(
+        id: 'active-road-route',
         points: geometry.remaining(along).map((p) => p.toLatLng()).toList(),
-        width: DriverRouteStyle.width,
-        color: DriverRouteStyle.color,
-        geodesic: false,
-        startCap: Cap.roundCap,
-        endCap: Cap.roundCap,
       ),
     };
   }

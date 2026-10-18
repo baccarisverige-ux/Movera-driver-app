@@ -579,11 +579,26 @@ void main() {
     );
     expect(barrier.color.a, inInclusiveRange(0.42, 0.45));
 
-    // While it shows the radar is a black Accept · TAP, the dock contour
-    // is black and the green online dash is gone.
+    // While it shows the radar is a black orb: a calendar, Accept and
+    // the pickup day and time; the dock contour is black and the green
+    // online dash is gone.
     final radar = find.byKey(_reserveRadar);
     expect(find.descendant(of: radar, matching: find.text('Accept')), findsOneWidget);
-    expect(find.descendant(of: radar, matching: find.text('TAP')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: radar,
+        matching: find.byKey(const ValueKey<String>('radar-reserve-icon')),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: radar,
+        matching: find.textContaining(RegExp(r'^\w+ · \d{1,2}:\d{2}$')),
+      ),
+      findsOneWidget,
+    );
+    expect(find.descendant(of: radar, matching: find.text('TAP')), findsNothing);
     final outline = tester.widget<RadarSheetOutline>(
       find.byKey(const ValueKey<String>('dock-contour-custom')),
     );

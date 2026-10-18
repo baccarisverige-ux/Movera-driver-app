@@ -46,6 +46,7 @@ import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
 import 'package:movera/presentation/driver/home/components/radar_offer_deck.dart';
@@ -208,6 +209,7 @@ class _DriverHomeState extends State<DriverHome>
   void _islandMessagesListener() =>
       _HomeMapSheet(this)._onIslandMessagesChanged();
   void _lastTripListener() => _HomeMapSheet(this)._onLastTripChanged();
+  void _rideCheckGateListener() => _HomeOfferRadar(this)._onRideCheckGate();
   Timer? _homeSheetPositionGuardTimer;
   Timer? _offerSimulationTimer;
   Timer? _directOfferTimer;
@@ -423,6 +425,7 @@ class _DriverHomeState extends State<DriverHome>
     _HomeMapSheet(this)._startIslandWake();
     _waybills.lastListenable.addListener(_lastTripListener);
     IslandMessages.changes.addListener(_islandMessagesListener);
+    RideCheckGate.listenable.addListener(_rideCheckGateListener);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_restoreActiveRideIfNeeded());
       _HomeMapSheet(this)._maybeShowAppUpdatePrompt();
@@ -937,7 +940,7 @@ class _DriverHomeState extends State<DriverHome>
     unawaited(_radarSubscription?.cancel() ?? Future<void>.value());
     _radarSubscription = null;
     _latestDispatchOffers = const <RideOffer>[];
-    _HomeMapSheet(this)._flashSheet(const Color(0xFF8E2E28));
+    _HomeMapSheet(this)._flashSheet(MoveraRadarOrb.holdSheet);
     _onlineTransitionTimer?.cancel();
     _offerSimulationTimer?.cancel();
     _directOfferTimer?.cancel();
@@ -1143,6 +1146,7 @@ class _DriverHomeState extends State<DriverHome>
     _lastTripSettleTimer?.cancel();
     _waybills.lastListenable.removeListener(_lastTripListener);
     IslandMessages.changes.removeListener(_islandMessagesListener);
+    RideCheckGate.listenable.removeListener(_rideCheckGateListener);
     _islandMessageTimer?.cancel();
     _offerSimulationTimer?.cancel();
     _directOfferTimer?.cancel();

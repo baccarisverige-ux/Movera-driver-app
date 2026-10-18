@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/safety/emergency_dial.dart';
 import 'package:movera/core/safety/ride_check.dart';
+import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/safety/ride_check_recorder.dart';
 import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/safety/safety_alert_repository.dart';
@@ -53,6 +54,7 @@ class RideCheckController extends ChangeNotifier {
   bool _sending = false;
   bool _closing = false;
   bool _disposed = false;
+  bool _holdsGate = false;
 
   RideCheckRecorder? _recorder;
   RideCheckAudio _audio = RideCheckAudio.idle;
@@ -385,9 +387,26 @@ class RideCheckController extends ChangeNotifier {
     });
   }
 
+  /// Every phase change notifies: keep [RideCheckGate] open from the pill
+  /// until the driver has answered.
+  @override
+  void notifyListeners() {
+    _syncGate(
+      _phase == RideCheckPhase.pill || _phase == RideCheckPhase.card,
+    );
+    super.notifyListeners();
+  }
+
+  void _syncGate(bool open) {
+    if (open == _holdsGate) return;
+    _holdsGate = open;
+    RideCheckGate.set(open);
+  }
+
   @override
   void dispose() {
     _disposed = true;
+    _syncGate(false);
     _phaseTimer?.cancel();
     _audioTicker?.cancel();
     if (_audio == RideCheckAudio.recording) {

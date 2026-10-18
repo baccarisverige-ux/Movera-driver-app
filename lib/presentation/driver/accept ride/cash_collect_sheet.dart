@@ -55,7 +55,7 @@ class CashCollectSheet extends StatelessWidget {
   static const Color _ink = Color(0xFF111614);
   static const Color _muted = Color(0xFF6F7B82);
   static const Color _line = Color(0xFFECEEF0);
-  static const Color _gold = Color(0xFF7A5200);
+  static const Color _greyInk = Color(0xFF5E6A71);
   static const Color _owe = Color(0xFFB4232C);
   static const Color _due = Color(0xFF1E7A46);
 
@@ -191,74 +191,78 @@ class CashCollectSheet extends StatelessWidget {
       label: 'Collect $amount in cash',
       container: true,
       excludeSemantics: true,
-      child: Container(
+      // R10-3: a light grey tray pressed into the sheet: inner shadow at
+      // the top/left, soft light at the bottom, no outer drop shadow.
+      child: CustomPaint(
         key: const ValueKey<String>('cash-collect-case'),
-        padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(26),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFFF8E6), Color(0xFFFFEFC7)],
+        foregroundPainter: const _InsetTrayPainter(radius: 26),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(26),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFE6E8EB), Color(0xFFEFF1F3)],
+            ),
           ),
-          border: Border.all(color: const Color(0xFFF2DDA4)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF7A5200).withValues(alpha: 0.10),
-              blurRadius: 22,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: SvgPicture.asset(
-                AppAssets.solarWadOfMoney,
-                width: 30,
-                height: 30,
-                colorFilter: const ColorFilter.mode(_gold, BlendMode.srcIn),
-              ),
-            ),
-            const SizedBox(height: 14),
-            const Text(
-              'Collect',
-              style: TextStyle(
-                color: _gold,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                amount,
-                key: const ValueKey<String>('cash-collect-amount'),
-                style: const TextStyle(
-                  color: _ink,
-                  fontSize: 52,
-                  height: 1.1,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1.8,
+          child: Column(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: SvgPicture.asset(
+                  AppAssets.solarWadOfMoney,
+                  width: 30,
+                  height: 30,
+                  colorFilter: const ColorFilter.mode(_ink, BlendMode.srcIn),
                 ),
               ),
-            ),
-            const Text(
-              'in cash',
-              style: TextStyle(
-                color: _gold,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
+              const SizedBox(height: 14),
+              const Text(
+                'Collect',
+                style: TextStyle(
+                  color: _greyInk,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          ],
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  amount,
+                  key: const ValueKey<String>('cash-collect-amount'),
+                  style: const TextStyle(
+                    color: _ink,
+                    fontSize: 52,
+                    height: 1.1,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.8,
+                  ),
+                ),
+              ),
+              const Text(
+                'in cash',
+                style: TextStyle(
+                  color: _greyInk,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -342,4 +346,60 @@ class CashCollectSheet extends StatelessWidget {
       ],
     );
   }
+}
+
+/// R10-3: Flutter has no inset BoxShadow, so the tray's inner shadow is
+/// painted over its fill: a blurred dark ring offset down/right (shadow on
+/// the top/left edge), a light ring offset up (light on the bottom edge),
+/// and a fine edge line, all clipped to the tray.
+class _InsetTrayPainter extends CustomPainter {
+  const _InsetTrayPainter({required this.radius});
+
+  final double radius;
+
+  void _ring(Canvas canvas, RRect tray, Offset offset, Paint paint) {
+    final ring = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(tray.outerRect.inflate(24))
+      ..addRRect(tray.shift(offset));
+    canvas.drawPath(ring, paint);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final tray = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(radius),
+    );
+    canvas.save();
+    canvas.clipRRect(tray);
+    _ring(
+      canvas,
+      tray,
+      const Offset(2, 4),
+      Paint()
+        ..color = const Color(0xFF1C2A33).withValues(alpha: 0.16)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+    );
+    _ring(
+      canvas,
+      tray,
+      const Offset(-1, -3),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.85)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
+    canvas.restore();
+    canvas.drawRRect(
+      tray.deflate(0.5),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = const Color(0xFFD9DDE1),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_InsetTrayPainter oldDelegate) =>
+      oldDelegate.radius != radius;
 }

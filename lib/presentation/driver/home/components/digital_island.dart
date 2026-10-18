@@ -16,6 +16,7 @@ class DigitalIslandShell extends StatefulWidget {
     this.curve = Curves.easeOutBack,
     this.calm = false,
     this.exclusive = 0,
+    this.offers = false,
   });
 
   /// Only the width ever changes; the height stays the same.
@@ -33,6 +34,10 @@ class DigitalIslandShell extends StatefulWidget {
   /// How much of the Exclusive blue ring and glow shows, 0 → 1, while an
   /// Exclusive offer is live on Home; it follows the card's slide.
   final double exclusive;
+
+  /// Radar offers are up on Home: a green ring, the radar's green. An
+  /// Exclusive offer's blue goes over it.
+  final bool offers;
 
   /// The radar's Exclusive blue.
   static const Color exclusiveBlue = MoveraRadarOrb.exclusiveBlue;
@@ -96,6 +101,9 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(widget.height / 2);
     final blue = widget.exclusive.clamp(0.0, 1.0);
+    final green = widget.offers && blue <= 0;
+    final ring = green ? MoveraRadarOrb.offerAccent : DigitalIslandShell.exclusiveBlue;
+    final strength = green ? 1.0 : blue;
     // The Exclusive ring and glow sit outside the shell's own easing, so
     // they follow the card's slide frame by frame. Always in the tree,
     // so the shell keeps its state when they come and go.
@@ -103,12 +111,11 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
       key: const ValueKey<String>('island-exclusive-glow'),
       decoration: BoxDecoration(
         borderRadius: radius,
-        boxShadow: blue <= 0
+        boxShadow: strength <= 0
             ? null
             : [
                 BoxShadow(
-                  color: DigitalIslandShell.exclusiveBlue
-                      .withValues(alpha: 0.40 * blue),
+                  color: ring.withValues(alpha: 0.40 * strength),
                   blurRadius: DigitalIslandShell.exclusiveGlowBlur,
                 ),
               ],
@@ -118,11 +125,10 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
         key: const ValueKey<String>('island-exclusive-ring'),
         decoration: BoxDecoration(
           borderRadius: radius,
-          border: blue <= 0
+          border: strength <= 0
               ? null
               : Border.all(
-                  color: DigitalIslandShell.exclusiveBlue
-                      .withValues(alpha: blue),
+                  color: ring.withValues(alpha: strength),
                   width: DigitalIslandShell.exclusiveRingWidth,
                 ),
         ),
