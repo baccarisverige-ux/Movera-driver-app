@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,6 +57,7 @@ void main() {
   final previous = DriverRuntimeConfig.current;
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    DriverStartPosition.clearMemory();
     DriverRuntimeConfig.current = const DriverRuntimeConfig(
       externalRouting: false,
       liveMapTicker: false,
@@ -88,9 +90,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
     }
     expect(location.updates.hasListener, isTrue);
-    final initial = tester.widget<GoogleMap>(find.byType(GoogleMap).first);
-    expect(initial.markers.any((marker) =>
-        marker.position == const LatLng(59.35, 18.08)), isFalse,
+    // Nothing usable known yet: the map waits instead of opening on a
+    // fallback city or on the stale point.
+    expect(tester.widgetList<GoogleMap>(find.byType(GoogleMap)).any((map) =>
+        map.markers.any((marker) =>
+            marker.position == const LatLng(59.35, 18.08))), isFalse,
         reason: 'A two-minute-old location may not move the map or marker');
     expect(maps.moves, isEmpty,
         reason: 'Stale GPS cannot claim first live camera framing');
@@ -110,6 +114,8 @@ void main() {
         marker.markerId.value == 'driver_location' &&
         marker.position == live), isTrue,
         reason: 'The first valid stream fix must reclaim the map marker');
+    expect(updated.initialCameraPosition.target, live,
+        reason: 'The map opens on the first valid fix, not a fallback');
     expect(maps.moves, isNotEmpty,
         reason: 'Only the valid fix is allowed to center the camera');
     expect(tester.takeException(), isNull);
