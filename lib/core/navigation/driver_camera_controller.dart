@@ -7,6 +7,7 @@ import 'package:movera/core/routing/route_instruction.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/navigation/route_progress.dart';
 import 'package:movera/core/navigation/route_camera_geometry.dart';
+import 'package:movera/core/navigation/route_camera_fit.dart';
 
 enum DriverCameraMode { following, browsing, overview }
 
@@ -45,6 +46,12 @@ abstract interface class DriverCameraPort {
   Future<void> overview(List<GeoPoint> points, double padding);
   void interrupt();
   void dispose();
+}
+
+/// A port that can put the camera exactly on a target and zoom (a whole
+/// route fitted into the free part of the map, see [RouteCameraFit]).
+abstract interface class DriverCameraFraming {
+  Future<void> frame(GeoPoint target, double zoom);
 }
 
 /// Geometry and maneuver-aware framing. Each route replacement resets progress.
@@ -362,6 +369,48 @@ class DriverCameraController {
     } catch (_) {
       // A failed camera fit must not strand the driver in Preview forever.
       // Respect any later manual pan, map replacement or lifecycle pause.
+      if (!_disposed &&
+          !_suspended &&
+          epoch == _epoch &&
+          identical(port, _port) &&
+          _mode == DriverCameraMode.overview) {
+        _mode = DriverCameraMode.following;
+        _request(immediate: true);
+      }
+    }
+  }
+
+  /// Shows an offer's whole route at [fit]. [takeOver]: a new offer
+  /// takes the map even from a driver who moved it; later fits of the
+  /// same offer leave a moved map alone. A port that cannot frame falls
+  /// back to fitting [points] with [padding].
+  Future<void> previewFit(
+    RouteCameraFit fit, {
+    required List<GeoPoint> points,
+    double padding = 80,
+    bool takeOver = false,
+  }) async {
+    final port = _port;
+    final framing = port is DriverCameraFraming
+        ? port as DriverCameraFraming
+        : null;
+    if (framing == null) {
+      if (takeOver && mode == DriverCameraMode.browsing) {
+        _mode = DriverCameraMode.overview;
+      }
+      return preview(points, padding: padding);
+    }
+    if (_disposed ||
+        _suspended ||
+        (!takeOver && mode == DriverCameraMode.browsing)) {
+      return;
+    }
+    _invalidate();
+    _mode = DriverCameraMode.overview;
+    final epoch = _epoch;
+    try {
+      await framing.frame(fit.target, fit.zoom);
+    } catch (_) {
       if (!_disposed &&
           !_suspended &&
           epoch == _epoch &&

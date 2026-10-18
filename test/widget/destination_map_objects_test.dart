@@ -71,4 +71,25 @@ void main() {
     expect(layers.polylines.map((p) => p.polylineId.value),
         ['destination_mode_road_route']);
   });
+
+  test('Home: an offer that is no longer on screen draws no pins or route',
+      () {
+    final layers = homeMapLayers(
+      car: {const Marker(markerId: MarkerId('driver_location'), position: _driver)},
+      destinationMode: false,
+      destinationMarkers: const {},
+      destinationPolylines: const {},
+      offerMarkers: {
+        const Marker(markerId: MarkerId('radar_pickup'), position: LatLng(59.33, 18.06)),
+        const Marker(markerId: MarkerId('radar_dropoff'), position: LatLng(59.30, 18.10)),
+      },
+      offerPolylines: {
+        const Polyline(polylineId: PolylineId('direct_offer_road_route'),
+            points: [LatLng(59.33, 18.06), LatLng(59.30, 18.10)]),
+      },
+      offerOnScreen: false,
+    );
+    expect(layers.markers.map((m) => m.markerId.value), ['driver_location']);
+    expect(layers.polylines, isEmpty);
+  });
 }

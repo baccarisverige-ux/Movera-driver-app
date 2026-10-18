@@ -17,6 +17,7 @@ import 'package:movera/presentation/driver/home/components/radar_offer_deck.dart
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/custom_google_map.dart';
+import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -80,6 +81,79 @@ class _Routes implements RouteRepository {
 const _pickup = GeoPoint(59.3335, 18.0610);
 const _dropoff = GeoPoint(59.3428, 18.0475);
 
+/// Home online with one Radar trip on its deck and its route drawn.
+Future<_Routes> _homeWithRadarTrip(WidgetTester tester) async {
+  final maps = GoogleMapsFlutterPlatform.instance;
+  GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+  addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+  await tester.binding.setSurfaceSize(const Size(375, 812));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  final routes = _Routes();
+  final dispatch = _Dispatch([
+    RideOffer(
+      id: 'route-trip',
+      category: 'Comfort',
+      fare: '168 kr',
+      rating: '4.92',
+      pickupMinutes: 7,
+      pickupKm: 2.1,
+      tripMinutes: 30,
+      tripKm: 14.2,
+      pickup: 'Sveavägen 20, Stockholm',
+      dropoff: 'Kista Galleria, Stockholm',
+      pickupPosition: _pickup,
+      dropoffPosition: _dropoff,
+      isNearby: true,
+      followsDestination: false,
+    ),
+  ]);
+  await tester.pumpWidget(
+    LayoutViewport(
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        useInheritedMediaQuery: true,
+        builder: (_, __) => MaterialApp(
+          home: DriverHome(
+            sessionController: DriverSessionController(),
+            dispatchRepository: dispatch,
+            routeRepository: routes,
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pump(const Duration(milliseconds: 200));
+  tester
+      .widget<GestureDetector>(
+        find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+      )
+      .onTap!
+      .call();
+  final total = const Duration(milliseconds: 1500) +
+      DriverOfferRules.current.exclusiveAcceptTime +
+      const Duration(milliseconds: 7500);
+  for (var t = Duration.zero; t < total; t += const Duration(milliseconds: 100)) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+  expect(
+    tester
+        .widget<RadarOfferDeck>(
+          find.byKey(const ValueKey<String>('radar-home-deck')),
+        )
+        .ids,
+    ['route-trip'],
+  );
+  // The marker bitmaps are painted off the fake clock.
+  await tester.runAsync(
+    () => Future<void>.delayed(const Duration(milliseconds: 200)),
+  );
+  await tester.pump(const Duration(milliseconds: 300));
+
+  return routes;
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -87,76 +161,10 @@ void main() {
     ScheduledRideStore.reset();
   });
 
-  testWidgets('a Radar offer shows pickup → drop-off only, with minute chips',
+  testWidgets('a Radar offer shows pickup → drop-off only, with minute chips, '
+      'and the route leaves with the last card',
       (tester) async {
-    final maps = GoogleMapsFlutterPlatform.instance;
-    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
-    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
-    await tester.binding.setSurfaceSize(const Size(375, 812));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    final routes = _Routes();
-    final dispatch = _Dispatch([
-      RideOffer(
-        id: 'route-trip',
-        category: 'Comfort',
-        fare: '168 kr',
-        rating: '4.92',
-        pickupMinutes: 7,
-        pickupKm: 2.1,
-        tripMinutes: 30,
-        tripKm: 14.2,
-        pickup: 'Sveavägen 20, Stockholm',
-        dropoff: 'Kista Galleria, Stockholm',
-        pickupPosition: _pickup,
-        dropoffPosition: _dropoff,
-        isNearby: true,
-        followsDestination: false,
-      ),
-    ]);
-    await tester.pumpWidget(
-      LayoutViewport(
-        child: ScreenUtilInit(
-          designSize: const Size(375, 812),
-          minTextAdapt: true,
-          splitScreenMode: true,
-          useInheritedMediaQuery: true,
-          builder: (_, __) => MaterialApp(
-            home: DriverHome(
-              sessionController: DriverSessionController(),
-              dispatchRepository: dispatch,
-              routeRepository: routes,
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 200));
-    tester
-        .widget<GestureDetector>(
-          find.byKey(const ValueKey<String>('trip-radar-touch-target')),
-        )
-        .onTap!
-        .call();
-    final total = const Duration(milliseconds: 1500) +
-        DriverOfferRules.current.exclusiveAcceptTime +
-        const Duration(milliseconds: 7500);
-    for (var t = Duration.zero; t < total; t += const Duration(milliseconds: 100)) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-    expect(
-      tester
-          .widget<RadarOfferDeck>(
-            find.byKey(const ValueKey<String>('radar-home-deck')),
-          )
-          .ids,
-      ['route-trip'],
-    );
-    // The marker bitmaps are painted off the fake clock.
-    await tester.runAsync(
-      () => Future<void>.delayed(const Duration(milliseconds: 200)),
-    );
-    await tester.pump(const Duration(milliseconds: 300));
-
+    final routes = await _homeWithRadarTrip(tester);
     final map = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
     final route = map.polylines!
         .where((line) => line.polylineId.value.startsWith('direct_offer'))
@@ -183,6 +191,24 @@ void main() {
     // Pickup chip on the pin's left, drop-off chip on its right.
     expect(pickupPin.anchor.dx, greaterThan(0.5));
     expect(dropoffPin.anchor.dx, lessThan(0.5));
+    // No "2D map" note over the route while the offer is up.
+    expect(map.show3DNotice, isFalse);
+
+    // R13-3: the last card leaving takes its route and pins along.
+    bool offerLine(Polyline line) =>
+        line.polylineId.value.startsWith('direct_offer') ||
+        line.polylineId.value == 'offer_route_glow';
+    bool offerPin(Marker m) => m.markerId.value.startsWith('radar_');
+    // The driver closes the only card with its ×.
+    tester.widget<RadarOfferCard>(find.byType(RadarOfferCard).first).onClose!();
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byKey(const ValueKey<String>('radar-home-deck')), findsNothing);
+    final after = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
+    expect(after.polylines!.where(offerLine), isEmpty);
+    expect(after.markers!.where(offerPin), isEmpty);
+    expect(after.show3DNotice, isTrue);
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
   });
