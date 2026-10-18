@@ -2,9 +2,11 @@ part of 'home.dart';
 
 // The reservation request on Home (notes R11–R26). It first sits in every
 // driver's Scheduled rides; untaken after a demo delay it is also sent to
-// Home, where it rises from under the dock as an extension of the Home
-// sheet while Radar is live. The radar is its Accept button; the × only
-// hides it. Close to pickup it becomes an Exclusive offer and a Radar trip.
+// Home, where the Home sheet rises to about 40 % of the screen with its
+// details while Radar is live. The grey radar orb on the sheet's top edge
+// is its Accept; Decline only hides it. The Home map shows its route with
+// clock times on the pins. Close to pickup it becomes an Exclusive offer
+// and a Radar trip.
 // Every take goes through dispatch, which gives it to the first claim.
 // The demo timings are in [ReservationDemoTimings].
 
@@ -27,8 +29,11 @@ class _HomeReservationState {
   /// The island said "New reservation" for this round.
   bool announced = false;
 
-  /// The sheet is (nearly) up: the radar is Accept, the dock black.
+  /// The sheet is (nearly) up: its orb is Accept, the island says when.
   bool raised = false;
+
+  /// The reservation whose route the Home map shows.
+  String? routeId;
 
   /// Seen taken (not open in Scheduled rides). Open again later means the
   /// driver cancelled it and it went back out (R24).
@@ -130,54 +135,49 @@ extension _HomeReservation on _DriverHomeState {
           ScheduledRideStore.isOpen(request.id);
     }
 
-    /// Risen on the dock: the radar is Accept and the dock contour black,
-    /// from the moment the sheet starts to rise.
+    /// Risen: the orb is Accept and the island shows the pickup time,
+    /// from the moment the sheet is nearly up.
     bool get _reservationOnDock => _reservation.raised && _reservationUp;
 
-    /// The sheet behind the dock; its content ends above the radar orb.
+    /// The sheet over the dock, its orb on the top edge. Only the sheet
+    /// and the orb take touches: the map above stays free to move.
     Widget _reservationLayer() {
       final viewport = MediaQuery.sizeOf(context);
       final safeTop = MediaQuery.paddingOf(context).top;
-      const bottomInset = 178.0;
       return Positioned(
         key: const ValueKey<String>('home-reservation-slot'),
-        // One pixel past each side: only the top contour shows. The map
-        // behind is dimmed while it is up.
-        left: -1,
-        right: -1,
-        top: 0,
+        left: 0,
+        right: 0,
         bottom: 0,
         child: ValueListenableBuilder<double>(
           valueListenable: _panelSlidePosition,
-          builder: (context, _, __) => HomeReservationSheet(
-            request: _reservation.request,
-            visible: _reservationUp,
-            bottomInset: bottomInset,
-            clock: ScheduledClock.instance.now,
-            position: _reservationPosition,
-            count: _reservation.round.length,
-            picture: _reservationPicture,
-            // The pictures' accent is always the orb's colour in the dock.
-            accent: reservationAcceptOrbColor,
-            // Leaves the top island and some map above the sheet.
-            maxContentHeight: math.max(
-              160.0,
-              viewport.height - safeTop - 72 - bottomInset,
+          builder: (context, _, __) => _HomeOfferRoute(this)._measureOfferCard(
+            HomeReservationSheet(
+              request: _reservation.request,
+              visible: _reservationUp,
+              clock: ScheduledClock.instance.now,
+              position: _reservationPosition,
+              count: _reservation.round.length,
+              orb: _reserveRadar(),
+              // Leaves the top island and some map above the sheet.
+              maxHeight: math.max(
+                240.0,
+                viewport.height - safeTop - 72 - HomeReservationSheet.orbSize,
+              ),
+              onDecline: _reservation.claimingId != null
+                  ? null
+                  : _hideHomeReservation,
+              onShown: _onReservationRising,
+              onHidden: () {
+                if (!mounted) { return; }
+                if (_reservation.raised) {
+                  _rebuild(() => _reservation.raised = false);
+                }
+                _hideReservationRoute();
+              },
             ),
-            // View details: full height, just under the top island.
-            fullContentHeight: math.max(
-              160.0,
-              viewport.height - safeTop - 40 - bottomInset,
-            ),
-            onHide: _reservation.claimingId != null
-                ? null
-                : _hideHomeReservation,
-            onShown: _onReservationRising,
-            onHidden: () {
-              if (mounted && _reservation.raised) {
-                _rebuild(() => _reservation.raised = false);
-              }
-            },
+            (height) =>
+                _HomeOfferRoute(this)._offerCardMeasured(reservation: height),
           ),
         ),
       );
@@ -191,25 +191,14 @@ extension _HomeReservation on _DriverHomeState {
       return index < 0 ? 1 : index + 1;
     }
 
-    /// Airport rides get the plane; the others switch pictures, one after
-    /// another.
-    ReservationPicture? get _reservationPicture {
-      final request = _reservation.request;
-      if (request == null) { return null; }
-      var order = 0;
-      for (final other in _reservation.round) {
-        if (other.id == request.id) { break; }
-        if (ReservationPicture.forRequest(other) !=
-            ReservationPicture.airport) { order++; }
-      }
-      return ReservationPicture.forRequest(request, order: order);
-    }
-
-    /// The sheet is nearly up: the radar turns into Accept; once per round
-    /// the island says so.
+    /// The sheet is nearly up: its orb turns into Accept and the Home map
+    /// shows the route; once per round the island says so.
     void _onReservationRising() {
       if (!mounted) { return; }
       _rebuild(() => _reservation.raised = true);
+      if (_reservation.request case final request?) {
+        unawaited(_showReservationRoute(request));
+      }
       if (_reservation.announced) { return; }
       _reservation.announced = true;
       IslandMessages.show(HomeIslandNotices.newReservation);
@@ -228,15 +217,52 @@ extension _HomeReservation on _DriverHomeState {
       }
     }
 
-    /// While the reservation is up the radar is the Radar-offer orb in
-    /// black, with a small calendar over "Accept / MATCH / Tap to
-    /// accept"; tapping it takes the reservation.
+    /// The Home map shows [request]'s route, pickup → drop-off (no drive
+    /// to the pickup), fitted above the sheet; the pins' chips show the
+    /// pickup time and the expected drop-off time.
+    Future<void> _showReservationRoute(ReservationRequestPreview request) {
+      final pickup = request.pickup.toLatLng();
+      final dropoff = request.dropoff.toLatLng();
+      _reservation.routeId = request.id;
+      return _HomeMapSheet(this)._previewTripRoute(
+        pickup,
+        dropoff,
+        () => _HomeOfferRoute(this)._routePins(
+          pickup,
+          dropoff,
+          request.pickupTime,
+          request.arrivalTime,
+        ),
+      );
+    }
+
+    /// The request ended or went down: the map is normal Home again.
+    void _hideReservationRoute() {
+      if (_reservation.routeId == null) { return; }
+      _reservation.routeId = null;
+      // A Radar or Exclusive offer that took the map over keeps it.
+      if (_outsideRadarOffer != null || _radarHomeOffers.isNotEmpty) {
+        return;
+      }
+      _rebuild(() {
+        _mapPreviews.cancel();
+        _camera.endPreview();
+        _isDirectOfferRoutePreview = false;
+        _directOfferRouteMarkers = {};
+        _directOfferRoutePolylines = {};
+      });
+    }
+
+    /// While the reservation is up its orb, on the sheet's top edge, is the
+    /// normal Radar-offer orb with grey waves and "MATCH" in light black
+    /// ("Accept / MATCH / Tap to accept"); tapping it takes the
+    /// reservation.
     Widget _reserveRadar() {
       final claiming = _reservation.claimingId != null;
       return KeyedSubtree(
         key: const ValueKey<String>('home-radar-reserve'),
         child: AnimatedBuilder(
-          // The normal radar's pulse and sweep, in black.
+          // The normal radar's pulse and sweep, in grey.
           animation: Listenable.merge([
             _goOnlinePulseController,
             _radarSweepController,
@@ -247,6 +273,7 @@ extension _HomeReservation on _DriverHomeState {
             subtitle: claiming ? 'Please wait' : 'Tap to accept',
             reserve: true,
             active: true,
+            touchKey: const ValueKey<String>('reservation-radar-touch-target'),
             loading: claiming,
             pulse: _goOnlinePulseController.value,
             sweep: _radarSweepController.value,
@@ -303,7 +330,7 @@ extension _HomeReservation on _DriverHomeState {
       _closeHomeReservation();
     }
 
-    /// The ×: the sheet goes back down; the reservation is not declined
+    /// Decline: the sheet goes back down; the reservation only leaves Home
     /// and stays open in Scheduled rides (R20).
     void _hideHomeReservation() {
       if (_reservation.claimingId != null) { return; }

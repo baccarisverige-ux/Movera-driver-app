@@ -171,7 +171,6 @@ void main() {
       Widget sheet(OfferCardDetails details) => ReservationRequestSheet(
         request: request,
         details: details,
-        mapBuilder: (_) => const ColoredBox(color: Color(0xFFE6EAED)),
         clock: () => DateTime(2026, 10, 15, 7),
       );
       // Full width, as on Home.
@@ -184,19 +183,12 @@ void main() {
       );
       await tester.binding.setSurfaceSize(const Size(375, 812));
       addTearDown(() => tester.binding.setSurfaceSize(null));
-      // The popup card: badges and the price; View details has the rest.
-      Future<void> details() async {
-        await tester.tap(
-          find.byKey(const ValueKey<String>('reservation-view-details')),
-        );
-        await tester.pumpAndSettle();
-      }
-
+      // Every detail is on the sheet itself: badges, price, trip numbers
+      // and stops.
       await show(sheet(const OfferCardDetails()));
       expect(find.byKey(const ValueKey<String>('reservation-cash')), findsOneWidget);
-      await details();
-      expect(find.text('Odenplan, Stockholm'), findsOneWidget);
-      expect(find.text('19 min'), findsOneWidget);
+      expect(find.text('1 stop'), findsOneWidget);
+      expect(find.textContaining('19 min', findRichText: true), findsOneWidget);
       await show(const SizedBox());
       await show(
         sheet(
@@ -210,15 +202,11 @@ void main() {
         ),
       );
       expect(find.byKey(const ValueKey<String>('reservation-cash')), findsNothing);
-      // Only the area of the drop-off, on the card and in the details.
+      // Only the area of the drop-off.
       expect(find.text('Solna'), findsOneWidget);
       expect(find.text('95,06 kr', findRichText: true), findsOneWidget);
-      await details();
-      expect(find.text('Odenplan, Stockholm'), findsNothing);
-      expect(find.text('19 min'), findsNothing);
-      expect(find.text('Solna'), findsOneWidget);
-      expect(find.textContaining('Your share'), findsOneWidget);
-      expect(find.text('95,06 kr', findRichText: true), findsOneWidget);
+      expect(find.text('1 stop'), findsNothing);
+      expect(find.textContaining('19 min', findRichText: true), findsNothing);
       expect(tester.takeException(), isNull);
     });
   });

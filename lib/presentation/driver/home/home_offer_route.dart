@@ -3,12 +3,17 @@ part of 'home.dart';
 // R11-7: a Radar or Exclusive offer on Home shows its whole route, pickup
 // to drop-off (no drive to the pickup), fitted between the top island and
 // the top of the offer card or deck. The fit follows the card's height.
+// A reservation request shows its route the same way, above its sheet,
+// with clock times on the pins.
 
 /// What the offer route needs to re-fit: the card heights and the points.
 class _OfferRouteFrame {
   /// Measured heights of the Radar deck and the Exclusive card.
   double? deckHeight;
   double? exclusiveHeight;
+
+  /// Measured height of the reservation sheet, its orb included.
+  double? reservationHeight;
 
   /// Pickup, drop-off and the road between them.
   List<LatLng> framing = const <LatLng>[];
@@ -18,9 +23,22 @@ class _OfferRouteFrame {
 extension _HomeOfferRoute on _DriverHomeState {
   /// The pins with their time chips: pickup = minutes to drive there,
   /// drop-off = the trip's own length.
-  Future<Set<Marker>> _offerRouteMarkers(_HomeDirectOffer offer) async {
-    final pickupLabel = OfferRoutePins.minutes(offer.pickupMinutes);
-    final dropoffLabel = OfferRoutePins.minutes(offer.tripMinutes);
+  Future<Set<Marker>> _offerRouteMarkers(_HomeDirectOffer offer) =>
+      _routePins(
+        offer.pickupPosition,
+        offer.dropoffPosition,
+        OfferRoutePins.minutes(offer.pickupMinutes),
+        OfferRoutePins.minutes(offer.tripMinutes),
+      );
+
+  /// Pickup and drop-off pins with their chips: [pickupLabel] left of the
+  /// green dot, [dropoffLabel] right of the black square.
+  Future<Set<Marker>> _routePins(
+    LatLng pickup,
+    LatLng dropoff,
+    String pickupLabel,
+    String dropoffLabel,
+  ) async {
     final icons = await Future.wait([
       OfferRoutePins.icon(OfferRoutePinKind.pickup, pickupLabel),
       OfferRoutePins.icon(OfferRoutePinKind.dropoff, dropoffLabel),
@@ -28,7 +46,7 @@ extension _HomeOfferRoute on _DriverHomeState {
     return {
       Marker(
         markerId: const MarkerId('radar_pickup'),
-        position: offer.pickupPosition,
+        position: pickup,
         infoWindow: InfoWindow(title: pickupLabel),
         icon: icons[0],
         anchor: OfferRoutePins.anchor(OfferRoutePinKind.pickup, pickupLabel),
@@ -37,7 +55,7 @@ extension _HomeOfferRoute on _DriverHomeState {
       ),
       Marker(
         markerId: const MarkerId('radar_dropoff'),
-        position: offer.dropoffPosition,
+        position: dropoff,
         infoWindow: InfoWindow(title: dropoffLabel),
         icon: icons[1],
         anchor: OfferRoutePins.anchor(OfferRoutePinKind.dropoff, dropoffLabel),
@@ -64,6 +82,11 @@ extension _HomeOfferRoute on _DriverHomeState {
   /// How much of the map's bottom the offer card or deck covers; null
   /// before it has been measured.
   double? _offerCardObscured() {
+    if (_reservation.routeId != null) {
+      return _offerRouteFrame.reservationHeight ??
+          MediaQuery.sizeOf(context).height * 0.4 +
+              HomeReservationSheet.orbSize / 2;
+    }
     if (_outsideRadarOffer != null) { return _offerRouteFrame.exclusiveHeight; }
     final deck = _offerRouteFrame.deckHeight;
     if (deck == null || _radarHomeOffers.isEmpty) { return null; }
@@ -90,18 +113,30 @@ extension _HomeOfferRoute on _DriverHomeState {
     );
   }
 
-  /// The deck or Exclusive card changed height: re-fit the route to the
-  /// new free space once it settles.
-  void _offerCardMeasured({double? deck, double? exclusive}) {
+  /// The deck, the Exclusive card or the reservation sheet changed
+  /// height: re-fit the route to the new free space once it settles.
+  void _offerCardMeasured({
+    double? deck,
+    double? exclusive,
+    double? reservation,
+  }) {
     if (!mounted) { return; }
     final frame = _offerRouteFrame;
-    final old = deck != null ? frame.deckHeight : frame.exclusiveHeight;
-    final next = deck ?? exclusive!;
-    if (old != null && (old - next).abs() < 2) { return; }
+    final old = deck != null
+        ? frame.deckHeight
+        : exclusive != null
+        ? frame.exclusiveHeight
+        : frame.reservationHeight;
+    final next = deck ?? exclusive ?? reservation!;
+    // No real change, or the reservation sheet is down (nothing laid out).
+    if ((old != null && (old - next).abs() < 2) ||
+        (reservation != null && next <= 0)) { return; }
     if (deck != null) {
       frame.deckHeight = deck;
-    } else {
+    } else if (exclusive != null) {
       frame.exclusiveHeight = exclusive;
+    } else {
+      frame.reservationHeight = reservation;
     }
     if (!_isDirectOfferRoutePreview) { return; }
     frame.refit?.cancel();

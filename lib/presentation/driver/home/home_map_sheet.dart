@@ -167,10 +167,20 @@ extension _HomeMapSheet on _DriverHomeState {
     }
     /// R11-7: the offer's whole trip, pickup → drop-off only (no drive to
     /// the pickup), with time-chip pins, fitted above the card or deck.
-    Future<void> _previewDirectOfferRoute(_HomeDirectOffer offer) async {
+    Future<void> _previewDirectOfferRoute(_HomeDirectOffer offer) =>
+        _previewTripRoute(
+          offer.pickupPosition,
+          offer.dropoffPosition,
+          () => _HomeOfferRoute(this)._offerRouteMarkers(offer),
+        );
+    /// A trip's route on the Home map, pickup → drop-off with [pins],
+    /// fitted into the free space above the card or sheet.
+    Future<void> _previewTripRoute(
+      LatLng pickup,
+      LatLng dropoff,
+      Future<Set<Marker>> Function() pins,
+    ) async {
       if (!mounted) { return; }
-      final pickup = offer.pickupPosition;
-      final dropoff = offer.dropoffPosition;
       final generation = _mapPreviews.begin();
       bool isCurrent() => mounted && _mapPreviews.owns(generation) &&
           _isDirectOfferRoutePreview;
@@ -182,7 +192,7 @@ extension _HomeMapSheet on _DriverHomeState {
         _directOfferRoutePolylines = <Polyline>{};
       });
 
-      final markers = await _HomeOfferRoute(this)._offerRouteMarkers(offer);
+      final markers = await pins();
       if (!isCurrent()) return;
       _rebuild(() => _directOfferRouteMarkers = markers);
 
@@ -620,7 +630,8 @@ extension _HomeMapSheet on _DriverHomeState {
         offerMarkers: _directOfferRouteMarkers,
         offerPolylines: _directOfferRoutePolylines,
         offerOnScreen: _isDirectOfferRoutePreview &&
-            (_outsideRadarOffer != null || _radarHomeOffers.isNotEmpty),
+            (_outsideRadarOffer != null || _radarHomeOffers.isNotEmpty ||
+                _reservation.routeId != null),
       );
 
       return SizedBox(
@@ -789,9 +800,6 @@ extension _HomeMapSheet on _DriverHomeState {
                   onTap: _fitDestinationRoute,
                 )),
               ),
-            // Reservation request: the Home sheet grows taller behind the
-            // dock, over the map buttons, under the top island.
-            if (!isDestinationPanel) _HomeReservation(this)._reservationLayer(),
             if (!isDestinationPanel) ...[
               // As high as the phone allows: tucked just under the clock
               // and notch (the safe area keeps a few spare pixels below).
@@ -854,8 +862,14 @@ extension _HomeMapSheet on _DriverHomeState {
           : null;
       final message = _islandMessage ?? hold;
       final maxWidth = viewportWidth - 32;
+      // A reservation request up: calendar and "Today 06:35 · Reservation".
+      final reservation = message == null &&
+              _HomeReservation(this)._reservationOnDock
+          ? DigitalReservationFace.whenOf(_reservation.request!)
+          : null;
       // Destination mode: pin and "Centralplan 15 · 35 min", menu kept.
-      final destination = message == null && _destinationModeActive;
+      final destination = message == null && reservation == null &&
+          _destinationModeActive;
       // A message sizes the island to its words (never taller): the normal
       // size for short words, a little longer for longer ones. 14 + 14 for the
       // tucked sides, 2 for the border and some air on both ends.
@@ -869,6 +883,11 @@ extension _HomeMapSheet on _DriverHomeState {
                     14 + 14 + 2 + 36)
                 .clamp(math.min(244.0, maxWidth), math.min(244.0 * 1.15, maxWidth))
                 .toDouble()
+          : reservation != null
+              ? (DigitalReservationFace.widthFor(context, reservation) +
+                        14 + 14 + 2 + 36)
+                    .clamp(math.min(200.0, maxWidth), maxWidth)
+                    .toDouble()
           : destination
               ? (DigitalDestinationFace.widthFor(context, _destinationShortLabel, _destinationEta) +
                         54 + 14 + 2 + 28)
@@ -877,7 +896,7 @@ extension _HomeMapSheet on _DriverHomeState {
           : _islandWake >= 1
               ? math.min(maxWidth, 244.0)
               : 112.0;
-      final tucked = _islandMessage != null;
+      final tucked = _islandMessage != null || reservation != null;
       Widget side(Widget button, {bool tuck = false}) => AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeOutCubic,
@@ -945,11 +964,14 @@ extension _HomeMapSheet on _DriverHomeState {
                         ? hold.onTap
                         : message != null
                         ? () => _onIslandMessageTap(message)
+                        : reservation != null
+                        ? null
                         : destination
                         ? _openDestinationDetails
                         : _onIslandEarningsTap,
                     // Holding the middle goes straight to Ride history.
-                    onLongPress: message != null || destination
+                    onLongPress: message != null || destination ||
+                            reservation != null
                         ? null
                         : () {
                             HapticFeedback.mediumImpact();
@@ -962,6 +984,13 @@ extension _HomeMapSheet on _DriverHomeState {
                             ? _islandMessageView(hold, hold: true)
                             : message != null
                             ? _islandMessageView(message)
+                            : reservation != null
+                            ? DigitalReservationFace(
+                                key: const ValueKey<String>(
+                                  'island-reservation-face',
+                                ),
+                                when: reservation,
+                              )
                             : destination
                             ? DigitalDestinationFace(
                                 key: const ValueKey<String>('island-destination-face'),
@@ -1393,12 +1422,10 @@ extension _HomeMapSheet on _DriverHomeState {
               topRuleOpacity: cover,
               tone: closed ? _sheetTone : null,
               toneShown: closed && _sheetToneShown,
-              // Reservation on the dock: thin black contour, no mint. The
-              // Exclusive offer turns it blue, all the way round the radar.
+              // The Exclusive offer turns the contour blue, all the way
+              // round the radar.
               contourColor: _exclusive.shown != null
                   ? Color.lerp(_dockInk, ExclusiveOfferCard.blue, blue)
-                  : _HomeReservation(this)._reservationOnDock
-                  ? _dockInk
                   : null,
               contourWidth: 1 +
                   (ExclusiveOfferCard.liveContourWidth - 1) * blue,
@@ -1457,11 +1484,10 @@ extension _HomeMapSheet on _DriverHomeState {
                 // An Exclusive offer: the blue radar is its Accept.
                 final exclusive = !holdOff && _isOnline &&
                     _HomeExclusive(this)._exclusiveLive;
-                // A reservation on the dock: the radar is its Accept.
-                final reserve = !holdOff && !exclusive && _isOnline &&
-                    _HomeReservation(this)._reservationOnDock;
-                // Offers on the deck: the radar takes the front trip.
-                final front = !holdOff && !reserve && _isOnline &&
+                // A reservation request brings its own Accept orb on its
+                // sheet, over this one. Offers on the deck: the radar takes
+                // the front trip.
+                final front = !holdOff && _isOnline &&
                         _outsideRadarOffer == null
                     ? _HomeOfferRadar(this)._radarFrontOffer()
                     : null;
@@ -1470,8 +1496,6 @@ extension _HomeMapSheet on _DriverHomeState {
                         ? 'radar-hold-off'
                         : exclusive
                         ? 'radar-exclusive'
-                        : reserve
-                        ? 'radar-reserve'
                         : front != null
                         ? 'radar-accept'
                         : 'radar-online')
@@ -1498,8 +1522,6 @@ extension _HomeMapSheet on _DriverHomeState {
                             ? _holdOffRadar()
                             : exclusive
                             ? _HomeExclusive(this)._exclusiveRadar()
-                            : reserve
-                            ? _HomeReservation(this)._reserveRadar()
                             : front != null
                             ? _acceptRadar(front)
                             : _buildTripRadarButton())
