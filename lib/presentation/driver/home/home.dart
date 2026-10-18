@@ -933,7 +933,7 @@ class _DriverHomeState extends State<DriverHome>
     unawaited(_radarSubscription?.cancel() ?? Future<void>.value());
     _radarSubscription = null;
     _latestDispatchOffers = const <RideOffer>[];
-    _HomeMapSheet(this)._flashSheet(const Color(0xFF8E2E28));
+    _HomeMapSheet(this)._flashSheet(MoveraRadarOrb.holdSheet);
     _onlineTransitionTimer?.cancel();
     _offerSimulationTimer?.cancel();
     _directOfferTimer?.cancel();

@@ -219,7 +219,15 @@ void main() {
     expect(
       find.descendant(
         of: _blueRadar,
-        matching: find.text('${lifetime.inSeconds}s'),
+        matching: find.text('${lifetime.inSeconds} s'),
+      ),
+      findsOneWidget,
+    );
+    // A plain white check over Accept (R10-6).
+    expect(
+      find.descendant(
+        of: _blueRadar,
+        matching: find.byKey(const ValueKey<String>('radar-exclusive-icon')),
       ),
       findsOneWidget,
     );
@@ -243,11 +251,11 @@ void main() {
     expect(
       find.descendant(
         of: _blueRadar,
-        matching: find.textContaining(RegExp(r'^\d+s$')),
+        matching: find.textContaining(RegExp(r'^\d+ s$')),
       ),
       findsOneWidget,
     );
-    expect(_orb(tester).status, '${(lifetime.inSeconds / 2).ceil()}s');
+    expect(_orb(tester).status, '${(lifetime.inSeconds / 2).ceil()} s');
     await _end(tester);
   });
 

@@ -6,6 +6,7 @@ import 'package:movera/presentation/driver/home/components/radar_edge_dash.dart'
 import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 
 /// Collapsed / expanded bottom-sheet navigation chrome for driver home.
 class DriverSheetNav {
@@ -36,7 +37,7 @@ class DriverSheetNav {
     double contourWidth = 1,
   }) {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
-    const sheetRed = Color(0xFF8E2E28);
+    const sheetRed = MoveraRadarOrb.holdSheet;
     final tinted = inactive || (tone != null && toneShown);
     final iconTint = tinted ? Colors.white : null;
 
@@ -59,11 +60,7 @@ class DriverSheetNav {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: inactive
-                    ? const [
-                        Color(0xFFA13A33),
-                        Color(0xFF8E2E28),
-                        Color(0xFF7A2722),
-                      ]
+                    ? MoveraRadarOrb.holdSheetGradient
                     : const [Colors.white, Colors.white],
               ),
             ),
@@ -195,7 +192,7 @@ class DriverSheetNav {
                 notchDepth: notchDepth,
                 cornerRadius: 24,
                 color: hasRideOffers
-                    ? const Color(0xFFFFA94D)
+                    ? MoveraRadarOrb.offerAccent
                     : const Color(0xFF1FA463),
               ),
               ),
@@ -286,7 +283,7 @@ class DriverSheetNav {
                   notchDepth: 58,
                   cornerRadius: 24,
                   color: hasRideOffers
-                      ? const Color(0xFFFFA94D)
+                      ? MoveraRadarOrb.offerAccent
                       : const Color(0xFF1FA463),
                 ),
               ),

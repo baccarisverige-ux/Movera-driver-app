@@ -21,6 +21,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:movera/widgets/led_count_badge.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
@@ -71,7 +72,7 @@ class _RideRequestsState extends State<RideRequests> {
   static const Color _muted = Color(0xFF5E6461);
   static const Color _line = Color(0xFFE4E6E5);
   static const Color _green = Color(0xFF19865C);
-  static const Color _mint = Color(0xFF58E5A6);
+  static const Color _mint = MoveraRadarOrb.onlineGreen;
 
   Timer? _matchNoticeTimer;
   late final DispatchRepository _dispatch;
