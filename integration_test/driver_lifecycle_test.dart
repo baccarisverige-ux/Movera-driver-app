@@ -88,7 +88,7 @@ Future<void> _slide(WidgetTester tester) async {
 
 Future<void> _confirmShortTripIfAsked(WidgetTester tester) async {
   await _elapse(tester, const Duration(milliseconds: 250));
-  final confirm = find.text('Confirm finish');
+  final confirm = find.byKey(const ValueKey<String>('finish-soon-finish'));
   if (confirm.evaluate().isNotEmpty) {
     await tester.tap(confirm);
   }
