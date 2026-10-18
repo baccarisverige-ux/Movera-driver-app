@@ -14,23 +14,27 @@ class OfferBadge extends StatelessWidget {
     this.foreground = _ink,
     this.border = _ink,
     this.vertical = 3,
+    this.iconColor,
   });
 
   /// The ride type, e.g. "Comfort": white with a fine black outline.
   const OfferBadge.category(this.label, {super.key, this.vertical = 3})
     : icon = null,
+      iconColor = null,
       background = Colors.white,
       foreground = _ink,
       border = _ink;
 
   /// The rider pays cash in the car. Shown only then: card, Apple Pay or
-  /// wallet show nothing.
+  /// wallet show nothing. R10-11: light grey with ink text and a green
+  /// money icon, like dollar bills.
   const OfferBadge.cash({super.key, this.vertical = 3})
     : label = 'Cash',
       icon = AppAssets.solarWadOfMoney,
-      background = const Color(0xFFFFF4DC),
-      foreground = const Color(0xFF7A5200),
-      border = const Color(0xFFF0D9A4);
+      background = cashBackground,
+      foreground = _ink,
+      border = cashBorder,
+      iconColor = cashGreen;
 
   /// A reservation, with its pickup time when known: "Reservation · 07:40".
   OfferBadge.reservation(String? time, {super.key, this.vertical = 3})
@@ -38,6 +42,7 @@ class OfferBadge extends StatelessWidget {
           ? 'Reservation'
           : 'Reservation · $time',
       icon = AppAssets.solarCalendar,
+      iconColor = null,
       background = Colors.white,
       foreground = _grey,
       border = _greyLine;
@@ -47,6 +52,7 @@ class OfferBadge extends StatelessWidget {
   /// includes it.
   const OfferBadge.boost(this.label, {super.key, this.vertical = 3})
     : icon = AppAssets.solarRoundArrowUp,
+      iconColor = null,
       background = const Color(0xFFE8F6EE),
       foreground = const Color(0xFF136B47),
       border = const Color(0xFFBFE3CF);
@@ -54,6 +60,7 @@ class OfferBadge extends StatelessWidget {
   /// A quiet outlined note, e.g. "On your way".
   const OfferBadge.note(this.label, {super.key, this.vertical = 3})
     : icon = null,
+      iconColor = null,
       background = Colors.white,
       foreground = _grey,
       border = _greyLine;
@@ -62,6 +69,7 @@ class OfferBadge extends StatelessWidget {
   const OfferBadge.exclusive({super.key, this.vertical = 4})
     : label = 'Exclusive',
       icon = AppAssets.solarBolt,
+      iconColor = null,
       background = _ink,
       foreground = Colors.white,
       border = _ink;
@@ -69,6 +77,11 @@ class OfferBadge extends StatelessWidget {
   static const Color _ink = Color(0xFF111518);
   static const Color _grey = Color(0xFF3A444B);
   static const Color _greyLine = Color(0xFFD5D9DC);
+
+  /// R10-11: the Cash chip's grey fill, outline and money green.
+  static const Color cashBackground = Color(0xFFEEF0F2);
+  static const Color cashBorder = Color(0xFFE1E4E8);
+  static const Color cashGreen = Color(0xFF2E9E5B);
 
   final String label;
 
@@ -78,6 +91,9 @@ class OfferBadge extends StatelessWidget {
   final Color foreground;
   final Color border;
   final double vertical;
+
+  /// The icon's colour; [foreground] when null.
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +118,10 @@ class OfferBadge extends StatelessWidget {
               asset,
               width: 13,
               height: 13,
-              colorFilter: ColorFilter.mode(foreground, BlendMode.srcIn),
+              colorFilter: ColorFilter.mode(
+                iconColor ?? foreground,
+                BlendMode.srcIn,
+              ),
             ),
             const SizedBox(width: 5),
           ],
