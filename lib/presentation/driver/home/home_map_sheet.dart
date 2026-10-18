@@ -255,17 +255,18 @@ extension _HomeMapSheet on _DriverHomeState {
         _destinationUntil = result.durationSeconds == null ? null
             : DateTime.now().add(Duration(seconds: result.durationSeconds!.round()));
         _destinationRouteMarkers = {
-          Marker(
-            markerId: const MarkerId('destination_mode_target'),
-            position: destination,
-            infoWindow: InfoWindow(title: result.address),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueGreen,
-            ),
-          ),
+          destinationModeMarker(destination, result.address),
         };
         _destinationRoutePolylines = <Polyline>{};
       });
+      if (MoveraDestinationMarker.cachedPin == null) {
+        unawaited(MoveraDestinationMarker.pin().then((_) {
+          if (!mounted || _destinationPosition != destination) { return; }
+          _rebuild(() => _destinationRouteMarkers = {
+            destinationModeMarker(destination, result.address),
+          });
+        }));
+      }
 
       await _refreshDestinationRoadRoute();
       await _fitDestinationRoute();
@@ -611,6 +612,16 @@ extension _HomeMapSheet on _DriverHomeState {
     Widget body({bool isDestinationPanel = false}) {
       final viewport = MediaQuery.sizeOf(context);
       final viewportWidth = viewport.width;
+      final layers = homeMapLayers(
+        car: _markers,
+        destinationMode: _destinationModeActive,
+        destinationMarkers: _destinationRouteMarkers,
+        destinationPolylines: _destinationRoutePolylines,
+        offerMarkers: _directOfferRouteMarkers,
+        offerPolylines: _directOfferRoutePolylines,
+        offerOnScreen: _isDirectOfferRoutePreview &&
+            (_outsideRadarOffer != null || _radarHomeOffers.isNotEmpty),
+      );
 
       return SizedBox(
         height: viewport.height,
@@ -619,15 +630,8 @@ extension _HomeMapSheet on _DriverHomeState {
           children: [
             if (!_HomeStartPosition(this)._mapReady) _HomeStartPosition(this)._locating() else CustomGoogleMap(
               initialPosition: _initialPosition,
-              markers: {
-                ..._markers,
-                ..._destinationRouteMarkers,
-                ..._directOfferRouteMarkers,
-              },
-              polylines: DriverRouteStyle.sized({
-                ..._destinationRoutePolylines,
-                ..._directOfferRoutePolylines,
-              }, _routeZoomStep),
+              markers: layers.markers,
+              polylines: DriverRouteStyle.sized(layers.polylines, _routeZoomStep),
               myLocationEnabled: false,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,

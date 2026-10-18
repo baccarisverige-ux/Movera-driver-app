@@ -203,7 +203,7 @@ void main() {
     await _end(tester);
   });
 
-  testWidgets('the radar turns blue and shows Accept and the seconds left', (
+  testWidgets('the radar is the offer orb in blue: Accept, MATCH, time ring', (
     tester,
   ) async {
     await _pumpHome(tester);
@@ -212,32 +212,35 @@ void main() {
     final lifetime = DriverOfferRules.current.exclusiveAcceptTime;
 
     expect(_orb(tester).exclusive, isTrue);
-    expect(
-      find.descendant(of: _blueRadar, matching: find.text('Accept')),
-      findsOneWidget,
+    for (final text in ['Accept', 'MATCH', 'Tap to accept']) {
+      expect(
+        find.descendant(of: _blueRadar, matching: find.text(text)),
+        findsOneWidget,
+      );
+    }
+    // MATCH is blue; a very small white check sits over Accept (R11-8).
+    final match = tester.widget<Text>(
+      find.descendant(of: _blueRadar, matching: find.text('MATCH')),
     );
-    expect(
-      find.descendant(
-        of: _blueRadar,
-        matching: find.text('${lifetime.inSeconds} s'),
-      ),
-      findsOneWidget,
+    expect(match.style!.color, MoveraRadarOrb.exclusiveBlue);
+    final icon = find.descendant(
+      of: _blueRadar,
+      matching: find.byKey(const ValueKey<String>('radar-exclusive-icon')),
     );
-    // A plain white check over Accept (R10-6).
-    expect(
-      find.descendant(
-        of: _blueRadar,
-        matching: find.byKey(const ValueKey<String>('radar-exclusive-icon')),
-      ),
-      findsOneWidget,
-    );
+    expect(icon, findsOneWidget);
+    expect(tester.getSize(icon).width, lessThanOrEqualTo(8));
+    // The core is the normal grey one, only its border is blue.
     final core = tester.widget<Ink>(
       find.byKey(const ValueKey<String>('radar-exclusive-core')),
     );
-    final gradient = (core.decoration! as BoxDecoration).gradient!;
-    expect(gradient.colors, contains(const Color(0xFF1769E8)));
+    final decoration = core.decoration! as BoxDecoration;
+    expect(decoration.gradient!.colors, isNot(contains(const Color(0xFF1769E8))));
+    expect(
+      (decoration.border! as Border).top.color.toARGB32() & 0xFFFFFF,
+      MoveraRadarOrb.exclusiveBlue.toARGB32() & 0xFFFFFF,
+    );
 
-    // The ring empties over the offer's lifetime.
+    // The hairline ring empties over the offer's lifetime.
     ExclusiveTimeRingPainter ring() =>
         tester
                 .widget<CustomPaint>(
@@ -245,17 +248,11 @@ void main() {
                 )
                 .painter!
             as ExclusiveTimeRingPainter;
+    expect(ring().stroke, 1.5);
     expect(ring().timeLeft, greaterThan(0.9));
     await _frames(tester, lifetime ~/ 2);
     expect(ring().timeLeft, closeTo(0.5, 0.05));
-    expect(
-      find.descendant(
-        of: _blueRadar,
-        matching: find.textContaining(RegExp(r'^\d+ s$')),
-      ),
-      findsOneWidget,
-    );
-    expect(_orb(tester).status, '${(lifetime.inSeconds / 2).ceil()} s');
+    expect(_orb(tester).status, 'MATCH');
     await _end(tester);
   });
 
