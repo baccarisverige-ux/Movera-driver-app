@@ -73,6 +73,8 @@ import 'package:movera/presentation/driver/home/components/destination_set_panel
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/home/components/island_waiting.dart';
+import 'package:movera/core/island/island_waiting_signals.dart';
 import 'package:movera/presentation/driver/home/components/trip_problem_sheet.dart';
 import 'package:movera/presentation/driver/home/components/driver_sheet_nav.dart';
 import 'package:movera/presentation/driver/home/components/driver_suspended_sheet.dart';
@@ -216,6 +218,10 @@ class _DriverHomeState extends State<DriverHome>
   IslandMessage? _islandMessage;
   int _islandMessageSeq = 0;
   Timer? _islandMessageTimer;
+  /// R13-1: "Finding trips" and short messages while waiting online.
+  late final IslandWaitingController _islandWaiting = IslandWaitingController(
+      tips: () => _HomeMapSheet(this)._waitingTips())..addListener(_islandWaitingListener);
+  void _islandWaitingListener() { if (mounted) { setState(() {}); } }
   void _islandMessagesListener() =>
       _HomeMapSheet(this)._onIslandMessagesChanged();
   void _lastTripListener() => _HomeMapSheet(this)._onLastTripChanged();
@@ -1081,6 +1087,7 @@ class _DriverHomeState extends State<DriverHome>
     IslandMessages.changes.removeListener(_islandMessagesListener);
     RideCheckGate.listenable.removeListener(_rideCheckGateListener);
     _islandMessageTimer?.cancel();
+    _islandWaiting.dispose();
     _offerSimulationTimer?.cancel();
     _directOfferTimer?.cancel();
     _HomeOfferRadar(this)._cancelAllOfferTimers();
