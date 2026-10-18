@@ -39,7 +39,7 @@ class RadarSheetOutline extends StatelessWidget {
   final double cornerRadius;
   final Color color;
 
-  /// The line's width; 2 while an Exclusive offer turns it blue.
+  /// The line's width.
   final double strokeWidth;
 
   const RadarSheetOutline({

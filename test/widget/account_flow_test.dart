@@ -344,7 +344,8 @@ void main() {
       await _frames(tester, const Duration(milliseconds: 2600));
       expect(find.byKey(_closeOffer), findsOneWidget);
       DriverCategoryChoice.off.value = {'Comfort'};
-      await _frames(tester, const Duration(milliseconds: 600));
+      // Its sheet slides down first.
+      await _frames(tester, const Duration(milliseconds: 1000));
       expect(find.byKey(_closeOffer), findsNothing);
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
@@ -368,12 +369,11 @@ void main() {
       expect(_said, contains('Radar is on'));
       await _frames(tester, const Duration(milliseconds: 2600));
       final card = find.byKey(_closeOffer);
-      // Accept is the blue radar now.
+      // Accept is the grey orb on the Exclusive sheet.
       final radar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
       expect(find.descendant(of: radar, matching: find.text('Take ride')),
           findsOneWidget);
-      expect(find.descendant(of: card, matching: find.text('View route')),
-          findsOneWidget);
+      expect(card, findsOneWidget);
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     });

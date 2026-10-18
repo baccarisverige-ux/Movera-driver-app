@@ -9,19 +9,19 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
-import 'package:movera/presentation/driver/home/components/digital_island.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
-import 'package:movera/presentation/driver/home/components/radar_edge_dash.dart';
 import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
-// P4: the Exclusive offer grows up out of the Home sheet and stays
-// attached to it; the radar in the dock turns blue and is its Accept,
-// ringed by the time left.
+// The Exclusive offer on Home is the same sheet as the reservation
+// request, with no blue: the sheet rises over the dock, the grey radar orb
+// on its top edge accepts inside a thin dark time ring, the grey pill
+// counts the seconds down and the island says "Exclusive · Pickup 3 min".
 
 class _Dispatch implements DispatchRepository {
   final _nearby = StreamController<List<RideOffer>>.broadcast();
@@ -61,7 +61,9 @@ class _Dispatch implements DispatchRepository {
 }
 
 const _card = ValueKey<String>('exclusive-offer-card-home-direct-close');
-final _blueRadar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
+const _sheet = ValueKey<String>('home-exclusive-sheet');
+const _hide = ValueKey<String>('direct-offer-dismiss');
+final _orbFinder = find.byKey(const ValueKey<String>('home-radar-exclusive'));
 
 Future<void> _frames(WidgetTester tester, Duration total) async {
   const step = Duration(milliseconds: 100);
@@ -108,20 +110,27 @@ Future<void> _pumpHome(WidgetTester tester, {bool reduceMotion = false}) async {
   await _frames(tester, const Duration(milliseconds: 1500));
 }
 
-/// Pumps single frames until the Exclusive card is on screen.
-Future<void> _untilCard(WidgetTester tester) async {
+/// Pumps single frames until the Exclusive sheet is on screen.
+Future<void> _untilSheet(WidgetTester tester) async {
   for (var i = 0; i < 400 && find.byKey(_card).evaluate().isEmpty; i++) {
     await tester.pump(const Duration(milliseconds: 10));
   }
   expect(find.byKey(_card), findsOneWidget);
 }
 
-/// How far down the card is: 0 up, 1 under the dock.
+/// Until the sheet is up (its rise starts on the next frame).
+Future<void> _untilUp(WidgetTester tester) async {
+  await _untilSheet(tester);
+  await tester.pump(const Duration(milliseconds: 16));
+  await tester.pump(const Duration(milliseconds: 450));
+}
+
+/// How far down the sheet is: 0 up, 1 below the screen.
 double _down(WidgetTester tester) => tester
     .widget<FractionalTranslation>(
       find
           .ancestor(
-            of: find.byKey(_card),
+            of: find.byKey(_sheet),
             matching: find.byType(FractionalTranslation),
           )
           .first,
@@ -130,39 +139,45 @@ double _down(WidgetTester tester) => tester
     .dy;
 
 MoveraRadarOrb _orb(WidgetTester tester) => tester.widget<MoveraRadarOrb>(
-  find.descendant(of: _blueRadar, matching: find.byType(MoveraRadarOrb)),
+  find.descendant(of: _orbFinder, matching: find.byType(MoveraRadarOrb)),
 );
 
+String _pill(WidgetTester tester) => tester
+    .widget<Text>(find.byKey(const ValueKey<String>('exclusive-timer-text')))
+    .data!;
+
+int _seconds(WidgetTester tester) =>
+    int.parse(RegExp(r'(\d+) s$').firstMatch(_pill(tester))!.group(1)!);
+
 const _blue = Color(0xFF1769E8);
-const _black = Color(0xFF111518);
 
-/// The attached card's contour.
-BorderSide _cardContour(WidgetTester tester) {
-  final box = tester.widget<Container>(find.byKey(_card));
-  return ((box.decoration! as BoxDecoration).border! as Border).top;
+/// Every colour drawn by boxes, texts and the time ring under [root].
+Iterable<Color> _colours(WidgetTester tester, Finder root) sync* {
+  Iterable<Color> ofDecoration(Decoration? d) sync* {
+    if (d is! BoxDecoration) return;
+    if (d.color case final c?) yield c;
+    if (d.border case final Border b) yield b.top.color;
+    for (final shadow in d.boxShadow ?? const <BoxShadow>[]) {
+      yield shadow.color;
+    }
+    yield* d.gradient?.colors ?? const <Color>[];
+  }
+
+  for (final e in find
+      .descendant(of: root, matching: find.byWidgetPredicate((_) => true))
+      .evaluate()) {
+    final w = e.widget;
+    if (w is Container) yield* ofDecoration(w.decoration);
+    if (w is DecoratedBox) yield* ofDecoration(w.decoration);
+    if (w is Ink) yield* ofDecoration(w.decoration);
+    if (w is Text && w.style?.color != null) yield w.style!.color!;
+    if (w is CustomPaint && w.painter is ExclusiveTimeRingPainter) {
+      yield (w.painter! as ExclusiveTimeRingPainter).color;
+    }
+  }
 }
 
-/// The dock's top line around the radar; null when it is the grey
-/// outline with the online dash.
-RadarSheetOutline? _dockLine(WidgetTester tester) {
-  final line = find.byKey(const ValueKey<String>('dock-contour-custom'));
-  return line.evaluate().isEmpty
-      ? null
-      : tester.widget<RadarSheetOutline>(line);
-}
-
-/// How much of the island's blue ring and glow shows.
-double _island(WidgetTester tester) =>
-    tester.widget<DigitalIslandShell>(find.byType(DigitalIslandShell)).exclusive;
-
-Border? _islandRing(WidgetTester tester) =>
-    (tester
-                .widget<DecoratedBox>(
-                  find.byKey(const ValueKey<String>('island-exclusive-ring')),
-                )
-                .decoration
-            as BoxDecoration)
-        .border as Border?;
+bool _isBlue(Color c) => (c.toARGB32() & 0xFFFFFF) == (_blue.toARGB32() & 0xFFFFFF);
 
 Future<void> _end(WidgetTester tester) async {
   tester.takeException();
@@ -175,72 +190,125 @@ void main() {
     IslandMessages.reset();
   });
 
-  testWidgets('slides up out of the sheet and stays attached, full width', (
+  // First: the pins are drawn in real time and cached per label.
+  testWidgets('the route comes once the sheet is up: chips 3 min, 14 min', (
     tester,
   ) async {
     await _pumpHome(tester);
-    await _untilCard(tester);
-    // Just arrived: still mostly under the dock.
+    await _untilSheet(tester);
+    Set<String> pins() => find.byType(CustomGoogleMap).evaluate().isEmpty
+        ? const <String>{}
+        : {
+            for (final m in tester
+                .widget<CustomGoogleMap>(find.byType(CustomGoogleMap))
+                .markers!)
+              if (m.markerId.value.startsWith('radar_')) m.markerId.value,
+          };
+    // Rising: no route yet.
+    expect(pins(), isEmpty);
+    for (var i = 0; i < 60 && !pins().contains('radar_dropoff'); i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    await tester.pump(const Duration(milliseconds: 400));
+    final map = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
+    String? chip(String id) => map.markers!
+        .firstWhere((m) => m.markerId.value == id)
+        .infoWindow
+        .title;
+    expect(chip('radar_pickup'), '3 min');
+    expect(chip('radar_dropoff'), '14 min');
+    await _end(tester);
+  });
+
+  testWidgets('rises like the reservation sheet, full width, orb on top', (
+    tester,
+  ) async {
+    await _pumpHome(tester);
+    await _untilSheet(tester);
+    // Just arrived: still mostly below the screen.
     expect(_down(tester), greaterThan(0.3));
-    await tester.pump(const Duration(milliseconds: 150));
-    expect(_down(tester), inExclusiveRange(0, 0.3));
+    await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 200));
+    expect(_down(tester), inExclusiveRange(0, 0.3));
+    await tester.pump(const Duration(milliseconds: 250));
     expect(_down(tester), 0);
 
-    // Edge to edge, its bottom behind the dock at the screen edge.
-    final rect = tester.getRect(find.byKey(_card));
-    expect(rect.left, -1);
-    expect(rect.right, 376);
+    // Edge to edge, about 40 % of the screen, down to its bottom.
+    final rect = tester.getRect(find.byKey(_sheet));
+    expect(rect.left, 0);
+    expect(rect.right, 375);
     expect(rect.bottom, 812);
-    // The dock and its radar stay; the map is not dimmed.
-    expect(find.byKey(const ValueKey<String>('home-map-dim')), findsNothing);
-    expect(_blueRadar, findsOneWidget);
-    // No Accept in the card: the radar is the Accept.
+    expect(rect.height, greaterThanOrEqualTo(812 * 0.4 - 1));
+    // The grey orb sits centred on the sheet's top edge.
+    final orb = tester.getRect(_orbFinder);
+    expect(orb.center.dx, closeTo(375 / 2, 1));
+    expect(orb.center.dy, closeTo(rect.top, 2));
+    // The down arrow top right; no Accept inside the sheet itself.
+    expect(
+      find.descendant(of: find.byKey(_sheet), matching: find.byKey(_hide)),
+      findsOneWidget,
+    );
     expect(
       find.descendant(of: find.byKey(_card), matching: find.text('Accept')),
       findsNothing,
     );
+
+    // The details: fare, trip minutes, pickup minutes, trip distance.
+    final fare = tester
+        .widget<RichText>(find.descendant(
+          of: find.byKey(const ValueKey<String>('exclusive-fare')),
+          matching: find.byType(RichText),
+        ))
+        .text
+        .toPlainText();
+    // 104,80 kr and its pickup pay: one total.
+    expect(fare, matches(RegExp(r'^\d+,\d\d kr$')));
+    expect(find.text('14 min trip'), findsOneWidget);
+    String value(String row) => tester
+        .widget<Text>(find.byKey(ValueKey<String>('exclusive-$row-trailing')))
+        .data!;
+    expect(value('pickup'), '3 min');
+    expect(value('dropoff'), '7.6 km');
+    expect(find.text('Kungsgatan 42'), findsOneWidget);
+    expect(find.text('Hornstull'), findsOneWidget);
+    expect(_pill(tester), startsWith('Exclusive for you · '));
     await _end(tester);
   });
 
-  testWidgets('the radar is the offer orb in blue: Accept, MATCH, time ring', (
+  testWidgets('the pill counts the seconds down live', (tester) async {
+    await _pumpHome(tester);
+    await _untilUp(tester);
+    final lifetime = DriverOfferRules.current.exclusiveAcceptTime;
+    final first = _seconds(tester);
+    expect(first, inInclusiveRange(lifetime.inSeconds - 1, lifetime.inSeconds));
+    await _frames(tester, const Duration(seconds: 3));
+    expect(_seconds(tester), first - 3);
+    await _end(tester);
+  });
+
+  testWidgets('the orb: reservation grey, black Accept, dark ring, no blue', (
     tester,
   ) async {
     await _pumpHome(tester);
-    await _untilCard(tester);
-    await tester.pump(const Duration(milliseconds: 400));
+    await _untilUp(tester);
     final lifetime = DriverOfferRules.current.exclusiveAcceptTime;
 
     expect(_orb(tester).exclusive, isTrue);
-    for (final text in ['Accept', 'MATCH', 'Tap to accept']) {
-      expect(
-        find.descendant(of: _blueRadar, matching: find.text(text)),
-        findsOneWidget,
-      );
-    }
-    // MATCH is blue; a very small white check sits over Accept (R11-8).
-    final match = tester.widget<Text>(
-      find.descendant(of: _blueRadar, matching: find.text('MATCH')),
+    expect(_orb(tester).reserve, isTrue);
+    Text text(String t) => tester.widget<Text>(
+      find.descendant(of: _orbFinder, matching: find.text(t)),
     );
-    expect(match.style!.color, MoveraRadarOrb.exclusiveBlue);
-    final icon = find.descendant(
-      of: _blueRadar,
-      matching: find.byKey(const ValueKey<String>('radar-exclusive-icon')),
-    );
-    expect(icon, findsOneWidget);
-    expect(tester.getSize(icon).width, lessThanOrEqualTo(8));
-    // The core is the normal grey one, only its border is blue.
-    final core = tester.widget<Ink>(
-      find.byKey(const ValueKey<String>('radar-exclusive-core')),
-    );
-    final decoration = core.decoration! as BoxDecoration;
-    expect(decoration.gradient!.colors, isNot(contains(const Color(0xFF1769E8))));
-    expect(
-      (decoration.border! as Border).top.color.toARGB32() & 0xFFFFFF,
-      MoveraRadarOrb.exclusiveBlue.toARGB32() & 0xFFFFFF,
-    );
+    expect(text('Accept').style!.color, MoveraRadarOrb.reserveTitle);
+    expect(text('MATCH').style!.color, MoveraRadarOrb.reserveInk);
+    expect(find.text('Tap to accept'), findsOneWidget);
+    // No icon inside.
+    expect(find.byKey(const ValueKey<String>('radar-exclusive-icon')),
+        findsNothing);
 
-    // The hairline ring empties over the offer's lifetime.
+    // The thin dark hairline empties over the offer's lifetime.
     ExclusiveTimeRingPainter ring() =>
         tester
                 .widget<CustomPaint>(
@@ -248,19 +316,40 @@ void main() {
                 )
                 .painter!
             as ExclusiveTimeRingPainter;
+    expect(ring().color, MoveraRadarOrb.reserveInk);
     expect(ring().stroke, 1.5);
     expect(ring().timeLeft, greaterThan(0.9));
     await _frames(tester, lifetime ~/ 2);
-    expect(ring().timeLeft, closeTo(0.5, 0.05));
-    expect(_orb(tester).status, 'MATCH');
+    expect(ring().timeLeft, closeTo(0.5, 0.06));
+
+    // Nothing on Home is blue: orb, sheet, island.
+    expect(_colours(tester, find.byType(DriverHome)).where(_isBlue), isEmpty);
     await _end(tester);
   });
 
-  testWidgets('tapping the blue radar accepts the offer', (tester) async {
+  testWidgets('the island says "Exclusive · Pickup 3 min"', (tester) async {
     await _pumpHome(tester);
-    await _untilCard(tester);
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(_blueRadar);
+    await _untilSheet(tester);
+    final face = find.byKey(const ValueKey<String>('island-exclusive'));
+    // Once "Exclusive ride" has passed.
+    for (var i = 0; i < 80 && face.evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    final span = tester.widget<Text>(face).textSpan!;
+    expect(span.toPlainText(), 'Exclusive · Pickup 3 min');
+    final parts = (span as TextSpan).children!.cast<TextSpan>();
+    expect(parts.first.style!.color, Colors.white);
+    expect(parts.first.style!.fontWeight, FontWeight.w700);
+    expect(parts.last.style!.color, const Color(0xFF9FB0BD));
+    expect(find.byKey(const ValueKey<String>('island-exclusive-icon')),
+        findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('tapping the grey orb accepts the offer', (tester) async {
+    await _pumpHome(tester);
+    await _untilUp(tester);
+    await tester.tap(_orbFinder);
     await _frames(tester, const Duration(milliseconds: 800));
     final trip = tester.widget<AcceptRide>(find.byType(AcceptRide));
     expect(trip.matchedVia, 'Exclusive offer');
@@ -268,41 +357,42 @@ void main() {
     await _end(tester);
   });
 
-  testWidgets('× slides the card back down before the offer clears', (
+  testWidgets('the down arrow: the sheet waits for the route, then slides', (
     tester,
   ) async {
     await _pumpHome(tester);
-    await _untilCard(tester);
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
+    await _untilUp(tester);
+    await tester.tap(find.byKey(_hide));
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 100));
-    // On its way down; the radar is already itself again.
-    expect(find.byKey(_card), findsOneWidget);
+    // The route fades first; the sheet stays put meanwhile.
+    expect(_down(tester), 0);
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pump(const Duration(milliseconds: 150));
     expect(_down(tester), inExclusiveRange(0, 1));
-    expect(find.byKey(const ValueKey<String>('radar-online')), findsOneWidget);
-    await _frames(tester, const Duration(milliseconds: 500));
+    await _frames(tester, const Duration(milliseconds: 600));
+    // Home is normal again.
     expect(find.byKey(_card), findsNothing);
-    expect(_blueRadar, findsNothing);
+    expect(_orbFinder, findsNothing);
+    expect(find.byKey(const ValueKey<String>('radar-online')), findsOneWidget);
     expect(find.byType(AcceptRide), findsNothing);
     await _end(tester);
   });
 
-  testWidgets('when the time runs out the card slides away, radar normal', (
-    tester,
-  ) async {
+  testWidgets('when the time runs out it leaves the same way', (tester) async {
     await _pumpHome(tester);
-    await _untilCard(tester);
+    await _untilSheet(tester);
     final lifetime = DriverOfferRules.current.exclusiveAcceptTime;
     await _frames(tester, lifetime + const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 16));
-    await tester.pump(const Duration(milliseconds: 60));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.pump(const Duration(milliseconds: 150));
     // Leaving: still drawn, on its way down.
     expect(find.byKey(_card), findsOneWidget);
     expect(_down(tester), inExclusiveRange(0, 1));
-    await _frames(tester, const Duration(milliseconds: 600));
+    await _frames(tester, const Duration(milliseconds: 700));
     expect(find.byKey(_card), findsNothing);
-    expect(_blueRadar, findsNothing);
     expect(
       tester
           .widgetList<MoveraRadarOrb>(find.byType(MoveraRadarOrb))
@@ -312,132 +402,17 @@ void main() {
     await _end(tester);
   });
 
-  testWidgets('reduced motion: the card is just there, and just goes', (
+  testWidgets('reduced motion: the sheet is just there, and just goes', (
     tester,
   ) async {
     await _pumpHome(tester, reduceMotion: true);
-    await _untilCard(tester);
+    await _untilSheet(tester);
+    await tester.pump();
     expect(_down(tester), 0);
-    await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
+    await tester.tap(find.byKey(_hide));
+    await tester.pump();
     await tester.pump();
     expect(find.byKey(_card), findsNothing);
-    await _end(tester);
-  });
-
-  testWidgets('while the offer is live the card, dock and island are blue', (
-    tester,
-  ) async {
-    await _pumpHome(tester);
-    // Before the offer: the plain island and the grey dock line.
-    expect(_island(tester), 0);
-    expect(_islandRing(tester), isNull);
-    expect(_dockLine(tester), isNull);
-
-    await _untilCard(tester);
-    await tester.pump(const Duration(milliseconds: 400));
-    // Card: a 2 px blue line with a soft blue shadow.
-    final contour = _cardContour(tester);
-    expect(contour.color, _blue);
-    expect(contour.width, 2);
-    final card = tester.widget<Container>(find.byKey(_card));
-    final shadow = (card.decoration! as BoxDecoration).boxShadow!.single;
-    expect(shadow.color, _blue.withValues(alpha: 0x1F / 255));
-    expect(shadow.blurRadius, 26);
-    expect(shadow.offset.dy, lessThan(0));
-    // Dock: the line round the radar is blue too.
-    expect(_dockLine(tester)!.color, _blue);
-    expect(_dockLine(tester)!.strokeWidth, 2);
-    // Island: a blue ring and a soft blue glow.
-    expect(_island(tester), 1);
-    expect(_islandRing(tester)!.top.color, _blue);
-    final glow = (tester
-                .widget<DecoratedBox>(
-                  find.byKey(const ValueKey<String>('island-exclusive-glow')),
-                )
-                .decoration
-            as BoxDecoration)
-        .boxShadow!
-        .single;
-    expect(glow.color.b, closeTo(_blue.b, 0.01));
-    expect(glow.color.a, closeTo(0.40, 0.01));
-    await _end(tester);
-  });
-
-  testWidgets('the blue fades in with the slide up and out with the slide down', (
-    tester,
-  ) async {
-    await _pumpHome(tester);
-    await _untilCard(tester);
-    await tester.pump(const Duration(milliseconds: 60));
-    // Rising: part way between black and blue, like the card.
-    final rising = _cardContour(tester).color;
-    expect(rising, isNot(_blue));
-    expect(_island(tester), inExclusiveRange(0, 1));
-    expect(_island(tester), closeTo(1 - _down(tester), 0.001));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(_island(tester), 1);
-
-    await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
-    await tester.pump(const Duration(milliseconds: 16));
-    await tester.pump(const Duration(milliseconds: 100));
-    // Sinking: the blue goes with it.
-    expect(_island(tester), inExclusiveRange(0, 1));
-    final sinking = _dockLine(tester)!.color;
-    expect(sinking, isNot(_blue));
-    expect(sinking, isNot(_black));
-    await _frames(tester, const Duration(milliseconds: 500));
-    // Down: back to black (the plain island, the grey dock line).
-    expect(find.byKey(_card), findsNothing);
-    expect(_island(tester), 0);
-    expect(_islandRing(tester), isNull);
-    expect(_dockLine(tester), isNull);
-    await _end(tester);
-  });
-
-  testWidgets('time out takes the blue away with the card', (tester) async {
-    await _pumpHome(tester);
-    await _untilCard(tester);
-    final lifetime = DriverOfferRules.current.exclusiveAcceptTime;
-    await _frames(tester, lifetime ~/ 2);
-    expect(_island(tester), 1);
-    expect(_dockLine(tester)!.color, _blue);
-    await _frames(tester, lifetime + const Duration(milliseconds: 800));
-    expect(find.byKey(_card), findsNothing);
-    expect(_island(tester), 0);
-    expect(_dockLine(tester), isNull);
-    await _end(tester);
-  });
-
-  testWidgets('accepting takes the blue away with the card', (tester) async {
-    await _pumpHome(tester);
-    await _untilCard(tester);
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(_island(tester), 1);
-    await tester.tap(_blueRadar);
-    await _frames(tester, const Duration(milliseconds: 800));
-    expect(find.byType(AcceptRide), findsOneWidget);
-    expect(find.byKey(_card), findsNothing);
-    expect(
-      tester
-          .widgetList<DigitalIslandShell>(find.byType(DigitalIslandShell))
-          .where((island) => island.exclusive > 0),
-      isEmpty,
-    );
-    await _end(tester);
-  });
-
-  testWidgets('reduced motion: the contours just turn blue, and just go', (
-    tester,
-  ) async {
-    await _pumpHome(tester, reduceMotion: true);
-    await _untilCard(tester);
-    expect(_cardContour(tester).color, _blue);
-    expect(_dockLine(tester)!.color, _blue);
-    expect(_island(tester), 1);
-    await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
-    await tester.pump();
-    expect(_island(tester), 0);
-    expect(_dockLine(tester), isNull);
     await _end(tester);
   });
 }

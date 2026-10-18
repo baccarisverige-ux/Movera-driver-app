@@ -52,23 +52,83 @@ class DigitalReservationFace extends StatelessWidget {
   }
 
   @override
+  Widget build(BuildContext context) => _IslandOfferFace(
+    icon: AppAssets.solarCalendar,
+    iconKey: const ValueKey<String>('island-reservation-icon'),
+    textKey: const ValueKey<String>('island-reservation'),
+    span: _span(when),
+  );
+}
+
+/// The Exclusive offer up on Home, on the island: a check circle, a bold
+/// white "Exclusive" and a grey "· Pickup 4 min", like the reservation.
+class DigitalExclusiveFace extends StatelessWidget {
+  const DigitalExclusiveFace({super.key, required this.pickupMinutes});
+
+  final int pickupMinutes;
+
+  static const String title = 'Exclusive';
+
+  static TextSpan _span(int minutes) => TextSpan(children: [
+    const TextSpan(text: title, style: _whenStyle),
+    TextSpan(text: ' · Pickup $minutes min', style: _kindStyle),
+  ]);
+
+  /// Width the face needs: icon, gap and words.
+  static double widthFor(BuildContext context, int pickupMinutes) {
+    final painter = TextPainter(
+      text: _span(pickupMinutes),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    return DigitalReservationFace._icon +
+        DigitalReservationFace._gap +
+        painter.width +
+        4;
+  }
+
+  @override
+  Widget build(BuildContext context) => _IslandOfferFace(
+    icon: AppAssets.solarCheckCircle,
+    iconKey: const ValueKey<String>('island-exclusive-icon'),
+    textKey: const ValueKey<String>('island-exclusive'),
+    span: _span(pickupMinutes),
+  );
+}
+
+/// A white Solar icon, then one line of words.
+class _IslandOfferFace extends StatelessWidget {
+  const _IslandOfferFace({
+    required this.icon,
+    required this.iconKey,
+    required this.textKey,
+    required this.span,
+  });
+
+  final String icon;
+  final Key iconKey;
+  final Key textKey;
+  final TextSpan span;
+
+  @override
   Widget build(BuildContext context) {
     return Center(
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           SvgPicture.asset(
-            AppAssets.solarCalendar,
-            key: const ValueKey<String>('island-reservation-icon'),
-            width: _icon,
-            height: _icon,
+            icon,
+            key: iconKey,
+            width: DigitalReservationFace._icon,
+            height: DigitalReservationFace._icon,
             colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
           ),
-          const SizedBox(width: _gap),
+          const SizedBox(width: DigitalReservationFace._gap),
           Flexible(
             child: Text.rich(
-              _span(when),
-              key: const ValueKey<String>('island-reservation'),
+              span,
+              key: textKey,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

@@ -337,7 +337,7 @@ void main() {
       expect(_said, contains('Assigned by Movera'));
 
       await tester.tap(_exclusiveRadar);
-      await _frames(tester, const Duration(milliseconds: 600));
+      await _frames(tester, const Duration(milliseconds: 1000));
       expect(dispatch.claims, [demoAssignedReservationId]);
       expect(_said, contains('Scheduled ride accepted'));
       expect(card, findsNothing);
@@ -372,7 +372,7 @@ void main() {
       );
       expect(card, findsOneWidget);
       expect(
-        find.descendant(of: card, matching: find.text('Only for you · pickup 3 min away')),
+        find.descendant(of: card, matching: find.text('Kungsgatan 42')),
         findsOneWidget,
       );
       await tester.tap(_exclusiveRadar);
@@ -400,7 +400,9 @@ void main() {
       expect(
         find.descendant(
           of: card,
-          matching: find.textContaining('Pickup soon'),
+          matching: find.byKey(const ValueKey<String>(
+            'exclusive-offer-reservation-$demoReservationId',
+          )),
         ),
         findsOneWidget,
       );

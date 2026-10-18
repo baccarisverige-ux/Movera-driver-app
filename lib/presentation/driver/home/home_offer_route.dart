@@ -4,11 +4,13 @@ part of 'home.dart';
 // to drop-off (no drive to the pickup), fitted between the top island and
 // the top of the offer card or deck. The fit follows the card's height.
 // A reservation request shows its route the same way, above its sheet,
-// with clock times on the pins.
+// with clock times on the pins; so does the Exclusive offer, above the
+// same sheet, with minutes on the pins.
 
 /// What the offer route needs to re-fit: the card heights and the points.
 class _OfferRouteFrame {
-  /// Measured heights of the Radar deck and the Exclusive card.
+  /// Measured heights of the Radar deck and the Exclusive sheet (its orb
+  /// included).
   double? deckHeight;
   double? exclusiveHeight;
 
@@ -87,7 +89,11 @@ extension _HomeOfferRoute on _DriverHomeState {
           MediaQuery.sizeOf(context).height * 0.4 +
               HomeReservationSheet.orbSize / 2;
     }
-    if (_outsideRadarOffer != null) { return _offerRouteFrame.exclusiveHeight; }
+    if (_outsideRadarOffer != null) {
+      return _offerRouteFrame.exclusiveHeight ??
+          MediaQuery.sizeOf(context).height * 0.4 +
+              HomeOfferSheet.orbSize / 2;
+    }
     final deck = _offerRouteFrame.deckHeight;
     if (deck == null || _radarHomeOffers.isEmpty) { return null; }
     // The deck sits above the map buttons (see the deck's slot).
@@ -128,9 +134,9 @@ extension _HomeOfferRoute on _DriverHomeState {
         ? frame.exclusiveHeight
         : frame.reservationHeight;
     final next = deck ?? exclusive ?? reservation!;
-    // No real change, or the reservation sheet is down (nothing laid out).
+    // No real change, or a request sheet is down (nothing laid out).
     if ((old != null && (old - next).abs() < 2) ||
-        (reservation != null && next <= 0)) { return; }
+        (deck == null && next <= 0)) { return; }
     if (deck != null) {
       frame.deckHeight = deck;
     } else if (exclusive != null) {

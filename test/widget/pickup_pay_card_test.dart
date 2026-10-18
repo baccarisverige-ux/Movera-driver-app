@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
-import 'package:movera/widgets/exclusive_offer_card.dart';
+import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 
 const _lineKey = ValueKey<String>('offer-pickup-pay-line');
@@ -53,16 +53,13 @@ Future<void> _pump(WidgetTester tester, Widget card) async {
 Widget _radar(PickupPayDisplay display) =>
     RadarOfferCard(offer: _offer(display), onMatch: () {});
 
-Widget _exclusive(PickupPayDisplay display) => ExclusiveOfferCard(
-  offer: _offer(display),
-  onRoute: () {},
-  onDismiss: () {},
-);
+Widget _exclusive(PickupPayDisplay display) =>
+    ExclusiveRequestSheet(offer: _offer(display), secondsLeft: 12);
 
 void main() {
   for (final (name, card) in [
     ('Radar card', _radar),
-    ('Exclusive card', _exclusive),
+    ('Exclusive sheet', _exclusive),
   ]) {
     testWidgets('$name: one total by default, no pickup line', (tester) async {
       await _pump(tester, card(PickupPayDisplay.totalOnly));

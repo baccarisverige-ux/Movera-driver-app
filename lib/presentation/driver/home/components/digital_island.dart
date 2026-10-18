@@ -15,7 +15,6 @@ class DigitalIslandShell extends StatefulWidget {
     this.duration = const Duration(milliseconds: 620),
     this.curve = Curves.easeOutBack,
     this.calm = false,
-    this.exclusive = 0,
     this.offers = false,
   });
 
@@ -31,21 +30,13 @@ class DigitalIslandShell extends StatefulWidget {
   /// No light sweep, e.g. while the driver is on the road.
   final bool calm;
 
-  /// How much of the Exclusive blue ring and glow shows, 0 → 1, while an
-  /// Exclusive offer is live on Home; it follows the card's slide.
-  final double exclusive;
-
-  /// Radar offers are up on Home: a green ring, the radar's green. An
-  /// Exclusive offer's blue goes over it.
+  /// Radar offers are up on Home: a green ring, the radar's green.
   final bool offers;
 
-  /// The radar's Exclusive blue.
-  static const Color exclusiveBlue = MoveraRadarOrb.exclusiveBlue;
-
-  /// The Exclusive ring is 2 px and its glow blurs 14 px on screen (the
+  /// The offers ring is 2 px and its glow blurs 14 px on screen (the
   /// island is drawn at 80 %).
-  static const double exclusiveRingWidth = 2 / 0.8;
-  static const double exclusiveGlowBlur = 14 / 0.8;
+  static const double offersRingWidth = 2 / 0.8;
+  static const double offersGlowBlur = 14 / 0.8;
 
   static const Color screen = Color(0xFF060708);
 
@@ -100,13 +91,10 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(widget.height / 2);
-    final blue = widget.exclusive.clamp(0.0, 1.0);
-    final green = widget.offers && blue <= 0;
-    final ring = green ? MoveraRadarOrb.offerAccent : DigitalIslandShell.exclusiveBlue;
-    final strength = green ? 1.0 : blue;
-    // The Exclusive ring and glow sit outside the shell's own easing, so
-    // they follow the card's slide frame by frame. Always in the tree,
-    // so the shell keeps its state when they come and go.
+    const ring = MoveraRadarOrb.offerAccent;
+    final strength = widget.offers ? 1.0 : 0.0;
+    // The ring and glow sit outside the shell's own easing. Always in the
+    // tree, so the shell keeps its state when they come and go.
     return DecoratedBox(
       key: const ValueKey<String>('island-exclusive-glow'),
       decoration: BoxDecoration(
@@ -116,7 +104,7 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
             : [
                 BoxShadow(
                   color: ring.withValues(alpha: 0.40 * strength),
-                  blurRadius: DigitalIslandShell.exclusiveGlowBlur,
+                  blurRadius: DigitalIslandShell.offersGlowBlur,
                 ),
               ],
       ),
@@ -129,7 +117,7 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
               ? null
               : Border.all(
                   color: ring.withValues(alpha: strength),
-                  width: DigitalIslandShell.exclusiveRingWidth,
+                  width: DigitalIslandShell.offersRingWidth,
                 ),
         ),
         position: DecorationPosition.foreground,

@@ -31,7 +31,6 @@ class AppAssets {
   static const String solarCalendarMark = 'assets/icons/solar_calendar_mark.svg';
   static const String solarCalendarMinimalistic = 'assets/icons/solar_calendar_minimalistic.svg';
   static const String solarClockCircle = 'assets/icons/solar_clock_circle.svg';
-  static const String solarUser = 'assets/icons/solar_user.svg';
   static const String solarCar = 'assets/icons/solar_car.svg';
   static const String solarRoute = 'assets/icons/solar_route.svg';
   static const String solarRouting2 = 'assets/icons/solar_routing_2.svg';

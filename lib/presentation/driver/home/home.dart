@@ -14,7 +14,6 @@ import 'package:movera/core/session/driver_route_observer.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:movera/widgets/exclusive_offer_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
@@ -78,6 +77,8 @@ import 'package:movera/presentation/driver/home/components/trip_problem_sheet.da
 import 'package:movera/presentation/driver/home/components/driver_sheet_nav.dart';
 import 'package:movera/presentation/driver/home/components/driver_suspended_sheet.dart';
 import 'package:movera/presentation/driver/home/components/reservation_request_sheet.dart';
+import 'package:movera/presentation/driver/home/components/home_offer_sheet.dart';
+import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/presentation/driver/home/components/route_fade.dart';
 import 'package:movera/presentation/driver/my%20queue%20position/components/in_airport_queue.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
@@ -815,6 +816,8 @@ class _DriverHomeState extends State<DriverHome>
           _HomeMapSheet(this)._homeRadarLayer(),
           // A reservation request: its sheet over the dock, its orb on top.
           _HomeReservation(this)._reservationLayer(),
+          // An Exclusive offer: the same sheet, its grey orb on top.
+          _HomeExclusive(this)._exclusiveLayer(),
               ],
             ),
       ),
