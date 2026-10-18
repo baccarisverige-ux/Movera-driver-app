@@ -228,28 +228,30 @@ extension _HomeReservation on _DriverHomeState {
       }
     }
 
-    /// While the reservation is up the radar is a black orb: a calendar,
-    /// "Accept" and the pickup day and time ("Tue · 14:30"); tapping it
-    /// takes the reservation.
+    /// While the reservation is up the radar is the Radar-offer orb in
+    /// black, with a small calendar over "Accept / MATCH / Tap to
+    /// accept"; tapping it takes the reservation.
     Widget _reserveRadar() {
       final claiming = _reservation.claimingId != null;
-      final request = _reservation.request;
-      final day = request?.pickupDay.trim() ?? '';
-      final time = request?.pickupTime.trim() ?? '';
-      final when = [
-        if (day.isNotEmpty) day[0].toUpperCase() + day.substring(1),
-        if (time.isNotEmpty) time,
-      ].join(' · ');
       return KeyedSubtree(
         key: const ValueKey<String>('home-radar-reserve'),
-        child: MoveraRadarOrb(
-          title: claiming ? 'Matching' : 'Accept',
-          status: claiming ? 'WAIT' : when,
-          subtitle: 'Accept the reservation',
-          reserve: true,
-          active: true,
-          loading: claiming,
-          onTap: claiming ? null : () => unawaited(_acceptHomeReservation()),
+        child: AnimatedBuilder(
+          // The normal radar's pulse and sweep, in black.
+          animation: Listenable.merge([
+            _goOnlinePulseController,
+            _radarSweepController,
+          ]),
+          builder: (context, child) => MoveraRadarOrb(
+            title: claiming ? 'Matching' : 'Accept',
+            status: claiming ? 'WAIT' : 'MATCH',
+            subtitle: claiming ? 'Please wait' : 'Tap to accept',
+            reserve: true,
+            active: true,
+            loading: claiming,
+            pulse: _goOnlinePulseController.value,
+            sweep: _radarSweepController.value,
+            onTap: claiming ? null : () => unawaited(_acceptHomeReservation()),
+          ),
         ),
       );
     }

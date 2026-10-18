@@ -150,13 +150,12 @@ extension _HomeExclusive on _DriverHomeState {
       );
     }
 
-    /// While the Exclusive offer is live the radar is blue and reads
-    /// "Accept" over the seconds left; tapping it accepts the offer.
+    /// While the Exclusive offer is live the radar is the Radar-offer orb
+    /// in blue ("Accept / MATCH / Tap to accept") inside a hairline time
+    /// ring; tapping it accepts the offer.
     Widget _exclusiveRadar() {
       final claiming =
           _reservation.claimingId != null || _scheduled.claimingId != null;
-      final lifetime =
-          _outsideRadarOffer?.lifetime ?? _DriverHomeState._outsideOfferLifetime;
       return KeyedSubtree(
         key: const ValueKey<String>('home-radar-exclusive'),
         child: AnimatedBuilder(
@@ -168,13 +167,12 @@ extension _HomeExclusive on _DriverHomeState {
           ]),
           builder: (context, child) {
             final left = _exclusive.clock.value;
-            final seconds = (left * lifetime.inMilliseconds / 1000).ceil();
             return MoveraRadarOrb(
               title: claiming
                   ? driverText(DriverTexts.offerMatching)
                   : driverText(DriverTexts.offerAccept),
-              status: '$seconds s',
-              subtitle: 'Accept the Exclusive offer',
+              status: claiming ? 'WAIT' : 'MATCH',
+              subtitle: claiming ? 'Please wait' : 'Tap to accept',
               exclusive: true,
               active: true,
               loading: claiming,
