@@ -165,12 +165,8 @@ void main() {
           ),
           width: width,
         );
-        expect(
-          find.textContaining('Pickup today 07:40 · in 40 min',
-              findRichText: true),
-          findsOneWidget,
-        );
-        expect(find.text('Decline'), findsOneWidget);
+        expect(find.text('In 40 min'), findsOneWidget);
+        expect(find.text('07:40'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
     }

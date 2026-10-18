@@ -48,6 +48,10 @@ class _HomeReservationState {
   /// Lets the Radar trips that waited behind the sheet come in, or the
   /// next request rise.
   Timer? release;
+
+  /// The route on the map fades in once the sheet is up and out before
+  /// it goes down.
+  final RouteFade fade = RouteFade();
 }
 
 extension _HomeReservation on _DriverHomeState {
@@ -168,6 +172,8 @@ extension _HomeReservation on _DriverHomeState {
                   ? null
                   : _hideHomeReservation,
               onShown: _onReservationRising,
+              onSettled: _onReservationSettled,
+              onLeaving: _fadeReservationRoute,
               onHidden: () {
                 if (!mounted) { return; }
                 if (_reservation.raised) {
@@ -196,9 +202,6 @@ extension _HomeReservation on _DriverHomeState {
     void _onReservationRising() {
       if (!mounted) { return; }
       _rebuild(() => _reservation.raised = true);
-      if (_reservation.request case final request?) {
-        unawaited(_showReservationRoute(request));
-      }
       if (_reservation.announced) { return; }
       _reservation.announced = true;
       IslandMessages.show(HomeIslandNotices.newReservation);
@@ -217,6 +220,53 @@ extension _HomeReservation on _DriverHomeState {
       }
     }
 
+    /// The sheet has settled: the route fades in on the Home map.
+    void _onReservationSettled() {
+      if (!mounted) { return; }
+      if (_reservation.request case final request?) {
+        unawaited(_showReservationRoute(request));
+      }
+    }
+
+    /// The reservation's route is the one on the map (no Radar or
+    /// Exclusive offer took it over).
+    bool get _reservationRouteOnMap =>
+        _reservation.routeId != null &&
+        _outsideRadarOffer == null &&
+        _radarHomeOffers.isEmpty;
+
+    /// The map's [markers] with the reservation route's pins at the
+    /// fade's opacity.
+    Set<Marker> _fadedPins(Set<Marker> markers) =>
+        _reservation.fade.value >= 1 || !_reservationRouteOnMap
+            ? markers
+            : _reservation.fade.markers(markers, {
+                for (final m in _directOfferRouteMarkers) m.markerId,
+              });
+
+    /// The map's [lines] with the reservation route's at the fade's
+    /// opacity.
+    Set<Polyline> _fadedLines(Set<Polyline> lines) =>
+        _reservation.fade.value >= 1 || !_reservationRouteOnMap
+            ? lines
+            : _reservation.fade.polylines(lines, {
+                for (final p in _directOfferRoutePolylines) p.polylineId,
+              });
+
+    bool get _reduceMotion => MediaQuery.disableAnimationsOf(context);
+
+    /// The sheet is going: the route fades out first.
+    void _fadeReservationRoute() {
+      if (!mounted || !_reservationRouteOnMap) { return; }
+      if (_reduceMotion) {
+        _hideReservationRoute();
+        return;
+      }
+      _reservation.fade.fadeTo(0, HomeReservationSheet.routeFadeOut, () {
+        if (mounted) { _rebuild(() {}); }
+      });
+    }
+
     /// The Home map shows [request]'s route, pickup → drop-off (no drive
     /// to the pickup), fitted above the sheet; the pins' chips show the
     /// pickup time and the expected drop-off time.
@@ -224,20 +274,32 @@ extension _HomeReservation on _DriverHomeState {
       final pickup = request.pickup.toLatLng();
       final dropoff = request.dropoff.toLatLng();
       _reservation.routeId = request.id;
+      final fade = _reservation.fade;
+      // Drawn from nothing, fading in once its pins are ready.
+      if (!_reduceMotion) { fade.set(0); }
       return _HomeMapSheet(this)._previewTripRoute(
         pickup,
         dropoff,
-        () => _HomeOfferRoute(this)._routePins(
-          pickup,
-          dropoff,
-          request.pickupTime,
-          request.arrivalTime,
-        ),
+        () async {
+          final pins = await _HomeOfferRoute(this)._routePins(
+            pickup,
+            dropoff,
+            request.pickupTime,
+            request.arrivalTime,
+          );
+          if (mounted && fade.value < 1 && !fade.running) {
+            fade.fadeTo(1, const Duration(milliseconds: 280), () {
+              if (mounted) { _rebuild(() {}); }
+            });
+          }
+          return pins;
+        },
       );
     }
 
     /// The request ended or went down: the map is normal Home again.
     void _hideReservationRoute() {
+      _reservation.fade.set(1);
       if (_reservation.routeId == null) { return; }
       _reservation.routeId = null;
       // A Radar or Exclusive offer that took the map over keeps it.
@@ -330,7 +392,7 @@ extension _HomeReservation on _DriverHomeState {
       _closeHomeReservation();
     }
 
-    /// Decline: the sheet goes back down; the reservation only leaves Home
+    /// The down arrow: the sheet goes back down; the reservation only leaves Home
     /// and stays open in Scheduled rides (R20).
     void _hideHomeReservation() {
       if (_reservation.claimingId != null) { return; }
@@ -349,7 +411,9 @@ extension _HomeReservation on _DriverHomeState {
       // Once it is down the next request rises; with none left, Radar
       // trips that waited behind it come in.
       _reservation.release?.cancel();
-      _reservation.release = Timer(const Duration(milliseconds: 320), () {
+      _reservation.release = Timer(
+          HomeReservationSheet.leaveDuration + const Duration(milliseconds: 50),
+          () {
         if (!mounted) { return; }
         final next = _nextHomeRequest();
         if (next != null) {

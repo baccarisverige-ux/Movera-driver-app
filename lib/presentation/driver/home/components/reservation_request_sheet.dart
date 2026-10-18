@@ -1,12 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
-import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/scheduled/reservation_when.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
+import 'package:movera/core/scheduled/smart_gap.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/offer_route_pins.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
@@ -16,13 +20,75 @@ const Color _ink = Color(0xFF111518);
 const Color _text = Color(0xFF5D646C);
 const Color _label = Color(0xFF8A9399);
 const Color _hairline = Color(0xFFEEF0F2);
-const Color _declineFill = Color(0xFFF1F2F4);
+const Color _softFill = Color(0xFFF1F2F4);
+
+/// The accent colour drawn in the flat picture files; replaced at render
+/// time by the reservation orb's ink. The other greys stay as drawn.
+const Color reservationPictureAccent = Color(0xFF4A555E);
+
+/// Replaces the pictures' accent with [accent] while the SVG is parsed.
+@immutable
+class ReservationAccentMapper extends ColorMapper {
+  const ReservationAccentMapper(this.accent);
+
+  final Color accent;
+
+  @override
+  Color substitute(
+    String? id,
+    String elementName,
+    String attributeName,
+    Color color,
+  ) {
+    if (color.toARGB32() | 0xFF000000 !=
+        reservationPictureAccent.toARGB32()) {
+      return color;
+    }
+    // Keeps the drawn opacity.
+    return accent.withValues(alpha: color.a * accent.a);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is ReservationAccentMapper && other.accent == accent;
+
+  @override
+  int get hashCode => accent.hashCode;
+}
+
+/// The flat picture on the reservation sheet, right of the fare.
+enum ReservationPicture {
+  /// A booked calendar with ticks.
+  booked,
+
+  /// A woman beside a big calendar.
+  calendar,
+
+  /// A plane and a traveller with a bag.
+  airport;
+
+  /// Airport rides (pickup or drop-off at an airport) get the plane and
+  /// the traveller; the others switch between [booked] and [calendar] by
+  /// [order], their place among the requests shown.
+  static ReservationPicture forRequest(
+    ReservationRequestPreview request, {
+    int order = 0,
+  }) {
+    final kind = SmartGap.kindOf(request, ScheduledRideRules.current);
+    if (kind == ScheduledRideKind.airport) return airport;
+    return order.isEven ? booked : calendar;
+  }
+}
 
 /// The reservation request on Home (notes R11–R26, design A): the Home
 /// sheet rises to about 40 % of the screen with every detail inside it and
 /// no map (the Home map shows the route). The radar orb, the Accept, sits
-/// centred on the sheet's top edge, half over the map. It rises from the
-/// bottom with a short spring while [visible] and goes back down when not.
+/// centred on the sheet's top edge, half over the map; a small down arrow
+/// top-right takes the request off Home.
+///
+/// It rises smoothly from the bottom while [visible] (slide up and fade
+/// in); when it goes, [onLeaving] lets the map's route fade first, then it
+/// slides down under the Home sheet and [onHidden] follows.
 class HomeReservationSheet extends StatefulWidget {
   const HomeReservationSheet({
     super.key,
@@ -31,10 +97,13 @@ class HomeReservationSheet extends StatefulWidget {
     this.orb,
     this.onDecline,
     this.onShown,
+    this.onSettled,
+    this.onLeaving,
     this.onHidden,
     this.clock,
     this.position = 1,
     this.count = 1,
+    this.picture,
     this.pickupPay,
     this.heightFactor = 0.4,
     this.maxHeight = double.infinity,
@@ -47,19 +116,31 @@ class HomeReservationSheet extends StatefulWidget {
   /// The radar orb on the top edge: tapping it accepts.
   final Widget? orb;
 
-  /// Decline: the sheet goes down; the reservation stays open in
+  /// The down arrow: the sheet goes down; the reservation stays open in
   /// Scheduled rides. Null while a claim is deciding.
   final VoidCallback? onDecline;
 
-  /// Called each time the sheet is nearly up (Accept works from then),
-  /// and after a frame once it starts to go down.
+  /// Called each time the sheet is nearly up (Accept works from then).
   final VoidCallback? onShown;
+
+  /// Called once the sheet has settled at the top: the map's route fades
+  /// in from then.
+  final VoidCallback? onSettled;
+
+  /// Called as soon as the sheet is to go: the map's route fades out
+  /// during [routeFadeOut], then the sheet slides down.
+  final VoidCallback? onLeaving;
+
+  /// Called once the sheet is down and removed.
   final VoidCallback? onHidden;
   final DateTime Function()? clock;
 
   /// "2 of 2": this request's place among the ones waiting.
   final int position;
   final int count;
+
+  /// The picture right of the fare; by default from the request.
+  final ReservationPicture? picture;
 
   /// Pickup pay added to the price: only for an exclusive reservation.
   /// The Home popup leaves this null.
@@ -77,28 +158,38 @@ class HomeReservationSheet extends StatefulWidget {
   /// driver sees Radar go live first (and its green flash fade).
   static const Duration riseDelay = Duration(milliseconds: 1000);
 
+  /// The rise: slide up and fade in.
+  static const Duration riseDuration = Duration(milliseconds: 400);
+
+  /// Going: the route fades out first, then the sheet slides down.
+  static const Duration routeFadeOut = Duration(milliseconds: 200);
+  static const Duration sinkDuration = Duration(milliseconds: 350);
+
+  /// From the request going until the sheet is removed.
+  static const Duration leaveDuration = Duration(milliseconds: 550);
+
   @override
   State<HomeReservationSheet> createState() => _HomeReservationSheetState();
 }
 
 class _HomeReservationSheetState extends State<HomeReservationSheet>
     with SingleTickerProviderStateMixin {
-  /// 0 hidden below the screen, 1 up; the spring passes 1 a little.
-  late final AnimationController _rise = AnimationController.unbounded(
-    vsync: this,
-  );
-
-  /// Short spring with a slight overshoot.
-  static final SpringDescription _spring = SpringDescription.withDampingRatio(
-    mass: 1,
-    stiffness: 260,
-    ratio: 0.76,
-  );
+  /// 0 hidden below the screen, 1 up; already eased.
+  late final AnimationController _rise = AnimationController(vsync: this);
 
   /// What is on screen; kept while the sheet goes down.
   ReservationRequestPreview? _shown;
+
+  /// The sheet should be (or is going) up.
   bool _up = false;
+
+  /// Going down: the route fades, then the slide; [_shown] stays.
+  bool _leaving = false;
   Timer? _riseTimer;
+  Timer? _leaveTimer;
+
+  /// Counts each rise or leave, so a stale animation end does nothing.
+  int _run = 0;
 
   /// [HomeReservationSheet.onShown] ran for this rise.
   bool _told = false;
@@ -119,7 +210,7 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
   }
 
   void _tellWhenNearlyUp() {
-    if (_told || !_up || _rise.value < _nearlyUp) return;
+    if (_told || !_up || _leaving || _rise.value < _nearlyUp) return;
     _told = true;
     widget.onShown?.call();
   }
@@ -130,63 +221,112 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
     _sync();
   }
 
+  /// Called from [initState] or [didUpdateWidget], so a build follows.
   void _sync() {
-    if (_wantUp) {
-      _shown = widget.request;
+    final request = widget.request;
+    if (_wantUp && request != null) {
+      if (_leaving) {
+        // The same request back while going: it comes up again. Another
+        // one waits until this one is down.
+        if (_shown?.id == request.id) _comeBack();
+        return;
+      }
+      _shown = request;
       if (!_up) {
         _up = true;
         _riseTimer?.cancel();
         _riseTimer = Timer(HomeReservationSheet.riseDelay, _riseNow);
       }
-    } else if (_up) {
-      _up = false;
-      _told = false;
-      _riseTimer?.cancel();
-      _sink();
-      final onHidden = widget.onHidden;
-      if (onHidden != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && !_up) onHidden();
-        });
-      }
+    } else if (_up && !_leaving) {
+      _leave();
     }
   }
 
   void _riseNow() {
-    if (!mounted || !_up) return;
+    if (!mounted || !_up || _leaving) return;
+    final run = ++_run;
     if (_reduceMotion) {
       _rise.value = 1;
-      return;
-    }
-    _rise.animateWith(
-      SpringSimulation(_spring, _rise.value, 1, _rise.velocity),
-    );
-  }
-
-  /// Called from [didUpdateWidget], so a build follows anyway.
-  void _sink() {
-    void drop() {
-      if (mounted && !_up) setState(() => _shown = null);
-    }
-
-    if (_rise.value <= 0 || _reduceMotion) {
-      _rise.stop();
-      _rise.value = 0;
-      _shown = null;
+      _settled(run);
       return;
     }
     _rise
         .animateTo(
-          0,
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeInCubic,
+          1,
+          duration: HomeReservationSheet.riseDuration,
+          curve: Curves.easeOutCubic,
         )
-        .whenCompleteOrCancel(drop);
+        .whenCompleteOrCancel(() => _settled(run));
+  }
+
+  void _settled(int run) {
+    if (!mounted || run != _run || !_up || _leaving || _rise.value < 1) {
+      return;
+    }
+    if (!_told) {
+      _told = true;
+      widget.onShown?.call();
+    }
+    widget.onSettled?.call();
+  }
+
+  void _comeBack() {
+    _leaving = false;
+    _leaveTimer?.cancel();
+    _riseNow();
+  }
+
+  /// The route fades first, then the sheet slides down; then it is gone.
+  void _leave() {
+    _riseTimer?.cancel();
+    _told = false;
+    final run = ++_run;
+    if (_rise.value <= 0 || _reduceMotion) {
+      // Never came up, or no motion: gone at once.
+      _rise.stop();
+      _rise.value = 0;
+      _up = false;
+      _shown = null;
+      widget.onLeaving?.call();
+      final onHidden = widget.onHidden;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _up) return;
+        onHidden?.call();
+      });
+      return;
+    }
+    _leaving = true;
+    _rise.stop();
+    widget.onLeaving?.call();
+    _leaveTimer?.cancel();
+    _leaveTimer = Timer(HomeReservationSheet.routeFadeOut, () {
+      if (!mounted || run != _run) return;
+      _rise
+          .animateTo(
+            0,
+            duration: HomeReservationSheet.sinkDuration,
+            curve: Curves.easeInCubic,
+          )
+          .whenCompleteOrCancel(() => _down(run));
+    });
+  }
+
+  void _down(int run) {
+    if (!mounted || run != _run || !_leaving) return;
+    setState(() {
+      _leaving = false;
+      _up = false;
+      _shown = null;
+      // A request that came while this one went rises now.
+      _sync();
+    });
+    widget.onHidden?.call();
   }
 
   @override
   void dispose() {
     _riseTimer?.cancel();
+    _leaveTimer?.cancel();
     _rise.dispose();
     super.dispose();
   }
@@ -203,7 +343,7 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
     final sheet = PointerInterceptor(
       child: Listener(
         behavior: HitTestBehavior.opaque,
-          child: DecoratedBox(
+        child: DecoratedBox(
           key: const ValueKey<String>('home-reservation-sheet'),
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -223,18 +363,30 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
                   ? minHeight
                   : widget.maxHeight,
             ),
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              // The orb's lower half sits on the top of the sheet.
-              padding: EdgeInsets.only(top: half + 4, bottom: safeBottom + 16),
-              child: ReservationRequestSheet(
-                request: request,
-                onDecline: widget.onDecline,
-                clock: widget.clock,
-                position: widget.position,
-                count: widget.count,
-                pickupPay: widget.pickupPay,
-              ),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  // The orb's lower half sits on the top of the sheet.
+                  padding: EdgeInsets.only(
+                    top: half + 4,
+                    bottom: safeBottom + 16,
+                  ),
+                  child: ReservationRequestSheet(
+                    request: request,
+                    clock: widget.clock,
+                    position: widget.position,
+                    count: widget.count,
+                    picture: widget.picture,
+                    pickupPay: widget.pickupPay,
+                  ),
+                ),
+                Positioned(
+                  top: 14,
+                  right: 18,
+                  child: ReservationCloseArrow(onTap: widget.onDecline),
+                ),
+              ],
             ),
           ),
         ),
@@ -246,14 +398,6 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
     final layer = Stack(
       clipBehavior: Clip.none,
       children: [
-        // White under the sheet while the spring passes the top.
-        const Positioned(
-          left: 0,
-          right: 0,
-          bottom: -60,
-          height: 60,
-          child: IgnorePointer(child: ColoredBox(color: Colors.white)),
-        ),
         Padding(padding: const EdgeInsets.only(top: half), child: sheet),
         if (orb != null)
           Positioned(
@@ -269,29 +413,79 @@ class _HomeReservationSheetState extends State<HomeReservationSheet>
       animation: _rise,
       child: layer,
       builder: (context, child) {
-        if (_rise.value <= 0 && !_up) return const SizedBox.shrink();
+        final t = _rise.value.clamp(0.0, 1.0);
+        if (t <= 0 && !_up) return const SizedBox.shrink();
         return FractionalTranslation(
           // Hidden: the whole layer is below the screen edge.
-          translation: Offset(0, 1 - _rise.value),
-          child: child,
+          translation: Offset(0, 1 - t),
+          child: Opacity(
+            // Fully there a little before the slide ends.
+            opacity: (t * 1.4).clamp(0.0, 1.0),
+            child: IgnorePointer(ignoring: _leaving, child: child),
+          ),
         );
       },
     );
   }
 }
 
+/// The small down arrow top-right of the sheet: back to Home, the request
+/// stays in Scheduled rides. Null [onTap] while a claim is deciding.
+class ReservationCloseArrow extends StatelessWidget {
+  const ReservationCloseArrow({super.key, this.onTap});
+
+  final VoidCallback? onTap;
+
+  static const double size = 34;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: 'Hide reservation request',
+      excludeSemantics: true,
+      child: Material(
+        color: _softFill,
+        shape: const CircleBorder(),
+        child: InkWell(
+          key: const ValueKey<String>('reservation-hide'),
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Center(
+              child: SvgPicture.asset(
+                AppAssets.solarAltArrowDown,
+                width: 18,
+                height: 18,
+                colorFilter: ColorFilter.mode(
+                  onTap == null ? const Color(0xFFA2AAB0) : _ink,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Content of the reservation request: category and payment chips with
-/// "New reservation · 2 of 2", the big fare, the pickup time with the trip
-/// numbers, pickup and drop-off, and Decline. The radar accepts.
+/// "2 of 2", the big fare with the trip minutes and a picture beside it,
+/// pickup (with its time) and drop-off (with the trip distance), and a
+/// grey button saying when the ride is. The radar accepts.
 class ReservationRequestSheet extends StatelessWidget {
   const ReservationRequestSheet({
     super.key,
     required this.request,
-    this.onDecline,
     this.clock,
     this.details,
     this.position = 1,
     this.count = 1,
+    this.picture,
     this.pickupPay,
   });
 
@@ -300,19 +494,23 @@ class ReservationRequestSheet extends StatelessWidget {
   /// Which details show (Q14); the admin's choice by default.
   final OfferCardDetails? details;
 
-  /// Decline; null shows it disabled.
-  final VoidCallback? onDecline;
-
-  /// Now, for the time left until pickup; defaults to [DateTime.now].
+  /// Now, for when the ride is; defaults to [DateTime.now].
   final DateTime Function()? clock;
 
-  /// "2 of 2" after "New reservation"; hidden while only one waits.
+  /// "2 of 2"; hidden while only one waits.
   final int position;
   final int count;
+
+  /// The picture right of the fare; by default from the request and its
+  /// place ([position]).
+  final ReservationPicture? picture;
 
   /// Pickup pay added to the price: only for an exclusive reservation
   /// (`PickupPayOfferKind.exclusiveReservation`).
   final PickupPayQuote? pickupPay;
+
+  /// The picture's size beside the fare.
+  static const Size pictureSize = Size(98, 75);
 
   OfferCardDetails get _show => details ?? DriverOfferRules.current.card;
 
@@ -329,31 +527,6 @@ class ReservationRequestSheet extends StatelessWidget {
         : (fare, '');
   }
 
-  /// "in 3 h 20 min", "in 1 day"; null once the pickup time is unknown or
-  /// has passed.
-  String? _inLabel() {
-    final left = request.untilPickup((clock ?? DateTime.now)());
-    if (left == null) return null;
-    // Whole minutes, rounded up: 1 h 32 min 40 s reads "1 h 33 min".
-    final total = (left.inSeconds + 59) ~/ 60;
-    final days = total ~/ (24 * 60);
-    if (days > 0) return 'in $days day${days == 1 ? '' : 's'}';
-    final hours = total ~/ 60;
-    final minutes = total % 60;
-    final when = hours > 0
-        ? (minutes > 0 ? '$hours h $minutes min' : '$hours h')
-        : '$minutes min';
-    return 'in $when';
-  }
-
-  /// "today 19:30"; another day keeps its own name.
-  String get _whenLabel {
-    final day = request.pickupDay.trim();
-    final lower = day.toLowerCase();
-    final shown = lower == 'today' || lower == 'tomorrow' ? lower : day;
-    return shown.isEmpty ? request.pickupTime : '$shown ${request.pickupTime}';
-  }
-
   String get _pickupPlace => _show.pickupAddress
       ? RadarOfferView.street(request.pickupAddress)
       : RadarOfferView.area(request.pickupAddress);
@@ -367,8 +540,12 @@ class ReservationRequestSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (whole, rest) = _fareParts();
-    final inLabel = _inLabel();
-    final title = driverText(DriverTexts.offerNewReservation);
+    final when = ReservationWhen.ofRequest(
+      request,
+      (clock ?? DateTime.now)(),
+    );
+    final shownPicture =
+        picture ?? ReservationPicture.forRequest(request, order: position - 1);
     return DefaultTextStyle.merge(
       // Tight lines like the design, not the theme's body line height.
       style: const TextStyle(height: 1.2),
@@ -384,7 +561,7 @@ class ReservationRequestSheet extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Flexible(
+                  Expanded(
                     child: Wrap(
                       spacing: 6,
                       runSpacing: 6,
@@ -406,79 +583,90 @@ class ReservationRequestSheet extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    count > 1 ? '$title · $position of $count' : title,
-                    key: const ValueKey<String>('reservation-title'),
-                    maxLines: 1,
-                    style: const TextStyle(
-                      color: _label,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
+                  if (count > 1) ...[
+                    const SizedBox(width: 10),
+                    Text(
+                      '$position of $count',
+                      key: const ValueKey<String>('reservation-count'),
+                      maxLines: 1,
+                      style: const TextStyle(
+                        color: _label,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    // Clear of the picture's right edge below.
+                    const SizedBox(width: 24),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text.rich(
+                            key: const ValueKey<String>('reservation-fare'),
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: whole,
+                                  style: const TextStyle(
+                                    color: _ink,
+                                    fontSize: 34,
+                                    height: 1.1,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -1,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: rest,
+                                  style: const TextStyle(
+                                    color: _label,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (_show.tripMinutesKm) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '${request.tripMinutes} min trip',
+                            key: const ValueKey<String>('reservation-trip'),
+                            maxLines: 1,
+                            style: const TextStyle(color: _text, fontSize: 14),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox.fromSize(
+                    size: pictureSize,
+                    child: ExcludeSemantics(
+                      child: _ReservationPictureView(picture: shownPicture),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text.rich(
-                    key: const ValueKey<String>('reservation-fare'),
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: whole,
-                          style: const TextStyle(
-                            color: _ink,
-                            fontSize: 34,
-                            height: 1.1,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -1,
-                          ),
-                        ),
-                        TextSpan(
-                          text: rest,
-                          style: const TextStyle(
-                            color: _label,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text.rich(
-                key: const ValueKey<String>('reservation-when'),
-                TextSpan(
-                  style: const TextStyle(color: _text, fontSize: 14),
-                  children: [
-                    const TextSpan(text: 'Pickup '),
-                    TextSpan(
-                      text: _whenLabel,
-                      style: const TextStyle(
-                        color: _ink,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (inLabel != null) TextSpan(text: ' · $inLabel'),
-                    if (_show.tripMinutesKm)
-                      TextSpan(
-                        text: ' · ${_km(request.tripKm)}'
-                            ' · ${request.tripMinutes} min',
-                      ),
-                  ],
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               const Divider(height: 1, thickness: 1, color: _hairline),
               const SizedBox(height: 10),
-              _place(const _StopMark.pickup(), _pickupPlace, 'reservation-pickup'),
+              _place(
+                const _StopMark.pickup(),
+                _pickupPlace,
+                'reservation-pickup',
+                trailing: request.pickupTime,
+              ),
               if (_show.stops && request.stops.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(left: 22, bottom: 2),
@@ -494,9 +682,10 @@ class ReservationRequestSheet extends StatelessWidget {
                 const _StopMark.dropoff(),
                 _dropoffPlace,
                 'reservation-dropoff',
+                trailing: _show.tripMinutesKm ? _km(request.tripKm) : null,
               ),
               const SizedBox(height: 12),
-              _declineButton(),
+              _whenButton(when.label),
             ],
           ),
         ),
@@ -525,7 +714,7 @@ class ReservationRequestSheet extends StatelessWidget {
     );
   }
 
-  Widget _place(Widget mark, String place, String key) {
+  Widget _place(Widget mark, String place, String key, {String? trailing}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
@@ -541,40 +730,132 @@ class ReservationRequestSheet extends StatelessWidget {
               style: const TextStyle(color: _ink, fontSize: 15),
             ),
           ),
+          if (trailing != null) ...[
+            const SizedBox(width: 10),
+            Text(
+              trailing,
+              key: ValueKey<String>('$key-trailing'),
+              maxLines: 1,
+              style: const TextStyle(
+                color: _ink,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _declineButton() {
-    final onTap = onDecline;
+  /// When the ride is, in a light grey pill; only shows, never taps.
+  Widget _whenButton(String label) {
     return Semantics(
-      button: true,
-      enabled: onTap != null,
-      label: 'Decline reservation request',
+      label: 'Pickup $label',
       excludeSemantics: true,
-      child: Material(
-        color: _declineFill,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          key: const ValueKey<String>('reservation-decline'),
+      child: Container(
+        key: const ValueKey<String>('reservation-when'),
+        height: 50,
+        decoration: BoxDecoration(
+          color: _softFill,
           borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: SizedBox(
-            height: 50,
-            child: Center(
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              AppAssets.solarCalendar,
+              key: const ValueKey<String>('reservation-when-icon'),
+              width: 18,
+              height: 18,
+              colorFilter: const ColorFilter.mode(_ink, BlendMode.srcIn),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
               child: Text(
-                'Decline',
-                style: TextStyle(
-                  color: onTap == null ? const Color(0xFFA2AAB0) : _ink,
+                label,
+                key: const ValueKey<String>('reservation-when-text'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _ink,
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+/// The flat picture right of the fare. Airport rides combine the plane
+/// (top left) with the traveller walking with a bag (bottom right).
+class _ReservationPictureView extends StatelessWidget {
+  const _ReservationPictureView({required this.picture});
+
+  final ReservationPicture picture;
+
+  /// Drawn in place of [reservationPictureAccent]: the orb's ink.
+  static const ReservationAccentMapper _colors = ReservationAccentMapper(
+    MoveraRadarOrb.reserveInk,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final key = ValueKey<String>('reservation-picture-${picture.name}');
+    return KeyedSubtree(
+      key: const ValueKey<String>('reservation-picture'),
+      child: switch (picture) {
+        ReservationPicture.booked => SvgPicture.asset(
+          AppAssets.reservationBooked,
+          key: key,
+          fit: BoxFit.contain,
+          colorMapper: _colors,
+        ),
+        ReservationPicture.calendar => SvgPicture.asset(
+          AppAssets.reservationCalendar,
+          key: key,
+          fit: BoxFit.contain,
+          colorMapper: _colors,
+        ),
+        ReservationPicture.airport => LayoutBuilder(
+          key: key,
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final h = constraints.maxHeight;
+            return Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  width: w * 0.6,
+                  height: h * 0.48,
+                  child: SvgPicture.asset(
+                    AppAssets.reservationAircraft,
+                    fit: BoxFit.contain,
+                    colorMapper: _colors,
+                  ),
+                ),
+                Positioned(
+                  left: w * 0.5,
+                  top: h * 0.22,
+                  width: w * 0.5,
+                  height: h * 0.78,
+                  child: SvgPicture.asset(
+                    AppAssets.reservationTraveller,
+                    fit: BoxFit.contain,
+                    colorMapper: _colors,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      },
     );
   }
 }
