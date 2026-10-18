@@ -133,7 +133,8 @@ extension _HomeExclusive on _DriverHomeState {
           // The contour turns blue with the slide, and back with it.
           builder: (context, _) => FractionalTranslation(
             translation: Offset(0, 1 - _exclusive.slide.value),
-            child: PointerInterceptor(
+            // R11-7: the route on the map fits above the card's top.
+            child: _HomeOfferRoute(this)._measureOfferCard(PointerInterceptor(
               child: _HomeOfferRadar(this)._buildOutsideRadarOfferCard(
                 offer,
                 bottomInset: bottomInset,
@@ -144,7 +145,8 @@ extension _HomeExclusive on _DriverHomeState {
                 ),
                 contour: _exclusiveBlue,
               ),
-            ),
+            ), (height) =>
+                _HomeOfferRoute(this)._offerCardMeasured(exclusive: height)),
           ),
         ),
       );

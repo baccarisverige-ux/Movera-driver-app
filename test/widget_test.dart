@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/main.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/routing/route_repository.dart';
@@ -38,6 +39,11 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 Future<void> _pumpHome(WidgetTester tester, Size size) async {
   IslandMessages.reset();
   ScheduledRideStore.reset();
+  // A returning driver: the last position saved by an earlier session is
+  // where Home's map opens (tests have no live GPS provider).
+  DriverStartPosition.clearMemory();
+  await (await SharedPreferences.getInstance())
+      .setString(DriverStartPosition.key, '{"lat":59.3326,"lng":18.0649}');
   await tester.binding.setSurfaceSize(size);
   await tester.pumpWidget(const MoveraApp());
 

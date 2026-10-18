@@ -152,6 +152,9 @@ extension _HomeMapSheet on _DriverHomeState {
       );
     }
     double _homeMapObscuredBottom(BuildContext context) {
+      // R11-7: the measured top of the offer card or deck, once known.
+      final measured = _HomeOfferRoute(this)._offerCardObscured();
+      if (measured != null) { return measured; }
       if (_outsideRadarOffer != null) {
         // The Exclusive card on top of the sheet, down to the screen edge.
         final height = MediaQuery.sizeOf(context).height;
@@ -162,80 +165,42 @@ extension _HomeMapSheet on _DriverHomeState {
       }
       return MoveraSheetMetrics.collapsedHeight;
     }
-    Future<void> _previewDirectOfferRoute(
-      LatLng pickup,
-      LatLng dropoff,
-    ) async {
+    /// R11-7: the offer's whole trip, pickup → drop-off only (no drive to
+    /// the pickup), with time-chip pins, fitted above the card or deck.
+    Future<void> _previewDirectOfferRoute(_HomeDirectOffer offer) async {
       if (!mounted) { return; }
+      final pickup = offer.pickupPosition;
+      final dropoff = offer.dropoffPosition;
       final generation = _mapPreviews.begin();
       bool isCurrent() => mounted && _mapPreviews.owns(generation) &&
           _isDirectOfferRoutePreview;
 
+      _offerRouteFrame.framing = <LatLng>[pickup, dropoff];
       _rebuild(() {
         _isDirectOfferRoutePreview = true;
-        _directOfferRouteMarkers = {
-          Marker(
-            markerId: const MarkerId('radar_pickup'),
-            position: pickup,
-            infoWindow: const InfoWindow(title: 'Pickup'),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueGreen,
-            ),
-          ),
-          Marker(
-            markerId: const MarkerId('radar_dropoff'),
-            position: dropoff,
-            infoWindow: const InfoWindow(title: 'Drop-off'),
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueRed,
-            ),
-          ),
-        };
+        _directOfferRouteMarkers = {};
         _directOfferRoutePolylines = <Polyline>{};
       });
 
-      final roadPoints = <LatLng>[];
-
-      if (_hasLiveDriverLocation) {
-        try {
-          final approach = await _roadRouteService.drivingRoute(
-            origin: GeoPointMaps.fromLatLng(_driverPosition),
-            destination: GeoPointMaps.fromLatLng(pickup),
-          );
-          if (!isCurrent()) return;
-          roadPoints.addAll(approach.latLngPoints);
-        } catch (_) {
-          if (!isCurrent()) return;
-        }
-      }
-
+      final markers = await _HomeOfferRoute(this)._offerRouteMarkers(offer);
       if (!isCurrent()) return;
+      _rebuild(() => _directOfferRouteMarkers = markers);
+
+      var roadPoints = const <LatLng>[];
       try {
         final trip = await _roadRouteService.drivingRoute(
           origin: GeoPointMaps.fromLatLng(pickup),
           destination: GeoPointMaps.fromLatLng(dropoff),
         );
         if (!isCurrent()) return;
-        if (roadPoints.isNotEmpty &&
-            trip.latLngPoints.isNotEmpty &&
-            roadPoints.last == trip.latLngPoints.first) {
-          roadPoints.addAll(trip.latLngPoints.skip(1));
-        } else {
-          roadPoints.addAll(trip.latLngPoints);
-        }
+        roadPoints = _HomeOfferRoute(this)
+            ._offerRoutePoints(pickup, dropoff, trip.latLngPoints);
       } catch (_) {
         if (!isCurrent()) return;
       }
 
       // The route request crossed an async gap: prove context is still mounted.
       if (!mounted || !isCurrent()) return;
-
-      final media = MediaQuery.of(context);
-      final insets = MapOverlayInsets.forHome(
-        safeTop: media.padding.top,
-        obscuredBottom: _homeMapObscuredBottom(context),
-        hasTopBanner: false,
-      );
 
       if (roadPoints.length >= 2) {
         _rebuild(() {
@@ -246,11 +211,9 @@ extension _HomeMapSheet on _DriverHomeState {
         });
       }
 
-      if (!isCurrent()) return;
-      await _fitPoints(
-        MapPreviewGeneration.framingPoints(pickup, dropoff, roadPoints),
-        padding: insets.boundsPadding,
-      );
+      _offerRouteFrame.framing =
+          MapPreviewGeneration.framingPoints(pickup, dropoff, roadPoints);
+      await _HomeOfferRoute(this)._fitOfferRoute();
     }
     Future<void> _fitPoints(List<LatLng> points, {double padding = 80}) async {
       await _camera.preview(points.map(GeoPointMaps.fromLatLng).toList(),
@@ -661,10 +624,10 @@ extension _HomeMapSheet on _DriverHomeState {
                 ..._destinationRouteMarkers,
                 ..._directOfferRouteMarkers,
               },
-              polylines: {
+              polylines: DriverRouteStyle.sized({
                 ..._destinationRoutePolylines,
                 ..._directOfferRoutePolylines,
-              },
+              }, _routeZoomStep),
               myLocationEnabled: false,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
@@ -675,15 +638,15 @@ extension _HomeMapSheet on _DriverHomeState {
               trafficEnabled: false,
               onUserGesture: _camera.userGesture,
               onCameraIdle: () => _cameraPort?.onIdle(),
-              onCameraMove: (position) => _cameraPort?.onMove(position),
+              onCameraMove: (position) {
+                _cameraPort?.onMove(position);
+                final step = DriverRouteStyle.stepZoom(position.zoom);
+                if (step != _routeZoomStep) _rebuild(() => _routeZoomStep = step);
+              },
               buildingsEnabled: true,
               indoorViewEnabled: false,
               mapType: MapType.normal,
-              padding: MapOverlayInsets.forHome(
-                safeTop: MediaQuery.paddingOf(context).top,
-                obscuredBottom: _homeMapObscuredBottom(context),
-                hasTopBanner: false,
-              ).edgeInsets,
+              padding: _HomeOfferRoute(this)._homeMapInsets(context).edgeInsets,
               onMapCreated: (GoogleMapController controller) {
                 _mapController = controller;
                 _cameraPort = GoogleDriverCameraPort(controller,
@@ -795,7 +758,11 @@ extension _HomeMapSheet on _DriverHomeState {
                     key: const ValueKey<String>('radar-home-deck-guard'),
                     behavior: HitTestBehavior.opaque,
                     onVerticalDragUpdate: (_) {},
-                    child: _HomeOfferRadar(this)._buildRadarOffersTray(),
+                    child: _HomeOfferRoute(this)._measureOfferCard(
+                      _HomeOfferRadar(this)._buildRadarOffersTray(),
+                      (height) => _HomeOfferRoute(this)
+                          ._offerCardMeasured(deck: height),
+                    ),
                   ),
                 ),
               ),
