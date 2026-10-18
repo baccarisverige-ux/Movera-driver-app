@@ -9,6 +9,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
+import 'package:movera/core/island/trip_island_controller.dart';
 import 'package:movera/core/routing/route_instruction.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/accept%20ride/island_icons.dart';
@@ -78,6 +79,7 @@ Widget surface({
 );
 
 void main() {
+  _islandFeatures();
   testWidgets('Record rendered guidance and alternating waiting views', (
     tester,
   ) async {
@@ -237,7 +239,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(milliseconds: 800));
     await capture('11-arrival-destination');
-    await tester.tap(find.text('Arriving soon'));
+    await tester.tap(find.text('Arriving'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
     expect(find.byKey(const ValueKey('trip-default-island')), findsOneWidget);
@@ -324,7 +326,7 @@ void main() {
         symbol: NavigationBannerSymbol.arrive,
       ),
     );
-    expect(find.text('Arriving soon'), findsOneWidget);
+    expect(find.text('Arriving'), findsOneWidget);
     expect(number(), '150m');
     // At the pickup, waiting there, or no distance known: icon only.
     await show(
@@ -336,7 +338,7 @@ void main() {
         symbol: NavigationBannerSymbol.arrive,
       ),
     );
-    expect(find.text('Near pickup'), findsOneWidget);
+    expect(find.text('Arriving'), findsOneWidget);
     expect(number(), isNull);
     await show(
       banner: const NavigationBanner(
@@ -614,5 +616,134 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 10));
     expect(tester.takeException(), isNull);
+  });
+}
+
+Widget _trip(NavigationBanner banner, {String? arrival, bool arrived = false, ValueNotifier<double>? sheet}) =>
+    MaterialApp(
+      home: Scaffold(
+        body: SizedBox(
+          width: 400,
+          height: 220,
+          child: AdaptiveTripIsland(
+            banner: banner,
+            status: 'To pickup',
+            address: 'Kungsgatan 42, Stockholm',
+            detail: '',
+            eta: '1 min',
+            arrival: arrival,
+            arrived: arrived,
+            progress: .9,
+            waitingMessage: 'Waiting for Angelica',
+            lastTripLabel: '120 kr',
+            sheetPosition: sheet,
+            sheetRaisedAt: .5,
+            onRadar: () {},
+            onMenu: () {},
+            onSearch: () {},
+            onHistory: () {},
+            onRoute: () {},
+            onSafety: () {},
+            onWait: () {},
+          ),
+        ),
+      ),
+    );
+
+void _islandFeatures() {
+  testWidgets('arriving icon pin colour follows the point', (tester) async {
+    for (final (label, word, pin) in [
+      ('Pickup', 'Arriving', ArrivingRoadPainter.pickup),
+      ('Stop 2', 'Stop 2', ArrivingRoadPainter.stop),
+      ('Destination', 'Arriving', ArrivingRoadPainter.dropOff),
+    ]) {
+      await tester.pumpWidget(
+        _trip(
+          NavigationBanner(
+            primary: label,
+            distanceLabel: 'in 150 m',
+            symbol: NavigationBannerSymbol.arrive,
+          ),
+          arrival: label,
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      final icon = tester.widget<CustomPaint>(
+        find.byKey(const ValueKey('island-arriving-icon')),
+      );
+      expect((icon.painter! as ArrivingRoadPainter).pin, pin);
+      expect(find.text(word), findsOneWidget);
+      expect(find.text('Kungsgatan 42'), findsOneWidget);
+    }
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 10));
+  });
+
+  testWidgets('lane row shows the lanes to use', (tester) async {
+    RouteLane lane(bool valid) =>
+        RouteLane(indications: const ['straight'], valid: valid);
+    await tester.pumpWidget(
+      _trip(
+        NavigationBanner(
+          primary: 'Exit right in 400 m',
+          distanceLabel: '400 m',
+          symbol: NavigationBannerSymbol.exitRight,
+          lanes: [lane(false), lane(false), lane(true), lane(true)],
+        ),
+      ),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byKey(const ValueKey('lane-2-use')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lane-3-use')), findsOneWidget);
+    expect(find.byKey(const ValueKey('lane-0-other')), findsOneWidget);
+    expect(find.text('Use the 2 right lanes'), findsOneWidget);
+    // After ~6 s the strip goes back to the arrival time.
+    await tester.pump(TripStripController.laneTime);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const ValueKey('lane-2-use')), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 10));
+  });
+
+  testWidgets('strip tucks under the island when arriving or sheet is up', (
+    tester,
+  ) async {
+    double height() =>
+        tester.getSize(find.byKey(const ValueKey('island-morph-shell'))).height;
+    const turn = NavigationBanner(
+      primary: 'Turn right in 300 m',
+      distanceLabel: '300 m',
+      symbol: NavigationBannerSymbol.right,
+    );
+    final sheet = ValueNotifier<double>(0);
+    await tester.pumpWidget(_trip(turn, sheet: sheet));
+    await tester.pump(const Duration(seconds: 1));
+    expect(height(), AdaptiveTripIsland.routeHeight);
+    sheet.value = .9;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    const tucked =
+        AdaptiveTripIsland.routeHeight - AdaptiveTripIsland.stripHeight;
+    expect(height(), tucked);
+    sheet.value = 0;
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(height(), AdaptiveTripIsland.routeHeight);
+    // Arriving at the pickup: tucked.
+    await tester.pumpWidget(
+      _trip(
+        const NavigationBanner(
+          primary: 'Pickup',
+          distanceLabel: 'in 40 m',
+          symbol: NavigationBannerSymbol.arrive,
+        ),
+        arrival: 'Pickup',
+        sheet: sheet,
+      ),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    expect(height(), closeTo(tucked, .01));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 10));
   });
 }

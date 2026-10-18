@@ -145,10 +145,7 @@ class TripIslandController extends ChangeNotifier {
       return TripIslandFace(TripIslandKind.status, fault, '', 'status-$fault');
     }
     final b = i.banner;
-    final maneuver =
-        b != null &&
-        b.symbol != NavigationBannerSymbol.arrive &&
-        b.symbol != NavigationBannerSymbol.straight;
+    final maneuver = b != null && b.symbol.isManeuver;
     if (_notice != null && (i.waitingSeconds != null || !maneuver)) {
       return _notice!;
     }
@@ -210,6 +207,189 @@ class TripIslandController extends ChangeNotifier {
     _idle?.cancel();
     _waitingCycle?.cancel();
     _noticeTimer?.cancel();
+    super.dispose();
+  }
+}
+
+/// Which point the trip is heading to.
+enum TripLeg { pickup, stop, dropoff }
+
+enum TripStripKind { eta, lanes, message }
+
+/// What the island's lighter bottom strip may say right now.
+class TripStripInput {
+  const TripStripInput({
+    this.leg,
+    this.stopLabel,
+    this.etaMinutes,
+    this.bags = 0,
+    this.nextTripFare,
+    this.pickupSide,
+    this.toll = false,
+    this.laneKey,
+  });
+
+  final TripLeg? leg;
+
+  /// "Stop 1" while heading to that stop.
+  final String? stopLabel;
+  final int? etaMinutes;
+
+  /// Bags the rider said they bring (from the booking).
+  final int bags;
+
+  /// Fare of a just-secured next trip ("132 kr").
+  final String? nextTripFare;
+
+  /// 'left' / 'right' when the route knows the pickup's side of the street.
+  final String? pickupSide;
+
+  /// The road after the next maneuver has a toll.
+  final bool toll;
+
+  /// Identity of the next maneuver's lanes when they matter.
+  final String? laneKey;
+}
+
+class TripStripItem {
+  const TripStripItem(this.kind, [this.text = '']);
+  final TripStripKind kind;
+  final String text;
+
+  static const eta = TripStripItem(TripStripKind.eta);
+
+  @override
+  bool operator ==(Object other) =>
+      other is TripStripItem && other.kind == kind && other.text == text;
+
+  @override
+  int get hashCode => Object.hash(kind, text);
+}
+
+/// Rotates the strip: ETA + progress by default, lane guidance while the
+/// lanes matter (~6 s), short messages (4 s) only at the moment they are
+/// true, then back to the ETA. Nothing plays while the strip is tucked.
+class TripStripController extends ChangeNotifier {
+  TripStripController({DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
+
+  static const messageTime = Duration(seconds: 4);
+  static const laneTime = Duration(seconds: 6);
+
+  /// "Arriving in N min" once per drop-off leg, inside this window.
+  static const arrivingMinutes = 10;
+
+  final DateTime Function() _clock;
+  TripStripInput? _last;
+  final _queue = <TripStripItem>[];
+  TripStripItem _current = TripStripItem.eta;
+  Timer? _timer;
+  bool _hidden = false, _disposed = false, _arrivingSaid = false;
+  int? _bestEta;
+
+  TripStripItem get current => _current;
+
+  void update(TripStripInput next, {bool hidden = false}) {
+    if (_disposed) return;
+    final last = _last;
+    _last = next;
+    final newLeg = last == null || last.leg != next.leg;
+    if (newLeg) {
+      _arrivingSaid = false;
+      _bestEta = null;
+    }
+    if (hidden != _hidden) {
+      _hidden = hidden;
+      if (hidden) {
+        // Tucked under the island: drop what was planned, it is stale.
+        _queue.clear();
+        _timer?.cancel();
+        _show(TripStripItem.eta);
+      }
+    }
+    if (_hidden) return;
+
+    if (newLeg && next.leg == TripLeg.pickup && next.bags > 0) {
+      _say('Rider has ${next.bags} bag${next.bags == 1 ? '' : 's'}');
+    }
+    if (newLeg && next.leg == TripLeg.stop && next.stopLabel != null) {
+      _say('${next.stopLabel} next');
+    }
+    final eta = next.etaMinutes;
+    if (eta != null) {
+      final best = _bestEta;
+      if (best != null && eta - best >= 2) {
+        _say('Traffic ahead · +${eta - best} min');
+        _bestEta = eta;
+      } else if (best == null || eta < best) {
+        _bestEta = eta;
+      }
+      if (next.leg == TripLeg.dropoff &&
+          !_arrivingSaid &&
+          eta <= arrivingMinutes &&
+          eta >= 3) {
+        _arrivingSaid = true;
+        final at = _clock().add(Duration(minutes: eta));
+        String two(int v) => v.toString().padLeft(2, '0');
+        _say('Arriving in $eta min · ${two(at.hour)}:${two(at.minute)}');
+      }
+    }
+    if (last != null &&
+        last.nextTripFare == null &&
+        next.nextTripFare != null) {
+      _say('Next trip secured · ${next.nextTripFare}');
+    }
+    if (next.leg == TripLeg.pickup &&
+        next.pickupSide != null &&
+        last?.pickupSide != next.pickupSide) {
+      _say('Pickup on the ${next.pickupSide} side');
+    }
+    if (next.toll && !(last?.toll ?? false)) _say('Toll ahead');
+
+    final lanes = next.laneKey;
+    if (lanes != null && lanes != last?.laneKey) {
+      // Lanes are time-critical: they go first and cut a message short.
+      _queue.removeWhere((i) => i.kind == TripStripKind.lanes);
+      _queue.insert(0, TripStripItem(TripStripKind.lanes, lanes));
+      if (_current.kind != TripStripKind.lanes) _advance();
+    } else if (lanes == null && _current.kind == TripStripKind.lanes) {
+      _advance();
+    }
+  }
+
+  void _say(String text) {
+    final item = TripStripItem(TripStripKind.message, text);
+    if (_current == item || _queue.contains(item)) return;
+    _queue.add(item);
+    if (_current.kind == TripStripKind.eta) _advance();
+  }
+
+  void _advance() {
+    _timer?.cancel();
+    if (_queue.isEmpty) {
+      _show(TripStripItem.eta);
+      return;
+    }
+    final item = _queue.removeAt(0);
+    _show(item);
+    _timer = Timer(
+      item.kind == TripStripKind.lanes ? laneTime : messageTime,
+      () {
+        if (!_disposed) _advance();
+      },
+    );
+  }
+
+  void _show(TripStripItem item) {
+    if (_current == item) return;
+    _current = item;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _timer?.cancel();
     super.dispose();
   }
 }
