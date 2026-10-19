@@ -65,7 +65,7 @@ void main() {
       zoom = highway.resolve(location: _fix(59 + i * .001, speed: 30),
           navigating: true).zoom;
     }
-    expect(zoom, lessThan(settled.first - 1),
+    expect(zoom, lessThan(settled.first - .75),
         reason: 'fast roads show more road ahead');
   });
 

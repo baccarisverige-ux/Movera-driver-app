@@ -35,6 +35,14 @@ void gestures(int mapId, bool enabled) {
   if (ready) _gestures(mapId.toJS, enabled.toJS);
 }
 
+@JS('driverMapCamera.tiltFollowsZoom')
+external void _tiltFollowsZoom(JSNumber mapId, JSBoolean enabled);
+
+/// The driver's own zoom carries the tilt along (off while waiting: flat).
+void tiltFollowsZoom(int mapId, bool enabled) {
+  if (ready) _tiltFollowsZoom(mapId.toJS, enabled.toJS);
+}
+
 @JS('driverMapCamera.listen')
 external JSFunction _listen(JSNumber mapId, JSFunction callback);
 void applyAnchor(int mapId) {

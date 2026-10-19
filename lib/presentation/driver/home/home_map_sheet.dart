@@ -688,6 +688,7 @@ extension _HomeMapSheet on _DriverHomeState {
           rotateGesturesEnabled: true,
           tiltGesturesEnabled: true,
           onUserGesture: _camera.userGesture,
+          onTouching: (down) => _camera.touching = down,
           onCameraIdle: () { _cameraPort?.onIdle(); _camera.browseSettled(); },
           onCameraMove: (position) => _cameraPort?.onMove(position),
           mapType: MapType.normal,
@@ -757,6 +758,7 @@ extension _HomeMapSheet on _DriverHomeState {
               // See _buildRadarMapBackdrop: no traffic layer on home.
               trafficEnabled: false,
               onUserGesture: _camera.userGesture,
+              onTouching: (down) => _camera.touching = down,
               onCameraIdle: () { _cameraPort?.onIdle(); _camera.browseSettled(); },
               onCameraMove: (position) {
                 _cameraPort?.onMove(position);
