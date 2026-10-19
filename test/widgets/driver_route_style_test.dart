@@ -26,7 +26,9 @@ void main() {
       expect({for (final l in resized) l.polylineId.value: l.width},
           {'r-casing': widths.$1, 'r': widths.$2});
     });
+    expect(DriverRouteStyle.stepZoom(10.2), 10);
     expect(DriverRouteStyle.stepZoom(11.5), 11);
+    expect(DriverRouteStyle.stepZoom(12.4), 12);
     expect(DriverRouteStyle.stepZoom(13), 14);
     expect(DriverRouteStyle.stepZoom(17), 16);
     expect(DriverRouteStyle.widthAt(DriverRouteStyle.defaultZoom), 11);
