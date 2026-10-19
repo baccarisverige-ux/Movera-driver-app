@@ -161,10 +161,29 @@ void main() {
     ScheduledRideStore.reset();
   });
 
-  testWidgets('a Radar offer shows pickup → drop-off only, with minute chips, '
-      'and the route leaves with the last card',
+  testWidgets('a Radar offer puts nothing on the map; its route button shows '
+      'pickup → drop-off only, with minute chips, and the route leaves with '
+      'the last card',
       (tester) async {
     final routes = await _homeWithRadarTrip(tester);
+    bool offerLine(Polyline line) =>
+        line.polylineId.value.startsWith('direct_offer') ||
+        line.polylineId.value.startsWith('offer_route_light');
+    bool offerPin(Marker m) => m.markerId.value.startsWith('radar_');
+    // R15-10: no line and no pins while the Radar card is up.
+    final before = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
+    expect(before.polylines!.where(offerLine), isEmpty);
+    expect(before.markers!.where(offerPin), isEmpty);
+    // The driver asks for the route with the card's route button.
+    tester.widget<RadarOfferCard>(find.byType(RadarOfferCard).first).onRoute!();
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    // The marker bitmaps are painted off the fake clock.
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
     final map = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
     final route = map.polylines!
         .where((line) => line.polylineId.value.startsWith('direct_offer'))
@@ -194,10 +213,6 @@ void main() {
     expect(pickupPin.anchor.dy, greaterThan(0.5));
 
     // R13-3: the last card leaving takes its route and pins along.
-    bool offerLine(Polyline line) =>
-        line.polylineId.value.startsWith('direct_offer') ||
-        line.polylineId.value.startsWith('offer_route_light');
-    bool offerPin(Marker m) => m.markerId.value.startsWith('radar_');
     // The driver closes the only card with its ×.
     tester.widget<RadarOfferCard>(find.byType(RadarOfferCard).first).onClose!();
     for (var i = 0; i < 20; i++) {
