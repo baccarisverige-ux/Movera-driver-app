@@ -117,7 +117,7 @@ class _HoldRingPainter extends CustomPainter {
       progress * 2 * math.pi,
       false,
       Paint()
-        ..color = MoveraRadarOrb.onlineGreen
+        ..color = MoveraRadarOrb.offerAccent
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3
         ..strokeCap = StrokeCap.round,

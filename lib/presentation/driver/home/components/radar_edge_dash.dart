@@ -128,7 +128,7 @@ class RadarEdgeDash extends StatefulWidget {
     this.notchWidth = 126,
     this.notchDepth = 58,
     this.cornerRadius = 24,
-    this.color = MoveraRadarOrb.onlineGreen,
+    this.color = MoveraRadarOrb.offerAccent,
     this.duration = const Duration(milliseconds: 2600),
   });
 

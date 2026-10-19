@@ -180,9 +180,8 @@ class DriverSheetNav {
                 notchWidth: 126,
                 notchDepth: notchDepth,
                 cornerRadius: 24,
-                color: hasRideOffers
-                    ? MoveraRadarOrb.offerAccent
-                    : MoveraRadarOrb.onlineGreen,
+                // R15: grey with or without offers.
+                color: MoveraRadarOrb.offerAccent,
               ),
               ),
             ),
@@ -271,9 +270,8 @@ class DriverSheetNav {
                   notchWidth: 126,
                   notchDepth: 58,
                   cornerRadius: 24,
-                  color: hasRideOffers
-                      ? MoveraRadarOrb.offerAccent
-                      : MoveraRadarOrb.onlineGreen,
+                  // R15: grey with or without offers.
+                  color: MoveraRadarOrb.offerAccent,
                 ),
               ),
           ],

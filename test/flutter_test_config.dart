@@ -25,6 +25,7 @@ const testRuntimeConfig = DriverRuntimeConfig(
   liveMapTicker: false,
   reservationPopup: false,
   islandHint: false,
+  radarSound: false,
 );
 
 /// The scheduled-ride day follows the test's fake time: widget tests move

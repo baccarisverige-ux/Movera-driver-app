@@ -81,6 +81,7 @@ import 'package:movera/presentation/driver/home/components/home_island_notices.d
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/components/island_waiting.dart';
 import 'package:movera/core/island/island_waiting_signals.dart';
+import 'package:movera/core/sound/radar_offer_sound.dart';
 import 'package:movera/presentation/driver/home/components/trip_problem_sheet.dart';
 import 'package:movera/presentation/driver/home/components/driver_sheet_nav.dart';
 import 'package:movera/presentation/driver/home/components/driver_suspended_sheet.dart';
@@ -119,6 +120,7 @@ part 'home_account.dart';
 part 'home_exclusive.dart';
 part 'home_start_position.dart';
 part 'home_offer_route.dart';
+part 'home_offer_sound.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -159,7 +161,7 @@ class _DriverHomeState extends State<DriverHome>
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
     if (route != null) { driverRouteObserver.subscribe(this, route); }
-    if(MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.stop(); _radarSweepController.stop(); }
+    if(MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.stop(); _radarSweepController.stop(); _radarMotionController.stop(); }
   }
   @override
   void didPushNext() { _routeVisible = false; _pauseHomeUpdates(); }
@@ -189,7 +191,7 @@ class _DriverHomeState extends State<DriverHome>
     _HomeOfferRadar(this)._cancelAllOfferTimers(preserveClaim: true);
     _offerSimulationTimer?.cancel(); _directOfferTimer?.cancel();
     _expandedDirectOfferTimer?.cancel(); _radarOfferTwoTimer?.cancel(); _radarOfferThreeTimer?.cancel();
-    _goOnlinePulseController.stop(); _radarSweepController.stop();
+    _goOnlinePulseController.stop(); _radarSweepController.stop(); _radarMotionController.stop();
     _offerRouteFrame.stopLine();
   }
   void _resumeHomeUpdates() {
@@ -199,7 +201,7 @@ class _DriverHomeState extends State<DriverHome>
     _HomeOfferRadar(this)._scheduleVisibleOffers();
     _HomeOfferRadar(this)._resumeOfferTimers();
     _HomeOfferRoute(this)._resumeRouteLine();
-    if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); }
+    if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); _radarMotionController.repeat(); }
     setState(() {});
   }
 
@@ -208,6 +210,17 @@ class _DriverHomeState extends State<DriverHome>
   final PanelController _destinationPanelController = PanelController();
   late final AnimationController _goOnlinePulseController;
   late final AnimationController _radarSweepController;
+  /// R15-4: one 10 s loop for the Radar's soft sweep (5 turns with trips
+  /// found, 3 while scanning) and the black MATCH pulse (4 per loop).
+  late final AnimationController _radarMotionController;
+  final RadarOfferSound _offerSound = RadarOfferSound();
+  bool _offerSoundQueued = false;
+  double _radarWedge({required bool found}) => (_radarMotionController.value * (found ? 5 : 3)) % 1;
+  double get _matchPulse {
+    final t = (_radarMotionController.value * 4) % 1;
+    final x = t < 0.35 ? t / 0.35 : t < 0.7 ? 1 - (t - 0.35) / 0.35 : 0.0;
+    return 0.5 - 0.5 * math.cos(math.pi * x);
+  }
   Timer? _onlineTransitionTimer;
 
   /// Puts the top island back on the hidden total after 5 s untouched.
@@ -448,6 +461,7 @@ class _DriverHomeState extends State<DriverHome>
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     )..repeat();
+    _radarMotionController = AnimationController(vsync: this, duration: const Duration(seconds: 10))..repeat();
     _snapSheet = MoveraSnapSheetController(panel: _panelController, vsync: this, reduceMotion: () => mounted && MediaQuery.disableAnimationsOf(context));
     _HomeStartPosition(this)._restoreStartPosition();
     _HomeMapSheet(this)._prepareDriverVehicleMarker();
@@ -669,7 +683,12 @@ class _DriverHomeState extends State<DriverHome>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutViewport(
+    _syncOfferSound();
+    // R15-5: any tap on the screen stops the radar sound.
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) => _offerSound.tap(),
+      child: LayoutViewport(
       child: Scaffold(
       key: _scaffoldKey,
       drawer: DriverSideMenu(
@@ -840,6 +859,7 @@ class _DriverHomeState extends State<DriverHome>
               ],
             ),
       ),
+      ),
     );
   }
 
@@ -1007,6 +1027,7 @@ class _DriverHomeState extends State<DriverHome>
       animation: Listenable.merge([
         _goOnlinePulseController,
         _radarSweepController,
+        _radarMotionController,
       ]),
       builder: (context, child) {
         // Every Radar trip open right now, the same trips the full Radar
@@ -1041,6 +1062,8 @@ class _DriverHomeState extends State<DriverHome>
           offer: hasRadarOffer,
           pulse: _goOnlinePulseController.value,
           sweep: _radarSweepController.value,
+          wedge: _radarWedge(found: hasRadarOffer),
+          statusPulse: hasRadarOffer ? _matchPulse : 0,
           onTap: hasRadarOffer ? _openRideOffers : null,
         );
       },
@@ -1057,6 +1080,8 @@ class _DriverHomeState extends State<DriverHome>
     bool offer = false,
     double pulse = 0,
     double sweep = 0,
+    double? wedge,
+    double statusPulse = 0,
     bool blocked = false,
   }) {
     return MoveraRadarOrb(
@@ -1069,6 +1094,8 @@ class _DriverHomeState extends State<DriverHome>
       offer: offer,
       pulse: pulse,
       sweep: sweep,
+      wedge: wedge,
+      statusPulse: statusPulse,
       blocked: blocked,
     );
   }
@@ -1114,6 +1141,8 @@ class _DriverHomeState extends State<DriverHome>
     _homeRadarLostMatchTimer?.cancel();
     _driverLocationSubscription?.cancel();
     _radarSweepController.dispose();
+    _radarMotionController.dispose();
+    _offerSound.dispose();
     _panelSlidePosition.dispose();
     _snapSheet.dispose();
     _exclusive.dispose();

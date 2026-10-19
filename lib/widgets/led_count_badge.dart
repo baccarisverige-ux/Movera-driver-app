@@ -49,8 +49,10 @@ class LedCountBadge extends StatelessWidget {
         decoration: BoxDecoration(
           color: mint ? const Color(0xFF0F1416) : const Color(0xFFF4F5F6),
           borderRadius: BorderRadius.circular(9),
+          // R15: the grey badge ("ALL OFFERS") has a clear light grey line.
           border: Border.all(
-            color: mint ? const Color(0xFF26302F) : const Color(0xFFDCE0E3),
+            color: mint ? const Color(0xFF26302F) : const Color(0xFFC4CACE),
+            width: mint ? 1 : 1.5,
           ),
         ),
         child: Row(
