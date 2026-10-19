@@ -1,5 +1,9 @@
 import 'package:movera/core/geo/geo_point.dart';
 
+/// A fix may be stamped by the GPS clock a little ahead of the phone clock.
+/// Up to this much "from the future" still counts as fresh.
+const Duration gpsClockSkewTolerance = Duration(seconds: 5);
+
 class DriverLocation {
   const DriverLocation({
     required this.point,
@@ -51,7 +55,7 @@ class DriverLocation {
       return false;
     }
     final age = now.difference(at);
-    return !age.isNegative &&
+    return age >= -gpsClockSkewTolerance &&
         age <= const Duration(seconds: 30) &&
         point.latitude.isFinite &&
         point.longitude.isFinite &&

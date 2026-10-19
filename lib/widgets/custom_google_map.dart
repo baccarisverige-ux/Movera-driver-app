@@ -43,7 +43,7 @@ class CustomGoogleMap extends StatefulWidget {
   final VoidCallback? onUserGesture;
   final EdgeInsets padding;
 
-  /// Vertical screen anchor; .72 drives, clamped above sheet overlays.
+  /// Vertical screen anchor; .75 drives, clamped above sheet overlays.
   final double cameraAnchor;
 
   /// Web only: Google's camera (zoom / pan) control in the corner.

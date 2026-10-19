@@ -1212,7 +1212,7 @@ class _AcceptRideState extends State<AcceptRide>
                       following: _camera.isGuidance &&
                           _camera.mode == DriverCameraMode.following),
                     cameraAnchor: _camera.isGuidance &&
-                        _camera.mode == DriverCameraMode.following ? .72 : .5,
+                        _camera.mode == DriverCameraMode.following ? .75 : .5,
                     blockGestures: _blockMapGestures,
                     initialTarget: _driverPosition,
                     onCameraMove: _onCameraMoveListener,
@@ -1239,7 +1239,8 @@ class _AcceptRideState extends State<AcceptRide>
                           }
                         },
                         initialPosition: CameraPosition(target: _driverPosition,
-                          zoom: DriverCameraPolicy.guidanceStartZoom),
+                          zoom: DriverCameraPolicy.guidanceStartZoom,
+                          tilt: DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.guidanceStartZoom)),
                         reducedMotion: MediaQuery.disableAnimationsOf(context));
                       _camera.attach(_cameraPort!);
                       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1500,6 +1501,8 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
         initialPosition: CameraPosition(
           target: widget.initialTarget,
           zoom: DriverCameraPolicy.guidanceStartZoom,
+          // Opens already tilted: no tilt-up flight when the trip starts.
+          tilt: DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.guidanceStartZoom),
         ),
         markers: _markers,
         polylines: widget.polylines,

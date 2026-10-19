@@ -20,7 +20,7 @@ class MapOverlayInsets {
 
   EdgeInsets get edgeInsets => EdgeInsets.fromLTRB(left, top, right, bottom);
 
-  /// Anchor at 72% of the screen, clamped above overlays with car clearance.
+  /// Anchor at 75% of the screen, clamped above overlays with car clearance.
   /// Web does not implement SDK padding: its projection adapter applies this.
   EdgeInsets drivingInsets(double height, {required bool following}) {
     if (kIsWeb) {
@@ -31,7 +31,7 @@ class MapOverlayInsets {
     }
     final visible = math.max(0.0, height - top - bottom);
     final margin = math.min(24.0, visible / 2);
-    final desired = (height * .72).clamp(
+    final desired = (height * .75).clamp(
       top + margin,
       height - bottom - margin,
     );

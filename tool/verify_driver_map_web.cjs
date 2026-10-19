@@ -184,7 +184,7 @@ div.fire('touchstart', [touch(100,100),touch(200,100)]);
 div.fire('touchmove', [touch(100,50),touch(200,50)]);
 assert.equal(map.getTilt(), 15, 'Two-finger up tilts');
 div.fire('touchmove', [touch(100,-300),touch(200,-300)]);
-assert.equal(map.getTilt(), 60, 'Tilt clamps to 60');
+assert.equal(map.getTilt(), 67.5, 'Tilt clamps to 67.5');
 div.fire('touchmove', [touch(100,400),touch(200,400)]);
 assert.equal(map.getTilt(), 0, 'Two-finger down flattens');
 div.fire('touchend');

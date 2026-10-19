@@ -26,7 +26,7 @@ class DriverRuntimeConfig {
   /// Skip the pending-account activation hold on Home.
   final bool skipAccountActivation;
 
-  /// 200 ms refresh of the active-ride vehicle pose on the map. Widget tests
+  /// 33 ms (about 30 Hz) refresh of the active-ride vehicle pose on the map. Widget tests
   /// turn it off because a fake clock cannot drain a periodic timer.
   final bool liveMapTicker;
 

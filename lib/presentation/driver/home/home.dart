@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/navigation/map_preview_generation.dart';
 import 'package:movera/core/navigation/coalescing_map_route_refresh.dart';
+import 'package:movera/core/navigation/moving_route_refresh.dart';
 import 'package:movera/widgets/google_driver_camera_port.dart';
 import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
@@ -375,13 +376,15 @@ class _DriverHomeState extends State<DriverHome>
   // An old routing response must never replace a route from a newer fix.
   final MapPreviewGeneration _destinationRoadRequests = MapPreviewGeneration();
   final CoalescingMapRouteRefresh _destinationRoadRefresh = CoalescingMapRouteRefresh();
+  final MovingRouteRefresh _destinationRouteRefetch = MovingRouteRefresh();
 
   // Placeholder only: the map and car wait for a known position.
   static const LatLng _fallbackDriverPosition = LatLng(59.3293, 18.0686);
   LatLng _driverPosition = _fallbackDriverPosition;
   bool _startPositionKnown = false, _startLocationFailed = false;
   Timer? _startWait;
-  CameraPosition get _initialPosition => CameraPosition(target: _driverPosition, zoom: _startPositionKnown ? DriverCameraPolicy.exploreZoom : 14.0);
+  // Opens on the area around the driver (~10 km across), nearly flat.
+  CameraPosition get _initialPosition => CameraPosition(target: _driverPosition, zoom: DriverCameraPolicy.exploreZoom, tilt: DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.exploreZoom));
 
   static const _HomeDirectOffer _veryCloseDirectOffer = _HomeDirectOffer(
     id: 'home-direct-close',

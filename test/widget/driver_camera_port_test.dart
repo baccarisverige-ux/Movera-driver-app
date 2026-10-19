@@ -32,7 +32,11 @@ class _DelayedCameraAckPlatform extends RecordingMapPlatform {
 }
 
 void main() {
-  test('driving anchor is 72% of screen and clears overlays', () {
+  test('driving anchor is 75% of screen and clears overlays', () {
+    const low = MapOverlayInsets(top: 100, bottom: 100, left: 32, right: 32);
+    final car = low.drivingInsets(800, following: true);
+    expect((800 + car.top - car.bottom) / 2, 600);
+    // A taller sheet keeps the car above it.
     const insets = MapOverlayInsets(top: 100, bottom: 200, left: 32, right: 32);
     final padding = insets.drivingInsets(800, following: true);
     expect((800 + padding.top - padding.bottom) / 2, 576);
@@ -90,6 +94,41 @@ void main() {
     );
     expect(platform.moves.length, count + 1);
     reduced.dispose();
+    port.dispose();
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets('a whole-route overview lands flat even from a tilted map', (
+    tester,
+  ) async {
+    final original = GoogleMapsFlutterPlatform.instance;
+    final platform = RecordingMapPlatform();
+    GoogleMapsFlutterPlatform.instance = platform;
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
+    GoogleMapController? controller;
+    const start = CameraPosition(
+      target: LatLng(59, 18),
+      zoom: 17,
+      tilt: 67.5,
+      bearing: 40,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GoogleMap(
+          initialCameraPosition: start,
+          onMapCreated: (value) => controller = value,
+        ),
+      ),
+    );
+    await tester.pump();
+    // Reduced motion lands in one move: the pose a flight ends at.
+    final port = GoogleDriverCameraPort(controller!,
+        initialPosition: start, reducedMotion: true);
+    await port.frame(const GeoPoint(59.01, 18.01), 13.4);
+    final pose =
+        (platform.moves.last.toJson() as List<dynamic>)[1]
+            as Map<String, dynamic>;
+    expect(pose['zoom'], closeTo(13.4, .001));
+    expect(pose['tilt'], 0);
     port.dispose();
     await tester.pumpWidget(const SizedBox());
   });

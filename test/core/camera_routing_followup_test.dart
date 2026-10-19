@@ -242,9 +242,9 @@ void main() {
         immediate: true,
       );
       // The corrected turn is now ~100 m ahead: the camera closes in a
-      // little and tilts further toward the horizon, never flatter.
+      // little and never gets flatter (cruise may already be at full tilt).
       expect(pose.zoom, greaterThan(cruise.zoom));
-      expect(pose.tilt, greaterThan(cruise.tilt));
+      expect(pose.tilt, greaterThanOrEqualTo(cruise.tilt));
     },
   );
 }
