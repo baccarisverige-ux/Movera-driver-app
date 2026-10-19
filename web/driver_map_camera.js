@@ -23,7 +23,7 @@
   // Where the car goes on screen: the middle of the map left free by the
   // island and the sheet, or (driving) behind that middle so the road
   // ahead shows. `lead` is the camera's heading: with a heading-up map it
-  // equals the map heading and the car sits low (72%); on a flat north-up
+  // equals the map heading and the car sits low (75%); on a flat north-up
   // map the car moves away from the side it drives to, so the road ahead
   // is on screen whichever way the car goes.
   function anchorPixel(state) {
@@ -306,7 +306,7 @@
         zoomAt(zoomDelta, previous.x, previous.y,
           supports3D() ? {
             heading: ((map.getHeading() || 0) - twist + 360) % 360,
-            tilt: clamp((map.getTilt() || 0) - (tilting ? vertical * .3 : 0), 0, 60)
+            tilt: clamp((map.getTilt() || 0) - (tilting ? vertical * .3 : 0), 0, 67.5)
           } : {},
           tilting ? 0 : next.x - previous.x,
           tilting ? 0 : next.y - previous.y);

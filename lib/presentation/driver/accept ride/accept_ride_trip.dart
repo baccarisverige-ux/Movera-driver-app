@@ -555,12 +555,12 @@ extension _AcceptRideTrip on _AcceptRideState {
         });
         return;
       }
+      // A far GPS outlier: keep the car, camera and route where they are.
+      if (!_navigation.setVehicle(location)) { return; }
       final next = location.point.toLatLng();
 
       _lastGpsAppliedAt = DateTime.now();
       _lastLocation = location;
-
-      _navigation.setVehicle(location);
       _driverPosition = next;
       _hasLiveLocation = location.isUsableAt(DateTime.now());
       _locationStatus = _navigation.status;

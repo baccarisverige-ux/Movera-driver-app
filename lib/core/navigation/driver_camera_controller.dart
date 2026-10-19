@@ -81,9 +81,10 @@ class DriverCameraPolicy {
   double get alongMeters => _along ?? 0;
   bool autoZoom = true;
 
-  /// Home's free-map zoom; also the zoom Home's map opens at, so the
-  /// first GPS frame does not zoom.
-  static const double exploreZoom = 16.8;
+  /// Home's free-map zoom: the area around the driver, about 10 km across
+  /// a phone. Also the zoom Home's map opens at, so the first GPS frame
+  /// does not zoom.
+  static const double exploreZoom = 11.7;
 
   /// Parked at the pickup or a paid stop.
   static const double waitingZoom = 17.2;
@@ -123,23 +124,32 @@ class DriverCameraPolicy {
     return _cruise = zoom;
   }
 
-  /// Zoom at or below which guidance is flat (city / region overview).
-  static const double flatZoom = 13;
+  /// Zoom at or below which every driver map is flat (region overview).
+  static const double flatZoom = 11;
 
-  /// Zoom at or above which guidance reaches [maxTilt].
-  static const double fullTiltZoom = 18;
+  /// Zoom at or above which the map reaches [maxTilt].
+  static const double fullTiltZoom = 15;
 
-  /// Strongest tilt toward the horizon, close in at street level.
-  static const double maxTilt = 58;
+  /// Strongest tilt the Google Maps SDKs accept (Android, iOS, JS vector).
+  static const double maxTilt = 67.5;
 
-  /// Guidance tilt at [zoom]: 0° at zoom <= [flatZoom], easing smoothly
-  /// (smoothstep) up to [maxTilt] at zoom >= [fullTiltZoom]. Street
-  /// guidance (16.5-17) comes out at about 45-52°, highway zoom (14.75)
-  /// at about 16°.
+  /// Most tilt Google Maps allows at [zoom] (Android/iOS `CameraPosition`):
+  /// 30° up to zoom 10, 45° at 14, [maxTilt] from 15.5, linear between.
+  /// A bigger value is clamped by the SDK, which would make the map jump.
+  static double sdkMaxTilt(double zoom) {
+    if (zoom <= 10) return 30;
+    if (zoom <= 14) return 30 + (zoom - 10) / 4 * 15;
+    if (zoom < 15.5) return 45 + (zoom - 14) / 1.5 * (maxTilt - 45);
+    return maxTilt;
+  }
+
+  /// Tilt at [zoom] on every driver map: 0° at zoom <= [flatZoom], easing
+  /// smoothly (smoothstep) up to [maxTilt] at [fullTiltZoom], never above
+  /// [sdkMaxTilt]. Street guidance (16-17.5) is at the full 67.5°.
   static double tiltForZoom(double zoom) {
     if (!zoom.isFinite) return 0;
     final t = ((zoom - flatZoom) / (fullTiltZoom - flatZoom)).clamp(0.0, 1.0);
-    return maxTilt * t * t * (3 - 2 * t);
+    return math.min(maxTilt * t * t * (3 - 2 * t), sdkMaxTilt(zoom));
   }
 
   /// Turn preview: the closest zoom it aims for, and the most it may add to
@@ -151,7 +161,7 @@ class DriverCameraPolicy {
   /// [arrivalZoom] (never out) and the tilt eases to [arrivalTilt].
   static const double arrivalMeters = 140;
   static const double arrivalZoom = 17;
-  static const double arrivalTilt = 45;
+  static const double arrivalTilt = 60;
 
   static double zoomForSpeed(double speed) {
     // Step thresholds made the map zoom a whole level when GPS speed
@@ -275,8 +285,10 @@ class DriverCameraPolicy {
       final turn = angleDelta(_previous!.bearing, bearing).clamp(-55.0, 55.0);
       bearing = (_previous!.bearing + turn * 0.65 + 360) % 360;
     }
-    var tilt = guiding ? tiltForZoom(zoom) : 0.0;
+    // Waiting is flat; guidance and the free map tilt with their zoom.
+    var tilt = waiting ? 0.0 : tiltForZoom(zoom);
     tilt += (arrivalTilt - tilt) * arrival;
+    tilt = math.min(tilt, sdkMaxTilt(zoom));
     return _previous = DriverCameraPose(
       vehiclePoint!,
       zoom,
@@ -434,9 +446,9 @@ class DriverCameraController {
   }
 
   /// The camera stopped while the driver browses: they pinch-zoomed or
-  /// panned during guidance. Once the map is let go, tilt it to match their
-  /// zoom with the guidance formula ([DriverCameraPolicy.tiltForZoom]), so a
-  /// zoom out flattens it and a zoom in tilts it toward the horizon.
+  /// panned (on a trip or on Home). Once the map is let go, tilt it to match
+  /// their zoom ([DriverCameraPolicy.tiltForZoom]), so a zoom out flattens
+  /// it and a zoom in tilts it toward the horizon. Waiting stays flat.
   void browseSettled() {
     if (_touching) {
       _settleOnRelease = true;
@@ -446,7 +458,7 @@ class DriverCameraController {
     final port = _port;
     if (_disposed ||
         _suspended ||
-        !isGuidance ||
+        _waiting ||
         mode != DriverCameraMode.browsing ||
         port is! DriverCameraTilting) {
       return;

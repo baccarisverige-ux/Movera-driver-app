@@ -42,9 +42,10 @@ void main() {
       ),
       isNull,
     );
+    // A fix stamped beyond the clock-skew tolerance is still refused.
     expect(
       DriverLocationService.vetCachedFix(
-        sample(age: const Duration(seconds: -1)),
+        sample(age: const Duration(seconds: -6)),
         now,
       ),
       isNull,

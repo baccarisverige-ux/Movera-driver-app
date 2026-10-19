@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/geo/geo_point.dart';
@@ -84,6 +85,27 @@ class NavigationController extends ChangeNotifier {
   RouteLoadState get routeState => _routeState;
   int _reroutes = 0;
 
+  /// Accepted GPS fixes that moved the car. A route asked for at this count
+  /// already answered for where the car is now.
+  int _fixSeq = 0;
+  int _routeFixSeq = -1;
+
+  /// Where the last reroute was asked from, and how many reroutes in a row
+  /// started within [_stuckMeters] of it (parked off the road).
+  GeoPoint? _rerouteOrigin;
+  int _stuckReroutes = 0;
+  static const double _stuckMeters = 20;
+  static const Duration _rerouteDelay = Duration(seconds: 2);
+  static const Duration _maxRerouteDelay = Duration(seconds: 60);
+
+  /// Last accepted measured fix, and a far one held back until a second fix
+  /// agrees with it.
+  DriverLocation? _lastMeasured;
+  DriverLocation? _heldJump;
+
+  /// Faster than this between two fixes is a GPS jump, not driving.
+  static const double maxPlausibleSpeedMetersPerSecond = 70;
+
   /// Routes replaced because the driver left the route. The island says
   /// "Route updated" only when this grows, never after a silent refresh.
   int get reroutes => _reroutes;
@@ -136,6 +158,8 @@ class NavigationController extends ChangeNotifier {
       _routeState = RouteLoadState.idle;
       _instructionHint = 0;
       _progressAlong = null;
+      _rerouteOrigin = null;
+      _stuckReroutes = 0;
     }
     _stage = stage;
     if (stage == ActiveRideStage.waitingForRider) {
@@ -159,29 +183,36 @@ class NavigationController extends ChangeNotifier {
     _rebuildBanner();
   }
 
-  void setVehicle(DriverLocation location) {
-    if (_disposed) return;
+  /// Returns false only for a fix held back as a GPS jump: the caller
+  /// should not draw it either. Every other fix returns true.
+  bool setVehicle(DriverLocation location) {
+    if (_disposed) return true;
     final point = location.point;
     if (!point.latitude.isFinite ||
         !point.longitude.isFinite ||
         point.latitude.abs() > 90 ||
         point.longitude.abs() > 180) {
-      return;
+      return true;
     }
     // Real GPS measurements carry freshness/accuracy evidence. Reject
     // unusable ones before altering the route, progress or recovery banner.
     // Keep metadata-free demo/test positions working as before.
     if ((location.measuredAt != null || location.accuracyMeters != null) &&
         !location.isUsableAt(DateTime.now())) {
-      return;
+      return true;
     }
     final at = location.measuredAt;
     if (at != null &&
         _lastMeasuredAt != null &&
         at.isBefore(_lastMeasuredAt!)) {
-      return;
+      return true;
     }
-    if (at != null) _lastMeasuredAt = at;
+    // One far outlier must not move progress or start a reroute.
+    if (_isGpsJump(location)) return false;
+    if (at != null) {
+      _lastMeasuredAt = at;
+      _lastMeasured = location;
+    }
     // A valid fix may arrive at exactly the same coordinates as the last
     // point, especially after a brief stream interruption. Clear only the
     // transient GPS warning; a failed road route still needs explicit retry.
@@ -194,10 +225,11 @@ class NavigationController extends ChangeNotifier {
     if (!restoredGps &&
         moved < 0.4 &&
         (location.headingDegrees - _snapshot.headingDegrees).abs() < 1) {
-      return;
+      return true;
     }
 
     final heading = location.courseOr(_snapshot.headingDegrees);
+    _fixSeq++;
 
     _snapshot = NavigationSnapshot(
       vehicle: location.point,
@@ -210,6 +242,39 @@ class NavigationController extends ChangeNotifier {
       offRoute: _snapshot.offRoute,
     );
     _rebuildBanner();
+    return true;
+  }
+
+  /// True for a fix that implies more than [maxPlausibleSpeedMetersPerSecond]
+  /// from the last accepted one. A second fix that agrees with it is let
+  /// through: the car really is there (a long tunnel, a bad first fix).
+  bool _isGpsJump(DriverLocation location) {
+    final last = _lastMeasured;
+    if (last == null || location.measuredAt == null) return false;
+    if (_impliedSpeed(last, location) <= maxPlausibleSpeedMetersPerSecond) {
+      _heldJump = null;
+      return false;
+    }
+    final held = _heldJump;
+    if (held != null &&
+        _impliedSpeed(held, location) <= maxPlausibleSpeedMetersPerSecond) {
+      _heldJump = null;
+      return false;
+    }
+    _heldJump = location;
+    return true;
+  }
+
+  /// Metres per second between two fixes, after both accuracies. Fixes less
+  /// than a second apart count as a second apart.
+  static double _impliedSpeed(DriverLocation from, DriverLocation to) {
+    final seconds = math.max(
+      1.0,
+      to.measuredAt!.difference(from.measuredAt!).inMilliseconds.abs() / 1000,
+    );
+    final slack = (from.accuracyMeters ?? 0) + (to.accuracyMeters ?? 0);
+    final meters = from.point.distanceMetersTo(to.point) - slack;
+    return math.max(0.0, meters) / seconds;
   }
 
   void keepLastKnown({String? status}) {
@@ -283,6 +348,7 @@ class NavigationController extends ChangeNotifier {
     _lastRouteAt = now;
     final token = ++_routeRequestToken;
     _routeInFlight = true;
+    _routeFixSeq = _fixSeq;
     if (kept == null) {
       // Nothing to follow yet: only then does the island say so.
       _routeState = RouteLoadState.loading;
@@ -332,7 +398,8 @@ class NavigationController extends ChangeNotifier {
       }
       _instructionHint = 0;
       _progressAlong = null;
-      if (rerouting) _reroutes++;
+      // The same road back is not "Route updated".
+      if (rerouting && !_samePoints(kept.points, route.points)) _reroutes++;
       _status = null;
       _rebuildBanner();
     } catch (_) {
@@ -406,6 +473,8 @@ class NavigationController extends ChangeNotifier {
     } else if (progress != null && !progress.offRoute) {
       _rerouteDebounce?.cancel();
       _rerouteDebounce = null;
+      _rerouteOrigin = null;
+      _stuckReroutes = 0;
       if (_status == 'Recalculating route…') _status = null;
     }
 
@@ -513,6 +582,17 @@ class NavigationController extends ChangeNotifier {
     return distance == 'now' ? distance : 'in $distance';
   }
 
+  static bool _samePoints(List<GeoPoint> a, List<GeoPoint> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].latitude != b[i].latitude ||
+          a[i].longitude != b[i].longitude) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   void _scheduleReroute() {
     final destination = _destination;
     if (_disposed ||
@@ -521,11 +601,25 @@ class NavigationController extends ChangeNotifier {
         _routeInFlight) {
       return;
     }
-    _rerouteDebounce = Timer(const Duration(seconds: 2), () {
+    // No fix since this route was asked for: asking again from the same
+    // place would bring the same road back.
+    if (_route != null && _fixSeq == _routeFixSeq) return;
+    // Still near where the last reroute started (parked off the road):
+    // wait twice as long each time, up to a minute.
+    final last = _rerouteOrigin;
+    final stuck =
+        last != null && _snapshot.vehicle.distanceMetersTo(last) < _stuckMeters;
+    final delay = stuck
+        ? _rerouteDelay * math.pow(2, math.min(_stuckReroutes + 1, 5))
+        : _rerouteDelay;
+    _rerouteDebounce = Timer(
+        delay > _maxRerouteDelay ? _maxRerouteDelay : delay, () {
       _rerouteDebounce = null;
       if (_disposed) {
         return;
       }
+      _stuckReroutes = stuck ? _stuckReroutes + 1 : 0;
+      _rerouteOrigin = _snapshot.vehicle;
       unawaited(
         ensureRoute(
           origin: _snapshot.vehicle,

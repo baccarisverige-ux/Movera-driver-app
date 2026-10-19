@@ -130,7 +130,7 @@ Future<void> runCameraContractTests() async {
       immediate: true,
     );
     check(preview.zoom > cruise.zoom, '$type tightens inside 180m');
-    check(preview.tilt > cruise.tilt, '$type tilts up approaching junction');
+    check(preview.tilt >= cruise.tilt, '$type never flatter approaching junction');
     check(close.tilt >= preview.tilt, '$type never flattens near maneuver');
     check(close.zoom - cruise.zoom <= DriverCameraPolicy.maxTurnZoomIn + 1e-9,
         '$type zooms in only a little at the junction');
@@ -182,7 +182,10 @@ Future<void> runCameraContractTests() async {
         'Zoom decreases smoothly as driving speed rises');
     previousZoom = zoom;
   }
-  check(wrapped.tilt == 0, 'Outside trip uses flat location following');
+  check(wrapped.zoom == DriverCameraPolicy.exploreZoom &&
+          wrapped.tilt == DriverCameraPolicy.tiltForZoom(wrapped.zoom) &&
+          wrapped.tilt < 6,
+      'Outside trip the area view tilts with its zoom (nearly flat)');
   final waiting = policy.resolve(
     location: fix(origin),
     waiting: true,
@@ -277,7 +280,7 @@ Future<void> runCameraContractTests() async {
     immediate: true,
   );
   check(arrival.tilt == DriverCameraPolicy.arrivalTilt,
-      'Arrival stays tilted at 45 degrees, never flat');
+      'Arrival stays tilted at 60 degrees, never flat');
   DriverCameraPose approachDestination(double meters) {
     final arrivingCamera = DriverCameraPolicy();
     return arrivingCamera.resolve(
@@ -303,9 +306,9 @@ Future<void> runCameraContractTests() async {
     'High-speed arrival smoothly tightens the view toward the endpoint',
   );
   check(
-    approachDestination(0).tilt == 45 &&
+    approachDestination(0).tilt == DriverCameraPolicy.arrivalTilt &&
         approachDestination(0).zoom >= DriverCameraPolicy.arrivalZoom,
-    'Final arrival remains close and tilted at 45 degrees',
+    'Final arrival remains close and tilted at 60 degrees',
   );
 
   final fast = DriverCameraPolicy();
@@ -322,21 +325,27 @@ Future<void> runCameraContractTests() async {
   );
   check(
     fastJunction.zoom > DriverCameraPolicy.zoomForSpeed(30) &&
-        fastJunction.tilt > DriverCameraPolicy.tiltForZoom(14.75),
+        fastJunction.tilt >= DriverCameraPolicy.tiltForZoom(14.75),
     'Highway-speed junction framing does not wait for many GPS samples',
   );
 
-  // Tilt follows zoom: flat over the city, eased up to 58 degrees close in.
-  check(DriverCameraPolicy.tiltForZoom(13) == 0 &&
+  // Tilt follows zoom: flat over the region, eased up to the SDK maximum
+  // (67.5 degrees) from zoom 15.5, never above what the SDK allows.
+  check(DriverCameraPolicy.tiltForZoom(11) == 0 &&
           DriverCameraPolicy.tiltForZoom(10) == 0,
-      'City and region overview zoom is flat');
-  check(DriverCameraPolicy.tiltForZoom(18) == 58 &&
-          DriverCameraPolicy.tiltForZoom(20) == 58,
-      'Closest zoom tilts 58 degrees toward the horizon');
-  final street = DriverCameraPolicy.tiltForZoom(16.5);
-  check(street >= 45 && street <= 50, 'Street guidance tilts about 45-50');
+      'Region overview zoom is flat');
+  check(DriverCameraPolicy.tiltForZoom(15.5) == 67.5 &&
+          DriverCameraPolicy.tiltForZoom(20) == 67.5,
+      'Street zoom tilts 67.5 degrees toward the horizon');
+  check(DriverCameraPolicy.tiltForZoom(16.5) == 67.5,
+      'Street guidance is at the full tilt');
+  for (var zoom = 0.0; zoom <= 21; zoom += .1) {
+    check(DriverCameraPolicy.tiltForZoom(zoom) <=
+            DriverCameraPolicy.sdkMaxTilt(zoom),
+        'Tilt never exceeds what the SDK allows at $zoom');
+  }
   var previousTilt = 0.0;
-  for (var zoom = 12.0; zoom <= 19; zoom += .05) {
+  for (var zoom = 11.0; zoom <= 19; zoom += .02) {
     final tilt = DriverCameraPolicy.tiltForZoom(zoom);
     check(tilt >= previousTilt && tilt - previousTilt < 1,
         'Tilt rises smoothly with zoom (no step at $zoom)');
@@ -348,7 +357,7 @@ Future<void> runCameraContractTests() async {
   ];
   for (var i = 1; i < arrivalFrames.length; i++) {
     check((arrivalFrames[i].tilt - arrivalFrames[i - 1].tilt).abs() < 6,
-        'Arrival tilt eases to 45 degrees without a jump');
+        'Arrival tilt eases to 60 degrees without a jump');
     check(arrivalFrames[i].tilt >= 15, 'Arrival never goes flat');
   }
 

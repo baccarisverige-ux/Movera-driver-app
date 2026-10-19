@@ -25,8 +25,14 @@ void main() {
       measuredAt: now.subtract(const Duration(seconds: 31)),
       accuracy: 5,
     ).isDisplayableAt(now), isFalse);
+    // A GPS clock a little ahead of the phone clock is still fresh (D-03);
+    // beyond the tolerance a fix from the future is refused.
     expect(at(
       measuredAt: now.add(const Duration(seconds: 1)),
+      accuracy: 5,
+    ).isDisplayableAt(now), isTrue);
+    expect(at(
+      measuredAt: now.add(const Duration(seconds: 6)),
       accuracy: 5,
     ).isDisplayableAt(now), isFalse);
     expect(at(measuredAt: now, accuracy: 51).isDisplayableAt(now), isFalse);

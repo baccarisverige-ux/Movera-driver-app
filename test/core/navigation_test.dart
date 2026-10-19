@@ -173,11 +173,14 @@ void main() {
       expect(navigation.status, 'Location updating…');
     }
 
-    navigation.setVehicle(DriverLocation(
-      point: wrong,
-      measuredAt: DateTime.now(),
-      accuracyMeters: 5,
-    ));
+    // 25 km away a moment later is a GPS jump until a second fix agrees.
+    for (var i = 0; i < 2; i++) {
+      navigation.setVehicle(DriverLocation(
+        point: wrong,
+        measuredAt: DateTime.now(),
+        accuracyMeters: 5,
+      ));
+    }
     expect(navigation.snapshot.vehicle, wrong);
     expect(navigation.status, isNull);
   });

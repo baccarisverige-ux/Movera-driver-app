@@ -90,7 +90,10 @@ extension _HomeMapSheet on _DriverHomeState {
       });
       if (_hasLiveDriverLocation) { unawaited(DriverStartPosition.save(location.point)); }
 
-      if (_destinationModeActive) {
+      // Only leaving the route or a slow refresh asks for a new one.
+      if (_destinationModeActive && (!_hasLiveDriverLocation ||
+          _destinationRouteRefetch.due(position: location.point,
+              route: _cameraRoute, now: DateTime.now()))) {
         _refreshDestinationRoadRoute();
       }
       unawaited(_animateToDriverLocation());
@@ -293,6 +296,7 @@ extension _HomeMapSheet on _DriverHomeState {
       final destination = result.position;
       _mapPreviews.cancel(); // An old offer cannot reclaim the destination map.
       _destinationRoadRequests.cancel();
+      _destinationRouteRefetch.reset();
       _cameraRoute = null;
       final session = DestinationModeSession.instance..started();
       _destinationLimitTimer?.cancel();
@@ -350,8 +354,10 @@ extension _HomeMapSheet on _DriverHomeState {
       }
 
       try {
+        final origin = GeoPointMaps.fromLatLng(_driverPosition);
+        _destinationRouteRefetch.asked(origin, DateTime.now());
         final route = await _roadRouteService.drivingRoute(
-          origin: GeoPointMaps.fromLatLng(_driverPosition),
+          origin: origin,
           destination: GeoPointMaps.fromLatLng(destination),
         );
         if (!mounted || !_destinationModeActive ||
@@ -678,7 +684,7 @@ extension _HomeMapSheet on _DriverHomeState {
           rotateGesturesEnabled: true,
           tiltGesturesEnabled: true,
           onUserGesture: _camera.userGesture,
-          onCameraIdle: () => _cameraPort?.onIdle(),
+          onCameraIdle: () { _cameraPort?.onIdle(); _camera.browseSettled(); },
           onCameraMove: (position) => _cameraPort?.onMove(position),
           mapType: MapType.normal,
           onMapCreated: (GoogleMapController controller) {
@@ -747,7 +753,7 @@ extension _HomeMapSheet on _DriverHomeState {
               // See _buildRadarMapBackdrop: no traffic layer on home.
               trafficEnabled: false,
               onUserGesture: _camera.userGesture,
-              onCameraIdle: () => _cameraPort?.onIdle(),
+              onCameraIdle: () { _cameraPort?.onIdle(); _camera.browseSettled(); },
               onCameraMove: (position) {
                 _cameraPort?.onMove(position);
                 final step = DriverRouteStyle.stepZoom(position.zoom);

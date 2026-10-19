@@ -183,7 +183,8 @@ void main() {
     location.requests.single.complete(
       DriverLocation(
         point: const GeoPoint(59.32, 18.05),
-        measuredAt: DateTime.now(),
+        // Measured a while ago, so driving on to the pickup is plausible.
+        measuredAt: DateTime.now().subtract(const Duration(seconds: 25)),
         accuracyMeters: 5,
       ),
     );
