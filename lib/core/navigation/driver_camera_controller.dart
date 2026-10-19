@@ -54,8 +54,20 @@ abstract interface class DriverCameraFraming {
   Future<void> frame(GeoPoint target, double zoom);
 }
 
+/// A port that can tilt the camera where it is, without moving or zooming it
+/// (the driver's own pinch zoom during guidance, see
+/// [DriverCameraController.browseSettled]).
+abstract interface class DriverCameraTilting {
+  /// The map's zoom and tilt now, or null before it reports a camera.
+  double? get currentZoom;
+  double? get currentTilt;
+  Future<void> tiltTo(double tilt);
+}
+
 /// Geometry and maneuver-aware framing. Each route replacement resets progress.
 /// Preview an upcoming turn, close in at the maneuver, then recover to cruise.
+/// Guidance tilt follows zoom ([tiltForZoom]): flat over the city, tilted
+/// toward the horizon close in, like the owner's reference navigation app.
 class DriverCameraPolicy {
   final RouteProgressCalculator _progress = const RouteProgressCalculator();
   RoadRoute? _route;
@@ -111,6 +123,36 @@ class DriverCameraPolicy {
     return _cruise = zoom;
   }
 
+  /// Zoom at or below which guidance is flat (city / region overview).
+  static const double flatZoom = 13;
+
+  /// Zoom at or above which guidance reaches [maxTilt].
+  static const double fullTiltZoom = 18;
+
+  /// Strongest tilt toward the horizon, close in at street level.
+  static const double maxTilt = 58;
+
+  /// Guidance tilt at [zoom]: 0° at zoom <= [flatZoom], easing smoothly
+  /// (smoothstep) up to [maxTilt] at zoom >= [fullTiltZoom]. Street
+  /// guidance (16.5-17) comes out at about 45-52°, highway zoom (14.75)
+  /// at about 16°.
+  static double tiltForZoom(double zoom) {
+    if (!zoom.isFinite) return 0;
+    final t = ((zoom - flatZoom) / (fullTiltZoom - flatZoom)).clamp(0.0, 1.0);
+    return maxTilt * t * t * (3 - 2 * t);
+  }
+
+  /// Turn preview: the closest zoom it aims for, and the most it may add to
+  /// the cruise zoom, so a junction never races the map to its closest zoom.
+  static const double turnZoom = 17.3;
+  static const double maxTurnZoomIn = 0.75;
+
+  /// Last [arrivalMeters] before a stop: the zoom eases in gently toward
+  /// [arrivalZoom] (never out) and the tilt eases to [arrivalTilt].
+  static const double arrivalMeters = 140;
+  static const double arrivalZoom = 17;
+  static const double arrivalTilt = 45;
+
   static double zoomForSpeed(double speed) {
     // Step thresholds made the map zoom a whole level when GPS speed
     // fluctuated near 20/50/80 km/h. Interpolate between the same approved
@@ -163,7 +205,8 @@ class DriverCameraPolicy {
               ? _cruiseZoom(speed, immediate)
               : (_previous?.zoom ?? 16.5))
         : exploreZoom;
-    var tilt = navigating && !waiting ? 45.0 : 0.0;
+    // Arrival blend toward [arrivalTilt]; 0 = tilt follows zoom.
+    var arrival = 0.0;
     var onRoute = false;
     if (navigating && !waiting && route != null && route.points.length > 1) {
       final progress = _progress.measure(
@@ -204,21 +247,24 @@ class DriverCameraPolicy {
           final approach = (1 - distance / 180).clamp(0.0, 1.0);
           // Enter turn preview progressively: previously crossing the 180 m
           // boundary jumped the map to zoom >=17 in a single GPS update.
-          // Reach full maneuver framing by the final 90 m.
-          final targetZoom = 17.0 + .8 * approach;
+          // Reach full maneuver framing by the final 90 m. Zoom in only a
+          // little (capped), so the tilt, which follows zoom, rises toward
+          // the horizon instead of the map racing to its closest zoom.
+          final targetZoom = turnZoom - .5 + .5 * approach;
           final t = (approach * 2).clamp(0.0, 1.0);
           final eased = t * t * (3 - 2 * t);
-          zoom += math.max(0.0, targetZoom - zoom) * eased;
-          tilt = 45 - 25 * approach;
+          zoom += math.min(maxTurnZoomIn, math.max(0.0, targetZoom - zoom)) *
+              eased;
         }
         // The former 35 m arrival threshold snapped a fast-road camera
         // from highway zoom straight to a close-up view. Start easing well
-        // before arrival, finishing flat and near at the actual endpoint.
-        if (progress.remainingMeters < 140) {
-          final fraction = (1 - progress.remainingMeters / 140).clamp(0.0, 1.0);
-          final ease = fraction * fraction * (3 - 2 * fraction);
-          zoom += math.max(0.0, 17.5 - zoom) * ease;
-          tilt *= 1 - ease;
+        // before arrival, finishing near and still tilted (45°) at the
+        // actual endpoint, never flat.
+        if (progress.remainingMeters < arrivalMeters) {
+          final fraction = (1 - progress.remainingMeters / arrivalMeters)
+              .clamp(0.0, 1.0);
+          arrival = fraction * fraction * (3 - 2 * fraction);
+          zoom += math.max(0.0, arrivalZoom - zoom) * arrival;
         }
       }
     }
@@ -229,6 +275,8 @@ class DriverCameraPolicy {
       final turn = angleDelta(_previous!.bearing, bearing).clamp(-55.0, 55.0);
       bearing = (_previous!.bearing + turn * 0.65 + 360) % 360;
     }
+    var tilt = guiding ? tiltForZoom(zoom) : 0.0;
+    tilt += (arrivalTilt - tilt) * arrival;
     return _previous = DriverCameraPose(
       vehiclePoint!,
       zoom,
@@ -352,6 +400,7 @@ class DriverCameraController {
       _resumeTimer = null;
     } else {
       _scheduleResume();
+      if (_settleOnRelease) browseSettled();
     }
   }
 
@@ -383,6 +432,34 @@ class DriverCameraController {
       }
     });
   }
+
+  /// The camera stopped while the driver browses: they pinch-zoomed or
+  /// panned during guidance. Once the map is let go, tilt it to match their
+  /// zoom with the guidance formula ([DriverCameraPolicy.tiltForZoom]), so a
+  /// zoom out flattens it and a zoom in tilts it toward the horizon.
+  void browseSettled() {
+    if (_touching) {
+      _settleOnRelease = true;
+      return;
+    }
+    _settleOnRelease = false;
+    final port = _port;
+    if (_disposed ||
+        _suspended ||
+        !isGuidance ||
+        mode != DriverCameraMode.browsing ||
+        port is! DriverCameraTilting) {
+      return;
+    }
+    final tilting = port as DriverCameraTilting;
+    final zoom = tilting.currentZoom;
+    if (zoom == null) return;
+    final tilt = DriverCameraPolicy.tiltForZoom(zoom);
+    if ((tilt - (tilting.currentTilt ?? tilt)).abs() < 1) return;
+    unawaited(tilting.tiltTo(tilt).catchError((Object _) {}));
+  }
+
+  bool _settleOnRelease = false;
 
   void setAutoZoom(bool enabled) {
     _policy.autoZoom = enabled;

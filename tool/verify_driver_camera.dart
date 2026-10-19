@@ -55,6 +55,19 @@ class RecordingCamera implements DriverCameraPort {
   }
 }
 
+class TiltingCamera extends RecordingCamera implements DriverCameraTilting {
+  @override
+  double? currentZoom;
+  @override
+  double? currentTilt;
+  final List<double> tilts = [];
+  @override
+  Future<void> tiltTo(double tilt) async {
+    tilts.add(tilt);
+    currentTilt = tilt;
+  }
+}
+
 Future<void> runCameraContractTests() async {
   final now = DateTime.utc(2026, 10, 6);
   DriverLocation fix(GeoPoint point, {double heading = 0, double speed = 10}) =>
@@ -117,7 +130,10 @@ Future<void> runCameraContractTests() async {
       immediate: true,
     );
     check(preview.zoom > cruise.zoom, '$type tightens inside 180m');
-    check(preview.tilt < cruise.tilt, '$type flattens approaching junction');
+    check(preview.tilt > cruise.tilt, '$type tilts up approaching junction');
+    check(close.tilt >= preview.tilt, '$type never flattens near maneuver');
+    check(close.zoom - cruise.zoom <= DriverCameraPolicy.maxTurnZoomIn + 1e-9,
+        '$type zooms in only a little at the junction');
     check(close.zoom > cruise.zoom, '$type closes in near maneuver');
     final after = policy.resolve(
       location: fix(const GeoPoint(59.334, 18.061)),
@@ -127,7 +143,8 @@ Future<void> runCameraContractTests() async {
     );
     check((after.bearing - 90).abs() < 1, 'Follow route direction after turn');
     check(
-      after.zoom == 16.5 && after.tilt == 45,
+      after.zoom == 16.5 &&
+          after.tilt == DriverCameraPolicy.tiltForZoom(16.5),
       'Recover speed zoom and driving tilt',
     );
   }
@@ -259,7 +276,8 @@ Future<void> runCameraContractTests() async {
     navigating: true,
     immediate: true,
   );
-  check(arrival.tilt == 0, 'Arrival flattens');
+  check(arrival.tilt == DriverCameraPolicy.arrivalTilt,
+      'Arrival stays tilted at 45 degrees, never flat');
   DriverCameraPose approachDestination(double meters) {
     final arrivingCamera = DriverCameraPolicy();
     return arrivingCamera.resolve(
@@ -285,9 +303,9 @@ Future<void> runCameraContractTests() async {
     'High-speed arrival smoothly tightens the view toward the endpoint',
   );
   check(
-    approachDestination(0).tilt == 0 &&
-        approachDestination(0).zoom >= 17.5,
-    'Final arrival remains close and flat',
+    approachDestination(0).tilt == 45 &&
+        approachDestination(0).zoom >= DriverCameraPolicy.arrivalZoom,
+    'Final arrival remains close and tilted at 45 degrees',
   );
 
   final fast = DriverCameraPolicy();
@@ -303,9 +321,36 @@ Future<void> runCameraContractTests() async {
     navigating: true,
   );
   check(
-    fastJunction.zoom > 17 && fastJunction.tilt < 45,
+    fastJunction.zoom > DriverCameraPolicy.zoomForSpeed(30) &&
+        fastJunction.tilt > DriverCameraPolicy.tiltForZoom(14.75),
     'Highway-speed junction framing does not wait for many GPS samples',
   );
+
+  // Tilt follows zoom: flat over the city, eased up to 58 degrees close in.
+  check(DriverCameraPolicy.tiltForZoom(13) == 0 &&
+          DriverCameraPolicy.tiltForZoom(10) == 0,
+      'City and region overview zoom is flat');
+  check(DriverCameraPolicy.tiltForZoom(18) == 58 &&
+          DriverCameraPolicy.tiltForZoom(20) == 58,
+      'Closest zoom tilts 58 degrees toward the horizon');
+  final street = DriverCameraPolicy.tiltForZoom(16.5);
+  check(street >= 45 && street <= 50, 'Street guidance tilts about 45-50');
+  var previousTilt = 0.0;
+  for (var zoom = 12.0; zoom <= 19; zoom += .05) {
+    final tilt = DriverCameraPolicy.tiltForZoom(zoom);
+    check(tilt >= previousTilt && tilt - previousTilt < 1,
+        'Tilt rises smoothly with zoom (no step at $zoom)');
+    previousTilt = tilt;
+  }
+  final arrivalFrames = [
+    for (var meters = 160.0; meters >= 0; meters -= 10)
+      approachDestination(meters),
+  ];
+  for (var i = 1; i < arrivalFrames.length; i++) {
+    check((arrivalFrames[i].tilt - arrivalFrames[i - 1].tilt).abs() < 6,
+        'Arrival tilt eases to 45 degrees without a jump');
+    check(arrivalFrames[i].tilt >= 15, 'Arrival never goes flat');
+  }
 
   final camera = DriverCameraController(now: () => now);
   final port = RecordingCamera();
@@ -406,6 +451,43 @@ Future<void> runCameraContractTests() async {
   );
   previewCamera.dispose();
   previewPort.complete();
+
+  // The driver's own pinch zoom during guidance: once let go, the tilt
+  // follows their zoom with the guidance formula; recenter restores the
+  // guidance zoom with its matching tilt.
+  final pinchCamera = DriverCameraController(now: () => now);
+  final pinchPort = TiltingCamera();
+  pinchCamera.attach(pinchPort);
+  pinchCamera.update(location: fix(origin), route: curvedRoute, navigating: true);
+  pinchCamera.userGesture();
+  pinchCamera.touching = true;
+  pinchPort
+    ..currentZoom = 13.2
+    ..currentTilt = 45;
+  pinchCamera.browseSettled();
+  check(pinchPort.tilts.isEmpty, 'No tilt while a finger is on the map');
+  pinchCamera.touching = false;
+  check(pinchPort.tilts.single == DriverCameraPolicy.tiltForZoom(13.2),
+      'Zooming out by hand flattens the tilt once let go');
+  pinchPort.currentZoom = 18.4;
+  pinchCamera.browseSettled();
+  check(pinchPort.tilts.last == DriverCameraPolicy.maxTilt,
+      'Zooming in by hand tilts toward the horizon');
+  pinchCamera.browseSettled();
+  check(pinchPort.tilts.length == 2, 'A matching tilt is left alone');
+  pinchCamera.recenter();
+  final back = pinchPort.commands.last;
+  check(back.tilt == DriverCameraPolicy.tiltForZoom(back.zoom),
+      'Recenter returns to guidance zoom with its matching tilt');
+  pinchPort.currentZoom = 14;
+  pinchCamera.browseSettled();
+  check(pinchPort.tilts.length == 2, 'Following ignores settle requests');
+  pinchCamera.update(location: fix(origin), navigating: true, waiting: true);
+  pinchCamera.userGesture();
+  pinchCamera.browseSettled();
+  check(pinchPort.tilts.length == 2, 'Waiting at the pickup stays flat');
+  pinchCamera.dispose();
+  pinchPort.complete();
 }
 
 Future<void> main() async {

@@ -1,22 +1,24 @@
 import 'package:flutter/painting.dart';
 
-/// The Movera map colours ("Clean v3", [moveraMapStyle] and the cloud style
+/// The Movera map colours ([moveraMapStyle] and the cloud style
 /// linked to the web Map ID) as Flutter colours, for drawn map pictures that
 /// are not Google maps (Scheduled rides route preview, notifications area
 /// map). Keep in step with movera_map_style.dart;
 /// test/widgets/movera_map_palette_test.dart checks both match.
 abstract final class MoveraMapPalette {
-  static const Color land = Color(0xFFFAFCFA);
-  static const Color building = Color(0xFFE1E4E5);
-  static const Color park = Color(0xFFC8F0CC);
-  static const Color parkLabel = Color(0xFF3D8549);
-  static const Color water = Color(0xFFADE2FC);
-  static const Color road = Color(0xFFC8CCD0);
-  static const Color mainRoad = Color(0xFFA1A6AB);
-  static const Color highway = Color(0xFF8A8F96);
-  static const Color label = Color(0xFF575C60);
+  static const Color land = Color(0xFFF8FAF8);
+  static const Color building = Color(0xFFDDDEE0);
+  static const Color park = Color(0xFFB6EFC2);
+  /// Parks zoomed out (zoom < 12.5), the far map style's green.
+  static const Color parkFar = Color(0xFFD8F5DF);
+  static const Color parkLabel = Color(0xFF14793A);
+  static const Color water = Color(0xFF95DFFF);
+  static const Color road = Color(0xFFCACFD2);
+  static const Color mainRoad = Color(0xFFACB1B6);
+  static const Color highway = Color(0xFFACB1B6);
+  static const Color label = Color(0xFF4D4F51);
   static const Color labelHalo = Color(0xFFFFFFFF);
-  static const Color cityLabel = Color(0xFF6F8B9D);
+  static const Color cityLabel = Color(0xFF5E7F90);
 
   /// Footpaths and tracks. Drawn maps only: the Google styles for Android
   /// and iOS have no footpath class, so Google's own path colour shows there.
@@ -47,7 +49,7 @@ abstract final class MoveraMapPalette {
     ..strokeCap = StrokeCap.round
     ..strokeWidth = width;
 
-  /// Draws a highway: one flat dark-grey line, no edge.
+  /// Draws a highway: one flat grey line (same grey as main roads), no edge.
   static void drawHighway(Canvas canvas, Path path, double width) {
     canvas.drawPath(path, _line(highway, width));
   }

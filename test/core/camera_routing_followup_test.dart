@@ -229,7 +229,7 @@ void main() {
       );
       final camera = DriverCameraPolicy();
       final location = _fix(const GeoPoint(59.01, 18), now);
-      camera.resolve(
+      final cruise = camera.resolve(
         location: location,
         route: road(_start),
         navigating: true,
@@ -241,8 +241,10 @@ void main() {
         navigating: true,
         immediate: true,
       );
-      expect(pose.zoom, greaterThan(17));
-      expect(pose.tilt, lessThan(45));
+      // The corrected turn is now ~100 m ahead: the camera closes in a
+      // little and tilts further toward the horizon, never flatter.
+      expect(pose.zoom, greaterThan(cruise.zoom));
+      expect(pose.tilt, greaterThan(cruise.tilt));
     },
   );
 }

@@ -72,8 +72,8 @@ const _stylerKeys = <String, String>{
   'weight': 'w',
 };
 
-List<Map<String, Object?>> _rules() =>
-    (jsonDecode(moveraMapStyle) as List<Object?>)
+List<Map<String, Object?>> _rules([String? style]) =>
+    (jsonDecode(style ?? moveraMapStyle) as List<Object?>)
         .cast<Map<String, Object?>>();
 
 String _webStyleString(List<Map<String, Object?>> rules) {
@@ -132,10 +132,13 @@ String? _visibility(String feature, [String? element]) {
 
 void main() {
   test('Movera map style fits the Maps JavaScript 1000-char limit', () {
-    final serialised = _webStyleString(_rules());
-    // Leave headroom so a small palette tweak cannot silently disable all
-    // web styling (the live site showed Google's default palette at 1051).
-    expect(serialised.length, lessThanOrEqualTo(950), reason: serialised);
+    // Both zoom bands (far / near). Leave headroom so a small palette
+    // tweak cannot silently disable all web styling (the live site showed
+    // Google's default palette at 1051).
+    for (final style in [moveraMapStyleFar, moveraMapStyleNear]) {
+      final serialised = _webStyleString(_rules(style));
+      expect(serialised.length, lessThanOrEqualTo(950), reason: serialised);
+    }
   });
 
   test('Movera map style has no duplicate selectors', () {
@@ -155,23 +158,31 @@ void main() {
     expect(_visibility('administrative', 'geometry'), 'off');
     // Parks come back (green areas, green names) but without icons.
     expect(_visibility('poi.park', 'geometry'), 'on');
+    // City-centre business and hospital grounds: pink areas, no labels.
+    for (final area in ['poi.business', 'poi.medical']) {
+      expect(_visibility(area, 'geometry'), 'on');
+      expect(_color(area, 'geometry'), '#F5E0E0');
+      expect(_visibility(area), isNull);
+      expect(_visibility(area, 'labels'), isNull);
+      expect(_visibility(area, 'labels.text'), isNull);
+    }
     expect(_visibility('poi.park', 'labels.text'), 'on');
     expect(_visibility('poi.park', 'labels'), isNull);
     expect(_visibility('poi.park'), isNull);
   });
 
-  test('Movera map style uses the clean v3 palette', () {
-    expect(_color(null, 'geometry'), '#FAFCFA');
-    expect(_color(null, 'labels.text.fill'), '#575C60');
+  test('Movera map style uses the measured reference palette', () {
+    expect(_color(null, 'geometry'), '#F8FAF8');
+    expect(_color(null, 'labels.text.fill'), '#4D4F51');
     expect(_color(null, 'labels.text.stroke'), '#FFFFFF');
-    expect(_color('landscape.man_made', 'geometry'), '#E1E4E5');
-    expect(_color('poi.park', 'geometry'), '#C8F0CC');
-    expect(_color('poi.park', 'labels.text.fill'), '#3D8549');
-    expect(_color('water', 'geometry'), '#ADE2FC');
-    expect(_color('road', 'geometry'), '#C8CCD0');
-    expect(_color('road.arterial', 'geometry'), '#A1A6AB');
-    expect(_color('road.highway', 'geometry'), '#8A8F96');
-    expect(_color('administrative.locality', 'labels.text.fill'), '#6F8B9D');
+    expect(_color('landscape.man_made', 'geometry'), '#DDDEE0');
+    expect(_color('poi.park', 'geometry'), '#B6EFC2');
+    expect(_color('poi.park', 'labels.text.fill'), '#14793A');
+    expect(_color('water', 'geometry'), '#95DFFF');
+    expect(_color('road', 'geometry'), '#CACFD2');
+    expect(_color('road.arterial', 'geometry'), '#ACB1B6');
+    expect(_color('road.highway', 'geometry'), '#ACB1B6');
+    expect(_color('administrative.locality', 'labels.text.fill'), '#5E7F90');
   });
 
   test('Movera map style keeps highway shields', () {
@@ -190,5 +201,35 @@ void main() {
       );
       expect(feature.isEmpty && element == 'labels.icon', isFalse);
     }
+  });
+
+  test('far and near styles differ only in the park green', () {
+    expect(moveraMapStyle, moveraMapStyleNear);
+    expect(moveraMapStyleNear, contains('#B6EFC2'));
+    expect(moveraMapStyleFar, contains('#D8F5DF'));
+    expect(moveraMapStyleFar.replaceAll('#D8F5DF', '#B6EFC2'),
+        moveraMapStyleNear);
+    for (final style in [moveraMapStyleFar, moveraMapStyleNear]) {
+      expect(style, contains('#95DFFF'));
+    }
+  });
+
+  test('style band switches at 12.5 with hysteresis', () {
+    expect(MoveraMapStyleBand.of(11), MoveraMapStyleBand.far);
+    expect(MoveraMapStyleBand.of(12.49), MoveraMapStyleBand.far);
+    expect(MoveraMapStyleBand.of(12.5), MoveraMapStyleBand.near);
+    expect(MoveraMapStyleBand.of(15), MoveraMapStyleBand.near);
+    // Far stays far until 12.6; near stays near until 12.4.
+    var band = MoveraMapStyleBand.far;
+    final seen = <MoveraMapStyleBand>[];
+    for (final zoom in <double>[12.45, 12.55, 12.59, 12.6, 12.5, 12.45, 12.41, 12.4,
+        12.5, 12.55, double.nan, 16.0]) {
+      band = band.at(zoom);
+      seen.add(band);
+    }
+    const f = MoveraMapStyleBand.far, n = MoveraMapStyleBand.near;
+    expect(seen, [f, f, f, n, n, n, n, f, f, f, f, n]);
+    expect(MoveraMapStyleBand.far.style, moveraMapStyleFar);
+    expect(MoveraMapStyleBand.near.style, moveraMapStyleNear);
   });
 }
