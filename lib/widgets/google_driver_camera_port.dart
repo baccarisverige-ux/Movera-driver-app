@@ -67,10 +67,18 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
     tilt: pose.tilt,
   );
 
-  /// What the map is asked for: a flat map never gets heading or tilt.
+  /// Closest zoom on a flat (raster) map: past it Google upscales the tiles
+  /// into giant blurry street names. The web bridge caps pinch zoom there too.
+  static const double rasterMaxZoom = 18;
+
+  /// What the map is asked for: a flat map never gets heading or tilt, nor a
+  /// zoom closer than [rasterMaxZoom].
   CameraPosition _sdk(CameraPosition logical) => _threeD
       ? logical
-      : CameraPosition(target: logical.target, zoom: logical.zoom);
+      : CameraPosition(
+          target: logical.target,
+          zoom: math.min(logical.zoom, rasterMaxZoom),
+        );
 
   /// Screen pixels the camera would slide across: beyond about three
   /// screens a glide only smears the city, so the camera cuts instead.

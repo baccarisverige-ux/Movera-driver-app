@@ -108,12 +108,29 @@ String _webStyleString(List<Map<String, Object?>> rules) {
   return parts.join(',');
 }
 
-void main() {
-  test('Movera map style minified JSON is under 1000 characters', () {
-    final minified = jsonEncode(jsonDecode(moveraMapStyle));
-    expect(minified.length, lessThan(1000), reason: minified);
-  });
+String? _color(String? feature, String element) {
+  for (final rule in _rules()) {
+    if (rule['featureType'] == feature && rule['elementType'] == element) {
+      for (final styler in (rule['stylers'] as List).cast<Map>()) {
+        if (styler['color'] != null) return styler['color'] as String;
+      }
+    }
+  }
+  return null;
+}
 
+String? _visibility(String feature, [String? element]) {
+  for (final rule in _rules()) {
+    if (rule['featureType'] == feature && rule['elementType'] == element) {
+      for (final styler in (rule['stylers'] as List).cast<Map>()) {
+        if (styler['visibility'] != null) return styler['visibility'] as String;
+      }
+    }
+  }
+  return null;
+}
+
+void main() {
   test('Movera map style fits the Maps JavaScript 1000-char limit', () {
     final serialised = _webStyleString(_rules());
     // Leave headroom so a small palette tweak cannot silently disable all
@@ -131,31 +148,47 @@ void main() {
     }
   });
 
-  test('Movera map style uses the Fresh blue palette', () {
-    String? colorOf(String? feature, String element) {
-      for (final rule in _rules()) {
-        if (rule['featureType'] == feature && rule['elementType'] == element) {
-          return ((rule['stylers'] as List).first as Map)['color'] as String?;
-        }
-      }
-      return null;
-    }
-
-    expect(colorOf(null, 'geometry'), '#F0F2F4');
-    expect(colorOf(null, 'labels.text.fill'), '#2B3036');
-    expect(colorOf('water', 'geometry'), '#A9CBF2');
-    expect(colorOf('road.highway', 'geometry.fill'), '#BCC3CF');
-    expect(colorOf('road.highway', 'geometry.stroke'), '#A6AEBD');
+  test('Movera map style hides POI, transit, neighbourhoods, admin lines', () {
+    expect(_visibility('poi'), 'off');
+    expect(_visibility('transit'), 'off');
+    expect(_visibility('administrative.neighborhood'), 'off');
+    expect(_visibility('administrative', 'geometry'), 'off');
+    // Parks come back (green areas, green names) but without icons.
+    expect(_visibility('poi.park', 'geometry'), 'on');
+    expect(_visibility('poi.park', 'labels.text'), 'on');
+    expect(_visibility('poi.park', 'labels'), isNull);
+    expect(_visibility('poi.park'), isNull);
   });
 
-  test('Movera map style leaves highway shields unstyled (green E-roads)', () {
+  test('Movera map style uses the clean v3 palette', () {
+    expect(_color(null, 'geometry'), '#FAFCFA');
+    expect(_color(null, 'labels.text.fill'), '#575C60');
+    expect(_color(null, 'labels.text.stroke'), '#FFFFFF');
+    expect(_color('landscape.man_made', 'geometry'), '#E1E4E5');
+    expect(_color('poi.park', 'geometry'), '#C8F0CC');
+    expect(_color('poi.park', 'labels.text.fill'), '#3D8549');
+    expect(_color('water', 'geometry'), '#ADE2FC');
+    expect(_color('road', 'geometry'), '#C8CCD0');
+    expect(_color('road.arterial', 'geometry'), '#A1A6AB');
+    expect(_color('road.highway', 'geometry'), '#8A8F96');
+    expect(_color('administrative.locality', 'labels.text.fill'), '#6F8B9D');
+  });
+
+  test('Movera map style keeps highway shields', () {
     for (final rule in _rules()) {
+      final feature = rule['featureType'] as String? ?? '';
+      final element = rule['elementType'] as String?;
+      final hidesIcons = (rule['stylers'] as List).any(
+        (s) => (s as Map)['visibility'] == 'off',
+      );
       expect(
-        rule['elementType'] == 'labels.icon' &&
-            (rule['featureType'] as String? ?? '').startsWith('road'),
+        feature.startsWith('road') &&
+            (element == null || element.startsWith('labels')) &&
+            hidesIcons,
         isFalse,
         reason: 'road shield rule: $rule',
       );
+      expect(feature.isEmpty && element == 'labels.icon', isFalse);
     }
   });
 }

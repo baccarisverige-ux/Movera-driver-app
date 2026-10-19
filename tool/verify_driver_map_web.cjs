@@ -31,6 +31,7 @@ class MapMock {
     }
     Object.assign(this.camera, next);
   }
+  setOptions(options) { this.options = {...this.options, ...options}; }
   addListener(event, callback) { this.listeners ??= {}; this.listeners[event] = callback; return {remove: () => delete this.listeners[event]}; }
   getRenderingType() { return this.renderer ?? this.options.renderingType; }
   getCenter() { return this.camera.center; } getZoom() { return this.camera.zoom; }
@@ -102,6 +103,17 @@ assert.equal(raster.options.isFractionalZoomEnabled, true,
   'Raster fallback must allow fractional pinch steps');
 assert.equal(raster.options.styles, style, 'Explicit 2D preview retains approved palette');
 assert.equal(api.supports3D(8), false);
+assert.equal(raster.options.maxZoom, 18, 'Raster tiles stop before they upscale');
+raster.setOptions({maxZoom: 21, styles: style});
+assert.equal(raster.options.maxZoom, 18, 'Flutter option updates keep the raster cap');
+assert.equal(raster.options.styles, style, 'Raster updates keep the in-app style');
+// Flutter re-sends options on widget updates: never inline styles (or the
+// plugin's empty mapId) on top of the cloud-styled Map ID.
+map.setOptions({styles: style, mapId: undefined, zoomControl: false});
+assert.equal(map.options.styles, undefined, 'Option updates keep the cloud style');
+assert.equal(map.options.mapId, 'configured-vector-style');
+assert.equal(map.options.zoomControl, false);
+assert.equal(map.options.maxZoom, null, 'Vector map zooms without a cap');
 rasterDiv.fire('touchstart', [{clientX:100,clientY:100},{clientX:200,clientY:100}]);
 rasterDiv.fire('touchmove', [{clientX:80,clientY:80},{clientX:220,clientY:120}]);
 assert.ok(raster.getZoom() > 16 && raster.getZoom() < 17,
@@ -112,8 +124,10 @@ let changed = 0;
 const removeRenderer = api.listenRenderer(7, () => changed++);
 map.renderer = 'RASTER'; map.listeners.renderingtype_changed();
 assert.equal(changed, 1); assert.equal(api.supports3D(7), false);
+assert.equal(map.options.maxZoom, 18, 'Vector fell back to raster: cap applies');
 removeRenderer(); map.renderer = 'VECTOR'; map.listeners.renderingtype_changed();
 assert.equal(changed, 1, 'Renderer listener is released');
+assert.equal(map.options.maxZoom, null, 'Back on vector: cap lifted');
 let gestures = 0;
 const remove = api.listen(7, () => gestures++);
 const mouse = (x, y) => ({pointerType: 'mouse', clientX: x, clientY: y});

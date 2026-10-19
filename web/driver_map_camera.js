@@ -76,14 +76,37 @@
       new sdk.Point(center.x - dx, center.y - dy));
     if (target) state.map.moveCamera({center: target});
   }
-  function install(map, div, id) {
+  // Raster tiles stop at about z18; closer, Google upscales them into giant
+  // blurry street names. A vector map draws crisp at any zoom: no cap there.
+  const RASTER_MAX_ZOOM = 18;
+  function install(map, div, id, cloud) {
     const state = {map, div, top: 0, bottom: 0, anchor: .5,
       callbacks: new Set(), rendererCallbacks: new Set(), heading: 0, car: null, claim: false, anchorToken: 0,
       gesturesEnabled: true, lead: null, anchored: false};
     const rendererListener = map.addListener?.('renderingtype_changed', () => {
+      applyZoomCap();
       state.rendererCallbacks.forEach(callback => callback());
     });
     const supports3D = () => map.getRenderingType?.() === sdk.RenderingType.VECTOR;
+    // Flutter re-sends every map option on widget updates. With a Map ID the
+    // cloud style draws the map: drop inline styles (Google ignores them and
+    // warns) and the plugin's empty mapId. Keep the raster zoom cap in force.
+    const nativeSetOptions = typeof map.setOptions === 'function'
+      ? map.setOptions.bind(map) : null;
+    let requestedMaxZoom = null;
+    const zoomCap = () => supports3D() ? requestedMaxZoom
+      : Math.min(requestedMaxZoom ?? RASTER_MAX_ZOOM, RASTER_MAX_ZOOM);
+    if (nativeSetOptions) {
+      map.setOptions = (options = {}) => {
+        let next = options || {};
+        if (cloud) { const {styles, mapId, ...rest} = next; next = rest; }
+        if ('maxZoom' in next) requestedMaxZoom = next.maxZoom ?? null;
+        nativeSetOptions({...next, maxZoom: zoomCap()});
+      };
+    }
+    const applyZoomCap = () => nativeSetOptions?.({maxZoom: zoomCap()});
+    // Until Google settles on a renderer, keep the raster cap.
+    if (cloud) applyZoomCap();
     const overlay = new sdk.OverlayView();
     overlay.onAdd = () => {};
     overlay.draw = () => {};
@@ -386,8 +409,13 @@
         const match = /^plugins\.flutter\.io\/google_maps_(\d+)$/.exec(div.id);
         const configuredId = globalThis.document?.querySelector?.('meta[name="movera-google-map-id"]')?.content?.trim();
         let driverOptions = options;
+        const cloud = !!configuredId && configuredId !== 'DRIVER_GOOGLE_MAP_ID';
         if (match) {
-          if (configuredId && configuredId !== 'DRIVER_GOOGLE_MAP_ID') {
+          if (cloud) {
+            // The cloud style linked to this Map ID draws the map. If WebGL
+            // is missing Google falls back to raster tiles but keeps the Map
+            // ID, so inline styles still cannot apply; that fallback shows
+            // the cloud style's raster rendering (only the zoom cap is ours).
             const {styles, ...cloudOptions} = options;
             driverOptions = {...cloudOptions, mapId: configuredId,
               renderingType: sdk.RenderingType.VECTOR,
@@ -400,11 +428,12 @@
             // custom pinch handler issues fractional steps, so enable smooth
             // fractional zoom even without the configured vector Map ID.
             driverOptions = {...options, renderingType: sdk.RenderingType.RASTER,
-              isFractionalZoomEnabled: true};
+              isFractionalZoomEnabled: true,
+              maxZoom: Math.min(options.maxZoom ?? RASTER_MAX_ZOOM, RASTER_MAX_ZOOM)};
           }
         }
         const map = Reflect.construct(target, [div, driverOptions]);
-        if (match) install(map, div, Number(match[1]));
+        if (match) install(map, div, Number(match[1]), cloud);
         return map;
       }
     });

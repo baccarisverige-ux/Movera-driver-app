@@ -266,7 +266,6 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
               myLocationEnabled: false,
               rotateGesturesEnabled: false,
               tiltGesturesEnabled: false,
-              show3DNotice: false,
               onMapCreated: _onMapCreated,
             ),
           ),

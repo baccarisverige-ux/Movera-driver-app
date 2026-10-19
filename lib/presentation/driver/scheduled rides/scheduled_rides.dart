@@ -1007,15 +1007,32 @@ class _RoutePreviewPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    // Home map colours (MoveraMapPalette): land, a park, water in the
-    // corner, white streets and one grey highway.
+    // Movera map colours (MoveraMapPalette): near-white land, grey blocks,
+    // a park with a path, water in the corner, grey streets and one darker
+    // highway.
     canvas.drawRect(Offset.zero & size, Paint()..color = MoveraMapPalette.land);
+    final blocks = Paint()..color = MoveraMapPalette.building;
+    for (final block in [
+      Rect.fromLTWH(w * 0.03, h * 0.42, w * 0.1, h * 0.18),
+      Rect.fromLTWH(w * 0.42, h * 0.12, w * 0.1, h * 0.16),
+      Rect.fromLTWH(w * 0.66, h * 0.6, w * 0.12, h * 0.2),
+    ]) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(block, const Radius.circular(2)),
+        blocks,
+      );
+    }
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(w * 0.42, h * 0.56, w * 0.2, h * 0.5),
         const Radius.circular(10),
       ),
       Paint()..color = MoveraMapPalette.park,
+    );
+    canvas.drawLine(
+      Offset(w * 0.45, h * 0.62),
+      Offset(w * 0.6, h * 0.98),
+      MoveraMapPalette.footpath(1.5),
     );
     canvas.drawPath(
       Path()
@@ -1030,7 +1047,11 @@ class _RoutePreviewPainter extends CustomPainter {
     canvas
       ..drawLine(Offset(w * 0.18, -5), Offset(w * 0.36, h + 5), street)
       ..drawLine(Offset(w * 0.72, -5), Offset(w * 0.58, h + 5), street)
-      ..drawLine(Offset(-5, h * 0.72), Offset(w + 5, h * 0.88), street);
+      ..drawLine(
+        Offset(-5, h * 0.72),
+        Offset(w + 5, h * 0.88),
+        MoveraMapPalette.mainStreet(3),
+      );
     MoveraMapPalette.drawHighway(
       canvas,
       Path()

@@ -49,9 +49,6 @@ class CustomGoogleMap extends StatefulWidget {
   /// Web only: Google's camera (zoom / pan) control in the corner.
   final bool webCameraControlEnabled;
 
-  /// The "2D map · 3D unavailable" note when 3D cannot be shown.
-  final bool show3DNotice;
-
   const CustomGoogleMap({
     super.key,
     this.initialPosition,
@@ -81,7 +78,6 @@ class CustomGoogleMap extends StatefulWidget {
     this.padding = EdgeInsets.zero,
     this.cameraAnchor = .5,
     this.webCameraControlEnabled = false,
-    this.show3DNotice = true,
   });
 
   @override
@@ -137,8 +133,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   }
 
   void Function()? _removeWebGesture;
-  void Function()? _removeWebRenderer;
-  bool _supports3D = true;
 
   @override
   void didUpdateWidget(CustomGoogleMap oldWidget) {
@@ -281,14 +275,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               style: moveraMapStyle,
               onMapCreated: (GoogleMapController controller) {
                 _mapController = controller;
-                _supports3D = web.supports3D(controller.mapId);
-                _removeWebRenderer = web.listenRenderer(controller.mapId, () {
-                  if (mounted) {
-                    setState(
-                      () => _supports3D = web.supports3D(controller.mapId),
-                    );
-                  }
-                });
                 if (mounted) {
                   setState(() {});
                 }
@@ -315,26 +301,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               onCameraMove: widget.onCameraMove,
               onCameraIdle: widget.onCameraIdle,
             ),
-          if (!_supports3D && widget.show3DNotice)
-            Positioned(
-              left: 12,
-              bottom: widget.padding.bottom + 8,
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .92),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: Text(
-                      '2D map · 3D unavailable',
-                      style: TextStyle(fontSize: 11, color: Colors.black87),
-                    ),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -347,7 +313,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void dispose() {
     _mapsReadyPoll?.cancel();
     _removeWebGesture?.call();
-    _removeWebRenderer?.call();
     // GoogleMap owns its platform controller. Avoid a second web disposal.
     _mapController = null;
     super.dispose();

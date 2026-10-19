@@ -97,7 +97,6 @@ class ReservationRouteMap extends StatefulWidget {
     this.fitPadding = 28,
     this.interactive = false,
     this.markerIcon,
-    this.show3DNotice = true,
     this.tilt = 0,
   });
 
@@ -113,9 +112,6 @@ class ReservationRouteMap extends StatefulWidget {
   final bool interactive;
   final Future<BitmapDescriptor> Function(RouteMarkKind, String, String?)?
   markerIcon;
-
-  /// The "2D map · 3D unavailable" note; off on the small popup map.
-  final bool show3DNotice;
 
   /// Camera tilt in degrees after fitting the route; 0 keeps it flat.
   final double tilt;
@@ -308,7 +304,6 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
       rotateGesturesEnabled: false,
       tiltGesturesEnabled: false,
       webCameraControlEnabled: false,
-      show3DNotice: widget.show3DNotice,
       onCameraMove: (position) {
         final step = DriverRouteStyle.stepZoom(position.zoom);
         if (step != _routeZoomStep) setState(() => _routeZoomStep = step);

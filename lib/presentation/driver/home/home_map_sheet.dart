@@ -732,8 +732,6 @@ extension _HomeMapSheet on _DriverHomeState {
               final layers = layersWith(light);
               return CustomGoogleMap(
               initialPosition: _initialPosition,
-              // The note would sit on the route: hidden while an offer is up.
-              show3DNotice: !offerOnScreen,
               markers: _HomeExclusive(this)._exclusiveFadedPins(
                   _HomeReservation(this)._fadedPins(layers.markers)),
               polylines: _HomeExclusive(this)._exclusiveFadedLines(
