@@ -841,11 +841,14 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
       if (id == _radarExpandedOfferId) { return; }
       _rebuild(() => _radarExpandedOfferId = id);
-      for (final offer in _radarHomeOffers) {
-        if (offer.id == id) {
-          _previewDirectOfferRoute(offer);
-          return;
-        }
+      // R15-10: Radar offers put nothing on the map (no line, no pins);
+      // a route the driver opened for another card goes away.
+      if (_outsideRadarOffer == null &&
+          _reservation.routeId == null &&
+          (_isDirectOfferRoutePreview ||
+              _directOfferRouteMarkers.isNotEmpty ||
+              _directOfferRoutePolylines.isNotEmpty)) {
+        _clearDirectOfferRoute();
       }
     }
     RadarOfferView _radarOfferView(_HomeDirectOffer offer) => RadarOfferView(
