@@ -145,6 +145,7 @@ abstract final class TripTransitions {
     TripTransition(TripCommand.endEarly, TripActor.rider, [TripStatus.riderOnboard, TripStatus.inTrip, TripStatus.approachingDropoff], TripStatus.cancelledByRider),
     TripTransition(TripCommand.cancel, TripActor.driver, [TripStatus.accepted, TripStatus.driverToPickup, TripStatus.arrived], TripStatus.searching, when: TripKind.live),
     TripTransition(TripCommand.cancel, TripActor.driver, [TripStatus.accepted], TripStatus.requested, when: TripKind.scheduled),
+    TripTransition(TripCommand.cancel, TripActor.driver, [TripStatus.driverToPickup, TripStatus.arrived], TripStatus.searching, when: TripKind.scheduled),
     TripTransition(TripCommand.cancel, TripActor.driver, [TripStatus.riderOnboard, TripStatus.inTrip, TripStatus.approachingDropoff], TripStatus.cancelledByDriver),
     TripTransition(TripCommand.noShow, TripActor.driver, [TripStatus.arrived], TripStatus.noShow),
     TripTransition(TripCommand.noShow, TripActor.admin, [TripStatus.arrived, TripStatus.accepted, TripStatus.driverToPickup], TripStatus.noShow),
