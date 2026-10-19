@@ -45,8 +45,6 @@ class AppAssets {
   static const String solarBellBing = 'assets/icons/solar_bell_bing.svg';
   // Solar (CC BY 4.0) — Earnings & Wallet pages, see assets/icons/SOLAR_LICENSE.txt
   static const String solarAltArrowLeft = 'assets/icons/solar_alt_arrow_left.svg';
-  // The reservation sheet's down chevron: back to Home.
-  static const String solarAltArrowDown = 'assets/icons/solar_alt_arrow_down.svg';
   // The cross of Solar's close-circle, for a soft round × button.
   static const String solarClose = 'assets/icons/solar_close.svg';
   static const String solarWallet = 'assets/icons/solar_wallet.svg';

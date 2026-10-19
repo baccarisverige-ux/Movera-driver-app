@@ -56,12 +56,15 @@ abstract final class OfferRouteLine {
   static const String outlineId = '$coreId-outline';
   static const String lightId = 'offer_route_light';
 
-  /// Outline width at a [DriverRouteStyle.stepZoom] step: 15 at the usual
-  /// offer zoom, a little less over a whole city, a little more close up.
-  static int outlineWidthAt(double zoom) => zoom < 12 ? 13 : zoom < 16 ? 15 : 17;
+  /// Outline width at a [DriverRouteStyle.stepZoom] step (R15-1, owner pick
+  /// "A thin"): 5 over a whole trip, 6 over part of it, 8 at street level,
+  /// 11 close up.
+  static int outlineWidthAt(double zoom) =>
+      zoom < 11 ? 5 : zoom < 13 ? 6 : zoom < 16 ? 8 : 11;
 
-  /// Core width inside the outline.
-  static int coreWidthAt(double zoom) => zoom < 12 ? 7 : zoom < 16 ? 8 : 9;
+  /// Core width inside the outline (about 55 % of it).
+  static int coreWidthAt(double zoom) =>
+      zoom < 11 ? 3 : zoom < 13 ? 3 : zoom < 16 ? 4 : 6;
 
   static double _ease(double t) => t < 0.5
       ? 4 * t * t * t
