@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
@@ -80,8 +81,9 @@ void main() {
     expect(airport.paidByCash, isTrue);
     final offer = RideOffer.reservation(airport);
     expect(offer.payment, 'Cash');
-    expect(offer.fare, '248,40 kr');
-    expect(offer.cashToCollect, '300,00 kr');
+    expect(offer.fare, const Money(minorUnits: 24840));
+    expect(offer.fareLabel, '248,40 kr');
+    expect(offer.cashToCollectLabel, '300,00 kr');
     // A card reservation has none.
     expect(RideOffer.reservation(DemoReservations.main).cashToCollect, isNull);
   });

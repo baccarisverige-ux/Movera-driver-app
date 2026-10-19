@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -73,7 +74,7 @@ class _Dispatch implements DispatchRepository {
 RideOffer _trip(String id, String category) => RideOffer(
   id: id,
   category: category,
-  fare: '88,10 kr',
+  fare: Money(minorUnits: 8810),
   rating: '4.92',
   pickupMinutes: 3,
   pickupKm: 0.9,

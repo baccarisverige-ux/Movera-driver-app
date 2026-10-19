@@ -188,7 +188,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!mounted || event.tripId != widget.offerId) { return; }
 
       final disposition = _realtimeGate.evaluate(event);
-      if (disposition == DriverRealtimeDisposition.staleOrDuplicate ||
+      if (disposition == DriverRealtimeDisposition.duplicate ||
+          disposition == DriverRealtimeDisposition.invalid ||
           disposition == DriverRealtimeDisposition.blockedAfterTerminal) {
         return;
       }
@@ -226,6 +227,12 @@ extension _AcceptRideTrip on _AcceptRideState {
         case DriverRealtimeKind.tripProjection:
         case DriverRealtimeKind.location:
         case DriverRealtimeKind.driverArrived:
+        // Contract v0.3 kinds the driver screen does not show yet. A driver
+        // cancel comes back with its projection, handled above.
+        case DriverRealtimeKind.driverCancelled:
+        case DriverRealtimeKind.paymentUpdated:
+        case DriverRealtimeKind.ratingUpdated:
+        case DriverRealtimeKind.message:
           return;
       }
     }

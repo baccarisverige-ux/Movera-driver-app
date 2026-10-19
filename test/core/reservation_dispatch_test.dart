@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
@@ -66,7 +67,8 @@ void main() {
     expect(reservation.isReservation, isTrue);
     expect(reservation.reservationTime, '07:40');
     expect(reservation.isNearby, isTrue);
-    expect(reservation.fare, '126,75 kr');
+    expect(reservation.fare, const Money(minorUnits: 12675));
+    expect(reservation.fareLabel, '126,75 kr');
 
     // Taken from Radar: it leaves Radar at once.
     expect(

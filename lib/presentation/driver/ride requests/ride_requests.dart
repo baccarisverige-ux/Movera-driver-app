@@ -139,7 +139,7 @@ class _RideRequestsState extends State<RideRequests> {
     return _RadarTrip(
       id: offer.id,
       category: offer.category,
-      fare: offer.fare,
+      fare: offer.fareLabel,
       rating: offer.rating,
       pickupMinutes: offer.pickupMinutes,
       pickupKm: offer.pickupKm,
@@ -351,7 +351,7 @@ class _RideRequestsState extends State<RideRequests> {
           riderTrips: rider.riderTrips,
           fare: trip.fare,
           paidByCash: RadarOfferView.isCash(trip.payment),
-          cashToCollect: rider.cashToCollect,
+          cashToCollect: rider.cashToCollectLabel,
           category: trip.category,
           matchedVia: 'Movera Radar',
           sessionController: widget.sessionController,
@@ -696,7 +696,7 @@ class _RideRequestsState extends State<RideRequests> {
         dropoff: trip.dropoff,
         bags: trip.bags,
         reservationTime: trip.reservationTime,
-        fareBoost: trip.source.fareBoost,
+        fareBoost: trip.source.fareBoostLabel,
         stops: trip.source.stops.length,
         riderTrips: trip.source.riderTrips,
         pickupPay: PickupPayCalculator.quote(
