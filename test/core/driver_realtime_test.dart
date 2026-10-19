@@ -26,13 +26,13 @@ void main() {
       gate.evaluate(DriverRealtimeEvent(
         tripId:'trip-1',kind:DriverRealtimeKind.location,sequence:4,at:at,
       )),
-      DriverRealtimeDisposition.staleOrDuplicate,
+      DriverRealtimeDisposition.duplicate,
     );
     expect(
       gate.evaluate(DriverRealtimeEvent(
         tripId:'trip-1',kind:DriverRealtimeKind.location,sequence:3,at:at,
       )),
-      DriverRealtimeDisposition.staleOrDuplicate,
+      DriverRealtimeDisposition.duplicate,
     );
   });
 
@@ -48,7 +48,7 @@ void main() {
         at: at,
         status: TripStatus.cancelledByRider,
       )),
-      DriverRealtimeDisposition.staleOrDuplicate,
+      DriverRealtimeDisposition.invalid,
     );
     expect(gate.lastSequenceFor(trip), isNull);
     expect(gate.isTerminal(trip), isFalse);
@@ -60,7 +60,7 @@ void main() {
         at: at,
         status: TripStatus.cancelledByRider,
       )),
-      DriverRealtimeDisposition.staleOrDuplicate,
+      DriverRealtimeDisposition.invalid,
     );
     expect(gate.lastSequenceFor('  '), isNull);
     expect(gate.isTerminal('  '), isFalse);

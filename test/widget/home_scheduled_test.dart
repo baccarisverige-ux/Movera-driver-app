@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -82,7 +83,7 @@ RideOffer _trip(
 }) => RideOffer(
   id: id,
   category: 'Comfort',
-  fare: '88,10 kr',
+  fare: Money(minorUnits: 8810),
   rating: '4.92',
   riderName: 'Sara',
   riderTrips: 86,

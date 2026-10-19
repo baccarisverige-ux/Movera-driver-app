@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 
 /// Demo trips for Destination mode (R13-9): with real filtering the fixed
 /// demo trips rarely head the driver's way, so the demo adds some along the
@@ -26,7 +27,7 @@ class DemoDestinationTrips {
     final corridor = corridorKm * 1000;
     final pickup = _offset(driver, _bearing(driver, destination) + 90, 600);
     RideOffer trip(String id, String rider, String dropoff, GeoPoint at,
-        String fare, {required bool follows}) {
+        Money fare, {required bool follows}) {
       final km = pickup.distanceMetersTo(at) / 1000 * 1.25;
       return RideOffer(
         id: '$idPrefix$id',
@@ -54,19 +55,19 @@ class DemoDestinationTrips {
     final (mid, midBearing) = _pointAt(path, 0.50);
     return <RideOffer>[
       trip('final', 'Sofia', 'Near $destinationLabel',
-          _offset(nearEnd, endBearing + 90, math.min(800, corridor * 0.2)), '248,00 kr',
+          _offset(nearEnd, endBearing + 90, math.min(800, corridor * 0.2)), Money.ore(24800),
           follows: true),
       trip('way-1', 'Adam', 'On your way · 35 %',
-          _offset(way1, way1Bearing + 90, corridor * 0.4), '164,50 kr',
+          _offset(way1, way1Bearing + 90, corridor * 0.4), Money.ore(16450),
           follows: true),
       trip('way-2', 'Ella', 'On your way · 60 %',
-          _offset(way2, way2Bearing - 90, corridor * 0.5), '198,30 kr',
+          _offset(way2, way2Bearing - 90, corridor * 0.5), Money.ore(19830),
           follows: true),
       trip('off-route', 'Karl', 'Away from your route',
-          _offset(mid, midBearing + 90, corridor * 3), '152,00 kr',
+          _offset(mid, midBearing + 90, corridor * 3), Money.ore(15200),
           follows: false),
       trip('behind', 'Noor', 'Behind you',
-          _offset(driver, _bearing(destination, driver), corridor * 1.5), '121,40 kr',
+          _offset(driver, _bearing(destination, driver), corridor * 1.5), Money.ore(12140),
           follows: false),
     ];
   }

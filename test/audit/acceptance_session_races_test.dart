@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 const _offer = RideOffer(
   id: 'controlled-offer',
   category: 'Comfort',
-  fare: '100 kr',
+  fare: Money(minorUnits: 10000),
   rating: '4.9',
   pickupMinutes: 2,
   pickupKm: 1,

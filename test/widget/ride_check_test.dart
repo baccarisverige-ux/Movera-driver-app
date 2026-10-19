@@ -410,7 +410,7 @@ void main() {
         AcceptRide(
           offerId: tripId,
           riderName: offer.riderName,
-          fare: offer.fare,
+          fare: offer.fareLabel,
           category: offer.category,
           pickupAddress: offer.pickup,
           dropoffAddress: offer.dropoff,

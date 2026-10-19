@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -93,7 +94,7 @@ Future<_Routes> _homeWithRadarTrip(WidgetTester tester) async {
     RideOffer(
       id: 'route-trip',
       category: 'Comfort',
-      fare: '168 kr',
+      fare: Money(minorUnits: 16800),
       rating: '4.92',
       pickupMinutes: 7,
       pickupKm: 2.1,

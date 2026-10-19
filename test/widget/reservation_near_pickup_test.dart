@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -27,7 +28,7 @@ import '../../integration_test/headless_map_platform.dart';
 const _reservationTrip = RideOffer(
   id: demoReservationId,
   category: 'Comfort',
-  fare: '126,75 kr',
+  fare: Money(minorUnits: 12675),
   rating: '4.94',
   pickupMinutes: 16,
   pickupKm: 2.1,

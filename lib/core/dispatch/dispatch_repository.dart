@@ -43,8 +43,7 @@ class RideOffer {
       RideOffer(
         id: reservation.id,
         category: reservation.category,
-        fare: Money.parseSekLabel(reservation.fare)?.formatted ??
-            reservation.fare,
+        fare: _amount(reservation.fare, 'fare')!,
         rating: reservation.rating,
         pickupMinutes: 16,
         pickupKm: 2.1,
@@ -61,9 +60,18 @@ class RideOffer {
         riderName: reservation.riderName,
         riderTrips: reservation.riderTrips,
         stops: reservation.stops,
-        fareBoost: reservation.fareBoost,
-        cashToCollect: reservation.paidByCash ? reservation.cashToCollect : null,
+        fareBoost: _amount(reservation.fareBoost, 'fareBoost'),
+        cashToCollect: reservation.paidByCash
+            ? _amount(reservation.cashToCollect, 'cashToCollect')
+            : null,
       );
+
+  /// Reservation previews still carry SEK labels (follow-up); offers do not.
+  static Money? _amount(String? label, String field) {
+    if (label == null) return null;
+    return Money.parseSekLabel(label) ??
+        (throw ArgumentError.value(label, field, 'Not a SEK amount'));
+  }
 
   final String id;
 
@@ -74,7 +82,13 @@ class RideOffer {
   /// the name is not a category.
   String? get categoryId => CategoryCatalog.idForLabel(category);
 
-  final String fare;
+  /// What the rider pays (contract `Offer.fare`, minor units). Formatted
+  /// locally: see [fareLabel].
+  final Money fare;
+
+  /// Display form of [fare], e.g. `111,02 kr`.
+  String get fareLabel => fare.formatted;
+
   final String rating;
   final int pickupMinutes;
   final double pickupKm;
@@ -106,12 +120,21 @@ class RideOffer {
   /// Stops between pickup and drop-off, in driving order.
   final List<ReservationStop> stops;
 
-  /// Admin raised the fare, e.g. "+40 kr"; [fare] already includes it.
-  final String? fareBoost;
+  /// Admin raised the fare by this much; [fare] already includes it.
+  final Money? fareBoost;
+
+  /// Display form of [fareBoost], e.g. `+40 kr`.
+  String? get fareBoostLabel {
+    final boost = fareBoost;
+    return boost == null ? null : '+${boost.formattedShort}';
+  }
 
   /// R8-4: on a cash trip, the cash to take from the rider when it is not
-  /// the fare (rider promotions), e.g. "250 kr". Null: the fare.
-  final String? cashToCollect;
+  /// the fare (rider promotions). Null: the fare.
+  final Money? cashToCollect;
+
+  /// Display form of [cashToCollect], e.g. `250,00 kr`.
+  String? get cashToCollectLabel => cashToCollect?.formatted;
 
   bool get isReservation => reservationTime != null;
 }
