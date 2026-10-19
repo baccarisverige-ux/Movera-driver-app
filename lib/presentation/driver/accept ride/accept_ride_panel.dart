@@ -1033,80 +1033,87 @@ extension _AcceptRidePanel on _AcceptRideState {
         fitContent: true,
         builder: (sheetContext) {
           return _CleanSheet(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (_navigation.routeState == RouteLoadState.failed)
-                  _CleanRow(
-                    key: const ValueKey<String>('retry-route-option'),
-                    title: 'Retry route',
-                    subtitle: 'Route unavailable. Your trip remains active.',
-                    onTap: () { if (popOwned(sheetContext)) unawaited(_navigation.retryRoute()); },
-                  ),
-                _CleanRow(
-                  key: const ValueKey<String>('current-trip-waybill-option'),
-                  title: 'Current waybill',
-                  subtitle:
-                      '${widget.pickupAddress} → ${widget.dropoffAddress}',
-                  onTap: () {
-                    if (!popOwned(sheetContext)) return;
-                    final record = _waybills.current;
-                    if (record != null) {
-                      showMoveraWaybillSheet(
-                        context,
-                        record,
-                        title: 'Current trip waybill',
-                      );
-                    }
-                  },
-                ),
-                if (showNext)
-                  _CleanRow(
-                    key: const ValueKey<String>('next-trip-waybill-option'),
-                    title: 'Next trip waybill',
-                    subtitle: _waybills.next!.dropoff,
-                    onTap: () {
-                      if (!popOwned(sheetContext)) return;
-                      showMoveraWaybillSheet(
-                        context,
-                        _waybills.next!,
+            // Scrolls on short screens and large text, so "End trip early"
+            // stays reachable.
+            child: Flexible(
+              child: SingleChildScrollView(
+                key: const ValueKey<String>('trip-options-scroll'),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_navigation.routeState == RouteLoadState.failed)
+                      _CleanRow(
+                        key: const ValueKey<String>('retry-route-option'),
+                        title: 'Retry route',
+                        subtitle: 'Route unavailable. Your trip remains active.',
+                        onTap: () { if (popOwned(sheetContext)) unawaited(_navigation.retryRoute()); },
+                      ),
+                    _CleanRow(
+                      key: const ValueKey<String>('current-trip-waybill-option'),
+                      title: 'Current waybill',
+                      subtitle:
+                          '${widget.pickupAddress} → ${widget.dropoffAddress}',
+                      onTap: () {
+                        if (!popOwned(sheetContext)) return;
+                        final record = _waybills.current;
+                        if (record != null) {
+                          showMoveraWaybillSheet(
+                            context,
+                            record,
+                            title: 'Current trip waybill',
+                          );
+                        }
+                      },
+                    ),
+                    if (showNext)
+                      _CleanRow(
+                        key: const ValueKey<String>('next-trip-waybill-option'),
                         title: 'Next trip waybill',
-                      );
-                    },
-                  ),
-                if (onTrip)
-                  _CleanRow(
-                    key: const ValueKey<String>('trip-destination-option'),
-                    title: 'Destination',
-                    subtitle: _destinationActive
-                        ? (_destinationAddress ?? 'On your way')
-                        : 'Next trips on your way',
-                    onTap: () {
-                      if (popOwned(sheetContext)) { _openDestinationPicker(); }
-                    },
-                  ),
-                _CleanRow(
-                  title: 'Safety toolkit',
-                  subtitle: 'Share trip, record audio, get help',
-                  onTap: () {
-                    if (!popOwned(sheetContext)) return;
-                    showSafetyToolKitSheet(context);
-                  },
+                        subtitle: _waybills.next!.dropoff,
+                        onTap: () {
+                          if (!popOwned(sheetContext)) return;
+                          showMoveraWaybillSheet(
+                            context,
+                            _waybills.next!,
+                            title: 'Next trip waybill',
+                          );
+                        },
+                      ),
+                    if (onTrip)
+                      _CleanRow(
+                        key: const ValueKey<String>('trip-destination-option'),
+                        title: 'Destination',
+                        subtitle: _destinationActive
+                            ? (_destinationAddress ?? 'On your way')
+                            : 'Next trips on your way',
+                        onTap: () {
+                          if (popOwned(sheetContext)) { _openDestinationPicker(); }
+                        },
+                      ),
+                    _CleanRow(
+                      title: 'Safety toolkit',
+                      subtitle: 'Share trip, record audio, get help',
+                      onTap: () {
+                        if (!popOwned(sheetContext)) return;
+                        showSafetyToolKitSheet(context);
+                      },
+                    ),
+                    _CleanRow(
+                      key: const ValueKey<String>('active-ride-cancel-option'),
+                      title: onTrip ? 'End trip early' : 'Cancel trip',
+                      subtitle:
+                          onTrip ? 'Stop safely first · reason required' : null,
+                      danger: true,
+                      last: true,
+                      onTap: () {
+                        if (!popOwned(sheetContext)) return;
+                        _showCancellationReasons();
+                      },
+                    ),
+                  ],
                 ),
-                _CleanRow(
-                  key: const ValueKey<String>('active-ride-cancel-option'),
-                  title: onTrip ? 'End trip early' : 'Cancel trip',
-                  subtitle:
-                      onTrip ? 'Stop safely first · reason required' : null,
-                  danger: true,
-                  last: true,
-                  onTap: () {
-                    if (!popOwned(sheetContext)) return;
-                    _showCancellationReasons();
-                  },
-                ),
-              ],
+              ),
             ),
           );
         },

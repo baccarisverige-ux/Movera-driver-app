@@ -95,6 +95,26 @@ class DriverDocuments extends StatelessWidget {
                   'Earn anywhere in Sweden',
                   style: TextStyle(color: _muted, fontSize: 14),
                 ),
+                const SizedBox(height: 14),
+                // No upload or review service yet: say so instead of
+                // presenting the list as a real onboarding checklist.
+                Container(
+                  key: const ValueKey<String>('documents-sample-notice'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F6F6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    'Sample list · Sending these documents is not available '
+                    'in the app yet. Nothing here was uploaded or reviewed.',
+                    style: TextStyle(color: _muted, fontSize: 13, height: 1.35),
+                  ),
+                ),
                 const SizedBox(height: 20),
                 Row(
                   children: [

@@ -17,93 +17,108 @@ class DriverStarter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Scrolls on short screens and large text instead of overflowing; on a
+    // tall screen the art stays centred above the buttons (UI-11).
     return Scaffold(
-      body: SizedBox(
-        child: Column(
-          children: [
-            100.height,
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    AppAssets.getStartedDriver,
-                    height: ResSize.h * 200,
-                  ),
-                  38.height,
-                  TextWidget(
-                    text: "Demo mode — no account",
-                    color: AppColor.title,
-                    fontSize: 34,
-                    fontWeight: fwExtraBold,
-                  ),
-                  8.height,
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: screenHorizPadding,
-                    ),
-                    child: TextWidget(
-                      textAlign: TextAlign.center,
-                      text: "Let’s hit the road. Accept rides in real time and make every minute count",
-                      color: AppColor.subtitle,
-                      fontSize: 16,
-                      fontWeight: fwMedium,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
+      body: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
               child: Column(
                 children: [
-                  CustomButton(
-                    centerContent: legacyAuthEnabled
-                        ? "Legacy sign-in preview"
-                        : "Sign-in unavailable — demo",
-                    onPressed: legacyAuthEnabled
-                        ? () {
-                            Navigator.pushReplacement(
-                              context,
-                              BottomToTopTransition(const DriverSignIn()),
-                            );
-                          }
-                        : null,
-                  ),
-                  8.height,
-                  CustomButton(
-                    centerContent: legacyAuthEnabled
-                        ? "Legacy registration preview"
-                        : "Registration unavailable — demo",
-                    onPressed: legacyAuthEnabled
-                        ? () {
-                            Navigator.push(
-                              context,
-                              BottomToTopTransition(
-                                const DriverCreateAccount(),
-                              ),
-                            );
-                          }
-                        : null,
-                    btncolor: Colors.transparent,
-                    borderColor: AppColor.primary,
-                    borderwidth: 0.5,
-                    textColor: AppColor.primary,
-                  ),
-                  if (DriverRuntimeScope.maybeOf(context) case final runtime?)
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pushReplacement(
-                        MaterialPageRoute<void>(
-                          builder: (_) => runtime.homeBuilder(),
+                  100.height,
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          AppAssets.getStartedDriver,
+                          height: ResSize.h * 200,
                         ),
-                      ),
-                      child: const Text('Return to demo'),
+                        38.height,
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenHorizPadding,
+                          ),
+                          child: TextWidget(
+                            textAlign: TextAlign.center,
+                            text: "Demo mode — no account",
+                            color: AppColor.title,
+                            fontSize: 34,
+                            fontWeight: fwExtraBold,
+                          ),
+                        ),
+                        8.height,
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenHorizPadding,
+                          ),
+                          child: TextWidget(
+                            textAlign: TextAlign.center,
+                            text: "Let’s hit the road. Accept rides in real time and make every minute count",
+                            color: AppColor.subtitle,
+                            fontSize: 16,
+                            fontWeight: fwMedium,
+                          ),
+                        ),
+                      ],
                     ),
-                  20.height,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
+                    child: Column(
+                      children: [
+                        CustomButton(
+                          centerContent: legacyAuthEnabled
+                              ? "Legacy sign-in preview"
+                              : "Sign-in unavailable — demo",
+                          onPressed: legacyAuthEnabled
+                              ? () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    BottomToTopTransition(const DriverSignIn()),
+                                  );
+                                }
+                              : null,
+                        ),
+                        8.height,
+                        CustomButton(
+                          centerContent: legacyAuthEnabled
+                              ? "Legacy registration preview"
+                              : "Registration unavailable — demo",
+                          onPressed: legacyAuthEnabled
+                              ? () {
+                                  Navigator.push(
+                                    context,
+                                    BottomToTopTransition(
+                                      const DriverCreateAccount(),
+                                    ),
+                                  );
+                                }
+                              : null,
+                          btncolor: Colors.transparent,
+                          borderColor: AppColor.primary,
+                          borderwidth: 0.5,
+                          textColor: AppColor.primary,
+                        ),
+                        if (DriverRuntimeScope.maybeOf(context) case final runtime?)
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute<void>(
+                                builder: (_) => runtime.homeBuilder(),
+                              ),
+                            ),
+                            child: const Text('Return to demo'),
+                          ),
+                        20.height,
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

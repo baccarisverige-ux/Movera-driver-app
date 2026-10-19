@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -17,6 +19,9 @@ Future<T?> showMoveraModalSheet<T>({
   bool barrierDismissible = true,
   // Size to the content, up to [heightFactor] of the screen.
   bool fitContent = false,
+  // With [fitContent]: never shorter than this share of the screen, so a
+  // sheet keeps its usual size and only grows when its content needs it.
+  double minHeightFactor = 0,
 }) {
   return showGeneralDialog<T>(
     context: context,
@@ -52,6 +57,10 @@ Future<T?> showMoveraModalSheet<T>({
                             constraints: BoxConstraints(
                               minWidth: width,
                               maxWidth: width,
+                              minHeight: math.min(
+                                height,
+                                availableHeight * minHeightFactor,
+                              ),
                               maxHeight: height,
                             ),
                             child: Builder(builder: builder),

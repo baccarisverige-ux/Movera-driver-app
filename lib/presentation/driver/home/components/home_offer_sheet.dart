@@ -720,16 +720,20 @@ class OfferSheetBody extends StatelessWidget {
               colorFilter: const ColorFilter.mode(_ink, BlendMode.srcIn),
             ),
             const SizedBox(width: 8),
+            // Shrinks to fit rather than cutting the end off: the end is
+            // the seconds left or the pickup time (UI-06).
             Flexible(
-              child: Text(
-                pillLabel,
-                key: ValueKey<String>('$key-text'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: _ink,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  pillLabel,
+                  key: ValueKey<String>('$key-text'),
+                  maxLines: 1,
+                  style: const TextStyle(
+                    color: _ink,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),

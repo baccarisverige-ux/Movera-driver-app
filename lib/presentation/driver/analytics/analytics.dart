@@ -15,6 +15,9 @@ class Analytics extends StatelessWidget {
   static const Color _muted = Color(0xFF7D898F);
   static const Color _line = Color(0xFFE6E8EA);
 
+  /// The same sample numbers as the Home performance sheet.
+  static const DriverPerformanceConfig _sample = DriverPerformanceConfig.sample;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -145,11 +148,11 @@ class Analytics extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              _metric('Rating', '4.88'),
+              _metric('Rating', _sample.ratingLabel),
               const SizedBox(width: 8),
-              _metric('Acceptance', '94%'),
+              _metric('Acceptance', _sample.acceptanceLabel),
               const SizedBox(width: 8),
-              _metric('Cancel', '2.4%'),
+              _metric('Cancel', _sample.cancellationLabel),
             ],
           ),
           const SizedBox(height: 16),
@@ -163,14 +166,14 @@ class Analytics extends StatelessWidget {
           _link(
             context,
             title: 'Acceptance rate',
-            detail: '94% of offers accepted',
+            detail: 'Sample · ${_sample.acceptanceLabel} of offers accepted',
             page: const AcceptanceRate(),
           ),
           const SizedBox(height: 8),
           _link(
             context,
             title: 'Cancellation rate',
-            detail: '2.4% of accepted trips',
+            detail: 'Sample · ${_sample.cancellationLabel} of accepted trips',
             page: const CancelationRate(),
           ),
         ],

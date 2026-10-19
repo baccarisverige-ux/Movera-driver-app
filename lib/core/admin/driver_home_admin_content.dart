@@ -47,12 +47,29 @@ class DriverPerformanceConfig {
     this.showCancellationRate = true,
   });
 
+  /// The demo's sample numbers. Home, the side menu and Analytics all read
+  /// these, so the same metric never shows two values (UI-10).
+  static const DriverPerformanceConfig sample = DriverPerformanceConfig(
+    rating: 4.88,
+    acceptanceRate: 94.0,
+    cancellationRate: 2.4,
+  );
+
   final double rating;
   final double acceptanceRate;
   final double cancellationRate;
   final bool showRating;
   final bool showAcceptanceRate;
   final bool showCancellationRate;
+
+  /// "4.88"
+  String get ratingLabel => rating.toStringAsFixed(2);
+
+  /// "94%"
+  String get acceptanceLabel => '${acceptanceRate.toStringAsFixed(0)}%';
+
+  /// "2.4%"
+  String get cancellationLabel => '${cancellationRate.toStringAsFixed(1)}%';
 }
 
 class ScheduledRidesAdminConfig {
@@ -603,11 +620,7 @@ class DriverHomeAdminContentService {
     return DriverHomeAdminConfig(
       destinationMode: tripRules?.$1,
       nextTrips: tripRules?.$2,
-      performance: const DriverPerformanceConfig(
-        rating: 4.88,
-        acceptanceRate: 94.0,
-        cancellationRate: 2.4,
-      ),
+      performance: DriverPerformanceConfig.sample,
       scheduledRides: ScheduledRidesAdminConfig(
         enabled: true,
         hasOpenRequests: true,

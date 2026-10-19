@@ -495,12 +495,15 @@ extension _HomeMapSheet on _DriverHomeState {
         child: Align(
           alignment: Alignment.topCenter,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 62, 16, 24),
+            // Starts below the red dock, which stays on top of the sheet's
+            // first [collapsedHeight] and takes its taps (UI-02).
+            padding: const EdgeInsets.fromLTRB(
+              16, MoveraSheetMetrics.collapsedHeight + 4, 16, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextButton(
-                  onPressed: _openActivationDocuments,
+                  onPressed: _openActivationSupport,
                   child: const Text('Contact support',
                     style: TextStyle(color: Colors.white, fontSize: 18,
                       fontWeight: FontWeight.w800)),
@@ -1055,7 +1058,13 @@ extension _HomeMapSheet on _DriverHomeState {
                 ),
               )),
               Expanded(
-                child: GestureDetector(
+                // Asleep, the middle is a few pixels wide and shows
+                // nothing: no unlabelled target for a screen reader (UI-12).
+                child: ExcludeSemantics(
+                  excluding: message == null && reservation == null &&
+                      exclusive == null && !waiting && !destination &&
+                      _islandWake < 2,
+                  child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onHorizontalDragEnd: (details) {
                     if (_islandFace == _IslandFace.history &&
@@ -1127,6 +1136,7 @@ extension _HomeMapSheet on _DriverHomeState {
                       ),
                     ),
                   ),
+                ),
                 ),
               ),
               side(Tooltip(
@@ -1822,8 +1832,9 @@ extension _HomeMapSheet on _DriverHomeState {
                 running: _isOnline,
                 onTap: _openDrivingTime,
               ),
-              // Q23: cash rides on or off. Off: no cash offers.
-              _sheetRow(
+              // Q23: cash rides on or off. Off: no cash offers. One node,
+              // so the switch is read with its label (UI-12).
+              MergeSemantics(child: _sheetRow(
                 key: const ValueKey<String>('home-sheet-cash'),
                 icon: _solarIcon(AppAssets.solarWadOfMoney),
                 label: 'Cash rides',
@@ -1836,7 +1847,7 @@ extension _HomeMapSheet on _DriverHomeState {
                 onTap: () => _HomeOfferRules(this)._setAcceptsCash(
                   !DriverOfferPreferences.acceptsCash.value,
                 ),
-              ),
+              )),
               if (showPerformance)
                 _sheetRow(
                   key: const ValueKey<String>('home-sheet-performance'),
@@ -1938,21 +1949,21 @@ extension _HomeMapSheet on _DriverHomeState {
             (last) => _todayRow(
                   mark: MoveraMark.star,
                   label: 'Rating',
-                  value: performance.rating.toStringAsFixed(2),
+                  value: performance.ratingLabel,
                   last: last,
                 ),
           if (performance.showAcceptanceRate)
             (last) => _todayRow(
                   mark: MoveraMark.check,
                   label: 'Acceptance',
-                  value: '${performance.acceptanceRate.toStringAsFixed(0)}%',
+                  value: performance.acceptanceLabel,
                   last: last,
                 ),
           if (performance.showCancellationRate)
             (last) => _todayRow(
                   mark: MoveraMark.close,
                   label: 'Cancellation',
-                  value: '${performance.cancellationRate.toStringAsFixed(1)}%',
+                  value: performance.cancellationLabel,
                   last: last,
                 ),
         ],

@@ -1,5 +1,6 @@
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -281,24 +282,30 @@ class DriverSideMenu extends StatelessWidget {
                           runSpacing: 4,
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.star_rounded,
-                                  size: 16,
-                                  color: Color(0xFF111614),
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  '4.88',
-                                  style: TextStyle(
+                            // The demo's sample rating, as on Home (UI-10).
+                            Semantics(
+                              label: 'Sample rating '
+                                  '${DriverPerformanceConfig.sample.ratingLabel}',
+                              excludeSemantics: true,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    size: 16,
                                     color: Color(0xFF111614),
-                                    fontSize: 14.5,
-                                    fontWeight: FontWeight.w600,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    DriverPerformanceConfig.sample.ratingLabel,
+                                    style: const TextStyle(
+                                      color: Color(0xFF111614),
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             Row(
                               mainAxisSize: MainAxisSize.min,

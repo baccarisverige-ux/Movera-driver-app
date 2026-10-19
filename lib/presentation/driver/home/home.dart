@@ -76,6 +76,7 @@ import 'package:movera/presentation/driver/home/components/home_map_layers.dart'
 import 'package:movera/widgets/movera_destination_marker.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/documents/document_renewal.dart';
+import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/home/components/destination_set_panel.dart';
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
@@ -123,6 +124,7 @@ part 'home_exclusive.dart';
 part 'home_start_position.dart';
 part 'home_offer_route.dart';
 part 'home_offer_sound.dart';
+part 'home_back.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -678,10 +680,10 @@ class _DriverHomeState extends State<DriverHome>
     }
   }
 
-  void _openActivationDocuments() {
+  void _openActivationSupport() {
     pushSingle(
       context,
-      MaterialPageRoute<void>(builder: (_) => const DriverDocuments()),
+      MaterialPageRoute<void>(builder: (_) => const SupportInboxScreen()),
     );
   }
 
@@ -696,7 +698,8 @@ class _DriverHomeState extends State<DriverHome>
       behavior: HitTestBehavior.translucent,
       onPointerDown: (_) => _offerSound.tap(),
       child: LayoutViewport(
-      child: Scaffold(
+      // UI-03: Back closes the overlay on top before it leaves Home.
+      child: _HomeBack(this)._backScope(Scaffold(
       key: _scaffoldKey,
       drawer: DriverSideMenu(
         isOnline: _isOnline,
@@ -865,7 +868,7 @@ class _DriverHomeState extends State<DriverHome>
           _HomeExclusive(this)._exclusiveLayer(),
               ],
             ),
-      ),
+      )),
       ),
     );
   }

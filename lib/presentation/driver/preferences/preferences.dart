@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -364,7 +366,14 @@ class _PreferencesState extends State<Preferences> {
   Widget _buildCategory(int index, {double extent = 137}) {
     // Small screens get slightly smaller text so the icon keeps its room.
     final compact = extent < 120;
-    final iconHeight = (extent - (compact ? 58 : 69)).clamp(36.0, 68.0);
+    // The two text lines grow with the text size; the icon gives up the
+    // room so the description is never cut off (UI-09).
+    final scaler = MediaQuery.textScalerOf(context);
+    final textBlock =
+        (scaler.scale(compact ? 15 : 17) + scaler.scale(compact ? 11 : 12)) *
+            1.25;
+    final reserved = math.max(compact ? 58.0 : 69.0, textBlock + 25.5);
+    final iconHeight = (extent - reserved).clamp(24.0, 68.0);
     final category = _categories[index];
     final selected = _selected[index];
     final radius = BorderRadius.circular(11);

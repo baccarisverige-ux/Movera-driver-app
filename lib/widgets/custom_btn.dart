@@ -38,8 +38,19 @@ class CustomButton extends StatelessWidget {
     this.iconSize = 20,
   });
 
+  /// Grey fill and text for a button that cannot be pressed, so it does
+  /// not look like an active one (UI-11).
+  static const Color disabledFill = Color(0xFFE4E7E9);
+  static const Color disabledText = Color(0xFF8A9297);
+
   @override
   Widget build(BuildContext context) {
+    final disabled = onPressed == null && !isLoading;
+    final fill = !disabled || btncolor.a == 0 ? btncolor : disabledFill;
+    final border = !disabled || borderColor.a == 0
+        ? borderColor
+        : disabledText;
+    final text = disabled ? disabledText : textColor;
     return MaterialButton(
       clipBehavior: Clip.none,
       padding: EdgeInsets.zero,
@@ -56,8 +67,8 @@ class CustomButton extends StatelessWidget {
         width: width,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
-          color: btncolor,
-          border: Border.all(color: borderColor, width: borderwidth),
+          color: fill,
+          border: Border.all(color: border, width: borderwidth),
         ),
         child: Center(
           heightFactor: 1,
@@ -75,7 +86,7 @@ class CustomButton extends StatelessWidget {
                         fontSize: fontSize,
                         textAlign: TextAlign.center,
                         text: centerContent,
-                        color: textColor,
+                        color: text,
                         fontWeight: fwSemiBold,
                       ),
                     ),
