@@ -57,7 +57,7 @@ class MarkerMock {
 }
 const maps = {Map: MapMock, Marker: MarkerMock, OverlayView: OverlayMock,
   Point: class {constructor(x,y) {this.x=x;this.y=y;}}, RenderingType: {VECTOR: 'VECTOR', RASTER: 'RASTER'}};
-const images = [];
+const images = [], halos = [];
 const frames = [];
 const flushFrames = (max = 200) => {
   for (let i = 0; i < max && frames.length; i++) frames.shift()?.();
@@ -66,8 +66,8 @@ const context = {google: {maps}, performance: {now: () => clock},
   queueMicrotask,
   requestAnimationFrame: callback => { frames.push(callback); return frames.length; },
   cancelAnimationFrame: () => { frames.length = 0; },
-  document: {querySelector: () => ({content: 'configured-vector-style'}), body: new Element(), createElement: () => {
-    const image = new Element(); images.push(image); return image;
+  document: {querySelector: () => ({content: 'configured-vector-style'}), body: new Element(), createElement: tag => {
+    const element = new Element(); (tag === 'img' ? images : halos).push(element); return element;
   }},
   MutationObserver: class {observe() {} disconnect() {}}};
 // Maps JavaScript loaded after the adapter (async/defer, slow network): the
@@ -368,8 +368,20 @@ marker.setMap(map); api.vehicle(7,90);
 assert.equal(marker.getVisible(), false, 'Rotatable vehicle overlay replaces bitmap');
 map.moveCamera({heading:90}); api.vehicle(7,90);
 assert.ok(images[0].style.transform.includes('rotate(0deg)'), 'Heading-up car points up');
-map.moveCamera({heading:30}); api.vehicle(7,90);
+map.moveCamera({heading:30, tilt:0}); api.vehicle(7,90);
 assert.ok(images[0].style.transform.includes('rotate(60deg)'), 'Free rotation preserves real car course');
+// The own vehicle is an upright arrow: a tilted map never lays it into
+// the ground (no rotateX squash). Its course is turned as the tilted
+// ground shows it; its halo lies on the ground and flattens with the tilt.
+map.moveCamera({heading:90, tilt:60}); api.vehicle(7,90);
+assert.ok(!images[0].style.transform.includes('rotateX'), 'Tilted map: the arrow stays upright');
+assert.ok(images[0].style.transform.includes('rotate(0deg)'), 'Tilted heading-up arrow still points up');
+map.moveCamera({heading:45, tilt:60}); api.vehicle(7,90);
+assert.ok(images[0].style.transform.includes(`rotate(${Math.round(Math.atan2(Math.SQRT1_2, Math.SQRT1_2 * .5) * 18000 / Math.PI) / 100}deg)`),
+  'A course across the tilted view is foreshortened like the road');
+assert.equal(halos.length, 1, 'One ground halo under the vehicle');
+assert.ok(halos[0].style.transform.includes(`scaleY(${Math.cos(60 * Math.PI / 180)})`), 'Halo lies on the tilted ground');
+map.moveCamera({heading:0, tilt:0});
 marker.setMap(null);
 // Native Maps +/- touches must not be cancelled by the map-wide custom
 // gesture interpreter. Mobile browsers need an intact touch-to-click chain.
@@ -406,11 +418,16 @@ div.fire('pointermove', [], mouse(120,100));
 assert.equal(gestures,count,'Disposed Flutter listener released');
 // Tilt follows zoom live: every pinch frame on a vector map moves zoom and
 // tilt together in one camera move (lib DriverCameraPolicy.tiltForZoom:
-// 0 deg at zoom 12, linear to 67.5 deg at zoom 16, under the SDK limit).
+// 0 deg at zoom 12, linear to 67.5 deg at zoom 15.5, under the SDK limit).
 {
   const sdkMax = z => z <= 10 ? 30 : z <= 14 ? 30 + (z - 10) / 4 * 15 :
     z < 15.5 ? 45 + (z - 14) / 1.5 * 22.5 : 67.5;
-  const curve = z => Math.min(67.5 * Math.min(1, Math.max(0, (z - 12) / 4)), sdkMax(z));
+  const curve = z => Math.min(67.5 * Math.min(1, Math.max(0, (z - 12) / 3.5)), sdkMax(z));
+  // The line stays under the SDK limit (no clamp) and is at full tilt
+  // from zoom 15.5, guidance standstill (15) already near 58 deg.
+  for (let z = 12.05; z < 15.5; z += .05) assert.ok(curve(z) < sdkMax(z), `no SDK clamp at ${z}`);
+  assert.equal(curve(15.5), 67.5);
+  assert.ok(Math.abs(curve(15) - 67.5 * 3 / 3.5) < 1e-9);
   const liveDiv = new Element('plugins.flutter.io/google_maps_9');
   context.document.querySelector = () => ({content: 'configured-vector-style'});
   const live = new maps.Map(liveDiv, {});
@@ -437,7 +454,8 @@ assert.equal(gestures,count,'Disposed Flutter listener released');
     if (i && i !== zoomIn) {
       const [z0, t0] = trace[i - 1];
       assert.ok(Math.sign(zoom - z0) === Math.sign(tilt - t0) ||
-        (zoom <= 12 && tilt === 0) || tilt === t0 && Math.abs(zoom - z0) < 1e-9,
+        (zoom <= 12 && tilt === 0) || (zoom >= 15.5 && z0 >= 15.5 && tilt === 67.5) ||
+        tilt === t0 && Math.abs(zoom - z0) < 1e-9,
         `Pinch frame ${i}: tilt moves with the zoom`);
     }
   }

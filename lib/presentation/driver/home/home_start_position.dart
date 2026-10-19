@@ -41,7 +41,8 @@ extension _HomeStartPosition on _DriverHomeState {
           position: _driverPosition,
           infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
           icon: _driverVehicleIcon,
-          flat: true,
+          // Upright arrow; CustomGoogleMap turns it to the screen.
+          flat: false,
           anchor: MoveraVehicleMarker.anchor,
           rotation: _driverHeading,
           zIndexInt: 12,

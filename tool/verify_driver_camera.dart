@@ -143,8 +143,8 @@ Future<void> runCameraContractTests() async {
     );
     check((after.bearing - 90).abs() < 1, 'Follow route direction after turn');
     check(
-      after.zoom == 15.5 &&
-          after.tilt == DriverCameraPolicy.tiltForZoom(15.5),
+      after.zoom == 14.5 &&
+          after.tilt == DriverCameraPolicy.tiltForZoom(14.5),
       'Recover speed zoom and driving tilt',
     );
   }
@@ -159,12 +159,13 @@ Future<void> runCameraContractTests() async {
     GeoPoint.shortestAngleLerp(359, 1, .5) < 2,
     'Shortest-angle interpolation crosses north without full circle',
   );
-  // Guidance stays wide: the full tilt already shows the road far ahead.
-  check(DriverCameraPolicy.zoomForSpeed(3) == 16, 'Slow-speed zoom');
-  check(DriverCameraPolicy.zoomForSpeed(10) == 15.5, 'Urban-speed zoom');
-  check(DriverCameraPolicy.zoomForSpeed(20) == 15, 'Fast urban zoom');
-  check(DriverCameraPolicy.zoomForSpeed(30) == 14.625, 'Highway zoom');
-  check(DriverCameraPolicy.zoomForSpeed(double.nan) == 16,
+  // Guidance stays wide: the strong tilt already shows the road far ahead,
+  // and one level under street zoom the near roads stay slim.
+  check(DriverCameraPolicy.zoomForSpeed(3) == 15, 'Slow-speed zoom');
+  check(DriverCameraPolicy.zoomForSpeed(10) == 14.5, 'Urban-speed zoom');
+  check(DriverCameraPolicy.zoomForSpeed(20) == 14, 'Fast urban zoom');
+  check(DriverCameraPolicy.zoomForSpeed(30) == 13.625, 'Highway zoom');
+  check(DriverCameraPolicy.zoomForSpeed(double.nan) == 15,
       'Missing speed stays at slow-speed framing');
   // Former 20/50/80 km/h hard thresholds jumped a full zoom level when
   // sensor speed oscillated by a fraction of a metre per second.
@@ -177,7 +178,7 @@ Future<void> runCameraContractTests() async {
   var previousZoom = DriverCameraPolicy.zoomForSpeed(0);
   for (var speed = .5; speed <= 36; speed += .5) {
     final zoom = DriverCameraPolicy.zoomForSpeed(speed);
-    check(zoom.isFinite && zoom >= 14.625 && zoom <= 16,
+    check(zoom.isFinite && zoom >= 13.625 && zoom <= 15,
         'Autozoom must stay within approved road framing');
     check(zoom <= previousZoom,
         'Zoom decreases smoothly as driving speed rises');
@@ -326,20 +327,21 @@ Future<void> runCameraContractTests() async {
   );
   check(
     fastJunction.zoom > DriverCameraPolicy.zoomForSpeed(30) &&
-        fastJunction.tilt >= DriverCameraPolicy.tiltForZoom(14.75),
+        fastJunction.tilt >= DriverCameraPolicy.tiltForZoom(13.75),
     'Highway-speed junction framing does not wait for many GPS samples',
   );
 
   // Tilt follows zoom: flat up to zoom 12, then proportional to zoom
-  // (linear) up to the SDK maximum (67.5 degrees) at zoom 16, never above
+  // (linear) up to the SDK maximum (67.5 degrees) at zoom 15.5, never above
   // what the SDK allows, so every pinch step changes the tilt.
   check(DriverCameraPolicy.tiltForZoom(12) == 0 &&
           DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.exploreZoom) == 0,
       'Region overview zoom is flat');
-  check(DriverCameraPolicy.tiltForZoom(16) == 67.5 &&
+  check(DriverCameraPolicy.tiltForZoom(15.5) == 67.5 &&
+          DriverCameraPolicy.tiltForZoom(16) == 67.5 &&
           DriverCameraPolicy.tiltForZoom(20) == 67.5,
       'Street zoom tilts 67.5 degrees toward the horizon');
-  check((DriverCameraPolicy.tiltForZoom(14) - 33.75).abs() < 1e-9,
+  check((DriverCameraPolicy.tiltForZoom(13.75) - 33.75).abs() < 1e-9,
       'Halfway up the zoom range is halfway up the tilt');
   for (var zoom = 0.0; zoom <= 21; zoom += .1) {
     check(DriverCameraPolicy.tiltForZoom(zoom) <=
@@ -347,7 +349,7 @@ Future<void> runCameraContractTests() async {
         'Tilt never exceeds what the SDK allows at $zoom');
   }
   var previousTilt = 0.0;
-  for (var zoom = 12.02; zoom <= 16; zoom += .02) {
+  for (var zoom = 12.02; zoom <= 15.5; zoom += .02) {
     final tilt = DriverCameraPolicy.tiltForZoom(zoom);
     check(tilt > previousTilt && tilt - previousTilt < 1,
         'Tilt rises with every zoom step (no plateau, no step at $zoom)');

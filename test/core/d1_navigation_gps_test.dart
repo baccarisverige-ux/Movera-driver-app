@@ -241,9 +241,10 @@ void main() {
       double t(double z) => DriverCameraPolicy.tiltForZoom(z);
       expect(t(11), 0);
       expect(t(12), 0);
-      expect(t(13), closeTo(16.875, .01));
-      expect(t(14), closeTo(33.75, .01));
-      expect(t(15), closeTo(50.625, .01));
+      expect(t(13), closeTo(19.29, .01));
+      expect(t(14), closeTo(38.57, .01));
+      expect(t(15), closeTo(57.86, .01));
+      expect(t(15.5), 67.5);
       expect(t(16), 67.5);
       expect(t(16.5), 67.5);
       expect(t(17), 67.5);
@@ -260,7 +261,7 @@ void main() {
       expect(pose.tilt, 0);
     });
 
-    test('guidance cruise is at full tilt; arrival eases to 60; waiting flat',
+    test('guidance cruise tilts with its zoom; arrival eases to 60; waiting flat',
         () {
       final road = RoadRoute(
         points: [for (var i = 0; i <= 20; i++) _east(_origin, i * 100.0)],
@@ -271,9 +272,11 @@ void main() {
       final cruise = policy.resolve(
           location: _fix(_origin), route: road, navigating: true,
           immediate: true);
-      // About 15.4 at 43 km/h: wide, with the horizon well up.
-      expect(cruise.zoom, closeTo(15.4, .1));
-      expect(cruise.tilt, greaterThanOrEqualTo(55));
+      // About 14.4 at 43 km/h: wide, slim near roads, the horizon well up
+      // (the tilt that zoom has on the curve, about 46 deg).
+      expect(cruise.zoom, closeTo(14.4, .1));
+      expect(cruise.tilt, closeTo(DriverCameraPolicy.tiltForZoom(cruise.zoom), 1e-9));
+      expect(cruise.tilt, greaterThanOrEqualTo(45));
       final arrival = DriverCameraPolicy().resolve(
           location: _fix(_east(_origin, 2000)), route: road, navigating: true,
           immediate: true);

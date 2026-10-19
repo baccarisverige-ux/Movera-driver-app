@@ -95,9 +95,11 @@ class DriverCameraPolicy {
   /// Parked at the pickup or a paid stop.
   static const double waitingZoom = 17.2;
 
-  /// Guidance zoom at a standstill: the zoom the trip map opens at. Wide
-  /// enough that the full tilt shows the road far toward the horizon.
-  static const double guidanceStartZoom = 16;
+  /// Guidance zoom at a standstill: the zoom the trip map opens at. One
+  /// level wider than street zoom: under a strong tilt the near roads of
+  /// zoom 16 drew fat across the bottom of the screen (owner, iPhone), so
+  /// guidance stays at 15 and below, like the reference navigation app.
+  static const double guidanceStartZoom = 15;
 
   /// Smoothed GPS speed: one noisy reading must not zoom the map.
   double? _speed;
@@ -134,8 +136,10 @@ class DriverCameraPolicy {
   /// Zoom at or below which every driver map is flat (region overview).
   static const double flatZoom = 12;
 
-  /// Zoom at or above which the map reaches [maxTilt].
-  static const double fullTiltZoom = 16;
+  /// Zoom at or above which the map reaches [maxTilt]: the closest zoom
+  /// at which the SDKs allow it ([sdkMaxTilt]), so guidance one level
+  /// wider still looks far toward the horizon.
+  static const double fullTiltZoom = 15.5;
 
   /// Strongest tilt the Google Maps SDKs accept (Android, iOS, JS vector).
   static const double maxTilt = 67.5;
@@ -151,7 +155,7 @@ class DriverCameraPolicy {
   }
 
   /// Tilt at [zoom] on every driver map: 0° at zoom <= [flatZoom], then
-  /// proportional to zoom (linear, about 17° per zoom level) up to [maxTilt]
+  /// proportional to zoom (linear, about 19° per zoom level) up to [maxTilt]
   /// at [fullTiltZoom], so every small pinch step changes the tilt. The line
   /// stays under [sdkMaxTilt] everywhere (no clamp, no plateau); the min is
   /// a guard. web/driver_map_camera.js applies the same curve live while
@@ -164,13 +168,13 @@ class DriverCameraPolicy {
 
   /// Turn preview: the closest zoom it aims for, and the most it may add to
   /// the cruise zoom, so a junction never races the map to its closest zoom.
-  static const double turnZoom = 16.4;
+  static const double turnZoom = 15.4;
   static const double maxTurnZoomIn = 0.4;
 
   /// Last [arrivalMeters] before a stop: the zoom eases in gently toward
   /// [arrivalZoom] (never out) and the tilt eases to [arrivalTilt].
   static const double arrivalMeters = 140;
-  static const double arrivalZoom = 16.5;
+  static const double arrivalZoom = 15.5;
   static const double arrivalTilt = 60;
 
   static double zoomForSpeed(double speed) {
@@ -178,7 +182,7 @@ class DriverCameraPolicy {
     // fluctuated near 20/50/80 km/h. Interpolate between slow, urban,
     // fast-urban and highway framing levels instead. Speeds are metres per
     // second. The tilted map shows far ahead, so guidance stays wide:
-    // 16 at a standstill, 15.5 urban, 15 fast urban, 14.625 highway.
+    // 15 at a standstill, 14.5 urban, 14 fast urban, 13.625 highway.
     if (!speed.isFinite || speed <= 3) return guidanceStartZoom;
     if (speed >= 30) return guidanceStartZoom - 1.375;
     if (speed <= 10) return guidanceStartZoom - (speed - 3) / 14;

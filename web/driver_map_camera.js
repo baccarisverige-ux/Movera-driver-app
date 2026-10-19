@@ -78,18 +78,32 @@
   }
   // Tilt follows zoom on every driver map (DriverCameraPolicy.tiltForZoom
   // in Dart; keep both in step): 0 deg at zoom 12, then proportional to
-  // zoom up to 67.5 deg at zoom 16, under the SDKs' own per-zoom limit.
-  const MAX_TILT = 67.5;
+  // zoom up to 67.5 deg at zoom 15.5, under the SDKs' own per-zoom limit.
+  const MAX_TILT = 67.5, FLAT_ZOOM = 12, FULL_TILT_ZOOM = 15.5;
   const sdkMaxTilt = zoom => zoom <= 10 ? 30 : zoom <= 14 ?
     30 + (zoom - 10) / 4 * 15 : zoom < 15.5 ?
     45 + (zoom - 14) / 1.5 * (MAX_TILT - 45) : MAX_TILT;
   const tiltForZoom = zoom => Number.isFinite(zoom) ?
-    Math.min(MAX_TILT * clamp((zoom - 12) / 4, 0, 1), sdkMaxTilt(zoom)) : 0;
+    Math.min(MAX_TILT * clamp((zoom - FLAT_ZOOM) /
+      (FULL_TILT_ZOOM - FLAT_ZOOM), 0, 1), sdkMaxTilt(zoom)) : 0;
   // A zoom step carries the tilt along the curve in the same camera move,
   // so the horizon rises as the driver zooms in and flattens as they zoom
   // out, frame by frame. A tilt the driver set by hand is kept as an offset.
-  const tiltWithZoom = (tilt, from, to) => clamp(
-    tilt + tiltForZoom(to) - tiltForZoom(from), 0, sdkMaxTilt(to));
+  // Rounding residue (1e-16) would keep a zoomed-out map a hair tilted.
+  const tiltWithZoom = (tilt, from, to) => {
+    const next = clamp(tilt + tiltForZoom(to) - tiltForZoom(from), 0, sdkMaxTilt(to));
+    return next < 1e-9 ? 0 : next;
+  };
+  // The own vehicle is an upright arrow (lib MoveraVehicleMarker): turned
+  // to its heading as seen from the camera, foreshortened like the tilted
+  // ground (MoveraVehicleMarker.screenRotation; keep both in step).
+  const HALO = 88;
+  const screenRotation = (heading, bearing, tilt) => {
+    const turn = (heading - bearing) * Math.PI / 180;
+    const lean = Math.cos(clamp(tilt, 0, 89) * Math.PI / 180);
+    const degrees = Math.atan2(Math.sin(turn), Math.cos(turn) * lean) * 180 / Math.PI;
+    return Math.round(((degrees % 360) + 360) % 360 * 100) / 100;
+  };
   // Raster tiles stop at about z18; closer, Google upscales them into giant
   // blurry street names. A vector map draws crisp at any zoom: no cap there.
   const RASTER_MAX_ZOOM = 18;
@@ -516,21 +530,44 @@
         const marker = this;
         let state;
         const car = new sdk.OverlayView();
+        // The own vehicle stands up (a billboard): never rotateX'd into the
+        // ground, only turned to its heading as the camera sees it. Its
+        // halo lies on the ground and flattens with the tilt.
+        const halo = document.createElement('div');
+        halo.style.cssText = `position:absolute;pointer-events:none;width:${HALO}px;height:${HALO}px;` +
+          'border-radius:50%;background:radial-gradient(circle,rgba(125,140,153,.32) 0,rgba(125,140,153,.26) 82%,rgba(125,140,153,0) 100%);';
         const image = document.createElement('img');
-        image.src = options.icon.url;
-        image.style.cssText = 'position:absolute;pointer-events:none;transform-origin:50% 50%;';
-        const size = options.icon.scaledSize || options.icon.size;
-        if (size) { image.style.width = `${size.width}px`; image.style.height = `${size.height}px`; }
-        car.onAdd = () => car.getPanes().overlayLayer.appendChild(image);
+        image.style.cssText = 'position:absolute;pointer-events:none;';
+        let anchor = {x: .5, y: .5};
+        const setIcon = icon => {
+          if (!icon?.url) return;
+          image.src = icon.url;
+          const size = icon.scaledSize || icon.size;
+          if (!size) return;
+          image.style.width = `${size.width}px`; image.style.height = `${size.height}px`;
+          anchor = icon.anchor && size.width && size.height
+            ? {x: icon.anchor.x / size.width, y: icon.anchor.y / size.height}
+            : {x: .5, y: .5};
+          image.style.transformOrigin = `${anchor.x * 100}% ${anchor.y * 100}%`;
+        };
+        setIcon(options.icon);
+        car.onAdd = () => {
+          const pane = car.getPanes().overlayLayer;
+          pane.appendChild(halo); pane.appendChild(image);
+        };
         car.draw = () => {
           const pixel = car.getProjection()?.fromLatLngToDivPixel(marker.getPosition());
           if (!pixel) return;
+          const tilt = state.map.getTilt() || 0;
           image.style.left = `${pixel.x}px`; image.style.top = `${pixel.y}px`;
-          image.style.transform = `translate(-50%,-50%) rotateX(${state.map.getTilt() || 0}deg) rotate(${state.heading - (state.map.getHeading() || 0)}deg)`;
+          image.style.transform = `translate(${-anchor.x * 100}%,${-anchor.y * 100}%) ` +
+            `rotate(${screenRotation(state.heading, state.map.getHeading() || 0, tilt)}deg)`;
+          halo.style.left = `${pixel.x}px`; halo.style.top = `${pixel.y}px`;
+          halo.style.transform = `translate(-50%,-50%) scaleY(${Math.cos(tilt * Math.PI / 180)})`;
         };
-        car.onRemove = () => image.remove();
+        car.onRemove = () => { image.remove(); halo.remove(); };
         this.addListener('position_changed', () => car.draw());
-        this.addListener('icon_changed', () => { image.src = this.getIcon().url; });
+        this.addListener('icon_changed', () => { setIcon(this.getIcon()); car.draw(); });
         const attach = () => {
           car.setMap(null);
           state = byMap.get(this.getMap());
