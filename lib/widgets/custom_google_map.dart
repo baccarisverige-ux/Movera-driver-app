@@ -113,6 +113,19 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
 
   GoogleMapController? _mapController;
 
+  /// Far / near map style band (parks change green at zoom 12.5). Changes
+  /// only when the camera crosses the band, so the map rebuilds rarely.
+  /// With a web Map ID the cloud style wins and this style is not applied.
+  late MoveraMapStyleBand _styleBand = MoveraMapStyleBand.of(
+    widget.initialPosition?.zoom ?? _defaultPosition.zoom,
+  );
+
+  void _onCameraMove(CameraPosition position) {
+    final band = _styleBand.at(position.zoom);
+    if (band != _styleBand && mounted) setState(() => _styleBand = band);
+    widget.onCameraMove?.call(position);
+  }
+
   /// Web: Maps JavaScript (and its camera adapter) can arrive after the
   /// first frame, e.g. with async loading or a slow network. Building
   /// [GoogleMap] before then throws on every rebuild; the framework swaps
@@ -272,7 +285,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               },
               webGestureHandling: WebGestureHandling.greedy,
               webCameraControlEnabled: widget.webCameraControlEnabled,
-              style: moveraMapStyle,
+              style: _styleBand.style,
               onMapCreated: (GoogleMapController controller) {
                 _mapController = controller;
                 if (mounted) {
@@ -298,7 +311,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               },
               onTap: widget.onTap,
               onLongPress: widget.onLongPress,
-              onCameraMove: widget.onCameraMove,
+              onCameraMove: _onCameraMove,
               onCameraIdle: widget.onCameraIdle,
             ),
         ],

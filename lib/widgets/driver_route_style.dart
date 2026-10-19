@@ -3,33 +3,37 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 /// One route-line look for every driver map (Home destination, direct offer
 /// preview, trip to pickup/drop-off, reservation popup and full-screen map):
-/// like Uber, a dark grey core with a thin black outline that grows a little
-/// as the map zooms in.
+/// like the owner's reference navigation app, a purple core with a thin dark
+/// purple outline (about 1.5 pt each side) that grows as the map zooms in.
 abstract final class DriverRouteStyle {
-  static const Color casingColor = Color(0xFF111518);
-  static const Color color = Color(0xFF45494F);
+  static const Color casingColor = Color(0xFF280E4B);
+  static const Color color = Color(0xFF6419CF);
 
-  /// Zoom used before a map reports its camera (the middle step).
+  /// Zoom used before a map reports its camera (a city step).
   static const double defaultZoom = 14;
 
   /// The step a camera zoom falls in, as that step's representative zoom:
-  /// 10 (region, zoom < 11), 11 (city), 12 (part of a trip, zoom 12-12.9),
-  /// 14 (zoom 13-15) or 16 (street, zoom >= 16). Maps keep this value and
-  /// rebuild only when it changes.
-  static double stepZoom(double zoom) => zoom < 11
-      ? 10
-      : zoom < 12
-          ? 11
-          : zoom < 13
-              ? 12
-              : zoom < 16
-                  ? 14
-                  : 16;
+  /// 10 (region, zoom < 11), then one step per whole zoom level 11-14
+  /// (zoom 11-14.9), half levels 15, 15.5, 16, 16.5 close in, and 17
+  /// (street, zoom >= 17). Maps keep this value and rebuild only when it
+  /// changes, so the line widens one logical pixel per step.
+  static double stepZoom(double zoom) {
+    if (!zoom.isFinite || zoom < 11) return 10;
+    if (zoom >= 17) return 17;
+    if (zoom < 15) return zoom.floorToDouble();
+    return (zoom * 2).floorToDouble() / 2;
+  }
 
   /// Visible line width (the casing) at [zoom]; the core sits inside it.
-  /// Polyline widths are whole logical pixels, so the 10.5 pt middle step
-  /// rounds to 11.
-  static int widthAt(double zoom) => zoom < 12 ? 9 : zoom < 16 ? 11 : 12;
+  /// About 6 pt at overview / region (zoom <= 11), 8 at city (13), 9 at
+  /// 14, 12 at street (16) and 14 from zoom 17: one pixel per step, so a
+  /// zoom never makes the line jump. Polyline widths are whole pixels.
+  static int widthAt(double zoom) {
+    final step = stepZoom(zoom);
+    if (step <= 11) return 6;
+    if (step <= 15) return step.round() - 5;
+    return (10 + (step - 15) * 2).round();
+  }
 
   /// Core width at [zoom]: the casing minus a 1.5 pt outline on each side.
   static int coreWidthAt(double zoom) => widthAt(zoom) - 3;

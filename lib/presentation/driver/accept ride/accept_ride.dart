@@ -1216,7 +1216,7 @@ class _AcceptRideState extends State<AcceptRide>
                     blockGestures: _blockMapGestures,
                     initialTarget: _driverPosition,
                     onCameraMove: _onCameraMoveListener,
-                    onCameraIdle: () => _cameraPort?.onIdle(),
+                    onCameraIdle: () { _cameraPort?.onIdle(); _camera.browseSettled(); },
                     onUserGesture: () {
                       _rebuild(_camera.userGesture);
                       if (!MediaQuery.disableAnimationsOf(context)) {

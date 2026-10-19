@@ -61,6 +61,41 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('map style swaps park green when the zoom crosses 12.5', (
+    tester,
+  ) async {
+    final original = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
+    final zooms = <double>[];
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(body: CustomGoogleMap(
+        myLocationEnabled: false,
+        initialPosition: const CameraPosition(target: LatLng(59.3, 18), zoom: 11),
+        onCameraMove: (p) => zooms.add(p.zoom),
+      )),
+    ));
+    await tester.pump();
+    String style() => tester.widget<GoogleMap>(find.byType(GoogleMap)).style!;
+    Future<void> move(double zoom) async {
+      tester.widget<GoogleMap>(find.byType(GoogleMap)).onCameraMove!(
+        CameraPosition(target: const LatLng(59.3, 18), zoom: zoom),
+      );
+      await tester.pump();
+    }
+    expect(style(), moveraMapStyleFar);
+    await move(12.55);
+    expect(style(), moveraMapStyleFar, reason: 'hysteresis: not yet near');
+    await move(15);
+    expect(style(), moveraMapStyleNear);
+    await move(12.45);
+    expect(style(), moveraMapStyleNear, reason: 'hysteresis: not yet far');
+    await move(11);
+    expect(style(), moveraMapStyleFar);
+    expect(zooms, [12.55, 15, 12.45, 11], reason: 'caller still gets moves');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('no native web zoom buttons while pinch and pan stay enabled',
       (tester) async {
     final original = GoogleMapsFlutterPlatform.instance;

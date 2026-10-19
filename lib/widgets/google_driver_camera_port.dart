@@ -14,7 +14,8 @@ import 'driver_map_web_bridge_stub.dart'
 ///
 /// The logical pose (vehicle at the camera target) is never replaced by the
 /// web anchor shift. That shift is applied inside the same Maps update.
-class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
+class GoogleDriverCameraPort
+    implements DriverCameraPort, DriverCameraFraming, DriverCameraTilting {
   GoogleDriverCameraPort(
     this.controller, {
     this.reducedMotion = false,
@@ -400,6 +401,56 @@ class GoogleDriverCameraPort implements DriverCameraPort, DriverCameraFraming {
       rethrow;
     }
   }
+
+  @override
+  double? get currentZoom => _logical?.zoom;
+
+  @override
+  double? get currentTilt => _logical?.tilt;
+
+  /// Tilts the map where the driver left it (same target, zoom and
+  /// heading) in one short eased move. A flat map only keeps the tilt as
+  /// the camera's own, for the next follow frame.
+  @override
+  Future<void> tiltTo(double tilt) async {
+    final from = _logical;
+    if (_disposed || from == null) return;
+    interrupt();
+    final generation = _generation;
+    final to = CameraPosition(
+      target: from.target,
+      zoom: from.zoom,
+      bearing: from.bearing,
+      tilt: tilt,
+    );
+    if (!_threeD || reducedMotion) {
+      if (_threeD) {
+        await _move(to,
+            trackVehicle: false, generation: generation, anchored: false);
+      }
+      if (!_disposed && generation == _generation) _logical = to;
+      return;
+    }
+    _producingFrames = true;
+    try {
+      final started = DateTime.now();
+      while (true) {
+        final t = (DateTime.now().difference(started).inMicroseconds /
+                tiltFlight.inMicroseconds)
+            .clamp(0.0, 1.0);
+        final e = t * t * (3 - 2 * t);
+        await _move(_blend(from, to, e),
+            trackVehicle: false, generation: generation, anchored: false);
+        if (_disposed || generation != _generation || t >= 1) break;
+        await _sleep(const Duration(milliseconds: 16));
+      }
+    } finally {
+      if (generation == _generation) _producingFrames = false;
+    }
+  }
+
+  /// The tilt following a driver's own zoom eases in this long.
+  static const Duration tiltFlight = Duration(milliseconds: 350);
 
   static CameraPosition _blend(CameraPosition a, CameraPosition b, double t) =>
       CameraPosition(

@@ -17,23 +17,28 @@ void main() {
     for (final color in MoveraMapPalette.all) {
       expect(moveraMapStyle, contains(MoveraMapPalette.hex(color)));
     }
-    expect(MoveraMapPalette.hex(MoveraMapPalette.land), '#FAFCFA');
-    expect(MoveraMapPalette.hex(MoveraMapPalette.building), '#E1E4E5');
-    expect(MoveraMapPalette.hex(MoveraMapPalette.park), '#C8F0CC');
-    expect(MoveraMapPalette.hex(MoveraMapPalette.parkLabel), '#3D8549');
-    expect(MoveraMapPalette.hex(MoveraMapPalette.water), '#ADE2FC');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.land), '#F8FAF8');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.building), '#DDDEE0');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.park), '#B6EFC2');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.parkFar), '#D8F5DF');
+    expect(moveraMapStyleFar, contains('#D8F5DF'));
+    expect(MoveraMapPalette.hex(MoveraMapPalette.parkLabel), '#14793A');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.water), '#95DFFF');
     expect(MoveraMapPalette.hex(MoveraMapPalette.path), '#DBD3B2');
-    expect(MoveraMapPalette.hex(MoveraMapPalette.road), '#C8CCD0');
-    expect(MoveraMapPalette.hex(MoveraMapPalette.mainRoad), '#A1A6AB');
-    expect(MoveraMapPalette.hex(MoveraMapPalette.highway), '#8A8F96');
-    expect(MoveraMapPalette.hex(MoveraMapPalette.label), '#575C60');
-    expect(MoveraMapPalette.hex(MoveraMapPalette.cityLabel), '#6F8B9D');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.road), '#CACFD2');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.mainRoad), '#ACB1B6');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.highway), '#ACB1B6');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.label), '#4D4F51');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.cityLabel), '#5E7F90');
   });
 
   test('the palette is the cloud style linked to the web Map ID', () {
-    // Same colours as the v3 cloud style (Google "variant/styles" format).
-    final cloud = File('docs/movera_map_style_v3.json').readAsStringSync();
-    for (final color in [...MoveraMapPalette.all, MoveraMapPalette.path]) {
+    // Same colours as the cloud style for the Map ID (reference palette).
+    // Footpaths are drawn maps only, so the cloud style has no path colour.
+    final cloud = File(
+      'docs/movera_driver_map_style.json',
+    ).readAsStringSync().toUpperCase();
+    for (final color in MoveraMapPalette.all) {
       expect(cloud, contains(MoveraMapPalette.hex(color)));
     }
   });
