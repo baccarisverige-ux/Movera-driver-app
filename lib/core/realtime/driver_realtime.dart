@@ -55,14 +55,8 @@ class DriverRealtimeSequenceGate {
 
   bool _isTerminal(DriverRealtimeEvent event) {
     if (event.kind == DriverRealtimeKind.riderCancelled) { return true; }
-    final status = event.status;
-    return status == TripStatus.completed ||
-        status == TripStatus.cancelledByRider ||
-        status == TripStatus.cancelledByDriver ||
-        status == TripStatus.cancelledByAdmin ||
-        status == TripStatus.noShow ||
-        status == TripStatus.expired ||
-        status == TripStatus.failed;
+    // One terminal set: contract.json#tripStatus.terminal.
+    return event.status?.isTerminal ?? false;
   }
 }
 

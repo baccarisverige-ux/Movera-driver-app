@@ -1,4 +1,5 @@
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/contracts/trip_transitions.dart';
 
 import 'dart:convert';
 
@@ -194,7 +195,9 @@ class PrefsActiveRideRepository
     DateTime? occurredAt,
     bool authoritative = false,
   }) => _enqueue(() async {
-    if (!status.isTerminal) {
+    // A driver cancel before pickup hands the trip back to dispatch
+    // (contract v0.3): it is over for this phone, so it is marked too.
+    if (!status.endsDriverTrip) {
       throw ArgumentError('Terminal status required');
     }
     final prefs = await _load();
@@ -206,7 +209,7 @@ class PrefsActiveRideRepository
         ? existing.first
         : [
             tripId,
-            status.name,
+            status.wireName,
             reasonCode ?? '',
             actor ?? '',
             at.toIso8601String(),

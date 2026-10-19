@@ -15,7 +15,7 @@ void main() {
  final prefs=await SharedPreferences.getInstance();
  final markers=prefs.getStringList(PrefsActiveRideRepository.terminalKey) ?? const <String>[];
  expect(markers.where((item)=>item.startsWith('cancel-A|')),hasLength(1));
- expect(markers.single,contains('|cancelledByDriver|unsafe_pickup|driver|'));
+ expect(markers.single,contains('|cancelled_by_driver|unsafe_pickup|driver|'));
  expect(await active.read(),isNull);
  });
 

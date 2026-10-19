@@ -67,6 +67,8 @@ dev_dependencies:
   shared_preferences_platform_interface: ^2.4.1
   flutter_test:
     sdk: flutter
+  # test/contract/contract_copy_test.dart: sha256 of contracts/ files.
+  crypto: ^3.0.6
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

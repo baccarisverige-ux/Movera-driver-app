@@ -6,6 +6,7 @@ import 'package:movera/core/storage/local_write_session.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
@@ -97,7 +98,8 @@ class CompletionJournal {
     final payload = {
       'schemaVersion': 2,
       'tripId': record.tripId,
-      'status': status.name,
+      // Contract wire name (v0.3). Older saves used camelCase; both parse.
+      'status': status.wireName,
       'authoritative': authoritative,
       'completedAt': terminalAt.toIso8601String(),
       'record': {
@@ -113,9 +115,10 @@ class CompletionJournal {
         // R8-4: the cash taken, which can differ from the fare.
         if (cashCollected != null) 'cashCollected': cashCollected,
       },
-      if (cancellationReasonCode != null)
+      if (cancellationReasonCode != null || cancellationActor != null)
         'cancellation': {
-          'reasonCode': cancellationReasonCode,
+          if (cancellationReasonCode != null)
+            'reasonCode': cancellationReasonCode,
           'actor': cancellationActor ?? 'unknown',
         },
       if (next != null) 'next': next.toJson(),
@@ -269,6 +272,9 @@ class CompletionJournal {
     TripStatus.cancelledByRider => 'Cancelled by rider',
     TripStatus.cancelledByDriver => 'Cancelled by driver',
     TripStatus.cancelledByAdmin => 'Cancelled by Movera',
+    TripStatus.cancelledBySystem => 'Cancelled by Movera',
+    TripStatus.searching ||
+    TripStatus.requested => 'Cancelled by driver · reassigned',
     TripStatus.noShow => 'Rider no-show',
     TripStatus.expired => 'Expired',
     TripStatus.failed => 'Failed',
@@ -309,8 +315,13 @@ class _DecodedJournal {
     if (id is! String || id.trim().isEmpty) {
       throw const FormatException('Journal trip ID missing');
     }
-    final status = TripStatus.values.byName(data['status'] as String);
-    if (!status.isTerminal) {
+    final status = TripStatusWire.parse(data['status'] as String);
+    final cancellation = data['cancellation'];
+    final releasedByDriver =
+        status.isReleasedToDispatch &&
+        cancellation is Map &&
+        cancellation['actor'] == 'driver';
+    if (!status.isTerminal && !releasedByDriver) {
       throw const FormatException('Invalid terminal journal');
     }
     final record = Map<String, dynamic>.from(data['record'] as Map);

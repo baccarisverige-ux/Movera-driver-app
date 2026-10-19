@@ -250,8 +250,8 @@ extension _AcceptRideSheet on _AcceptRideState {
     }
 
     /// Drops the secured next trip; the current trip goes on. The next trip
-    /// goes back to dispatch (demo: it is dropped). It is kept in history as
-    /// cancelled by the driver with its reason, so it counts like any other
+    /// goes back to dispatch (`searching`; demo: it is dropped). It is kept in
+    /// history as a driver cancel with its reason, so it counts like any other
     /// driver cancel unless the reason doesn't count.
     void _cancelNextTrip(_TripCancellationReason reason) {
       final offer = _nextTripRadarOffer;
@@ -272,7 +272,12 @@ extension _AcceptRideSheet on _AcceptRideState {
           PrefsTripHistoryRepository()
               .archive(
                 record,
-                status: TripStatus.cancelledByDriver,
+                // Contract v0.3: the queued trip goes back to dispatch.
+                status: TripTransitions.apply(
+                  TripStatus.accepted,
+                  TripCommand.cancel,
+                  TripActor.driver,
+                ),
                 cancellationActor: 'driver',
                 cancellationReasonCode: reason.code,
               )

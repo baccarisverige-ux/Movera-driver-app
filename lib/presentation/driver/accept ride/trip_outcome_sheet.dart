@@ -20,6 +20,10 @@ const Color _muted = Color(0xFF6D797F);
         title: 'Trip cancelled by Movera',
         body: 'Movera cancelled this trip. Stop in a safe place before leaving this screen.',
       ),
+      TripStatus.cancelledBySystem => (
+        title: 'Trip cancelled by Movera',
+        body: 'Movera closed this trip. Stop in a safe place before leaving this screen.',
+      ),
       TripStatus.cancelledByDriver => (
         title: 'Trip cancelled',
         body: 'This trip was cancelled from your account.',

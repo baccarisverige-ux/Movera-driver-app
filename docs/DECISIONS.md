@@ -11,7 +11,7 @@ change Driver or Rider screens.
 | Trip identifier | `tripId` | Neutral to Rider `rideId` and Driver `offerId`/`tripId`. Rider rename is R4 (later). |
 | Trip lifecycle | `TripStatus` | See enum below. Payment and rating are **not** trip states. |
 | Currency code | `SEK` | ISO 4217. Minor units are öre integers. |
-| Vehicle categories | `economy`, `comfort`, `premium`, `priority`, `xl`, `electric`, `pet` | Rider catalog ids. Admin's 3-value USD list must extend, not shrink this. |
+| Vehicle categories | `economy`, `comfort`, `premium`, `priority`, `xl`, `electric`, `pet` | Contract seed ids (`contracts/contract.json#categories`); ids come from the admin Pricing catalog, which may add more. `movera` is a read-only alias of `economy` for one release. The driver app still shows its display names ("Movera", "Movera XL") and maps them with `CategoryCatalog` (`lib/core/contracts/category_catalog.dart`); "Booster Seat" is an extra, not a category. |
 
 ### TripStatus
 
@@ -21,7 +21,9 @@ Happy path:
 
 Terminal:
 
-`cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `no_show` · `expired` · `failed`
+`completed` · `cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `cancelled_by_system` · `no_show` · `expired` · `failed`
+
+The source of truth is now `contracts/contract.json` (v0.3.0, copied byte-for-byte; see "Contract v0.3" below).
 
 Driver `ActiveRideStage` maps onto the live slice only:
 
@@ -72,7 +74,7 @@ D7 — History detail takes a `TripHistoryRecord`. Tapping a history card opens 
 
 D8 / D9 — `DriverRealtime` is a sequence-numbered envelope. `riderCancelled` is a kind on that envelope. Screens do not subscribe yet.
 
-P5 — Same envelope shape as Rider's `RideRealtimeEvent` (`tripId`, `sequence`, reconnect replay).
+P5 — ~~Same envelope shape as Rider's `RideRealtimeEvent`~~. This was not true: the Driver and Rider envelopes differed (fields, status type, kinds). Both apps now target the one envelope in `contracts/contract.json#realtime` (`eventId, tripId, sequence, version, kind, occurredAt, serverTime` + optional `projection, location, etaSeconds, cancelFee, message`).
 
 ## Active ride crash recovery (Safari / PWA)
 
@@ -95,3 +97,13 @@ Fix (no UX change, no lifecycle change):
 - Stage changes update copy, slide label and markers in place. GPS, map, overlays and sheet position stay mounted.
 - Waiting and on-trip transitions do not re-fit the camera or flash `Routing…`. First map create and crash-restore may still fit.
 
+
+## Contract v0.3 (19 October 2026)
+
+`contracts/` holds the shared Movera contract v0.3.0 for Rider, Driver and Admin. It is copied byte-for-byte; `test/contract/contract_copy_test.dart` checks it against `contracts/CHECKSUMS`. Change it upstream and re-sync, never here. `docs/contracts/openapi.yaml` is now only a pointer to `contracts/openapi.yaml`.
+
+- `TripStatus` has 19 values incl. `cancelled_by_system`; one terminal set. Local storage (journal, history, terminal markers) writes the wire name and still reads older camelCase saves (`TripStatusWire.parse`).
+- `TripTransitions` (`lib/core/contracts/trip_transitions.dart`) mirrors `contract.json#transitions`; contract tests replay `fixtures/scenarios.json`. `ActiveRideController` checks every local stage change against it.
+- Driver no-show is `no_show` (it was saved as `cancelled_by_driver` + `rider_no_show`).
+- A driver cancel before the rider is on board does not end the trip: it goes back to dispatch (`searching`; a reservation goes back to `requested`). On this phone the trip is over all the same, so local records keep that status with the driver's cancel reason. After the rider is on board a driver cancel is `cancelled_by_driver`.
+- `CancelReasonCode` (`lib/core/contracts/cancel_reason_code.dart`) is the contract's code registry; `DriverTripGateway` is typed with it, `expectedVersion` and an idempotency key (interface only; no network).

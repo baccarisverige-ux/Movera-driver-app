@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 
 export 'package:movera/core/ride/active_ride_repository.dart'
     show ActiveRideStage;
+export 'package:movera/core/contracts/trip_transitions.dart'
+    show TripCommand, TripKind;
 
 /// Single source of truth for the lifecycle stage of one active ride.
 ///
@@ -16,13 +19,21 @@ class ActiveRideController extends ChangeNotifier {
     ActiveRideRepository? repository,
     ActiveRideStage initialStage = ActiveRideStage.headingToPickup,
     this.snapshotBuilder,
+    this.kind = TripKind.live,
   }) : _repository = repository ?? MemoryActiveRideRepository(),
        _stage = initialStage;
 
   final String? tripId;
+
+  /// Live trip or reservation; picks the contract's driver-cancel row.
+  final TripKind kind;
   final ActiveRideRepository _repository;
   PersistedActiveRide Function(ActiveRideStage stage)? snapshotBuilder;
   ActiveRideStage _stage;
+
+  /// The contract status at which the trip left this driver: a terminal
+  /// status, or `searching` / `requested` after a driver cancel before the
+  /// rider was on board (the trip goes back to dispatch).
   TripStatus? _terminalStatus;
 
   ActiveRideStage get stage => _stage;
@@ -31,12 +42,30 @@ class ActiveRideController extends ChangeNotifier {
   bool get cancelled =>
       _terminalStatus == TripStatus.cancelledByRider ||
       _terminalStatus == TripStatus.cancelledByDriver ||
-      _terminalStatus == TripStatus.cancelledByAdmin;
+      _terminalStatus == TripStatus.cancelledByAdmin ||
+      _terminalStatus == TripStatus.cancelledBySystem ||
+      (_terminalStatus?.isReleasedToDispatch ?? false);
+
+  /// True once the trip is no longer this driver's (terminal or released).
   bool get terminal => _terminalStatus != null;
 
-  /// Canonical P1 status derived from the live stage and terminal outcome.
+  /// True when a driver cancel handed the trip back to dispatch.
+  bool get releasedToDispatch => _terminalStatus?.isReleasedToDispatch ?? false;
+
+  /// Canonical status derived from the live stage and terminal outcome.
   /// Does not replace [ActiveRideStage] in UI.
   TripStatus get tripStatus => _terminalStatus ?? _stage.tripStatus;
+
+  /// Where a driver [command] would take the trip from the current stage
+  /// (`contract.json#transitions`), or null when the contract rejects it.
+  TripStatus? driverTarget(TripCommand command) => terminal
+      ? null
+      : TripTransitions.target(
+          tripStatus,
+          command,
+          TripActor.driver,
+          kind: kind,
+        );
 
   Future<bool> transitionTo(ActiveRideStage next) async {
     if (_disposed || terminal || saving) {
@@ -46,11 +75,21 @@ class ActiveRideController extends ChangeNotifier {
       return true;
     }
 
-    final allowed = switch (_stage) {
-      ActiveRideStage.headingToPickup =>
-        next == ActiveRideStage.waitingForRider,
-      ActiveRideStage.waitingForRider => next == ActiveRideStage.onTrip,
-      ActiveRideStage.onTrip => false,
+    // The driver app folds `board` + `start_trip` into one slide: both rows
+    // must allow it. Pickup → Waiting is `arrive`.
+    final allowed = switch ((_stage, next)) {
+      (ActiveRideStage.headingToPickup, ActiveRideStage.waitingForRider) =>
+        driverTarget(TripCommand.arrive) == TripStatus.arrived,
+      (ActiveRideStage.waitingForRider, ActiveRideStage.onTrip) =>
+        driverTarget(TripCommand.board) == TripStatus.riderOnboard &&
+            TripTransitions.target(
+                  TripStatus.riderOnboard,
+                  TripCommand.startTrip,
+                  TripActor.driver,
+                  kind: kind,
+                ) ==
+                next.tripStatus,
+      _ => false,
     };
 
     if (!allowed) {
@@ -107,29 +146,56 @@ class ActiveRideController extends ChangeNotifier {
   }
 
   Future<bool> complete({bool clearSnapshot = true}) async {
-    if (_disposed || terminal || saving || _stage != ActiveRideStage.onTrip) {
+    if (_disposed ||
+        terminal ||
+        saving ||
+        driverTarget(TripCommand.complete) != TripStatus.completed) {
       return false;
     }
-    if (clearSnapshot) {
-      return _write(
-        () => _finish(TripStatus.completed),
-        commit: () => _terminalStatus = TripStatus.completed,
-      );
-    }
-    _terminalStatus = TripStatus.completed;
-    if (!_disposed) {
-      notifyListeners();
-    }
-    return true;
+    return _end(TripStatus.completed, clearSnapshot: clearSnapshot);
   }
 
-  Future<bool> cancel({
-    TripStatus status = TripStatus.cancelledByDriver,
-    bool clearSnapshot = true,
-  }) async {
-    if (_disposed || terminal || saving || !_isCancellationTerminal(status)) {
+  /// Ends the trip for this driver with a cancel.
+  ///
+  /// Without [status] this is the driver's own cancel: the contract decides
+  /// the outcome from the stage (`searching`/`requested` before the rider is
+  /// on board, `cancelled_by_driver` after). An explicit [status] (another
+  /// actor's cancel) must be reachable from the current status by some
+  /// contract row, or it is rejected.
+  Future<bool> cancel({TripStatus? status, bool clearSnapshot = true}) async {
+    if (_disposed || terminal || saving) {
       return false;
     }
+    final to = status ?? driverTarget(TripCommand.cancel);
+    if (to == null ||
+        to == TripStatus.completed ||
+        !to.endsDriverTrip ||
+        !_reachable(to)) {
+      return false;
+    }
+    return _end(to, clearSnapshot: clearSnapshot);
+  }
+
+  /// Driver no-show at pickup (`no_show`, from `arrived` only). The waiting
+  /// guard (`noShowAfterMin`) is the caller's.
+  Future<bool> noShow({bool clearSnapshot = true}) async {
+    if (_disposed ||
+        terminal ||
+        saving ||
+        driverTarget(TripCommand.noShow) != TripStatus.noShow) {
+      return false;
+    }
+    return _end(TripStatus.noShow, clearSnapshot: clearSnapshot);
+  }
+
+  bool _reachable(TripStatus to) => TripTransitions.table.any(
+    (row) =>
+        row.to == to &&
+        row.from.contains(tripStatus) &&
+        (row.when == null || row.when == kind),
+  );
+
+  Future<bool> _end(TripStatus status, {required bool clearSnapshot}) async {
     if (clearSnapshot) {
       return _write(
         () => _finish(status),
@@ -141,12 +207,6 @@ class ActiveRideController extends ChangeNotifier {
       notifyListeners();
     }
     return true;
-  }
-
-  bool _isCancellationTerminal(TripStatus status) {
-    return status == TripStatus.cancelledByRider ||
-        status == TripStatus.cancelledByDriver ||
-        status == TripStatus.cancelledByAdmin;
   }
 
   Future<void> _finish(TripStatus status) async {

@@ -1,4 +1,5 @@
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 
@@ -65,7 +66,14 @@ class RideOffer {
       );
 
   final String id;
+
+  /// Display name, e.g. "Movera XL". See [categoryId] for the wire id.
   final String category;
+
+  /// Contract category id (`economy`, `xl`, …) for [category], or null when
+  /// the name is not a category.
+  String? get categoryId => CategoryCatalog.idForLabel(category);
+
   final String fare;
   final String rating;
   final int pickupMinutes;

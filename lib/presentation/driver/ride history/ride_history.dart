@@ -1,6 +1,7 @@
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -921,7 +922,7 @@ class _HistoryRideCard extends StatelessWidget {
                 ),
                 SizedBox(width: 6),
                 Text(
-                  ride.status == TripStatus.completed ? 'Completed' : ride.status.wireName,
+                  ride.status == TripStatus.completed ? 'Completed' : ride.status.isReleasedToDispatch ? 'cancelled_by_driver' : ride.status.wireName,
                   style: TextStyle(
                     color: Color(0xFF5F6B72),
                     fontSize: 9.5,
