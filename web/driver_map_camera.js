@@ -16,7 +16,7 @@
   const touchPose = touches => {
     const a = touches[0], b = touches[1] || a;
     return {x: (a.clientX + b.clientX) / 2,
-      y: (a.clientY + b.clientY) / 2,
+      y: (a.clientY + b.clientY) / 2, ay: a.clientY, by: b.clientY,
       span: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
       angle: Math.atan2(b.clientY - a.clientY, b.clientX - a.clientX) * 180 / Math.PI};
   };
@@ -76,13 +76,27 @@
       new sdk.Point(center.x - dx, center.y - dy));
     if (target) state.map.moveCamera({center: target});
   }
+  // Tilt follows zoom on every driver map (DriverCameraPolicy.tiltForZoom
+  // in Dart; keep both in step): 0 deg at zoom 12, then proportional to
+  // zoom up to 67.5 deg at zoom 16, under the SDKs' own per-zoom limit.
+  const MAX_TILT = 67.5;
+  const sdkMaxTilt = zoom => zoom <= 10 ? 30 : zoom <= 14 ?
+    30 + (zoom - 10) / 4 * 15 : zoom < 15.5 ?
+    45 + (zoom - 14) / 1.5 * (MAX_TILT - 45) : MAX_TILT;
+  const tiltForZoom = zoom => Number.isFinite(zoom) ?
+    Math.min(MAX_TILT * clamp((zoom - 12) / 4, 0, 1), sdkMaxTilt(zoom)) : 0;
+  // A zoom step carries the tilt along the curve in the same camera move,
+  // so the horizon rises as the driver zooms in and flattens as they zoom
+  // out, frame by frame. A tilt the driver set by hand is kept as an offset.
+  const tiltWithZoom = (tilt, from, to) => clamp(
+    tilt + tiltForZoom(to) - tiltForZoom(from), 0, sdkMaxTilt(to));
   // Raster tiles stop at about z18; closer, Google upscales them into giant
   // blurry street names. A vector map draws crisp at any zoom: no cap there.
   const RASTER_MAX_ZOOM = 18;
   function install(map, div, id, cloud) {
     const state = {map, div, top: 0, bottom: 0, anchor: .5,
       callbacks: new Set(), rendererCallbacks: new Set(), heading: 0, car: null, claim: false, anchorToken: 0,
-      gesturesEnabled: true, lead: null, anchored: false};
+      gesturesEnabled: true, lead: null, anchored: false, tiltFollowsZoom: true};
     const rendererListener = map.addListener?.('renderingtype_changed', () => {
       applyZoomCap();
       state.rendererCallbacks.forEach(callback => callback());
@@ -172,6 +186,7 @@
     state.setGesturesEnabled = enabled => {
       state.gesturesEnabled = !!enabled;
       if (!enabled) {
+        state.stopWheel?.();
         previous = null; pointerOrigin = null;
         touchReleased = false; pointerReleased = false;
         multiTouchMoved = false;
@@ -198,6 +213,9 @@
       const current = Number(map.getZoom());
       if (!Number.isFinite(current)) return;
       const next = clamp(current + amount, 3, 21);
+      if (supports3D() && state.tiltFollowsZoom && !('tilt' in camera)) {
+        camera = {...camera, tilt: tiltWithZoom(map.getTilt() || 0, current, next)};
+      }
       map.moveCamera({...camera, zoom: next});
       let panX = gestureX, panY = gestureY;
       const width = div.clientWidth, height = div.clientHeight;
@@ -247,7 +265,49 @@
     div.addEventListener('pointerup', clearPointer, {capture: true});
     div.addEventListener('pointercancel', clearPointer, {capture: true});
     div.addEventListener('dblclick', release, {capture: true});
-    div.addEventListener('wheel', release, {capture: true, passive: true});
+    // Wheel / trackpad zoom. A flat (raster) map keeps Google's own wheel
+    // zoom. On a vector map Google's wheel animation would zoom with a
+    // fixed tilt (and reset a tilt set meanwhile), so this layer zooms
+    // instead: a short glide toward the wheel's goal, about the cursor,
+    // with the tilt bound to the zoom on every frame.
+    let wheelGoal = null, wheelPoint = null, wheelFrame = 0, wheelSet = null;
+    const stopWheel = () => {
+      if (wheelFrame) globalThis.cancelAnimationFrame?.(wheelFrame);
+      wheelFrame = 0; wheelGoal = null; wheelSet = null;
+    };
+    state.stopWheel = stopWheel;
+    const wheelTick = () => {
+      wheelFrame = 0;
+      const current = Number(map.getZoom());
+      // Someone else moved the camera (recenter), or Maps capped the zoom.
+      if (wheelGoal == null || !Number.isFinite(current) ||
+          (wheelSet != null && Math.abs(current - wheelSet) > .001)) {
+        stopWheel();
+        return;
+      }
+      const left = wheelGoal - current;
+      const step = Math.abs(left) < .01 ? left : left * .35;
+      zoomAt(step, wheelPoint.x, wheelPoint.y);
+      wheelSet = Number(map.getZoom());
+      if (Math.abs(left) < .01) { stopWheel(); return; }
+      wheelFrame = globalThis.requestAnimationFrame(wheelTick);
+    };
+    div.addEventListener('wheel', event => {
+      release();
+      if (!state.gesturesEnabled || !supports3D() ||
+          typeof globalThis.requestAnimationFrame !== 'function') return;
+      event.preventDefault(); event.stopImmediatePropagation();
+      const unit = event.deltaMode === 1 ? 33 : event.deltaMode === 2 ? 800 : 1;
+      const current = Number(map.getZoom());
+      if (!Number.isFinite(current)) return;
+      const step = clamp(-(event.deltaY || 0) * unit / 150, -1, 1);
+      wheelGoal = clamp((wheelGoal ?? current) + step, 3, 21);
+      wheelPoint = {x: event.clientX, y: event.clientY};
+      if (!wheelFrame) {
+        wheelSet = null;
+        wheelFrame = globalThis.requestAnimationFrame(wheelTick);
+      }
+    }, {capture: true, passive: false});
     // Own touch geometry so zoom + rotate can happen in the same gesture.
     // Mouse/keyboard gestures stay with Google Maps.
     div.addEventListener('touchstart', event => {
@@ -261,6 +321,7 @@
       }
       if (touchOnControl) return;
       event.preventDefault(); event.stopImmediatePropagation();
+      state.stopWheel?.();
       if (!previous) {
         startedAt = performance.now(); maxTouches = 0;
         travel = 0; touchReleased = false; multiTouchMoved = false;
@@ -299,14 +360,24 @@
           ? next.span / previous.span : 1;
         const zoomDelta = clamp(Math.log2(ratio), -0.4, 0.4);
         const vertical = next.y - previous.y;
-        const tilting = Math.abs(vertical) > Math.abs(next.x - previous.x) &&
-          Math.abs(twist) < 2 && Math.abs(zoomDelta) < .03;
+        // Tilt follows zoom by itself; a hand tilt is only a deliberate
+        // two-finger drag: both fingers up (or both down) together, mostly
+        // vertical, with no pinch or twist in the frame. A pinch whose
+        // fingers drift vertically stays a zoom: hand tilt never takes a
+        // frame's zoom, and every other frame binds the tilt to the zoom.
+        const dyA = next.ay - previous.ay, dyB = next.by - previous.by;
+        const tilting = Math.sign(dyA) === Math.sign(dyB) &&
+          Math.min(Math.abs(dyA), Math.abs(dyB)) > 1 &&
+          Math.abs(vertical) > 2 * Math.abs(next.x - previous.x) &&
+          Math.abs(twist) < 2 && Math.abs(zoomDelta) < .01;
         // Zoom about the *previous* focal point; the midpoint translation
         // below then carries that road point to the fingers' new position.
+        // A vertical two-finger drag tilts by hand; any other two-finger
+        // move zooms with the tilt bound to the zoom (see zoomAt).
         zoomAt(zoomDelta, previous.x, previous.y,
           supports3D() ? {
             heading: ((map.getHeading() || 0) - twist + 360) % 360,
-            tilt: clamp((map.getTilt() || 0) - (tilting ? vertical * .3 : 0), 0, 67.5)
+            ...(tilting ? {tilt: clamp((map.getTilt() || 0) - vertical * .3, 0, 67.5)} : {})
           } : {},
           tilting ? 0 : next.x - previous.x,
           tilting ? 0 : next.y - previous.y);
@@ -512,6 +583,10 @@
     },
     gestures(id, enabled) {
       states.get(id)?.setGesturesEnabled(enabled);
+    },
+    // Waiting at a stop the map stays flat while the driver zooms it.
+    tiltFollowsZoom(id, enabled) {
+      const state = states.get(id); if (state) state.tiltFollowsZoom = !!enabled;
     },
     listen(id, callback) {
       const state = states.get(id); state?.callbacks.add(callback);

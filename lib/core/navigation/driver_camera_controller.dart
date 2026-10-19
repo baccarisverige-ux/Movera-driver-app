@@ -64,6 +64,12 @@ abstract interface class DriverCameraTilting {
   Future<void> tiltTo(double tilt);
 }
 
+/// A port whose map tilts with the zoom while the driver zooms it by hand
+/// (the web gesture layer). Off while waiting: that map stays flat.
+abstract interface class DriverCameraTiltBinding {
+  void bindTiltToZoom(bool enabled);
+}
+
 /// Geometry and maneuver-aware framing. Each route replacement resets progress.
 /// Preview an upcoming turn, close in at the maneuver, then recover to cruise.
 /// Guidance tilt follows zoom ([tiltForZoom]): flat over the city, tilted
@@ -89,8 +95,9 @@ class DriverCameraPolicy {
   /// Parked at the pickup or a paid stop.
   static const double waitingZoom = 17.2;
 
-  /// Guidance zoom at a standstill: the zoom the trip map opens at.
-  static const double guidanceStartZoom = 17.5;
+  /// Guidance zoom at a standstill: the zoom the trip map opens at. Wide
+  /// enough that the full tilt shows the road far toward the horizon.
+  static const double guidanceStartZoom = 16;
 
   /// Smoothed GPS speed: one noisy reading must not zoom the map.
   double? _speed;
@@ -125,10 +132,10 @@ class DriverCameraPolicy {
   }
 
   /// Zoom at or below which every driver map is flat (region overview).
-  static const double flatZoom = 11;
+  static const double flatZoom = 12;
 
   /// Zoom at or above which the map reaches [maxTilt].
-  static const double fullTiltZoom = 15;
+  static const double fullTiltZoom = 16;
 
   /// Strongest tilt the Google Maps SDKs accept (Android, iOS, JS vector).
   static const double maxTilt = 67.5;
@@ -143,36 +150,40 @@ class DriverCameraPolicy {
     return maxTilt;
   }
 
-  /// Tilt at [zoom] on every driver map: 0° at zoom <= [flatZoom], easing
-  /// smoothly (smoothstep) up to [maxTilt] at [fullTiltZoom], never above
-  /// [sdkMaxTilt]. Street guidance (16-17.5) is at the full 67.5°.
+  /// Tilt at [zoom] on every driver map: 0° at zoom <= [flatZoom], then
+  /// proportional to zoom (linear, about 17° per zoom level) up to [maxTilt]
+  /// at [fullTiltZoom], so every small pinch step changes the tilt. The line
+  /// stays under [sdkMaxTilt] everywhere (no clamp, no plateau); the min is
+  /// a guard. web/driver_map_camera.js applies the same curve live while
+  /// the driver pinches; keep both in step.
   static double tiltForZoom(double zoom) {
     if (!zoom.isFinite) return 0;
     final t = ((zoom - flatZoom) / (fullTiltZoom - flatZoom)).clamp(0.0, 1.0);
-    return math.min(maxTilt * t * t * (3 - 2 * t), sdkMaxTilt(zoom));
+    return math.min(maxTilt * t, sdkMaxTilt(zoom));
   }
 
   /// Turn preview: the closest zoom it aims for, and the most it may add to
   /// the cruise zoom, so a junction never races the map to its closest zoom.
-  static const double turnZoom = 17.3;
-  static const double maxTurnZoomIn = 0.75;
+  static const double turnZoom = 16.4;
+  static const double maxTurnZoomIn = 0.4;
 
   /// Last [arrivalMeters] before a stop: the zoom eases in gently toward
   /// [arrivalZoom] (never out) and the tilt eases to [arrivalTilt].
   static const double arrivalMeters = 140;
-  static const double arrivalZoom = 17;
+  static const double arrivalZoom = 16.5;
   static const double arrivalTilt = 60;
 
   static double zoomForSpeed(double speed) {
     // Step thresholds made the map zoom a whole level when GPS speed
-    // fluctuated near 20/50/80 km/h. Interpolate between the same approved
-    // slow, urban, fast-urban and highway framing levels instead.
-    // Speeds are metres per second; preserve the original framing anchors.
-    if (!speed.isFinite || speed <= 3) return 17.5;
-    if (speed >= 30) return 14.75;
-    if (speed <= 10) return 17.5 - (speed - 3) / 7;
-    if (speed <= 20) return 16.5 - (speed - 10) / 10;
-    return 15.5 - (speed - 20) * .075;
+    // fluctuated near 20/50/80 km/h. Interpolate between slow, urban,
+    // fast-urban and highway framing levels instead. Speeds are metres per
+    // second. The tilted map shows far ahead, so guidance stays wide:
+    // 16 at a standstill, 15.5 urban, 15 fast urban, 14.625 highway.
+    if (!speed.isFinite || speed <= 3) return guidanceStartZoom;
+    if (speed >= 30) return guidanceStartZoom - 1.375;
+    if (speed <= 10) return guidanceStartZoom - (speed - 3) / 14;
+    if (speed <= 20) return guidanceStartZoom - .5 - (speed - 10) / 20;
+    return guidanceStartZoom - 1 - (speed - 20) * .0375;
   }
 
   static double angleDelta(double from, double to) =>
@@ -213,7 +224,7 @@ class DriverCameraPolicy {
         : navigating
         ? (autoZoom
               ? _cruiseZoom(speed, immediate)
-              : (_previous?.zoom ?? 16.5))
+              : (_previous?.zoom ?? guidanceStartZoom))
         : exploreZoom;
     // Arrival blend toward [arrivalTilt]; 0 = tilt follows zoom.
     var arrival = 0.0;
@@ -268,7 +279,7 @@ class DriverCameraPolicy {
         }
         // The former 35 m arrival threshold snapped a fast-road camera
         // from highway zoom straight to a close-up view. Start easing well
-        // before arrival, finishing near and still tilted (45°) at the
+        // before arrival, finishing near and still tilted (60°) at the
         // actual endpoint, never flat.
         if (progress.remainingMeters < arrivalMeters) {
           final fraction = (1 - progress.remainingMeters / arrivalMeters)
@@ -410,6 +421,8 @@ class DriverCameraController {
     if (value) {
       _resumeTimer?.cancel();
       _resumeTimer = null;
+      // A tilt easing after the last pinch stops under the new finger.
+      if (mode == DriverCameraMode.browsing) _port?.interrupt();
     } else {
       _scheduleResume();
       if (_settleOnRelease) browseSettled();
@@ -449,6 +462,11 @@ class DriverCameraController {
   /// panned (on a trip or on Home). Once the map is let go, tilt it to match
   /// their zoom ([DriverCameraPolicy.tiltForZoom]), so a zoom out flattens
   /// it and a zoom in tilts it toward the horizon. Waiting stays flat.
+  /// Maps reports idle whenever the camera pauses, also under a finger
+  /// that holds a pinch: nothing moves until the map is let go ([touching]),
+  /// or the ease would pull the zoom back from under the driver's fingers.
+  /// (The web gesture layer already tilts with zoom live during a pinch, so
+  /// there this ease usually has nothing left to do.)
   void browseSettled() {
     if (_touching) {
       _settleOnRelease = true;
@@ -473,6 +491,13 @@ class DriverCameraController {
 
   bool _settleOnRelease = false;
 
+  void _bindTilt() {
+    final port = _port;
+    if (port is DriverCameraTiltBinding) {
+      (port as DriverCameraTiltBinding).bindTiltToZoom(!_waiting);
+    }
+  }
+
   void setAutoZoom(bool enabled) {
     _policy.autoZoom = enabled;
     _request();
@@ -488,6 +513,7 @@ class DriverCameraController {
     _port?.dispose();
     _port = port;
     _busy = false;
+    _bindTilt();
     _request(immediate: true);
   }
 
@@ -514,6 +540,7 @@ class DriverCameraController {
         navigating && !waiting && (!_navigating || _waiting);
     _navigating = navigating;
     _waiting = waiting;
+    _bindTilt();
     // Track car/route progress even while the viewport belongs to the driver.
     final pose = _policy.resolve(
       location: location,

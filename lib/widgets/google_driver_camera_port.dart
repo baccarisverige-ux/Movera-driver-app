@@ -15,7 +15,11 @@ import 'driver_map_web_bridge_stub.dart'
 /// The logical pose (vehicle at the camera target) is never replaced by the
 /// web anchor shift. That shift is applied inside the same Maps update.
 class GoogleDriverCameraPort
-    implements DriverCameraPort, DriverCameraFraming, DriverCameraTilting {
+    implements
+        DriverCameraPort,
+        DriverCameraFraming,
+        DriverCameraTilting,
+        DriverCameraTiltBinding {
   GoogleDriverCameraPort(
     this.controller, {
     this.reducedMotion = false,
@@ -403,6 +407,10 @@ class GoogleDriverCameraPort
   }
 
   @override
+  void bindTiltToZoom(bool enabled) =>
+      web.tiltFollowsZoom(controller.mapId, enabled);
+
+  @override
   double? get currentZoom => _logical?.zoom;
 
   @override
@@ -411,43 +419,63 @@ class GoogleDriverCameraPort
   /// Tilts the map where the driver left it (same target, zoom and
   /// heading) in one short eased move. A flat map only keeps the tilt as
   /// the camera's own, for the next follow frame.
+  ///
+  /// Maps reports idle between the ease's own frames, so the same request
+  /// arrives again while it runs: that one keeps the ease going instead of
+  /// restarting it (a restart re-accelerates from rest each time, which
+  /// stutters). A new tilt retargets it from where the tilt is now. Every
+  /// frame keeps the camera's latest target, zoom and heading: only the
+  /// tilt moves, so the ease can never pull zoom or position back.
   @override
   Future<void> tiltTo(double tilt) async {
     final from = _logical;
     if (_disposed || from == null) return;
+    final easing = _tiltEase;
+    if (easing != null && (easing.target - tilt).abs() < .5 &&
+        easing.generation == _generation) {
+      return easing.done.future;
+    }
     interrupt();
     final generation = _generation;
-    final to = CameraPosition(
-      target: from.target,
-      zoom: from.zoom,
-      bearing: from.bearing,
-      tilt: tilt,
+    CameraPosition at(CameraPosition base, double t) => CameraPosition(
+      target: base.target,
+      zoom: base.zoom,
+      bearing: base.bearing,
+      tilt: t,
     );
     if (!_threeD || reducedMotion) {
       if (_threeD) {
-        await _move(to,
+        await _move(at(from, tilt),
             trackVehicle: false, generation: generation, anchored: false);
       }
-      if (!_disposed && generation == _generation) _logical = to;
+      if (!_disposed && generation == _generation) _logical = at(from, tilt);
       return;
     }
+    final ease = _tiltEase = (target: tilt, generation: generation,
+        done: Completer<void>());
     _producingFrames = true;
     try {
       final started = DateTime.now();
+      final fromTilt = from.tilt;
       while (true) {
         final t = (DateTime.now().difference(started).inMicroseconds /
                 tiltFlight.inMicroseconds)
             .clamp(0.0, 1.0);
         final e = t * t * (3 - 2 * t);
-        await _move(_blend(from, to, e),
+        final base = _logical ?? from;
+        await _move(at(base, fromTilt + (tilt - fromTilt) * e),
             trackVehicle: false, generation: generation, anchored: false);
         if (_disposed || generation != _generation || t >= 1) break;
         await _sleep(const Duration(milliseconds: 16));
       }
     } finally {
       if (generation == _generation) _producingFrames = false;
+      if (identical(_tiltEase, ease)) _tiltEase = null;
+      ease.done.complete();
     }
   }
+
+  ({double target, int generation, Completer<void> done})? _tiltEase;
 
   /// The tilt following a driver's own zoom eases in this long.
   static const Duration tiltFlight = Duration(milliseconds: 350);

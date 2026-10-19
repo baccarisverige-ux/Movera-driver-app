@@ -58,8 +58,14 @@ class MarkerMock {
 const maps = {Map: MapMock, Marker: MarkerMock, OverlayView: OverlayMock,
   Point: class {constructor(x,y) {this.x=x;this.y=y;}}, RenderingType: {VECTOR: 'VECTOR', RASTER: 'RASTER'}};
 const images = [];
+const frames = [];
+const flushFrames = (max = 200) => {
+  for (let i = 0; i < max && frames.length; i++) frames.shift()?.();
+};
 const context = {google: {maps}, performance: {now: () => clock},
   queueMicrotask,
+  requestAnimationFrame: callback => { frames.push(callback); return frames.length; },
+  cancelAnimationFrame: () => { frames.length = 0; },
   document: {querySelector: () => ({content: 'configured-vector-style'}), body: new Element(), createElement: () => {
     const image = new Element(); images.push(image); return image;
   }},
@@ -398,6 +404,122 @@ div.fire('touchend', [], {target: mapSurface});
 remove(); const count = gestures; div.fire('pointerdown', [], mouse(100,100));
 div.fire('pointermove', [], mouse(120,100));
 assert.equal(gestures,count,'Disposed Flutter listener released');
+// Tilt follows zoom live: every pinch frame on a vector map moves zoom and
+// tilt together in one camera move (lib DriverCameraPolicy.tiltForZoom:
+// 0 deg at zoom 12, linear to 67.5 deg at zoom 16, under the SDK limit).
+{
+  const sdkMax = z => z <= 10 ? 30 : z <= 14 ? 30 + (z - 10) / 4 * 15 :
+    z < 15.5 ? 45 + (z - 14) / 1.5 * 22.5 : 67.5;
+  const curve = z => Math.min(67.5 * Math.min(1, Math.max(0, (z - 12) / 4)), sdkMax(z));
+  const liveDiv = new Element('plugins.flutter.io/google_maps_9');
+  context.document.querySelector = () => ({content: 'configured-vector-style'});
+  const live = new maps.Map(liveDiv, {});
+  assert.equal(api.supports3D(9), true);
+  live.moveCamera({center: {x: 0, y: 0}, zoom: 11.7, heading: 0, tilt: 0});
+  const trace = [];
+  const pinch = (from, to, steps) => {
+    clock += 400;
+    liveDiv.fire('touchstart', [touch(200 - from / 2, 400), touch(200 + from / 2, 400)]);
+    for (let i = 1; i <= steps; i++) {
+      const span = from + (to - from) * i / steps;
+      liveDiv.fire('touchmove', [touch(200 - span / 2, 400), touch(200 + span / 2, 400)]);
+      trace.push([live.getZoom(), live.getTilt()]);
+    }
+    liveDiv.fire('touchend');
+  };
+  pinch(60, 960, 60); // about 1 s of 16 ms frames, zooming in 4 levels
+  const zoomIn = trace.length;
+  pinch(960, 60, 60); // and back out
+  for (let i = 0; i < trace.length; i++) {
+    const [zoom, tilt] = trace[i];
+    assert.ok(Math.abs(tilt - curve(zoom)) < 1e-9,
+      `Pinch frame ${i}: tilt ${tilt} follows zoom ${zoom} live`);
+    if (i && i !== zoomIn) {
+      const [z0, t0] = trace[i - 1];
+      assert.ok(Math.sign(zoom - z0) === Math.sign(tilt - t0) ||
+        (zoom <= 12 && tilt === 0) || tilt === t0 && Math.abs(zoom - z0) < 1e-9,
+        `Pinch frame ${i}: tilt moves with the zoom`);
+    }
+  }
+  assert.ok(trace[zoomIn - 1][0] > 15.5 && trace[zoomIn - 1][1] > 59,
+    'Pinching in raises the horizon');
+  assert.ok(trace[trace.length - 1][0] < 12 && trace[trace.length - 1][1] === 0,
+    'Pinching out flattens');
+  // A tilt set by hand is kept as an offset while zooming.
+  live.moveCamera({zoom: 14, tilt: 40});
+  clock += 400;
+  liveDiv.fire('touchstart', [touch(150, 400), touch(250, 400)]);
+  liveDiv.fire('touchmove', [touch(140, 400), touch(260, 400)]);
+  liveDiv.fire('touchend');
+  assert.ok(Math.abs(live.getTilt() - (40 + curve(live.getZoom()) - curve(14))) < 1e-9,
+    'A hand-set tilt rides along with the zoom');
+  // Pinch while tilted, slowly, with both fingers drifting up the screen
+  // (a real thumb + finger pinch): every frame zooms by the span ratio and
+  // the tilt rides with the zoom. The hand-tilt mode cannot take it over.
+  live.moveCamera({zoom: 14, tilt: 60});
+  clock += 400;
+  let span = 200, mid = 500;
+  liveDiv.fire('touchstart', [touch(200 - span / 2, mid), touch(200 + span / 2, mid)]);
+  for (let i = 0; i < 40; i++) {
+    const zoom0 = live.getZoom(), tilt0 = live.getTilt();
+    const next = span * 1.012, nextMid = mid - 3;
+    liveDiv.fire('touchmove', [touch(200 - next / 2, nextMid), touch(200 + next / 2, nextMid)]);
+    assert.ok(Math.abs(live.getZoom() - (zoom0 + Math.log2(next / span))) < 1e-9,
+      `Slow tilted pinch frame ${i} zooms by the finger spread`);
+    assert.ok(Math.abs(live.getTilt() -
+      Math.min(Math.max(tilt0 + curve(live.getZoom()) - curve(zoom0), 0), sdkMax(live.getZoom()))) < 1e-9,
+      `Slow tilted pinch frame ${i}: tilt follows the zoom, not the drift`);
+    span = next; mid = nextMid;
+  }
+  liveDiv.fire('touchend');
+  assert.ok(live.getZoom() > 14.6, 'A slow pinch while tilted zooms');
+  // A deliberate two-finger drag (no pinch) still tilts by hand.
+  live.moveCamera({zoom: 15, tilt: 50});
+  clock += 400;
+  liveDiv.fire('touchstart', [touch(150, 500), touch(250, 500)]);
+  liveDiv.fire('touchmove', [touch(150, 480), touch(250, 480)]);
+  liveDiv.fire('touchend');
+  assert.equal(live.getTilt(), 56, 'Two-finger drag up tilts by hand');
+  assert.equal(live.getZoom(), 15, 'and keeps the zoom');
+  // Waiting at a stop: the map stays flat while the driver zooms.
+  api.tiltFollowsZoom(9, false);
+  live.moveCamera({zoom: 14, tilt: 0});
+  clock += 400;
+  liveDiv.fire('touchstart', [touch(150, 400), touch(250, 400)]);
+  liveDiv.fire('touchmove', [touch(120, 400), touch(280, 400)]);
+  liveDiv.fire('touchend');
+  assert.ok(live.getZoom() > 14.3 && live.getTilt() === 0, 'Waiting map zooms flat');
+  api.tiltFollowsZoom(9, true);
+  // Wheel / trackpad zoom glides with the tilt bound to the zoom.
+  let wheelGestures = 0;
+  const removeWheel = api.listen(9, () => wheelGestures++);
+  live.moveCamera({zoom: 12, tilt: 0});
+  const wheel = liveDiv.fire('wheel', [], {deltaY: -300, deltaMode: 0, clientX: 200, clientY: 400});
+  assert.equal(wheel.defaultPrevented, true, 'Vector wheel zoom is ours');
+  assert.equal(wheel.propagationStopped, true);
+  assert.equal(wheelGestures, 1, 'Wheel releases follow');
+  let lastZoom = live.getZoom(), lastTilt = live.getTilt(), glideFrames = 0;
+  while (frames.length && glideFrames < 200) {
+    frames.shift()(); glideFrames++;
+    assert.ok(live.getZoom() >= lastZoom && live.getTilt() >= lastTilt,
+      'Wheel glide zooms in and tilts up together');
+    assert.ok(Math.abs(live.getTilt() - curve(live.getZoom())) < 1e-9,
+      'Wheel glide frame keeps tilt on the zoom curve');
+    lastZoom = live.getZoom(); lastTilt = live.getTilt();
+  }
+  assert.ok(glideFrames > 3, 'Wheel zoom glides over several frames');
+  assert.ok(Math.abs(live.getZoom() - 13) < 1e-9, 'Wheel reaches its goal (at most 1 level per event)');
+  // Someone else moving the camera (recenter) ends the glide.
+  liveDiv.fire('wheel', [], {deltaY: 150, deltaMode: 0, clientX: 200, clientY: 400});
+  flushFrames(1);
+  live.moveCamera({zoom: 17, tilt: 67.5});
+  flushFrames();
+  assert.equal(live.getZoom(), 17, 'A wheel glide never fights a camera move');
+  removeWheel();
+  const rasterWheel = rasterDiv.fire('wheel', [], {deltaY: -300, deltaMode: 0});
+  assert.equal(rasterWheel.defaultPrevented, false, 'Raster keeps Google wheel zoom');
+  assert.equal(frames.length, 0);
+}
 map.moveCamera({center: {x:0,y:400}, zoom: 16, heading: 12, tilt: 30});
 api.claim(7);
 map.panTo({x:0,y:400});
@@ -438,7 +560,7 @@ queueMicrotask(() => {
         queueMicrotask(() => {
           api.configure(8, 100, 400, .72);
           assert.ok(panned && panned.y > 0, 'A raised sheet glides the followed car up');
-          console.log('PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, taps, anchor, look-ahead, sheet glide and vehicle overlay');
+          console.log('PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, live tilt-with-zoom, wheel glide, taps, anchor, look-ahead, sheet glide and vehicle overlay');
         });
       });
     });

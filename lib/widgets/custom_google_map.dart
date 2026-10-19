@@ -41,6 +41,11 @@ class CustomGoogleMap extends StatefulWidget {
 
   /// Fired only for physical drag/pinch/rotate/tilt/wheel input, never SDK moves.
   final VoidCallback? onUserGesture;
+
+  /// True while at least one finger (or button) is down on the map, false
+  /// once the last one lifts. The camera must not move under a finger:
+  /// Maps reports camera idle also while a pinch is held still.
+  final ValueChanged<bool>? onTouching;
   final EdgeInsets padding;
 
   /// Vertical screen anchor; .75 drives, clamped above sheet overlays.
@@ -75,6 +80,7 @@ class CustomGoogleMap extends StatefulWidget {
     this.onCameraMove,
     this.onCameraIdle,
     this.onUserGesture,
+    this.onTouching,
     this.padding = EdgeInsets.zero,
     this.cameraAnchor = .5,
     this.webCameraControlEnabled = false,
@@ -158,6 +164,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
       // down. Flutter may not send its original pointer-up through the newly
       // blocked platform view. Do not let that stale finger become a phantom
       // second pointer, or an earlier tap become a new double-tap zoom.
+      if (_pointerOrigins.isNotEmpty) widget.onTouching?.call(false);
       _pointerOrigins.clear();
       _gestureReported = false;
       _forgetTap();
@@ -211,6 +218,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               );
         }
         _pointerOrigins[event.pointer] = event.position;
+        if (_pointerOrigins.length == 1) widget.onTouching?.call(true);
         // A marker tap stays in Follow. A second simultaneous pointer
         // signals pinch/rotate, even if neither finger has moved yet.
         if (_pointerOrigins.length > 1) {
@@ -228,6 +236,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
       onPointerUp: (event) {
         final origin = _pointerOrigins.remove(event.pointer);
         if (origin == null || _pointerOrigins.isNotEmpty) return;
+        widget.onTouching?.call(false);
         if (_gestureReported || (event.position - origin).distance >= 6) {
           _forgetTap();
           return;
@@ -245,7 +254,10 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
         }
       },
       onPointerCancel: (event) {
-        _pointerOrigins.remove(event.pointer);
+        if (_pointerOrigins.remove(event.pointer) != null &&
+            _pointerOrigins.isEmpty) {
+          widget.onTouching?.call(false);
+        }
         _forgetTap();
       },
       onPointerSignal: (_) {
@@ -326,6 +338,8 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void dispose() {
     _mapsReadyPoll?.cancel();
     _removeWebGesture?.call();
+    // A map replaced under a finger must not leave the camera held.
+    if (_pointerOrigins.isNotEmpty) widget.onTouching?.call(false);
     // GoogleMap owns its platform controller. Avoid a second web disposal.
     _mapController = null;
     super.dispose();

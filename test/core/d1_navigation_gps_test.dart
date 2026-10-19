@@ -240,11 +240,11 @@ void main() {
     test('the curve: flat region view, SDK maximum at street zoom', () {
       double t(double z) => DriverCameraPolicy.tiltForZoom(z);
       expect(t(11), 0);
-      expect(t(12), closeTo(10.5, .1));
-      expect(t(13), closeTo(33.75, .1));
-      expect(t(14), 45); // Android/iOS allow 45 degrees at zoom 14.
-      expect(t(15), 60); // ... and 60 at zoom 15.
-      expect(t(15.5), 67.5);
+      expect(t(12), 0);
+      expect(t(13), closeTo(16.875, .01));
+      expect(t(14), closeTo(33.75, .01));
+      expect(t(15), closeTo(50.625, .01));
+      expect(t(16), 67.5);
       expect(t(16.5), 67.5);
       expect(t(17), 67.5);
       for (var z = 0.0; z <= 21; z += .05) {
@@ -257,7 +257,7 @@ void main() {
       final pose = DriverCameraPolicy().resolve(location: _fix(_origin));
       expect(pose.zoom, 11.7);
       expect(pose.bearing, 0);
-      expect(pose.tilt, closeTo(5.5, .3));
+      expect(pose.tilt, 0);
     });
 
     test('guidance cruise is at full tilt; arrival eases to 60; waiting flat',
@@ -271,7 +271,9 @@ void main() {
       final cruise = policy.resolve(
           location: _fix(_origin), route: road, navigating: true,
           immediate: true);
-      expect(cruise.tilt, greaterThanOrEqualTo(58));
+      // About 15.4 at 43 km/h: wide, with the horizon well up.
+      expect(cruise.zoom, closeTo(15.4, .1));
+      expect(cruise.tilt, greaterThanOrEqualTo(55));
       final arrival = DriverCameraPolicy().resolve(
           location: _fix(_east(_origin, 2000)), route: road, navigating: true,
           immediate: true);
