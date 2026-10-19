@@ -372,7 +372,8 @@ class _HomeOfferSheetState extends State<HomeOfferSheet>
   }
 }
 
-/// The small down arrow top-right of the request sheet: back to Home.
+/// The small round × top-right of the Exclusive and Reservation sheet
+/// (R15-2): back to Home.
 /// Null [onTap] while a claim is deciding.
 class ReservationCloseArrow extends StatelessWidget {
   const ReservationCloseArrow({
@@ -404,9 +405,9 @@ class ReservationCloseArrow extends StatelessWidget {
             height: size,
             child: Center(
               child: SvgPicture.asset(
-                AppAssets.solarAltArrowDown,
-                width: 18,
-                height: 18,
+                AppAssets.solarClose,
+                width: 16,
+                height: 16,
                 colorFilter: ColorFilter.mode(
                   onTap == null ? const Color(0xFFA2AAB0) : _ink,
                   BlendMode.srcIn,

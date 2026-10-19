@@ -52,12 +52,17 @@ void main() {
       (l) => l.polylineId.value == OfferRouteLine.coreId,
     );
     expect(outline.color, const Color(0xFF000000));
-    expect(outline.width, 15);
+    expect(outline.width, 8);
     expect(core.color, const Color(0xFF141414));
-    expect(core.width, 8);
-    expect(
-      OfferRouteLine.sized(lines, 16).map((l) => l.width).toSet(),
-      {17, 9},
-    );
+    expect(core.width, 4);
+    // R15-1 "A thin": 5 / 6 / 8 / 11 from a whole trip to close up.
+    for (final (zoom, width) in [(10.0, 5), (12.0, 6), (14.0, 8), (16.0, 11)]) {
+      expect(
+        OfferRouteLine.sized(lines, zoom)
+            .firstWhere((l) => l.polylineId.value == OfferRouteLine.outlineId)
+            .width,
+        width,
+      );
+    }
   });
 }

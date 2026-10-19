@@ -13,9 +13,18 @@ abstract final class DriverRouteStyle {
   static const double defaultZoom = 14;
 
   /// The step a camera zoom falls in, as that step's representative zoom:
-  /// 11 (city, zoom <= 11), 14 (zoom 12-15) or 16 (street, zoom >= 16).
-  /// Maps keep this value and rebuild only when it changes.
-  static double stepZoom(double zoom) => zoom < 12 ? 11 : zoom < 16 ? 14 : 16;
+  /// 10 (region, zoom < 11), 11 (city), 12 (part of a trip, zoom 12-12.9),
+  /// 14 (zoom 13-15) or 16 (street, zoom >= 16). Maps keep this value and
+  /// rebuild only when it changes.
+  static double stepZoom(double zoom) => zoom < 11
+      ? 10
+      : zoom < 12
+          ? 11
+          : zoom < 13
+              ? 12
+              : zoom < 16
+                  ? 14
+                  : 16;
 
   /// Visible line width (the casing) at [zoom]; the core sits inside it.
   /// Polyline widths are whole logical pixels, so the 10.5 pt middle step
