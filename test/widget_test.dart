@@ -1607,9 +1607,9 @@ void main() {
     );
     final normal = tester.getSize(island);
     expect(normal.width, closeTo(244, 1));
-    // Drawn at 80 %, content included.
+    // Drawn at 80 %, content included; 48 high so the side buttons are 48 x 48.
     expect(tester.getRect(island).width, closeTo(244 * 0.8, 1));
-    expect(tester.getRect(island).height, closeTo(50.4 * 0.8, 1));
+    expect(tester.getRect(island).height, closeTo(48, 1));
 
     IslandMessages.show(const IslandMessage(title: 'Matched'));
     await _advanceAnimation(tester, const Duration(milliseconds: 900));

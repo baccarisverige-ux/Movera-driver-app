@@ -663,8 +663,13 @@ class _TickerLine extends StatelessWidget {
 class DigitalIslandParts {
   DigitalIslandParts._();
 
-  /// Island height before the 80 % scale both screens draw it at.
-  static const double height = 50.4;
+  /// Island height before the 80 % scale both screens draw it at: 48 dp on
+  /// screen, so the menu and search buttons are full 48 x 48 targets (UI-12).
+  static const double height = 60;
+
+  /// Width of the menu and search buttons before the 80 % scale: 48 dp on
+  /// screen (UI-12).
+  static const double sideWidth = 60;
 
   /// Normal width, before the scale.
   static const double width = 244;

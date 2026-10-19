@@ -247,6 +247,41 @@ void main() {
       await _end(tester);
     });
 
+    testWidgets('UI-12 island Menu and Search are 48x48 targets at $at',
+        (tester) async {
+      final islandErrors = <String>[];
+      final previous = FlutterError.onError;
+      FlutterError.onError = (details) {
+        final text = details.toString();
+        if (text.contains('home_map_sheet.dart')) { islandErrors.add(text); }
+        previous?.call(details);
+      };
+      try {
+        await _pumpHome(tester, size);
+        // Asleep (small island) first, then awake.
+        for (final wait in const [Duration.zero, Duration(seconds: 2)]) {
+          await _frames(tester, wait);
+          final menu = tester.getRect(find.descendant(
+            of: find.byTooltip('Menu'),
+            matching: find.byType(InkWell),
+          ));
+          final search = tester.getRect(
+            find.byKey(const ValueKey<String>('destination-mode-open')),
+          );
+          for (final target in [menu, search]) {
+            expect(target.width, greaterThanOrEqualTo(47.99));
+            expect(target.height, greaterThanOrEqualTo(47.99));
+            expect(target.left, greaterThanOrEqualTo(0));
+            expect(target.right, lessThanOrEqualTo(size.width));
+          }
+        }
+      } finally {
+        FlutterError.onError = previous;
+      }
+      expect(islandErrors, isEmpty);
+      await _end(tester);
+    });
+
     testWidgets('UI-12 Home offline has no unlabelled tap targets at $at',
         (tester) async {
       final semantics = tester.ensureSemantics();

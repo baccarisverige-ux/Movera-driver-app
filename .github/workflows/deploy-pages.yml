@@ -85,8 +85,10 @@ jobs:
               f'src="driver_map_camera.js?v={sha}"'))
           PY
 
+      # The Pages site is the owner's demo: arrival works away from the
+      # demo pickup. Store and other release builds keep the 100 m check (D-12).
       - name: Build Drider web
-        run: flutter build web --release --base-href "/Movera-driver-app/"
+        run: flutter build web --release --base-href "/Movera-driver-app/" --dart-define=MOVERA_DEMO_ARRIVAL=true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

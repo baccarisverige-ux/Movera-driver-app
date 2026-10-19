@@ -117,11 +117,11 @@ class _TripIslandState extends State<TripIsland> {
     Widget side(Widget button) => AnimatedContainer(
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
-      width: message == null ? 54 : 14,
+      width: message == null ? DigitalIslandParts.sideWidth : 14,
       child: ClipRect(
         child: OverflowBox(
-          minWidth: 54,
-          maxWidth: 54,
+          minWidth: DigitalIslandParts.sideWidth,
+          maxWidth: DigitalIslandParts.sideWidth,
           child: IgnorePointer(
             ignoring: message != null,
             child: AnimatedOpacity(
@@ -149,7 +149,7 @@ class _TripIslandState extends State<TripIsland> {
               child: InkWell(
                 onTap: widget.onMenu,
                 child: SizedBox(
-                  width: 54,
+                  width: DigitalIslandParts.sideWidth,
                   height: height,
                   child: DigitalIslandParts.menuIcon(),
                 ),
@@ -198,7 +198,7 @@ class _TripIslandState extends State<TripIsland> {
                 key: const ValueKey<String>('trip-island-search'),
                 onTap: widget.onSearch,
                 child: const SizedBox(
-                  width: 54,
+                  width: DigitalIslandParts.sideWidth,
                   height: height,
                   child: DigitalIslandParts.searchIcon,
                 ),

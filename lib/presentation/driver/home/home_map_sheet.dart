@@ -977,7 +977,7 @@ extension _HomeMapSheet on _DriverHomeState {
       // tucked sides, 2 for the border and some air on both ends.
       final width = hold != null
           ? (DigitalMessageFace.widthFor(context, hold.title, tappable: true) +
-                    54 + 54 + 2 + 8)
+                    DigitalIslandParts.sideWidth * 2 + 2 + 8)
                 .clamp(math.min(244.0, maxWidth), maxWidth)
                 .toDouble()
           : message != null
@@ -1002,22 +1002,22 @@ extension _HomeMapSheet on _DriverHomeState {
                     .toDouble()
           : destination
               ? (DigitalDestinationFace.widthFor(context, _destinationShortLabel, _destinationEta) +
-                        54 + 14 + 2 + 28)
+                        DigitalIslandParts.sideWidth + 14 + 2 + 28)
                     .clamp(math.min(200.0, maxWidth), maxWidth)
                     .toDouble()
           : _islandWake >= 1
               ? math.min(maxWidth, 244.0)
-              : 112.0;
+              : DigitalIslandParts.sideWidth * 2 + 4;
       final tucked = _islandMessage != null || reservation != null ||
           exclusive != null || waiting;
       Widget side(Widget button, {bool tuck = false}) => AnimatedContainer(
             duration: const Duration(milliseconds: 320),
             curve: Curves.easeOutCubic,
-            width: tucked || tuck ? 14 : 54,
+            width: tucked || tuck ? 14 : DigitalIslandParts.sideWidth,
             child: ClipRect(
               child: OverflowBox(
-                minWidth: 54,
-                maxWidth: 54,
+                minWidth: DigitalIslandParts.sideWidth,
+                maxWidth: DigitalIslandParts.sideWidth,
                 child: IgnorePointer(
                   ignoring: tucked || tuck,
                   child: AnimatedOpacity(
@@ -1052,7 +1052,7 @@ extension _HomeMapSheet on _DriverHomeState {
                   child: InkWell(
                     onTap: () => Scaffold.of(context).openDrawer(),
                     child: SizedBox(
-                      width: 54,
+                      width: DigitalIslandParts.sideWidth,
                       height: height,
                       child: DigitalIslandParts.menuIcon(),
                     ),
@@ -1147,7 +1147,7 @@ extension _HomeMapSheet on _DriverHomeState {
                   key: const ValueKey<String>('destination-mode-open'),
                   onTap: _openDestinationModePicker,
                   child: const SizedBox(
-                    width: 54,
+                    width: DigitalIslandParts.sideWidth,
                     height: height,
                     child: DigitalIslandParts.searchIcon,
                   ),
