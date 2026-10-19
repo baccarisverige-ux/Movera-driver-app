@@ -56,6 +56,8 @@ dependencies:
   flutter_svg: ^2.0.17
   # Ride check "Record audio": saved only on this phone (see lib/core/safety).
   record: ^7.1.1
+  # R15-5: the radar sound while Radar offers are on Home.
+  audioplayers: ^6.8.1
   path_provider: ^2.1.5
 
 dev_dependencies:
@@ -88,6 +90,7 @@ flutter:
   assets:
     - assets/icons/
     - assets/images/
+    - assets/sounds/
 
   # DSEG7 Classic (SIL OFL 1.1) — see assets/fonts/DSEG-LICENSE.txt
   fonts:

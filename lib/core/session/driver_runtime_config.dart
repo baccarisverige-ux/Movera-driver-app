@@ -12,6 +12,7 @@ class DriverRuntimeConfig {
     this.liveMapTicker = true,
     this.reservationPopup = true,
     this.islandHint = true,
+    this.radarSound = true,
   });
 
   /// Demo builds only: arrival does not require a live GPS fix within 100 m of
@@ -36,6 +37,10 @@ class DriverRuntimeConfig {
   /// First launch: the Home island says once that its middle shows the
   /// earnings. Widget tests turn it off so the island starts on the total.
   final bool islandHint;
+
+  /// R15-5: the radar sound while Radar offers show. Tests turn it off:
+  /// their machines have no sound device.
+  final bool radarSound;
 
   /// Values compiled into this build.
   static const DriverRuntimeConfig build = DriverRuntimeConfig(

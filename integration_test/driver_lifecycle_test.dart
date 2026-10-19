@@ -107,6 +107,7 @@ void main() {
     liveMapTicker: false,
     reservationPopup: false,
     islandHint: false,
+    radarSound: false,
   );
 
   setUp(() {

@@ -474,6 +474,8 @@ extension _HomeOfferRadar on _DriverHomeState {
           _homeRadarMatchingOfferId != null) {
         return;
       }
+      // R15-5: Match stops the radar sound.
+      _offerSound.silence();
 
       _rebuild(() {
         _homeRadarMatchingOfferId = offer.id;

@@ -31,6 +31,7 @@ import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dar
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
+import 'package:movera/core/sound/radar_offer_sound.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -60,6 +61,35 @@ Future<void> _wakeIsland(WidgetTester tester) async {
   for (var i = 0; i < 4; i++) {
     await tester.pump(const Duration(milliseconds: 450));
   }
+}
+
+class _FakeRadarSound implements RadarSoundPlayer {
+  final calls = <String>[];
+  @override
+  Future<void> startLoop() async => calls.add('start');
+  @override
+  Future<void> stop() async => calls.add('stop');
+  @override
+  Future<void> prime() async {}
+}
+
+/// How far Home Radar's soft sweep turns in 200 ms, per second.
+Future<double> _wedgeTurnsPerSecond(
+  WidgetTester tester, [
+  Finder? within,
+]) async {
+  final wedge = find.byKey(const ValueKey<String>('radar-sweep-wedge'));
+  double turn() => (tester
+          .widget<CustomPaint>(
+            within == null
+                ? wedge
+                : find.descendant(of: within, matching: wedge),
+          )
+          .painter! as RadarWedgePainter)
+      .turn;
+  final start = turn();
+  await tester.pump(const Duration(milliseconds: 200));
+  return ((turn() - start) % 1) * 5;
 }
 
 void _expectNoException(WidgetTester tester) {
@@ -512,11 +542,16 @@ void main() {
     'Exclusive Radar stays separate and Radar offers survive list open-close',
     (WidgetTester tester) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
+      final sound = _FakeRadarSound();
+      RadarOfferSound.debugPlayer = sound;
+      addTearDown(() => RadarOfferSound.debugPlayer = null);
       await _pumpHome(tester, const Size(375, 812));
 
       await tester.tap(find.text('OFF'));
       await tester.pump(const Duration(milliseconds: 1550));
       expect(find.text('LIVE'), findsOneWidget);
+      // R15-4: scanning, the soft sweep turns once every 3.3 s.
+      expect(await _wedgeTurnsPerSecond(tester), closeTo(0.3, 0.01));
 
       // Exclusive Radar offer uses its own exclusive surface.
       await tester.pump(const Duration(milliseconds: 2300));
@@ -526,6 +561,16 @@ void main() {
       expect(find.text('Kungsgatan 42'), findsOneWidget);
       expect(
         find.byKey(const ValueKey<String>('radar-home-deck')),
+        findsNothing,
+      );
+      // Exclusive: no radar sound.
+      expect(sound.calls, isEmpty);
+      // Exclusive keeps its own radar: no soft sweep.
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey<String>('home-radar-exclusive')),
+          matching: find.byKey(const ValueKey<String>('radar-sweep-wedge')),
+        ),
         findsNothing,
       );
       _expectNoException(tester);
@@ -546,6 +591,25 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('MATCH'), findsOneWidget);
+      // R15-3/4: a black MATCH, and the sweep turns once every 2 s.
+      final accept = find.byKey(const ValueKey<String>('home-radar-accept'));
+      final match = tester.widget<Text>(
+        find.descendant(
+          of: accept,
+          matching: find.byKey(const ValueKey<String>('radar-status-found')),
+        ),
+      );
+      expect(
+        match.style!.color!.withValues(alpha: 1),
+        MoveraRadarOrb.offerInk,
+      );
+      expect(await _wedgeTurnsPerSecond(tester, accept), closeTo(0.5, 0.01));
+      // R15-5: the radar sound loops while Radar offers show; a tap
+      // anywhere stops it.
+      expect(sound.calls, ['start']);
+      await tester.tapAt(const Offset(187, 300));
+      await tester.pump();
+      expect(sound.calls, ['start', 'stop']);
       _expectNoException(tester);
 
       // The ALL OFFERS badge opens the full Radar list.

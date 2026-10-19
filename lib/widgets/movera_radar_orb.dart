@@ -21,6 +21,8 @@ class MoveraRadarOrb extends StatelessWidget {
     this.reserve = false,
     this.exclusive = false,
     this.timeLeft = 1,
+    this.wedge,
+    this.statusPulse = 0,
     this.size = 104,
     this.touchSize,
     this.touchKey = const ValueKey<String>('trip-radar-touch-target'),
@@ -54,6 +56,14 @@ class MoveraRadarOrb extends StatelessWidget {
   /// blue anywhere.
   final bool exclusive;
   final double timeLeft;
+
+  /// The soft light sweep around the ring, as a fraction of a full turn
+  /// from twelve o'clock (null: none). Home's Radar runs it, slower when
+  /// nothing is found yet; Exclusive and reservation never do.
+  final double? wedge;
+
+  /// 0..1: the small pulse of a found trip's black [status] ("MATCH").
+  final double statusPulse;
   final double size;
   final double? touchSize;
   final Key touchKey;
@@ -69,13 +79,19 @@ class MoveraRadarOrb extends StatelessWidget {
   /// A reservation's [title] ("Accept"): black.
   static const Color reserveTitle = Color(0xFF111518);
 
-  /// The radar's green while a trip is found: its ring, glow and sweep.
-  /// Home's radar offer cards, the dock dash and the island use it for
-  /// their contour, so all stay in step. The same green marks Radar on.
-  static const Color offerAccent = Color(0xFF5FB87D);
+  /// The radar's grey while it is on: its ring, glow and sweep. Home's
+  /// radar offer cards, the dock dash and the island use it for their
+  /// contour, so all stay in step.
+  static const Color offerAccent = Color(0xFF969CA1);
 
-  /// Radar on, nothing found yet: the same green.
-  static const Color onlineGreen = offerAccent;
+  /// A found trip breathes from this lighter grey into [offerAccent].
+  static const Color offerAccentLight = Color(0xFFC2C7CB);
+
+  /// A found trip's [status] ("MATCH"): black.
+  static const Color offerInk = Color(0xFF111614);
+
+  /// Radar on, outside the radar itself (side menu, lists): green.
+  static const Color onlineGreen = Color(0xFF5FB87D);
 
   /// The radar on hold, and the red dock under it.
   static const Color holdRed = Color(0xFFBB371F);
@@ -90,10 +106,11 @@ class MoveraRadarOrb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const mint = onlineGreen;
-    // A found trip breathes from a lighter green into the green.
-    const detectedLight = Color(0xFF9ED6B0);
-    const detectedGreen = offerAccent;
+    // R15: Radar on looks the same with or without a trip found: it
+    // breathes from a lighter grey into the grey. Only the sweep's speed
+    // (set by Home) tells them apart.
+    const detectedLight = offerAccentLight;
+    const detectedGrey = offerAccent;
     // Exclusive is the normal radar in blue, with its time ring.
     final accent = reserve
         ? Color.lerp(reserveLight, reserveGrey, pulse) ?? reserveGrey
@@ -101,12 +118,13 @@ class MoveraRadarOrb extends StatelessWidget {
         ? exclusiveBlue
         : blocked
         ? holdRed
-        : offer
-            ? Color.lerp(detectedLight, detectedGreen, pulse) ?? detectedGreen
-            : mint;
+        : Color.lerp(detectedLight, detectedGrey, pulse) ?? detectedGrey;
     // Exclusive and reservation are the Radar-offer orb in their colour;
     // only the blue Exclusive carries a small icon.
     final tinted = exclusive && !reserve;
+    // A Radar trip found: black status with its small pulse.
+    final found = offer && !exclusive && !reserve;
+    final p = statusPulse.clamp(0.0, 1.0);
     final hot = offer || exclusive || reserve;
     final glowStrength = !active
         ? 0.08
@@ -199,7 +217,7 @@ class MoveraRadarOrb extends StatelessWidget {
                               ? reserveHalo
                               : exclusive
                               ? const Color(0xFFCFE0FB)
-                              : const Color(0xFFBFD9CF))
+                              : reserveHalo)
                           .withValues(alpha: 0.12),
                       border: Border.all(
                         color: accent.withValues(alpha: active ? 0.38 : 0.19),
@@ -227,6 +245,18 @@ class MoveraRadarOrb extends StatelessWidget {
                           // The grey Exclusive: a dark hairline.
                           color: reserve ? reserveInk : exclusiveBlue,
                           track: reserve ? reserveHalo : exclusiveTrack,
+                        ),
+                      ),
+                    ),
+                  if (active && wedge != null)
+                    SizedBox(
+                      width: 102 * s,
+                      height: 102 * s,
+                      child: CustomPaint(
+                        key: const ValueKey<String>('radar-sweep-wedge'),
+                        painter: RadarWedgePainter(
+                          turn: wedge!,
+                          inner: 36.5 * s,
                         ),
                       ),
                     ),
@@ -344,19 +374,31 @@ class MoveraRadarOrb extends StatelessWidget {
                                     ),
                                   ),
                                   SizedBox(height: 2.5 * s),
-                                  Text(
-                                    status,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: reserve
-                                          ? reserveInk
-                                          : hot
-                                          ? accent
-                                          : const Color(0xFFE2E9E6),
-                                      fontSize: 6.1 * s,
-                                      height: 1,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.9,
+                                  Transform.scale(
+                                    scale: found ? 1 + 0.05 * p : 1,
+                                    child: Text(
+                                      status,
+                                      key: found
+                                          ? const ValueKey<String>(
+                                              'radar-status-found',
+                                            )
+                                          : null,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: reserve
+                                            ? reserveInk
+                                            : found
+                                            ? offerInk.withValues(
+                                                alpha: 0.82 + 0.18 * p,
+                                              )
+                                            : hot
+                                            ? accent
+                                            : const Color(0xFFE2E9E6),
+                                        fontSize: 6.1 * s,
+                                        height: 1,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.9,
+                                      ),
                                     ),
                                   ),
                                   SizedBox(height: 3 * s),
@@ -409,6 +451,51 @@ class MoveraRadarOrb extends StatelessWidget {
 
   static const Color exclusiveBlue = Color(0xFF1769E8);
   static const Color exclusiveTrack = Color(0xFFE3E9F0);
+}
+
+/// Home Radar's soft sweep: a light wedge that fades behind its leading
+/// edge, in the ring between the core ([inner]) and the outer wave.
+class RadarWedgePainter extends CustomPainter {
+  const RadarWedgePainter({required this.turn, required this.inner});
+
+  /// The leading edge, as a fraction of a turn from twelve o'clock.
+  final double turn;
+  final double inner;
+
+  /// The faded tail behind the leading edge.
+  static const double tail = math.pi / 3;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final outer = size.shortestSide / 2;
+    final lead = -math.pi / 2 + (turn % 1) * 2 * math.pi;
+    final band = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addOval(Rect.fromCircle(center: center, radius: outer))
+      ..addOval(Rect.fromCircle(center: center, radius: inner));
+    canvas.save();
+    canvas.clipPath(band);
+    // Drawn around zero and rotated, so the gradient never wraps.
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(lead);
+    final rect = Rect.fromCircle(center: Offset.zero, radius: outer);
+    final paint = Paint()
+      ..shader = SweepGradient(
+        startAngle: -tail,
+        endAngle: 0,
+        colors: [
+          Colors.white.withValues(alpha: 0),
+          Colors.white.withValues(alpha: 0.6),
+        ],
+      ).createShader(rect);
+    canvas.drawArc(rect, -tail, tail, true, paint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(RadarWedgePainter old) =>
+      old.turn != turn || old.inner != inner;
 }
 
 /// The Exclusive radar's time left: a hairline arc in [color] on a barely

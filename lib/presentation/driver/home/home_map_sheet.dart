@@ -1686,6 +1686,7 @@ extension _HomeMapSheet on _DriverHomeState {
           animation: Listenable.merge([
             _goOnlinePulseController,
             _radarSweepController,
+            _radarMotionController,
           ]),
           builder: (context, child) => _buildRadarOrb(
             title: busy ? "Matching" : "Accept",
@@ -1695,6 +1696,8 @@ extension _HomeMapSheet on _DriverHomeState {
             offer: true,
             pulse: _goOnlinePulseController.value,
             sweep: _radarSweepController.value,
+            wedge: _radarWedge(found: true),
+            statusPulse: _matchPulse,
             onTap: busy
                 ? null
                 : () => _HomeOfferRadar(this)._startHomeRadarMatch(front),
