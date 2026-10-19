@@ -166,15 +166,15 @@ extension _HomeMapSheet on _DriverHomeState {
       return MoveraSheetMetrics.collapsedHeight;
     }
     /// R11-7: the offer's whole trip, pickup → drop-off only (no drive to
-    /// the pickup), with time-chip pins, fitted above the card or deck.
+    /// the pickup), with minute pins, fitted above the card or deck.
     Future<void> _previewDirectOfferRoute(_HomeDirectOffer offer) =>
         _previewTripRoute(
           offer.pickupPosition,
           offer.dropoffPosition,
           () => _HomeOfferRoute(this)._offerRouteMarkers(offer),
           labels: (
-            OfferRoutePins.minutes(offer.pickupMinutes),
-            OfferRoutePins.minutes(offer.tripMinutes),
+            OfferRouteMarks.minutes(offer.pickupMinutes),
+            OfferRouteMarks.minutes(offer.tripMinutes),
           ),
           stops: [for (final stop in offer.stops) stop.point.toLatLng()],
         );
@@ -193,8 +193,9 @@ extension _HomeMapSheet on _DriverHomeState {
       bool isCurrent() => mounted && _mapPreviews.owns(generation) &&
           _isDirectOfferRoutePreview;
 
-      final frame = _offerRouteFrame..stopGlow();
+      final frame = _offerRouteFrame..stopLine();
       frame
+        ..road = const <GeoPoint>[]
         ..framing = <LatLng>[pickup, dropoff, ...stops]
         ..pickupLabel = labels.$1
         ..dropoffLabel = labels.$2
@@ -212,13 +213,9 @@ extension _HomeMapSheet on _DriverHomeState {
 
       var roadPoints = const <LatLng>[];
       try {
-        final trip = await _roadRouteService.drivingRoute(
-          origin: GeoPointMaps.fromLatLng(pickup),
-          destination: GeoPointMaps.fromLatLng(dropoff),
-        );
+        roadPoints =
+            await _HomeOfferRoute(this)._offerRoad(pickup, stops, dropoff);
         if (!isCurrent()) return;
-        roadPoints = _HomeOfferRoute(this)
-            ._offerRoutePoints(pickup, dropoff, trip.latLngPoints);
       } catch (_) {
         if (!isCurrent()) return;
       }
@@ -228,12 +225,9 @@ extension _HomeMapSheet on _DriverHomeState {
 
       if (roadPoints.length >= 2) {
         _rebuild(() {
-          _directOfferRoutePolylines = DriverRouteStyle.polylines(
-            id: 'direct_offer_road_route',
-            points: roadPoints,
-          );
+          _directOfferRoutePolylines = OfferRouteLine.polylines(roadPoints);
         });
-        _HomeOfferRoute(this)._startRouteGlow(roadPoints);
+        _HomeOfferRoute(this)._startRouteLine(roadPoints);
       }
 
       frame.framing = [
@@ -708,20 +702,20 @@ extension _HomeMapSheet on _DriverHomeState {
       final viewport = MediaQuery.sizeOf(context);
       final viewportWidth = viewport.width;
       final offerOnScreen = _HomeOfferRoute(this)._offerOnScreen;
-      // The travelling streak, once the route has faded fully in.
-      final glowShown = offerOnScreen &&
+      // The line's animated white part, once the route has faded fully in.
+      final lightShown = offerOnScreen &&
           _exclusive.fade.value >= 1 &&
           _reservation.fade.value >= 1;
       ({Set<Marker> markers, Set<Polyline> polylines}) layersWith(
-        Set<Polyline> glow,
+        Set<Polyline> light,
       ) => homeMapLayers(
         car: _markers,
         destinationMode: _destinationModeActive,
         destinationMarkers: _destinationRouteMarkers,
         destinationPolylines: _destinationRoutePolylines,
         offerMarkers: _directOfferRouteMarkers,
-        offerPolylines: glowShown && glow.isNotEmpty
-            ? {..._directOfferRoutePolylines, ...glow}
+        offerPolylines: lightShown && light.isNotEmpty
+            ? {..._directOfferRoutePolylines, ...light}
             : _directOfferRoutePolylines,
         offerOnScreen: offerOnScreen,
       );
@@ -732,10 +726,10 @@ extension _HomeMapSheet on _DriverHomeState {
         child: Stack(
           children: [
             if (!_HomeStartPosition(this)._mapReady) _HomeStartPosition(this)._locating() else ValueListenableBuilder<Set<Polyline>>(
-              // Only the map redraws for each step of the streak.
-              valueListenable: _offerRouteFrame.glowLine,
-              builder: (context, glow, _) {
-              final layers = layersWith(glow);
+              // Only the map redraws for each step of the line animation.
+              valueListenable: _offerRouteFrame.lightLine,
+              builder: (context, light, _) {
+              final layers = layersWith(light);
               return CustomGoogleMap(
               initialPosition: _initialPosition,
               // The note would sit on the route: hidden while an offer is up.
@@ -744,7 +738,8 @@ extension _HomeMapSheet on _DriverHomeState {
                   _HomeReservation(this)._fadedPins(layers.markers)),
               polylines: _HomeExclusive(this)._exclusiveFadedLines(
                   _HomeReservation(this)._fadedLines(
-                DriverRouteStyle.sized(layers.polylines, _routeZoomStep))),
+                OfferRouteLine.sized(DriverRouteStyle.sized(
+                    layers.polylines, _routeZoomStep), _routeZoomStep))),
               myLocationEnabled: false,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,

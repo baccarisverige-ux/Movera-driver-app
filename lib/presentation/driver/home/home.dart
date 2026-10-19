@@ -102,7 +102,9 @@ import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:movera/widgets/movera_sheet_metrics.dart';
 import 'package:movera/widgets/movera_vehicle_marker.dart';
-import 'package:movera/widgets/offer_route_pins.dart';
+import 'package:movera/widgets/offer_route_line.dart';
+import 'package:movera/widgets/offer_route_marks.dart';
+import 'package:movera/widgets/route_mark_pins.dart';
 import 'package:movera/presentation/driver/sheets/movera_snap_sheet_controller.dart';
 import 'package:movera/presentation/driver/overlays/map_overlay_insets.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -188,6 +190,7 @@ class _DriverHomeState extends State<DriverHome>
     _offerSimulationTimer?.cancel(); _directOfferTimer?.cancel();
     _expandedDirectOfferTimer?.cancel(); _radarOfferTwoTimer?.cancel(); _radarOfferThreeTimer?.cancel();
     _goOnlinePulseController.stop(); _radarSweepController.stop();
+    _offerRouteFrame.stopLine();
   }
   void _resumeHomeUpdates() {
     if (!mounted || !_liveVisible) { return; }
@@ -195,6 +198,7 @@ class _DriverHomeState extends State<DriverHome>
     unawaited(_HomeMapSheet(this)._startDriverLocation());
     _HomeOfferRadar(this)._scheduleVisibleOffers();
     _HomeOfferRadar(this)._resumeOfferTimers();
+    _HomeOfferRoute(this)._resumeRouteLine();
     if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); }
     setState(() {});
   }
