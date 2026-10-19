@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/expantion_tile.dart';
 import 'package:movera/widgets/responsive_size.dart';
@@ -10,7 +11,23 @@ import 'package:movera/widgets/rate_rule_note.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
 class CancelationRate extends StatelessWidget {
-  const CancelationRate({super.key});
+  const CancelationRate({
+    super.key,
+    this.performance = DriverPerformanceConfig.sample,
+  });
+
+  /// Sample numbers until the driver's real rates exist: the same ones as
+  /// Analytics and the Home performance sheet (UI-10).
+  final DriverPerformanceConfig performance;
+
+  /// "2.4%" of the counted offers or trips.
+  String get _rateShare => performance.cancellationLabel;
+
+  /// What is left of 100 %.
+  String get _otherShare {
+    final rest = 100 - performance.cancellationRate;
+    return '${rest.toStringAsFixed(rest == rest.roundToDouble() ? 0 : 1)}%';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +82,7 @@ class CancelationRate extends StatelessWidget {
       child: Column(
         children: [
           TextWidget(
-            text: '%5.0',
+            text: performance.cancellationLabel,
             color: AppColor.black,
             fontSize: 36,
             fontWeight: fwSemiBold,
@@ -83,14 +100,14 @@ class CancelationRate extends StatelessWidget {
               ),
               6.width,
               TextWidget(
-                text: '1/10',
+                text: 'Sample',
                 color: AppColor.red,
                 fontSize: 16,
                 fontWeight: fwMedium,
               ),
               6.width,
               TextWidget(
-                text: 'last 10 confirmed trips',
+                text: 'not your real rate yet',
                 color: AppColor.subtitle,
                 fontSize: 16,
                 fontWeight: fwMedium,
@@ -122,7 +139,7 @@ class CancelationRate extends StatelessWidget {
                 ),
               ),
               TextWidget(
-                text: '100',
+                text: '100%',
                 color: AppColor.title,
                 fontSize: 20,
                 fontWeight: fwSemiBold,
@@ -149,7 +166,7 @@ class CancelationRate extends StatelessWidget {
                 ),
               ),
               TextWidget(
-                text: '95',
+                text: _otherShare,
                 color: AppColor.title,
                 fontSize: 16,
                 fontWeight: fwMedium,
@@ -174,7 +191,7 @@ class CancelationRate extends StatelessWidget {
                 ),
               ),
               TextWidget(
-                text: '5',
+                text: _rateShare,
                 color: AppColor.title,
                 fontSize: 16,
                 fontWeight: fwMedium,
@@ -183,7 +200,7 @@ class CancelationRate extends StatelessWidget {
           ),
           16.height,
           TextWidget(
-            text: 'Based on your last 100 requests',
+            text: 'Sample numbers for this preview, not your real rate.',
             color: AppColor.title,
             fontSize: 12,
             fontWeight: fwMedium,

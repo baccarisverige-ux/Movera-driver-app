@@ -6,6 +6,7 @@ class DocumentPreview extends StatelessWidget {
  Widget build(BuildContext context) => Scaffold(
  appBar: AppBar(title: Text(title)),
  body: const Padding(padding: EdgeInsets.all(24), child: Text(
- 'Not verified — sample document preview. No document was uploaded or reviewed.')),
+ 'Not available yet — sample page. Sending this document is not part of '
+ 'the app yet. No document was uploaded or reviewed.')),
  );
 }

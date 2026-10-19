@@ -61,7 +61,9 @@ Future<void> showTripOutcomeSheet(
 }) {
   return showMoveraModalSheet<void>(
     context: context,
-    heightFactor: 0.46,
+    heightFactor: 0.9,
+    minHeightFactor: 0.46,
+    fitContent: true,
     barrierColor: const Color(0x730D1519),
     barrierDismissible: false,
     builder: (sheetContext) => TripOutcomeSheet(
@@ -87,34 +89,52 @@ class TripOutcomeSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final copy = tripOutcomeCopy(status);
-    return MoveraModalSheet(
+    // Sized by the sheet route: its usual height, taller only when the
+    // text needs it. The text scrolls when even that is not enough, so the
+    // only exit of this non-dismissible sheet stays on screen (UI-01).
+    return Material(
       color: const Color(0xFFF8FAF9),
-      radius: 30,
+      clipBehavior: Clip.antiAlias,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
       child: SafeArea(
         top: false,
         child: Padding(
           key: const ValueKey<String>('trip-outcome-sheet'),
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Semantics(
-                header: true,
-                child: Text(
-                  copy.title,
-                  style: const TextStyle(
-                    color: _ink,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
+              Flexible(
+                child: SingleChildScrollView(
+                  key: const ValueKey<String>('trip-outcome-scroll'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          copy.title,
+                          style: const TextStyle(
+                            color: _ink,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        hasNext ? '${copy.body} Your next trip starts now.' : copy.body,
+                        style: const TextStyle(color: _muted, fontSize: 15, height: 1.4),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                hasNext ? '${copy.body} Your next trip starts now.' : copy.body,
-                style: const TextStyle(color: _muted, fontSize: 15, height: 1.4),
-              ),
-              const Spacer(),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 height: 54,

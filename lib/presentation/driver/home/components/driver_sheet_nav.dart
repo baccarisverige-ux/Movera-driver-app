@@ -123,6 +123,7 @@ class DriverSheetNav {
                               customIcon: _ScheduledRideIcon(
                                 pulse: goOnlinePulseController.value,
                                 animateClock: hasScheduledRideOffers,
+                                tint: iconTint,
                               ),
                               tooltip: 'Scheduled',
                               onTap: onOpenScheduledRides,
@@ -447,10 +448,15 @@ class _ScheduledRideIcon extends StatelessWidget {
   const _ScheduledRideIcon({
     required this.pulse,
     required this.animateClock,
+    this.tint,
   });
 
   final double pulse;
   final bool animateClock;
+
+  /// The dock's icon colour on the red account-hold dock, so the
+  /// calendar matches the other icons (UI-15).
+  final Color? tint;
 
   @override
   Widget build(BuildContext context) {
@@ -476,6 +482,8 @@ class _ScheduledRideIcon extends StatelessWidget {
               : AppAssets.navScheduledRide,
           fit: BoxFit.contain,
           filterQuality: FilterQuality.medium,
+          color: tint,
+          colorBlendMode: tint == null ? null : BlendMode.srcIn,
         ),
       ),
     );

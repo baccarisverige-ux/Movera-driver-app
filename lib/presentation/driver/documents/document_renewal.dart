@@ -59,51 +59,54 @@ Future<void> showDocumentUploadSheet(
       child: Padding(
         key: const ValueKey<String>('document-upload-sheet'),
         padding: const EdgeInsets.fromLTRB(22, 0, 22, 18),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'New ${document.title.toLowerCase()}',
-              style: const TextStyle(
-                color: _ink,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Take a clear photo of the whole document. Movera checks it '
-              'before it counts.',
-              style: TextStyle(color: _muted, fontSize: 14, height: 1.35),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              height: 50,
-              child: FilledButton.icon(
-                key: const ValueKey<String>('document-upload-send'),
-                onPressed: () => Navigator.of(sheetContext).pop(true),
-                icon: _solar(AppAssets.solarUploadMinimalistic, Colors.white, 20),
-                label: const Text(
-                  'Send new document',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        // Scrolls when large text makes it taller than the sheet.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'New ${document.title.toLowerCase()}',
+                style: const TextStyle(
+                  color: _ink,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
                 ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _ink,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Take a clear photo of the whole document. Movera checks it '
+                'before it counts.',
+                style: TextStyle(color: _muted, fontSize: 14, height: 1.35),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                height: 50,
+                child: FilledButton.icon(
+                  key: const ValueKey<String>('document-upload-send'),
+                  onPressed: () => Navigator.of(sheetContext).pop(true),
+                  icon: _solar(AppAssets.solarUploadMinimalistic, Colors.white, 20),
+                  label: const Text(
+                    'Send new document',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _ink,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Demo: no file leaves the phone.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: _muted, fontSize: 12.5),
-            ),
-          ],
+              const SizedBox(height: 10),
+              const Text(
+                'Demo: no file leaves the phone.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: _muted, fontSize: 12.5),
+              ),
+            ],
+          ),
         ),
       ),
     ),
