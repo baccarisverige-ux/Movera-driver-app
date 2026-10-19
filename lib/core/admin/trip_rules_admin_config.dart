@@ -159,6 +159,33 @@ class NextTripRules {
   }
 }
 
+/// Admin zone ids (`contracts/fixtures/config`: `Z001`, `FR-PC`, `TN-TC`).
+abstract final class DriverZones {
+  /// Admin's Greater Stockholm zone.
+  static const String defaultId = 'Z001';
+
+  /// Ids older builds and exports used; read as their current id.
+  static const Map<String, String> legacyAliases = <String, String>{
+    'svc-stockholm': defaultId,
+  };
+
+  static String canonical(String id) => legacyAliases[id] ?? id;
+
+  /// [byZone]'s entry for [zoneId], else the entry under a legacy alias of
+  /// the same zone.
+  static Object? read(Map<dynamic, dynamic> byZone, String zoneId) {
+    final id = canonical(zoneId);
+    final current = byZone[id];
+    if (current != null) return current;
+    for (final alias in legacyAliases.entries) {
+      if (alias.value == id && byZone[alias.key] != null) {
+        return byZone[alias.key];
+      }
+    }
+    return null;
+  }
+}
+
 /// Reads one zone's sets from the admin rules file. [export] is the whole
 /// file or just its `driverApp` part.
 class DriverTripRulesExport {
@@ -171,7 +198,7 @@ class DriverTripRulesExport {
     final app = export['driverApp'] is Map ? export['driverApp'] as Map : export;
     Object? zone(String key) {
       final byZone = app[key];
-      return byZone is Map ? byZone[zoneId] : null;
+      return byZone is Map ? DriverZones.read(byZone, zoneId) : null;
     }
     return (
       DestinationModeRules.fromJson(zone('destinationMode')),

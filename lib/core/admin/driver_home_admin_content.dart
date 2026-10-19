@@ -1,5 +1,6 @@
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
@@ -602,21 +603,31 @@ class StockholmWorkStatsConfig {
 class DriverHomeAdminContentService {
   const DriverHomeAdminContentService({
     this.rulesExport,
+    this.appConfig,
     this.zoneId = defaultZoneId,
   });
 
-  /// Admin's Greater Stockholm service zone.
-  static const String defaultZoneId = 'svc-stockholm';
+  /// Admin's Greater Stockholm zone (the old `svc-stockholm` id is read
+  /// as an alias, see [DriverZones]).
+  static const String defaultZoneId = DriverZones.defaultId;
 
   /// Admin's dispatch rules file (its `driverApp` part is read); null in
   /// the demo, which runs on the defaults.
   final Map<String, dynamic>? rulesExport;
+
+  /// Admin's `DriverAppConfig` for the zone (contract §6). When set, its
+  /// destination mode and next trips win over [rulesExport].
+  final DriverAppConfig? appConfig;
   final String zoneId;
 
   DriverHomeAdminConfig load() {
     final export = rulesExport;
-    final tripRules =
-        export == null ? null : DriverTripRulesExport.forZone(export, zoneId);
+    final config = appConfig;
+    final tripRules = config != null
+        ? (config.destinationMode, config.nextTrips)
+        : export == null
+            ? null
+            : DriverTripRulesExport.forZone(export, zoneId);
     return DriverHomeAdminConfig(
       destinationMode: tripRules?.$1,
       nextTrips: tripRules?.$2,

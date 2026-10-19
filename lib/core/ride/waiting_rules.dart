@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
@@ -38,9 +39,11 @@ class WaitingTerms {
   int get freeSeconds => freeMinutes * 60;
   int get noShowSeconds => noShowAfterMinutes * 60;
 
-  /// The driver's part of the no-show fee.
-  Money get driverNoShowFee => Money.ore(
-    (noShowFee.minorUnits * driverShareNoShowPercent / 100).round(),
+  /// The driver's part of the no-show fee, in the fee's own currency and
+  /// minor units (öre, cents, millimes).
+  Money get driverNoShowFee => Money(
+    minorUnits: (noShowFee.minorUnits * driverShareNoShowPercent / 100).round(),
+    currency: noShowFee.currency,
   );
 
   /// The terms of the trip on screen now: the waiting clocks read them.
@@ -109,12 +112,12 @@ class WaitingRules {
       ),
     },
     this.categories = const {
-      'Premium': WaitingRule(
+      'premium': WaitingRule(
         label: 'Premium',
         freeMinutes: 5,
         perMinute: Money(minorUnits: 1690),
       ),
-      'XL': WaitingRule(label: 'XL', freeMinutes: 3),
+      'xl': WaitingRule(label: 'XL', freeMinutes: 3),
     },
   });
 
@@ -130,8 +133,16 @@ class WaitingRules {
 
   final Map<WaitingRideType, WaitingRule> rideTypes;
 
-  /// By ride category, e.g. "Premium".
+  /// By ride category id (`contract.json#categories`), e.g. `premium`.
   final Map<String, WaitingRule> categories;
+
+  /// The rule for a category given as a wire id (`xl`) or as a driver
+  /// display name (`Movera XL`, `XL`); null when none is set.
+  WaitingRule? ruleForCategory(String category) {
+    final raw = category.trim();
+    final id = CategoryCatalog.canonicalId(CategoryCatalog.idForLabel(raw) ?? raw);
+    return id == null ? null : categories[id];
+  }
 
   /// The terms for one pickup. Category first, then ride type, then the
   /// distance rule: a later rule wins where it sets a value.
@@ -141,7 +152,7 @@ class WaitingRules {
     double? pickupKm,
   }) {
     var terms = base;
-    final byCategory = categories[category.trim()];
+    final byCategory = ruleForCategory(category);
     if (byCategory != null) {
       terms = terms._with(byCategory);
     }
