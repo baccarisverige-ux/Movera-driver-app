@@ -457,10 +457,15 @@ class GoogleDriverCameraPort
     try {
       final started = DateTime.now();
       final fromTilt = from.tilt;
+      var frames = 0;
       while (true) {
-        final t = (DateTime.now().difference(started).inMicroseconds /
-                tiltFlight.inMicroseconds)
-            .clamp(0.0, 1.0);
+        // Real time, but never slower than one 16 ms step per frame, so the
+        // ease ends even where the clock barely moves (tests, fast frames).
+        final micros = math.max(
+            DateTime.now().difference(started).inMicroseconds,
+            frames * 16000);
+        final t = (micros / tiltFlight.inMicroseconds).clamp(0.0, 1.0);
+        frames++;
         final e = t * t * (3 - 2 * t);
         final base = _logical ?? from;
         await _move(at(base, fromTilt + (tilt - fromTilt) * e),
