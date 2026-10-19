@@ -211,7 +211,8 @@ void main() async {
     );
 
     final ride = AcceptRide.fromPersisted(snapshot);
-    expect(ride.offerId, 'nearby-1');
+    expect(ride.tripId, 'nearby-1');
+    expect(ride.offerId, isNull);
     expect(ride.initialStage, ActiveRideStage.waitingForRider);
     expect(ride.riderName, 'Angelica');
     expect(ride.fare, '104,80 kr');

@@ -29,6 +29,13 @@ class HomeIslandNotices {
     priority: IslandPriority.high,
   );
 
+  /// X5: admin reassigned the trip or released the reservation.
+  static IslandMessage get tripRemoved => IslandMessage(
+    title: driverText(DriverTexts.islandTripRemoved),
+    tone: IslandTone.alert,
+    priority: IslandPriority.high,
+  );
+
   static IslandMessage get riderEndedTrip => IslandMessage(
     title: driverText(DriverTexts.islandRiderEndedTrip),
     tone: IslandTone.alert,

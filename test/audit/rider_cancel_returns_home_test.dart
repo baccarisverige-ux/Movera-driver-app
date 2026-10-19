@@ -39,7 +39,7 @@ void main() {
                   context,
                   MaterialPageRoute<void>(
                     builder: (_) => AcceptRide(
-                      offerId: 'cancel-home-trip',
+                      tripId: 'cancel-home-trip',
                       riderName: 'Angelica',
                       initialStage: ActiveRideStage.waitingForRider,
                       activeRideRepository: MemoryActiveRideRepository(),

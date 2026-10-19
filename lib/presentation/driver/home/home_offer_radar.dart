@@ -17,6 +17,9 @@ enum _RadarOfferGone {
 
 class _HomeDirectOffer {
   final String id;
+
+  /// X9: the trip behind this offer, when dispatch sent it (never [id]).
+  final String? tripId;
   final String category;
 
   /// Why it is Exclusive, shown on its card (see [ExclusiveReasons]).
@@ -62,6 +65,7 @@ class _HomeDirectOffer {
 
   const _HomeDirectOffer({
     required this.id,
+    this.tripId,
     required this.category,
     this.reason = '',
     required this.fare,
@@ -97,6 +101,7 @@ class _HomeDirectOffer {
     Duration? lifetime,
   }) => _HomeDirectOffer(
     id: offer.id,
+    tripId: offer.tripId,
     category: offer.category,
     reason: reason,
     fare: offer.fareLabel,
@@ -367,12 +372,14 @@ extension _HomeOfferRadar on _DriverHomeState {
 
       // Trips whose pick window ran out leave on refresh.
       next.removeWhere((offer) => _radarOfferExpired.contains(offer.id));
+      _radarOfferExpired.clear();
+      _radarOfferDeadlines.removeWhere(
+          (id, _) => !next.any((offer) => offer.id == id));
       for (final offer in next) {
         _startRadarPickWindow(offer);
       }
 
       _rebuild(() {
-        _radarOfferExpired.clear();
         _radarHomeOffers
           ..clear()
           ..addAll(next);
@@ -384,10 +391,20 @@ extension _HomeOfferRadar on _DriverHomeState {
       _scheduleHomeRadarExternalClaimDemo();
     }
     /// Starts [offer]'s pick window once; when it ends, Match fades.
+    /// D-04: the window has one deadline, set when the trip is listed. A
+    /// pause cancels the timer only; back on screen it gets the time left,
+    /// or Match fades at once when the window ran out meanwhile.
     void _startRadarPickWindow(_HomeDirectOffer offer) {
-      if (_radarOfferTimeoutTimers.containsKey(offer.id)) { return; }
+      if (_radarOfferTimeoutTimers.containsKey(offer.id) ||
+          _radarOfferExpired.contains(offer.id)) {
+        return;
+      }
+      final now = DateTime.now();
+      final deadline = _radarOfferDeadlines.putIfAbsent(
+          offer.id, () => now.add(_DriverHomeState._radarOfferPickWindow));
+      final left = deadline.difference(now);
       _radarOfferTimeoutTimers[offer.id] = Timer(
-        _DriverHomeState._radarOfferPickWindow,
+        left.isNegative ? Duration.zero : left,
         () {
           if (!mounted ||
               !_radarHomeOffers.any((item) => item.id == offer.id) ||
@@ -436,6 +453,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         _homeRadarMatchStates.remove(offer.id);
         _homeRadarGoneReasons.remove(offer.id);
         _radarOfferExpired.remove(offer.id);
+        _radarOfferDeadlines.remove(offer.id);
         _hasRideOffers =
             _radarHomeOffers.isNotEmpty || _pendingRadarHomeOffers.isNotEmpty;
       });
@@ -710,7 +728,12 @@ extension _HomeOfferRadar on _DriverHomeState {
         timer.cancel();
       }
       _radarOfferTimeoutTimers.clear();
-      _radarOfferExpired.clear();
+      // D-04: a pause (preserveClaim) keeps each pick window's deadline and
+      // the trips whose window already ran out: resume must not revive them.
+      if (!preserveClaim) {
+        _radarOfferExpired.clear();
+        _radarOfferDeadlines.clear();
+      }
     }
     void _acceptOutsideRadarOffer() {
       final offer = _outsideRadarOffer;
@@ -752,8 +775,13 @@ extension _HomeOfferRadar on _DriverHomeState {
         context,
         ActiveRideTransition(
           AcceptRide(
+            // X9: the offer and the trip keep their own ids. Until a backend
+            // sends the trip id, the demo makes one per accepted occurrence.
             // A sample scheduled ride has no dispatch id.
-            offerId: tripOccurrenceId(offer.id.isEmpty ? 'scheduled' : offer.id),
+            offerId: offer.id.isEmpty ? null : offer.id,
+            tripId: offer.tripId ??
+                tripOccurrenceId(offer.id.isEmpty ? 'scheduled' : offer.id),
+            dispatchRepository: _dispatch,
             riderName: offer.riderName.isEmpty ? 'Rider' : offer.riderName,
             riderRating: double.tryParse(offer.rating) ?? 4.9,
             riderTrips: offer.riderTrips,

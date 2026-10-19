@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/contracts/trip_transitions.dart';
@@ -68,6 +70,9 @@ class ActiveRideController extends ChangeNotifier {
         );
 
   Future<bool> transitionTo(ActiveRideStage next) async {
+    if (_backgroundSave != null) {
+      await _afterBackgroundSave();
+    }
     if (_disposed || terminal || saving) {
       return false;
     }
@@ -117,6 +122,15 @@ class ActiveRideController extends ChangeNotifier {
         () => _finish(status),
         commit: () => _terminalStatus = status,
       );
+    } else if (status.isReleasedToDispatch) {
+      // Admin reassign or a released reservation (`searching` /
+      // `requested`): the trip went back to dispatch at whatever stage,
+      // so it is over for this driver. Echoes of the driver's own cancel
+      // were dropped above (already terminal).
+      return _write(
+        () => _finish(status),
+        commit: () => _terminalStatus = status,
+      );
     } else {
       if (terminal) {
         return false;
@@ -146,6 +160,9 @@ class ActiveRideController extends ChangeNotifier {
   }
 
   Future<bool> complete({bool clearSnapshot = true}) async {
+    if (_backgroundSave != null) {
+      await _afterBackgroundSave();
+    }
     if (_disposed ||
         terminal ||
         saving ||
@@ -163,6 +180,9 @@ class ActiveRideController extends ChangeNotifier {
   /// actor's cancel) must be reachable from the current status by some
   /// contract row, or it is rejected.
   Future<bool> cancel({TripStatus? status, bool clearSnapshot = true}) async {
+    if (_backgroundSave != null) {
+      await _afterBackgroundSave();
+    }
     if (_disposed || terminal || saving) {
       return false;
     }
@@ -179,6 +199,9 @@ class ActiveRideController extends ChangeNotifier {
   /// Driver no-show at pickup (`no_show`, from `arrived` only). The waiting
   /// guard (`noShowAfterMin`) is the caller's.
   Future<bool> noShow({bool clearSnapshot = true}) async {
+    if (_backgroundSave != null) {
+      await _afterBackgroundSave();
+    }
     if (_disposed ||
         terminal ||
         saving ||
@@ -225,20 +248,37 @@ class ActiveRideController extends ChangeNotifier {
   bool recoveryRequired = false;
   bool _disposed = false;
   bool _writing = false;
+
+  /// Set while the write in flight is a background [persistNow] (GPS
+  /// snapshot, lifecycle save) rather than a driver command.
+  Completer<void>? _backgroundSave;
   int _revision = 0;
   Object? persistenceError;
   bool get saving => _writing;
   PersistedActiveRide _snapshot(ActiveRideStage stage) =>
       snapshotBuilder?.call(stage) ??
       PersistedActiveRide(tripId: tripId ?? 'demo', stage: stage);
+  /// D-09: a driver command (Arrive, Start, Finish, cancel) that lands
+  /// while a background save is in flight waits for it and then runs,
+  /// instead of being dropped. A command in flight still rejects a
+  /// second one (double tap).
+  Future<void> _afterBackgroundSave() async {
+    while (_writing && _backgroundSave != null && !_disposed) {
+      await _backgroundSave!.future;
+    }
+  }
+
   Future<bool> _write(
     Future<void> Function() operation, {
     VoidCallback? commit,
+    bool background = false,
   }) async {
     if (_disposed || _writing) {
       return false;
     }
     _writing = true;
+    final backgroundSave = background ? Completer<void>() : null;
+    _backgroundSave = backgroundSave;
     _revision++;
     persistenceError = null;
     if (!_disposed) {
@@ -256,9 +296,13 @@ class ActiveRideController extends ChangeNotifier {
       return false;
     } finally {
       _writing = false;
+      if (identical(_backgroundSave, backgroundSave)) {
+        _backgroundSave = null;
+      }
       if (!_disposed) {
         notifyListeners();
       }
+      backgroundSave?.complete();
     }
   }
 
@@ -270,7 +314,10 @@ class ActiveRideController extends ChangeNotifier {
     if (terminal || tripId == null) {
       return true;
     }
-    return _write(() => _repository.save(_snapshot(_stage)));
+    return _write(
+      () => _repository.save(_snapshot(_stage)),
+      background: true,
+    );
   }
 
   @override

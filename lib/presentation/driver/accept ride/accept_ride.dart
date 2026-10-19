@@ -42,6 +42,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/rider_contact.dart';
+import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/next_trip_gate.dart';
@@ -104,7 +105,8 @@ part 'accept_ride_sheet.dart';
 class AcceptRide extends StatefulWidget {
   const AcceptRide({
     super.key,
-    this.offerId = 'demo-radar-offer',
+    this.offerId,
+    String? tripId,
     this.riderName = 'Angelica',
     this.riderRating = 4.9,
     this.riderTrips = 312,
@@ -137,7 +139,8 @@ class AcceptRide extends StatefulWidget {
     this.rideCheck,
     this.pickupKm,
     this.bags = 0,
-  });
+    this.dispatchRepository,
+  }) : tripId = tripId ?? 'demo-radar-offer';
 
   /// Bags the rider said they bring; the trip island mentions them.
   final int bags;
@@ -150,8 +153,21 @@ class AcceptRide extends StatefulWidget {
 
   /// Ride check services; the app's [RideCheckScope] when omitted.
   final RideCheckServices? rideCheck;
-  final String offerId;
-  /// Clock for elapsed waiting time; injectable for lifecycle verification.
+
+  /// X9: the trip (contract `tripId`). Realtime, persistence, waybills and
+  /// the session all key on it. Without one, a bare widget (tests, demo)
+  /// uses a fixed demo id.
+  final String tripId;
+
+  /// The dispatch offer the driver claimed for this trip, when there was
+  /// one. Never used as the trip's id.
+  final String? offerId;
+
+  /// UI-04: the in-trip menu claims and releases reservations through the
+  /// same dispatch as Home.
+  final DispatchRepository? dispatchRepository;
+  /// Clock for elapsed waiting time and the next-trip offer's time to
+  /// accept; injectable for lifecycle verification.
   final DateTime Function()? waitNow;
   final String riderName;
   final double riderRating;
@@ -194,11 +210,12 @@ class AcceptRide extends StatefulWidget {
     WaybillRepository? waybillRepository,
     DriverSessionController? sessionController,
     ActiveRideRepository? activeRideRepository,
+    DispatchRepository? dispatchRepository,
   }) {
     final pickup = record.pickup;
     return AcceptRide(
       key: key,
-      offerId: record.tripId,
+      tripId: record.tripId,
       riderName: record.riderName,
       fare: record.fare,
       category: record.service,
@@ -211,6 +228,7 @@ class AcceptRide extends StatefulWidget {
       waybillRepository: waybillRepository,
       sessionController: sessionController,
       activeRideRepository: activeRideRepository,
+      dispatchRepository: dispatchRepository,
     );
   }
 
@@ -222,13 +240,14 @@ class AcceptRide extends StatefulWidget {
     WaybillRepository? waybillRepository,
     DriverSessionController? sessionController,
     ActiveRideRepository? activeRideRepository,
+    DispatchRepository? dispatchRepository,
     DriverRealtime? realtime,
   }) {
     if (!snapshot.hasVerifiedEndpoints) { throw StateError('Saved trip requires verified pickup and drop-off coordinates'); }
     final pickup = snapshot.pickupAddress ?? 'Address unavailable';
     return AcceptRide(
       key: key,
-      offerId: snapshot.tripId,
+      tripId: snapshot.tripId,
       riderName: snapshot.riderName ?? 'Rider data unavailable',
       riderRating: snapshot.riderRating ?? 4.9,
       riderTrips: snapshot.riderTrips ?? 312,
@@ -255,6 +274,7 @@ class AcceptRide extends StatefulWidget {
       waybillRepository: waybillRepository,
       sessionController: sessionController,
       activeRideRepository: activeRideRepository,
+      dispatchRepository: dispatchRepository,
       realtime: realtime,
       initialStage: snapshot.stage,
       initialWaitSeconds: snapshot.waitSeconds ?? 0,
@@ -464,7 +484,7 @@ class _AcceptRideState extends State<AcceptRide>
   GoogleDriverCameraPort? _cameraPort;
   StreamSubscription<DriverLocation>? _positionSubscription;
   late final ActiveRideController _rideLifecycle = ActiveRideController(
-    tripId: widget.offerId,
+    tripId: widget.tripId,
     repository: widget.activeRideRepository,
     initialStage: widget.initialStage,
   );
@@ -489,6 +509,7 @@ class _AcceptRideState extends State<AcceptRide>
   Timer? _nextTripRadarDemoTimer;
   Timer? _nextTripRadarMatchTimer;
   Timer? _nextTripOfferExpiry;
+  DateTime? _nextTripOfferDeadline; // D-05: kept across a pause.
   /// An Exclusive offer while driving a rider: Dispatch's time to accept.
   static Duration get _onTripOfferLifetime => DriverOfferRules.current.exclusiveAcceptTime;
   DateTime? _lastGpsAppliedAt;
@@ -545,7 +566,7 @@ class _AcceptRideState extends State<AcceptRide>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // A RideCheck demo trip drives its own scripted GPS (DemoTripDrive).
-    _locationService = DemoTripDrive.forTrip(widget.offerId,
+    _locationService = DemoTripDrive.forTrip(widget.tripId,
             pickup: GeoPointMaps.fromLatLng(widget.pickupPosition),
             dropoff: GeoPointMaps.fromLatLng(widget.dropoffPosition)) ??
         widget.locationRepository ?? const DriverLocationService();
@@ -558,7 +579,7 @@ class _AcceptRideState extends State<AcceptRide>
     _ownsRealtime = widget.realtime == null;
     _realtime = widget.realtime ?? MemoryDriverRealtime();
     _realtimeSubscription =
-        _realtime.subscribe(widget.offerId).listen(_AcceptRideTrip(this)._onRealtimeEvent, onError: (Object error) {
+        _realtime.subscribe(widget.tripId).listen(_AcceptRideTrip(this)._onRealtimeEvent, onError: (Object error) {
           if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trip updates disconnected. Reconnecting is required.'))); }
         });
     unawaited(_AcceptRideTrip(this)._resyncTrip());
@@ -582,8 +603,8 @@ class _AcceptRideState extends State<AcceptRide>
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) { return; }
-      widget.sessionController?.beginTrip(widget.offerId);
-      if(_waybills.current?.tripId != widget.offerId) { _waybills.beginCurrent(_AcceptRideTrip(this)._buildCurrentWaybill()); }
+      widget.sessionController?.beginTrip(widget.tripId);
+      if(_waybills.current?.tripId != widget.tripId) { _waybills.beginCurrent(_AcceptRideTrip(this)._buildCurrentWaybill()); }
       if (widget.restoredSnapshot?.next != null && _nextTripRadarOffer != null) {
         _waybills.secureNext(_AcceptRideTrip(this)._buildNextWaybill(_nextTripRadarOffer!));
       }
@@ -627,7 +648,7 @@ class _AcceptRideState extends State<AcceptRide>
       final services = widget.rideCheck ?? RideCheckScope.read(context) ?? RideCheckServices.fallback;
       _rideCheckServices = services;
       _rideCheckDetector = RideCheckDetector(rules: services.rules);
-      _rideCheck = RideCheckController(services: services, tripId: widget.offerId,
+      _rideCheck = RideCheckController(services: services, tripId: widget.tripId,
         tripDetails: _AcceptRideTrip(this)._safetyAlertTrip);
       _rideCheckTicker = Timer.periodic(const Duration(seconds: 20), (_) => _AcceptRideTrip(this)._rideCheckTick());
       _hardStops = services.hardStops?.listen(_AcceptRideTrip(this)._rideCheckHardStop);
@@ -948,7 +969,7 @@ class _AcceptRideState extends State<AcceptRide>
 
 
   _NextTripRadarOffer get _uniqueDemoNext => _NextTripRadarOffer(
-    id:'${widget.offerId}-next',category:_demoNextTripOffer.category,fare:_demoNextTripOffer.fare,rating:_demoNextTripOffer.rating,
+    id:'${widget.tripId}-next',category:_demoNextTripOffer.category,fare:_demoNextTripOffer.fare,rating:_demoNextTripOffer.rating,
     pickupMinutes:_demoNextTripOffer.pickupMinutes,pickupKm:_demoNextTripOffer.pickupKm,tripMinutes:_demoNextTripOffer.tripMinutes,riderName:_demoNextTripOffer.riderName,
     pickup:_demoNextTripOffer.pickup,dropoff:_demoNextTripOffer.dropoff,pickupPosition:_demoNextTripOffer.pickupPosition,dropoffPosition:_demoNextTripOffer.dropoffPosition);
 
@@ -1094,7 +1115,14 @@ class _AcceptRideState extends State<AcceptRide>
         child: Scaffold(
       key: _rideScaffoldKey,
       // The menu opens from the island, not by swiping over the map.
-      drawer: const DriverSideMenu(isOnline: true),
+      // UI-04: the same dispatch and the real status as Home's menu.
+      drawer: ListenableBuilder(
+        listenable: widget.sessionController ?? const AlwaysStoppedAnimation<double>(0),
+        builder: (_, __) => DriverSideMenu(
+          isOnline: widget.sessionController?.availableAfterTrip ?? true,
+          dispatchRepository: widget.dispatchRepository,
+        ),
+      ),
       drawerEnableOpenDragGesture: false,
       backgroundColor: _canvas,
       body: LayoutBuilder(

@@ -21,7 +21,7 @@ Future<void> _mount(WidgetTester tester, ActiveRideRepository repo) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(ScreenUtilInit(designSize: const Size(375,812),
     builder: (_, __) => MaterialApp(home: AcceptRide(
-      offerId: 'confirmation-test', initialStage: ActiveRideStage.waitingForRider,
+      tripId: 'confirmation-test', initialStage: ActiveRideStage.waitingForRider,
       activeRideRepository: repo))));
   for (var i=0;i<10;i++) { await tester.pump(const Duration(milliseconds:30)); }
   tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last).controller!.animatePanelToSnapPoint();

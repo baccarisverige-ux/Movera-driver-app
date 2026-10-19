@@ -138,7 +138,7 @@ void main() {
     await _mount(
       tester,
       AcceptRide(
-        offerId: 'projection-trip',
+        tripId: 'projection-trip',
         realtime: realtime,
         locationRepository: _Location(),
         waitNow: () => now,
@@ -167,7 +167,7 @@ void main() {
     await _mount(
       tester,
       AcceptRide(
-        offerId: 'stop-trip',
+        tripId: 'stop-trip',
         initialStage: ActiveRideStage.onTrip,
         initialWaitSeconds: 30,
         waitNow: () => now,

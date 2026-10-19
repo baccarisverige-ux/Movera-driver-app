@@ -106,7 +106,7 @@ void main() {
       await _settle(tester, 30);
 
       final ride = tester.widget<AcceptRide>(find.byType(AcceptRide));
-      expect(ride.offerId, 'trip-b');
+      expect(ride.tripId, 'trip-b');
       expect(session.activeTripId, 'trip-b');
       expect(InMemoryWaybillRepository.instance.current?.tripId, 'trip-b');
       final history = await PrefsTripHistoryRepository().list();
