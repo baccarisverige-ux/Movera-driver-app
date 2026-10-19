@@ -77,20 +77,24 @@ class _Moves extends HeadlessMapPlatform {
 void main() {
   group('tilt is proportional to zoom', () {
     double t(double z) => DriverCameraPolicy.tiltForZoom(z);
-    test('0 deg at zoom 12, linear to 67.5 deg at zoom 16', () {
+    test('0 deg at zoom 12, linear to 67.5 deg at zoom 15.5', () {
       expect(t(11), 0);
       expect(t(DriverCameraPolicy.exploreZoom), 0); // Home opens flat.
       expect(t(12), 0);
-      expect(t(13), closeTo(16.875, 1e-9));
-      expect(t(14), closeTo(33.75, 1e-9));
-      expect(t(15), closeTo(50.625, 1e-9));
+      expect(t(13), closeTo(67.5 / 3.5, 1e-9));
+      expect(t(13.75), closeTo(33.75, 1e-9));
+      // Guidance standstill (zoom 15) is already near the horizon.
+      expect(t(15), closeTo(67.5 * 3 / 3.5, 1e-9));
+      expect(t(15), greaterThan(57));
+      expect(t(15.5), 67.5);
       expect(t(16), 67.5);
       expect(t(20), 67.5);
-      // Every small zoom step between 12 and 16 changes the tilt by the
-      // same amount: no plateau from the SDK limit, no steep middle.
-      for (var z = 12.0; z < 15.99; z += .05) {
+      // Every small zoom step between 12 and 15.5 changes the tilt by the
+      // same amount (about 19 deg a level, steeper than the 17 deg of the
+      // old 12 to 16 line): no plateau from the SDK limit, no steep middle.
+      for (var z = 12.0; z < 15.49; z += .05) {
         final step = t(z + .05) - t(z);
-        expect(step, closeTo(67.5 / 4 * .05, 1e-6), reason: 'at $z');
+        expect(step, closeTo(67.5 / 3.5 * .05, 1e-6), reason: 'at $z');
         expect(t(z), lessThan(DriverCameraPolicy.sdkMaxTilt(z)),
             reason: 'never clamped by the SDK at $z');
       }
@@ -98,21 +102,24 @@ void main() {
 
     test('the web gesture layer uses the same curve', () {
       final js = File('web/driver_map_camera.js').readAsStringSync();
-      expect(js, contains('const MAX_TILT = 67.5;'));
-      expect(js, contains('MAX_TILT * clamp((zoom - 12) / 4, 0, 1)'));
+      expect(js,
+          contains('const MAX_TILT = 67.5, FLAT_ZOOM = 12, FULL_TILT_ZOOM = 15.5;'));
+      expect(js, contains('MAX_TILT * clamp((zoom - FLAT_ZOOM) /'));
       expect(DriverCameraPolicy.flatZoom, 12);
-      expect(DriverCameraPolicy.fullTiltZoom, 16);
+      expect(DriverCameraPolicy.fullTiltZoom, 15.5);
       expect(DriverCameraPolicy.maxTilt, 67.5);
     });
   });
 
   group('guidance stays wide while tilted', () {
-    test('cruise 16 standstill, 15.5 urban, 15 fast, 14.625 highway', () {
-      expect(DriverCameraPolicy.guidanceStartZoom, 16);
-      expect(DriverCameraPolicy.zoomForSpeed(0), 16);
-      expect(DriverCameraPolicy.zoomForSpeed(10), 15.5);
-      expect(DriverCameraPolicy.zoomForSpeed(20), 15);
-      expect(DriverCameraPolicy.zoomForSpeed(30), 14.625);
+    // One level under street zoom: under the strong tilt the near roads of
+    // zoom 16 drew too wide (owner, iPhone).
+    test('cruise 15 standstill, 14.5 urban, 14 fast, 13.625 highway', () {
+      expect(DriverCameraPolicy.guidanceStartZoom, 15);
+      expect(DriverCameraPolicy.zoomForSpeed(0), 15);
+      expect(DriverCameraPolicy.zoomForSpeed(10), 14.5);
+      expect(DriverCameraPolicy.zoomForSpeed(20), 14);
+      expect(DriverCameraPolicy.zoomForSpeed(30), 13.625);
       var previous = DriverCameraPolicy.zoomForSpeed(0);
       for (var s = 0.0; s <= 40; s += .25) {
         final z = DriverCameraPolicy.zoomForSpeed(s);
@@ -122,9 +129,10 @@ void main() {
       }
     });
 
-    test('a turn adds at most 0.4; arrival is 16.5 at 60 deg', () {
+    test('a turn adds at most 0.4; arrival is 15.5 at 60 deg', () {
       expect(DriverCameraPolicy.maxTurnZoomIn, .4);
-      expect(DriverCameraPolicy.arrivalZoom, 16.5);
+      expect(DriverCameraPolicy.turnZoom, 15.4);
+      expect(DriverCameraPolicy.arrivalZoom, 15.5);
       expect(DriverCameraPolicy.arrivalTilt, 60);
       final road = RoadRoute(
         points: [for (var i = 0; i <= 20; i++) _east(_origin, i * 100.0)],
@@ -134,12 +142,12 @@ void main() {
       final cruise = DriverCameraPolicy().resolve(
           location: _fix(_origin), route: road, navigating: true,
           immediate: true);
-      expect(cruise.zoom, 16);
-      expect(cruise.tilt, 67.5);
+      expect(cruise.zoom, 15);
+      expect(cruise.tilt, closeTo(67.5 * 3 / 3.5, 1e-9));
       final arrival = DriverCameraPolicy().resolve(
           location: _fix(_east(_origin, 2000)), route: road,
           navigating: true, immediate: true);
-      expect(arrival.zoom, closeTo(16.5, 1e-9));
+      expect(arrival.zoom, closeTo(15.5, 1e-9));
       expect(arrival.tilt, 60);
     });
   });
@@ -159,7 +167,7 @@ void main() {
       camera.browseSettled(); // Maps idle while the fingers rest.
       expect(port.tilts, isEmpty);
       camera.touching = false;
-      expect(port.tilts.single, closeTo(33.75, 1e-9));
+      expect(port.tilts.single, closeTo(67.5 * 2 / 3.5, 1e-9));
     });
 
     test('the live tilt-with-zoom is off while waiting (flat map)', () {

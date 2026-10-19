@@ -1488,8 +1488,9 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
       Marker(
         markerId: const MarkerId('driver'),
         position: _pose.position,
+        // Compass heading of an upright arrow; CustomGoogleMap turns it.
         rotation: _pose.headingDegrees,
-        flat: true,
+        flat: false,
         anchor: MoveraVehicleMarker.anchor,
         zIndexInt: 12,
         icon: widget.vehicleIcon,

@@ -10,6 +10,7 @@ import 'dart:math' as math;
 import '../core/navigation/map_double_tap_policy.dart';
 import '../styles/movera_map_palette.dart';
 import '../styles/movera_map_style.dart';
+import 'movera_vehicle_marker.dart';
 import 'driver_map_web_bridge_stub.dart'
     if (dart.library.js_interop) 'driver_map_web_bridge.dart'
     as web;
@@ -129,7 +130,59 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void _onCameraMove(CameraPosition position) {
     final band = _styleBand.at(position.zoom);
     if (band != _styleBand && mounted) setState(() => _styleBand = band);
+    _turnVehicleWith(position);
     widget.onCameraMove?.call(position);
+  }
+
+  /// The camera the own vehicle's billboard rotation was last worked out
+  /// for (native maps; web draws its own vehicle overlay).
+  late double _vehicleBearing = widget.initialPosition?.bearing ?? 0;
+  late double _vehicleTilt = widget.initialPosition?.tilt ?? 0;
+
+  static bool _isOwnVehicle(Marker marker) =>
+      marker.markerId.value == 'driver' ||
+      marker.markerId.value == 'driver_location';
+
+  /// A billboard turns with the screen: as the camera turns or tilts, turn
+  /// the arrow back onto its heading. Only a visible change (over 1.5°)
+  /// rebuilds the markers, so a following camera does not churn them.
+  void _turnVehicleWith(CameraPosition camera) {
+    if (kIsWeb || !mounted) return;
+    for (final marker in widget.markers ?? const <Marker>{}) {
+      if (!_isOwnVehicle(marker) || marker.flat) continue;
+      final shown = MoveraVehicleMarker.screenRotation(
+          marker.rotation, _vehicleBearing, _vehicleTilt);
+      final wanted = MoveraVehicleMarker.screenRotation(
+          marker.rotation, camera.bearing, camera.tilt);
+      final change = ((wanted - shown + 540) % 360 - 180).abs();
+      if (change > 1.5) {
+        setState(() {
+          _vehicleBearing = camera.bearing;
+          _vehicleTilt = camera.tilt;
+        });
+      }
+      return;
+    }
+  }
+
+  /// The markers as the map gets them: the own vehicle (a billboard, its
+  /// rotation a compass heading) turned to the screen, over its halo.
+  Set<Marker> get _mapMarkers {
+    final markers = widget.markers ?? const <Marker>{};
+    if (kIsWeb) return markers;
+    final halo = MoveraVehicleMarker.halo;
+    return {
+      for (final marker in markers)
+        if (_isOwnVehicle(marker) && !marker.flat) ...[
+          marker.copyWith(
+            rotationParam: MoveraVehicleMarker.screenRotation(
+                marker.rotation, _vehicleBearing, _vehicleTilt),
+          ),
+          if (halo != null && marker.visible)
+            MoveraVehicleMarker.haloMarker(marker, halo),
+        ] else
+          marker,
+    };
   }
 
   /// Web: Maps JavaScript (and its camera adapter) can arrive after the
@@ -184,8 +237,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
 
   void _updateWebVehicle(int mapId) {
     for (final marker in widget.markers ?? <Marker>{}) {
-      if (marker.markerId.value == 'driver' ||
-          marker.markerId.value == 'driver_location') {
+      if (_isOwnVehicle(marker)) {
         web.vehicle(mapId, marker.rotation);
       }
     }
@@ -272,7 +324,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
           else
             GoogleMap(
               initialCameraPosition: widget.initialPosition ?? _defaultPosition,
-              markers: widget.markers ?? {},
+              markers: _mapMarkers,
               polylines: widget.polylines ?? {},
               circles: widget.circles ?? {},
               polygons: widget.polygons ?? {},
