@@ -70,6 +70,7 @@ import 'package:movera/presentation/driver/accept%20ride/finish_soon_sheet.dart'
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';

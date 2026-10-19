@@ -55,8 +55,8 @@ void main() {
     expect(outline.width, 8);
     expect(core.color, const Color(0xFF141414));
     expect(core.width, 4);
-    // R15-1 "A thin": 5 / 6 / 8 / 11 from a whole trip to close up.
-    for (final (zoom, width) in [(10.0, 5), (12.0, 6), (14.0, 8), (16.0, 11)]) {
+    // R15-8: 8 on every offer zoom, 11 only close up.
+    for (final (zoom, width) in [(10.0, 8), (12.0, 8), (14.0, 8), (16.0, 11)]) {
       expect(
         OfferRouteLine.sized(lines, zoom)
             .firstWhere((l) => l.polylineId.value == OfferRouteLine.outlineId)

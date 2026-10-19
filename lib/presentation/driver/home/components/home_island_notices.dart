@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 
 /// What the island says, in one place. Kept to the essential words so the
@@ -33,6 +34,39 @@ class HomeIslandNotices {
     tone: IslandTone.alert,
     priority: IslandPriority.high,
   );
+
+  /// R15-7: "Rider cancelled · +45 kr" or "· no fee". Without a [fee]
+  /// decision (null) only "Rider cancelled".
+  static IslandMessage riderCancelledWithFee(Money? fee, {bool onTrip = false}) =>
+      IslandMessage(
+        title: driverText(onTrip
+                ? DriverTexts.islandRiderEndedTrip
+                : DriverTexts.islandRiderCancelled) +
+            feeSuffix(fee),
+        tone: IslandTone.alert,
+        priority: IslandPriority.high,
+      );
+
+  /// R15-7: an accepted reservation, "14:00 cancelled · +105 kr".
+  static IslandMessage reservationCancelled(String time, Money? fee) =>
+      IslandMessage(
+        title: driverText(DriverTexts.islandReservationCancelled, {'time': time}) +
+            feeSuffix(fee),
+        tone: IslandTone.alert,
+        priority: IslandPriority.high,
+      );
+
+  /// " · +45 kr", " · no fee", or nothing when no fee was decided.
+  static String feeSuffix(Money? fee) {
+    if (fee == null) { return ''; }
+    if (fee.minorUnits <= 0) {
+      return ' · ${driverText(DriverTexts.islandCancelNoFee)}';
+    }
+    final amount = fee.minorUnits % 100 == 0
+        ? '${fee.minorUnits ~/ 100} kr'
+        : fee.formatted;
+    return ' · ${driverText(DriverTexts.islandCancelFee, {'amount': amount})}';
+  }
 
   static IslandMessage get matching => IslandMessage(
     title: driverText(DriverTexts.islandMatching),
