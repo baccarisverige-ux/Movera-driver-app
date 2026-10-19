@@ -17,7 +17,25 @@ void main() {
     for (final color in MoveraMapPalette.all) {
       expect(moveraMapStyle, contains(MoveraMapPalette.hex(color)));
     }
-    expect(MoveraMapPalette.hex(MoveraMapPalette.land), '#F0F2F4');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.land), '#FAFCFA');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.building), '#E1E4E5');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.park), '#C8F0CC');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.parkLabel), '#3D8549');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.water), '#ADE2FC');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.path), '#DBD3B2');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.road), '#C8CCD0');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.mainRoad), '#A1A6AB');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.highway), '#8A8F96');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.label), '#575C60');
+    expect(MoveraMapPalette.hex(MoveraMapPalette.cityLabel), '#6F8B9D');
+  });
+
+  test('the palette is the cloud style linked to the web Map ID', () {
+    // Same colours as the v3 cloud style (Google "variant/styles" format).
+    final cloud = File('docs/movera_map_style_v3.json').readAsStringSync();
+    for (final color in [...MoveraMapPalette.all, MoveraMapPalette.path]) {
+      expect(cloud, contains(MoveraMapPalette.hex(color)));
+    }
   });
 
   test('drawn maps use the Home palette, route line and pins', () {
@@ -34,6 +52,9 @@ void main() {
         'MoveraMapPalette.land',
         'MoveraMapPalette.water',
         'MoveraMapPalette.park',
+        'MoveraMapPalette.building',
+        'MoveraMapPalette.footpath(',
+        'MoveraMapPalette.mainStreet(',
         'MoveraMapPalette.street(',
         'MoveraMapPalette.drawHighway(',
       ]) {

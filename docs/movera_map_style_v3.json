@@ -1,0 +1,170 @@
+{
+  "variant": "light",
+  "styles": [
+    {
+      "id": "natural.land",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "natural.land.landCover",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "natural.land.landCover.crops",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "natural.land.landCover.dryCrops",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "natural.land.landCover.forest",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "natural.land.landCover.ice",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "natural.land.landCover.sand",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "natural.land.landCover.shrub",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "natural.land.landCover.tundra",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "infrastructure.urbanArea",
+      "geometry": {
+        "fillColor": "#FAFCFA"
+      }
+    },
+    {
+      "id": "infrastructure.building",
+      "geometry": {
+        "fillColor": "#E1E4E5",
+        "strokeColor": "#D6D9DB"
+      }
+    },
+    {
+      "id": "natural.water",
+      "geometry": {
+        "fillColor": "#ADE2FC"
+      },
+      "label": {
+        "textFillColor": "#4A8DBF",
+        "textStrokeColor": "#FFFFFF"
+      }
+    },
+    {
+      "id": "pointOfInterest",
+      "geometry": {
+        "visible": false
+      },
+      "label": {
+        "visible": false
+      }
+    },
+    {
+      "id": "pointOfInterest.recreation.park",
+      "geometry": {
+        "visible": true,
+        "fillColor": "#C8F0CC"
+      },
+      "label": {
+        "visible": true,
+        "textFillColor": "#3D8549",
+        "textStrokeColor": "#FFFFFF"
+      }
+    },
+    {
+      "id": "infrastructure.transitStation",
+      "geometry": {
+        "visible": false
+      },
+      "label": {
+        "visible": false
+      }
+    },
+    {
+      "id": "infrastructure.railwayTrack",
+      "geometry": {
+        "fillColor": "#D3D6D8"
+      }
+    },
+    {
+      "id": "infrastructure.roadNetwork.road",
+      "geometry": {
+        "fillColor": "#C8CCD0",
+        "strokeColor": "#C8CCD0"
+      },
+      "label": {
+        "textFillColor": "#575C60",
+        "textStrokeColor": "#FFFFFF"
+      }
+    },
+    {
+      "id": "infrastructure.roadNetwork.road.local",
+      "geometry": {
+        "fillColor": "#C8CCD0",
+        "strokeColor": "#C8CCD0"
+      }
+    },
+    {
+      "id": "infrastructure.roadNetwork.road.arterial",
+      "geometry": {
+        "fillColor": "#A1A6AB",
+        "strokeColor": "#A1A6AB"
+      }
+    },
+    {
+      "id": "infrastructure.roadNetwork.road.highway",
+      "geometry": {
+        "fillColor": "#8A8F96",
+        "strokeColor": "#8A8F96"
+      }
+    },
+    {
+      "id": "infrastructure.roadNetwork.road.noTraffic",
+      "geometry": {
+        "fillColor": "#DBD3B2",
+        "strokeColor": "#DBD3B2"
+      }
+    },
+    {
+      "id": "political.neighborhood",
+      "label": {
+        "visible": false
+      }
+    },
+    {
+      "id": "political.city",
+      "label": {
+        "textFillColor": "#6F8B9D",
+        "textStrokeColor": "#FFFFFF"
+      }
+    }
+  ]
+}

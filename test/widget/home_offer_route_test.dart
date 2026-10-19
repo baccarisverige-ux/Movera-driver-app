@@ -191,8 +191,6 @@ void main() {
     // Pickup chip on the pin's left, drop-off chip on its right.
     expect(pickupPin.anchor.dx, greaterThan(0.5));
     expect(dropoffPin.anchor.dx, lessThan(0.5));
-    // No "2D map" note over the route while the offer is up.
-    expect(map.show3DNotice, isFalse);
 
     // R13-3: the last card leaving takes its route and pins along.
     bool offerLine(Polyline line) =>
@@ -208,7 +206,6 @@ void main() {
     final after = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
     expect(after.polylines!.where(offerLine), isEmpty);
     expect(after.markers!.where(offerPin), isEmpty);
-    expect(after.show3DNotice, isTrue);
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
   });

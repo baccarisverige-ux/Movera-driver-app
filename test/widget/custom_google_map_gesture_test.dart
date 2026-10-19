@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/styles/movera_map_style.dart';
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/core/navigation/map_double_tap_policy.dart';
 
@@ -30,6 +33,32 @@ void main() {
       currentAt: const Duration(milliseconds: 1200),
       currentPosition: position,
     ), isFalse);
+  });
+
+  testWidgets('clean map: Movera style, no "3D unavailable" chip', (
+    tester,
+  ) async {
+    final original = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: CustomGoogleMap(myLocationEnabled: false)),
+    ));
+    await tester.pump();
+    expect(tester.widget<GoogleMap>(find.byType(GoogleMap)).style,
+        moveraMapStyle);
+    expect(find.descendant(
+      of: find.byType(CustomGoogleMap),
+      matching: find.byType(Text),
+    ), findsNothing);
+    for (final file in Directory('lib').listSync(recursive: true)) {
+      if (file is! File || !file.path.endsWith('.dart')) continue;
+      final source = file.readAsStringSync();
+      expect(source, isNot(contains('3D unavailable')), reason: file.path);
+      expect(source, isNot(contains('show3DNotice')), reason: file.path);
+    }
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('no native web zoom buttons while pinch and pan stay enabled',
