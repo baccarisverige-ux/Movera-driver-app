@@ -23,6 +23,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:movera/widgets/map_control_button.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/location/driver_location_repository.dart';

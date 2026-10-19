@@ -4,6 +4,7 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/presentation/driver/sheets/sheet_trace.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/contracts/trip_transitions.dart';
 import 'dart:async';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/navigation/map_preview_generation.dart';
@@ -520,7 +521,7 @@ class _DriverHomeState extends State<DriverHome>
       if (!mounted) { return; }
       if (resume != true) {
         try {
-          if (repo is TerminalRideRepository) { await (repo as TerminalRideRepository).markTerminal(snapshot.tripId, TripStatus.cancelledByDriver); }
+          if (repo is TerminalRideRepository) { await (repo as TerminalRideRepository).markTerminal(snapshot.tripId, TripTransitions.target(snapshot.stage.tripStatus, TripCommand.cancel, TripActor.driver) ?? TripStatus.cancelledByDriver); }
           if (repo is TerminalRideRepository) { await (repo as TerminalRideRepository).clearForTrip(snapshot.tripId); } else { await repo.clear(); }
           if (mounted) { setState(() => _recoveryResolved = true); }
         } catch (_) {

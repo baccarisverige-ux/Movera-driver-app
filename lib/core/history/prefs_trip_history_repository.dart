@@ -1,4 +1,5 @@
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
@@ -49,7 +50,8 @@ class PrefsTripHistoryRepository {
             duration: data['duration'] as String? ?? '—',
             tip: data['tip'] as String? ?? '—',
             paymentMethod: data['paymentMethod'] as String? ?? '—',
-            status: TripStatus.values.byName(
+            // Wire name since contract v0.3; older rows are camelCase.
+            status: TripStatusWire.parse(
               data['status'] as String? ?? 'completed',
             ),
             fareMinorUnits: data['fareMinorUnits'] as int?,
@@ -63,6 +65,15 @@ class PrefsTripHistoryRepository {
         )
         .toList(growable: false);
   });
+
+  /// A terminal status, or a driver cancel that sent the trip back to
+  /// dispatch (contract v0.3: `searching` / `requested`).
+  static bool _validStatus(Object? raw, Object? actor) {
+    final status = raw is String ? TripStatusWire.tryParse(raw) : null;
+    if (status == null) return false;
+    return status.isTerminal ||
+        (status.isReleasedToDispatch && actor == 'driver');
+  }
 
   static const maxReceipts = 500;
   _HistoryDecode _decode(String? raw) {
@@ -111,9 +122,7 @@ class PrefsTripHistoryRepository {
           ].every((key) => row[key] == null || row[key] is String) ||
           (row['fareMinorUnits'] != null && row['fareMinorUnits'] is! int) ||
           (row['status'] != null &&
-              !TripStatus.values.any(
-                (status) => status.isTerminal && status.name == row['status'],
-              )) ||
+              !_validStatus(row['status'], row['cancellationActor'])) ||
           (row['completedAt'] != null &&
               (row['completedAt'] is! String ||
                   DateTime.tryParse(row['completedAt'] as String) == null))) {
@@ -167,7 +176,9 @@ class PrefsTripHistoryRepository {
     String? cancellationReasonCode,
     bool authoritative = false,
   }) {
-    if (record.tripId.trim().isEmpty || !status.isTerminal) {
+    if (record.tripId.trim().isEmpty ||
+        !(status.isTerminal ||
+            (status.isReleasedToDispatch && cancellationActor == 'driver'))) {
       return Future<void>.error(
         ArgumentError('A terminal trip with a nonempty ID is required'),
       );
@@ -197,7 +208,7 @@ class PrefsTripHistoryRepository {
         'pickup': record.pickup,
         'dropoff': record.dropoff,
         'fare': record.fare,
-        'status': status.name,
+        'status': status.wireName,
         if (status == TripStatus.completed &&
             Money.parseSekLabel(record.fare) != null)
           'fareMinorUnits': Money.parseSekLabel(record.fare)!.minorUnits,

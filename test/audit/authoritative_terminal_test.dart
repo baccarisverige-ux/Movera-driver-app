@@ -47,7 +47,7 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(
         prefs.getStringList(PrefsActiveRideRepository.terminalKey)!.single,
-        contains('|cancelledByRider|rider_cancelled|rider|'),
+        contains('|cancelled_by_rider|rider_cancelled|rider|'),
       );
       expect(await active.read(), isNull);
     },

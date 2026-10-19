@@ -430,6 +430,9 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
       TripStatus.cancelledByRider => 'Cancelled by rider',
       TripStatus.cancelledByDriver => 'Cancelled by driver',
       TripStatus.cancelledByAdmin => 'Cancelled by support',
+      TripStatus.cancelledBySystem => 'Cancelled by Movera',
+      TripStatus.searching ||
+      TripStatus.requested => 'Cancelled by driver',
       TripStatus.noShow => 'Rider did not arrive',
       TripStatus.expired => 'Trip expired',
       TripStatus.failed => 'Trip failed',

@@ -332,7 +332,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           _waybills.current ?? _buildCurrentWaybill(),
           status: TripStatus.cancelledByRider,
           authoritative:true,
-          cancellationReasonCode: 'rider_cancelled',
+          // The rider's own reason code is not sent to the driver yet.
           cancellationActor: 'rider',
           next: next);
         if (!mounted) { return; }
@@ -1228,11 +1228,21 @@ extension _AcceptRideTrip on _AcceptRideState {
     Future<void> _submitTripCancellation(_TripCancellationReason reason) async {
       if(_cancellationInFlight || _completionInFlight || _handlingRiderCancellation) { return; }
       _cancellationInFlight=true;
+      // Contract v0.3: a no-show is its own command and status; a driver
+      // cancel before the rider is on board sends the trip back to dispatch
+      // (`searching`), after that it is `cancelled_by_driver`.
+      final noShow = reason.code == CancelReasons.current.noShow.code;
+      final outcome = _rideLifecycle.driverTarget(noShow ? TripCommand.noShow : TripCommand.cancel);
+      if (outcome == null) {
+        if(mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This trip cannot be cancelled right now.'))); }
+        _cancellationInFlight=false;
+        return;
+      }
       try {
         final secured = _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer : null;
         await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
           _waybills.current ?? _buildCurrentWaybill(),
-          status: TripStatus.cancelledByDriver,
+          status: outcome,
           cancellationReasonCode: reason.code,
           cancellationActor: 'driver',
           next: secured == null ? null : _snapshotForOffer(secured));
@@ -1243,7 +1253,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
       if(await _yieldToAuthoritativeTerminal()) return;
       // The journal has already applied terminal cleanup and queued handoff.
-      if (!await _rideLifecycle.cancel(clearSnapshot: false)) { _cancellationInFlight=false; return; }
+      if (!await (noShow ? _rideLifecycle.noShow(clearSnapshot: false) : _rideLifecycle.cancel(clearSnapshot: false))) { _cancellationInFlight=false; return; }
       if (!mounted) { return; }
       _waitTimer?.cancel();
       _nextTripRadarDemoTimer?.cancel();
