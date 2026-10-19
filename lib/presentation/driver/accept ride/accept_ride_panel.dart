@@ -606,15 +606,9 @@ extension _AcceptRidePanel on _AcceptRideState {
             tooltip: 'Recenter',
             size: 56,
             fill: MapControlButton.recenterBlue,
-            onTap: () {
-              if (_browsing) {
-                // Follows the car again and brings the sheet back.
-                _AcceptRideTrip(this)._exitBrowse();
-                return;
-              }
-              // Same quiet window as leaving browse: the fly-back is ours.
-              _AcceptRideTrip(this)._exitBrowse();
-            },
+            // Follows the car again at the locate view and brings the
+            // sheet back; the same quiet window as leaving browse.
+            onTap: () => _AcceptRideTrip(this)._exitBrowse(locate: true),
             child: SvgPicture.asset(AppAssets.mapRecenter, width: 24, height: 24),
           ),
             ],

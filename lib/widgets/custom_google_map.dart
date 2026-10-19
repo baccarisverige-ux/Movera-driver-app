@@ -130,6 +130,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void _onCameraMove(CameraPosition position) {
     final band = _styleBand.at(position.zoom);
     if (band != _styleBand && mounted) setState(() => _styleBand = band);
+    _scaleVehicleWith(position.zoom);
     _turnVehicleWith(position);
     widget.onCameraMove?.call(position);
   }
@@ -138,6 +139,19 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   /// for (native maps; web draws its own vehicle overlay).
   late double _vehicleBearing = widget.initialPosition?.bearing ?? 0;
   late double _vehicleTilt = widget.initialPosition?.tilt ?? 0;
+
+  /// The own vehicle's size bucket for the camera's zoom (native maps; the
+  /// web overlay scales itself): bigger zoomed in, smaller zoomed out.
+  late double _vehicleScale = MoveraVehicleMarker.scaleAt(
+    widget.initialPosition?.zoom ?? _defaultPosition.zoom,
+  );
+
+  /// Only a new bucket rebuilds the markers, never every zoom frame.
+  void _scaleVehicleWith(double zoom) {
+    if (kIsWeb || !mounted) return;
+    final scale = MoveraVehicleMarker.nextScale(_vehicleScale, zoom);
+    if (scale != _vehicleScale) setState(() => _vehicleScale = scale);
+  }
 
   static bool _isOwnVehicle(Marker marker) =>
       marker.markerId.value == 'driver' ||
@@ -166,15 +180,18 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   }
 
   /// The markers as the map gets them: the own vehicle (a billboard, its
-  /// rotation a compass heading) turned to the screen, over its halo.
+  /// rotation a compass heading) turned to the screen and sized for the
+  /// zoom, over its halo.
   Set<Marker> get _mapMarkers {
     final markers = widget.markers ?? const <Marker>{};
     if (kIsWeb) return markers;
-    final halo = MoveraVehicleMarker.halo;
+    final halo = MoveraVehicleMarker.haloAt(_vehicleScale);
+    final arrow = MoveraVehicleMarker.arrowAt(_vehicleScale);
     return {
       for (final marker in markers)
         if (_isOwnVehicle(marker) && !marker.flat) ...[
           marker.copyWith(
+            iconParam: arrow ?? marker.icon,
             rotationParam: MoveraVehicleMarker.screenRotation(
                 marker.rotation, _vehicleBearing, _vehicleTilt),
           ),

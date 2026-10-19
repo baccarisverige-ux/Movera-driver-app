@@ -92,7 +92,13 @@ void main() {
     expect(style(), moveraMapStyleNear, reason: 'hysteresis: not yet far');
     await move(11);
     expect(style(), moveraMapStyleFar);
-    expect(zooms, [12.55, 15, 12.45, 11], reason: 'caller still gets moves');
+    // Zoomed right in past the locate view: bolder roads.
+    await move(16.5);
+    expect(style(), moveraMapStyleClose);
+    await move(15);
+    expect(style(), moveraMapStyleNear);
+    expect(zooms, [12.55, 15, 12.45, 11, 16.5, 15],
+        reason: 'caller still gets moves');
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
