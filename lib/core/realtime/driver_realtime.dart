@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/money/money.dart';
 
 /// Platform realtime envelope (P5 / D8). Sequence-numbered, no WebSocket yet.
 enum DriverRealtimeKind {
@@ -75,6 +76,7 @@ class DriverRealtimeEvent {
     this.latitude,
     this.longitude,
     this.message,
+    this.cancelFee,
   });
 
   final String tripId;
@@ -85,6 +87,10 @@ class DriverRealtimeEvent {
   final double? latitude;
   final double? longitude;
   final String? message;
+
+  /// R15-7: with [DriverRealtimeKind.riderCancelled], the driver's cancel
+  /// fee as decided by the backend (zero: no fee; null: not decided).
+  final Money? cancelFee;
 }
 
 /// Mirror of Rider's [RideRealtime] shape so both apps hit the same seam.
@@ -143,6 +149,7 @@ class MemoryDriverRealtime implements DriverRealtime {
     double? longitude,
     String? message,
     DateTime? at,
+    Money? cancelFee,
   }) {
     if (_disposed) throw StateError('Realtime disposed');
     final nextSequence=(_sequencesByTrip[tripId] ?? 0)+1;
@@ -155,6 +162,7 @@ class MemoryDriverRealtime implements DriverRealtime {
       latitude: latitude,
       longitude: longitude,
       message: message,
+      cancelFee: cancelFee,
     );
     publish(event);
     return event;

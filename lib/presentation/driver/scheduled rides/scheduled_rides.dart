@@ -2,6 +2,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -666,6 +667,22 @@ class ScheduledRideStore {
   static final ValueNotifier<String?> backupNote = ValueNotifier<String?>(
     null,
   );
+
+  /// R15-7: the rider cancelled reservation [id], which this driver had
+  /// accepted. It leaves Accepted and the island says so, with the
+  /// driver's cancel [fee] from the backend ("+105 kr", "no fee"; nothing
+  /// while not decided). False when no accepted ride has that id.
+  static bool riderCancelled(String id, {Money? fee}) {
+    final index = _accepted.indexWhere((ride) => ride.id == id && id.isNotEmpty);
+    if (index < 0) { return false; }
+    final ride = _accepted.removeAt(index);
+    IslandMessages.show(HomeIslandNotices.reservationCancelled(
+      ride.route?.pickupTime ?? ride.time,
+      fee,
+    ));
+    _changed();
+    return true;
+  }
 
   /// The driver cancelled [ride], which they had accepted. A late cancel is
   /// counted (drivers never pay), unless its reason doesn't count

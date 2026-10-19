@@ -1,6 +1,8 @@
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/widgets/movera_modal_sheet.dart';
+import 'package:movera/core/money/money.dart';
+import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 
 const Color _ink = Color(0xFF202A31);
 const Color _muted = Color(0xFF6D797F);
@@ -9,12 +11,13 @@ const Color _dangerSoft = Color(0xFFF9E9E7);
 
 /// Presents an authoritative rider-cancelled event to the driver.
 ///
-/// The sheet deliberately contains no fee/no-show copy. Those rules belong to
-/// backend policy and are not yet approved in the Movera readiness plan.
+/// The fee follows the backend's decision ([fee], R15-7): "+45 kr",
+/// "no fee", or nothing while it is not decided.
 Future<void> showRiderCancelledSheet(
   BuildContext context, {
   required String riderName,
   required bool wasOnTrip,
+  Money? fee,
 }) {
   return showMoveraModalSheet<void>(
     context: context,
@@ -24,6 +27,7 @@ Future<void> showRiderCancelledSheet(
     builder: (sheetContext) => RiderCancelledSheet(
       riderName: riderName,
       wasOnTrip: wasOnTrip,
+      fee: fee,
       onAcknowledge: () => popOwned(sheetContext),
     ),
   );
@@ -35,10 +39,12 @@ class RiderCancelledSheet extends StatelessWidget {
     required this.riderName,
     required this.wasOnTrip,
     required this.onAcknowledge,
+    this.fee,
   });
 
   final String riderName;
   final bool wasOnTrip;
+  final Money? fee;
   final VoidCallback onAcknowledge;
 
   @override
@@ -47,9 +53,10 @@ class RiderCancelledSheet extends StatelessWidget {
     final body = wasOnTrip
         ? '$riderName cancelled while the trip was active. Stop in a safe place before leaving this screen.'
         : '$riderName cancelled this request. The current pickup is no longer active.';
-    final status = wasOnTrip
-        ? 'Active trip cancelled by rider'
-        : 'Pickup cancelled by rider';
+    final status = (wasOnTrip
+            ? 'Active trip cancelled by rider'
+            : 'Pickup cancelled by rider') +
+        HomeIslandNotices.feeSuffix(fee);
 
     return MoveraModalSheet(
       color: const Color(0xFFF8FAF9),

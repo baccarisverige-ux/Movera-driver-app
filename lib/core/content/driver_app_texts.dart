@@ -76,6 +76,16 @@ class DriverTexts {
       'island.riderCancelled', 'Rider cancelled', DriverTextArea.island);
   static const islandRiderEndedTrip = DriverTextKey(
       'island.riderEndedTrip', 'Rider ended trip', DriverTextArea.island);
+  /// R15-7: after "Rider cancelled", the driver's cancel fee or none.
+  static const islandCancelFee =
+      DriverTextKey('island.cancelFee', '+{amount}', DriverTextArea.island);
+  static const islandCancelNoFee =
+      DriverTextKey('island.cancelNoFee', 'no fee', DriverTextArea.island);
+  /// R15-7: the rider cancelled a reservation this driver had accepted,
+  /// e.g. "14:00 cancelled" (short, so the fee still fits the island).
+  static const islandReservationCancelled = DriverTextKey(
+      'island.reservationCancelled', '{time} cancelled',
+      DriverTextArea.island);
   static const islandMatching =
       DriverTextKey('island.matching', 'Matching…', DriverTextArea.island);
   static const islandMatched =
@@ -249,6 +259,9 @@ class DriverTexts {
     islandOffline,
     islandRiderCancelled,
     islandRiderEndedTrip,
+    islandCancelFee,
+    islandCancelNoFee,
+    islandReservationCancelled,
     islandMatching,
     islandMatched,
     islandTakenByOther,

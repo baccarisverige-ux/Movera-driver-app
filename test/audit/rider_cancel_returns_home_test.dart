@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
@@ -10,7 +11,12 @@ import 'package:movera/presentation/driver/home/components/island_messages.dart'
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('rider cancellation goes back home and tells the island', (tester) async {
+  for (final (fee, title) in <(Money?, String)>[
+    (null, 'Rider cancelled'),
+    (Money.sek(45), 'Rider cancelled · +45 kr'),
+    (Money.ore(0), 'Rider cancelled · no fee'),
+  ]) {
+  testWidgets('rider cancellation goes back home and tells the island: $title', (tester) async {
     SharedPreferences.setMockInitialValues({});
     CompletionJournal.resetForTesting();
     IslandMessages.reset();
@@ -58,6 +64,7 @@ void main() {
       tripId: 'cancel-home-trip',
       kind: DriverRealtimeKind.riderCancelled,
       status: TripStatus.cancelledByRider,
+      cancelFee: fee,
     );
     for (var i = 0; i < 30; i++) {
       await tester.pump(const Duration(milliseconds: 50));
@@ -68,9 +75,10 @@ void main() {
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Rider cancelled'), findsNothing);
     final message = IslandMessages.take();
-    expect(message?.title, 'Rider cancelled');
+    expect(message?.title, title);
     expect(message?.priority, IslandPriority.high);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });
+  }
 }

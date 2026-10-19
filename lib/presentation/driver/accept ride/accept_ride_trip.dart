@@ -222,7 +222,7 @@ extension _AcceptRideTrip on _AcceptRideState {
             ),
           );
         case DriverRealtimeKind.riderCancelled:
-          unawaited(_handleRiderCancelled());
+          unawaited(_handleRiderCancelled(fee: event.cancelFee));
         case DriverRealtimeKind.tripProjection:
         case DriverRealtimeKind.location:
         case DriverRealtimeKind.driverArrived:
@@ -250,7 +250,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       final status = event.kind == DriverRealtimeKind.riderCancelled ? TripStatus.cancelledByRider : event.status!;
       try {
         if (status == TripStatus.cancelledByRider) {
-          await _handleRiderCancelled();
+          await _handleRiderCancelled(fee: event.cancelFee);
         } else if (status.isTerminal) {
           final secured = _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer : null;
           final next = secured == null ? null : _snapshotForOffer(secured);
@@ -314,7 +314,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       final navigator = Navigator.of(context);
       if (navigator.canPop()) { navigator.pop(); }
     }
-    Future<void> _handleRiderCancelled() async {
+    /// [fee]: the driver's cancel fee from the backend (R15-7), if decided.
+    Future<void> _handleRiderCancelled({Money? fee}) async {
       if (!mounted ||
           _handlingRiderCancellation) {
         return;
@@ -342,7 +343,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _handlingRiderCancellation=false;
         if(mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Could not save rider cancellation. Retry.'),
-          action: SnackBarAction(label:'Retry',onPressed:(){ _handleRiderCancelled(); }))); }
+          action: SnackBarAction(label:'Retry',onPressed:(){ _handleRiderCancelled(fee: fee); }))); }
         return;
       }
       if(!mounted) { return; }
@@ -356,9 +357,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       // Back to Home when it is underneath: its island tells the driver.
       final home = Navigator.of(context);
       if (next == null && home.canPop()) {
-        IslandMessages.show(wasOnTrip
-            ? HomeIslandNotices.riderEndedTrip
-            : HomeIslandNotices.riderCancelled);
+        IslandMessages.show(
+            HomeIslandNotices.riderCancelledWithFee(fee, onTrip: wasOnTrip));
         widget.sessionController?.stayOnlineAfterTrip();
         home.pop();
         return;
@@ -368,6 +368,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         context,
         riderName: widget.riderName,
         wasOnTrip: wasOnTrip,
+        fee: fee,
       );
       if (!mounted) { return; }
 
