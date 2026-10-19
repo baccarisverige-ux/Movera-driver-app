@@ -239,7 +239,7 @@ void main() {
         await _mountRide(
           tester,
           AcceptRide(
-            offerId: 'demo-trip',
+            tripId: 'demo-trip',
             initialStage: ActiveRideStage.onTrip,
             locationRepository: _Gps(_north(_dropoff, 1000)),
             rideCheck: kit.services,
@@ -312,7 +312,7 @@ void main() {
       await _mountRide(
         tester,
         AcceptRide(
-          offerId: 'far-trip',
+          tripId: 'far-trip',
           initialStage: ActiveRideStage.onTrip,
           locationRepository: _Gps(_north(_dropoff, 4200)),
           activeRideRepository: MemoryActiveRideRepository(),
@@ -367,7 +367,7 @@ void main() {
       await _mountRide(
         tester,
         AcceptRide(
-          offerId: 'demo-far-trip',
+          tripId: 'demo-far-trip',
           initialStage: ActiveRideStage.onTrip,
           locationRepository: _Gps(_north(_dropoff, 5000)),
           activeRideRepository: MemoryActiveRideRepository(),
@@ -408,7 +408,7 @@ void main() {
       await _mountRide(
         tester,
         AcceptRide(
-          offerId: tripId,
+          tripId: tripId,
           riderName: offer.riderName,
           fare: offer.fareLabel,
           category: offer.category,
@@ -479,7 +479,7 @@ void main() {
       await _mountRide(
         tester,
         AcceptRide(
-          offerId: 'stop-trip',
+          tripId: 'stop-trip',
           initialStage: ActiveRideStage.onTrip,
           locationRepository: gps,
           rideCheck: kit.services,
@@ -508,7 +508,7 @@ void main() {
       await _mountRide(
         tester,
         AcceptRide(
-          offerId: 'gate-trip',
+          tripId: 'gate-trip',
           initialStage: ActiveRideStage.onTrip,
           locationRepository: _Gps(_north(_dropoff, 1000)),
           rideCheck: kit.services,
@@ -542,7 +542,7 @@ void main() {
       await _mountRide(
         tester,
         AcceptRide(
-          offerId: 'quiet-trip',
+          tripId: 'quiet-trip',
           initialStage: ActiveRideStage.onTrip,
           locationRepository: _Gps(_north(_dropoff, 1000)),
           rideCheck: kit.services,
@@ -568,7 +568,7 @@ void main() {
       await _mountRide(
         tester,
         AcceptRide(
-          offerId: 'crash-trip',
+          tripId: 'crash-trip',
           initialStage: ActiveRideStage.onTrip,
           locationRepository: _Gps(_north(_dropoff, 1000)),
           rideCheck: kit.services,
@@ -598,7 +598,7 @@ void main() {
     await _mountRide(
       tester,
       AcceptRide(
-        offerId: 'pill-trip',
+        tripId: 'pill-trip',
         initialStage: ActiveRideStage.onTrip,
         locationRepository: _Gps(_north(_dropoff, 1000)),
         rideCheck: kit.services,
@@ -963,7 +963,7 @@ void main() {
     await _mountRide(
       tester,
       AcceptRide(
-        offerId: 'tools-trip',
+        tripId: 'tools-trip',
         locationRepository: _Gps(_north(_dropoff, 3000)),
         rideCheck: kit.services,
       ),

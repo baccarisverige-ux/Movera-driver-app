@@ -14,6 +14,7 @@ enum ClaimOutcome {
 class RideOffer {
   const RideOffer({
     required this.id,
+    this.tripId,
     required this.category,
     required this.fare,
     required this.rating,
@@ -73,7 +74,13 @@ class RideOffer {
         (throw ArgumentError.value(label, field, 'Not a SEK amount'));
   }
 
+  /// The offer (contract `offerId`): what the driver claims.
   final String id;
+
+  /// X9: the trip this offer is for (contract `Offer.tripId`). Realtime,
+  /// persistence and receipts key on it, never on [id]. Null until a
+  /// backend sends it; the demo then makes one per accepted occurrence.
+  final String? tripId;
 
   /// Display name, e.g. "Movera XL". See [categoryId] for the wire id.
   final String category;

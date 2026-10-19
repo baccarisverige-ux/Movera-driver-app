@@ -11,7 +11,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       final securedOffer =
           _onTripRadarState == _OnTripRadarState.secured ? offer : null;
       return PersistedActiveRide(
-        tripId: widget.offerId,
+        tripId: widget.tripId,
         stage: stage,
         destinationModeActive: _destinationActive,
         destinationAddress: _destinationAddress,
@@ -97,6 +97,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       _syncWaitClock();
       _waitTimer?.cancel();
       _liveUpdatesPaused = true;
+      // D-05: no next-trip offer comes or runs out while the driver cannot
+      // see the trip; the offer up keeps its deadline for the resume.
+      _nextTripRadarDemoTimer?.cancel();
+      _nextTripOfferExpiry?.cancel();
       _locationEpoch++;
       _hasLiveLocation = false;
       _positionSubscription?.cancel();
@@ -124,10 +128,33 @@ extension _AcceptRideTrip on _AcceptRideState {
         _radarSweepController.repeat();
       }
       unawaited(_startLiveLocation());
+      _resumeOnTripOffer();
     }
+    /// D-05: back on screen. An offer whose time ran out while hidden
+    /// leaves without counting as a miss (as on Home); one with time left
+    /// counts down the rest. Radar then looks for the next one.
+    void _resumeOnTripOffer() {
+      if (!mounted || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
+      if (_onTripRadarState == _OnTripRadarState.offerAvailable) {
+        final deadline = _nextTripOfferDeadline;
+        final left = deadline?.difference(_offerNow());
+        if (left != null && left > Duration.zero) {
+          _armOnTripOfferExpiry(left: left);
+          return;
+        }
+        _nextTripOfferDeadline = null;
+        _rebuild(() {
+          _nextTripRadarOffer = null;
+          _onTripRadarState = _OnTripRadarState.scanning;
+        });
+        _restoreRideSheet();
+      }
+      _maybeScheduleOnTripRadarDemoOffer();
+    }
+    DateTime _offerNow() => widget.waitNow?.call() ?? DateTime.now();
     WaybillRecord _buildCurrentWaybill() {
       return WaybillRecord(
-        tripId: widget.offerId,
+        tripId: widget.tripId,
         statusLabel: 'Current trip',
         issuedAt: DateTime.now(),
         fare: widget.fare,
@@ -154,7 +181,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       ]) {
         if (record != null &&
             record.vehicle != _vehicleLabel &&
-            (record.tripId == widget.offerId || record.tripId == _nextTripRadarOffer?.id)) {
+            (record.tripId == widget.tripId || record.tripId == _nextTripRadarOffer?.id)) {
           apply(record.copyWith(vehicle: _vehicleLabel, licensePlate: _vehiclePlate));
         }
       }
@@ -185,7 +212,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       unawaited(_followVehicle());
     }
     void _onRealtimeEvent(DriverRealtimeEvent event) {
-      if (!mounted || event.tripId != widget.offerId) { return; }
+      if (!mounted || event.tripId != widget.tripId) { return; }
 
       final disposition = _realtimeGate.evaluate(event);
       if (disposition == DriverRealtimeDisposition.duplicate ||
@@ -237,7 +264,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
     }
     Future<void> _resyncTrip() async {
-      try { await _realtime.reconnectAndResync(widget.offerId); }
+      try { await _realtime.reconnectAndResync(widget.tripId); }
       catch (_) {
         if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text('Trip updates could not be refreshed.'),
@@ -268,6 +295,21 @@ extension _AcceptRideTrip on _AcceptRideState {
           if (identical(event, _pendingProjection)) { _pendingProjection = null; }
           _projectionRetryDelay = _AcceptRideState._projectionRetryBase;
           await _leaveAfterAuthoritativeOutcome(status, next);
+          return;
+        } else if (status.isReleasedToDispatch) {
+          // X5: admin reassign or a released reservation. Already over here
+          // (the echo of this driver's own cancel): nothing more to do.
+          if (!_rideLifecycle.terminal) {
+            if (!await _rideLifecycle.applyProjection(status)) {
+              _scheduleProjectionRetry();
+              return;
+            }
+          }
+          if (identical(event, _pendingProjection)) { _pendingProjection = null; }
+          _projectionRetryDelay = _AcceptRideState._projectionRetryBase;
+          if (_rideLifecycle.terminalStatus == status && !_cancellationInFlight) {
+            await _leaveAfterRelease(status);
+          }
           return;
         } else {
           if (!await _rideLifecycle.applyProjection(status)) { return; }
@@ -315,11 +357,31 @@ extension _AcceptRideTrip on _AcceptRideState {
         Navigator.of(context).pushReplacement(BottomToTopTransition(AcceptRide.fromPersisted(next,
           waybillRepository:_waybills,sessionController:widget.sessionController,
           locationRepository:widget.locationRepository,routeRepository:widget.routeRepository,
-          activeRideRepository:widget.activeRideRepository)));
+          activeRideRepository:widget.activeRideRepository,dispatchRepository:widget.dispatchRepository)));
         return;
       }
       final navigator = Navigator.of(context);
       if (navigator.canPop()) { navigator.pop(); }
+    }
+    /// X5: the trip went back to dispatch without this driver. Navigation
+    /// and offers stop, the island says so on Home, and the driver is back
+    /// to the availability they had.
+    Future<void> _leaveAfterRelease(TripStatus status) async {
+      _waitTimer?.cancel();
+      _nextTripRadarDemoTimer?.cancel();
+      _nextTripRadarMatchTimer?.cancel();
+      _nextTripOfferExpiry?.cancel();
+      _pauseLiveUpdates();
+      _waybills.discardCurrent();
+      _waybills.clearNext();
+      widget.sessionController?.stayOnlineAfterTrip();
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) {
+        IslandMessages.show(HomeIslandNotices.tripRemoved);
+        navigator.pop();
+        return;
+      }
+      await showTripOutcomeSheet(context, status: status, hasNext: false);
     }
     /// [fee]: the driver's cancel fee from the backend (R15-7), if decided.
     Future<void> _handleRiderCancelled({Money? fee}) async {
@@ -385,7 +447,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         Navigator.of(context).pushReplacement(BottomToTopTransition(AcceptRide.fromPersisted(next,
           waybillRepository:_waybills,sessionController:widget.sessionController,
           locationRepository:widget.locationRepository,routeRepository:widget.routeRepository,
-          activeRideRepository:widget.activeRideRepository)));
+          activeRideRepository:widget.activeRideRepository,dispatchRepository:widget.dispatchRepository)));
         return;
       }
       final navigator = Navigator.of(context);
@@ -463,7 +525,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       await _rideLifecycle.persistNow();
       unawaited(
         _realtime.sendSignal(
-          tripId: widget.offerId,
+          tripId: widget.tripId,
           kind: DriverRealtimeKind.driverArrived,
           message: 'Your driver has arrived at the pickup point.',
         ),
@@ -820,7 +882,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       _waybills.completeCurrent();
       final nextRide = queuedNext
           ? AcceptRide(
-              offerId: offer.id,
+              tripId: offer.id,
               riderName: offer.riderName,
               riderRating: offer.rating,
               fare: offer.fare,
@@ -836,6 +898,7 @@ extension _AcceptRideTrip on _AcceptRideState {
               waybillRepository: _waybills,
               sessionController: widget.sessionController,
               activeRideRepository: widget.activeRideRepository,
+              dispatchRepository: widget.dispatchRepository,
               destinationModeActive: _destinationActive,
               destinationAddress: _destinationAddress,
               destinationPosition: _destinationPosition,
@@ -920,7 +983,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (destination == null) { return _uniqueDemoNext; }
       final address = _destinationAddress?.trim();
       return _NextTripRadarOffer(
-        id: '${widget.offerId}-next-destination',
+        id: '${widget.tripId}-next-destination',
         category: _AcceptRideState._demoNextTripOffer.category,
         fare: _AcceptRideState._demoNextTripOffer.fare,
         rating: _AcceptRideState._demoNextTripOffer.rating,
@@ -955,6 +1018,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         return;
       }
       if (!mounted ||
+          _liveUpdatesPaused ||
           _stage != ActiveRideStage.onTrip ||
           _onTripRadarState != _OnTripRadarState.scanning ||
           _onTripRadarDeclined ||
@@ -988,6 +1052,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         const Duration(milliseconds: 2200),
         () {
           if (!mounted ||
+              _liveUpdatesPaused ||
               _stage != ActiveRideStage.onTrip ||
               _onTripRadarState != _OnTripRadarState.scanning) {
             return;
@@ -1003,6 +1068,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       );
     }
     void _presentOnTripOffer() {
+      // D-05: never while the trip is hidden; the resume looks again.
+      if (_liveUpdatesPaused) { return; }
       _rebuild(() {
         final offer = _onTripRadarOfferForDestination();
         if (!_dropoffFollowsDestination(offer.dropoffPosition)) { return; }
@@ -1041,10 +1108,12 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
       _presentOnTripOffer();
     }
-    void _armOnTripOfferExpiry() {
+    void _armOnTripOfferExpiry({Duration? left}) {
       _nextTripOfferExpiry?.cancel();
       if (_onTripRadarState != _OnTripRadarState.offerAvailable) { return; }
-      _nextTripOfferExpiry = Timer(_AcceptRideState._onTripOfferLifetime, () {
+      final time = left ?? _AcceptRideState._onTripOfferLifetime;
+      if (left == null) { _nextTripOfferDeadline = _offerNow().add(time); }
+      _nextTripOfferExpiry = Timer(time, () {
         if (!mounted || _onTripRadarState != _OnTripRadarState.offerAvailable) {
           return;
         }
@@ -1272,7 +1341,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           _onTripRadarState == _OnTripRadarState.secured && offer != null;
       final nextRide = queuedNext
           ? AcceptRide(
-              offerId: offer.id,
+              tripId: offer.id,
               riderName: offer.riderName,
               riderRating: offer.rating,
               fare: offer.fare,
@@ -1288,6 +1357,7 @@ extension _AcceptRideTrip on _AcceptRideState {
               waybillRepository: _waybills,
               sessionController: widget.sessionController,
               activeRideRepository: widget.activeRideRepository,
+              dispatchRepository: widget.dispatchRepository,
             )
           : null;
       if (nextRide != null) {
@@ -1341,7 +1411,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       return road == null || road.isEmpty ? null : road;
     }
     SafetyAlertTrip _safetyAlertTrip() => SafetyAlertTrip(
-      tripId: widget.offerId, riderName: widget.riderName, riderRating: widget.riderRating,
+      tripId: widget.tripId, riderName: widget.riderName, riderRating: widget.riderRating,
       pickup: widget.pickupAddress, dropoff: widget.dropoffAddress, fare: widget.fare,
       category: widget.category, driverName: 'Movera Driver', vehicle: _vehicleLabel,
       plate: _vehiclePlate,

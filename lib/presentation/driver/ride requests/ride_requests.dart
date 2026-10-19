@@ -345,7 +345,11 @@ class _RideRequestsState extends State<RideRequests> {
         final navigator = Navigator.of(context);
         final rider = trip.source;
         final ride = AcceptRide(
-          offerId: tripOccurrenceId(trip.id),
+          // X9: the offer and the trip keep their own ids. Until a backend
+          // sends the trip id, the demo makes one per accepted occurrence.
+          offerId: trip.id,
+          tripId: rider.tripId ?? tripOccurrenceId(trip.id),
+          dispatchRepository: _dispatch,
           riderName: rider.riderName.isEmpty ? 'Rider' : rider.riderName,
           riderRating: double.tryParse(rider.rating) ?? 4.9,
           riderTrips: rider.riderTrips,

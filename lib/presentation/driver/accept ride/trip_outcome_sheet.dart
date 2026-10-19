@@ -44,6 +44,10 @@ const Color _muted = Color(0xFF6D797F);
         title: 'Trip could not continue',
         body: 'The trip was closed because of a system problem. Contact support if the rider is still with you.',
       ),
+      TripStatus.searching || TripStatus.requested => (
+        title: 'Trip removed by Movera',
+        body: 'Movera gave this trip back to dispatch. Stop in a safe place before leaving this screen.',
+      ),
       _ => (
         title: 'Trip ended',
         body: 'This trip is no longer active.',

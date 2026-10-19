@@ -121,7 +121,8 @@ void main() {
     ]) {
       final source = File(path).readAsStringSync();
       expect(source, contains('tripOccurrenceId('), reason: path);
-      expect(source, isNot(contains('offerId: trip.id,')), reason: path);
+      expect(source, isNot(contains('tripId: trip.id,')), reason: path);
+      expect(source, isNot(contains('tripId: offer.id,')), reason: path);
     }
   });
 

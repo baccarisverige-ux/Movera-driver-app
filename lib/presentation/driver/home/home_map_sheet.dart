@@ -276,8 +276,9 @@ extension _HomeMapSheet on _DriverHomeState {
       }
       if (!mounted) { return; }
 
-      Navigator.of(context)
-          .push<DriverDestinationResult>(
+      // UI-07: one picker per tap burst, so one pick uses one daily use.
+      pushSingle<DriverDestinationResult>(
+            context,
             MaterialPageRoute(
               builder: (_) => DriverDestinationPicker(
                 origin: _driverPosition,

@@ -38,7 +38,7 @@ Future<void> _mount(
       designSize: const Size(375, 812),
       builder: (_, __) => MaterialApp(
         home: AcceptRide(
-          offerId: 'pending-trip',
+          tripId: 'pending-trip',
           initialStage: ActiveRideStage.waitingForRider,
           activeRideRepository: repo,
           realtime: realtime,

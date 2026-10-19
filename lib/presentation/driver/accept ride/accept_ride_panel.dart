@@ -168,9 +168,16 @@ extension _AcceptRidePanel on _AcceptRideState {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(refusal)));
         return;
       }
-      Navigator.of(context)
-          .push<DriverDestinationResult>(
-            MaterialPageRoute(builder: (_) => const DriverDestinationPicker()),
+      // UI-07: one picker per tap burst. UI-08: from the car, so a place
+      // opens the confirm map (distance, time) as on Home.
+      pushSingle<DriverDestinationResult>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DriverDestinationPicker(
+                origin: _driverPosition,
+                routeRepository: _routeService,
+              ),
+            ),
           )
           .then((result) {
             if (!mounted || result == null) { return; }

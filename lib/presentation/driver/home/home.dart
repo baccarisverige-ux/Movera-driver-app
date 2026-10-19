@@ -353,6 +353,8 @@ class _DriverHomeState extends State<DriverHome>
 
   /// Radar trips whose pick window ran out: still listed, Match faded.
   final Set<String> _radarOfferExpired = <String>{};
+  /// D-04: when each listed Radar trip's pick window ends; a pause keeps it.
+  final Map<String, DateTime> _radarOfferDeadlines = <String, DateTime>{};
   bool _destinationModeActive = false;
   bool _soonReservationReady = false;
   String? _destinationAddress;
@@ -559,6 +561,7 @@ class _DriverHomeState extends State<DriverHome>
           locationRepository: _driverLocationService,
           routeRepository: _roadRouteService,
           activeRideRepository: repo,
+          dispatchRepository: _dispatch,
         ),
       ),
     );

@@ -85,6 +85,16 @@ class DriverSessionController extends ChangeNotifier {
       _status == DriverOnlineStatus.online ||
       _status == DriverOnlineStatus.onTrip;
 
+  /// During a trip: true unless the driver goes offline or on hold when
+  /// it ends (missed offers, "go offline", suspension). Otherwise the same
+  /// as [availableForOffers].
+  bool get availableAfterTrip => _activeTripId == null
+      ? availableForOffers
+      : !_offlineAfterTrip &&
+          !_suspendAfterTrip &&
+          _status != DriverOnlineStatus.suspended &&
+          _statusBeforeTrip == DriverOnlineStatus.online;
+
   bool get isGoingOnline => _status == DriverOnlineStatus.goingOnline;
 
   bool get isSuspended => _status == DriverOnlineStatus.suspended;
@@ -96,7 +106,9 @@ class DriverSessionController extends ChangeNotifier {
       return;
     }
     if (_activeTripId != null) {
+      if (_offlineAfterTrip == !value) return;
       _offlineAfterTrip = !value;
+      notifyListeners(); // [availableAfterTrip] changed.
       return;
     }
     if (isSuspended && value) {

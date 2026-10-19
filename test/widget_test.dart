@@ -2509,7 +2509,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: AcceptRide(
-            offerId: 'waybill-current-test',
+            tripId: 'waybill-current-test',
             fare: '111,02 kr',
             category: 'Comfort',
             matchedVia: 'Movera Radar',

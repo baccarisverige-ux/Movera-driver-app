@@ -38,7 +38,7 @@ void main() {
       designSize: const Size(375, 812),
       builder: (_, __) => MaterialApp(
         home: AcceptRide(
-          offerId: 'flaky-trip',
+          tripId: 'flaky-trip',
           initialStage: ActiveRideStage.waitingForRider,
           activeRideRepository: repo,
           realtime: realtime,

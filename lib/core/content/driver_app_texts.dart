@@ -76,6 +76,9 @@ class DriverTexts {
       'island.riderCancelled', 'Rider cancelled', DriverTextArea.island);
   static const islandRiderEndedTrip = DriverTextKey(
       'island.riderEndedTrip', 'Rider ended trip', DriverTextArea.island);
+  /// X5: the trip went back to dispatch (admin reassign, released booking).
+  static const islandTripRemoved = DriverTextKey(
+      'island.tripRemoved', 'Trip removed by Movera', DriverTextArea.island);
   /// R15-7: after "Rider cancelled", the driver's cancel fee or none.
   static const islandCancelFee =
       DriverTextKey('island.cancelFee', '+{amount}', DriverTextArea.island);
@@ -259,6 +262,7 @@ class DriverTexts {
     islandOffline,
     islandRiderCancelled,
     islandRiderEndedTrip,
+    islandTripRemoved,
     islandCancelFee,
     islandCancelNoFee,
     islandReservationCancelled,

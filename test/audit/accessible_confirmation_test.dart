@@ -19,7 +19,7 @@ void main() {
         home: MediaQuery(
           data: const MediaQueryData(disableAnimations: true),
           child: AcceptRide(
-            offerId: 'accessible-trip',
+            tripId: 'accessible-trip',
             initialStage: ActiveRideStage.waitingForRider,
             activeRideRepository: repo,
           ),
