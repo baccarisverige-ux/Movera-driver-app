@@ -166,7 +166,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     void _clearDirectOfferRoute() {
       if (!mounted) { return; }
-      _offerRouteFrame.stopGlow();
+      _offerRouteFrame.stopLine();
       _HomeExclusive(this)._sinkExclusiveIfGone();
       _rebuild(() {
         _mapPreviews.cancel();

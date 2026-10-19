@@ -24,7 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../integration_test/headless_map_platform.dart';
 
 // R11-7: a Radar offer on Home draws only its trip, pickup → drop-off,
-// with time-chip pins (pickup = minutes there, drop-off = trip length).
+// with labelled pins (pickup = minutes there, drop-off = trip length).
 
 class _Dispatch implements DispatchRepository {
   final List<RideOffer> offers;
@@ -188,14 +188,15 @@ void main() {
     expect(dropoffPin.position, dropoff);
     expect(pickupPin.infoWindow.title, '7 min');
     expect(dropoffPin.infoWindow.title, '30 min');
-    // Pickup chip on the pin's left, drop-off chip on its right.
-    expect(pickupPin.anchor.dx, greaterThan(0.5));
-    expect(dropoffPin.anchor.dx, lessThan(0.5));
+    // R14-1: the bubble stands above each mark, centred on it.
+    expect(pickupPin.anchor.dx, 0.5);
+    expect(dropoffPin.anchor.dx, 0.5);
+    expect(pickupPin.anchor.dy, greaterThan(0.5));
 
     // R13-3: the last card leaving takes its route and pins along.
     bool offerLine(Polyline line) =>
         line.polylineId.value.startsWith('direct_offer') ||
-        line.polylineId.value == 'offer_route_glow';
+        line.polylineId.value.startsWith('offer_route_light');
     bool offerPin(Marker m) => m.markerId.value.startsWith('radar_');
     // The driver closes the only card with its ×.
     tester.widget<RadarOfferCard>(find.byType(RadarOfferCard).first).onClose!();

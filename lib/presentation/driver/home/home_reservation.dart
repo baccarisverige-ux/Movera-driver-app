@@ -268,8 +268,8 @@ extension _HomeReservation on _DriverHomeState {
     }
 
     /// The Home map shows [request]'s route, pickup → drop-off (no drive
-    /// to the pickup), fitted above the sheet; the pins' chips show the
-    /// pickup time and the expected drop-off time.
+    /// to the pickup), fitted above the sheet; the pins show the pickup
+    /// time and the expected drop-off time, a circle marks each stop.
     Future<void> _showReservationRoute(ReservationRequestPreview request) {
       final pickup = request.pickup.toLatLng();
       final dropoff = request.dropoff.toLatLng();
@@ -286,6 +286,7 @@ extension _HomeReservation on _DriverHomeState {
             dropoff,
             request.pickupTime,
             request.arrivalTime,
+            stops: [for (final stop in request.stops) stop.point.toLatLng()],
           );
           if (mounted && fade.value < 1 && !fade.running) {
             fade.fadeTo(1, const Duration(milliseconds: 280), () {
@@ -460,7 +461,7 @@ extension _HomeReservation on _DriverHomeState {
       if (_reservation.routeId == null) { return; }
       _reservation.routeId = null;
       _reservation.fade.set(1);
-      _offerRouteFrame.stopGlow();
+      _offerRouteFrame.stopLine();
       _rebuild(() {
         _mapPreviews.cancel();
         _isDirectOfferRoutePreview = false;

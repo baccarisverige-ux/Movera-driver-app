@@ -29,74 +29,90 @@ class _OfferRouteFrame {
   /// first fit of a new offer (which takes the map over).
   RouteCameraFit? fitted;
 
-  /// R13-8: the light streak that travels along the offer line.
-  Timer? glow;
-  final ValueNotifier<Set<Polyline>> glowLine =
+  /// R14-2: the road the line animation runs along, and its clock.
+  List<GeoPoint> road = const <GeoPoint>[];
+  Timer? line;
+  final Stopwatch lineClock = Stopwatch();
+  OfferLinePhase? linePhase;
+
+  /// The white part of the animated line; only the map listens to it.
+  final ValueNotifier<Set<Polyline>> lightLine =
       ValueNotifier<Set<Polyline>>(const <Polyline>{});
 
-  void stopGlow() {
-    glow?.cancel();
-    glow = null;
-    if (glowLine.value.isNotEmpty) { glowLine.value = const <Polyline>{}; }
+  /// Stops the animation (offer gone, app hidden); the line stays black.
+  void stopLine() {
+    line?.cancel();
+    line = null;
+    lineClock
+      ..stop()
+      ..reset();
+    linePhase = null;
+    if (lightLine.value.isNotEmpty) { lightLine.value = const <Polyline>{}; }
   }
 
   void dispose() {
     refit?.cancel();
-    glow?.cancel();
-    glowLine.dispose();
+    line?.cancel();
+    lightLine.dispose();
   }
 }
 
-/// The streak's beat: 80 ms steps (12.5 a second, light on web), 26 to
-/// run pickup → drop-off, then a rest; its length is a share of the line.
-const Duration _glowTick = Duration(milliseconds: 80);
-const int _glowTravel = 26;
-const int _glowCycle = 40;
-const double _glowLength = 0.18;
+/// The animation's beat: ~30 a second at most (light on web).
+const Duration _lineTick = Duration(milliseconds: 33);
 
 extension _HomeOfferRoute on _DriverHomeState {
-  /// The pins with their time chips: pickup = minutes to drive there,
-  /// drop-off = the trip's own length.
+  /// R14-1: the pins with their minutes, pickup = the drive there,
+  /// drop-off = the trip's own length, and a circle on each stop.
   Future<Set<Marker>> _offerRouteMarkers(_HomeDirectOffer offer) =>
       _routePins(
         offer.pickupPosition,
         offer.dropoffPosition,
-        OfferRoutePins.minutes(offer.pickupMinutes),
-        OfferRoutePins.minutes(offer.tripMinutes),
+        OfferRouteMarks.minutes(offer.pickupMinutes),
+        OfferRouteMarks.minutes(offer.tripMinutes),
+        stops: [for (final stop in offer.stops) stop.point.toLatLng()],
       );
 
-  /// Pickup and drop-off pins with their chips: [pickupLabel] left of the
-  /// green dot, [dropoffLabel] right of the black square.
+  /// "Pickup" and "Drop-off" pins with [pickupValue] and [dropoffValue]
+  /// (clock times or minutes) and a small circle on each of [stops].
   Future<Set<Marker>> _routePins(
     LatLng pickup,
     LatLng dropoff,
-    String pickupLabel,
-    String dropoffLabel,
+    String pickupValue,
+    String dropoffValue, {
+    List<LatLng> stops = const <LatLng>[],
+  }) => OfferRouteMarks.markers(
+    pickup: pickup,
+    dropoff: dropoff,
+    pickupValue: pickupValue,
+    dropoffValue: dropoffValue,
+    stops: stops,
+  );
+
+  /// The road pickup → each stop → drop-off, one leg per stop, so the
+  /// line passes the stops' circles.
+  Future<List<LatLng>> _offerRoad(
+    LatLng pickup,
+    List<LatLng> stops,
+    LatLng dropoff,
   ) async {
-    final icons = await Future.wait([
-      OfferRoutePins.icon(OfferRoutePinKind.pickup, pickupLabel),
-      OfferRoutePins.icon(OfferRoutePinKind.dropoff, dropoffLabel),
+    final via = [pickup, ...stops, dropoff];
+    final legs = await Future.wait([
+      for (var i = 1; i < via.length; i++)
+        _roadRouteService.drivingRoute(
+          origin: GeoPointMaps.fromLatLng(via[i - 1]),
+          destination: GeoPointMaps.fromLatLng(via[i]),
+        ),
     ]);
-    return {
-      Marker(
-        markerId: const MarkerId('radar_pickup'),
-        position: pickup,
-        infoWindow: InfoWindow(title: pickupLabel),
-        icon: icons[0],
-        anchor: OfferRoutePins.anchor(OfferRoutePinKind.pickup, pickupLabel),
-        consumeTapEvents: true,
-        zIndexInt: 14,
-      ),
-      Marker(
-        markerId: const MarkerId('radar_dropoff'),
-        position: dropoff,
-        infoWindow: InfoWindow(title: dropoffLabel),
-        icon: icons[1],
-        anchor: OfferRoutePins.anchor(OfferRoutePinKind.dropoff, dropoffLabel),
-        consumeTapEvents: true,
-        zIndexInt: 14,
-      ),
-    };
+    final road = <LatLng>[];
+    for (final leg in legs) {
+      final points = leg.latLngPoints;
+      road.addAll(
+        road.isNotEmpty && points.isNotEmpty && points.first == road.last
+            ? points.skip(1)
+            : points,
+      );
+    }
+    return _offerRoutePoints(pickup, dropoff, road);
   }
 
   /// The trip's road, pinned to the exact pickup and drop-off.
@@ -157,18 +173,18 @@ extension _HomeOfferRoute on _DriverHomeState {
         size.height - insets.bottom - 6,
       );
 
-  /// Everything of the route the camera must show: the road, the stops
-  /// and both pins with their chips.
+  /// Everything of the route the camera must show: the road, the stops'
+  /// circles and both pins with their bubbles.
   List<RouteFitPoint> _offerFitPoints() {
     final frame = _offerRouteFrame;
     final points = frame.framing;
-    RouteFitPoint pin(LatLng at, OfferRoutePinKind kind, String? label) {
+    RouteFitPoint pin(LatLng at, RouteMarkKind kind, String? label) {
       final point = GeoPointMaps.fromLatLng(at);
       if (label == null) {
         return RouteFitPoint(point, left: 17, right: 17, up: 17, down: 17);
       }
-      final size = OfferRoutePins.size(label);
-      final anchor = OfferRoutePins.anchor(kind, label);
+      final size = OfferRouteMarks.pinSize(kind, label);
+      final anchor = OfferRouteMarks.pinAnchor(kind, label);
       return RouteFitPoint(
         point,
         left: size.width * anchor.dx,
@@ -181,9 +197,9 @@ extension _HomeOfferRoute on _DriverHomeState {
     return [
       for (var i = 0; i < points.length; i++)
         i == 0
-            ? pin(points[0], OfferRoutePinKind.pickup, frame.pickupLabel)
+            ? pin(points[0], RouteMarkKind.pickup, frame.pickupLabel)
             : i == 1
-            ? pin(points[1], OfferRoutePinKind.dropoff, frame.dropoffLabel)
+            ? pin(points[1], RouteMarkKind.dropoff, frame.dropoffLabel)
             : RouteFitPoint(
                 GeoPointMaps.fromLatLng(points[i]),
                 left: 12,
@@ -228,41 +244,57 @@ extension _HomeOfferRoute on _DriverHomeState {
     );
   }
 
-  /// R13-8: a short light streak runs along [road], pickup → drop-off,
-  /// again and again while the offer is up. None with reduced motion.
-  void _startRouteGlow(List<LatLng> road) {
-    final frame = _offerRouteFrame..stopGlow();
-    if (!mounted || road.length < 2 || MediaQuery.disableAnimationsOf(context)) {
+  /// R14-2: the black-and-white line animation along [road] (see
+  /// [OfferRouteLine]), again and again while the offer is up. None with
+  /// reduced motion or while Home is hidden: the line stays black.
+  void _startRouteLine(List<LatLng> road) {
+    final frame = _offerRouteFrame..stopLine();
+    if (road.length >= 2) {
+      frame.road = road.map(GeoPointMaps.fromLatLng).toList();
+    }
+    _resumeRouteLine();
+  }
+
+  /// Runs the line animation again (Home shown again) when an offer's
+  /// road is on the map.
+  void _resumeRouteLine() {
+    final frame = _offerRouteFrame;
+    if (!mounted ||
+        frame.line != null ||
+        frame.road.length < 2 ||
+        !_liveVisible ||
+        !_offerOnScreen ||
+        _directOfferRoutePolylines.isEmpty ||
+        MediaQuery.disableAnimationsOf(context)) {
       return;
     }
-    final route = road.map(GeoPointMaps.fromLatLng).toList();
-    var step = -1;
-    frame.glow = Timer.periodic(_glowTick, (_) {
-      if (!mounted || !_offerOnScreen || _directOfferRoutePolylines.isEmpty) {
-        frame.stopGlow();
+    frame.lineClock.start();
+    void tick() {
+      if (!mounted ||
+          !_offerOnScreen ||
+          !_liveVisible ||
+          _directOfferRoutePolylines.isEmpty ||
+          MediaQuery.disableAnimationsOf(context)) {
+        frame.stopLine();
         return;
       }
-      if (!_liveVisible) { return; }
-      step = (step + 1) % _glowCycle;
-      final head = step / _glowTravel * (1 + _glowLength);
-      final slice = step > _glowTravel
-          ? const <GeoPoint>[]
-          : routeSlice(route, head - _glowLength, head);
-      frame.glowLine.value = slice.length < 2
-          ? const <Polyline>{}
-          : {
-              Polyline(
-                polylineId: const PolylineId('offer_route_glow'),
-                points: slice.map((p) => p.toLatLng()).toList(),
-                color: const Color(0xA6F4F7F9),
-                width: math.max(2, DriverRouteStyle.coreWidthAt(_routeZoomStep) - 4),
-                zIndex: 3,
-                jointType: JointType.round,
-                startCap: Cap.roundCap,
-                endCap: Cap.roundCap,
-              ),
-            };
-    });
+      final phase = OfferRouteLine.phaseAt(frame.lineClock.elapsed);
+      final last = frame.linePhase;
+      // Resting black (or unchanged): nothing to send to the map.
+      if (last != null && (phase == last || (phase.dark && last.dark))) {
+        return;
+      }
+      frame
+        ..linePhase = phase
+        ..lightLine.value = OfferRouteLine.light(
+          frame.road,
+          phase,
+          zoom: _routeZoomStep,
+        );
+    }
+
+    frame.line = Timer.periodic(_lineTick, (_) => tick());
+    tick();
   }
 
   /// The deck, the Exclusive card or the reservation sheet changed

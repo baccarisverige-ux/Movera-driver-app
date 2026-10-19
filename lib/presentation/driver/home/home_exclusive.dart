@@ -258,8 +258,8 @@ extension _HomeExclusive on _DriverHomeState {
           return pins;
         },
         labels: (
-          OfferRoutePins.minutes(offer.pickupMinutes),
-          OfferRoutePins.minutes(offer.tripMinutes),
+          OfferRouteMarks.minutes(offer.pickupMinutes),
+          OfferRouteMarks.minutes(offer.tripMinutes),
         ),
         stops: [for (final stop in offer.stops) stop.point.toLatLng()],
       );

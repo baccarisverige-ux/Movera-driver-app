@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/offer_badges.dart';
-import 'package:movera/widgets/offer_route_pins.dart';
+import 'package:movera/widgets/offer_route_marks.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 const Color _ink = Color(0xFF111518);
@@ -778,12 +778,12 @@ class OfferStopMark extends StatelessWidget {
       width: 10,
       height: 10,
       decoration: BoxDecoration(
-        color: OfferRoutePins.green,
+        color: OfferRouteMarks.green,
         shape: BoxShape.circle,
         // A white ring, then a faint green one (painted first, under it).
         boxShadow: [
           BoxShadow(
-            color: OfferRoutePins.green.withValues(alpha: 0.33),
+            color: OfferRouteMarks.green.withValues(alpha: 0.33),
             spreadRadius: 4,
           ),
           const BoxShadow(color: Colors.white, spreadRadius: 3),
