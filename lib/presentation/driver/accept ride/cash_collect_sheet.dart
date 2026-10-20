@@ -59,12 +59,9 @@ class CashCollectSheet extends StatelessWidget {
   static const Color _owe = Color(0xFFB4232C);
   static const Color _due = Color(0xFF1E7A46);
 
-  /// "250 kr" for whole kronor, otherwise "126,75 kr".
-  static String _short(String label) {
-    final money = Money.parseSekLabel(label);
-    if (money == null) return label;
-    return money.formatted.replaceFirst(RegExp(r',00 kr$'), ' kr');
-  }
+  /// "250 kr" for whole kronor, otherwise "126,75 kr" (any currency).
+  static String _short(String label) =>
+      Money.parseLabel(label)?.formattedShort ?? label;
 
   String get _finishLabel => category.trim().isEmpty
       ? driverText(DriverTexts.tripFinishRide)

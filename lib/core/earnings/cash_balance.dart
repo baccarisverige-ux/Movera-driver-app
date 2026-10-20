@@ -14,8 +14,10 @@ class CashBalance {
     required String fare,
     required String cashCollected,
   }) {
-    final fareMoney = Money.parseSekLabel(fare);
-    final cash = Money.parseSekLabel(cashCollected);
+    final fareMoney = Money.parseLabel(fare);
+    final cash = fareMoney == null
+        ? null
+        : Money.parseLabel(cashCollected, currency: fareMoney.currency);
     if (fareMoney == null || cash == null) return null;
     return CashBalance(fare: fareMoney, cashCollected: cash);
   }

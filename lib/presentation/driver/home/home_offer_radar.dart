@@ -13,6 +13,9 @@ enum _RadarOfferGone {
 
   /// Expired, cancelled by the rider or gone from Radar for another reason.
   unavailable,
+
+  /// Dispatch withdrew it: another driver (of its radar group) took it.
+  takenElsewhere,
 }
 
 class _HomeDirectOffer {
@@ -67,8 +70,18 @@ class _HomeDirectOffer {
   /// red "Priority" badge.
   final bool priority;
 
+  /// Movera-paid extra already in [fare] (Q16): the trip's earnings say
+  /// "incl. +X Movera bonus".
+  final Money? driverBonus;
+
+  /// The admin's radar group (contract `Offer.groupId`); null otherwise.
+  final String? groupId;
+
   /// An admin direct assign (contract §3.1): "Assigned by Movera".
   bool get adminAssigned => reason == ExclusiveReasons.assigned && !assigned;
+
+  /// Accept and No go through dispatch's accept/decline (§3.1).
+  bool get viaDispatchAnswer => adminAssigned || groupId != null;
 
   const _HomeDirectOffer({
     required this.id,
@@ -98,6 +111,8 @@ class _HomeDirectOffer {
     this.assigned = false,
     this.lifetime,
     this.priority = false,
+    this.driverBonus,
+    this.groupId,
   });
 
   /// A dispatch offer on Home. A reservation keeps its pickup time for
@@ -135,6 +150,8 @@ class _HomeDirectOffer {
     assigned: assigned,
     lifetime: lifetime,
     priority: offer.isPriority,
+    driverBonus: offer.driverBonus,
+    groupId: offer.groupId,
   );
 }
 
@@ -548,6 +565,9 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
     }
     void _watchDispatchRadar() {
+      _withdrawalSubscription?.cancel();
+      _withdrawalSubscription =
+          _dispatch.watchWithdrawals().listen(_onOfferWithdrawn);
       _radarSubscription?.cancel();
       _radarSubscription = _dispatch.watchNearbyOffers().listen((offers) {
         if (!mounted || !_isOnline) { return; }
@@ -574,6 +594,13 @@ extension _HomeOfferRadar on _DriverHomeState {
           }
         }
         final ids = offers.map((item) => item.id).toSet();
+        // An admin direct assign on screen that left dispatch is gone.
+        final up = _outsideRadarOffer;
+        if (up != null && up.adminAssigned && !ids.contains(up.id) &&
+            _exclusive.claimingId != up.id && !_exclusive.leaving) {
+          IslandMessages.show(HomeIslandNotices.tripUnavailable);
+          _dismissOutsideRadarOffer();
+        }
         for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
           if (!ids.contains(offer.id) &&
               _homeRadarStateFor(offer.id) == _HomeRadarMatchState.available) {
@@ -654,7 +681,8 @@ extension _HomeOfferRadar on _DriverHomeState {
       // The island says why when this driver tapped Match, or when the
       // trip was the front card they were reading.
       final wasFront = offer.id == _radarExpandedOfferId;
-      if (reason == _RadarOfferGone.lostOwnMatch) {
+      if (reason == _RadarOfferGone.lostOwnMatch ||
+          reason == _RadarOfferGone.takenElsewhere) {
         IslandMessages.show(HomeIslandNotices.takenByOther);
       } else if (wasMatching || wasFront) {
         IslandMessages.show(HomeIslandNotices.tripUnavailable);
@@ -791,6 +819,13 @@ extension _HomeOfferRadar on _DriverHomeState {
         _HomeScheduled(this)._acceptAssignment(offer);
         return;
       }
+      // An admin direct assign: dispatch decides, like any claim (§3.1).
+      if (offer.adminAssigned) {
+        if (_exclusive.claimingId == null) {
+          unawaited(_claimAdminAssign(offer));
+        }
+        return;
+      }
       // A reservation goes to the first driver who claims it (R25).
       if (offer.reservation &&
           _HomeReservation(this)._exclusiveNeedsClaim(offer)) {
@@ -801,6 +836,91 @@ extension _HomeOfferRadar on _DriverHomeState {
         offer,
         offer.reservation ? 'Exclusive reservation' : 'Exclusive offer',
       );
+    }
+    /// Contract §3.1: Accept on an admin direct assign is the offer's
+    /// accept. Won: the trip opens. Lost or gone: it leaves with why, and
+    /// it is not a miss. No answer: it counts down again.
+    Future<void> _claimAdminAssign(_HomeDirectOffer offer) async {
+      _outsideOfferTimeoutTimer?.cancel();
+      _exclusive.clock.stop();
+      _rebuild(() => _exclusive.claimingId = offer.id);
+      IslandMessages.show(HomeIslandNotices.matching);
+      ClaimResult result;
+      try {
+        result = await _dispatch.claimOffer(offer.id);
+      } catch (_) {
+        result = const ClaimResult.networkError();
+      }
+      if (!mounted) { return; }
+      _rebuild(() => _exclusive.claimingId = null);
+      if (_outsideRadarOffer?.id != offer.id) { return; }
+      switch (result.outcome) {
+        case ClaimOutcome.success:
+          IslandMessages.show(HomeIslandNotices.matched);
+          _openOfferTrip(offer, ExclusiveReasons.text(ExclusiveReasons.assigned));
+        case ClaimOutcome.alreadyClaimed:
+          IslandMessages.show(HomeIslandNotices.takenByOther);
+          _dismissOutsideRadarOffer();
+        case ClaimOutcome.expired:
+        case ClaimOutcome.unavailable:
+          IslandMessages.show(HomeIslandNotices.tripUnavailable);
+          _dismissOutsideRadarOffer();
+        case ClaimOutcome.networkError:
+          IslandMessages.show(HomeIslandNotices.noConnection);
+          final lifetime = offer.lifetime ?? _DriverHomeState._outsideOfferLifetime;
+          _HomeExclusive(this)._startExclusiveClock(lifetime);
+          _outsideOfferTimeoutTimer = Timer(lifetime, () {
+            if (mounted && _outsideRadarOffer?.id == offer.id) {
+              _dismissOutsideRadarOffer(missed: true);
+            }
+          });
+      }
+    }
+    /// The down arrow, × or Back on the Exclusive offer: skipped like a
+    /// time out (Q16/Q46). An admin direct assign also tells dispatch No.
+    void _declineOutsideRadarOffer() {
+      final offer = _outsideRadarOffer;
+      if (offer != null && offer.viaDispatchAnswer && !_exclusive.leaving) {
+        unawaited(_dispatch.declineOffer(offer.id));
+      }
+      _dismissOutsideRadarOffer(missed: true);
+    }
+    /// × on a Radar card hides it (never a miss, Q17); for an admin radar
+    /// group it is the driver's No to dispatch.
+    void _closeRadarHomeOffer(_HomeDirectOffer offer) {
+      if (offer.groupId != null &&
+          _homeRadarStateFor(offer.id) == _HomeRadarMatchState.available) {
+        unawaited(_dispatch.declineOffer(offer.id));
+      }
+      _dismissRadarHomeOffer(offer);
+    }
+    /// Dispatch withdrew an offer: another driver took it (a radar group's
+    /// first Accept, or the trip locked), it expired, or it was taken back.
+    void _onOfferWithdrawn(OfferWithdrawal gone) {
+      if (!mounted || !_isOnline) { return; }
+      final taken = gone.reason == OfferGoneReason.claimedElsewhere;
+      final up = _outsideRadarOffer;
+      if (up != null && up.id == gone.offerId) {
+        if (_exclusive.claimingId == up.id || _exclusive.leaving) { return; }
+        // Ran out on the server: a miss, like the phone's own time out.
+        if (gone.reason == OfferGoneReason.expired) {
+          _dismissOutsideRadarOffer(missed: true);
+          return;
+        }
+        IslandMessages.show(taken
+            ? HomeIslandNotices.takenByOther
+            : HomeIslandNotices.tripUnavailable);
+        _dismissOutsideRadarOffer();
+        return;
+      }
+      _rebuild(() => _pendingRadarHomeOffers.removeWhere((o) => o.id == gone.offerId));
+      for (final offer in _radarHomeOffers.toList()) {
+        if (offer.id == gone.offerId &&
+            _homeRadarStateFor(offer.id) == _HomeRadarMatchState.available) {
+          _resolveHomeRadarMatchLost(offer,
+              taken ? _RadarOfferGone.takenElsewhere : _RadarOfferGone.unavailable);
+        }
+      }
     }
     void _acceptRadarHomeOffer(_HomeDirectOffer offer) {
       if (!_radarHomeOffers.any((item) => item.id == offer.id)) { return; }
@@ -834,6 +954,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             fare: offer.fare,
             paidByCash: offer.cash,
             cashToCollect: offer.cashToCollect,
+            driverBonus: offer.driverBonus,
             category: offer.category,
             matchedVia: matchedVia,
             waybillRepository: _waybills,
@@ -943,6 +1064,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           stops: offer.stops.length,
           riderTrips: offer.riderTrips,
           priority: offer.priority,
+          driverBonus: WaybillRecord.bonusLabel(offer.driverBonus),
           // Worked out now, from the offer's pickup leg (never cached).
           pickupPay: PickupPayCalculator.quote(
             category: offer.category,
@@ -1008,7 +1130,7 @@ extension _HomeOfferRadar on _DriverHomeState {
               onRoute: () => _previewDirectOfferRoute(offer),
               // The radar's orange, and a small × that removes the offer.
               contour: MoveraRadarOrb.offerAccent,
-              onClose: () => _dismissRadarHomeOffer(offer),
+              onClose: () => _closeRadarHomeOffer(offer),
             );
           },
         ),

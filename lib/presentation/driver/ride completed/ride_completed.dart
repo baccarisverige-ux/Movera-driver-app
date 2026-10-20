@@ -181,6 +181,17 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                           style: const TextStyle(color: _muted, fontSize: 13.5),
                         ),
                       ),
+                    // Q16/Q18: Movera's bonus is in the fare.
+                    if (record?.driverBonus case final bonus?)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          WaybillRecord.bonusNote(bonus),
+                          key: const ValueKey<String>('ride-completed-driver-bonus'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: _muted, fontSize: 13.5),
+                        ),
+                      ),
                     const SizedBox(height: 12),
                     Center(child: _chip(record)),
                     const SizedBox(height: 26),

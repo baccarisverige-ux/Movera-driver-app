@@ -66,12 +66,13 @@ class WaitingTerms {
     );
   }
 
-  /// [label] (e.g. "104,80 kr") with [fee] added, in the same display
-  /// form. Unchanged with no fee, or when the label is not money in the
-  /// fee's currency (fare labels are still SEK labels).
+  /// [label] (e.g. "104,80 kr", "24,50 €", "12,500 DT") with [fee]
+  /// added, in the same display form. The label is read in the fee's
+  /// currency with that currency's exponent. Unchanged with no fee, or
+  /// when the label is not money in the fee's currency.
   static String addFee(String label, Money fee) {
     if (fee.isZero) return label;
-    final amount = fee.currency == 'SEK' ? Money.parseSekLabel(label) : null;
+    final amount = Money.parseLabel(label, currency: fee.currency);
     return amount == null ? label : (amount + fee).formatted;
   }
 

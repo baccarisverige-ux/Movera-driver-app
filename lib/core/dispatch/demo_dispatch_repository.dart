@@ -86,6 +86,33 @@ class DemoAdminOffers {
     followsDestination: false,
   );
 
+  /// A second radar group trip: another driver of the group accepts it
+  /// first ([DemoDispatchRepository] `groupRaceDelay` after the demo
+  /// starts), so it leaves with "Taken by another driver".
+  static const RideOffer radarGroupTaken = RideOffer(
+    id: 'admin-group-2',
+    riderName: 'Leo',
+    riderTrips: 12,
+    category: 'Movera',
+    // 87,20 kr trip + 25 kr Movera bonus.
+    fare: Money(minorUnits: 11220),
+    driverBonus: Money(minorUnits: 2500),
+    priority: true,
+    source: OfferSource.admin,
+    groupId: 'demo-radar-group-2',
+    rating: '4.81',
+    pickupMinutes: 6,
+    pickupKm: 2.2,
+    tripMinutes: 12,
+    tripKm: 6.1,
+    pickup: 'Sveavägen 44, Stockholm',
+    dropoff: 'Fridhemsplan, Stockholm',
+    pickupPosition: GeoPoint(59.3390, 18.0590),
+    dropoffPosition: GeoPoint(59.3322, 18.0290),
+    isNearby: true,
+    followsDestination: false,
+  );
+
   /// A direct assign (`source: admin`, no group): an Exclusive offer.
   static const RideOffer directAssign = RideOffer(
     id: 'admin-assign-1',
@@ -144,7 +171,9 @@ class DemoDispatchRepository implements DispatchRepository {
     ScheduledClock? clock,
     ScheduledRideRules? rules,
     bool? adminOffers,
-  }) : _adminOffers =
+    Duration? groupRaceDelay,
+  }) : _groupRaceDelay = groupRaceDelay,
+       _adminOffers =
            adminOffers ?? DriverRuntimeConfig.current.adminDemoOffers,
        _claimDelay = claimDelay,
        _newOfferDelay = newOfferDelay,
@@ -178,8 +207,17 @@ class DemoDispatchRepository implements DispatchRepository {
   List<RideOffer> _firstOffers() => [
     if (_adminOffers) DemoAdminOffers.radarGroup,
     ..._immediateOffers,
+    if (_adminOffers) DemoAdminOffers.radarGroupTaken,
     if (_adminOffers) DemoAdminOffers.directAssign,
   ];
+
+  /// When another driver of [DemoAdminOffers.radarGroupTaken]'s group
+  /// accepts it; by default a little after the Radar trips come.
+  final Duration? _groupRaceDelay;
+  Timer? _groupRaceTimer;
+
+  final StreamController<OfferWithdrawal> _withdrawals =
+      StreamController<OfferWithdrawal>.broadcast();
 
   final Duration _claimDelay;
   final Duration _newOfferDelay;
@@ -528,6 +566,34 @@ class DemoDispatchRepository implements DispatchRepository {
     return ClaimResult.success(offer);
   }
 
+  /// Contract §3.1 in process: the driver's No leaves the feed at once.
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async {
+    if (_disposed || !_offers.any((offer) => offer.id == offerId)) {
+      return false;
+    }
+    _removeOffer(offerId);
+    return true;
+  }
+
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() => _withdrawals.stream;
+
+  /// Another driver took [offerId] (a radar group's first Accept): it is
+  /// withdrawn with that reason, then leaves the list.
+  void withdrawOffer(
+    String offerId, {
+    OfferGoneReason reason = OfferGoneReason.claimedElsewhere,
+  }) {
+    if (_disposed || !_offers.any((offer) => offer.id == offerId)) {
+      return;
+    }
+    if (!_withdrawals.isClosed) {
+      _withdrawals.add(OfferWithdrawal(offerId: offerId, reason: reason));
+    }
+    _removeOffer(offerId);
+  }
+
   @override
   void refreshOffers() {
     _emitNearby();
@@ -640,6 +706,12 @@ class DemoDispatchRepository implements DispatchRepository {
     _externalClaimTimer = Timer(_externalClaimDelay, () {
       _removeOffer(externalClaimOfferId);
     });
+    if (_adminOffers) {
+      _groupRaceTimer = Timer(
+        _groupRaceDelay ?? _externalClaimDelay + const Duration(seconds: 6),
+        () => withdrawOffer(DemoAdminOffers.radarGroupTaken.id),
+      );
+    }
     for (final id in _reservations.keys) {
       _scheduleRadarJoin(id);
     }
@@ -704,11 +776,13 @@ class DemoDispatchRepository implements DispatchRepository {
     _nearby.close();
     _nextTrip.close();
     _assignments.close();
+    _withdrawals.close();
   }
 
   void _cancelDemoTimers() {
     _newOfferTimer?.cancel();
     _externalClaimTimer?.cancel();
+    _groupRaceTimer?.cancel();
     _assignmentTimer?.cancel();
     for (final timer in _radarJoinTimers.values) {
       timer.cancel();

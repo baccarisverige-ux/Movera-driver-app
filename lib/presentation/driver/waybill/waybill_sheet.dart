@@ -66,11 +66,15 @@ const _ink = Color(0xFF303A3F);
 const _muted = Color(0xFF7D898F);
 
 List<Widget> _rows(WaybillRecord record) {
-  final payment = WaybillPayment.fromFare(record.fare);
+  final payment = WaybillPayment.fromFare(record.fare, bonus: record.driverBonus);
+  final bonus = record.driverBonus;
   return [
     _Row('Trip #', record.tripId),
     _Row('Time', formatWaybillTime(record.issuedAt)),
     _Row('Fare', payment == null ? record.fare : '${record.fare}*'),
+    // Q16/Q18: the fare has Movera's bonus in it.
+    if (bonus != null)
+      _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
     _Row('Passenger', record.riderName),
     _Row('Via', record.source),
     _Row('From', record.pickup),
@@ -85,7 +89,10 @@ List<Widget> _rows(WaybillRecord record) {
       const _Row('Payment', 'In the app'),
       _Row('Base price · ${record.service}', payment.fare),
       _Row('Movera fee', '−${payment.serviceFee}'),
+      if (payment.bonus case final extra?) _Row('Movera bonus', '+$extra'),
       _Row('Your earnings', payment.earnings),
+      if (bonus != null)
+      _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
       const SizedBox(height: 16),
       const Text(
         '* Round to the nearest whole krona in the taximeter.',
@@ -116,6 +123,26 @@ String formatWaybillTime(DateTime value) {
   return '${value.day} ${_months[value.month - 1]} ${value.year}, '
       '${two(value.hour)}:${two(value.minute)}:${two(value.second)} '
       '${value.timeZoneName}';
+}
+
+/// A small muted line under a row, e.g. "incl. +40 kr Movera bonus".
+class _Note extends StatelessWidget {
+  const _Note(this.text, {required this.id});
+
+  final String text;
+  final String id;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Text(
+        text,
+        key: ValueKey<String>(id),
+        style: const TextStyle(color: _muted, fontSize: 13),
+      ),
+    );
+  }
 }
 
 class _Row extends StatelessWidget {

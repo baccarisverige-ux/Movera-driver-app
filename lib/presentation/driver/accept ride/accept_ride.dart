@@ -113,6 +113,7 @@ class AcceptRide extends StatefulWidget {
     this.fare = '—',
     this.paidByCash = false,
     this.cashToCollect,
+    this.driverBonus,
     this.category = 'Movera',
     this.matchedVia = 'Demo Radar',
     this.pickupAddress = 'Odlarvägen 22',
@@ -180,6 +181,9 @@ class AcceptRide extends StatefulWidget {
   /// R8-4: on a cash trip, the cash to take from the rider when it is not
   /// [fare] (rider promotions). Null: the fare.
   final String? cashToCollect;
+
+  /// Q16/Q18: Movera's bonus already in [fare]; earnings say "incl. +X".
+  final Money? driverBonus;
   final String category;
   final String matchedVia;
   final String pickupAddress;
@@ -254,6 +258,7 @@ class AcceptRide extends StatefulWidget {
       fare: snapshot.fare ?? '—',
       paidByCash: snapshot.paidByCash,
       cashToCollect: snapshot.cashToCollect,
+      driverBonus: snapshot.driverBonus,
       category: snapshot.category ?? 'Movera',
       matchedVia: snapshot.matchedVia ?? 'Demo Radar',
       pickupAddress: pickup,

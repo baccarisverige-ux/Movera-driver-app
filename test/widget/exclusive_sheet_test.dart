@@ -24,6 +24,14 @@ import '../../integration_test/headless_map_platform.dart';
 // counts the seconds down and the island says "Exclusive · Pickup 3 min".
 
 class _Dispatch implements DispatchRepository {
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() =>
+      const Stream<OfferWithdrawal>.empty();
+
   final _nearby = StreamController<List<RideOffer>>.broadcast();
   List<RideOffer> offers = const [];
 

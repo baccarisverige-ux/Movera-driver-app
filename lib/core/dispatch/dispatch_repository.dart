@@ -52,6 +52,7 @@ class RideOffer {
     this.priority = false,
     this.source = OfferSource.system,
     this.groupId,
+    this.version = 1,
   });
 
   /// A reservation as a Radar trip. The driver's distance to the pickup is
@@ -183,6 +184,49 @@ class RideOffer {
   /// group). It is an Exclusive offer for this driver, never a Radar trip.
   bool get isAdminDirectAssign =>
       source == OfferSource.admin && groupId == null;
+
+  /// Contract §3.1: one of an admin's radar group (`source: admin` with a
+  /// `groupId`). A Radar trip: the first driver of the group to accept
+  /// wins, and it never counts against the driver (Q45/Q46).
+  bool get isRadarGroup => source == OfferSource.admin && groupId != null;
+
+  /// Contract `Offer.version` (≥ 1): sent as `expectedVersion` when the
+  /// driver accepts or declines it.
+  final int version;
+}
+
+/// Why an offer left this driver (contract `OfferEvent` `offer_withdrawn`,
+/// `offer.status`).
+enum OfferGoneReason {
+  /// Another driver accepted first (a radar group, or the admin locked
+  /// the trip to someone else: `assignment_locked`).
+  claimedElsewhere,
+
+  /// Its time ran out on the server.
+  expired,
+
+  /// Dispatch or the admin took it back (rider cancelled, reassigned…).
+  withdrawn;
+
+  static OfferGoneReason fromWire(Object? status) => switch (status) {
+    'claimed_elsewhere' || 'claimed' => OfferGoneReason.claimedElsewhere,
+    'expired' => OfferGoneReason.expired,
+    _ => OfferGoneReason.withdrawn,
+  };
+}
+
+/// An offer that left this driver's feed, and why. Repositories send it
+/// before the offer list without it, so screens can say why it went.
+class OfferWithdrawal {
+  const OfferWithdrawal({
+    required this.offerId,
+    required this.reason,
+    this.tripId,
+  });
+
+  final String offerId;
+  final String? tripId;
+  final OfferGoneReason reason;
 }
 
 class ClaimResult {
@@ -211,8 +255,20 @@ abstract interface class DispatchRepository {
   Stream<List<RideOffer>> watchNextTripOffers();
 
   /// Radar trips and open reservations alike: the server gives each one
-  /// to the first driver who claims it.
+  /// to the first driver who claims it (`POST /offers/{id}/accept`). Admin
+  /// direct assigns and radar-group offers go through it too.
   Future<ClaimResult> claimOffer(String offerId);
+
+  /// The driver said no to [offerId] (`POST /offers/{id}/decline`): an
+  /// admin direct assign (Exclusive) or a radar-group trip. True when
+  /// dispatch recorded it; false when the offer was already gone or the
+  /// network failed (the server then lets it run out).
+  Future<bool> declineOffer(String offerId, {String? reasonCode});
+
+  /// Offers withdrawn from this driver (`offer_withdrawn`, and
+  /// `assignment_locked` for a trip another driver took), with the
+  /// reason. Each comes before the offer list without it.
+  Stream<OfferWithdrawal> watchWithdrawals();
 
   void refreshOffers();
 

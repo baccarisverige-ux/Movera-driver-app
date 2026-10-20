@@ -7,6 +7,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
 import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/ride_check_history_entry.dart';
 import 'package:movera/widgets/custom_google_map.dart';
@@ -387,6 +388,22 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
     return Column(
       children: [
         _detailRow('Ride Cost', _ride.fare),
+        // Q16/Q18: Movera's bonus is in the fare.
+        if (_ride.driverBonus case final bonus?) ...[
+          6.height,
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              WaybillRecord.bonusNote(bonus),
+              key: const ValueKey<String>('history-driver-bonus'),
+              style: const TextStyle(
+                color: Color(0xFF7D898F),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
         16.height,
         _detailRow('Tip', _ride.tip),
         16.height,

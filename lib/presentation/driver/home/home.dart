@@ -35,6 +35,7 @@ import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/documents/document_expiry.dart';
@@ -192,7 +193,7 @@ class _DriverHomeState extends State<DriverHome>
     _locationEpoch++;
     _driverLocationSubscription?.cancel();
     _driverLocationSubscription = null;
-    _radarSubscription?.cancel();_radarSubscription=null;
+    _radarSubscription?.cancel();_radarSubscription=null; _withdrawalSubscription?.cancel();
     _HomeOfferRadar(this)._cancelAllOfferTimers(preserveClaim: true);
     _offerSimulationTimer?.cancel(); _directOfferTimer?.cancel();
     _expandedDirectOfferTimer?.cancel(); _radarOfferTwoTimer?.cancel(); _radarOfferThreeTimer?.cancel();
@@ -287,6 +288,7 @@ class _DriverHomeState extends State<DriverHome>
   late final WaybillRepository _waybills;
   late final DispatchRepository _dispatch;
   StreamSubscription<List<RideOffer>>? _radarSubscription;
+  StreamSubscription<OfferWithdrawal>? _withdrawalSubscription;
   List<RideOffer> _latestDispatchOffers = const <RideOffer>[];
   late final bool _ownsDispatch;
   late final DriverHomeAdminConfig _adminHomeConfig;
@@ -624,6 +626,7 @@ class _DriverHomeState extends State<DriverHome>
       statusLabel: 'Current trip',
       issuedAt: snapshot.savedAt ?? DateTime.now(),
       fare: snapshot.fare ?? '—',
+      driverBonus: WaybillRecord.bonusLabel(snapshot.driverBonus),
       service: snapshot.category ?? 'Movera',
       riderName: snapshot.riderName ?? 'Rider data unavailable',
       pickup: snapshot.pickupAddress ?? '',
@@ -938,7 +941,7 @@ class _DriverHomeState extends State<DriverHome>
     IslandMessages.show(HomeIslandNotices.offline);
     hideMainPanel = false;
     unawaited(_radarSubscription?.cancel() ?? Future<void>.value());
-    _radarSubscription = null;
+    _radarSubscription = null; unawaited(_withdrawalSubscription?.cancel());
     _latestDispatchOffers = const <RideOffer>[];
     _onlineTransitionTimer?.cancel();
     _offerSimulationTimer?.cancel();
@@ -1124,7 +1127,7 @@ class _DriverHomeState extends State<DriverHome>
     driverRouteObserver.unsubscribe(this);
     _sheetTrace.dispose();
     _destinationOpenTimer?.cancel();
-    _radarSubscription?.cancel();
+    _radarSubscription?.cancel(); _withdrawalSubscription?.cancel();
     _homeSheetPositionGuardTimer?.cancel();
     _goOnlinePulseController.dispose();
     _onlineTransitionTimer?.cancel();

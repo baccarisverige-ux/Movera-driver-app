@@ -30,6 +30,14 @@ const _scale = 1.3;
 
 class _Dispatch implements DispatchRepository {
   @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() =>
+      const Stream<OfferWithdrawal>.empty();
+
+  @override
   Stream<List<RideOffer>> watchNearbyOffers({
     bool destinationModeActive = false,
   }) => Stream.value(const <RideOffer>[]);

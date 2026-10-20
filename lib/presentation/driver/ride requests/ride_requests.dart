@@ -83,6 +83,7 @@ class _RideRequestsState extends State<RideRequests> {
   late final DispatchRepository _dispatch;
   late final bool _ownsDispatch;
   StreamSubscription<List<RideOffer>>? _nearbySubscription;
+  StreamSubscription<OfferWithdrawal>? _withdrawalSubscription;
   final Map<String, Timer> _claimedRemovalTimers = <String, Timer>{};
   final Map<String, _RadarOfferState> _offerStates =
       <String, _RadarOfferState>{};
@@ -105,6 +106,11 @@ class _RideRequestsState extends State<RideRequests> {
   final Map<String, Timer> _comeBackTimers = <String, Timer>{};
 
   void _hide(_RadarTrip trip) {
+    // An admin radar group's trip: × is the driver's No (§3.1). It never
+    // counts against the driver, like any Radar trip.
+    if (trip.source.isRadarGroup) {
+      unawaited(_dispatch.declineOffer(trip.id));
+    }
     setState(() => _dismissed.add(trip.id));
     _comeBackTimers.remove(trip.id)?.cancel();
     _comeBackTimers[trip.id] = Timer(
@@ -165,12 +171,26 @@ class _RideRequestsState extends State<RideRequests> {
     super.initState();
     _ownsDispatch = widget.dispatchRepository == null;
     _dispatch = widget.dispatchRepository ?? DemoDispatchRepository();
+    _withdrawalSubscription = _dispatch.watchWithdrawals().listen(_onWithdrawn);
     _nearbySubscription = _dispatch.watchNearbyOffers().listen(_onDispatchOffers);
+  }
+
+  /// Dispatch withdrew a trip: when another driver took it (a radar
+  /// group's first Accept), it leaves with "Taken by another driver".
+  void _onWithdrawn(OfferWithdrawal gone) {
+    if (!mounted || gone.reason != OfferGoneReason.claimedElsewhere) { return; }
+    for (final trip in _offers.toList()) {
+      if (trip.id == gone.offerId && _stateFor(trip.id) == _RadarOfferState.available) {
+        final shown = _visibleOffers.any((offer) => offer.id == trip.id);
+        _resolveMatchLost(trip, _RadarGone.lostOwnMatch, notice: shown);
+      }
+    }
   }
 
   @override
   void dispose() {
     _nearbySubscription?.cancel();
+    _withdrawalSubscription?.cancel();
     _matchNoticeTimer?.cancel();
     for (final timer in _claimedRemovalTimers.values) {
       timer.cancel();
@@ -360,6 +380,7 @@ class _RideRequestsState extends State<RideRequests> {
           fare: trip.fare,
           paidByCash: RadarOfferView.isCash(trip.payment),
           cashToCollect: rider.cashToCollectLabel,
+          driverBonus: rider.driverBonus,
           category: trip.category,
           matchedVia: 'Movera Radar',
           sessionController: widget.sessionController,
@@ -395,12 +416,24 @@ class _RideRequestsState extends State<RideRequests> {
     );
   }
 
-  void _resolveMatchLost(_RadarTrip trip, _RadarGone reason) {
+  void _resolveMatchLost(
+    _RadarTrip trip,
+    _RadarGone reason, {
+    bool notice = true,
+  }) {
     // The card fades out; a short banner says why, since this driver
-    // tapped Match.
+    // tapped Match (or another driver of its radar group took it).
+    if (!notice) {
+      setState(() {
+        _offerStates[trip.id] = _RadarOfferState.claimedElsewhere;
+        _goneReasons[trip.id] = reason;
+      });
+      _scheduleClaimedRemoval(trip.id);
+      return;
+    }
     _matchNoticeTimer?.cancel();
     setState(() {
-      _matchingOfferId = null;
+      if (_matchingOfferId == trip.id) { _matchingOfferId = null; }
       _offerStates[trip.id] = _RadarOfferState.claimedElsewhere;
       _goneReasons[trip.id] = reason;
       _matchNotice = reason == _RadarGone.lostOwnMatch
@@ -708,6 +741,7 @@ class _RideRequestsState extends State<RideRequests> {
         stops: trip.source.stops.length,
         riderTrips: trip.source.riderTrips,
         priority: trip.source.isPriority,
+        driverBonus: WaybillRecord.bonusLabel(trip.source.driverBonus),
         pickupPay: PickupPayCalculator.quote(
           category: trip.category,
           kind: PickupPayOfferKind.forHomeOffer(

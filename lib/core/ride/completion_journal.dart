@@ -114,6 +114,8 @@ class CompletionJournal {
         if (paymentMethod != null) 'paymentMethod': paymentMethod,
         // R8-4: the cash taken, which can differ from the fare.
         if (cashCollected != null) 'cashCollected': cashCollected,
+        // Q16/Q18: Movera's bonus in the fare, for the earnings history.
+        if (record.driverBonus != null) 'driverBonus': record.driverBonus,
       },
       if (cancellationReasonCode != null || cancellationActor != null)
         'cancellation': {
@@ -180,6 +182,9 @@ class CompletionJournal {
           vehicle: 'Unavailable',
           licensePlate: 'Unavailable',
           passengerCapacity: 0,
+          driverBonus: row['driverBonus'] is String
+              ? row['driverBonus'] as String
+              : null,
         ),
         completedAt: at,
         status: status,

@@ -80,6 +80,60 @@ class Money {
     return Money.ore(sign * (major * 100 + fraction));
   }
 
+  /// Label suffixes (`symbols` and ISO codes) → currency.
+  static const Map<String, String> _suffixes = {
+    'kr': 'SEK',
+    'SEK': 'SEK',
+    '€': 'EUR',
+    'EUR': 'EUR',
+    'DT': 'TND',
+    'TND': 'TND',
+  };
+
+  /// A display label in any known currency, e.g. `104,80 kr`, `24,50 €`,
+  /// `12,500 DT` or `+40 kr`: the currency comes from its symbol (or
+  /// [currency] when it has none) and the fraction may have up to that
+  /// currency's exponent of digits. Null when it is not an amount, or its
+  /// symbol is another currency than [currency]. SEK reads exactly like
+  /// [parseSekLabel].
+  static Money? parseLabel(String label, {String? currency}) {
+    var value = label.trim().replaceAll('−', '-').replaceAll('\u00a0', ' ');
+    String? found;
+    for (final entry in _suffixes.entries) {
+      if (value.toUpperCase().endsWith(entry.key.toUpperCase())) {
+        found = entry.value;
+        value = value.substring(0, value.length - entry.key.length).trim();
+        break;
+      }
+    }
+    if (found != null && currency != null && found != currency) return null;
+    final code = found ?? currency ?? 'SEK';
+    final exponent = exponents[code];
+    if (exponent == null) return null;
+    if (code == 'SEK') return parseSekLabel(value);
+    var sign = 1;
+    if (value.startsWith('-')) {
+      sign = -1;
+      value = value.substring(1);
+    } else if (value.startsWith('+')) {
+      value = value.substring(1);
+    }
+    var fraction = 0;
+    final decimal = RegExp('[,.](\\d{1,$exponent})\$').firstMatch(value);
+    if (decimal != null) {
+      fraction = int.parse(decimal.group(1)!.padRight(exponent, '0'));
+      value = value.substring(0, decimal.start);
+    }
+    // Thousands are grouped with spaces ([formatted]).
+    if (!RegExp(r'^(\d+|\d{1,3}( \d{3})+)$').hasMatch(value)) return null;
+    var unit = 1;
+    for (var i = 0; i < exponent; i++) {
+      unit *= 10;
+    }
+    final major = int.parse(value.replaceAll(' ', ''));
+    return Money(minorUnits: sign * (major * unit + fraction), currency: code);
+  }
+
   final int minorUnits;
   final String currency;
 
