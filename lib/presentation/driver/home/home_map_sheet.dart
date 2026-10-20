@@ -121,7 +121,8 @@ extension _HomeMapSheet on _DriverHomeState {
         navigating: false);
     }
     Future<void> _zoomToDriverLocation() async {
-      _camera.recenter();
+      // Locate: back to the car at the street view (zoom 15, tilted).
+      _camera.locate();
       await _startDriverLocation();
       if (mounted) { await _animateToDriverLocation(); }
     }

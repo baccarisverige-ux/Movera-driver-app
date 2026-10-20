@@ -381,7 +381,68 @@ assert.ok(images[0].style.transform.includes(`rotate(${Math.round(Math.atan2(Mat
   'A course across the tilted view is foreshortened like the road');
 assert.equal(halos.length, 1, 'One ground halo under the vehicle');
 assert.ok(halos[0].style.transform.includes(`scaleY(${Math.cos(60 * Math.PI / 180)})`), 'Halo lies on the tilted ground');
-map.moveCamera({heading:0, tilt:0});
+// The arrow and its halo scale with the zoom like the reference app:
+// smaller over the region, bigger close in, in 0.05 buckets (lib
+// MoveraVehicleMarker.scaleStops; parsed here so both stay in step).
+{
+  const dart = fs.readFileSync('lib/widgets/movera_vehicle_marker.dart', 'utf8');
+  const stops = [...dart.match(/scaleStops = \[([\s\S]*?)\];/)[1]
+    .matchAll(/\(([\d.]+),\s*([\d.]+)\)/g)].map(m => [Number(m[1]), Number(m[2])]);
+  assert.deepEqual(stops, [[11.5, .6], [13.5, .75], [15, 1], [17, 1.1]], 'Dart arrow scale stops');
+  const expected = z => {
+    if (z <= stops[0][0]) return stops[0][1];
+    for (let i = 1; i < stops.length; i++) if (z <= stops[i][0]) {
+      const [z0, s0] = stops[i - 1], [z1, s1] = stops[i];
+      return s0 + (s1 - s0) * (z - z0) / (z1 - z0);
+    }
+    return stops[stops.length - 1][1];
+  };
+  for (let z = 10; z <= 19; z += .05) {
+    assert.equal(api.vehicleScale(z), Math.round(Math.round(expected(z) / .05) * 5) / 100,
+      `JS arrow bucket at zoom ${z.toFixed(2)} matches Dart`);
+  }
+  const scaleOf = element => Number(/(?:^|\) )scale\(([\d.]+)\)/.exec(element.style.transform)?.[1]);
+  const shown = zoom => { map.moveCamera({zoom, heading: 0, tilt: 0}); api.vehicle(7, 0);
+    return [scaleOf(images[0]), scaleOf(halos[0])]; };
+  assert.deepEqual(shown(11.7), [.6, .6], 'Home (11.7): small arrow and halo');
+  assert.deepEqual(shown(14), [.85, .85], 'Neighbourhood zoom: mid-size arrow');
+  assert.deepEqual(shown(15), [1, 1], 'Locate / guidance standstill (15): full-size arrow');
+  assert.deepEqual(shown(17), [1.1, 1.1], 'Close in: a bit bigger');
+  assert.deepEqual(shown(20), [1.1, 1.1], 'Clamped zoomed right in');
+  assert.deepEqual(shown(5), [.6, .6], 'Clamped zoomed right out');
+  assert.equal(api.vehicleScale(11.7, 0.6), .6);
+  // Hysteresis: a zoom resting on a bucket edge never flickers.
+  shown(14);
+  assert.equal(api.vehicleScale(14.28), .9, 'Fresh: 14.28 rounds to the 0.9 bucket');
+  assert.deepEqual(shown(14.28), [.85, .85], 'Under 0.7 of a bucket away: no new size');
+  assert.deepEqual(shown(14.36), [.9, .9], 'Past it: the next bucket');
+  assert.deepEqual(shown(14.28), [.9, .9], 'And it stays there on the way back');
+  map.moveCamera({heading: 90, tilt: 60}); api.vehicle(7, 90);
+  assert.ok(images[0].style.transform.includes('rotate(0deg) scale(0.9)'), 'Scale after the heading turn');
+  assert.ok(halos[0].style.transform.includes(`scale(0.9) scaleY(${Math.cos(60 * Math.PI / 180)})`),
+    'Halo scales with the arrow and still lies on the tilted ground');
+  // Locate (lib DriverCameraPolicy.locateZoom): a street view tilted by the
+  // curve, never closer than guidance standstill; the arrow grows smoothly
+  // during the flight, in few monotonic steps (no marker churn).
+  const policy = fs.readFileSync('lib/core/navigation/driver_camera_controller.dart', 'utf8');
+  const locateZoom = Number(/static const double locateZoom = ([\d.]+);/.exec(policy)[1]);
+  const startZoom = Number(/static const double guidanceStartZoom = ([\d.]+);/.exec(policy)[1]);
+  const homeZoom = Number(/static const double exploreZoom = ([\d.]+);/.exec(policy)[1]);
+  assert.equal(locateZoom, 15, 'Locate zooms to street level (15)');
+  assert.ok(locateZoom <= startZoom, 'Locate is never closer than the guidance standstill view');
+  assert.equal(homeZoom, 11.7, 'Home still opens at 11.7');
+  const sizes = [];
+  for (let i = 0; i <= 60; i++) {
+    const t = i / 60, e = t * t * (3 - 2 * t);
+    const zoom = homeZoom + (locateZoom - homeZoom) * e;
+    map.moveCamera({zoom, heading: 0, tilt: 0}); api.vehicle(7, 0);
+    sizes.push(scaleOf(images[0]));
+  }
+  assert.equal(sizes[sizes.length - 1], 1, 'Locate view: full-size arrow');
+  assert.ok(sizes.every((s, i) => !i || s >= sizes[i - 1]), 'Arrow only grows during the locate flight');
+  assert.ok(new Set(sizes).size <= 9, `Few size steps during the flight: ${[...new Set(sizes)]}`);
+}
+map.moveCamera({heading:0, tilt:0, zoom: 16});
 marker.setMap(null);
 // Native Maps +/- touches must not be cancelled by the map-wide custom
 // gesture interpreter. Mobile browsers need an intact touch-to-click chain.
@@ -428,6 +489,8 @@ assert.equal(gestures,count,'Disposed Flutter listener released');
   for (let z = 12.05; z < 15.5; z += .05) assert.ok(curve(z) < sdkMax(z), `no SDK clamp at ${z}`);
   assert.equal(curve(15.5), 67.5);
   assert.ok(Math.abs(curve(15) - 67.5 * 3 / 3.5) < 1e-9);
+  // The locate view (zoom 15) gets a strong tilt from the same curve.
+  assert.ok(curve(15) > 55 && curve(15) < sdkMax(15), 'Locate view: strong tilt under the SDK limit');
   const liveDiv = new Element('plugins.flutter.io/google_maps_9');
   context.document.querySelector = () => ({content: 'configured-vector-style'});
   const live = new maps.Map(liveDiv, {});
@@ -578,7 +641,7 @@ queueMicrotask(() => {
         queueMicrotask(() => {
           api.configure(8, 100, 400, .72);
           assert.ok(panned && panned.y > 0, 'A raised sheet glides the followed car up');
-          console.log('PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, live tilt-with-zoom, wheel glide, taps, anchor, look-ahead, sheet glide and vehicle overlay');
+          console.log('PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, live tilt-with-zoom, wheel glide, taps, anchor, look-ahead, sheet glide, vehicle overlay, zoom-scaled arrow and locate view');
         });
       });
     });

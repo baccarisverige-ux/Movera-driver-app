@@ -132,10 +132,14 @@ String? _visibility(String feature, [String? element]) {
 
 void main() {
   test('Movera map style fits the Maps JavaScript 1000-char limit', () {
-    // Both zoom bands (far / near). Leave headroom so a small palette
-    // tweak cannot silently disable all web styling (the live site showed
-    // Google's default palette at 1051).
-    for (final style in [moveraMapStyleFar, moveraMapStyleNear]) {
+    // Every zoom band (far / near / close). Leave headroom so a small
+    // palette tweak cannot silently disable all web styling (the live site
+    // showed Google's default palette at 1051).
+    for (final style in [
+      moveraMapStyleFar,
+      moveraMapStyleNear,
+      moveraMapStyleClose,
+    ]) {
       final serialised = _webStyleString(_rules(style));
       expect(serialised.length, lessThanOrEqualTo(950), reason: serialised);
     }
@@ -143,7 +147,7 @@ void main() {
 
   test('Movera map style has no duplicate selectors', () {
     final seen = <String>{};
-    for (final rule in _rules()) {
+    for (final rule in _rules(moveraMapStyleClose)) {
       final key =
           '${rule['featureType'] ?? 'all'}/'
           '${rule['elementType'] ?? 'all'}';
@@ -214,11 +218,38 @@ void main() {
     }
   });
 
+  test('zoomed right in the roads get a heavier, bolder edge', () {
+    final close = _rules(moveraMapStyleClose);
+    double? weight(String road) {
+      for (final rule in close) {
+        if (rule['featureType'] == road &&
+            rule['elementType'] == 'geometry.stroke') {
+          final styler = (rule['stylers'] as List).single as Map;
+          return (styler['weight'] as num?)?.toDouble();
+        }
+      }
+      return null;
+    }
+
+    // Wider by class: local < arterial < highway.
+    expect(weight('road.local'), 2);
+    expect(weight('road.arterial'), 2.5);
+    expect(weight('road.highway'), 3);
+    // Otherwise the near style: same palette, same park green.
+    expect(moveraMapStyleClose.replaceAll(moveraCloseRoads, ''),
+        moveraMapStyleNear);
+    // Zoomed out the SDK's own thin roads stay: no weights.
+    for (final style in [moveraMapStyleFar, moveraMapStyleNear]) {
+      expect(style, isNot(contains('"weight"')));
+    }
+  });
+
   test('style band switches at 12.5 with hysteresis', () {
     expect(MoveraMapStyleBand.of(11), MoveraMapStyleBand.far);
     expect(MoveraMapStyleBand.of(12.49), MoveraMapStyleBand.far);
     expect(MoveraMapStyleBand.of(12.5), MoveraMapStyleBand.near);
     expect(MoveraMapStyleBand.of(15), MoveraMapStyleBand.near);
+    expect(MoveraMapStyleBand.of(15.5), MoveraMapStyleBand.close);
     // Far stays far until 12.6; near stays near until 12.4.
     var band = MoveraMapStyleBand.far;
     final seen = <MoveraMapStyleBand>[];
@@ -228,8 +259,25 @@ void main() {
       seen.add(band);
     }
     const f = MoveraMapStyleBand.far, n = MoveraMapStyleBand.near;
-    expect(seen, [f, f, f, n, n, n, n, f, f, f, f, n]);
+    const c = MoveraMapStyleBand.close;
+    expect(seen, [f, f, f, n, n, n, n, f, f, f, f, c]);
     expect(MoveraMapStyleBand.far.style, moveraMapStyleFar);
     expect(MoveraMapStyleBand.near.style, moveraMapStyleNear);
+    expect(MoveraMapStyleBand.close.style, moveraMapStyleClose);
+  });
+
+  test('close roads start above every guidance zoom, with hysteresis', () {
+    // Guidance stays at 15 and below (turns 15.4, arrival 15.5): driving
+    // never swaps the style; the locate view (15) stays near.
+    var band = MoveraMapStyleBand.near;
+    final seen = <MoveraMapStyleBand>[];
+    for (final zoom in <double>[15, 15.4, 15.5, 15.59, 15.6, 15.5, 15.41,
+        15.4, 15.5, 17, 12]) {
+      band = band.at(zoom);
+      seen.add(band);
+    }
+    const f = MoveraMapStyleBand.far, n = MoveraMapStyleBand.near;
+    const c = MoveraMapStyleBand.close;
+    expect(seen, [n, n, n, n, c, c, c, n, n, c, f]);
   });
 }
