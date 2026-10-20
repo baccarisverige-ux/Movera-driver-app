@@ -94,6 +94,19 @@ void main() {
     expect(DriverCameraPolicy().resolve(location: _fix(_origin)).zoom, 11.7);
   });
 
+  test('a locate that waits for the next fix still flies', () {
+    final policy = DriverCameraPolicy();
+    policy.resolve(location: _fix(_origin), immediate: true);
+    policy.locate();
+    // The last fix was too old: the locate is applied by the next GPS fix.
+    final located = policy.resolve(location: _fix(_east(_origin, 5)));
+    expect(located.zoom, 15);
+    expect(located.duration.inMilliseconds, greaterThan(600),
+        reason: 'the one-second flight, not the 450 ms follow glide');
+    final next = policy.resolve(location: _fix(_east(_origin, 25)));
+    expect(next.duration.inMilliseconds, 450);
+  });
+
   test('trip: locate shows 15, then eases back to the speed zoom', () {
     final policy = DriverCameraPolicy();
     var at = _origin;

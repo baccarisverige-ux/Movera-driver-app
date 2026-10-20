@@ -330,7 +330,9 @@ class DriverCameraPolicy {
       zoom,
       bearing,
       tilt,
-      duration: Duration(milliseconds: immediate ? 900 : 450),
+      // A locate that waited for a usable fix still flies (the port's
+      // one-second flight), not the short follow glide.
+      duration: Duration(milliseconds: immediate || locating ? 900 : 450),
       speedMetersPerSecond: rawUsable,
       coast: onRoute && rawUsable >= 1,
     );
