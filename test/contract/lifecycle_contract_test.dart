@@ -68,6 +68,51 @@ void main() {
     });
   });
 
+  group('rating rules = contract.json#ratingAllowed', () {
+    test('row by row', () {
+      final rows = ((contract['ratingAllowed'] as Map)['rules'] as List)
+          .cast<Map<String, dynamic>>();
+      expect(TripRatingRules.rules.length, rows.length);
+      for (var i = 0; i < rows.length; i++) {
+        final rule = TripRatingRules.rules[i];
+        expect(rule.rater.wireName, rows[i]['rater'], reason: 'row $i');
+        expect(rule.status.wireName, rows[i]['status'], reason: 'row $i');
+        expect(rule.command?.wireName, rows[i]['command'], reason: 'row $i');
+      }
+    });
+
+    test('replays the rating cases of fixtures/scenarios.json', () {
+      final cases = (_json('fixtures/scenarios.json')['scenarios'] as List)
+          .cast<Map<String, dynamic>>()
+          .where((scenario) => scenario['rating'] != null)
+          .toList();
+      expect(cases.map((s) => s['id']),
+          containsAll(['rider_rates_trip_ended_early',
+              'plain_rider_cancel_is_not_rated']));
+      for (final scenario in cases) {
+        final kind = TripKind.tryParse(scenario['kind'] as String)!;
+        var status = TripStatus.draft;
+        TripCommand? endedBy;
+        for (final step in (scenario['steps'] as List).cast<List>()) {
+          final command = TripCommand.tryParse(step[0] as String)!;
+          final next = TripTransitions.target(
+              status, command, TripActor.tryParse(step[1] as String)!,
+              kind: kind);
+          if (next != null) (status, endedBy) = (next, command);
+        }
+        for (final MapEntry(key: rater, value: expected)
+            in (scenario['rating'] as Map).entries) {
+          final allowed = status.isTerminal &&
+              TripRatingRules.allows(
+                  TripActor.tryParse(rater as String)!, status,
+                  endedBy: endedBy);
+          expect(allowed ? 'allowed' : 'invalid_transition', expected,
+              reason: '${scenario['id']}: $rater after ${status.wireName}');
+        }
+      }
+    });
+  });
+
   test('replays fixtures/scenarios.json with identical results', () {
     final scenarios = (_json('fixtures/scenarios.json')['scenarios'] as List)
         .cast<Map<String, dynamic>>();
