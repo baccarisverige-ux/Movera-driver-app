@@ -345,6 +345,8 @@ class _DriverHomeState extends State<DriverHome>
   _HomeDirectOffer? _outsideRadarOffer;
   /// Demo: once an Exclusive offer was accepted, the next one is the cash one.
   bool _exclusiveDemoTaken = false;
+  /// Q16: admin direct assigns already shown as Exclusive offers.
+  final Set<String> _adminAssignsShown = <String>{};
   final List<_HomeDirectOffer> _radarHomeOffers = <_HomeDirectOffer>[];
   final List<_HomeDirectOffer> _pendingRadarHomeOffers = <_HomeDirectOffer>[];
 

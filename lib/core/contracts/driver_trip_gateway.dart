@@ -11,7 +11,26 @@ class DriverTripProjection {
     required this.status,
     required this.version,
     this.sequence = 0,
+    this.acceptedAt,
+    this.driverBonus,
   });
+
+  /// Wire `TripProjection` fields the driver reads (contract v0.4.0).
+  factory DriverTripProjection.fromJson(Map<String, dynamic> json) {
+    final accepted = json['acceptedAt'];
+    final bonus = json['driverBonus'];
+    return DriverTripProjection(
+      tripId: json['tripId'] as String,
+      status: TripStatusWire.parse(json['status'] as String),
+      version: (json['version'] as num).toInt(),
+      sequence: (json['sequence'] as num?)?.toInt() ?? 0,
+      acceptedAt: accepted is String ? DateTime.parse(accepted).toUtc() : null,
+      driverBonus: bonus is Map
+          ? Money.fromJson(Map<String, dynamic>.from(bonus))
+          : null,
+    );
+  }
+
   final String tripId;
   final TripStatus status;
 
@@ -20,6 +39,13 @@ class DriverTripProjection {
 
   /// Last realtime sequence folded into this projection (≥ 0).
   final int sequence;
+
+  /// When a driver accepted; null before (owner Q12: the live free-cancel
+  /// clock counts from it).
+  final DateTime? acceptedAt;
+
+  /// Movera-paid extra for the driver, already in the earnings (Q16/Q18).
+  final Money? driverBonus;
 }
 
 /// Fields every mutation carries: the `Idempotency-Key` header and the body's

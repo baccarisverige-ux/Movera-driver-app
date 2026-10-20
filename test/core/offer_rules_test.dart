@@ -94,7 +94,8 @@ void main() {
 
     test('the zone\'s terms and the driver\'s share', () {
       final terms = rules.termsFor(category: 'Comfort');
-      expect(terms.freeMinutes, 2);
+      // contract.json#configDefaults (owner Q41): 5 free minutes.
+      expect(terms.freeMinutes, 5);
       expect(terms.perMinute.formatted, '12,26 kr');
       expect(terms.noShowAfterMinutes, 5);
       expect(terms.noShowFee.formatted, '65,00 kr');
@@ -131,7 +132,7 @@ void main() {
         includedWaitingMinutes: 7,
       );
       expect(rules.termsFor(type: WaitingRideType.scheduled).freeMinutes, 7);
-      expect(rules.termsFor().freeMinutes, 2);
+      expect(rules.termsFor().freeMinutes, 5);
     });
 
     test('Dispatch\'s offer times: 15 s to accept, 15 s on the radar', () {

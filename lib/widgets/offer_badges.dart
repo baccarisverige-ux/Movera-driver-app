@@ -3,8 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 
 /// A small pill on the Radar and Exclusive offer cards: the ride type, the
-/// Cash note, a reservation time, a fare boost or the black "Exclusive"
-/// mark.
+/// Cash note, a reservation time, a fare boost, the red "Priority" mark or
+/// the black "Exclusive" mark.
 class OfferBadge extends StatelessWidget {
   const OfferBadge({
     super.key,
@@ -56,6 +56,19 @@ class OfferBadge extends StatelessWidget {
       background = const Color(0xFFE8F6EE),
       foreground = const Color(0xFF136B47),
       border = const Color(0xFFBFE3CF);
+
+  /// Q18: admin made the trip a priority or added Movera-paid money to
+  /// it. Red with white text; the fare shown already has the money in it.
+  const OfferBadge.priority({super.key, this.vertical = 3})
+    : label = 'Priority',
+      icon = null,
+      iconColor = null,
+      background = priorityRed,
+      foreground = Colors.white,
+      border = priorityRed;
+
+  /// The Priority badge's red.
+  static const Color priorityRed = Color(0xFFD92D20);
 
   /// A quiet outlined note, e.g. "On your way".
   const OfferBadge.note(this.label, {super.key, this.vertical = 3})

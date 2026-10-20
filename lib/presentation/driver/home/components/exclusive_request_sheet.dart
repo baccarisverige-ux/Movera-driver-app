@@ -68,6 +68,11 @@ class ExclusiveRequestSheet extends StatelessWidget {
       bodyKey: ValueKey<String>('exclusive-offer-card-$id'),
       category: offer.category,
       chips: [
+        // Q18: admin's priority or added money; the fare has it.
+        if (offer.priority)
+          OfferBadge.priority(
+            key: ValueKey<String>('exclusive-offer-priority-$id'),
+          ),
         if (show.badges && offer.cash)
           OfferBadge.cash(key: ValueKey<String>('exclusive-offer-cash-$id')),
         if (show.badges && reservation)

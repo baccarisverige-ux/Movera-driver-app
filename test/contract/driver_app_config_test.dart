@@ -155,13 +155,13 @@ void main() {
       expect(config.feature('performance', fallback: true), isTrue);
       expect(config.feature('scheduledRides', fallback: true), isFalse);
       final waiting = config.waiting;
-      expect(waiting.base.freeMinutes, 2);
+      expect(waiting.base.freeMinutes, 5);
       expect(waiting.base.perMinute.formatted, '12,26 kr');
       expect(waiting.base.noShowFee.formatted, '65,00 kr');
       expect(waiting.base.driverShareNoShowPercent, 80);
       expect(waiting.rideTypes.containsKey(WaitingRideType.airport), isFalse);
       expect(waiting.termsFor(category: 'pet').freeMinutes, 4);
-      expect(waiting.termsFor(category: 'xl').freeMinutes, 2);
+      expect(waiting.termsFor(category: 'xl').freeMinutes, 5);
       expect(config.cancelReasons['scheduled'], ['scheduled_other']);
       expect(config.cancelReasons.containsKey('noShow'), isFalse);
       expect(config.latestVersion, '1.0.0');

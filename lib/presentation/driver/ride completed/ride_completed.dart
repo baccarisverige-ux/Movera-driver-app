@@ -170,6 +170,17 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                     ),
                     const SizedBox(height: 22),
                     _fare(record?.fare),
+                    // Q43: the waiting fee is all the driver's.
+                    if (record?.waitingFee case final fee?)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Includes $fee waiting fee',
+                          key: const ValueKey<String>('ride-completed-waiting-fee'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: _muted, fontSize: 13.5),
+                        ),
+                      ),
                     const SizedBox(height: 12),
                     Center(child: _chip(record)),
                     const SizedBox(height: 26),

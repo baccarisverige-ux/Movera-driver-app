@@ -15,6 +15,7 @@ class WaybillRecord {
     required this.vehicle,
     required this.licensePlate,
     required this.passengerCapacity,
+    this.waitingFee,
   });
 
   final String tripId;
@@ -31,7 +32,13 @@ class WaybillRecord {
   final String licensePlate;
   final int passengerCapacity;
 
+  /// The driver's waiting fee in [fare] (Q42/Q43), e.g. "3,68 kr"; null
+  /// when the trip had none.
+  final String? waitingFee;
+
   WaybillRecord copyWith({
+    String? fare,
+    String? waitingFee,
     String? statusLabel,
     DateTime? issuedAt,
     String? vehicle,
@@ -41,7 +48,7 @@ class WaybillRecord {
       tripId: tripId,
       statusLabel: statusLabel ?? this.statusLabel,
       issuedAt: issuedAt ?? this.issuedAt,
-      fare: fare,
+      fare: fare ?? this.fare,
       service: service,
       riderName: riderName,
       pickup: pickup,
@@ -51,6 +58,7 @@ class WaybillRecord {
       vehicle: vehicle ?? this.vehicle,
       licensePlate: licensePlate ?? this.licensePlate,
       passengerCapacity: passengerCapacity,
+      waitingFee: waitingFee ?? this.waitingFee,
     );
   }
 }
