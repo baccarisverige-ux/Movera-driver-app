@@ -38,7 +38,7 @@ void main() {
   group('admin export fixtures', () {
     test('Z001 (SEK)', () {
       final config = _admin('Z001');
-      expect(config.version, 8);
+      expect(config.version, 9);
       expect(config.zoneId, 'Z001');
       expect(config.timeZone, 'Europe/Stockholm');
       expect(config.publishedAt, DateTime.utc(2026, 10, 19, 8));
