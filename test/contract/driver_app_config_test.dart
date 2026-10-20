@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
+import 'package:movera/core/contracts/zone_settings.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 
 /// X1: the driver app reads the admin app's `DriverAppConfig` (contract §6).
@@ -43,13 +45,16 @@ void main() {
       expect(config.categoryIds, contains('child_seat'));
       expect(config.categories.firstWhere((c) => c.id == 'xl').seats, 6);
       final waiting = config.waiting;
-      expect(waiting.base.freeMinutes, 2);
+      // Owner Q41: free wait 5 min (XL 3), and the no-show comes with it.
+      expect(waiting.base.freeMinutes, 5);
+      expect(waiting.base.noShowAfterMinutes, 5);
       expect(waiting.base.perMinute.formatted, '12,26 kr');
       expect(waiting.base.noShowFee.formatted, '65,00 kr');
       expect(waiting.base.driverNoShowFee.formatted, '52,00 kr');
       // Category rules only where they differ from the zone's terms.
       expect(waiting.categories.keys, unorderedEquals(['premium', 'xl']));
       expect(waiting.termsFor(category: 'Movera XL').freeMinutes, 3);
+      expect(waiting.termsFor(category: 'Movera XL').noShowAfterMinutes, 3);
       expect(waiting.termsFor(category: 'premium').perMinute.formatted,
           '16,90 kr');
       expect(waiting.termsFor(pickupKm: 7).noShowFee.formatted, '85,00 kr');
@@ -181,6 +186,130 @@ void main() {
     test('the old zone id is read as Z001', () {
       expect(DriverAppConfig.fromJson({'zoneId': 'svc-stockholm'}).zoneId,
           'Z001');
+    });
+  });
+
+  group('contract v0.4.0 per-zone fields', () {
+    test('ZoneDefaults equal contract.json#configDefaults', () {
+      final contract = _read('contracts/contract.json') as Map<String, dynamic>;
+      final defaults = contract['configDefaults'] as Map<String, dynamic>;
+      expect(contract['version'], '0.4.0');
+      expect(ZoneDefaults.paymentMethods, contract['zonePaymentMethods']['values']);
+      expect(ZoneDefaults.languages, contract['languages']['values']);
+      expect(ZoneDefaults.maxStops, defaults['maxStops']);
+      expect(ZoneDefaults.maxPickupMoveMeters, defaults['maxPickupMoveMeters']);
+      expect(ZoneDefaults.missedExclusiveBeforeOffline,
+          defaults['missedExclusiveBeforeOffline']);
+      expect(ZoneDefaults.waitingDriverSharePct, defaults['waitingDriverSharePct']);
+      expect(ZoneDefaults.noShowDriverSharePct, defaults['noShowDriverSharePct']);
+      for (final MapEntry(key: country, value: row)
+          in (defaults['countries'] as Map<String, dynamic>).entries) {
+        final currency = row['currency'] as String;
+        expect(ZoneDefaults.countryOf(currency), country);
+        expect(ZoneDefaults.languageOf(country), row['defaultLanguage']);
+        final bonus = DriverBonusLimits.defaultsIn(currency);
+        expect(bonus.defaultLimit,
+            Money.fromJson(Map<String, dynamic>.from(row['driverBonus']['defaultLimit'])));
+        expect(bonus.hardMax,
+            Money.fromJson(Map<String, dynamic>.from(row['driverBonus']['hardMax'])));
+      }
+    });
+
+    for (final (zone, country, lang, limit, max) in const [
+      ('Z001', 'SE', 'sv', '200,00 kr', '1 000,00 kr'),
+      ('FR-PC', 'FR', 'fr', '20,00 €', '95,00 €'),
+      ('TN-TC', 'TN', 'fr', '60,000 DT', '300,000 DT'),
+    ]) {
+      test('$zone admin export', () {
+        final config = _admin(zone);
+        expect(config.country, country);
+        expect(config.languages.available, ['en', 'fr', 'sv']);
+        expect([config.languages.rider, config.languages.driver, config.languages.admin],
+            [lang, lang, lang]);
+        expect(config.paymentMethods, ['cash', 'card', 'apple_pay', 'google_pay']);
+        expect(config.maxStops, 3);
+        expect(config.maxPickupMoveMeters, 500);
+        expect(config.autoOffline, isTrue);
+        expect(config.missedExclusiveBeforeOffline, 3);
+        expect(config.driverBonus, isNotNull);
+        expect(config.driverBonusLimits.defaultLimit.currency, config.currency);
+        String digits(String text) => text.replaceAll(RegExp(r'\s'), '');
+        expect(digits(config.driverBonusLimits.defaultLimit.formatted), digits(limit));
+        expect(digits(config.driverBonusLimits.hardMax.formatted), digits(max));
+        expect(config.waiting.base.driverShareWaitPercent, 100);
+        expect(config.waiting.base.driverShareNoShowPercent, 80);
+      });
+    }
+
+    test('the contract sample', () {
+      final config = DriverAppConfig.fromJson(
+        _read('contracts/fixtures/config/driver_app_config.json'),
+      );
+      expect(config.country, 'SE');
+      expect(config.missedExclusiveBeforeOffline, 3);
+      expect(config.driverBonusLimits.defaultLimit, Money(minorUnits: 20000));
+      expect(config.waiting.base.freeMinutes, 5);
+      expect(config.waiting.termsFor(category: 'comfort').noShowAfterMinutes, 5);
+      expect(config.waiting.base.driverShareWaitPercent, 100);
+    });
+
+    test('missing: the defaults of the currency', () {
+      final config = DriverAppConfig.fromJson({'currency': 'EUR'});
+      expect(config.country, 'FR');
+      expect(config.languages.driver, 'fr');
+      expect(config.paymentMethods, ZoneDefaults.paymentMethods);
+      expect(config.maxStops, 3);
+      expect(config.maxPickupMoveMeters, 500);
+      expect(config.missedExclusiveBeforeOffline, 3);
+      expect(config.driverBonus, isNull);
+      expect(config.driverBonusLimits.defaultLimit,
+          Money(minorUnits: 2000, currency: 'EUR'));
+      expect(config.driverBonusLimits.hardMax,
+          Money(minorUnits: 9500, currency: 'EUR'));
+    });
+
+    test('invalid values never crash and fall back', () {
+      final config = DriverAppConfig.fromJson({
+        'currency': 'TND',
+        'country': 'Tunisia',
+        'languages': {
+          'available': ['ar', 'en', 'en'],
+          'default': {'driver': 'ar', 'rider': 3},
+        },
+        'paymentMethods': ['swish', 'apple', 'd17', 'wallet', 'cash', 'cash'],
+        'booking': {'maxStops': 11, 'maxPickupMoveMeters': 2.5},
+        'offers': {
+          'autoOffline': {'on': 'yes', 'missedExclusive': 0},
+        },
+        'driverBonus': {
+          'defaultLimit': {'amountMinor': 500000, 'currency': 'TND'},
+          'hardMax': {'amountMinor': 300000, 'currency': 'TND'},
+        },
+      });
+      expect(config.country, 'TN');
+      expect(config.languages.available, ['en']);
+      expect(config.languages.driver, 'en');
+      expect(config.languages.rider, 'en');
+      expect(config.paymentMethods, ['apple_pay', 'cash']);
+      expect(config.maxStops, 3);
+      expect(config.maxPickupMoveMeters, 500);
+      expect(config.autoOffline, isTrue);
+      expect(config.missedExclusiveBeforeOffline, 3);
+      expect(config.driverBonus, isNull, reason: 'limit above the hard max');
+      expect(config.driverBonusLimits.defaultLimit,
+          Money(minorUnits: 60000, currency: 'TND'));
+      final other = DriverAppConfig.fromJson({
+        'currency': 'SEK',
+        'paymentMethods': 'card',
+        'driverBonus': {
+          'defaultLimit': {'amountMinor': 2000, 'currency': 'EUR'},
+          'hardMax': {'amountMinor': 9500, 'currency': 'EUR'},
+        },
+        'languages': 'sv',
+      });
+      expect(other.paymentMethods, ZoneDefaults.paymentMethods);
+      expect(other.driverBonus, isNull, reason: 'another currency');
+      expect(other.languages.driver, 'sv');
     });
   });
 }

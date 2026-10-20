@@ -1,5 +1,6 @@
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 
@@ -40,6 +41,19 @@ class DriverAppConfig {
     this.cancelReasons = const <String, List<String>>{},
     this.minimumVersion = '1.0.0',
     this.latestVersion = '1.0.0',
+    this.country = 'SE',
+    this.languages = const AppLanguages(
+      rider: 'sv',
+      driver: 'sv',
+      admin: 'sv',
+    ),
+    this.paymentMethods = ZoneDefaults.paymentMethods,
+    this.maxStops = ZoneDefaults.maxStops,
+    this.maxPickupMoveMeters = ZoneDefaults.maxPickupMoveMeters,
+    this.autoOffline = true,
+    this.missedExclusiveBeforeOffline =
+        ZoneDefaults.missedExclusiveBeforeOffline,
+    this.driverBonus,
   });
 
   final int version;
@@ -59,6 +73,35 @@ class DriverAppConfig {
   final String minimumVersion;
   final String latestVersion;
 
+  /// ISO 3166 country of the zone (`SE`, `FR`, `TN`), contract v0.4.0.
+  final String country;
+
+  /// App languages and the country's default per app (Q48/Q49).
+  final AppLanguages languages;
+
+  /// Zone payment methods (`cash`, `card`, `apple_pay`, `google_pay`; Q7).
+  final List<String> paymentMethods;
+
+  /// `booking.maxStops` (Q39).
+  final int maxStops;
+
+  /// `booking.maxPickupMoveMeters`: how far the rider may move the pickup
+  /// after accept; the driver is notified (Q40).
+  final int maxPickupMoveMeters;
+
+  /// `offers.autoOffline`: offline after this many missed or declined
+  /// Exclusive offers in a row (Q46).
+  final bool autoOffline;
+  final int missedExclusiveBeforeOffline;
+
+  /// `driverBonus` limits in the zone's currency (Q17); null = the
+  /// country defaults ([driverBonusLimits]).
+  final DriverBonusLimits? driverBonus;
+
+  /// The bonus limits of the zone, the defaults when the document has none.
+  DriverBonusLimits get driverBonusLimits =>
+      driverBonus ?? DriverBonusLimits.defaultsIn(currency);
+
   bool feature(String key, {bool fallback = false}) =>
       features[key] ?? fallback;
 
@@ -74,6 +117,14 @@ class DriverAppConfig {
     final time = json['timeZone'];
     final published = json['publishedAt'];
     final update = _map(json['appUpdate']);
+    final countryRaw = json['country'];
+    final country =
+        countryRaw is String && RegExp(r'^[A-Z]{2}$').hasMatch(countryRaw)
+        ? countryRaw
+        : ZoneDefaults.countryOf(currency);
+    final booking = _map(json['booking']);
+    final autoOffline = _map(_map(json['offers'])?['autoOffline']);
+    final missed = _int(autoOffline?['missedExclusive']);
     return DriverAppConfig(
       version: _int(json['version']) ?? seed.version,
       publishedAt: published is String ? DateTime.tryParse(published) : null,
@@ -101,6 +152,19 @@ class DriverAppConfig {
       },
       minimumVersion: _string(update?['minimumVersion']) ?? seed.minimumVersion,
       latestVersion: _string(update?['latestVersion']) ?? seed.latestVersion,
+      country: country,
+      languages: AppLanguages.fromJson(json['languages'], country),
+      paymentMethods: ZoneDefaults.readPaymentMethods(json['paymentMethods']),
+      maxStops: _bounded(booking?['maxStops'], 10) ?? seed.maxStops,
+      maxPickupMoveMeters: _bounded(booking?['maxPickupMoveMeters'], 100000) ??
+          seed.maxPickupMoveMeters,
+      autoOffline: autoOffline?['on'] is bool
+          ? autoOffline!['on'] as bool
+          : seed.autoOffline,
+      missedExclusiveBeforeOffline: missed != null && missed >= 1 && missed <= 99
+          ? missed
+          : seed.missedExclusiveBeforeOffline,
+      driverBonus: _bonus(_map(json['driverBonus']), currency),
     );
   }
 
@@ -277,6 +341,25 @@ Money? _money(Object? json, String currency) {
 }
 
 Map<dynamic, dynamic>? _map(Object? json) => json is Map ? json : null;
+
+/// A whole number from 0 to [max]; null for anything else (a fraction too).
+int? _bounded(Object? json, int max) =>
+    json is int && json >= 0 && json <= max ? json : null;
+
+/// Both limits in [currency], positive, the limit not above the hard max;
+/// else null (the country defaults apply).
+DriverBonusLimits? _bonus(Map<dynamic, dynamic>? json, String currency) {
+  if (json == null) return null;
+  final limit = _money(json['defaultLimit'], currency);
+  final max = _money(json['hardMax'], currency);
+  if (limit == null ||
+      max == null ||
+      limit.minorUnits <= 0 ||
+      limit.minorUnits > max.minorUnits) {
+    return null;
+  }
+  return DriverBonusLimits(defaultLimit: limit, hardMax: max);
+}
 
 String? _string(Object? json) =>
     json is String && json.trim().isNotEmpty ? json.trim() : null;
