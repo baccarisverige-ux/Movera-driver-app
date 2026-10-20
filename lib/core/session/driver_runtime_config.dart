@@ -72,14 +72,18 @@ class DriverRuntimeConfig {
       productionBuild: driverProductionRequested,
       demoArrivalDefine: _demoArrivalDefined ? _demoArrivalValue : null,
     ),
-    externalRouting: bool.fromEnvironment(
-      'MOVERA_EXTERNAL_ROUTING',
-      defaultValue: true,
-    ),
-    skipAccountActivation: bool.fromEnvironment(
-      'MOVERA_SKIP_ACTIVATION',
-      defaultValue: false,
-    ),
+    externalRouting: _externalRouting,
+    skipAccountActivation: _skipAccountActivation,
+  );
+
+  // Web (dart2js) only allows these reads as const values.
+  static const bool _externalRouting = bool.fromEnvironment(
+    'MOVERA_EXTERNAL_ROUTING',
+    defaultValue: true,
+  );
+  static const bool _skipAccountActivation = bool.fromEnvironment(
+    'MOVERA_SKIP_ACTIVATION',
+    defaultValue: false,
   );
 
   /// Production policy: every gate enforced.
