@@ -5,10 +5,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-/// The driver's own position on Home and the active ride map: a blue 3D
-/// navigation arrow (lighter top face, darker edge for thickness) that
-/// stands up toward the viewer, over a soft grey halo on the ground, like
-/// the owner's reference navigation app.
+/// The driver's own position on Home and the active ride map: a flat blue
+/// navigation arrow with a white outline that stands up toward the viewer,
+/// over a soft grey halo on the ground, like the owner's reference
+/// navigation app.
 ///
 /// The arrow is a billboard (`flat: false`): on a tilted map it stays
 /// upright instead of lying squashed in the ground plane. Google turns a
@@ -25,12 +25,12 @@ class MoveraVehicleMarker {
   const MoveraVehicleMarker._();
 
   /// The arrow's box on screen (logical pixels) at scale 1 (zoom 15, the
-  /// locate and guidance standstill view): the arrow is 40 of its 52 points
-  /// wide, about a tenth of a phone's width, as in the reference.
-  static const double size = 52;
+  /// locate and guidance standstill view): the arrow is 25 of its 38 points
+  /// wide, small like the reference (owner: the old 52 looked too big).
+  static const double size = 38;
 
   /// The halo's diameter on the ground at an untilted map, at scale 1.
-  static const double haloSize = 88;
+  static const double haloSize = 60;
 
   /// Arrow scale by camera zoom (zoom, scale), linear between, clamped
   /// outside: measured on the reference screenshots, the arrow is about
@@ -188,60 +188,42 @@ class MoveraVehicleMarker {
   }
 
   /// The arrow pointing up in a [box] x [box] square, its base notch at
-  /// [anchor].
+  /// [anchor]: a flat navigation arrow like the owner's reference (blue
+  /// face, white outline, soft shadow), with no fake 3D edge, so it reads
+  /// the same at every heading.
   static void paintArrow(Canvas c, double box) {
     final s = box / 52;
-    Path arrow(double dy) => Path()
-      ..moveTo(26 * s, (7 + dy) * s)
-      ..lineTo(46 * s, (37 + dy) * s)
-      ..quadraticBezierTo(26 * s, (29 + dy) * s, 6 * s, (37 + dy) * s)
+    final arrow = Path()
+      ..moveTo(26 * s, 8 * s)
+      ..lineTo(43 * s, 42 * s)
+      ..lineTo(26 * s, 32.2 * s)
+      ..lineTo(9 * s, 42 * s)
       ..close();
-    Paint rounded(Color color) => Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    Paint corners(Color color) => Paint()
+    Paint stroke(Color color, double width) => Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 4 * s
+      ..strokeWidth = width * s
       ..strokeJoin = StrokeJoin.round;
-    // Soft shadow on the ground.
+    // Soft shadow right under the arrow.
     c.drawPath(
-      arrow(7),
-      Paint()
-        ..color = const Color(0x3D1D2B33)
-        ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, 2.4 * s),
+      arrow.shift(Offset(0, 1.2 * s)),
+      stroke(const Color(0x401D2B33), 6)
+        ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, 1.6 * s),
     );
-    // Thickness: the edge under the top face, stacked down a few pixels.
-    for (var dy = 4.5; dy > 0; dy -= .5) {
-      final path = arrow(dy);
-      c
-        ..drawPath(path, rounded(edge))
-        ..drawPath(path, corners(edge));
-    }
-    // A pale lip along the bottom of the edge, as in the reference.
-    c.drawPath(
-      arrow(4.5),
-      corners(const Color(0x66E6F4F7))..strokeWidth = 1.2 * s,
-    );
-    // Top face: lighter toward the tip.
-    final top = arrow(0);
-    final light = Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(26 * s, 7 * s),
-        Offset(26 * s, 37 * s),
-        const [faceLight, face],
-      );
+    // White outline.
     c
-      ..drawPath(top, light)
-      ..drawPath(top, corners(face)..shader = light.shader);
-    // Thin bright rim on the face.
+      ..drawPath(arrow, stroke(Colors.white, 5))
+      ..drawPath(arrow, Paint()..color = Colors.white);
+    // Blue face, a little lighter toward the tip.
     c.drawPath(
-      top,
+      arrow,
       Paint()
-        ..color = const Color(0x8CFFFFFF)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.1 * s
-        ..strokeJoin = StrokeJoin.round,
+        ..shader = ui.Gradient.linear(
+          Offset(26 * s, 8 * s),
+          Offset(26 * s, 42 * s),
+          const [faceLight, face],
+        ),
     );
+    c.drawPath(arrow, stroke(edge, .8));
   }
 }
