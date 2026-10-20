@@ -1,10 +1,11 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 
-// Documents that run out (Q26): the warning card, "Upload new" and the
+// Documents that run out (Q26): the warning card, tr.uploadNew and the
 // sheet shown when an expired document keeps the driver offline.
 
 const Color _ink = Color(0xFF111614);
@@ -12,13 +13,8 @@ const Color _muted = Color(0xFF6F7A80);
 const Color _amber = Color(0xFF9B6B24);
 const Color _red = Color(0xFFB3261E);
 
-const List<String> _months = <String>[
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
-
-/// "22 Oct"
-String documentDateLabel(DateTime day) => '${day.day} ${_months[day.month - 1]}';
+/// "22 Oct" ("22 oct.", "22 okt.").
+String documentDateLabel(DateTime day) => DriverDates.dayMonth(day);
 
 Widget _solar(String asset, Color color, double size) => SvgPicture.asset(
       asset,
@@ -30,14 +26,14 @@ Widget _solar(String asset, Color color, double size) => SvgPicture.asset(
 /// What the driver reads about [document] now.
 ({String text, Color color}) documentStatus(TrackedDocument document, DateTime now) {
   if (document.inReview) {
-    return (text: 'New document in review', color: _amber);
+    return (text: tr.islandDocumentInReview, color: _amber);
   }
   final days = document.daysLeft(now);
   if (days <= 0) {
-    return (text: 'Expired · You can’t go online', color: _red);
+    return (text: tr.docExpiredCantGoOnline, color: _red);
   }
   return (
-    text: 'Expires ${expiresInLabel(days)} · ${documentDateLabel(document.expiresOn)}',
+    text: tr.docExpiresWhenDate(expiresInLabel(days), documentDateLabel(document.expiresOn)),
     color: _amber,
   );
 }
@@ -66,7 +62,7 @@ Future<void> showDocumentUploadSheet(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'New ${document.title.toLowerCase()}',
+                tr.docNewTitle(document.title.toLowerCase()),
                 style: const TextStyle(
                   color: _ink,
                   fontSize: 20,
@@ -75,9 +71,8 @@ Future<void> showDocumentUploadSheet(
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Take a clear photo of the whole document. Movera checks it '
-                'before it counts.',
+              Text(
+                tr.docTakeClearPhoto,
                 style: TextStyle(color: _muted, fontSize: 14, height: 1.35),
               ),
               const SizedBox(height: 18),
@@ -87,8 +82,8 @@ Future<void> showDocumentUploadSheet(
                   key: const ValueKey<String>('document-upload-send'),
                   onPressed: () => Navigator.of(sheetContext).pop(true),
                   icon: _solar(AppAssets.solarUploadMinimalistic, Colors.white, 20),
-                  label: const Text(
-                    'Send new document',
+                  label: Text(
+                    tr.docSendNew,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   style: FilledButton.styleFrom(
@@ -100,8 +95,8 @@ Future<void> showDocumentUploadSheet(
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                'Demo: no file leaves the phone.',
+              Text(
+                tr.docDemoNoFileLeaves,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: _muted, fontSize: 12.5),
               ),
@@ -114,8 +109,8 @@ Future<void> showDocumentUploadSheet(
   if (sent != true || !context.mounted) { return; }
   (store ?? DocumentExpiryStore.instance).uploadNew(document.id);
   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-    const SnackBar(
-      content: Text('Sent for review'),
+    SnackBar(
+      content: Text(tr.docSentForReview),
       behavior: SnackBarBehavior.floating,
     ),
   );
@@ -153,7 +148,8 @@ Future<void> showDocumentBlockedSheet(
           return Padding(
             key: const ValueKey<String>('document-blocked-sheet'),
             padding: const EdgeInsets.fromLTRB(22, 0, 22, 18),
-            child: Column(
+            // Scrolls when large text makes it taller than the sheet.
+            child: SingleChildScrollView(child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -168,8 +164,8 @@ Future<void> showDocumentBlockedSheet(
                     Expanded(
                       child: Text(
                         cleared
-                            ? 'Document approved'
-                            : '${current.title} expired',
+                            ? tr.islandDocumentApproved
+                            : tr.docTitleExpired(current.title),
                         style: const TextStyle(
                           color: _ink,
                           fontSize: 20,
@@ -183,12 +179,10 @@ Future<void> showDocumentBlockedSheet(
                 const SizedBox(height: 8),
                 Text(
                   cleared
-                      ? 'You can go online now.'
+                      ? tr.youCanGoOnlineNow
                       : current.inReview
-                          ? 'Your new document is in review. You can go online '
-                              'when Movera approves it.'
-                          : 'Upload a new one. You can go online when Movera '
-                              'approves it.',
+                          ? tr.docNewInReviewGoOnlineWhenApproved
+                          : tr.docUploadNewGoOnlineWhenApproved,
                   style: const TextStyle(color: _muted, fontSize: 14, height: 1.35),
                 ),
                 const SizedBox(height: 18),
@@ -198,7 +192,7 @@ Future<void> showDocumentBlockedSheet(
                     child: FilledButton(
                       onPressed: () => Navigator.of(sheetContext).pop(),
                       style: FilledButton.styleFrom(backgroundColor: _ink),
-                      child: const Text('Done'),
+                      child: Text(tr.done),
                     ),
                   )
                 else if (current.inReview)
@@ -207,7 +201,7 @@ Future<void> showDocumentBlockedSheet(
                     child: OutlinedButton(
                       key: const ValueKey<String>('document-blocked-approve'),
                       onPressed: () => approveDocumentDemo(current, store: documents),
-                      child: const Text('Approve (demo)'),
+                      child: Text(tr.approveDemo),
                     ),
                   )
                 else
@@ -221,11 +215,11 @@ Future<void> showDocumentBlockedSheet(
                         store: documents,
                       ),
                       style: FilledButton.styleFrom(backgroundColor: _ink),
-                      child: const Text('Upload new'),
+                      child: Text(tr.uploadNew),
                     ),
                   ),
               ],
-            ),
+            )),
           );
         },
       ),
@@ -335,7 +329,7 @@ class _ExpiryCard extends StatelessWidget {
                 ? TextButton(
                     key: ValueKey<String>('document-approve-${document.id}'),
                     onPressed: () => approveDocumentDemo(document, store: store),
-                    child: const Text('Approve (demo)'),
+                    child: Text(tr.approveDemo),
                   )
                 : OutlinedButton.icon(
                     key: ValueKey<String>('document-upload-${document.id}'),
@@ -345,7 +339,7 @@ class _ExpiryCard extends StatelessWidget {
                       store: store,
                     ),
                     icon: _solar(AppAssets.solarUploadMinimalistic, _ink, 18),
-                    label: const Text('Upload new'),
+                    label: Text(tr.uploadNew),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _ink,
                       side: const BorderSide(color: Color(0xFFD5D9DB)),

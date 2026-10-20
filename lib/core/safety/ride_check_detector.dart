@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
 import 'package:movera/core/geo/geo_point.dart';
@@ -159,7 +160,7 @@ class RideCheckDetector {
     return _fire(
       RideCheckTrigger.offRoute,
       at,
-      RideCheckReason('This trip is ', '$percent%', ' longer than expected'),
+      RideCheckReason(tr.rcLongerLead, tr.rcPercent(percent), tr.rcLongerTrail),
     );
   }
 
@@ -174,31 +175,33 @@ class RideCheckDetector {
 
   static RideCheckReason longStopReason(int minutes, String? place) =>
       RideCheckReason(
-        'Your car has stopped for ',
-        '$minutes min',
+        tr.rcStoppedLead,
+        tr.rcMinutes(minutes),
         place == null || place.isEmpty ? '' : ' · $place',
       );
 
   static RideCheckReason droppedFarReason(double meters, String address) =>
       RideCheckReason(
-        'Your trip ended ',
+        tr.rcEndedLead,
         rideCheckDistance(meters),
-        ' from ${rideCheckPlace(address)}',
+        tr.rcEndedFromTrail(rideCheckPlace(address)),
       );
 
   static RideCheckReason offRouteReason(double meters, String? destination) =>
       RideCheckReason(
-        'You are ',
+        tr.rcOffRouteLead,
         rideCheckDistance(meters),
         destination == null
-            ? ' off the route'
-            : ' off the route to ${rideCheckPlace(destination)}',
+            ? tr.rcOffRouteTrail
+            : tr.rcOffRouteToTrail(rideCheckPlace(destination)),
       );
 
   static RideCheckReason crashReason(String? place) => RideCheckReason(
-    'A ',
-    'very hard stop',
-    place == null || place.isEmpty ? ' was detected' : ' was detected · $place',
+    tr.rcCrashLead,
+    tr.rcCrashBold,
+    place == null || place.isEmpty
+        ? tr.rcCrashTrail
+        : tr.rcCrashTrailAt(place),
   );
 
   /// Shortest distance from [point] to the polyline [route], in meters.

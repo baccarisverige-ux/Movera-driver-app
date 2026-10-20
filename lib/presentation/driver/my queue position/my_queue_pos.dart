@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
@@ -59,7 +60,7 @@ class MyQueuePosition extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    tooltip: 'Close queue position',
+                    tooltip: tr.queueClose,
                     onPressed: () => popOwned(context),
                     icon: Icon(
                       Icons.keyboard_arrow_down_rounded,
@@ -69,7 +70,7 @@ class MyQueuePosition extends StatelessWidget {
                   ),
                   Expanded(
                     child: TextWidget(
-                      text: "My Queue position",
+                      text: tr.queueMyPosition,
                       textAlign: TextAlign.center,
                       color: AppColor.title,
                       fontSize: 16,
@@ -110,7 +111,7 @@ class MyQueuePosition extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     TextWidget(
-                                      text: "Medium Wait",
+                                      text: tr.queueMediumWait,
                                       color: AppColor.black,
                                       fontSize: 16,
                                       fontWeight: fwSemiBold,
@@ -152,7 +153,7 @@ class MyQueuePosition extends StatelessWidget {
                                     color: AppColor.title,
                                   ),
                                   TextWidget(
-                                    text: "Sample Rank",
+                                    text: tr.queueSampleRank,
                                     color: AppColor.title,
                                     fontSize: 14,
                                     fontWeight: fwMedium,
@@ -170,7 +171,7 @@ class MyQueuePosition extends StatelessWidget {
                                     color: AppColor.title,
                                   ),
                                   TextWidget(
-                                    text: "Sample Rank",
+                                    text: tr.queueSampleRank,
                                     color: AppColor.title,
                                     fontSize: 14,
                                     fontWeight: fwMedium,
@@ -217,7 +218,7 @@ class MyQueuePosition extends StatelessWidget {
                     ),
                   ),
                   16.height,
-                  CustomButton(centerContent: "Queue unavailable — preview", onPressed: null),
+                  CustomButton(centerContent: tr.queueUnavailablePreview, onPressed: null),
                   24.height,
                   Row(
                     children: [
@@ -228,7 +229,7 @@ class MyQueuePosition extends StatelessWidget {
                           children: [
                             Center(
                               child: TextWidget(
-                                text: "Ranks",
+                                text: tr.queueRanks,
                                 color: AppColor.subtitle,
                                 fontSize: 16,
                                 fontWeight: fwMedium,
@@ -266,7 +267,7 @@ class MyQueuePosition extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               TextWidget(
-                                text: "Category",
+                                text: tr.category,
                                 color: AppColor.subtitle,
                                 fontSize: 16,
                                 fontWeight: fwMedium,

@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -26,7 +27,7 @@ int _minutes(double seconds) => math.max(1, (seconds / 60).round());
 /// Choose-destination step: a black arc draws from the car (the driver's
 /// real position, [DestinationConfirmScreen.origin]) to the destination over
 /// a faint straight line, the place chip stands on the blue pin, and one
-/// option card ends in "Confirm destination". Arc, car, pin and chip are map
+/// option card ends in tr.destConfirm. Arc, car, pin and chip are map
 /// objects, so they stay on their places when the map is dragged. Pops the
 /// destination with its distance and time, or null on close.
 class DestinationConfirmScreen extends StatefulWidget {
@@ -358,9 +359,9 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
                               _ink, BlendMode.srcIn)),
                     ),
                     const SizedBox(width: 10),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Fastest route to your destination',
+                        tr.destFastestRoute,
                         style: TextStyle(
                           color: _ink,
                           fontSize: 16,
@@ -373,8 +374,7 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "You'll only get trips heading your way, so every ride "
-                  'takes you closer to $_place.',
+                  tr.destOnlyTripsYourWay(_place),
                   style: const TextStyle(
                     color: _muted,
                     fontSize: 13,
@@ -383,7 +383,7 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Arrive by $arrive',
+                  tr.destArriveBy(arrive),
                   key: const ValueKey<String>('destination-confirm-arrive'),
                   style: const TextStyle(
                     color: _ink,
@@ -408,8 +408,8 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'Confirm destination',
+              child: Text(
+                tr.destConfirm,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
               ),
             ),

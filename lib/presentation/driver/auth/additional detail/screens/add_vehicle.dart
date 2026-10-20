@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -66,14 +67,14 @@ class _AdditionDetailAddVehicleState extends State<AdditionDetailAddVehicle> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextWidget(
-                      text: 'Add Vehicle',
+                      text: tr.authAddVehicle,
                       color: AppColor.title,
                       fontSize: 22,
                       fontWeight: fwExtraBold,
                     ),
                     9.height,
                     TextWidget(
-                      text: 'Add Vehicle details for verification',
+                      text: tr.authAddVehicleDetails,
                       color: AppColor.subtitle,
                       fontSize: 14,
                       fontWeight: fwMedium,
@@ -90,7 +91,7 @@ class _AdditionDetailAddVehicleState extends State<AdditionDetailAddVehicle> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildLabel('Vehicle make'),
+                  _buildLabel(tr.vehicleMake),
                   8.height,
                   customTextfield(
                     borderColor: Colors.transparent,
@@ -110,7 +111,7 @@ class _AdditionDetailAddVehicleState extends State<AdditionDetailAddVehicle> {
                     ),
                   ),
                   16.height,
-                  _buildLabel('Vehicle model'),
+                  _buildLabel(tr.vehicleModel),
                   8.height,
                   customTextfield(
                     borderColor: Colors.transparent,
@@ -130,14 +131,14 @@ class _AdditionDetailAddVehicleState extends State<AdditionDetailAddVehicle> {
                     ),
                   ),
                   16.height,
-                  _buildLabel('Vehicle year'),
+                  _buildLabel(tr.vehicleYear),
                   8.height,
                   customTextfield(
                     borderColor: Colors.transparent,
                     borderWidth: 0,
                     fillColor: Color(0xffF6F8FA),
                     controller: _yearController,
-                    hint: 'Enter model year',
+                    hint: tr.enterModelYear,
                     keyboardType: TextInputType.number,
                     suffixWidget: Padding(
                       padding: EdgeInsets.all(12),
@@ -151,7 +152,7 @@ class _AdditionDetailAddVehicleState extends State<AdditionDetailAddVehicle> {
                     ),
                   ),
                   16.height,
-                  _buildLabel('License plate number'),
+                  _buildLabel(tr.licensePlateNumber),
                   8.height,
                   customTextfield(
                     borderColor: Colors.transparent,
@@ -163,7 +164,7 @@ class _AdditionDetailAddVehicleState extends State<AdditionDetailAddVehicle> {
                     hint: 'AQS - 140',
                   ),
                   16.height,
-                  _buildLabel('Vehicle type'),
+                  _buildLabel(tr.vehicleType),
                   8.height,
                   AppDropdownField(
                     controller: _vehicleTypePrimaryController,
@@ -171,14 +172,14 @@ class _AdditionDetailAddVehicleState extends State<AdditionDetailAddVehicle> {
                     items: vehicleTypes,
                   ),
                   16.height,
-                  _buildLabel('Color'),
+                  _buildLabel(tr.vehicleColor),
                   8.height,
                   customTextfield(
                     borderColor: Colors.transparent,
                     borderWidth: 0,
                     fillColor: Color(0xffF6F8FA),
                     controller: _colorController,
-                    hint: 'Select color',
+                    hint: tr.selectColor,
                     readOnly: true,
                     ontap: () {
                       ColorPickerDialog.show(context, (selectedColor) {

@@ -42,6 +42,38 @@ class WaybillRecord {
   /// Movera's bonus in [fare] (Q16/Q18), e.g. "40 kr"; null without one.
   final String? driverBonus;
 
+  /// Stored values of [statusLabel] and [source]. They stay in English in
+  /// storage; the screens show them in the driver's language.
+  static const String currentTrip = 'Current trip';
+  static const String nextTripSecured = 'Next trip secured';
+  static const String completed = 'Completed';
+  static const String exclusiveOfferSource = 'Exclusive offer';
+  static const String localDemoSource = 'Local demo';
+  static const String demoRadarSource = 'Demo Radar';
+
+  /// [statusLabel] in the driver's language ("Course en cours").
+  String get statusText => switch (statusLabel) {
+    currentTrip => tr.currentTrip,
+    nextTripSecured => tr.nextTripSecured,
+    completed => tr.completed,
+    'Cancelled by rider' => tr.cancelledByRider,
+    'Cancelled by driver' => tr.cancelledByDriver,
+    'Cancelled by Movera' => tr.cancelledByMovera,
+    'Cancelled by driver · reassigned' => tr.cancelledByDriver,
+    'Rider no-show' => tr.riderDidNotArrive,
+    'Expired' => tr.tripExpired,
+    'Failed' => tr.tripFailed,
+    _ => statusLabel,
+  };
+
+  /// [source] in the driver's language; names such as "Movera Radar" stay.
+  String get sourceText => switch (source) {
+    exclusiveOfferSource => tr.exclusiveOffer,
+    localDemoSource => tr.waybillLocalDemo,
+    demoRadarSource => tr.waybillDemoRadar,
+    _ => source,
+  };
+
   /// [bonus] as the earnings label, e.g. "40 kr"; null for none.
   static String? bonusLabel(Money? bonus) =>
       bonus == null || bonus.minorUnits <= 0 ? null : bonus.formattedShort;
@@ -153,7 +185,7 @@ class InMemoryWaybillRepository implements WaybillRepository {
     if (active == null) { return; }
 
     _last.value = active.copyWith(
-      statusLabel: 'Completed',
+      statusLabel: WaybillRecord.completed,
       issuedAt: DateTime.now(),
     );
     _current.value = null;
@@ -175,7 +207,7 @@ class InMemoryWaybillRepository implements WaybillRepository {
     if (queued == null || current != null) {
       return null;
     }
-    final promoted = queued.copyWith(statusLabel: 'Current trip');
+    final promoted = queued.copyWith(statusLabel: WaybillRecord.currentTrip);
     _current.value = promoted;
     _next.value = null;
     return promoted;

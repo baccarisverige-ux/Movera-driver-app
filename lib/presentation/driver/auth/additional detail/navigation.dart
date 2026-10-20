@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:circle_progress_bar/circle_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -121,7 +122,7 @@ class _AdditionalInfoNavigationState extends State<AdditionalInfoNavigation> {
             Row(
               children: [
                 IconButton(
-                  tooltip: 'Back',
+                  tooltip: tr.back,
                   onPressed: () => controller.moveToPreviousStep(context),
                   icon: Icon(
                     Icons.arrow_back_ios_rounded,
@@ -153,8 +154,8 @@ class _AdditionalInfoNavigationState extends State<AdditionalInfoNavigation> {
                   centerContent:
                       controller.currentPageIndex.value <
                           controller.pages.length - 1
-                      ? "Continue"
-                      : "Verify",
+                      ? tr.navContinue
+                      : tr.verifyAction,
                   onPressed: () {
                     controller.moveToNextStep(context);
                   },
@@ -239,7 +240,7 @@ class _ProgressWidgetState extends State<ProgressWidget>
         value: _progress.value,
         child: Center(
           child: TextWidget(
-            text: '${widget.currentPageIndex + 1} of ${widget.totalPages}',
+            text: tr.stepOfTotal('${widget.currentPageIndex + 1}', '${widget.totalPages}'),
             fontSize: 12,
             fontWeight: fwSemiBold,
             color: AppColor.title,

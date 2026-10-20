@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 
@@ -13,10 +14,10 @@ class _PinVerificationState extends State<PinVerification> {
   static const Color _muted = Color(0xFF7D898F);
   static const Color _line = Color(0xFFE6E8EA);
 
-  static const _options = [
-    ('Verify all trips', 'Ask for the rider PIN on every pickup.'),
-    ('Verify this session', 'Ask until you go offline.'),
-    ('Don’t verify', 'Skip the PIN on this device.'),
+  static List<(String, String)> get _options => [
+    (tr.pinVerifyAll, tr.pinAskEveryPickup),
+    (tr.pinVerifySession, tr.pinAskUntilOffline),
+    (tr.pinDontVerify, tr.pinSkipOnDevice),
   ];
 
   int _selected = 2;
@@ -30,13 +31,13 @@ class _PinVerificationState extends State<PinVerification> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: 'Back', 
+        leading: IconButton(tooltip: tr.back, 
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
         titleSpacing: 0,
-        title: const Text(
-          'Pin verification',
+        title: Text(
+          tr.pinVerification,
           style: TextStyle(
             color: _ink,
             fontSize: 18,
@@ -48,8 +49,8 @@ class _PinVerificationState extends State<PinVerification> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         children: [
-          const Text(
-            'PIN verification preview - this preference is not saved or enforced in the demo.',
+          Text(
+            tr.pinPreviewNotSaved,
             style: TextStyle(
               color: _muted,
               fontSize: 13,
@@ -70,8 +71,8 @@ class _PinVerificationState extends State<PinVerification> {
                 final messenger = ScaffoldMessenger.of(context);
                 if (!popOwned(context)) return;
                 messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('PIN verification is not connected in this demo.'),
+                  SnackBar(
+                    content: Text(tr.pinNotConnected),
                   ),
                 );
               },
@@ -81,8 +82,8 @@ class _PinVerificationState extends State<PinVerification> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text(
-                'Close preview',
+              child: Text(
+                tr.closePreview,
                 style: TextStyle(fontWeight: FontWeight.w800),
               ),
             ),

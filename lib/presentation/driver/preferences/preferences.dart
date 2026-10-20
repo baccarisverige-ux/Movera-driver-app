@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -26,45 +27,45 @@ class _PreferencesState extends State<Preferences> {
 
   // Stored order: the saved `selected` list is indexed by this list, so new
   // categories are only ever appended. [_displayOrder] controls the grid.
-  final List<_DriverCategory> _categories = const [
+  final List<_DriverCategory> _categories = [
     _DriverCategory(
       title: 'Movera',
-      subtitle: 'Standard • Everyday ride',
+      subtitle: tr.prefStandardEveryday,
       icon: AppAssets.rideMovera,
     ),
     _DriverCategory(
       title: 'Comfort',
-      subtitle: 'Extra comfort • Plush',
+      subtitle: tr.prefExtraComfort,
       icon: AppAssets.rideComfort,
     ),
     _DriverCategory(
       title: 'Premium',
-      subtitle: 'Luxury • Premium service',
+      subtitle: tr.prefLuxuryPremium,
       icon: AppAssets.ridePremium,
     ),
     _DriverCategory(
       title: 'Priority',
-      subtitle: 'Faster pickup • Priority',
+      subtitle: tr.prefFasterPickup,
       icon: AppAssets.ridePriority,
     ),
     _DriverCategory(
       title: 'Movera XL',
-      subtitle: '6 seat • Spacious',
+      subtitle: tr.prefSixSeat,
       icon: AppAssets.rideXl,
     ),
     _DriverCategory(
       title: 'Electric',
-      subtitle: 'Low emissions • Eco',
+      subtitle: tr.prefLowEmissions,
       icon: AppAssets.rideElectric,
     ),
     _DriverCategory(
       title: 'Movera Pet',
-      subtitle: 'Pet friendly • Carrier OK',
+      subtitle: tr.prefPetFriendly,
       icon: AppAssets.ridePet,
     ),
     _DriverCategory(
       title: 'Booster Seat',
-      subtitle: 'Child seat • Kids safe',
+      subtitle: tr.prefChildSeat,
       icon: AppAssets.rideBooster,
     ),
   ];
@@ -199,7 +200,7 @@ class _PreferencesState extends State<Preferences> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '$selectedCount ride categories saved',
+            tr.prefCategoriesSaved(selectedCount),
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           backgroundColor: _ink,
@@ -288,14 +289,14 @@ class _PreferencesState extends State<Preferences> {
             onPressed: _retryingSave ? null : _retrySave,
             child: Text(
               _retryingSave
-                  ? 'Saving preferences…'
-                  : 'Changes not saved — Retry',
+                  ? tr.savingPreferencesEllipsis
+                  : tr.changesNotSavedRetry,
             ),
           ),
         if (_restoreFailed)
           TextButton(
             onPressed: _restoreSettings,
-            child: const Text('Could not load saved preferences — Retry'),
+            child: Text(tr.couldNotLoadSavedPreferencesRetry),
           ),
         Padding(
           padding: const EdgeInsets.only(top: 4),
@@ -305,7 +306,7 @@ class _PreferencesState extends State<Preferences> {
                 // Line the arrow up with the heading's left edge.
                 offset: const Offset(-10, 0),
                 child: IconButton(
-                  tooltip: 'Back',
+                  tooltip: tr.back,
                   onPressed: () => maybePopOwned(context),
                   icon: const Icon(Icons.arrow_back_rounded, size: 24),
                   color: _heading,
@@ -314,7 +315,7 @@ class _PreferencesState extends State<Preferences> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '$_selectedCount of ${_visible.length} active',
+                  tr.prefActiveOfTotal(_selectedCount, _visible.length),
                   textAlign: TextAlign.end,
                   style: const TextStyle(
                     color: _text,
@@ -327,8 +328,8 @@ class _PreferencesState extends State<Preferences> {
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Choose your ride options',
+        Text(
+          tr.prefChooseRideOptions,
           style: TextStyle(
             color: _heading,
             fontSize: 26,
@@ -338,8 +339,8 @@ class _PreferencesState extends State<Preferences> {
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
-          "Select the ride types you'd like available for your trips",
+        Text(
+          tr.prefSelectRideTypes,
           style: TextStyle(
             color: _text,
             fontSize: 14,
@@ -349,8 +350,8 @@ class _PreferencesState extends State<Preferences> {
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Movera sets these from your car. Switch off any you don’t want.',
+        Text(
+          tr.prefMoveraSetsFromCar,
           key: ValueKey<String>('preferences-categories-note'),
           style: TextStyle(
             color: Color(0xFF6F7673),
@@ -477,7 +478,7 @@ class _PreferencesState extends State<Preferences> {
             ),
           ),
           child: Text(
-            _explicitSaving ? 'Saving preferences…' : 'Save preferences',
+            _explicitSaving ? tr.savingPreferencesEllipsis : tr.prefSave,
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,

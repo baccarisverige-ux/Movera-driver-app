@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/money/bank_account.dart';
@@ -39,21 +40,21 @@ class _AddNewAccountState extends State<AddNewAccount> {
       : BankAccountRules.bankForClearing(_clearing.text);
 
   String? get _problem {
-    if (_holder.text.trim().isEmpty) return 'Add the account holder’s name.';
+    if (_holder.text.trim().isEmpty) return tr.bankAddHolderName;
     if (_international) {
       if (!BankAccountRules.validIban(_iban.text)) {
-        return 'Check the IBAN format and check digits against your bank statement.';
+        return tr.bankCheckIban;
       }
       if (!BankAccountRules.validBic(_bic.text)) {
-        return 'BIC / SWIFT has 8 or 11 letters and digits.';
+        return tr.bankBicFormat;
       }
       return null;
     }
     if (_bank == null) {
-      return 'Check the clearing number: 4 digits, or 5 starting with 8 for Swedbank.';
+      return tr.bankCheckClearing;
     }
     if (!BankAccountRules.validAccount(_account.text)) {
-      return 'The account number has 6 to 10 digits.';
+      return tr.bankAccountDigits;
     }
     return null;
   }
@@ -63,7 +64,7 @@ class _AddNewAccountState extends State<AddNewAccount> {
     setState(() => _tried = true);
     final problem = _problem;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(problem ?? 'Preview only — account not saved.')),
+      SnackBar(content: Text(problem ?? tr.bankPreviewNotSaved)),
     );
   }
 
@@ -76,8 +77,8 @@ class _AddNewAccountState extends State<AddNewAccount> {
     child: Row(
       children: [
         for (final (label, intl) in [
-          ('Sweden', false),
-          ('International', true),
+          (tr.countrySweden, false),
+          (tr.international, true),
         ])
           Expanded(
             child: TextButton(
@@ -227,13 +228,13 @@ class _AddNewAccountState extends State<AddNewAccount> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink, size: 24),
         ),
         centerTitle: true,
-        title: const Text(
-          'Bank account',
+        title: Text(
+          tr.bankAccount,
           style: TextStyle(
             color: _ink,
             fontSize: 16,
@@ -266,22 +267,22 @@ class _AddNewAccountState extends State<AddNewAccount> {
             child: Column(
               children: [
                 _row(
-                  'Holder',
+                  tr.bankHolder,
                   controller: _holder,
-                  hint: 'Full name',
+                  hint: tr.fullName,
                   caps: TextCapitalization.words,
                 ),
-                _row(foreignIban ? 'Country' : 'Bank', value: bank),
+                _row(foreignIban ? tr.country : tr.bank, value: bank),
                 if (!_international) ...[
                   _row(
-                    'Clearing',
+                    tr.clearing,
                     controller: _clearing,
                     hint: '8327-9',
                     ok: bank != null,
                     keyboard: TextInputType.number,
                   ),
                   _row(
-                    'Account',
+                    tr.account,
                     controller: _account,
                     hint: '123 456 789-0',
                     ok: BankAccountRules.validAccount(_account.text),
@@ -315,8 +316,8 @@ class _AddNewAccountState extends State<AddNewAccount> {
             child: Text(
               problem ??
                   (_international
-                      ? 'Use the IBAN on your bank statement. Foreign IBANs show a country code; no bank connection is verified.'
-                      : 'The bank is found from the clearing number.'),
+                      ? tr.bankUseIban
+                      : tr.bankFoundFromClearing),
               key: const ValueKey<String>('bank-note'),
               style: TextStyle(
                 color: problem == null ? _muted : _red,
@@ -338,21 +339,21 @@ class _AddNewAccountState extends State<AddNewAccount> {
                   borderRadius: BorderRadius.circular(26),
                 ),
               ),
-              child: const Text(
-                'Check details',
+              child: Text(
+                tr.checkDetails,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ),
           const SizedBox(height: 12),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.lock_outline_rounded, size: 14, color: _muted),
               SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  'Demo: account not saved or sent to a bank',
+                  tr.bankDemoNotSaved,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: _muted, fontSize: 12.5),
                 ),

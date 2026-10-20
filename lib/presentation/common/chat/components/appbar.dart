@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
@@ -27,7 +28,7 @@ class ChatAppBar extends StatelessWidget {
         children: [
           8.width,
           IconButton(
-            tooltip: 'Back',
+            tooltip: tr.back,
             onPressed: () {
               popOwned(context);
             },
@@ -54,7 +55,7 @@ class ChatAppBar extends StatelessWidget {
       actions: [
         IconButton(
           tooltip: RiderContactPolicy.available
-              ? 'Call rider'
+              ? tr.callRider
               : RiderContactPolicy.unavailableMessage,
           onPressed: () {
             if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) {

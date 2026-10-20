@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -26,7 +27,7 @@ Future<T?> showMoveraModalSheet<T>({
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    barrierLabel: barrierDismissible ? 'Dismiss' : null,
+    barrierLabel: barrierDismissible ? tr.dismiss : null,
     barrierColor: barrierColor,
     transitionDuration: Duration.zero,
     pageBuilder: (sheetContext, animation, secondaryAnimation) {

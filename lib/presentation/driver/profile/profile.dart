@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -80,15 +81,15 @@ class _DriverProfileState extends State<DriverProfile> {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            tooltip: 'Back',
+            tooltip: tr.back,
             onPressed: _logoutBusy
                 ? null
                 : () => maybePopOwned(context),
             icon: const Icon(Icons.arrow_back_rounded, color: _ink),
           ),
           titleSpacing: 0,
-          title: const Text(
-            'Profile',
+          title: Text(
+            tr.profile,
             style: TextStyle(
               color: _ink,
               fontSize: 18,
@@ -98,7 +99,7 @@ class _DriverProfileState extends State<DriverProfile> {
           ),
           actions: [
             IconButton(
-              tooltip: 'Settings',
+              tooltip: tr.settings,
               onPressed: _logoutBusy
                   ? null
                   : () => _openPage(context, const Settings()),
@@ -124,12 +125,12 @@ class _DriverProfileState extends State<DriverProfile> {
                     backgroundColor: Color(0xFFECECEC),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sample driver profile',
+                          tr.profSampleDriver,
                           style: TextStyle(
                             color: _ink,
                             fontSize: 17,
@@ -138,7 +139,7 @@ class _DriverProfileState extends State<DriverProfile> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          'Demo — no verified account',
+                          tr.profDemoNoVerified,
                           style: TextStyle(
                             color: _muted,
                             fontSize: 12,
@@ -157,19 +158,19 @@ class _DriverProfileState extends State<DriverProfile> {
               builder: (context, snapshot) => _link(
                 context,
                 icon: Icons.directions_car_outlined,
-                title: 'Vehicles',
-                detail: snapshot.data?.vehicle ?? 'Vehicle data unavailable',
+                title: tr.vehicles,
+                detail: snapshot.data?.vehicle ?? tr.vehicleDataUnavailable,
                 page: const DriverVehicles(),
                 refreshVehicle: true,
               ),
             ),
             const SizedBox(height: 12),
             _group(context, [
-              _item(Icons.insights_outlined, 'Analytics', const Analytics()),
-              _item(Icons.account_balance_outlined, 'My bank', const MyBank()),
+              _item(Icons.insights_outlined, tr.analytics, const Analytics()),
+              _item(Icons.account_balance_outlined, tr.myBank, const MyBank()),
               _item(
                 Icons.description_outlined,
-                'Documents',
+                tr.documents,
                 const DriverDocuments(),
               ),
             ]),
@@ -177,17 +178,17 @@ class _DriverProfileState extends State<DriverProfile> {
             _group(context, [
               _item(
                 Icons.privacy_tip_outlined,
-                'Privacy policy',
+                tr.privacyPolicyTitle,
                 LegalDocumentScreen.privacy,
               ),
               _item(
                 Icons.article_outlined,
-                'Terms of service',
+                tr.termsOfService,
                 LegalDocumentScreen.terms,
               ),
               _item(
                 Icons.help_outline_rounded,
-                'Help center',
+                tr.helpCenter,
                 const SupportInboxScreen(),
               ),
             ]),
@@ -207,7 +208,7 @@ class _DriverProfileState extends State<DriverProfile> {
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: _line),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Icon(
                         Icons.logout_rounded,
@@ -216,7 +217,7 @@ class _DriverProfileState extends State<DriverProfile> {
                       ),
                       SizedBox(width: 10),
                       Text(
-                        'Log out',
+                        tr.logOut,
                         style: TextStyle(
                           color: Color(0xFFB84F3D),
                           fontSize: 15,
@@ -364,21 +365,21 @@ class _DriverProfileState extends State<DriverProfile> {
 
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: const Text('Log out?'),
-          content: const Text(
-            'Local preview data on this device will be cleared, including trip history, contacts, and drafts. You will return to the sign-in screen offline.',
+          title: Text(tr.logOutQ),
+          content: Text(
+            tr.profLogOutClears,
           ),
           actions: [
             TextButton(
               onPressed: () => close(false),
-              child: const Text('Stay'),
+              child: Text(tr.stay),
             ),
             FilledButton(
               onPressed: () => close(true),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF252E3A),
               ),
-              child: const Text('Log out'),
+              child: Text(tr.logOut),
             ),
           ],
         );
@@ -398,9 +399,9 @@ class _DriverProfileState extends State<DriverProfile> {
       } catch (_) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(
-                'Could not clear local data. You are still signed in. Please retry.',
+                tr.profCouldNotClear,
               ),
             ),
           );

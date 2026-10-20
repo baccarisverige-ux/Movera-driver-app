@@ -116,7 +116,7 @@ class AcceptRide extends StatefulWidget {
     this.cashToCollect,
     this.driverBonus,
     this.category = 'Movera',
-    this.matchedVia = 'Demo Radar',
+    this.matchedVia = WaybillRecord.demoRadarSource,
     this.pickupAddress = 'Odlarvägen 22',
     this.pickupArea = 'Enhörna',
     this.dropoffAddress = 'T-Centralen, Stockholm',
@@ -261,7 +261,7 @@ class AcceptRide extends StatefulWidget {
       cashToCollect: snapshot.cashToCollect,
       driverBonus: snapshot.driverBonus,
       category: snapshot.category ?? 'Movera',
-      matchedVia: snapshot.matchedVia ?? 'Demo Radar',
+      matchedVia: snapshot.matchedVia ?? WaybillRecord.demoRadarSource,
       pickupAddress: pickup,
       pickupArea: snapshot.pickupArea ?? pickup.split(',').last.trim(),
       dropoffAddress: snapshot.dropoffAddress ?? 'Stockholm',
@@ -550,8 +550,8 @@ class _AcceptRideState extends State<AcceptRide>
   DriverRealtimeEvent? _pendingProjection;
   bool _drainingProjection = false;
   Timer? _projectionRetry;
-  String _vehicleLabel = 'Vehicle data unavailable';
-  String _vehiclePlate = 'Plate unavailable';
+  String _vehicleLabel = tr.vehicleDataUnavailable;
+  String _vehiclePlate = tr.plateUnavailable;
   static const Duration _projectionRetryBase = Duration(seconds: 1);
   static const Duration _projectionRetryMax = Duration(seconds: 30);
   Duration _projectionRetryDelay = _projectionRetryBase;

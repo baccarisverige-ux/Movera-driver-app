@@ -77,7 +77,7 @@ List<Widget> _rows(WaybillRecord record) {
     if (bonus != null)
       _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
     _Row(tr.passenger, record.riderName),
-    _Row(tr.via, record.source),
+    _Row(tr.via, record.sourceText),
     _Row(tr.from, record.pickup),
     _Row(tr.to2, record.dropoff),
     const SizedBox(height: 14),

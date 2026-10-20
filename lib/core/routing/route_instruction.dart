@@ -1,4 +1,5 @@
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 
 enum RouteManeuverType {
   turn,
@@ -147,19 +148,17 @@ class RouteLane {
       lanes.any((l) => !l.valid);
 
   /// "Use the 2 right lanes", "Use the left lane", "Use the middle lane".
-  static String hint(List<RouteLane> lanes) {
+  static String hint(List<RouteLane> lanes, [AppLocalizations? strings]) {
+    final l = strings ?? tr;
     final used = [
       for (var i = 0; i < lanes.length; i++)
         if (lanes[i].valid) i,
     ];
     if (used.isEmpty) return '';
     final n = used.length;
-    final side = used.first == 0
-        ? 'left'
-        : used.last == lanes.length - 1
-        ? 'right'
-        : 'middle';
-    return n == 1 ? 'Use the $side lane' : 'Use the $n $side lanes';
+    if (used.first == 0) return l.navUseLeftLanes(n);
+    if (used.last == lanes.length - 1) return l.navUseRightLanes(n);
+    return l.navUseMiddleLanes(n);
   }
 }
 
@@ -232,6 +231,9 @@ class NavigationBanner {
   const NavigationBanner({
     required this.primary,
     required this.distanceLabel,
+    this.instruction,
+    this.distanceMeters,
+    this.exitRef,
     this.roadName,
     this.symbol = NavigationBannerSymbol.straight,
     this.status,
@@ -246,6 +248,16 @@ class NavigationBanner {
 
   final String primary;
   final String distanceLabel;
+
+  /// [primary] without the distance, for the island's line under the
+  /// large number; null when [primary] has no distance in it.
+  final String? instruction;
+
+  /// Meters behind [distanceLabel]; null when it is a status, not a distance.
+  final double? distanceMeters;
+
+  /// Signposted number of the highway exit at the next maneuver.
+  final String? exitRef;
   final String? roadName;
   final NavigationBannerSymbol symbol;
   final String? status;
@@ -387,36 +399,180 @@ extension RouteManeuverTypeX on RouteManeuverType {
   }
 }
 
+/// What the driver does at the next maneuver, decided from the route data
+/// alone (maneuver type, modifier, exit number, signs). The words come
+/// last, in [RouteCue.label], in the driver's language.
+enum RouteCueKind {
+  arrive,
+  headOut,
+  keepLeft,
+  keepRight,
+  tunnelAhead,
+  tollAhead,
+  continueStraight,
+
+  /// Plain "Continue" (no direction known).
+  proceed,
+  roundabout,
+  roundaboutUTurn,
+
+  /// A signposted highway exit ("Exit 165 · Liljeholmen").
+  signedExit,
+  exitLeft,
+  exitRight,
+  takeExit,
+
+  /// On-ramp onto a road whose signs follow the words.
+  rampOnto,
+  rampLeft,
+  rampRight,
+  ramp,
+  mergeLeft,
+  mergeRight,
+  merge,
+  forkLeft,
+  forkRight,
+  continueAtFork,
+  turnLeft,
+  turnRight,
+  endOfRoad,
+  uTurn,
+  sharpLeft,
+  sharpRight,
+  slightLeft,
+  slightRight,
+}
+
+/// The next action: its kind plus the exit and place it names.
+class RouteCue {
+  const RouteCue(this.kind, {this.exit, this.place});
+
+  final RouteCueKind kind;
+
+  /// Roundabout exit number, or the signposted exit for [RouteCueKind.signedExit].
+  final String? exit;
+
+  /// First signposted place of a signposted exit.
+  final String? place;
+
+  /// A roundabout reads the same at any distance.
+  bool get isRoundabout =>
+      kind == RouteCueKind.roundabout || kind == RouteCueKind.roundaboutUTurn;
+
+  /// Goes on along the road: "Continue straight 1.2 km", not "in 1.2 km".
+  bool get isOnward =>
+      kind == RouteCueKind.continueStraight ||
+      kind == RouteCueKind.proceed ||
+      kind == RouteCueKind.continueAtFork;
+
+  /// The action in the driver's language: "Turn left", "Tournez à gauche".
+  String label([AppLocalizations? strings]) {
+    final l = strings ?? tr;
+    final exit = (this.exit ?? '').trim();
+    final place = (this.place ?? '').trim();
+    return switch (kind) {
+      RouteCueKind.arrive => l.navArrive,
+      RouteCueKind.headOut => l.navHeadOut,
+      RouteCueKind.keepLeft => l.navKeepLeft,
+      RouteCueKind.keepRight => l.navKeepRight,
+      RouteCueKind.tunnelAhead => l.navTunnelAhead,
+      RouteCueKind.tollAhead => l.navTollRoadAhead,
+      RouteCueKind.continueStraight => l.navContinueStraight,
+      RouteCueKind.proceed => l.navContinue,
+      RouteCueKind.roundabout =>
+        exit.isEmpty ? l.navRoundabout : l.navRoundaboutExit(exit),
+      RouteCueKind.roundaboutUTurn =>
+        exit.isEmpty ? l.navRoundaboutUTurn : l.navRoundaboutUTurnExit(exit),
+      RouteCueKind.signedExit =>
+        place.isEmpty ? l.navSignedExit(exit) : l.navSignedExitTowards(exit, place),
+      RouteCueKind.exitLeft => l.navExitLeft,
+      RouteCueKind.exitRight => l.navExitRight,
+      RouteCueKind.takeExit => l.navTakeExit,
+      RouteCueKind.rampOnto => l.navRampOnto,
+      RouteCueKind.rampLeft => l.navRampLeft,
+      RouteCueKind.rampRight => l.navRampRight,
+      RouteCueKind.ramp => l.navRamp,
+      RouteCueKind.mergeLeft => l.navMergeLeft,
+      RouteCueKind.mergeRight => l.navMergeRight,
+      RouteCueKind.merge => l.navMerge,
+      RouteCueKind.forkLeft => l.navForkLeft,
+      RouteCueKind.forkRight => l.navForkRight,
+      RouteCueKind.continueAtFork => l.navContinueAtFork,
+      RouteCueKind.turnLeft => l.navTurnLeft,
+      RouteCueKind.turnRight => l.navTurnRight,
+      RouteCueKind.endOfRoad => l.navEndOfRoad,
+      RouteCueKind.uTurn => l.navUTurn,
+      RouteCueKind.sharpLeft => l.navSharpLeft,
+      RouteCueKind.sharpRight => l.navSharpRight,
+      RouteCueKind.slightLeft => l.navSlightLeft,
+      RouteCueKind.slightRight => l.navSlightRight,
+    };
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is RouteCue &&
+      other.kind == kind &&
+      other.exit == exit &&
+      other.place == place;
+
+  @override
+  int get hashCode => Object.hash(kind, exit, place);
+
+  @override
+  String toString() => 'RouteCue($kind, exit: $exit, place: $place)';
+}
+
 class RouteInstructionCopy {
   const RouteInstructionCopy._();
 
-  static String formatDistance(double meters) {
-    if (meters < 25) {
-      return 'now';
+  /// At the maneuver: the driver acts "now" instead of at a distance.
+  static const double nowMeters = 25;
+
+  /// "300 m", "1.2 km" ("1,2 km" in French and Swedish), or "now" under
+  /// [nowMeters].
+  static String formatDistance(double meters, [AppLocalizations? strings]) {
+    final l = strings ?? tr;
+    if (meters < nowMeters) {
+      return l.navDistanceNow;
     }
     if (meters < 1000) {
-      return '${meters.round()} m';
+      return l.navMeters('${meters.round()}');
     }
     final km = meters / 1000;
-    return '${km.toStringAsFixed(km < 10 ? 1 : 0)} km';
+    return l.navKilometers(
+      km.toStringAsFixed(km < 10 ? 1 : 0).replaceAll('.', l.navDecimalMark),
+    );
   }
 
+  /// "in 150 m", or "now" at the point.
+  static String toPoint(double meters, [AppLocalizations? strings]) {
+    final l = strings ?? tr;
+    final distance = formatDistance(meters, l);
+    return meters < nowMeters ? distance : l.navInDistance(distance);
+  }
+
+  /// The whole step as one line ("Turn left onto Sveavägen").
   static String build({
     required RouteManeuverType type,
     required String modifier,
     String? roadName,
     String? exitNumber,
+    AppLocalizations? strings,
   }) {
+    final l = strings ?? tr;
     final road = (roadName ?? '').trim();
-    final onto = road.isEmpty ? '' : ' onto $road';
+    String onto(String action) => road.isEmpty ? action : l.navOnto(action, road);
+    final left = modifier.contains('left');
+    final right = modifier.contains('right');
     switch (type) {
       case RouteManeuverType.arrive:
-        return 'Arrive at destination';
+        return l.navArriveAtDestination;
       case RouteManeuverType.depart:
-        return road.isEmpty ? 'Head out' : 'Head out on $road';
+        return road.isEmpty ? l.navHeadOut : l.navHeadOutOn(road);
       case RouteManeuverType.continueStraight:
       case RouteManeuverType.newName:
-        return road.isEmpty ? 'Continue straight' : 'Continue on $road';
+        return road.isEmpty ? l.navContinueStraight : l.navContinueOn(road);
       case RouteManeuverType.roundabout:
       case RouteManeuverType.rotary:
       case RouteManeuverType.roundaboutTurn:
@@ -424,43 +580,55 @@ class RouteInstructionCopy {
       case RouteManeuverType.exitRotary:
         final exit = exitNumber ?? '';
         if (exit.isEmpty) {
-          return 'At the roundabout, continue';
+          return l.navRoundaboutContinue;
         }
-        return 'At roundabout, take exit $exit';
+        return l.navRoundaboutTakeExit(exit);
       case RouteManeuverType.offRamp:
       case RouteManeuverType.ramp:
-        return modifier.contains('left')
-            ? 'Take the exit on the left$onto'
-            : modifier.contains('right')
-            ? 'Take the exit on the right$onto'
-            : 'Take the exit$onto';
+        return onto(
+          left
+              ? l.navExitOnLeft
+              : right
+              ? l.navExitOnRight
+              : l.navTakeExit,
+        );
       case RouteManeuverType.onRamp:
       case RouteManeuverType.merge:
-        return modifier.contains('left')
-            ? 'Merge left$onto'
-            : modifier.contains('right')
-            ? 'Merge right$onto'
-            : 'Merge$onto';
+        return onto(
+          left
+              ? l.navMergeLeft
+              : right
+              ? l.navMergeRight
+              : l.navMerge,
+        );
       case RouteManeuverType.fork:
-        return modifier.contains('left')
-            ? 'Keep left$onto'
-            : modifier.contains('right')
-            ? 'Keep right$onto'
-            : 'Continue at the fork$onto';
+        return onto(
+          left
+              ? l.navKeepLeft
+              : right
+              ? l.navKeepRight
+              : l.navContinueAtFork,
+        );
       case RouteManeuverType.endOfRoad:
-        return modifier.contains('left')
-            ? 'Turn left at the end of the road$onto'
-            : modifier.contains('right')
-            ? 'Turn right at the end of the road$onto'
-            : 'At the end of the road$onto';
+        return onto(
+          left
+              ? l.navEndTurnLeft
+              : right
+              ? l.navEndTurnRight
+              : l.navAtEndOfRoad,
+        );
       case RouteManeuverType.turn:
       case RouteManeuverType.unknown:
       case RouteManeuverType.notification:
-        return _turnLine(modifier, onto);
+        final turn = _turn(modifier);
+        return onto(
+          turn.kind == RouteCueKind.uTurn ? l.navMakeUTurn : turn.label(l),
+        );
     }
   }
 
-  static String shortAction({
+  /// The next action, from the maneuver data.
+  static RouteCue cue({
     required RouteManeuverType type,
     required String modifier,
     String? exitNumber,
@@ -473,142 +641,182 @@ class RouteInstructionCopy {
   }) {
     final place = (towards ?? '').trim();
     final ref = (exitRef ?? '').trim();
+    final left = modifier.contains('left');
+    final right = modifier.contains('right');
     switch (type) {
       case RouteManeuverType.arrive:
-        return 'Arrive';
+        return const RouteCue(RouteCueKind.arrive);
       case RouteManeuverType.depart:
-        return 'Head out';
+        return const RouteCue(RouteCueKind.headOut);
       case RouteManeuverType.continueStraight:
       case RouteManeuverType.newName:
-        if (highway && modifier == 'slight left') return 'Keep left';
-        if (highway && modifier == 'slight right') return 'Keep right';
-        if (modifier.isEmpty || modifier == 'straight') {
-          if (tunnel) return 'Tunnel ahead';
-          if (toll) return 'Toll road ahead';
+        if (highway && modifier == 'slight left') {
+          return const RouteCue(RouteCueKind.keepLeft);
         }
-        return 'Continue straight';
+        if (highway && modifier == 'slight right') {
+          return const RouteCue(RouteCueKind.keepRight);
+        }
+        if (modifier.isEmpty || modifier == 'straight') {
+          if (tunnel) return const RouteCue(RouteCueKind.tunnelAhead);
+          if (toll) return const RouteCue(RouteCueKind.tollAhead);
+        }
+        return const RouteCue(RouteCueKind.continueStraight);
       case RouteManeuverType.roundabout:
       case RouteManeuverType.rotary:
       case RouteManeuverType.roundaboutTurn:
       case RouteManeuverType.exitRoundabout:
       case RouteManeuverType.exitRotary:
         final exit = (exitNumber ?? '').trim();
-        if (modifier.startsWith('uturn')) {
-          return exit.isEmpty ? 'Roundabout, U-turn' : 'Roundabout, U-turn · exit $exit';
-        }
-        return exit.isEmpty ? 'Roundabout' : 'Roundabout, exit $exit';
+        return RouteCue(
+          modifier.startsWith('uturn')
+              ? RouteCueKind.roundaboutUTurn
+              : RouteCueKind.roundabout,
+          exit: exit.isEmpty ? null : exit,
+        );
       case RouteManeuverType.offRamp:
       case RouteManeuverType.ramp:
         // Signposted exit: "Exit 165 · Liljeholmen".
         if (ref.isNotEmpty) {
-          return place.isEmpty ? 'Exit $ref' : 'Exit $ref · $place';
+          return RouteCue(
+            RouteCueKind.signedExit,
+            exit: ref,
+            place: place.isEmpty ? null : place,
+          );
         }
-        return modifier.contains('left')
-            ? 'Exit left'
-            : modifier.contains('right')
-            ? 'Exit right'
-            : 'Take the exit';
+        return RouteCue(
+          left
+              ? RouteCueKind.exitLeft
+              : right
+              ? RouteCueKind.exitRight
+              : RouteCueKind.takeExit,
+        );
       case RouteManeuverType.onRamp:
-        if (hasRoad) return 'Take the ramp onto';
-        return modifier.contains('left')
-            ? 'Take the ramp on the left'
-            : modifier.contains('right')
-            ? 'Take the ramp on the right'
-            : 'Take the ramp';
+        if (hasRoad) return const RouteCue(RouteCueKind.rampOnto);
+        return RouteCue(
+          left
+              ? RouteCueKind.rampLeft
+              : right
+              ? RouteCueKind.rampRight
+              : RouteCueKind.ramp,
+        );
       case RouteManeuverType.merge:
-        return modifier.contains('left')
-            ? 'Merge left'
-            : modifier.contains('right')
-            ? 'Merge right'
-            : 'Merge';
+        return RouteCue(
+          left
+              ? RouteCueKind.mergeLeft
+              : right
+              ? RouteCueKind.mergeRight
+              : RouteCueKind.merge,
+        );
       case RouteManeuverType.fork:
         if (!highway) {
-          return modifier.contains('left')
-              ? 'At the fork, go left'
-              : modifier.contains('right')
-              ? 'At the fork, go right'
-              : 'Continue at the fork';
+          return RouteCue(
+            left
+                ? RouteCueKind.forkLeft
+                : right
+                ? RouteCueKind.forkRight
+                : RouteCueKind.continueAtFork,
+          );
         }
-        return modifier.contains('left')
-            ? 'Keep left'
-            : modifier.contains('right')
-            ? 'Keep right'
-            : 'Continue at the fork';
+        return RouteCue(
+          left
+              ? RouteCueKind.keepLeft
+              : right
+              ? RouteCueKind.keepRight
+              : RouteCueKind.continueAtFork,
+        );
       case RouteManeuverType.endOfRoad:
-        return modifier.contains('left')
-            ? 'Turn left'
-            : modifier.contains('right')
-            ? 'Turn right'
-            : 'End of the road';
+        return RouteCue(
+          left
+              ? RouteCueKind.turnLeft
+              : right
+              ? RouteCueKind.turnRight
+              : RouteCueKind.endOfRoad,
+        );
       case RouteManeuverType.turn:
       case RouteManeuverType.unknown:
       case RouteManeuverType.notification:
-        return _shortTurn(modifier);
+        return _turn(modifier);
     }
   }
 
-  static String livePrimary({required String action, required double meters}) {
-    final lower = action.toLowerCase();
-    if (lower.startsWith('roundabout')) {
+  /// [cue] in words.
+  static String shortAction({
+    required RouteManeuverType type,
+    required String modifier,
+    String? exitNumber,
+    String? exitRef,
+    String? towards,
+    bool highway = false,
+    bool hasRoad = false,
+    bool toll = false,
+    bool tunnel = false,
+    AppLocalizations? strings,
+  }) => cue(
+    type: type,
+    modifier: modifier,
+    exitNumber: exitNumber,
+    exitRef: exitRef,
+    towards: towards,
+    highway: highway,
+    hasRoad: hasRoad,
+    toll: toll,
+    tunnel: tunnel,
+  ).label(strings);
+
+  /// "Turn left in 300 m", "Turn left now", "Continue straight 1.2 km";
+  /// a roundabout without the distance.
+  static String livePrimary({
+    required RouteCue cue,
+    required double meters,
+    AppLocalizations? strings,
+  }) {
+    final l = strings ?? tr;
+    final action = cue.label(l);
+    if (cue.isRoundabout) {
       return action;
     }
-    final dist = formatDistance(meters);
-    if (dist == 'now') {
-      return '$action now';
+    if (meters < nowMeters) {
+      return l.navActionNow(action);
     }
-    if (lower.startsWith('continue')) {
-      return '$action $dist';
+    final dist = formatDistance(meters, l);
+    if (cue.isOnward) {
+      return l.navActionFor(action, dist);
     }
-    return '$action in $dist';
+    return l.navActionIn(action, dist);
   }
 
-  static String _shortTurn(String modifier) {
+  /// [livePrimary] without the distance, as the island shows it under the
+  /// large number: the action, or the "now" line at the maneuver.
+  static String liveInstruction({
+    required RouteCue cue,
+    required double meters,
+    AppLocalizations? strings,
+  }) => !cue.isRoundabout && meters < nowMeters
+      ? livePrimary(cue: cue, meters: meters, strings: strings)
+      : cue.label(strings);
+
+  static RouteCue _turn(String modifier) {
     switch (modifier) {
       case 'uturn':
       case 'uturn left':
       case 'uturn right':
-        return 'U-turn';
+        return const RouteCue(RouteCueKind.uTurn);
       case 'sharp left':
-        return 'Turn sharp left';
+        return const RouteCue(RouteCueKind.sharpLeft);
       case 'sharp right':
-        return 'Turn sharp right';
+        return const RouteCue(RouteCueKind.sharpRight);
       case 'slight left':
-        return 'Turn slight left';
+        return const RouteCue(RouteCueKind.slightLeft);
       case 'slight right':
-        return 'Turn slight right';
+        return const RouteCue(RouteCueKind.slightRight);
       case 'left':
-        return 'Turn left';
+        return const RouteCue(RouteCueKind.turnLeft);
       case 'right':
-        return 'Turn right';
+        return const RouteCue(RouteCueKind.turnRight);
       case 'straight':
-        return 'Continue straight';
+        return const RouteCue(RouteCueKind.continueStraight);
       default:
-        return 'Continue';
-    }
-  }
-
-  static String _turnLine(String modifier, String onto) {
-    switch (modifier) {
-      case 'uturn':
-      case 'uturn left':
-      case 'uturn right':
-        return 'Make a U-turn$onto';
-      case 'sharp left':
-        return 'Turn sharp left$onto';
-      case 'sharp right':
-        return 'Turn sharp right$onto';
-      case 'slight left':
-        return 'Turn slight left$onto';
-      case 'slight right':
-        return 'Turn slight right$onto';
-      case 'left':
-        return 'Turn left$onto';
-      case 'right':
-        return 'Turn right$onto';
-      case 'straight':
-        return 'Continue straight$onto';
-      default:
-        return onto.isEmpty ? 'Continue' : 'Continue$onto';
+        return const RouteCue(RouteCueKind.proceed);
     }
   }
 

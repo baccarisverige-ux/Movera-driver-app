@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -31,13 +32,13 @@ class _AdditionDetailUploadIdState extends State<AdditionDetailUploadId> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextWidget(
-                      text: "Upload ID",
+                      text: tr.uploadId,
                       color: AppColor.title,
                       fontSize: 24,
                       fontWeight: fwExtraBold,
                     ),
                     TextWidget(
-                      text: "we need to verify your Id",
+                      text: tr.weNeedToVerifyYourId,
                       color: AppColor.subtitle,
                       fontSize: 16,
                       fontWeight: fwMedium,
@@ -58,7 +59,7 @@ class _AdditionDetailUploadIdState extends State<AdditionDetailUploadId> {
             child: TextWidget(
               textAlign: TextAlign.center,
               text:
-                  "In order to approve your account, we need to be 100% sure that you are who you say you are, for security and transparency purposes.",
+                  tr.approveAccountIdentityReason,
               color: AppColor.subtitle,
               fontSize: 14,
               fontWeight: fwNormal,

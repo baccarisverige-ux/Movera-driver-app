@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:country_pickers/country.dart';
 import 'package:country_pickers/utils/utils.dart';
@@ -52,7 +53,7 @@ class _DriverCreateAccountPhoneState extends State<DriverCreateAccountPhone> {
             Transform.translate(
               offset: Offset(ResSize.w * -10, 0),
               child: IconButton(
-                tooltip: 'Back',
+                tooltip: tr.back,
                 onPressed: () {
                   popOwned(context);
                 },
@@ -65,14 +66,14 @@ class _DriverCreateAccountPhoneState extends State<DriverCreateAccountPhone> {
             ),
             18.height,
             TextWidget(
-              text: "Phone number",
+              text: tr.phoneNumber,
               fontSize: 24,
               fontWeight: fwExtraBold,
             ),
             9.height,
             TextWidget(
               textAlign: TextAlign.start,
-              text: "Enter a valid phone number where we will send",
+              text: tr.enterValidPhoneWeWillSend,
               color: AppColor.subtitle,
               fontSize: 16,
               fontWeight: fwMedium,
@@ -80,7 +81,7 @@ class _DriverCreateAccountPhoneState extends State<DriverCreateAccountPhone> {
             14.height,
             customTextfield(
               contentHorizPadding: 0,
-              hint: "Phone number",
+              hint: tr.phoneNumber,
               keyboardType: TextInputType.phone,
               prefixWidget: InkWell(
                 onTap: () {
@@ -134,7 +135,7 @@ class _DriverCreateAccountPhoneState extends State<DriverCreateAccountPhone> {
             mainAxisSize: MainAxisSize.min,
             children: [
               CustomButton(
-                centerContent: "Continue",
+                centerContent: tr.navContinue,
                 onPressed: () {
                   Navigator.push(
                     context,

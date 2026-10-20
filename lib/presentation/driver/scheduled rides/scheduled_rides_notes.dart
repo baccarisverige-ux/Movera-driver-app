@@ -3,13 +3,8 @@ part of 'scheduled_rides.dart';
 // Notes on the Scheduled rides screen: paused or off (Q11), clashing rides
 // left out (Q9), reminders and backup (Q10), and the cancel rules (Q11).
 
-const List<String> _months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
-
-/// "22 Oct".
-String _dayMonth(DateTime time) => '${time.day} ${_months[time.month - 1]}';
+/// "22 Oct" ("22 oct.", "22 okt.").
+String _dayMonth(DateTime time) => DriverDates.dayMonth(time);
 
 /// "07:15", "tomorrow 07:15" or "22 Oct 07:15", seen from [now].
 String _timeFrom(DateTime time, DateTime now) {
@@ -20,7 +15,7 @@ String _timeFrom(DateTime time, DateTime now) {
   return days == 0
       ? clock
       : days == 1
-      ? 'tomorrow $clock'
+      ? tr.tomorrowAtClock(clock)
       : '${_dayMonth(time)} $clock';
 }
 
@@ -29,12 +24,12 @@ String _freeCancelLine(ReservationRequestPreview? ride) {
   final until = ScheduledRideStore.freeCancelUntil(ride);
   final hours = ScheduledRideRules.current.driverLateCancelHours;
   if (until == null) {
-    return 'Free cancel until $hours h before pickup.';
+    return tr.schedFreeCancelHoursBefore('$hours');
   }
   if (ScheduledRideStore.isLateCancel(ride)) {
-    return 'Late cancel: under $hours h to pickup.';
+    return tr.schedLateCancelUnder('$hours');
   }
-  return 'Free cancel until ${_timeFrom(until, ScheduledRideStore._now)}.';
+  return tr.schedFreeCancelUntil(_timeFrom(until, ScheduledRideStore._now));
 }
 
 /// A short note with a Solar icon, in the card style of the list.
@@ -112,14 +107,12 @@ class _BlockNotice extends StatelessWidget {
     final rules = ScheduledRideRules.current;
     final title = block.byAdmin
         ? until == null
-              ? 'Scheduled rides are off'
-              : 'Scheduled rides off until ${_dayMonth(until)}'
-        : 'Scheduled rides paused until ${until == null ? '' : _dayMonth(until)}';
+              ? tr.schedRidesAreOff
+              : tr.schedRidesOffUntil(_dayMonth(until))
+        : tr.schedRidesPausedUntil(until == null ? '' : _dayMonth(until));
     final body = block.byAdmin
-        ? 'Movera turned off Scheduled rides for your account. '
-              'Contact support if you have questions.'
-        : 'You had ${rules.lateCancelLimit} late cancels in '
-              '${rules.lateCancelPeriodDays} days. Your accepted rides stay.';
+        ? tr.schedTurnedOffByMovera
+        : tr.schedLateCancelsInDays('${rules.lateCancelLimit}', '${rules.lateCancelPeriodDays}');
     return _ScheduledNote(
       key: const ValueKey<String>('scheduled-block-notice'),
       icon: block.byAdmin
@@ -179,9 +172,8 @@ class _CancelRulesBox extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   late
-                      ? 'You never pay to cancel, but this late cancel counts.'
-                      : 'You never pay to cancel. Under $hours h to pickup a '
-                            'cancel is late and counts toward a pause.',
+                      ? tr.schedNeverPayLateCounts
+                      : tr.schedNeverPayUnderHours('$hours'),
                   style: const TextStyle(
                     color: Color(0xFF5F6B72),
                     fontSize: 12,
@@ -214,9 +206,8 @@ class _LateCancelWarning extends StatelessWidget {
     final until = ScheduledRideStore._now.add(Duration(days: rules.pauseDays));
     return Text(
       pauses
-          ? 'This is a late cancel ($count in ${rules.lateCancelPeriodDays} '
-                'days). Scheduled rides pause until ${_dayMonth(until)}.'
-          : 'This is a late cancel and it counts. You never pay.',
+          ? tr.schedLateCancelPauses('$count', '${rules.lateCancelPeriodDays}', _dayMonth(until))
+          : tr.schedLateCancelCounts,
       key: const ValueKey<String>('scheduled-late-cancel'),
       style: const TextStyle(
         color: Color(0xFF9A4B1F),
@@ -242,8 +233,8 @@ class _NotCountedTag extends StatelessWidget {
         color: const Color(0xFFE9F4EF),
         borderRadius: BorderRadius.circular(99),
       ),
-      child: const Text(
-        'Doesn’t count',
+      child: Text(
+        tr.doesnTCount,
         style: TextStyle(
           color: Color(0xFF19865C),
           fontSize: 10.5,

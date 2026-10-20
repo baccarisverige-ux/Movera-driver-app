@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -15,26 +16,16 @@ class LegalDocumentScreen extends StatelessWidget {
   final String title;
   final String body;
 
-  static const privacy = LegalDocumentScreen(
-    title: 'Privacy policy',
+  static LegalDocumentScreen get privacy => LegalDocumentScreen(
+    title: tr.privacyPolicyTitle,
     body:
-        'Movera Driver uses location, trip and vehicle data to assign rides, '
-        'show routes and keep a waybill on this device.\n\n'
-        'Demo builds keep this information in memory on the phone. Nothing is '
-        'sold to advertisers. You can log out at any time from Profile.\n\n'
-        'When a live backend is connected, the same screens will keep using '
-        'this policy text until a signed version is published.',
+        tr.legalPrivacyBody,
   );
 
-  static const terms = LegalDocumentScreen(
-    title: 'Terms of service',
+  static LegalDocumentScreen get terms => LegalDocumentScreen(
+    title: tr.termsOfService,
     body:
-        'You agree to drive only with a valid licence, insurance and a vehicle '
-        'that matches the documents in this app.\n\n'
-        'Radar offers are first-come. Matching another order while on a trip '
-        'is optional. Completing a trip creates a waybill you can reopen from Home.\n\n'
-        'Movera may suspend a demo account that misuses Safety tools or '
-        'emergency calling.',
+        tr.legalTermsBody,
   );
 
   @override
@@ -46,7 +37,7 @@ class LegalDocumentScreen extends StatelessWidget {
         backgroundColor: AppColor.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: 'Back', 
+        leading: IconButton(tooltip: tr.back, 
           onPressed: () => popOwned(context),
           icon: Icon(
             Icons.arrow_back_ios_rounded,

@@ -76,7 +76,7 @@ class TripIslandController extends ChangeNotifier {
       _showNotice(tr.routeUpdated);
     } else if (previousFault != null &&
         fault == null &&
-        previousFault.contains('Location')) {
+        _isLocationFault(previousFault)) {
       _showNotice(tr.gpsRestored);
     } else if (wasWaiting &&
         input.waitingSeconds != null &&
@@ -90,6 +90,11 @@ class TripIslandController extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  /// The GPS warning, in whatever language it was shown: "GPS restored"
+  /// follows it, never a route fault.
+  static bool _isLocationFault(String fault) =>
+      fault == tr.locationUpdatingEllipsis || fault.contains('Location');
 
   void _showNotice(String title) {
     _noticeTimer?.cancel();

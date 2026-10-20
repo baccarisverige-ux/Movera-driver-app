@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
@@ -100,25 +101,22 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
         _ScheduledNote(
           key: const ValueKey<String>('scheduled-clash-note'),
           icon: AppAssets.solarCalendarMinimalistic,
-          title: clashing.length == 1
-              ? '1 ride hidden'
-              : '${clashing.length} rides hidden',
+          title: tr.schedRidesHidden(clashing.length),
           body:
-              'It clashes with your ${clashing.first.$2.route?.pickupTime ?? ''} '
-              'pickup: not enough time to get there.',
+              tr.schedClashBody(clashing.first.$2.route?.pickupTime ?? ''),
         ),
       if (_selectedTab == 1 && reminder != null)
         _ScheduledNote(
           key: const ValueKey<String>('scheduled-reminder'),
           icon: AppAssets.solarBellBing,
-          title: 'Reminder',
+          title: tr.reminder,
           body: reminder,
         ),
       if (_selectedTab == 1 && backup != null)
         _ScheduledNote(
           key: const ValueKey<String>('scheduled-backup-note'),
           icon: AppAssets.solarInfoCircle,
-          title: 'Given to backup driver',
+          title: tr.islandGivenToBackup,
           body: backup,
         ),
     ];
@@ -158,7 +156,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            _selectedTab == 0 ? 'Available today' : 'Upcoming',
+                            _selectedTab == 0 ? tr.schedAvailableToday : tr.schedUpcoming,
                             style: const TextStyle(
                               color: Color(0xFF6F7B82),
                               fontSize: 13,
@@ -187,10 +185,10 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
               children: [
                 _buildHeader(context),
-                const Padding(
+                Padding(
                   padding: EdgeInsets.all(12),
                   child: Text(
-                    'Preview — not binding. Decisions last until the app restarts.',
+                    tr.schedPreviewNotBinding,
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
@@ -232,10 +230,10 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       // by the real clock), never right after Accept.
       final time = ride.route?.pickupTime;
       if (time == null) {
-        _notice('Reservation accepted');
+        _notice(tr.islandReservationAccepted);
       } else {
         IslandMessages.show(HomeIslandNotices.reservationAcceptedAt(time));
-        _notice('Accepted · pickup $time');
+        _notice(tr.schedAcceptedPickupAt(time));
       }
     } else if (action == _ScheduledRideAction.cancelled ||
         action == _ScheduledRideAction.cancelledNotCounted) {
@@ -250,7 +248,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
         final feed = DriverNotificationFeed.instance;
         feed.add(DriverNotices.scheduledPaused(
           feed.now,
-          until: until == null ? 'later' : _dayMonth(until),
+          until: until == null ? tr.laterLower : _dayMonth(until),
         ));
       }
       // An open reservation goes back out to drivers (notes R24): where it
@@ -258,7 +256,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       if (ride.id.isNotEmpty && !ride.assigned) {
         widget.dispatchRepository?.releaseReservation(ride.id);
       }
-      _notice('Reservation cancelled');
+      _notice(tr.schedReservationCancelled);
     }
   }
 
@@ -283,13 +281,13 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       case ClaimOutcome.success:
         return true;
       case ClaimOutcome.networkError:
-        _notice('No connection');
+        _notice(tr.islandNoConnection);
         return false;
       case ClaimOutcome.alreadyClaimed:
       case ClaimOutcome.expired:
       case ClaimOutcome.unavailable:
         ScheduledRideStore.take(ride.id);
-        _notice('No longer available');
+        _notice(tr.islandNoLongerAvailable);
         return false;
     }
   }
@@ -310,17 +308,17 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Back',
+            tooltip: tr.back,
             onPressed: () => _popScheduledRoute<void>(context),
             icon: _solar(AppAssets.solarArrowLeft, const Color(0xFF252E3A), 24),
           ),
           const SizedBox(width: 2),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Scheduled rides',
+                  tr.scheduledRides,
                   style: TextStyle(
                     color: Color(0xFF252E3A),
                     fontSize: 21,
@@ -330,7 +328,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  'Plan ahead and choose your next trip',
+                  tr.schedPlanAhead,
                   style: TextStyle(
                     color: Color(0xFF869198),
                     fontSize: 11,
@@ -367,7 +365,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
-          children: [_tabButton(0, 'Requests'), _tabButton(1, 'Accepted')],
+          children: [_tabButton(0, tr.schedRequestsTab), _tabButton(1, tr.schedAcceptedTab)],
         ),
       ),
     );
@@ -428,7 +426,7 @@ class ScheduledRideStore {
   static List<_ScheduledRide> _seedAccepted() => [
     _ScheduledRide(
       price: '184.00 kr',
-      time: 'Tomorrow, 08:15',
+      time: tr.schedSeedTime(tr.tomorrow, '08:15'),
       category: 'Comfort',
       distance: '9.4 km',
       pickup: 'Södermalm, Stockholm',
@@ -440,11 +438,11 @@ class ScheduledRideStore {
         rating: '4.90',
         riderName: 'Lars',
         riderTrips: 47,
-        pickupLabel: 'Pickup tomorrow at 08:15',
+        pickupLabel: tr.schedPickupTomorrowAt('08:15'),
         pickupAddress: 'Södermalm, Stockholm',
         dropoffAddress: 'Bromma Airport',
         pickupTime: '08:15',
-        pickupDay: 'Tomorrow',
+        pickupDay: tr.tomorrow,
         tripMinutes: 20,
         tripKm: 9.4,
         pickup: GeoPoint(59.3134, 18.0727),
@@ -647,7 +645,7 @@ class ScheduledRideStore {
       return;
     }
     backupNote.value =
-        'Your ${ride.pickupTime} pickup was given to a backup driver.';
+        tr.schedBackupNote(ride.pickupTime);
     _changed();
   }
 
@@ -743,7 +741,7 @@ class _ScheduledRideCard extends StatelessWidget {
   final _ScheduledRide ride;
   final VoidCallback? onTap;
 
-  /// Its claim is with the server: "Matching…" until the answer comes.
+  /// Its claim is with the server: tr.islandMatching until the answer comes.
   final bool claiming;
 
   @override
@@ -789,7 +787,7 @@ class _ScheduledRideCard extends StatelessWidget {
                         ),
                       ),
                       if (claiming)
-                        const Row(
+                        Row(
                           key: ValueKey<String>('scheduled-ride-matching'),
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -803,7 +801,7 @@ class _ScheduledRideCard extends StatelessWidget {
                             ),
                             SizedBox(width: 6),
                             Text(
-                              'Matching…',
+                              tr.islandMatching,
                               style: TextStyle(
                                 color: Color(0xFF4E5A61),
                                 fontSize: 12,
@@ -861,10 +859,10 @@ class _ScheduledRideCard extends StatelessWidget {
                       ),
                       if (ride.assigned) ...[
                         const SizedBox(width: 12),
-                        const Flexible(
+                        Flexible(
                           child: _RideMeta(
                             icon: AppAssets.solarBolt,
-                            label: 'Assigned by Movera',
+                            label: tr.assignedByMovera,
                           ),
                         ),
                       ],
@@ -1002,7 +1000,7 @@ class _RoutePreview extends StatelessWidget {
               ],
             ),
             child: Text(
-              accepted ? 'Accepted' : 'Scheduled',
+              accepted ? tr.schedAcceptedBadge : tr.scheduled,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
@@ -1116,7 +1114,7 @@ class _ScheduledRide {
     bool assigned = false,
   }) => _ScheduledRide(
     price: route.fare,
-    time: '${route.pickupDay}, ${route.pickupTime}',
+    time: tr.schedSeedTime(route.pickupDay, route.pickupTime),
     category: route.category,
     distance: driverDistanceKm(route.tripKm),
     pickup: route.pickupAddress,
@@ -1133,7 +1131,7 @@ class _ScheduledRide {
     String? distance,
   }) {
     final start = route.minuteOfDay;
-    var time = '${route.pickupDay}, ${route.pickupTime}';
+    var time = tr.schedSeedTime(route.pickupDay, route.pickupTime);
     if (start != null) {
       final end = (start + window.inMinutes) % (24 * 60);
       String two(int v) => v.toString().padLeft(2, '0');
@@ -1204,15 +1202,15 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
         surfaceTintColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => _popScheduledRoute<void>(context),
           icon: _solar(AppAssets.solarArrowLeft, _ink, 24),
         ),
         titleSpacing: 0,
         title: Text(
           ride.accepted && ride.id.isEmpty
-              ? 'Sample reservation'
-              : 'Reservation details',
+              ? tr.schedSampleReservation
+              : tr.schedReservationDetails,
           style: const TextStyle(
             color: _ink,
             fontSize: 18,
@@ -1286,9 +1284,9 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                   children: [
                     _solar(AppAssets.solarRoute, _green, 16),
                     const SizedBox(width: 6),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Illustrative route — sample data',
+                        tr.schedIllustrativeRoute,
                         style: TextStyle(
                           color: _ink,
                           fontSize: 11,
@@ -1420,7 +1418,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                 child: Material(
                   type: MaterialType.transparency,
                   child: Semantics(
-                    label: 'View reservation route',
+                    label: tr.schedViewRoute,
                     button: true,
                     child: InkWell(
                       key: const ValueKey<String>('scheduled-route-open'),
@@ -1480,8 +1478,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                                 Flexible(
                                   child: Text(
                                     ride.accepted
-                                        ? 'Demo accepted'
-                                        : 'Available',
+                                        ? tr.schedDemoAccepted
+                                        : tr.schedAvailable,
                                     style: TextStyle(
                                       color: ride.accepted ? _green : _muted,
                                       fontSize: 11,
@@ -1547,7 +1545,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
               Expanded(
                 child: _DetailMetric(
                   icon: AppAssets.solarCar,
-                  label: 'Ride type',
+                  label: tr.rideTypeLabel,
                   value: ride.category,
                 ),
               ),
@@ -1555,7 +1553,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
               Expanded(
                 child: _DetailMetric(
                   icon: AppAssets.solarRoute,
-                  label: 'Trip',
+                  label: tr.trip2,
                   value: ride.distance,
                 ),
               ),
@@ -1576,8 +1574,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Route',
+          Text(
+            tr.route,
             style: TextStyle(
               color: _ink,
               fontSize: 17,
@@ -1622,8 +1620,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Pickup',
+                    Text(
+                      tr.pickup,
                       style: TextStyle(
                         color: _muted,
                         fontSize: 11,
@@ -1640,8 +1638,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 27),
-                    const Text(
-                      'Drop-off',
+                    Text(
+                      tr.dropOff,
                       style: TextStyle(
                         color: _muted,
                         fontSize: 11,
@@ -1678,7 +1676,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            ride.accepted ? 'Before this ride' : 'Good to know',
+            ride.accepted ? tr.schedBeforeThisRide : tr.goodToKnow,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 17,
@@ -1688,27 +1686,24 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _PlanRow(
             icon: AppAssets.solarAlarm,
-            title: 'Be ready early',
-            body: 'Go online ${_onlineBefore()} min before pickup so the app '
-                'can guide you in time.',
+            title: tr.schedBeReadyEarly,
+            body: tr.schedGoOnlineMinBefore('${_onlineBefore()}'),
           ),
           const SizedBox(height: 15),
           _PlanRow(
             icon: AppAssets.solarRouting2,
-            title: 'Trips on the way',
+            title: tr.schedTripsOnTheWay,
             body: ScheduledRideRules.current.towardPickupBeforeRide
-                ? 'Before pickup you only get trips that head toward it and '
-                    'leave time to get there.'
-                : 'You can still receive suitable rides before the scheduled pickup.',
+                ? tr.schedOnlyTripsToward
+                : tr.schedStillReceiveRides,
           ),
           const SizedBox(height: 15),
           _PlanRow(
             icon: AppAssets.solarCalendarMinimalistic,
-            title: 'Plans changed?',
+            title: tr.schedPlansChanged,
             body: ride.accepted
-                ? '${_freeCancelLine(ride.route)} Drivers never pay to cancel.'
-                : 'This is a local preview. Cancelling removes the sample '
-                    'reservation until the app restarts.',
+                ? tr.schedDriversNeverPay(_freeCancelLine(ride.route))
+                : tr.schedLocalPreviewCancel,
           ),
         ],
       ),
@@ -1737,12 +1732,12 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
         children: [
           _solar(AppAssets.solarBellBing, const Color(0xFF9B6B24), 22),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Reserved for you',
+                  tr.schedReservedForYou,
                   style: TextStyle(
                     color: _ink,
                     fontSize: 14,
@@ -1751,7 +1746,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'We’ll keep this ride in your Accepted list. If you cancel, you’ll be asked for a reason before anything changes.',
+                  tr.schedKeepInAccepted,
                   style: TextStyle(
                     color: Color(0xFF6F777C),
                     fontSize: 12,
@@ -1791,8 +1786,8 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(17),
                   ),
                 ),
-                child: const Text(
-                  'Cancel reservation',
+                child: Text(
+                  tr.schedCancelReservation,
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                 ),
               ),
@@ -1811,7 +1806,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Accept  •  ${ride.price}',
+                  tr.schedAcceptPrice(ride.price),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
@@ -2014,12 +2009,12 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
                 padding: const EdgeInsets.fromLTRB(20, 18, 14, 8),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Why are you cancelling?',
+                            tr.whyAreYouCancellingQuestion,
                             style: TextStyle(
                               color: Color(0xFF252E3A),
                               fontSize: 21,
@@ -2029,7 +2024,7 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            'Choose the reason that best matches.',
+                            tr.chooseBestReason,
                             style: TextStyle(
                               color: Color(0xFF7D888E),
                               fontSize: 12,
@@ -2040,7 +2035,7 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Close',
+                      tooltip: tr.close,
                       onPressed: () => _popScheduledRoute<void>(context),
                       icon: const Icon(Icons.close_rounded),
                       color: const Color(0xFF39444A),
@@ -2148,8 +2143,8 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
                         borderRadius: BorderRadius.circular(17),
                       ),
                     ),
-                    child: const Text(
-                      'Continue',
+                    child: Text(
+                      tr.navContinue,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -2211,8 +2206,8 @@ class _CancelConfirmationSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text(
-                'Cancel this reservation?',
+              Text(
+                tr.schedCancelThisReservation,
                 style: TextStyle(
                   color: Color(0xFF252E3A),
                   fontSize: 21,
@@ -2231,8 +2226,8 @@ class _CancelConfirmationSheet extends StatelessWidget {
               ),
               if (!reason.counts) ...[
                 const SizedBox(height: 12),
-                const Text(
-                  'This reason doesn’t count against you.',
+                Text(
+                  tr.schedReasonDoesntCount,
                   key: ValueKey<String>('scheduled-cancel-not-counted'),
                   style: TextStyle(
                     color: Color(0xFF19865C),
@@ -2246,8 +2241,8 @@ class _CancelConfirmationSheet extends StatelessWidget {
                 _LateCancelWarning(ride: ride),
               ],
               const SizedBox(height: 8),
-              const Text(
-                'This removes the sample reservation from this session. It does not cancel a real booking or change account access.',
+              Text(
+                tr.schedRemovesSample,
                 style: TextStyle(
                   color: Color(0xFF7D888E),
                   fontSize: 12,
@@ -2268,8 +2263,8 @@ class _CancelConfirmationSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(17),
                     ),
                   ),
-                  child: const Text(
-                    'Cancel reservation',
+                  child: Text(
+                    tr.schedCancelReservation,
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
                   ),
                 ),
@@ -2282,8 +2277,8 @@ class _CancelConfirmationSheet extends StatelessWidget {
                   style: TextButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                   ),
-                  child: const Text(
-                    'Keep reservation',
+                  child: Text(
+                    tr.schedKeepReservation,
                     style: TextStyle(
                       color: Color(0xFF354047),
                       fontSize: 14,

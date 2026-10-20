@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 
@@ -5,7 +6,7 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 enum IslandTipLook { boost, demand, info, promotion, good }
 
 /// One short message the island can show while the driver waits for a
-/// trip, e.g. "Busy area · trips expected soon". Built into the app: the
+/// trip, e.g. tr.tipBusyArea. Built into the app: the
 /// words are chosen here, only the facts come from the app's data.
 @immutable
 class IslandWaitingTip {
@@ -137,38 +138,38 @@ class IslandWaitingSignals {
           IslandWaitingTip(
             'boost',
             boostZone == null
-                ? 'High boost nearby'
-                : 'High boost · +$kr kr in $boostZone',
+                ? tr.tipHighBoostNearby
+                : tr.tipHighBoostIn('$kr', boostZone!),
             IslandTipLook.boost,
           ),
         if (expectTripSoon)
-          const IslandWaitingTip(
-            'expect', 'Expect a trip in 2–5 min', IslandTipLook.info),
+          IslandWaitingTip(
+            'expect', tr.tipExpectTrip, IslandTipLook.info),
         if (promotionRides case final rides?)
           if (promotionKr case final kr?)
             IslandWaitingTip(
               'promotion',
-              'Promotion · $rides rides = $kr kr',
+              tr.tipPromotionRides('$rides', '$kr'),
               IslandTipLook.promotion,
             ),
         if (busyArea)
-          const IslandWaitingTip(
-            'busy', 'Busy area · trips expected soon', IslandTipLook.demand),
+          IslandWaitingTip(
+            'busy', tr.tipBusyArea, IslandTipLook.demand),
         if (airportQueue case final queue?)
           IslandWaitingTip(
-            'airport', 'Airport queue: $queue drivers', IslandTipLook.info),
+            'airport', tr.tipAirportQueue('$queue'), IslandTipLook.info),
         if (streak >= 2)
           IslandWaitingTip(
-            'streak', 'Good streak · $streak trips in a row', IslandTipLook.good),
+            'streak', tr.tipGoodStreak('$streak'), IslandTipLook.good),
         if (demandRising)
-          const IslandWaitingTip(
-            'demand', 'Demand rising near you', IslandTipLook.demand),
+          IslandWaitingTip(
+            'demand', tr.tipDemandRising, IslandTipLook.demand),
         if (peakStart case final start?)
           IslandWaitingTip(
-            'peak', 'Peak hours start at $start', IslandTipLook.info),
+            'peak', tr.tipPeakStart(start), IslandTipLook.info),
         if (topZone)
-          const IslandWaitingTip(
-            'top-zone', "You're in a top zone right now", IslandTipLook.good),
+          IslandWaitingTip(
+            'top-zone', tr.tipTopZone, IslandTipLook.good),
       ];
 
   static const List<String> _months = [

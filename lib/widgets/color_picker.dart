@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -25,19 +26,19 @@ class ColorPickerDialog {
 
 class _ColorPicker extends StatelessWidget {
   const _ColorPicker();
-  static const _colors = <(String, Color)>[
-    ('Red', Colors.red),
-    ('Blue', Colors.blue),
-    ('Green', Colors.green),
-    ('Black', Colors.black),
-    ('White', Colors.white),
-    ('Gray', Colors.grey),
-    ('Silver', Colors.blueGrey),
-    ('Yellow', Colors.yellow),
-    ('Orange', Colors.orange),
-    ('Brown', Colors.brown),
-    ('Purple', Colors.purple),
-    ('Pink', Colors.pink),
+  static List<(String, Color)> get _colors => <(String, Color)>[
+    (tr.colorRed, Colors.red),
+    (tr.colorBlue, Colors.blue),
+    (tr.colorGreen, Colors.green),
+    (tr.colorBlack, Colors.black),
+    (tr.colorWhite, Colors.white),
+    (tr.colorGray, Colors.grey),
+    (tr.colorSilver, Colors.blueGrey),
+    (tr.colorYellow, Colors.yellow),
+    (tr.colorOrange, Colors.orange),
+    (tr.colorBrown, Colors.brown),
+    (tr.colorPurple, Colors.purple),
+    (tr.colorPink, Colors.pink),
   ];
   @override
   Widget build(BuildContext context) {
@@ -55,14 +56,14 @@ class _ColorPicker extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
               child: Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Choose vehicle color',
+                      tr.chooseVehicleColor,
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Close color picker',
+                    tooltip: tr.closeColorPicker,
                     onPressed: () => popOwned(context),
                     icon: const Icon(Icons.close),
                   ),

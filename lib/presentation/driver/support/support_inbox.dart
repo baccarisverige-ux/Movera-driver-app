@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 
@@ -63,8 +64,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
         setState(() => _restoreFailed = true);
         if (recover && ModalRoute.of(context)?.isCurrent == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Could not recover local support. Retry.'),
+            SnackBar(
+              content: Text(tr.supportCouldNotRecover),
             ),
           );
         }
@@ -88,8 +89,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not save local conversation. Retry.'),
+          SnackBar(
+            content: Text(tr.supportCouldNotSaveConversation),
           ),
         );
       }
@@ -124,8 +125,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
       if (mounted && ModalRoute.of(context)?.isCurrent == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Could not load the local draft.'),
-            action: SnackBarAction(label: 'Retry', onPressed: _newTicket),
+            content: Text(tr.supportCouldNotLoadDraft),
+            action: SnackBarAction(label: tr.retry, onPressed: _newTicket),
           ),
         );
       }
@@ -164,7 +165,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not save local draft.')),
+            SnackBar(content: Text(tr.supportCouldNotSaveDraft)),
           );
         }
       }
@@ -219,8 +220,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          'Local ticket draft',
+                        Text(
+                          tr.supportLocalTicketDraft,
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w800,
@@ -231,7 +232,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                         DropdownButtonFormField<String>(
                           isExpanded: true,
                           initialValue: category,
-                          decoration: _decoration('Category'),
+                          decoration: _decoration(tr.category),
                           items:
                               [
                                     'Trip & rider',
@@ -245,7 +246,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                                     (e) => DropdownMenuItem(
                                       value: e,
                                       child: Text(
-                                        e,
+                                        _supportCategoryLabel(e),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -268,9 +269,9 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                           onChanged: (_) {
                             if (attempted) setSheetState(() {});
                           },
-                          decoration: _decoration('Subject').copyWith(
+                          decoration: _decoration(tr.subject).copyWith(
                             errorText: attempted && subject.text.trim().isEmpty
-                                ? 'Enter a subject'
+                                ? tr.enterSubject
                                 : null,
                           ),
                         ),
@@ -283,11 +284,11 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                           },
                           minLines: 4,
                           maxLines: 6,
-                          decoration: _decoration('Tell us what happened')
+                          decoration: _decoration(tr.tellUsWhatHappened)
                               .copyWith(
                                 errorText:
                                     attempted && message.text.trim().isEmpty
-                                    ? 'Enter a message'
+                                    ? tr.enterMessage
                                     : null,
                               ),
                         ),
@@ -353,7 +354,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                                       if (sheetContext.mounted) {
                                         setSheetState(() {
                                           saving = false;
-                                          saveError = 'Could not save local ticket. Retry.';
+                                          saveError = tr.supportCouldNotSaveTicket;
                                         });
                                       }
                                       return;
@@ -368,8 +369,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                                   },
                             child: Text(
                               saving
-                                  ? 'Saving local draft…'
-                                  : 'Save draft in demo',
+                                  ? tr.supportSavingDraft
+                                  : tr.supportSaveDraftDemo,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -398,9 +399,9 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(
-                'Ticket saved locally, but the composer draft could not be cleared.',
+                tr.supportTicketSavedDraftNotCleared,
               ),
             ),
           );
@@ -442,8 +443,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
     appBar: AppBar(
       backgroundColor: const Color(0xFFF2F4F5),
       surfaceTintColor: Colors.transparent,
-      title: const Text(
-        'Support demo',
+      title: Text(
+        tr.supportDemo,
         style: TextStyle(fontWeight: FontWeight.w800),
       ),
       centerTitle: true,
@@ -453,8 +454,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
       backgroundColor: const Color(0xFF202A30),
       foregroundColor: Colors.white,
       icon: const Icon(Icons.add_rounded),
-      label: const Text(
-        'Draft local ticket',
+      label: Text(
+        tr.supportDraftLocalTicket,
         style: TextStyle(fontWeight: FontWeight.w700),
       ),
     ),
@@ -467,7 +468,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
             color: const Color(0xFF202A30),
             borderRadius: BorderRadius.circular(24),
           ),
-          child: const Row(
+          child: Row(
             children: [
               _SupportIcon(),
               SizedBox(width: 14),
@@ -476,7 +477,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Local support preview',
+                      tr.supportLocalPreview,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 17,
@@ -485,7 +486,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                     ),
                     SizedBox(height: 3),
                     Text(
-                      'Local drafts on this device — no support service.',
+                      tr.supportLocalDraftsNoService,
                       style: TextStyle(color: Color(0xFFBFC8CD), fontSize: 12),
                     ),
                   ],
@@ -500,17 +501,17 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
         if (_restoreFailed) ...[
           TextButton(
             onPressed: _loading ? null : _restore,
-            child: const Text('Could not load local support — Retry'),
+            child: Text(tr.supportCouldNotLoadRetry),
           ),
           TextButton(
             onPressed: _loading ? null : _recover,
-            child: const Text(
-              'Recover local support (preserve unreadable data)',
+            child: Text(
+              tr.supportRecoverPreserve,
             ),
           ),
         ],
-        const Text(
-          'Your conversations',
+        Text(
+          tr.supportYourConversations,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
@@ -528,6 +529,17 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
     ),
   );
 }
+
+/// A saved category (kept in English) in the driver's language.
+String _supportCategoryLabel(String category) => switch (category) {
+  'Trip & rider' => tr.supportCatTripRider,
+  'Wallet & payments' => tr.supportCatWallet,
+  'Scheduled rides' => tr.scheduledRides,
+  'Account & documents' => tr.supportCatAccount,
+  'Technical issue' => tr.supportCatTechnical,
+  'Something else' => tr.cancelReasonSomethingElse,
+  _ => category,
+};
 
 class _TicketCard extends StatelessWidget {
   final _Ticket ticket;
@@ -612,7 +624,9 @@ class _TicketCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        ticket.status,
+                        ticket.status == 'LOCAL DRAFT'
+                            ? tr.supportLocalDraftBadge
+                            : ticket.status,
                         style: TextStyle(
                           color: open
                               ? const Color(0xFF16895B)
@@ -700,7 +714,7 @@ class _ConversationState extends State<_Conversation> {
       backgroundColor: const Color(0xFFF2F4F5),
       surfaceTintColor: Colors.transparent,
       title: Text(
-        'Local draft: ${widget.ticket.subject}',
+        tr.supportLocalDraftSubject(widget.ticket.subject),
         style: const TextStyle(fontWeight: FontWeight.w800),
       ),
     ),
@@ -754,7 +768,7 @@ class _ConversationState extends State<_Conversation> {
                 child: TextField(
                   controller: input,
                   decoration: InputDecoration(
-                    hintText: 'Write a local draft',
+                    hintText: tr.supportWriteLocalDraft,
                     filled: true,
                     fillColor: const Color(0xFFF2F4F5),
                     border: OutlineInputBorder(
@@ -768,7 +782,7 @@ class _ConversationState extends State<_Conversation> {
               ValueListenableBuilder<TextEditingValue>(
                 valueListenable: input,
                 builder: (_, value, __) => IconButton.filled(
-                  tooltip: 'Save local reply',
+                  tooltip: tr.supportSaveLocalReply,
                   key: const ValueKey('local-reply-save'),
                   onPressed: _saving || value.text.trim().isEmpty
                       ? null

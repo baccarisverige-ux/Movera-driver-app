@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -18,10 +19,10 @@ class TrackedDocument {
 
   final String id;
 
-  /// "Insurance letter"
+  /// tr.docInsuranceLetter
   final String title;
 
-  /// "Insurance", for the island.
+  /// tr.insurance, for the island.
   final String shortTitle;
   final DateTime expiresOn;
   final DocumentRenewal renewal;
@@ -86,20 +87,20 @@ class DocumentExpiryStore {
     return <TrackedDocument>[
       TrackedDocument(
         id: 'DOC-INS-418',
-        title: 'Insurance letter',
-        shortTitle: 'Insurance',
+        title: tr.docInsuranceLetter,
+        shortTitle: tr.insurance,
         expiresOn: today.add(const Duration(days: 7)),
       ),
       TrackedDocument(
         id: 'DOC-TAXI-418',
-        title: 'Taxi driver license',
-        shortTitle: 'Taxi license',
+        title: tr.docTaxiDriverLicense,
+        shortTitle: tr.docTaxiLicenseShort,
         expiresOn: today.add(const Duration(days: 214)),
       ),
       TrackedDocument(
         id: 'DOC-REG-418',
-        title: 'Registration certificate',
-        shortTitle: 'Registration',
+        title: tr.docRegistrationCertificate,
+        shortTitle: tr.docRegistrationShort,
         expiresOn: today.add(const Duration(days: 320)),
       ),
     ];
@@ -195,7 +196,7 @@ class DocumentExpiryStore {
 
 /// "in 7 days", "tomorrow", "today".
 String expiresInLabel(int daysLeft) => switch (daysLeft) {
-      <= 0 => 'today',
-      1 => 'tomorrow',
-      _ => 'in $daysLeft days',
+      <= 0 => tr.todayLower,
+      1 => tr.tomorrowLower,
+      _ => tr.inDaysCount(daysLeft),
     };

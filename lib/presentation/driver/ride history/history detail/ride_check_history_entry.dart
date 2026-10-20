@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/safety/ride_check_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -113,7 +114,7 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${check.trigger.label} · ${check.reason}',
+                  '${check.trigger.text} · ${check.reason}',
                   style: const TextStyle(
                     color: _muted,
                     fontSize: 12.5,
@@ -131,8 +132,9 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       answer.question == RideCheckAnswer.first
-                          ? tr.answerAnswer(answer.answer)
-                          : '${answer.question} ${answer.answer}',
+                          ? tr.answerAnswer(rideCheckAnswerWords(answer.answer))
+                          : '${rideCheckQuestionWords(answer.question)} '
+                                '${rideCheckAnswerWords(answer.answer)}',
                       style: TextStyle(
                         color: _ink,
                         fontSize: 13.5,

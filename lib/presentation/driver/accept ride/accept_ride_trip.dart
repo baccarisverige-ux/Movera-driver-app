@@ -177,7 +177,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     WaybillRecord _buildCurrentWaybill() {
       return WaybillRecord(
         tripId: widget.tripId,
-        statusLabel: tr.currentTrip,
+        statusLabel: WaybillRecord.currentTrip,
         issuedAt: DateTime.now(),
         fare: widget.fare,
         driverBonus: WaybillRecord.bonusLabel(widget.driverBonus),
@@ -186,7 +186,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         pickup: widget.pickupAddress,
         dropoff: widget.dropoffAddress,
         source: widget.matchedVia,
-        driverName: 'Movera Driver',
+        driverName: tr.moveraDriver,
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
         passengerCapacity: 4,
@@ -212,15 +212,15 @@ extension _AcceptRideTrip on _AcceptRideState {
     WaybillRecord _buildNextWaybill(_NextTripRadarOffer offer) {
       return WaybillRecord(
         tripId: offer.id,
-        statusLabel: tr.nextTripSecured,
+        statusLabel: WaybillRecord.nextTripSecured,
         issuedAt: DateTime.now(),
         fare: offer.fare,
         service: offer.category,
         riderName: offer.riderName,
         pickup: offer.pickup,
         dropoff: offer.dropoff,
-        source: 'Exclusive offer',
-        driverName: 'Movera Driver',
+        source: WaybillRecord.exclusiveOfferSource,
+        driverName: tr.moveraDriver,
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
         passengerCapacity: 4,
@@ -939,7 +939,7 @@ extension _AcceptRideTrip on _AcceptRideState {
               riderRating: offer.rating,
               fare: offer.fare,
               category: offer.category,
-              matchedVia: 'Exclusive offer',
+              matchedVia: WaybillRecord.exclusiveOfferSource,
               pickupAddress: offer.pickup,
               pickupArea: offer.pickup.split(',').last.trim(),
               dropoffAddress: offer.dropoff,
@@ -973,7 +973,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         destinationModeActive: _destinationActive,
         destinationAddress: _destinationAddress,
         destinationPoint: _destinationPosition == null ? null : GeoPointMaps.fromLatLng(_destinationPosition!), riderName: offer.riderName,
-      riderRating: offer.rating, fare: offer.fare, category: offer.category, matchedVia: 'Exclusive offer',
+      riderRating: offer.rating, fare: offer.fare, category: offer.category, matchedVia: WaybillRecord.exclusiveOfferSource,
       pickupAddress: offer.pickup, dropoffAddress: offer.dropoff,
       pickupLat: offer.pickupPosition.latitude, pickupLng: offer.pickupPosition.longitude,
       dropoffLat: offer.dropoffPosition.latitude, dropoffLng: offer.dropoffPosition.longitude);
@@ -1398,7 +1398,7 @@ extension _AcceptRideTrip on _AcceptRideState {
               riderRating: offer.rating,
               fare: offer.fare,
               category: offer.category,
-              matchedVia: 'Exclusive offer',
+              matchedVia: WaybillRecord.exclusiveOfferSource,
               pickupAddress: offer.pickup,
               pickupArea: offer.pickup.split(',').last.trim(),
               dropoffAddress: offer.dropoff,
@@ -1465,7 +1465,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     SafetyAlertTrip _safetyAlertTrip() => SafetyAlertTrip(
       tripId: widget.tripId, riderName: widget.riderName, riderRating: widget.riderRating,
       pickup: widget.pickupAddress, dropoff: widget.dropoffAddress, fare: widget.fare,
-      category: widget.category, driverName: 'Movera Driver', vehicle: _vehicleLabel,
+      category: widget.category, driverName: tr.moveraDriver, vehicle: _vehicleLabel,
       plate: _vehiclePlate,
       position: _hasLiveLocation ? GeoPointMaps.fromLatLng(_driverPosition) : null);
     void _openRideCheck(RideCheckEvent? event) {

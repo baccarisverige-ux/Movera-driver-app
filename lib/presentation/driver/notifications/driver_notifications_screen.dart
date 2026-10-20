@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -61,13 +62,13 @@ class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
         centerTitle: true,
-        title: const Text(
-          'Notifications',
+        title: Text(
+          tr.notifications,
           style: TextStyle(
             color: _ink,
             fontSize: 18,
@@ -87,10 +88,10 @@ class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
             children: [
               _filters(),
               if (items.isEmpty)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.fromLTRB(22, 40, 22, 0),
                   child: Text(
-                    'No notifications yet',
+                    tr.noNotificationsYet,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: _muted, fontSize: 15),
                   ),
@@ -138,10 +139,10 @@ class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 10),
       child: Row(
         children: [
-          chip('All', null),
-          chip('Rides', DriverNoticeGroup.rideAlerts),
-          chip('Demand', DriverNoticeGroup.demand),
-          chip('Account', DriverNoticeGroup.account),
+          chip(tr.filterAll, null),
+          chip(tr.rides, DriverNoticeGroup.rideAlerts),
+          chip(tr.filterDemand, DriverNoticeGroup.demand),
+          chip(tr.account, DriverNoticeGroup.account),
         ],
       ),
     );
@@ -173,11 +174,11 @@ class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
 /// "Now", "12 min ago", "3 h ago", "Yesterday", "4 days ago".
 String noticeTimeLabel(DateTime at, DateTime now) {
   final ago = now.difference(at);
-  if (ago.inMinutes < 1) { return 'Now'; }
-  if (ago.inMinutes < 60) { return '${ago.inMinutes} min ago'; }
-  if (ago.inHours < 24) { return '${ago.inHours} h ago'; }
-  if (ago.inDays == 1) { return 'Yesterday'; }
-  return '${ago.inDays} days ago';
+  if (ago.inMinutes < 1) { return tr.now; }
+  if (ago.inMinutes < 60) { return tr.minutesAgo(ago.inMinutes); }
+  if (ago.inHours < 24) { return tr.hoursAgo(ago.inHours); }
+  if (ago.inDays == 1) { return tr.yesterday; }
+  return tr.daysAgo(ago.inDays);
 }
 
 /// The Solar icon of each kind.
@@ -320,7 +321,7 @@ class DemandAreaMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Map of ${area.name}',
+      label: tr.mapOfArea(area.name),
       image: true,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),

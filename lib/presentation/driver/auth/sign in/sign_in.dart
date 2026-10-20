@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -23,10 +24,10 @@ class DriverSignIn extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             56.height,
-            TextWidget(text: "Sign in", fontSize: 24, fontWeight: fwExtraBold),
+            TextWidget(text: tr.signIn, fontSize: 24, fontWeight: fwExtraBold),
             9.height,
             TextWidget(
-              text: "Welcome back! Let’s get you riding",
+              text: tr.welcomeBackRiding,
               color: AppColor.subtitle,
               fontSize: 16,
               fontWeight: fwMedium,
@@ -37,7 +38,7 @@ class DriverSignIn extends StatelessWidget {
                 padding: EdgeInsets.only(right: ResSize.w * 12),
                 child: Image.asset(AppAssets.mobile, height: ResSize.h * 24),
               ),
-              centerContent: "Continue with phone",
+              centerContent: tr.continueWithPhone,
               onPressed: () {
                 Navigator.push(
                   context,
@@ -75,7 +76,7 @@ class DriverSignIn extends StatelessWidget {
                 padding: EdgeInsets.only(right: ResSize.w * 12),
                 child: Image.asset(AppAssets.apple, height: ResSize.h * 24),
               ),
-              centerContent: "Continue with apple",
+              centerContent: tr.continueWithApple,
               onPressed: () {
                 Navigator.push(
                   context,
@@ -94,7 +95,7 @@ class DriverSignIn extends StatelessWidget {
                 padding: EdgeInsets.only(right: ResSize.w * 12),
                 child: Image.asset(AppAssets.google, height: ResSize.h * 24),
               ),
-              centerContent: "Continue with Google",
+              centerContent: tr.continueWithGoogle,
               onPressed: () {
                 Navigator.push(
                   context,
@@ -110,17 +111,20 @@ class DriverSignIn extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: SizedBox(
-        height: ResSize.h * 60,
+      // Grows and wraps when a longer language or large text needs it.
+      bottomNavigationBar: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: ResSize.h * 60),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   TextWidget(
-                    text: "Don't have an account?",
+                    text: tr.dontHaveAccount,
                     color: AppColor.subtitle,
                     fontSize: 16,
                     fontWeight: fwMedium,
@@ -133,7 +137,7 @@ class DriverSignIn extends StatelessWidget {
                       );
                     },
                     child: TextWidget(
-                      text: "Sign up",
+                      text: tr.signUp,
                       color: AppColor.primary,
                       fontSize: 16,
                       fontWeight: fwMedium,

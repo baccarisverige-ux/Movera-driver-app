@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -187,7 +188,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                     shadowColor: Colors.black.withValues(alpha: 0.08),
                     shape: const CircleBorder(),
                     child: IconButton(
-                      tooltip: 'Back',
+                      tooltip: tr.back,
                       key: const ValueKey<String>('destination-picker-back'),
                       onPressed: () => popOwned(context),
                       icon: const Icon(
@@ -198,12 +199,12 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                     ),
                   ),
                   const SizedBox(width: 13),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Destination',
+                          tr.destination,
                           style: TextStyle(
                             color: _ink,
                             fontSize: 22,
@@ -213,7 +214,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                         ),
                         SizedBox(height: 1),
                         Text(
-                          'Choose one address',
+                          tr.destChooseOneAddress,
                           style: TextStyle(
                             color: _muted,
                             fontSize: 11.5,
@@ -236,7 +237,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(color: const Color(0xFFDDEAE2)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     _DirectionBadge(),
                     SizedBox(width: 11),
@@ -245,7 +246,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Trips in your direction',
+                            tr.destTripsInYourDirection,
                             style: TextStyle(
                               color: _ink,
                               fontSize: 12.5,
@@ -254,7 +255,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Movera will prioritize requests that keep you moving toward this address.',
+                            tr.destMoveraPrioritizes,
                             style: TextStyle(
                               color: _muted,
                               fontSize: 10.5,
@@ -289,7 +290,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                     fontWeight: FontWeight.w700,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Add destination address',
+                    hintText: tr.destAddAddress,
                     hintStyle: const TextStyle(
                       color: Color(0xFF9BA4A8),
                       fontWeight: FontWeight.w600,
@@ -301,7 +302,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                     suffixIcon: _searchController.text.isEmpty
                         ? null
                         : IconButton(
-                            tooltip: 'Close',
+                            tooltip: tr.close,
                             key: const ValueKey<String>(
                               'destination-search-clear',
                             ),
@@ -345,8 +346,8 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                   Expanded(
                     child: Text(
                       _searchController.text.trim().isEmpty
-                          ? 'Suggested addresses'
-                          : 'Results',
+                          ? tr.destSuggestedAddresses
+                          : tr.destResults,
                       style: const TextStyle(
                         color: _ink,
                         fontSize: 13,
@@ -501,7 +502,7 @@ class _NoDestinationResults extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.fromLTRB(32, 0, 32, 72),
         child: Column(
@@ -514,7 +515,7 @@ class _NoDestinationResults extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text(
-              'No address found',
+              tr.destNoAddressFound,
               style: TextStyle(
                 color: Color(0xFF252E3A),
                 fontSize: 14,
@@ -523,7 +524,7 @@ class _NoDestinationResults extends StatelessWidget {
             ),
             SizedBox(height: 4),
             Text(
-              'Try another street, place, or area.',
+              tr.destTryAnother,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF7D898F),

@@ -1874,5 +1874,1241 @@
         "type": "int"
       }
     }
+  },
+  "navArrive": "Arrive",
+  "navHeadOut": "Head out",
+  "navKeepLeft": "Keep left",
+  "navKeepRight": "Keep right",
+  "navTunnelAhead": "Tunnel ahead",
+  "navTollRoadAhead": "Toll road ahead",
+  "navContinueStraight": "Continue straight",
+  "navContinue": "Continue",
+  "navRoundabout": "Roundabout",
+  "navRoundaboutExit": "Roundabout, exit {exit}",
+  "@navRoundaboutExit": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navRoundaboutUTurn": "Roundabout, U-turn",
+  "navRoundaboutUTurnExit": "Roundabout, U-turn · exit {exit}",
+  "@navRoundaboutUTurnExit": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navSignedExit": "Exit {exit}",
+  "@navSignedExit": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navSignedExitTowards": "Exit {exit} · {place}",
+  "@navSignedExitTowards": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      },
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "navExitLeft": "Exit left",
+  "navExitRight": "Exit right",
+  "navTakeExit": "Take the exit",
+  "navRampOnto": "Take the ramp onto",
+  "navRampLeft": "Take the ramp on the left",
+  "navRampRight": "Take the ramp on the right",
+  "navRamp": "Take the ramp",
+  "navMergeLeft": "Merge left",
+  "navMergeRight": "Merge right",
+  "navMerge": "Merge",
+  "navForkLeft": "At the fork, go left",
+  "navForkRight": "At the fork, go right",
+  "navContinueAtFork": "Continue at the fork",
+  "navTurnLeft": "Turn left",
+  "navTurnRight": "Turn right",
+  "navEndOfRoad": "End of the road",
+  "navUTurn": "U-turn",
+  "navSharpLeft": "Turn sharp left",
+  "navSharpRight": "Turn sharp right",
+  "navSlightLeft": "Turn slight left",
+  "navSlightRight": "Turn slight right",
+  "navDistanceNow": "now",
+  "navMeters": "{meters} m",
+  "@navMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "navKilometers": "{km} km",
+  "@navKilometers": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "navDecimalMark": ".",
+  "navInDistance": "in {distance}",
+  "@navInDistance": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "navActionIn": "{action} in {distance}",
+  "@navActionIn": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "navActionNow": "{action} now",
+  "@navActionNow": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "navActionFor": "{action} {distance}",
+  "@navActionFor": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "navOnto": "{action} onto {road}",
+  "@navOnto": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "road": {
+        "type": "String"
+      }
+    }
+  },
+  "navArriveAtDestination": "Arrive at destination",
+  "navHeadOutOn": "Head out on {road}",
+  "@navHeadOutOn": {
+    "placeholders": {
+      "road": {
+        "type": "String"
+      }
+    }
+  },
+  "navContinueOn": "Continue on {road}",
+  "@navContinueOn": {
+    "placeholders": {
+      "road": {
+        "type": "String"
+      }
+    }
+  },
+  "navRoundaboutContinue": "At the roundabout, continue",
+  "navRoundaboutTakeExit": "At roundabout, take exit {exit}",
+  "@navRoundaboutTakeExit": {
+    "placeholders": {
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navExitOnLeft": "Take the exit on the left",
+  "navExitOnRight": "Take the exit on the right",
+  "navEndTurnLeft": "Turn left at the end of the road",
+  "navEndTurnRight": "Turn right at the end of the road",
+  "navAtEndOfRoad": "At the end of the road",
+  "navMakeUTurn": "Make a U-turn",
+  "navUseLeftLanes": "{count, plural, =1{Use the left lane} other{Use the {count} left lanes}}",
+  "@navUseLeftLanes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navUseRightLanes": "{count, plural, =1{Use the right lane} other{Use the {count} right lanes}}",
+  "@navUseRightLanes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navUseMiddleLanes": "{count, plural, =1{Use the middle lane} other{Use the {count} middle lanes}}",
+  "@navUseMiddleLanes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navTowards": "towards {place}",
+  "@navTowards": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "navToDestination": "To destination",
+  "navExitSemantics": "{cue}, exit {exit}",
+  "@navExitSemantics": {
+    "placeholders": {
+      "cue": {
+        "type": "String"
+      },
+      "exit": {
+        "type": "String"
+      }
+    }
+  },
+  "navPickupAhead": "Pickup ahead",
+  "navDropOffAhead": "Drop-off ahead",
+  "navPointAhead": "{point} ahead",
+  "@navPointAhead": {
+    "placeholders": {
+      "point": {
+        "type": "String"
+      }
+    }
+  },
+  "navToPickup": "Navigate to pickup",
+  "navToPoint": "Navigate to {point}",
+  "@navToPoint": {
+    "placeholders": {
+      "point": {
+        "type": "String"
+      }
+    }
+  },
+  "navDropOffLower": "drop-off",
+  "navWaitingForRider": "Waiting for rider",
+  "navRouteUpdating": "Route updating…",
+  "navRouteRecalculating": "Recalculating route…",
+  "navRouteUnavailableRetry": "Route unavailable — retry",
+  "navRouteUnavailableLocation": "Route unavailable — check location",
+  "authAddVehicle": "Add Vehicle",
+  "authAddVehicleDetails": "Add Vehicle details for verification",
+  "vehicleMake": "Vehicle make",
+  "vehicleModel": "Vehicle model",
+  "vehicleYear": "Vehicle year",
+  "enterModelYear": "Enter model year",
+  "licensePlateNumber": "License plate number",
+  "vehicleType": "Vehicle type",
+  "vehicleColor": "Color",
+  "selectColor": "Select color",
+  "tapToUpload": "Tap to upload",
+  "openingEllipsis": "Opening...",
+  "openCamera": "Open Camera",
+  "fileSelectedSuccessfully": "File selected successfully!",
+  "vehicleDocumentSelectionFailed": "Vehicle document selection failed",
+  "couldNotReadSelectedFile": "Could not read the selected file. Please try again.",
+  "photoCapturedSuccessfully": "Photo captured successfully!",
+  "couldNotReadCapturedPhoto": "Could not read the captured photo. Please try again.",
+  "docPassport": "Passport",
+  "scanYourPassportPhoto": "Scan your passport photo",
+  "docDrivingLicense": "Driving License",
+  "scanYourDrivingLicense": "Scan your driving license",
+  "docNationalId": "National ID",
+  "scanYourNationalId": "Scan your national Id",
+  "selectDocumentTypeToScan": "Select the type of document you wish to scan",
+  "weNeedToDetermineDocument": "We need to determine  if an identity document is authentic and belongs to you",
+  "createAccount": "Create account",
+  "enterValidPhoneForCode": "Enter a valid phone number where we will send a verification code",
+  "fullName": "Full name",
+  "emailAddress": "Email address",
+  "acceptTermsAndPrivacy": "Accept terms and privacy policy",
+  "byContinuingIAgreeTo": " By continuing, I agree to the ",
+  "termsOfUse": "Terms of Use",
+  "andWord": " and ",
+  "privacyPolicy": "Privacy Policy",
+  "phoneVerification": "Phone verification",
+  "codeDeliveryUnavailableDemo": "Code delivery is unavailable in this demo",
+  "accountVerificationNeedsService": " Account verification requires the account service.",
+  "didNotGetCode": "Did you don’t get code?",
+  "signInUnavailableInPreview": "Sign in unavailable in preview",
+  "verificationUnavailableDemo": "Verification is unavailable in this demo.",
+  "starterTagline": "Let’s hit the road. Accept rides in real time and make every minute count",
+  "legacySignInPreview": "Legacy sign-in preview",
+  "signInUnavailableDemo": "Sign-in unavailable — demo",
+  "legacyRegistrationPreview": "Legacy registration preview",
+  "registrationUnavailableDemo": "Registration unavailable — demo",
+  "returnToDemo": "Return to demo",
+  "signIn": "Sign in",
+  "welcomeBackRiding": "Welcome back! Let’s get you riding",
+  "continueWithPhone": "Continue with phone",
+  "continueWithApple": "Continue with apple",
+  "continueWithGoogle": "Continue with Google",
+  "dontHaveAccount": "Don't have an account?",
+  "signUp": "Sign up",
+  "signInWithPhone": "Sign in with phone number",
+  "phoneSignInUnavailableDemo": "Phone sign-in is unavailable in this demo. No verification code is sent.",
+  "phoneNumber": "Phone number",
+  "phoneSignInNeedsService": "Phone sign-in requires the account service.",
+  "idPhotoPreview": "ID photo preview",
+  "idPhotoSampleOnly": "Sample image only. Camera capture and verification are not connected. No ID is submitted.",
+  "returnToHome": "Return to home",
+  "retakeUnavailablePreview": "Retake unavailable in this preview",
+  "enterValidPhoneWeWillSend": "Enter a valid phone number where we will send",
+  "verifyAction": "Verify",
+  "stepOfTotal": "{step} of {total}",
+  "@stepOfTotal": {
+    "placeholders": {
+      "step": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "uploadId": "Upload ID",
+  "weNeedToVerifyYourId": "we need to verify your Id",
+  "approveAccountIdentityReason": "In order to approve your account, we need to be 100% sure that you are who you say you are, for security and transparency purposes.",
+  "vehicleRegistration": "Vehicle Registration",
+  "uploadVehicleRegistration": "Upload vehicle registration document",
+  "insurance": "Insurance",
+  "uploadCarInsurance": "Upload car insurance for verification",
+  "todayLower": "today",
+  "tomorrowLower": "tomorrow",
+  "inDaysCount": "{count, plural, =1{in 1 day} other{in {count} days}}",
+  "@inDaysCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "docInsuranceLetter": "Insurance letter",
+  "docTaxiDriverLicense": "Taxi driver license",
+  "docTaxiLicenseShort": "Taxi license",
+  "docRegistrationCertificate": "Registration certificate",
+  "docRegistrationShort": "Registration",
+  "docDriversLicense": "Driver's License",
+  "docVehicleVerification": "Vehicle Verification",
+  "docDriversId": "Driver's ID",
+  "docExpiredCantGoOnline": "Expired · You can’t go online",
+  "docExpiresWhenDate": "Expires {when} · {date}",
+  "@docExpiresWhenDate": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "docNewTitle": "New {title}",
+  "@docNewTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "docTakeClearPhoto": "Take a clear photo of the whole document. Movera checks it before it counts.",
+  "docSendNew": "Send new document",
+  "docDemoNoFileLeaves": "Demo: no file leaves the phone.",
+  "docSentForReview": "Sent for review",
+  "docTitleExpired": "{title} expired",
+  "@docTitleExpired": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "youCanGoOnlineNow": "You can go online now.",
+  "docNewInReviewGoOnlineWhenApproved": "Your new document is in review. You can go online when Movera approves it.",
+  "docUploadNewGoOnlineWhenApproved": "Upload a new one. You can go online when Movera approves it.",
+  "approveDemo": "Approve (demo)",
+  "uploadNew": "Upload new",
+  "documents": "Documents",
+  "docTermsAndConditions": "Terms and Conditions",
+  "docVirtualInfoSession": "Virtual information session",
+  "docDriversLicenseLower": "Driver’s license",
+  "docProfilePhoto": "Profile photo",
+  "docCompanyRegistration": "Company registration",
+  "docCompanyRegistrationNote": "Bolagsverket or Skatteverket extract. Not needed with a Fleet Partner.",
+  "docTaxiTrafficPermit": "Taxi traffic permit",
+  "docTaxSettings": "Tax settings",
+  "docBankStatement": "Bank statement",
+  "docFrontPage": "Front page",
+  "docStockholmTrips": "Stockholm · Trips",
+  "docEarnAnywhereSweden": "Earn anywhere in Sweden",
+  "docSampleListNotice": "Sample list · Sending these documents is not available in the app yet. Nothing here was uploaded or reviewed.",
+  "docApprovedOfTotal": "{approved} of {total} approved",
+  "@docApprovedOfTotal": {
+    "placeholders": {
+      "approved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "docLeftCount": "{count} left",
+  "@docLeftCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "vehicle": "Vehicle",
+  "docStatusApproved": "Approved",
+  "docStatusInReview": "In review",
+  "docStatusNeeded": "Needed",
+  "docPreviewNotAvailable": "Not available yet — sample page. Sending this document is not part of the app yet. No document was uploaded or reviewed.",
+  "schedRidesHidden": "{count, plural, =1{1 ride hidden} other{{count} rides hidden}}",
+  "@schedRidesHidden": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "schedClashBody": "It clashes with your {time} pickup: not enough time to get there.",
+  "@schedClashBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "reminder": "Reminder",
+  "schedAvailableToday": "Available today",
+  "schedUpcoming": "Upcoming",
+  "schedPreviewNotBinding": "Preview — not binding. Decisions last until the app restarts.",
+  "schedAcceptedPickupAt": "Accepted · pickup {time}",
+  "@schedAcceptedPickupAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "laterLower": "later",
+  "schedReservationCancelled": "Reservation cancelled",
+  "schedPlanAhead": "Plan ahead and choose your next trip",
+  "schedRequestsTab": "Requests",
+  "schedAcceptedTab": "Accepted",
+  "schedSeedTime": "{day}, {time}",
+  "@schedSeedTime": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedPickupTomorrowAt": "Pickup tomorrow at {time}",
+  "@schedPickupTomorrowAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedBackupNote": "Your {time} pickup was given to a backup driver.",
+  "@schedBackupNote": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedSampleReservation": "Sample reservation",
+  "schedReservationDetails": "Reservation details",
+  "schedIllustrativeRoute": "Illustrative route — sample data",
+  "schedViewRoute": "View reservation route",
+  "schedDemoAccepted": "Demo accepted",
+  "schedAvailable": "Available",
+  "rideTypeLabel": "Ride type",
+  "trip2": "Trip",
+  "route": "Route",
+  "schedBeforeThisRide": "Before this ride",
+  "goodToKnow": "Good to know",
+  "schedBeReadyEarly": "Be ready early",
+  "schedGoOnlineMinBefore": "Go online {minutes} min before pickup so the app can guide you in time.",
+  "@schedGoOnlineMinBefore": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "schedTripsOnTheWay": "Trips on the way",
+  "schedOnlyTripsToward": "Before pickup you only get trips that head toward it and leave time to get there.",
+  "schedStillReceiveRides": "You can still receive suitable rides before the scheduled pickup.",
+  "schedPlansChanged": "Plans changed?",
+  "schedDriversNeverPay": "{line} Drivers never pay to cancel.",
+  "@schedDriversNeverPay": {
+    "placeholders": {
+      "line": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLocalPreviewCancel": "This is a local preview. Cancelling removes the sample reservation until the app restarts.",
+  "schedReservedForYou": "Reserved for you",
+  "schedKeepInAccepted": "We’ll keep this ride in your Accepted list. If you cancel, you’ll be asked for a reason before anything changes.",
+  "schedCancelReservation": "Cancel reservation",
+  "schedAcceptPrice": "Accept  •  {price}",
+  "@schedAcceptPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "chooseBestReason": "Choose the reason that best matches.",
+  "schedCancelThisReservation": "Cancel this reservation?",
+  "schedReasonDoesntCount": "This reason doesn’t count against you.",
+  "schedRemovesSample": "This removes the sample reservation from this session. It does not cancel a real booking or change account access.",
+  "schedKeepReservation": "Keep reservation",
+  "tomorrowAtClock": "tomorrow {clock}",
+  "@tomorrowAtClock": {
+    "placeholders": {
+      "clock": {
+        "type": "String"
+      }
+    }
+  },
+  "schedFreeCancelHoursBefore": "Free cancel until {hours} h before pickup.",
+  "@schedFreeCancelHoursBefore": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLateCancelUnder": "Late cancel: under {hours} h to pickup.",
+  "@schedLateCancelUnder": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "schedFreeCancelUntil": "Free cancel until {time}.",
+  "@schedFreeCancelUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedRidesAreOff": "Scheduled rides are off",
+  "schedRidesOffUntil": "Scheduled rides off until {date}",
+  "@schedRidesOffUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "schedRidesPausedUntil": "Scheduled rides paused until {date}",
+  "@schedRidesPausedUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "schedTurnedOffByMovera": "Movera turned off Scheduled rides for your account. Contact support if you have questions.",
+  "schedLateCancelsInDays": "You had {count} late cancels in {days} days. Your accepted rides stay.",
+  "@schedLateCancelsInDays": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "schedNeverPayLateCounts": "You never pay to cancel, but this late cancel counts.",
+  "schedNeverPayUnderHours": "You never pay to cancel. Under {hours} h to pickup a cancel is late and counts toward a pause.",
+  "@schedNeverPayUnderHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLateCancelPauses": "This is a late cancel ({count} in {days} days). Scheduled rides pause until {date}.",
+  "@schedLateCancelPauses": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLateCancelCounts": "This is a late cancel and it counts. You never pay.",
+  "schedAcceptedBadge": "Accepted",
+  "supportCatTripRider": "Trip & rider",
+  "supportCatWallet": "Wallet & payments",
+  "supportCatAccount": "Account & documents",
+  "supportCatTechnical": "Technical issue",
+  "supportLocalDraftBadge": "LOCAL DRAFT",
+  "supportCouldNotRecover": "Could not recover local support. Retry.",
+  "supportCouldNotSaveConversation": "Could not save local conversation. Retry.",
+  "supportCouldNotLoadDraft": "Could not load the local draft.",
+  "supportCouldNotSaveDraft": "Could not save local draft.",
+  "supportLocalTicketDraft": "Local ticket draft",
+  "category": "Category",
+  "subject": "Subject",
+  "enterSubject": "Enter a subject",
+  "tellUsWhatHappened": "Tell us what happened",
+  "enterMessage": "Enter a message",
+  "supportCouldNotSaveTicket": "Could not save local ticket. Retry.",
+  "supportSavingDraft": "Saving local draft…",
+  "supportSaveDraftDemo": "Save draft in demo",
+  "supportTicketSavedDraftNotCleared": "Ticket saved locally, but the composer draft could not be cleared.",
+  "supportDemo": "Support demo",
+  "supportDraftLocalTicket": "Draft local ticket",
+  "supportLocalPreview": "Local support preview",
+  "supportLocalDraftsNoService": "Local drafts on this device — no support service.",
+  "supportCouldNotLoadRetry": "Could not load local support — Retry",
+  "supportRecoverPreserve": "Recover local support (preserve unreadable data)",
+  "supportYourConversations": "Your conversations",
+  "supportLocalDraftSubject": "Local draft: {subject}",
+  "@supportLocalDraftSubject": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "supportWriteLocalDraft": "Write a local draft",
+  "supportSaveLocalReply": "Save local reply",
+  "promoWeekdayPeak": "Weekday peak",
+  "promoWeekdayPeakDetail": "Complete 8 trips between 07:00 and 09:00.",
+  "promoWeekdayPeakWindow": "Mon–Fri · this week",
+  "promoAirportRuns": "Airport runs",
+  "promoAirportRunsDetail": "Two airport trips in the same day.",
+  "promoUntilSunday": "Until Sunday",
+  "promoEveningHours": "Evening hours",
+  "promoEveningHoursDetail": "Stay online for 3 hours after 18:00.",
+  "promoTonight": "Tonight",
+  "promoDemoCodeCopied": "Demo code {code} copied",
+  "@promoDemoCodeCopied": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "promoCouldNotCopy": "Could not copy the code. Please try again.",
+  "promoPreviewTitle": "Promotions preview",
+  "preview": "Preview",
+  "promoSavedTab": "Saved",
+  "promoNothingSaved": "Nothing saved yet",
+  "promoSave": "Save",
+  "vehicles": "Vehicles",
+  "addVehicle": "Add vehicle",
+  "vehCouldNotLoadDrafts": "Could not load local vehicle drafts — Retry",
+  "vehLocalDraftsNotVerified": "Local vehicle drafts — not activated or verified",
+  "vehTripsOnly": "Trips only",
+  "vehManageVehicles": "Manage vehicles",
+  "vehExploreOpportunities": "Explore vehicle opportunities",
+  "vehConnectFleetPartner": "Connect with a fleet partner or browse rental or purchase offers if you need another vehicle.",
+  "vehCouldNotSaveDraft": "Could not save local vehicle draft. Retry.",
+  "year": "Year",
+  "vehRequirements": "Vehicle requirements",
+  "vehRequirementsBody": "To drive with Movera, you need a vehicle that is 1990 or newer, and not salvaged.",
+  "vehEnterInformation": "Enter your vehicle information",
+  "make": "Make",
+  "searchByMake": "Search by make",
+  "model": "Model",
+  "searchByModel": "Search by model",
+  "selectEllipsis": "Select...",
+  "requiredMark": "* Required",
+  "vehPhotoCouldNotSave": "Photo could not be saved locally. Retry.",
+  "vehRemoveDraftQ": "Remove local vehicle draft?",
+  "vehRemovesNameAndPhotos": "This removes {name} and its saved document photos from this device.",
+  "@vehRemovesNameAndPhotos": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "vehKeepVehicle": "Keep vehicle",
+  "vehRemoveVehicle": "Remove vehicle",
+  "vehCouldNotRemoveDraft": "Could not remove local draft. Retry.",
+  "vehPhotosStayOnDevice": "Document photos stay on this device. No upload or verification service is connected.",
+  "vehCouldNotLoadDocuments": "Could not load local vehicle documents.",
+  "vehDraftNoLongerAvailable": "This local vehicle draft is no longer available.",
+  "vehRegistrationCertFront": "Vehicle Registration Certificate (Front Page)",
+  "vehSavedLocallyNotVerified": "Saved locally — not verified",
+  "vehRecommendedNextStep": "Recommended next step",
+  "vehTakePhotoRegistration": "Take a photo of your Vehicle Registration Certificate (Front Page)",
+  "vehDocBlueBlackWhite": "The document should be blue, black and white.",
+  "vehAllFourCorners": "All four corners are visible.",
+  "vehInsuranceLetter": "Insurance Letter",
+  "vehTakePhotoInsurance": "Take a photo of your Insurance Letter",
+  "vehInsuranceShowsTaxi": "The document shows the car’s registration number and that it is registered as a taxi.",
+  "vehInsuranceDatesVisible": "The start and end dates of the insurance are visible.",
+  "vehSavedPhotoCannotDisplay": "Saved photo cannot be displayed. Retake this document photo.",
+  "vehPhotoTooLarge": "Photo is too large to keep on this device. Retake it closer and with less detail.",
+  "vehCameraNotAvailable": "Camera is not available in this preview.",
+  "vehBeforeSavingCheck": "Before saving the local photo, check the following:",
+  "takingPhoto": "Taking photo…",
+  "takePhoto": "Take photo",
+  "promoSaved": "Saved",
+  "prefStandardEveryday": "Standard • Everyday ride",
+  "prefExtraComfort": "Extra comfort • Plush",
+  "prefLuxuryPremium": "Luxury • Premium service",
+  "prefFasterPickup": "Faster pickup • Priority",
+  "prefSixSeat": "6 seat • Spacious",
+  "prefLowEmissions": "Low emissions • Eco",
+  "prefPetFriendly": "Pet friendly • Carrier OK",
+  "prefChildSeat": "Child seat • Kids safe",
+  "prefCategoriesSaved": "{count} ride categories saved",
+  "@prefCategoriesSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "prefActiveOfTotal": "{active} of {total} active",
+  "@prefActiveOfTotal": {
+    "placeholders": {
+      "active": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "prefChooseRideOptions": "Choose your ride options",
+  "prefSelectRideTypes": "Select the ride types you'd like available for your trips",
+  "prefMoveraSetsFromCar": "Movera sets these from your car. Switch off any you don’t want.",
+  "prefSave": "Save preferences",
+  "safetyContactEmergencyQ": "Contact emergency services?",
+  "safetyUse112Only": "Use 112 only when you or someone else needs immediate help.",
+  "safetyDialerOpened": "Emergency dialer opened — confirm the call on your device.",
+  "safetyAudioUnavailable": "Audio recording is unavailable in this demo.",
+  "safetyTripSharingUnavailable": "Trip sharing is unavailable in this demo.",
+  "safetyPreferences": "Safety preferences",
+  "safetyRideCheckOnOthersPreview": "Ride check is on. The others are preview only.",
+  "safetyUnavailableWithoutVerification": "Unavailable without account verification",
+  "safetyAutoTripSharing": "Automatic trip sharing",
+  "safetyUnavailableWithoutSharing": "Unavailable without a sharing service",
+  "safetyOnSetByMovera": "On · set by Movera for every trip",
+  "safetyOn": "On",
+  "safetyRideCheckExplained": "On for every trip. Asks \"Is everything OK?\" after a long stop, a drop-off far from the destination, a big detour or a very hard stop.",
+  "safetyTools": "Safety tools",
+  "safetyQuickTools": "Quick tools designed to protect you during every ride.",
+  "safetyContact112": "Contact 112",
+  "safetyShareTrip": "Share trip",
+  "safetyRideCheckOnPreviewOnly": "Ride check on · the others are preview only",
+  "destChooseOneAddress": "Choose one address",
+  "destTripsInYourDirection": "Trips in your direction",
+  "destMoveraPrioritizes": "Movera will prioritize requests that keep you moving toward this address.",
+  "destAddAddress": "Add destination address",
+  "destSuggestedAddresses": "Suggested addresses",
+  "destResults": "Results",
+  "destNoAddressFound": "No address found",
+  "destTryAnother": "Try another street, place, or area.",
+  "destFastestRoute": "Fastest route to your destination",
+  "destOnlyTripsYourWay": "You'll only get trips heading your way, so every ride takes you closer to {place}.",
+  "@destOnlyTripsYourWay": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "destArriveBy": "Arrive by {time}",
+  "@destArriveBy": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "destConfirm": "Confirm destination",
+  "waybillLocalDemo": "Local demo",
+  "waybillDemoRadar": "Demo Radar",
+  "demoDriverIdentityUnavailable": "Demo driver — identity unavailable",
+  "vehicleDataUnavailable": "Vehicle data unavailable",
+  "plateUnavailable": "Plate unavailable",
+  "positionOfCount": "{position} of {count}",
+  "@positionOfCount": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rrMatchingTrip": "Matching trip",
+  "rrConfirmingRealTime": "Confirming this request in real time…",
+  "rrCouldNotMatch": "Could not match trip. Try again.",
+  "rrConnectionInterrupted": "Connection interrupted. You can retry this request.",
+  "rrAssignedOpening": "You’re assigned to this request. Opening trip…",
+  "rrAnotherMatchedFirst": "Another driver matched this trip first.",
+  "rrNoLongerOnRadar": "This trip is no longer on Radar.",
+  "rrTripsTowardPickup": "Trips toward your {time} pickup",
+  "@rrTripsTowardPickup": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "rrLive": "Live",
+  "rrFreshNew": "{count} new",
+  "@rrFreshNew": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "rrNew": "New",
+  "rrDestinationRoute": "Destination route",
+  "rrTripsToward": "Trips toward {place}",
+  "@rrTripsToward": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "rrScanningNearby": "Scanning nearby",
+  "rrNewTripsAppear": "New trips will appear here when the radar finds requests around you.",
+  "moveraDriver": "Movera Driver",
+  "legalPrivacyBody": "Movera Driver uses location, trip and vehicle data to assign rides, show routes and keep a waybill on this device.\n\nDemo builds keep this information in memory on the phone. Nothing is sold to advertisers. You can log out at any time from Profile.\n\nWhen a live backend is connected, the same screens will keep using this policy text until a signed version is published.",
+  "legalTermsBody": "You agree to drive only with a valid licence, insurance and a vehicle that matches the documents in this app.\n\nRadar offers are first-come. Matching another order while on a trip is optional. Completing a trip creates a waybill you can reopen from Home.\n\nMovera may suspend a demo account that misuses Safety tools or emergency calling.",
+  "privacyPolicyTitle": "Privacy policy",
+  "termsOfService": "Terms of service",
+  "profSampleDriver": "Sample driver profile",
+  "profDemoNoVerified": "Demo — no verified account",
+  "analytics": "Analytics",
+  "myBank": "My bank",
+  "helpCenter": "Help center",
+  "logOut": "Log out",
+  "logOutQ": "Log out?",
+  "profLogOutClears": "Local preview data on this device will be cleared, including trip history, contacts, and drafts. You will return to the sign-in screen offline.",
+  "stay": "Stay",
+  "profCouldNotClear": "Could not clear local data. You are still signed in. Please retry.",
+  "anaPreview": "Analytics preview",
+  "anaSample3Rides": "Sample: 3 rides completed",
+  "anaSampleLastTrip": "Sample last trip",
+  "anaSamplePerformance": "Sample performance",
+  "anaCancel": "Cancel",
+  "earnings": "Earnings",
+  "anaSamePeriodHome": "Same period as the home sheet",
+  "acceptanceRate": "Acceptance rate",
+  "anaSampleAcceptance": "Sample · {rate} of offers accepted",
+  "@anaSampleAcceptance": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "cancellationRate": "Cancellation rate",
+  "anaSampleCancellation": "Sample · {rate} of accepted trips",
+  "@anaSampleCancellation": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "anaSampleStrongestArea": "Sample strongest area",
+  "bankAddHolderName": "Add the account holder’s name.",
+  "bankCheckIban": "Check the IBAN format and check digits against your bank statement.",
+  "bankBicFormat": "BIC / SWIFT has 8 or 11 letters and digits.",
+  "bankCheckClearing": "Check the clearing number: 4 digits, or 5 starting with 8 for Swedbank.",
+  "bankAccountDigits": "The account number has 6 to 10 digits.",
+  "bankPreviewNotSaved": "Preview only — account not saved.",
+  "countrySweden": "Sweden",
+  "international": "International",
+  "bankAccount": "Bank account",
+  "bankHolder": "Holder",
+  "country": "Country",
+  "bank": "Bank",
+  "clearing": "Clearing",
+  "bankUseIban": "Use the IBAN on your bank statement. Foreign IBANs show a country code; no bank connection is verified.",
+  "bankFoundFromClearing": "The bank is found from the clearing number.",
+  "checkDetails": "Check details",
+  "bankDemoNotSaved": "Demo: account not saved or sent to a bank",
+  "minutesAgo": "{minutes} min ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours} h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "yesterday": "Yesterday",
+  "daysAgo": "{days} days ago",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "noNotificationsYet": "No notifications yet",
+  "filterAll": "All",
+  "filterDemand": "Demand",
+  "logsPreview": "Driving log preview",
+  "logsSampleNotLive": "Sample driving-time data · not live",
+  "logsSampleWeek": "Sample week",
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "logsOnlineFromTo": "Online {from} – {to}",
+  "@logsOnlineFromTo": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "logsSampleOnlineState": "Sample online state",
+  "logsDemoCompliance": "Demo compliance copy only. Driving and break limits are not connected to live account or regulatory data.",
+  "pinVerifyAll": "Verify all trips",
+  "pinAskEveryPickup": "Ask for the rider PIN on every pickup.",
+  "pinVerifySession": "Verify this session",
+  "pinAskUntilOffline": "Ask until you go offline.",
+  "pinDontVerify": "Don’t verify",
+  "pinSkipOnDevice": "Skip the PIN on this device.",
+  "pinPreviewNotSaved": "PIN verification preview - this preference is not saved or enforced in the demo.",
+  "pinNotConnected": "PIN verification is not connected in this demo.",
+  "bankPreviewAccountDetails": "Preview account details",
+  "bankLocalPreviewOnly": "Local preview only. No bank is connected, nothing is verified, and no payout is scheduled.",
+  "bankCheckInPreview": "You can check account details in the preview form. Details are discarded when you leave the form; no payout account is connected.",
+  "emEmergencyServices112": "Emergency services — 112",
+  "emEmergency": "Emergency",
+  "emAlreadyInContacts": "This number is already in your contacts.",
+  "emFamily": "Family",
+  "chatLocalDemo": "Local demo chat · messages are not sent to the rider.",
+  "chatSendMessageHint": "send message...",
+  "chatSaveLocally": "Save message locally",
+  "chatLocalNotSent": "Local preview · not sent",
+  "queueAirportPreview": "Airport queue preview",
+  "queueSample10Ahead": "Sample: 10 drivers ahead",
+  "queueViewSampleDetails": "view sample details",
+  "queueClose": "Close queue position",
+  "queueMyPosition": "My Queue position",
+  "queueMediumWait": "Medium Wait",
+  "queueSampleRank": "Sample Rank",
+  "queueUnavailablePreview": "Queue unavailable — preview",
+  "queueRanks": "Ranks",
+  "earnTypeTab": "Type",
+  "earnMoveraDemo": "Movera demo",
+  "cancelRateTitle": "Cancelation Rate",
+  "notYourRealRateYet": "not your real rate yet",
+  "tripsConfirmed": "Trips confirmed",
+  "completedTripsLower": "completed trips",
+  "canceledTrips": "Canceled trips",
+  "sampleNumbersNotReal": "Sample numbers for this preview, not your real rate.",
+  "cancelRateKeepLow": "Keep your cancel rate low to keep full access to trips",
+  "cancelRateEveryCancelCounts": "Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.",
+  "moreInformation": "More Information",
+  "cancelRateHowCalculated": "How your cancelation is calculated",
+  "cancelRateHowBody": "Your cancellation rate is calculated based on the number of trips you cancel compared to the total trips you confirm. We use your last 100 confirmed trip requests to determine this percentage.",
+  "cancelRateWhyMatters": "Why cancelation rate matters",
+  "cancelRateWhyBody": "A high cancellation rate affects the reliability of our service and can impact your ability to get ride requests. Maintaining a low cancellation rate helps ensure better service for all users.",
+  "acceptRateTitle": "Acceptance Rate",
+  "exclusiveOffers": "Exclusive offers",
+  "acceptedOffersLower": "accepted offers",
+  "declinedOrMissed": "declined or missed",
+  "acceptRateOnlyExclusive": "Only Exclusive offers count",
+  "acceptRateExclusiveBody": "Exclusive offers and other offers sent only to you count. Radar trips never count.",
+  "acceptRateHowCalculated": "How your acceptance rate is calculated",
+  "acceptRateHowBody": "Your acceptance rate is the Exclusive offers you accept compared with all the Exclusive offers you receive. Radar trips never count. We use your last 100 Exclusive offers.",
+  "acceptRateWhyMatters": "Why acceptance rate matters",
+  "acceptRateWhyBody": "A low acceptance rate reduces your chances of receiving ride requests and may affect your standing on the platform. Maintaining a high acceptance rate helps you get more trips and ensures a reliable experience for riders.",
+  "rcTriggerDroppedFar": "Finished far from drop-off",
+  "rcTriggerLongStop": "Long stop",
+  "rcTriggerOffRoute": "Off the route",
+  "rcTriggerPossibleCrash": "Possible crash",
+  "rcTopicAccident": "Accident or collision",
+  "rcTopicHurt": "Someone is hurt or feels ill",
+  "rcTopicUnsafe": "I feel unsafe",
+  "rcTopicCarProblem": "Car problem",
+  "rcTopicRiderAskedStop": "The rider asked for a stop",
+  "rcTopicTraffic": "Traffic or road works",
+  "rcTopicRiderStopHere": "The rider asked to stop here",
+  "rcTopicRiderChangedDestination": "The rider changed destination",
+  "rcTopicRoadClosed": "Road closed or no access",
+  "rcTopicRiderOtherRoute": "The rider asked for another route",
+  "rcShortAccident": "Accident",
+  "rcShortHurt": "Someone hurt",
+  "rcShortUnsafe": "Unsafe",
+  "rcShortRiderStop": "Rider stop",
+  "rcShortTraffic": "Traffic",
+  "rcShortNewDestination": "New destination",
+  "rcShortRoadClosed": "Road closed",
+  "rcShortOtherRoute": "Other route",
+  "rcQuestionAnyoneHurt": "Is anyone hurt?",
+  "rcQuestionCarSafe": "Is the car in a safe place?",
+  "rcQuestionOtherPersonOk": "Is the other person OK?",
+  "rcQuestionWhoNeedsHelp": "Who needs help?",
+  "rcQuestionInDanger": "Are you in danger right now?",
+  "rcQuestionCanContinue": "Can you continue the trip?",
+  "rcAnswerYes": "Yes",
+  "rcAnswerNo": "No",
+  "rcAnswerNotSure": "Not sure",
+  "rcAnswerMe": "Me",
+  "rcAnswerTheRider": "The rider",
+  "rcAnswerSomeoneElse": "Someone else",
+  "rcLongerLead": "This trip is ",
+  "rcPercent": "{percent}%",
+  "@rcPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "rcLongerTrail": " longer than expected",
+  "rcStoppedLead": "Your car has stopped for ",
+  "rcMinutes": "{minutes} min",
+  "@rcMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "rcEndedLead": "Your trip ended ",
+  "rcEndedFromTrail": " from {place}",
+  "@rcEndedFromTrail": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "rcOffRouteLead": "You are ",
+  "rcOffRouteTrail": " off the route",
+  "rcOffRouteToTrail": " off the route to {place}",
+  "@rcOffRouteToTrail": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "rcCrashLead": "A ",
+  "rcCrashBold": "very hard stop",
+  "rcCrashTrail": " was detected",
+  "rcCrashTrailAt": " was detected · {place}",
+  "@rcCrashTrailAt": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "tipHighBoostNearby": "High boost nearby",
+  "tipHighBoostIn": "High boost · +{kr} kr in {zone}",
+  "@tipHighBoostIn": {
+    "placeholders": {
+      "kr": {
+        "type": "String"
+      },
+      "zone": {
+        "type": "String"
+      }
+    }
+  },
+  "tipExpectTrip": "Expect a trip in 2–5 min",
+  "tipPromotionRides": "Promotion · {rides} rides = {kr} kr",
+  "@tipPromotionRides": {
+    "placeholders": {
+      "rides": {
+        "type": "String"
+      },
+      "kr": {
+        "type": "String"
+      }
+    }
+  },
+  "tipBusyArea": "Busy area · trips expected soon",
+  "tipAirportQueue": "Airport queue: {count} drivers",
+  "@tipAirportQueue": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tipGoodStreak": "Good streak · {count} trips in a row",
+  "@tipGoodStreak": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "tipDemandRising": "Demand rising near you",
+  "tipPeakStart": "Peak hours start at {time}",
+  "@tipPeakStart": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tipTopZone": "You're in a top zone right now",
+  "noticeNewScheduledRide": "New scheduled ride",
+  "noticeScheduledBody": "{day} {time} · {fare} · Tap to view",
+  "@noticeScheduledBody": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "fare": {
+        "type": "String"
+      }
+    }
+  },
+  "view": "View",
+  "noticeSecondsToAccept": "{seconds} s to accept",
+  "@noticeSecondsToAccept": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "noticeHighDemandIn": "High demand in {area}",
+  "@noticeHighDemandIn": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeGoOnlineNow": "Go online now",
+  "noticeDocExpires": "{title} expires {when}",
+  "@noticeDocExpires": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeUploadNewKeepDriving": "Upload a new one so you can keep driving.",
+  "noticeDocApprovedBody": "{title} approved. You can go online.",
+  "@noticeDocApprovedBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeCanGoOnlineAgain": "You can go online again.",
+  "noticeTooManyLateCancels": "Too many late cancels. Back on {date}.",
+  "@noticeTooManyLateCancels": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rcWhatHappened": "What happened",
+  "rcCalled112": "Called 112",
+  "selectCountry": "Select Country",
+  "searchCountry": "Search Country",
+  "colorRed": "Red",
+  "colorBlue": "Blue",
+  "colorGreen": "Green",
+  "colorBlack": "Black",
+  "colorWhite": "White",
+  "colorGray": "Gray",
+  "colorSilver": "Silver",
+  "colorYellow": "Yellow",
+  "colorOrange": "Orange",
+  "colorBrown": "Brown",
+  "colorPurple": "Purple",
+  "colorPink": "Pink",
+  "chooseVehicleColor": "Choose vehicle color",
+  "closeColorPicker": "Close color picker",
+  "mapCameraUnavailable": "Map camera unavailable — tap recenter to retry",
+  "dismiss": "Dismiss",
+  "ratingAndRides": "{rating} ★ · {count, plural, =1{1 ride} other{{count} rides}}",
+  "@ratingAndRides": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mapOfArea": "Map of {area}",
+  "@mapOfArea": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/geo_point.dart';
@@ -61,7 +62,7 @@ class DriverNotice {
   /// "High demand in Stockholm City"
   final String title;
 
-  /// "Go online now"
+  /// tr.noticeGoOnlineNow
   final String body;
   final DateTime at;
 
@@ -69,7 +70,7 @@ class DriverNotice {
   final String? island;
   final DriverNoticeAction? action;
 
-  /// "Upload new"
+  /// tr.uploadNew
   final String? actionLabel;
 
   /// The document a document notification is about.
@@ -197,12 +198,12 @@ class DriverNotices {
       DriverNotice(
         id: _feed.nextId('scheduled'),
         kind: DriverNoticeKind.newScheduledRide,
-        title: 'New scheduled ride',
-        body: '$day $time · $fare · Tap to view',
+        title: tr.noticeNewScheduledRide,
+        body: tr.noticeScheduledBody(day, time, fare),
         at: at,
         island: driverText(DriverTexts.islandNewReservation),
         action: DriverNoticeAction.viewScheduledRides,
-        actionLabel: 'View',
+        actionLabel: tr.view,
       );
 
   /// N1: "Exclusive offer · 8 s to accept".
@@ -210,8 +211,8 @@ class DriverNotices {
       DriverNotice(
         id: _feed.nextId('exclusive'),
         kind: DriverNoticeKind.exclusiveOffer,
-        title: 'Exclusive offer',
-        body: '$seconds s to accept',
+        title: tr.exclusiveOffer,
+        body: tr.noticeSecondsToAccept(seconds),
         at: at,
         island: driverText(DriverTexts.islandExclusiveRide),
       );
@@ -233,7 +234,7 @@ class DriverNotices {
         at: at,
         island: title,
         action: DriverNoticeAction.viewScheduledRides,
-        actionLabel: 'View',
+        actionLabel: tr.view,
       );
 
   /// N2: "High demand in Stockholm City · Go online now", with a map.
@@ -241,8 +242,8 @@ class DriverNotices {
       DriverNotice(
         id: _feed.nextId('demand'),
         kind: DriverNoticeKind.highDemand,
-        title: 'High demand in ${area.name}',
-        body: 'Go online now',
+        title: tr.noticeHighDemandIn(area.name),
+        body: tr.noticeGoOnlineNow,
         at: at,
         island: driverText(DriverTexts.islandHighDemand, {
           'area': area.name.replaceFirst('Stockholm ', ''),
@@ -277,15 +278,15 @@ class DriverNotices {
       DriverNotice(
         id: _feed.nextId('document'),
         kind: DriverNoticeKind.documentExpiring,
-        title: '$title expires $when',
-        body: 'Upload a new one so you can keep driving.',
+        title: tr.noticeDocExpires(title, when),
+        body: tr.noticeUploadNewKeepDriving,
         at: at,
         island: driverText(DriverTexts.islandDocumentExpires, {
           'document': shortTitle,
           'when': when,
         }),
         action: DriverNoticeAction.uploadDocument,
-        actionLabel: 'Upload new',
+        actionLabel: tr.uploadNew,
         documentId: documentId,
       );
 
@@ -294,8 +295,8 @@ class DriverNotices {
       DriverNotice(
         id: _feed.nextId('document'),
         kind: DriverNoticeKind.documentApproved,
-        title: 'Document approved',
-        body: '$title approved. You can go online.',
+        title: tr.islandDocumentApproved,
+        body: tr.noticeDocApprovedBody(title),
         at: at,
         island: driverText(DriverTexts.islandDocumentApproved),
       );
@@ -304,8 +305,8 @@ class DriverNotices {
   static DriverNotice restOver(DateTime at) => DriverNotice(
         id: _feed.nextId('rest'),
         kind: DriverNoticeKind.restOver,
-        title: 'Rest over',
-        body: 'You can go online again.',
+        title: tr.islandRestOver,
+        body: tr.noticeCanGoOnlineAgain,
         at: at,
         island: driverText(DriverTexts.islandRestOver),
       );
@@ -315,12 +316,12 @@ class DriverNotices {
       DriverNotice(
         id: _feed.nextId('paused'),
         kind: DriverNoticeKind.scheduledPaused,
-        title: 'Scheduled rides paused',
-        body: 'Too many late cancels. Back on $until.',
+        title: tr.islandScheduledPaused,
+        body: tr.noticeTooManyLateCancels(until),
         at: at,
         island: driverText(DriverTexts.islandScheduledPaused),
         action: DriverNoticeAction.viewScheduledRides,
-        actionLabel: 'View',
+        actionLabel: tr.view,
       );
 
   /// Already received when the demo opens.
@@ -328,11 +329,11 @@ class DriverNotices {
         DriverNotice(
           id: 'demo-scheduled-0740',
           kind: DriverNoticeKind.newScheduledRide,
-          title: 'New scheduled ride',
+          title: tr.noticeNewScheduledRide,
           body: 'Tomorrow 07:40 · 126 kr · Tap to view',
           at: now.subtract(const Duration(minutes: 18)),
           action: DriverNoticeAction.viewScheduledRides,
-          actionLabel: 'View',
+          actionLabel: tr.view,
         ),
         DriverNotice(
           id: 'demo-bonus',

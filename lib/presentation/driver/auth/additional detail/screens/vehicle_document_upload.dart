@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
@@ -114,7 +115,7 @@ class _VehicleDocumentUploadState extends State<VehicleDocumentUpload> {
           TextButton(
             onPressed: _isPicking ? null : _pickAnyFile,
             child: TextWidget(
-              text: "Tap to upload",
+              text: tr.tapToUpload,
               color: Color(0xff30A1F7),
               fontSize: 16,
               fontWeight: fwMedium,
@@ -164,7 +165,7 @@ class _VehicleDocumentUploadState extends State<VehicleDocumentUpload> {
               ),
               child: Center(
                 child: TextWidget(
-                  text: _isPicking ? "Opening..." : "Open Camera",
+                  text: _isPicking ? tr.openingEllipsis : tr.openCamera,
                   color: AppColor.title,
                   fontSize: 14,
                   fontWeight: fwMedium,
@@ -212,7 +213,7 @@ class _VehicleDocumentUploadState extends State<VehicleDocumentUpload> {
 
           // Remove button
           IconButton(
-            tooltip: 'Close',
+            tooltip: tr.close,
             icon: const Icon(Icons.close, color: Colors.red),
             onPressed: () {
               setState(() {
@@ -255,10 +256,10 @@ class _VehicleDocumentUploadState extends State<VehicleDocumentUpload> {
         selectedFileName = fileName;
         selectedFileBytes = bytes;
       });
-      _showSuccessMessage('File selected successfully!');
+      _showSuccessMessage(tr.fileSelectedSuccessfully);
     } catch (error, stack) {
-      DriverLog.error('Vehicle document selection failed', error, stack);
-      _showErrorMessage('Could not read the selected file. Please try again.');
+      DriverLog.error(tr.vehicleDocumentSelectionFailed, error, stack);
+      _showErrorMessage(tr.couldNotReadSelectedFile);
     } finally {
       if (mounted) setState(() => _isPicking = false);
     }
@@ -287,12 +288,12 @@ class _VehicleDocumentUploadState extends State<VehicleDocumentUpload> {
           selectedFileName = image.name;
           selectedFileBytes = bytes;
         });
-        _showSuccessMessage("Photo captured successfully!");
+        _showSuccessMessage(tr.photoCapturedSuccessfully);
       }
     } catch (e) {
       if (mounted) {
         _showErrorMessage(
-          'Could not read the captured photo. Please try again.',
+          tr.couldNotReadCapturedPhoto,
         );
       }
     } finally {

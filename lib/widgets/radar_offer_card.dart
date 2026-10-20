@@ -234,7 +234,7 @@ class RadarOfferCard extends StatelessWidget {
                     // still fits a narrow phone.
                     if (show.riderRating && offer.riderTrips > 0)
                       Text(
-                        '${offer.riderTrips} trips',
+                        tr.tripsCount(offer.riderTrips),
                         key: ValueKey<String>('radar-offer-trips-${offer.id}'),
                         style: const TextStyle(
                           color: Color(0xFF3A444B),

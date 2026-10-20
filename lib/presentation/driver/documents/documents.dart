@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -16,23 +17,23 @@ class DriverDocuments extends StatelessWidget {
   static const Color _green = Color(0xFF1FA463);
 
   // Nothing is uploaded or checked yet, so every document is still needed.
-  static const List<_Doc> _driver = [
-    _Doc('Terms and Conditions'),
-    _Doc('Virtual information session'),
-    _Doc('Driver’s license'),
-    _Doc('Profile photo'),
+  static List<_Doc> get _driver => [
+    _Doc(tr.docTermsAndConditions),
+    _Doc(tr.docVirtualInfoSession),
+    _Doc(tr.docDriversLicenseLower),
+    _Doc(tr.docProfilePhoto),
     _Doc(
-      'Company registration',
-      note: 'Bolagsverket or Skatteverket extract. Not needed with a Fleet Partner.',
+      tr.docCompanyRegistration,
+      note: tr.docCompanyRegistrationNote,
     ),
-    _Doc('Taxi driver license'),
-    _Doc('Taxi traffic permit'),
-    _Doc('Tax settings'),
-    _Doc('Bank statement'),
+    _Doc(tr.docTaxiDriverLicense),
+    _Doc(tr.docTaxiTrafficPermit),
+    _Doc(tr.docTaxSettings),
+    _Doc(tr.docBankStatement),
   ];
-  static const List<_Doc> _vehicle = [
-    _Doc('Registration certificate', note: 'Front page'),
-    _Doc('Insurance letter'),
+  static List<_Doc> get _vehicle => [
+    _Doc(tr.docRegistrationCertificate, note: tr.docFrontPage),
+    _Doc(tr.docInsuranceLetter),
   ];
 
   @override
@@ -47,13 +48,13 @@ class DriverDocuments extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: 'Back',
+        leading: IconButton(tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
         centerTitle: true,
-        title: const Text(
-          'Documents',
+        title: Text(
+          tr.documents,
           style: TextStyle(
             color: _ink,
             fontSize: 18,
@@ -81,8 +82,8 @@ class DriverDocuments extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Stockholm · Trips',
+                Text(
+                  tr.docStockholmTrips,
                   style: TextStyle(
                     color: _ink,
                     fontSize: 22,
@@ -91,8 +92,8 @@ class DriverDocuments extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
-                  'Earn anywhere in Sweden',
+                Text(
+                  tr.docEarnAnywhereSweden,
                   style: TextStyle(color: _muted, fontSize: 14),
                 ),
                 const SizedBox(height: 14),
@@ -109,9 +110,8 @@ class DriverDocuments extends StatelessWidget {
                     color: const Color(0xFFF4F6F6),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Text(
-                    'Sample list · Sending these documents is not available '
-                    'in the app yet. Nothing here was uploaded or reviewed.',
+                  child: Text(
+                    tr.docSampleListNotice,
                     style: TextStyle(color: _muted, fontSize: 13, height: 1.35),
                   ),
                 ),
@@ -119,7 +119,7 @@ class DriverDocuments extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(child: Text(
-                      '$approved of ${all.length} approved',
+                      tr.docApprovedOfTotal(approved, all.length),
                       key: const ValueKey<String>('documents-progress'),
                       style: const TextStyle(
                         color: _ink,
@@ -128,7 +128,7 @@ class DriverDocuments extends StatelessWidget {
                       ),
                     )),
                     Text(
-                      '$left left',
+                      tr.docLeftCount(left),
                       style: const TextStyle(
                         color: _muted,
                         fontSize: 13.5,
@@ -150,9 +150,9 @@ class DriverDocuments extends StatelessWidget {
               ],
             ),
           ),
-          _section('Driver'),
+          _section(tr.driver),
           _group(context, _driver),
-          _section('Vehicle'),
+          _section(tr.vehicle),
           _group(context, _vehicle),
         ],
       ),
@@ -174,9 +174,9 @@ class DriverDocuments extends StatelessWidget {
 
   Widget _status(DocStatus status) {
     final (color, label) = switch (status) {
-      DocStatus.approved => (_green, 'Approved'),
-      DocStatus.inReview => (const Color(0xFFD08A1E), 'In review'),
-      DocStatus.needed => (const Color(0xFFC2453A), 'Needed'),
+      DocStatus.approved => (_green, tr.docStatusApproved),
+      DocStatus.inReview => (const Color(0xFFD08A1E), tr.docStatusInReview),
+      DocStatus.needed => (const Color(0xFFC2453A), tr.docStatusNeeded),
     };
     return Row(
       mainAxisSize: MainAxisSize.min,

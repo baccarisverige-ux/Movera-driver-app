@@ -10,6 +10,7 @@ import 'island_icons.dart';
 import 'island_waiting_motion.dart';
 
 import 'package:movera/core/routing/route_instruction.dart';
+import 'package:movera/core/safety/ride_check_l10n.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_banner.dart';
@@ -219,6 +220,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
 
   /// Meters to the point while arriving, from the live instruction.
   double? get _arrivalMeters {
+    final meters = widget.banner?.distanceMeters;
+    if (meters != null) return meters;
     final parts = _distanceParts(widget.banner?.distanceLabel);
     final value = double.tryParse(parts?.$1.replaceAll(',', '.') ?? '');
     if (parts == null || value == null) return null;
@@ -503,6 +506,23 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
     caseSensitive: false,
   );
 
+  /// The large number from the banner's meters: 300 -> ("300", "m"),
+  /// 1200 -> ("1.2", "km") ("1,2" in French and Swedish), under 25 m
+  /// ("Now", null). Without meters, read from the label.
+  static (String, String?)? _bannerDistance(NavigationBanner? banner) {
+    final meters = banner?.distanceMeters;
+    if (meters == null || !meters.isFinite) {
+      return _distanceParts(banner?.distanceLabel);
+    }
+    if (meters < RouteInstructionCopy.nowMeters) return (tr.now, null);
+    if (meters < 1000) return ('${meters.round()}', 'm');
+    final km = meters / 1000;
+    return (
+      km.toStringAsFixed(km < 10 ? 1 : 0).replaceAll('.', tr.navDecimalMark),
+      'km',
+    );
+  }
+
   /// "300 m" -> ("300", "m"); "now" -> ("Now", null).
   static (String, String?)? _distanceParts(String? text) {
     if (text == null) return null;
@@ -526,8 +546,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
     final distance = arrival
         ? (widget.arrived || live?.symbol.isArrival != true
               ? null
-              : _distanceParts(live?.distanceLabel))
-        : (_distanceParts(live?.distanceLabel) ?? _distanceParts(face.title));
+              : _bannerDistance(live))
+        : (_bannerDistance(live) ?? _distanceParts(face.title));
     final pin = ArrivingRoadPainter.pinFor(widget.arrival);
     const top = AdaptiveTripIsland.routeHeight - AdaptiveTripIsland.stripHeight;
     final strip = math.max(0.0, size.height - top);
@@ -643,10 +663,13 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
   /// Instruction without the distance, then the street with road signs.
   Widget _guidanceText(TripIslandFace face) {
     final live = widget.banner;
-    var title = face.title
-        .replaceAll(_distanceText, '')
-        .replaceAll(RegExp(r'\s*·\s*$'), '')
-        .trim();
+    final instruction = live?.instruction;
+    var title = instruction != null && face.title == live?.primary
+        ? instruction
+        : face.title
+              .replaceAll(_distanceText, '')
+              .replaceAll(RegExp(r'\s*·\s*$'), '')
+              .trim();
     if (title.isEmpty) title = face.title;
     final road = live?.roadName?.trim() ?? '';
     final shields = live?.shields ?? const <RoadShield>[];
@@ -665,8 +688,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
     // With signs the place reads "towards Södertälje"; the street stays
     // when nothing is signposted.
     final line2 = shields.isNotEmpty && towards.isNotEmpty
-        ? 'towards $towards'
-        : [...parts, if (towards.isNotEmpty) 'towards $towards'].join(' · ');
+        ? tr.navTowards(towards)
+        : [...parts, if (towards.isNotEmpty) tr.navTowards(towards)].join(' · ');
     final hasLine2 = line2.isNotEmpty || shields.isNotEmpty;
     return Semantics(
       label: [
@@ -951,8 +974,10 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
   );
 
   Widget _cue(TripIslandFace face, NavigationBanner? live, Color accent) {
+    // Hand-made banners without the numbers: read the exit from the text.
     final exit =
         live?.exitNumber ??
+        live?.exitRef ??
         RegExp(
           r'exit\s+(\d+)',
           caseSensitive: false,
@@ -960,7 +985,9 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
     final symbol = live?.symbol;
     return Semantics(
       label:
-          '${symbol?.name ?? 'To destination'}${exit == null ? '' : ', exit $exit'}',
+          exit == null
+              ? symbol?.name ?? tr.navToDestination
+              : tr.navExitSemantics(symbol?.name ?? tr.navToDestination, exit),
       child: live == null || symbol == null
           ? const Icon(
               Icons.person_outline_rounded,
@@ -1059,7 +1086,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                     icon,
                     color: const Color(0xFF45525A),
                   ),
-                  title: Text(tr.demoValue(trigger.label.toLowerCase())),
+                  title: Text(tr.demoValue(trigger.text.toLowerCase())),
                   onTap: () => popOwned(context, 'ride-check-${trigger.name}'),
                 ),
             ],
