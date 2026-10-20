@@ -80,6 +80,7 @@ import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/home/components/destination_set_panel.dart';
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
+import 'package:movera/presentation/driver/home/components/island_side_hit_slop.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/components/island_waiting.dart';

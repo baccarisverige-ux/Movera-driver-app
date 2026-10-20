@@ -16,6 +16,8 @@ import 'package:movera/presentation/driver/accept%20ride/island_icons.dart';
 import 'package:movera/presentation/driver/accept%20ride/island_morph.dart';
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
 
+import 'island_side_targets.dart';
+
 Widget surface({
   int? seconds,
   bool waitingAtStop = false,
@@ -30,6 +32,8 @@ Widget surface({
   double progress = .4,
   bool radarVisible = false,
   VoidCallback? radar,
+  VoidCallback? menu,
+  VoidCallback? search,
 }) => MaterialApp(
   theme: ThemeData(fontFamily: fontFamily),
   builder: (context, child) => MediaQuery(
@@ -66,8 +70,8 @@ Widget surface({
           lastTripLabel: '120 kr',
           radarVisible: radarVisible,
           onRadar: radar ?? () {},
-          onMenu: () {},
-          onSearch: () {},
+          onMenu: menu ?? () {},
+          onSearch: search ?? () {},
           onHistory: () {},
           onRoute: route ?? () {},
           onSafety: () {},
@@ -452,6 +456,62 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
+  for (final width in const [320.0, 390.0]) {
+    testWidgets('UI-12 trip island Menu and Search take touches in 48x48 at '
+        '$width wide, text 130 %', (tester) async {
+      var menus = 0;
+      var searches = 0;
+      await tester.pumpWidget(surface(
+        width: width,
+        textScale: 1.3,
+        menu: () => menus++,
+        search: () => searches++,
+      ));
+      // The route face it opens on overflows at 320 wide, text 130 %, on
+      // main too (a separate finding); this test is about the default face.
+      tester.takeException();
+      await tester.tap(find.byKey(const ValueKey('island-morph-shell')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 900));
+      expect(find.byKey(const ValueKey('trip-default-island')), findsOneWidget);
+      // The island paints exactly as on main.
+      expect(
+        tester.getSize(find.byKey(const ValueKey('island-morph-shell'))),
+        const Size(TripIslandGeometry.width, TripIslandGeometry.height),
+      );
+      final menu = find.descendant(
+        of: find.byTooltip('Menu'),
+        matching: find.byType(InkWell),
+      );
+      final search = find.byKey(const ValueKey<String>('trip-island-search'));
+      for (final visible in [tester.getRect(menu), tester.getRect(search)]) {
+        expect(visible.width, closeTo(54 * TripIslandGeometry.scale, .01));
+        expect(visible.height, closeTo(TripIslandGeometry.height, .01));
+      }
+      expectSideTargets(
+        tester,
+        menu: menu,
+        search: search,
+        middle: find.byKey(const ValueKey<String>('trip-island-middle')),
+        screenWidth: width,
+      );
+      // A real tap at the outer bottom corner of each box works.
+      final (menuBox, searchBox) = sideTargetBoxes(
+        tester.getRect(menu),
+        tester.getRect(search),
+      );
+      await tester.tapAt(menuBox.bottomLeft + const Offset(1, -1));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tapAt(searchBox.bottomRight + const Offset(-1, -1));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(menus, 1);
+      expect(searches, 1);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 3));
+    });
+  }
+
   testWidgets('Touch shows the Home island at exactly Home size', (
     tester,
   ) async {

@@ -57,47 +57,6 @@ void main() {
     expect(search, 1);
   });
 
-  for (final width in const [320.0, 390.0]) {
-    testWidgets('UI-12 Menu and Search are 48x48 at $width wide, text 130 %', (
-      tester,
-    ) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = Size(width, 640);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      addTearDown(tester.view.resetPhysicalSize);
-      await tester.pumpWidget(
-        MaterialApp(
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: const TextScaler.linear(1.3),
-            ),
-            child: child!,
-          ),
-          home: Scaffold(
-            body: Align(
-              alignment: Alignment.topCenter,
-              child: TripIsland(onMenu: () {}, onSearch: () {}, lastTripLabel: '126 kr'),
-            ),
-          ),
-        ),
-      );
-      await _settle(tester);
-      final menu = tester.getRect(
-        find.descendant(of: find.byTooltip('Menu'), matching: find.byType(InkWell)),
-      );
-      final search = tester.getRect(
-        find.byKey(const ValueKey<String>('trip-island-search')),
-      );
-      for (final target in [menu, search]) {
-        expect(target.width, greaterThanOrEqualTo(47.99));
-        expect(target.height, greaterThanOrEqualTo(47.99));
-        expect(target.left, greaterThanOrEqualTo(0));
-        expect(target.right, lessThanOrEqualTo(width));
-      }
-      expect(tester.takeException(), isNull);
-    });
-  }
-
   testWidgets('Money screens cycle and hide again after 5 s', (tester) async {
     await tester.pumpWidget(_island(null));
     await _settle(tester);
