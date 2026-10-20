@@ -41,6 +41,7 @@ class GoogleDriverCameraPort
   bool _looping = false;
   bool _producingFrames = false;
   bool _followOwned = false;
+  bool _flightPending = false;
 
   void onMove(CameraPosition position) {
     // SDK echoes include the web anchor pan. While we own follow, the logical
@@ -98,14 +99,17 @@ class GoogleDriverCameraPort
     return metersPerPixel > 0 && meters / metersPerPixel > 2400;
   }
 
-  /// How long a recenter / locate flight takes to reach full speed.
-  static const Duration flightEaseIn = Duration(milliseconds: 280);
+  /// A recenter / locate flight takes this long, start to rest. It runs on
+  /// the clock, eased in and out, and lands with no speed left (no snap).
+  /// The damped approach used for it before crept on for 4-5 s (up to the
+  /// frame cap) before it counted as settled.
+  static const Duration flightDuration = Duration(milliseconds: 1000);
 
-  /// Smoothstep from a small first step (the flight visibly starts on its
-  /// first frame) to full speed.
-  static double _easeIn(double t) {
+  /// Ease-in-out (smoothstep) of a flight at progress [t] (0..1): zero
+  /// speed at both ends, a peak of 1.5x the mean speed (no zoom leap).
+  static double flightEase(double t) {
     final x = t.clamp(0.0, 1.0);
-    return .12 + .88 * x * x * (3 - 2 * x);
+    return x * x * (3 - 2 * x);
   }
 
   /// Offer and route previews fly in this long (eased in and out).
@@ -233,6 +237,8 @@ class GoogleDriverCameraPort
     _goalAt = DateTime.now();
     _followOwned = true;
     _producingFrames = true;
+    // A recenter / locate: a flight, also when the follow loop is running.
+    if (pose.duration.inMilliseconds > 600) _flightPending = true;
     if (_looping) {
       return _active?.future ?? Future<void>.value();
     }
@@ -256,10 +262,12 @@ class GoogleDriverCameraPort
         return;
       }
       var dt = 16000;
-      // A recenter / locate flight (long duration) eases in over its first
-      // [flightEaseIn]: the damped approach alone would leave at full speed
-      // in the first frame, a visible jolt on a zoom of several levels.
-      final easeIn = initial.duration.inMilliseconds > 600;
+      // A recenter / locate flight (long duration) runs on the clock
+      // ([flightDuration]): each frame closes the share of the remaining
+      // gap that the eased curve covers in it, so a still goal follows the
+      // curve exactly and a moving one (GPS fixes, coasting) is turned to
+      // smoothly. Then the damped follow takes over.
+      var flying = false;
       var flown = 0;
       // The first frame is always sent, even when the map already shows
       // this pose: it puts the car on the anchor above the sheet (a map
@@ -273,19 +281,44 @@ class GoogleDriverCameraPort
         final destination = _at(goal, _coasted(goal));
         final from = _logical ?? destination;
         if (_far(from, destination)) {
+          _flightPending = false;
           await _move(destination, trackVehicle: true, generation: generation);
           break;
+        }
+        if (_flightPending) {
+          _flightPending = false;
+          flying = true;
+          flown = 0;
+        }
+        if (flying) {
+          first = false;
+          final span = flightDuration.inMicroseconds;
+          final before = flightEase(flown / span);
+          flown += dt;
+          final after = flightEase(flown / span);
+          if (after >= 1) flying = false;
+          final next = after >= 1
+              ? destination
+              : _blend(from, destination, (after - before) / (1 - before));
+          await _move(next,
+            trackVehicle: _trackCar(next, goal), generation: generation);
+          if (_disposed || generation != _generation) {
+            break;
+          }
+          final stamp = DateTime.now();
+          await _sleep(const Duration(milliseconds: 16));
+          if (_disposed || generation != _generation) {
+            break;
+          }
+          dt = math.max(16000, DateTime.now().difference(stamp).inMicroseconds);
+          continue;
         }
         final settled = _settled(from, destination);
         if (!settled || first) {
           first = false;
-          final ramp = easeIn
-              ? _easeIn(flown / flightEaseIn.inMicroseconds)
-              : 1.0;
           final next = settled
               ? destination
-              : _approach(from, destination, (dt * ramp).round(), goal.duration);
-          flown += dt;
+              : _approach(from, destination, dt, goal.duration);
           await _move(next,
             trackVehicle: _trackCar(next, goal), generation: generation);
         }
@@ -542,6 +575,7 @@ class GoogleDriverCameraPort
     _followOwned = false;
     _looping = false;
     _goal = null;
+    _flightPending = false;
   }
 
   @override

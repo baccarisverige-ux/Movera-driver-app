@@ -97,6 +97,66 @@ void main() {
     port.dispose();
     await tester.pumpWidget(const SizedBox());
   });
+  testWidgets('a locate flight lands in about 1 s, eased in and out', (
+    tester,
+  ) async {
+    final original = GoogleMapsFlutterPlatform.instance;
+    final platform = RecordingMapPlatform();
+    GoogleMapsFlutterPlatform.instance = platform;
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
+    GoogleMapController? controller;
+    const start = CameraPosition(target: LatLng(59.33, 18.06), zoom: 11.7);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GoogleMap(
+          initialCameraPosition: start,
+          onMapCreated: (value) => controller = value,
+        ),
+      ),
+    );
+    await tester.pump();
+    final port = GoogleDriverCameraPort(controller!, initialPosition: start);
+    var done = false;
+    final before = platform.moves.length;
+    unawaited(
+      port
+          .animate(
+            const DriverCameraPose(
+              GeoPoint(59.34, 18.08),
+              15,
+              0,
+              57.9,
+              duration: Duration(milliseconds: 900),
+            ),
+          )
+          .then((_) => done = true),
+    );
+    for (var i = 0; i < 400 && !done; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(done, isTrue);
+    final zooms = [
+      for (final move in platform.moves.skip(before))
+        ((move.toJson() as List<dynamic>)[1] as Map<String, dynamic>)['zoom']
+            as double,
+    ];
+    final frames = GoogleDriverCameraPort.flightDuration.inMilliseconds ~/ 16;
+    // The damped approach crept on for 4-5 s (240+ frames) before.
+    expect(zooms.length, inInclusiveRange(frames - 2, frames + 3));
+    expect(zooms.last, closeTo(15, 1e-9));
+    final steps = [
+      for (var i = 1; i < zooms.length; i++) zooms[i] - zooms[i - 1],
+    ];
+    final fastest = steps.reduce((a, b) => a > b ? a : b);
+    for (final step in steps) {
+      expect(step, greaterThanOrEqualTo(0));
+    }
+    // Slow first and last steps: no jolt at the start, no snap at the end.
+    expect(steps.first, lessThan(fastest * .1));
+    expect(steps.last, lessThan(fastest * .1));
+    port.dispose();
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets('a whole-route overview lands flat even from a tilted map', (
     tester,
   ) async {
