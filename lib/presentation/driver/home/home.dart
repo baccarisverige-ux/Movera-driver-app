@@ -211,6 +211,8 @@ class _DriverHomeState extends State<DriverHome>
   }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  /// D-11: one Home map (and camera) for the sheet, the Radar list and the destination panel.
+  final GlobalKey _homeMapKey = GlobalKey(debugLabel: 'home-map');
   final PanelController _panelController = PanelController();
   final PanelController _destinationPanelController = PanelController();
   late final AnimationController _goOnlinePulseController;
@@ -1034,6 +1036,19 @@ class _DriverHomeState extends State<DriverHome>
   }
 
   Widget _buildTripRadarButton() {
+    // Every Radar trip open right now, the same trips the full Radar screen
+    // lists when the driver taps this button. Counted once per build, not
+    // on every animation frame (D-16).
+    final radarTrips = _HomeOfferRadar(this)._radarTripsOpen;
+    final openListed = _radarHomeOffers
+        .where((offer) =>
+            _homeRadarMatchStates[offer.id] !=
+            _HomeRadarMatchState.claimedElsewhere)
+        .length;
+    final homeTrips = openListed + _pendingRadarHomeOffers.length;
+    // Until a Radar trip reaches Home the button keeps scanning.
+    final hasRadarOffer = _hasRideOffers || homeTrips > 0;
+    final totalTrips = hasRadarOffer ? math.max(radarTrips, homeTrips) : 0;
     return AnimatedBuilder(
       animation: Listenable.merge([
         _goOnlinePulseController,
@@ -1041,26 +1056,6 @@ class _DriverHomeState extends State<DriverHome>
         _radarMotionController,
       ]),
       builder: (context, child) {
-        // Every Radar trip open right now, the same trips the full Radar
-        // screen lists when the driver taps this button.
-        final radarTrips = _latestDispatchOffers
-            .where((offer) =>
-                offer.isNearby &&
-                _HomeOfferRadar(this)._followsDestination(offer.dropoffPosition.toLatLng()) &&
-                _HomeOfferRules(this)._rideAllowed(offer))
-            .length;
-        final openListed = _radarHomeOffers
-            .where((offer) =>
-                _homeRadarMatchStates[offer.id] !=
-                _HomeRadarMatchState.claimedElsewhere)
-            .length;
-        final homeTrips = openListed + _pendingRadarHomeOffers.length;
-        // Until a Radar trip reaches Home the button keeps scanning.
-        final hasRadarOffer = _hasRideOffers || homeTrips > 0;
-        final totalTrips = hasRadarOffer
-            ? math.max(radarTrips, homeTrips)
-            : 0;
-
         return _buildRadarOrb(
           title: totalTrips > 0
               ? "$totalTrips trip${totalTrips == 1 ? '' : 's'}"

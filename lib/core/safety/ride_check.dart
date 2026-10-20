@@ -5,6 +5,7 @@
 library;
 
 import 'package:movera/core/admin/ride_check_admin_config.dart';
+import 'package:movera/core/geo/driver_distance.dart';
 
 /// Why a Ride check opened.
 enum RideCheckTrigger {
@@ -342,11 +343,7 @@ class RideCheckRecord {
 }
 
 /// "650 m", "1.2 km".
-String rideCheckDistance(double meters) {
-  if (meters < 1000) return '${(meters / 10).round() * 10} m';
-  final km = meters / 1000;
-  return '${km.toStringAsFixed(km < 10 ? 1 : 0)} km';
-}
+String rideCheckDistance(double meters) => driverDistanceMeters(meters);
 
 /// "T-Centralen, Stockholm" -> "T-Centralen".
 String rideCheckPlace(String address) {

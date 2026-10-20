@@ -10,7 +10,7 @@ class DriverOfferRules {
     this.card = const OfferCardDetails(),
     this.exclusiveReasons = defaultExclusiveReasons,
     this.autoOffline = true,
-    this.autoOfflineAfter = 5,
+    this.autoOfflineAfter = defaultAutoOfflineAfter,
     this.hiddenComesBackAfter = const Duration(minutes: 2),
     this.exclusiveWhileDriving = true,
     this.exclusiveWhileDrivingCount = 1,
@@ -21,6 +21,11 @@ class DriverOfferRules {
 
   /// The rules in use. Mirrors the admin defaults until a backend sets it.
   static DriverOfferRules current = const DriverOfferRules();
+
+  /// Q46: Exclusive offers missed or declined in a row before the driver
+  /// goes offline. A local default until admin config sends its number
+  /// (`offers.autoOffline.missedExclusive`).
+  static const int defaultAutoOfflineAfter = 3;
 
   /// Q14: what the offer cards show.
   final OfferCardDetails card;

@@ -141,7 +141,27 @@ class DriverRealtimeEvent {
        _latitude = latitude,
        _longitude = longitude;
 
-  /// Reads one wire envelope. Lifecycle status comes from
+  /// X14: what a transport reads. An unknown or newer [kind] (or a broken
+  /// envelope) is skipped and returns null; it never stops the stream.
+  static DriverRealtimeEvent? tryParse(Object? json) {
+    if (json is! Map) return null;
+    final map = Map<String, dynamic>.from(json);
+    if (DriverRealtimeKind.tryParse(map['kind'] as String?) == null) {
+      return null;
+    }
+    try {
+      return DriverRealtimeEvent.fromJson(map);
+    } on FormatException {
+      return null;
+    } on TypeError {
+      return null;
+    } on ArgumentError {
+      return null;
+    }
+  }
+
+  /// Reads one wire envelope; throws on an unknown kind (see [tryParse]).
+  /// Lifecycle status comes from
   /// `projection.status` (or the top-level `status` shorthand the contract
   /// fixtures use). Times are normalised to UTC.
   factory DriverRealtimeEvent.fromJson(Map<String, dynamic> json) {

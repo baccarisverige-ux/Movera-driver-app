@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/geo/driver_distance.dart';
 
 /// The drive to an offer's pickup, from where the driver is when the offer
 /// shows (for a next trip while driving: from the current trip's
@@ -12,8 +13,8 @@ class PickupLeg {
   final double km;
   final int minutes;
 
-  /// "4.2 km · 9 min".
-  String get label => '${km.toStringAsFixed(1)} km · $minutes min';
+  /// "4.2 km · 9 min", "650 m · 2 min" (Q20).
+  String get label => driverDistanceAndMinutes(km, minutes);
 }
 
 /// The pickup pay of one offer, as shown now. Worked out again every time

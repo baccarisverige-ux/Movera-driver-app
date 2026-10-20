@@ -10,7 +10,6 @@ import 'dart:async';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/navigation/driver_map_zoom_change_detector.dart';
 import 'package:movera/core/navigation/map_zoom_sheet_settle.dart';
-import 'package:movera/core/navigation/route_camera_geometry.dart';
 import 'package:movera/core/navigation/trip_camera_sheet_inset.dart';
 import 'package:movera/widgets/google_driver_camera_port.dart';
 import 'dart:math' as math;
@@ -75,6 +74,7 @@ import 'package:movera/presentation/driver/home/components/home_island_notices.d
 import 'package:movera/core/money/money.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
+import 'package:movera/presentation/driver/accept%20ride/trip_route_lines.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/accept%20ride/rider_cancelled_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_outcome_sheet.dart';
@@ -490,8 +490,10 @@ class _AcceptRideState extends State<AcceptRide>
   );
   ActiveRideStage get _stage => _rideLifecycle.stage;
   // Trip orchestration lives in an extension, which cannot call setState.
-  void _rebuild(VoidCallback update) => setState(update);
+  void _rebuild(VoidCallback update) { setState(update); _AcceptRideTrip(this)._syncRouteLines(); }
   double _routeZoomStep = DriverRouteStyle.defaultZoom;
+  /// D-07/D-08: the map's route lines; a GPS fix redraws only the map.
+  final TripRouteLines _routeLines = TripRouteLines();
   Timer? _waitTimer;
   StreamSubscription<DriverRealtimeEvent>? _realtimeSubscription;
   late final VoidCallback _onNavigationChangedListener =
@@ -690,6 +692,7 @@ class _AcceptRideState extends State<AcceptRide>
     _navigation.removeListener(_onNavigationChangedListener);
     _navigation.dispose();
     _vehicle.dispose();
+    _routeLines.dispose();
     _snapSheet.dispose();
     _tripMotion.dispose();
     _ridePanelPosition.dispose();
@@ -834,29 +837,6 @@ class _AcceptRideState extends State<AcceptRide>
     final distance = _approachDistanceMeters;
     return distance != null && distance <= 25;
   }
-
-  Set<Polyline> get _polylines {
-    if (_roadGeoPoints.length < 2) { return {}; }
-    final geometry = RouteCameraGeometry(_roadGeoPoints);
-    final along = _camera.alongMeters;
-    return {
-      if (along > 0) Polyline(
-        polylineId: const PolylineId('traveled-road-route'),
-        points: geometry.traveled(along).map((p) => p.toLatLng()).toList(),
-        width: 3,
-        color: RouteMarkPins.ink.withValues(alpha: .18),
-        startCap: Cap.roundCap,
-        endCap: Cap.roundCap,
-      ),
-      ...DriverRouteStyle.polylines(
-        id: 'active-road-route',
-        points: geometry.remaining(along).map((p) => p.toLatLng()).toList(),
-        zoom: _routeZoomStep,
-      ),
-    };
-  }
-
-
 
   bool get _allowExternalRouting => DriverRuntimeConfig.current.externalRouting;
 
@@ -1232,7 +1212,7 @@ class _AcceptRideState extends State<AcceptRide>
                     stopPositions: widget.stopPositions,
                     stopCursor: _stopCursor,
                     pinIcons: _pinIcons,
-                    polylines: _polylines,
+                    routeLines: _routeLines,
                     padding: MapOverlayInsets.forActiveRide(
                       safeTop: safeTop,
                       collapsedSheet: _cameraSheet.resolve(collapsed),
@@ -1413,7 +1393,7 @@ class _ThrottledVehicleMap extends StatefulWidget {
     required this.stopCursor,
     required this.pinIcons,
     required this.dropoffAddress,
-    required this.polylines,
+    required this.routeLines,
     required this.padding,
     required this.cameraAnchor,
     required this.blockGestures,
@@ -1434,7 +1414,7 @@ class _ThrottledVehicleMap extends StatefulWidget {
   final List<LatLng> stopPositions;
   final int stopCursor;
   final Map<RouteMarkKind, BitmapDescriptor> pinIcons;
-  final Set<Polyline> polylines;
+  final TripRouteLines routeLines;
   final EdgeInsets padding;
   final double cameraAnchor;
   final bool blockGestures;
@@ -1451,11 +1431,15 @@ class _ThrottledVehicleMap extends StatefulWidget {
 class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
   Timer? _ticker;
   late LiveVehiclePose _pose;
+  /// D-08: the moving car goes to the map on its own; the map widget (and
+  /// with it every line and pin) is not rebuilt for it.
+  late final ValueNotifier<Marker?> _car;
 
   @override
   void initState() {
     super.initState();
     _pose = widget.vehicle.current;
+    _car = ValueNotifier<Marker?>(_carMarker);
     if (!DriverRuntimeConfig.current.liveMapTicker) { return; }
     _ticker = Timer.periodic(const Duration(milliseconds: 33), (_) {
       if (!mounted) { return; }
@@ -1465,7 +1449,8 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
           next.headingDegrees == _pose.headingDegrees) {
         return;
       }
-      setState(() => _pose = next);
+      _pose = next;
+      _car.value = _carMarker;
     });
   }
 
@@ -1475,17 +1460,20 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     if (!identical(oldWidget.vehicle, widget.vehicle)) {
       _pose = widget.vehicle.current;
     }
+    if (!identical(oldWidget.vehicle, widget.vehicle) ||
+        oldWidget.vehicleIcon != widget.vehicleIcon) {
+      _car.value = _carMarker;
+    }
   }
 
   @override
   void dispose() {
     _ticker?.cancel();
+    _car.dispose();
     super.dispose();
   }
 
-  Set<Marker> get _markers {
-    final markers = <Marker>{
-      Marker(
+  Marker get _carMarker => Marker(
         markerId: const MarkerId('driver'),
         position: _pose.position,
         // Compass heading of an upright arrow; CustomGoogleMap turns it.
@@ -1497,8 +1485,11 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
         // No default map bubble on the car.
         consumeTapEvents: true,
         infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
-      ),
-    };
+      );
+
+  /// The pins; they change only with the trip's step.
+  Set<Marker> get _pins {
+    final markers = <Marker>{};
     Marker pin(String id, LatLng at, RouteMarkKind kind) => Marker(
           markerId: MarkerId(id),
           position: at,
@@ -1524,7 +1515,9 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
+    return ValueListenableBuilder<Set<Polyline>>(
+      valueListenable: widget.routeLines,
+      builder: (context, lines, _) => RepaintBoundary(
       child: CustomGoogleMap(
         key: const ValueKey<String>('active-ride-map'),
         initialPosition: CameraPosition(
@@ -1533,8 +1526,9 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
           // Opens already tilted: no tilt-up flight when the trip starts.
           tilt: DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.guidanceStartZoom),
         ),
-        markers: _markers,
-        polylines: widget.polylines,
+        markers: _pins,
+        liveMarker: _car,
+        polylines: lines,
         cameraAnchor: widget.cameraAnchor,
         myLocationEnabled: false,
         myLocationButtonEnabled: false,
@@ -1555,6 +1549,7 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
         onCameraIdle: widget.onCameraIdle,
         onUserGesture: widget.onUserGesture,
         onMapCreated: widget.onMapCreated,
+      ),
       ),
     );
   }

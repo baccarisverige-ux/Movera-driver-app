@@ -3,10 +3,38 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
+import 'package:movera/widgets/owned_route_exit.dart';
+
+/// Q19: a long press on the Radar (the island's "Finding trips" or the
+/// radar button) asks first. True: the driver chose Go offline.
+Future<bool> showGoOfflineConfirm(BuildContext context) async {
+  final off = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      key: const ValueKey<String>('go-offline-confirm'),
+      title: const Text('Go offline?'),
+      content: const Text('You stop getting trip offers until you go online again.'),
+      actions: [
+        TextButton(
+          key: const ValueKey<String>('go-offline-stay'),
+          onPressed: () => popOwned(context, false),
+          child: const Text('Stay online'),
+        ),
+        FilledButton(
+          key: const ValueKey<String>('go-offline-yes'),
+          onPressed: () => popOwned(context, true),
+          child: const Text('Go offline'),
+        ),
+      ],
+    ),
+  );
+  return off == true;
+}
 
 /// Wraps the online radar while the Home sheet is open: holding it for
 /// [holdFor] fills a green ring around it, gives one vibration and calls
-/// [onConfirmed]. Letting go early, or dragging, undoes the ring.
+/// [onConfirmed] (on Home: "Go offline?"). Letting go early, or dragging,
+/// undoes the ring.
 class RadarHoldOff extends StatefulWidget {
   const RadarHoldOff({
     super.key,
@@ -54,10 +82,9 @@ class _RadarHoldOffState extends State<RadarHoldOff>
     _hold.forward();
   }
 
-  void _release() {
-    if (_fired) { return; }
-    _hold.reverse();
-  }
+  // Also after a full hold: if the driver stays (Q19 "Stay online") the
+  // ring empties and the next hold asks again.
+  void _release() => _hold.reverse();
 
   @override
   void dispose() {

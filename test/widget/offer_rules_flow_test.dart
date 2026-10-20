@@ -174,6 +174,34 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets('Q45: running out while the app is hidden is not a miss', (
+      tester,
+    ) async {
+      DriverOfferRules.current = const DriverOfferRules(autoOfflineAfter: 2);
+      ExclusiveAnswers.instance.missed();
+      final session = await _pumpHome(tester, _Dispatch());
+      await _frames(tester, const Duration(milliseconds: 2600));
+      expect(find.byKey(_closeOffer), findsOneWidget);
+      // The phone locks with the offer up; its time runs out meanwhile.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime + const Duration(seconds: 2),
+      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await _frames(tester, const Duration(milliseconds: 900));
+      expect(find.byKey(_closeOffer), findsNothing);
+      // Still one in the row (the earlier one), and still online.
+      expect(ExclusiveAnswers.instance.missedInRow, 1);
+      expect(session.availableForOffers, isTrue);
+      expect(_said, isNot(contains('Offline: 2 offers missed')));
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('Accept starts the row again', (tester) async {
       ExclusiveAnswers.instance.missed();
       await _pumpHome(tester, _Dispatch());

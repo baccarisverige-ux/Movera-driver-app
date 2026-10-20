@@ -536,7 +536,11 @@ extension _HomeOfferRadar on _DriverHomeState {
       _radarSubscription = _dispatch.watchNearbyOffers().listen((offers) {
         if (!mounted || !_isOnline) { return; }
         final known = {for (final offer in _latestDispatchOffers) offer.id};
+        final open = _radarTripsOpen;
         _latestDispatchOffers = offers;
+        // The radar button's trip count (D-16: counted per build, not per
+        // frame) redraws only when it changes.
+        if (_radarTripsOpen != open) { _rebuild(() {}); }
         // A reservation that just joined Radar (its Radar time, or back
         // after a cancel) comes onto the deck too, once its Exclusive step
         // on this phone is over.
@@ -559,6 +563,13 @@ extension _HomeOfferRadar on _DriverHomeState {
         }
       });
     }
+    /// Radar trips open right now, the ones the full Radar screen lists.
+    int get _radarTripsOpen => _latestDispatchOffers
+        .where((offer) =>
+            offer.isNearby &&
+            _followsDestination(offer.dropoffPosition.toLatLng()) &&
+            _HomeOfferRules(this)._rideAllowed(offer))
+        .length;
     void _showDispatchOfferAt(int index) {
       final offers = _latestDispatchOffers.where((offer) => offer.isNearby &&
           _followsDestination(offer.dropoffPosition.toLatLng())).toList();

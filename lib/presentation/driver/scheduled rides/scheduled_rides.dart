@@ -21,6 +21,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/widgets/offer_badges.dart';
+import 'package:movera/core/geo/driver_distance.dart';
 
 part 'scheduled_rides_notes.dart';
 
@@ -1117,7 +1118,7 @@ class _ScheduledRide {
     price: route.fare,
     time: '${route.pickupDay}, ${route.pickupTime}',
     category: route.category,
-    distance: '${route.tripKm.toStringAsFixed(1)} km',
+    distance: driverDistanceKm(route.tripKm),
     pickup: route.pickupAddress,
     destination: route.dropoffAddress,
     accepted: true,
@@ -1142,7 +1143,7 @@ class _ScheduledRide {
       price: route.fare,
       time: time,
       category: route.category,
-      distance: distance ?? '${route.tripKm.toStringAsFixed(1)} km',
+      distance: distance ?? driverDistanceKm(route.tripKm),
       pickup: route.pickupAddress,
       destination: route.dropoffAddress,
       route: route,

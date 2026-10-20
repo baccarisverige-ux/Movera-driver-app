@@ -1,6 +1,5 @@
 import 'package:circle_progress_bar/circle_progress_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
 import 'package:movera/presentation/driver/auth/additional%20detail/screens/add_vehicle.dart';
@@ -15,8 +14,8 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/widgets/responsive_size.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
-class AdditionalInfoNavigationController extends GetxController {
-  final RxInt currentPageIndex = 0.obs;
+class AdditionalInfoNavigationController {
+  final ValueNotifier<int> currentPageIndex = ValueNotifier<int>(0);
   final PageController pageController = PageController();
   bool _moving = false;
   bool _closed = false;
@@ -90,15 +89,13 @@ class AdditionalInfoNavigationController extends GetxController {
     }
   }
 
-  @override
   void onClose() {
     _closed = true;
     pageController.dispose();
-    super.onClose();
+    currentPageIndex.dispose();
   }
 }
 
-// Updated main widget using GetX
 class AdditionalInfoNavigation extends StatefulWidget {
   const AdditionalInfoNavigation({super.key});
   @override
@@ -150,8 +147,9 @@ class _AdditionalInfoNavigationState extends State<AdditionalInfoNavigation> {
             ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
-              child: Obx(
-                () => CustomButton(
+              child: ValueListenableBuilder<int>(
+                valueListenable: controller.currentPageIndex,
+                builder: (context, _, __) => CustomButton(
                   centerContent:
                       controller.currentPageIndex.value <
                           controller.pages.length - 1

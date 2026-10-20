@@ -676,6 +676,7 @@ extension _HomeMapSheet on _DriverHomeState {
     Widget _buildRadarMapBackdrop() {
       return SizedBox.expand(
         child: !_HomeStartPosition(this)._mapReady ? _HomeStartPosition(this)._locating() : CustomGoogleMap(
+          key: _homeMapKey,
           initialPosition: _initialPosition,
           markers: _markers,
           myLocationEnabled: false,
@@ -749,6 +750,7 @@ extension _HomeMapSheet on _DriverHomeState {
               builder: (context, light, _) {
               final layers = layersWith(light);
               return CustomGoogleMap(
+              key: _homeMapKey,
               initialPosition: _initialPosition,
               markers: _HomeExclusive(this)._exclusiveFadedPins(
                   _HomeReservation(this)._fadedPins(layers.markers)),
@@ -1102,9 +1104,17 @@ extension _HomeMapSheet on _DriverHomeState {
                         : destination
                         ? _openDestinationDetails
                         : _onIslandEarningsTap,
-                    // Holding the middle goes straight to Ride history.
-                    onLongPress: message != null || destination ||
-                            reservation != null || exclusive != null
+                    // Online, the island is the top of the Radar: holding
+                    // it asks "Go offline?" (Q19), unless an offer is up.
+                    // Offline, holding it goes straight to Ride history.
+                    onLongPress: reservation != null || exclusive != null
+                        ? null
+                        : _isOnline
+                        ? () {
+                            HapticFeedback.mediumImpact();
+                            unawaited(_confirmGoOffline());
+                          }
+                        : message != null || destination
                         ? null
                         : () {
                             HapticFeedback.mediumImpact();
@@ -1676,9 +1686,9 @@ extension _HomeMapSheet on _DriverHomeState {
                     child: _isOnline
                         ? (holdOff
                             ? _holdOffRadar()
-                            : front != null
-                            ? _acceptRadar(front)
-                            : _buildTripRadarButton())
+                            : _radarLongPressOff(front != null
+                                ? _acceptRadar(front)
+                                : _buildTripRadarButton()))
                         : _isGoingOnline
                         ? _buildGoingOnlineButton()
                         : _buildGoOnlineButton(),
@@ -1691,11 +1701,32 @@ extension _HomeMapSheet on _DriverHomeState {
       );
     }
 
+    /// Q19: holding the Radar asks "Go offline?" first; only Go offline
+    /// takes the driver offline.
+    Future<void> _confirmGoOffline() async {
+      if (!mounted || !_isOnline || ModalRoute.of(context)?.isCurrent != true) {
+        return;
+      }
+      if (!await showGoOfflineConfirm(context)) { return; }
+      if (mounted && _isOnline) { await _goOffline(); }
+    }
+
+    /// The radar button with the sheet closed: a long press asks to go
+    /// offline (Q19); a tap does what the face says.
+    Widget _radarLongPressOff(Widget radar) => GestureDetector(
+          key: const ValueKey<String>('home-radar-long-press'),
+          onLongPress: () {
+            HapticFeedback.mediumImpact();
+            unawaited(_confirmGoOffline());
+          },
+          child: radar,
+        );
+
     /// The online radar with the sheet open: same look, "Hold · OFF ·
-    /// Go offline"; a one-second hold vibrates and goes offline.
+    /// Go offline"; a one-second hold vibrates and asks "Go offline?".
     Widget _holdOffRadar() {
       return RadarHoldOff(
-        onConfirmed: () => unawaited(_goOffline()),
+        onConfirmed: () => unawaited(_confirmGoOffline()),
         child: AnimatedBuilder(
           animation: Listenable.merge([
             _goOnlinePulseController,

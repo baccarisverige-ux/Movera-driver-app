@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart'
+    show GoogleMapsFlutterPlatform, MarkerUpdates;
 
-import 'dart:math' as math;
 
 import '../core/navigation/map_double_tap_policy.dart';
 import '../styles/movera_map_palette.dart';
@@ -18,6 +20,11 @@ import 'driver_map_web_bridge_stub.dart'
 class CustomGoogleMap extends StatefulWidget {
   final CameraPosition? initialPosition;
   final Set<Marker>? markers;
+
+  /// D-08: one marker that moves often (the own car). Each move goes to the
+  /// map as a marker update of its own; the map widget is not rebuilt, so
+  /// lines, pins and the rest are not sent again.
+  final ValueListenable<Marker?>? liveMarker;
   final Set<Polyline>? polylines;
   final Set<Circle>? circles;
   final Set<Polygon>? polygons;
@@ -59,6 +66,7 @@ class CustomGoogleMap extends StatefulWidget {
     super.key,
     this.initialPosition,
     this.markers,
+    this.liveMarker,
     this.polylines,
     this.circles,
     this.polygons,
@@ -162,7 +170,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   /// rebuilds the markers, so a following camera does not churn them.
   void _turnVehicleWith(CameraPosition camera) {
     if (kIsWeb || !mounted) return;
-    for (final marker in widget.markers ?? const <Marker>{}) {
+    for (final marker in _allMarkers) {
       if (!_isOwnVehicle(marker) || marker.flat) continue;
       final shown = MoveraVehicleMarker.screenRotation(
           marker.rotation, _vehicleBearing, _vehicleTilt);
@@ -179,12 +187,67 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     }
   }
 
+  /// Every marker, the live one included.
+  Iterable<Marker> get _allMarkers {
+    final live = widget.liveMarker?.value;
+    final markers = widget.markers ?? const <Marker>{};
+    return live == null ? markers : [...markers, live];
+  }
+
+  Set<Marker> get _mapMarkers => _shown(_allMarkers);
+
+  /// What [GoogleMap] gets: every marker, and the live one as sent now.
+  Set<Marker> get _mapMarkersSent {
+    _liveShown = _liveNow;
+    return _mapMarkers;
+  }
+
+  /// The live marker as last given to the map.
+  Set<Marker> _liveShown = const <Marker>{};
+
+  Set<Marker> get _liveNow {
+    final live = widget.liveMarker?.value;
+    return live == null ? const <Marker>{} : _shown([live]);
+  }
+
+  bool _livePushQueued = false;
+
+  /// At most one live-marker update a frame, as a rebuild would be.
+  void _onLiveMarker() {
+    if (!mounted || _livePushQueued) return;
+    _livePushQueued = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _livePushQueued = false;
+      _pushLiveMarker();
+    });
+    SchedulerBinding.instance.scheduleFrame();
+  }
+
+  void _pushLiveMarker() {
+    if (!mounted) return;
+    final controller = _mapController;
+    if (controller == null || !_mapsReady) {
+      setState(() {});
+      return;
+    }
+    final next = _liveNow;
+    final updates = MarkerUpdates.from(_liveShown, next);
+    _liveShown = next;
+    if (updates.markersToAdd.isEmpty &&
+        updates.markersToChange.isEmpty &&
+        updates.markerIdsToRemove.isEmpty) {
+      return;
+    }
+    unawaited(GoogleMapsFlutterPlatform.instance
+        .updateMarkers(updates, mapId: controller.mapId));
+    _updateWebVehicle(controller.mapId);
+  }
+
   /// The markers as the map gets them: the own vehicle (a billboard, its
   /// rotation a compass heading) turned to the screen and sized for the
   /// zoom, over its halo.
-  Set<Marker> get _mapMarkers {
-    final markers = widget.markers ?? const <Marker>{};
-    if (kIsWeb) return markers;
+  Set<Marker> _shown(Iterable<Marker> markers) {
+    if (kIsWeb) return markers.toSet();
     final halo = MoveraVehicleMarker.haloAt(_vehicleScale);
     final arrow = MoveraVehicleMarker.arrowAt(_vehicleScale);
     return {
@@ -213,6 +276,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   @override
   void initState() {
     super.initState();
+    widget.liveMarker?.addListener(_onLiveMarker);
     if (_mapsReady) return;
     _mapsReadyPoll = Timer.periodic(const Duration(milliseconds: 50), (timer) {
       if (!web.ready) return;
@@ -226,6 +290,10 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   @override
   void didUpdateWidget(CustomGoogleMap oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.liveMarker, widget.liveMarker)) {
+      oldWidget.liveMarker?.removeListener(_onLiveMarker);
+      widget.liveMarker?.addListener(_onLiveMarker);
+    }
     if (oldWidget.scrollGesturesEnabled != widget.scrollGesturesEnabled ||
         oldWidget.zoomGesturesEnabled != widget.zoomGesturesEnabled ||
         oldWidget.rotateGesturesEnabled != widget.rotateGesturesEnabled ||
@@ -253,7 +321,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   }
 
   void _updateWebVehicle(int mapId) {
-    for (final marker in widget.markers ?? <Marker>{}) {
+    for (final marker in _allMarkers) {
       if (_isOwnVehicle(marker)) {
         web.vehicle(mapId, marker.rotation);
       }
@@ -341,7 +409,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
           else
             GoogleMap(
               initialCameraPosition: widget.initialPosition ?? _defaultPosition,
-              markers: _mapMarkers,
+              markers: _mapMarkersSent,
               polylines: widget.polylines ?? {},
               circles: widget.circles ?? {},
               polygons: widget.polygons ?? {},
@@ -405,6 +473,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
 
   @override
   void dispose() {
+    widget.liveMarker?.removeListener(_onLiveMarker);
     _mapsReadyPoll?.cancel();
     _removeWebGesture?.call();
     // A map replaced under a finger must not leave the camera held.
@@ -414,79 +483,3 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     super.dispose();
   }
 }
-
-// Helper class for creating common map elements
-class MapHelper {
-  // Create a custom marker
-  static Future<Marker> createCustomMarker({
-    required String markerId,
-    required LatLng position,
-    String? infoWindow,
-    BitmapDescriptor? icon,
-    VoidCallback? onTap,
-  }) async {
-    return Marker(
-      markerId: MarkerId(markerId),
-      position: position,
-      infoWindow: InfoWindow(title: infoWindow),
-      icon: icon ?? BitmapDescriptor.defaultMarker,
-      onTap: onTap,
-    );
-  }
-
-  // Create a polyline (route)
-  static Polyline createRoute({
-    required String polylineId,
-    required List<LatLng> points,
-    Color color = Colors.blue,
-    double width = 5.0,
-  }) {
-    return Polyline(
-      polylineId: PolylineId(polylineId),
-      points: points,
-      color: color,
-      width: width.toInt(),
-    );
-  }
-
-  // Create a circle
-  static Circle createCircle({
-    required String circleId,
-    required LatLng center,
-    required double radius,
-    Color fillColor = Colors.blue,
-    Color strokeColor = Colors.blue,
-    double strokeWidth = 2.0,
-  }) {
-    return Circle(
-      circleId: CircleId(circleId),
-      center: center,
-      radius: radius,
-      fillColor: fillColor.withValues(alpha: 0.3),
-      strokeColor: strokeColor,
-      strokeWidth: strokeWidth.toInt(),
-    );
-  }
-
-  // Calculate bounds for multiple points
-  static LatLngBounds boundsFromLatLngList(List<LatLng> list) {
-    double minLat = list.first.latitude;
-    double minLng = list.first.longitude;
-    double maxLat = list.first.latitude;
-    double maxLng = list.first.longitude;
-
-    for (LatLng point in list) {
-      minLat = math.min(minLat, point.latitude);
-      minLng = math.min(minLng, point.longitude);
-      maxLat = math.max(maxLat, point.latitude);
-      maxLng = math.max(maxLng, point.longitude);
-    }
-
-    return LatLngBounds(
-      southwest: LatLng(minLat, minLng),
-      northeast: LatLng(maxLat, maxLng),
-    );
-  }
-}
-
-// Import this for math operations

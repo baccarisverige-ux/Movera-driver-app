@@ -71,6 +71,8 @@ class _FakeRadarSound implements RadarSoundPlayer {
   Future<void> stop() async => calls.add('stop');
   @override
   Future<void> prime() async {}
+  @override
+  Future<void> dispose() async {}
 }
 
 /// How far Home Radar's soft sweep turns in 200 ms, per second.
@@ -162,7 +164,8 @@ Future<void> _closePanel(WidgetTester tester) async {
 }
 
 /// With the Home sheet open and Radar on, the radar reads "Hold · OFF";
-/// holding it one second goes offline and closes the sheet.
+/// holding it one second asks "Go offline?" (Q19), and Go offline goes
+/// offline and closes the sheet.
 Future<void> _holdRadarOff(WidgetTester tester) async {
   final radar = find.byKey(const ValueKey<String>('home-radar-hold-off'));
   expect(radar, findsOneWidget);
@@ -171,6 +174,9 @@ Future<void> _holdRadarOff(WidgetTester tester) async {
     await tester.pump(const Duration(milliseconds: 250));
   }
   await gesture.up();
+  await _advanceAnimation(tester, const Duration(milliseconds: 320));
+  expect(find.text('Go offline?'), findsOneWidget);
+  await tester.tap(find.byKey(const ValueKey<String>('go-offline-yes')));
   await _advanceAnimation(tester, const Duration(milliseconds: 520));
 }
 
@@ -1354,6 +1360,63 @@ void main() {
     // Still online: with the sheet open the radar reads "Hold · OFF".
     expect(find.text('Hold'), findsOneWidget);
     expect(find.text('Go offline'), findsOneWidget);
+    _expectNoException(tester);
+  });
+
+  testWidgets('Q19: a long press on the radar asks "Go offline?" first', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pumpHome(tester, const Size(375, 812));
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 1550));
+    expect(find.text('LIVE'), findsOneWidget);
+
+    // The sheet is closed: the radar button at the bottom.
+    final radar = find.byKey(const ValueKey<String>('home-radar-long-press'));
+    await tester.longPress(radar);
+    await _advanceAnimation(tester, const Duration(milliseconds: 320));
+    expect(find.text('Go offline?'), findsOneWidget);
+    // Stay online: nothing changes.
+    await tester.tap(find.byKey(const ValueKey<String>('go-offline-stay')));
+    await _advanceAnimation(tester, const Duration(milliseconds: 320));
+    expect(find.text('Go offline?'), findsNothing);
+    expect(find.text('LIVE'), findsOneWidget);
+
+    await tester.longPress(radar);
+    await _advanceAnimation(tester, const Duration(milliseconds: 320));
+    await tester.tap(find.byKey(const ValueKey<String>('go-offline-yes')));
+    await _advanceAnimation(tester, const Duration(milliseconds: 520));
+    expect(find.text('Tap to scan'), findsOneWidget);
+    // Offline, a long press on the radar asks nothing.
+    await tester.longPress(find.text('OFF'));
+    await _advanceAnimation(tester, const Duration(milliseconds: 320));
+    expect(find.text('Go offline?'), findsNothing);
+    _expectNoException(tester);
+  });
+
+  testWidgets('Q19: holding the island while online asks "Go offline?"', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pumpHome(tester, const Size(375, 812));
+    await _wakeIsland(tester);
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 1550));
+    // Let "Radar online" pass: the island says "Finding trips", the top
+    // of the radar.
+    for (var i = 0; i < 20 && find.text('Finding trips').evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+    expect(find.text('Finding trips'), findsOneWidget);
+    final island = find.byKey(const ValueKey<String>('last-trip-launcher'));
+    await tester.longPress(island);
+    await _advanceAnimation(tester, const Duration(milliseconds: 320));
+    expect(find.text('Go offline?'), findsOneWidget);
+    expect(find.byType(DriverRideHistory), findsNothing);
+    await tester.tap(find.byKey(const ValueKey<String>('go-offline-yes')));
+    await _advanceAnimation(tester, const Duration(milliseconds: 520));
+    expect(find.text('Tap to scan'), findsOneWidget);
     _expectNoException(tester);
   });
 

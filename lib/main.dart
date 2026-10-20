@@ -8,7 +8,6 @@ import 'package:movera/core/logging/global_error_hooks.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/widgets/demo_mode_banner.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/core/admin/driver_home_config_repository.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
@@ -111,7 +110,7 @@ class _MoveraAppState extends State<MoveraApp> {
         splitScreenMode: true,
         useInheritedMediaQuery: true,
         builder: (_, __) {
-          return GetMaterialApp(
+          return MaterialApp(
             navigatorKey: _navigatorKey,
             navigatorObservers: [driverRouteObserver],
             title: 'Movera Driver',

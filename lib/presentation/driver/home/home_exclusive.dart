@@ -78,7 +78,7 @@ extension _HomeExclusive on _DriverHomeState {
 
     void _startExclusiveClock(Duration lifetime) {
       _exclusive.clock.duration = lifetime;
-      _exclusive.deadline = DateTime.now().add(lifetime);
+      _exclusive.deadline = ScheduledClock.realNow().add(lifetime);
       unawaited(_exclusive.clock.reverse(from: 1));
     }
 
@@ -97,7 +97,7 @@ extension _HomeExclusive on _DriverHomeState {
           _scheduled.claimingId != null) {
         return;
       }
-      final left = deadline.difference(DateTime.now());
+      final left = deadline.difference(ScheduledClock.realNow());
       if (left <= Duration.zero) {
         // It ran out while the driver could not see it: not a miss.
         _HomeOfferRadar(this)._dismissOutsideRadarOffer();

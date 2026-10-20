@@ -12,6 +12,9 @@ abstract class RadarSoundPlayer {
   /// Unlocks sound during a tap: phones' browsers play sound only after
   /// one has started inside a tap.
   Future<void> prime() async {}
+
+  /// Releases the native player (D-17). Nothing plays after it.
+  Future<void> dispose() async {}
 }
 
 /// R15-5: the radar sound while Radar offers are on Home.
@@ -21,10 +24,11 @@ abstract class RadarSoundPlayer {
 /// the screen ([silence]). A new offer after that starts it again.
 class RadarOfferSound {
   RadarOfferSound({RadarSoundPlayer? player})
-      : _player = player ??
+      : _ownsPlayer = player == null && debugPlayer == null,
+        _player = player ??
             debugPlayer ??
             (DriverRuntimeConfig.current.radarSound
-                ? _AudioRadarSound()
+                ? AudioRadarSound()
                 : _SilentSound());
 
   /// Tests put a fake player here.
@@ -32,6 +36,7 @@ class RadarOfferSound {
   static RadarSoundPlayer? debugPlayer;
 
   final RadarSoundPlayer _player;
+  final bool _ownsPlayer;
   final Set<String> _heard = <String>{};
   bool _playing = false;
 
@@ -68,6 +73,9 @@ class RadarOfferSound {
   void dispose() {
     _set(false);
     _heard.clear();
+    if (_ownsPlayer) {
+      unawaited(_player.dispose().catchError((Object _) {}));
+    }
   }
 
   void _set(bool on) {
@@ -88,30 +96,64 @@ class _SilentSound implements RadarSoundPlayer {
   Future<void> stop() async {}
   @override
   Future<void> prime() async {}
+  @override
+  Future<void> dispose() async {}
 }
 
 /// The owner's radar sound (assets/sounds/radar_offer.mp3), looped.
-class _AudioRadarSound implements RadarSoundPlayer {
+///
+/// D-17: each call waits for the one before it, so the silent [prime]
+/// (volume 0, play, stop, volume 1) never mixes with [startLoop], and
+/// [dispose] releases the native player once the calls before it ran.
+class AudioRadarSound implements RadarSoundPlayer {
+  AudioRadarSound({@visibleForTesting AudioPlayer Function()? create})
+      : _create = create ?? AudioPlayer.new;
+
+  final AudioPlayer Function() _create;
   AudioPlayer? _audio;
+  bool _closed = false;
+  Future<void> _queue = Future<void>.value();
 
-  @override
-  Future<void> startLoop() async {
-    final audio = _audio ??= AudioPlayer();
-    await audio.setReleaseMode(ReleaseMode.loop);
-    await audio.play(AssetSource('sounds/radar_offer.mp3'));
+  /// Runs [op] after every call before it; skipped once disposed.
+  Future<void> _then(Future<void> Function(AudioPlayer audio) op,
+      {bool create = true}) {
+    final next = _queue.then((_) async {
+      if (_closed) return;
+      final audio = create ? (_audio ??= _create()) : _audio;
+      if (audio != null) await op(audio);
+    });
+    _queue = next.catchError((Object _) {});
+    return next;
   }
 
-  @override
-  Future<void> stop() async {
-    await _audio?.stop();
-  }
+  static final Source _sound = AssetSource('sounds/radar_offer.mp3');
 
   @override
-  Future<void> prime() async {
-    final audio = _audio ??= AudioPlayer();
-    await audio.setVolume(0);
-    await audio.play(AssetSource('sounds/radar_offer.mp3'));
-    await audio.stop();
-    await audio.setVolume(1);
+  Future<void> startLoop() => _then((audio) async {
+        await audio.setReleaseMode(ReleaseMode.loop);
+        await audio.play(_sound);
+      });
+
+  @override
+  Future<void> stop() => _then((audio) => audio.stop(), create: false);
+
+  @override
+  Future<void> prime() => _then((audio) async {
+        await audio.setVolume(0);
+        await audio.play(_sound);
+        await audio.stop();
+        await audio.setVolume(1);
+      });
+
+  @override
+  Future<void> dispose() {
+    final last = _queue.then((_) async {
+      final audio = _audio;
+      _audio = null;
+      await audio?.dispose();
+    });
+    _closed = true;
+    _queue = last.catchError((Object _) {});
+    return last;
   }
 }
