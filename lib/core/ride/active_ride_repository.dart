@@ -101,6 +101,7 @@ class PersistedActiveRide {
     required this.stage,
     this.nextTripId,
     this.arrivedAt,
+    this.acceptedAt,
     this.startedAt,
     this.savedAt,
     this.riderName,
@@ -121,6 +122,7 @@ class PersistedActiveRide {
     this.dropoffLat,
     this.dropoffLng,
     this.waitSeconds,
+    this.paidWaitSeconds = 0,
     this.stopIndex = 0,
     this.paidStopWait = false,
     this.next,
@@ -133,6 +135,10 @@ class PersistedActiveRide {
   final ActiveRideStage stage;
   final String? nextTripId;
   final DateTime? arrivedAt;
+
+  /// When the driver accepted (contract `TripProjection.acceptedAt`, owner
+  /// Q12): the live free-cancel clock counts from it.
+  final DateTime? acceptedAt;
   final DateTime? startedAt;
   final DateTime? savedAt;
   final String? riderName;
@@ -157,6 +163,10 @@ class PersistedActiveRide {
   final double? dropoffLat;
   final double? dropoffLng;
   final int? waitSeconds;
+
+  /// Paid waiting seconds of waits already over (pickup, stops): the
+  /// waiting fee the trip has earned so far (Q42/Q43).
+  final int paidWaitSeconds;
   final int stopIndex;
   final bool paidStopWait;
   final PersistedQueuedTrip? next;
@@ -192,6 +202,7 @@ class PersistedActiveRide {
       stage: stage,
       nextTripId: nextTripId ?? next?.tripId,
       arrivedAt: arrivedAt,
+      acceptedAt: acceptedAt,
       startedAt: startedAt,
       savedAt: at ?? DateTime.now(),
       riderName: riderName,
@@ -212,6 +223,7 @@ class PersistedActiveRide {
       dropoffLat: dropoffLat,
       dropoffLng: dropoffLng,
       waitSeconds: waitSeconds,
+      paidWaitSeconds: paidWaitSeconds,
       stopIndex: stopIndex,
       paidStopWait: paidStopWait,
       next: next,
@@ -228,6 +240,7 @@ class PersistedActiveRide {
     if (nextTripId != null || next != null)
       'nextTripId': nextTripId ?? next?.tripId,
     if (arrivedAt != null) 'arrivedAt': arrivedAt!.toIso8601String(),
+    if (acceptedAt != null) 'acceptedAt': acceptedAt!.toIso8601String(),
     if (startedAt != null) 'startedAt': startedAt!.toIso8601String(),
     if (savedAt != null) 'savedAt': savedAt!.toIso8601String(),
     if (riderName != null) 'riderName': riderName,
@@ -252,6 +265,7 @@ class PersistedActiveRide {
     if (dropoffLat != null) 'dropoffLat': dropoffLat,
     if (dropoffLng != null) 'dropoffLng': dropoffLng,
     if (waitSeconds != null) 'waitSeconds': waitSeconds,
+    if (paidWaitSeconds > 0) 'paidWaitSeconds': paidWaitSeconds,
     'stopIndex': stopIndex,
     'paidStopWait': paidStopWait,
     if (next != null) 'next': next!.toJson(),
@@ -280,7 +294,7 @@ class PersistedActiveRide {
     if (stage.isEmpty) {
       return null;
     }
-    for (final key in ['arrivedAt', 'startedAt', 'savedAt']) {
+    for (final key in ['arrivedAt', 'acceptedAt', 'startedAt', 'savedAt']) {
       if (json[key] != null &&
           (json[key] is! String ||
               DateTime.tryParse(json[key] as String) == null)) {
@@ -303,6 +317,10 @@ class PersistedActiveRide {
     // These counters drive waiting and multi-stop UI after app recovery.
     final waitSeconds = json['waitSeconds'];
     if (waitSeconds != null && (waitSeconds is! int || waitSeconds < 0)) {
+      return null;
+    }
+    final paidWait = json['paidWaitSeconds'];
+    if (paidWait != null && (paidWait is! int || paidWait < 0)) {
       return null;
     }
     final stopIndex = json['stopIndex'];
@@ -347,6 +365,7 @@ class PersistedActiveRide {
       stage: stage.first,
       nextTripId: json['nextTripId'] as String?,
       arrivedAt: DateTime.tryParse(json['arrivedAt'] as String? ?? ''),
+      acceptedAt: DateTime.tryParse(json['acceptedAt'] as String? ?? ''),
       startedAt: DateTime.tryParse(json['startedAt'] as String? ?? ''),
       savedAt: DateTime.tryParse(json['savedAt'] as String? ?? ''),
       riderName: json['riderName'] as String?,
@@ -383,6 +402,7 @@ class PersistedActiveRide {
       dropoffLat: (json['dropoffLat'] as num?)?.toDouble(),
       dropoffLng: (json['dropoffLng'] as num?)?.toDouble(),
       waitSeconds: (json['waitSeconds'] as num?)?.toInt(),
+      paidWaitSeconds: paidWait is int ? paidWait : 0,
       stopIndex: (json['stopIndex'] as num?)?.toInt() ?? 0,
       paidStopWait: json['paidStopWait'] == true,
       next: next,

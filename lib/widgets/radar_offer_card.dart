@@ -29,6 +29,7 @@ class RadarOfferView {
     this.stops = 0,
     this.riderTrips = 0,
     this.pickupPay,
+    this.priority = false,
   });
 
   final String id;
@@ -61,6 +62,10 @@ class RadarOfferView {
 
   /// The rider's trips; 0 when not known.
   final int riderTrips;
+
+  /// Q18: admin's priority or Movera-paid bonus: the red "Priority"
+  /// badge. [fare] is already the total with the bonus.
+  final bool priority;
 
   /// Pickup pay worked out when the offer shows; null for none.
   final PickupPayQuote? pickupPay;
@@ -199,6 +204,10 @@ class RadarOfferCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (offer.priority)
+                      OfferBadge.priority(
+                        key: ValueKey<String>('radar-offer-priority-${offer.id}'),
+                      ),
                     if (show.badges && offer.reservationTime != null)
                       OfferBadge.reservation(
                         offer.reservationTime,

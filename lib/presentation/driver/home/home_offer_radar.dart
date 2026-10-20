@@ -63,6 +63,13 @@ class _HomeDirectOffer {
   /// How long its Exclusive card stays; null for the usual offer time.
   final Duration? lifetime;
 
+  /// Q18: admin's priority or Movera-paid bonus ([fare] includes it): the
+  /// red "Priority" badge.
+  final bool priority;
+
+  /// An admin direct assign (contract §3.1): "Assigned by Movera".
+  bool get adminAssigned => reason == ExclusiveReasons.assigned && !assigned;
+
   const _HomeDirectOffer({
     required this.id,
     this.tripId,
@@ -90,6 +97,7 @@ class _HomeDirectOffer {
     this.fareBoost,
     this.assigned = false,
     this.lifetime,
+    this.priority = false,
   });
 
   /// A dispatch offer on Home. A reservation keeps its pickup time for
@@ -126,6 +134,7 @@ class _HomeDirectOffer {
     fareBoost: offer.fareBoostLabel,
     assigned: assigned,
     lifetime: lifetime,
+    priority: offer.isPriority,
   );
 }
 
@@ -227,6 +236,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       _rebuild(() {
         _outsideRadarOffer = offer;
       });
+      if (offer.adminAssigned) { _adminAssignsShown.add(offer.id); }
       // The sheet rises over the dock; its orb's ring starts full. The
       // route comes onto the map once the sheet has settled.
       _HomeExclusive(this)._raiseExclusive(offer, lifetime);
@@ -420,10 +430,16 @@ extension _HomeOfferRadar on _DriverHomeState {
           !_isOnline ||
           RideCheckGate.open ||
           _outsideRadarOffer != null ||
-          _HomeReservation(this)._reservationUp ||
-          _pendingRadarHomeOffers.isEmpty) {
+          _HomeReservation(this)._reservationUp) {
         return;
       }
+      // Q16: an admin direct assign that waited behind them comes first.
+      final admin = _pendingAdminAssign;
+      if (admin != null && _radarHomeOffers.isEmpty) {
+        unawaited(_showOutsideRadarOffer(admin));
+        if (_outsideRadarOffer != null) { return; }
+      }
+      if (_pendingRadarHomeOffers.isEmpty) { return; }
 
       // Nothing on screen: load the new trips and open the offers popup.
       // With trips already listed, new ones wait behind the "new" button
@@ -545,6 +561,11 @@ extension _HomeOfferRadar on _DriverHomeState {
         // after a cancel) comes onto the deck too, once its Exclusive step
         // on this phone is over.
         for (final offer in offers) {
+          // Q16: an admin direct assign arriving now is an Exclusive offer.
+          if (offer.isAdminDirectAssign && !known.contains(offer.id) &&
+              !_adminAssignsShown.contains(offer.id)) {
+            unawaited(_showOutsideRadarOffer(_adminAssignOffer(offer)));
+          }
           if (offer.isReservation &&
               !known.contains(offer.id) &&
               _outsideRadarOffer?.id != offer.id &&
@@ -567,14 +588,28 @@ extension _HomeOfferRadar on _DriverHomeState {
     int get _radarTripsOpen => _latestDispatchOffers
         .where((offer) =>
             offer.isNearby &&
+            !offer.isAdminDirectAssign &&
             _followsDestination(offer.dropoffPosition.toLatLng()) &&
             _HomeOfferRules(this)._rideAllowed(offer))
         .length;
     void _showDispatchOfferAt(int index) {
       final offers = _latestDispatchOffers.where((offer) => offer.isNearby &&
+          !offer.isAdminDirectAssign &&
           _followsDestination(offer.dropoffPosition.toLatLng())).toList();
       if (index >= offers.length) { return; }
       _showRadarHomeOffer(_homeOfferFromDispatch(offers[index]));
+    }
+    /// An admin direct assign (contract §3.1) as an Exclusive offer.
+    _HomeDirectOffer _adminAssignOffer(RideOffer offer) =>
+        _HomeDirectOffer.fromRide(offer, reason: ExclusiveReasons.assigned);
+    /// The first admin direct assign from dispatch not shown yet.
+    _HomeDirectOffer? get _pendingAdminAssign {
+      for (final offer in _latestDispatchOffers) {
+        if (offer.isAdminDirectAssign && !_adminAssignsShown.contains(offer.id)) {
+          return _adminAssignOffer(offer);
+        }
+      }
+      return null;
     }
     /// A Radar trip from dispatch as a Home deck card.
     _HomeDirectOffer _homeOfferFromDispatch(RideOffer offer) =>
@@ -907,6 +942,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           fareBoost: offer.fareBoost,
           stops: offer.stops.length,
           riderTrips: offer.riderTrips,
+          priority: offer.priority,
           // Worked out now, from the offer's pickup leg (never cached).
           pickupPay: PickupPayCalculator.quote(
             category: offer.category,
@@ -995,7 +1031,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         onYourWay: _destinationModeActive ||
             (!offer.assigned && _HomeScheduled(this)._towardPickupTime != null),
         // A ride Movera assigned says so (Q29).
-        lead: offer.assigned
+        lead: offer.assigned || offer.adminAssigned
             ? ExclusiveReasons.text(ExclusiveReasons.assigned)
             : ExclusiveRequestSheet.defaultLead,
       );
@@ -1022,7 +1058,8 @@ extension _HomeOfferRadar on _DriverHomeState {
               const cash = _DriverHomeState._expandedDirectOffer;
               // R13-9 demo: in Destination mode, the trip toward it.
               final toward = _destinationModeActive ? _destinationDemoExclusive : null;
-              _showOutsideRadarOffer(toward ?? (_exclusiveDemoTaken &&
+              // Q16: an admin direct assign from dispatch comes first.
+              _showOutsideRadarOffer(toward ?? _pendingAdminAssign ?? (_exclusiveDemoTaken &&
                       _HomeOfferRules(this)._offerAllowed(cash)
                   ? cash
                   : _DriverHomeState._veryCloseDirectOffer));

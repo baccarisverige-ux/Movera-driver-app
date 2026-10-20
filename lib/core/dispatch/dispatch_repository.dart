@@ -11,6 +11,18 @@ enum ClaimOutcome {
   networkError,
 }
 
+/// Who sent an offer (contract `Offer.source`).
+enum OfferSource {
+  /// Normal dispatch.
+  system,
+
+  /// An admin: a direct assign (Exclusive) or a radar group (§3.1).
+  admin;
+
+  static OfferSource fromWire(Object? value) =>
+      value == 'admin' ? OfferSource.admin : OfferSource.system;
+}
+
 class RideOffer {
   const RideOffer({
     required this.id,
@@ -36,6 +48,10 @@ class RideOffer {
     this.stops = const <ReservationStop>[],
     this.fareBoost,
     this.cashToCollect,
+    this.driverBonus,
+    this.priority = false,
+    this.source = OfferSource.system,
+    this.groupId,
   });
 
   /// A reservation as a Radar trip. The driver's distance to the pickup is
@@ -144,6 +160,29 @@ class RideOffer {
   String? get cashToCollectLabel => cashToCollect?.formatted;
 
   bool get isReservation => reservationTime != null;
+
+  /// Movera-paid extra for this driver (contract `Offer.driverBonus`, owner
+  /// Q16). [fare] already includes it: the driver sees one total.
+  final Money? driverBonus;
+
+  /// Contract `Offer.priority`: the card shows the red "Priority" badge.
+  final bool priority;
+
+  /// Contract `Offer.source`.
+  final OfferSource source;
+
+  /// Contract `Offer.groupId`: the admin's radar group (up to 10 drivers,
+  /// first to accept wins). Null for a direct assign.
+  final String? groupId;
+
+  /// Q18: the "Priority" badge shows when admin marked the offer or added
+  /// money to it.
+  bool get isPriority => priority || (driverBonus?.minorUnits ?? 0) > 0;
+
+  /// Contract §3.1: an admin direct assign (`source: admin`, no radar
+  /// group). It is an Exclusive offer for this driver, never a Radar trip.
+  bool get isAdminDirectAssign =>
+      source == OfferSource.admin && groupId == null;
 }
 
 class ClaimResult {

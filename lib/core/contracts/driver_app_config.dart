@@ -1,5 +1,6 @@
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
@@ -171,6 +172,11 @@ class DriverAppConfig {
   /// Puts this zone's rules in use where the app reads them.
   void apply() {
     WaitingRules.current = waiting;
+    // Q46: the zone's number of missed Exclusive offers before offline.
+    DriverOfferRules.current = DriverOfferRules.current.withAutoOffline(
+      on: autoOffline,
+      after: missedExclusiveBeforeOffline,
+    );
     DestinationModeRules.current = destinationMode;
     NextTripRules.current = nextTrips;
   }

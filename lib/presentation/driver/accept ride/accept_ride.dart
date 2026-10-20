@@ -518,6 +518,10 @@ class _AcceptRideState extends State<AcceptRide>
   DateTime? _lastSnapshotAt;
   bool _liveUpdatesPaused = false;
   int _waitSeconds = 0;
+  /// Paid seconds of waits already over (Q42); [_acceptedAt]: contract
+  /// `acceptedAt`, kept across restores (Q12).
+  int _paidWaitSeconds = 0;
+  late DateTime _acceptedAt;
   DateTime? _waitAnchorAt;
   int _waitAnchorSeconds = 0;
   int _stopCursor = 0;
@@ -596,6 +600,8 @@ class _AcceptRideState extends State<AcceptRide>
     _paidStopWait = restored?.paidStopWait == true;
     _onTripStartedAt = restored?.startedAt;
     _waitSeconds = widget.initialWaitSeconds;
+    _paidWaitSeconds = restored?.paidWaitSeconds ?? 0;
+    _acceptedAt = restored?.acceptedAt ?? DateTime.now();
     // The waiting clocks on this trip follow its terms.
     WaitingTerms.active = _waitTerms;
     if (restored?.savedAt != null &&
@@ -992,7 +998,9 @@ class _AcceptRideState extends State<AcceptRide>
 
   /// R8-4: the cash taken from the rider; the fare unless a promotion
   /// changed it.
-  String get _cashToCollect => widget.cashToCollect ?? widget.fare;
+  String get _cashToCollect => WaitingTerms.addFee(
+      widget.cashToCollect ?? widget.fare,
+      _waitTerms.waitingFee(_AcceptRideTrip(this)._paidWaitTotal));
   int get _includedWaitSeconds => _waitTerms.freeSeconds;
   int get _noShowWaitSeconds => _waitTerms.noShowSeconds;
 
@@ -1277,7 +1285,7 @@ class _AcceptRideState extends State<AcceptRide>
                         arrived: _arrivalApproachArrived,
                         progress: _legFraction ?? 0,
                         waitingSeconds: _countingWait ? _waitSeconds : null,
-                        paidSeconds: _countingWait ? (_paidStopWait ? _waitSeconds : math.max(0, _waitSeconds - _includedWaitSeconds)) : null,
+                        paidSeconds: _countingWait ? _AcceptRideTrip(this)._paidWaitNow : null,
                         waitingAtStop: _paidStopWait,
                         navigationStatus: _locationStatus ?? _navigation.snapshot.status,
                         reroutes: _navigation.reroutes,

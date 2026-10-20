@@ -9,6 +9,7 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/demo_trip_drive.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 
 /// The two RideCheck demo trips on Radar, labelled in their pickup. Their
 /// ids give them a scripted drive (see [DemoTripDrive.forTrip]).
@@ -54,6 +55,62 @@ class DemoRideCheckTrips {
   );
 }
 
+/// Admin offers in the demo (contract §3.1, owner Q16/Q18): Movera added
+/// money to both, so their fares already include the bonus and their cards
+/// carry the red "Priority" badge.
+class DemoAdminOffers {
+  const DemoAdminOffers._();
+
+  /// A radar group trip (`source: admin`, with a `groupId`): a Radar card.
+  static const RideOffer radarGroup = RideOffer(
+    id: 'admin-group-1',
+    riderName: 'Astrid',
+    riderTrips: 38,
+    category: 'Comfort',
+    // 112,40 kr trip + 40 kr Movera bonus.
+    fare: Money(minorUnits: 15240),
+    driverBonus: Money(minorUnits: 4000),
+    priority: true,
+    source: OfferSource.admin,
+    groupId: 'demo-radar-group-1',
+    rating: '4.92',
+    pickupMinutes: 4,
+    pickupKm: 1.3,
+    tripMinutes: 16,
+    tripKm: 9.4,
+    pickup: 'Birger Jarlsgatan 12, Stockholm',
+    dropoff: 'Liljeholmstorget, Stockholm',
+    pickupPosition: GeoPoint(59.3362, 18.0735),
+    dropoffPosition: GeoPoint(59.3103, 18.0231),
+    isNearby: true,
+    followsDestination: false,
+  );
+
+  /// A direct assign (`source: admin`, no group): an Exclusive offer.
+  static const RideOffer directAssign = RideOffer(
+    id: 'admin-assign-1',
+    riderName: 'Karim',
+    riderTrips: 64,
+    category: 'Movera',
+    // 98,60 kr trip + 30 kr Movera bonus.
+    fare: Money(minorUnits: 12860),
+    driverBonus: Money(minorUnits: 3000),
+    priority: true,
+    source: OfferSource.admin,
+    rating: '4.88',
+    pickupMinutes: 3,
+    pickupKm: 0.8,
+    tripMinutes: 14,
+    tripKm: 7.9,
+    pickup: 'Tegnérgatan 8, Stockholm',
+    dropoff: 'Hammarby sjöstad, Stockholm',
+    pickupPosition: GeoPoint(59.3378, 18.0570),
+    dropoffPosition: GeoPoint(59.3030, 18.1000),
+    isNearby: true,
+    followsDestination: false,
+  );
+}
+
 /// Frontend/demo dispatch. A backend implementation replaces this class.
 ///
 /// Snapshot rules the Radar UI already depends on:
@@ -86,7 +143,10 @@ class DemoDispatchRepository implements DispatchRepository {
     Duration assignmentDelay = ReservationDemoTimings.assignedAfter,
     ScheduledClock? clock,
     ScheduledRideRules? rules,
-  }) : _claimDelay = claimDelay,
+    bool? adminOffers,
+  }) : _adminOffers =
+           adminOffers ?? DriverRuntimeConfig.current.adminDemoOffers,
+       _claimDelay = claimDelay,
        _newOfferDelay = newOfferDelay,
        // Another driver takes a trip soon after Home shows Radar trips,
        // which follow the Exclusive offer's time to accept.
@@ -109,7 +169,17 @@ class DemoDispatchRepository implements DispatchRepository {
         reservation.id: RideOffer.reservation(reservation),
     };
     _reservations = Map<String, RideOffer>.of(_seedReservations);
+    _offers = _firstOffers();
   }
+
+  /// Q16/Q18 demo: the admin's offers come with the first ones.
+  final bool _adminOffers;
+
+  List<RideOffer> _firstOffers() => [
+    if (_adminOffers) DemoAdminOffers.radarGroup,
+    ..._immediateOffers,
+    if (_adminOffers) DemoAdminOffers.directAssign,
+  ];
 
   final Duration _claimDelay;
   final Duration _newOfferDelay;
@@ -616,7 +686,7 @@ class DemoDispatchRepository implements DispatchRepository {
     }
     _generation++;
     _cancelDemoTimers();
-    _offers = List<RideOffer>.from(_immediateOffers);
+    _offers = _firstOffers();
     _queued = List<RideOffer>.from(_laterOffers);
     _reservations = Map<String, RideOffer>.of(_seedReservations);
     _openAssignments.clear();

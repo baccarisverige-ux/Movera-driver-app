@@ -23,8 +23,9 @@ class DriverOfferRules {
   static DriverOfferRules current = const DriverOfferRules();
 
   /// Q46: Exclusive offers missed or declined in a row before the driver
-  /// goes offline. A local default until admin config sends its number
-  /// (`offers.autoOffline.missedExclusive`).
+  /// goes offline. The fallback: the zone's `DriverAppConfig` sets its own
+  /// number (`offers.autoOffline.missedExclusive`) through
+  /// [withAutoOffline] when it is applied.
   static const int defaultAutoOfflineAfter = 3;
 
   /// Q14: what the offer cards show.
@@ -58,6 +59,22 @@ class DriverOfferRules {
   /// Dispatch › Radar "time on the radar": how long a Radar trip on Home
   /// can be taken before its Match fades.
   final Duration radarTime;
+
+  /// These rules with the zone's auto-offline setting
+  /// (`offers.autoOffline`, Q46); everything else unchanged.
+  DriverOfferRules withAutoOffline({required bool on, required int after}) =>
+      DriverOfferRules(
+        card: card,
+        exclusiveReasons: exclusiveReasons,
+        autoOffline: on,
+        autoOfflineAfter: after < 1 ? defaultAutoOfflineAfter : after,
+        hiddenComesBackAfter: hiddenComesBackAfter,
+        exclusiveWhileDriving: exclusiveWhileDriving,
+        exclusiveWhileDrivingCount: exclusiveWhileDrivingCount,
+        commissionRate: commissionRate,
+        exclusiveAcceptTime: exclusiveAcceptTime,
+        radarTime: radarTime,
+      );
 
   /// The text of Exclusive reason [id], or '' when admin switched it off
   /// or it is unknown.

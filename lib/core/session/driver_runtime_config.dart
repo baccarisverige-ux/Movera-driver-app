@@ -16,6 +16,7 @@ class DriverRuntimeConfig {
     this.reservationPopup = true,
     this.islandHint = true,
     this.radarSound = true,
+    this.adminDemoOffers = false,
   });
 
   /// Demo builds only: arrival does not require a live GPS fix within 100 m of
@@ -47,6 +48,12 @@ class DriverRuntimeConfig {
   /// their machines have no sound device.
   final bool radarSound;
 
+  /// Q16/Q18 demo: the demo dispatch also sends admin offers (a radar
+  /// group trip with a Movera bonus and a direct assign), so the Priority
+  /// badge and "Assigned by Movera" can be tried. Demo builds only; tests
+  /// and production leave it off.
+  final bool adminDemoOffers;
+
   /// D-12: whether a build lets the driver arrive from anywhere.
   ///
   /// A production composition never does. Otherwise an explicit
@@ -74,6 +81,7 @@ class DriverRuntimeConfig {
     ),
     externalRouting: _externalRouting,
     skipAccountActivation: _skipAccountActivation,
+    adminDemoOffers: !driverProductionRequested,
   );
 
   // Web (dart2js) only allows these reads as const values.

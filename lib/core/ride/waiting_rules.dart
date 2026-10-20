@@ -46,6 +46,35 @@ class WaitingTerms {
     currency: noShowFee.currency,
   );
 
+  /// Q42: the waiting fee for [paidSeconds] past the free wait, at
+  /// [perMinute] counted by the second and rounded to a whole minor unit.
+  /// It is the rider's charge; see [driverWaitingFee] for the driver's part.
+  Money waitingFee(int paidSeconds) => Money(
+    minorUnits: paidSeconds <= 0
+        ? 0
+        : (perMinute.minorUnits * paidSeconds / 60).round(),
+    currency: perMinute.currency,
+  );
+
+  /// Q43: the driver's part of [waitingFee] ([driverShareWaitPercent],
+  /// 100% by default).
+  Money driverWaitingFee(int paidSeconds) {
+    final fee = waitingFee(paidSeconds);
+    return Money(
+      minorUnits: (fee.minorUnits * driverShareWaitPercent / 100).round(),
+      currency: fee.currency,
+    );
+  }
+
+  /// [label] (e.g. "104,80 kr") with [fee] added, in the same display
+  /// form. Unchanged with no fee, or when the label is not money in the
+  /// fee's currency (fare labels are still SEK labels).
+  static String addFee(String label, Money fee) {
+    if (fee.isZero) return label;
+    final amount = fee.currency == 'SEK' ? Money.parseSekLabel(label) : null;
+    return amount == null ? label : (amount + fee).formatted;
+  }
+
   /// The terms of the trip on screen now: the waiting clocks read them.
   static WaitingTerms active = WaitingRules.current.base;
 
@@ -56,7 +85,10 @@ class WaitingTerms {
     noShowFee: rule.noShowFee ?? noShowFee,
     driverShareWaitPercent: driverShareWaitPercent,
     driverShareNoShowPercent: driverShareNoShowPercent,
-    rule: [if (this.rule.isNotEmpty) this.rule, label ?? rule.label].join(' · '),
+    rule: [
+      if (this.rule.isNotEmpty) this.rule,
+      if ((label ?? rule.label).isNotEmpty) label ?? rule.label,
+    ].join(' · '),
   );
 }
 
@@ -83,8 +115,10 @@ class WaitingRule {
 
 class WaitingRules {
   const WaitingRules({
+    // contract.json#configDefaults (owner Q41): 5 free minutes, and the
+    // no-show comes when they end.
     this.base = const WaitingTerms(
-      freeMinutes: 2,
+      freeMinutes: 5,
       perMinute: Money(minorUnits: 1226),
       noShowAfterMinutes: 5,
       noShowFee: Money(minorUnits: 6500),
@@ -117,7 +151,7 @@ class WaitingRules {
         freeMinutes: 5,
         perMinute: Money(minorUnits: 1690),
       ),
-      'xl': WaitingRule(label: 'XL', freeMinutes: 3),
+      'xl': WaitingRule(label: 'XL', freeMinutes: 3, noShowAfterMinutes: 3),
     },
   });
 
@@ -154,7 +188,17 @@ class WaitingRules {
     var terms = base;
     final byCategory = ruleForCategory(category);
     if (byCategory != null) {
-      terms = terms._with(byCategory);
+      // Q41: a category's no-show comes with the end of its free wait.
+      terms = terms._with(byCategory.noShowAfterMinutes == null &&
+              byCategory.freeMinutes != null
+          ? WaitingRule(
+              label: byCategory.label,
+              freeMinutes: byCategory.freeMinutes,
+              perMinute: byCategory.perMinute,
+              noShowAfterMinutes: byCategory.freeMinutes,
+              noShowFee: byCategory.noShowFee,
+            )
+          : byCategory);
     }
     final byType = rideTypes[type];
     if (byType != null) {
@@ -174,7 +218,13 @@ class WaitingRules {
           : farPickupKm.toStringAsFixed(1);
       terms = terms._with(farPickup, label: 'Pickup over $km km');
     }
-    return terms;
+    // Never a no-show before the free wait is over (Q41).
+    return terms.noShowAfterMinutes >= terms.freeMinutes
+        ? terms
+        : terms._with(WaitingRule(
+            label: '',
+            noShowAfterMinutes: terms.freeMinutes,
+          ), label: '');
   }
 
   /// The kind of trip, from how it was matched and where it starts.

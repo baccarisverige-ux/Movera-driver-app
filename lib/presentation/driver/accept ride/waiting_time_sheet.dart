@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/widgets/movera_modal_sheet.dart';
 
@@ -78,6 +79,9 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
     final seconds = _seconds;
     final terms = widget.terms ?? WaitingTerms.active;
     final phase = _WaitPhase.of(seconds);
+    final paidSeconds = widget.fullyPaid
+        ? seconds
+        : math.max(0, seconds - terms.freeSeconds);
 
     return MoveraModalSheet(
       key: const ValueKey<String>('waiting-time-sheet'),
@@ -150,6 +154,15 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                      // Q42/Q43: once the free wait is over, the waiting
+                      // fee counts up live; it is all the driver's.
+                      if (paidSeconds > 0) ...[
+                        const SizedBox(height: 12),
+                        WaitingFeeCounter(
+                          fee: terms.driverWaitingFee(paidSeconds),
+                          perMinute: terms.perMinute,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -223,7 +236,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                         ),
                       ),
                       child: const Text(
-                        'Cancel for no-show',
+                        'Rider didn’t show',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
@@ -280,6 +293,62 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   'Close',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The live waiting fee on the pickup-wait screen: "+3,68 kr" with its
+/// rate (Q42). [fee] is the driver's part (100% by default, Q43).
+class WaitingFeeCounter extends StatelessWidget {
+  const WaitingFeeCounter({
+    super.key,
+    required this.fee,
+    required this.perMinute,
+  });
+
+  final Money fee;
+  final Money perMinute;
+
+  static const _green = Color(0xFF146B45);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey<String>('waiting-fee-counter'),
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F6EE),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: const Color(0xFFBFE3CF)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '+${fee.formatted}',
+            key: const ValueKey<String>('waiting-fee-amount'),
+            style: const TextStyle(
+              color: _green,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              'waiting fee · ${perMinute.formatted} / min',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: _green,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),

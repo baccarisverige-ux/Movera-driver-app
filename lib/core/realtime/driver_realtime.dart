@@ -136,6 +136,7 @@ class DriverRealtimeEvent {
     this.message,
     this.chat,
     this.cancelFee,
+    this.acceptedAt,
   }) : _eventId = eventId,
        _status = status,
        _latitude = latitude,
@@ -176,6 +177,7 @@ class DriverRealtimeEvent {
     final location = json['location'];
     final message = json['message'];
     final cancelFee = json['cancelFee'];
+    final accepted = projection is Map ? projection['acceptedAt'] : null;
     DateTime? time(String key) => json[key] is String
         ? DateTime.parse(json[key] as String).toUtc()
         : null;
@@ -198,6 +200,7 @@ class DriverRealtimeEvent {
       cancelFee: cancelFee is Map
           ? Money.fromJson(Map<String, dynamic>.from(cancelFee))
           : null,
+      acceptedAt: accepted is String ? DateTime.parse(accepted).toUtc() : null,
     );
   }
 
@@ -229,6 +232,10 @@ class DriverRealtimeEvent {
   /// decided by the backend (zero: no fee; null: not decided).
   final Money? cancelFee;
 
+  /// `projection.acceptedAt` (contract v0.4.0): when the driver accepted;
+  /// the live free-cancel clock counts from it (owner Q12).
+  final DateTime? acceptedAt;
+
   /// Server-assigned dedupe key. Envelopes without one (legacy in-process
   /// events) fall back to `tripId#sequence`.
   String get eventId => _eventId ?? '$tripId#$sequence';
@@ -249,7 +256,11 @@ class DriverRealtimeEvent {
     'kind': kind.wireName,
     'occurredAt': occurredAt.toIso8601String(),
     'serverTime': (serverTime ?? at).toUtc().toIso8601String(),
-    if (status != null) 'projection': {'status': status!.wireName},
+    if (status != null || acceptedAt != null)
+      'projection': {
+        if (status != null) 'status': status!.wireName,
+        if (acceptedAt != null) 'acceptedAt': acceptedAt!.toIso8601String(),
+      },
     if (location != null)
       'location': location!.toJson()
     else if (latitude != null && longitude != null)

@@ -35,6 +35,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         dropoffLat: widget.dropoffPosition.latitude,
         dropoffLng: widget.dropoffPosition.longitude,
         waitSeconds: _waitSeconds,
+        paidWaitSeconds: _paidWaitSeconds,
+        acceptedAt: _acceptedAt,
         stopIndex: _stopCursor,
         paidStopWait: _paidStopWait,
         startedAt: _onTripStartedAt,
@@ -55,6 +57,25 @@ extension _AcceptRideTrip on _AcceptRideState {
                 pickupMinutes: securedOffer.pickupMinutes,
                 tripMinutes: securedOffer.tripMinutes,
               ),
+      );
+    }
+    /// Q42: paid seconds of the wait running now (a stop wait is paid
+    /// from its first second).
+    int get _paidWaitNow => !_countingWait
+        ? 0
+        : _paidStopWait
+        ? _waitSeconds
+        : math.max(0, _waitSeconds - _includedWaitSeconds);
+    int get _paidWaitTotal => _paidWaitSeconds + _paidWaitNow;
+    /// Q43: the fare with the driver's waiting fee in it, for the earnings.
+    String get _fareWithWaiting => WaitingTerms.addFee(
+        widget.fare, _waitTerms.driverWaitingFee(_paidWaitTotal));
+    /// The current trip's waybill with the waiting fee in its fare.
+    WaybillRecord _paidWaybill() {
+      final fee = _waitTerms.driverWaitingFee(_paidWaitTotal);
+      return (_waybills.current ?? _buildCurrentWaybill()).copyWith(
+        fare: _fareWithWaiting,
+        waitingFee: fee.isZero ? null : fee.formatted,
       );
     }
     void _restoreQueuedNextFromSnapshot() {
@@ -224,6 +245,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (disposition == DriverRealtimeDisposition.acceptedWithGap) {
         unawaited(_resyncTrip());
       }
+      // The server's accept time wins over this phone's (Q12).
+      if (event.acceptedAt case final at?) { _acceptedAt = at; }
       if (event.status != null || event.kind == DriverRealtimeKind.riderCancelled) {
         _pendingProjection = event;
         unawaited(_drainProjection());
@@ -784,7 +807,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!_collectsCashNow || _stageTransitioning || _rideLifecycle.terminal) { return; }
       final complete = await showCashCollectSheet(
         context,
-        fare: widget.fare,
+        fare: _fareWithWaiting,
         cash: _cashToCollect,
         riderName: widget.riderName,
         category: widget.category,
@@ -803,10 +826,13 @@ extension _AcceptRideTrip on _AcceptRideState {
           return;
 
         case ActiveRideStage.waitingForRider:
+          _syncWaitClock();
+          final paidWait = _paidWaitNow;
           if (!await _rideLifecycle.transitionTo(ActiveRideStage.onTrip)) {
             _stageTransitioning = false;
             return;
           }
+          _paidWaitSeconds += paidWait;
           _waitTimer?.cancel();
           _paidStopWait = false;
           _stopCursor = 0;
@@ -826,6 +852,8 @@ extension _AcceptRideTrip on _AcceptRideState {
 
         case ActiveRideStage.onTrip:
           if (_paidStopWait) {
+            _syncWaitClock();
+            _paidWaitSeconds += _paidWaitNow;
             _paidStopWait = false;
             _waitTimer?.cancel();
             _stopCursor += 1;
@@ -878,8 +906,11 @@ extension _AcceptRideTrip on _AcceptRideState {
       final queuedNext = _onTripRadarState == _OnTripRadarState.secured && offer != null;
       final next = queuedNext ? _snapshotForOffer(offer) : null;
       try {
+        // Q43: the waiting fee is the driver's, in the trip's earnings.
+        final paid = _paidWaybill();
+        _waybills.beginCurrent(paid);
         await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
-          _waybills.current ?? _buildCurrentWaybill(), next: next,
+          paid, next: next,
           paymentMethod: widget.paidByCash ? 'Cash' : null,
           cashCollected: widget.paidByCash ? _cashToCollect : null);
         if (!mounted) { return; }
