@@ -14,6 +14,7 @@ import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_banner.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 import 'package:movera/presentation/driver/accept%20ride/island_morph.dart';
+import 'package:movera/presentation/driver/home/components/island_side_hit_slop.dart';
 
 /// Trip information has one surface. Touch temporarily reveals the original
 /// island; inactivity returns to the live face without changing trip state.
@@ -457,10 +458,22 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
             : _controller.defaultFace
             ? 'default'
             : presentation.identity;
+        // UI-12: menu and search (on the Home-like face) take touches in a
+        // 48 x 48 box; the island paints exactly as before.
+        final sides = _controller.defaultFace && !widget.rideCheck;
         return Align(
           alignment: Alignment.topCenter,
           heightFactor: 1,
-          child: Listener(
+          child: IslandSideHitSlop(
+            target: IslandSideHitSlop.minTarget,
+            // Room below for the touch boxes; only on that face, so the
+            // other faces keep their exact size.
+            growth: EdgeInsets.only(
+              bottom: sides
+                  ? math.max(0.0, IslandSideHitSlop.minTarget - size.height)
+                  : 0,
+            ),
+            child: Listener(
             onPointerDown: (_) => _controller.hold(),
             onPointerUp: (_) => _controller.release(),
             onPointerCancel: (_) => _controller.release(),
@@ -477,6 +490,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                 child: content,
               ),
             ),
+          ),
           ),
         );
       },

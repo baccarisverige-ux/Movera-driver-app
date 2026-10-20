@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart';
+import 'package:movera/core/session/driver_composition_guard.dart';
+
 /// Runtime switches chosen by the build, never inferred from the binding.
 ///
 /// Earlier code checked whether `WidgetsBinding` was a test binding to skip
@@ -16,8 +19,10 @@ class DriverRuntimeConfig {
   });
 
   /// Demo builds only: arrival does not require a live GPS fix within 100 m of
-  /// the demo pickup, so the demo works outside Stockholm. Production builds
-  /// set `MOVERA_DEMO_ARRIVAL=false` to keep the fresh, accurate GPS gate.
+  /// the demo pickup, so the demo works outside Stockholm. Release builds
+  /// keep the fresh, accurate GPS gate unless the demo build passes
+  /// `--dart-define=MOVERA_DEMO_ARRIVAL=true` (the GitHub Pages demo does).
+  /// See [simulatedArrivalFor].
   final bool simulatedArrival;
 
   /// Whether the active ride requests road routes from the routing service.
@@ -42,11 +47,30 @@ class DriverRuntimeConfig {
   /// their machines have no sound device.
   final bool radarSound;
 
+  /// D-12: whether a build lets the driver arrive from anywhere.
+  ///
+  /// A production composition never does. Otherwise an explicit
+  /// `MOVERA_DEMO_ARRIVAL` define wins; without one, release builds (store,
+  /// APK, iOS, web release) enforce the 100 m check and debug or profile
+  /// runs stay free for local testing.
+  static bool simulatedArrivalFor({
+    required bool releaseBuild,
+    required bool productionBuild,
+    bool? demoArrivalDefine,
+  }) {
+    if (productionBuild) { return false; }
+    return demoArrivalDefine ?? !releaseBuild;
+  }
+
+  static const bool _demoArrivalDefined = bool.hasEnvironment('MOVERA_DEMO_ARRIVAL');
+  static const bool _demoArrivalValue = bool.fromEnvironment('MOVERA_DEMO_ARRIVAL');
+
   /// Values compiled into this build.
-  static const DriverRuntimeConfig build = DriverRuntimeConfig(
-    simulatedArrival: bool.fromEnvironment(
-      'MOVERA_DEMO_ARRIVAL',
-      defaultValue: true,
+  static final DriverRuntimeConfig build = DriverRuntimeConfig(
+    simulatedArrival: simulatedArrivalFor(
+      releaseBuild: kReleaseMode,
+      productionBuild: driverProductionRequested,
+      demoArrivalDefine: _demoArrivalDefined ? _demoArrivalValue : null,
     ),
     externalRouting: bool.fromEnvironment(
       'MOVERA_EXTERNAL_ROUTING',

@@ -9,6 +9,7 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/presentation/driver/home/components/digital_island.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
@@ -17,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../integration_test/headless_map_platform.dart';
+import 'island_side_targets.dart';
 
 // D3 on Home, at 320x568 and 375x667 with text at 130 %:
 // UI-03 Android Back closes what is on top of Home before it leaves the app;
@@ -244,6 +246,41 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(tester.getSemantics(cash).label, contains('Cash rides'));
       semantics.dispose();
+      await _end(tester);
+    });
+
+    testWidgets('UI-12 island Menu and Search take touches in 48x48 at $at',
+        (tester) async {
+      await _pumpHome(tester, size);
+      // Asleep (small island) first, then awake.
+      for (final wait in const [Duration.zero, Duration(seconds: 2)]) {
+        await _frames(tester, wait);
+        final menuFinder = find.descendant(
+          of: find.byTooltip('Menu'),
+          matching: find.byType(InkWell),
+        );
+        final searchFinder =
+            find.byKey(const ValueKey<String>('destination-mode-open'));
+        final menu = tester.getRect(menuFinder);
+        final search = tester.getRect(searchFinder);
+        // The island paints exactly as on main: 54 x 50.4 at 80 %.
+        for (final visible in [menu, search]) {
+          expect(visible.width, closeTo(54 * 0.8, .01));
+          expect(visible.height, closeTo(50.4 * 0.8, .01));
+        }
+        final shell = tester.getRect(find.ancestor(
+          of: menuFinder,
+          matching: find.byType(DigitalIslandShell),
+        ));
+        expect(shell.height, closeTo(50.4 * 0.8, .01));
+        expectSideTargets(
+          tester,
+          menu: menuFinder,
+          search: searchFinder,
+          middle: find.byKey(const ValueKey<String>('last-trip-launcher')),
+          screenWidth: size.width,
+        );
+      }
       await _end(tester);
     });
 

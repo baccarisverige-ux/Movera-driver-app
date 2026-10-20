@@ -15,6 +15,12 @@ const Duration _islandIdleTimeout = Duration(seconds: 5);
 /// The whole island, its content included, is drawn at 80 % of its design
 /// size.
 const double _islandScale = 0.8;
+// UI-12: room around the island, before the scale, that makes each side
+// button's touch area 48 x 48 on screen (the buttons draw 54 x 50.4).
+const double _islandSideSlopX =
+    IslandSideHitSlop.minTarget / _islandScale - 54;
+const double _islandSideSlopBottom =
+    IslandSideHitSlop.minTarget / _islandScale - DigitalIslandParts.height;
 
 /// Set once the first-launch hint has been shown.
 const String _islandHintSeenKey = 'home_island_hint_seen';
@@ -1034,7 +1040,14 @@ extension _HomeMapSheet on _DriverHomeState {
         child: Listener(
           // Any touch on the island: normal behaviour at once (R13-1).
           onPointerDown: (_) => _islandWaiting.touch(),
-          child: DigitalIslandShell(
+          // UI-12: menu and search take touches in a 48 x 48 box; the
+          // island paints exactly as before.
+          child: IslandSideHitSlop(
+            target: IslandSideHitSlop.minTarget / _islandScale,
+            growth: const EdgeInsets.fromLTRB(
+              _islandSideSlopX, 0, _islandSideSlopX, _islandSideSlopBottom,
+            ),
+            child: DigitalIslandShell(
             width: width,
             height: height,
             // Online, the driver is on the road: no light passing over it.
@@ -1050,12 +1063,15 @@ extension _HomeMapSheet on _DriverHomeState {
               side(Builder(
                 builder: (context) => Tooltip(
                   message: 'Menu',
-                  child: InkWell(
-                    onTap: () => Scaffold.of(context).openDrawer(),
-                    child: SizedBox(
-                      width: 54,
-                      height: height,
-                      child: DigitalIslandParts.menuIcon(),
+                  child: IslandSideButton(
+                    outward: AxisDirection.left,
+                    child: InkWell(
+                      onTap: () => Scaffold.of(context).openDrawer(),
+                      child: SizedBox(
+                        width: 54,
+                        height: height,
+                        child: DigitalIslandParts.menuIcon(),
+                      ),
                     ),
                   ),
                 ),
@@ -1144,18 +1160,22 @@ extension _HomeMapSheet on _DriverHomeState {
               ),
               side(Tooltip(
                 message: 'Search destination',
-                child: InkWell(
-                  key: const ValueKey<String>('destination-mode-open'),
-                  onTap: _openDestinationModePicker,
-                  child: const SizedBox(
-                    width: 54,
-                    height: height,
-                    child: DigitalIslandParts.searchIcon,
+                child: IslandSideButton(
+                  outward: AxisDirection.right,
+                  child: InkWell(
+                    key: const ValueKey<String>('destination-mode-open'),
+                    onTap: _openDestinationModePicker,
+                    child: const SizedBox(
+                      width: 54,
+                      height: height,
+                      child: DigitalIslandParts.searchIcon,
+                    ),
                   ),
                 ),
               ), tuck: destination),
             ],
           ),
+        ),
         ),
         ),
       );

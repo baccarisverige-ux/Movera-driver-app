@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/home/components/island_side_hit_slop.dart';
 
 /// Shared dimensions of the default island as displayed on the driver map.
 abstract final class TripIslandGeometry {
@@ -146,12 +147,15 @@ class _TripIslandState extends State<TripIsland> {
           side(
             Tooltip(
               message: 'Menu',
-              child: InkWell(
-                onTap: widget.onMenu,
-                child: SizedBox(
-                  width: 54,
-                  height: height,
-                  child: DigitalIslandParts.menuIcon(),
+              child: IslandSideButton(
+                outward: AxisDirection.left,
+                child: InkWell(
+                  onTap: widget.onMenu,
+                  child: SizedBox(
+                    width: 54,
+                    height: height,
+                    child: DigitalIslandParts.menuIcon(),
+                  ),
                 ),
               ),
             ),
@@ -194,13 +198,16 @@ class _TripIslandState extends State<TripIsland> {
           side(
             Tooltip(
               message: 'Search destination',
-              child: InkWell(
-                key: const ValueKey<String>('trip-island-search'),
-                onTap: widget.onSearch,
-                child: const SizedBox(
-                  width: 54,
-                  height: height,
-                  child: DigitalIslandParts.searchIcon,
+              child: IslandSideButton(
+                outward: AxisDirection.right,
+                child: InkWell(
+                  key: const ValueKey<String>('trip-island-search'),
+                  onTap: widget.onSearch,
+                  child: const SizedBox(
+                    width: 54,
+                    height: height,
+                    child: DigitalIslandParts.searchIcon,
+                  ),
                 ),
               ),
             ),

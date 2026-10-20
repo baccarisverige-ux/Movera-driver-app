@@ -11,7 +11,7 @@ Source: deep re-audit of 2 October 2026 (N05, N06, N09, N27; residuals of F12, F
 
 ## Change
 
-- `DriverRuntimeConfig` holds explicit switches (`simulatedArrival`, `externalRouting`, `skipAccountActivation`, `liveMapTicker`) compiled from `--dart-define`. Production builds pass `--dart-define=MOVERA_DEMO_ARRIVAL=false`. `DriverRuntimeConfig.production` documents the fully gated policy.
+- `DriverRuntimeConfig` holds explicit switches (`simulatedArrival`, `externalRouting`, `skipAccountActivation`, `liveMapTicker`) compiled from `--dart-define`. Release builds enforce the 100 m arrival check by default (D-12); only the GitHub Pages demo passes `--dart-define=MOVERA_DEMO_ARRIVAL=true`, and `MOVERA_PRODUCTION=true` always enforces it. `DriverRuntimeConfig.production` documents the fully gated policy.
 - `test/flutter_test_config.dart` sets the test policy explicitly; the integration test sets its own.
 - All accept paths use `tripOccurrenceId()`.
 - `MoveraApp(locationRepository:)` lets the integration test inject scripted fixes, so it no longer touches host location services.
