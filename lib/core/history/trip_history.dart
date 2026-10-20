@@ -26,6 +26,7 @@ class TripHistoryRecord {
     this.cancellationActor,
     this.cancellationReasonCode,
     this.cashCollected,
+    this.driverBonus,
   });
 
   final String tripId;
@@ -49,6 +50,10 @@ class TripHistoryRecord {
   /// from [fare] (rider promotions). Null when not recorded: an older
   /// cash trip then counts as its fare.
   final String? cashCollected;
+
+  /// Q16/Q18: Movera's bonus already in [fare], e.g. "40 kr"; null for
+  /// none. Shown as "incl. +40 kr Movera bonus".
+  final String? driverBonus;
 
   /// The rider paid cash in the car (Q23).
   bool get paidByCash => paymentMethod.trim().toLowerCase() == 'cash';

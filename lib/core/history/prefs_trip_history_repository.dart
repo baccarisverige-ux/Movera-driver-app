@@ -58,6 +58,7 @@ class PrefsTripHistoryRepository {
             cancellationActor: data['cancellationActor'] as String?,
             cancellationReasonCode: data['cancellationReasonCode'] as String?,
             cashCollected: data['cashCollected'] as String?,
+            driverBonus: data['driverBonus'] as String?,
             completedAt: DateTime.tryParse(
               data['completedAt'] as String? ?? '',
             ),
@@ -119,6 +120,7 @@ class PrefsTripHistoryRepository {
             'cancellationActor',
             'cancellationReasonCode',
             'cashCollected',
+            'driverBonus',
           ].every((key) => row[key] == null || row[key] is String) ||
           (row['fareMinorUnits'] != null && row['fareMinorUnits'] is! int) ||
           (row['status'] != null &&
@@ -223,6 +225,7 @@ class PrefsTripHistoryRepository {
           'paymentMethod': paymentMethod!.trim(),
         if (cashCollected?.trim().isNotEmpty == true)
           'cashCollected': cashCollected!.trim(),
+        if (record.driverBonus != null) 'driverBonus': record.driverBonus,
         'completedAt': at.toIso8601String(),
       });
       rows.sort(

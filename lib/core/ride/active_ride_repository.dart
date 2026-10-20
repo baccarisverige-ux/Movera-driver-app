@@ -1,5 +1,6 @@
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 
 enum ActiveRideStage { headingToPickup, waitingForRider, onTrip }
 
@@ -110,6 +111,7 @@ class PersistedActiveRide {
     this.fare,
     this.paidByCash = false,
     this.cashToCollect,
+    this.driverBonus,
     this.category,
     this.matchedVia,
     this.pickupAddress,
@@ -151,6 +153,9 @@ class PersistedActiveRide {
 
   /// R8-4: the cash to take from the rider when it is not [fare].
   final String? cashToCollect;
+
+  /// Movera's bonus already in [fare] (contract `driverBonus`, Q16/Q18).
+  final Money? driverBonus;
   final String? category;
   final String? matchedVia;
   final String? pickupAddress;
@@ -211,6 +216,7 @@ class PersistedActiveRide {
       fare: fare,
       paidByCash: paidByCash,
       cashToCollect: cashToCollect,
+      driverBonus: driverBonus,
       category: category,
       matchedVia: matchedVia,
       pickupAddress: pickupAddress,
@@ -249,6 +255,7 @@ class PersistedActiveRide {
     if (fare != null) 'fare': fare,
     if (paidByCash) 'paidByCash': true,
     if (cashToCollect != null) 'cashToCollect': cashToCollect,
+    if (driverBonus != null) 'driverBonus': driverBonus!.toJson(),
     if (category != null) 'category': category,
     if (matchedVia != null) 'matchedVia': matchedVia,
     if (pickupAddress != null) 'pickupAddress': pickupAddress,
@@ -277,6 +284,16 @@ class PersistedActiveRide {
         'longitude': destinationPoint!.longitude,
       },
   };
+
+  /// A saved Money, or null when absent or not readable.
+  static Money? _money(Object? value) {
+    if (value is! Map) return null;
+    try {
+      return Money.fromJson(Map<String, dynamic>.from(value));
+    } on FormatException {
+      return null;
+    }
+  }
 
   static PersistedActiveRide? fromJson(Map<String, dynamic> json) {
     final version = json['schemaVersion'] ?? 1;
@@ -376,6 +393,7 @@ class PersistedActiveRide {
       cashToCollect: json['cashToCollect'] is String
           ? json['cashToCollect'] as String
           : null,
+      driverBonus: _money(json['driverBonus']),
       category: json['category'] as String?,
       matchedVia: json['matchedVia'] as String?,
       pickupAddress: json['pickupAddress'] as String?,

@@ -35,6 +35,9 @@ class _HomeExclusiveState {
   /// Takes the sheet down if it never reports back (not on screen).
   Timer? downGuard;
 
+  /// The admin direct assign whose Accept dispatch is deciding (§3.1).
+  String? claimingId;
+
   /// The route on the map fades in once the sheet is up and out before
   /// it goes down.
   final RouteFade fade = RouteFade();
@@ -49,6 +52,13 @@ class _HomeExclusiveState {
 extension _HomeExclusive on _DriverHomeState {
     bool get _exclusiveReduceMotion =>
         MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+
+    /// Accept is being sent (a reservation, an assigned ride or an admin
+    /// direct assign): the orb waits and the down arrow is off.
+    bool get _exclusiveClaiming =>
+        _reservation.claimingId != null ||
+        _scheduled.claimingId != null ||
+        _exclusive.claimingId != null;
 
     /// The Exclusive offer is up and its orb is Accept.
     bool get _exclusiveLive =>
@@ -93,8 +103,7 @@ extension _HomeExclusive on _DriverHomeState {
           deadline == null ||
           _exclusive.leaving ||
           _outsideOfferTimeoutTimer != null ||
-          _reservation.claimingId != null ||
-          _scheduled.claimingId != null) {
+          _exclusiveClaiming) {
         return;
       }
       final left = deadline.difference(ScheduledClock.realNow());
@@ -172,8 +181,7 @@ extension _HomeExclusive on _DriverHomeState {
       final viewport = MediaQuery.sizeOf(context);
       final safeTop = MediaQuery.paddingOf(context).top;
       final offer = _exclusive.shown;
-      final claiming =
-          _reservation.claimingId != null || _scheduled.claimingId != null;
+      final claiming = _exclusiveClaiming;
       return Positioned(
         key: const ValueKey<String>('home-exclusive-slot'),
         left: 0,
@@ -205,8 +213,7 @@ extension _HomeExclusive on _DriverHomeState {
             // The down arrow skips the offer, like a time out (Q16).
             onDecline: claiming
                 ? null
-                : () => _HomeOfferRadar(this)
-                    ._dismissOutsideRadarOffer(missed: true),
+                : _HomeOfferRadar(this)._declineOutsideRadarOffer,
             onShown: () {
               if (mounted && !_exclusive.raised && _exclusiveLive) {
                 _rebuild(() => _exclusive.raised = true);
@@ -300,8 +307,7 @@ extension _HomeExclusive on _DriverHomeState {
     /// accept", black Accept, no icon) inside a thin dark time ring;
     /// tapping it accepts the offer.
     Widget _exclusiveRadar() {
-      final claiming =
-          _reservation.claimingId != null || _scheduled.claimingId != null;
+      final claiming = _exclusiveClaiming;
       return KeyedSubtree(
         key: const ValueKey<String>('home-radar-exclusive'),
         child: AnimatedBuilder(

@@ -45,6 +45,14 @@ const _reservationTrip = RideOffer(
 
 /// Dispatch with only what a test publishes: no demo Radar trips.
 class _Radar implements DispatchRepository {
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() =>
+      const Stream<OfferWithdrawal>.empty();
+
   _Radar({this.lose = false});
 
   final bool lose;

@@ -28,6 +28,14 @@ const _offer = RideOffer(
 );
 
 class _ControlledDispatch implements DispatchRepository {
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() =>
+      const Stream<OfferWithdrawal>.empty();
+
   final requests = <Completer<ClaimResult>>[];
   @override
   Stream<List<RideOffer>> watchNearbyOffers({

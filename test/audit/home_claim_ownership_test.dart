@@ -32,6 +32,14 @@ RideOffer _offer(String id) => RideOffer(
 );
 
 class _Dispatch implements DispatchRepository {
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() =>
+      const Stream<OfferWithdrawal>.empty();
+
   final updates = StreamController<List<RideOffer>>.broadcast();
   final claims = <Completer<ClaimResult>>[];
   @override

@@ -68,10 +68,8 @@ extension _HomeBack on _DriverHomeState {
       if (_backSeesExclusive) {
         // Same as its down arrow: skipped like a time out (Q16). While
         // Accept is being sent, Back waits like the arrow does.
-        final claiming =
-            _reservation.claimingId != null || _scheduled.claimingId != null;
-        if (!claiming) {
-          _HomeOfferRadar(this)._dismissOutsideRadarOffer(missed: true);
+        if (!_HomeExclusive(this)._exclusiveClaiming) {
+          _HomeOfferRadar(this)._declineOutsideRadarOffer();
         }
         return;
       }

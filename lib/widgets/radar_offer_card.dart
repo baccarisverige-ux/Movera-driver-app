@@ -30,6 +30,7 @@ class RadarOfferView {
     this.riderTrips = 0,
     this.pickupPay,
     this.priority = false,
+    this.driverBonus,
   });
 
   final String id;
@@ -67,13 +68,17 @@ class RadarOfferView {
   /// badge. [fare] is already the total with the bonus.
   final bool priority;
 
+  /// Movera's bonus already in [fare], e.g. "40 kr" (Q16); no commission
+  /// is taken on it when the card shows the driver's share.
+  final String? driverBonus;
+
   /// Pickup pay worked out when the offer shows; null for none.
   final PickupPayQuote? pickupPay;
 
   /// The fare as the card shows it ([OfferCardDetails.fare]) with the
   /// pickup pay added: one total.
   String shownFare(OfferCardDetails show) {
-    final base = show.fare(fare);
+    final base = show.fare(fare, bonus: driverBonus);
     return pickupPay?.totalOf(base) ?? base;
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/money/money.dart';
 
 class WaybillRecord {
   const WaybillRecord({
@@ -16,6 +17,7 @@ class WaybillRecord {
     required this.licensePlate,
     required this.passengerCapacity,
     this.waitingFee,
+    this.driverBonus,
   });
 
   final String tripId;
@@ -35,6 +37,16 @@ class WaybillRecord {
   /// The driver's waiting fee in [fare] (Q42/Q43), e.g. "3,68 kr"; null
   /// when the trip had none.
   final String? waitingFee;
+
+  /// Movera's bonus in [fare] (Q16/Q18), e.g. "40 kr"; null without one.
+  final String? driverBonus;
+
+  /// [bonus] as the earnings label, e.g. "40 kr"; null for none.
+  static String? bonusLabel(Money? bonus) =>
+      bonus == null || bonus.minorUnits <= 0 ? null : bonus.formattedShort;
+
+  /// "incl. +40 kr Movera bonus", under the fare wherever earnings show.
+  static String bonusNote(String bonus) => 'incl. +$bonus Movera bonus';
 
   WaybillRecord copyWith({
     String? fare,
@@ -59,6 +71,7 @@ class WaybillRecord {
       licensePlate: licensePlate ?? this.licensePlate,
       passengerCapacity: passengerCapacity,
       waitingFee: waitingFee ?? this.waitingFee,
+      driverBonus: driverBonus,
     );
   }
 }
@@ -232,35 +245,55 @@ class WaybillStore {
 /// The fare text is the one shown to the driver ("128,40 kr" or
 /// "126.75 kr"). Amounts are kept in öre and keep its decimal separator.
 class WaybillPayment {
-  const WaybillPayment._(this._fareOre, this._comma, this._feeRate);
+  const WaybillPayment._(this._fareOre, this._comma, this._feeRate, this._bonusOre);
 
   /// Movera's share of each fare. Placeholder until per-trip pricing comes
   /// from the backend; change here.
   static const double serviceFeeRate = 0.25;
 
   /// Null when [fare] holds no amount (for example "—"). [feeRate] is
-  /// Movera's share.
+  /// Movera's share. [bonus] (e.g. "40 kr", Q16/Q18) is Movera's extra
+  /// already in [fare]: the rider never pays it and Movera takes no fee
+  /// on it, so it all goes to the driver's earnings.
   static WaybillPayment? fromFare(
     String fare, {
     double feeRate = serviceFeeRate,
+    String? bonus,
   }) {
     final match = RegExp(r'\d+(?:[.,]\d{1,2})?').firstMatch(fare);
     if (match == null) return null;
     final text = match.group(0)!;
     final value = double.tryParse(text.replaceAll(',', '.'));
     if (value == null) return null;
-    return WaybillPayment._((value * 100).round(), text.contains(','), feeRate);
+    final fareOre = (value * 100).round();
+    final bonusOre = bonus == null ? 0 : Money.parseLabel(bonus)?.minorUnits ?? 0;
+    return WaybillPayment._(
+      fareOre,
+      text.contains(','),
+      feeRate,
+      bonusOre.clamp(0, fareOre),
+    );
   }
 
   final int _fareOre;
   final bool _comma;
   final double _feeRate;
+  final int _bonusOre;
 
-  int get _feeOre => (_fareOre * _feeRate).round();
+  /// What the rider pays: the fare without Movera's bonus.
+  int get _riderOre => _fareOre - _bonusOre;
 
-  String get fare => _format(_fareOre);
+  int get _feeOre => (_riderOre * _feeRate).round();
+
+  /// Paid by the passenger (the base price).
+  String get fare => _format(_riderOre);
   String get serviceFee => _format(_feeOre);
+
+  /// The driver's: the rider's fare after Movera's fee, plus the bonus.
   String get earnings => _format(_fareOre - _feeOre);
+
+  /// Movera's bonus in the earnings; null without one.
+  String? get bonus => _bonusOre > 0 ? _format(_bonusOre) : null;
 
   String _format(int ore) {
     final text = '${ore ~/ 100}.${(ore % 100).toString().padLeft(2, '0')}';
