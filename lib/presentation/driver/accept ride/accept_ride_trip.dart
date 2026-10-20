@@ -727,13 +727,15 @@ extension _AcceptRideTrip on _AcceptRideState {
         _finishBrowseSheetCollapse();
       }
     }
-    void _exitBrowse() {
+    /// [locate]: the driver tapped recenter, so the camera flies to the
+    /// locate view; the quiet return after browsing keeps the speed zoom.
+    void _exitBrowse({bool locate = false}) {
       // The recenter tap itself reaches the map, and the camera then flies
       // back: neither is the driver browsing.
       _mapZoomSettle.cancel();
       _lastMapZoom = null;
       _navigation.resumeFollow();
-      _camera.recenter();
+      if (locate) { _camera.locate(); } else { _camera.recenter(); }
       unawaited(_followVehicle());
       _browsePulse
         ..stop()

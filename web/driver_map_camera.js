@@ -98,6 +98,30 @@
   // to its heading as seen from the camera, foreshortened like the tilted
   // ground (MoveraVehicleMarker.screenRotation; keep both in step).
   const HALO = 88;
+  // The arrow and its halo grow a little zoomed in and shrink zoomed out
+  // (MoveraVehicleMarker.scaleStops / nextScale; keep both in step):
+  // interpolated between these stops, clamped, in 0.05 buckets that change
+  // only once the zoom's scale is 0.7 of a bucket away.
+  const SCALE_STOPS = [[11.5, .6], [13.5, .75], [15, 1], [17, 1.1]];
+  const SCALE_STEP = .05;
+  const scaleForZoom = zoom => {
+    if (!Number.isFinite(zoom)) return 1;
+    if (zoom <= SCALE_STOPS[0][0]) return SCALE_STOPS[0][1];
+    for (let i = 1; i < SCALE_STOPS.length; i++) {
+      const [z1, s1] = SCALE_STOPS[i];
+      if (zoom <= z1) {
+        const [z0, s0] = SCALE_STOPS[i - 1];
+        return s0 + (s1 - s0) * (zoom - z0) / (z1 - z0);
+      }
+    }
+    return SCALE_STOPS[SCALE_STOPS.length - 1][1];
+  };
+  const bucket = scale => Math.round(Math.round(scale / SCALE_STEP) * SCALE_STEP * 100) / 100;
+  const nextScale = (shown, zoom) => {
+    const wanted = scaleForZoom(zoom);
+    if (shown != null && Math.abs(wanted - shown) < SCALE_STEP * .7) return shown;
+    return bucket(wanted);
+  };
   const screenRotation = (heading, bearing, tilt) => {
     const turn = (heading - bearing) * Math.PI / 180;
     const lean = Math.cos(clamp(tilt, 0, 89) * Math.PI / 180);
@@ -539,6 +563,9 @@
         const image = document.createElement('img');
         image.style.cssText = 'position:absolute;pointer-events:none;';
         let anchor = {x: .5, y: .5};
+        // Size bucket for the camera's zoom; the overlay redraws on every
+        // camera frame, the transform changes only on a new bucket.
+        let scale = null;
         const setIcon = icon => {
           if (!icon?.url) return;
           image.src = icon.url;
@@ -559,11 +586,12 @@
           const pixel = car.getProjection()?.fromLatLngToDivPixel(marker.getPosition());
           if (!pixel) return;
           const tilt = state.map.getTilt() || 0;
+          scale = nextScale(scale, Number(state.map.getZoom()));
           image.style.left = `${pixel.x}px`; image.style.top = `${pixel.y}px`;
           image.style.transform = `translate(${-anchor.x * 100}%,${-anchor.y * 100}%) ` +
-            `rotate(${screenRotation(state.heading, state.map.getHeading() || 0, tilt)}deg)`;
+            `rotate(${screenRotation(state.heading, state.map.getHeading() || 0, tilt)}deg) scale(${scale})`;
           halo.style.left = `${pixel.x}px`; halo.style.top = `${pixel.y}px`;
-          halo.style.transform = `translate(-50%,-50%) scaleY(${Math.cos(tilt * Math.PI / 180)})`;
+          halo.style.transform = `translate(-50%,-50%) scale(${scale}) scaleY(${Math.cos(tilt * Math.PI / 180)})`;
         };
         car.onRemove = () => { image.remove(); halo.remove(); };
         this.addListener('position_changed', () => car.draw());
@@ -629,6 +657,8 @@
       const state = states.get(id); state?.callbacks.add(callback);
       return () => state?.callbacks.delete(callback);
     },
+    // The own vehicle's size bucket at a zoom (for checks; see nextScale).
+    vehicleScale(zoom, shown) { return nextScale(shown ?? null, zoom); },
     vehicle(id, heading) {
       const state = states.get(id); if (!state) return;
       state.heading = heading; state.car?.draw();

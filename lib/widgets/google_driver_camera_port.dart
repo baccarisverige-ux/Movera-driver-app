@@ -97,6 +97,16 @@ class GoogleDriverCameraPort
     return metersPerPixel > 0 && meters / metersPerPixel > 2400;
   }
 
+  /// How long a recenter / locate flight takes to reach full speed.
+  static const Duration flightEaseIn = Duration(milliseconds: 280);
+
+  /// Smoothstep from a small first step (the flight visibly starts on its
+  /// first frame) to full speed.
+  static double _easeIn(double t) {
+    final x = t.clamp(0.0, 1.0);
+    return .12 + .88 * x * x * (3 - 2 * x);
+  }
+
   /// Offer and route previews fly in this long (eased in and out).
   static const Duration previewFlight = Duration(milliseconds: 650);
 
@@ -245,6 +255,11 @@ class GoogleDriverCameraPort
         return;
       }
       var dt = 16000;
+      // A recenter / locate flight (long duration) eases in over its first
+      // [flightEaseIn]: the damped approach alone would leave at full speed
+      // in the first frame, a visible jolt on a zoom of several levels.
+      final easeIn = initial.duration.inMilliseconds > 600;
+      var flown = 0;
       // The first frame is always sent, even when the map already shows
       // this pose: it puts the car on the anchor above the sheet (a map
       // opens with the car in the middle of the whole view).
@@ -263,9 +278,13 @@ class GoogleDriverCameraPort
         final settled = _settled(from, destination);
         if (!settled || first) {
           first = false;
+          final ramp = easeIn
+              ? _easeIn(flown / flightEaseIn.inMicroseconds)
+              : 1.0;
           final next = settled
               ? destination
-              : _approach(from, destination, dt, goal.duration);
+              : _approach(from, destination, (dt * ramp).round(), goal.duration);
+          flown += dt;
           await _move(next,
             trackVehicle: _trackCar(next, goal), generation: generation);
         }

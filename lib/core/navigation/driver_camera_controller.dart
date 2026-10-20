@@ -92,6 +92,14 @@ class DriverCameraPolicy {
   /// does not zoom.
   static const double exploreZoom = 11.7;
 
+  /// The locate (recenter) button's view, on Home and on a trip: streets
+  /// readable and tilted toward the horizon by the tilt curve (about 58°),
+  /// one to two kilometres ahead on screen, like the reference app's
+  /// locate view; never closer, so the map does not turn into a few fat
+  /// roads. Home then keeps this zoom while it follows the car (it still
+  /// opens at [exploreZoom]); a trip eases back to its speed zoom from here.
+  static const double locateZoom = 15;
+
   /// Parked at the pickup or a paid stop.
   static const double waitingZoom = 17.2;
 
@@ -100,6 +108,17 @@ class DriverCameraPolicy {
   /// zoom 16 drew fat across the bottom of the screen (owner, iPhone), so
   /// guidance stays at 15 and below, like the reference navigation app.
   static const double guidanceStartZoom = 15;
+
+  /// Home's follow zoom: [exploreZoom] until the driver taps locate, then
+  /// [locateZoom].
+  double _exploreZoom = exploreZoom;
+
+  /// The next pose is the locate button's ([locate]).
+  bool _locating = false;
+
+  /// The driver tapped locate: the next pose flies to [locateZoom] (its
+  /// tilt from [tiltForZoom]); waiting at a stop keeps its own view.
+  void locate() => _locating = true;
 
   /// Smoothed GPS speed: one noisy reading must not zoom the map.
   double? _speed;
@@ -223,13 +242,19 @@ class DriverCameraPolicy {
     final speed = _smoothedSpeed(rawUsable, immediate || !guiding);
     if (!guiding) _cruise = null;
     var bearing = guiding ? _course : 0.0;
+    final locating = _locating && !waiting;
+    _locating = false;
+    if (locating && !navigating) _exploreZoom = locateZoom;
     var zoom = waiting
         ? waitingZoom
         : navigating
         ? (autoZoom
               ? _cruiseZoom(speed, immediate)
               : (_previous?.zoom ?? guidanceStartZoom))
-        : exploreZoom;
+        : _exploreZoom;
+    // Locate on a trip: the locate view now; the speed zoom then takes over
+    // again at its own pace (at most [maxZoomOutPerFix] a fix).
+    if (locating && navigating) zoom = _cruise = locateZoom;
     // Arrival blend toward [arrivalTilt]; 0 = tilt follows zoom.
     var arrival = 0.0;
     var onRoute = false;
@@ -569,6 +594,14 @@ class DriverCameraController {
     _mode = DriverCameraMode.browsing;
     _invalidate();
     _scheduleResume();
+  }
+
+  /// The locate button (Home and trip): follow the car again at the
+  /// locate view ([DriverCameraPolicy.locateZoom]), in one smooth flight.
+  void locate() {
+    if (_disposed) return;
+    _policy.locate();
+    recenter();
   }
 
   void recenter() {
