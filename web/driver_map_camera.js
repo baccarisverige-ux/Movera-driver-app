@@ -97,7 +97,7 @@
   // The own vehicle is an upright arrow (lib MoveraVehicleMarker): turned
   // to its heading as seen from the camera, foreshortened like the tilted
   // ground (MoveraVehicleMarker.screenRotation; keep both in step).
-  const HALO = 88;
+  const HALO = 60;
   // The arrow and its halo grow a little zoomed in and shrink zoomed out
   // (MoveraVehicleMarker.scaleStops / nextScale; keep both in step):
   // interpolated between these stops, clamped, in 0.05 buckets that change

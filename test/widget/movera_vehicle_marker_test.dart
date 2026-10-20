@@ -69,12 +69,13 @@ void main() {
         expect(raw, greaterThanOrEqualTo(previous - 1e-12));
         previous = raw;
       }
-      // About a tenth of a phone (393 pt) at zoom 15: the arrow is 40 of
-      // its box's 52 points.
-      expect(40 / 52 * MoveraVehicleMarker.size * s(15) / 393,
-          closeTo(.10, .01));
-      expect(40 / 52 * MoveraVehicleMarker.size * s(11.7) / 393,
+      // Small like the reference (owner: the old arrow looked too big):
+      // about 6.5 % of a phone (393 pt) at zoom 15, 4 % zoomed out. The
+      // arrow is 34 of its box's 52 drawing units wide.
+      expect(34 / 52 * MoveraVehicleMarker.size * s(15) / 393,
           closeTo(.065, .01));
+      expect(34 / 52 * MoveraVehicleMarker.size * s(11.7) / 393,
+          closeTo(.04, .01));
     });
 
     test('size buckets: no flicker at a bucket edge', () {
@@ -98,8 +99,9 @@ void main() {
       expect(halo.width, closeTo(MoveraVehicleMarker.haloSize * .6, 1e-9));
     });
 
-    test('blue top face, darker edge under it, clear around it', () async {
-      const box = MoveraVehicleMarker.size;
+    test('flat blue face, white outline, clear around it', () async {
+      // Drawn in its 52-unit design box so the pixel spots stay fixed.
+      const box = 52.0;
       final recorder = ui.PictureRecorder();
       MoveraVehicleMarker.paintArrow(Canvas(recorder), box);
       final image =
@@ -114,10 +116,11 @@ void main() {
       final face = at(26, 24);
       expect(face.a, 1);
       expect(face.b, greaterThan(face.r));
-      final edge = at(40, 38);
-      expect(edge.a, greaterThan(.9));
-      double light(Color c) => c.r + c.g + c.b;
-      expect(light(edge), lessThan(light(face)));
+      // White outline just outside the tip.
+      final rim = at(26, 6);
+      expect(rim.a, greaterThan(.9));
+      expect(rim.r, greaterThan(.9));
+      expect(rim.b, greaterThan(.9));
       expect(at(2, 2).a, 0);
     });
 
