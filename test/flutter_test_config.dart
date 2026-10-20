@@ -9,6 +9,7 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/documents/document_expiry.dart';
+import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -67,6 +68,8 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
       ..arrivals = const [];
     DriverCategoryChoice.reset();
     DriverAppTexts.reset();
+    // English, no zone and no saved language (Round 4).
+    DriverLanguage.resetForTest();
     PickupPayConfig.current = const PickupPayConfig();
     DestinationModeRules.current = const DestinationModeRules();
     NextTripRules.current = const NextTripRules();

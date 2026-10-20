@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -12,18 +13,18 @@ Future<bool> showGoOfflineConfirm(BuildContext context) async {
     context: context,
     builder: (context) => AlertDialog(
       key: const ValueKey<String>('go-offline-confirm'),
-      title: const Text('Go offline?'),
-      content: const Text('You stop getting trip offers until you go online again.'),
+      title: Text(tr.goOfflineQuestion),
+      content: Text(tr.youStopGettingTripOffersUntil),
       actions: [
         TextButton(
           key: const ValueKey<String>('go-offline-stay'),
           onPressed: () => popOwned(context, false),
-          child: const Text('Stay online'),
+          child: Text(tr.stayOnline),
         ),
         FilledButton(
           key: const ValueKey<String>('go-offline-yes'),
           onPressed: () => popOwned(context, true),
-          child: const Text('Go offline'),
+          child: Text(tr.goOffline),
         ),
       ],
     ),
@@ -42,7 +43,7 @@ class RadarHoldOff extends StatefulWidget {
     required this.onConfirmed,
     this.holdFor = const Duration(milliseconds: 1000),
     this.size = 104,
-    this.semanticsLabel = 'Hold to go offline',
+    this.semanticsLabel,
     this.holdKey = const ValueKey<String>('home-radar-hold-off'),
   });
 
@@ -52,7 +53,8 @@ class RadarHoldOff extends StatefulWidget {
   final double size;
 
   /// What a screen reader says, e.g. "Hold to stop next trips".
-  final String semanticsLabel;
+  /// "Hold to go offline" by default.
+  final String? semanticsLabel;
   final Key holdKey;
 
   @override
@@ -96,7 +98,7 @@ class _RadarHoldOffState extends State<RadarHoldOff>
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: widget.semanticsLabel,
+      label: widget.semanticsLabel ?? tr.holdToGoOffline,
       onLongPress: widget.onConfirmed,
       child: GestureDetector(
         key: widget.holdKey,

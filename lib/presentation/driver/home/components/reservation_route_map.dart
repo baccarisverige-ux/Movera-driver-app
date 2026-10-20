@@ -1,3 +1,5 @@
+import 'package:movera/core/scheduled/reservation_when.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -192,7 +194,7 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
       'reservation-pickup',
       request.pickup,
       RouteMarkKind.pickup,
-      'Pickup',
+      tr.pickup,
       request.pickupTime,
     )) {
       return;
@@ -202,7 +204,7 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
         'reservation-stop-$i',
         request.stops[i].point,
         RouteMarkKind.stop,
-        'Stop ${i + 1}',
+        tr.stopNumber(i + 1),
         null,
       )) {
         return;
@@ -212,7 +214,7 @@ class _ReservationRouteMapState extends State<ReservationRouteMap> {
       'reservation-dropoff',
       request.dropoff,
       RouteMarkKind.dropoff,
-      'Arrive',
+      tr.arrive,
       request.arrivalTime,
     )) {
       return;
@@ -378,7 +380,7 @@ class ReservationRouteMapPage extends StatelessWidget {
                 top: safe.top + 12,
                 child: MapControlButton(
                   key: const ValueKey<String>('reservation-map-close'),
-                  tooltip: 'Back to request',
+                  tooltip: tr.backToRequest,
                   size: 48,
                   onTap: () => maybePopOwned(context),
                   child: const Icon(
@@ -422,11 +424,11 @@ class ReservationRouteMapPage extends StatelessWidget {
               runSpacing: 8,
               children: [
                 Text(
-                  '${request.pickupDay} · ${request.category}',
+                  '${ReservationWhen.dayWord(request.pickupDay)} · ${request.category}',
                   style: const TextStyle(color: _muted, fontSize: 13),
                 ),
                 Text(
-                  '${request.tripMinutes} min · ${driverDistanceKm(request.tripKm)}',
+                  tr.tripMinutesMinDistance(request.tripMinutes, driverDistanceKm(request.tripKm)),
                   style: const TextStyle(
                     color: _ink,
                     fontSize: 13,
@@ -438,7 +440,7 @@ class ReservationRouteMapPage extends StatelessWidget {
             const SizedBox(height: 12),
             _row(
               RouteMarkKind.pickup,
-              'Pickup',
+              tr.pickup,
               request.pickupAddress,
               request.pickupTime,
             ),
@@ -446,7 +448,7 @@ class ReservationRouteMapPage extends StatelessWidget {
               _connector(),
               _row(
                 RouteMarkKind.stop,
-                'Stop ${i + 1}',
+                tr.stopNumber(i + 1),
                 request.stops[i].address,
                 null,
               ),
@@ -454,7 +456,7 @@ class ReservationRouteMapPage extends StatelessWidget {
             _connector(),
             _row(
               RouteMarkKind.dropoff,
-              'Drop-off',
+              tr.dropOff,
               request.dropoffAddress,
               request.arrivalTime,
             ),

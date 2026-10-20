@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
@@ -22,8 +23,8 @@ class ExclusiveRequestSheet extends StatelessWidget {
     this.reservationTime,
     this.onYourWay = false,
     this.details,
-    this.lead = defaultLead,
-  });
+    String? lead,
+  }) : _lead = lead;
 
   final RadarOfferView offer;
 
@@ -42,14 +43,17 @@ class ExclusiveRequestSheet extends StatelessWidget {
 
   /// The pill's words before the seconds: "Exclusive for you", or
   /// "Assigned by Movera" for a ride Movera assigned (Q29).
-  final String lead;
+  final String? _lead;
 
-  static const String defaultLead = 'Exclusive for you';
+  /// The pill's words; "Exclusive for you" by default.
+  String get lead => _lead ?? defaultLead;
+
+  static String get defaultLead => tr.exclusiveForYou;
   static const String _prefix = 'exclusive';
 
   /// "Exclusive for you · 12 s".
-  static String pillLabel(int seconds, [String lead = defaultLead]) =>
-      '$lead · ${seconds < 0 ? 0 : seconds} s';
+  static String pillLabel(int seconds, [String? lead]) =>
+      '${lead ?? defaultLead} · ${seconds < 0 ? 0 : seconds} s';
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +94,7 @@ class ExclusiveRequestSheet extends StatelessWidget {
       ],
       fareWhole: whole,
       fareRest: rest,
-      trip: show.tripMinutesKm ? '${offer.tripMinutes} min trip' : null,
+      trip: show.tripMinutesKm ? tr.tripMinutesMinTrip(offer.tripMinutes) : null,
       // "incl. … pickup" under the total, when admin shows it.
       underFare: PickupPayLine(
         quote: offer.pickupPay,

@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -93,12 +94,12 @@ class _TripIslandState extends State<TripIsland> {
     _Face.hidden => DigitalIslandParts.hiddenFace(),
     _Face.lastTrip => DigitalIslandParts.amountFace(
       'island-last-trip',
-      'LAST TRIP',
+      tr.lastTrip,
       widget.lastTripLabel,
     ),
     _Face.today => DigitalIslandParts.amountFace(
       'island-today',
-      'TODAY',
+      tr.todayCaps,
       DigitalIslandParts.sampleToday,
     ),
     _Face.history => DigitalIslandParts.historyFace(),
@@ -146,7 +147,7 @@ class _TripIslandState extends State<TripIsland> {
         children: [
           side(
             Tooltip(
-              message: 'Menu',
+              message: tr.menu,
               child: IslandSideButton(
                 outward: AxisDirection.left,
                 child: InkWell(
@@ -197,7 +198,7 @@ class _TripIslandState extends State<TripIsland> {
           ),
           side(
             Tooltip(
-              message: 'Search destination',
+              message: tr.searchDestination,
               child: IslandSideButton(
                 outward: AxisDirection.right,
                 child: InkWell(

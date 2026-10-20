@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -77,8 +78,8 @@ class _DrivingTimeRowState extends State<DrivingTimeRow> {
               Expanded(
                 child: Text(
                   switch (clock.restUntil) {
-                    final until? => 'Rest until ${clockLabel(until)}',
-                    null => '${DrivingTimeClock.hoursMinutes(clock.left)} left to drive',
+                    final until? => tr.restUntilTime(clockLabel(until)),
+                    null => tr.timeLeftToDrive(DrivingTimeClock.hoursMinutes(clock.left)),
                   },
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -103,7 +104,7 @@ class _DrivingTimeRowState extends State<DrivingTimeRow> {
               Text(
                 widget.running
                     ? DrivingTimeClock.clock(clock.worked)
-                    : 'Paused',
+                    : tr.paused,
                 style: const TextStyle(
                   color: sub,
                   fontSize: 12.5,

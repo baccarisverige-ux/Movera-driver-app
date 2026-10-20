@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:flutter/material.dart';
@@ -121,13 +122,13 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
         titleSpacing: 0,
-        title: const Text(
-          'Sound & voice',
+        title: Text(
+          tr.soundVoice,
           style: TextStyle(
             color: _ink,
             fontSize: 18,
@@ -146,22 +147,22 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
               onPressed: _retryingSave ? null : _retrySave,
               child: Text(
                 _retryingSave
-                    ? 'Saving preferences…'
-                    : 'Changes not saved — Retry',
+                    ? tr.savingPreferencesEllipsis
+                    : tr.changesNotSavedRetry,
               ),
             ),
           if (_restoreFailed)
             TextButton(
               onPressed: _restoreSettings,
-              child: const Text('Could not load saved preferences — Retry'),
+              child: Text(tr.couldNotLoadSavedPreferencesRetry),
             ),
-          const Text(
-            'Local demo preferences — saved on this device; effects are previews.',
+          Text(
+            tr.localDemoPreferencesSavedOnThis,
           ),
           _card(
             children: [
-              const Text(
-                'Volume',
+              Text(
+                tr.volume,
                 style: TextStyle(
                   color: _ink,
                   fontSize: 15,
@@ -169,7 +170,7 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
                 ),
               ),
               Slider(
-                label: 'General volume',
+                label: tr.generalVolume,
                 value: generalVolume,
                 activeColor: _ink,
                 semanticFormatterCallback: (value) =>
@@ -183,8 +184,8 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
                       },
               ),
               _switchRow(
-                'Always play trip requests',
-                'Plays even when the phone is silent',
+                tr.alwaysPlayTripRequests,
+                tr.playsEvenWhenPhoneIsSilent,
                 alwaysPlayRequests,
                 (value) {
                   if (!_canEdit) return;
@@ -197,8 +198,8 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
           const SizedBox(height: 12),
           _card(
             children: [
-              const Text(
-                'Voice',
+              Text(
+                tr.voice,
                 style: TextStyle(
                   color: _ink,
                   fontSize: 15,
@@ -207,8 +208,8 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
               ),
               const SizedBox(height: 8),
               _switchRow(
-                'Voice navigation',
-                'Spoken turns while you drive',
+                tr.voiceNavigation,
+                tr.spokenTurnsWhileYouDrive,
                 voiceNavigation,
                 (value) {
                   if (!_canEdit) return;
@@ -217,8 +218,8 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
                 },
               ),
               _switchRow(
-                'Read rider messages',
-                'Reads new chat messages aloud',
+                tr.readRiderMessages,
+                tr.readsNewChatMessagesAloud,
                 readRiderMessages,
                 (value) {
                   if (!_canEdit) return;
@@ -227,9 +228,9 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
                 },
               ),
               const SizedBox(height: 8),
-              _test('Test alerts', _onTestAlerts),
+              _test(tr.testAlerts, _onTestAlerts),
               const SizedBox(height: 8),
-              _test('Test voice', _onTestVoice),
+              _test(tr.testVoice, _onTestVoice),
             ],
           ),
         ],
@@ -324,12 +325,12 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
   void _onTestAlerts() {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Playing alert sound (mock)')));
+    ).showSnackBar(SnackBar(content: Text(tr.playingAlertSoundMock)));
   }
 
   void _onTestVoice() {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Playing voice sound (mock)')));
+    ).showSnackBar(SnackBar(content: Text(tr.playingVoiceSoundMock)));
   }
 }

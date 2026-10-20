@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -26,7 +27,7 @@ class DigitalReservationFace extends StatelessWidget {
   /// or "19-10 11:44".
   final String when;
 
-  static const String kind = 'Reservation';
+  static String get kind => tr.reservation;
   static const double _icon = 18;
   static const double _gap = 8;
 
@@ -37,7 +38,7 @@ class DigitalReservationFace extends StatelessWidget {
 
   static TextSpan _span(String when) => TextSpan(children: [
     TextSpan(text: when, style: _whenStyle),
-    const TextSpan(text: ' · $kind', style: _kindStyle),
+    TextSpan(text: ' · $kind', style: _kindStyle),
   ]);
 
   /// Width the face needs: icon, gap and words.
@@ -67,11 +68,11 @@ class DigitalExclusiveFace extends StatelessWidget {
 
   final int pickupMinutes;
 
-  static const String title = 'Exclusive';
+  static String get title => tr.exclusive;
 
   static TextSpan _span(int minutes) => TextSpan(children: [
-    const TextSpan(text: title, style: _whenStyle),
-    TextSpan(text: ' · Pickup $minutes min', style: _kindStyle),
+    TextSpan(text: title, style: _whenStyle),
+    TextSpan(text: tr.pickupMinutesMin(minutes), style: _kindStyle),
   ]);
 
   /// Width the face needs: icon, gap and words.

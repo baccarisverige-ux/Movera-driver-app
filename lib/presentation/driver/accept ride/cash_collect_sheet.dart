@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -115,8 +116,8 @@ class CashCollectSheet extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   first.isEmpty
-                      ? 'Take the cash before you finish.'
-                      : 'Take the cash from $first before you finish.',
+                      ? tr.takeCashBeforeYouFinish
+                      : tr.takeCashFromFirstBeforeYou(first),
                   style: const TextStyle(
                     color: _muted,
                     fontSize: 13.5,
@@ -165,8 +166,8 @@ class CashCollectSheet extends StatelessWidget {
                 TextButton(
                   key: const ValueKey<String>('cash-not-yet'),
                   onPressed: () => popOwned(context, false),
-                  child: const Text(
-                    'Not yet',
+                  child: Text(
+                    tr.notYet,
                     style: TextStyle(
                       color: _ink,
                       fontSize: 15,
@@ -185,7 +186,7 @@ class CashCollectSheet extends StatelessWidget {
   /// The "case": the cash to take, big and clear.
   Widget _cashCase(String amount) {
     return Semantics(
-      label: 'Collect $amount in cash',
+      label: tr.collectAmountInCash(amount),
       container: true,
       excludeSemantics: true,
       // R10-3: a light grey tray pressed into the sheet: inner shadow at
@@ -228,8 +229,8 @@ class CashCollectSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text(
-                'Collect',
+              Text(
+                tr.collect,
                 style: TextStyle(
                   color: _greyInk,
                   fontSize: 15,
@@ -250,8 +251,8 @@ class CashCollectSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              const Text(
-                'in cash',
+              Text(
+                tr.inCash,
                 style: TextStyle(
                   color: _greyInk,
                   fontSize: 15,
@@ -282,9 +283,9 @@ class CashCollectSheet extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _row('Your fare', _short(fare)),
+          _row(tr.yourFare, _short(fare)),
           const SizedBox(height: 8),
-          _row('Cash from rider', _short(cash)),
+          _row(tr.cashFromRider, _short(cash)),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 10),
             child: Divider(height: 1, color: _line),
@@ -301,10 +302,8 @@ class CashCollectSheet extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 balance.driverOwesMovera
-                    ? 'The rider paid more than your fare (promotion). '
-                          'It is settled in your next payout.'
-                    : 'The rider paid less than your fare (promotion). '
-                          'Movera adds it to your next payout.',
+                    ? tr.riderPaidMoreThanYourFare
+                    : tr.riderPaidLessThanYourFare,
                 style: const TextStyle(
                   color: _muted,
                   fontSize: 12,

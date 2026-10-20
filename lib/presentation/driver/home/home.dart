@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/home/components/app_update_sheet.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -519,7 +520,7 @@ class _DriverHomeState extends State<DriverHome>
       _didAttemptActiveRideRestore = false;
       if(mounted) {
         _HomeMapSheet(this)._tripProblem(HomeIslandNotices.recoveryFailed,
-            'The saved trip could not be opened.');
+            tr.savedTripCouldNotBeOpened);
       }
       return;
     }
@@ -528,10 +529,10 @@ class _DriverHomeState extends State<DriverHome>
 
     if (!snapshot.isFresh || !snapshot.hasVerifiedEndpoints) {
       final resume = await showDialog<bool>(context: context, barrierDismissible: false,
-        builder: (context) => AlertDialog(title: const Text('Unresolved trip'),
-          content: Text(snapshot!.hasVerifiedEndpoints ? 'This saved trip is older than six hours. Resume it or close it explicitly.' : 'Saved route coordinates are unavailable. Close this trip explicitly before accepting another.'),
-          actions: [TextButton(onPressed: () => popOwned(context, false), child: const Text('Close trip')),
-            FilledButton(onPressed: snapshot.hasVerifiedEndpoints ? () => popOwned(context, true) : null, child: const Text('Resume trip'))]));
+        builder: (context) => AlertDialog(title: Text(tr.unresolvedTrip),
+          content: Text(snapshot!.hasVerifiedEndpoints ? tr.thisSavedTripIsOlderThan : tr.savedRouteCoordinatesAreUnavailableClose),
+          actions: [TextButton(onPressed: () => popOwned(context, false), child: Text(tr.closeTrip)),
+            FilledButton(onPressed: snapshot.hasVerifiedEndpoints ? () => popOwned(context, true) : null, child: Text(tr.resumeTrip))]));
       if (!mounted) { return; }
       if (resume != true) {
         try {
@@ -543,7 +544,7 @@ class _DriverHomeState extends State<DriverHome>
           if (mounted) {
             _HomeMapSheet(this)._tripProblem(
                 HomeIslandNotices.savedTripNotClosed,
-                'The saved trip could not be closed.');
+                tr.savedTripCouldNotBeClosed);
           }
         }
         return;
@@ -583,19 +584,18 @@ class _DriverHomeState extends State<DriverHome>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Saved trip cannot be read'),
-        content: const Text(
-          'The trip saved on this device is damaged or from another app version. '
-          'Close it to continue. A copy is kept on this device for support.',
+        title: Text(tr.savedTripCannotBeRead),
+        content: Text(
+          tr.tripSavedOnThisDeviceIs,
         ),
         actions: [
           TextButton(
             onPressed: () => popOwned(context, false),
-            child: const Text('Not now'),
+            child: Text(tr.notNow),
           ),
           FilledButton(
             onPressed: () => popOwned(context, true),
-            child: const Text('Close unreadable trip'),
+            child: Text(tr.closeUnreadableTrip),
           ),
         ],
       ),
@@ -603,8 +603,8 @@ class _DriverHomeState extends State<DriverHome>
     if (!mounted) { return; }
     if (close != true || repo is! UnreadableRideRecovery) {
       _HomeMapSheet(this)._tripProblem(HomeIslandNotices.unreadableTripOpen,
-          'A saved trip could not be read. Close it to go online.',
-          action: 'Review');
+          tr.savedTripCouldNotBeRead,
+          action: tr.review);
       return;
     }
     try {
@@ -613,7 +613,7 @@ class _DriverHomeState extends State<DriverHome>
       if (mounted) {
         _HomeMapSheet(this)._tripProblem(
             HomeIslandNotices.unreadableTripNotClosed,
-            'The unreadable trip could not be closed.');
+            tr.unreadableTripCouldNotBeClosed);
       }
       return;
     }
@@ -628,7 +628,7 @@ class _DriverHomeState extends State<DriverHome>
       fare: snapshot.fare ?? '—',
       driverBonus: WaybillRecord.bonusLabel(snapshot.driverBonus),
       service: snapshot.category ?? 'Movera',
-      riderName: snapshot.riderName ?? 'Rider data unavailable',
+      riderName: snapshot.riderName ?? tr.riderDataUnavailable,
       pickup: snapshot.pickupAddress ?? '',
       dropoff: snapshot.dropoffAddress ?? '',
       source: snapshot.matchedVia ?? 'Movera Radar',
@@ -672,7 +672,7 @@ class _DriverHomeState extends State<DriverHome>
 
   String get _destinationShortLabel {
     final address = _destinationAddress?.trim();
-    if (address == null || address.isEmpty) { return 'Destination'; }
+    if (address == null || address.isEmpty) { return tr.destination; }
     final firstPart = address.split(',').first.trim();
     if (firstPart.length <= 24) { return firstPart; }
     return '${firstPart.substring(0, 21)}…';
@@ -889,8 +889,8 @@ class _DriverHomeState extends State<DriverHome>
     }
     if(!_recoveryResolved) {
       _HomeMapSheet(this)._tripProblem(HomeIslandNotices.recoveryPending,
-          'Finish or close the saved trip before going online.',
-          action: 'Open saved trip');
+          tr.finishOrCloseSavedTripBefore,
+          action: tr.openSavedTrip);
       return;
     }
     if (!isAccountActivated) {
@@ -1001,17 +1001,17 @@ class _DriverHomeState extends State<DriverHome>
         // Q25/Q26: resting after the driving limit, or an expired document.
         final hold = suspended ? null : _HomeAccount(this)._onlineHold();
         return _buildRadarOrb(
-          title: suspended ? "Account" : "Radar",
+          title: suspended ? tr.account : tr.radar,
           status: suspended
-              ? "PAUSED"
+              ? tr.orbPaused
               : hold?.status ?? (_activationHold
-                  ? "HOLD"
-                  : "OFF"),
+                  ? tr.statusHold
+                  : tr.orbOff),
           subtitle: suspended
-              ? "Tap for details"
+              ? tr.tapForDetails
               : hold?.subtitle ?? (_activationHold
-                  ? "Not active"
-                  : "Tap to scan"),
+                  ? tr.notActive
+                  : tr.tapToScan),
           onTap: _goOnline,
           blocked: (_activationHold || hold != null) && !suspended,
           pulse: suspended ? 0 : _goOnlinePulseController.value,
@@ -1028,9 +1028,9 @@ class _DriverHomeState extends State<DriverHome>
       ]),
       builder: (context, child) {
         return _buildRadarOrb(
-          title: "Radar",
-          status: "STARTING",
-          subtitle: "Connecting",
+          title: tr.radar,
+          status: tr.orbStarting,
+          subtitle: tr.connecting,
           active: true,
           loading: true,
           pulse: _goOnlinePulseController.value,
@@ -1063,12 +1063,12 @@ class _DriverHomeState extends State<DriverHome>
       builder: (context, child) {
         return _buildRadarOrb(
           title: totalTrips > 0
-              ? "$totalTrips trip${totalTrips == 1 ? '' : 's'}"
+              ? tr.tripsCount(totalTrips)
               : hasRadarOffer
-              ? "Trip found"
-              : "Radar",
-          status: hasRadarOffer ? "NEW" : "LIVE",
-          subtitle: hasRadarOffer ? "Tap for all" : "Scanning",
+              ? tr.tripFound
+              : tr.radar,
+          status: hasRadarOffer ? tr.orbNew : tr.orbLive,
+          subtitle: hasRadarOffer ? tr.tapForAll : tr.scanning,
           active: true,
           offer: hasRadarOffer,
           pulse: _goOnlinePulseController.value,

@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -69,14 +70,14 @@ class TripIslandController extends ChangeNotifier {
       _idle?.cancel();
     }
     if (wasWaiting && input.waitingSeconds == null) {
-      _showNotice(previous.waitingAtStop ? input.status : 'Trip started');
+      _showNotice(previous.waitingAtStop ? input.status : tr.tripStarted);
     } else if (input.reroutes > previous.reroutes) {
       // Only after a real reroute. It never hides a maneuver (see [face]).
-      _showNotice('Route updated');
+      _showNotice(tr.routeUpdated);
     } else if (previousFault != null &&
         fault == null &&
         previousFault.contains('Location')) {
-      _showNotice('GPS restored');
+      _showNotice(tr.gpsRestored);
     } else if (wasWaiting &&
         input.waitingSeconds != null &&
         previous.waitingAtStop == input.waitingAtStop &&
@@ -165,10 +166,10 @@ class TripIslandController extends ChangeNotifier {
         TripIslandKind.waitingTimer,
         clock(seconds),
         i.waitingAtStop
-            ? 'Waiting at stop'
+            ? tr.waitingAtStop
             : i.paidWait
-            ? 'Paid waiting'
-            : 'Waiting time',
+            ? tr.paidWaiting
+            : tr.waitingTime,
         'waiting-timer-${i.waitingAtStop}-${i.paidWait}',
       );
     }
@@ -176,7 +177,7 @@ class TripIslandController extends ChangeNotifier {
     if (i.arrival != null && !maneuver) {
       return TripIslandFace(
         TripIslandKind.arrival,
-        i.arrived ? 'Near ${i.arrival!.toLowerCase()}' : 'Arriving soon',
+        i.arrived ? tr.nearValue(i.arrival!.toLowerCase()) : tr.arrivingSoon,
         i.address,
         'arrival-${i.arrival}',
       );
@@ -310,7 +311,7 @@ class TripStripController extends ChangeNotifier {
     if (_hidden) return;
 
     if (newLeg && next.leg == TripLeg.pickup && next.bags > 0) {
-      _say('Rider has ${next.bags} bag${next.bags == 1 ? '' : 's'}');
+      _say(tr.riderBags(next.bags));
     }
     if (newLeg && next.leg == TripLeg.stop && next.stopLabel != null) {
       _say('${next.stopLabel} next');
@@ -319,7 +320,7 @@ class TripStripController extends ChangeNotifier {
     if (eta != null) {
       final best = _bestEta;
       if (best != null && eta - best >= 2) {
-        _say('Traffic ahead · +${eta - best} min');
+        _say(tr.trafficAheadValueMin(eta - best));
         _bestEta = eta;
       } else if (best == null || eta < best) {
         _bestEta = eta;
@@ -331,20 +332,20 @@ class TripStripController extends ChangeNotifier {
         _arrivingSaid = true;
         final at = _clock().add(Duration(minutes: eta));
         String two(int v) => v.toString().padLeft(2, '0');
-        _say('Arriving in $eta min · ${two(at.hour)}:${two(at.minute)}');
+        _say(tr.arrivingInEtaMinTimeTime2(eta, two(at.hour), two(at.minute)));
       }
     }
     if (last != null &&
         last.nextTripFare == null &&
         next.nextTripFare != null) {
-      _say('Next trip secured · ${next.nextTripFare}');
+      _say(tr.nextTripSecuredNextTripFare(next.nextTripFare!));
     }
     if (next.leg == TripLeg.pickup &&
         next.pickupSide != null &&
         last?.pickupSide != next.pickupSide) {
-      _say('Pickup on the ${next.pickupSide} side');
+      _say(tr.pickupOnPickupSideSide(next.pickupSide!));
     }
-    if (next.toll && !(last?.toll ?? false)) _say('Toll ahead');
+    if (next.toll && !(last?.toll ?? false)) _say(tr.tollAhead);
 
     final lanes = next.laneKey;
     if (lanes != null && lanes != last?.laneKey) {

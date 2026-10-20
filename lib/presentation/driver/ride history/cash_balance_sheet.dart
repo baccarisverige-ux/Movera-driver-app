@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -77,8 +78,8 @@ class CashBalanceSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Other earnings',
+                Text(
+                  tr.otherEarnings,
                   style: TextStyle(
                     color: _ink,
                     fontSize: 20,
@@ -87,8 +88,8 @@ class CashBalanceSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                const Text(
-                  'Cash trips: your fare minus the cash you collected.',
+                Text(
+                  tr.cashTripsYourFareMinusCash,
                   style: TextStyle(
                     color: _muted,
                     fontSize: 12,
@@ -98,10 +99,10 @@ class CashBalanceSheet extends StatelessWidget {
                 const SizedBox(height: 14),
                 Flexible(
                   child: rows.isEmpty
-                      ? const Padding(
+                      ? Padding(
                           padding: EdgeInsets.symmetric(vertical: 18),
                           child: Text(
-                            'No cash trips in this period.',
+                            tr.noCashTripsInThisPeriod,
                             textAlign: TextAlign.center,
                             style: TextStyle(color: _muted, fontSize: 13),
                           ),
@@ -126,10 +127,10 @@ class CashBalanceSheet extends StatelessWidget {
                       Expanded(
                         child: Text(
                           total.minorUnits < 0
-                              ? 'Total you owe Movera'
+                              ? tr.totalYouOweMovera
                               : total.minorUnits > 0
-                              ? 'Total Movera owes you'
-                              : 'Total balance',
+                              ? tr.totalMoveraOwesYou
+                              : tr.totalBalance,
                           style: const TextStyle(
                             color: _ink,
                             fontSize: 13.5,
@@ -149,8 +150,8 @@ class CashBalanceSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Settled in your next payout.',
+                Text(
+                  tr.settledInYourNextPayout2,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: _muted,
@@ -209,8 +210,7 @@ class CashBalanceSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Fare ${balance.fare.formatted} · '
-                  'Cash ${balance.cashCollected.formatted}',
+                  tr.fareFareFormattedCashCashCollected(balance.fare.formatted, balance.cashCollected.formatted),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

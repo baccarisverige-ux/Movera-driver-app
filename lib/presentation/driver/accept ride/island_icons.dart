@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -137,12 +138,22 @@ class ArrivingRoadPainter extends CustomPainter {
   static const stop = Colors.white;
   static const dropOff = Color(0xFFE5484D);
 
-  /// 'Pickup', 'Stop 2', 'Destination' -> the pin colour.
+  /// 'Pickup', 'Stop 2', 'Destination' -> the pin colour. The labels come
+  /// in the driver's language ("Arrêt 2", "Upphämtning").
   static Color pinFor(String? label) {
     final l = (label ?? '').toLowerCase();
-    if (l.startsWith('pickup')) return pickup;
-    if (l.startsWith('stop')) return stop;
+    if (l.startsWith('pickup') || l.startsWith(tr.pickup.toLowerCase())) {
+      return pickup;
+    }
+    if (isStop(label)) return stop;
     return dropOff;
+  }
+
+  /// "Stop 2" in any of the app's languages.
+  static bool isStop(String? label) {
+    final l = (label ?? '').toLowerCase();
+    final word = tr.stopNumber('').trim().toLowerCase();
+    return l.startsWith('stop') || (word.isNotEmpty && l.startsWith(word));
   }
 
   @override

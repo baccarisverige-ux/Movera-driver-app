@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'dart:math' as math;
 
@@ -404,7 +405,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                                 size: 22,
                               )
                             : Tooltip(
-                                message: 'Trip route and options',
+                                message: tr.tripRouteAndOptions,
                                 child: InkWell(
                                   onTap: widget.onRoute,
                                   borderRadius: BorderRadius.circular(20),
@@ -506,7 +507,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
   static (String, String?)? _distanceParts(String? text) {
     if (text == null) return null;
     if (RegExp(r'^\s*now\s*$', caseSensitive: false).hasMatch(text)) {
-      return ('Now', null);
+      return (tr.now, null);
     }
     final match = _distanceText.firstMatch(text);
     if (match == null) return null;
@@ -543,7 +544,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
               child: Row(
                 children: [
                   Tooltip(
-                    message: 'Trip route and options',
+                    message: tr.tripRouteAndOptions,
                     child: InkWell(
                       key: const ValueKey('island-route-cue'),
                       onTap: widget.onRoute,
@@ -556,7 +557,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                           children: [
                             if (arrival)
                               Semantics(
-                                label: 'Arrival',
+                                label: tr.arrival,
                                 child: CustomPaint(
                                   key: const ValueKey('island-arriving-icon'),
                                   size: const Size(46, 34),
@@ -715,7 +716,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
   /// One small word ("Arriving", "Stop 1"), the address big, the area under.
   Widget _arrivalText() {
     final label = widget.arrival ?? '';
-    final word = label.toLowerCase().startsWith('stop') ? label : 'Arriving';
+    final word = ArrivingRoadPainter.isStop(label) ? label : tr.arriving;
     final address = widget.address.trim();
     final comma = address.indexOf(',');
     final street = comma < 0 ? address : address.substring(0, comma).trim();
@@ -1007,12 +1008,12 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
           children: [
             ListTile(
               leading: const Icon(Icons.alt_route_rounded),
-              title: const Text('Trip route and options'),
+              title: Text(tr.tripRouteAndOptions),
               onTap: () => popOwned(context, 'route'),
             ),
             ListTile(
               leading: const Icon(Icons.shield_outlined),
-              title: const Text('Safety toolkit'),
+              title: Text(tr.safetyToolkit),
               onTap: () => popOwned(context, 'safety'),
             ),
             if (widget.radarVisible)
@@ -1020,8 +1021,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                 leading: const Icon(Icons.radar_rounded),
                 title: Text(
                   widget.radarOn
-                      ? 'Turn Exclusive offers off'
-                      : 'Turn Exclusive offers on',
+                      ? tr.turnExclusiveOffersOff
+                      : tr.turnExclusiveOffersOn,
                 ),
                 onTap: () => popOwned(context, 'radar'),
               ),
@@ -1032,17 +1033,17 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                     : Icons.credit_card_rounded,
               ),
               title: Text(
-                widget.paidByCash ? 'Cash: collect in the car' : 'Paid by card',
+                widget.paidByCash ? tr.cashCollectInCar : tr.paidByCard,
               ),
             ),
             if (widget.onRideCheckDemo != null) ...[
               const Divider(height: 1),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(16, 12, 16, 2),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Ride check demo',
+                    tr.rideCheckDemo,
                     style: TextStyle(
                       color: Color(0xFF7D898F),
                       fontSize: 12,
@@ -1058,7 +1059,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                     icon,
                     color: const Color(0xFF45525A),
                   ),
-                  title: Text('Demo: ${trigger.label.toLowerCase()}'),
+                  title: Text(tr.demoValue(trigger.label.toLowerCase())),
                   onTap: () => popOwned(context, 'ride-check-${trigger.name}'),
                 ),
             ],
@@ -1090,10 +1091,10 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
 
   /// Route fraction belongs to the active leg. Waiting uses its own activity lane.
   Widget _routeProgress(Color accent, bool available) => Semantics(
-    label: 'Route progress',
+    label: tr.routeProgress,
     value: available
         ? '${(widget.progress.clamp(0, 1) * 100).round()} percent'
-        : 'Unavailable',
+        : tr.unavailable,
     child: TweenAnimationBuilder<double>(
       tween: Tween<double>(
         end: available ? widget.progress.clamp(0, 1).toDouble() : 0,

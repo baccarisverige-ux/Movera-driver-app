@@ -196,10 +196,10 @@ extension _HomeScheduled on _DriverHomeState {
         _scheduled.lateSince = now;
         IslandMessages.show(HomeIslandNotices.headToPickup(ride.pickupTime));
         ScheduledRideStore.reminder.value =
-            'Head to your ${ride.pickupTime} pickup now: '
-            '${ride.pickupAddress}.';
+            tr.headToYourPickupTimePickup(
+                ride.pickupTime, ride.pickupAddress);
         _noteRideAlert(
-          'Head to your ${ride.pickupTime} pickup',
+          tr.headToYourPickupTimePickup2(ride.pickupTime),
           ride.pickupAddress,
         );
       }
@@ -226,14 +226,14 @@ extension _HomeScheduled on _DriverHomeState {
       ScheduledRideStore.reminder.value = null;
       IslandMessages.show(HomeIslandNotices.leaveNow(ride.pickupTime));
       _noteRideAlert(
-        'Leave now for ${ride.pickupTime} pickup',
+        tr.leaveNowForPickupTimePickup(ride.pickupTime),
         ride.pickupAddress,
         leaveNow: true,
       );
       final offer = RideOffer.reservation(ride);
       _HomeOfferRadar(this)._openOfferTrip(
         _HomeDirectOffer.fromRide(offer),
-        'Scheduled ride',
+        tr.scheduledRide,
       );
       _planScheduled();
     }
@@ -262,8 +262,8 @@ extension _HomeScheduled on _DriverHomeState {
         HomeIslandNotices.scheduledReminder(ride.pickupTime, left),
       );
       ScheduledRideStore.reminder.value =
-          'Pickup at ${ride.pickupTime} in $left: ${ride.pickupAddress}.';
-      _noteRideAlert('${ride.pickupTime} pickup in $left', ride.pickupAddress);
+          tr.pickupAtPickupTimeInLeft(ride.pickupTime, left, ride.pickupAddress);
+      _noteRideAlert(tr.pickupTimePickupInLeft(ride.pickupTime, left), ride.pickupAddress);
     }
 
     /// Reminders and "Leave now" are in Notifications too (Q31, N1); the
@@ -285,9 +285,9 @@ extension _HomeScheduled on _DriverHomeState {
       if (!mounted || _driverSession.isOnline) { return; }
       IslandMessages.show(HomeIslandNotices.goOnlineFor(ride.pickupTime));
       ScheduledRideStore.reminder.value =
-          'Go online now for your ${ride.pickupTime} pickup.';
+          tr.goOnlineNowForYourPickup(ride.pickupTime);
       _noteRideAlert(
-        'Go online for ${ride.pickupTime} pickup',
+        tr.goOnlineForPickupTimePickup(ride.pickupTime),
         ride.pickupAddress,
       );
     }

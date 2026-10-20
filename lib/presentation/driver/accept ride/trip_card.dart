@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -32,7 +33,7 @@ class TripCard extends StatelessWidget {
     required this.footer,
     required this.onMore,
     required this.moreKey,
-    this.moreTooltip = 'Trip options',
+    this.moreTooltip,
     this.onWaybill,
     this.waybillKey,
   });
@@ -43,7 +44,8 @@ class TripCard extends StatelessWidget {
   final String footer;
   final VoidCallback onMore;
   final Key moreKey;
-  final String moreTooltip;
+  /// "Trip options" by default.
+  final String? moreTooltip;
 
   /// Null hides the Waybill link (no waybill yet).
   final VoidCallback? onWaybill;
@@ -92,7 +94,7 @@ class TripCard extends StatelessWidget {
               ),
               const SizedBox(width: 2),
               Tooltip(
-                message: moreTooltip,
+                message: moreTooltip ?? tr.tripOptions,
                 child: Material(
                   color: Colors.transparent,
                   shape: const CircleBorder(),
@@ -149,8 +151,8 @@ class TripCard extends StatelessWidget {
                     height: 17,
                     colorFilter: const ColorFilter.mode(ink, BlendMode.srcIn),
                   ),
-                  label: const Text(
-                    'Waybill',
+                  label: Text(
+                    tr.waybill,
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,

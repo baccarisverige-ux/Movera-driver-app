@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -149,7 +150,7 @@ Future<void> showDestinationDetailsSheet(
                 Text(
                   [
                     if (summary != null) summary,
-                    if (until != null) 'Destination mode until $until',
+                    if (until != null) tr.destinationModeUntilUntil(until),
                   ].join(' · '),
                   style: const TextStyle(
                       color: ink, fontSize: 13.5, fontWeight: FontWeight.w600),
@@ -171,7 +172,7 @@ Future<void> showDestinationDetailsSheet(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text('Show route',
+                  child: Text(tr.showRoute,
                       style: TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w700)),
                 ),
@@ -192,7 +193,7 @@ Future<void> showDestinationDetailsSheet(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text('Turn off destination',
+                  child: Text(tr.turnOffDestination,
                       style: TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w800)),
                 ),

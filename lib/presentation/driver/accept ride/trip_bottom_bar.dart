@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -34,7 +35,7 @@ class TripBottomBar extends StatelessWidget {
         Expanded(
           child: Semantics(
             button: true,
-            label: 'Trip details',
+            label: tr.tripDetails,
             child: InkWell(
               key: const ValueKey('trip-bar-details'),
               onTap: onTap,
@@ -75,7 +76,7 @@ class TripBottomBar extends StatelessWidget {
           ),
         ),
         Tooltip(
-          message: 'Ride preferences',
+          message: tr.ridePreferences,
           child: Material(
             color: Colors.transparent,
             child: InkWell(

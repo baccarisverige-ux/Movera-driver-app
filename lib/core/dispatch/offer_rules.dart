@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/waybill/waybill.dart';
 
 /// Offer rules the driver app follows, the same ones admin sets per zone in
@@ -81,7 +82,7 @@ class DriverOfferRules {
   String reasonText(String id) {
     for (final reason in exclusiveReasons) {
       if (reason.id == id) {
-        return reason.on ? reason.text : '';
+        return reason.on ? reason.shownText : '';
       }
     }
     return '';
@@ -173,6 +174,27 @@ class ExclusiveReasonRule {
   final String id;
   final String text;
   final bool on;
+
+  /// [text] for the driver: an admin default still as shipped is shown in
+  /// the app's language (Round 4); admin's own wording as written.
+  String get shownText {
+    for (final reason in defaultExclusiveReasons) {
+      if (reason.id == id) {
+        return reason.text == text ? _defaultText(id) ?? text : text;
+      }
+    }
+    return text;
+  }
+
+  static String? _defaultText(String id) => switch (id) {
+    'best-match' => tr.exclusiveReasonBestMatch,
+    'favourite' => tr.exclusiveReasonFavourite,
+    'finishing-nearby' => tr.exclusiveReasonFinishingNearby,
+    'airport-queue' => tr.exclusiveReasonAirportQueue,
+    'pickup-soon' => tr.exclusiveReasonPickupSoon,
+    'nearby' => tr.exclusiveReasonNearby,
+    _ => null,
+  };
 }
 
 /// The admin defaults (Q15).

@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -98,7 +99,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    widget.fullyPaid ? 'Stop wait' : 'Pickup wait',
+                    widget.fullyPaid ? tr.stopWait : tr.pickupWait,
                     style: TextStyle(
                       color: _ink,
                       fontSize: 16,
@@ -132,7 +133,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                       const SizedBox(height: 14),
                       Text(
                         widget.fullyPaid
-                            ? 'Every minute is paid'
+                            ? tr.everyMinuteIsPaid
                             : phase.title,
                         style: const TextStyle(
                           color: _ink,
@@ -144,7 +145,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                       const SizedBox(height: 6),
                       Text(
                         widget.fullyPaid
-                            ? 'This stop has no free minutes. The whole wait is added to the fare.'
+                            ? tr.thisStopHasNoFreeMinutes
                             : phase.detail,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
@@ -169,7 +170,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                 const SizedBox(height: 12),
                 if (terms.rule.isNotEmpty) ...[
                   Text(
-                    'Rule for this pickup: ${terms.rule}',
+                    tr.ruleForThisPickupRule(terms.rule),
                     key: const ValueKey<String>('waiting-rule'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
@@ -182,8 +183,8 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                 ],
                 if (!widget.fullyPaid) ...[
                 _PhaseCard(
-                  title: 'Included time',
-                  detail: 'The opening minutes stay inside the fare.',
+                  title: tr.includedTime,
+                  detail: tr.openingMinutesStayInsideFare,
                   value: '${terms.freeMinutes} min',
                   state: seconds < _graceSeconds
                       ? _PhaseState.now
@@ -192,11 +193,11 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                 const SizedBox(height: 8),
                 ],
                 _PhaseCard(
-                  title: 'Wait time',
+                  title: tr.waitTime,
                   detail: widget.fullyPaid
-                      ? 'Added from the first second at this stop.'
-                      : 'Added to the fare when this trip is completed.',
-                  value: '${terms.perMinute.formatted} / min',
+                      ? tr.addedFromFirstSecondAtThis
+                      : tr.addedToFareWhenThisTrip,
+                  value: tr.perMinuteFormattedMin(terms.perMinute.formatted),
                   tone: const Color(0xFF146B45),
                   state: widget.fullyPaid || seconds >= _graceSeconds
                       ? _PhaseState.now
@@ -205,9 +206,8 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                 if (!widget.fullyPaid) ...[
                 const SizedBox(height: 8),
                 _PhaseCard(
-                  title: 'No-show',
-                  detail: 'Can be applied after ${terms.noShowAfterMinutes} min '
-                      'if the rider has not arrived.',
+                  title: tr.noShow,
+                  detail: tr.canBeAppliedAfterNoShow(terms.noShowAfterMinutes),
                   value: terms.noShowFee.formatted,
                   tone: const Color(0xFF9E2B33),
                   state: seconds < _noShowSeconds
@@ -235,8 +235,8 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: const Text(
-                        'Rider didn’t show',
+                      child: Text(
+                        tr.riderDidnTShow,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
@@ -248,10 +248,8 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                 const SizedBox(height: 14),
                 Text(
                   widget.fullyPaid
-                      ? 'You get ${terms.driverShareWaitPercent}% of the wait time.'
-                      : 'You get ${terms.driverShareWaitPercent}% of the wait '
-                          'time and ${terms.driverShareNoShowPercent}% of the '
-                          'no-show fee (${terms.driverNoShowFee.formatted}).',
+                      ? tr.youGetDriverShareWaitPercent(terms.driverShareWaitPercent)
+                      : tr.youGetDriverShareWaitPercent2(terms.driverShareWaitPercent, terms.driverShareNoShowPercent, terms.driverNoShowFee.formatted),
                   key: const ValueKey<String>('waiting-driver-share'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
@@ -262,8 +260,8 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Amounts can change with taxes and fees.',
+                Text(
+                  tr.amountsCanChangeWithTaxesAnd,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: _muted,
@@ -289,8 +287,8 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text(
-                  'Close',
+                child: Text(
+                  tr.close,
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
                 ),
               ),
@@ -342,7 +340,7 @@ class WaitingFeeCounter extends StatelessWidget {
           const SizedBox(width: 8),
           Flexible(
             child: Text(
-              'waiting fee · ${perMinute.formatted} / min',
+              tr.waitingFeePerMinuteFormattedMin(perMinute.formatted),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -381,9 +379,9 @@ class _PhaseCard extends StatelessWidget {
     const muted = Color(0xFF7D898F);
     final active = state == _PhaseState.now;
     final label = switch (state) {
-      _PhaseState.now => 'Now',
-      _PhaseState.done => 'Done',
-      _PhaseState.later => 'Later',
+      _PhaseState.now => tr.now,
+      _PhaseState.done => tr.done,
+      _PhaseState.later => tr.later,
     };
 
     return Container(
@@ -489,20 +487,20 @@ class _WaitPhase {
 
   static _WaitPhase of(int seconds) {
     if (seconds < _graceSeconds) {
-      return const _WaitPhase(
-        'Included minutes',
-        'These first minutes are already part of the fare.',
+      return _WaitPhase(
+        tr.includedMinutes,
+        tr.theseFirstMinutesAreAlreadyPart,
       );
     }
     if (seconds < _noShowSeconds) {
-      return const _WaitPhase(
-        'Wait time is running',
-        'Each minute after the included time is added when the trip ends.',
+      return _WaitPhase(
+        tr.waitTimeIsRunning,
+        tr.eachMinuteAfterIncludedTimeIs,
       );
     }
-    return const _WaitPhase(
-      'No-show can be applied',
-      'The rider is still not here. The no-show amount is now available.',
+    return _WaitPhase(
+      tr.noShowCanBeApplied,
+      tr.riderIsStillNotHereNo,
     );
   }
 }

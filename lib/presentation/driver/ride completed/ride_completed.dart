@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -107,10 +108,10 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   @override
   Widget build(BuildContext context) {
     final record = _record;
-    final rider = record?.riderName ?? 'Rider';
+    final rider = record?.riderName ?? tr.rider;
     final issued = record?.issuedAt;
     final when = issued == null
-        ? 'Just now'
+        ? tr.justNow
         : '${_two(issued.hour)}:${_two(issued.minute)}';
 
     return Scaffold(
@@ -151,8 +152,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Ride completed',
+                    Text(
+                      tr.rideCompleted,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: _ink,
@@ -175,7 +176,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          'Includes $fee waiting fee',
+                          tr.includesFeeWaitingFee(fee),
                           key: const ValueKey<String>('ride-completed-waiting-fee'),
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: _muted, fontSize: 13.5),
@@ -201,20 +202,20 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                     const SizedBox(height: 20),
                     _stop(
                       mark: const OfferStopMark.pickup(),
-                      text: record?.pickup ?? 'Pickup',
+                      text: record?.pickup ?? tr.pickup,
                     ),
                     const SizedBox(height: 14),
                     _stop(
                       mark: const OfferStopMark.dropoff(),
-                      text: record?.dropoff ?? 'Drop-off',
+                      text: record?.dropoff ?? tr.dropOff,
                     ),
                     const SizedBox(height: 20),
                     const Divider(height: 1, thickness: 1, color: _line),
                     const SizedBox(height: 16),
-                    _row('Payment', Text(widget.paymentMethod ?? '—',
+                    _row(tr.payment, Text(widget.paymentMethod ?? '—',
                         style: _value)),
                     _row(
-                      'Waybill',
+                      tr.waybill,
                       record == null
                           ? const Text('—', style: _value)
                           : InkWell(
@@ -224,12 +225,12 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                               onTap: () => showMoveraWaybillSheet(
                                 context,
                                 record,
-                                title: 'Last waybill',
+                                title: tr.lastWaybill,
                               ),
-                              child: const Padding(
+                              child: Padding(
                                 padding: EdgeInsets.symmetric(vertical: 2),
                                 child: Text(
-                                  'Open',
+                                  tr.open,
                                   style: TextStyle(
                                     color: _ink,
                                     fontSize: 15,
@@ -241,7 +242,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                             ),
                     ),
                     _row(
-                      'Trip ID',
+                      tr.tripId,
                       Text(
                         record == null ? '—' : _shortId(record.tripId),
                         style: _value,
@@ -272,8 +273,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
-                    'Done',
+                  child: Text(
+                    tr.done,
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                   ),
                 ),
@@ -293,8 +294,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
 
   Widget _fare(String? fare) {
     if (fare == null) {
-      return const Text(
-        'Completed',
+      return Text(
+        tr.completed,
         textAlign: TextAlign.center,
         style: TextStyle(
           color: _ink,
@@ -387,14 +388,14 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
           onRatingUpdate: (rating) {
             setState(() => _rating = rating);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Rating not sent (demo)')),
+              SnackBar(content: Text(tr.ratingNotSentDemo)),
             );
           },
           updateOnDrag: true,
         ),
         const SizedBox(height: 8),
         Text(
-          'Rate $rider',
+          tr.rateRider(rider),
           style: const TextStyle(color: _muted, fontSize: 14),
         ),
       ],
@@ -483,9 +484,9 @@ class _CompletedIsland extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Trip completed',
+                tr.tripCompleted,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,

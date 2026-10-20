@@ -1,0 +1,8 @@
+# Round 4 (owner Q48/Q49): the driver app in English, French and Swedish.
+# `flutter gen-l10n` writes lib/l10n/app_localizations*.dart from these
+# files; the English file is the template every other file must match.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

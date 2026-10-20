@@ -1,7 +1,12 @@
 /// Driver app texts (Q30): every island, offer and main trip button text
 /// that admin can change in Content › Driver app texts, per language.
-/// An empty text there means the app's own English default below.
+/// An empty text there means the app's own text in that language
+/// (lib/l10n, Round 4), and the English default below for a language the
+/// app has no texts for.
 library;
+
+import 'package:movera/core/content/driver_text_l10n.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 
 /// Where a text shows in the app.
 enum DriverTextArea { island, offer, trip }
@@ -38,14 +43,17 @@ class DriverAppTexts {
   /// The languages admin writes texts in.
   static const List<String> languages = <String>['en', 'sv', 'fr', 'ar'];
 
-  /// The app's language. The rest of the app is English only.
+  /// The app's language ("en", "fr" or "sv"); [DriverLanguage] sets it.
   static String language = 'en';
 
   /// From admin Content.
   static DriverAppTextOverrides overrides = const DriverAppTextOverrides();
 
+  /// Admin's text for the language wins; then the app's own text.
   static String of(DriverTextKey key, [Map<String, Object> values = const {}]) {
-    var text = overrides.textFor(language, key.id) ?? key.english;
+    var text = overrides.textFor(language, key.id) ??
+        driverTextTemplate(tr, key.id) ??
+        key.english;
     values.forEach((name, value) {
       text = text.replaceAll('{$name}', '$value');
     });

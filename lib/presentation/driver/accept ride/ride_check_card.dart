@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -62,7 +63,7 @@ abstract final class RideCheckStyle {
 class RideCheckPillFace extends StatelessWidget {
   const RideCheckPillFace({super.key});
 
-  static const String title = 'Is everything OK?';
+  static String get title => tr.isEverythingOkQuestion;
 
   /// Same size as the trip's Home island, so the change is only its face.
   static Size sizeFor(double available) => Size(
@@ -73,7 +74,7 @@ class RideCheckPillFace extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Semantics(
     liveRegion: true,
-    label: 'Ride check. $title',
+    label: tr.rideCheckTitle(title),
     excludeSemantics: true,
     child: _Pulse(
       builder: (context, pulse) => DecoratedBox(
@@ -87,7 +88,7 @@ class RideCheckPillFace extends StatelessWidget {
           children: [
             _PulseDot(pulse: pulse),
             const SizedBox(width: 8),
-            const Flexible(
+            Flexible(
               child: Text(
                 title,
                 maxLines: 1,
@@ -385,7 +386,7 @@ class RideCheckCard extends StatelessWidget {
           key: const ValueKey('ride-check-card'),
           container: true,
           liveRegion: true,
-          label: 'Ride check',
+          label: tr.rideCheck,
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
             child: switch (c.step) {
@@ -428,10 +429,10 @@ class RideCheckCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _header('Ride check'),
+        _header(tr.rideCheck),
         const SizedBox(height: 8),
-        const Text(
-          'Is everything OK?',
+        Text(
+          tr.isEverythingOkQuestion,
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w800,
@@ -486,7 +487,7 @@ class RideCheckCard extends StatelessWidget {
             Expanded(
               child: _button(
                 key: const ValueKey('ride-check-call-112'),
-                label: 'Call 112',
+                label: tr.call112,
                 icon: AppAssets.solarPhoneCalling,
                 background: RideCheckStyle.red,
                 foreground: Colors.white,
@@ -497,7 +498,7 @@ class RideCheckCard extends StatelessWidget {
             Expanded(
               child: _button(
                 key: const ValueKey('ride-check-ok'),
-                label: "I'm OK",
+                label: tr.iMOk,
                 icon: AppAssets.solarCheckCircle,
                 background: Colors.white,
                 foreground: RideCheckStyle.ink,
@@ -511,7 +512,7 @@ class RideCheckCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(2, 14, 2, 2),
           child: Text(
-            "Or tell us what's happening",
+            tr.orTellUsWhatSHappening,
             style: TextStyle(
               color: RideCheckStyle.white(.5),
               fontSize: 12,
@@ -521,7 +522,7 @@ class RideCheckCard extends StatelessWidget {
         ),
         for (final (index, topic) in c.topics.indexed)
           _row(topic, last: index == c.topics.length - 1),
-        _footer('Your answer is saved to this trip.'),
+        _footer(tr.yourAnswerIsSavedToThis),
       ],
     );
   }
@@ -586,17 +587,17 @@ class RideCheckCard extends StatelessWidget {
     final c = controller;
     final questions = topic.questions;
     final children = <Widget>[
-      _header('Ride check · ${topic.short}'),
+      _header(tr.rideCheckShort(topic.short)),
       const _Steps(),
     ];
     if (topic == RideCheckTopic.somethingElse) {
       children.addAll([
-        const _Question('What is happening?'),
+        _Question(tr.whatIsHappeningQuestion),
         const SizedBox(height: 10),
         _NoteField(controller: note, onChanged: c.setNote),
       ]);
     } else if (questions.isEmpty) {
-      children.add(const _Question('Thanks, this is saved to the trip.'));
+      children.add(_Question(tr.thanksThisIsSavedToTrip));
     }
     for (final (index, question) in questions.indexed) {
       children.addAll([
@@ -628,13 +629,13 @@ class RideCheckCard extends StatelessWidget {
       const SizedBox(height: 16),
       _button(
         key: const ValueKey('ride-check-done'),
-        label: 'Done',
+        label: tr.done,
         background: Colors.white,
         foreground: RideCheckStyle.ink,
         height: 48,
         onTap: c.done,
       ),
-      _footer('Your answers are saved to this trip.'),
+      _footer(tr.yourAnswersAreSavedToThis),
     ]);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -647,14 +648,14 @@ class RideCheckCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _header('Ride check · 112'),
+        _header(tr.rideCheck112),
         const _Steps(),
-        const _Question('Call 112 on your phone'),
+        _Question(tr.call112OnYourPhone),
         const SizedBox(height: 6),
         Text(
           c.dialFailed
-              ? 'Could not open the dialer. Dial 112 manually.'
-              : 'Your dialer opens with 112. Movera never calls for you.',
+              ? tr.couldNotOpenDialerDial112
+              : tr.yourDialerOpensWith112Movera,
           key: const ValueKey('ride-check-dial-status'),
           style: TextStyle(
             color: RideCheckStyle.white(.8),
@@ -667,13 +668,13 @@ class RideCheckCard extends StatelessWidget {
         const SizedBox(height: 16),
         _button(
           key: const ValueKey('ride-check-done'),
-          label: 'Done',
+          label: tr.done,
           background: Colors.white,
           foreground: RideCheckStyle.ink,
           height: 48,
           onTap: c.done,
         ),
-        _footer('Your answers are saved to this trip.'),
+        _footer(tr.yourAnswersAreSavedToThis),
       ],
     );
   }
@@ -698,8 +699,8 @@ class RideCheckCard extends StatelessWidget {
                 children: [
                   TextSpan(
                     text: failed
-                        ? 'Movera could not be alerted'
-                        : 'Movera safety team alerted',
+                        ? tr.moveraCouldNotBeAlerted
+                        : tr.moveraSafetyTeamAlerted,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13.5,
@@ -708,8 +709,8 @@ class RideCheckCard extends StatelessWidget {
                   ),
                   TextSpan(
                     text: failed
-                        ? '\nCall 112 if you need help now.'
-                        : '\nTrip, driver and rider details were sent.',
+                        ? tr.call112IfYouNeedHelp
+                        : tr.tripDriverAndRiderDetailsWere,
                   ),
                 ],
               ),
@@ -753,8 +754,8 @@ class RideCheckCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Call 112 now',
+                    Text(
+                      tr.call112Now,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -763,7 +764,7 @@ class RideCheckCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'If someone is hurt or in danger, call emergency services.',
+                      tr.ifSomeoneIsHurtOrIn,
                       style: TextStyle(
                         color: RideCheckStyle.white(.92),
                         fontSize: 12.5,
@@ -961,7 +962,7 @@ class _NoteField extends StatelessWidget {
     cursorColor: Colors.white,
     style: const TextStyle(color: Colors.white, fontSize: 15),
     decoration: InputDecoration(
-      hintText: 'Tell us in a few words',
+      hintText: tr.tellUsInFewWords,
       hintStyle: TextStyle(color: RideCheckStyle.white(.45)),
       counterStyle: TextStyle(color: RideCheckStyle.white(.45)),
       filled: true,
@@ -989,21 +990,21 @@ class _RecordAudio extends StatelessWidget {
     final recording = c.audio == RideCheckAudio.recording;
     final (title, detail) = switch (c.audio) {
       RideCheckAudio.recording => (
-        'Recording ${_clock(c.audioSeconds)}',
-        'saved only on this phone',
+        tr.recordingTime(_clock(c.audioSeconds)),
+        tr.savedOnlyOnThisPhone,
       ),
-      RideCheckAudio.starting => ('Record audio', 'starting…'),
+      RideCheckAudio.starting => (tr.recordAudio, 'starting…'),
       RideCheckAudio.saved => (
-        'Audio saved · ${_clock(c.audioSeconds)}',
-        'only on this phone',
+        tr.audioSavedTime(_clock(c.audioSeconds)),
+        tr.onlyOnThisPhone,
       ),
       RideCheckAudio.unavailable => (
-        'Record audio',
-        'not available on this device',
+        tr.recordAudio,
+        tr.notAvailableOnThisDevice,
       ),
-      RideCheckAudio.denied => ('Record audio', 'allow the microphone first'),
-      RideCheckAudio.failed => ('Record audio', 'could not record, try again'),
-      RideCheckAudio.idle => ('Record audio', 'saved only on this phone'),
+      RideCheckAudio.denied => (tr.recordAudio, tr.allowMicrophoneFirst),
+      RideCheckAudio.failed => (tr.recordAudio, tr.couldNotRecordTryAgain),
+      RideCheckAudio.idle => (tr.recordAudio, tr.savedOnlyOnThisPhone),
     };
     return Semantics(
       button: true,
@@ -1053,8 +1054,8 @@ class _RecordAudio extends StatelessWidget {
                   const SizedBox(width: 8),
                   _solar(AppAssets.solarStopCircle, Colors.white, 18),
                   const SizedBox(width: 5),
-                  const Text(
-                    'Stop',
+                  Text(
+                    tr.stop,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 13,

@@ -193,10 +193,10 @@ extension _HomeAccount on _DriverHomeState {
     ({String status, String subtitle})? _onlineHold() {
       final rest = _drivingClock.restUntil;
       if (rest != null) {
-        return (status: 'REST', subtitle: 'Until ${clockLabel(rest)}');
+        return (status: tr.statusRest, subtitle: tr.untilTime(clockLabel(rest)));
       }
       if (DocumentExpiryStore.instance.blocking != null) {
-        return (status: 'HOLD', subtitle: 'Document expired');
+        return (status: tr.statusHold, subtitle: tr.documentExpired);
       }
       return null;
     }

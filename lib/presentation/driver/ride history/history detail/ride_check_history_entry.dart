@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -89,9 +90,9 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Ride check',
+                        tr.rideCheck,
                         style: TextStyle(
                           color: _ink,
                           fontSize: 15,
@@ -121,8 +122,8 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                 ),
                 const SizedBox(height: 8),
                 if (answers.isEmpty)
-                  const Text(
-                    'No answer',
+                  Text(
+                    tr.noAnswer,
                     style: TextStyle(color: _ink, fontSize: 13.5),
                   ),
                 for (final answer in answers)
@@ -130,7 +131,7 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                     padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       answer.question == RideCheckAnswer.first
-                          ? 'Answer: ${answer.answer}'
+                          ? tr.answerAnswer(answer.answer)
                           : '${answer.question} ${answer.answer}',
                       style: TextStyle(
                         color: _ink,
@@ -148,9 +149,9 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                     children: [
                       _solar(AppAssets.solarBellBing, _red, 14),
                       const SizedBox(width: 6),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Movera safety team alerted',
+                          tr.moveraSafetyTeamAlerted,
                           style: TextStyle(
                             color: _red,
                             fontSize: 12.5,
@@ -169,8 +170,8 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Audio saved only on this phone · '
-                          '${check.audioSeconds! ~/ 60}:${(check.audioSeconds! % 60).toString().padLeft(2, '0')}',
+                          tr.audioSavedOnlyOnThisPhone(
+                              '${check.audioSeconds! ~/ 60}:${(check.audioSeconds! % 60).toString().padLeft(2, '0')}'),
                           style: const TextStyle(color: _muted, fontSize: 12.5),
                         ),
                       ),

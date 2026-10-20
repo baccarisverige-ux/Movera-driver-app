@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/presentation/driver/home/components/radar_hold_off.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
@@ -62,15 +63,15 @@ class _TripRadarDockState extends State<TripRadarDock>
         // A new hold ring each time the state flips.
         key: ValueKey<String>(on ? 'trip-radar-dock-on' : 'trip-radar-dock-off'),
         holdKey: const ValueKey<String>('trip-radar-hold'),
-        semanticsLabel: on ? 'Hold to stop next trips' : 'Hold to start next trips',
+        semanticsLabel: on ? tr.holdToStopNextTrips : tr.holdToStartNextTrips,
         size: TripRadarDock.size,
         onConfirmed: widget.onToggle,
         child: AnimatedBuilder(
           animation: Listenable.merge([_pulse, _sweep]),
           builder: (context, _) => MoveraRadarOrb(
-            title: 'Hold',
-            status: on ? 'OFF' : 'ON',
-            subtitle: on ? 'Stop radar' : 'Start radar',
+            title: tr.hold,
+            status: on ? tr.orbOff : tr.orbOn,
+            subtitle: on ? tr.stopRadar : tr.startRadar,
             active: on,
             pulse: _pulse.value,
             sweep: on ? _sweep.value : 0,

@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -323,10 +324,10 @@ class _ArrivalApproachBannerState extends State<_ArrivalApproachBanner>
   }
 
   String get _distanceLabel {
-    if (widget.arrived) { return 'ARRIVED'; }
+    if (widget.arrived) { return tr.navArrived; }
     final meters = widget.distanceMeters;
-    if (meters == null || !meters.isFinite) { return 'NEAR'; }
-    if (meters < 25) { return 'NOW'; }
+    if (meters == null || !meters.isFinite) { return tr.navNear; }
+    if (meters < 25) { return tr.navNow; }
     if (meters < 1000) { return '${meters.round()} m'; }
     final km = meters / 1000;
     return '${km.toStringAsFixed(km < 10 ? 1 : 0)} km';
@@ -338,9 +339,9 @@ class _ArrivalApproachBannerState extends State<_ArrivalApproachBanner>
     final color = widget.kind.color;
     final label = widget.label.trim().isEmpty
         ? switch (widget.kind) {
-            ArrivalPointKind.pickup => 'Pickup',
-            ArrivalPointKind.stop => 'Stop',
-            ArrivalPointKind.destination => 'Destination',
+            ArrivalPointKind.pickup => tr.pickup,
+            ArrivalPointKind.stop => tr.stop,
+            ArrivalPointKind.destination => tr.destination,
           }
         : widget.label.trim();
 
@@ -1067,8 +1068,8 @@ class _NextStopLineState extends State<_NextStopLine>
       ),
       child: Row(
         children: [
-          const Text(
-            'TO',
+          Text(
+            tr.to,
             style: TextStyle(
               color: Color(0xFFB9C0C5),
               fontSize: 10,

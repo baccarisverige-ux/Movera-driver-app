@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -137,20 +138,23 @@ Color islandTipColor(IslandTipLook look) => switch (look) {
 class DigitalWaitingFace extends StatefulWidget {
   const DigitalWaitingFace({
     super.key,
-    required this.title,
+    required String title,
     required this.color,
     this.dots = false,
-  });
+  }) : _title = title;
 
   /// "Finding trips".
   const DigitalWaitingFace.finding({super.key})
-      : title = findingTitle,
+      : _title = null,
         color = const Color(0xFF2BD47D),
         dots = true;
 
-  static const String findingTitle = 'Finding trips';
+  static String get findingTitle => tr.findingTrips;
 
-  final String title;
+  final String? _title;
+
+  /// The words; "Finding trips" in the driver's language for [finding].
+  String get title => _title ?? findingTitle;
   final Color color;
   final bool dots;
 

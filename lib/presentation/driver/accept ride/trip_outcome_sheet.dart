@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/contracts/trip_status.dart';
@@ -13,44 +14,44 @@ const Color _muted = Color(0xFF6D797F);
 ({String title, String body}) tripOutcomeCopy(TripStatus status) =>
     switch (status) {
       TripStatus.completed => (
-        title: 'Trip completed',
-        body: 'Movera recorded this trip as completed.',
+        title: tr.tripCompleted,
+        body: tr.moveraRecordedThisTripAsCompleted,
       ),
       TripStatus.cancelledByAdmin => (
-        title: 'Trip cancelled by Movera',
-        body: 'Movera cancelled this trip. Stop in a safe place before leaving this screen.',
+        title: tr.tripCancelledByMovera,
+        body: tr.moveraCancelledThisTripStopIn,
       ),
       TripStatus.cancelledBySystem => (
-        title: 'Trip cancelled by Movera',
-        body: 'Movera closed this trip. Stop in a safe place before leaving this screen.',
+        title: tr.tripCancelledByMovera,
+        body: tr.moveraClosedThisTripStopIn,
       ),
       TripStatus.cancelledByDriver => (
-        title: 'Trip cancelled',
-        body: 'This trip was cancelled from your account.',
+        title: tr.tripCancelled,
+        body: tr.thisTripWasCancelledFromYour,
       ),
       TripStatus.cancelledByRider => (
-        title: 'Rider cancelled',
-        body: 'The rider cancelled this trip.',
+        title: tr.riderCancelled,
+        body: tr.riderCancelledThisTrip,
       ),
       TripStatus.noShow => (
-        title: 'Rider no-show recorded',
-        body: 'This pickup was closed because the rider did not arrive.',
+        title: tr.riderNoShowRecorded,
+        body: tr.thisPickupWasClosedBecauseRider,
       ),
       TripStatus.expired => (
-        title: 'Trip expired',
-        body: 'This trip is no longer active.',
+        title: tr.tripExpired,
+        body: tr.thisTripIsNoLongerActive,
       ),
       TripStatus.failed => (
-        title: 'Trip could not continue',
-        body: 'The trip was closed because of a system problem. Contact support if the rider is still with you.',
+        title: tr.tripCouldNotContinue,
+        body: tr.tripWasClosedBecauseOfSystem,
       ),
       TripStatus.searching || TripStatus.requested => (
-        title: 'Trip removed by Movera',
-        body: 'Movera gave this trip back to dispatch. Stop in a safe place before leaving this screen.',
+        title: tr.tripRemovedByMovera,
+        body: tr.moveraGaveThisTripBackTo,
       ),
       _ => (
-        title: 'Trip ended',
-        body: 'This trip is no longer active.',
+        title: tr.tripEnded,
+        body: tr.thisTripIsNoLongerActive,
       ),
     };
 
@@ -127,7 +128,7 @@ class TripOutcomeSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        hasNext ? '${copy.body} Your next trip starts now.' : copy.body,
+                        hasNext ? tr.bodyYourNextTripStartsNow(copy.body) : copy.body,
                         style: const TextStyle(color: _muted, fontSize: 15, height: 1.4),
                       ),
                     ],
@@ -142,7 +143,7 @@ class TripOutcomeSheet extends StatelessWidget {
                   key: const ValueKey<String>('trip-outcome-acknowledge'),
                   onPressed: onAcknowledge,
                   style: FilledButton.styleFrom(backgroundColor: _ink),
-                  child: Text(hasNext ? 'Go to next trip' : 'OK'),
+                  child: Text(hasNext ? tr.goToNextTrip : tr.ok),
                 ),
               ),
             ],

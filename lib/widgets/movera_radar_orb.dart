@@ -408,14 +408,21 @@ class MoveraRadarOrb extends StatelessWidget {
                                     color: Colors.white.withValues(alpha: 0.36),
                                   ),
                                   SizedBox(height: 4 * s),
-                                  Text(
-                                    subtitle,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: const Color(0xFFB7C2BE),
-                                      fontSize: 5.9 * s,
-                                      height: 1.12,
-                                      fontWeight: FontWeight.w400,
+                                  // Round 4: one line in every language;
+                                  // longer words shrink to fit the orb.
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      subtitle,
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: const Color(0xFFB7C2BE),
+                                        fontSize: 5.9 * s,
+                                        height: 1.12,
+                                        fontWeight: FontWeight.w400,
+                                      ),
                                     ),
                                   ),
                                 ],

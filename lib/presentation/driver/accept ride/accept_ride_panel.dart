@@ -153,11 +153,11 @@ extension _AcceptRidePanel on _AcceptRideState {
     String get _islandStatus {
       final first = widget.riderName.split(' ').first;
       return switch (_stage) {
-        ActiveRideStage.headingToPickup => 'Heading to pickup',
-        ActiveRideStage.waitingForRider => 'Waiting for $first',
+        ActiveRideStage.headingToPickup => tr.headingToPickup,
+        ActiveRideStage.waitingForRider => tr.waitingForFirst(first),
         _ => _stopCursor < widget.stopAddresses.length
-            ? 'To next stop'
-            : 'To drop-off',
+            ? tr.toNextStop
+            : tr.toDropOff,
       };
     }
     /// R13-18: a destination can be set during the trip too; next-trip
@@ -246,8 +246,8 @@ extension _AcceptRidePanel on _AcceptRideState {
                         color: _AcceptRideState._ink,
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: const Text(
-                        'On your way',
+                      child: Text(
+                        tr.onYourWay,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -264,8 +264,8 @@ extension _AcceptRidePanel on _AcceptRideState {
                         color: alertCoral.withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(11),
                       ),
-                      child: const Text(
-                        'After this drop-off',
+                      child: Text(
+                        tr.afterThisDropOff,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -337,8 +337,8 @@ extension _AcceptRidePanel on _AcceptRideState {
               ),
               PickupPayLine(quote: offer.pickupPay),
               const SizedBox(height: 5),
-              const Text(
-                'Available after your current drop-off',
+              Text(
+                tr.availableAfterYourCurrentDropOff,
                 style: TextStyle(
                   color: _AcceptRideState._muted,
                   fontSize: 10.5,
@@ -366,7 +366,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              'Exclusive · ${seconds}s',
+                              tr.exclusiveSecondsS(seconds),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -377,9 +377,9 @@ extension _AcceptRidePanel on _AcceptRideState {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Flexible(
+                          Flexible(
                             child: Text(
-                              'On this ride',
+                              tr.onThisRide,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -411,13 +411,13 @@ extension _AcceptRidePanel on _AcceptRideState {
               const SizedBox(height: 11),
               _offerLocationRow(
                 color: const Color(0xFF215277),
-                title: '${offer.pickupMinutes} min away',
+                title: tr.pickupMinutesMinAway(offer.pickupMinutes),
                 subtitle: offer.pickup,
               ),
               const SizedBox(height: 9),
               _offerLocationRow(
                 color: _AcceptRideState._ink,
-                title: '${offer.tripMinutes} min trip',
+                title: tr.tripMinutesMinTrip(offer.tripMinutes),
                 subtitle: offer.dropoff,
               ),
               const SizedBox(height: 13),
@@ -435,8 +435,8 @@ extension _AcceptRidePanel on _AcceptRideState {
                         ),
                         minimumSize: const Size(0, 42),
                       ),
-                      child: const Text(
-                        'Deny',
+                      child: Text(
+                        tr.deny,
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                       ),
                     ),
@@ -543,11 +543,11 @@ extension _AcceptRidePanel on _AcceptRideState {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(_freshRadarLocation ? 'Demo offers' : 'Demo offers — live location unavailable/stale', style: const TextStyle(fontSize: 10)),
+          Text(_freshRadarLocation ? tr.demoOffers : tr.demoOffersLiveLocationUnavailableStale, style: const TextStyle(fontSize: 10)),
           const SizedBox(height: 4),
           MapControlButton(
             key: const ValueKey<String>('active-ride-safety-button'),
-            tooltip: 'Safety toolkit',
+            tooltip: tr.safetyToolkit,
             size: 50,
             onTap: () => showSafetyToolKitSheet(context),
             child: SvgPicture.asset(AppAssets.mapSafety, width: 26, height: 26),
@@ -556,7 +556,7 @@ extension _AcceptRidePanel on _AcceptRideState {
           const SizedBox(height: 12),
           MapControlButton(
             key: const ValueKey<String>('active-ride-google-maps-button'),
-            tooltip: 'Navigate with Google Maps',
+            tooltip: tr.navigateWithGoogleMaps,
             size: 56,
             fill: MapControlButton.googleGrey,
             onTap: _openGoogleMaps,
@@ -603,7 +603,7 @@ extension _AcceptRidePanel on _AcceptRideState {
             ),
           MapControlButton(
             key: const ValueKey<String>('active-ride-recenter-button'),
-            tooltip: 'Recenter',
+            tooltip: tr.recenter,
             size: 56,
             fill: MapControlButton.recenterBlue,
             // Follows the car again at the locate view and brings the
@@ -627,7 +627,7 @@ extension _AcceptRidePanel on _AcceptRideState {
         () => widget.launchExternalMap?.call(uri) ?? launchUrl(uri, mode: LaunchMode.externalApplication));
       if (opened == false && mounted && ModalRoute.of(context)?.isCurrent == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google Maps is unavailable.')),
+          SnackBar(content: Text(tr.googleMapsIsUnavailable)),
         );
       }
     }
@@ -830,14 +830,14 @@ extension _AcceptRidePanel on _AcceptRideState {
             ),
             TripRoundButton(
               key: const ValueKey<String>('active-ride-call-rider'),
-              tooltip: 'Call rider',
+              tooltip: tr.callRider,
               onTap: _callRider,
               asset: AppAssets.solarPhoneCalling,
             ),
             const SizedBox(width: 12),
             TripRoundButton(
               key: const ValueKey<String>('active-ride-message-rider'),
-              tooltip: 'Message rider',
+              tooltip: tr.messageRider,
               onTap: _messageRider,
               asset: AppAssets.solarChatRoundDots,
             ),
@@ -999,8 +999,8 @@ extension _AcceptRidePanel on _AcceptRideState {
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(color: _AcceptRideState._line),
                       ),
-                      child: const Text(
-                        'Rider details from the booking will appear here when the backend profile is connected.',
+                      child: Text(
+                        tr.riderDetailsFromBookingWillAppear,
                         style: TextStyle(
                           color: _AcceptRideState._muted,
                           fontSize: 11,
@@ -1039,13 +1039,13 @@ extension _AcceptRidePanel on _AcceptRideState {
                     if (_navigation.routeState == RouteLoadState.failed)
                       _CleanRow(
                         key: const ValueKey<String>('retry-route-option'),
-                        title: 'Retry route',
-                        subtitle: 'Route unavailable. Your trip remains active.',
+                        title: tr.retryRoute,
+                        subtitle: tr.routeUnavailableYourTripRemainsActive,
                         onTap: () { if (popOwned(sheetContext)) unawaited(_navigation.retryRoute()); },
                       ),
                     _CleanRow(
                       key: const ValueKey<String>('current-trip-waybill-option'),
-                      title: 'Current waybill',
+                      title: tr.currentWaybill,
                       subtitle:
                           '${widget.pickupAddress} → ${widget.dropoffAddress}',
                       onTap: () {
@@ -1055,7 +1055,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                           showMoveraWaybillSheet(
                             context,
                             record,
-                            title: 'Current trip waybill',
+                            title: tr.currentTripWaybill,
                           );
                         }
                       },
@@ -1063,31 +1063,31 @@ extension _AcceptRidePanel on _AcceptRideState {
                     if (showNext)
                       _CleanRow(
                         key: const ValueKey<String>('next-trip-waybill-option'),
-                        title: 'Next trip waybill',
+                        title: tr.nextTripWaybill,
                         subtitle: _waybills.next!.dropoff,
                         onTap: () {
                           if (!popOwned(sheetContext)) return;
                           showMoveraWaybillSheet(
                             context,
                             _waybills.next!,
-                            title: 'Next trip waybill',
+                            title: tr.nextTripWaybill,
                           );
                         },
                       ),
                     if (onTrip)
                       _CleanRow(
                         key: const ValueKey<String>('trip-destination-option'),
-                        title: 'Destination',
+                        title: tr.destination,
                         subtitle: _destinationActive
-                            ? (_destinationAddress ?? 'On your way')
-                            : 'Next trips on your way',
+                            ? (_destinationAddress ?? tr.onYourWay)
+                            : tr.nextTripsOnYourWay,
                         onTap: () {
                           if (popOwned(sheetContext)) { _openDestinationPicker(); }
                         },
                       ),
                     _CleanRow(
-                      title: 'Safety toolkit',
-                      subtitle: 'Share trip, record audio, get help',
+                      title: tr.safetyToolkit,
+                      subtitle: tr.shareTripRecordAudioGetHelp,
                       onTap: () {
                         if (!popOwned(sheetContext)) return;
                         showSafetyToolKitSheet(context);
@@ -1095,9 +1095,9 @@ extension _AcceptRidePanel on _AcceptRideState {
                     ),
                     _CleanRow(
                       key: const ValueKey<String>('active-ride-cancel-option'),
-                      title: onTrip ? 'End trip early' : 'Cancel trip',
+                      title: onTrip ? tr.endTripEarly : tr.cancelTrip,
                       subtitle:
-                          onTrip ? 'Stop safely first · reason required' : null,
+                          onTrip ? tr.stopSafelyFirstReasonRequired : null,
                       danger: true,
                       last: true,
                       onTap: () {
@@ -1143,19 +1143,19 @@ extension _AcceptRidePanel on _AcceptRideState {
                 children: [
                   Text(
                     nextTrip
-                        ? 'Why are you cancelling the next trip?'
+                        ? tr.whyAreYouCancellingNextTripQuestion
                         : isOnTrip
-                        ? 'Why are you ending the trip?'
-                        : 'Why are you cancelling?',
+                        ? tr.whyAreYouEndingTripQuestion
+                        : tr.whyAreYouCancellingQuestion,
                     style: _CleanSheet.title,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     nextTrip
-                        ? 'Your current trip continues.'
+                        ? tr.yourCurrentTripContinues
                         : isOnTrip
-                        ? 'Stop in a safe place first.'
-                        : 'Pick the reason that fits best.',
+                        ? tr.stopInSafePlaceFirst
+                        : tr.pickReasonThatFitsBest,
                     style: _CleanSheet.note,
                   ),
                   const SizedBox(height: 8),
