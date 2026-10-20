@@ -6,6 +6,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/offer_route_marks.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
+import 'package:movera/core/geo/driver_distance.dart';
 
 const Color _ink = Color(0xFF111518);
 const Color _text = Color(0xFF5D646C);
@@ -743,8 +744,8 @@ class OfferSheetBody extends StatelessWidget {
     );
   }
 
-  /// "8.5 km", "12 km".
-  static String km(double km) => '${km.toStringAsFixed(km < 10 ? 1 : 0)} km';
+  /// "650 m", "8.5 km", "12 km" (Q20).
+  static String km(double km) => driverDistanceKm(km);
 
   /// "126,75 kr" → "126" and ",75 kr", for the grey decimals.
   static (String, String) fareParts(String fare) {

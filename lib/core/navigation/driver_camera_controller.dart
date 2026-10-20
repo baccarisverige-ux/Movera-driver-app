@@ -85,7 +85,6 @@ class DriverCameraPolicy {
   GeoPoint? vehiclePoint;
   double get vehicleCourse => _course;
   double get alongMeters => _along ?? 0;
-  bool autoZoom = true;
 
   /// Home's free-map zoom: the area around the driver, about 10 km across
   /// a phone. Also the zoom Home's map opens at, so the first GPS frame
@@ -248,9 +247,7 @@ class DriverCameraPolicy {
     var zoom = waiting
         ? waitingZoom
         : navigating
-        ? (autoZoom
-              ? _cruiseZoom(speed, immediate)
-              : (_previous?.zoom ?? guidanceStartZoom))
+        ? _cruiseZoom(speed, immediate)
         : _exploreZoom;
     // Locate on a trip: the locate view now; the speed zoom then takes over
     // again at its own pace (at most [maxZoomOutPerFix] a fix).
@@ -290,8 +287,7 @@ class DriverCameraPolicy {
         }
         final maneuver = progress.nextInstruction;
         final distance = progress.distanceToManeuverMeters;
-        if (autoZoom &&
-            maneuver != null &&
+        if (maneuver != null &&
             _needsPreview(maneuver.type) &&
             distance < 180) {
           final approach = (1 - distance / 180).clamp(0.0, 1.0);
@@ -427,7 +423,6 @@ class DriverCameraController {
   double get vehicleCourse => _policy.vehicleCourse;
   double get alongMeters => _policy.alongMeters;
   bool get isGuidance => _navigating && !_waiting;
-  bool get autoZoom => _policy.autoZoom;
   /// Trip guidance: how long the map may stay moved by the driver before
   /// the camera returns to the car. Null keeps the map until Recenter.
   Duration? autoResumeAfter;
@@ -525,11 +520,6 @@ class DriverCameraController {
     if (port is DriverCameraTiltBinding) {
       (port as DriverCameraTiltBinding).bindTiltToZoom(!_waiting);
     }
-  }
-
-  void setAutoZoom(bool enabled) {
-    _policy.autoZoom = enabled;
-    _request();
   }
 
   void attach(DriverCameraPort port) {
@@ -738,7 +728,10 @@ class DriverCameraController {
     }
     final pending = _pending;
     if (_busy && pending != null) {
+      // D-14: the running animation now steers to this pose; animating
+      // it again once that one ends would send the same move twice.
       _port?.retarget(pending);
+      _pending = null;
     }
     if (!_busy && _throttle == null) {
       unawaited(_flush());

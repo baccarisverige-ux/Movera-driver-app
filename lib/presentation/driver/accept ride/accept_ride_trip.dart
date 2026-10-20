@@ -603,11 +603,20 @@ extension _AcceptRideTrip on _AcceptRideState {
         unawaited(_refreshRoadRoute(force: true));
       }
     }
+    /// D-07: what the screen shows from a fix outside the map and the
+    /// island (both follow on their own). A fix that changes none of it
+    /// does not rebuild the trip screen.
+    Object get _fixView => (_nearArrivalTarget, _hasLiveLocation, _locationStatus,
+        _etaLabel, _freshRadarLocation, _camera.mode, _camera.isGuidance);
+    /// The map's route lines for the route, the car's progress and zoom.
+    void _syncRouteLines() =>
+        _routeLines.sync(_roadGeoPoints, _camera.alongMeters, _routeZoomStep);
     Future<void> _applyDriverPosition(
       DriverLocation location, {
       bool forceRoute = false,
     }) async {
       if (!mounted) { return; }
+      final shown = _fixView;
       if (!location.isDisplayableAt(DateTime.now())) {
         // Keep the previous car position and route; do not draw a stale fix.
         _navigation.keepLastKnown(status: 'Location updating…');
@@ -633,6 +642,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         waiting: _stage == ActiveRideStage.waitingForRider || _paidStopWait);
       _vehicle.moveTo((_camera.vehiclePoint ?? location.point).toLatLng(),
           _camera.vehicleCourse);
+      _syncRouteLines();
 
       final lastSnap = _lastSnapshotAt;
       if (lastSnap == null ||
@@ -650,6 +660,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _maybeScheduleOnTripRadarDemoOffer();
         _rideCheckObserve();
       }
+      if (mounted && _fixView != shown) { _rebuild(() {}); }
     }
     Future<void> _refreshRoadRoute({bool force = false}) async {
       if (_stage == ActiveRideStage.waitingForRider || _paidStopWait) { return; }
@@ -674,9 +685,14 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!mounted) { return; }
 
       final route = _navigation.route;
-      if (route != null && route.points.length >= 2) { _rideCheckPlan(route); }
+      final drawn = route != null && route.points.length >= 2;
+      if (drawn) { _rideCheckPlan(route); }
+      // D-07: the same route and status as drawn: nothing to rebuild.
+      if (_locationStatus == _navigation.status && (!drawn ||
+          (identical(_roadGeoPoints, route.points) &&
+              _routeDurationSeconds == route.durationSeconds))) { return; }
       _rebuild(() {
-        if (route != null && route.points.length >= 2) {
+        if (drawn) {
           _roadGeoPoints = route.points;
 
           _routeDurationSeconds = route.durationSeconds;
@@ -695,7 +711,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     void _onCameraMove(CameraPosition position) {
       _cameraPort?.onMove(position);
       final step = DriverRouteStyle.stepZoom(position.zoom);
-      if (step != _routeZoomStep) { _rebuild(() => _routeZoomStep = step); }
+      // The zoom step only changes the line widths: the map alone redraws.
+      if (step != _routeZoomStep) { _routeZoomStep = step; _syncRouteLines(); }
       // A native +/- control zoom has no Flutter pinch/wheel pointer signal.
       // Observe SDK zoom *deltas*, but only after physical input has already
       // transferred the camera to manual Browse. Pan-only moves stay quiet.

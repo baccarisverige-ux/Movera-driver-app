@@ -33,6 +33,8 @@ class _SilentSound implements RadarSoundPlayer {
   Future<void> stop() async {}
   @override
   Future<void> prime() async {}
+  @override
+  Future<void> dispose() async {}
 }
 
 class _Loc implements DriverLocationRepository {

@@ -6,6 +6,7 @@ import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/pickup_pay_line.dart';
+import 'package:movera/core/geo/driver_distance.dart';
 
 /// What a Radar offer card shows. The same card is used on Home (the deck
 /// above the radar) and in the full-screen Live list.
@@ -442,9 +443,7 @@ class RadarOfferCard extends StatelessWidget {
                           ? RadarOfferView.street(offer.pickup)
                           : driverText(DriverTexts.offerPickupNearby),
                       show.pickupDistance
-                          ? driverText(DriverTexts.offerKmAway, {
-                              'km': offer.pickupKm.toStringAsFixed(1),
-                            })
+                          ? _distanceText(DriverTexts.offerKmAway, offer.pickupKm)
                           : driverText(DriverTexts.offerPickup),
                     ),
                     const SizedBox(height: 14),
@@ -452,10 +451,8 @@ class RadarOfferCard extends StatelessWidget {
                       RadarOfferView.area(offer.dropoff),
                       [
                         if (show.tripMinutesKm)
-                          driverText(DriverTexts.offerTripLength, {
-                            'minutes': offer.tripMinutes,
-                            'km': offer.tripKm.toStringAsFixed(1),
-                          }),
+                          _distanceText(DriverTexts.offerTripLength,
+                              offer.tripKm, {'minutes': offer.tripMinutes}),
                         if (show.stops && offer.stops > 0) offer.stopsLabel,
                       ].join(' · ').ifEmpty(driverText(DriverTexts.offerDropoff)),
                     ),
@@ -607,4 +604,15 @@ class RadarOfferCard extends StatelessWidget {
 
 extension on String {
   String ifEmpty(String other) => isEmpty ? other : this;
+}
+
+/// Q20: an offer text whose "{km} km" ("{km} km away") shows the distance
+/// as the app writes it: "650 m away", "4.2 km away". An admin text that
+/// uses {km} without the unit still gets the km number.
+String _distanceText(DriverTextKey key, double km,
+    [Map<String, Object> values = const {}]) {
+  const mark = '\u{E000}';
+  return driverText(key, {...values, 'km': mark})
+      .replaceAll('$mark km', driverDistanceKm(km))
+      .replaceAll(mark, km.toStringAsFixed(1));
 }

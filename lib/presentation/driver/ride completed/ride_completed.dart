@@ -348,9 +348,11 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   Widget _stars(String rider) {
     return Column(
       children: [
+        // Q37/Q38: optional, whole stars 1–5; Done without a rating skips.
         RatingBar(
           initialRating: _rating,
           minRating: 1,
+          allowHalfRating: false,
           glow: false,
           itemCount: 5,
           itemSize: 34,

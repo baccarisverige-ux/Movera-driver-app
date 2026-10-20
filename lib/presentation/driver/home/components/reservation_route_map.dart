@@ -15,6 +15,7 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/widgets/map_control_button.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
+import 'package:movera/core/geo/driver_distance.dart';
 
 /// Points the reservation passes through, in order: pickup, stops, drop-off.
 List<GeoPoint> reservationWaypoints(ReservationRequestPreview request) => [
@@ -425,7 +426,7 @@ class ReservationRouteMapPage extends StatelessWidget {
                   style: const TextStyle(color: _muted, fontSize: 13),
                 ),
                 Text(
-                  '${request.tripMinutes} min · ${request.tripKm.toStringAsFixed(request.tripKm < 10 ? 1 : 0)} km',
+                  '${request.tripMinutes} min · ${driverDistanceKm(request.tripKm)}',
                   style: const TextStyle(
                     color: _ink,
                     fontSize: 13,

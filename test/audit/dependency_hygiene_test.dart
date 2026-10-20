@@ -27,7 +27,7 @@ void main() {
     final packages = RegExp(r'^  ([a-z0-9_]+):', multiLine: true)
         .allMatches(block)
         .map((m) => m.group(1)!)
-        .where((name) => !{'flutter', 'cupertino_icons'}.contains(name));
+        .where((name) => name != 'flutter');
     final source = Directory('lib')
         .listSync(recursive: true)
         .whereType<File>()
