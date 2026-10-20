@@ -1,6 +1,6 @@
 import 'package:movera/core/contracts/trip_status.dart';
 
-/// Pure transition engine for `contracts/contract.json#transitions` (v0.3.0).
+/// Pure transition engine for `contracts/contract.json#transitions` (v0.3.1).
 ///
 /// The table below is a hand copy of the contract. `test/contract/` checks it
 /// row by row against `contracts/contract.json` and replays
@@ -124,7 +124,7 @@ class InvalidTripTransition implements Exception {
 }
 
 abstract final class TripTransitions {
-  static const String contractVersion = '0.3.0';
+  static const String contractVersion = '0.3.1';
 
   static const List<TripTransition> table = [
     TripTransition(TripCommand.quote, TripActor.system, [TripStatus.draft], TripStatus.quoted),
@@ -187,6 +187,36 @@ abstract final class TripTransitions {
   }) =>
       target(from, command, actor, kind: kind) ??
       (throw InvalidTripTransition(from, command, actor, kind));
+}
+
+/// One row of `contract.json#ratingAllowed.rules`: [rater] may rate a trip
+/// that ended in [status], through [command] when it is set.
+class TripRatingRule {
+  const TripRatingRule(this.rater, this.status, {this.command});
+  final TripActor rater;
+  final TripStatus status;
+  final TripCommand? command;
+}
+
+/// Who may rate a finished trip (`contract.json#ratingAllowed`, v0.3.1).
+/// The driver rates the rider after `completed` only; the rider also rates
+/// a trip they ended early. Anything else is `invalid_transition`.
+abstract final class TripRatingRules {
+  static const List<TripRatingRule> rules = [
+    TripRatingRule(TripActor.rider, TripStatus.completed),
+    TripRatingRule(TripActor.driver, TripStatus.completed),
+    TripRatingRule(TripActor.rider, TripStatus.cancelledByRider,
+        command: TripCommand.endEarly),
+  ];
+
+  /// Whether [rater] may rate a trip in [status] that [endedBy] (the
+  /// command that ended it, when known) brought there.
+  static bool allows(TripActor rater, TripStatus status,
+          {TripCommand? endedBy}) =>
+      rules.any((rule) =>
+          rule.rater == rater &&
+          rule.status == status &&
+          (rule.command == null || rule.command == endedBy));
 }
 
 /// How a trip leaves this driver's phone.
