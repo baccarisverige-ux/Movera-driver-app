@@ -1,0 +1,1878 @@
+{
+  "@@locale": "en",
+  "appTitle": "Movera Driver",
+  "hideReservationRequest": "Hide reservation request",
+  "tripMinutesMinTrip": "{tripMinutes} min trip",
+  "@tripMinutesMinTrip": {
+    "placeholders": {
+      "tripMinutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "n1Stop": "1 stop",
+  "pickupWhenLabel": "Pickup {whenLabel}",
+  "@pickupWhenLabel": {
+    "placeholders": {
+      "whenLabel": {
+        "type": "Object"
+      }
+    }
+  },
+  "reservation": "Reservation",
+  "exclusive": "Exclusive",
+  "pickupMinutesMin": " · Pickup {minutes} min",
+  "@pickupMinutesMin": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "findingTrips": "Finding trips",
+  "notNow": "Not now",
+  "ridePreferences": "Ride preferences",
+  "wallet": "Wallet",
+  "inbox": "Inbox",
+  "scheduled": "Scheduled",
+  "exclusiveForYou": "Exclusive for you",
+  "destinationSet": "Destination Set",
+  "recommendations": "Recommendations",
+  "destination": "Destination",
+  "driverStatus": "DRIVER STATUS",
+  "accountAccessPaused": "Account access paused",
+  "yourDriverStatusIsCurrentlySuspended": "Your driver status is currently suspended, so new trip requests cannot be accepted and Radar cannot be started.",
+  "moveraWillUseAuthoritativeAccountStatus": "Movera will use the authoritative account status. This screen does not guess a reason or unlock time.",
+  "gotIt": "Got it",
+  "pickup": "Pickup",
+  "stopNumber": "Stop {number}",
+  "@stopNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "arrive": "Arrive",
+  "backToRequest": "Back to request",
+  "tripMinutesMinDistance": "{tripMinutes} min · {distance}",
+  "@tripMinutesMinDistance": {
+    "placeholders": {
+      "tripMinutes": {
+        "type": "Object"
+      },
+      "distance": {
+        "type": "Object"
+      }
+    }
+  },
+  "dropOff": "Drop-off",
+  "destinationModeUntilUntil": "Destination mode until {until}",
+  "@destinationModeUntilUntil": {
+    "placeholders": {
+      "until": {
+        "type": "Object"
+      }
+    }
+  },
+  "showRoute": "Show route",
+  "turnOffDestination": "Turn off destination",
+  "versionLatestVersion": "Version {latestVersion}",
+  "@versionLatestVersion": {
+    "placeholders": {
+      "latestVersion": {
+        "type": "Object"
+      }
+    }
+  },
+  "openingUpdateEllipsis": "Opening update…",
+  "couldNotOpenUpdatePleaseTry": "Could not open the update. Please try again.",
+  "updating": "UPDATING",
+  "slideToOpen": "SLIDE TO OPEN",
+  "rideHistory": "Ride history",
+  "goOfflineQuestion": "Go offline?",
+  "youStopGettingTripOffersUntil": "You stop getting trip offers until you go online again.",
+  "stayOnline": "Stay online",
+  "goOffline": "Go offline",
+  "restUntilTime": "Rest until {time}",
+  "@restUntilTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "timeLeftToDrive": "{time} left to drive",
+  "@timeLeftToDrive": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "paused": "Paused",
+  "findingYourLocation": "Finding your location",
+  "untilTime": "Until {time}",
+  "@untilTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "documentExpired": "Document expired",
+  "skipExclusiveOffer": "Skip Exclusive offer",
+  "pleaseWait": "Please wait",
+  "tapToAccept": "Tap to accept",
+  "headToYourPickupTimePickup": "Head to your {pickupTime} pickup now: {pickupAddress}.",
+  "@headToYourPickupTimePickup": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      },
+      "pickupAddress": {
+        "type": "Object"
+      }
+    }
+  },
+  "headToYourPickupTimePickup2": "Head to your {pickupTime} pickup",
+  "@headToYourPickupTimePickup2": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      }
+    }
+  },
+  "leaveNowForPickupTimePickup": "Leave now for {pickupTime} pickup",
+  "@leaveNowForPickupTimePickup": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      }
+    }
+  },
+  "scheduledRide": "Scheduled ride",
+  "pickupAtPickupTimeInLeft": "Pickup at {pickupTime} in {left}: {pickupAddress}.",
+  "@pickupAtPickupTimeInLeft": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      },
+      "left": {
+        "type": "Object"
+      },
+      "pickupAddress": {
+        "type": "Object"
+      }
+    }
+  },
+  "pickupTimePickupInLeft": "{pickupTime} pickup in {left}",
+  "@pickupTimePickupInLeft": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      },
+      "left": {
+        "type": "Object"
+      }
+    }
+  },
+  "goOnlineNowForYourPickup": "Go online now for your {pickupTime} pickup.",
+  "@goOnlineNowForYourPickup": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      }
+    }
+  },
+  "goOnlineForPickupTimePickup": "Go online for {pickupTime} pickup",
+  "@goOnlineForPickupTimePickup": {
+    "placeholders": {
+      "pickupTime": {
+        "type": "Object"
+      }
+    }
+  },
+  "matching": "Matching",
+  "accept": "Accept",
+  "recenter": "Recenter",
+  "contactSupport": "Contact support",
+  "skipDemo": "Skip demo",
+  "retry": "Retry",
+  "safetyToolkit": "Safety toolkit",
+  "menu": "Menu",
+  "searchDestination": "Search destination",
+  "lastTrip": "LAST TRIP",
+  "hold": "Hold",
+  "rightNow": "Right now",
+  "cashRides": "Cash rides",
+  "performance": "Performance",
+  "latestWaybill": "Latest waybill",
+  "noneYet": "None yet",
+  "rating": "Rating",
+  "acceptance": "Acceptance",
+  "cancellation": "Cancellation",
+  "drivingTime": "Driving time",
+  "worked": "Worked",
+  "leftBeforeRest": "Left before rest",
+  "restUntil": "Rest until",
+  "workLimit": "Work limit",
+  "restAfterIt": "Rest after it",
+  "countsWhileRadarIsOnAfter": "Counts while Radar is on. After {workHours} h you rest {restHours} h before going online again. A {restHours} h break starts it from zero.",
+  "@countsWhileRadarIsOnAfter": {
+    "placeholders": {
+      "workHours": {
+        "type": "Object"
+      },
+      "restHours": {
+        "type": "Object"
+      }
+    }
+  },
+  "closeSheet": "Close sheet",
+  "today": "Today",
+  "exclusiveReservation": "Exclusive reservation",
+  "exclusiveOffer": "Exclusive offer",
+  "moveraRadar": "Movera Radar",
+  "rider": "Rider",
+  "cash": "Cash",
+  "allOffers": "ALL OFFERS",
+  "savedTripCouldNotBeOpened": "The saved trip could not be opened.",
+  "unresolvedTrip": "Unresolved trip",
+  "thisSavedTripIsOlderThan": "This saved trip is older than six hours. Resume it or close it explicitly.",
+  "savedRouteCoordinatesAreUnavailableClose": "Saved route coordinates are unavailable. Close this trip explicitly before accepting another.",
+  "closeTrip": "Close trip",
+  "resumeTrip": "Resume trip",
+  "savedTripCouldNotBeClosed": "The saved trip could not be closed.",
+  "savedTripCannotBeRead": "Saved trip cannot be read",
+  "tripSavedOnThisDeviceIs": "The trip saved on this device is damaged or from another app version. Close it to continue. A copy is kept on this device for support.",
+  "closeUnreadableTrip": "Close unreadable trip",
+  "savedTripCouldNotBeRead": "A saved trip could not be read. Close it to go online.",
+  "review": "Review",
+  "unreadableTripCouldNotBeClosed": "The unreadable trip could not be closed.",
+  "riderDataUnavailable": "Rider data unavailable",
+  "finishOrCloseSavedTripBefore": "Finish or close the saved trip before going online.",
+  "openSavedTrip": "Open saved trip",
+  "account": "Account",
+  "radar": "Radar",
+  "tapForDetails": "Tap for details",
+  "notActive": "Not active",
+  "tapToScan": "Tap to scan",
+  "connecting": "Connecting",
+  "tripFound": "Trip found",
+  "tapForAll": "Tap for all",
+  "scanning": "Scanning",
+  "currentTrip": "Current trip",
+  "nextTripSecured": "Next trip secured",
+  "riderNameIsOnWay": "{riderName} is on the way",
+  "@riderNameIsOnWay": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "tripUpdatesCouldNotBeRefreshed": "Trip updates could not be refreshed.",
+  "tripUpdateCouldNotBeSaved": "Trip update could not be saved. Retrying automatically.",
+  "retryNow": "Retry now",
+  "couldNotSaveRiderCancellationRetry": "Could not save rider cancellation. Retry.",
+  "tripProgressCouldNotBeSaved": "Trip progress could not be saved. Keep this screen open and retry.",
+  "thisStopNeedsVerifiedMapLocation": "This stop needs a verified map location before arrival.",
+  "locationUnavailableEnableLocationToConfirm": "Location unavailable. Enable location to confirm arrival.",
+  "moveWithin100MOfWhere": "Move within 100 m of the {where} to arrive.",
+  "@moveWithin100MOfWhere": {
+    "placeholders": {
+      "where": {
+        "type": "Object"
+      }
+    }
+  },
+  "yourDriverHasArrivedAtPickup": "Your driver has arrived at the pickup point.",
+  "locationUpdatingEllipsis": "Location updating…",
+  "stopLocationUnavailable": "Stop location unavailable",
+  "couldNotFinishSavingThisTrip": "Could not finish saving this trip. Retry completion; the receipt will not duplicate.",
+  "alongYourDestination": "Along your destination",
+  "cancelNextTripQuestion": "Cancel the next trip?",
+  "endThisTripEarlyQuestion": "End this trip early?",
+  "cancelThisTripQuestion": "Cancel this trip?",
+  "reasonTitle": "Reason: {title}",
+  "@reasonTitle": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  },
+  "yourCurrentTripContinuesNextTrip": "Your current trip continues. The next trip goes back to dispatch for another driver.",
+  "onlyEndTripAfterYouHave": "Only end the trip after you have stopped in a safe place and the rider can exit safely.",
+  "cancelNextTrip": "Cancel next trip",
+  "endTripEarly": "End trip early",
+  "cancelTrip": "Cancel trip",
+  "keepTrip": "Keep trip",
+  "thisTripCannotBeCancelledRight": "This trip cannot be cancelled right now.",
+  "couldNotSaveCancellationRetry": "Could not save cancellation. Retry.",
+  "firstTripEndedStartingNextOne": "First trip ended · starting the next one",
+  "tripEndedEarlyTitle": "Trip ended early · {title}",
+  "@tripEndedEarlyTitle": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  },
+  "tripCancelledTitle": "Trip cancelled · {title}",
+  "@tripCancelledTitle": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  },
+  "tripRouteAndOptions": "Trip route and options",
+  "now": "Now",
+  "arrival": "Arrival",
+  "arriving": "Arriving",
+  "turnExclusiveOffersOff": "Turn Exclusive offers off",
+  "turnExclusiveOffersOn": "Turn Exclusive offers on",
+  "cashCollectInCar": "Cash: collect in the car",
+  "paidByCard": "Paid by card",
+  "rideCheckDemo": "Ride check demo",
+  "demoValue": "Demo: {value}",
+  "@demoValue": {
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "routeProgress": "Route progress",
+  "unavailable": "Unavailable",
+  "addressUnavailable": "Address unavailable",
+  "doesnTCount": "Doesn’t count",
+  "tripUpdatesDisconnectedReconnectingIsRequired": "Trip updates disconnected. Reconnecting is required.",
+  "pickingUpRiderName": "Picking up {riderName}",
+  "@pickingUpRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "waitingForRiderName": "Waiting for {riderName}",
+  "@waitingForRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "waitingAtStopNumber": "Waiting at stop {number}",
+  "@waitingAtStopNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "headingToStopNumber": "Heading to stop {number}",
+  "@headingToStopNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "droppingOffRiderName": "Dropping off {riderName}",
+  "@droppingOffRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "pickUpRiderName": "Pick up {riderName}",
+  "@pickUpRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "driveToStopNumber": "Drive to stop {number}",
+  "@driveToStopNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "dropOffRiderName": "Drop off {riderName}",
+  "@dropOffRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "enRoute": "En route",
+  "paidWaitAtStopNumber": "Paid wait at stop {number}",
+  "@paidWaitAtStopNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "includedWaitThenPaid": "Included wait · then paid",
+  "paidWaitRunning": "Paid wait running",
+  "paidWaitNoShowAvailable": "Paid wait · no-show available",
+  "nextStop": "Next stop",
+  "toDropOff": "To drop-off",
+  "waiting": "Waiting",
+  "tripStarted": "Trip started",
+  "tripCompleted": "Trip completed",
+  "holdForRiderName": "Hold for {riderName}",
+  "@holdForRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "thenDropOff": "Then drop-off",
+  "stop1OfStopAddressesLength": "Stop 1 of {stopAddressesLength}",
+  "@stop1OfStopAddressesLength": {
+    "placeholders": {
+      "stopAddressesLength": {
+        "type": "Object"
+      }
+    }
+  },
+  "actionCouldNotBeCompletedPlease": "The action could not be completed. Please retry.",
+  "confirmThisTripActionQuestion": "Confirm this trip action?",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "finishSoSoonQuestion": "Finish so soon?",
+  "youPickedUpRiderMinutesMin": "You picked up the rider {minutes} min ago. Finish only if the trip really ended.",
+  "@youPickedUpRiderMinutesMin": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "backToRide": "Back to ride",
+  "finishTrip": "Finish trip",
+  "isEverythingOkQuestion": "Is everything OK?",
+  "rideCheckTitle": "Ride check. {title}",
+  "@rideCheckTitle": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  },
+  "rideCheck": "Ride check",
+  "call112": "Call 112",
+  "iMOk": "I'm OK",
+  "orTellUsWhatSHappening": "Or tell us what's happening",
+  "yourAnswerIsSavedToThis": "Your answer is saved to this trip.",
+  "rideCheckShort": "Ride check · {short}",
+  "@rideCheckShort": {
+    "placeholders": {
+      "short": {
+        "type": "Object"
+      }
+    }
+  },
+  "whatIsHappeningQuestion": "What is happening?",
+  "thanksThisIsSavedToTrip": "Thanks, this is saved to the trip.",
+  "done": "Done",
+  "yourAnswersAreSavedToThis": "Your answers are saved to this trip.",
+  "rideCheck112": "Ride check · 112",
+  "call112OnYourPhone": "Call 112 on your phone",
+  "couldNotOpenDialerDial112": "Could not open the dialer. Dial 112 manually.",
+  "yourDialerOpensWith112Movera": "Your dialer opens with 112. Movera never calls for you.",
+  "moveraCouldNotBeAlerted": "Movera could not be alerted",
+  "moveraSafetyTeamAlerted": "Movera safety team alerted",
+  "call112IfYouNeedHelp": "\nCall 112 if you need help now.",
+  "tripDriverAndRiderDetailsWere": "\nTrip, driver and rider details were sent.",
+  "call112Now": "Call 112 now",
+  "ifSomeoneIsHurtOrIn": "If someone is hurt or in danger, call emergency services.",
+  "tellUsInFewWords": "Tell us in a few words",
+  "recordingTime": "Recording {time}",
+  "@recordingTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "savedOnlyOnThisPhone": "saved only on this phone",
+  "recordAudio": "Record audio",
+  "audioSavedTime": "Audio saved · {time}",
+  "@audioSavedTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "onlyOnThisPhone": "only on this phone",
+  "notAvailableOnThisDevice": "not available on this device",
+  "allowMicrophoneFirst": "allow the microphone first",
+  "couldNotRecordTryAgain": "could not record, try again",
+  "stop": "Stop",
+  "moveraRecordedThisTripAsCompleted": "Movera recorded this trip as completed.",
+  "tripCancelledByMovera": "Trip cancelled by Movera",
+  "moveraCancelledThisTripStopIn": "Movera cancelled this trip. Stop in a safe place before leaving this screen.",
+  "moveraClosedThisTripStopIn": "Movera closed this trip. Stop in a safe place before leaving this screen.",
+  "tripCancelled": "Trip cancelled",
+  "thisTripWasCancelledFromYour": "This trip was cancelled from your account.",
+  "riderCancelled": "Rider cancelled",
+  "riderCancelledThisTrip": "The rider cancelled this trip.",
+  "riderNoShowRecorded": "Rider no-show recorded",
+  "thisPickupWasClosedBecauseRider": "This pickup was closed because the rider did not arrive.",
+  "tripExpired": "Trip expired",
+  "thisTripIsNoLongerActive": "This trip is no longer active.",
+  "tripCouldNotContinue": "Trip could not continue",
+  "tripWasClosedBecauseOfSystem": "The trip was closed because of a system problem. Contact support if the rider is still with you.",
+  "tripRemovedByMovera": "Trip removed by Movera",
+  "moveraGaveThisTripBackTo": "Movera gave this trip back to dispatch. Stop in a safe place before leaving this screen.",
+  "tripEnded": "Trip ended",
+  "bodyYourNextTripStartsNow": "{body} Your next trip starts now.",
+  "@bodyYourNextTripStartsNow": {
+    "placeholders": {
+      "body": {
+        "type": "Object"
+      }
+    }
+  },
+  "goToNextTrip": "Go to next trip",
+  "holdToStopNextTrips": "Hold to stop next trips",
+  "holdToStartNextTrips": "Hold to start next trips",
+  "stopRadar": "Stop radar",
+  "startRadar": "Start radar",
+  "headingToPickup": "Heading to pickup",
+  "waitingForFirst": "Waiting for {first}",
+  "@waitingForFirst": {
+    "placeholders": {
+      "first": {
+        "type": "Object"
+      }
+    }
+  },
+  "toNextStop": "To next stop",
+  "onYourWay": "On your way",
+  "afterThisDropOff": "After this drop-off",
+  "availableAfterYourCurrentDropOff": "Available after your current drop-off",
+  "exclusiveSecondsS": "Exclusive · {seconds}s",
+  "@exclusiveSecondsS": {
+    "placeholders": {
+      "seconds": {
+        "type": "Object"
+      }
+    }
+  },
+  "onThisRide": "On this ride",
+  "pickupMinutesMinAway": "{pickupMinutes} min away",
+  "@pickupMinutesMinAway": {
+    "placeholders": {
+      "pickupMinutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "deny": "Deny",
+  "demoOffers": "Demo offers",
+  "demoOffersLiveLocationUnavailableStale": "Demo offers — live location unavailable/stale",
+  "navigateWithGoogleMaps": "Navigate with Google Maps",
+  "googleMapsIsUnavailable": "Google Maps is unavailable.",
+  "callRider": "Call rider",
+  "messageRider": "Message rider",
+  "riderDetailsFromBookingWillAppear": "Rider details from the booking will appear here when the backend profile is connected.",
+  "retryRoute": "Retry route",
+  "routeUnavailableYourTripRemainsActive": "Route unavailable. Your trip remains active.",
+  "currentWaybill": "Current waybill",
+  "currentTripWaybill": "Current trip waybill",
+  "nextTripWaybill": "Next trip waybill",
+  "nextTripsOnYourWay": "Next trips on your way",
+  "shareTripRecordAudioGetHelp": "Share trip, record audio, get help",
+  "stopSafelyFirstReasonRequired": "Stop safely first · reason required",
+  "whyAreYouCancellingNextTripQuestion": "Why are you cancelling the next trip?",
+  "whyAreYouEndingTripQuestion": "Why are you ending the trip?",
+  "whyAreYouCancellingQuestion": "Why are you cancelling?",
+  "yourCurrentTripContinues": "Your current trip continues.",
+  "stopInSafePlaceFirst": "Stop in a safe place first.",
+  "pickReasonThatFitsBest": "Pick the reason that fits best.",
+  "riderEndedTrip": "Rider ended the trip",
+  "riderNameCancelledWhileTripWas": "{riderName} cancelled while the trip was active. Stop in a safe place before leaving this screen.",
+  "@riderNameCancelledWhileTripWas": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "riderNameCancelledThisRequestCurrent": "{riderName} cancelled this request. The current pickup is no longer active.",
+  "@riderNameCancelledThisRequestCurrent": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "activeTripCancelledByRider": "Active trip cancelled by rider",
+  "pickupCancelledByRider": "Pickup cancelled by rider",
+  "tripUpdate": "TRIP UPDATE",
+  "keepControlOfVehicleAndStop": "Keep control of the vehicle and stop safely before continuing.",
+  "iHaveStoppedSafely": "I have stopped safely",
+  "returnToRequests": "Return to requests",
+  "waitingInProgress": "Waiting in progress",
+  "takeCashBeforeYouFinish": "Take the cash before you finish.",
+  "takeCashFromFirstBeforeYou": "Take the cash from {first} before you finish.",
+  "@takeCashFromFirstBeforeYou": {
+    "placeholders": {
+      "first": {
+        "type": "Object"
+      }
+    }
+  },
+  "notYet": "Not yet",
+  "collectAmountInCash": "Collect {amount} in cash",
+  "@collectAmountInCash": {
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "collect": "Collect",
+  "inCash": "in cash",
+  "yourFare": "Your fare",
+  "cashFromRider": "Cash from rider",
+  "riderPaidMoreThanYourFare": "The rider paid more than your fare (promotion). It is settled in your next payout.",
+  "riderPaidLessThanYourFare": "The rider paid less than your fare (promotion). Movera adds it to your next payout.",
+  "to": "TO",
+  "pickupArrived": "Pickup · arrived",
+  "pickupPickedUp": "Pickup · picked up",
+  "stopNumberDone": "Stop {number} · done",
+  "@stopNumberDone": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "yourTrip": "Your trip",
+  "pickupPickupMinutesMin": "Pickup · {pickupMinutes} min",
+  "@pickupPickupMinutesMin": {
+    "placeholders": {
+      "pickupMinutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "dropOffTripMinutesMinTrip": "Drop-off · {tripMinutes} min trip",
+  "@dropOffTripMinutesMinTrip": {
+    "placeholders": {
+      "tripMinutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "nextTripOptions": "Next trip options",
+  "openWaybill": "Open waybill",
+  "contactRider": "Contact rider",
+  "yourCurrentTripContinuesReasonRequired": "Your current trip continues · reason required",
+  "nextTripCancelledTitle": "Next trip cancelled · {title}",
+  "@nextTripCancelledTitle": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  },
+  "waybill": "Waybill",
+  "stopWait": "Stop wait",
+  "pickupWait": "Pickup wait",
+  "everyMinuteIsPaid": "Every minute is paid",
+  "thisStopHasNoFreeMinutes": "This stop has no free minutes. The whole wait is added to the fare.",
+  "ruleForThisPickupRule": "Rule for this pickup: {rule}",
+  "@ruleForThisPickupRule": {
+    "placeholders": {
+      "rule": {
+        "type": "Object"
+      }
+    }
+  },
+  "includedTime": "Included time",
+  "openingMinutesStayInsideFare": "The opening minutes stay inside the fare.",
+  "waitTime": "Wait time",
+  "addedFromFirstSecondAtThis": "Added from the first second at this stop.",
+  "addedToFareWhenThisTrip": "Added to the fare when this trip is completed.",
+  "perMinuteFormattedMin": "{perMinuteFormatted} / min",
+  "@perMinuteFormattedMin": {
+    "placeholders": {
+      "perMinuteFormatted": {
+        "type": "Object"
+      }
+    }
+  },
+  "noShow": "No-show",
+  "canBeAppliedAfterNoShow": "Can be applied after {noShowAfterMinutes} min if the rider has not arrived.",
+  "@canBeAppliedAfterNoShow": {
+    "placeholders": {
+      "noShowAfterMinutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "riderDidnTShow": "Rider didn’t show",
+  "youGetDriverShareWaitPercent": "You get {driverShareWaitPercent}% of the wait time.",
+  "@youGetDriverShareWaitPercent": {
+    "placeholders": {
+      "driverShareWaitPercent": {
+        "type": "Object"
+      }
+    }
+  },
+  "youGetDriverShareWaitPercent2": "You get {driverShareWaitPercent}% of the wait time and {driverShareNoShowPercent}% of the no-show fee ({driverNoShowFeeFormatted}).",
+  "@youGetDriverShareWaitPercent2": {
+    "placeholders": {
+      "driverShareWaitPercent": {
+        "type": "Object"
+      },
+      "driverShareNoShowPercent": {
+        "type": "Object"
+      },
+      "driverNoShowFeeFormatted": {
+        "type": "Object"
+      }
+    }
+  },
+  "amountsCanChangeWithTaxesAnd": "Amounts can change with taxes and fees.",
+  "close": "Close",
+  "waitingFeePerMinuteFormattedMin": "waiting fee · {perMinuteFormatted} / min",
+  "@waitingFeePerMinuteFormattedMin": {
+    "placeholders": {
+      "perMinuteFormatted": {
+        "type": "Object"
+      }
+    }
+  },
+  "later": "Later",
+  "includedMinutes": "Included minutes",
+  "theseFirstMinutesAreAlreadyPart": "These first minutes are already part of the fare.",
+  "waitTimeIsRunning": "Wait time is running",
+  "eachMinuteAfterIncludedTimeIs": "Each minute after the included time is added when the trip ends.",
+  "noShowCanBeApplied": "No-show can be applied",
+  "riderIsStillNotHereNo": "The rider is still not here. The no-show amount is now available.",
+  "tripDetails": "Trip details",
+  "justNow": "Just now",
+  "rideCompleted": "Ride completed",
+  "includesFeeWaitingFee": "Includes {fee} waiting fee",
+  "@includesFeeWaitingFee": {
+    "placeholders": {
+      "fee": {
+        "type": "Object"
+      }
+    }
+  },
+  "payment": "Payment",
+  "lastWaybill": "Last waybill",
+  "open": "Open",
+  "tripId": "Trip ID",
+  "completed": "Completed",
+  "ratingNotSentDemo": "Rating not sent (demo)",
+  "rateRider": "Rate {rider}",
+  "@rateRider": {
+    "placeholders": {
+      "rider": {
+        "type": "Object"
+      }
+    }
+  },
+  "trip": "Trip #",
+  "time": "Time",
+  "fare": "Fare",
+  "passenger": "Passenger",
+  "via": "Via",
+  "from": "From",
+  "to2": "To",
+  "driver": "Driver",
+  "licensePlate": "License plate",
+  "passengerCapacity": "Passenger capacity",
+  "paidByPassenger": "Paid by the passenger",
+  "inApp": "In the app",
+  "basePriceService": "Base price · {service}",
+  "@basePriceService": {
+    "placeholders": {
+      "service": {
+        "type": "Object"
+      }
+    }
+  },
+  "moveraFee": "Movera fee",
+  "moveraBonus": "Movera bonus",
+  "yourEarnings": "Your earnings",
+  "roundToNearestWholeKronaIn": "* Round to the nearest whole krona in the taximeter.",
+  "feature": "Feature",
+  "samplePeriod": "Sample period",
+  "clear": "Clear",
+  "back": "Back",
+  "earningsPreview": "Earnings preview",
+  "demoRider": "Demo rider",
+  "sampleDistance": "Sample distance",
+  "sample": "Sample",
+  "pickupFrom": "Pickup from",
+  "samplePickupStockholm": "Sample pickup, Stockholm",
+  "dropOffLocation": "Drop off location",
+  "sampleDropOffStockholm": "Sample drop-off, Stockholm",
+  "noAnswer": "No answer",
+  "answerAnswer": "Answer: {answer}",
+  "@answerAnswer": {
+    "placeholders": {
+      "answer": {
+        "type": "Object"
+      }
+    }
+  },
+  "audioSavedOnlyOnThisPhone": "Audio saved only on this phone · {time}",
+  "@audioSavedOnlyOnThisPhone": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "illustrativeMapArchivedRouteUnavailable": "Illustrative map · archived route unavailable",
+  "rideCost": "Ride Cost",
+  "tip": "Tip",
+  "paymentMethod": "Payment Method",
+  "rideType": "Ride Type",
+  "cashCollected": "Cash collected",
+  "cashMatchedYourFare": "Cash matched your fare",
+  "settledInYourNextPayout": "Settled in your next payout",
+  "rideCompletedOn": "Ride completed on",
+  "cancelledByRider": "Cancelled by rider",
+  "cancelledByDriver": "Cancelled by driver",
+  "cancelledBySupport": "Cancelled by support",
+  "cancelledByMovera": "Cancelled by Movera",
+  "riderDidNotArrive": "Rider did not arrive",
+  "tripFailed": "Trip failed",
+  "previous": "Previous",
+  "last7Days": "Last 7 days",
+  "loadingRideHistoryEllipsis": "Loading ride history…",
+  "couldNotLoadRideHistory": "Could not load ride history.",
+  "earningsHistory": "Earnings & history",
+  "allRides": "All rides",
+  "yourMoveraActivity": "Your Movera activity",
+  "online": "Online",
+  "rides": "Rides",
+  "earningsBreakdown": "Earnings breakdown",
+  "latestRides": "Latest rides",
+  "noCompletedRidesInThisPeriod": "No completed rides in this period.",
+  "viewAllVisibleRideCountRides": "View all {visibleRideCount} rides",
+  "@viewAllVisibleRideCountRides": {
+    "placeholders": {
+      "visibleRideCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "periodRidesRidesInPeriodLabel": "{periodRides} rides in {periodLabel}",
+  "@periodRidesRidesInPeriodLabel": {
+    "placeholders": {
+      "periodRides": {
+        "type": "Object"
+      },
+      "periodLabel": {
+        "type": "Object"
+      }
+    }
+  },
+  "week": "Week",
+  "month": "Month",
+  "recordedFares": "Recorded fares",
+  "tipsAndFees": "Tips and fees",
+  "notAvailable": "Not available",
+  "otherEarnings": "Other earnings",
+  "otherEarningsTripsLengthCash": "Other earnings · {tripsLength} cash",
+  "@otherEarningsTripsLengthCash": {
+    "placeholders": {
+      "tripsLength": {
+        "type": "Object"
+      }
+    }
+  },
+  "cashTripsYourFareMinusCash": "Cash trips: your fare minus the cash you collected.",
+  "noCashTripsInThisPeriod": "No cash trips in this period.",
+  "totalYouOweMovera": "Total you owe Movera",
+  "totalMoveraOwesYou": "Total Movera owes you",
+  "totalBalance": "Total balance",
+  "settledInYourNextPayout2": "Settled in your next payout.",
+  "fareFareFormattedCashCashCollected": "Fare {fareFormatted} · Cash {cashCollectedFormatted}",
+  "@fareFareFormattedCashCashCollected": {
+    "placeholders": {
+      "fareFormatted": {
+        "type": "Object"
+      },
+      "cashCollectedFormatted": {
+        "type": "Object"
+      }
+    }
+  },
+  "driver2": "DRIVER",
+  "profile": "Profile",
+  "accountVehicleAndDocuments": "Account, vehicle and documents",
+  "earningsAndWeeklyPayouts": "Earnings and weekly payouts",
+  "completedAndPreviousRides": "Completed and previous rides",
+  "notifications": "Notifications",
+  "rideAlertsDemandAndAccount": "Ride alerts, demand and account",
+  "work": "WORK",
+  "scheduledRides": "Scheduled rides",
+  "reservationsAndAcceptedTrips": "Reservations and accepted trips",
+  "chooseCategoriesYouWantToReceive": "Choose categories you want to receive",
+  "promotions": "Promotions",
+  "bonusesAndCampaignOffers": "Bonuses and campaign offers",
+  "drivingLogs": "Driving logs",
+  "hoursOnlineAndRestRules": "Hours online and rest rules",
+  "supportApp": "SUPPORT & APP",
+  "support": "Support",
+  "messagesAndSupportTickets": "Messages and support tickets",
+  "settings": "Settings",
+  "appAndDriverSettings": "App and driver settings",
+  "sampleRating": "Sample rating {rating}",
+  "@sampleRating": {
+    "placeholders": {
+      "rating": {
+        "type": "Object"
+      }
+    }
+  },
+  "active": "Active",
+  "pending": "Pending",
+  "soundVoice": "Sound & voice",
+  "savingPreferencesEllipsis": "Saving preferences…",
+  "changesNotSavedRetry": "Changes not saved — Retry",
+  "couldNotLoadSavedPreferencesRetry": "Could not load saved preferences — Retry",
+  "localDemoPreferencesSavedOnThis": "Local demo preferences — saved on this device; effects are previews.",
+  "volume": "Volume",
+  "generalVolume": "General volume",
+  "alwaysPlayTripRequests": "Always play trip requests",
+  "playsEvenWhenPhoneIsSilent": "Plays even when the phone is silent",
+  "voice": "Voice",
+  "voiceNavigation": "Voice navigation",
+  "spokenTurnsWhileYouDrive": "Spoken turns while you drive",
+  "readRiderMessages": "Read rider messages",
+  "readsNewChatMessagesAloud": "Reads new chat messages aloud",
+  "testAlerts": "Test alerts",
+  "testVoice": "Test voice",
+  "playingAlertSoundMock": "Playing alert sound (mock)",
+  "playingVoiceSoundMock": "Playing voice sound (mock)",
+  "accessibility": "Accessibility",
+  "hearing": "Hearing",
+  "tellRidersIfYouAreDeaf": "Tell riders if you are deaf or hard of hearing.",
+  "demoPreviewNoInformationIsShared": "Demo preview — no information is shared with riders.",
+  "closePreview": "Close preview",
+  "flashForRequests": "Flash for requests",
+  "screenFlashesWhenRequestArrives": "The screen flashes when a request arrives.",
+  "vibrationForRequests": "Vibration for requests",
+  "phoneVibratesWhenRequestArrives": "The phone vibrates when a request arrives.",
+  "appSettings": "App settings",
+  "darkMode": "Dark mode",
+  "unavailableInDemo": "Unavailable in demo",
+  "language": "Language",
+  "pinVerification": "Pin verification",
+  "emergencyContacts": "Emergency contacts",
+  "safety": "Safety",
+  "showTrafficOnMap": "Show traffic on map",
+  "trafficColoursOnTripMap": "Traffic colours on the trip map",
+  "trustedContact": "Trusted contact",
+  "dialerIsUnavailable": "Dialer is unavailable.",
+  "addTrustedContact": "Add trusted contact",
+  "couldNotLoadTrustedContactsRetry": "Could not load trusted contacts — Retry",
+  "trustedContactsStayOnThisDevice": "Trusted contacts stay on this device. Calling opens your dialer.",
+  "callName": "Call {name}",
+  "@callName": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "contactCouldNotBeSavedRetry": "Contact could not be saved. Retry.",
+  "name": "Name",
+  "enterName": "Enter a name",
+  "phone": "Phone",
+  "enterValidPhoneNumber": "Enter a valid phone number",
+  "relation": "Relation",
+  "savingContactEllipsis": "Saving contact…",
+  "saveContact": "Save contact",
+  "recentPayouts": "Recent payouts",
+  "seeAll": "See all",
+  "previewOnly": "Preview only",
+  "noPayoutBalanceUntilPaymentService": "No payout balance until a payment service is connected.",
+  "noAutomaticPayout": "No automatic payout",
+  "payoutDateIsNotAvailable": "Payout date is not available",
+  "notSet": "Not set",
+  "noPayoutsYetLocalPreviewCannot": "No payouts yet. Local preview cannot invent earnings.",
+  "payoutAccount": "Payout account",
+  "noPayoutAccountConnected": "No payout account connected",
+  "ratingRiderTripsTrips": "{rating} · {riderTrips} trips",
+  "@ratingRiderTripsTrips": {
+    "placeholders": {
+      "rating": {
+        "type": "Object"
+      },
+      "riderTrips": {
+        "type": "Object"
+      }
+    }
+  },
+  "closeOffer": "Close offer",
+  "reservationTime": "Reservation · {time}",
+  "@reservationTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "priority": "Priority",
+  "demoModeNoAccount": "Demo mode — no account",
+  "labelUnavailableInDemo": "{label} — unavailable in demo",
+  "@labelUnavailableInDemo": {
+    "placeholders": {
+      "label": {
+        "type": "Object"
+      }
+    }
+  },
+  "routeUpdated": "Route updated",
+  "gpsRestored": "GPS restored",
+  "waitingAtStop": "Waiting at stop",
+  "paidWaiting": "Paid waiting",
+  "waitingTime": "Waiting time",
+  "nearValue": "Near {value}",
+  "@nearValue": {
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "arrivingSoon": "Arriving soon",
+  "trafficAheadValueMin": "Traffic ahead · +{value} min",
+  "@trafficAheadValueMin": {
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "arrivingInEtaMinTimeTime2": "Arriving in {eta} min · {time}:{time2}",
+  "@arrivingInEtaMinTimeTime2": {
+    "placeholders": {
+      "eta": {
+        "type": "Object"
+      },
+      "time": {
+        "type": "Object"
+      },
+      "time2": {
+        "type": "Object"
+      }
+    }
+  },
+  "nextTripSecuredNextTripFare": "Next trip secured · {nextTripFare}",
+  "@nextTripSecuredNextTripFare": {
+    "placeholders": {
+      "nextTripFare": {
+        "type": "Object"
+      }
+    }
+  },
+  "pickupOnPickupSideSide": "Pickup on the {pickupSide} side",
+  "@pickupOnPickupSideSide": {
+    "placeholders": {
+      "pickupSide": {
+        "type": "Object"
+      }
+    }
+  },
+  "tollAhead": "Toll ahead",
+  "pickupOverKmKm": "Pickup over {km} km",
+  "@pickupOverKmKm": {
+    "placeholders": {
+      "km": {
+        "type": "Object"
+      }
+    }
+  },
+  "assignedByMovera": "Assigned by Movera",
+  "inclBonusMoveraBonus": "incl. +{bonus} Movera bonus",
+  "@inclBonusMoveraBonus": {
+    "placeholders": {
+      "bonus": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandOnline": "Radar online",
+  "@islandOnline": {
+    "description": "Admin text key island.online (Content › Driver app texts)."
+  },
+  "islandOffline": "Radar offline",
+  "@islandOffline": {
+    "description": "Admin text key island.offline (Content › Driver app texts)."
+  },
+  "islandRiderCancelled": "Rider cancelled",
+  "@islandRiderCancelled": {
+    "description": "Admin text key island.riderCancelled (Content › Driver app texts)."
+  },
+  "islandRiderEndedTrip": "Rider ended trip",
+  "@islandRiderEndedTrip": {
+    "description": "Admin text key island.riderEndedTrip (Content › Driver app texts)."
+  },
+  "islandTripRemoved": "Trip removed by Movera",
+  "@islandTripRemoved": {
+    "description": "Admin text key island.tripRemoved (Content › Driver app texts)."
+  },
+  "islandCancelFee": "+{amount}",
+  "@islandCancelFee": {
+    "description": "Admin text key island.cancelFee (Content › Driver app texts).",
+    "placeholders": {
+      "amount": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandCancelNoFee": "no fee",
+  "@islandCancelNoFee": {
+    "description": "Admin text key island.cancelNoFee (Content › Driver app texts)."
+  },
+  "islandReservationCancelled": "{time} cancelled",
+  "@islandReservationCancelled": {
+    "description": "Admin text key island.reservationCancelled (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandMatching": "Matching…",
+  "@islandMatching": {
+    "description": "Admin text key island.matching (Content › Driver app texts)."
+  },
+  "islandMatched": "Trip matched",
+  "@islandMatched": {
+    "description": "Admin text key island.matched (Content › Driver app texts)."
+  },
+  "islandTakenByOther": "Taken by another driver",
+  "@islandTakenByOther": {
+    "description": "Admin text key island.takenByOther (Content › Driver app texts)."
+  },
+  "islandTripUnavailable": "Trip unavailable",
+  "@islandTripUnavailable": {
+    "description": "Admin text key island.tripUnavailable (Content › Driver app texts)."
+  },
+  "islandNoConnection": "No connection",
+  "@islandNoConnection": {
+    "description": "Admin text key island.noConnection (Content › Driver app texts)."
+  },
+  "islandContactSupport": "Contact support",
+  "@islandContactSupport": {
+    "description": "Admin text key island.contactSupport (Content › Driver app texts)."
+  },
+  "islandAccountOnHold": "Account on hold · Contact support",
+  "@islandAccountOnHold": {
+    "description": "Admin text key island.accountOnHold (Content › Driver app texts)."
+  },
+  "islandAccountNotActive": "Account not active · Finish sign-up",
+  "@islandAccountNotActive": {
+    "description": "Admin text key island.accountNotActive (Content › Driver app texts)."
+  },
+  "islandNewReservation": "New reservation",
+  "@islandNewReservation": {
+    "description": "Admin text key island.newReservation (Content › Driver app texts)."
+  },
+  "islandExclusiveRide": "Exclusive ride",
+  "@islandExclusiveRide": {
+    "description": "Admin text key island.exclusiveRide (Content › Driver app texts)."
+  },
+  "islandExclusiveReservation": "Exclusive reservation",
+  "@islandExclusiveReservation": {
+    "description": "Admin text key island.exclusiveReservation (Content › Driver app texts)."
+  },
+  "islandReservationAccepted": "Reservation accepted",
+  "@islandReservationAccepted": {
+    "description": "Admin text key island.reservationAccepted (Content › Driver app texts)."
+  },
+  "islandReservationAcceptedAt": "Accepted · pickup {time}",
+  "@islandReservationAcceptedAt": {
+    "description": "Admin text key island.reservationAcceptedAt (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandNoLongerAvailable": "No longer available",
+  "@islandNoLongerAvailable": {
+    "description": "Admin text key island.noLongerAvailable (Content › Driver app texts)."
+  },
+  "islandAssignedByMovera": "Assigned by Movera",
+  "@islandAssignedByMovera": {
+    "description": "Admin text key island.assignedByMovera (Content › Driver app texts)."
+  },
+  "islandAssignmentAccepted": "Scheduled ride accepted",
+  "@islandAssignmentAccepted": {
+    "description": "Admin text key island.assignmentAccepted (Content › Driver app texts)."
+  },
+  "islandAssignmentNotAccepted": "Assignment not accepted",
+  "@islandAssignmentNotAccepted": {
+    "description": "Admin text key island.assignmentNotAccepted (Content › Driver app texts)."
+  },
+  "islandPickupIn": "{time} pickup in {left}",
+  "@islandPickupIn": {
+    "description": "Admin text key island.pickupIn (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      },
+      "left": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandGoOnlineFor": "Go online for {time} pickup",
+  "@islandGoOnlineFor": {
+    "description": "Admin text key island.goOnlineFor (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandLeaveNow": "Leave now for {time} pickup",
+  "@islandLeaveNow": {
+    "description": "Admin text key island.leaveNow (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandHeadToPickup": "Head to your {time} pickup",
+  "@islandHeadToPickup": {
+    "description": "Admin text key island.headToPickup (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandGivenToBackup": "Given to backup driver",
+  "@islandGivenToBackup": {
+    "description": "Admin text key island.givenToBackup (Content › Driver app texts)."
+  },
+  "islandCashOn": "Cash rides on",
+  "@islandCashOn": {
+    "description": "Admin text key island.cashOn (Content › Driver app texts)."
+  },
+  "islandCashOff": "Cash rides off",
+  "@islandCashOff": {
+    "description": "Admin text key island.cashOff (Content › Driver app texts)."
+  },
+  "islandLastMissed": "Next missed offer: offline",
+  "@islandLastMissed": {
+    "description": "Admin text key island.lastMissed (Content › Driver app texts)."
+  },
+  "islandOfflineMissed": "Offline: {count} offers missed",
+  "@islandOfflineMissed": {
+    "description": "Admin text key island.offlineMissed (Content › Driver app texts).",
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandDrivingLeft": "{minutes} min left to drive",
+  "@islandDrivingLeft": {
+    "description": "Admin text key island.drivingLeft (Content › Driver app texts).",
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandRestUntil": "Rest until {time}",
+  "@islandRestUntil": {
+    "description": "Admin text key island.restUntil (Content › Driver app texts).",
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandRestOver": "Rest over",
+  "@islandRestOver": {
+    "description": "Admin text key island.restOver (Content › Driver app texts)."
+  },
+  "islandDocumentExpires": "{document} expires {when}",
+  "@islandDocumentExpires": {
+    "description": "Admin text key island.documentExpires (Content › Driver app texts).",
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      },
+      "when": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandDocumentExpired": "{document} expired",
+  "@islandDocumentExpired": {
+    "description": "Admin text key island.documentExpired (Content › Driver app texts).",
+    "placeholders": {
+      "document": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandDocumentInReview": "New document in review",
+  "@islandDocumentInReview": {
+    "description": "Admin text key island.documentInReview (Content › Driver app texts)."
+  },
+  "islandDocumentApproved": "Document approved",
+  "@islandDocumentApproved": {
+    "description": "Admin text key island.documentApproved (Content › Driver app texts)."
+  },
+  "islandHighDemand": "High demand · {area}",
+  "@islandHighDemand": {
+    "description": "Admin text key island.highDemand (Content › Driver app texts).",
+    "placeholders": {
+      "area": {
+        "type": "Object"
+      }
+    }
+  },
+  "islandScheduledPaused": "Scheduled rides paused",
+  "@islandScheduledPaused": {
+    "description": "Admin text key island.scheduledPaused (Content › Driver app texts)."
+  },
+  "islandSavedTripOpen": "Saved trip open",
+  "@islandSavedTripOpen": {
+    "description": "Admin text key island.savedTripOpen (Content › Driver app texts)."
+  },
+  "islandNewerTripKept": "Newer trip kept",
+  "@islandNewerTripKept": {
+    "description": "Admin text key island.newerTripKept (Content › Driver app texts)."
+  },
+  "islandRecordSetAside": "Trip record set aside",
+  "@islandRecordSetAside": {
+    "description": "Admin text key island.recordSetAside (Content › Driver app texts)."
+  },
+  "islandRecoveryFailed": "Recovery failed",
+  "@islandRecoveryFailed": {
+    "description": "Admin text key island.recoveryFailed (Content › Driver app texts)."
+  },
+  "islandTripNotClosed": "Trip not closed",
+  "@islandTripNotClosed": {
+    "description": "Admin text key island.tripNotClosed (Content › Driver app texts)."
+  },
+  "islandCloseSavedTrip": "Close saved trip",
+  "@islandCloseSavedTrip": {
+    "description": "Admin text key island.closeSavedTrip (Content › Driver app texts)."
+  },
+  "islandSeeEarnings": "Tap to see earnings",
+  "@islandSeeEarnings": {
+    "description": "Admin text key island.seeEarnings (Content › Driver app texts)."
+  },
+  "islandDestinationsUsed": "Today's destinations used",
+  "@islandDestinationsUsed": {
+    "description": "Admin text key island.destinationsUsed (Content › Driver app texts)."
+  },
+  "islandDestinationOff": "Destination mode is off here",
+  "@islandDestinationOff": {
+    "description": "Admin text key island.destinationOff (Content › Driver app texts)."
+  },
+  "islandDestinationEnded": "Destination mode ended",
+  "@islandDestinationEnded": {
+    "description": "Admin text key island.destinationEnded (Content › Driver app texts)."
+  },
+  "offerYourShare": "Your share",
+  "@offerYourShare": {
+    "description": "Admin text key offer.yourShare (Content › Driver app texts)."
+  },
+  "offerFare": "Fare",
+  "@offerFare": {
+    "description": "Admin text key offer.fare (Content › Driver app texts)."
+  },
+  "offerPickup": "Pickup",
+  "@offerPickup": {
+    "description": "Admin text key offer.pickup (Content › Driver app texts)."
+  },
+  "offerDropoff": "Drop-off",
+  "@offerDropoff": {
+    "description": "Admin text key offer.dropoff (Content › Driver app texts)."
+  },
+  "offerPickupNearby": "Pickup nearby",
+  "@offerPickupNearby": {
+    "description": "Admin text key offer.pickupNearby (Content › Driver app texts)."
+  },
+  "offerKmAway": "{km} km away",
+  "@offerKmAway": {
+    "description": "Admin text key offer.kmAway (Content › Driver app texts).",
+    "placeholders": {
+      "km": {
+        "type": "Object"
+      }
+    }
+  },
+  "offerTripLength": "{minutes} min trip · {km} km",
+  "@offerTripLength": {
+    "description": "Admin text key offer.tripLength (Content › Driver app texts).",
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      },
+      "km": {
+        "type": "Object"
+      }
+    }
+  },
+  "offerMatch": "Match",
+  "@offerMatch": {
+    "description": "Admin text key offer.match (Content › Driver app texts)."
+  },
+  "offerMatching": "Matching…",
+  "@offerMatching": {
+    "description": "Admin text key offer.matching (Content › Driver app texts)."
+  },
+  "offerAccept": "Accept",
+  "@offerAccept": {
+    "description": "Admin text key offer.accept (Content › Driver app texts)."
+  },
+  "offerOnYourWay": "On your way",
+  "@offerOnYourWay": {
+    "description": "Admin text key offer.onYourWay (Content › Driver app texts)."
+  },
+  "offerHide": "Hide offer",
+  "@offerHide": {
+    "description": "Admin text key offer.hide (Content › Driver app texts)."
+  },
+  "offerReservationRequest": "Reservation request",
+  "@offerReservationRequest": {
+    "description": "Admin text key offer.reservationRequest (Content › Driver app texts)."
+  },
+  "offerYourNextRide": "Your next ride",
+  "@offerYourNextRide": {
+    "description": "Admin text key offer.yourNextRide (Content › Driver app texts)."
+  },
+  "offerViewRoute": "View route",
+  "@offerViewRoute": {
+    "description": "Admin text key offer.viewRoute (Content › Driver app texts)."
+  },
+  "offerNewReservation": "New reservation",
+  "@offerNewReservation": {
+    "description": "Admin text key offer.newReservation (Content › Driver app texts)."
+  },
+  "offerViewDetails": "View details",
+  "@offerViewDetails": {
+    "description": "Admin text key offer.viewDetails (Content › Driver app texts)."
+  },
+  "tripArrived": "I've arrived",
+  "@tripArrived": {
+    "description": "Admin text key trip.arrived (Content › Driver app texts)."
+  },
+  "tripStart": "Start trip",
+  "@tripStart": {
+    "description": "Admin text key trip.start (Content › Driver app texts)."
+  },
+  "tripStartFirstStop": "Start first stop",
+  "@tripStartFirstStop": {
+    "description": "Admin text key trip.startFirstStop (Content › Driver app texts)."
+  },
+  "tripArriveAtStop": "Arrive at the stop",
+  "@tripArriveAtStop": {
+    "description": "Admin text key trip.arriveAtStop (Content › Driver app texts)."
+  },
+  "tripComplete": "Complete trip",
+  "@tripComplete": {
+    "description": "Admin text key trip.complete (Content › Driver app texts)."
+  },
+  "tripGoToStop": "Go to {stop} stop",
+  "@tripGoToStop": {
+    "description": "Admin text key trip.goToStop (Content › Driver app texts).",
+    "placeholders": {
+      "stop": {
+        "type": "Object"
+      }
+    }
+  },
+  "tripGoToDropoff": "Go to drop-off",
+  "@tripGoToDropoff": {
+    "description": "Admin text key trip.goToDropoff (Content › Driver app texts)."
+  },
+  "tripCollectCash": "Collect cash",
+  "@tripCollectCash": {
+    "description": "Admin text key trip.collectCash (Content › Driver app texts)."
+  },
+  "tripCompleteRide": "Complete ride",
+  "@tripCompleteRide": {
+    "description": "Admin text key trip.completeRide (Content › Driver app texts)."
+  },
+  "tripFinishCategory": "Finish {category}",
+  "@tripFinishCategory": {
+    "description": "Admin text key trip.finishCategory (Content › Driver app texts).",
+    "placeholders": {
+      "category": {
+        "type": "Object"
+      }
+    }
+  },
+  "tripFinishRide": "Finish ride",
+  "@tripFinishRide": {
+    "description": "Admin text key trip.finishRide (Content › Driver app texts)."
+  },
+  "cancelReasonRiderNoShow": "Rider did not arrive",
+  "@cancelReasonRiderNoShow": {
+    "description": "Cancel reason rider_no_show."
+  },
+  "cancelReasonRiderNoShowDetail": "The no-show time has passed and the rider is not here",
+  "@cancelReasonRiderNoShowDetail": {
+    "description": "Cancel reason rider_no_show, the line under it."
+  },
+  "cancelReasonRiderRequestedCancel": "Rider asked to cancel",
+  "@cancelReasonRiderRequestedCancel": {
+    "description": "Cancel reason rider_requested_cancel."
+  },
+  "cancelReasonRiderRequestedCancelDetail": "The rider doesn’t want to continue",
+  "@cancelReasonRiderRequestedCancelDetail": {
+    "description": "Cancel reason rider_requested_cancel, the line under it."
+  },
+  "cancelReasonRiderNotAtPickup": "Rider not at pickup",
+  "@cancelReasonRiderNotAtPickup": {
+    "description": "Cancel reason rider_not_at_pickup."
+  },
+  "cancelReasonRiderNotAtPickupDetail": "You arrived but couldn’t find the rider",
+  "@cancelReasonRiderNotAtPickupDetail": {
+    "description": "Cancel reason rider_not_at_pickup, the line under it."
+  },
+  "cancelReasonUnsafePickup": "Pickup unsafe",
+  "@cancelReasonUnsafePickup": {
+    "description": "Cancel reason unsafe_pickup."
+  },
+  "cancelReasonUnsafePickupDetail": "You can’t stop there safely",
+  "@cancelReasonUnsafePickupDetail": {
+    "description": "Cancel reason unsafe_pickup, the line under it."
+  },
+  "cancelReasonVehicleIssueBeforeStart": "Vehicle problem",
+  "@cancelReasonVehicleIssueBeforeStart": {
+    "description": "Cancel reason vehicle_issue_before_start."
+  },
+  "cancelReasonVehicleIssueBeforeStartDetail": "Your car can’t make the trip",
+  "@cancelReasonVehicleIssueBeforeStartDetail": {
+    "description": "Cancel reason vehicle_issue_before_start, the line under it."
+  },
+  "cancelReasonDriverEmergencyBeforeStart": "Personal emergency",
+  "@cancelReasonDriverEmergencyBeforeStart": {
+    "description": "Cancel reason driver_emergency_before_start."
+  },
+  "cancelReasonDriverEmergencyBeforeStartDetail": "Something urgent came up",
+  "@cancelReasonDriverEmergencyBeforeStartDetail": {
+    "description": "Cancel reason driver_emergency_before_start, the line under it."
+  },
+  "cancelReasonOtherBeforeStart": "Other reason",
+  "@cancelReasonOtherBeforeStart": {
+    "description": "Cancel reason other_before_start."
+  },
+  "cancelReasonOtherBeforeStartDetail": "Something else stops this pickup",
+  "@cancelReasonOtherBeforeStartDetail": {
+    "description": "Cancel reason other_before_start, the line under it."
+  },
+  "cancelReasonRiderRequestedEarlyEnd": "Rider asked to end the trip",
+  "@cancelReasonRiderRequestedEarlyEnd": {
+    "description": "Cancel reason rider_requested_early_end."
+  },
+  "cancelReasonRiderRequestedEarlyEndDetail": "The rider wants to leave before the destination",
+  "@cancelReasonRiderRequestedEarlyEndDetail": {
+    "description": "Cancel reason rider_requested_early_end, the line under it."
+  },
+  "cancelReasonSafetyConcernOnTrip": "Safety concern",
+  "@cancelReasonSafetyConcernOnTrip": {
+    "description": "Cancel reason safety_concern_on_trip."
+  },
+  "cancelReasonSafetyConcernOnTripDetail": "Continuing the trip may be unsafe",
+  "@cancelReasonSafetyConcernOnTripDetail": {
+    "description": "Cancel reason safety_concern_on_trip, the line under it."
+  },
+  "cancelReasonVehicleIssueOnTrip": "Vehicle problem",
+  "@cancelReasonVehicleIssueOnTrip": {
+    "description": "Cancel reason vehicle_issue_on_trip."
+  },
+  "cancelReasonVehicleIssueOnTripDetail": "A vehicle issue makes it unsafe to continue",
+  "@cancelReasonVehicleIssueOnTripDetail": {
+    "description": "Cancel reason vehicle_issue_on_trip, the line under it."
+  },
+  "cancelReasonAccidentOrRoadEmergency": "Accident or road emergency",
+  "@cancelReasonAccidentOrRoadEmergency": {
+    "description": "Cancel reason accident_or_road_emergency."
+  },
+  "cancelReasonAccidentOrRoadEmergencyDetail": "An incident or emergency prevents continuing",
+  "@cancelReasonAccidentOrRoadEmergencyDetail": {
+    "description": "Cancel reason accident_or_road_emergency, the line under it."
+  },
+  "cancelReasonRiderBehavior": "Rider behavior",
+  "@cancelReasonRiderBehavior": {
+    "description": "Cancel reason rider_behavior."
+  },
+  "cancelReasonRiderBehaviorDetail": "The rider’s behavior requires the trip to end",
+  "@cancelReasonRiderBehaviorDetail": {
+    "description": "Cancel reason rider_behavior, the line under it."
+  },
+  "cancelReasonTripOrDestinationIssue": "Trip or destination issue",
+  "@cancelReasonTripOrDestinationIssue": {
+    "description": "Cancel reason trip_or_destination_issue."
+  },
+  "cancelReasonTripOrDestinationIssueDetail": "A trip detail or destination problem prevents continuing",
+  "@cancelReasonTripOrDestinationIssueDetail": {
+    "description": "Cancel reason trip_or_destination_issue, the line under it."
+  },
+  "cancelReasonOtherOnTrip": "Other reason",
+  "@cancelReasonOtherOnTrip": {
+    "description": "Cancel reason other_on_trip."
+  },
+  "cancelReasonOtherOnTripDetail": "Another issue requires the trip to end early",
+  "@cancelReasonOtherOnTripDetail": {
+    "description": "Cancel reason other_on_trip, the line under it."
+  },
+  "cancelReasonScheduledCannotMakeTime": "I can no longer make the pickup time",
+  "@cancelReasonScheduledCannotMakeTime": {
+    "description": "Cancel reason scheduled_cannot_make_time."
+  },
+  "cancelReasonScheduledVehicleIssue": "Vehicle issue",
+  "@cancelReasonScheduledVehicleIssue": {
+    "description": "Cancel reason scheduled_vehicle_issue."
+  },
+  "cancelReasonScheduledPersonalEmergency": "Personal emergency",
+  "@cancelReasonScheduledPersonalEmergency": {
+    "description": "Cancel reason scheduled_personal_emergency."
+  },
+  "cancelReasonScheduledPickupTooFar": "Pickup is too far from me",
+  "@cancelReasonScheduledPickupTooFar": {
+    "description": "Cancel reason scheduled_pickup_too_far."
+  },
+  "cancelReasonScheduledTripDetails": "Trip details no longer work for me",
+  "@cancelReasonScheduledTripDetails": {
+    "description": "Cancel reason scheduled_trip_details."
+  },
+  "cancelReasonScheduledOther": "Other reason",
+  "@cancelReasonScheduledOther": {
+    "description": "Cancel reason scheduled_other."
+  },
+  "cancelReasonNextTripCurrentRunningLate": "Current trip is taking longer",
+  "@cancelReasonNextTripCurrentRunningLate": {
+    "description": "Cancel reason next_trip_current_running_late."
+  },
+  "cancelReasonNextTripCurrentRunningLateDetail": "You can’t reach the next pickup in time",
+  "@cancelReasonNextTripCurrentRunningLateDetail": {
+    "description": "Cancel reason next_trip_current_running_late, the line under it."
+  },
+  "cancelReasonNextTripPickupTooFar": "Too far from the pickup",
+  "@cancelReasonNextTripPickupTooFar": {
+    "description": "Cancel reason next_trip_pickup_too_far."
+  },
+  "cancelReasonNextTripPickupTooFarDetail": "The next pickup is further than expected",
+  "@cancelReasonNextTripPickupTooFarDetail": {
+    "description": "Cancel reason next_trip_pickup_too_far, the line under it."
+  },
+  "cancelReasonNextTripRiderRequested": "Rider asked me to cancel",
+  "@cancelReasonNextTripRiderRequested": {
+    "description": "Cancel reason next_trip_rider_requested."
+  },
+  "cancelReasonNextTripRiderRequestedDetail": "The next rider doesn’t want the trip",
+  "@cancelReasonNextTripRiderRequestedDetail": {
+    "description": "Cancel reason next_trip_rider_requested, the line under it."
+  },
+  "cancelReasonNextTripVehicleIssue": "Problem with the car",
+  "@cancelReasonNextTripVehicleIssue": {
+    "description": "Cancel reason next_trip_vehicle_issue."
+  },
+  "cancelReasonNextTripVehicleIssueDetail": "Your car can’t make the next trip",
+  "@cancelReasonNextTripVehicleIssueDetail": {
+    "description": "Cancel reason next_trip_vehicle_issue, the line under it."
+  },
+  "cancelReasonNextTripDriverEmergency": "Personal emergency",
+  "@cancelReasonNextTripDriverEmergency": {
+    "description": "Cancel reason next_trip_driver_emergency."
+  },
+  "cancelReasonNextTripDriverEmergencyDetail": "Something urgent came up",
+  "@cancelReasonNextTripDriverEmergencyDetail": {
+    "description": "Cancel reason next_trip_driver_emergency, the line under it."
+  },
+  "cancelReasonNextTripOther": "Other reason",
+  "@cancelReasonNextTripOther": {
+    "description": "Cancel reason next_trip_other."
+  },
+  "cancelReasonNextTripOtherDetail": "Something else stops the next trip",
+  "@cancelReasonNextTripOtherDetail": {
+    "description": "Cancel reason next_trip_other, the line under it."
+  },
+  "cancelReasonPickupIncorrect": "Pickup point is incorrect",
+  "@cancelReasonPickupIncorrect": {
+    "description": "Cancel reason pickup_incorrect."
+  },
+  "cancelReasonWrongRideOption": "I chose the wrong ride option",
+  "@cancelReasonWrongRideOption": {
+    "description": "Cancel reason wrong_ride_option."
+  },
+  "cancelReasonRequestedByMistake": "I requested the ride by mistake",
+  "@cancelReasonRequestedByMistake": {
+    "description": "Cancel reason requested_by_mistake."
+  },
+  "cancelReasonWaitTooLong": "The wait is taking too long",
+  "@cancelReasonWaitTooLong": {
+    "description": "Cancel reason wait_too_long."
+  },
+  "cancelReasonDestinationChange": "Destination needs to be changed",
+  "@cancelReasonDestinationChange": {
+    "description": "Cancel reason destination_change."
+  },
+  "cancelReasonDriverNotSuitable": "Driver/ride details are not suitable",
+  "@cancelReasonDriverNotSuitable": {
+    "description": "Cancel reason driver_not_suitable."
+  },
+  "cancelReasonPlansChanged": "Plans changed",
+  "@cancelReasonPlansChanged": {
+    "description": "Cancel reason plans_changed."
+  },
+  "cancelReasonSomethingElse": "Something else",
+  "@cancelReasonSomethingElse": {
+    "description": "Cancel reason something_else."
+  },
+  "exclusiveReasonBestMatch": "Best match",
+  "exclusiveReasonFavourite": "Rider's favourite",
+  "exclusiveReasonFinishingNearby": "Finishing nearby",
+  "exclusiveReasonAirportQueue": "Airport queue",
+  "exclusiveReasonPickupSoon": "Pickup soon",
+  "exclusiveReasonNearby": "Only for you · nearby",
+  "waitingRulePickupFarAway": "Pickup far away",
+  "waitingRuleScheduledRide": "Scheduled ride",
+  "waitingRuleAirportPickup": "Airport pickup",
+  "waitingRuleEventPickup": "Event pickup",
+  "riderBags": "{count, plural, =1{Rider has 1 bag} other{Rider has {count} bags}}",
+  "@riderBags": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "languageTitle": "Language",
+  "languageZoneDefault": "Default for your zone",
+  "languageSaveFailed": "Language not saved. Try again.",
+  "tomorrow": "Tomorrow",
+  "todayCaps": "TODAY",
+  "statusRest": "REST",
+  "statusHold": "HOLD",
+  "whenInMinutes": "In {minutes} min",
+  "@whenInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "whenInHours": "In {hours} h",
+  "@whenInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "Object"
+      }
+    }
+  },
+  "whenToday": "Today {time}",
+  "@whenToday": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "whenTomorrow": "Tomorrow {time}",
+  "@whenTomorrow": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "stopOrdinal1": "first",
+  "@stopOrdinal1": {
+    "description": "Fills {stop} in \"Go to {stop} stop\"."
+  },
+  "stopOrdinal2": "second",
+  "@stopOrdinal2": {
+    "description": "Fills {stop} in \"Go to {stop} stop\"."
+  },
+  "stopOrdinal3": "third",
+  "@stopOrdinal3": {
+    "description": "Fills {stop} in \"Go to {stop} stop\"."
+  },
+  "stopOrdinal4": "fourth",
+  "@stopOrdinal4": {
+    "description": "Fills {stop} in \"Go to {stop} stop\"."
+  },
+  "stopOrdinal5": "fifth",
+  "@stopOrdinal5": {
+    "description": "Fills {stop} in \"Go to {stop} stop\"."
+  },
+  "stopOrdinalN": "{number}th",
+  "@stopOrdinalN": {
+    "description": "Fills {stop} in \"Go to {stop} stop\" from the sixth stop on.",
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "hideRequest": "Hide request",
+  "holdToGoOffline": "Hold to go offline",
+  "tripOptions": "Trip options",
+  "orbMatch": "MATCH",
+  "orbWait": "WAIT",
+  "orbOff": "OFF",
+  "orbOn": "ON",
+  "orbNew": "NEW",
+  "orbLive": "LIVE",
+  "orbPaused": "PAUSED",
+  "orbStarting": "STARTING",
+  "navArrived": "ARRIVED",
+  "navNear": "NEAR",
+  "navNow": "NOW",
+  "menuOnline": "ONLINE",
+  "menuOffline": "OFFLINE",
+  "menuReady": "READY",
+  "menuPending": "PENDING",
+  "ok": "OK",
+  "tripsCount": "{count, plural, =1{1 trip} other{{count} trips}}",
+  "@tripsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stopsCount": "{count, plural, =1{1 stop} other{{count} stops}}",
+  "@stopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

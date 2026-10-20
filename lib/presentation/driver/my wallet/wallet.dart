@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +45,7 @@ class WalletScreen extends StatelessWidget {
                     const SizedBox(height: 14),
                     _payoutInfoStrip(),
                     const SizedBox(height: 28),
-                    _sectionHeader(title: 'Recent payouts', action: 'See all'),
+                    _sectionHeader(title: tr.recentPayouts, action: tr.seeAll),
                     const SizedBox(height: 12),
                     _recentPayouts(),
                     const SizedBox(height: 22),
@@ -82,9 +83,9 @@ class WalletScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Wallet',
+                tr.wallet,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: _text,
@@ -128,7 +129,7 @@ class WalletScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: _line),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
@@ -144,7 +145,7 @@ class WalletScreen extends StatelessWidget {
                     SizedBox(width: 7),
                     Flexible(
                       child: Text(
-                        'Preview only',
+                        tr.previewOnly,
                         style: TextStyle(
                           color: _text,
                           fontSize: 10.5,
@@ -179,8 +180,8 @@ class WalletScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'No payout balance until a payment service is connected.',
+          Text(
+            tr.noPayoutBalanceUntilPaymentService,
             style: TextStyle(
               color: _muted,
               fontSize: 12,
@@ -214,12 +215,12 @@ class WalletScreen extends StatelessWidget {
             child: _solarIcon(AppAssets.solarRefresh),
           ),
           const SizedBox(width: 11),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'No automatic payout',
+                  tr.noAutomaticPayout,
                   style: TextStyle(
                     color: _text,
                     fontSize: 13.5,
@@ -228,7 +229,7 @@ class WalletScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 3),
                 Text(
-                  'Payout date is not available',
+                  tr.payoutDateIsNotAvailable,
                   style: TextStyle(
                     color: _muted,
                     fontSize: 10.5,
@@ -245,8 +246,8 @@ class WalletScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: _line),
             ),
-            child: const Text(
-              'Not set',
+            child: Text(
+              tr.notSet,
               style: TextStyle(
                 color: _subtle,
                 fontSize: 10.5,
@@ -304,10 +305,10 @@ class WalletScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: _line),
       ),
-      child: const Padding(
+      child: Padding(
         padding: EdgeInsets.fromLTRB(16, 18, 16, 18),
         child: Text(
-          'No payouts yet. Local preview cannot invent earnings.',
+          tr.noPayoutsYetLocalPreviewCannot,
           style: TextStyle(
             color: _muted,
             fontSize: 13,
@@ -352,12 +353,12 @@ class WalletScreen extends StatelessWidget {
                     child: _solarIcon(AppAssets.solarCard, size: 21),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Payout account',
+                          tr.payoutAccount,
                           style: TextStyle(
                             color: _text,
                             fontSize: 13.5,
@@ -366,7 +367,7 @@ class WalletScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 3),
                         Text(
-                          'No payout account connected',
+                          tr.noPayoutAccountConnected,
                           style: TextStyle(
                             color: _muted,
                             fontSize: 10.5,

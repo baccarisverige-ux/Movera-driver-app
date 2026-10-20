@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -79,13 +80,13 @@ class DriverSheetNav {
                       children: [
                         _dockAction(
                           asset: AppAssets.navMenuBranch,
-                          tooltip: 'Ride preferences',
+                          tooltip: tr.ridePreferences,
                           onTap: () => _openRidePreferences(context),
                           iconColor: iconTint,
                         ),
                         _dockAction(
                           asset: AppAssets.navCreditCard,
-                          tooltip: 'Wallet',
+                          tooltip: tr.wallet,
                           onTap: () {
                             pushSingle(
                               context,
@@ -105,7 +106,7 @@ class DriverSheetNav {
                       children: [
                         _dockAction(
                           asset: AppAssets.navMessagesSquare,
-                          tooltip: 'Inbox',
+                          tooltip: tr.inbox,
                           onTap: () {
                             pushSingle(
                               context,
@@ -125,7 +126,7 @@ class DriverSheetNav {
                                 animateClock: hasScheduledRideOffers,
                                 tint: iconTint,
                               ),
-                              tooltip: 'Scheduled',
+                              tooltip: tr.scheduled,
                               onTap: onOpenScheduledRides,
                               pulse: goOnlinePulseController.value,
                               iconColor: iconTint,
@@ -213,12 +214,12 @@ class DriverSheetNav {
         children: [
           _sheetQuickAction(
             asset: AppAssets.navMenuBranch,
-            tooltip: 'Ride preferences',
+            tooltip: tr.ridePreferences,
             onTap: () => _openRidePreferences(context),
           ),
           _sheetQuickAction(
             asset: AppAssets.navCreditCard,
-            tooltip: 'Wallet',
+            tooltip: tr.wallet,
             onTap: () {
               pushSingle(
                 context,
@@ -228,7 +229,7 @@ class DriverSheetNav {
           ),
           _sheetQuickAction(
             asset: AppAssets.navMessagesSquare,
-            tooltip: 'Inbox',
+            tooltip: tr.inbox,
             onTap: () {
               pushSingle(
                 context,
@@ -244,7 +245,7 @@ class DriverSheetNav {
                   pulse: goOnlinePulseController.value,
                   animateClock: hasScheduledRideOffers,
                 ),
-                tooltip: 'Scheduled',
+                tooltip: tr.scheduled,
                 onTap: onOpenScheduledRides,
                 pulse: goOnlinePulseController.value,
                 animateAlertIndicator: false,

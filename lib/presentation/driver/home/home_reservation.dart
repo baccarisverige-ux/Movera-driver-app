@@ -333,9 +333,9 @@ extension _HomeReservation on _DriverHomeState {
             _radarSweepController,
           ]),
           builder: (context, child) => MoveraRadarOrb(
-            title: claiming ? 'Matching' : 'Accept',
-            status: claiming ? 'WAIT' : 'MATCH',
-            subtitle: claiming ? 'Please wait' : 'Tap to accept',
+            title: claiming ? tr.matching : tr.accept,
+            status: claiming ? tr.orbWait : tr.orbMatch,
+            subtitle: claiming ? tr.pleaseWait : tr.tapToAccept,
             reserve: true,
             active: true,
             touchKey: const ValueKey<String>('reservation-radar-touch-target'),

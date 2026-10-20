@@ -133,7 +133,7 @@ extension _HomeMapSheet on _DriverHomeState {
           children: [
             MapControlButton(
               key: const ValueKey<String>('driver-location-zoom'),
-              tooltip: 'Recenter',
+              tooltip: tr.recenter,
               size: _homeMapButtonSize,
               fill: MapControlButton.recenterBlue,
               onTap: _zoomToDriverLocation,
@@ -511,14 +511,14 @@ extension _HomeMapSheet on _DriverHomeState {
               children: [
                 TextButton(
                   onPressed: _openActivationSupport,
-                  child: const Text('Contact support',
+                  child: Text(tr.contactSupport,
                     style: TextStyle(color: Colors.white, fontSize: 18,
                       fontWeight: FontWeight.w800)),
                 ),
                 TextButton(
                   onPressed: _skipActivationDemo,
-                  child: const Text(
-                    'Skip demo',
+                  child: Text(
+                    tr.skipDemo,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -706,7 +706,7 @@ extension _HomeMapSheet on _DriverHomeState {
                         onStatus: (status) {
                           if (status != null && mounted && ModalRoute.of(context)?.isCurrent == true) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status),
-                              action: SnackBarAction(label: 'Retry', onPressed: _camera.recenter)));
+                              action: SnackBarAction(label: tr.retry, onPressed: _camera.recenter)));
                           }
                         },
               initialPosition: _initialPosition,
@@ -784,7 +784,7 @@ extension _HomeMapSheet on _DriverHomeState {
                         onStatus: (status) {
                           if (status != null && mounted && ModalRoute.of(context)?.isCurrent == true) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status),
-                              action: SnackBarAction(label: 'Retry', onPressed: _camera.recenter)));
+                              action: SnackBarAction(label: tr.retry, onPressed: _camera.recenter)));
                           }
                         },
                   initialPosition: _initialPosition,
@@ -864,7 +864,7 @@ extension _HomeMapSheet on _DriverHomeState {
                 bottom: 138,
                 child: MapControlButton(
                   key: const ValueKey<String>('home-safety-button'),
-                  tooltip: 'Safety toolkit',
+                  tooltip: tr.safetyToolkit,
                   size: _homeMapButtonSize,
                   onTap: () => showSafetyToolKitSheet(context),
                   child: SvgPicture.asset(AppAssets.mapSafety, width: 24, height: 24),
@@ -1064,7 +1064,7 @@ extension _HomeMapSheet on _DriverHomeState {
             children: [
               side(Builder(
                 builder: (context) => Tooltip(
-                  message: 'Menu',
+                  message: tr.menu,
                   child: IslandSideButton(
                     outward: AxisDirection.left,
                     child: InkWell(
@@ -1169,7 +1169,7 @@ extension _HomeMapSheet on _DriverHomeState {
                 ),
               ),
               side(Tooltip(
-                message: 'Search destination',
+                message: tr.searchDestination,
                 child: IslandSideButton(
                   outward: AxisDirection.right,
                   child: InkWell(
@@ -1218,10 +1218,10 @@ extension _HomeMapSheet on _DriverHomeState {
             );
           }
           return DigitalIslandParts.amountFace(
-              'island-last-trip', 'LAST TRIP', _lastTripFareLabel);
+              'island-last-trip', tr.lastTrip, _lastTripFareLabel);
         case _IslandFace.today:
           return DigitalIslandParts.amountFace(
-              'island-today', 'TODAY', DigitalIslandParts.sampleToday);
+              'island-today', tr.todayCaps, DigitalIslandParts.sampleToday);
         case _IslandFace.history:
           return DigitalIslandParts.historyFace();
       }
@@ -1276,13 +1276,13 @@ extension _HomeMapSheet on _DriverHomeState {
     /// A saved-trip problem: a heads-up on the island and a sheet that
     /// stays until the driver acts, since a tap only closes the island.
     void _tripProblem(IslandMessage notice, String message,
-        {String action = 'Retry'}) {
+        {String? action}) {
       IslandMessages.show(notice);
       unawaited(showTripProblemSheet(
         context,
         title: notice.title,
         message: message,
-        actionLabel: action,
+        actionLabel: action ?? tr.retry,
         onAction: () => unawaited(_restoreActiveRideIfNeeded()),
       ));
     }
@@ -1733,9 +1733,9 @@ extension _HomeMapSheet on _DriverHomeState {
             _radarSweepController,
           ]),
           builder: (context, child) => _buildRadarOrb(
-            title: "Hold",
-            status: "OFF",
-            subtitle: "Go offline",
+            title: tr.hold,
+            status: tr.orbOff,
+            subtitle: tr.goOffline,
             active: true,
             offer: _hasRideOffers ||
                 _radarHomeOffers.isNotEmpty ||
@@ -1760,9 +1760,9 @@ extension _HomeMapSheet on _DriverHomeState {
             _radarMotionController,
           ]),
           builder: (context, child) => _buildRadarOrb(
-            title: busy ? "Matching" : "Accept",
-            status: "MATCH",
-            subtitle: busy ? "Please wait" : "Tap to accept",
+            title: busy ? tr.matching : tr.accept,
+            status: tr.orbMatch,
+            subtitle: busy ? tr.pleaseWait : tr.tapToAccept,
             active: true,
             offer: true,
             pulse: _goOnlinePulseController.value,
@@ -1829,7 +1829,7 @@ extension _HomeMapSheet on _DriverHomeState {
                     ),
                   ),
                 ),
-                if (trailing != null) trailing,
+                if (trailing != null) Flexible(child: trailing),
               ],
             ),
           ),
@@ -1852,10 +1852,10 @@ extension _HomeMapSheet on _DriverHomeState {
           performance.showAcceptanceRate ||
           performance.showCancellationRate;
       return [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 14),
           child: Text(
-            'Right now',
+            tr.rightNow,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: _sheetSub,
@@ -1891,7 +1891,7 @@ extension _HomeMapSheet on _DriverHomeState {
               MergeSemantics(child: _sheetRow(
                 key: const ValueKey<String>('home-sheet-cash'),
                 icon: _solarIcon(AppAssets.solarWadOfMoney),
-                label: 'Cash rides',
+                label: tr.cashRides,
                 trailing: Switch.adaptive(
                   key: const ValueKey<String>('home-sheet-cash-switch'),
                   value: DriverOfferPreferences.acceptsCash.value,
@@ -1906,7 +1906,7 @@ extension _HomeMapSheet on _DriverHomeState {
                 _sheetRow(
                   key: const ValueKey<String>('home-sheet-performance'),
                   icon: _solarIcon(AppAssets.solarMedalRibbonStar),
-                  label: 'Performance',
+                  label: tr.performance,
                   onTap: _openPerformance,
                 ),
               ValueListenableBuilder<WaybillRecord?>(
@@ -1914,10 +1914,12 @@ extension _HomeMapSheet on _DriverHomeState {
                 builder: (context, lastWaybill, _) => _sheetRow(
                   key: const ValueKey<String>('home-sheet-last-waybill'),
                   icon: _solarIcon(AppAssets.solarBillList),
-                  label: 'Latest waybill',
+                  label: tr.latestWaybill,
                   trailing: lastWaybill == null
-                      ? const Text(
-                          'None yet',
+                      ? Text(
+                          tr.noneYet,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: _sheetSub,
                             fontSize: 13,
@@ -1930,7 +1932,7 @@ extension _HomeMapSheet on _DriverHomeState {
                       : () => showMoveraWaybillSheet(
                             context,
                             lastWaybill,
-                            title: 'Latest waybill',
+                            title: tr.latestWaybill,
                           ),
                 ),
               ),
@@ -1997,26 +1999,26 @@ extension _HomeMapSheet on _DriverHomeState {
     void _openPerformance() {
       final performance = _adminHomeConfig.performance;
       unawaited(_openDetailsSheet(
-        title: 'Performance',
+        title: tr.performance,
         rows: [
           if (performance.showRating)
             (last) => _todayRow(
                   mark: MoveraMark.star,
-                  label: 'Rating',
+                  label: tr.rating,
                   value: performance.ratingLabel,
                   last: last,
                 ),
           if (performance.showAcceptanceRate)
             (last) => _todayRow(
                   mark: MoveraMark.check,
-                  label: 'Acceptance',
+                  label: tr.acceptance,
                   value: performance.acceptanceLabel,
                   last: last,
                 ),
           if (performance.showCancellationRate)
             (last) => _todayRow(
                   mark: MoveraMark.close,
-                  label: 'Cancellation',
+                  label: tr.cancellation,
                   value: performance.cancellationLabel,
                   last: last,
                 ),
@@ -2027,19 +2029,19 @@ extension _HomeMapSheet on _DriverHomeState {
     void _openDrivingTime() {
       final clock = DrivingTimeClock.instance;
       unawaited(_openDetailsSheet(
-        title: 'Driving time',
+        title: tr.drivingTime,
         rows: [
           (last) => _todayRow(
                 mark: MoveraMark.timer,
-                label: 'Worked',
+                label: tr.worked,
                 value: DrivingTimeClock.hoursMinutes(clock.worked),
                 last: last,
               ),
           (last) => _todayRow(
                 mark: MoveraMark.route,
                 label: switch (clock.restUntil) {
-                  null => 'Left before rest',
-                  _ => 'Rest until',
+                  null => tr.leftBeforeRest,
+                  _ => tr.restUntil,
                 },
                 value: switch (clock.restUntil) {
                   final until? => clockLabel(until),
@@ -2049,21 +2051,19 @@ extension _HomeMapSheet on _DriverHomeState {
               ),
           (last) => _todayRow(
                 mark: MoveraMark.calendar,
-                label: 'Work limit',
+                label: tr.workLimit,
                 value: '${clock.rule.workHours} h',
                 last: last,
               ),
           (last) => _todayRow(
                 mark: MoveraMark.timer,
-                label: 'Rest after it',
+                label: tr.restAfterIt,
                 value: '${clock.rule.restHours} h',
                 last: last,
               ),
         ],
         // Q25: the admin's rule for the country.
-        note: 'Counts while Radar is on. After ${clock.rule.workHours} h you '
-            'rest ${clock.rule.restHours} h before going online again. A '
-            '${clock.rule.restHours} h break starts it from zero.',
+        note: tr.countsWhileRadarIsOnAfter(clock.rule.workHours, clock.rule.restHours),
       ));
     }
 
@@ -2091,7 +2091,7 @@ extension _HomeMapSheet on _DriverHomeState {
                 children: [
                   IconButton(
                     key: const ValueKey<String>('home-sheet-close'),
-                    tooltip: 'Close sheet',
+                    tooltip: tr.closeSheet,
                     onPressed: () => unawaited(_closeDriverSheet()),
                     icon: const Icon(
                       Icons.keyboard_arrow_down_rounded,
@@ -2099,9 +2099,9 @@ extension _HomeMapSheet on _DriverHomeState {
                       size: 28,
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Today',
+                      tr.today,
                       key: ValueKey<String>('home-sheet-today'),
                       textAlign: TextAlign.center,
                       style: TextStyle(

@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +43,15 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
 
   TripHistoryRecord get _ride => widget.record;
 
+  /// When the trip ended, in the driver's language; the saved words for
+  /// an older record without a time.
+  String get _when {
+    final at = _ride.completedAt;
+    return at == null
+        ? _ride.whenLabel
+        : '${DriverDates.numericDate(at)}, ${DriverDates.time(at)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,13 +89,13 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
                 mapType: MapType.normal,
                 onTap: (LatLng position) {},
               ),
-              const Positioned(
+              Positioned(
                 top: 100,
                 left: 16,
                 right: 16,
                 child: SafeArea(
                   child: Text(
-                    'Illustrative map · archived route unavailable',
+                    tr.illustrativeMapArchivedRouteUnavailable,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF252E3A),
@@ -175,7 +185,7 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TextWidget(
-                        text: _ride.whenLabel,
+                        text: _when,
                         color: AppColor.title,
                         fontSize: 16,
                         fontWeight: fwBold,
@@ -296,7 +306,7 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
                   TextWidget(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    text: 'Pickup from',
+                    text: tr.pickupFrom,
                     color: const Color(0xffA3A3A3),
                   ),
                   Row(
@@ -320,7 +330,7 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
                   TextWidget(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    text: 'Drop off location',
+                    text: tr.dropOffLocation,
                     color: const Color(0xffA3A3A3),
                   ),
                   Row(
@@ -387,7 +397,7 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
   Widget _buildSummaryRows(BuildContext context) {
     return Column(
       children: [
-        _detailRow('Ride Cost', _ride.fare),
+        _detailRow(tr.rideCost, _ride.fare),
         // Q16/Q18: Movera's bonus is in the fare.
         if (_ride.driverBonus case final bonus?) ...[
           6.height,
@@ -405,17 +415,17 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
           ),
         ],
         16.height,
-        _detailRow('Tip', _ride.tip),
+        _detailRow(tr.tip, _ride.tip),
         16.height,
-        _detailRow('Payment Method', _ride.paymentMethod, paymentIcon: true),
+        _detailRow(tr.paymentMethod, _ride.paymentMethod, paymentIcon: true),
         16.height,
-        _detailRow('Ride Type', _ride.category),
+        _detailRow(tr.rideType, _ride.category),
         // Q23 / R8-4: on a cash trip, the fare, the cash the driver
         // collected, and the balance: fare − cash, owed by (−) or to (+)
         // the driver, settled in the next payout.
         if (_ride.cashBalance case final cash?) ...[
           16.height,
-          _detailRow('Cash collected', cash.cashCollected.formatted),
+          _detailRow(tr.cashCollected, cash.cashCollected.formatted),
           16.height,
           KeyedSubtree(
             key: const ValueKey<String>('history-cash-balance'),
@@ -426,8 +436,8 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
             alignment: Alignment.centerRight,
             child: Text(
               cash.balance.minorUnits == 0
-                  ? 'Cash matched your fare'
-                  : 'Settled in your next payout',
+                  ? tr.cashMatchedYourFare
+                  : tr.settledInYourNextPayout,
               key: const ValueKey<String>('history-owed-note'),
               style: const TextStyle(
                 color: Color(0xFF7D898F),
@@ -443,24 +453,24 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
 
   Widget _buildMetaRows() {
     final outcome = switch (_ride.status) {
-      TripStatus.completed => 'Ride completed on',
-      TripStatus.cancelledByRider => 'Cancelled by rider',
-      TripStatus.cancelledByDriver => 'Cancelled by driver',
-      TripStatus.cancelledByAdmin => 'Cancelled by support',
-      TripStatus.cancelledBySystem => 'Cancelled by Movera',
+      TripStatus.completed => tr.rideCompletedOn,
+      TripStatus.cancelledByRider => tr.cancelledByRider,
+      TripStatus.cancelledByDriver => tr.cancelledByDriver,
+      TripStatus.cancelledByAdmin => tr.cancelledBySupport,
+      TripStatus.cancelledBySystem => tr.cancelledByMovera,
       TripStatus.searching ||
-      TripStatus.requested => 'Cancelled by driver',
-      TripStatus.noShow => 'Rider did not arrive',
-      TripStatus.expired => 'Trip expired',
-      TripStatus.failed => 'Trip failed',
-      _ => 'Trip ended',
+      TripStatus.requested => tr.cancelledByDriver,
+      TripStatus.noShow => tr.riderDidNotArrive,
+      TripStatus.expired => tr.tripExpired,
+      TripStatus.failed => tr.tripFailed,
+      _ => tr.tripEnded,
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _detailRow('Trip ID', _ride.tripId),
+        _detailRow(tr.tripId, _ride.tripId),
         20.height,
-        _detailRow(outcome, _ride.whenLabel),
+        _detailRow(outcome, _when),
       ],
     );
   }

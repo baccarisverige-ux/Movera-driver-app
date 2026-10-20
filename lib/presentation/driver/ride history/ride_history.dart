@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/core/contracts/trip_status.dart';
@@ -71,7 +72,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         return _HistoryRide(
           record: record,
           id: record.tripId,
-          day: at == null ? 'Previous' : '${at.day}/${at.month}/${at.year}',
+          day: at == null ? tr.previous : DriverDates.numericDate(at),
           time: at == null ? '' : '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}',
           category: record.category,
           pickup: record.pickup,
@@ -112,19 +113,18 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   String get _periodLabel {
     switch (_period) {
       case _HistoryPeriod.today:
-        return 'Today';
+        return tr.today;
       case _HistoryPeriod.week:
-        return 'Last 7 days';
+        return tr.last7Days;
       case _HistoryPeriod.month:
-        final now = DateTime.now();
-        return '${now.month}/${now.year}';
+        return DriverDates.monthYear(DateTime.now());
     }
   }
 
   String get _periodEarnings {
     var total=0;
     for(final ride in _periodRidesList.where((ride)=>ride.status==TripStatus.completed)) {
-      if(ride.fareMoney==null) { return 'Unavailable'; }
+      if(ride.fareMoney==null) { return tr.unavailable; }
       total+=ride.fareMoney!.minorUnits;
     }
     return Money.ore(total).formatted;
@@ -221,7 +221,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       Semantics(
         liveRegion: true,
         child: Text(
-          _loading ? 'Loading ride history…' : 'Could not load ride history.',
+          _loading ? tr.loadingRideHistoryEllipsis : tr.couldNotLoadRideHistory,
           textAlign: TextAlign.center,
           style: const TextStyle(color: _muted, fontSize: 14),
         ),
@@ -231,7 +231,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           child: TextButton(
             key: const ValueKey<String>('history-retry'),
             onPressed: _loadHistory,
-            child: const Text('Retry'),
+            child: Text(tr.retry),
           ),
         ),
     ],
@@ -245,7 +245,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           Material(
             color: Colors.white,
             shape: const CircleBorder(side: BorderSide(color: _line)),
-            child: IconButton(tooltip: 'Back', 
+            child: IconButton(tooltip: tr.back, 
               onPressed: _view == _HistoryView.rides
                   ? _showOverview
                   : _closeHistory,
@@ -262,8 +262,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
                 children: [
                   Text(
                     _view == _HistoryView.overview
-                        ? 'Earnings & history'
-                        : 'All rides',
+                        ? tr.earningsHistory
+                        : tr.allRides,
                     style: const TextStyle(
                       color: _ink,
                       fontSize: 20,
@@ -274,7 +274,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
                   const SizedBox(height: 1),
                   Text(
                     _view == _HistoryView.overview
-                        ? 'Your Movera activity'
+                        ? tr.yourMoveraActivity
                         : _periodLabel,
                     style: const TextStyle(
                       color: _muted,
@@ -319,7 +319,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
             Expanded(
               child: _MetricCard(
                 icon: AppAssets.solarClockCircle,
-                label: 'Online',
+                label: tr.online,
                 value: _periodHours,
               ),
             ),
@@ -327,15 +327,15 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
             Expanded(
               child: _MetricCard(
                 icon: AppAssets.solarCar,
-                label: 'Rides',
+                label: tr.rides,
                 value: _periodRides,
               ),
             ),
           ],
         ),
         const SizedBox(height: 18),
-        const Text(
-          'Earnings breakdown',
+        Text(
+          tr.earningsBreakdown,
           style: TextStyle(
             color: _ink,
             fontSize: 15,
@@ -348,9 +348,9 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         const SizedBox(height: 18),
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
-                'Latest rides',
+                tr.latestRides,
                 style: TextStyle(
                   color: _ink,
                   fontSize: 15,
@@ -372,8 +372,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'All rides',
+                  Text(
+                    tr.allRides,
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
@@ -388,7 +388,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         ),
         const SizedBox(height: 3),
         if (_periodRidesList.isEmpty)
-          const Padding(padding: EdgeInsets.all(18), child: Text('No completed rides in this period.')),
+          Padding(padding: EdgeInsets.all(18), child: Text(tr.noCompletedRidesInThisPeriod)),
         for (final ride in _periodRidesList.take(2)) ...[
           _HistoryRideCard(ride: ride, compact: true),
           const SizedBox(height: 8),
@@ -400,7 +400,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
             key: const ValueKey<String>('history-view-all-rides'),
             onPressed: _showAllRides,
             icon: _solarIcon(AppAssets.solarList),
-            label: Text('View all $visibleRideCount rides'),
+            label: Text(tr.viewAllVisibleRideCountRides(visibleRideCount)),
             style: OutlinedButton.styleFrom(
               foregroundColor: _ink,
               side: const BorderSide(color: _line),
@@ -445,7 +445,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '$_periodRides rides in $_periodLabel',
+                  tr.periodRidesRidesInPeriodLabel(_periodRides, _periodLabel),
                   style: const TextStyle(
                     color: _ink,
                     fontSize: 11.5,
@@ -498,17 +498,17 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       child: Row(
         children: [
           _PeriodButton(
-            label: 'Today',
+            label: tr.today,
             selected: _period == _HistoryPeriod.today,
             onTap: () => setState(() => _period = _HistoryPeriod.today),
           ),
           _PeriodButton(
-            label: 'Week',
+            label: tr.week,
             selected: _period == _HistoryPeriod.week,
             onTap: () => setState(() => _period = _HistoryPeriod.week),
           ),
           _PeriodButton(
-            label: 'Month',
+            label: tr.month,
             selected: _period == _HistoryPeriod.month,
             onTap: () => setState(() => _period = _HistoryPeriod.month),
           ),
@@ -570,8 +570,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  const Text(
-                    'Recorded fares',
+                  Text(
+                    tr.recordedFares,
                     style: TextStyle(
                       color: _subtle,
                       fontSize: 10.5,
@@ -608,11 +608,11 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       ),
       child: Column(
         children: [
-          _BreakdownRow(label: 'Recorded fares', value: _periodEarnings, strong: true),
+          _BreakdownRow(label: tr.recordedFares, value: _periodEarnings, strong: true),
           const SizedBox(height: 10),
           _buildOtherEarningsRow(),
           const SizedBox(height: 10),
-          const _BreakdownRow(label: 'Tips and fees', value: 'Not available'),
+          _BreakdownRow(label: tr.tipsAndFees, value: tr.notAvailable),
         ],
       ),
     );
@@ -631,8 +631,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           Expanded(
             child: _BreakdownRow(
               label: trips.isEmpty
-                  ? 'Other earnings'
-                  : 'Other earnings · ${trips.length} cash',
+                  ? tr.otherEarnings
+                  : tr.otherEarningsTripsLengthCash(trips.length),
               value: CashBalance.signed(balance),
               valueColor: CashBalanceSheet.colorFor(balance.minorUnits),
             ),
@@ -937,7 +937,7 @@ class _HistoryRideCard extends StatelessWidget {
                 ),
                 SizedBox(width: 6),
                 Text(
-                  ride.status == TripStatus.completed ? 'Completed' : ride.status.isReleasedToDispatch ? 'cancelled_by_driver' : ride.status.wireName,
+                  ride.status == TripStatus.completed ? tr.completed : ride.status.isReleasedToDispatch ? 'cancelled_by_driver' : ride.status.wireName,
                   style: TextStyle(
                     color: Color(0xFF5F6B72),
                     fontSize: 9.5,

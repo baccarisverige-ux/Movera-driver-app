@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/widgets/movera_modal_sheet.dart';
@@ -51,13 +52,13 @@ class RiderCancelledSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = wasOnTrip ? 'Rider ended the trip' : 'Rider cancelled';
+    final title = wasOnTrip ? tr.riderEndedTrip : tr.riderCancelled;
     final body = wasOnTrip
-        ? '$riderName cancelled while the trip was active. Stop in a safe place before leaving this screen.'
-        : '$riderName cancelled this request. The current pickup is no longer active.';
+        ? tr.riderNameCancelledWhileTripWas(riderName)
+        : tr.riderNameCancelledThisRequestCurrent(riderName);
     final status = (wasOnTrip
-            ? 'Active trip cancelled by rider'
-            : 'Pickup cancelled by rider') +
+            ? tr.activeTripCancelledByRider
+            : tr.pickupCancelledByRider) +
         HomeIslandNotices.feeSuffix(fee);
 
     // Sized by the sheet route: its usual height, taller only when the
@@ -121,8 +122,8 @@ class RiderCancelledSheet extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'TRIP UPDATE',
+                                Text(
+                                  tr.tripUpdate,
                                   style: TextStyle(
                                     color: _muted,
                                     fontSize: 11,
@@ -191,7 +192,7 @@ class RiderCancelledSheet extends StatelessWidget {
                       ),
                       if (wasOnTrip) ...[
                         const SizedBox(height: 12),
-                        const Row(
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Icon(
@@ -202,7 +203,7 @@ class RiderCancelledSheet extends StatelessWidget {
                             SizedBox(width: 9),
                             Expanded(
                               child: Text(
-                                'Keep control of the vehicle and stop safely before continuing.',
+                                tr.keepControlOfVehicleAndStop,
                                 style: TextStyle(
                                   color: _muted,
                                   fontSize: 12.5,
@@ -236,7 +237,7 @@ class RiderCancelledSheet extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    wasOnTrip ? 'I have stopped safely' : 'Return to requests',
+                    wasOnTrip ? tr.iHaveStoppedSafely : tr.returnToRequests,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,

@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 
 /// Why an offer is Exclusive: the short text next to the black mark on the
@@ -32,7 +33,7 @@ class ExclusiveReasons {
   /// The text for reason [id]: '' when admin switched it off.
   static String text(String id, [DriverOfferRules? rules]) {
     if (id == assigned) {
-      return 'Assigned by Movera';
+      return tr.assignedByMovera;
     }
     return (rules ?? DriverOfferRules.current).reasonText(id);
   }

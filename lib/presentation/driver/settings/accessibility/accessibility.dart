@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:flutter/material.dart';
@@ -108,13 +109,13 @@ class _AccessibilityState extends State<Accessibility> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
         titleSpacing: 0,
-        title: const Text(
-          'Accessibility',
+        title: Text(
+          tr.accessibility,
           style: TextStyle(
             color: _ink,
             fontSize: 18,
@@ -133,21 +134,21 @@ class _AccessibilityState extends State<Accessibility> {
               onPressed: _retryingSave ? null : _retrySave,
               child: Text(
                 _retryingSave
-                    ? 'Saving preferences…'
-                    : 'Changes not saved — Retry',
+                    ? tr.savingPreferencesEllipsis
+                    : tr.changesNotSavedRetry,
               ),
             ),
           if (_restoreFailed)
             TextButton(
               onPressed: _restoreSettings,
-              child: const Text('Could not load saved preferences — Retry'),
+              child: Text(tr.couldNotLoadSavedPreferencesRetry),
             ),
-          const Text(
-            'Local demo preferences — saved on this device; effects are previews.',
+          Text(
+            tr.localDemoPreferencesSavedOnThis,
           ),
           _tile(
-            title: 'Hearing',
-            detail: 'Tell riders if you are deaf or hard of hearing.',
+            title: tr.hearing,
+            detail: tr.tellRidersIfYouAreDeaf,
             trailing: const Icon(
               Icons.chevron_right_rounded,
               color: Color(0xFFB0B8BC),
@@ -159,19 +160,19 @@ class _AccessibilityState extends State<Accessibility> {
                 builder: (dialogContext) {
                   return AlertDialog(
                     backgroundColor: Colors.white,
-                    title: const Text('Hearing'),
-                    content: const Text(
-                      'Demo preview — no information is shared with riders.',
+                    title: Text(tr.hearing),
+                    content: Text(
+                      tr.demoPreviewNoInformationIsShared,
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => popOwned(dialogContext),
-                        child: const Text('Not now'),
+                        child: Text(tr.notNow),
                       ),
                       FilledButton(
                         onPressed: () => popOwned(dialogContext),
                         style: FilledButton.styleFrom(backgroundColor: _ink),
-                        child: const Text('Close preview'),
+                        child: Text(tr.closePreview),
                       ),
                     ],
                   );
@@ -181,11 +182,11 @@ class _AccessibilityState extends State<Accessibility> {
           ),
           const SizedBox(height: 10),
           _tile(
-            title: 'Flash for requests',
-            detail: 'The screen flashes when a request arrives.',
+            title: tr.flashForRequests,
+            detail: tr.screenFlashesWhenRequestArrives,
             trailing: Semantics(
               container: true,
-              label: 'Flash for requests',
+              label: tr.flashForRequests,
               enabled: _canEdit,
               toggled: _flash,
               onTap: !_canEdit
@@ -212,11 +213,11 @@ class _AccessibilityState extends State<Accessibility> {
           ),
           const SizedBox(height: 10),
           _tile(
-            title: 'Vibration for requests',
-            detail: 'The phone vibrates when a request arrives.',
+            title: tr.vibrationForRequests,
+            detail: tr.phoneVibratesWhenRequestArrives,
             trailing: Semantics(
               container: true,
-              label: 'Vibration for requests',
+              label: tr.vibrationForRequests,
               enabled: _canEdit,
               toggled: _vibration,
               onTap: !_canEdit

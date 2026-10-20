@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/waybill/waybill.dart';
 
@@ -6,7 +7,7 @@ import 'package:movera/core/waybill/waybill.dart';
 Future<void> showMoveraWaybillSheet(
   BuildContext context,
   WaybillRecord record, {
-  String title = 'Waybill',
+  String? title,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -35,7 +36,7 @@ Future<void> showMoveraWaybillSheet(
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      tooltip: 'Close',
+                      tooltip: tr.close,
                       padding: EdgeInsets.zero,
                       alignment: Alignment.centerLeft,
                       onPressed: () => Navigator.of(sheetContext).maybePop(),
@@ -43,7 +44,7 @@ Future<void> showMoveraWaybillSheet(
                     ),
                   ),
                   Text(
-                    title,
+                    title ?? tr.waybill,
                     style: const TextStyle(
                       color: _ink,
                       fontSize: 22,
@@ -69,58 +70,44 @@ List<Widget> _rows(WaybillRecord record) {
   final payment = WaybillPayment.fromFare(record.fare, bonus: record.driverBonus);
   final bonus = record.driverBonus;
   return [
-    _Row('Trip #', record.tripId),
-    _Row('Time', formatWaybillTime(record.issuedAt)),
-    _Row('Fare', payment == null ? record.fare : '${record.fare}*'),
+    _Row(tr.trip, record.tripId),
+    _Row(tr.time, formatWaybillTime(record.issuedAt)),
+    _Row(tr.fare, payment == null ? record.fare : '${record.fare}*'),
     // Q16/Q18: the fare has Movera's bonus in it.
     if (bonus != null)
       _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
-    _Row('Passenger', record.riderName),
-    _Row('Via', record.source),
-    _Row('From', record.pickup),
-    _Row('To', record.dropoff),
+    _Row(tr.passenger, record.riderName),
+    _Row(tr.via, record.source),
+    _Row(tr.from, record.pickup),
+    _Row(tr.to2, record.dropoff),
     const SizedBox(height: 14),
-    _Row('Driver', record.driverName),
-    _Row('License plate', record.licensePlate),
-    _Row('Passenger capacity', '${record.passengerCapacity}'),
+    _Row(tr.driver, record.driverName),
+    _Row(tr.licensePlate, record.licensePlate),
+    _Row(tr.passengerCapacity, '${record.passengerCapacity}'),
     if (payment != null) ...[
       const SizedBox(height: 14),
-      _Row('Paid by the passenger', payment.fare),
-      const _Row('Payment', 'In the app'),
-      _Row('Base price · ${record.service}', payment.fare),
-      _Row('Movera fee', '−${payment.serviceFee}'),
-      if (payment.bonus case final extra?) _Row('Movera bonus', '+$extra'),
-      _Row('Your earnings', payment.earnings),
+      _Row(tr.paidByPassenger, payment.fare),
+      _Row(tr.payment, tr.inApp),
+      _Row(tr.basePriceService(record.service), payment.fare),
+      _Row(tr.moveraFee, '−${payment.serviceFee}'),
+      if (payment.bonus case final extra?) _Row(tr.moveraBonus, '+$extra'),
+      _Row(tr.yourEarnings, payment.earnings),
       if (bonus != null)
       _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
       const SizedBox(height: 16),
-      const Text(
-        '* Round to the nearest whole krona in the taximeter.',
+      Text(
+        tr.roundToNearestWholeKronaIn,
         style: TextStyle(color: _muted, fontSize: 13),
       ),
     ],
   ];
 }
 
-const _months = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-/// "10 Oct 2026, 14:32:05 CEST": date, time to the second, time zone.
+/// "10 Oct 2026, 14:32:05 CEST": date, time to the second, time zone. The
+/// month is in the driver's language ("10 oct. 2026", "10 okt. 2026").
 String formatWaybillTime(DateTime value) {
   String two(int number) => number.toString().padLeft(2, '0');
-  return '${value.day} ${_months[value.month - 1]} ${value.year}, '
+  return '${DriverDates.dayMonth(value)} ${value.year}, '
       '${two(value.hour)}:${two(value.minute)}:${two(value.second)} '
       '${value.timeZoneName}';
 }

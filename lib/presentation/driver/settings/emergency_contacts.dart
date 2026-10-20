@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_external_action.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +84,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                     phone: row['phone'] as String,
                     relation: row['relation'] is String
                         ? row['relation'] as String
-                        : 'Trusted contact',
+                        : tr.trustedContact,
                   ),
                 );
               }
@@ -181,7 +182,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
         ModalRoute.of(context)?.isCurrent == true) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Dialer is unavailable.')));
+      ).showSnackBar(SnackBar(content: Text(tr.dialerIsUnavailable)));
     }
   }
 
@@ -195,7 +196,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => popOwned(context),
           icon: Icon(
             Icons.arrow_back_ios_rounded,
@@ -205,14 +206,14 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
         ),
         centerTitle: true,
         title: TextWidget(
-          text: 'Emergency contacts',
+          text: tr.emergencyContacts,
           color: AppColor.title,
           fontSize: 16,
           fontWeight: fwMedium,
         ),
         actions: [
           IconButton(
-            tooltip: 'Add trusted contact',
+            tooltip: tr.addTrustedContact,
             key: const ValueKey<String>('add-emergency-contact'),
             onPressed: _loading || _restoreFailed || _adding
                 ? null
@@ -228,10 +229,10 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
           if (_restoreFailed)
             TextButton(
               onPressed: _restore,
-              child: const Text('Could not load trusted contacts — Retry'),
+              child: Text(tr.couldNotLoadTrustedContactsRetry),
             ),
-          const Text(
-            'Trusted contacts stay on this device. Calling opens your dialer.',
+          Text(
+            tr.trustedContactsStayOnThisDevice,
             style: TextStyle(color: _muted, fontSize: 12.5, height: 1.4),
           ),
           const SizedBox(height: 16),
@@ -251,7 +252,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                   ),
                   subtitle: Text('${contact.relation} · ${contact.phone}'),
                   trailing: IconButton(
-                    tooltip: 'Call ${contact.name}',
+                    tooltip: tr.callName(contact.name),
                     icon: const Icon(Icons.phone_outlined),
                     onPressed: () => _call(contact),
                   ),
@@ -286,7 +287,7 @@ class _ContactComposerState extends State<_ContactComposer> {
       name: name.text.trim(),
       phone: phone.text.trim(),
       relation: relation.text.trim().isEmpty
-          ? 'Trusted contact'
+          ? tr.trustedContact
           : relation.text.trim(),
     );
     setState(() {
@@ -302,7 +303,7 @@ class _ContactComposerState extends State<_ContactComposer> {
           _saving = false;
           _saveError = error is FormatException
               ? error.message
-              : 'Contact could not be saved. Retry.';
+              : tr.contactCouldNotBeSavedRetry;
         });
       }
     }
@@ -334,32 +335,32 @@ class _ContactComposerState extends State<_ContactComposer> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Add trusted contact',
+                  Text(
+                    tr.addTrustedContact,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: name,
                     enabled: !_saving,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                    decoration: InputDecoration(labelText: tr.name),
                     validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Enter a name'
+                        ? tr.enterName
                         : null,
                   ),
                   TextFormField(
                     controller: phone,
                     enabled: !_saving,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'Phone'),
+                    decoration: InputDecoration(labelText: tr.phone),
                     validator: (value) => widget.validPhone(value?.trim() ?? '')
                         ? null
-                        : 'Enter a valid phone number',
+                        : tr.enterValidPhoneNumber,
                   ),
                   TextFormField(
                     controller: relation,
                     enabled: !_saving,
-                    decoration: const InputDecoration(labelText: 'Relation'),
+                    decoration: InputDecoration(labelText: tr.relation),
                   ),
                   const SizedBox(height: 16),
                   if (_saveError != null)
@@ -377,7 +378,7 @@ class _ContactComposerState extends State<_ContactComposer> {
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF19865C),
                     ),
-                    child: Text(_saving ? 'Saving contact…' : 'Save contact'),
+                    child: Text(_saving ? tr.savingContactEllipsis : tr.saveContact),
                   ),
                 ],
               ),

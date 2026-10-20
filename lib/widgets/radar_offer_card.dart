@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -102,11 +103,11 @@ class RadarOfferView {
 
   /// "1 stop", "2 stops"; '' with none.
   String get stopsLabel =>
-      stops <= 0 ? '' : '$stops stop${stops == 1 ? '' : 's'}';
+      stops <= 0 ? '' : tr.stopsCount(stops);
 
   /// "4.95" or, with the trips known, "4.95 · 86 trips".
   String get ratingLabel =>
-      riderTrips > 0 ? '$rating · $riderTrips trips' : rating;
+      riderTrips > 0 ? tr.ratingRiderTripsTrips(rating, riderTrips) : rating;
 }
 
 enum RadarOfferCardState { available, matching, expired, taken }
@@ -597,7 +598,7 @@ class RadarOfferCard extends StatelessWidget {
           right: 0,
           child: Semantics(
             button: true,
-            label: 'Close offer',
+            label: tr.closeOffer,
             child: GestureDetector(
               key: const ValueKey<String>('radar-offer-close'),
               behavior: HitTestBehavior.opaque,

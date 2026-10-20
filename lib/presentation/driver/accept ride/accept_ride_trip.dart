@@ -177,7 +177,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     WaybillRecord _buildCurrentWaybill() {
       return WaybillRecord(
         tripId: widget.tripId,
-        statusLabel: 'Current trip',
+        statusLabel: tr.currentTrip,
         issuedAt: DateTime.now(),
         fare: widget.fare,
         driverBonus: WaybillRecord.bonusLabel(widget.driverBonus),
@@ -212,7 +212,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     WaybillRecord _buildNextWaybill(_NextTripRadarOffer offer) {
       return WaybillRecord(
         tripId: offer.id,
-        statusLabel: 'Next trip secured',
+        statusLabel: tr.nextTripSecured,
         issuedAt: DateTime.now(),
         fare: offer.fare,
         service: offer.category,
@@ -264,7 +264,7 @@ extension _AcceptRideTrip on _AcceptRideState {
               content: Text(
                 event.message?.trim().isNotEmpty == true
                     ? event.message!
-                    : '${widget.riderName} is on the way',
+                    : tr.riderNameIsOnWay(widget.riderName),
               ),
               backgroundColor: _AcceptRideState._ink,
               behavior: SnackBarBehavior.floating,
@@ -292,8 +292,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       try { await _realtime.reconnectAndResync(widget.tripId); }
       catch (_) {
         if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Trip updates could not be refreshed.'),
-          action: SnackBarAction(label: 'Retry', onPressed: () => unawaited(_resyncTrip())))); }
+          content: Text(tr.tripUpdatesCouldNotBeRefreshed),
+          action: SnackBarAction(label: tr.retry, onPressed: () => unawaited(_resyncTrip())))); }
       }
     }
     Future<void> _drainProjection() async {
@@ -348,8 +348,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         _projectionRetryDelay = _AcceptRideState._projectionRetryBase;
       } catch (_) {
         if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Trip update could not be saved. Retrying automatically.'),
-          action: SnackBarAction(label: 'Retry now', onPressed: () => unawaited(_drainProjection())))); }
+          content: Text(tr.tripUpdateCouldNotBeSaved),
+          action: SnackBarAction(label: tr.retryNow, onPressed: () => unawaited(_drainProjection())))); }
         _scheduleProjectionRetry();
       } finally { _drainingProjection = false; }
     }
@@ -436,8 +436,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       } catch (_) {
         _handlingRiderCancellation=false;
         if(mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Could not save rider cancellation. Retry.'),
-          action: SnackBarAction(label:'Retry',onPressed:(){ _handleRiderCancelled(fee: fee); }))); }
+          content: Text(tr.couldNotSaveRiderCancellationRetry),
+          action: SnackBarAction(label:tr.retry,onPressed:(){ _handleRiderCancelled(fee: fee); }))); }
         return;
       }
       if(!mounted) { return; }
@@ -483,27 +483,27 @@ extension _AcceptRideTrip on _AcceptRideState {
     void _onPersistenceChanged() {
       if (!mounted || _rideLifecycle.persistenceError == null) { return; }
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: const Text('Trip progress could not be saved. Keep this screen open and retry.'),
-        action: SnackBarAction(label: 'Retry', onPressed: () { _rideLifecycle.persistNow(); }),
+        content: Text(tr.tripProgressCouldNotBeSaved),
+        action: SnackBarAction(label: tr.retry, onPressed: () { _rideLifecycle.persistNow(); }),
       ));
     }
     void _blockedArrival() {
       if (_arrivalTarget == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('This stop needs a verified map location before arrival.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(tr.thisStopNeedsVerifiedMapLocation),
         ));
         return;
       }
       if (!_arrivalDemo && !_hasLiveLocation) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Location unavailable. Enable location to confirm arrival.'),
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(tr.locationUnavailableEnableLocationToConfirm),
         ));
         return;
       }
       final where = _stage == ActiveRideStage.onTrip ? 'stop' : 'pickup';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Move within 100 m of the $where to arrive.'),
+          content: Text(tr.moveWithin100MOfWhere(where)),
           backgroundColor: _AcceptRideState._ink,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -552,7 +552,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _realtime.sendSignal(
           tripId: widget.tripId,
           kind: DriverRealtimeKind.driverArrived,
-          message: 'Your driver has arrived at the pickup point.',
+          message: tr.yourDriverHasArrivedAtPickup,
         ),
       );
       if (mounted) { _rebuild(() {}); }
@@ -610,20 +610,20 @@ extension _AcceptRideTrip on _AcceptRideState {
           },
           onError: (Object error) {
             if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-            _navigation.keepLastKnown(status: 'Location updating…');
+            _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
             _rebuild(() {
               _hasLiveLocation = false;
-              _locationStatus = 'Location updating…';
+              _locationStatus = tr.locationUpdatingEllipsis;
             });
           },
         );
         await _applyDriverPosition(position, forceRoute: true);
       } catch (_) {
         if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-        _navigation.keepLastKnown(status: 'Location updating…');
+        _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
         _rebuild(() {
           _hasLiveLocation = false;
-          _locationStatus = 'Location updating…';
+          _locationStatus = tr.locationUpdatingEllipsis;
         });
         unawaited(_refreshRoadRoute(force: true));
       }
@@ -644,10 +644,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       final shown = _fixView;
       if (!location.isDisplayableAt(DateTime.now())) {
         // Keep the previous car position and route; do not draw a stale fix.
-        _navigation.keepLastKnown(status: 'Location updating…');
+        _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
         _rebuild(() {
           _hasLiveLocation = false;
-          _locationStatus = 'Location updating…';
+          _locationStatus = tr.locationUpdatingEllipsis;
         });
         return;
       }
@@ -697,14 +697,14 @@ extension _AcceptRideTrip on _AcceptRideState {
           _roadGeoPoints = [];
 
           _routeDurationSeconds = null;
-          _locationStatus = 'Stop location unavailable';
+          _locationStatus = tr.stopLocationUnavailable;
         });
         return;
       }
       await _navigation.ensureRoute(
         origin: GeoPointMaps.fromLatLng(_driverPosition),
         destination: GeoPointMaps.fromLatLng(target),
-        targetLabel: _stage == ActiveRideStage.onTrip && _stopCursor < widget.stopAddresses.length ? 'Stop ${_stopCursor + 1}' : null,
+        targetLabel: _stage == ActiveRideStage.onTrip && _stopCursor < widget.stopAddresses.length ? tr.stopNumber(_stopCursor + 1) : null,
         force: force,
       );
       if (!mounted) { return; }
@@ -923,8 +923,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       } catch (error, stack) {
         DriverLog.error('Trip completion journal failed', error, stack);
         _completionInFlight = false; _stageTransitioning = false;
-        if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Could not finish saving this trip. Retry completion; the receipt will not duplicate.'))); }
+        if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(tr.couldNotFinishSavingThisTrip))); }
         return;
       }
       _waitTimer?.cancel();
@@ -1045,7 +1045,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         riderName: _AcceptRideState._demoNextTripOffer.riderName,
         pickup: _AcceptRideState._demoNextTripOffer.pickup,
         dropoff: address == null || address.isEmpty
-            ? 'Along your destination'
+            ? tr.alongYourDestination
             : address,
         pickupPosition: _AcceptRideState._demoNextTripOffer.pickupPosition,
         dropoffPosition: destination,
@@ -1250,12 +1250,12 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     String _stopWord(int number) {
       return switch (number) {
-        1 => 'first',
-        2 => 'second',
-        3 => 'third',
-        4 => 'fourth',
-        5 => 'fifth',
-        _ => '$number',
+        1 => tr.stopOrdinal1,
+        2 => tr.stopOrdinal2,
+        3 => tr.stopOrdinal3,
+        4 => tr.stopOrdinal4,
+        5 => tr.stopOrdinal5,
+        _ => tr.stopOrdinalN(number),
       };
     }
     Future<void> _confirmCancellationReason(
@@ -1278,23 +1278,23 @@ extension _AcceptRideTrip on _AcceptRideState {
               children: [
                 Text(
                   nextTrip
-                      ? 'Cancel the next trip?'
-                      : isOnTrip ? 'End this trip early?' : 'Cancel this trip?',
+                      ? tr.cancelNextTripQuestion
+                      : isOnTrip ? tr.endThisTripEarlyQuestion : tr.cancelThisTripQuestion,
                   style: _CleanSheet.title,
                 ),
                 const SizedBox(height: 6),
-                Text('Reason: ${reason.title}', style: _CleanSheet.note),
+                Text(tr.reasonTitle(reason.title), style: _CleanSheet.note),
                 if (nextTrip) ...[
                   const SizedBox(height: 6),
-                  const Text(
-                    'Your current trip continues. The next trip goes back to dispatch for another driver.',
+                  Text(
+                    tr.yourCurrentTripContinuesNextTrip,
                     style: _CleanSheet.note,
                   ),
                 ],
                 if (isOnTrip) ...[
                   const SizedBox(height: 6),
-                  const Text(
-                    'Only end the trip after you have stopped in a safe place and the rider can exit safely.',
+                  Text(
+                    tr.onlyEndTripAfterYouHave,
                     style: _CleanSheet.note,
                   ),
                 ],
@@ -1312,8 +1312,8 @@ extension _AcceptRideTrip on _AcceptRideState {
                     ),
                     child: Text(
                       nextTrip
-                          ? 'Cancel next trip'
-                          : isOnTrip ? 'End trip early' : 'Cancel trip',
+                          ? tr.cancelNextTrip
+                          : isOnTrip ? tr.endTripEarly : tr.cancelTrip,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -1331,8 +1331,8 @@ extension _AcceptRideTrip on _AcceptRideState {
                       side: const BorderSide(color: Color(0xFFDADEDC)),
                       shape: const StadiumBorder(),
                     ),
-                    child: const Text(
-                      'Keep trip',
+                    child: Text(
+                      tr.keepTrip,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -1362,7 +1362,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       final noShow = reason.code == CancelReasons.current.noShow.code;
       final outcome = _rideLifecycle.driverTarget(noShow ? TripCommand.noShow : TripCommand.cancel);
       if (outcome == null) {
-        if(mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('This trip cannot be cancelled right now.'))); }
+        if(mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.thisTripCannotBeCancelledRight))); }
         _cancellationInFlight=false;
         return;
       }
@@ -1375,7 +1375,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           cancellationActor: 'driver',
           next: secured == null ? null : _snapshotForOffer(secured));
       } catch (_) {
-        if(mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not save cancellation. Retry.'))); }
+        if(mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.couldNotSaveCancellationRetry))); }
         _cancellationInFlight=false;
         return;
       }
@@ -1423,10 +1423,10 @@ extension _AcceptRideTrip on _AcceptRideState {
         SnackBar(
           content: Text(
             queuedNext
-                ? 'First trip ended · starting the next one'
+                ? tr.firstTripEndedStartingNextOne
                 : _stage == ActiveRideStage.onTrip
-                    ? 'Trip ended early · ${reason.title}'
-                    : 'Trip cancelled · ${reason.title}',
+                    ? tr.tripEndedEarlyTitle(reason.title)
+                    : tr.tripCancelledTitle(reason.title),
           ),
           backgroundColor: _AcceptRideState._ink,
           behavior: SnackBarBehavior.floating,

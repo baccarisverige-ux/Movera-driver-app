@@ -4,6 +4,10 @@
 /// English for Sweden; a backend feeds it later.
 library;
 
+import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/ride/cancel_reason_l10n.dart';
+
 /// Where a reason is offered.
 enum CancelReasonGroup {
   /// The driver, before the trip starts.
@@ -63,22 +67,47 @@ class CancelReasons {
   /// Offered once the no-show time has passed at pickup.
   final CancelReason noShow;
 
-  List<CancelReason> of(CancelReasonGroup group) =>
-      groups[group] ?? const <CancelReason>[];
+  /// The reasons of [group], in the driver's language ([shown]).
+  List<CancelReason> of(CancelReasonGroup group) => [
+    for (final reason in groups[group] ?? const <CancelReason>[])
+      shown(reason),
+  ];
 
   /// The reason with [code] in any group, or null.
   CancelReason? byCode(String code) {
     if (code == noShow.code) {
-      return noShow;
+      return shown(noShow);
     }
     for (final reasons in groups.values) {
       for (final reason in reasons) {
         if (reason.code == code) {
-          return reason;
+          return shown(reason);
         }
       }
     }
     return null;
+  }
+
+  /// [reason] as the driver reads it (Round 4). Admin's list in the app's
+  /// language is shown as written. Otherwise a reason the app knows by its
+  /// code is shown in the app's language; any other one as written.
+  CancelReason shown(CancelReason reason) {
+    if (language == DriverAppTexts.language) {
+      return reason;
+    }
+    final strings = tr;
+    final title = cancelReasonTitle(strings, reason.code);
+    if (title == null) {
+      return reason;
+    }
+    return CancelReason(
+      code: reason.code,
+      title: title,
+      subtitle: reason.subtitle.isEmpty
+          ? ''
+          : cancelReasonDetail(strings, reason.code) ?? reason.subtitle,
+      counts: reason.counts,
+    );
   }
 
   /// A cancel with [code] counts in the cancel rate (unknown codes do).

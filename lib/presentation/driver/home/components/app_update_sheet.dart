@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -106,7 +107,7 @@ class _AppUpdateSheetState extends State<AppUpdateSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Version ${update.latestVersion}',
+              tr.versionLatestVersion(update.latestVersion),
               style: const TextStyle(
                 color: Color(0xFF19865C),
                 fontSize: 10,
@@ -128,7 +129,7 @@ class _AppUpdateSheetState extends State<AppUpdateSheet> {
                   ),
                 ),
                 child: Text(
-                  _launching ? 'Opening update…' : update.actionLabel,
+                  _launching ? tr.openingUpdateEllipsis : update.actionLabel,
                   style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w900,
@@ -138,8 +139,8 @@ class _AppUpdateSheetState extends State<AppUpdateSheet> {
             ),
             if (_launchFailed) ...[
               const SizedBox(height: 8),
-              const Text(
-                'Could not open the update. Please try again.',
+              Text(
+                tr.couldNotOpenUpdatePleaseTry,
                 key: ValueKey('app-update-error'),
                 textAlign: TextAlign.center,
               ),

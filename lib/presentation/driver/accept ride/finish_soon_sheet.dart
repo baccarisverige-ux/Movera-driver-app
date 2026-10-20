@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -13,7 +14,9 @@ Future<bool?> showFinishSoonSheet(
   return showMoveraModalSheet<bool>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.32),
-    heightFactor: 0.6,
+    // Sized to its content; the room up to 0.9 is for long words and
+    // large text (Round 4: French and Swedish at 130 %).
+    heightFactor: 0.9,
     fitContent: true,
     builder: (sheetContext) => FinishSoonSheet(
       minutesSincePickup: minutesSincePickup,
@@ -94,8 +97,8 @@ class FinishSoonSheet extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Finish so soon?',
+                        Text(
+                          tr.finishSoSoonQuestion,
                           style: TextStyle(
                             color: _ink,
                             fontSize: 20,
@@ -105,8 +108,7 @@ class FinishSoonSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'You picked up the rider $minutes min ago. '
-                          'Finish only if the trip really ended.',
+                          tr.youPickedUpRiderMinutesMin(minutes),
                           style: const TextStyle(
                             color: _muted,
                             fontSize: 14,
@@ -135,8 +137,8 @@ class FinishSoonSheet extends StatelessWidget {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text(
-                          'Back to ride',
+                        child: Text(
+                          tr.backToRide,
                           style: TextStyle(
                             fontSize: 15.5,
                             fontWeight: FontWeight.w700,
@@ -160,8 +162,8 @@ class FinishSoonSheet extends StatelessWidget {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: const Text(
-                          'Finish trip',
+                        child: Text(
+                          tr.finishTrip,
                           style: TextStyle(
                             fontSize: 15.5,
                             fontWeight: FontWeight.w700,

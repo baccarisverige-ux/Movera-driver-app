@@ -100,7 +100,7 @@ void main() {
   group('Q30: driver app texts', () {
     tearDown(DriverAppTexts.reset);
 
-    test('admin text per language; empty or missing is the default', () {
+    test('admin text per language; empty or missing is the app text', () {
       DriverAppTexts.overrides = const DriverAppTextOverrides({
         'en': {'island.online': '', 'offer.accept': 'Take ride'},
         'sv': {'island.online': 'Radar på'},
@@ -109,9 +109,10 @@ void main() {
       expect(driverText(DriverTexts.offerAccept), 'Take ride');
       DriverAppTexts.language = 'sv';
       expect(driverText(DriverTexts.islandOnline), 'Radar på');
-      expect(driverText(DriverTexts.offerAccept), 'Accept');
+      // Round 4: no admin text in Swedish is the app's own Swedish text.
+      expect(driverText(DriverTexts.offerAccept), 'Acceptera');
       DriverAppTexts.language = 'fr';
-      expect(driverText(DriverTexts.islandOnline), 'Radar online');
+      expect(driverText(DriverTexts.islandOnline), 'Radar en ligne');
     });
 
     test('values fill the braces, also in admin texts', () {

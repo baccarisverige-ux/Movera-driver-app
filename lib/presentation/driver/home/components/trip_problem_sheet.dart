@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 
@@ -66,7 +67,7 @@ Future<void> showTripProblemSheet(
                 foregroundColor: muted,
                 minimumSize: const Size.fromHeight(46),
               ),
-              child: const Text('Not now'),
+              child: Text(tr.notNow),
             ),
           ],
         ),

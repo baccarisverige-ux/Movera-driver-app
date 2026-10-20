@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -175,7 +176,7 @@ class HomeReservationSheet extends StatelessWidget {
       maxHeight: maxHeight,
       sheetKey: const ValueKey<String>('home-reservation-sheet'),
       closeKey: const ValueKey<String>('reservation-hide'),
-      closeLabel: 'Hide reservation request',
+      closeLabel: tr.hideReservationRequest,
     );
   }
 }
@@ -265,7 +266,7 @@ class ReservationRequestSheet extends StatelessWidget {
       count: count,
       fareWhole: whole,
       fareRest: rest,
-      trip: _show.tripMinutesKm ? '${request.tripMinutes} min trip' : null,
+      trip: _show.tripMinutesKm ? tr.tripMinutesMinTrip(request.tripMinutes) : null,
       picture: _ReservationPictureView(picture: shownPicture),
       pictureSize: pictureSize,
       pickup: OfferSheetStop(
@@ -275,7 +276,7 @@ class ReservationRequestSheet extends StatelessWidget {
       ),
       stops: _show.stops && request.stops.isNotEmpty
           ? (request.stops.length == 1
-              ? '1 stop'
+              ? tr.n1Stop
               : '${request.stops.length} stops')
           : null,
       dropoff: OfferSheetStop(
@@ -287,7 +288,7 @@ class ReservationRequestSheet extends StatelessWidget {
       pillIcon: AppAssets.solarCalendar,
       pillLabel: when.label,
       pillKey: 'when',
-      pillSemantics: 'Pickup ${when.label}',
+      pillSemantics: tr.pickupWhenLabel(when.label),
     );
   }
 }

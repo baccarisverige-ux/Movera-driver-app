@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -400,8 +401,8 @@ class _DigitalUpdatingFaceState extends State<DigitalUpdatingFace>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          'UPDATING',
+        Text(
+          tr.updating,
           style: TextStyle(
             color: Color(0xFF9AA4AA),
             fontSize: 9.5,
@@ -762,13 +763,13 @@ class DigitalIslandParts {
         key: const ValueKey<String>('island-history'),
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('SLIDE TO OPEN', style: _label),
+          Text(tr.slideToOpen, style: _label),
           const SizedBox(height: 2),
-          _fit(const Row(
+          _fit(Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Ride history',
+                tr.rideHistory,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,

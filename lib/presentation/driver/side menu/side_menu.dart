@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -83,33 +84,33 @@ class DriverSideMenu extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 children: [
                   _groupGap(),
-                  _sectionLabel('DRIVER'),
+                  _sectionLabel(tr.driver2),
                   _menuCard(
                     children: [
                       _MenuAction(
                         asset: AppAssets.menuProfile,
-                        title: 'Profile',
-                        subtitle: 'Account, vehicle and documents',
+                        title: tr.profile,
+                        subtitle: tr.accountVehicleAndDocuments,
                         onTap: () => _open(context, const DriverProfile()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuWallet,
-                        title: 'Wallet',
-                        subtitle: 'Earnings and weekly payouts',
+                        title: tr.wallet,
+                        subtitle: tr.earningsAndWeeklyPayouts,
                         onTap: () => _open(context, const WalletScreen()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuHistory,
-                        title: 'Ride history',
-                        subtitle: 'Completed and previous rides',
+                        title: tr.rideHistory,
+                        subtitle: tr.completedAndPreviousRides,
                         onTap: () => _open(context, const DriverRideHistory()),
                       ),
                       // Q31: ride alerts, demand and account messages.
                       _MenuAction(
                         asset: AppAssets.solarBellBing,
                         badge: _unreadBadge(),
-                        title: 'Notifications',
-                        subtitle: 'Ride alerts, demand and account',
+                        title: tr.notifications,
+                        subtitle: tr.rideAlertsDemandAndAccount,
                         onTap: () => _open(
                           context,
                           DriverNotificationsScreen(
@@ -120,14 +121,14 @@ class DriverSideMenu extends StatelessWidget {
                     ],
                   ),
                   _groupGap(),
-                  _sectionLabel('WORK'),
+                  _sectionLabel(tr.work),
                   _menuCard(
                     children: [
                       _MenuAction(
                         asset: AppAssets.menuScheduledRide,
                         highlight: true,
-                        title: 'Scheduled rides',
-                        subtitle: 'Reservations and accepted trips',
+                        title: tr.scheduledRides,
+                        subtitle: tr.reservationsAndAcceptedTrips,
                         onTap: () => _open(
                           context,
                           ScheduledRidesScreen(
@@ -137,40 +138,40 @@ class DriverSideMenu extends StatelessWidget {
                       ),
                       _MenuAction(
                         asset: AppAssets.navMenuBranch,
-                        title: 'Ride preferences',
-                        subtitle: 'Choose categories you want to receive',
+                        title: tr.ridePreferences,
+                        subtitle: tr.chooseCategoriesYouWantToReceive,
                         onTap: () => _open(context, const Preferences()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuTag,
-                        badge: 'NEW',
-                        title: 'Promotions',
-                        subtitle: 'Bonuses and campaign offers',
+                        badge: tr.orbNew,
+                        title: tr.promotions,
+                        subtitle: tr.bonusesAndCampaignOffers,
                         onTap: () => _open(context, const Promotions()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuTimer,
-                        title: 'Driving logs',
-                        subtitle: 'Hours online and rest rules',
+                        title: tr.drivingLogs,
+                        subtitle: tr.hoursOnlineAndRestRules,
                         onTap: () => _open(context, const DrivingLogs()),
                       ),
                     ],
                   ),
                   _groupGap(),
-                  _sectionLabel('SUPPORT & APP'),
+                  _sectionLabel(tr.supportApp),
                   _menuCard(
                     children: [
                       _MenuAction(
                         asset: AppAssets.menuSupport,
-                        title: 'Support',
-                        subtitle: 'Messages and support tickets',
+                        title: tr.support,
+                        subtitle: tr.messagesAndSupportTickets,
                         onTap: () =>
                             _open(context, const SupportInboxScreen()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuSettings,
-                        title: 'Settings',
-                        subtitle: 'App and driver settings',
+                        title: tr.settings,
+                        subtitle: tr.appAndDriverSettings,
                         onTap: () => _open(context, const Settings()),
                       ),
                     ],
@@ -194,7 +195,7 @@ class DriverSideMenu extends StatelessWidget {
     final statusColor = isOnline
         ? MoveraRadarOrb.onlineGreen
         : const Color(0xFF8A9390);
-    final statusText = isOnline ? 'ONLINE' : 'OFFLINE';
+    final statusText = isOnline ? tr.menuOnline : tr.menuOffline;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -284,8 +285,8 @@ class DriverSideMenu extends StatelessWidget {
                           children: [
                             // The demo's sample rating, as on Home (UI-10).
                             Semantics(
-                              label: 'Sample rating '
-                                  '${DriverPerformanceConfig.sample.ratingLabel}',
+                              label: tr.sampleRating(
+                                  DriverPerformanceConfig.sample.ratingLabel),
                               excludeSemantics: true,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -321,7 +322,7 @@ class DriverSideMenu extends StatelessWidget {
                                 const SizedBox(width: 7),
                                 Flexible(
                                   child: Text(
-                                    accountActive ? 'Active' : 'Pending',
+                                    accountActive ? tr.active : tr.pending,
                                     key: const ValueKey<String>('menu-account-state'),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -356,15 +357,22 @@ class DriverSideMenu extends StatelessWidget {
                       : const Color(0xFFF1F2F2),
                   borderRadius: BorderRadius.circular(99),
                 ),
-                child: Text(
-                  compact
-                      ? (isOnline ? 'ON' : 'OFF')
-                      : statusText,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: compact ? 0.4 : 1.2,
+                // Round 4: "EN LIGNE" / "HORS LIGNE" are longer than
+                // "ONLINE"; the pill keeps its size and the word shrinks.
+                constraints: BoxConstraints(maxWidth: compact ? 64 : 84),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    compact
+                        ? (isOnline ? tr.orbOn : tr.orbOff)
+                        : statusText,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: compact ? 0.4 : 1.2,
+                    ),
                   ),
                 ),
               ),
@@ -542,7 +550,7 @@ class DriverSideMenu extends StatelessWidget {
             ),
           ),
           Text(
-            ready ? 'READY' : 'PENDING',
+            ready ? tr.menuReady : tr.menuPending,
             style: TextStyle(
               color: ready ? _green : const Color(0xFFB9801F),
               fontSize: 8.5,

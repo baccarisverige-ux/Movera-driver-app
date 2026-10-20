@@ -229,7 +229,7 @@ extension _HomeExclusive on _DriverHomeState {
             },
             sheetKey: const ValueKey<String>('home-exclusive-sheet'),
             closeKey: const ValueKey<String>('direct-offer-dismiss'),
-            closeLabel: 'Skip Exclusive offer',
+            closeLabel: tr.skipExclusiveOffer,
           ),
           (height) =>
               _HomeOfferRoute(this)._offerCardMeasured(exclusive: height),
@@ -323,8 +323,8 @@ extension _HomeExclusive on _DriverHomeState {
               title: claiming
                   ? driverText(DriverTexts.offerMatching)
                   : driverText(DriverTexts.offerAccept),
-              status: claiming ? 'WAIT' : 'MATCH',
-              subtitle: claiming ? 'Please wait' : 'Tap to accept',
+              status: claiming ? tr.orbWait : tr.orbMatch,
+              subtitle: claiming ? tr.pleaseWait : tr.tapToAccept,
               exclusive: true,
               reserve: true,
               active: true,

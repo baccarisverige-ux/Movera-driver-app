@@ -1,8 +1,10 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/settings/map_traffic_setting.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/presentation/driver/pin%20verification/pin_verification.dart';
@@ -42,13 +44,13 @@ class _SettingsState extends State<Settings> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: 'Back', 
+        leading: IconButton(tooltip: tr.back, 
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
         titleSpacing: 0,
-        title: const Text(
-          'App settings',
+        title: Text(
+          tr.appSettings,
           style: TextStyle(
             color: _ink,
             fontSize: 18,
@@ -63,7 +65,7 @@ class _SettingsState extends State<Settings> {
           _group([
             _row(
               icon: Icons.volume_up_outlined,
-              title: 'Sound & voice',
+              title: tr.soundVoice,
               onTap: () => pushSingle(
                 context,
                 RightToLeftTransition(const SoundAndVoice()),
@@ -71,14 +73,10 @@ class _SettingsState extends State<Settings> {
             ),
             _row(
               icon: Icons.dark_mode_outlined,
-              title: 'Dark mode',
-              detail: 'Unavailable in demo',
+              title: tr.darkMode,
+              detail: tr.unavailableInDemo,
             ),
-            _row(
-              icon: Icons.language_rounded,
-              title: 'Language',
-              detail: 'English (US) only',
-            ),
+            _languageRow(),
           ]),
           const SizedBox(height: 12),
           _group([_trafficRow()]),
@@ -86,7 +84,7 @@ class _SettingsState extends State<Settings> {
           _group([
             _row(
               icon: Icons.accessibility_new_rounded,
-              title: 'Accessibility',
+              title: tr.accessibility,
               onTap: () => pushSingle(
                 context,
                 RightToLeftTransition(const Accessibility()),
@@ -94,7 +92,7 @@ class _SettingsState extends State<Settings> {
             ),
             _row(
               icon: Icons.pin_outlined,
-              title: 'Pin verification',
+              title: tr.pinVerification,
               onTap: () => pushSingle(
                 context,
                 RightToLeftTransition(const PinVerification()),
@@ -102,7 +100,7 @@ class _SettingsState extends State<Settings> {
             ),
             _row(
               icon: Icons.contact_phone_outlined,
-              title: 'Emergency contacts',
+              title: tr.emergencyContacts,
               onTap: () => pushSingle(
                 context,
                 RightToLeftTransition(const EmergencyContactsScreen()),
@@ -110,7 +108,7 @@ class _SettingsState extends State<Settings> {
             ),
             _row(
               icon: Icons.shield_outlined,
-              title: 'Safety',
+              title: tr.safety,
               onTap: () => showSafetyToolKitSheet(context),
             ),
           ]),
@@ -187,6 +185,83 @@ class _SettingsState extends State<Settings> {
     );
   }
 
+  /// Round 4 (Q48/Q49): the app's language, "SV · Svenska". The zone sets
+  /// the default; the driver's pick is saved and wins.
+  Widget _languageRow() {
+    return ValueListenableBuilder<String>(
+      valueListenable: DriverLanguage.current,
+      builder: (context, code, _) => KeyedSubtree(
+        key: const ValueKey<String>('settings-language'),
+        child: _row(
+          icon: Icons.language_rounded,
+          title: tr.language,
+          detail: DriverLanguage.label(code),
+          onTap: _pickLanguage,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickLanguage() async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.white,
+      showDragHandle: true,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                tr.languageTitle,
+                style: const TextStyle(
+                  color: _ink,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            for (final code in DriverLanguage.available)
+              ListTile(
+                key: ValueKey<String>('settings-language-$code'),
+                title: Text(
+                  DriverLanguage.label(code),
+                  style: const TextStyle(
+                    color: _ink,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: code == DriverLanguage.zoneDefault
+                    ? Text(
+                        tr.languageZoneDefault,
+                        style: const TextStyle(color: _muted, fontSize: 12),
+                      )
+                    : null,
+                trailing: code == DriverLanguage.current.value
+                    ? const Icon(Icons.check_rounded, color: _ink)
+                    : null,
+                selected: code == DriverLanguage.current.value,
+                onTap: () => Navigator.of(sheet).pop(code),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    try {
+      await DriverLanguage.choose(picked, _settings);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr.languageSaveFailed)),
+      );
+    }
+  }
+
   /// "Show traffic on map": trip map only, ON by default (R13-17).
   Widget _trafficRow() {
     return ValueListenableBuilder<bool>(
@@ -213,12 +288,12 @@ class _SettingsState extends State<Settings> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Show traffic on map',
+                      tr.showTrafficOnMap,
                       style: TextStyle(
                         color: _ink,
                         fontSize: 15,
@@ -227,7 +302,7 @@ class _SettingsState extends State<Settings> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Traffic colours on the trip map',
+                      tr.trafficColoursOnTripMap,
                       style: TextStyle(
                         color: _muted,
                         fontSize: 12,
@@ -238,7 +313,7 @@ class _SettingsState extends State<Settings> {
                 ),
               ),
               Semantics(
-                label: 'Show traffic on map',
+                label: tr.showTrafficOnMap,
                 toggled: on,
                 onTap: () => toggle(!on),
                 child: ExcludeSemantics(

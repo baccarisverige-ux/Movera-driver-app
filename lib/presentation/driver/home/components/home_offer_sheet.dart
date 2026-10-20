@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -42,7 +43,7 @@ class HomeOfferSheet extends StatefulWidget {
     this.maxHeight = double.infinity,
     this.sheetKey = const ValueKey<String>('home-offer-sheet'),
     this.closeKey = const ValueKey<String>('offer-sheet-hide'),
-    this.closeLabel = 'Hide request',
+    this.closeLabel,
   });
 
   /// The request on the sheet; null takes the sheet down.
@@ -83,7 +84,8 @@ class HomeOfferSheet extends StatefulWidget {
   /// Keys and words of the sheet and its down arrow.
   final Key sheetKey;
   final Key closeKey;
-  final String closeLabel;
+  /// The close arrow's label; "Hide request" by default.
+  final String? closeLabel;
 
   /// The orb on the top edge: the Home radar's size.
   static const double orbSize = 104;
@@ -327,7 +329,7 @@ class _HomeOfferSheetState extends State<HomeOfferSheet>
                   child: ReservationCloseArrow(
                     key: widget.closeKey,
                     onTap: widget.onDecline,
-                    label: widget.closeLabel,
+                    label: widget.closeLabel ?? tr.hideRequest,
                   ),
                 ),
               ],
@@ -380,11 +382,13 @@ class ReservationCloseArrow extends StatelessWidget {
   const ReservationCloseArrow({
     super.key,
     this.onTap,
-    this.label = 'Hide reservation request',
+    this.label,
   });
 
   final VoidCallback? onTap;
-  final String label;
+
+  /// "Hide reservation request" by default.
+  final String? label;
 
   static const double size = 34;
 
@@ -393,7 +397,7 @@ class ReservationCloseArrow extends StatelessWidget {
     return Semantics(
       button: true,
       enabled: onTap != null,
-      label: label,
+      label: label ?? tr.hideReservationRequest,
       excludeSemantics: true,
       child: Material(
         color: _softFill,

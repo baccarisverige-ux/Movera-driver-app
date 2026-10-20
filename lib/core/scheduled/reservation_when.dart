@@ -1,4 +1,5 @@
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 
 /// When a reservation is, in a few words, seen from now: the reservation
 /// sheet's bottom button and the island both say it.
@@ -45,8 +46,8 @@ class ReservationWhen {
       // Whole minutes, rounded up; 0 or less is now.
       final minutes = left.isNegative ? 0 : (left.inSeconds + 59) ~/ 60;
       final label = minutes < 60
-          ? 'In $minutes min'
-          : 'In ${(minutes / 60).round()} h';
+          ? tr.whenInMinutes(minutes)
+          : tr.whenInHours((minutes / 60).round());
       return ReservationWhen._(label, time, soon: true);
     }
     // Rounded, as a day across a clock change is 23 or 25 hours.
@@ -57,11 +58,11 @@ class ReservationWhen {
         .round();
     final String label;
     if (dayGap <= 0) {
-      label = 'Today $time';
+      label = tr.whenToday(time);
     } else if (dayGap == 1) {
-      label = 'Tomorrow $time';
+      label = tr.whenTomorrow(time);
     } else if (dayGap <= 6) {
-      label = '${_weekdays[pickup.weekday - 1]} $time';
+      label = '${DriverDates.weekday(pickup)} $time';
     } else {
       label = '${_two(pickup.day)}-${_two(pickup.month)} $time';
     }
@@ -79,9 +80,17 @@ class ReservationWhen {
     final day = request.pickupDay.trim();
     final label = day.isEmpty
         ? request.pickupTime
-        : '$day ${request.pickupTime}';
+        : '${dayWord(day)} ${request.pickupTime}';
     return ReservationWhen._(label, request.pickupTime, soon: false);
   }
+
+  /// A reservation's day as the driver reads it: "Today" and "Tomorrow"
+  /// in the app's language, any other day as written.
+  static String dayWord(String day) => switch (day.trim().toLowerCase()) {
+    'today' => tr.today,
+    'tomorrow' => tr.tomorrow,
+    _ => day,
+  };
 
   static const List<String> _months = [
     'jan', 'feb', 'mar', 'apr', 'may', 'jun',

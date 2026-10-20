@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -17,8 +18,8 @@ import 'package:movera/widgets/route_mark_pins.dart';
 class OfferRouteMarks {
   const OfferRouteMarks._();
 
-  static const String pickupTitle = 'Pickup';
-  static const String dropoffTitle = 'Drop-off';
+  static String get pickupTitle => tr.pickup;
+  static String get dropoffTitle => tr.dropOff;
 
   /// Movera green of the offer sheets (the orb's ring and glow).
   static const Color green = Color(0xFF5FB87D);
@@ -128,7 +129,7 @@ class OfferRouteMarks {
         Marker(
           markerId: MarkerId('radar_stop_$i'),
           position: stops[i],
-          infoWindow: InfoWindow(title: 'Stop ${i + 1}'),
+          infoWindow: InfoWindow(title: tr.stopNumber(i + 1)),
           icon: icons[2],
           anchor: const Offset(0.5, 0.5),
           consumeTapEvents: true,

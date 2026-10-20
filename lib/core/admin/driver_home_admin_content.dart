@@ -1,6 +1,7 @@
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
+import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
@@ -619,6 +620,12 @@ class DriverHomeAdminContentService {
   /// destination mode and next trips win over [rulesExport].
   final DriverAppConfig? appConfig;
   final String zoneId;
+
+  /// The zone's app languages and its default for the driver app
+  /// (`languages.default.driver`, Q48/Q49). Without admin's document the
+  /// zone's seed: Greater Stockholm, Swedish.
+  AppLanguages get languages =>
+      (appConfig ?? const DriverAppConfig()).languages;
 
   DriverHomeAdminConfig load() {
     final export = rulesExport;

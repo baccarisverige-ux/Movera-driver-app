@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_external_action.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -248,11 +249,11 @@ class AcceptRide extends StatefulWidget {
     DriverRealtime? realtime,
   }) {
     if (!snapshot.hasVerifiedEndpoints) { throw StateError('Saved trip requires verified pickup and drop-off coordinates'); }
-    final pickup = snapshot.pickupAddress ?? 'Address unavailable';
+    final pickup = snapshot.pickupAddress ?? tr.addressUnavailable;
     return AcceptRide(
       key: key,
       tripId: snapshot.tripId,
-      riderName: snapshot.riderName ?? 'Rider data unavailable',
+      riderName: snapshot.riderName ?? tr.riderDataUnavailable,
       riderRating: snapshot.riderRating ?? 4.9,
       riderTrips: snapshot.riderTrips ?? 312,
       fare: snapshot.fare ?? '—',
@@ -358,7 +359,7 @@ class _TripCancellationReason {
   /// The line under the title; a reason that doesn't count says so.
   String get detail => counts
       ? subtitle
-      : [if (subtitle.isNotEmpty) subtitle, 'Doesn’t count'].join(' · ');
+      : [if (subtitle.isNotEmpty) subtitle, tr.doesnTCount].join(' · ');
 }
 
 class _AcceptRideState extends State<AcceptRide>
@@ -404,7 +405,7 @@ class _AcceptRideState extends State<AcceptRide>
   ];
 
   static _TripCancellationReason get _noShowReason =>
-      _reason(CancelReasons.current.noShow);
+      _reason(CancelReasons.current.shown(CancelReasons.current.noShow));
 
   static List<_TripCancellationReason> get _onTripCancellationReasons => [
     for (final reason
@@ -591,7 +592,7 @@ class _AcceptRideState extends State<AcceptRide>
     _realtime = widget.realtime ?? MemoryDriverRealtime();
     _realtimeSubscription =
         _realtime.subscribe(widget.tripId).listen(_AcceptRideTrip(this)._onRealtimeEvent, onError: (Object error) {
-          if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Trip updates disconnected. Reconnecting is required.'))); }
+          if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripUpdatesDisconnectedReconnectingIsRequired))); }
         });
     unawaited(_AcceptRideTrip(this)._resyncTrip());
     _rideLifecycle.snapshotBuilder = _AcceptRideTrip(this)._buildSnapshot;
@@ -804,9 +805,9 @@ class _AcceptRideState extends State<AcceptRide>
 
   String get _approachLabel {
     return switch (_approachKind) {
-      ArrivalPointKind.pickup => 'Pickup',
-      ArrivalPointKind.stop => 'Stop ${_stopCursor + 1}',
-      ArrivalPointKind.destination => 'Destination',
+      ArrivalPointKind.pickup => tr.pickup,
+      ArrivalPointKind.stop => tr.stopNumber(_stopCursor + 1),
+      ArrivalPointKind.destination => tr.destination,
     };
   }
 
@@ -858,17 +859,17 @@ class _AcceptRideState extends State<AcceptRide>
   String get _tripBarStatus {
     switch (_stage) {
       case ActiveRideStage.headingToPickup:
-        return 'Picking up ${widget.riderName}';
+        return tr.pickingUpRiderName(widget.riderName);
       case ActiveRideStage.waitingForRider:
         return _riderOnTheWay
-            ? '${widget.riderName} is on the way'
-            : 'Waiting for ${widget.riderName}';
+            ? tr.riderNameIsOnWay(widget.riderName)
+            : tr.waitingForRiderName(widget.riderName);
       case ActiveRideStage.onTrip:
-        if (_paidStopWait) { return 'Waiting at stop ${_stopCursor + 1}'; }
+        if (_paidStopWait) { return tr.waitingAtStopNumber(_stopCursor + 1); }
         if (_stopCursor < widget.stopAddresses.length) {
-          return 'Heading to stop ${_stopCursor + 1}';
+          return tr.headingToStopNumber(_stopCursor + 1);
         }
-        return 'Dropping off ${widget.riderName}';
+        return tr.droppingOffRiderName(widget.riderName);
     }
   }
 
@@ -876,17 +877,17 @@ class _AcceptRideState extends State<AcceptRide>
   String get _tripBarInstruction {
     switch (_stage) {
       case ActiveRideStage.headingToPickup:
-        return 'Pick up ${widget.riderName}';
+        return tr.pickUpRiderName(widget.riderName);
       case ActiveRideStage.waitingForRider:
         return _riderOnTheWay
-            ? '${widget.riderName} is on the way'
-            : 'Waiting for ${widget.riderName}';
+            ? tr.riderNameIsOnWay(widget.riderName)
+            : tr.waitingForRiderName(widget.riderName);
       case ActiveRideStage.onTrip:
-        if (_paidStopWait) { return 'Waiting at stop ${_stopCursor + 1}'; }
+        if (_paidStopWait) { return tr.waitingAtStopNumber(_stopCursor + 1); }
         if (_stopCursor < widget.stopAddresses.length) {
-          return 'Drive to stop ${_stopCursor + 1}';
+          return tr.driveToStopNumber(_stopCursor + 1);
         }
-        return 'Drop off ${widget.riderName}';
+        return tr.dropOffRiderName(widget.riderName);
     }
   }
 
@@ -922,7 +923,7 @@ class _AcceptRideState extends State<AcceptRide>
   String get _routeEtaText {
     final seconds = _routeDurationSeconds;
     // Until a road route arrives, a calm word instead of a placeholder.
-    if (seconds == null) { return 'En route'; }
+    if (seconds == null) { return tr.enRoute; }
     final left = seconds * (1 - (_navigation.routeFraction ?? 0));
     final minutes = math.max(1, (left / 60).ceil());
     return '$minutes min';
@@ -1013,10 +1014,10 @@ class _AcceptRideState extends State<AcceptRide>
       !_paidStopWait && _waitSeconds < _includedWaitSeconds;
 
   String get _waitBarStatus {
-    if (_paidStopWait) { return 'Paid wait at stop ${_stopCursor + 1}'; }
-    if (_inIncludedWait) { return 'Included wait · then paid'; }
-    if (_waitSeconds < _noShowWaitSeconds) { return 'Paid wait running'; }
-    return 'Paid wait · no-show available';
+    if (_paidStopWait) { return tr.paidWaitAtStopNumber(_stopCursor + 1); }
+    if (_inIncludedWait) { return tr.includedWaitThenPaid; }
+    if (_waitSeconds < _noShowWaitSeconds) { return tr.paidWaitRunning; }
+    return tr.paidWaitNoShowAvailable;
   }
 
   /// Share of the pickup wait window used (free minutes, then paid up to
@@ -1055,13 +1056,13 @@ class _AcceptRideState extends State<AcceptRide>
   String get _slideConfirmedLabel {
     if (_paidStopWait) {
       return _stopCursor + 1 < widget.stopAddresses.length
-          ? 'Next stop'
-          : 'To drop-off';
+          ? tr.nextStop
+          : tr.toDropOff;
     }
     return switch (_stage) {
-      ActiveRideStage.headingToPickup => 'Waiting',
-      ActiveRideStage.waitingForRider => 'Trip started',
-      ActiveRideStage.onTrip => 'Trip completed',
+      ActiveRideStage.headingToPickup => tr.waiting,
+      ActiveRideStage.waitingForRider => tr.tripStarted,
+      ActiveRideStage.onTrip => tr.tripCompleted,
     };
   }
 
@@ -1088,15 +1089,15 @@ class _AcceptRideState extends State<AcceptRide>
   String get _nextStopDetail {
     switch (_stage) {
       case ActiveRideStage.headingToPickup:
-        return 'Pick up ${widget.riderName}';
+        return tr.pickUpRiderName(widget.riderName);
       case ActiveRideStage.waitingForRider:
         return _riderOnTheWay
-            ? '${widget.riderName} is on the way'
-            : 'Hold for ${widget.riderName}';
+            ? tr.riderNameIsOnWay(widget.riderName)
+            : tr.holdForRiderName(widget.riderName);
       case ActiveRideStage.onTrip:
         if (widget.stopAddresses.isEmpty) { return widget.riderName; }
-        if (widget.stopAddresses.length == 1) { return 'Then drop-off'; }
-        return 'Stop 1 of ${widget.stopAddresses.length}';
+        if (widget.stopAddresses.length == 1) { return tr.thenDropOff; }
+        return tr.stop1OfStopAddressesLength(widget.stopAddresses.length);
     }
   }
 
@@ -1250,7 +1251,7 @@ class _AcceptRideState extends State<AcceptRide>
                         onStatus: (status) {
                           if (status != null && mounted && ModalRoute.of(context)?.isCurrent == true) {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status),
-                              action: SnackBarAction(label: 'Retry', onPressed: _camera.recenter)));
+                              action: SnackBarAction(label: tr.retry, onPressed: _camera.recenter)));
                           }
                         },
                         onFrame: (position) {
@@ -1639,7 +1640,7 @@ class _SlideRideActionState extends State<_SlideRideAction> {
       await widget.onConfirmed();
     } catch (_) {
       if (mounted) { ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('The action could not be completed. Please retry.'))); }
+        SnackBar(content: Text(tr.actionCouldNotBeCompletedPlease))); }
     } finally {
       if (mounted) { setState(() { _confirmed = false; _confirming = false; _fraction = 0; _dragging = false; }); }
     }
@@ -1649,9 +1650,9 @@ class _SlideRideActionState extends State<_SlideRideAction> {
     if(_confirming) { return; }
     final confirmed=await showDialog<bool>(context:context,builder:(context)=>AlertDialog(
       title:Text(widget.label.replaceFirst('Slide to ','')),
-      content:const Text('Confirm this trip action?'),
-      actions:[TextButton(onPressed:()=>popOwned(context,false),child:const Text('Cancel')),
-        FilledButton(onPressed:()=>popOwned(context,true),child:const Text('Confirm'))]));
+      content:Text(tr.confirmThisTripActionQuestion),
+      actions:[TextButton(onPressed:()=>popOwned(context,false),child:Text(tr.cancel)),
+        FilledButton(onPressed:()=>popOwned(context,true),child:Text(tr.confirm))]));
     if(!mounted || confirmed!=true || _confirming) { return; }
     _fraction=1;
     await _finish();

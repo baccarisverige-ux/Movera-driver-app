@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/money/money.dart';
 
@@ -46,7 +47,7 @@ class WaybillRecord {
       bonus == null || bonus.minorUnits <= 0 ? null : bonus.formattedShort;
 
   /// "incl. +40 kr Movera bonus", under the fare wherever earnings show.
-  static String bonusNote(String bonus) => 'incl. +$bonus Movera bonus';
+  static String bonusNote(String bonus) => tr.inclBonusMoveraBonus(bonus);
 
   WaybillRecord copyWith({
     String? fare,

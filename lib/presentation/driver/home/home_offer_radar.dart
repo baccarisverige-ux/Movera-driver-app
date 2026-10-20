@@ -834,7 +834,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (!offer.reservation) { _exclusiveDemoTaken = true; }
       _openOfferTrip(
         offer,
-        offer.reservation ? 'Exclusive reservation' : 'Exclusive offer',
+        offer.reservation ? tr.exclusiveReservation : tr.exclusiveOffer,
       );
     }
     /// Contract §3.1: Accept on an admin direct assign is the offer's
@@ -924,7 +924,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     void _acceptRadarHomeOffer(_HomeDirectOffer offer) {
       if (!_radarHomeOffers.any((item) => item.id == offer.id)) { return; }
-      _openOfferTrip(offer, 'Movera Radar');
+      _openOfferTrip(offer, tr.moveraRadar);
     }
     /// Opens the trip for [offer], with its rider and stops, and clears
     /// the offers on Home behind it.
@@ -948,7 +948,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             tripId: offer.tripId ??
                 tripOccurrenceId(offer.id.isEmpty ? 'scheduled' : offer.id),
             dispatchRepository: _dispatch,
-            riderName: offer.riderName.isEmpty ? 'Rider' : offer.riderName,
+            riderName: offer.riderName.isEmpty ? tr.rider : offer.riderName,
             riderRating: double.tryParse(offer.rating) ?? 4.9,
             riderTrips: offer.riderTrips,
             fare: offer.fare,
@@ -1049,7 +1049,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     RadarOfferView _radarOfferView(_HomeDirectOffer offer) => RadarOfferView(
           id: offer.id,
           category: offer.category,
-          payment: offer.cash ? 'Cash' : offer.payment,
+          payment: offer.cash ? tr.cash : offer.payment,
           rating: offer.rating,
           fare: offer.fare,
           pickupMinutes: offer.pickupMinutes,
@@ -1099,7 +1099,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             onTap: _openRideOffers,
             child: LedCountBadge(
               count: _radarTripTotal(),
-              label: 'ALL OFFERS',
+              label: tr.allOffers,
               tone: LedCountTone.grey,
               trailing: SvgPicture.asset(
                 AppAssets.offerChevron,

@@ -50,7 +50,7 @@ extension _HomeStartPosition on _DriverHomeState {
       };
 
   /// Soft neutral surface while the first position is found.
-  Widget _locating() => const ColoredBox(
+  Widget _locating() => ColoredBox(
         key: ValueKey<String>('home-map-locating'),
         color: Color(0xFFEEF0F2),
         child: Align(
@@ -76,7 +76,7 @@ extension _HomeStartPosition on _DriverHomeState {
                 ),
               ),
               SizedBox(height: 12),
-              Text('Finding your location',
+              Text(tr.findingYourLocation,
                   style: TextStyle(
                       color: Color(0xFF6B747C),
                       fontSize: 14,

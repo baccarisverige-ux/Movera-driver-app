@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -75,7 +76,7 @@ class _DestinationSetPanelState extends State<DestinationSetPanel> {
                     Column(
                       children: [
                         TextWidget(
-                          text: "Destination Set",
+                          text: tr.destinationSet,
                           fontSize: 16,
                           fontWeight: fwSemiBold,
                           color: AppColor.darkTitle,
@@ -131,7 +132,7 @@ class _DestinationSetPanelState extends State<DestinationSetPanel> {
                   ),
                 ),
                 TextWidget(
-                  text: "Recommendations",
+                  text: tr.recommendations,
                   color: AppColor.title,
                   fontSize: 16,
                   fontWeight: fwSemiBold,
@@ -176,7 +177,7 @@ class _DestinationSetPanelState extends State<DestinationSetPanel> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         TextWidget(
-                          text: "Destination",
+                          text: tr.destination,
                           color: AppColor.title,
                           fontSize: 16,
                           fontWeight: fwSemiBold,

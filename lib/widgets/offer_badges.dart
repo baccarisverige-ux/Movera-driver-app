@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -8,18 +9,21 @@ import 'package:movera/constants/appassets.dart';
 class OfferBadge extends StatelessWidget {
   const OfferBadge({
     super.key,
-    required this.label,
+    required String label,
     this.icon,
     this.background = Colors.white,
     this.foreground = _ink,
     this.border = _ink,
     this.vertical = 3,
     this.iconColor,
-  });
+  }) : _label = label,
+       _kind = _BadgeText.given;
 
   /// The ride type, e.g. "Comfort": white with a fine black outline.
-  const OfferBadge.category(this.label, {super.key, this.vertical = 3})
-    : icon = null,
+  const OfferBadge.category(String label, {super.key, this.vertical = 3})
+    : _label = label,
+      _kind = _BadgeText.given,
+      icon = null,
       iconColor = null,
       background = Colors.white,
       foreground = _ink,
@@ -29,7 +33,8 @@ class OfferBadge extends StatelessWidget {
   /// wallet show nothing. R10-11: light grey with ink text and a green
   /// money icon, like dollar bills.
   const OfferBadge.cash({super.key, this.vertical = 3})
-    : label = 'Cash',
+    : _label = null,
+      _kind = _BadgeText.cash,
       icon = AppAssets.solarWadOfMoney,
       background = cashBackground,
       foreground = _ink,
@@ -38,9 +43,10 @@ class OfferBadge extends StatelessWidget {
 
   /// A reservation, with its pickup time when known: "Reservation · 07:40".
   OfferBadge.reservation(String? time, {super.key, this.vertical = 3})
-    : label = time == null || time.isEmpty
-          ? 'Reservation'
-          : 'Reservation · $time',
+    : _label = time == null || time.isEmpty
+          ? tr.reservation
+          : tr.reservationTime(time),
+      _kind = _BadgeText.given,
       icon = AppAssets.solarCalendar,
       iconColor = null,
       background = Colors.white,
@@ -50,8 +56,10 @@ class OfferBadge extends StatelessWidget {
   /// Admin raised the fare because no driver was near the pickup, e.g.
   /// "+40 kr". Movera pays it from its commission; the fare shown already
   /// includes it.
-  const OfferBadge.boost(this.label, {super.key, this.vertical = 3})
-    : icon = AppAssets.solarRoundArrowUp,
+  const OfferBadge.boost(String label, {super.key, this.vertical = 3})
+    : _label = label,
+      _kind = _BadgeText.given,
+      icon = AppAssets.solarRoundArrowUp,
       iconColor = null,
       background = const Color(0xFFE8F6EE),
       foreground = const Color(0xFF136B47),
@@ -60,7 +68,8 @@ class OfferBadge extends StatelessWidget {
   /// Q18: admin made the trip a priority or added Movera-paid money to
   /// it. Red with white text; the fare shown already has the money in it.
   const OfferBadge.priority({super.key, this.vertical = 3})
-    : label = 'Priority',
+    : _label = null,
+      _kind = _BadgeText.priority,
       icon = null,
       iconColor = null,
       background = priorityRed,
@@ -71,8 +80,10 @@ class OfferBadge extends StatelessWidget {
   static const Color priorityRed = Color(0xFFD92D20);
 
   /// A quiet outlined note, e.g. "On your way".
-  const OfferBadge.note(this.label, {super.key, this.vertical = 3})
-    : icon = null,
+  const OfferBadge.note(String label, {super.key, this.vertical = 3})
+    : _label = label,
+      _kind = _BadgeText.given,
+      icon = null,
       iconColor = null,
       background = Colors.white,
       foreground = _grey,
@@ -80,7 +91,8 @@ class OfferBadge extends StatelessWidget {
 
   /// The black "Exclusive" mark with a bolt.
   const OfferBadge.exclusive({super.key, this.vertical = 4})
-    : label = 'Exclusive',
+    : _label = null,
+      _kind = _BadgeText.exclusive,
       icon = AppAssets.solarBolt,
       iconColor = null,
       background = _ink,
@@ -96,7 +108,18 @@ class OfferBadge extends StatelessWidget {
   static const Color cashBorder = Color(0xFFE1E4E8);
   static const Color cashGreen = Color(0xFF2E9E5B);
 
-  final String label;
+  final String? _label;
+  final _BadgeText _kind;
+
+  /// The text on the pill, in the driver's language for the fixed marks.
+  String get label =>
+      _label ??
+      switch (_kind) {
+        _BadgeText.cash => tr.cash,
+        _BadgeText.priority => tr.priority,
+        _BadgeText.exclusive => tr.exclusive,
+        _BadgeText.given => '',
+      };
 
   /// A Solar icon asset drawn before the label.
   final String? icon;
@@ -155,3 +178,6 @@ class OfferBadge extends StatelessWidget {
     );
   }
 }
+
+/// Where an [OfferBadge]'s text comes from.
+enum _BadgeText { given, cash, priority, exclusive }

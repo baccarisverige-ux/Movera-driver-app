@@ -6,6 +6,10 @@ import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/logging/global_error_hooks.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/widgets/demo_mode_banner.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -30,11 +34,19 @@ import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   validateDriverComposition(production: driverProductionRequested);
   installGlobalErrorHooks();
   unawaited(MapTrafficSetting.restore());
+  // Round 4: the zone's default language, then the driver's saved choice.
+  // A slow or broken store never holds the first frame for long.
+  DriverLanguage.applyZone(const DriverHomeAdminContentService().languages);
+  try {
+    await DriverLanguage.restore().timeout(const Duration(seconds: 2));
+  } catch (_) {
+    // The zone default stays.
+  }
   runApp(const MoveraApp());
 }
 
@@ -87,10 +99,25 @@ class _MoveraAppState extends State<MoveraApp> {
       log: PrefsRideCheckLog(),
     );
     unawaited(_session.restore());
+    DriverLanguage.current.addListener(_languageChanged);
+  }
+
+  /// A new language: the app's texts are read in `build`, so every screen
+  /// builds again in place (trip and offer state stay as they are).
+  void _languageChanged() {
+    if (!mounted) return;
+    setState(() {});
+    void rebuild(Element element) {
+      element.markNeedsBuild();
+      element.visitChildren(rebuild);
+    }
+
+    (context as Element).visitChildren(rebuild);
   }
 
   @override
   void dispose() {
+    DriverLanguage.current.removeListener(_languageChanged);
     _session.dispose();
     _routing.dispose();
     final dispatch = _dispatch;
@@ -115,6 +142,14 @@ class _MoveraAppState extends State<MoveraApp> {
             navigatorObservers: [driverRouteObserver],
             title: 'Movera Driver',
             debugShowCheckedModeBanner: false,
+            locale: Locale(DriverLanguage.current.value),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             theme: ThemeData.light(useMaterial3: true)
                 .copyWith(scaffoldBackgroundColor: AppColor.bg),
             builder: (context, child) {
@@ -148,6 +183,7 @@ class _MoveraAppState extends State<MoveraApp> {
     await SettingsRepository.settle();
     await clearLocalUserData();
     MapTrafficSetting.reset();
+    DriverLanguage.reset();
     _activeRide = PrefsActiveRideRepository();
     _waybills.reset();
     final dispatch = _dispatch;

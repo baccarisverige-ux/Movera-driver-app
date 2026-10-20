@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 
 /// A subtle activity lane, deliberately not a route-progress percentage.
@@ -34,7 +35,7 @@ class _IslandWaitingLaneState extends State<IslandWaitingLane>
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Waiting in progress',
+    label: tr.waitingInProgress,
     child: RepaintBoundary(
       child: AnimatedBuilder(
         animation: _motion,

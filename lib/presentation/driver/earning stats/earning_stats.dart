@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,7 +18,7 @@ class EarningStatsScreen extends StatefulWidget {
 }
 
 class _EarningStatsScreenState extends State<EarningStatsScreen> {
-  final List<String> tabs = ["Type", "Feature", "Sample period", "Clear"];
+  final List<String> tabs = ["Type", tr.feature, tr.samplePeriod, tr.clear];
   int selectedTab = 2;
   @override
   Widget build(BuildContext context) {
@@ -31,7 +32,7 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           icon: Icon(
             Icons.arrow_back_ios,
             color: AppColor.title,
@@ -40,7 +41,7 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
           onPressed: () => popOwned(context),
         ),
         title: TextWidget(
-          text: "Earnings preview",
+          text: tr.earningsPreview,
           fontSize: 16,
           fontWeight: fwSemiBold,
           color: AppColor.title,
@@ -187,7 +188,7 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextWidget(
-                      text: "Demo rider",
+                      text: tr.demoRider,
                       fontSize: 16,
                       fontWeight: fwSemiBold,
                       color: AppColor.title,
@@ -208,7 +209,7 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
                           color: AppColor.subtitle,
                         ),
                         TextWidget(
-                          text: "Sample distance",
+                          text: tr.sampleDistance,
                           fontSize: 10,
                           fontWeight: fwSemiBold,
                           color: AppColor.subtitle,
@@ -232,7 +233,7 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
                           color: AppColor.subtitle,
                         ),
                         TextWidget(
-                          text: "Sample",
+                          text: tr.sample,
                           fontSize: 10,
                           fontWeight: fwSemiBold,
                           color: AppColor.subtitle,
@@ -323,14 +324,14 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
                         TextWidget(
                           fontSize: 12,
                           fontWeight: fwSemiBold,
-                          text: "Pickup from",
+                          text: tr.pickupFrom,
                           color: Color(0xffA3A3A3),
                         ),
                         Row(
                           children: [
                             Expanded(
                               child: Text(
-                                "Sample pickup, Stockholm",
+                                tr.samplePickupStockholm,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.poppins(
@@ -351,14 +352,14 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
                         TextWidget(
                           fontSize: 12,
                           fontWeight: fwSemiBold,
-                          text: "Drop off location",
+                          text: tr.dropOffLocation,
                           color: Color(0xffA3A3A3),
                         ),
                         Row(
                           children: [
                             Expanded(
                               child: Text(
-                                "Sample drop-off, Stockholm",
+                                tr.sampleDropOffStockholm,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.poppins(

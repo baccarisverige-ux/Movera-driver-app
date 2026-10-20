@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
@@ -88,9 +89,18 @@ class WaitingTerms {
     driverShareNoShowPercent: driverShareNoShowPercent,
     rule: [
       if (this.rule.isNotEmpty) this.rule,
-      if ((label ?? rule.label).isNotEmpty) label ?? rule.label,
+      if ((label ?? rule.label).isNotEmpty) _shown(label ?? rule.label),
     ].join(' · '),
   );
+
+  /// An admin default label still as shipped, in the app's language.
+  static String _shown(String label) => switch (label) {
+    'Pickup far away' => tr.waitingRulePickupFarAway,
+    'Scheduled ride' => tr.waitingRuleScheduledRide,
+    'Airport pickup' => tr.waitingRuleAirportPickup,
+    'Event pickup' => tr.waitingRuleEventPickup,
+    _ => label,
+  };
 }
 
 /// Kinds of trip a waiting rule can be for.
@@ -217,7 +227,7 @@ class WaitingRules {
       final km = farPickupKm == farPickupKm.roundToDouble()
           ? farPickupKm.toStringAsFixed(0)
           : farPickupKm.toStringAsFixed(1);
-      terms = terms._with(farPickup, label: 'Pickup over $km km');
+      terms = terms._with(farPickup, label: tr.pickupOverKmKm(km));
     }
     // Never a no-show before the free wait is over (Q41).
     return terms.noShowAfterMinutes >= terms.freeMinutes

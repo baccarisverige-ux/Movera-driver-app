@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/widgets/movera_modal_sheet.dart';
@@ -71,12 +72,12 @@ class DriverSuspendedSheet extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'DRIVER STATUS',
+                          tr.driverStatus,
                           style: TextStyle(
                             color: _muted,
                             fontSize: 11,
@@ -86,7 +87,7 @@ class DriverSuspendedSheet extends StatelessWidget {
                         ),
                         SizedBox(height: 3),
                         Text(
-                          'Account access paused',
+                          tr.accountAccessPaused,
                           style: TextStyle(
                             color: _ink,
                             fontSize: 22,
@@ -101,8 +102,8 @@ class DriverSuspendedSheet extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Your driver status is currently suspended, so new trip requests cannot be accepted and Radar cannot be started.',
+              Text(
+                tr.yourDriverStatusIsCurrentlySuspended,
                 style: TextStyle(
                   color: _muted,
                   fontSize: 14,
@@ -122,7 +123,7 @@ class DriverSuspendedSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFE3E9E6)),
                 ),
-                child: const Row(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
@@ -133,7 +134,7 @@ class DriverSuspendedSheet extends StatelessWidget {
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Movera will use the authoritative account status. This screen does not guess a reason or unlock time.',
+                        tr.moveraWillUseAuthoritativeAccountStatus,
                         style: TextStyle(
                           color: _ink,
                           fontSize: 12.5,
@@ -160,8 +161,8 @@ class DriverSuspendedSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(17),
                     ),
                   ),
-                  child: const Text(
-                    'Got it',
+                  child: Text(
+                    tr.gotIt,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,

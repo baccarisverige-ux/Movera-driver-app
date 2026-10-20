@@ -70,9 +70,9 @@ extension _AcceptRideSheet on _AcceptRideState {
       final points = <TripCardPoint>[
         TripCardPoint(
           label: switch (_stage) {
-            ActiveRideStage.headingToPickup => _withEta('Pickup', eta),
-            ActiveRideStage.waitingForRider => 'Pickup · arrived',
-            ActiveRideStage.onTrip => 'Pickup · picked up',
+            ActiveRideStage.headingToPickup => _withEta(tr.pickup, eta),
+            ActiveRideStage.waitingForRider => tr.pickupArrived,
+            ActiveRideStage.onTrip => tr.pickupPickedUp,
           },
           address: widget.pickupAddress,
           color: TripCard.pickupGreen,
@@ -80,15 +80,15 @@ extension _AcceptRideSheet on _AcceptRideState {
         for (var i = 0; i < stops.length; i++)
           TripCardPoint(
             label: onTrip && i < _stopCursor
-                ? 'Stop ${i + 1} · done'
+                ? tr.stopNumberDone(i + 1)
                 : onTrip && i == _stopCursor && !_paidStopWait
-                ? _withEta('Stop ${i + 1}', eta)
-                : 'Stop ${i + 1}',
+                ? _withEta(tr.stopNumber(i + 1), eta)
+                : tr.stopNumber(i + 1),
             address: stops[i],
             color: TripCard.stopGrey,
           ),
         TripCardPoint(
-          label: toDropoff ? _withEta('Drop-off', eta) : 'Drop-off',
+          label: toDropoff ? _withEta(tr.dropOff, eta) : tr.dropOff,
           address: widget.dropoffAddress,
           color: TripCard.ink,
           square: true,
@@ -98,7 +98,7 @@ extension _AcceptRideSheet on _AcceptRideState {
         valueListenable: _waybills.currentListenable,
         builder: (context, record, _) => TripCard(
           key: const ValueKey<String>('active-ride-current-trip-card'),
-          title: onTrip ? 'Current trip' : 'Your trip',
+          title: onTrip ? tr.currentTrip : tr.yourTrip,
           fare: widget.fare,
           points: points,
           footer: '${widget.category} · ${widget.riderName.split(' ').first}',
@@ -110,7 +110,7 @@ extension _AcceptRideSheet on _AcceptRideState {
               : () => showMoveraWaybillSheet(
                     context,
                     record,
-                    title: 'Current trip waybill',
+                    title: tr.currentTripWaybill,
                   ),
         ),
       );
@@ -128,16 +128,16 @@ extension _AcceptRideSheet on _AcceptRideState {
         padding: const EdgeInsets.only(top: 12),
         child: TripCard(
           key: const ValueKey<String>('secured-next-trip-details'),
-          title: 'Next trip secured',
+          title: tr.nextTripSecured,
           fare: offer.shownFare,
           points: [
             TripCardPoint(
-              label: 'Pickup · ${offer.pickupMinutes} min',
+              label: tr.pickupPickupMinutesMin(offer.pickupMinutes),
               address: offer.pickup,
               color: TripCard.pickupGreen,
             ),
             TripCardPoint(
-              label: 'Drop-off · ${offer.tripMinutes} min trip',
+              label: tr.dropOffTripMinutesMinTrip(offer.tripMinutes),
               address: offer.dropoff,
               color: TripCard.ink,
               square: true,
@@ -145,7 +145,7 @@ extension _AcceptRideSheet on _AcceptRideState {
           ],
           footer: '${offer.category} · ${offer.riderName}',
           moreKey: const ValueKey<String>('next-trip-more'),
-          moreTooltip: 'Next trip options',
+          moreTooltip: tr.nextTripOptions,
           onMore: _showNextTripOptions,
           waybillKey: const ValueKey<String>('next-trip-waybill'),
           onWaybill: _openNextWaybill,
@@ -155,7 +155,7 @@ extension _AcceptRideSheet on _AcceptRideState {
     void _openNextWaybill() {
       final record = _waybills.next;
       if (record == null) { return; }
-      showMoveraWaybillSheet(context, record, title: 'Next trip waybill');
+      showMoveraWaybillSheet(context, record, title: tr.nextTripWaybill);
     }
 
     /// Next trips are possible now: on the trip, allowed by admin, and
@@ -204,7 +204,7 @@ extension _AcceptRideSheet on _AcceptRideState {
                 if (_waybills.next != null)
                   _CleanRow(
                     key: const ValueKey<String>('next-trip-open-waybill'),
-                    title: 'Open waybill',
+                    title: tr.openWaybill,
                     subtitle: '${offer.pickup} → ${offer.dropoff}',
                     onTap: () {
                       if (popOwned(sheetContext)) { _openNextWaybill(); }
@@ -212,7 +212,7 @@ extension _AcceptRideSheet on _AcceptRideState {
                   ),
                 _CleanRow(
                   key: const ValueKey<String>('next-trip-contact-rider'),
-                  title: 'Contact rider',
+                  title: tr.contactRider,
                   subtitle: offer.riderName,
                   onTap: () {
                     if (!popOwned(sheetContext)) { return; }
@@ -225,16 +225,16 @@ extension _AcceptRideSheet on _AcceptRideState {
                   },
                 ),
                 _CleanRow(
-                  title: 'Safety toolkit',
-                  subtitle: 'Share trip, record audio, get help',
+                  title: tr.safetyToolkit,
+                  subtitle: tr.shareTripRecordAudioGetHelp,
                   onTap: () {
                     if (popOwned(sheetContext)) { showSafetyToolKitSheet(context); }
                   },
                 ),
                 _CleanRow(
                   key: const ValueKey<String>('next-trip-cancel-option'),
-                  title: 'Cancel next trip',
-                  subtitle: 'Your current trip continues · reason required',
+                  title: tr.cancelNextTrip,
+                  subtitle: tr.yourCurrentTripContinuesReasonRequired,
                   danger: true,
                   last: true,
                   onTap: () {
@@ -289,7 +289,7 @@ extension _AcceptRideSheet on _AcceptRideState {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(
           key: const ValueKey<String>('next-trip-cancelled-notice'),
-          content: Text('Next trip cancelled · ${reason.title}'),
+          content: Text(tr.nextTripCancelledTitle(reason.title)),
           backgroundColor: _AcceptRideState._ink,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
