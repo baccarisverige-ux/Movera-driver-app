@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
@@ -42,7 +43,7 @@ class AcceptanceRate extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () {
             popOwned(context);
           },
@@ -54,7 +55,7 @@ class AcceptanceRate extends StatelessWidget {
         ),
         centerTitle: true,
         title: TextWidget(
-          text: "Acceptance Rate",
+          text: tr.acceptRateTitle,
           color: AppColor.title,
           fontSize: 16,
           fontWeight: fwMedium,
@@ -100,14 +101,14 @@ class AcceptanceRate extends StatelessWidget {
               ),
               6.width,
               TextWidget(
-                text: 'Sample',
+                text: tr.sample,
                 color: AppColor.green,
                 fontSize: 16,
                 fontWeight: fwMedium,
               ),
               6.width,
               TextWidget(
-                text: 'not your real rate yet',
+                text: tr.notYourRealRateYet,
                 color: AppColor.subtitle,
                 fontSize: 16,
                 fontWeight: fwMedium,
@@ -132,7 +133,7 @@ class AcceptanceRate extends StatelessWidget {
             children: [
               Expanded(
                 child: TextWidget(
-                  text: 'Exclusive offers',
+                  text: tr.exclusiveOffers,
                   color: AppColor.title,
                   fontSize: 20,
                   fontWeight: fwSemiBold,
@@ -159,7 +160,7 @@ class AcceptanceRate extends StatelessWidget {
               12.width,
               Expanded(
                 child: TextWidget(
-                  text: 'accepted offers',
+                  text: tr.acceptedOffersLower,
                   color: AppColor.title,
                   fontSize: 16,
                   fontWeight: fwMedium,
@@ -184,7 +185,7 @@ class AcceptanceRate extends StatelessWidget {
               12.width,
               Expanded(
                 child: TextWidget(
-                  text: 'declined or missed',
+                  text: tr.declinedOrMissed,
                   color: AppColor.title,
                   fontSize: 16,
                   fontWeight: fwMedium,
@@ -200,16 +201,16 @@ class AcceptanceRate extends StatelessWidget {
           ),
           16.height,
           TextWidget(
-            text: 'Sample numbers for this preview, not your real rate.',
+            text: tr.sampleNumbersNotReal,
             color: AppColor.title,
             fontSize: 12,
             fontWeight: fwMedium,
           ),
           16.height,
-          const RateRuleNote(
+          RateRuleNote(
             key: ValueKey<String>('acceptance-rate-rule'),
-            title: 'Only Exclusive offers count',
-            body: 'Exclusive offers and other offers sent only to you count. Radar trips never count.',
+            title: tr.acceptRateOnlyExclusive,
+            body: tr.acceptRateExclusiveBody,
           ),
           16.height,
           Divider(color: AppColor.subtitle, height: 0, thickness: 0.2),
@@ -225,7 +226,7 @@ class AcceptanceRate extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextWidget(
-            text: 'More Information',
+            text: tr.moreInformation,
             color: AppColor.title,
             fontSize: 20,
             fontWeight: fwSemiBold,
@@ -233,9 +234,9 @@ class AcceptanceRate extends StatelessWidget {
           14.height,
           CustomExpansionTile(
             iconAsset: AppAssets.calculator,
-            title: 'How your acceptance rate is calculated',
+            title: tr.acceptRateHowCalculated,
             child: TextWidget(
-              text: 'Your acceptance rate is the Exclusive offers you accept compared with all the Exclusive offers you receive. Radar trips never count. We use your last 100 Exclusive offers.',
+              text: tr.acceptRateHowBody,
               color: AppColor.subtitle,
               fontSize: 14,
               fontWeight: fwNormal,
@@ -243,9 +244,9 @@ class AcceptanceRate extends StatelessWidget {
           ),
           CustomExpansionTile(
             iconAsset: AppAssets.infoOutl,
-            title: 'Why acceptance rate matters',
+            title: tr.acceptRateWhyMatters,
             child: TextWidget(
-              text: 'A low acceptance rate reduces your chances of receiving ride requests and may affect your standing on the platform. Maintaining a high acceptance rate helps you get more trips and ensures a reliable experience for riders.',
+              text: tr.acceptRateWhyBody,
               color: AppColor.subtitle,
               fontSize: 14,
               fontWeight: fwNormal,

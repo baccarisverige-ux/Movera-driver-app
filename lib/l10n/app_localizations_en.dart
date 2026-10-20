@@ -2479,4 +2479,2117 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get navArrive => 'Arrive';
+
+  @override
+  String get navHeadOut => 'Head out';
+
+  @override
+  String get navKeepLeft => 'Keep left';
+
+  @override
+  String get navKeepRight => 'Keep right';
+
+  @override
+  String get navTunnelAhead => 'Tunnel ahead';
+
+  @override
+  String get navTollRoadAhead => 'Toll road ahead';
+
+  @override
+  String get navContinueStraight => 'Continue straight';
+
+  @override
+  String get navContinue => 'Continue';
+
+  @override
+  String get navRoundabout => 'Roundabout';
+
+  @override
+  String navRoundaboutExit(String exit) {
+    return 'Roundabout, exit $exit';
+  }
+
+  @override
+  String get navRoundaboutUTurn => 'Roundabout, U-turn';
+
+  @override
+  String navRoundaboutUTurnExit(String exit) {
+    return 'Roundabout, U-turn · exit $exit';
+  }
+
+  @override
+  String navSignedExit(String exit) {
+    return 'Exit $exit';
+  }
+
+  @override
+  String navSignedExitTowards(String exit, String place) {
+    return 'Exit $exit · $place';
+  }
+
+  @override
+  String get navExitLeft => 'Exit left';
+
+  @override
+  String get navExitRight => 'Exit right';
+
+  @override
+  String get navTakeExit => 'Take the exit';
+
+  @override
+  String get navRampOnto => 'Take the ramp onto';
+
+  @override
+  String get navRampLeft => 'Take the ramp on the left';
+
+  @override
+  String get navRampRight => 'Take the ramp on the right';
+
+  @override
+  String get navRamp => 'Take the ramp';
+
+  @override
+  String get navMergeLeft => 'Merge left';
+
+  @override
+  String get navMergeRight => 'Merge right';
+
+  @override
+  String get navMerge => 'Merge';
+
+  @override
+  String get navForkLeft => 'At the fork, go left';
+
+  @override
+  String get navForkRight => 'At the fork, go right';
+
+  @override
+  String get navContinueAtFork => 'Continue at the fork';
+
+  @override
+  String get navTurnLeft => 'Turn left';
+
+  @override
+  String get navTurnRight => 'Turn right';
+
+  @override
+  String get navEndOfRoad => 'End of the road';
+
+  @override
+  String get navUTurn => 'U-turn';
+
+  @override
+  String get navSharpLeft => 'Turn sharp left';
+
+  @override
+  String get navSharpRight => 'Turn sharp right';
+
+  @override
+  String get navSlightLeft => 'Turn slight left';
+
+  @override
+  String get navSlightRight => 'Turn slight right';
+
+  @override
+  String get navDistanceNow => 'now';
+
+  @override
+  String navMeters(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String navKilometers(String km) {
+    return '$km km';
+  }
+
+  @override
+  String get navDecimalMark => '.';
+
+  @override
+  String navInDistance(String distance) {
+    return 'in $distance';
+  }
+
+  @override
+  String navActionIn(String action, String distance) {
+    return '$action in $distance';
+  }
+
+  @override
+  String navActionNow(String action) {
+    return '$action now';
+  }
+
+  @override
+  String navActionFor(String action, String distance) {
+    return '$action $distance';
+  }
+
+  @override
+  String navOnto(String action, String road) {
+    return '$action onto $road';
+  }
+
+  @override
+  String get navArriveAtDestination => 'Arrive at destination';
+
+  @override
+  String navHeadOutOn(String road) {
+    return 'Head out on $road';
+  }
+
+  @override
+  String navContinueOn(String road) {
+    return 'Continue on $road';
+  }
+
+  @override
+  String get navRoundaboutContinue => 'At the roundabout, continue';
+
+  @override
+  String navRoundaboutTakeExit(String exit) {
+    return 'At roundabout, take exit $exit';
+  }
+
+  @override
+  String get navExitOnLeft => 'Take the exit on the left';
+
+  @override
+  String get navExitOnRight => 'Take the exit on the right';
+
+  @override
+  String get navEndTurnLeft => 'Turn left at the end of the road';
+
+  @override
+  String get navEndTurnRight => 'Turn right at the end of the road';
+
+  @override
+  String get navAtEndOfRoad => 'At the end of the road';
+
+  @override
+  String get navMakeUTurn => 'Make a U-turn';
+
+  @override
+  String navUseLeftLanes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Use the $count left lanes',
+      one: 'Use the left lane',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String navUseRightLanes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Use the $count right lanes',
+      one: 'Use the right lane',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String navUseMiddleLanes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Use the $count middle lanes',
+      one: 'Use the middle lane',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String navTowards(String place) {
+    return 'towards $place';
+  }
+
+  @override
+  String get navToDestination => 'To destination';
+
+  @override
+  String navExitSemantics(String cue, String exit) {
+    return '$cue, exit $exit';
+  }
+
+  @override
+  String get navPickupAhead => 'Pickup ahead';
+
+  @override
+  String get navDropOffAhead => 'Drop-off ahead';
+
+  @override
+  String navPointAhead(String point) {
+    return '$point ahead';
+  }
+
+  @override
+  String get navToPickup => 'Navigate to pickup';
+
+  @override
+  String navToPoint(String point) {
+    return 'Navigate to $point';
+  }
+
+  @override
+  String get navDropOffLower => 'drop-off';
+
+  @override
+  String get navWaitingForRider => 'Waiting for rider';
+
+  @override
+  String get navRouteUpdating => 'Route updating…';
+
+  @override
+  String get navRouteRecalculating => 'Recalculating route…';
+
+  @override
+  String get navRouteUnavailableRetry => 'Route unavailable — retry';
+
+  @override
+  String get navRouteUnavailableLocation =>
+      'Route unavailable — check location';
+
+  @override
+  String get authAddVehicle => 'Add Vehicle';
+
+  @override
+  String get authAddVehicleDetails => 'Add Vehicle details for verification';
+
+  @override
+  String get vehicleMake => 'Vehicle make';
+
+  @override
+  String get vehicleModel => 'Vehicle model';
+
+  @override
+  String get vehicleYear => 'Vehicle year';
+
+  @override
+  String get enterModelYear => 'Enter model year';
+
+  @override
+  String get licensePlateNumber => 'License plate number';
+
+  @override
+  String get vehicleType => 'Vehicle type';
+
+  @override
+  String get vehicleColor => 'Color';
+
+  @override
+  String get selectColor => 'Select color';
+
+  @override
+  String get tapToUpload => 'Tap to upload';
+
+  @override
+  String get openingEllipsis => 'Opening...';
+
+  @override
+  String get openCamera => 'Open Camera';
+
+  @override
+  String get fileSelectedSuccessfully => 'File selected successfully!';
+
+  @override
+  String get vehicleDocumentSelectionFailed =>
+      'Vehicle document selection failed';
+
+  @override
+  String get couldNotReadSelectedFile =>
+      'Could not read the selected file. Please try again.';
+
+  @override
+  String get photoCapturedSuccessfully => 'Photo captured successfully!';
+
+  @override
+  String get couldNotReadCapturedPhoto =>
+      'Could not read the captured photo. Please try again.';
+
+  @override
+  String get docPassport => 'Passport';
+
+  @override
+  String get scanYourPassportPhoto => 'Scan your passport photo';
+
+  @override
+  String get docDrivingLicense => 'Driving License';
+
+  @override
+  String get scanYourDrivingLicense => 'Scan your driving license';
+
+  @override
+  String get docNationalId => 'National ID';
+
+  @override
+  String get scanYourNationalId => 'Scan your national Id';
+
+  @override
+  String get selectDocumentTypeToScan =>
+      'Select the type of document you wish to scan';
+
+  @override
+  String get weNeedToDetermineDocument =>
+      'We need to determine  if an identity document is authentic and belongs to you';
+
+  @override
+  String get createAccount => 'Create account';
+
+  @override
+  String get enterValidPhoneForCode =>
+      'Enter a valid phone number where we will send a verification code';
+
+  @override
+  String get fullName => 'Full name';
+
+  @override
+  String get emailAddress => 'Email address';
+
+  @override
+  String get acceptTermsAndPrivacy => 'Accept terms and privacy policy';
+
+  @override
+  String get byContinuingIAgreeTo => ' By continuing, I agree to the ';
+
+  @override
+  String get termsOfUse => 'Terms of Use';
+
+  @override
+  String get andWord => ' and ';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get phoneVerification => 'Phone verification';
+
+  @override
+  String get codeDeliveryUnavailableDemo =>
+      'Code delivery is unavailable in this demo';
+
+  @override
+  String get accountVerificationNeedsService =>
+      ' Account verification requires the account service.';
+
+  @override
+  String get didNotGetCode => 'Did you don’t get code?';
+
+  @override
+  String get signInUnavailableInPreview => 'Sign in unavailable in preview';
+
+  @override
+  String get verificationUnavailableDemo =>
+      'Verification is unavailable in this demo.';
+
+  @override
+  String get starterTagline =>
+      'Let’s hit the road. Accept rides in real time and make every minute count';
+
+  @override
+  String get legacySignInPreview => 'Legacy sign-in preview';
+
+  @override
+  String get signInUnavailableDemo => 'Sign-in unavailable — demo';
+
+  @override
+  String get legacyRegistrationPreview => 'Legacy registration preview';
+
+  @override
+  String get registrationUnavailableDemo => 'Registration unavailable — demo';
+
+  @override
+  String get returnToDemo => 'Return to demo';
+
+  @override
+  String get signIn => 'Sign in';
+
+  @override
+  String get welcomeBackRiding => 'Welcome back! Let’s get you riding';
+
+  @override
+  String get continueWithPhone => 'Continue with phone';
+
+  @override
+  String get continueWithApple => 'Continue with apple';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get dontHaveAccount => 'Don\'t have an account?';
+
+  @override
+  String get signUp => 'Sign up';
+
+  @override
+  String get signInWithPhone => 'Sign in with phone number';
+
+  @override
+  String get phoneSignInUnavailableDemo =>
+      'Phone sign-in is unavailable in this demo. No verification code is sent.';
+
+  @override
+  String get phoneNumber => 'Phone number';
+
+  @override
+  String get phoneSignInNeedsService =>
+      'Phone sign-in requires the account service.';
+
+  @override
+  String get idPhotoPreview => 'ID photo preview';
+
+  @override
+  String get idPhotoSampleOnly =>
+      'Sample image only. Camera capture and verification are not connected. No ID is submitted.';
+
+  @override
+  String get returnToHome => 'Return to home';
+
+  @override
+  String get retakeUnavailablePreview => 'Retake unavailable in this preview';
+
+  @override
+  String get enterValidPhoneWeWillSend =>
+      'Enter a valid phone number where we will send';
+
+  @override
+  String get verifyAction => 'Verify';
+
+  @override
+  String stepOfTotal(String step, String total) {
+    return '$step of $total';
+  }
+
+  @override
+  String get uploadId => 'Upload ID';
+
+  @override
+  String get weNeedToVerifyYourId => 'we need to verify your Id';
+
+  @override
+  String get approveAccountIdentityReason =>
+      'In order to approve your account, we need to be 100% sure that you are who you say you are, for security and transparency purposes.';
+
+  @override
+  String get vehicleRegistration => 'Vehicle Registration';
+
+  @override
+  String get uploadVehicleRegistration =>
+      'Upload vehicle registration document';
+
+  @override
+  String get insurance => 'Insurance';
+
+  @override
+  String get uploadCarInsurance => 'Upload car insurance for verification';
+
+  @override
+  String get todayLower => 'today';
+
+  @override
+  String get tomorrowLower => 'tomorrow';
+
+  @override
+  String inDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'in $count days',
+      one: 'in 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get docInsuranceLetter => 'Insurance letter';
+
+  @override
+  String get docTaxiDriverLicense => 'Taxi driver license';
+
+  @override
+  String get docTaxiLicenseShort => 'Taxi license';
+
+  @override
+  String get docRegistrationCertificate => 'Registration certificate';
+
+  @override
+  String get docRegistrationShort => 'Registration';
+
+  @override
+  String get docDriversLicense => 'Driver\'s License';
+
+  @override
+  String get docVehicleVerification => 'Vehicle Verification';
+
+  @override
+  String get docDriversId => 'Driver\'s ID';
+
+  @override
+  String get docExpiredCantGoOnline => 'Expired · You can’t go online';
+
+  @override
+  String docExpiresWhenDate(String when, String date) {
+    return 'Expires $when · $date';
+  }
+
+  @override
+  String docNewTitle(String title) {
+    return 'New $title';
+  }
+
+  @override
+  String get docTakeClearPhoto =>
+      'Take a clear photo of the whole document. Movera checks it before it counts.';
+
+  @override
+  String get docSendNew => 'Send new document';
+
+  @override
+  String get docDemoNoFileLeaves => 'Demo: no file leaves the phone.';
+
+  @override
+  String get docSentForReview => 'Sent for review';
+
+  @override
+  String docTitleExpired(String title) {
+    return '$title expired';
+  }
+
+  @override
+  String get youCanGoOnlineNow => 'You can go online now.';
+
+  @override
+  String get docNewInReviewGoOnlineWhenApproved =>
+      'Your new document is in review. You can go online when Movera approves it.';
+
+  @override
+  String get docUploadNewGoOnlineWhenApproved =>
+      'Upload a new one. You can go online when Movera approves it.';
+
+  @override
+  String get approveDemo => 'Approve (demo)';
+
+  @override
+  String get uploadNew => 'Upload new';
+
+  @override
+  String get documents => 'Documents';
+
+  @override
+  String get docTermsAndConditions => 'Terms and Conditions';
+
+  @override
+  String get docVirtualInfoSession => 'Virtual information session';
+
+  @override
+  String get docDriversLicenseLower => 'Driver’s license';
+
+  @override
+  String get docProfilePhoto => 'Profile photo';
+
+  @override
+  String get docCompanyRegistration => 'Company registration';
+
+  @override
+  String get docCompanyRegistrationNote =>
+      'Bolagsverket or Skatteverket extract. Not needed with a Fleet Partner.';
+
+  @override
+  String get docTaxiTrafficPermit => 'Taxi traffic permit';
+
+  @override
+  String get docTaxSettings => 'Tax settings';
+
+  @override
+  String get docBankStatement => 'Bank statement';
+
+  @override
+  String get docFrontPage => 'Front page';
+
+  @override
+  String get docStockholmTrips => 'Stockholm · Trips';
+
+  @override
+  String get docEarnAnywhereSweden => 'Earn anywhere in Sweden';
+
+  @override
+  String get docSampleListNotice =>
+      'Sample list · Sending these documents is not available in the app yet. Nothing here was uploaded or reviewed.';
+
+  @override
+  String docApprovedOfTotal(int approved, int total) {
+    return '$approved of $total approved';
+  }
+
+  @override
+  String docLeftCount(int count) {
+    return '$count left';
+  }
+
+  @override
+  String get vehicle => 'Vehicle';
+
+  @override
+  String get docStatusApproved => 'Approved';
+
+  @override
+  String get docStatusInReview => 'In review';
+
+  @override
+  String get docStatusNeeded => 'Needed';
+
+  @override
+  String get docPreviewNotAvailable =>
+      'Not available yet — sample page. Sending this document is not part of the app yet. No document was uploaded or reviewed.';
+
+  @override
+  String schedRidesHidden(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides hidden',
+      one: '1 ride hidden',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String schedClashBody(String time) {
+    return 'It clashes with your $time pickup: not enough time to get there.';
+  }
+
+  @override
+  String get reminder => 'Reminder';
+
+  @override
+  String get schedAvailableToday => 'Available today';
+
+  @override
+  String get schedUpcoming => 'Upcoming';
+
+  @override
+  String get schedPreviewNotBinding =>
+      'Preview — not binding. Decisions last until the app restarts.';
+
+  @override
+  String schedAcceptedPickupAt(String time) {
+    return 'Accepted · pickup $time';
+  }
+
+  @override
+  String get laterLower => 'later';
+
+  @override
+  String get schedReservationCancelled => 'Reservation cancelled';
+
+  @override
+  String get schedPlanAhead => 'Plan ahead and choose your next trip';
+
+  @override
+  String get schedRequestsTab => 'Requests';
+
+  @override
+  String get schedAcceptedTab => 'Accepted';
+
+  @override
+  String schedSeedTime(String day, String time) {
+    return '$day, $time';
+  }
+
+  @override
+  String schedPickupTomorrowAt(String time) {
+    return 'Pickup tomorrow at $time';
+  }
+
+  @override
+  String schedBackupNote(String time) {
+    return 'Your $time pickup was given to a backup driver.';
+  }
+
+  @override
+  String get schedSampleReservation => 'Sample reservation';
+
+  @override
+  String get schedReservationDetails => 'Reservation details';
+
+  @override
+  String get schedIllustrativeRoute => 'Illustrative route — sample data';
+
+  @override
+  String get schedViewRoute => 'View reservation route';
+
+  @override
+  String get schedDemoAccepted => 'Demo accepted';
+
+  @override
+  String get schedAvailable => 'Available';
+
+  @override
+  String get rideTypeLabel => 'Ride type';
+
+  @override
+  String get trip2 => 'Trip';
+
+  @override
+  String get route => 'Route';
+
+  @override
+  String get schedBeforeThisRide => 'Before this ride';
+
+  @override
+  String get goodToKnow => 'Good to know';
+
+  @override
+  String get schedBeReadyEarly => 'Be ready early';
+
+  @override
+  String schedGoOnlineMinBefore(String minutes) {
+    return 'Go online $minutes min before pickup so the app can guide you in time.';
+  }
+
+  @override
+  String get schedTripsOnTheWay => 'Trips on the way';
+
+  @override
+  String get schedOnlyTripsToward =>
+      'Before pickup you only get trips that head toward it and leave time to get there.';
+
+  @override
+  String get schedStillReceiveRides =>
+      'You can still receive suitable rides before the scheduled pickup.';
+
+  @override
+  String get schedPlansChanged => 'Plans changed?';
+
+  @override
+  String schedDriversNeverPay(String line) {
+    return '$line Drivers never pay to cancel.';
+  }
+
+  @override
+  String get schedLocalPreviewCancel =>
+      'This is a local preview. Cancelling removes the sample reservation until the app restarts.';
+
+  @override
+  String get schedReservedForYou => 'Reserved for you';
+
+  @override
+  String get schedKeepInAccepted =>
+      'We’ll keep this ride in your Accepted list. If you cancel, you’ll be asked for a reason before anything changes.';
+
+  @override
+  String get schedCancelReservation => 'Cancel reservation';
+
+  @override
+  String schedAcceptPrice(String price) {
+    return 'Accept  •  $price';
+  }
+
+  @override
+  String get chooseBestReason => 'Choose the reason that best matches.';
+
+  @override
+  String get schedCancelThisReservation => 'Cancel this reservation?';
+
+  @override
+  String get schedReasonDoesntCount => 'This reason doesn’t count against you.';
+
+  @override
+  String get schedRemovesSample =>
+      'This removes the sample reservation from this session. It does not cancel a real booking or change account access.';
+
+  @override
+  String get schedKeepReservation => 'Keep reservation';
+
+  @override
+  String tomorrowAtClock(String clock) {
+    return 'tomorrow $clock';
+  }
+
+  @override
+  String schedFreeCancelHoursBefore(String hours) {
+    return 'Free cancel until $hours h before pickup.';
+  }
+
+  @override
+  String schedLateCancelUnder(String hours) {
+    return 'Late cancel: under $hours h to pickup.';
+  }
+
+  @override
+  String schedFreeCancelUntil(String time) {
+    return 'Free cancel until $time.';
+  }
+
+  @override
+  String get schedRidesAreOff => 'Scheduled rides are off';
+
+  @override
+  String schedRidesOffUntil(String date) {
+    return 'Scheduled rides off until $date';
+  }
+
+  @override
+  String schedRidesPausedUntil(String date) {
+    return 'Scheduled rides paused until $date';
+  }
+
+  @override
+  String get schedTurnedOffByMovera =>
+      'Movera turned off Scheduled rides for your account. Contact support if you have questions.';
+
+  @override
+  String schedLateCancelsInDays(String count, String days) {
+    return 'You had $count late cancels in $days days. Your accepted rides stay.';
+  }
+
+  @override
+  String get schedNeverPayLateCounts =>
+      'You never pay to cancel, but this late cancel counts.';
+
+  @override
+  String schedNeverPayUnderHours(String hours) {
+    return 'You never pay to cancel. Under $hours h to pickup a cancel is late and counts toward a pause.';
+  }
+
+  @override
+  String schedLateCancelPauses(String count, String days, String date) {
+    return 'This is a late cancel ($count in $days days). Scheduled rides pause until $date.';
+  }
+
+  @override
+  String get schedLateCancelCounts =>
+      'This is a late cancel and it counts. You never pay.';
+
+  @override
+  String get schedAcceptedBadge => 'Accepted';
+
+  @override
+  String get supportCatTripRider => 'Trip & rider';
+
+  @override
+  String get supportCatWallet => 'Wallet & payments';
+
+  @override
+  String get supportCatAccount => 'Account & documents';
+
+  @override
+  String get supportCatTechnical => 'Technical issue';
+
+  @override
+  String get supportLocalDraftBadge => 'LOCAL DRAFT';
+
+  @override
+  String get supportCouldNotRecover =>
+      'Could not recover local support. Retry.';
+
+  @override
+  String get supportCouldNotSaveConversation =>
+      'Could not save local conversation. Retry.';
+
+  @override
+  String get supportCouldNotLoadDraft => 'Could not load the local draft.';
+
+  @override
+  String get supportCouldNotSaveDraft => 'Could not save local draft.';
+
+  @override
+  String get supportLocalTicketDraft => 'Local ticket draft';
+
+  @override
+  String get category => 'Category';
+
+  @override
+  String get subject => 'Subject';
+
+  @override
+  String get enterSubject => 'Enter a subject';
+
+  @override
+  String get tellUsWhatHappened => 'Tell us what happened';
+
+  @override
+  String get enterMessage => 'Enter a message';
+
+  @override
+  String get supportCouldNotSaveTicket => 'Could not save local ticket. Retry.';
+
+  @override
+  String get supportSavingDraft => 'Saving local draft…';
+
+  @override
+  String get supportSaveDraftDemo => 'Save draft in demo';
+
+  @override
+  String get supportTicketSavedDraftNotCleared =>
+      'Ticket saved locally, but the composer draft could not be cleared.';
+
+  @override
+  String get supportDemo => 'Support demo';
+
+  @override
+  String get supportDraftLocalTicket => 'Draft local ticket';
+
+  @override
+  String get supportLocalPreview => 'Local support preview';
+
+  @override
+  String get supportLocalDraftsNoService =>
+      'Local drafts on this device — no support service.';
+
+  @override
+  String get supportCouldNotLoadRetry => 'Could not load local support — Retry';
+
+  @override
+  String get supportRecoverPreserve =>
+      'Recover local support (preserve unreadable data)';
+
+  @override
+  String get supportYourConversations => 'Your conversations';
+
+  @override
+  String supportLocalDraftSubject(String subject) {
+    return 'Local draft: $subject';
+  }
+
+  @override
+  String get supportWriteLocalDraft => 'Write a local draft';
+
+  @override
+  String get supportSaveLocalReply => 'Save local reply';
+
+  @override
+  String get promoWeekdayPeak => 'Weekday peak';
+
+  @override
+  String get promoWeekdayPeakDetail =>
+      'Complete 8 trips between 07:00 and 09:00.';
+
+  @override
+  String get promoWeekdayPeakWindow => 'Mon–Fri · this week';
+
+  @override
+  String get promoAirportRuns => 'Airport runs';
+
+  @override
+  String get promoAirportRunsDetail => 'Two airport trips in the same day.';
+
+  @override
+  String get promoUntilSunday => 'Until Sunday';
+
+  @override
+  String get promoEveningHours => 'Evening hours';
+
+  @override
+  String get promoEveningHoursDetail => 'Stay online for 3 hours after 18:00.';
+
+  @override
+  String get promoTonight => 'Tonight';
+
+  @override
+  String promoDemoCodeCopied(String code) {
+    return 'Demo code $code copied';
+  }
+
+  @override
+  String get promoCouldNotCopy => 'Could not copy the code. Please try again.';
+
+  @override
+  String get promoPreviewTitle => 'Promotions preview';
+
+  @override
+  String get preview => 'Preview';
+
+  @override
+  String get promoSavedTab => 'Saved';
+
+  @override
+  String get promoNothingSaved => 'Nothing saved yet';
+
+  @override
+  String get promoSave => 'Save';
+
+  @override
+  String get vehicles => 'Vehicles';
+
+  @override
+  String get addVehicle => 'Add vehicle';
+
+  @override
+  String get vehCouldNotLoadDrafts =>
+      'Could not load local vehicle drafts — Retry';
+
+  @override
+  String get vehLocalDraftsNotVerified =>
+      'Local vehicle drafts — not activated or verified';
+
+  @override
+  String get vehTripsOnly => 'Trips only';
+
+  @override
+  String get vehManageVehicles => 'Manage vehicles';
+
+  @override
+  String get vehExploreOpportunities => 'Explore vehicle opportunities';
+
+  @override
+  String get vehConnectFleetPartner =>
+      'Connect with a fleet partner or browse rental or purchase offers if you need another vehicle.';
+
+  @override
+  String get vehCouldNotSaveDraft =>
+      'Could not save local vehicle draft. Retry.';
+
+  @override
+  String get year => 'Year';
+
+  @override
+  String get vehRequirements => 'Vehicle requirements';
+
+  @override
+  String get vehRequirementsBody =>
+      'To drive with Movera, you need a vehicle that is 1990 or newer, and not salvaged.';
+
+  @override
+  String get vehEnterInformation => 'Enter your vehicle information';
+
+  @override
+  String get make => 'Make';
+
+  @override
+  String get searchByMake => 'Search by make';
+
+  @override
+  String get model => 'Model';
+
+  @override
+  String get searchByModel => 'Search by model';
+
+  @override
+  String get selectEllipsis => 'Select...';
+
+  @override
+  String get requiredMark => '* Required';
+
+  @override
+  String get vehPhotoCouldNotSave => 'Photo could not be saved locally. Retry.';
+
+  @override
+  String get vehRemoveDraftQ => 'Remove local vehicle draft?';
+
+  @override
+  String vehRemovesNameAndPhotos(String name) {
+    return 'This removes $name and its saved document photos from this device.';
+  }
+
+  @override
+  String get vehKeepVehicle => 'Keep vehicle';
+
+  @override
+  String get vehRemoveVehicle => 'Remove vehicle';
+
+  @override
+  String get vehCouldNotRemoveDraft => 'Could not remove local draft. Retry.';
+
+  @override
+  String get vehPhotosStayOnDevice =>
+      'Document photos stay on this device. No upload or verification service is connected.';
+
+  @override
+  String get vehCouldNotLoadDocuments =>
+      'Could not load local vehicle documents.';
+
+  @override
+  String get vehDraftNoLongerAvailable =>
+      'This local vehicle draft is no longer available.';
+
+  @override
+  String get vehRegistrationCertFront =>
+      'Vehicle Registration Certificate (Front Page)';
+
+  @override
+  String get vehSavedLocallyNotVerified => 'Saved locally — not verified';
+
+  @override
+  String get vehRecommendedNextStep => 'Recommended next step';
+
+  @override
+  String get vehTakePhotoRegistration =>
+      'Take a photo of your Vehicle Registration Certificate (Front Page)';
+
+  @override
+  String get vehDocBlueBlackWhite =>
+      'The document should be blue, black and white.';
+
+  @override
+  String get vehAllFourCorners => 'All four corners are visible.';
+
+  @override
+  String get vehInsuranceLetter => 'Insurance Letter';
+
+  @override
+  String get vehTakePhotoInsurance => 'Take a photo of your Insurance Letter';
+
+  @override
+  String get vehInsuranceShowsTaxi =>
+      'The document shows the car’s registration number and that it is registered as a taxi.';
+
+  @override
+  String get vehInsuranceDatesVisible =>
+      'The start and end dates of the insurance are visible.';
+
+  @override
+  String get vehSavedPhotoCannotDisplay =>
+      'Saved photo cannot be displayed. Retake this document photo.';
+
+  @override
+  String get vehPhotoTooLarge =>
+      'Photo is too large to keep on this device. Retake it closer and with less detail.';
+
+  @override
+  String get vehCameraNotAvailable =>
+      'Camera is not available in this preview.';
+
+  @override
+  String get vehBeforeSavingCheck =>
+      'Before saving the local photo, check the following:';
+
+  @override
+  String get takingPhoto => 'Taking photo…';
+
+  @override
+  String get takePhoto => 'Take photo';
+
+  @override
+  String get promoSaved => 'Saved';
+
+  @override
+  String get prefStandardEveryday => 'Standard • Everyday ride';
+
+  @override
+  String get prefExtraComfort => 'Extra comfort • Plush';
+
+  @override
+  String get prefLuxuryPremium => 'Luxury • Premium service';
+
+  @override
+  String get prefFasterPickup => 'Faster pickup • Priority';
+
+  @override
+  String get prefSixSeat => '6 seat • Spacious';
+
+  @override
+  String get prefLowEmissions => 'Low emissions • Eco';
+
+  @override
+  String get prefPetFriendly => 'Pet friendly • Carrier OK';
+
+  @override
+  String get prefChildSeat => 'Child seat • Kids safe';
+
+  @override
+  String prefCategoriesSaved(int count) {
+    return '$count ride categories saved';
+  }
+
+  @override
+  String prefActiveOfTotal(int active, int total) {
+    return '$active of $total active';
+  }
+
+  @override
+  String get prefChooseRideOptions => 'Choose your ride options';
+
+  @override
+  String get prefSelectRideTypes =>
+      'Select the ride types you\'d like available for your trips';
+
+  @override
+  String get prefMoveraSetsFromCar =>
+      'Movera sets these from your car. Switch off any you don’t want.';
+
+  @override
+  String get prefSave => 'Save preferences';
+
+  @override
+  String get safetyContactEmergencyQ => 'Contact emergency services?';
+
+  @override
+  String get safetyUse112Only =>
+      'Use 112 only when you or someone else needs immediate help.';
+
+  @override
+  String get safetyDialerOpened =>
+      'Emergency dialer opened — confirm the call on your device.';
+
+  @override
+  String get safetyAudioUnavailable =>
+      'Audio recording is unavailable in this demo.';
+
+  @override
+  String get safetyTripSharingUnavailable =>
+      'Trip sharing is unavailable in this demo.';
+
+  @override
+  String get safetyPreferences => 'Safety preferences';
+
+  @override
+  String get safetyRideCheckOnOthersPreview =>
+      'Ride check is on. The others are preview only.';
+
+  @override
+  String get safetyUnavailableWithoutVerification =>
+      'Unavailable without account verification';
+
+  @override
+  String get safetyAutoTripSharing => 'Automatic trip sharing';
+
+  @override
+  String get safetyUnavailableWithoutSharing =>
+      'Unavailable without a sharing service';
+
+  @override
+  String get safetyOnSetByMovera => 'On · set by Movera for every trip';
+
+  @override
+  String get safetyOn => 'On';
+
+  @override
+  String get safetyRideCheckExplained =>
+      'On for every trip. Asks \"Is everything OK?\" after a long stop, a drop-off far from the destination, a big detour or a very hard stop.';
+
+  @override
+  String get safetyTools => 'Safety tools';
+
+  @override
+  String get safetyQuickTools =>
+      'Quick tools designed to protect you during every ride.';
+
+  @override
+  String get safetyContact112 => 'Contact 112';
+
+  @override
+  String get safetyShareTrip => 'Share trip';
+
+  @override
+  String get safetyRideCheckOnPreviewOnly =>
+      'Ride check on · the others are preview only';
+
+  @override
+  String get destChooseOneAddress => 'Choose one address';
+
+  @override
+  String get destTripsInYourDirection => 'Trips in your direction';
+
+  @override
+  String get destMoveraPrioritizes =>
+      'Movera will prioritize requests that keep you moving toward this address.';
+
+  @override
+  String get destAddAddress => 'Add destination address';
+
+  @override
+  String get destSuggestedAddresses => 'Suggested addresses';
+
+  @override
+  String get destResults => 'Results';
+
+  @override
+  String get destNoAddressFound => 'No address found';
+
+  @override
+  String get destTryAnother => 'Try another street, place, or area.';
+
+  @override
+  String get destFastestRoute => 'Fastest route to your destination';
+
+  @override
+  String destOnlyTripsYourWay(String place) {
+    return 'You\'ll only get trips heading your way, so every ride takes you closer to $place.';
+  }
+
+  @override
+  String destArriveBy(String time) {
+    return 'Arrive by $time';
+  }
+
+  @override
+  String get destConfirm => 'Confirm destination';
+
+  @override
+  String get waybillLocalDemo => 'Local demo';
+
+  @override
+  String get waybillDemoRadar => 'Demo Radar';
+
+  @override
+  String get demoDriverIdentityUnavailable =>
+      'Demo driver — identity unavailable';
+
+  @override
+  String get vehicleDataUnavailable => 'Vehicle data unavailable';
+
+  @override
+  String get plateUnavailable => 'Plate unavailable';
+
+  @override
+  String positionOfCount(int position, int count) {
+    return '$position of $count';
+  }
+
+  @override
+  String get rrMatchingTrip => 'Matching trip';
+
+  @override
+  String get rrConfirmingRealTime => 'Confirming this request in real time…';
+
+  @override
+  String get rrCouldNotMatch => 'Could not match trip. Try again.';
+
+  @override
+  String get rrConnectionInterrupted =>
+      'Connection interrupted. You can retry this request.';
+
+  @override
+  String get rrAssignedOpening =>
+      'You’re assigned to this request. Opening trip…';
+
+  @override
+  String get rrAnotherMatchedFirst => 'Another driver matched this trip first.';
+
+  @override
+  String get rrNoLongerOnRadar => 'This trip is no longer on Radar.';
+
+  @override
+  String rrTripsTowardPickup(String time) {
+    return 'Trips toward your $time pickup';
+  }
+
+  @override
+  String get rrLive => 'Live';
+
+  @override
+  String rrFreshNew(int count) {
+    return '$count new';
+  }
+
+  @override
+  String get rrNew => 'New';
+
+  @override
+  String get rrDestinationRoute => 'Destination route';
+
+  @override
+  String rrTripsToward(String place) {
+    return 'Trips toward $place';
+  }
+
+  @override
+  String get rrScanningNearby => 'Scanning nearby';
+
+  @override
+  String get rrNewTripsAppear =>
+      'New trips will appear here when the radar finds requests around you.';
+
+  @override
+  String get moveraDriver => 'Movera Driver';
+
+  @override
+  String get legalPrivacyBody =>
+      'Movera Driver uses location, trip and vehicle data to assign rides, show routes and keep a waybill on this device.\n\nDemo builds keep this information in memory on the phone. Nothing is sold to advertisers. You can log out at any time from Profile.\n\nWhen a live backend is connected, the same screens will keep using this policy text until a signed version is published.';
+
+  @override
+  String get legalTermsBody =>
+      'You agree to drive only with a valid licence, insurance and a vehicle that matches the documents in this app.\n\nRadar offers are first-come. Matching another order while on a trip is optional. Completing a trip creates a waybill you can reopen from Home.\n\nMovera may suspend a demo account that misuses Safety tools or emergency calling.';
+
+  @override
+  String get privacyPolicyTitle => 'Privacy policy';
+
+  @override
+  String get termsOfService => 'Terms of service';
+
+  @override
+  String get profSampleDriver => 'Sample driver profile';
+
+  @override
+  String get profDemoNoVerified => 'Demo — no verified account';
+
+  @override
+  String get analytics => 'Analytics';
+
+  @override
+  String get myBank => 'My bank';
+
+  @override
+  String get helpCenter => 'Help center';
+
+  @override
+  String get logOut => 'Log out';
+
+  @override
+  String get logOutQ => 'Log out?';
+
+  @override
+  String get profLogOutClears =>
+      'Local preview data on this device will be cleared, including trip history, contacts, and drafts. You will return to the sign-in screen offline.';
+
+  @override
+  String get stay => 'Stay';
+
+  @override
+  String get profCouldNotClear =>
+      'Could not clear local data. You are still signed in. Please retry.';
+
+  @override
+  String get anaPreview => 'Analytics preview';
+
+  @override
+  String get anaSample3Rides => 'Sample: 3 rides completed';
+
+  @override
+  String get anaSampleLastTrip => 'Sample last trip';
+
+  @override
+  String get anaSamplePerformance => 'Sample performance';
+
+  @override
+  String get anaCancel => 'Cancel';
+
+  @override
+  String get earnings => 'Earnings';
+
+  @override
+  String get anaSamePeriodHome => 'Same period as the home sheet';
+
+  @override
+  String get acceptanceRate => 'Acceptance rate';
+
+  @override
+  String anaSampleAcceptance(String rate) {
+    return 'Sample · $rate of offers accepted';
+  }
+
+  @override
+  String get cancellationRate => 'Cancellation rate';
+
+  @override
+  String anaSampleCancellation(String rate) {
+    return 'Sample · $rate of accepted trips';
+  }
+
+  @override
+  String get anaSampleStrongestArea => 'Sample strongest area';
+
+  @override
+  String get bankAddHolderName => 'Add the account holder’s name.';
+
+  @override
+  String get bankCheckIban =>
+      'Check the IBAN format and check digits against your bank statement.';
+
+  @override
+  String get bankBicFormat => 'BIC / SWIFT has 8 or 11 letters and digits.';
+
+  @override
+  String get bankCheckClearing =>
+      'Check the clearing number: 4 digits, or 5 starting with 8 for Swedbank.';
+
+  @override
+  String get bankAccountDigits => 'The account number has 6 to 10 digits.';
+
+  @override
+  String get bankPreviewNotSaved => 'Preview only — account not saved.';
+
+  @override
+  String get countrySweden => 'Sweden';
+
+  @override
+  String get international => 'International';
+
+  @override
+  String get bankAccount => 'Bank account';
+
+  @override
+  String get bankHolder => 'Holder';
+
+  @override
+  String get country => 'Country';
+
+  @override
+  String get bank => 'Bank';
+
+  @override
+  String get clearing => 'Clearing';
+
+  @override
+  String get bankUseIban =>
+      'Use the IBAN on your bank statement. Foreign IBANs show a country code; no bank connection is verified.';
+
+  @override
+  String get bankFoundFromClearing =>
+      'The bank is found from the clearing number.';
+
+  @override
+  String get checkDetails => 'Check details';
+
+  @override
+  String get bankDemoNotSaved => 'Demo: account not saved or sent to a bank';
+
+  @override
+  String minutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String hoursAgo(int hours) {
+    return '$hours h ago';
+  }
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String daysAgo(int days) {
+    return '$days days ago';
+  }
+
+  @override
+  String get noNotificationsYet => 'No notifications yet';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterDemand => 'Demand';
+
+  @override
+  String get logsPreview => 'Driving log preview';
+
+  @override
+  String get logsSampleNotLive => 'Sample driving-time data · not live';
+
+  @override
+  String get logsSampleWeek => 'Sample week';
+
+  @override
+  String get monday => 'Monday';
+
+  @override
+  String get tuesday => 'Tuesday';
+
+  @override
+  String get wednesday => 'Wednesday';
+
+  @override
+  String get thursday => 'Thursday';
+
+  @override
+  String logsOnlineFromTo(String from, String to) {
+    return 'Online $from – $to';
+  }
+
+  @override
+  String get logsSampleOnlineState => 'Sample online state';
+
+  @override
+  String get logsDemoCompliance =>
+      'Demo compliance copy only. Driving and break limits are not connected to live account or regulatory data.';
+
+  @override
+  String get pinVerifyAll => 'Verify all trips';
+
+  @override
+  String get pinAskEveryPickup => 'Ask for the rider PIN on every pickup.';
+
+  @override
+  String get pinVerifySession => 'Verify this session';
+
+  @override
+  String get pinAskUntilOffline => 'Ask until you go offline.';
+
+  @override
+  String get pinDontVerify => 'Don’t verify';
+
+  @override
+  String get pinSkipOnDevice => 'Skip the PIN on this device.';
+
+  @override
+  String get pinPreviewNotSaved =>
+      'PIN verification preview - this preference is not saved or enforced in the demo.';
+
+  @override
+  String get pinNotConnected =>
+      'PIN verification is not connected in this demo.';
+
+  @override
+  String get bankPreviewAccountDetails => 'Preview account details';
+
+  @override
+  String get bankLocalPreviewOnly =>
+      'Local preview only. No bank is connected, nothing is verified, and no payout is scheduled.';
+
+  @override
+  String get bankCheckInPreview =>
+      'You can check account details in the preview form. Details are discarded when you leave the form; no payout account is connected.';
+
+  @override
+  String get emEmergencyServices112 => 'Emergency services — 112';
+
+  @override
+  String get emEmergency => 'Emergency';
+
+  @override
+  String get emAlreadyInContacts => 'This number is already in your contacts.';
+
+  @override
+  String get emFamily => 'Family';
+
+  @override
+  String get chatLocalDemo =>
+      'Local demo chat · messages are not sent to the rider.';
+
+  @override
+  String get chatSendMessageHint => 'send message...';
+
+  @override
+  String get chatSaveLocally => 'Save message locally';
+
+  @override
+  String get chatLocalNotSent => 'Local preview · not sent';
+
+  @override
+  String get queueAirportPreview => 'Airport queue preview';
+
+  @override
+  String get queueSample10Ahead => 'Sample: 10 drivers ahead';
+
+  @override
+  String get queueViewSampleDetails => 'view sample details';
+
+  @override
+  String get queueClose => 'Close queue position';
+
+  @override
+  String get queueMyPosition => 'My Queue position';
+
+  @override
+  String get queueMediumWait => 'Medium Wait';
+
+  @override
+  String get queueSampleRank => 'Sample Rank';
+
+  @override
+  String get queueUnavailablePreview => 'Queue unavailable — preview';
+
+  @override
+  String get queueRanks => 'Ranks';
+
+  @override
+  String get earnTypeTab => 'Type';
+
+  @override
+  String get earnMoveraDemo => 'Movera demo';
+
+  @override
+  String get cancelRateTitle => 'Cancelation Rate';
+
+  @override
+  String get notYourRealRateYet => 'not your real rate yet';
+
+  @override
+  String get tripsConfirmed => 'Trips confirmed';
+
+  @override
+  String get completedTripsLower => 'completed trips';
+
+  @override
+  String get canceledTrips => 'Canceled trips';
+
+  @override
+  String get sampleNumbersNotReal =>
+      'Sample numbers for this preview, not your real rate.';
+
+  @override
+  String get cancelRateKeepLow =>
+      'Keep your cancel rate low to keep full access to trips';
+
+  @override
+  String get cancelRateEveryCancelCounts =>
+      'Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.';
+
+  @override
+  String get moreInformation => 'More Information';
+
+  @override
+  String get cancelRateHowCalculated => 'How your cancelation is calculated';
+
+  @override
+  String get cancelRateHowBody =>
+      'Your cancellation rate is calculated based on the number of trips you cancel compared to the total trips you confirm. We use your last 100 confirmed trip requests to determine this percentage.';
+
+  @override
+  String get cancelRateWhyMatters => 'Why cancelation rate matters';
+
+  @override
+  String get cancelRateWhyBody =>
+      'A high cancellation rate affects the reliability of our service and can impact your ability to get ride requests. Maintaining a low cancellation rate helps ensure better service for all users.';
+
+  @override
+  String get acceptRateTitle => 'Acceptance Rate';
+
+  @override
+  String get exclusiveOffers => 'Exclusive offers';
+
+  @override
+  String get acceptedOffersLower => 'accepted offers';
+
+  @override
+  String get declinedOrMissed => 'declined or missed';
+
+  @override
+  String get acceptRateOnlyExclusive => 'Only Exclusive offers count';
+
+  @override
+  String get acceptRateExclusiveBody =>
+      'Exclusive offers and other offers sent only to you count. Radar trips never count.';
+
+  @override
+  String get acceptRateHowCalculated =>
+      'How your acceptance rate is calculated';
+
+  @override
+  String get acceptRateHowBody =>
+      'Your acceptance rate is the Exclusive offers you accept compared with all the Exclusive offers you receive. Radar trips never count. We use your last 100 Exclusive offers.';
+
+  @override
+  String get acceptRateWhyMatters => 'Why acceptance rate matters';
+
+  @override
+  String get acceptRateWhyBody =>
+      'A low acceptance rate reduces your chances of receiving ride requests and may affect your standing on the platform. Maintaining a high acceptance rate helps you get more trips and ensures a reliable experience for riders.';
+
+  @override
+  String get rcTriggerDroppedFar => 'Finished far from drop-off';
+
+  @override
+  String get rcTriggerLongStop => 'Long stop';
+
+  @override
+  String get rcTriggerOffRoute => 'Off the route';
+
+  @override
+  String get rcTriggerPossibleCrash => 'Possible crash';
+
+  @override
+  String get rcTopicAccident => 'Accident or collision';
+
+  @override
+  String get rcTopicHurt => 'Someone is hurt or feels ill';
+
+  @override
+  String get rcTopicUnsafe => 'I feel unsafe';
+
+  @override
+  String get rcTopicCarProblem => 'Car problem';
+
+  @override
+  String get rcTopicRiderAskedStop => 'The rider asked for a stop';
+
+  @override
+  String get rcTopicTraffic => 'Traffic or road works';
+
+  @override
+  String get rcTopicRiderStopHere => 'The rider asked to stop here';
+
+  @override
+  String get rcTopicRiderChangedDestination => 'The rider changed destination';
+
+  @override
+  String get rcTopicRoadClosed => 'Road closed or no access';
+
+  @override
+  String get rcTopicRiderOtherRoute => 'The rider asked for another route';
+
+  @override
+  String get rcShortAccident => 'Accident';
+
+  @override
+  String get rcShortHurt => 'Someone hurt';
+
+  @override
+  String get rcShortUnsafe => 'Unsafe';
+
+  @override
+  String get rcShortRiderStop => 'Rider stop';
+
+  @override
+  String get rcShortTraffic => 'Traffic';
+
+  @override
+  String get rcShortNewDestination => 'New destination';
+
+  @override
+  String get rcShortRoadClosed => 'Road closed';
+
+  @override
+  String get rcShortOtherRoute => 'Other route';
+
+  @override
+  String get rcQuestionAnyoneHurt => 'Is anyone hurt?';
+
+  @override
+  String get rcQuestionCarSafe => 'Is the car in a safe place?';
+
+  @override
+  String get rcQuestionOtherPersonOk => 'Is the other person OK?';
+
+  @override
+  String get rcQuestionWhoNeedsHelp => 'Who needs help?';
+
+  @override
+  String get rcQuestionInDanger => 'Are you in danger right now?';
+
+  @override
+  String get rcQuestionCanContinue => 'Can you continue the trip?';
+
+  @override
+  String get rcAnswerYes => 'Yes';
+
+  @override
+  String get rcAnswerNo => 'No';
+
+  @override
+  String get rcAnswerNotSure => 'Not sure';
+
+  @override
+  String get rcAnswerMe => 'Me';
+
+  @override
+  String get rcAnswerTheRider => 'The rider';
+
+  @override
+  String get rcAnswerSomeoneElse => 'Someone else';
+
+  @override
+  String get rcLongerLead => 'This trip is ';
+
+  @override
+  String rcPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get rcLongerTrail => ' longer than expected';
+
+  @override
+  String get rcStoppedLead => 'Your car has stopped for ';
+
+  @override
+  String rcMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get rcEndedLead => 'Your trip ended ';
+
+  @override
+  String rcEndedFromTrail(String place) {
+    return ' from $place';
+  }
+
+  @override
+  String get rcOffRouteLead => 'You are ';
+
+  @override
+  String get rcOffRouteTrail => ' off the route';
+
+  @override
+  String rcOffRouteToTrail(String place) {
+    return ' off the route to $place';
+  }
+
+  @override
+  String get rcCrashLead => 'A ';
+
+  @override
+  String get rcCrashBold => 'very hard stop';
+
+  @override
+  String get rcCrashTrail => ' was detected';
+
+  @override
+  String rcCrashTrailAt(String place) {
+    return ' was detected · $place';
+  }
+
+  @override
+  String get tipHighBoostNearby => 'High boost nearby';
+
+  @override
+  String tipHighBoostIn(String kr, String zone) {
+    return 'High boost · +$kr kr in $zone';
+  }
+
+  @override
+  String get tipExpectTrip => 'Expect a trip in 2–5 min';
+
+  @override
+  String tipPromotionRides(String rides, String kr) {
+    return 'Promotion · $rides rides = $kr kr';
+  }
+
+  @override
+  String get tipBusyArea => 'Busy area · trips expected soon';
+
+  @override
+  String tipAirportQueue(String count) {
+    return 'Airport queue: $count drivers';
+  }
+
+  @override
+  String tipGoodStreak(String count) {
+    return 'Good streak · $count trips in a row';
+  }
+
+  @override
+  String get tipDemandRising => 'Demand rising near you';
+
+  @override
+  String tipPeakStart(String time) {
+    return 'Peak hours start at $time';
+  }
+
+  @override
+  String get tipTopZone => 'You\'re in a top zone right now';
+
+  @override
+  String get noticeNewScheduledRide => 'New scheduled ride';
+
+  @override
+  String noticeScheduledBody(String day, String time, String fare) {
+    return '$day $time · $fare · Tap to view';
+  }
+
+  @override
+  String get view => 'View';
+
+  @override
+  String noticeSecondsToAccept(int seconds) {
+    return '$seconds s to accept';
+  }
+
+  @override
+  String noticeHighDemandIn(String area) {
+    return 'High demand in $area';
+  }
+
+  @override
+  String get noticeGoOnlineNow => 'Go online now';
+
+  @override
+  String noticeDocExpires(String title, String when) {
+    return '$title expires $when';
+  }
+
+  @override
+  String get noticeUploadNewKeepDriving =>
+      'Upload a new one so you can keep driving.';
+
+  @override
+  String noticeDocApprovedBody(String title) {
+    return '$title approved. You can go online.';
+  }
+
+  @override
+  String get noticeCanGoOnlineAgain => 'You can go online again.';
+
+  @override
+  String noticeTooManyLateCancels(String date) {
+    return 'Too many late cancels. Back on $date.';
+  }
+
+  @override
+  String get rcWhatHappened => 'What happened';
+
+  @override
+  String get rcCalled112 => 'Called 112';
+
+  @override
+  String get selectCountry => 'Select Country';
+
+  @override
+  String get searchCountry => 'Search Country';
+
+  @override
+  String get colorRed => 'Red';
+
+  @override
+  String get colorBlue => 'Blue';
+
+  @override
+  String get colorGreen => 'Green';
+
+  @override
+  String get colorBlack => 'Black';
+
+  @override
+  String get colorWhite => 'White';
+
+  @override
+  String get colorGray => 'Gray';
+
+  @override
+  String get colorSilver => 'Silver';
+
+  @override
+  String get colorYellow => 'Yellow';
+
+  @override
+  String get colorOrange => 'Orange';
+
+  @override
+  String get colorBrown => 'Brown';
+
+  @override
+  String get colorPurple => 'Purple';
+
+  @override
+  String get colorPink => 'Pink';
+
+  @override
+  String get chooseVehicleColor => 'Choose vehicle color';
+
+  @override
+  String get closeColorPicker => 'Close color picker';
+
+  @override
+  String get mapCameraUnavailable =>
+      'Map camera unavailable — tap recenter to retry';
+
+  @override
+  String get dismiss => 'Dismiss';
+
+  @override
+  String ratingAndRides(String rating, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides',
+      one: '1 ride',
+    );
+    return '$rating ★ · $_temp0';
+  }
+
+  @override
+  String mapOfArea(String area) {
+    return 'Map of $area';
+  }
 }

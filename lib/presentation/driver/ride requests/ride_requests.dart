@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -176,7 +177,7 @@ class _RideRequestsState extends State<RideRequests> {
   }
 
   /// Dispatch withdrew a trip: when another driver took it (a radar
-  /// group's first Accept), it leaves with "Taken by another driver".
+  /// group's first Accept), it leaves with tr.islandTakenByOther.
   void _onWithdrawn(OfferWithdrawal gone) {
     if (!mounted || gone.reason != OfferGoneReason.claimedElsewhere) { return; }
     for (final trip in _offers.toList()) {
@@ -301,10 +302,10 @@ class _RideRequestsState extends State<RideRequests> {
     setState(() {
       _matchingOfferId = trip.id;
       _offerStates[trip.id] = _RadarOfferState.resolving;
-      _matchNotice = const _RadarMatchNotice(
+      _matchNotice = _RadarMatchNotice(
         type: _RadarMatchNoticeType.matching,
-        title: 'Matching trip',
-        message: 'Confirming this request in real time…',
+        title: tr.rrMatchingTrip,
+        message: tr.rrConfirmingRealTime,
       );
     });
 
@@ -338,10 +339,10 @@ class _RideRequestsState extends State<RideRequests> {
         setState(() {
           _matchingOfferId = null;
           _offerStates.remove(trip.id);
-          _matchNotice = const _RadarMatchNotice(
+          _matchNotice = _RadarMatchNotice(
             type: _RadarMatchNoticeType.error,
-            title: 'Could not match trip. Try again.',
-            message: 'Connection interrupted. You can retry this request.',
+            title: tr.rrCouldNotMatch,
+            message: tr.rrConnectionInterrupted,
           );
         });
     }
@@ -355,10 +356,10 @@ class _RideRequestsState extends State<RideRequests> {
     // visible disappear/reappear flash on iPhone Safari.
     setState(() {
       _matchingOfferId = trip.id;
-      _matchNotice = const _RadarMatchNotice(
+      _matchNotice = _RadarMatchNotice(
         type: _RadarMatchNoticeType.success,
-        title: 'Trip matched',
-        message: 'You’re assigned to this request. Opening trip…',
+        title: tr.islandMatched,
+        message: tr.rrAssignedOpening,
       );
     });
 
@@ -374,7 +375,7 @@ class _RideRequestsState extends State<RideRequests> {
           offerId: trip.id,
           tripId: rider.tripId ?? tripOccurrenceId(trip.id),
           dispatchRepository: _dispatch,
-          riderName: rider.riderName.isEmpty ? 'Rider' : rider.riderName,
+          riderName: rider.riderName.isEmpty ? tr.rider : rider.riderName,
           riderRating: double.tryParse(rider.rating) ?? 4.9,
           riderTrips: rider.riderTrips,
           fare: trip.fare,
@@ -437,15 +438,15 @@ class _RideRequestsState extends State<RideRequests> {
       _offerStates[trip.id] = _RadarOfferState.claimedElsewhere;
       _goneReasons[trip.id] = reason;
       _matchNotice = reason == _RadarGone.lostOwnMatch
-          ? const _RadarMatchNotice(
+          ? _RadarMatchNotice(
               type: _RadarMatchNoticeType.error,
-              title: 'Taken by another driver',
-              message: 'Another driver matched this trip first.',
+              title: tr.islandTakenByOther,
+              message: tr.rrAnotherMatchedFirst,
             )
-          : const _RadarMatchNotice(
+          : _RadarMatchNotice(
               type: _RadarMatchNoticeType.error,
-              title: 'No longer available',
-              message: 'This trip is no longer on Radar.',
+              title: tr.islandNoLongerAvailable,
+              message: tr.rrNoLongerOnRadar,
             );
     });
     _matchNoticeTimer = Timer(const Duration(milliseconds: 2800), () {
@@ -507,7 +508,7 @@ class _RideRequestsState extends State<RideRequests> {
                 if (widget.destinationModeActive) _destinationModeBanner(),
                 if (widget.towardPickupTime case final time?)
                   _onYourWayBanner(
-                    'Trips toward your $time pickup',
+                    tr.rrTripsTowardPickup(time),
                     key: const ValueKey<String>('radar-schedule-filter'),
                   ),
                 Expanded(
@@ -540,7 +541,7 @@ class _RideRequestsState extends State<RideRequests> {
     );
   }
 
-  /// Back, the live dot with "Live", Refresh (only when new trips are
+  /// Back, the live dot with tr.rrLive, Refresh (only when new trips are
   /// waiting) and the total count.
   Widget _header(int count) {
     final shown = _offers.map((trip) => trip.id).toSet();
@@ -562,7 +563,7 @@ class _RideRequestsState extends State<RideRequests> {
             color: Colors.white,
             shape: const CircleBorder(side: BorderSide(color: Color(0xFFECEEF0))),
             child: IconButton(
-              tooltip: 'Back',
+              tooltip: tr.back,
               onPressed: _closeRides,
               constraints: const BoxConstraints.tightFor(width: 44, height: 44),
               icon: SvgPicture.asset(
@@ -576,8 +577,8 @@ class _RideRequestsState extends State<RideRequests> {
           const SizedBox(width: 12),
           const _LivePulse(),
           const SizedBox(width: 8),
-          const Text(
-            'Live',
+          Text(
+            tr.rrLive,
             style: TextStyle(
               color: _ink,
               fontSize: 20,
@@ -618,7 +619,7 @@ class _RideRequestsState extends State<RideRequests> {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  fresh > 0 ? '$fresh new' : 'New',
+                                  fresh > 0 ? tr.rrFreshNew(fresh) : tr.rrNew,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 13,
@@ -660,15 +661,15 @@ class _RideRequestsState extends State<RideRequests> {
   Widget _destinationModeBanner() {
     final destination = widget.destinationAddress?.trim();
     final label = destination == null || destination.isEmpty
-        ? 'Destination route'
+        ? tr.rrDestinationRoute
         : destination.split(',').first.trim();
     return _onYourWayBanner(
-      'Trips toward $label',
+      tr.rrTripsToward(label),
       key: const ValueKey<String>('radar-destination-filter'),
     );
   }
 
-  /// "On your way" and what the trips head toward.
+  /// tr.onYourWay and what the trips head toward.
   Widget _onYourWayBanner(String text, {Key? key}) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
@@ -688,8 +689,8 @@ class _RideRequestsState extends State<RideRequests> {
                 color: _ink,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                'On your way',
+              child: Text(
+                tr.onYourWay,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 10,
@@ -800,7 +801,7 @@ class _RideRequestsState extends State<RideRequests> {
   }
 
   Widget _emptyState() {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 36),
         child: Column(
@@ -809,7 +810,7 @@ class _RideRequestsState extends State<RideRequests> {
             Icon(Icons.radar_rounded, color: _muted, size: 30),
             SizedBox(height: 12),
             Text(
-              'Scanning nearby',
+              tr.rrScanningNearby,
               style: TextStyle(
                 color: _ink,
                 fontSize: 17,
@@ -818,7 +819,7 @@ class _RideRequestsState extends State<RideRequests> {
             ),
             SizedBox(height: 6),
             Text(
-              'New trips will appear here when the radar finds requests around you.',
+              tr.rrNewTripsAppear,
               textAlign: TextAlign.center,
               style: TextStyle(color: _muted, fontSize: 13, height: 1.4),
             ),

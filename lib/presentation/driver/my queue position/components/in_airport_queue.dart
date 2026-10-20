@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -49,21 +50,21 @@ class InAirportQueue extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           TextWidget(
-                            text: "Airport queue preview",
+                            text: tr.queueAirportPreview,
                             fontSize: 16,
                             fontWeight: fwSemiBold,
                             color: AppColor.title,
                           ),
                           4.height,
                           TextWidget(
-                            text: "Sample: 10 drivers ahead",
+                            text: tr.queueSample10Ahead,
                             fontSize: 12,
                             fontWeight: fwMedium,
                             color: AppColor.subtitle,
                           ),
                           4.height,
                           TextWidget(
-                            text: "view sample details",
+                            text: tr.queueViewSampleDetails,
                             fontSize: 12,
                             fontWeight: fwMedium,
                             color: Color(0xff0088FF),

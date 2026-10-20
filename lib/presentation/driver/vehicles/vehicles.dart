@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -57,12 +58,12 @@ class _DriverVehiclesState extends State<DriverVehicles> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
-        title: const Text(
-          'Vehicles',
+        title: Text(
+          tr.vehicles,
           style: TextStyle(
             color: _ink,
             fontSize: 17,
@@ -71,7 +72,7 @@ class _DriverVehiclesState extends State<DriverVehicles> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Add vehicle',
+            tooltip: tr.addVehicle,
             onPressed: _loading || _failed
                 ? null
                 : () async {
@@ -96,9 +97,9 @@ class _DriverVehiclesState extends State<DriverVehicles> {
           if (_failed)
             TextButton(
               onPressed: _loading ? null : _load,
-              child: const Text('Could not load local vehicle drafts — Retry'),
+              child: Text(tr.vehCouldNotLoadDrafts),
             ),
-          const Text('Local vehicle drafts — not activated or verified'),
+          Text(tr.vehLocalDraftsNotVerified),
           for (final vehicle in _vehicles)
             Container(
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
@@ -130,8 +131,8 @@ class _DriverVehiclesState extends State<DriverVehicles> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  const Text(
-                    'Trips only',
+                  Text(
+                    tr.vehTripsOnly,
                     style: TextStyle(
                       color: _muted,
                       fontSize: 14,
@@ -170,8 +171,8 @@ class _DriverVehiclesState extends State<DriverVehicles> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Manage vehicles',
+                      child: Text(
+                        tr.vehManageVehicles,
                         style: TextStyle(fontWeight: FontWeight.w800),
                       ),
                     ),
@@ -186,11 +187,11 @@ class _DriverVehiclesState extends State<DriverVehicles> {
               color: _ink,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Explore vehicle opportunities',
+                  tr.vehExploreOpportunities,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -199,7 +200,7 @@ class _DriverVehiclesState extends State<DriverVehicles> {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'Connect with a fleet partner or browse rental or purchase offers if you need another vehicle.',
+                  tr.vehConnectFleetPartner,
                   style: TextStyle(
                     color: Color(0xFFD5DCE0),
                     fontSize: 13,

@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -301,7 +302,7 @@ class GoogleDriverCameraPort
       }
     } catch (_) {
       if (!_disposed && generation == _generation) {
-        onStatus?.call('Map camera unavailable — tap recenter to retry');
+        onStatus?.call(tr.mapCameraUnavailable);
       }
     } finally {
       if (generation == _generation) {
@@ -375,7 +376,7 @@ class GoogleDriverCameraPort
       if (_disposed || generation != _generation) {
         return;
       }
-      onStatus?.call('Map camera unavailable — tap recenter to retry');
+      onStatus?.call(tr.mapCameraUnavailable);
       // The owner must know that fitting the route failed. Otherwise it
       // remains in Overview forever and suppresses subsequent GPS following.
       rethrow;
@@ -420,7 +421,7 @@ class GoogleDriverCameraPort
     } catch (_) {
       if (_disposed || generation != _generation) return;
       _producingFrames = false;
-      onStatus?.call('Map camera unavailable — tap recenter to retry');
+      onStatus?.call(tr.mapCameraUnavailable);
       rethrow;
     }
   }

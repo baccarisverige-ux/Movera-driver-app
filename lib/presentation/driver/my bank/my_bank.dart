@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,7 @@ class MyBank extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: Icon(
             Icons.arrow_back_ios_rounded,
@@ -31,14 +32,14 @@ class MyBank extends StatelessWidget {
         ),
         centerTitle: true,
         title: TextWidget(
-          text: 'My bank',
+          text: tr.myBank,
           color: AppColor.title,
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
         actions: [
           IconButton(
-            tooltip: 'Preview account details',
+            tooltip: tr.bankPreviewAccountDetails,
             onPressed: () {
               pushSingle(context, TopToBottomTransition(const AddNewAccount()));
             },
@@ -50,8 +51,8 @@ class MyBank extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
         children: [
           12.height,
-          const Text(
-            'No payout account connected',
+          Text(
+            tr.noPayoutAccountConnected,
             style: TextStyle(
               color: Color(0xFF252E3A),
               fontSize: 18,
@@ -59,13 +60,13 @@ class MyBank extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Local preview only. No bank is connected, nothing is verified, and no payout is scheduled.',
+          Text(
+            tr.bankLocalPreviewOnly,
             style: TextStyle(color: Color(0xFF7D898F), height: 1.4),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'You can check account details in the preview form. Details are discarded when you leave the form; no payout account is connected.',
+          Text(
+            tr.bankCheckInPreview,
             style: TextStyle(color: Color(0xFF7D898F), height: 1.4),
           ),
         ],

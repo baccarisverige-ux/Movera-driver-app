@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -27,13 +28,13 @@ class Analytics extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: 'Back', 
+        leading: IconButton(tooltip: tr.back, 
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
         titleSpacing: 0,
-        title: const Text(
-          'Analytics preview',
+        title: Text(
+          tr.anaPreview,
           style: TextStyle(
             color: _ink,
             fontSize: 18,
@@ -52,7 +53,7 @@ class Analytics extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: _line),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -76,7 +77,7 @@ class Analytics extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Sample: 3 rides completed',
+                  tr.anaSample3Rides,
                   style: TextStyle(
                     color: _muted,
                     fontSize: 13,
@@ -88,14 +89,14 @@ class Analytics extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _card(
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sample last trip',
+                        tr.anaSampleLastTrip,
                         style: TextStyle(
                           color: _muted,
                           fontSize: 11,
@@ -137,8 +138,8 @@ class Analytics extends StatelessWidget {
           const SizedBox(height: 16),
           _demand(const DriverHomeAdminContentService().load().stockholmWork),
           const SizedBox(height: 16),
-          const Text(
-            'Sample performance',
+          Text(
+            tr.anaSamplePerformance,
             style: TextStyle(
               color: _ink,
               fontSize: 14,
@@ -148,32 +149,32 @@ class Analytics extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              _metric('Rating', _sample.ratingLabel),
+              _metric(tr.rating, _sample.ratingLabel),
               const SizedBox(width: 8),
-              _metric('Acceptance', _sample.acceptanceLabel),
+              _metric(tr.acceptance, _sample.acceptanceLabel),
               const SizedBox(width: 8),
-              _metric('Cancel', _sample.cancellationLabel),
+              _metric(tr.anaCancel, _sample.cancellationLabel),
             ],
           ),
           const SizedBox(height: 16),
           _link(
             context,
-            title: 'Earnings',
-            detail: 'Same period as the home sheet',
+            title: tr.earnings,
+            detail: tr.anaSamePeriodHome,
             page: const EarningStatsScreen(),
           ),
           const SizedBox(height: 8),
           _link(
             context,
-            title: 'Acceptance rate',
-            detail: 'Sample · ${_sample.acceptanceLabel} of offers accepted',
+            title: tr.acceptanceRate,
+            detail: tr.anaSampleAcceptance(_sample.acceptanceLabel),
             page: const AcceptanceRate(),
           ),
           const SizedBox(height: 8),
           _link(
             context,
-            title: 'Cancellation rate',
-            detail: 'Sample · ${_sample.cancellationLabel} of accepted trips',
+            title: tr.cancellationRate,
+            detail: tr.anaSampleCancellation(_sample.cancellationLabel),
             page: const CancelationRate(),
           ),
         ],
@@ -218,8 +219,8 @@ class Analytics extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Sample strongest area',
+                    Text(
+                      tr.anaSampleStrongestArea,
                       style: TextStyle(
                         color: Color(0xFFBFD5CC),
                         fontSize: 11,

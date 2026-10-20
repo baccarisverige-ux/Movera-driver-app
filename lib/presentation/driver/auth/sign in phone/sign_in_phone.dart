@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:country_pickers/country.dart';
 import 'package:country_pickers/utils/utils.dart';
@@ -60,7 +61,7 @@ class _DriverSignInPhoneState extends State<DriverSignInPhone> {
                         50.height,
                         Row(
                           children: [
-                            IconButton(tooltip: 'Back', 
+                            IconButton(tooltip: tr.back, 
                               onPressed: () {
                                 popOwned(context);
                               },
@@ -105,7 +106,7 @@ class _DriverSignInPhoneState extends State<DriverSignInPhone> {
                   children: [
                     5.height,
                     TextWidget(
-                      text: "Sign in with phone number",
+                      text: tr.signInWithPhone,
                       fontSize: 22,
                       fontWeight: fwExtraBold,
                     ),
@@ -113,7 +114,7 @@ class _DriverSignInPhoneState extends State<DriverSignInPhone> {
                     TextWidget(
                       textAlign: TextAlign.start,
                       text:
-                          "Phone sign-in is unavailable in this demo. No verification code is sent.",
+                          tr.phoneSignInUnavailableDemo,
                       color: AppColor.subtitle,
                       fontSize: 14,
                       fontWeight: fwMedium,
@@ -121,7 +122,7 @@ class _DriverSignInPhoneState extends State<DriverSignInPhone> {
                     24.height,
                     customTextfield(
                       contentHorizPadding: 0,
-                      hint: "Phone number",
+                      hint: tr.phoneNumber,
                       keyboardType: TextInputType.phone,
                       prefixWidget: InkWell(
                         onTap: () {
@@ -166,10 +167,10 @@ class _DriverSignInPhoneState extends State<DriverSignInPhone> {
                     ),
                     40.height,
                     CustomButton(
-                      centerContent: "Continue",
+                      centerContent: tr.navContinue,
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Phone sign-in requires the account service.')),
+                          SnackBar(content: Text(tr.phoneSignInNeedsService)),
                         );
                       },
                     ),

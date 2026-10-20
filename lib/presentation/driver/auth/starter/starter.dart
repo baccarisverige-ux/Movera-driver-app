@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/session/demo_features.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
@@ -43,7 +44,7 @@ class DriverStarter extends StatelessWidget {
                           ),
                           child: TextWidget(
                             textAlign: TextAlign.center,
-                            text: "Demo mode — no account",
+                            text: tr.demoModeNoAccount,
                             color: AppColor.title,
                             fontSize: 34,
                             fontWeight: fwExtraBold,
@@ -56,7 +57,7 @@ class DriverStarter extends StatelessWidget {
                           ),
                           child: TextWidget(
                             textAlign: TextAlign.center,
-                            text: "Let’s hit the road. Accept rides in real time and make every minute count",
+                            text: tr.starterTagline,
                             color: AppColor.subtitle,
                             fontSize: 16,
                             fontWeight: fwMedium,
@@ -71,8 +72,8 @@ class DriverStarter extends StatelessWidget {
                       children: [
                         CustomButton(
                           centerContent: legacyAuthEnabled
-                              ? "Legacy sign-in preview"
-                              : "Sign-in unavailable — demo",
+                              ? tr.legacySignInPreview
+                              : tr.signInUnavailableDemo,
                           onPressed: legacyAuthEnabled
                               ? () {
                                   Navigator.pushReplacement(
@@ -85,8 +86,8 @@ class DriverStarter extends StatelessWidget {
                         8.height,
                         CustomButton(
                           centerContent: legacyAuthEnabled
-                              ? "Legacy registration preview"
-                              : "Registration unavailable — demo",
+                              ? tr.legacyRegistrationPreview
+                              : tr.registrationUnavailableDemo,
                           onPressed: legacyAuthEnabled
                               ? () {
                                   Navigator.push(
@@ -109,7 +110,7 @@ class DriverStarter extends StatelessWidget {
                                 builder: (_) => runtime.homeBuilder(),
                               ),
                             ),
-                            child: const Text('Return to demo'),
+                            child: Text(tr.returnToDemo),
                           ),
                         20.height,
                       ],

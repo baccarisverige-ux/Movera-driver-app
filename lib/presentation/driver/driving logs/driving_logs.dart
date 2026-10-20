@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 
@@ -17,13 +18,13 @@ class DrivingLogs extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: 'Back', 
+        leading: IconButton(tooltip: tr.back, 
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
         titleSpacing: 0,
-        title: const Text(
-          'Driving log preview',
+        title: Text(
+          tr.logsPreview,
           style: TextStyle(
             color: _ink,
             fontSize: 18,
@@ -65,8 +66,8 @@ class DrivingLogs extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Sample driving-time data · not live',
+                Text(
+                  tr.logsSampleNotLive,
                   style: TextStyle(
                     color: _muted,
                     fontSize: 12,
@@ -87,8 +88,8 @@ class DrivingLogs extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          const Text(
-            'Sample week',
+          Text(
+            tr.logsSampleWeek,
             style: TextStyle(
               color: _ink,
               fontSize: 14,
@@ -96,10 +97,10 @@ class DrivingLogs extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _shift('Monday', '5 h 10 min', 'Online 07:12 – 12:22'),
-          _shift('Tuesday', '6 h 40 min', 'Online 06:48 – 13:28'),
-          _shift('Wednesday', '4 h 05 min', 'Online 15:10 – 19:15'),
-          _shift('Thursday', '6 h 26 min', 'Sample online state'),
+          _shift(tr.monday, '5 h 10 min', tr.logsOnlineFromTo('07:12', '12:22')),
+          _shift(tr.tuesday, '6 h 40 min', tr.logsOnlineFromTo('06:48', '13:28')),
+          _shift(tr.wednesday, '4 h 05 min', tr.logsOnlineFromTo('15:10', '19:15')),
+          _shift(tr.thursday, '6 h 26 min', tr.logsSampleOnlineState),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -108,8 +109,8 @@ class DrivingLogs extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: _line),
             ),
-            child: const Text(
-              'Demo compliance copy only. Driving and break limits are not connected to live account or regulatory data.',
+            child: Text(
+              tr.logsDemoCompliance,
               style: TextStyle(
                 color: _muted,
                 fontSize: 12,

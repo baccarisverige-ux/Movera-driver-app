@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/navigation/route_progress.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -10,6 +11,22 @@ import 'package:movera/core/routing/route_instruction.dart';
 import 'package:movera/core/routing/route_repository.dart';
 
 enum RouteLoadState { idle, loading, ready, failed }
+
+/// Why the route on screen is missing or changing. The words come from
+/// [text], in the driver's language; the logic only compares the value.
+enum NavigationRouteStatus {
+  updating,
+  recalculating,
+  unavailableRetry,
+  unavailableCheckLocation;
+
+  String get text => switch (this) {
+    updating => tr.navRouteUpdating,
+    recalculating => tr.navRouteRecalculating,
+    unavailableRetry => tr.navRouteUnavailableRetry,
+    unavailableCheckLocation => tr.navRouteUnavailableLocation,
+  };
+}
 
 class NavigationSnapshot {
   const NavigationSnapshot({
@@ -73,9 +90,9 @@ class NavigationController extends ChangeNotifier {
   DateTime? _lastMeasuredAt;
   double? _routeLength;
   bool _userPausedFollow = false;
-  String? _status;
+  NavigationRouteStatus? _status;
   String? _locationWarning;
-  String? get _displayStatus => _locationWarning ?? _status;
+  String? get _displayStatus => _locationWarning ?? _status?.text;
   Timer? _rerouteDebounce;
   bool _disposed = false;
   bool _routeInFlight = false;
@@ -278,7 +295,7 @@ class NavigationController extends ChangeNotifier {
   }
 
   void keepLastKnown({String? status}) {
-    _locationWarning = status ?? 'Location updating…';
+    _locationWarning = status ?? tr.locationUpdatingEllipsis;
     _rebuildBanner();
   }
 
@@ -306,7 +323,7 @@ class NavigationController extends ChangeNotifier {
       _routeLength = null;
       _progressAlong = null;
       _routeState = RouteLoadState.failed;
-      _status = 'Route unavailable — check location';
+      _status = NavigationRouteStatus.unavailableCheckLocation;
       _rebuildBanner();
       return;
     }
@@ -355,7 +372,7 @@ class NavigationController extends ChangeNotifier {
       _route = null;
       _instructionHint = 0;
       _progressAlong = null;
-      _status = 'Route updating…';
+      _status = NavigationRouteStatus.updating;
       _rebuildBanner();
     }
 
@@ -412,7 +429,7 @@ class NavigationController extends ChangeNotifier {
       }
       _routeState = RouteLoadState.failed;
       _route = null;
-      _status = 'Route unavailable — retry';
+      _status = NavigationRouteStatus.unavailableRetry;
       _rebuildBanner();
     } finally {
       if (token == _routeRequestToken) {
@@ -440,9 +457,9 @@ class NavigationController extends ChangeNotifier {
         followCamera: false,
         waitingAtPickup: true,
         route: _route,
-        banner: const NavigationBanner(
-          primary: 'Pickup',
-          distanceLabel: 'Waiting for rider',
+        banner: NavigationBanner(
+          primary: tr.pickup,
+          distanceLabel: tr.navWaitingForRider,
           symbol: NavigationBannerSymbol.arrive,
         ),
         status: _displayStatus,
@@ -468,14 +485,14 @@ class NavigationController extends ChangeNotifier {
         progress.offRoute &&
         _destination != null &&
         _stage != ActiveRideStage.waitingForRider) {
-      _status = 'Recalculating route…';
+      _status = NavigationRouteStatus.recalculating;
       _scheduleReroute();
     } else if (progress != null && !progress.offRoute) {
       _rerouteDebounce?.cancel();
       _rerouteDebounce = null;
       _rerouteOrigin = null;
       _stuckReroutes = 0;
-      if (_status == 'Recalculating route…') _status = null;
+      if (_status == NavigationRouteStatus.recalculating) _status = null;
     }
 
     _snapshot = NavigationSnapshot(
@@ -497,14 +514,15 @@ class NavigationController extends ChangeNotifier {
     if (instruction == null) {
       return NavigationBanner(
         primary: arrivingToPickup
-            ? 'Navigate to pickup'
-            : 'Navigate to ${_targetLabel ?? 'drop-off'}',
+            ? tr.navToPickup
+            : tr.navToPoint(_targetLabel ?? tr.navDropOffLower),
         // A route without turns: the distance left to the point.
         distanceLabel:
             _displayStatus ??
             (progress == null
-                ? 'Route updating…'
-                : _toPoint(progress.remainingMeters)),
+                ? NavigationRouteStatus.updating.text
+                : RouteInstructionCopy.toPoint(progress.remainingMeters)),
+        distanceMeters: _displayStatus == null ? progress?.remainingMeters : null,
         symbol: arrivingToPickup
             ? NavigationBannerSymbol.straight
             : NavigationBannerSymbol.arrive,
@@ -521,8 +539,11 @@ class NavigationController extends ChangeNotifier {
           : NavigationBannerSymbol.arrive;
       if (arrivingToPickup) {
         return NavigationBanner(
-          primary: meters < 25 ? 'Pickup ahead' : 'Pickup',
-          distanceLabel: _toPoint(meters),
+          primary: meters < RouteInstructionCopy.nowMeters
+              ? tr.navPickupAhead
+              : tr.pickup,
+          distanceLabel: RouteInstructionCopy.toPoint(meters),
+          distanceMeters: meters,
           roadName: instruction.roadName,
           symbol: side,
           status: _displayStatus,
@@ -530,9 +551,14 @@ class NavigationController extends ChangeNotifier {
       }
       return NavigationBanner(
         primary: _targetLabel != null
-            ? '${_targetLabel!}${meters < 25 ? ' ahead' : ''}'
-            : (meters < 25 ? 'Drop-off ahead' : 'Drop-off'),
-        distanceLabel: _toPoint(meters),
+            ? (meters < RouteInstructionCopy.nowMeters
+                  ? tr.navPointAhead(_targetLabel!)
+                  : _targetLabel!)
+            : (meters < RouteInstructionCopy.nowMeters
+                  ? tr.navDropOffAhead
+                  : tr.dropOff),
+        distanceLabel: RouteInstructionCopy.toPoint(meters),
+        distanceMeters: meters,
         roadName: instruction.roadName,
         symbol: side,
         status: _displayStatus,
@@ -546,7 +572,7 @@ class NavigationController extends ChangeNotifier {
     final named = exitRef != null &&
         (instruction.type == RouteManeuverType.offRamp ||
             instruction.type == RouteManeuverType.ramp);
-    final action = RouteInstructionCopy.shortAction(
+    final cue = RouteInstructionCopy.cue(
       type: instruction.type,
       modifier: instruction.modifier,
       exitNumber: instruction.exitNumber,
@@ -559,8 +585,14 @@ class NavigationController extends ChangeNotifier {
     );
     final rest = named ? towards.skip(1) : towards;
     return NavigationBanner(
-      primary: RouteInstructionCopy.livePrimary(action: action, meters: meters),
+      primary: RouteInstructionCopy.livePrimary(cue: cue, meters: meters),
+      instruction: RouteInstructionCopy.liveInstruction(
+        cue: cue,
+        meters: meters,
+      ),
       distanceLabel: RouteInstructionCopy.formatDistance(meters),
+      distanceMeters: meters,
+      exitRef: named ? exitRef : null,
       roadName: instruction.roadName,
       exitNumber: instruction.exitNumber,
       exitAngleDegrees: instruction.exitAngleDegrees,
@@ -574,12 +606,6 @@ class NavigationController extends ChangeNotifier {
       laneModifier: instruction.modifier,
       toll: instruction.toll,
     );
-  }
-
-  /// "in 150 m", or "now" at the point.
-  static String _toPoint(double meters) {
-    final distance = RouteInstructionCopy.formatDistance(meters);
-    return distance == 'now' ? distance : 'in $distance';
   }
 
   static bool _samePoints(List<GeoPoint> a, List<GeoPoint> b) {

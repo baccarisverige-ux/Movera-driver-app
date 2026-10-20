@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/core/vehicle/vehicle_year_policy.dart';
@@ -101,8 +102,8 @@ class _AddVehicleState extends State<AddVehicle> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not save local vehicle draft. Retry.'),
+          SnackBar(
+            content: Text(tr.vehCouldNotSaveDraft),
           ),
         );
       }
@@ -131,9 +132,9 @@ class _AddVehicleState extends State<AddVehicle> {
         return ListView(
           children: [
             const SizedBox(height: 12),
-            const Center(
+            Center(
               child: Text(
-                'Year',
+                tr.year,
                 style: TextStyle(
                   color: _ink,
                   fontSize: 16,
@@ -171,7 +172,7 @@ class _AddVehicleState extends State<AddVehicle> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
@@ -182,8 +183,8 @@ class _AddVehicleState extends State<AddVehicle> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
               children: [
-                const Text(
-                  'Vehicle requirements',
+                Text(
+                  tr.vehRequirements,
                   style: TextStyle(
                     color: _ink,
                     fontSize: 28,
@@ -192,8 +193,8 @@ class _AddVehicleState extends State<AddVehicle> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'To drive with Movera, you need a vehicle that is 1990 or newer, and not salvaged.',
+                Text(
+                  tr.vehRequirementsBody,
                   style: TextStyle(
                     color: _ink,
                     fontSize: 16,
@@ -202,8 +203,8 @@ class _AddVehicleState extends State<AddVehicle> {
                   ),
                 ),
                 const SizedBox(height: 28),
-                const Text(
-                  'Enter your vehicle information',
+                Text(
+                  tr.vehEnterInformation,
                   style: TextStyle(
                     color: _ink,
                     fontSize: 20,
@@ -213,38 +214,38 @@ class _AddVehicleState extends State<AddVehicle> {
                 ),
                 const SizedBox(height: 18),
                 _field(
-                  label: 'Make',
+                  label: tr.make,
                   child: TextField(
                     controller: _make,
                     textCapitalization: TextCapitalization.characters,
-                    decoration: _input('Search by make'),
+                    decoration: _input(tr.searchByMake),
                   ),
                 ),
                 if (showModel) ...[
                   const SizedBox(height: 16),
                   _field(
-                    label: 'Model',
+                    label: tr.model,
                     child: TextField(
                       controller: _model,
                       textCapitalization: TextCapitalization.characters,
-                      decoration: _input('Search by model'),
+                      decoration: _input(tr.searchByModel),
                     ),
                   ),
                 ],
                 if (showYear) ...[
                   const SizedBox(height: 16),
                   _field(
-                    label: 'Year',
+                    label: tr.year,
                     child: InkWell(
                       onTap: _pickYear,
                       borderRadius: BorderRadius.circular(12),
                       child: InputDecorator(
-                        decoration: _input('Select...'),
+                        decoration: _input(tr.selectEllipsis),
                         child: Row(
                           children: [
                             Expanded(
                               child: Text(
-                                _year ?? 'Select...',
+                                _year ?? tr.selectEllipsis,
                                 style: TextStyle(
                                   color: _year == null ? _muted : _ink,
                                   fontSize: 16,
@@ -265,7 +266,7 @@ class _AddVehicleState extends State<AddVehicle> {
                 if (showPlate) ...[
                   const SizedBox(height: 16),
                   _field(
-                    label: 'License plate number',
+                    label: tr.licensePlateNumber,
                     child: TextField(
                       controller: _plate,
                       textCapitalization: TextCapitalization.characters,
@@ -274,8 +275,8 @@ class _AddVehicleState extends State<AddVehicle> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                const Text(
-                  '* Required',
+                Text(
+                  tr.requiredMark,
                   style: TextStyle(
                     color: Color(0xFFB84F3D),
                     fontSize: 13,
@@ -301,8 +302,8 @@ class _AddVehicleState extends State<AddVehicle> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  'Continue',
+                child: Text(
+                  tr.navContinue,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
               ),
@@ -503,8 +504,8 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Photo could not be saved locally. Retry.'),
+          SnackBar(
+            content: Text(tr.vehPhotoCouldNotSave),
           ),
         );
       }
@@ -554,8 +555,8 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Remove local vehicle draft?',
+              Text(
+                tr.vehRemoveDraftQ,
                 style: TextStyle(
                   color: _ink,
                   fontSize: 18,
@@ -564,7 +565,7 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
               ),
               const SizedBox(height: 14),
               Text(
-                'This removes $_name and its saved document photos from this device.',
+                tr.vehRemovesNameAndPhotos(_name),
                 style: const TextStyle(
                   color: _ink,
                   fontSize: 15,
@@ -587,8 +588,8 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text(
-                    'Keep vehicle',
+                  child: Text(
+                    tr.vehKeepVehicle,
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),
@@ -608,8 +609,8 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text(
-                    'Remove vehicle',
+                  child: Text(
+                    tr.vehRemoveVehicle,
                     style: TextStyle(fontWeight: FontWeight.w800),
                   ),
                 ),
@@ -628,8 +629,8 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
       } catch (_) {
         if (mounted && ModalRoute.of(context)?.isCurrent == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Could not remove local draft. Retry.'),
+            SnackBar(
+              content: Text(tr.vehCouldNotRemoveDraft),
             ),
           );
         }
@@ -651,7 +652,7 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
@@ -669,8 +670,8 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
             ),
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Document photos stay on this device. No upload or verification service is connected.',
+          Text(
+            tr.vehPhotosStayOnDevice,
             style: TextStyle(
               color: _ink,
               fontSize: 16,
@@ -681,48 +682,48 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
           const SizedBox(height: 22),
           if (_loading) const Center(child: CircularProgressIndicator()),
           if (_restoreFailed) ...[
-            const Text('Could not load local vehicle documents.'),
+            Text(tr.vehCouldNotLoadDocuments),
             Align(
               alignment: Alignment.centerLeft,
               child: FilledButton(
                 onPressed: _restore,
-                child: const Text('Retry'),
+                child: Text(tr.retry),
               ),
             ),
           ],
           if (!_loading && !_restoreFailed && _draft == null)
-            const Text('This local vehicle draft is no longer available.'),
+            Text(tr.vehDraftNoLongerAvailable),
           _docRow(
-            title: 'Vehicle Registration Certificate (Front Page)',
+            title: tr.vehRegistrationCertFront,
             note: _registrationDone
-                ? 'Saved locally — not verified'
-                : 'Recommended next step',
+                ? tr.vehSavedLocallyNotVerified
+                : tr.vehRecommendedNextStep,
             noteColor: _registrationDone
                 ? const Color(0xFF1F7A4D)
                 : const Color(0xFF3D5A80),
             onTap: !_canEdit
                 ? null
                 : () => _openPhoto(
-                    title: 'Take a photo of your Vehicle Registration Certificate (Front Page)',
-                    checks: const [
-                      'The document should be blue, black and white.',
-                      'All four corners are visible.',
+                    title: tr.vehTakePhotoRegistration,
+                    checks: [
+                      tr.vehDocBlueBlackWhite,
+                      tr.vehAllFourCorners,
                     ],
                     registration: true,
                   ),
           ),
           const Divider(height: 1, color: _line),
           _docRow(
-            title: 'Insurance Letter',
-            note: _insuranceDone ? 'Saved locally — not verified' : null,
+            title: tr.vehInsuranceLetter,
+            note: _insuranceDone ? tr.vehSavedLocallyNotVerified : null,
             noteColor: const Color(0xFF1F7A4D),
             onTap: !_canEdit
                 ? null
                 : () => _openPhoto(
-                    title: 'Take a photo of your Insurance Letter',
-                    checks: const [
-                      'The document shows the car’s registration number and that it is registered as a taxi.',
-                      'The start and end dates of the insurance are visible.',
+                    title: tr.vehTakePhotoInsurance,
+                    checks: [
+                      tr.vehInsuranceShowsTaxi,
+                      tr.vehInsuranceDatesVisible,
                     ],
                     registration: false,
                   ),
@@ -735,10 +736,10 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
                   base64Decode(_draft![key] as String),
                   height: 160,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Padding(
+                  errorBuilder: (_, __, ___) => Padding(
                     padding: EdgeInsets.all(12),
                     child: Text(
-                      'Saved photo cannot be displayed. Retake this document photo.',
+                      tr.vehSavedPhotoCannotDisplay,
                     ),
                   ),
                 ),
@@ -758,8 +759,8 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'Remove vehicle',
+              child: Text(
+                tr.vehRemoveVehicle,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
               ),
             ),
@@ -861,7 +862,7 @@ class _VehiclePhotoPageState extends State<_VehiclePhotoPage> {
         }
         if (bytes.length > LocalVehicleStore.maxPhotoBytes) {
           setState(
-            () => _captureError = 'Photo is too large to keep on this device. Retake it closer and with less detail.',
+            () => _captureError = tr.vehPhotoTooLarge,
           );
           return;
         }
@@ -873,7 +874,7 @@ class _VehiclePhotoPageState extends State<_VehiclePhotoPage> {
       }
       // Bottom snackbars cover this page's retry button on compact screens.
       setState(
-        () => _captureError = 'Camera is not available in this preview.',
+        () => _captureError = tr.vehCameraNotAvailable,
       );
     } finally {
       if (mounted) setState(() => _taking = false);
@@ -889,7 +890,7 @@ class _VehiclePhotoPageState extends State<_VehiclePhotoPage> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
@@ -926,8 +927,8 @@ class _VehiclePhotoPageState extends State<_VehiclePhotoPage> {
                   ),
                 ),
                 const SizedBox(height: 22),
-                const Text(
-                  'Before saving the local photo, check the following:',
+                Text(
+                  tr.vehBeforeSavingCheck,
                   style: TextStyle(
                     color: _ink,
                     fontSize: 16,
@@ -989,7 +990,7 @@ class _VehiclePhotoPageState extends State<_VehiclePhotoPage> {
                       ),
                     ),
                     child: Text(
-                      _taking ? 'Taking photo…' : 'Take photo',
+                      _taking ? tr.takingPhoto : tr.takePhoto,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,

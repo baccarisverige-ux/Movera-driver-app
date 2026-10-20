@@ -2510,4 +2510,2150 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get navArrive => 'Arrivée';
+
+  @override
+  String get navHeadOut => 'Partez';
+
+  @override
+  String get navKeepLeft => 'Serrez à gauche';
+
+  @override
+  String get navKeepRight => 'Serrez à droite';
+
+  @override
+  String get navTunnelAhead => 'Tunnel à venir';
+
+  @override
+  String get navTollRoadAhead => 'Route à péage à venir';
+
+  @override
+  String get navContinueStraight => 'Continuez tout droit';
+
+  @override
+  String get navContinue => 'Continuez';
+
+  @override
+  String get navRoundabout => 'Rond-point';
+
+  @override
+  String navRoundaboutExit(String exit) {
+    return 'Rond-point, sortie $exit';
+  }
+
+  @override
+  String get navRoundaboutUTurn => 'Rond-point, demi-tour';
+
+  @override
+  String navRoundaboutUTurnExit(String exit) {
+    return 'Rond-point, demi-tour · sortie $exit';
+  }
+
+  @override
+  String navSignedExit(String exit) {
+    return 'Sortie $exit';
+  }
+
+  @override
+  String navSignedExitTowards(String exit, String place) {
+    return 'Sortie $exit · $place';
+  }
+
+  @override
+  String get navExitLeft => 'Sortez à gauche';
+
+  @override
+  String get navExitRight => 'Sortez à droite';
+
+  @override
+  String get navTakeExit => 'Prenez la sortie';
+
+  @override
+  String get navRampOnto => 'Prenez la bretelle vers';
+
+  @override
+  String get navRampLeft => 'Prenez la bretelle à gauche';
+
+  @override
+  String get navRampRight => 'Prenez la bretelle à droite';
+
+  @override
+  String get navRamp => 'Prenez la bretelle';
+
+  @override
+  String get navMergeLeft => 'Insérez-vous à gauche';
+
+  @override
+  String get navMergeRight => 'Insérez-vous à droite';
+
+  @override
+  String get navMerge => 'Insérez-vous';
+
+  @override
+  String get navForkLeft => 'À l’embranchement, allez à gauche';
+
+  @override
+  String get navForkRight => 'À l’embranchement, allez à droite';
+
+  @override
+  String get navContinueAtFork => 'Continuez à l’embranchement';
+
+  @override
+  String get navTurnLeft => 'Tournez à gauche';
+
+  @override
+  String get navTurnRight => 'Tournez à droite';
+
+  @override
+  String get navEndOfRoad => 'Fin de la route';
+
+  @override
+  String get navUTurn => 'Demi-tour';
+
+  @override
+  String get navSharpLeft => 'Tournez franchement à gauche';
+
+  @override
+  String get navSharpRight => 'Tournez franchement à droite';
+
+  @override
+  String get navSlightLeft => 'Tournez légèrement à gauche';
+
+  @override
+  String get navSlightRight => 'Tournez légèrement à droite';
+
+  @override
+  String get navDistanceNow => 'maintenant';
+
+  @override
+  String navMeters(String meters) {
+    return '$meters m';
+  }
+
+  @override
+  String navKilometers(String km) {
+    return '$km km';
+  }
+
+  @override
+  String get navDecimalMark => ',';
+
+  @override
+  String navInDistance(String distance) {
+    return 'dans $distance';
+  }
+
+  @override
+  String navActionIn(String action, String distance) {
+    return '$action dans $distance';
+  }
+
+  @override
+  String navActionNow(String action) {
+    return '$action maintenant';
+  }
+
+  @override
+  String navActionFor(String action, String distance) {
+    return '$action sur $distance';
+  }
+
+  @override
+  String navOnto(String action, String road) {
+    return '$action sur $road';
+  }
+
+  @override
+  String get navArriveAtDestination => 'Vous êtes arrivé à destination';
+
+  @override
+  String navHeadOutOn(String road) {
+    return 'Partez sur $road';
+  }
+
+  @override
+  String navContinueOn(String road) {
+    return 'Continuez sur $road';
+  }
+
+  @override
+  String get navRoundaboutContinue => 'Au rond-point, continuez';
+
+  @override
+  String navRoundaboutTakeExit(String exit) {
+    return 'Au rond-point, prenez la sortie $exit';
+  }
+
+  @override
+  String get navExitOnLeft => 'Prenez la sortie à gauche';
+
+  @override
+  String get navExitOnRight => 'Prenez la sortie à droite';
+
+  @override
+  String get navEndTurnLeft => 'Au bout de la route, tournez à gauche';
+
+  @override
+  String get navEndTurnRight => 'Au bout de la route, tournez à droite';
+
+  @override
+  String get navAtEndOfRoad => 'Au bout de la route';
+
+  @override
+  String get navMakeUTurn => 'Faites demi-tour';
+
+  @override
+  String navUseLeftLanes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Prenez les $count voies de gauche',
+      one: 'Prenez la voie de gauche',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String navUseRightLanes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Prenez les $count voies de droite',
+      one: 'Prenez la voie de droite',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String navUseMiddleLanes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Prenez les $count voies du milieu',
+      one: 'Prenez la voie du milieu',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String navTowards(String place) {
+    return 'direction $place';
+  }
+
+  @override
+  String get navToDestination => 'Vers la destination';
+
+  @override
+  String navExitSemantics(String cue, String exit) {
+    return '$cue, sortie $exit';
+  }
+
+  @override
+  String get navPickupAhead => 'Prise en charge juste devant';
+
+  @override
+  String get navDropOffAhead => 'Dépose juste devant';
+
+  @override
+  String navPointAhead(String point) {
+    return '$point juste devant';
+  }
+
+  @override
+  String get navToPickup => 'Naviguer vers la prise en charge';
+
+  @override
+  String navToPoint(String point) {
+    return 'Naviguer vers $point';
+  }
+
+  @override
+  String get navDropOffLower => 'la dépose';
+
+  @override
+  String get navWaitingForRider => 'En attente du passager';
+
+  @override
+  String get navRouteUpdating => 'Itinéraire en cours de mise à jour…';
+
+  @override
+  String get navRouteRecalculating => 'Recalcul de l’itinéraire…';
+
+  @override
+  String get navRouteUnavailableRetry => 'Itinéraire indisponible — réessayez';
+
+  @override
+  String get navRouteUnavailableLocation =>
+      'Itinéraire indisponible — vérifiez la localisation';
+
+  @override
+  String get authAddVehicle => 'Ajouter un véhicule';
+
+  @override
+  String get authAddVehicleDetails =>
+      'Ajoutez les détails du véhicule pour vérification';
+
+  @override
+  String get vehicleMake => 'Marque du véhicule';
+
+  @override
+  String get vehicleModel => 'Modèle du véhicule';
+
+  @override
+  String get vehicleYear => 'Année du véhicule';
+
+  @override
+  String get enterModelYear => 'Saisissez l’année du modèle';
+
+  @override
+  String get licensePlateNumber => 'Numéro d’immatriculation';
+
+  @override
+  String get vehicleType => 'Type de véhicule';
+
+  @override
+  String get vehicleColor => 'Couleur';
+
+  @override
+  String get selectColor => 'Choisissez une couleur';
+
+  @override
+  String get tapToUpload => 'Touchez pour importer';
+
+  @override
+  String get openingEllipsis => 'Ouverture…';
+
+  @override
+  String get openCamera => 'Ouvrir l’appareil photo';
+
+  @override
+  String get fileSelectedSuccessfully => 'Fichier sélectionné !';
+
+  @override
+  String get vehicleDocumentSelectionFailed =>
+      'Échec de la sélection du document du véhicule';
+
+  @override
+  String get couldNotReadSelectedFile =>
+      'Impossible de lire le fichier sélectionné. Veuillez réessayer.';
+
+  @override
+  String get photoCapturedSuccessfully => 'Photo prise !';
+
+  @override
+  String get couldNotReadCapturedPhoto =>
+      'Impossible de lire la photo prise. Veuillez réessayer.';
+
+  @override
+  String get docPassport => 'Passeport';
+
+  @override
+  String get scanYourPassportPhoto => 'Scannez la photo de votre passeport';
+
+  @override
+  String get docDrivingLicense => 'Permis de conduire';
+
+  @override
+  String get scanYourDrivingLicense => 'Scannez votre permis de conduire';
+
+  @override
+  String get docNationalId => 'Carte d’identité';
+
+  @override
+  String get scanYourNationalId => 'Scannez votre carte d’identité';
+
+  @override
+  String get selectDocumentTypeToScan =>
+      'Choisissez le type de document à scanner';
+
+  @override
+  String get weNeedToDetermineDocument =>
+      'Nous devons vérifier que la pièce d’identité est authentique et vous appartient';
+
+  @override
+  String get createAccount => 'Créer un compte';
+
+  @override
+  String get enterValidPhoneForCode =>
+      'Saisissez un numéro de téléphone valide auquel nous enverrons un code de vérification';
+
+  @override
+  String get fullName => 'Nom complet';
+
+  @override
+  String get emailAddress => 'Adresse e-mail';
+
+  @override
+  String get acceptTermsAndPrivacy =>
+      'Acceptez les conditions et la politique de confidentialité';
+
+  @override
+  String get byContinuingIAgreeTo => ' En continuant, j’accepte les ';
+
+  @override
+  String get termsOfUse => 'Conditions d’utilisation';
+
+  @override
+  String get andWord => ' et la ';
+
+  @override
+  String get privacyPolicy => 'Politique de confidentialité';
+
+  @override
+  String get phoneVerification => 'Vérification du téléphone';
+
+  @override
+  String get codeDeliveryUnavailableDemo =>
+      'L’envoi de code n’est pas disponible dans cette démo';
+
+  @override
+  String get accountVerificationNeedsService =>
+      ' La vérification du compte nécessite le service de compte.';
+
+  @override
+  String get didNotGetCode => 'Vous n’avez pas reçu de code ?';
+
+  @override
+  String get signInUnavailableInPreview => 'Connexion indisponible en aperçu';
+
+  @override
+  String get verificationUnavailableDemo =>
+      'La vérification n’est pas disponible dans cette démo.';
+
+  @override
+  String get starterTagline =>
+      'En route ! Acceptez des courses en temps réel et faites compter chaque minute';
+
+  @override
+  String get legacySignInPreview => 'Aperçu de l’ancienne connexion';
+
+  @override
+  String get signInUnavailableDemo => 'Connexion indisponible — démo';
+
+  @override
+  String get legacyRegistrationPreview => 'Aperçu de l’ancienne inscription';
+
+  @override
+  String get registrationUnavailableDemo => 'Inscription indisponible — démo';
+
+  @override
+  String get returnToDemo => 'Retour à la démo';
+
+  @override
+  String get signIn => 'Se connecter';
+
+  @override
+  String get welcomeBackRiding => 'Bon retour ! C’est parti';
+
+  @override
+  String get continueWithPhone => 'Continuer avec le téléphone';
+
+  @override
+  String get continueWithApple => 'Continuer avec Apple';
+
+  @override
+  String get continueWithGoogle => 'Continuer avec Google';
+
+  @override
+  String get dontHaveAccount => 'Vous n’avez pas de compte ?';
+
+  @override
+  String get signUp => 'S’inscrire';
+
+  @override
+  String get signInWithPhone => 'Se connecter avec un numéro de téléphone';
+
+  @override
+  String get phoneSignInUnavailableDemo =>
+      'La connexion par téléphone n’est pas disponible dans cette démo. Aucun code n’est envoyé.';
+
+  @override
+  String get phoneNumber => 'Numéro de téléphone';
+
+  @override
+  String get phoneSignInNeedsService =>
+      'La connexion par téléphone nécessite le service de compte.';
+
+  @override
+  String get idPhotoPreview => 'Aperçu de la photo d’identité';
+
+  @override
+  String get idPhotoSampleOnly =>
+      'Image d’exemple uniquement. La prise de vue et la vérification ne sont pas connectées. Aucune pièce d’identité n’est envoyée.';
+
+  @override
+  String get returnToHome => 'Retour à l’accueil';
+
+  @override
+  String get retakeUnavailablePreview => 'Reprise indisponible dans cet aperçu';
+
+  @override
+  String get enterValidPhoneWeWillSend =>
+      'Saisissez un numéro de téléphone valide auquel nous enverrons';
+
+  @override
+  String get verifyAction => 'Vérifier';
+
+  @override
+  String stepOfTotal(String step, String total) {
+    return '$step sur $total';
+  }
+
+  @override
+  String get uploadId => 'Importer une pièce d’identité';
+
+  @override
+  String get weNeedToVerifyYourId => 'nous devons vérifier votre identité';
+
+  @override
+  String get approveAccountIdentityReason =>
+      'Pour approuver votre compte, nous devons être sûrs à 100 % que vous êtes bien la personne que vous dites être, pour des raisons de sécurité et de transparence.';
+
+  @override
+  String get vehicleRegistration => 'Carte grise';
+
+  @override
+  String get uploadVehicleRegistration =>
+      'Importez le certificat d’immatriculation';
+
+  @override
+  String get insurance => 'Assurance';
+
+  @override
+  String get uploadCarInsurance =>
+      'Importez l’assurance du véhicule pour vérification';
+
+  @override
+  String get todayLower => 'aujourd’hui';
+
+  @override
+  String get tomorrowLower => 'demain';
+
+  @override
+  String inDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'dans $count jours',
+      one: 'dans 1 jour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get docInsuranceLetter => 'Attestation d’assurance';
+
+  @override
+  String get docTaxiDriverLicense => 'Carte professionnelle de taxi';
+
+  @override
+  String get docTaxiLicenseShort => 'Carte taxi';
+
+  @override
+  String get docRegistrationCertificate => 'Certificat d’immatriculation';
+
+  @override
+  String get docRegistrationShort => 'Immatriculation';
+
+  @override
+  String get docDriversLicense => 'Permis de conduire';
+
+  @override
+  String get docVehicleVerification => 'Vérification du véhicule';
+
+  @override
+  String get docDriversId => 'Pièce d’identité du chauffeur';
+
+  @override
+  String get docExpiredCantGoOnline =>
+      'Expiré · Vous ne pouvez pas passer en ligne';
+
+  @override
+  String docExpiresWhenDate(String when, String date) {
+    return 'Expire $when · $date';
+  }
+
+  @override
+  String docNewTitle(String title) {
+    return 'Nouveau document : $title';
+  }
+
+  @override
+  String get docTakeClearPhoto =>
+      'Prenez une photo nette du document entier. Movera le vérifie avant qu’il soit pris en compte.';
+
+  @override
+  String get docSendNew => 'Envoyer le nouveau document';
+
+  @override
+  String get docDemoNoFileLeaves =>
+      'Démo : aucun fichier ne quitte le téléphone.';
+
+  @override
+  String get docSentForReview => 'Envoyé pour vérification';
+
+  @override
+  String docTitleExpired(String title) {
+    return '$title expiré';
+  }
+
+  @override
+  String get youCanGoOnlineNow => 'Vous pouvez passer en ligne.';
+
+  @override
+  String get docNewInReviewGoOnlineWhenApproved =>
+      'Votre nouveau document est en cours de vérification. Vous pourrez passer en ligne dès que Movera l’aura approuvé.';
+
+  @override
+  String get docUploadNewGoOnlineWhenApproved =>
+      'Importez-en un nouveau. Vous pourrez passer en ligne dès que Movera l’aura approuvé.';
+
+  @override
+  String get approveDemo => 'Approuver (démo)';
+
+  @override
+  String get uploadNew => 'Importer un nouveau';
+
+  @override
+  String get documents => 'Documents';
+
+  @override
+  String get docTermsAndConditions => 'Conditions générales';
+
+  @override
+  String get docVirtualInfoSession => 'Session d’information en ligne';
+
+  @override
+  String get docDriversLicenseLower => 'Permis de conduire';
+
+  @override
+  String get docProfilePhoto => 'Photo de profil';
+
+  @override
+  String get docCompanyRegistration => 'Immatriculation de l’entreprise';
+
+  @override
+  String get docCompanyRegistrationNote =>
+      'Extrait de Bolagsverket ou de Skatteverket. Inutile avec un partenaire de flotte.';
+
+  @override
+  String get docTaxiTrafficPermit => 'Autorisation de transport de taxi';
+
+  @override
+  String get docTaxSettings => 'Paramètres fiscaux';
+
+  @override
+  String get docBankStatement => 'Relevé bancaire';
+
+  @override
+  String get docFrontPage => 'Première page';
+
+  @override
+  String get docStockholmTrips => 'Stockholm · Courses';
+
+  @override
+  String get docEarnAnywhereSweden => 'Gagnez de l’argent partout en Suède';
+
+  @override
+  String get docSampleListNotice =>
+      'Liste d’exemple · L’envoi de ces documents n’est pas encore disponible dans l’application. Rien n’a été importé ni vérifié.';
+
+  @override
+  String docApprovedOfTotal(int approved, int total) {
+    return '$approved sur $total approuvés';
+  }
+
+  @override
+  String docLeftCount(int count) {
+    return '$count restant(s)';
+  }
+
+  @override
+  String get vehicle => 'Véhicule';
+
+  @override
+  String get docStatusApproved => 'Approuvé';
+
+  @override
+  String get docStatusInReview => 'En vérification';
+
+  @override
+  String get docStatusNeeded => 'Requis';
+
+  @override
+  String get docPreviewNotAvailable =>
+      'Pas encore disponible — page d’exemple. L’envoi de ce document ne fait pas encore partie de l’application. Aucun document n’a été importé ni vérifié.';
+
+  @override
+  String schedRidesHidden(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count courses masquées',
+      one: '1 course masquée',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String schedClashBody(String time) {
+    return 'Elle chevauche votre prise en charge de $time : pas assez de temps pour y aller.';
+  }
+
+  @override
+  String get reminder => 'Rappel';
+
+  @override
+  String get schedAvailableToday => 'Disponibles aujourd’hui';
+
+  @override
+  String get schedUpcoming => 'À venir';
+
+  @override
+  String get schedPreviewNotBinding =>
+      'Aperçu — sans engagement. Vos choix durent jusqu’au redémarrage de l’application.';
+
+  @override
+  String schedAcceptedPickupAt(String time) {
+    return 'Acceptée · prise en charge $time';
+  }
+
+  @override
+  String get laterLower => 'plus tard';
+
+  @override
+  String get schedReservationCancelled => 'Réservation annulée';
+
+  @override
+  String get schedPlanAhead => 'Anticipez et choisissez votre prochaine course';
+
+  @override
+  String get schedRequestsTab => 'Demandes';
+
+  @override
+  String get schedAcceptedTab => 'Acceptées';
+
+  @override
+  String schedSeedTime(String day, String time) {
+    return '$day, $time';
+  }
+
+  @override
+  String schedPickupTomorrowAt(String time) {
+    return 'Prise en charge demain à $time';
+  }
+
+  @override
+  String schedBackupNote(String time) {
+    return 'Votre prise en charge de $time a été confiée à un chauffeur de secours.';
+  }
+
+  @override
+  String get schedSampleReservation => 'Réservation d’exemple';
+
+  @override
+  String get schedReservationDetails => 'Détails de la réservation';
+
+  @override
+  String get schedIllustrativeRoute =>
+      'Itinéraire indicatif — données d’exemple';
+
+  @override
+  String get schedViewRoute => 'Voir l’itinéraire de la réservation';
+
+  @override
+  String get schedDemoAccepted => 'Acceptée (démo)';
+
+  @override
+  String get schedAvailable => 'Disponible';
+
+  @override
+  String get rideTypeLabel => 'Type de course';
+
+  @override
+  String get trip2 => 'Course';
+
+  @override
+  String get route => 'Itinéraire';
+
+  @override
+  String get schedBeforeThisRide => 'Avant cette course';
+
+  @override
+  String get goodToKnow => 'Bon à savoir';
+
+  @override
+  String get schedBeReadyEarly => 'Soyez prêt à l’avance';
+
+  @override
+  String schedGoOnlineMinBefore(String minutes) {
+    return 'Passez en ligne $minutes min avant la prise en charge pour que l’application vous guide à temps.';
+  }
+
+  @override
+  String get schedTripsOnTheWay => 'Courses sur le trajet';
+
+  @override
+  String get schedOnlyTripsToward =>
+      'Avant la prise en charge, vous ne recevez que des courses qui vont dans sa direction et vous laissent le temps d’y arriver.';
+
+  @override
+  String get schedStillReceiveRides =>
+      'Vous pouvez encore recevoir des courses adaptées avant la prise en charge prévue.';
+
+  @override
+  String get schedPlansChanged => 'Changement de programme ?';
+
+  @override
+  String schedDriversNeverPay(String line) {
+    return '$line Les chauffeurs ne paient jamais pour annuler.';
+  }
+
+  @override
+  String get schedLocalPreviewCancel =>
+      'Ceci est un aperçu local. Annuler retire la réservation d’exemple jusqu’au redémarrage de l’application.';
+
+  @override
+  String get schedReservedForYou => 'Réservée pour vous';
+
+  @override
+  String get schedKeepInAccepted =>
+      'Nous gardons cette course dans votre liste Acceptées. Si vous annulez, un motif vous sera demandé avant tout changement.';
+
+  @override
+  String get schedCancelReservation => 'Annuler la réservation';
+
+  @override
+  String schedAcceptPrice(String price) {
+    return 'Accepter  •  $price';
+  }
+
+  @override
+  String get chooseBestReason => 'Choisissez le motif qui correspond le mieux.';
+
+  @override
+  String get schedCancelThisReservation => 'Annuler cette réservation ?';
+
+  @override
+  String get schedReasonDoesntCount => 'Ce motif ne compte pas contre vous.';
+
+  @override
+  String get schedRemovesSample =>
+      'Cela retire la réservation d’exemple de cette session. Aucune vraie réservation n’est annulée et l’accès au compte ne change pas.';
+
+  @override
+  String get schedKeepReservation => 'Garder la réservation';
+
+  @override
+  String tomorrowAtClock(String clock) {
+    return 'demain $clock';
+  }
+
+  @override
+  String schedFreeCancelHoursBefore(String hours) {
+    return 'Annulation gratuite jusqu’à $hours h avant la prise en charge.';
+  }
+
+  @override
+  String schedLateCancelUnder(String hours) {
+    return 'Annulation tardive : moins de $hours h avant la prise en charge.';
+  }
+
+  @override
+  String schedFreeCancelUntil(String time) {
+    return 'Annulation gratuite jusqu’à $time.';
+  }
+
+  @override
+  String get schedRidesAreOff => 'Les courses planifiées sont désactivées';
+
+  @override
+  String schedRidesOffUntil(String date) {
+    return 'Courses planifiées désactivées jusqu’au $date';
+  }
+
+  @override
+  String schedRidesPausedUntil(String date) {
+    return 'Courses planifiées en pause jusqu’au $date';
+  }
+
+  @override
+  String get schedTurnedOffByMovera =>
+      'Movera a désactivé les courses planifiées pour votre compte. Contactez l’assistance si vous avez des questions.';
+
+  @override
+  String schedLateCancelsInDays(String count, String days) {
+    return 'Vous avez eu $count annulations tardives en $days jours. Vos courses acceptées sont conservées.';
+  }
+
+  @override
+  String get schedNeverPayLateCounts =>
+      'Vous ne payez jamais pour annuler, mais cette annulation tardive compte.';
+
+  @override
+  String schedNeverPayUnderHours(String hours) {
+    return 'Vous ne payez jamais pour annuler. À moins de $hours h de la prise en charge, l’annulation est tardive et compte pour une pause.';
+  }
+
+  @override
+  String schedLateCancelPauses(String count, String days, String date) {
+    return 'C’est une annulation tardive ($count en $days jours). Les courses planifiées sont en pause jusqu’au $date.';
+  }
+
+  @override
+  String get schedLateCancelCounts =>
+      'C’est une annulation tardive et elle compte. Vous ne payez jamais.';
+
+  @override
+  String get schedAcceptedBadge => 'Acceptée';
+
+  @override
+  String get supportCatTripRider => 'Course et passager';
+
+  @override
+  String get supportCatWallet => 'Portefeuille et paiements';
+
+  @override
+  String get supportCatAccount => 'Compte et documents';
+
+  @override
+  String get supportCatTechnical => 'Problème technique';
+
+  @override
+  String get supportLocalDraftBadge => 'BROUILLON LOCAL';
+
+  @override
+  String get supportCouldNotRecover =>
+      'Impossible de récupérer l’assistance locale. Réessayez.';
+
+  @override
+  String get supportCouldNotSaveConversation =>
+      'Impossible d’enregistrer la conversation locale. Réessayez.';
+
+  @override
+  String get supportCouldNotLoadDraft =>
+      'Impossible de charger le brouillon local.';
+
+  @override
+  String get supportCouldNotSaveDraft =>
+      'Impossible d’enregistrer le brouillon local.';
+
+  @override
+  String get supportLocalTicketDraft => 'Brouillon de demande local';
+
+  @override
+  String get category => 'Catégorie';
+
+  @override
+  String get subject => 'Objet';
+
+  @override
+  String get enterSubject => 'Saisissez un objet';
+
+  @override
+  String get tellUsWhatHappened => 'Dites-nous ce qui s’est passé';
+
+  @override
+  String get enterMessage => 'Saisissez un message';
+
+  @override
+  String get supportCouldNotSaveTicket =>
+      'Impossible d’enregistrer la demande locale. Réessayez.';
+
+  @override
+  String get supportSavingDraft => 'Enregistrement du brouillon local…';
+
+  @override
+  String get supportSaveDraftDemo => 'Enregistrer le brouillon (démo)';
+
+  @override
+  String get supportTicketSavedDraftNotCleared =>
+      'Demande enregistrée localement, mais le brouillon n’a pas pu être effacé.';
+
+  @override
+  String get supportDemo => 'Assistance (démo)';
+
+  @override
+  String get supportDraftLocalTicket => 'Rédiger une demande locale';
+
+  @override
+  String get supportLocalPreview => 'Aperçu de l’assistance locale';
+
+  @override
+  String get supportLocalDraftsNoService =>
+      'Brouillons locaux sur cet appareil — aucun service d’assistance.';
+
+  @override
+  String get supportCouldNotLoadRetry =>
+      'Impossible de charger l’assistance locale — Réessayer';
+
+  @override
+  String get supportRecoverPreserve =>
+      'Récupérer l’assistance locale (conserver les données illisibles)';
+
+  @override
+  String get supportYourConversations => 'Vos conversations';
+
+  @override
+  String supportLocalDraftSubject(String subject) {
+    return 'Brouillon local : $subject';
+  }
+
+  @override
+  String get supportWriteLocalDraft => 'Rédigez un brouillon local';
+
+  @override
+  String get supportSaveLocalReply => 'Enregistrer la réponse locale';
+
+  @override
+  String get promoWeekdayPeak => 'Pointe en semaine';
+
+  @override
+  String get promoWeekdayPeakDetail =>
+      'Effectuez 8 courses entre 07:00 et 09:00.';
+
+  @override
+  String get promoWeekdayPeakWindow => 'Lun–ven · cette semaine';
+
+  @override
+  String get promoAirportRuns => 'Trajets aéroport';
+
+  @override
+  String get promoAirportRunsDetail =>
+      'Deux courses vers l’aéroport le même jour.';
+
+  @override
+  String get promoUntilSunday => 'Jusqu’à dimanche';
+
+  @override
+  String get promoEveningHours => 'Heures du soir';
+
+  @override
+  String get promoEveningHoursDetail => 'Restez en ligne 3 heures après 18:00.';
+
+  @override
+  String get promoTonight => 'Ce soir';
+
+  @override
+  String promoDemoCodeCopied(String code) {
+    return 'Code de démo $code copié';
+  }
+
+  @override
+  String get promoCouldNotCopy =>
+      'Impossible de copier le code. Veuillez réessayer.';
+
+  @override
+  String get promoPreviewTitle => 'Aperçu des promotions';
+
+  @override
+  String get preview => 'Aperçu';
+
+  @override
+  String get promoSavedTab => 'Enregistrées';
+
+  @override
+  String get promoNothingSaved => 'Rien d’enregistré pour l’instant';
+
+  @override
+  String get promoSave => 'Enregistrer';
+
+  @override
+  String get vehicles => 'Véhicules';
+
+  @override
+  String get addVehicle => 'Ajouter un véhicule';
+
+  @override
+  String get vehCouldNotLoadDrafts =>
+      'Impossible de charger les brouillons de véhicule — Réessayer';
+
+  @override
+  String get vehLocalDraftsNotVerified =>
+      'Brouillons de véhicule locaux — non activés ni vérifiés';
+
+  @override
+  String get vehTripsOnly => 'Courses uniquement';
+
+  @override
+  String get vehManageVehicles => 'Gérer les véhicules';
+
+  @override
+  String get vehExploreOpportunities => 'Découvrir les offres de véhicules';
+
+  @override
+  String get vehConnectFleetPartner =>
+      'Rejoignez un partenaire de flotte ou consultez les offres de location ou d’achat si vous avez besoin d’un autre véhicule.';
+
+  @override
+  String get vehCouldNotSaveDraft =>
+      'Impossible d’enregistrer le brouillon du véhicule. Réessayez.';
+
+  @override
+  String get year => 'Année';
+
+  @override
+  String get vehRequirements => 'Exigences pour le véhicule';
+
+  @override
+  String get vehRequirementsBody =>
+      'Pour conduire avec Movera, il vous faut un véhicule de 1990 ou plus récent, non accidenté grave.';
+
+  @override
+  String get vehEnterInformation =>
+      'Saisissez les informations de votre véhicule';
+
+  @override
+  String get make => 'Marque';
+
+  @override
+  String get searchByMake => 'Rechercher par marque';
+
+  @override
+  String get model => 'Modèle';
+
+  @override
+  String get searchByModel => 'Rechercher par modèle';
+
+  @override
+  String get selectEllipsis => 'Choisir…';
+
+  @override
+  String get requiredMark => '* Obligatoire';
+
+  @override
+  String get vehPhotoCouldNotSave =>
+      'La photo n’a pas pu être enregistrée localement. Réessayez.';
+
+  @override
+  String get vehRemoveDraftQ => 'Supprimer le brouillon du véhicule ?';
+
+  @override
+  String vehRemovesNameAndPhotos(String name) {
+    return 'Cela supprime $name et les photos de documents enregistrées de cet appareil.';
+  }
+
+  @override
+  String get vehKeepVehicle => 'Garder le véhicule';
+
+  @override
+  String get vehRemoveVehicle => 'Supprimer le véhicule';
+
+  @override
+  String get vehCouldNotRemoveDraft =>
+      'Impossible de supprimer le brouillon local. Réessayez.';
+
+  @override
+  String get vehPhotosStayOnDevice =>
+      'Les photos de documents restent sur cet appareil. Aucun service d’envoi ni de vérification n’est connecté.';
+
+  @override
+  String get vehCouldNotLoadDocuments =>
+      'Impossible de charger les documents du véhicule.';
+
+  @override
+  String get vehDraftNoLongerAvailable =>
+      'Ce brouillon de véhicule n’est plus disponible.';
+
+  @override
+  String get vehRegistrationCertFront =>
+      'Certificat d’immatriculation (première page)';
+
+  @override
+  String get vehSavedLocallyNotVerified =>
+      'Enregistré localement — non vérifié';
+
+  @override
+  String get vehRecommendedNextStep => 'Étape suivante conseillée';
+
+  @override
+  String get vehTakePhotoRegistration =>
+      'Prenez en photo votre certificat d’immatriculation (première page)';
+
+  @override
+  String get vehDocBlueBlackWhite =>
+      'Le document doit être bleu, noir et blanc.';
+
+  @override
+  String get vehAllFourCorners => 'Les quatre coins sont visibles.';
+
+  @override
+  String get vehInsuranceLetter => 'Attestation d’assurance';
+
+  @override
+  String get vehTakePhotoInsurance =>
+      'Prenez en photo votre attestation d’assurance';
+
+  @override
+  String get vehInsuranceShowsTaxi =>
+      'Le document indique l’immatriculation du véhicule et qu’il est enregistré comme taxi.';
+
+  @override
+  String get vehInsuranceDatesVisible =>
+      'Les dates de début et de fin de l’assurance sont visibles.';
+
+  @override
+  String get vehSavedPhotoCannotDisplay =>
+      'La photo enregistrée ne peut pas être affichée. Reprenez la photo de ce document.';
+
+  @override
+  String get vehPhotoTooLarge =>
+      'La photo est trop lourde pour être gardée sur cet appareil. Reprenez-la de plus près et avec moins de détails.';
+
+  @override
+  String get vehCameraNotAvailable =>
+      'L’appareil photo n’est pas disponible dans cet aperçu.';
+
+  @override
+  String get vehBeforeSavingCheck =>
+      'Avant d’enregistrer la photo, vérifiez les points suivants :';
+
+  @override
+  String get takingPhoto => 'Prise de la photo…';
+
+  @override
+  String get takePhoto => 'Prendre une photo';
+
+  @override
+  String get promoSaved => 'Enregistrée';
+
+  @override
+  String get prefStandardEveryday => 'Standard • Course du quotidien';
+
+  @override
+  String get prefExtraComfort => 'Confort supplémentaire • Douillet';
+
+  @override
+  String get prefLuxuryPremium => 'Luxe • Service premium';
+
+  @override
+  String get prefFasterPickup => 'Prise en charge plus rapide • Priorité';
+
+  @override
+  String get prefSixSeat => '6 places • Spacieux';
+
+  @override
+  String get prefLowEmissions => 'Faibles émissions • Éco';
+
+  @override
+  String get prefPetFriendly => 'Animaux acceptés • Caisse OK';
+
+  @override
+  String get prefChildSeat => 'Siège enfant • Sûr pour les enfants';
+
+  @override
+  String prefCategoriesSaved(int count) {
+    return '$count catégories de course enregistrées';
+  }
+
+  @override
+  String prefActiveOfTotal(int active, int total) {
+    return '$active sur $total actives';
+  }
+
+  @override
+  String get prefChooseRideOptions => 'Choisissez vos options de course';
+
+  @override
+  String get prefSelectRideTypes =>
+      'Sélectionnez les types de course que vous souhaitez recevoir';
+
+  @override
+  String get prefMoveraSetsFromCar =>
+      'Movera les définit d’après votre véhicule. Désactivez ceux que vous ne voulez pas.';
+
+  @override
+  String get prefSave => 'Enregistrer les préférences';
+
+  @override
+  String get safetyContactEmergencyQ => 'Contacter les services d’urgence ?';
+
+  @override
+  String get safetyUse112Only =>
+      'N’appelez le 112 que si vous ou une autre personne avez besoin d’une aide immédiate.';
+
+  @override
+  String get safetyDialerOpened =>
+      'Composeur d’urgence ouvert — confirmez l’appel sur votre appareil.';
+
+  @override
+  String get safetyAudioUnavailable =>
+      'L’enregistrement audio n’est pas disponible dans cette démo.';
+
+  @override
+  String get safetyTripSharingUnavailable =>
+      'Le partage de course n’est pas disponible dans cette démo.';
+
+  @override
+  String get safetyPreferences => 'Préférences de sécurité';
+
+  @override
+  String get safetyRideCheckOnOthersPreview =>
+      'Le contrôle de course est activé. Les autres sont en aperçu.';
+
+  @override
+  String get safetyUnavailableWithoutVerification =>
+      'Indisponible sans vérification du compte';
+
+  @override
+  String get safetyAutoTripSharing => 'Partage automatique de la course';
+
+  @override
+  String get safetyUnavailableWithoutSharing =>
+      'Indisponible sans service de partage';
+
+  @override
+  String get safetyOnSetByMovera =>
+      'Activé · défini par Movera pour chaque course';
+
+  @override
+  String get safetyOn => 'Activé';
+
+  @override
+  String get safetyRideCheckExplained =>
+      'Activé pour chaque course. Demande « Tout va bien ? » après un long arrêt, une dépose loin de la destination, un grand détour ou un freinage très brusque.';
+
+  @override
+  String get safetyTools => 'Outils de sécurité';
+
+  @override
+  String get safetyQuickTools =>
+      'Des outils rapides pour vous protéger à chaque course.';
+
+  @override
+  String get safetyContact112 => 'Contacter le 112';
+
+  @override
+  String get safetyShareTrip => 'Partager la course';
+
+  @override
+  String get safetyRideCheckOnPreviewOnly =>
+      'Contrôle de course activé · les autres en aperçu';
+
+  @override
+  String get destChooseOneAddress => 'Choisissez une adresse';
+
+  @override
+  String get destTripsInYourDirection => 'Courses dans votre direction';
+
+  @override
+  String get destMoveraPrioritizes =>
+      'Movera donnera la priorité aux demandes qui vous rapprochent de cette adresse.';
+
+  @override
+  String get destAddAddress => 'Ajouter une adresse de destination';
+
+  @override
+  String get destSuggestedAddresses => 'Adresses suggérées';
+
+  @override
+  String get destResults => 'Résultats';
+
+  @override
+  String get destNoAddressFound => 'Aucune adresse trouvée';
+
+  @override
+  String get destTryAnother =>
+      'Essayez une autre rue, un autre lieu ou une autre zone.';
+
+  @override
+  String get destFastestRoute =>
+      'Itinéraire le plus rapide vers votre destination';
+
+  @override
+  String destOnlyTripsYourWay(String place) {
+    return 'Vous ne recevrez que des courses dans votre direction : chaque course vous rapproche de $place.';
+  }
+
+  @override
+  String destArriveBy(String time) {
+    return 'Arrivée vers $time';
+  }
+
+  @override
+  String get destConfirm => 'Confirmer la destination';
+
+  @override
+  String get waybillLocalDemo => 'Démo locale';
+
+  @override
+  String get waybillDemoRadar => 'Radar de démo';
+
+  @override
+  String get demoDriverIdentityUnavailable =>
+      'Chauffeur de démo — identité indisponible';
+
+  @override
+  String get vehicleDataUnavailable => 'Données du véhicule indisponibles';
+
+  @override
+  String get plateUnavailable => 'Immatriculation indisponible';
+
+  @override
+  String positionOfCount(int position, int count) {
+    return '$position sur $count';
+  }
+
+  @override
+  String get rrMatchingTrip => 'Attribution de la course';
+
+  @override
+  String get rrConfirmingRealTime =>
+      'Confirmation de la demande en temps réel…';
+
+  @override
+  String get rrCouldNotMatch => 'Impossible d’obtenir la course. Réessayez.';
+
+  @override
+  String get rrConnectionInterrupted =>
+      'Connexion interrompue. Vous pouvez réessayer cette demande.';
+
+  @override
+  String get rrAssignedOpening =>
+      'Cette demande vous est attribuée. Ouverture de la course…';
+
+  @override
+  String get rrAnotherMatchedFirst =>
+      'Un autre chauffeur a obtenu cette course en premier.';
+
+  @override
+  String get rrNoLongerOnRadar => 'Cette course n’est plus sur le Radar.';
+
+  @override
+  String rrTripsTowardPickup(String time) {
+    return 'Courses vers votre prise en charge de $time';
+  }
+
+  @override
+  String get rrLive => 'En direct';
+
+  @override
+  String rrFreshNew(int count) {
+    return '$count nouvelles';
+  }
+
+  @override
+  String get rrNew => 'Nouveau';
+
+  @override
+  String get rrDestinationRoute => 'Itinéraire vers la destination';
+
+  @override
+  String rrTripsToward(String place) {
+    return 'Courses vers $place';
+  }
+
+  @override
+  String get rrScanningNearby => 'Recherche à proximité';
+
+  @override
+  String get rrNewTripsAppear =>
+      'Les nouvelles courses s’afficheront ici dès que le radar trouvera des demandes autour de vous.';
+
+  @override
+  String get moveraDriver => 'Chauffeur Movera';
+
+  @override
+  String get legalPrivacyBody =>
+      'Movera Driver utilise la localisation et les données de course et de véhicule pour attribuer les courses, afficher les itinéraires et conserver une feuille de route sur cet appareil.\n\nLes versions de démo gardent ces informations en mémoire sur le téléphone. Rien n’est vendu à des annonceurs. Vous pouvez vous déconnecter à tout moment depuis Profil.\n\nUne fois un vrai serveur connecté, les mêmes écrans utiliseront ce texte jusqu’à la publication d’une version signée.';
+
+  @override
+  String get legalTermsBody =>
+      'Vous vous engagez à conduire uniquement avec un permis et une assurance valides et un véhicule conforme aux documents de cette application.\n\nLes offres Radar vont au premier qui les prend. Accepter une autre course pendant un trajet est facultatif. Terminer une course crée une feuille de route que vous pouvez rouvrir depuis l’accueil.\n\nMovera peut suspendre un compte de démo qui utilise abusivement les outils de sécurité ou les appels d’urgence.';
+
+  @override
+  String get privacyPolicyTitle => 'Politique de confidentialité';
+
+  @override
+  String get termsOfService => 'Conditions d’utilisation';
+
+  @override
+  String get profSampleDriver => 'Profil de chauffeur d’exemple';
+
+  @override
+  String get profDemoNoVerified => 'Démo — aucun compte vérifié';
+
+  @override
+  String get analytics => 'Statistiques';
+
+  @override
+  String get myBank => 'Ma banque';
+
+  @override
+  String get helpCenter => 'Centre d’aide';
+
+  @override
+  String get logOut => 'Se déconnecter';
+
+  @override
+  String get logOutQ => 'Se déconnecter ?';
+
+  @override
+  String get profLogOutClears =>
+      'Les données d’aperçu de cet appareil seront effacées, y compris l’historique des courses, les contacts et les brouillons. Vous reviendrez à l’écran de connexion hors ligne.';
+
+  @override
+  String get stay => 'Rester';
+
+  @override
+  String get profCouldNotClear =>
+      'Impossible d’effacer les données locales. Vous êtes toujours connecté. Veuillez réessayer.';
+
+  @override
+  String get anaPreview => 'Aperçu des statistiques';
+
+  @override
+  String get anaSample3Rides => 'Exemple : 3 courses terminées';
+
+  @override
+  String get anaSampleLastTrip => 'Dernière course (exemple)';
+
+  @override
+  String get anaSamplePerformance => 'Performances (exemple)';
+
+  @override
+  String get anaCancel => 'Annulation';
+
+  @override
+  String get earnings => 'Gains';
+
+  @override
+  String get anaSamePeriodHome => 'Même période que sur l’accueil';
+
+  @override
+  String get acceptanceRate => 'Taux d’acceptation';
+
+  @override
+  String anaSampleAcceptance(String rate) {
+    return 'Exemple · $rate des offres acceptées';
+  }
+
+  @override
+  String get cancellationRate => 'Taux d’annulation';
+
+  @override
+  String anaSampleCancellation(String rate) {
+    return 'Exemple · $rate des courses acceptées';
+  }
+
+  @override
+  String get anaSampleStrongestArea => 'Zone la plus active (exemple)';
+
+  @override
+  String get bankAddHolderName => 'Ajoutez le nom du titulaire du compte.';
+
+  @override
+  String get bankCheckIban =>
+      'Vérifiez le format de l’IBAN et sa clé avec votre relevé bancaire.';
+
+  @override
+  String get bankBicFormat =>
+      'Le BIC / SWIFT comporte 8 ou 11 lettres et chiffres.';
+
+  @override
+  String get bankCheckClearing =>
+      'Vérifiez le numéro de clearing : 4 chiffres, ou 5 commençant par 8 pour Swedbank.';
+
+  @override
+  String get bankAccountDigits =>
+      'Le numéro de compte comporte 6 à 10 chiffres.';
+
+  @override
+  String get bankPreviewNotSaved =>
+      'Aperçu uniquement — compte non enregistré.';
+
+  @override
+  String get countrySweden => 'Suède';
+
+  @override
+  String get international => 'International';
+
+  @override
+  String get bankAccount => 'Compte bancaire';
+
+  @override
+  String get bankHolder => 'Titulaire';
+
+  @override
+  String get country => 'Pays';
+
+  @override
+  String get bank => 'Banque';
+
+  @override
+  String get clearing => 'Clearing';
+
+  @override
+  String get bankUseIban =>
+      'Utilisez l’IBAN de votre relevé bancaire. Les IBAN étrangers affichent un code pays ; aucune connexion bancaire n’est vérifiée.';
+
+  @override
+  String get bankFoundFromClearing =>
+      'La banque est déduite du numéro de clearing.';
+
+  @override
+  String get checkDetails => 'Vérifier les informations';
+
+  @override
+  String get bankDemoNotSaved =>
+      'Démo : compte non enregistré ni envoyé à une banque';
+
+  @override
+  String minutesAgo(int minutes) {
+    return 'il y a $minutes min';
+  }
+
+  @override
+  String hoursAgo(int hours) {
+    return 'il y a $hours h';
+  }
+
+  @override
+  String get yesterday => 'Hier';
+
+  @override
+  String daysAgo(int days) {
+    return 'il y a $days jours';
+  }
+
+  @override
+  String get noNotificationsYet => 'Aucune notification pour l’instant';
+
+  @override
+  String get filterAll => 'Toutes';
+
+  @override
+  String get filterDemand => 'Demande';
+
+  @override
+  String get logsPreview => 'Aperçu du journal de conduite';
+
+  @override
+  String get logsSampleNotLive =>
+      'Données de temps de conduite d’exemple · pas en direct';
+
+  @override
+  String get logsSampleWeek => 'Semaine d’exemple';
+
+  @override
+  String get monday => 'Lundi';
+
+  @override
+  String get tuesday => 'Mardi';
+
+  @override
+  String get wednesday => 'Mercredi';
+
+  @override
+  String get thursday => 'Jeudi';
+
+  @override
+  String logsOnlineFromTo(String from, String to) {
+    return 'En ligne $from – $to';
+  }
+
+  @override
+  String get logsSampleOnlineState => 'État en ligne d’exemple';
+
+  @override
+  String get logsDemoCompliance =>
+      'Texte de conformité de démo uniquement. Les limites de conduite et de pause ne sont pas reliées au compte ni aux données réglementaires.';
+
+  @override
+  String get pinVerifyAll => 'Vérifier toutes les courses';
+
+  @override
+  String get pinAskEveryPickup =>
+      'Demandez le code PIN du passager à chaque prise en charge.';
+
+  @override
+  String get pinVerifySession => 'Vérifier cette session';
+
+  @override
+  String get pinAskUntilOffline =>
+      'Demandez-le jusqu’à ce que vous passiez hors ligne.';
+
+  @override
+  String get pinDontVerify => 'Ne pas vérifier';
+
+  @override
+  String get pinSkipOnDevice => 'Pas de code PIN sur cet appareil.';
+
+  @override
+  String get pinPreviewNotSaved =>
+      'Aperçu de la vérification PIN — ce choix n’est ni enregistré ni appliqué dans la démo.';
+
+  @override
+  String get pinNotConnected =>
+      'La vérification PIN n’est pas connectée dans cette démo.';
+
+  @override
+  String get bankPreviewAccountDetails => 'Aperçu des coordonnées bancaires';
+
+  @override
+  String get bankLocalPreviewOnly =>
+      'Aperçu local uniquement. Aucune banque n’est connectée, rien n’est vérifié et aucun versement n’est prévu.';
+
+  @override
+  String get bankCheckInPreview =>
+      'Vous pouvez vérifier des coordonnées dans le formulaire d’aperçu. Elles sont effacées quand vous le quittez ; aucun compte de versement n’est connecté.';
+
+  @override
+  String get emEmergencyServices112 => 'Services d’urgence — 112';
+
+  @override
+  String get emEmergency => 'Urgence';
+
+  @override
+  String get emAlreadyInContacts => 'Ce numéro figure déjà dans vos contacts.';
+
+  @override
+  String get emFamily => 'Famille';
+
+  @override
+  String get chatLocalDemo =>
+      'Discussion de démo locale · les messages ne sont pas envoyés au passager.';
+
+  @override
+  String get chatSendMessageHint => 'envoyer un message…';
+
+  @override
+  String get chatSaveLocally => 'Enregistrer le message localement';
+
+  @override
+  String get chatLocalNotSent => 'Aperçu local · non envoyé';
+
+  @override
+  String get queueAirportPreview => 'Aperçu de la file d’attente aéroport';
+
+  @override
+  String get queueSample10Ahead => 'Exemple : 10 chauffeurs devant vous';
+
+  @override
+  String get queueViewSampleDetails => 'voir les détails de l’exemple';
+
+  @override
+  String get queueClose => 'Fermer la position dans la file';
+
+  @override
+  String get queueMyPosition => 'Ma position dans la file';
+
+  @override
+  String get queueMediumWait => 'Attente moyenne';
+
+  @override
+  String get queueSampleRank => 'Rang (exemple)';
+
+  @override
+  String get queueUnavailablePreview => 'File d’attente indisponible — aperçu';
+
+  @override
+  String get queueRanks => 'Rangs';
+
+  @override
+  String get earnTypeTab => 'Type';
+
+  @override
+  String get earnMoveraDemo => 'Démo Movera';
+
+  @override
+  String get cancelRateTitle => 'Taux d’annulation';
+
+  @override
+  String get notYourRealRateYet => 'ce n’est pas encore votre vrai taux';
+
+  @override
+  String get tripsConfirmed => 'Courses confirmées';
+
+  @override
+  String get completedTripsLower => 'courses terminées';
+
+  @override
+  String get canceledTrips => 'Courses annulées';
+
+  @override
+  String get sampleNumbersNotReal =>
+      'Chiffres d’exemple pour cet aperçu, pas votre vrai taux.';
+
+  @override
+  String get cancelRateKeepLow =>
+      'Gardez un taux d’annulation bas pour garder un accès complet aux courses';
+
+  @override
+  String get cancelRateEveryCancelCounts =>
+      'Chaque annulation compte, sauf les motifs marqués « Ne compte pas », comme un passager absent ou un problème de sécurité.';
+
+  @override
+  String get moreInformation => 'Plus d’informations';
+
+  @override
+  String get cancelRateHowCalculated =>
+      'Comment votre taux d’annulation est calculé';
+
+  @override
+  String get cancelRateHowBody =>
+      'Votre taux d’annulation compare le nombre de courses que vous annulez au total des courses que vous confirmez. Nous utilisons vos 100 dernières demandes confirmées pour ce pourcentage.';
+
+  @override
+  String get cancelRateWhyMatters => 'Pourquoi le taux d’annulation compte';
+
+  @override
+  String get cancelRateWhyBody =>
+      'Un taux d’annulation élevé nuit à la fiabilité du service et peut réduire les demandes de course que vous recevez. Un taux bas garantit un meilleur service pour tous.';
+
+  @override
+  String get acceptRateTitle => 'Taux d’acceptation';
+
+  @override
+  String get exclusiveOffers => 'Offres exclusives';
+
+  @override
+  String get acceptedOffersLower => 'offres acceptées';
+
+  @override
+  String get declinedOrMissed => 'refusées ou manquées';
+
+  @override
+  String get acceptRateOnlyExclusive => 'Seules les offres exclusives comptent';
+
+  @override
+  String get acceptRateExclusiveBody =>
+      'Les offres exclusives et les autres offres envoyées à vous seul comptent. Les courses Radar ne comptent jamais.';
+
+  @override
+  String get acceptRateHowCalculated =>
+      'Comment votre taux d’acceptation est calculé';
+
+  @override
+  String get acceptRateHowBody =>
+      'Votre taux d’acceptation compare les offres exclusives que vous acceptez à toutes celles que vous recevez. Les courses Radar ne comptent jamais. Nous utilisons vos 100 dernières offres exclusives.';
+
+  @override
+  String get acceptRateWhyMatters => 'Pourquoi le taux d’acceptation compte';
+
+  @override
+  String get acceptRateWhyBody =>
+      'Un taux d’acceptation bas réduit vos chances de recevoir des demandes et peut nuire à votre position sur la plateforme. Un taux élevé vous apporte plus de courses et une expérience fiable pour les passagers.';
+
+  @override
+  String get rcTriggerDroppedFar => 'Terminée loin de la dépose';
+
+  @override
+  String get rcTriggerLongStop => 'Arrêt prolongé';
+
+  @override
+  String get rcTriggerOffRoute => 'Hors itinéraire';
+
+  @override
+  String get rcTriggerPossibleCrash => 'Accident possible';
+
+  @override
+  String get rcTopicAccident => 'Accident ou collision';
+
+  @override
+  String get rcTopicHurt => 'Quelqu’un est blessé ou se sent mal';
+
+  @override
+  String get rcTopicUnsafe => 'Je ne me sens pas en sécurité';
+
+  @override
+  String get rcTopicCarProblem => 'Problème de voiture';
+
+  @override
+  String get rcTopicRiderAskedStop => 'Le passager a demandé un arrêt';
+
+  @override
+  String get rcTopicTraffic => 'Circulation ou travaux';
+
+  @override
+  String get rcTopicRiderStopHere => 'Le passager a demandé à s’arrêter ici';
+
+  @override
+  String get rcTopicRiderChangedDestination =>
+      'Le passager a changé de destination';
+
+  @override
+  String get rcTopicRoadClosed => 'Route fermée ou accès impossible';
+
+  @override
+  String get rcTopicRiderOtherRoute =>
+      'Le passager a demandé un autre itinéraire';
+
+  @override
+  String get rcShortAccident => 'Accident';
+
+  @override
+  String get rcShortHurt => 'Personne blessée';
+
+  @override
+  String get rcShortUnsafe => 'Insécurité';
+
+  @override
+  String get rcShortRiderStop => 'Arrêt passager';
+
+  @override
+  String get rcShortTraffic => 'Circulation';
+
+  @override
+  String get rcShortNewDestination => 'Nouvelle destination';
+
+  @override
+  String get rcShortRoadClosed => 'Route fermée';
+
+  @override
+  String get rcShortOtherRoute => 'Autre itinéraire';
+
+  @override
+  String get rcQuestionAnyoneHurt => 'Quelqu’un est-il blessé ?';
+
+  @override
+  String get rcQuestionCarSafe => 'La voiture est-elle en lieu sûr ?';
+
+  @override
+  String get rcQuestionOtherPersonOk => 'L’autre personne va-t-elle bien ?';
+
+  @override
+  String get rcQuestionWhoNeedsHelp => 'Qui a besoin d’aide ?';
+
+  @override
+  String get rcQuestionInDanger => 'Êtes-vous en danger en ce moment ?';
+
+  @override
+  String get rcQuestionCanContinue => 'Pouvez-vous continuer la course ?';
+
+  @override
+  String get rcAnswerYes => 'Oui';
+
+  @override
+  String get rcAnswerNo => 'Non';
+
+  @override
+  String get rcAnswerNotSure => 'Je ne sais pas';
+
+  @override
+  String get rcAnswerMe => 'Moi';
+
+  @override
+  String get rcAnswerTheRider => 'Le passager';
+
+  @override
+  String get rcAnswerSomeoneElse => 'Quelqu’un d’autre';
+
+  @override
+  String get rcLongerLead => 'Cette course dure ';
+
+  @override
+  String rcPercent(int percent) {
+    return '$percent %';
+  }
+
+  @override
+  String get rcLongerTrail => ' de plus que prévu';
+
+  @override
+  String get rcStoppedLead => 'Votre voiture est arrêtée depuis ';
+
+  @override
+  String rcMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get rcEndedLead => 'Votre course s’est terminée à ';
+
+  @override
+  String rcEndedFromTrail(String place) {
+    return ' de $place';
+  }
+
+  @override
+  String get rcOffRouteLead => 'Vous êtes à ';
+
+  @override
+  String get rcOffRouteTrail => ' de l’itinéraire';
+
+  @override
+  String rcOffRouteToTrail(String place) {
+    return ' de l’itinéraire vers $place';
+  }
+
+  @override
+  String get rcCrashLead => 'Un ';
+
+  @override
+  String get rcCrashBold => 'freinage très brusque';
+
+  @override
+  String get rcCrashTrail => ' a été détecté';
+
+  @override
+  String rcCrashTrailAt(String place) {
+    return ' a été détecté · $place';
+  }
+
+  @override
+  String get tipHighBoostNearby => 'Forte majoration à proximité';
+
+  @override
+  String tipHighBoostIn(String kr, String zone) {
+    return 'Forte majoration · +$kr kr à $zone';
+  }
+
+  @override
+  String get tipExpectTrip => 'Une course est attendue d’ici 2 à 5 min';
+
+  @override
+  String tipPromotionRides(String rides, String kr) {
+    return 'Promotion · $rides courses = $kr kr';
+  }
+
+  @override
+  String get tipBusyArea => 'Zone animée · courses attendues bientôt';
+
+  @override
+  String tipAirportQueue(String count) {
+    return 'File aéroport : $count chauffeurs';
+  }
+
+  @override
+  String tipGoodStreak(String count) {
+    return 'Belle série · $count courses d’affilée';
+  }
+
+  @override
+  String get tipDemandRising => 'La demande augmente près de vous';
+
+  @override
+  String tipPeakStart(String time) {
+    return 'Les heures de pointe commencent à $time';
+  }
+
+  @override
+  String get tipTopZone => 'Vous êtes dans une zone très demandée';
+
+  @override
+  String get noticeNewScheduledRide => 'Nouvelle course planifiée';
+
+  @override
+  String noticeScheduledBody(String day, String time, String fare) {
+    return '$day $time · $fare · Touchez pour voir';
+  }
+
+  @override
+  String get view => 'Voir';
+
+  @override
+  String noticeSecondsToAccept(int seconds) {
+    return '$seconds s pour accepter';
+  }
+
+  @override
+  String noticeHighDemandIn(String area) {
+    return 'Forte demande à $area';
+  }
+
+  @override
+  String get noticeGoOnlineNow => 'Passez en ligne maintenant';
+
+  @override
+  String noticeDocExpires(String title, String when) {
+    return '$title expire $when';
+  }
+
+  @override
+  String get noticeUploadNewKeepDriving =>
+      'Importez-en un nouveau pour continuer à conduire.';
+
+  @override
+  String noticeDocApprovedBody(String title) {
+    return '$title approuvé. Vous pouvez passer en ligne.';
+  }
+
+  @override
+  String get noticeCanGoOnlineAgain =>
+      'Vous pouvez de nouveau passer en ligne.';
+
+  @override
+  String noticeTooManyLateCancels(String date) {
+    return 'Trop d’annulations tardives. Retour le $date.';
+  }
+
+  @override
+  String get rcWhatHappened => 'Ce qui s’est passé';
+
+  @override
+  String get rcCalled112 => '112 appelé';
+
+  @override
+  String get selectCountry => 'Choisir un pays';
+
+  @override
+  String get searchCountry => 'Rechercher un pays';
+
+  @override
+  String get colorRed => 'Rouge';
+
+  @override
+  String get colorBlue => 'Bleu';
+
+  @override
+  String get colorGreen => 'Vert';
+
+  @override
+  String get colorBlack => 'Noir';
+
+  @override
+  String get colorWhite => 'Blanc';
+
+  @override
+  String get colorGray => 'Gris';
+
+  @override
+  String get colorSilver => 'Argent';
+
+  @override
+  String get colorYellow => 'Jaune';
+
+  @override
+  String get colorOrange => 'Orange';
+
+  @override
+  String get colorBrown => 'Marron';
+
+  @override
+  String get colorPurple => 'Violet';
+
+  @override
+  String get colorPink => 'Rose';
+
+  @override
+  String get chooseVehicleColor => 'Choisir la couleur du véhicule';
+
+  @override
+  String get closeColorPicker => 'Fermer le sélecteur de couleur';
+
+  @override
+  String get mapCameraUnavailable =>
+      'Caméra de la carte indisponible — touchez Recentrer pour réessayer';
+
+  @override
+  String get dismiss => 'Fermer';
+
+  @override
+  String ratingAndRides(String rating, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count courses',
+      one: '1 course',
+    );
+    return '$rating ★ · $_temp0';
+  }
+
+  @override
+  String mapOfArea(String area) {
+    return 'Carte de $area';
+  }
 }

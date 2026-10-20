@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,29 +37,29 @@ class _PromotionsState extends State<Promotions> {
   static const Color _muted = Color(0xFF7D898F);
   static const Color _line = Color(0xFFE6E8EA);
 
-  static const List<_Promo> _catalog = [
+  static List<_Promo> get _catalog => [
     _Promo(
       id: 'weekday-peak',
-      title: 'Weekday peak',
-      detail: 'Complete 8 trips between 07:00 and 09:00.',
+      title: tr.promoWeekdayPeak,
+      detail: tr.promoWeekdayPeakDetail,
       reward: '+80 kr',
-      window: 'Mon–Fri · this week',
+      window: tr.promoWeekdayPeakWindow,
       code: 'PEAK80',
     ),
     _Promo(
       id: 'airport',
-      title: 'Airport runs',
-      detail: 'Two airport trips in the same day.',
+      title: tr.promoAirportRuns,
+      detail: tr.promoAirportRunsDetail,
       reward: '+120 kr',
-      window: 'Until Sunday',
+      window: tr.promoUntilSunday,
       code: 'ARN120',
     ),
     _Promo(
       id: 'evening',
-      title: 'Evening hours',
-      detail: 'Stay online for 3 hours after 18:00.',
+      title: tr.promoEveningHours,
+      detail: tr.promoEveningHoursDetail,
       reward: '+60 kr',
-      window: 'Tonight',
+      window: tr.promoTonight,
       code: 'EVE60',
     ),
   ];
@@ -75,9 +76,9 @@ class _PromotionsState extends State<Promotions> {
     try {
       await (widget.copyCode ??
           (code) => Clipboard.setData(ClipboardData(text: code)))(promo.code);
-      message = 'Demo code ${promo.code} copied';
+      message = tr.promoDemoCodeCopied(promo.code);
     } catch (_) {
-      message = 'Could not copy the code. Please try again.';
+      message = tr.promoCouldNotCopy;
     } finally {
       if (mounted) setState(() => _copying = false);
     }
@@ -109,13 +110,13 @@ class _PromotionsState extends State<Promotions> {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
         titleSpacing: 0,
-        title: const Text(
-          'Promotions preview',
+        title: Text(
+          tr.promoPreviewTitle,
           style: TextStyle(
             color: _ink,
             fontSize: 18,
@@ -131,14 +132,14 @@ class _PromotionsState extends State<Promotions> {
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [_tabChip('Preview', 0), _tabChip('Saved', 1)],
+              children: [_tabChip(tr.preview, 0), _tabChip(tr.promoSavedTab, 1)],
             ),
           ),
           Expanded(
             child: items.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'Nothing saved yet',
+                      tr.promoNothingSaved,
                       style: TextStyle(
                         color: _muted,
                         fontSize: 13,
@@ -266,7 +267,7 @@ class _PromotionsState extends State<Promotions> {
                   });
                 },
                 child: Text(
-                  saved ? 'Saved' : 'Save',
+                  saved ? tr.promoSaved : tr.promoSave,
                   style: const TextStyle(
                     color: _ink,
                     fontWeight: FontWeight.w800,

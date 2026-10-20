@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:country_pickers/country.dart';
 import 'package:country_pickers/utils/utils.dart';
@@ -53,7 +54,7 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
             Transform.translate(
               offset: Offset(ResSize.w * -10, 0),
               child: IconButton(
-                tooltip: 'Back',
+                tooltip: tr.back,
                 onPressed: () {
                   popOwned(context);
                 },
@@ -66,21 +67,21 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
             ),
             18.height,
             TextWidget(
-              text: "Create account",
+              text: tr.createAccount,
               fontSize: 24,
               fontWeight: fwExtraBold,
             ),
             9.height,
             TextWidget(
               textAlign: TextAlign.start,
-              text: "Enter a valid phone number where we will send a verification code",
+              text: tr.enterValidPhoneForCode,
               color: AppColor.subtitle,
               fontSize: 16,
               fontWeight: fwMedium,
             ),
             14.height,
             customTextfield(
-              hint: "Full name",
+              hint: tr.fullName,
               prefixWidget: Icon(
                 Icons.person_outline_rounded,
                 size: ResSize.h * 25,
@@ -89,7 +90,7 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
             ),
             16.height,
             customTextfield(
-              hint: "Email address",
+              hint: tr.emailAddress,
               prefixWidget: Icon(
                 Icons.email_outlined,
                 size: ResSize.h * 25,
@@ -104,7 +105,7 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
                   offset: Offset(ResSize.w * -10, -7),
                   child: CustomCheckBox(
                     value: isAccept,
-                    semanticLabel: 'Accept terms and privacy policy',
+                    semanticLabel: tr.acceptTermsAndPrivacy,
                     onPressed: () {
                       setState(() {
                         isAccept = !isAccept;
@@ -120,7 +121,7 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: " By continuing, I agree to the ",
+                            text: tr.byContinuingIAgreeTo,
                             style: GoogleFonts.poppins(
                               fontSize: ResSize.setSp(14),
                               fontWeight: fwNormal,
@@ -128,7 +129,7 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
                             ),
                           ),
                           TextSpan(
-                            text: "Terms of Use",
+                            text: tr.termsOfUse,
                             style: GoogleFonts.poppins(
                               decoration: TextDecoration.underline,
                               fontSize: ResSize.setSp(14),
@@ -137,7 +138,7 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
                             ),
                           ),
                           TextSpan(
-                            text: " and ",
+                            text: tr.andWord,
                             style: GoogleFonts.poppins(
                               fontSize: ResSize.setSp(14),
                               fontWeight: fwNormal,
@@ -145,7 +146,7 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
                             ),
                           ),
                           TextSpan(
-                            text: "Privacy Policy",
+                            text: tr.privacyPolicy,
                             style: GoogleFonts.poppins(
                               decoration: TextDecoration.underline,
                               fontSize: ResSize.setSp(14),
@@ -171,7 +172,7 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
             mainAxisSize: MainAxisSize.min,
             children: [
               CustomButton(
-                centerContent: "Continue",
+                centerContent: tr.navContinue,
                 onPressed: () {
                   Navigator.push(
                     context,

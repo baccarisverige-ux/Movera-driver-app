@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,7 +38,7 @@ class DriverPhoneVerification extends StatelessWidget {
             Transform.translate(
               offset: Offset(ResSize.w * -10, 0),
               child: IconButton(
-                tooltip: 'Back',
+                tooltip: tr.back,
                 onPressed: () {
                   popOwned(context);
                 },
@@ -50,7 +51,7 @@ class DriverPhoneVerification extends StatelessWidget {
             ),
             18.height,
             TextWidget(
-              text: "Phone verification",
+              text: tr.phoneVerification,
               fontSize: 24,
               fontWeight: fwExtraBold,
             ),
@@ -60,7 +61,7 @@ class DriverPhoneVerification extends StatelessWidget {
               text: TextSpan(
                 children: [
                   TextSpan(
-                    text: "Code delivery is unavailable in this demo",
+                    text: tr.codeDeliveryUnavailableDemo,
                     style: GoogleFonts.poppins(
                       fontSize: ResSize.setSp(16),
                       fontWeight: fwNormal,
@@ -77,7 +78,7 @@ class DriverPhoneVerification extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text: " Account verification requires the account service.",
+                    text: tr.accountVerificationNeedsService,
                     style: GoogleFonts.poppins(
                       fontSize: ResSize.setSp(16),
                       fontWeight: fwNormal,
@@ -118,7 +119,7 @@ class DriverPhoneVerification extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       TextWidget(
-                        text: "Did you don’t get code?",
+                        text: tr.didNotGetCode,
                         color: AppColor.title,
                         fontSize: 15,
                         fontWeight: fwNormal,
@@ -126,7 +127,7 @@ class DriverPhoneVerification extends StatelessWidget {
                       TextButton(
                         onPressed: null,
                         child: TextWidget(
-                          text: "Sign in unavailable in preview",
+                          text: tr.signInUnavailableInPreview,
                           color: AppColor.primary,
                           fontSize: 15,
                           fontWeight: fwNormal,
@@ -149,12 +150,12 @@ class DriverPhoneVerification extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               CustomButton(
-                centerContent: "Continue",
+                centerContent: tr.navContinue,
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text(
-                        'Verification is unavailable in this demo.',
+                        tr.verificationUnavailableDemo,
                       ),
                     ),
                   );

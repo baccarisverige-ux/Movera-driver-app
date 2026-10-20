@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/safety/ride_check_l10n.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -566,7 +567,7 @@ class RideCheckCard extends StatelessWidget {
             const SizedBox(width: 11),
             Expanded(
               child: Text(
-                topic.label,
+                topic.text,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
@@ -587,7 +588,7 @@ class RideCheckCard extends StatelessWidget {
     final c = controller;
     final questions = topic.questions;
     final children = <Widget>[
-      _header(tr.rideCheckShort(topic.short)),
+      _header(tr.rideCheckShort(topic.shortText)),
       const _Steps(),
     ];
     if (topic == RideCheckTopic.somethingElse) {
@@ -602,7 +603,7 @@ class RideCheckCard extends StatelessWidget {
     for (final (index, question) in questions.indexed) {
       children.addAll([
         if (index > 0) const SizedBox(height: 18),
-        _Question(question.text, small: index > 0),
+        _Question(question.shown, small: index > 0),
         const SizedBox(height: 10),
         Row(
           children: [
@@ -611,7 +612,7 @@ class RideCheckCard extends StatelessWidget {
               Expanded(
                 child: _Choice(
                   key: ValueKey('ride-check-option-${question.text}-$option'),
-                  label: option,
+                  label: RideCheckQuestionText.option(option),
                   selected: c.pick(question) == option,
                   onTap: () => c.answer(question, option),
                 ),

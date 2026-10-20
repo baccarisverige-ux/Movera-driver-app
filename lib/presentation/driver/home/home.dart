@@ -623,7 +623,7 @@ class _DriverHomeState extends State<DriverHome>
   WaybillRecord _waybillFromSnapshot(PersistedActiveRide snapshot) {
     return WaybillRecord(
       tripId: snapshot.tripId,
-      statusLabel: 'Current trip',
+      statusLabel: WaybillRecord.currentTrip,
       issuedAt: snapshot.savedAt ?? DateTime.now(),
       fare: snapshot.fare ?? '—',
       driverBonus: WaybillRecord.bonusLabel(snapshot.driverBonus),
@@ -632,9 +632,9 @@ class _DriverHomeState extends State<DriverHome>
       pickup: snapshot.pickupAddress ?? '',
       dropoff: snapshot.dropoffAddress ?? '',
       source: snapshot.matchedVia ?? 'Movera Radar',
-      driverName: 'Demo driver — identity unavailable',
-      vehicle: 'Vehicle data unavailable',
-      licensePlate: 'Plate unavailable',
+      driverName: tr.demoDriverIdentityUnavailable,
+      vehicle: tr.vehicleDataUnavailable,
+      licensePlate: tr.plateUnavailable,
       passengerCapacity: 4,
     );
   }
@@ -642,7 +642,7 @@ class _DriverHomeState extends State<DriverHome>
   WaybillRecord _waybillFromQueued(PersistedQueuedTrip next) {
     return WaybillRecord(
       tripId: next.tripId,
-      statusLabel: 'Next trip secured',
+      statusLabel: WaybillRecord.nextTripSecured,
       issuedAt: DateTime.now(),
       fare: next.fare,
       service: next.category,
@@ -650,9 +650,9 @@ class _DriverHomeState extends State<DriverHome>
       pickup: next.pickup,
       dropoff: next.dropoff,
       source: 'Movera Radar',
-      driverName: 'Demo driver — identity unavailable',
-      vehicle: 'Vehicle data unavailable',
-      licensePlate: 'Plate unavailable',
+      driverName: tr.demoDriverIdentityUnavailable,
+      vehicle: tr.vehicleDataUnavailable,
+      licensePlate: tr.plateUnavailable,
       passengerCapacity: 4,
     );
   }

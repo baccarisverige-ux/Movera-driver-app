@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
@@ -42,7 +43,7 @@ class CancelationRate extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: tr.back,
           onPressed: () {
             popOwned(context);
           },
@@ -54,7 +55,7 @@ class CancelationRate extends StatelessWidget {
         ),
         centerTitle: true,
         title: TextWidget(
-          text: "Cancelation Rate",
+          text: tr.cancelRateTitle,
           color: AppColor.title,
           fontSize: 16,
           fontWeight: fwMedium,
@@ -100,14 +101,14 @@ class CancelationRate extends StatelessWidget {
               ),
               6.width,
               TextWidget(
-                text: 'Sample',
+                text: tr.sample,
                 color: AppColor.red,
                 fontSize: 16,
                 fontWeight: fwMedium,
               ),
               6.width,
               TextWidget(
-                text: 'not your real rate yet',
+                text: tr.notYourRealRateYet,
                 color: AppColor.subtitle,
                 fontSize: 16,
                 fontWeight: fwMedium,
@@ -132,7 +133,7 @@ class CancelationRate extends StatelessWidget {
             children: [
               Expanded(
                 child: TextWidget(
-                  text: 'Trips confirmed',
+                  text: tr.tripsConfirmed,
                   color: AppColor.title,
                   fontSize: 20,
                   fontWeight: fwSemiBold,
@@ -159,7 +160,7 @@ class CancelationRate extends StatelessWidget {
               12.width,
               Expanded(
                 child: TextWidget(
-                  text: 'completed trips',
+                  text: tr.completedTripsLower,
                   color: AppColor.title,
                   fontSize: 16,
                   fontWeight: fwMedium,
@@ -184,7 +185,7 @@ class CancelationRate extends StatelessWidget {
               12.width,
               Expanded(
                 child: TextWidget(
-                  text: 'Canceled trips',
+                  text: tr.canceledTrips,
                   color: AppColor.title,
                   fontSize: 16,
                   fontWeight: fwMedium,
@@ -200,16 +201,16 @@ class CancelationRate extends StatelessWidget {
           ),
           16.height,
           TextWidget(
-            text: 'Sample numbers for this preview, not your real rate.',
+            text: tr.sampleNumbersNotReal,
             color: AppColor.title,
             fontSize: 12,
             fontWeight: fwMedium,
           ),
           16.height,
-          const RateRuleNote(
+          RateRuleNote(
             key: ValueKey<String>('cancel-rate-rule'),
-            title: 'Keep your cancel rate low to keep full access to trips',
-            body: 'Every cancel counts, except reasons marked “Doesn’t count”, such as a rider no-show or a safety issue.',
+            title: tr.cancelRateKeepLow,
+            body: tr.cancelRateEveryCancelCounts,
           ),
           16.height,
           Divider(color: AppColor.subtitle, height: 0, thickness: 0.2),
@@ -225,7 +226,7 @@ class CancelationRate extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextWidget(
-            text: 'More Information',
+            text: tr.moreInformation,
             color: AppColor.title,
             fontSize: 20,
             fontWeight: fwSemiBold,
@@ -233,9 +234,9 @@ class CancelationRate extends StatelessWidget {
           14.height,
           CustomExpansionTile(
             iconAsset: AppAssets.calculator,
-            title: 'How your cancelation is calculated',
+            title: tr.cancelRateHowCalculated,
             child: TextWidget(
-              text: 'Your cancellation rate is calculated based on the number of trips you cancel compared to the total trips you confirm. We use your last 100 confirmed trip requests to determine this percentage.',
+              text: tr.cancelRateHowBody,
               color: AppColor.subtitle,
               fontSize: 14,
               fontWeight: fwNormal,
@@ -244,9 +245,9 @@ class CancelationRate extends StatelessWidget {
           // 6.height,
           CustomExpansionTile(
             iconAsset: AppAssets.infoOutl,
-            title: 'Why cancelation rate matters',
+            title: tr.cancelRateWhyMatters,
             child: TextWidget(
-              text: 'A high cancellation rate affects the reliability of our service and can impact your ability to get ride requests. Maintaining a low cancellation rate helps ensure better service for all users.',
+              text: tr.cancelRateWhyBody,
               color: AppColor.subtitle,
               fontSize: 14,
               fontWeight: fwNormal,

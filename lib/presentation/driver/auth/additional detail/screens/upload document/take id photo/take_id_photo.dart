@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -9,9 +10,9 @@ class TakeIdPhoto extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('ID photo preview'),
+      title: Text(tr.idPhotoPreview),
       leading: IconButton(
-        tooltip: 'Back',
+        tooltip: tr.back,
         onPressed: () => popOwned(context),
         icon: const Icon(Icons.arrow_back_rounded),
       ),
@@ -19,8 +20,8 @@ class TakeIdPhoto extends StatelessWidget {
     body: ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        const Text(
-          'Sample image only. Camera capture and verification are not connected. No ID is submitted.',
+        Text(
+          tr.idPhotoSampleOnly,
           style: TextStyle(fontSize: 16, height: 1.4),
         ),
         const SizedBox(height: 24),
@@ -34,11 +35,11 @@ class TakeIdPhoto extends StatelessWidget {
             }
             Navigator.of(context).popUntil((route) => route.isFirst);
           },
-          child: const Text('Return to home'),
+          child: Text(tr.returnToHome),
         ),
-        const TextButton(
+        TextButton(
           onPressed: null,
-          child: Text('Retake unavailable in this preview'),
+          child: Text(tr.retakeUnavailablePreview),
         ),
       ],
     ),

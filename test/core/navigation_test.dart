@@ -325,23 +325,29 @@ void main() {
 
   test('live navigation copy matches driver banner examples', () {
     expect(
-      RouteInstructionCopy.livePrimary(action: 'Turn left', meters: 300),
+      RouteInstructionCopy.livePrimary(
+        cue: const RouteCue(RouteCueKind.turnLeft),
+        meters: 300,
+      ),
       'Turn left in 300 m',
     );
     expect(
-      RouteInstructionCopy.livePrimary(action: 'Turn right', meters: 150),
+      RouteInstructionCopy.livePrimary(
+        cue: const RouteCue(RouteCueKind.turnRight),
+        meters: 150,
+      ),
       'Turn right in 150 m',
     );
     expect(
       RouteInstructionCopy.livePrimary(
-        action: 'Continue straight',
+        cue: const RouteCue(RouteCueKind.continueStraight),
         meters: 1200,
       ),
       'Continue straight 1.2 km',
     );
     expect(
       RouteInstructionCopy.livePrimary(
-        action: 'Roundabout, exit 2',
+        cue: const RouteCue(RouteCueKind.roundabout, exit: '2'),
         meters: 80,
       ),
       'Roundabout, exit 2',

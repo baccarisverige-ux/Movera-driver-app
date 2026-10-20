@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -76,13 +77,13 @@ class _ChatState extends State<Chat> {
       color: const Color(0xffF6F6F6),
       borderRadius: BorderRadius.circular(14),
     ),
-    child: const Row(
+    child: Row(
       children: [
         Icon(Icons.info_outline_rounded, size: 18),
         SizedBox(width: 8),
         Expanded(
           child: Text(
-            'Local demo chat · messages are not sent to the rider.',
+            tr.chatLocalDemo,
             style: TextStyle(fontSize: 12.5, height: 1.3),
           ),
         ),
@@ -132,7 +133,7 @@ class _ChatState extends State<Chat> {
                         textColor: AppColor.black,
                         controller: _messageController,
                         fontSize: 14,
-                        hint: 'send message...',
+                        hint: tr.chatSendMessageHint,
                         fillColor: const Color(0xffF6F6F6),
                         borderRadius: 32,
                         hintTextColor: const Color(0xff969696),
@@ -145,7 +146,7 @@ class _ChatState extends State<Chat> {
                     const SizedBox(width: 10),
                     Semantics(
                       container: true,
-                      label: 'Save message locally',
+                      label: tr.chatSaveLocally,
                       button: true,
                       enabled: showSendIcon,
                       onTap: showSendIcon ? _sendMessage : null,
@@ -158,7 +159,7 @@ class _ChatState extends State<Chat> {
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
-                            tooltip: 'Save message locally',
+                            tooltip: tr.chatSaveLocally,
                             onPressed: showSendIcon ? _sendMessage : null,
                             padding: const EdgeInsets.all(12),
                             icon: Image.asset(
@@ -231,7 +232,7 @@ class SenderMessage extends StatelessWidget {
                     ),
                     5.height,
                     TextWidget(
-                      text: "Local preview · not sent",
+                      text: tr.chatLocalNotSent,
                       color: Color(0xff858F94),
                       fontSize: 12,
                       fontWeight: fwNormal,

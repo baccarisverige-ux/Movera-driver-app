@@ -541,7 +541,7 @@ class OfferSheetBody extends StatelessWidget {
                   if (count > 1) ...[
                     const SizedBox(width: 10),
                     Text(
-                      '$position of $count',
+                      tr.positionOfCount(position, count),
                       key: ValueKey<String>('$keyPrefix-count'),
                       maxLines: 1,
                       style: const TextStyle(

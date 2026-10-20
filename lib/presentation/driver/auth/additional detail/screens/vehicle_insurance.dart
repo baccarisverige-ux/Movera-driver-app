@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,8 +18,8 @@ class AdditionDetailVehicleInsurance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => VehicleDocumentUpload(
-    title: 'Insurance',
-    subtitle: 'Upload car insurance for verification',
+    title: tr.insurance,
+    subtitle: tr.uploadCarInsurance,
     progressIndex: 2,
     circleProgress: circleProgress,
     selectFile: selectFile,

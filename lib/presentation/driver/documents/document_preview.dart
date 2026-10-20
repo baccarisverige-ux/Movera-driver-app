@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 class DocumentPreview extends StatelessWidget {
  const DocumentPreview({super.key, required this.title});
@@ -5,8 +6,7 @@ class DocumentPreview extends StatelessWidget {
  @override
  Widget build(BuildContext context) => Scaffold(
  appBar: AppBar(title: Text(title)),
- body: const Padding(padding: EdgeInsets.all(24), child: Text(
- 'Not available yet — sample page. Sending this document is not part of '
- 'the app yet. No document was uploaded or reviewed.')),
+ body: Padding(padding: EdgeInsets.all(24), child: Text(
+ tr.docPreviewNotAvailable)),
  );
 }

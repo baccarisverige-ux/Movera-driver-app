@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
@@ -22,18 +23,18 @@ class _SelectDocumentTypeState extends State<SelectDocumentType> {
   List<OnBoardingModel> items = [
     OnBoardingModel(
       image: AppAssets.verify,
-      title: "Passport",
-      subTitle: "Scan your passport photo",
+      title: tr.docPassport,
+      subTitle: tr.scanYourPassportPhoto,
     ),
     OnBoardingModel(
       image: AppAssets.verifyCrntSession,
-      title: "Driving License",
-      subTitle: "Scan your driving license",
+      title: tr.docDrivingLicense,
+      subTitle: tr.scanYourDrivingLicense,
     ),
     OnBoardingModel(
       image: AppAssets.dontVerify,
-      title: "National ID",
-      subTitle: "Scan your national Id",
+      title: tr.docNationalId,
+      subTitle: tr.scanYourNationalId,
     ),
   ];
   int selectedTab = 2;
@@ -48,7 +49,7 @@ class _SelectDocumentTypeState extends State<SelectDocumentType> {
             46.height,
             Transform.translate(
               offset: Offset(ResSize.w * -10, 0),
-              child: IconButton(tooltip: 'Back', 
+              child: IconButton(tooltip: tr.back, 
                 onPressed: () {
                   popOwned(context);
                 },
@@ -61,7 +62,7 @@ class _SelectDocumentTypeState extends State<SelectDocumentType> {
             ),
             16.height,
             TextWidget(
-              text: "Select the type of document you wish to scan",
+              text: tr.selectDocumentTypeToScan,
               color: AppColor.title,
               fontSize: 24,
               fontWeight: fwSemiBold,
@@ -69,7 +70,7 @@ class _SelectDocumentTypeState extends State<SelectDocumentType> {
             16.height,
             TextWidget(
               text:
-                  "We need to determine  if an identity document is authentic and belongs to you",
+                  tr.weNeedToDetermineDocument,
               color: AppColor.subtitle,
               fontSize: 16,
               fontWeight: fwMedium,
@@ -167,7 +168,7 @@ class _SelectDocumentTypeState extends State<SelectDocumentType> {
           vertical: ResSize.h * 20,
         ),
         child: CustomButton(
-          centerContent: "Continue",
+          centerContent: tr.navContinue,
           onPressed: () {
             Navigator.push(context, BottomToTopTransition(TakeIdPhoto()));
           },

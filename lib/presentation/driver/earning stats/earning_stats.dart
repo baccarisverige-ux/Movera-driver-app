@@ -18,7 +18,7 @@ class EarningStatsScreen extends StatefulWidget {
 }
 
 class _EarningStatsScreenState extends State<EarningStatsScreen> {
-  final List<String> tabs = ["Type", tr.feature, tr.samplePeriod, tr.clear];
+  final List<String> tabs = [tr.earnTypeTab, tr.feature, tr.samplePeriod, tr.clear];
   int selectedTab = 2;
   @override
   Widget build(BuildContext context) {
@@ -197,7 +197,7 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
                     Wrap(
                       children: [
                         TextWidget(
-                          text: "Movera demo",
+                          text: tr.earnMoveraDemo,
                           fontSize: 10,
                           fontWeight: fwSemiBold,
                           color: AppColor.subtitle,

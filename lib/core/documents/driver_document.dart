@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 enum DriverDocumentType {
   license,
   insurance,
@@ -21,10 +22,10 @@ class DriverDocument {
   final DriverDocumentStatus status;
 
   String get label => switch (type) {
-        DriverDocumentType.license => "Driver's License",
-        DriverDocumentType.insurance => 'Insurance',
-        DriverDocumentType.vehicleVerification => 'Vehicle Verification',
-        DriverDocumentType.nationalId => "Driver's ID",
+        DriverDocumentType.license => tr.docDriversLicense,
+        DriverDocumentType.insurance => tr.insurance,
+        DriverDocumentType.vehicleVerification => tr.docVehicleVerification,
+        DriverDocumentType.nationalId => tr.docDriversId,
       };
 }
 

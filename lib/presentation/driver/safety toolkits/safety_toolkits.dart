@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -53,29 +54,29 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
             ),
-            title: const Text(
-              'Contact emergency services?',
+            title: Text(
+              tr.safetyContactEmergencyQ,
               style: TextStyle(
                 color: _ink,
                 fontSize: 19,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            content: const Text(
-              'Use 112 only when you or someone else needs immediate help.',
+            content: Text(
+              tr.safetyUse112Only,
               style: TextStyle(color: _muted, fontSize: 13, height: 1.4),
             ),
             actions: [
               TextButton(
                 onPressed: () => popOwned(dialogContext, false),
-                child: const Text('Cancel'),
+                child: Text(tr.cancel),
               ),
               FilledButton(
                 onPressed: () => popOwned(dialogContext, true),
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFFCB424B),
                 ),
-                child: const Text('Call 112'),
+                child: Text(tr.call112),
               ),
             ],
           );
@@ -91,8 +92,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
         }
         _showMessage(
           result == EmergencyDialResult.opened
-              ? 'Emergency dialer opened — confirm the call on your device.'
-              : 'Could not open the dialer. Dial 112 manually.',
+              ? tr.safetyDialerOpened
+              : tr.couldNotOpenDialerDial112,
         );
       }
     } finally {
@@ -101,11 +102,11 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
   }
 
   void _toggleRecording() {
-    _showMessage('Audio recording is unavailable in this demo.');
+    _showMessage(tr.safetyAudioUnavailable);
   }
 
   void _shareTrip() {
-    _showMessage('Trip sharing is unavailable in this demo.');
+    _showMessage(tr.safetyTripSharingUnavailable);
   }
 
   Future<void> _openPreferences() {
@@ -139,12 +140,12 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Safety preferences',
+                                tr.safetyPreferences,
                                 style: TextStyle(
                                   color: _ink,
                                   fontSize: 20,
@@ -154,7 +155,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                               ),
                               SizedBox(height: 3),
                               Text(
-                                'Ride check is on. The others are preview only.',
+                                tr.safetyRideCheckOnOthersPreview,
                                 style: TextStyle(
                                   color: _muted,
                                   fontSize: 11,
@@ -165,7 +166,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                           ),
                         ),
                         IconButton(
-                          tooltip: 'Close',
+                          tooltip: tr.close,
                           onPressed: () => popOwned(sheetContext),
                           icon: const Icon(Icons.close_rounded),
                           color: _muted,
@@ -176,15 +177,15 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                     _preferenceTile(
                       icon: Icons.pin_outlined,
                       title: 'PIN verification',
-                      subtitle: 'Unavailable without account verification',
+                      subtitle: tr.safetyUnavailableWithoutVerification,
                       value: false,
                       onChanged: null,
                     ),
                     const SizedBox(height: 10),
                     _preferenceTile(
                       icon: Icons.ios_share_outlined,
-                      title: 'Automatic trip sharing',
-                      subtitle: 'Unavailable without a sharing service',
+                      title: tr.safetyAutoTripSharing,
+                      subtitle: tr.safetyUnavailableWithoutSharing,
                       value: false,
                       onChanged: null,
                     ),
@@ -193,8 +194,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                       key: const ValueKey('ride-check-preference'),
                       icon: Icons.shield_outlined,
                       leading: _rideCheckIcon(),
-                      title: 'Ride check',
-                      subtitle: 'On · set by Movera for every trip',
+                      title: tr.rideCheck,
+                      subtitle: tr.safetyOnSetByMovera,
                       value: true,
                       onChanged: null,
                     ),
@@ -235,9 +236,9 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Ride check',
+                      tr.rideCheck,
                       style: TextStyle(
                         color: _ink,
                         fontSize: 14,
@@ -254,8 +255,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                       color: const Color(0xFFE7F4EE),
                       borderRadius: BorderRadius.circular(99),
                     ),
-                    child: const Text(
-                      'On',
+                    child: Text(
+                      tr.safetyOn,
                       style: TextStyle(
                         color: _green,
                         fontSize: 10,
@@ -266,10 +267,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                 ],
               ),
               const SizedBox(height: 4),
-              const Text(
-                'On for every trip. Asks "Is everything OK?" after a long '
-                'stop, a drop-off far from the destination, a big detour or '
-                'a very hard stop.',
+              Text(
+                tr.safetyRideCheckExplained,
                 style: TextStyle(
                   color: _muted,
                   fontSize: 10.5,
@@ -373,11 +372,11 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                     onPressed: () => popOwned(context),
                     icon: const Icon(Icons.close_rounded),
                     color: _ink,
-                    tooltip: 'Close',
+                    tooltip: tr.close,
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Safety',
+                      tr.safety,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: _ink,
@@ -390,8 +389,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                 ],
               ),
               const SizedBox(height: 2),
-              const Text(
-                'Safety tools',
+              Text(
+                tr.safetyTools,
                 style: TextStyle(
                   color: _ink,
                   fontSize: 22,
@@ -400,8 +399,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Quick tools designed to protect you during every ride.',
+              Text(
+                tr.safetyQuickTools,
                 style: TextStyle(
                   color: _muted,
                   fontSize: 11,
@@ -414,7 +413,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                   Expanded(
                     child: _SafetyToolButton(
                       icon: Icons.call_outlined,
-                      label: 'Contact 112',
+                      label: tr.safetyContact112,
                       onTap: _confirmEmergencyCall,
                     ),
                   ),
@@ -422,7 +421,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                   Expanded(
                     child: _SafetyToolButton(
                       icon: Icons.mic_outlined,
-                      label: 'Record audio',
+                      label: tr.recordAudio,
                       onTap: _toggleRecording,
                     ),
                   ),
@@ -430,7 +429,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                   Expanded(
                     child: _SafetyToolButton(
                       icon: Icons.ios_share_outlined,
-                      label: 'Share trip',
+                      label: tr.safetyShareTrip,
                       onTap: _shareTrip,
                     ),
                   ),
@@ -485,7 +484,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                       borderRadius: BorderRadius.circular(19),
                       border: Border.all(color: _line),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Icon(
                           Icons.shield_outlined,
@@ -498,7 +497,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Safety preferences',
+                                tr.safetyPreferences,
                                 style: TextStyle(
                                   color: _ink,
                                   fontSize: 14,
@@ -507,7 +506,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                               ),
                               SizedBox(height: 3),
                               Text(
-                                'Ride check on · the others are preview only',
+                                tr.safetyRideCheckOnPreviewOnly,
                                 style: TextStyle(
                                   color: _muted,
                                   fontSize: 10,

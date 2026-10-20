@@ -177,7 +177,7 @@ class CompletionJournal {
           riderName: row['riderName'] as String,
           pickup: row['pickup'] as String,
           dropoff: row['dropoff'] as String,
-          source: 'Local demo',
+          source: WaybillRecord.localDemoSource,
           driverName: 'Unavailable',
           vehicle: 'Unavailable',
           licensePlate: 'Unavailable',
@@ -273,7 +273,7 @@ class CompletionJournal {
   }
 
   static String _statusLabel(TripStatus status) => switch (status) {
-    TripStatus.completed => 'Completed',
+    TripStatus.completed => WaybillRecord.completed,
     TripStatus.cancelledByRider => 'Cancelled by rider',
     TripStatus.cancelledByDriver => 'Cancelled by driver',
     TripStatus.cancelledByAdmin => 'Cancelled by Movera',

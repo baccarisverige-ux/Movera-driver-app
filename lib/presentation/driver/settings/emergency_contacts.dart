@@ -41,10 +41,10 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
 
   final _dialAction = OwnedExternalAction();
   final List<_EmergencyContact> _contacts = [
-    const _EmergencyContact(
-      name: 'Emergency services — 112',
+    _EmergencyContact(
+      name: tr.emEmergencyServices112,
       phone: '112',
-      relation: 'Emergency',
+      relation: tr.emEmergency,
     ),
   ];
 
@@ -138,8 +138,8 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
               (existing) =>
                   existing.phone.replaceAll(RegExp(r'[\s()-]'), '') == number,
             )) {
-              throw const FormatException(
-                'This number is already in your contacts.',
+              throw FormatException(
+                tr.emAlreadyInContacts,
               );
             }
             final updated = [..._contacts, contact];
@@ -277,7 +277,7 @@ class _ContactComposerState extends State<_ContactComposer> {
   final _form = GlobalKey<FormState>();
   final name = TextEditingController();
   final phone = TextEditingController();
-  final relation = TextEditingController(text: 'Family');
+  final relation = TextEditingController(text: tr.emFamily);
   bool _saving = false;
   String? _saveError;
 
