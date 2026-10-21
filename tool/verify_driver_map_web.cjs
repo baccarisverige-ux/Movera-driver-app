@@ -98,6 +98,15 @@ const context = {google: {maps}, performance: {now: () => clock},
   assert.notEqual(late.google.maps.Map, MapMock, 'Late SDK Map is wrapped');
   assert.equal(ticks.length, 0, 'Polling stops after install');
 }
+// driver-r4-24: that late arrival is what index.html must allow. A plain
+// <script> for Maps blocks the parser, so a stalled maps.googleapis.com
+// kept Flutter from starting at all (blank page).
+{
+  const html = fs.readFileSync('web/index.html', 'utf8');
+  const tag = /<script\b[^>]*maps\.googleapis\.com[^>]*>/.exec(html)?.[0];
+  assert.ok(tag, 'index.html loads Maps JavaScript');
+  assert.match(tag, /\s(async|defer)[\s>=]/, 'Maps JavaScript never blocks the Flutter bootstrap');
+}
 vm.runInNewContext(fs.readFileSync('web/driver_map_camera.js', 'utf8'), context);
 assert.equal(context.driverMapCamera.ready(), true);
 const div = new Element('plugins.flutter.io/google_maps_7');
