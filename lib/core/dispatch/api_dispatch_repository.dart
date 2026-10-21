@@ -86,6 +86,13 @@ abstract final class OfferWire {
             ),
       ],
       payment: _payments[json['paymentMethod']] ?? 'Card',
+      kind: OfferKind.fromWire(json['kind']),
+      expiresAt: json['expiresAt'] is String
+          ? DateTime.tryParse(json['expiresAt'] as String)
+          : null,
+      reasonCode: json['reasonCode'] is String
+          ? json['reasonCode'] as String
+          : null,
       reservationTime: json['kind'] == 'reservation' && at != null
           ? '${two(at.hour)}:${two(at.minute)}'
           : null,
