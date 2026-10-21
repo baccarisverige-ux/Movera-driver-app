@@ -15,6 +15,15 @@ class DriverLocationException implements Exception {
   String toString() => message;
 }
 
+/// driver-u24: location is allowed but only approximately (Android 12+
+/// "Approximate", iOS 14+ "Precise Location" off). Every such fix is
+/// kilometres wide and fails the 50 m gate, so the driver must be asked to
+/// turn precise location on instead of waiting for a fix that never comes.
+class PreciseLocationRequiredException extends DriverLocationException {
+  const PreciseLocationRequiredException()
+    : super('Precise location is turned off.');
+}
+
 class DriverLocationService implements DriverLocationRepository {
   const DriverLocationService();
 
@@ -26,6 +35,17 @@ class DriverLocationService implements DriverLocationRepository {
         : LocationAccuracy.bestForNavigation,
     timeLimit: _oneShotLimit,
   );
+
+  /// The app's page in the device settings, where precise location is
+  /// turned on.
+  static Future<bool> openSettings() async {
+    try {
+      return await Geolocator.openAppSettings();
+    } catch (error) {
+      DriverLog.warn('Could not open app settings: $error');
+      return false;
+    }
+  }
 
   @override
   Future<DriverLocation> getCurrentPosition() async {
@@ -131,6 +151,19 @@ class DriverLocationService implements DriverLocationRepository {
       throw const DriverLocationException(
         'Location permission is blocked in device settings.',
       );
+    }
+
+    // Browsers have no approximate mode and the web plugin cannot tell.
+    if (kIsWeb) return;
+    LocationAccuracyStatus accuracy;
+    try {
+      accuracy = await Geolocator.getLocationAccuracy();
+    } catch (error) {
+      DriverLog.warn('Location accuracy status unknown: $error');
+      return;
+    }
+    if (accuracy == LocationAccuracyStatus.reduced) {
+      throw const PreciseLocationRequiredException();
     }
   }
 }

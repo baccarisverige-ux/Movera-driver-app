@@ -554,8 +554,13 @@ extension _AcceptRideTrip on _AcceptRideState {
         return;
       }
       if (!_arrivalDemo && !_hasLiveLocation) {
+        // driver-u24: location is on but only approximate; say so.
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(tr.locationUnavailableEnableLocationToConfirm),
+          content: Text(_preciseLocationOff ? tr.preciseLocationOff
+              : tr.locationUnavailableEnableLocationToConfirm),
+          action: _preciseLocationOff ? SnackBarAction(label: tr.settings,
+              onPressed: () => unawaited(DriverLocationService.openSettings()))
+              : null,
         ));
         return;
       }
@@ -657,6 +662,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         if (!mounted) { return; }
 
         if (_liveUpdatesPaused || epoch != _locationEpoch) { return; }
+        _preciseLocationOff = false;
         // Subscribe before routing: fresh GPS must remain usable even when
         // the first road-route request is slow or never resolves.
         _positionSubscription?.cancel();
@@ -671,16 +677,18 @@ extension _AcceptRideTrip on _AcceptRideState {
             if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
             _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
             _rebuild(() {
+              _preciseLocationOff = error is PreciseLocationRequiredException;
               _hasLiveLocation = false;
               _locationStatus = tr.locationUpdatingEllipsis;
             });
           },
         );
         await _applyDriverPosition(position, forceRoute: true);
-      } catch (_) {
+      } catch (error) {
         if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
         _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
         _rebuild(() {
+          _preciseLocationOff = error is PreciseLocationRequiredException;
           _hasLiveLocation = false;
           _locationStatus = tr.locationUpdatingEllipsis;
         });

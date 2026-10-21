@@ -872,6 +872,12 @@ abstract class AppLocalizations {
   /// **'Location unavailable. Enable location to confirm arrival.'**
   String get locationUnavailableEnableLocationToConfirm;
 
+  /// No description provided for @preciseLocationOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise location is off. Turn it on in Settings to show your position and confirm arrival.'**
+  String get preciseLocationOff;
+
   /// No description provided for @moveWithin100MOfWhere.
   ///
   /// In en, this message translates to:

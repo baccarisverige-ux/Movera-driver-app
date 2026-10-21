@@ -10,7 +10,8 @@ import 'package:movera/core/location/driver_location_service.dart';
 class _FakeGeolocator extends GeolocatorPlatform {
   Completer<Position> current = Completer<Position>();
   Position? lastKnown;
-  LocationAccuracyStatus accuracy = LocationAccuracyStatus.precise;
+  /// Null: the platform cannot tell (like the web plugin).
+  LocationAccuracyStatus? accuracy = LocationAccuracyStatus.precise;
 
   @override
   Future<bool> isLocationServiceEnabled() async => true;
@@ -21,7 +22,8 @@ class _FakeGeolocator extends GeolocatorPlatform {
   Future<LocationPermission> requestPermission() async =>
       LocationPermission.whileInUse;
   @override
-  Future<LocationAccuracyStatus> getLocationAccuracy() async => accuracy;
+  Future<LocationAccuracyStatus> getLocationAccuracy() async =>
+      accuracy ?? (throw UnimplementedError('not on this platform'));
   // Like geolocator_web 4.1.4: no Dart-side timeout, so a browser that
   // never answers never completes this future.
   @override
@@ -64,5 +66,46 @@ void main() {
     expect(done, isTrue,
         reason: 'a hung one-shot must not block Home and the trip');
     expect(error, isA<TimeoutException>());
+  });
+
+  test('driver-u24: approximate-only location is refused with its own '
+      'error instead of passing the permission check', () async {
+    fake.accuracy = LocationAccuracyStatus.reduced;
+    fake.current.complete(Position(
+      latitude: 59.33,
+      longitude: 18.06,
+      timestamp: DateTime.now(),
+      accuracy: 1800,
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    ));
+    const service = DriverLocationService();
+    await expectLater(service.getCurrentPosition(),
+        throwsA(isA<PreciseLocationRequiredException>()));
+    await expectLater(service.watchPosition(distanceFilterMeters: 0),
+        emitsError(isA<PreciseLocationRequiredException>()));
+  });
+
+  test('driver-u24: precise location, or a platform that cannot tell, '
+      'still gets its fix', () async {
+    fake.accuracy = null;
+    fake.current.complete(Position(
+      latitude: 59.33,
+      longitude: 18.06,
+      timestamp: DateTime.now(),
+      accuracy: 5,
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    ));
+    final fix = await const DriverLocationService().getCurrentPosition();
+    expect(fix.accuracyMeters, 5);
   });
 }

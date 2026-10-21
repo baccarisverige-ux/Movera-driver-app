@@ -128,6 +128,7 @@
   "tripProgressCouldNotBeSaved": "Impossible d’enregistrer la progression de la course. Gardez cet écran ouvert et réessayez.",
   "thisStopNeedsVerifiedMapLocation": "Cet arrêt doit avoir une position vérifiée sur la carte avant l’arrivée.",
   "locationUnavailableEnableLocationToConfirm": "Position indisponible. Activez la localisation pour confirmer l’arrivée.",
+  "preciseLocationOff": "La position exacte est désactivée. Activez-la dans les réglages pour afficher votre position et confirmer l’arrivée.",
   "moveWithin100MOfWhere": "Approchez-vous à moins de 100 m ({where}) pour confirmer l’arrivée.",
   "yourDriverHasArrivedAtPickup": "Votre chauffeur est arrivé au point de prise en charge.",
   "locationUpdatingEllipsis": "Mise à jour de la position…",

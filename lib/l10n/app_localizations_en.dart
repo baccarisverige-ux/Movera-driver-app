@@ -451,6 +451,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Location unavailable. Enable location to confirm arrival.';
 
   @override
+  String get preciseLocationOff =>
+      'Precise location is off. Turn it on in Settings to show your position and confirm arrival.';
+
+  @override
   String moveWithin100MOfWhere(Object where) {
     return 'Move within 100 m of the $where to arrive.';
   }

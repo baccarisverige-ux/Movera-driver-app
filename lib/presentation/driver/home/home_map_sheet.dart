@@ -46,9 +46,18 @@ extension _HomeMapSheet on _DriverHomeState {
           _didCenterOnLiveLocation = true;
           await _animateToDriverLocation();
         }
-      } catch (_) {
+      } catch (error) {
         if (!mounted || !_liveVisible || epoch != _locationEpoch) { return; }
         _rebuild(() { _hasLiveDriverLocation = false; _startLocationFailed = true; });
+        // driver-u24: allowed but approximate only. No fix will ever be
+        // usable, so ask for precise location instead of "Finding…".
+        if (error is PreciseLocationRequiredException) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+            content: Text(tr.preciseLocationOff),
+            action: SnackBarAction(label: tr.settings,
+                onPressed: () => unawaited(DriverLocationService.openSettings())),
+          ));
+        }
         // A transient one-shot GPS failure must not leave Home without a
         // location subscription until the next app resume or recenter tap.
         // Continuous updates can recover when permissions/provider return.

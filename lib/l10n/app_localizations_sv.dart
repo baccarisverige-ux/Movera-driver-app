@@ -453,6 +453,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Position saknas. Slå på platstjänster för att bekräfta att du är framme.';
 
   @override
+  String get preciseLocationOff =>
+      'Exakt plats är avstängd. Slå på den i Inställningar för att visa din position och bekräfta att du är framme.';
+
+  @override
   String moveWithin100MOfWhere(Object where) {
     return 'Kom inom 100 m ($where) för att vara framme.';
   }

@@ -564,7 +564,7 @@ class _AcceptRideState extends State<AcceptRide>
   double? _routeDurationSeconds;
   /// The road route was asked from a live fix, not the fallback position.
   bool _routeFromLiveFix = false;
-  bool _hasLiveLocation = false;
+  bool _hasLiveLocation = false, _preciseLocationOff = false;
   DriverLocation? _lastLocation;
   int _locationEpoch = 0;
   bool _stageTransitioning = false;

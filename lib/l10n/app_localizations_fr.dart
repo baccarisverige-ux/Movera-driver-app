@@ -453,6 +453,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Position indisponible. Activez la localisation pour confirmer l’arrivée.';
 
   @override
+  String get preciseLocationOff =>
+      'La position exacte est désactivée. Activez-la dans les réglages pour afficher votre position et confirmer l’arrivée.';
+
+  @override
   String moveWithin100MOfWhere(Object where) {
     return 'Approchez-vous à moins de 100 m ($where) pour confirmer l’arrivée.';
   }
