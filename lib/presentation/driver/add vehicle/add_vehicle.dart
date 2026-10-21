@@ -37,6 +37,9 @@ class _AddVehicleState extends State<AddVehicle> {
   final TextEditingController _plate = TextEditingController();
   String? _year;
   bool _saving = false;
+  // Set once the draft row exists: the documents page may have added
+  // photos to it since.
+  bool _drafted = false;
   late final _store = widget.store ?? LocalVehicleStore();
   late final String _vehicleId =
       'local-${DateTime.now().microsecondsSinceEpoch}';
@@ -82,7 +85,13 @@ class _AddVehicleState extends State<AddVehicle> {
     };
     setState(() => _saving = true);
     try {
-      await _store.upsert(submitted);
+      // Back from the documents page and Continue again: keep the photos
+      // saved for this draft (driver-50).
+      final previous = _drafted
+          ? (await _store.list()).where((row) => row['id'] == _vehicleId)
+          : const <Map<String, dynamic>>[];
+      await _store.upsert({...?previous.firstOrNull, ...submitted});
+      _drafted = true;
       if (!mounted) {
         return;
       }
