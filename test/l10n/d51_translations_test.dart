@@ -26,7 +26,10 @@ import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
+import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
+import 'package:movera/presentation/driver/documents/documents.dart';
+import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -313,6 +316,21 @@ void main() {
       await store.upsert(vehicle('v2', [each]));
       expect(await refusal(vehicle('v2', [each, each])), tr.photoStorageFull);
       expect(tr.photoStorageFull, isNot(contains('Photo storage')));
+    });
+  }
+
+  for (final code in languages) {
+    testWidgets('driver-52: demo badges and the zone header in $code',
+        (tester) async {
+      await show(tester, code, const Analytics());
+      expect(words(tr.demoDataBadge), findsOneWidget);
+      expect(words(tr.anaSampleTripRoute), findsOneWidget);
+      expect(words('DEMO DATA'), findsNothing);
+      await show(tester, code, const DrivingLogs());
+      expect(words(tr.demoDataBadge), findsOneWidget);
+      await show(tester, code, const DriverDocuments());
+      expect(words(tr.drivingInHeader), findsOneWidget);
+      expect(words('DRIVING IN'), findsNothing);
     });
   }
 }

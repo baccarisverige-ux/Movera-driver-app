@@ -72,8 +72,8 @@ class DriverDocuments extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'DRIVING IN',
+                Text(
+                  tr.drivingInHeader,
                   style: TextStyle(
                     color: _muted,
                     fontSize: 11,

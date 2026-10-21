@@ -57,7 +57,7 @@ class Analytics extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'DEMO DATA',
+                  tr.demoDataBadge,
                   style: TextStyle(
                     color: _muted,
                     fontSize: 10,
@@ -105,7 +105,7 @@ class Analytics extends StatelessWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Central Station → Södermalm',
+                        tr.anaSampleTripRoute,
                         style: TextStyle(
                           color: _ink,
                           fontSize: 14,

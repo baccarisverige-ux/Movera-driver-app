@@ -1336,5 +1336,8 @@
   "riderPhoneNotConnected": "Le contact téléphonique du passager n’est pas connecté dans cette démo.",
   "recordAudioStarting": "démarrage…",
   "photoTooLargeForDevice": "La photo est trop volumineuse pour être conservée sur cet appareil.",
-  "photoStorageFull": "Le stockage des photos sur cet appareil est plein. Supprimez d’abord les photos d’un autre véhicule."
+  "photoStorageFull": "Le stockage des photos sur cet appareil est plein. Supprimez d’abord les photos d’un autre véhicule.",
+  "demoDataBadge": "DONNÉES DE DÉMO",
+  "drivingInHeader": "ZONE DE CONDUITE",
+  "anaSampleTripRoute": "Gare centrale → Södermalm"
 }

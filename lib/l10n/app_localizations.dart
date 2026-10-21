@@ -8132,6 +8132,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photo storage on this device is full. Remove photos from another vehicle first.'**
   String get photoStorageFull;
+
+  /// No description provided for @demoDataBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'DEMO DATA'**
+  String get demoDataBadge;
+
+  /// No description provided for @drivingInHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'DRIVING IN'**
+  String get drivingInHeader;
+
+  /// No description provided for @anaSampleTripRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Central Station → Södermalm'**
+  String get anaSampleTripRoute;
 }
 
 class _AppLocalizationsDelegate

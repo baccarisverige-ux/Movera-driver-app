@@ -46,8 +46,8 @@ class DrivingLogs extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'DEMO DATA',
+                Text(
+                  tr.demoDataBadge,
                   style: TextStyle(
                     color: _muted,
                     fontSize: 10,

@@ -3144,5 +3144,8 @@
   "riderPhoneNotConnected": "Rider phone contact is not connected in this demo.",
   "recordAudioStarting": "starting…",
   "photoTooLargeForDevice": "Photo is too large to keep on this device.",
-  "photoStorageFull": "Photo storage on this device is full. Remove photos from another vehicle first."
+  "photoStorageFull": "Photo storage on this device is full. Remove photos from another vehicle first.",
+  "demoDataBadge": "DEMO DATA",
+  "drivingInHeader": "DRIVING IN",
+  "anaSampleTripRoute": "Central Station → Södermalm"
 }

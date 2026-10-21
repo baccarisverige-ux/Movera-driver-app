@@ -4657,4 +4657,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get photoStorageFull =>
       'Photo storage on this device is full. Remove photos from another vehicle first.';
+
+  @override
+  String get demoDataBadge => 'DEMO DATA';
+
+  @override
+  String get drivingInHeader => 'DRIVING IN';
+
+  @override
+  String get anaSampleTripRoute => 'Central Station → Södermalm';
 }

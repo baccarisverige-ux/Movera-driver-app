@@ -4722,4 +4722,13 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get photoStorageFull =>
       'Le stockage des photos sur cet appareil est plein. Supprimez d’abord les photos d’un autre véhicule.';
+
+  @override
+  String get demoDataBadge => 'DONNÉES DE DÉMO';
+
+  @override
+  String get drivingInHeader => 'ZONE DE CONDUITE';
+
+  @override
+  String get anaSampleTripRoute => 'Gare centrale → Södermalm';
 }
