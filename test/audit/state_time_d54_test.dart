@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 
 // Wave 5 D5.4 (parts a + b): state and time. Time cases also run under
@@ -35,5 +38,25 @@ void main() {
         expect(main.pickupDayAt(day), 'Tomorrow');
       });
     }
+  });
+
+  test('driver-u9: every text admin can change is shown by a screen', () {
+    const source = 'lib/core/content/driver_app_texts.dart';
+    final names = {
+      for (final m in RegExp(r"static const (\w+) =\s*DriverTextKey\(\s*'([^']+)'")
+          .allMatches(File(source).readAsStringSync()))
+        m.group(2)!: m.group(1)!,
+    };
+    final used = Directory('lib')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.dart') && !f.path.endsWith(source))
+        .map((f) => f.readAsStringSync())
+        .join('\n');
+    final dead = [
+      for (final key in DriverTexts.all)
+        if (!RegExp('DriverTexts\\.${names[key.id]}\\b').hasMatch(used)) key.id,
+    ];
+    expect(dead, isEmpty);
   });
 }

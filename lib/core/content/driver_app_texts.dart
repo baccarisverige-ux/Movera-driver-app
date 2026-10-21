@@ -208,8 +208,6 @@ class DriverTexts {
   // Offer cards: Radar, Exclusive and the reservation popup.
   static const offerYourShare =
       DriverTextKey('offer.yourShare', 'Your share', DriverTextArea.offer);
-  static const offerFare =
-      DriverTextKey('offer.fare', 'Fare', DriverTextArea.offer);
   static const offerPickup =
       DriverTextKey('offer.pickup', 'Pickup', DriverTextArea.offer);
   static const offerDropoff =
@@ -228,18 +226,6 @@ class DriverTexts {
       DriverTextKey('offer.accept', 'Accept', DriverTextArea.offer);
   static const offerOnYourWay =
       DriverTextKey('offer.onYourWay', 'On your way', DriverTextArea.offer);
-  static const offerHide =
-      DriverTextKey('offer.hide', 'Hide offer', DriverTextArea.offer);
-  static const offerReservationRequest = DriverTextKey(
-      'offer.reservationRequest', 'Reservation request', DriverTextArea.offer);
-  static const offerYourNextRide =
-      DriverTextKey('offer.yourNextRide', 'Your next ride', DriverTextArea.offer);
-  static const offerViewRoute =
-      DriverTextKey('offer.viewRoute', 'View route', DriverTextArea.offer);
-  static const offerNewReservation = DriverTextKey(
-      'offer.newReservation', 'New reservation', DriverTextArea.offer);
-  static const offerViewDetails =
-      DriverTextKey('offer.viewDetails', 'View details', DriverTextArea.offer);
 
   // Main trip buttons.
   static const tripArrived =
@@ -258,8 +244,6 @@ class DriverTexts {
       DriverTextKey('trip.goToDropoff', 'Go to drop-off', DriverTextArea.trip);
   static const tripCollectCash =
       DriverTextKey('trip.collectCash', 'Collect cash', DriverTextArea.trip);
-  static const tripCompleteRide =
-      DriverTextKey('trip.completeRide', 'Complete ride', DriverTextArea.trip);
 
   /// R8-4: the Collect cash sheet's button, e.g. "Finish Comfort".
   static const tripFinishCategory = DriverTextKey(
@@ -267,7 +251,8 @@ class DriverTexts {
   static const tripFinishRide =
       DriverTextKey('trip.finishRide', 'Finish ride', DriverTextArea.trip);
 
-  /// Every key, for admin's list.
+  /// Every key, for admin's list. Only texts a screen shows: a key no
+  /// screen reads would be an edit with no effect (driver-u9).
   static const List<DriverTextKey> all = <DriverTextKey>[
     islandOnline,
     islandOffline,
@@ -324,7 +309,6 @@ class DriverTexts {
     islandDestinationOff,
     islandDestinationEnded,
     offerYourShare,
-    offerFare,
     offerPickup,
     offerDropoff,
     offerPickupNearby,
@@ -334,12 +318,6 @@ class DriverTexts {
     offerMatching,
     offerAccept,
     offerOnYourWay,
-    offerHide,
-    offerReservationRequest,
-    offerYourNextRide,
-    offerViewRoute,
-    offerNewReservation,
-    offerViewDetails,
     tripArrived,
     tripStart,
     tripStartFirstStop,
@@ -348,7 +326,6 @@ class DriverTexts {
     tripGoToStop,
     tripGoToDropoff,
     tripCollectCash,
-    tripCompleteRide,
     tripFinishCategory,
     tripFinishRide,
   ];
