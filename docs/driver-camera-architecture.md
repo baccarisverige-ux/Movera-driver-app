@@ -27,12 +27,12 @@ Driver only. Rider, palette and trip business lifecycle are unchanged.
 
 | State | Framing | Car |
 | --- | --- | --- |
-| Explore | Driver-centered, north-up, flat, neighborhood zoom 16.8 | Real course |
+| Explore | Driver-centered, north-up, flat, area zoom 11.7 (about 10 km across a phone) | Real course |
 | Preview | Entire destination route fitted, north-up/flat; no GPS follow | Real course |
-| Following | Heading-up, 45 degrees, speed zoom; vehicle at 72% of screen, above overlays | Real course, on-route snapped |
+| Following | Heading-up, tilt from the zoom curve (up to 67.5 degrees), speed zoom; vehicle at 75% of screen, above overlays | Real course, on-route snapped |
 | Free | Driver owns pan/zoom/bearing/tilt until Recenter | Continues real course and snapping |
 
-The driving anchor is **72% of screen height**, clamped above the collapsed
+The driving anchor is **75% of screen height**, clamped above the collapsed
 sheet and below the top banner with 24 dp vehicle clearance. Horizontal is 50%.
 Native SDK padding realizes the anchor; web uses OverlayView projection because
 the pinned Flutter web plugin does not implement camera padding. During guidance
@@ -47,10 +47,14 @@ to +/-30 degrees and blended at 70%. While already following, a single sample
 cannot rotate the camera more than 55 degrees, and only 65% of that step is
 applied, so a bad heading does not spin the map. Entry/recenter aims directly
 down the route. Refreshing the same polyline does not reset along-track progress.
-Auto Zoom defaults on: 17.5 below 20 km/h, 16.5 at 20–50, 15.5 at 50–80,
-14.75 above 80. Inside 180 m of significant maneuvers, zoom tightens toward
-17.8 and tilt eases toward 20 degrees, recovering after passing. Last 35 m
-flattens for arrival. Waiting/paid stops use flat 17.2 framing.
+Auto Zoom defaults on and is smooth (no steps): 15 at a standstill, 14.5
+urban, 14 fast urban and 13.625 on the highway (from 108 km/h). Tilt follows
+zoom (`tiltForZoom`): flat at zoom 12 and below, rising linearly to 67.5
+degrees at zoom 15.5, never above what the SDK allows. Inside 180 m of
+significant maneuvers, zoom tightens toward 15.4 (at most 0.4 above the cruise
+zoom), its tilt from the same curve, recovering after passing. Last 140 m
+before a stop eases the zoom in toward 15.5 (never out) and the tilt
+to 60 degrees; it never goes flat. Waiting/paid stops use flat 17.2 framing.
 
 Home destination selection remains Preview, not guidance. Entering the active
 pickup/dropoff screen begins guidance. Reroute does not reset manual mode,
@@ -69,7 +73,7 @@ against its element-ID and marker-option contracts.
 
 Flutter web 0.5.14+2 applies `newCameraPosition` with `panTo`, which animates
 and stacked a second glide on every follow frame. A claimed follow pan is
-instant (`moveCamera`) and the 72% anchor is applied in the same turn, after
+instant (`moveCamera`) and the 75% anchor is applied in the same turn, after
 tilt is set and before paint. Unclaimed pans (mouse, overview) stay with the
 SDK. The anchor must not be applied again from Dart after `moveCamera`.
 

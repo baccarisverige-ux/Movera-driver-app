@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/navigation/driver_camera_controller.dart';
 
 /// Wave 5 D5.4: the decision records say what the build does.
 String _read(String path) => File(path).readAsStringSync();
@@ -43,5 +44,27 @@ void main() {
         contains('`https://baccarisverige-ux.github.io$base*`'));
     expect(_read('docs/BASELINE.md'),
         contains('`baccarisverige-ux${base.substring(0, base.length - 1)}`'));
+  });
+
+  test('driver-6: the camera doc gives the numbers the camera uses', () {
+    final doc = _read('docs/driver-camera-architecture.md');
+    String n(double v) => v == v.roundToDouble() ? '${v.toInt()}' : '$v';
+    final trip = _read('lib/presentation/driver/accept ride/accept_ride.dart');
+    expect(trip, contains('DriverCameraMode.following ? .75 : .5'));
+    expect(doc, contains('**75% of screen height**'));
+    expect(doc, isNot(contains('72%')));
+    expect(doc, contains('zoom ${n(DriverCameraPolicy.exploreZoom)}'));
+    expect(doc, contains('up to ${n(DriverCameraPolicy.maxTilt)} degrees'));
+    expect(doc, contains('${n(DriverCameraPolicy.zoomForSpeed(0))} at a '
+        'standstill'));
+    expect(doc, contains('${n(DriverCameraPolicy.zoomForSpeed(40))} on the '
+        'highway'));
+    expect(doc, contains('toward ${n(DriverCameraPolicy.turnZoom)}'));
+    expect(doc, contains('Last ${n(DriverCameraPolicy.arrivalMeters)} m'));
+    expect(doc, contains('${n(DriverCameraPolicy.arrivalTilt)} degrees'));
+    // The web verifier checks the anchor the app passes.
+    final verifier = _read('tool/verify_driver_map_web.cjs');
+    expect(verifier, isNot(contains('.72)')));
+    expect(verifier, contains('200, .75)'));
   });
 }
