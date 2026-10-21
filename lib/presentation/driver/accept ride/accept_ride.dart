@@ -722,14 +722,17 @@ class _AcceptRideState extends State<AcceptRide>
       case AppLifecycleState.resumed:
         _AcceptRideTrip(this)._resumeLiveUpdates();
         unawaited(_AcceptRideTrip(this)._resyncTrip());
+      // driver-r4-32: inactive (a shade, a prompt, a call banner) is still on
+      // screen: save the trip, keep GPS and the camera.
       case AppLifecycleState.inactive:
+        _rideLifecycle.persistNow();
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
         _rideLifecycle.persistNow();
         _AcceptRideTrip(this)._pauseLiveUpdates();
         // driver-u41: no background capture; inactive (a shade) still records.
-        if (state != AppLifecycleState.inactive) unawaited(_rideCheck.appBackgrounded());
+        unawaited(_rideCheck.appBackgrounded());
     }
   }
 
