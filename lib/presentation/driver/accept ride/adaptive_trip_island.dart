@@ -409,15 +409,20 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                               )
                             : Tooltip(
                                 message: tr.tripRouteAndOptions,
-                                child: InkWell(
-                                  onTap: widget.onRoute,
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: SizedBox(
-                                    height: 28,
-                                    child: Icon(
-                                      Icons.info_outline_rounded,
-                                      color: accent,
-                                      size: 22,
+                                // driver-u94: a 48 px wide touch box that
+                                // reaches below the island; same paint.
+                                child: IslandSideButton(
+                                  outward: AxisDirection.right,
+                                  child: InkWell(
+                                    onTap: widget.onRoute,
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: SizedBox(
+                                      height: double.infinity,
+                                      child: Icon(
+                                        Icons.info_outline_rounded,
+                                        color: accent,
+                                        size: 22,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -463,8 +468,10 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
             ? 'default'
             : presentation.identity;
         // UI-12: menu and search (on the Home-like face) take touches in a
-        // 48 x 48 box; the island paints exactly as before.
-        final sides = _controller.defaultFace && !widget.rideCheck;
+        // 48 x 48 box; the island paints exactly as before. So does the
+        // status face's info button (driver-u94).
+        final sides = !widget.rideCheck &&
+            (_controller.defaultFace || (!route && !waiting));
         return Align(
           alignment: Alignment.topCenter,
           heightFactor: 1,

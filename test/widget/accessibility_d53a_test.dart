@@ -10,6 +10,7 @@ import 'package:movera/core/routing/route_instruction.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
+import 'package:movera/presentation/driver/accept%20ride/trip_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -44,7 +45,12 @@ Future<void> _unmount(WidgetTester tester) async {
   await tester.pump(const Duration(seconds: 1));
 }
 
-Widget _island({NavigationBanner? banner, double progress = .42}) =>
+Widget _island({
+  NavigationBanner? banner,
+  double progress = .42,
+  VoidCallback? onRoute,
+  String? navigationStatus,
+}) =>
     MaterialApp(
       home: Scaffold(
         body: SizedBox(
@@ -57,13 +63,14 @@ Widget _island({NavigationBanner? banner, double progress = .42}) =>
             detail: 'Picking up Angelica',
             eta: '2 min',
             progress: progress,
+            navigationStatus: navigationStatus,
             waitingMessage: 'Waiting for Angelica',
             lastTripLabel: '120 kr',
             onRadar: () {},
             onMenu: () {},
             onSearch: () {},
             onHistory: () {},
-            onRoute: () {},
+            onRoute: onRoute ?? () {},
             onSafety: () {},
             onWait: () {},
           ),
@@ -159,6 +166,48 @@ void main() {
       expect(island.value, '42 %');
       await _unmount(tester);
       semantics.dispose();
+    });
+  });
+
+  group('driver-u94: trip options open from a 48 px touch box', () {
+    testWidgets('the trip card ••• is 48 x 48', (tester) async {
+      const more = ValueKey<String>('more');
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: TripCard(
+            title: 'Your trip',
+            fare: '111,02 kr',
+            points: const [],
+            footer: 'Comfort · Nils',
+            onMore: () {},
+            moreKey: more,
+          ),
+        ),
+      ));
+      expect(tester.getSize(find.byKey(more)), const Size(48, 48));
+    });
+
+    testWidgets('the island info button takes touches around it',
+        (tester) async {
+      var opened = 0;
+      await tester.pumpWidget(_island(
+        onRoute: () => opened++,
+        navigationStatus: 'Route unavailable — retry',
+      ));
+      await _frames(tester, 40);
+      expect(find.byKey(const ValueKey('trip-status-island')), findsOneWidget);
+      final info = tester.getRect(find.byIcon(Icons.info_outline_rounded));
+      final island =
+          tester.getRect(find.byKey(const ValueKey('trip-status-island')));
+      // 44 px down from the icon's top, 48 px across from its left edge:
+      // beside the 24 px slot and below the island both open the options.
+      await tester.tapAt(Offset(info.left + 46, info.center.dy));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(info.top + 44, greaterThan(island.bottom));
+      await tester.tapAt(Offset(info.center.dx, info.top + 44 - 0.5));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(opened, 2);
+      await _unmount(tester);
     });
   });
 }
