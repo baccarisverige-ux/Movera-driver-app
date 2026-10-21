@@ -113,4 +113,20 @@ void main() {
       expect(_row(tester, 'Your earnings'), '75,00 kr');
     });
   });
+
+  group('driver-u50: the waiting fee is not in the base price', () {
+    testWidgets('base price without the wait, the wait on its own row',
+        (tester) async {
+      await _openWaybill(tester, _record());
+      expect(_row(tester, 'Paid by the passenger'), '118,39 kr');
+      expect(_row(tester, 'Base price · Movera'), '100,00 kr');
+      expect(_row(tester, 'Waiting time'), '+18,39 kr');
+    });
+
+    testWidgets('no waiting row without a waiting fee', (tester) async {
+      await _openWaybill(tester, _record(fare: '100,00 kr', waitingFee: null));
+      expect(_row(tester, 'Base price · Movera'), '100,00 kr');
+      expect(_row(tester, 'Waiting time'), isNull);
+    });
+  });
 }

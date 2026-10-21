@@ -349,8 +349,15 @@ class WaybillPayment {
   /// Movera's fee: on the rider's fare without the waiting fee.
   int get _feeOre => ((_riderOre - _waitOre) * _feeRate).round();
 
-  /// Paid by the passenger (the base price).
+  /// Paid by the passenger: the base price plus the waiting fee.
   String get fare => _format(_riderOre);
+
+  /// The trip's base price: what the passenger paid without the waiting
+  /// fee (driver-u50).
+  String get basePrice => _format(_riderOre - _waitOre);
+
+  /// The driver's waiting fee in the fare; null without one.
+  String? get waitingFee => _waitOre > 0 ? _format(_waitOre) : null;
   String get serviceFee => _format(_feeOre);
 
   /// The driver's: the rider's fare after Movera's fee, plus the bonus
