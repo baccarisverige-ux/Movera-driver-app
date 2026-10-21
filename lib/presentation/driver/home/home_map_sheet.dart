@@ -1271,8 +1271,11 @@ extension _HomeMapSheet on _DriverHomeState {
       }
       _showNextIslandMessage();
     }
+    /// D3.2 (driver-u110/u126): while a screen covers Home (a trip, a
+    /// menu screen) or the app is away, messages wait in the queue; Home
+    /// shows them once it is back on top.
     void _showNextIslandMessage() {
-      if (!mounted || _islandMessage != null) { return; }
+      if (!mounted || !_liveVisible || _islandMessage != null) { return; }
       final next = IslandMessages.take();
       if (next == null) { return; }
       _islandWakeTimer?.cancel();

@@ -210,6 +210,7 @@ class _DriverHomeState extends State<DriverHome>
     _HomeOfferRadar(this)._resumeOfferTimers();
     _HomeOfferRules(this)._releaseHeldOffline();
     _HomeOfferRoute(this)._resumeRouteLine();
+    _HomeMapSheet(this)._showNextIslandMessage();
     if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); _radarMotionController.repeat(); }
     setState(() {});
   }

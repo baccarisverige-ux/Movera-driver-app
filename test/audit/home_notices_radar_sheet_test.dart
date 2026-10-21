@@ -1,0 +1,194 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/session/driving_time_clock.dart';
+import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/widgets/layout_viewport.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../integration_test/headless_map_platform.dart';
+
+// Wave 3 (D3.2, part a): Home's island notices, Radar, map sheet.
+// - driver-u110 / driver-u126: a notice posted while a screen covers
+//   Home waits for Home instead of playing on its hidden island.
+
+/// Dispatch with no trips unless the test publishes some.
+class _Dispatch implements DispatchRepository {
+  final _nearby = StreamController<List<RideOffer>>.broadcast();
+  List<RideOffer> offers = const [];
+  final claims = <Completer<ClaimResult>>[];
+
+  void publish(List<RideOffer> next) {
+    offers = List<RideOffer>.unmodifiable(next);
+    _nearby.add(offers);
+  }
+
+  @override
+  Stream<List<RideOffer>> watchNearbyOffers({
+    bool destinationModeActive = false,
+  }) => Stream<List<RideOffer>>.multi((sink) {
+    final sub = _nearby.stream.listen(sink.addSync);
+    sink.onCancel = sub.cancel;
+    sink.addSync(offers);
+  }, isBroadcast: true);
+
+  @override
+  Stream<List<RideOffer>> watchNextTripOffers() =>
+      Stream.value(const <RideOffer>[]);
+
+  @override
+  void refreshOffers() {}
+
+  @override
+  void releaseReservation(String reservationId) {}
+
+  @override
+  Stream<ReservationRequestPreview> watchAssignments() =>
+      const Stream<ReservationRequestPreview>.empty();
+
+  @override
+  Future<ClaimResult> claimOffer(String offerId) {
+    final claim = Completer<ClaimResult>();
+    claims.add(claim);
+    return claim.future;
+  }
+
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() =>
+      const Stream<OfferWithdrawal>.empty();
+}
+
+typedef _Home = ({_Dispatch dispatch, DriverSessionController session});
+
+Future<void> _frames(WidgetTester tester, Duration total) async {
+  const step = Duration(milliseconds: 100);
+  for (var t = Duration.zero; t < total; t += step) {
+    await tester.pump(step);
+  }
+}
+
+/// Home with the app's route observer, so a screen pushed over Home
+/// covers it as in the app; with [online], the Radar is on.
+Future<_Home> _pumpHome(WidgetTester tester, {bool online = true}) async {
+  final dispatch = _Dispatch();
+  final session = DriverSessionController();
+  final maps = GoogleMapsFlutterPlatform.instance;
+  GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+  addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+  await tester.binding.setSurfaceSize(const Size(375, 812));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(
+    LayoutViewport(
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        useInheritedMediaQuery: true,
+        builder: (_, __) => MaterialApp(
+          navigatorObservers: [driverRouteObserver],
+          home: DriverHome(
+            sessionController: session,
+            dispatchRepository: dispatch,
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pump(const Duration(milliseconds: 200));
+  if (online) {
+    tester
+        .widget<GestureDetector>(
+          find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+        )
+        .onTap!
+        .call();
+    await _frames(tester, const Duration(milliseconds: 1500));
+  }
+  return (dispatch: dispatch, session: session);
+}
+
+/// Pushes a screen over Home, as a trip or a menu item does.
+Future<NavigatorState> _cover(WidgetTester tester) async {
+  final navigator = Navigator.of(tester.element(find.byType(DriverHome)));
+  unawaited(navigator.push(MaterialPageRoute<void>(
+    builder: (_) => const Scaffold(body: Text('cover')),
+  )));
+  await _frames(tester, const Duration(milliseconds: 600));
+  expect(find.text('cover'), findsOneWidget);
+  return navigator;
+}
+
+Future<void> _end(WidgetTester tester) async {
+  tester.takeException();
+  await tester.pumpWidget(const SizedBox());
+}
+
+void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    IslandMessages.reset();
+    ScheduledRideStore.reset();
+    ExclusiveAnswers.instance.reset();
+  });
+  tearDown(() {
+    DriverOfferRules.current = const DriverOfferRules();
+    DrivingTimeClock.instance.load(worked: Duration.zero);
+  });
+
+  group('driver-u110: a notice posted while a screen covers Home', () {
+    testWidgets('waits and shows once Home is back on top', (tester) async {
+      await _pumpHome(tester);
+      // "Radar online" and the launch messages pass first.
+      await _frames(tester, const Duration(seconds: 6));
+      final navigator = await _cover(tester);
+      final missed = HomeIslandNotices.offlineAfterMissed(5);
+      IslandMessages.show(missed);
+      // Longer than the message's own time on the island.
+      await _frames(tester, const Duration(seconds: 6));
+      expect(IslandMessages.hasPending, isTrue,
+          reason: 'Home is covered: nobody has seen it yet');
+      navigator.pop();
+      await _frames(tester, const Duration(milliseconds: 800));
+      expect(find.text(missed.title), findsOneWidget);
+      await _end(tester);
+    });
+  });
+
+  group('driver-u126: the driving-limit warning during a covering screen', () {
+    testWidgets('the 30 min warning shows once Home is back', (tester) async {
+      final rule = DrivingTimeClock.instance.rule;
+      // 30 min left in 3 s.
+      DrivingTimeClock.instance.load(
+        worked: rule.work - const Duration(minutes: 30, seconds: 3),
+        offlineSince: ScheduledClock.realNow(),
+      );
+      await _pumpHome(tester);
+      await _frames(tester, const Duration(milliseconds: 500));
+      final navigator = await _cover(tester);
+      await _frames(tester, const Duration(seconds: 8));
+      final warning = HomeIslandNotices.drivingLeft(30);
+      expect(IslandMessages.posted.map((m) => m.title),
+          contains(warning.title));
+      navigator.pop();
+      await _frames(tester, const Duration(milliseconds: 800));
+      expect(find.text(warning.title), findsOneWidget);
+      await _end(tester);
+    });
+  });
+}
