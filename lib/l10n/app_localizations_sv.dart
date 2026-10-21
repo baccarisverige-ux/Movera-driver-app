@@ -4660,4 +4660,8 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get moveWithin100MOfStop =>
       'Kom inom 100 m från stoppet för att vara framme.';
+
+  @override
+  String get riderPhoneNotConnected =>
+      'Telefonkontakt med passageraren är inte ansluten i den här demon.';
 }

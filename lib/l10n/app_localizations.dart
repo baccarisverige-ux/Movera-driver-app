@@ -8108,6 +8108,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move within 100 m of the stop to arrive.'**
   String get moveWithin100MOfStop;
+
+  /// No description provided for @riderPhoneNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rider phone contact is not connected in this demo.'**
+  String get riderPhoneNotConnected;
 }
 
 class _AppLocalizationsDelegate

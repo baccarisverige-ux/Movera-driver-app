@@ -869,7 +869,7 @@ extension _AcceptRidePanel on _AcceptRideState {
     void _callRider() {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(RiderContactPolicy.unavailableMessage),
+          content: Text(RiderContactPolicy.unavailableMessage),
           backgroundColor: _AcceptRideState._ink,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(

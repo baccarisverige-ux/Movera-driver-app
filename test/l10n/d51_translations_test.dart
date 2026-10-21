@@ -9,6 +9,7 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/island/trip_island_controller.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
@@ -173,6 +174,17 @@ void main() {
       expect(find.text(tr.moveWithin100MOfPickup), findsOneWidget);
       expect(words('(pickup)'), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+  for (final code in languages) {
+    testWidgets('driver-u48: rider phone not connected in $code',
+        (tester) async {
+      await show(tester, code, const Chat(riderDisplayName: 'Maya'));
+      await tester.tap(find.byTooltip(tr.riderPhoneNotConnected));
+      await tester.pump();
+      expect(find.text(tr.riderPhoneNotConnected), findsOneWidget);
+      expect(words('not connected in this demo'), findsNothing);
     });
   }
 }
