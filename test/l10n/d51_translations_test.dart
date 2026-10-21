@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
@@ -365,4 +366,17 @@ void main() {
           isEmpty, reason: 'sample values are hints, not answers');
     });
   }
+
+  test('driver-u38: the waiting rule follows a language switch', () {
+    speak('sv');
+    final terms = WaitingRules.current.termsFor(
+      type: WaitingRideType.scheduled,
+      pickupKm: 40,
+    );
+    expect(terms.rule, contains(tr.waitingRuleScheduledRide));
+    speak('fr');
+    expect(terms.rule, startsWith(tr.waitingRuleScheduledRide));
+    expect(terms.rule, contains(tr.pickupOverKmKm('5')));
+    expect(terms.rule, isNot(contains('Upphämtning')));
+  });
 }

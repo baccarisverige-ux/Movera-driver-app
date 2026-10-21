@@ -15,7 +15,7 @@ class WaitingTerms {
     required this.noShowFee,
     this.driverShareWaitPercent = 100,
     this.driverShareNoShowPercent = 100,
-    this.rule = '',
+    this.ruleLabels = const <String>[],
   });
 
   /// The first minutes are part of the fare.
@@ -33,9 +33,19 @@ class WaitingTerms {
   final int driverShareWaitPercent;
   final int driverShareNoShowPercent;
 
-  /// The rule that set these terms, e.g. "Scheduled ride"; '' for the
-  /// zone's own terms.
-  final String rule;
+  /// The rules that set these terms as admin wrote them (or
+  /// [farPickupLabel] for the distance rule); empty for the zone's own
+  /// terms. Kept untranslated, so a language switch mid-trip shows them
+  /// in the new language (driver-u38).
+  final List<String> ruleLabels;
+
+  /// The rules, e.g. "Scheduled ride", in the driver's language; '' for
+  /// the zone's own terms.
+  String get rule => ruleLabels.map(_shown).join(' · ');
+
+  /// The distance rule's label for pickups over [km] km.
+  static String farPickupLabel(String km) => '$_farPickup$km';
+  static const String _farPickup = 'pickupOverKm:';
 
   int get freeSeconds => freeMinutes * 60;
   int get noShowSeconds => noShowAfterMinutes * 60;
@@ -87,14 +97,18 @@ class WaitingTerms {
     noShowFee: rule.noShowFee ?? noShowFee,
     driverShareWaitPercent: driverShareWaitPercent,
     driverShareNoShowPercent: driverShareNoShowPercent,
-    rule: [
-      if (this.rule.isNotEmpty) this.rule,
-      if ((label ?? rule.label).isNotEmpty) _shown(label ?? rule.label),
-    ].join(' · '),
+    ruleLabels: [
+      ...ruleLabels,
+      if ((label ?? rule.label).isNotEmpty) label ?? rule.label,
+    ],
   );
 
   /// An admin default label still as shipped, in the app's language.
   static String _shown(String label) => switch (label) {
+    _ when label.startsWith(_farPickup) =>
+      tr.pickupOverKmKm(label
+          .substring(_farPickup.length)
+          .replaceAll('.', tr.navDecimalMark)),
     'Pickup far away' => tr.waitingRulePickupFarAway,
     'Scheduled ride' => tr.waitingRuleScheduledRide,
     'Airport pickup' => tr.waitingRuleAirportPickup,
@@ -227,7 +241,7 @@ class WaitingRules {
       final km = farPickupKm == farPickupKm.roundToDouble()
           ? farPickupKm.toStringAsFixed(0)
           : farPickupKm.toStringAsFixed(1);
-      terms = terms._with(farPickup, label: tr.pickupOverKmKm(km));
+      terms = terms._with(farPickup, label: WaitingTerms.farPickupLabel(km));
     }
     // Never a no-show before the free wait is over (Q41).
     return terms.noShowAfterMinutes >= terms.freeMinutes
