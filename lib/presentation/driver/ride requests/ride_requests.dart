@@ -147,8 +147,9 @@ class _RideRequestsState extends State<RideRequests> {
   List<_RadarTrip> get _visibleOffers {
     final nearby = _offers.where((offer) {
       if (!offer.isNearby || _dismissed.contains(offer.id)) { return false; }
-      // An admin direct assign is an Exclusive offer, not a Radar trip.
-      if (offer.source.isAdminDirectAssign) { return false; }
+      // An admin direct assign or dispatch's Exclusive offer is an
+      // Exclusive offer, not a Radar trip.
+      if (offer.source.isExclusive) { return false; }
       if (!(widget.offerFilter?.call(offer.source) ?? true)) { return false; }
       if (!widget.destinationModeActive) { return true; }
       return offer.followsDestination;
@@ -247,7 +248,7 @@ class _RideRequestsState extends State<RideRequests> {
     final incomingIds = offers.map((offer) => offer.id).toSet();
     final hasNew = offers.any(
       (offer) => offer.isNearby &&
-          !offer.isAdminDirectAssign &&
+          !offer.isExclusive &&
           !displayedIds.contains(offer.id),
     );
     final disappeared = _offers.where((trip) {

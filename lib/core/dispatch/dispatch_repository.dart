@@ -23,6 +23,25 @@ enum OfferSource {
       value == 'admin' ? OfferSource.admin : OfferSource.system;
 }
 
+/// What kind of offer it is (contract `OfferKind`).
+enum OfferKind {
+  radar,
+  exclusive,
+  assigned,
+  reservation,
+  nextTrip;
+
+  /// Null for a value this build does not know.
+  static OfferKind? fromWire(Object? value) => switch (value) {
+    'radar' => OfferKind.radar,
+    'exclusive' => OfferKind.exclusive,
+    'assigned' => OfferKind.assigned,
+    'reservation' => OfferKind.reservation,
+    'next_trip' => OfferKind.nextTrip,
+    _ => null,
+  };
+}
+
 class RideOffer {
   const RideOffer({
     required this.id,
@@ -53,6 +72,9 @@ class RideOffer {
     this.source = OfferSource.system,
     this.groupId,
     this.version = 1,
+    this.kind,
+    this.expiresAt,
+    this.reasonCode,
   });
 
   /// A reservation as a Radar trip. The driver's distance to the pickup is
@@ -189,6 +211,25 @@ class RideOffer {
   /// `groupId`). A Radar trip: the first driver of the group to accept
   /// wins, and it never counts against the driver (Q45/Q46).
   bool get isRadarGroup => source == OfferSource.admin && groupId != null;
+
+  /// Contract `Offer.kind`; null when dispatch did not send one (the demo).
+  final OfferKind? kind;
+
+  /// Contract `Offer.expiresAt`: when the server lets the offer go. Null
+  /// when not known; the app's own offer time applies then.
+  final DateTime? expiresAt;
+
+  /// Contract `Offer.reasonCode`: why it is Exclusive, an id of
+  /// `driver.offers.exclusiveReasons`. Null when not sent.
+  final String? reasonCode;
+
+  /// An Exclusive offer for this driver alone, answered with Accept or No
+  /// through dispatch: an admin direct assign (§3.1), or dispatch's own
+  /// `kind: exclusive` / `assigned` offer (§3). Never a Radar trip.
+  bool get isExclusive =>
+      isAdminDirectAssign ||
+      (groupId == null &&
+          (kind == OfferKind.exclusive || kind == OfferKind.assigned));
 
   /// Contract `Offer.version` (≥ 1): sent as `expectedVersion` when the
   /// driver accepts or declines it.

@@ -80,8 +80,15 @@ class _HomeDirectOffer {
   /// An admin direct assign (contract §3.1): "Assigned by Movera".
   bool get adminAssigned => reason == ExclusiveReasons.assigned && !assigned;
 
+  /// Dispatch's own Exclusive offer for this driver (an admin direct
+  /// assign, or `kind: exclusive` / `assigned`): Accept is its claim.
+  final bool dispatchExclusive;
+
+  /// Accept is dispatch's claim (§3, §3.1).
+  bool get claimedViaDispatch => adminAssigned || dispatchExclusive;
+
   /// Accept and No go through dispatch's accept/decline (§3.1).
-  bool get viaDispatchAnswer => adminAssigned || groupId != null;
+  bool get viaDispatchAnswer => claimedViaDispatch || groupId != null;
 
   const _HomeDirectOffer({
     required this.id,
@@ -113,6 +120,7 @@ class _HomeDirectOffer {
     this.priority = false,
     this.driverBonus,
     this.groupId,
+    this.dispatchExclusive = false,
   });
 
   /// A dispatch offer on Home. A reservation keeps its pickup time for
@@ -122,6 +130,7 @@ class _HomeDirectOffer {
     String reason = '',
     bool assigned = false,
     Duration? lifetime,
+    bool dispatchExclusive = false,
   }) => _HomeDirectOffer(
     id: offer.id,
     tripId: offer.tripId,
@@ -152,6 +161,7 @@ class _HomeDirectOffer {
     priority: offer.isPriority,
     driverBonus: offer.driverBonus,
     groupId: offer.groupId,
+    dispatchExclusive: dispatchExclusive,
   );
 }
 
@@ -253,7 +263,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       _rebuild(() {
         _outsideRadarOffer = offer;
       });
-      if (offer.adminAssigned) { _adminAssignsShown.add(offer.id); }
+      if (offer.claimedViaDispatch) { _adminAssignsShown.add(offer.id); }
       // The sheet rises over the dock; its orb's ring starts full. The
       // route comes onto the map once the sheet has settled.
       _HomeExclusive(this)._raiseExclusive(offer, lifetime);
@@ -592,8 +602,9 @@ extension _HomeOfferRadar on _DriverHomeState {
         // after a cancel) comes onto the deck too, once its Exclusive step
         // on this phone is over.
         for (final offer in offers) {
-          // Q16: an admin direct assign arriving now is an Exclusive offer.
-          if (offer.isAdminDirectAssign && !known.contains(offer.id) &&
+          // Q16: an admin direct assign or dispatch's Exclusive offer
+          // arriving now is an Exclusive offer.
+          if (offer.isExclusive && !known.contains(offer.id) &&
               !_adminAssignsShown.contains(offer.id)) {
             unawaited(_showOutsideRadarOffer(_adminAssignOffer(offer)));
           }
@@ -607,7 +618,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         final ids = offers.map((item) => item.id).toSet();
         // An admin direct assign on screen that left dispatch is gone.
         final up = _outsideRadarOffer;
-        if (up != null && up.adminAssigned && !ids.contains(up.id) &&
+        if (up != null && up.claimedViaDispatch && !ids.contains(up.id) &&
             _exclusive.claimingId != up.id && !_exclusive.leaving) {
           IslandMessages.show(HomeIslandNotices.tripUnavailable);
           _dismissOutsideRadarOffer();
@@ -634,24 +645,35 @@ extension _HomeOfferRadar on _DriverHomeState {
     int get _radarTripsOpen => _latestDispatchOffers
         .where((offer) =>
             offer.isNearby &&
-            !offer.isAdminDirectAssign &&
+            !offer.isExclusive &&
             _followsDestination(offer.dropoffPosition.toLatLng()) &&
             _HomeOfferRules(this)._rideAllowed(offer))
         .length;
     void _showDispatchOfferAt(int index) {
       final offers = _latestDispatchOffers.where((offer) => offer.isNearby &&
-          !offer.isAdminDirectAssign &&
+          !offer.isExclusive &&
           _followsDestination(offer.dropoffPosition.toLatLng())).toList();
       if (index >= offers.length) { return; }
       _showRadarHomeOffer(_homeOfferFromDispatch(offers[index]));
     }
-    /// An admin direct assign (contract §3.1) as an Exclusive offer.
-    _HomeDirectOffer _adminAssignOffer(RideOffer offer) =>
-        _HomeDirectOffer.fromRide(offer, reason: ExclusiveReasons.assigned);
-    /// The first admin direct assign from dispatch not shown yet.
+    /// An admin direct assign (contract §3.1) or dispatch's own Exclusive
+    /// offer (§3, with its `reasonCode`) as an Exclusive offer. It runs to
+    /// the server's `expiresAt` when dispatch sent one.
+    _HomeDirectOffer _adminAssignOffer(RideOffer offer) {
+      final left = offer.expiresAt?.difference(DateTime.now());
+      return _HomeDirectOffer.fromRide(
+        offer,
+        reason: offer.isAdminDirectAssign
+            ? ExclusiveReasons.assigned
+            : offer.reasonCode ?? '',
+        dispatchExclusive: true,
+        lifetime: left != null && left > Duration.zero ? left : null,
+      );
+    }
+    /// The first dispatch Exclusive offer not shown yet.
     _HomeDirectOffer? get _pendingAdminAssign {
       for (final offer in _latestDispatchOffers) {
-        if (offer.isAdminDirectAssign && !_adminAssignsShown.contains(offer.id)) {
+        if (offer.isExclusive && !_adminAssignsShown.contains(offer.id)) {
           return _adminAssignOffer(offer);
         }
       }
@@ -867,8 +889,9 @@ extension _HomeOfferRadar on _DriverHomeState {
         _HomeScheduled(this)._acceptAssignment(offer);
         return;
       }
-      // An admin direct assign: dispatch decides, like any claim (§3.1).
-      if (offer.adminAssigned) {
+      // An admin direct assign or dispatch's Exclusive offer: dispatch
+      // decides, like any claim (§3, §3.1).
+      if (offer.claimedViaDispatch) {
         if (_exclusive.claimingId == null) {
           unawaited(_claimAdminAssign(offer));
         }
@@ -916,7 +939,11 @@ extension _HomeOfferRadar on _DriverHomeState {
           // A reservation keeps the scheduled waiting rules.
           _openWonOffer(
             offer,
-            offer.reservation
+            !offer.adminAssigned
+                ? (offer.reservation
+                    ? WaybillRecord.exclusiveReservationSource
+                    : WaybillRecord.exclusiveOfferSource)
+                : offer.reservation
                 ? WaybillRecord.assignedReservationSource
                 : WaybillRecord.assignedByMoveraSource,
           );
@@ -1252,6 +1279,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       required int secondsLeft,
     }) {
       final reservation = offer.reservation && !offer.driverSigned;
+      final reason = ExclusiveReasons.text(offer.reason);
       return ExclusiveRequestSheet(
         offer: _radarOfferView(offer),
         secondsLeft: secondsLeft,
@@ -1261,8 +1289,11 @@ extension _HomeOfferRadar on _DriverHomeState {
         onYourWay: _destinationModeActive ||
             (!offer.assigned && _HomeScheduled(this)._towardPickupTime != null),
         // A ride Movera assigned says so (Q29).
+        // Dispatch's Exclusive offer says why it is this driver's.
         lead: offer.assigned || offer.adminAssigned
             ? ExclusiveReasons.text(ExclusiveReasons.assigned)
+            : offer.dispatchExclusive && reason.isNotEmpty
+            ? reason
             : ExclusiveRequestSheet.defaultLead,
       );
     }

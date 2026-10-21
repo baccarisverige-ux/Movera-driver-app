@@ -78,16 +78,17 @@ class LateEtaRule {
   Duration get tolerance => Duration(minutes: toleranceMinutes);
   Duration get checkEvery => Duration(seconds: checkEverySeconds);
 
-  /// Every field optional; a missing or broken one keeps the default, a
-  /// number out of range is clamped, an unknown [reassignTo] is the default.
+  /// Every field optional; a missing or invalid one (wrong type, out of
+  /// the schema's range) keeps the default, as does an unknown
+  /// [reassignTo] (CONTRACT.md §6.1).
   factory LateEtaRule.fromJson(Object? json) {
     const seed = LateEtaRule();
     if (json is! Map) return seed;
     return LateEtaRule(
       on: _bool(json['on']) ?? seed.on,
       toleranceMinutes:
-          _clampInt(json['toleranceMin'], 0, 30) ?? seed.toleranceMinutes,
-      checkEverySeconds: _clampInt(json['checkEverySeconds'], 15, 600) ??
+          _intIn(json['toleranceMin'], 0, 30) ?? seed.toleranceMinutes,
+      checkEverySeconds: _intIn(json['checkEverySeconds'], 15, 600) ??
           seed.checkEverySeconds,
       reassignTo: _enum(json['reassignTo'], LateEtaReassignTo.values) ??
           seed.reassignTo,
@@ -112,8 +113,8 @@ class ScheduledRideKindRule {
   /// Reminders, in minutes before pickup.
   final List<int> reminderMinutes;
 
-  /// `{onlineBeforeMin, spareMin, reminderMin}`; what is missing or broken
-  /// stays as in [seed].
+  /// `{onlineBeforeMin, spareMin, reminderMin}`; what is missing or
+  /// invalid stays as in [seed]; a reminder out of range is left out.
   factory ScheduledRideKindRule.fromJson(
     Object? json,
     ScheduledRideKindRule seed,
@@ -121,14 +122,14 @@ class ScheduledRideKindRule {
     if (json is! Map) return seed;
     final reminders = json['reminderMin'];
     return ScheduledRideKindRule(
-      onlineBeforeMinutes: _clampInt(json['onlineBeforeMin'], 0, 1440) ??
+      onlineBeforeMinutes: _intIn(json['onlineBeforeMin'], 5, 240) ??
           seed.onlineBeforeMinutes,
-      spareMinutes: _clampInt(json['spareMin'], 0, 240) ?? seed.spareMinutes,
+      spareMinutes: _intIn(json['spareMin'], 0, 60) ?? seed.spareMinutes,
       reminderMinutes: reminders is List
           ? List<int>.unmodifiable(
               {
                 for (final minutes in reminders)
-                  if (_clampInt(minutes, 1, 1440) case final value?) value,
+                  if (_intIn(minutes, 1, 1440) case final value?) value,
               }.toList()
                 ..sort((a, b) => b.compareTo(a)),
             )
@@ -189,8 +190,9 @@ class ScheduledRideRules {
   final LateEtaRule lateEta;
 
   /// `DriverAppConfig.reservations`. Every field optional: a missing or
-  /// broken value keeps the default, a number out of range is clamped and
-  /// an unknown choice is the default. [includedWaitingMinutes] is not part
+  /// invalid value (wrong type, not a whole number where the schema wants
+  /// one, out of the schema's range) keeps the default, and so does an
+  /// unknown choice (CONTRACT.md §6.1). [includedWaitingMinutes] is not part
   /// of it and keeps its default. A `leaveNow` field from an older document
   /// is ignored (contract v0.4.2).
   factory ScheduledRideRules.fromJson(Object? json) {
@@ -204,18 +206,18 @@ class ScheduledRideRules {
           seed.ruleFor(kind),
         ),
     };
-    final assign = _clampInt(json['assignAcceptSeconds'], 5, 600);
+    final assign = _intIn(json['assignAcceptSeconds'], 10, 600);
     return ScheduledRideRules(
       enabled: _bool(json['on']) ?? seed.enabled,
       lateWarning: _bool(json['lateWarn']) ?? seed.lateWarning,
-      backupAfterMinutes: _clampInt(json['offlineBackupAfterMin'], 1, 60) ??
+      backupAfterMinutes: _intIn(json['offlineBackupAfterMin'], 1, 60) ??
           seed.backupAfterMinutes,
-      homePopupAfterMinutes: _clampInt(json['homePopupAfterMin'], 0, 1440) ??
+      homePopupAfterMinutes: _intIn(json['homePopupAfterMin'], 1, 1440) ??
           seed.homePopupAfterMinutes,
       exclusiveBeforeMinutes:
-          _clampInt(json['exclusiveBeforeMin'], 0, 1440) ??
+          _intIn(json['exclusiveBeforeMin'], 1, 180) ??
           seed.exclusiveBeforeMinutes,
-      radarBeforeMinutes: _clampInt(json['radarBeforeMin'], 0, 1440) ??
+      radarBeforeMinutes: _intIn(json['radarBeforeMin'], 1, 180) ??
           seed.radarBeforeMinutes,
       onDriverCancel:
           _enum(json['onDriverCancel'], ReservationCancelReturn.values) ??
@@ -224,17 +226,17 @@ class ScheduledRideRules {
       towardPickupBeforeRide:
           _bool(json['towardPickup']) ?? seed.towardPickupBeforeRide,
       towardPickupBeforeMinutes:
-          _clampInt(json['towardPickupBeforeMin'], 0, 1440) ??
+          _intIn(json['towardPickupBeforeMin'], 15, 240) ??
           seed.towardPickupBeforeMinutes,
-      longTripKm: _clampNum(json['longTripKm'], 1, 1000) ?? seed.longTripKm,
+      longTripKm: _numIn(json['longTripKm'], 10, 500) ?? seed.longTripKm,
       kinds: kinds,
-      driverLateCancelHours: _clampInt(json['driverLateCancelHours'], 0, 72) ??
+      driverLateCancelHours: _numIn(json['driverLateCancelHours'], 0.5, 72)?.round() ??
           seed.driverLateCancelHours,
       lateCancelLimit:
-          _clampInt(json['lateCancelLimit'], 1, 99) ?? seed.lateCancelLimit,
-      lateCancelPeriodDays: _clampInt(json['lateCancelPeriodDays'], 1, 365) ??
+          _intIn(json['lateCancelLimit'], 1, 20) ?? seed.lateCancelLimit,
+      lateCancelPeriodDays: _intIn(json['lateCancelPeriodDays'], 1, 90) ??
           seed.lateCancelPeriodDays,
-      pauseDays: _clampInt(json['pauseDays'], 0, 365) ?? seed.pauseDays,
+      pauseDays: _intIn(json['pauseDays'], 1, 365) ?? seed.pauseDays,
       assignAcceptTime:
           assign == null ? seed.assignAcceptTime : Duration(seconds: assign),
       lateEta: LateEtaRule.fromJson(json['lateEta']),
@@ -336,12 +338,19 @@ class ScheduledRideRules {
 
 bool? _bool(Object? json) => json is bool ? json : null;
 
-/// A finite number rounded and clamped to [min]..[max]; null otherwise.
-int? _clampInt(Object? json, int min, int max) =>
-    json is num && json.isFinite ? json.round().clamp(min, max) : null;
+/// A whole number in [min]..[max] (the schema's `integer` range); null
+/// otherwise, so the field keeps its default.
+int? _intIn(Object? json, int min, int max) =>
+    json is num && json.isFinite && json == json.roundToDouble() &&
+        json >= min && json <= max
+    ? json.toInt()
+    : null;
 
-double? _clampNum(Object? json, double min, double max) =>
-    json is num && json.isFinite ? json.toDouble().clamp(min, max) : null;
+/// A number in [min]..[max]; null otherwise.
+double? _numIn(Object? json, double min, double max) =>
+    json is num && json.isFinite && json >= min && json <= max
+    ? json.toDouble()
+    : null;
 
 T? _enum<T extends Enum>(Object? json, List<T> values) {
   for (final value in values) {

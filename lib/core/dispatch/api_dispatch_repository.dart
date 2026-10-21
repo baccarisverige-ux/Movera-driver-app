@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
@@ -16,7 +17,15 @@ abstract final class OfferWire {
     'card': 'Card',
     'apple_pay': 'Apple Pay',
     'google_pay': 'Google Pay',
+    'wallet': 'Wallet',
   };
+
+  /// Contract `PaymentMethod`, the v0.3 ids (`apple`, `google`) read as
+  /// their v0.4 names like the config reader does. Unknown: Card.
+  static String _payment(Object? id) {
+    final key = id is String ? id.trim() : null;
+    return _payments[ZoneDefaults.paymentMethodAliases[key] ?? key] ?? 'Card';
+  }
 
   /// Throws [FormatException] when a required field is missing or wrong.
   static RideOffer parse(Map<String, dynamic> json) {
@@ -85,7 +94,14 @@ abstract final class OfferWire {
               point: point(place(stop)),
             ),
       ],
-      payment: _payments[json['paymentMethod']] ?? 'Card',
+      payment: _payment(json['paymentMethod']),
+      kind: OfferKind.fromWire(json['kind']),
+      expiresAt: json['expiresAt'] is String
+          ? DateTime.tryParse(json['expiresAt'] as String)
+          : null,
+      reasonCode: json['reasonCode'] is String
+          ? json['reasonCode'] as String
+          : null,
       reservationTime: json['kind'] == 'reservation' && at != null
           ? '${two(at.hour)}:${two(at.minute)}'
           : null,
@@ -139,15 +155,18 @@ class ApiDispatchRepository implements DispatchRepository {
     required Uri baseUri,
     required Future<String?> Function() accessToken,
     String Function()? idempotencyKey,
+    Duration Function(int attempt)? reconnectDelay,
   }) : _client = client,
        _base = baseUri,
        _token = accessToken,
-       _key = idempotencyKey ?? _randomKey;
+       _key = idempotencyKey ?? _randomKey,
+       _reconnectDelay = reconnectDelay ?? _backoff;
 
   final http.Client _client;
   final Uri _base;
   final Future<String?> Function() _token;
   final String Function() _key;
+  final Duration Function(int attempt) _reconnectDelay;
 
   final Map<String, RideOffer> _offers = <String, RideOffer>{};
   final Map<String, RideOffer> _nextTrips = <String, RideOffer>{};
@@ -159,6 +178,17 @@ class ApiDispatchRepository implements DispatchRepository {
       StreamController<OfferWithdrawal>.broadcast();
   int _lastSequence = 0;
   StreamSubscription<String>? _feed;
+  final StreamController<bool> _live = StreamController<bool>.broadcast();
+  bool _feedLive = false;
+  int _reconnects = 0;
+  Timer? _reconnect;
+  bool _disposed = false;
+
+  /// One Idempotency-Key per offer command (its route and body) until the
+  /// server answers it: a retry after no answer, the app's or the
+  /// driver's, is the same command (openapi `Unavailable`: "retry with
+  /// the same Idempotency-Key"). A new body is a new command.
+  final Map<String, String> _commandKeys = <String, String>{};
 
   static final math.Random _random = math.Random.secure();
 
@@ -170,20 +200,52 @@ class ApiDispatchRepository implements DispatchRepository {
   /// The offer feed cursor, for `?after=` replay.
   int get lastSequence => _lastSequence;
 
+  /// 1 s, 2 s, 4 s … up to 30 s between tries.
+  static Duration _backoff(int attempt) =>
+      Duration(seconds: math.min(30, 1 << math.min(attempt, 5)));
+
+  /// True while the offer feed is open. When it is not, the offer list
+  /// is the last one known and may be stale; it reconnects by itself.
+  bool get feedLive => _feedLive;
+
+  /// [feedLive] as it changes.
+  Stream<bool> watchFeedLive() => _live.stream;
+
+  void _setLive(bool live) {
+    if (_feedLive == live) return;
+    _feedLive = live;
+    if (!_live.isClosed) _live.add(live);
+  }
+
   Uri _uri(String path, [Map<String, String>? query]) => _base.replace(
     path: '${_base.path.replaceFirst(RegExp(r'/$'), '')}$path',
     queryParameters: query,
   );
 
-  Future<Map<String, String>> _headers({bool mutation = false}) async {
+  Future<Map<String, String>> _headers({String? idempotencyKey}) async {
     final token = await _token();
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       'X-Api-Version': '0.4',
       if (token != null) 'Authorization': 'Bearer $token',
-      if (mutation) 'Idempotency-Key': _key(),
+      if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
     };
+  }
+
+  /// POST [path] with [body] under the command's key. The key is dropped
+  /// once the server answered (not on no answer or a 5xx).
+  Future<http.Response> _command(String path, Map<String, Object?> body) async {
+    final text = jsonEncode(body);
+    final command = '$path $text';
+    final key = _commandKeys.putIfAbsent(command, _key);
+    final response = await _client.post(
+      _uri(path),
+      headers: await _headers(idempotencyKey: key),
+      body: text,
+    );
+    if (response.statusCode < 500) _commandKeys.remove(command);
+    return response;
   }
 
   @override
@@ -241,16 +303,43 @@ class ApiDispatchRepository implements DispatchRepository {
     }
   }
 
-  /// Opens `GET /driver/offers/stream` (SSE) from [lastSequence].
+  /// Opens `GET /driver/offers/stream` (SSE) from [lastSequence]. An
+  /// error answer, a dropped connection or a feed the server ends is
+  /// retried with backoff from the last sequence; [feedLive] says when.
   Future<void> connect() async {
+    _reconnect?.cancel();
     await _feed?.cancel();
-    final request = http.Request(
-      'GET',
-      _uri('/driver/offers/stream', {
-        if (_lastSequence > 0) 'after': '$_lastSequence',
-      }),
-    )..headers.addAll({...await _headers(), 'Accept': 'text/event-stream'});
-    final response = await _client.send(request);
+    _feed = null;
+    if (_disposed) return;
+    final http.StreamedResponse response;
+    try {
+      final request = http.Request(
+        'GET',
+        _uri('/driver/offers/stream', {
+          if (_lastSequence > 0) 'after': '$_lastSequence',
+        }),
+      )..headers.addAll({
+          ...await _headers(),
+          'Accept': 'text/event-stream',
+          if (_lastSequence > 0) 'Last-Event-ID': '$_lastSequence',
+        });
+      response = await _client.send(request);
+    } catch (_) {
+      _feedLost();
+      return;
+    }
+    if (response.statusCode != 200) {
+      // An error body is not the feed.
+      unawaited(response.stream.drain<void>().catchError((_) {}));
+      _feedLost();
+      return;
+    }
+    if (_disposed) {
+      unawaited(response.stream.drain<void>().catchError((_) {}));
+      return;
+    }
+    _reconnects = 0;
+    _setLive(true);
     final data = StringBuffer();
     _feed = response.stream
         .transform(utf8.decoder)
@@ -268,7 +357,15 @@ class ApiDispatchRepository implements DispatchRepository {
               // A broken event is skipped; the next resync fixes the list.
             }
           }
-        });
+        }, onError: (_) => _feedLost(), onDone: _feedLost, cancelOnError: true);
+  }
+
+  /// The feed is gone: not live, and it tries again after a while.
+  void _feedLost() {
+    _setLive(false);
+    if (_disposed) return;
+    _reconnect?.cancel();
+    _reconnect = Timer(_reconnectDelay(_reconnects++), () => unawaited(connect()));
   }
 
   /// Applies one feed event (`offer_created`, `offer_updated`,
@@ -344,10 +441,9 @@ class ApiDispatchRepository implements DispatchRepository {
     for (var attempt = 0; attempt < 2; attempt++) {
       final http.Response response;
       try {
-        response = await _client.post(
-          _uri('/offers/${Uri.encodeComponent(offerId)}/accept'),
-          headers: await _headers(mutation: true),
-          body: jsonEncode({'expectedVersion': version}),
+        response = await _command(
+          '/offers/${Uri.encodeComponent(offerId)}/accept',
+          {'expectedVersion': version},
         );
       } catch (_) {
         return const ClaimResult.networkError();
@@ -394,13 +490,12 @@ class ApiDispatchRepository implements DispatchRepository {
     final offer = _find(offerId);
     if (offer == null) return false;
     try {
-      final response = await _client.post(
-        _uri('/offers/${Uri.encodeComponent(offerId)}/decline'),
-        headers: await _headers(mutation: true),
-        body: jsonEncode({
+      final response = await _command(
+        '/offers/${Uri.encodeComponent(offerId)}/decline',
+        {
           'expectedVersion': offer.version,
           if (reasonCode != null) 'reasonCode': reasonCode,
-        }),
+        },
       );
       if (response.statusCode != 200 && response.statusCode != 409) {
         return false;
@@ -424,7 +519,10 @@ class ApiDispatchRepository implements DispatchRepository {
   }
 
   Future<void> dispose() async {
+    _disposed = true;
+    _reconnect?.cancel();
     await _feed?.cancel();
+    await _live.close();
     await _nearby.close();
     await _next.close();
     await _withdrawals.close();
