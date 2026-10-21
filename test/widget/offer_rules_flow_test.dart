@@ -218,7 +218,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
       await _frames(tester, const Duration(milliseconds: 600));
       expect(ExclusiveAnswers.instance.missedInRow, 0);
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });
   });
@@ -239,7 +239,7 @@ void main() {
       await _frames(tester, const Duration(milliseconds: 300));
       expect(DriverOfferPreferences.acceptsCash.value, isFalse);
       expect(_said, contains('Cash rides off'));
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -272,7 +272,7 @@ void main() {
         find.byKey(const ValueKey<String>('radar-offer-card-cash-trip')),
         findsNothing,
       );
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });
   });
@@ -395,7 +395,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey<String>('on-trip-radar-deny')));
       await tester.pump(const Duration(milliseconds: 300));
       expect(ExclusiveAnswers.instance.missedInRow, 1);
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -412,7 +412,7 @@ void main() {
         find.byKey(const ValueKey<String>('on-trip-radar-offer-button')),
         findsNothing,
       );
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -434,7 +434,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('The rider doesn’t want to continue'), findsOneWidget);
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });
 
@@ -481,7 +481,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 25));
       }
       expect(find.byType(DriverRideCompleted), findsOneWidget);
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 2));
     });

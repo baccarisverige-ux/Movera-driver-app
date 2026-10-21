@@ -163,7 +163,7 @@ Future<void> _goOnline(WidgetTester tester) async {
 }
 
 Future<void> _end(WidgetTester tester) async {
-  tester.takeException();
+  expect(tester.takeException(), isNull);
   await tester.pumpWidget(const SizedBox());
 }
 

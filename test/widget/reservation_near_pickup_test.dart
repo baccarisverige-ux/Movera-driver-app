@@ -241,7 +241,7 @@ void main() {
         find.descendant(of: live, matching: find.textContaining('Exclusive')),
         findsNothing,
       );
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },
   );
@@ -283,7 +283,7 @@ void main() {
       expect(deck.ids, contains(demoReservationId));
       expect(deck.ids.last, demoReservationId);
       expect(find.textContaining('Exclusive'), findsNothing);
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       dispatch.dispose();
     },
@@ -308,7 +308,7 @@ void main() {
     expect(card, findsNothing);
     expect(ScheduledRideStore.isOpen(demoReservationId), isFalse);
     expect(find.byKey(_radarCard), findsNothing);
-    tester.takeException();
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -379,12 +379,12 @@ void main() {
         find.byType(ReservationRouteMapPage),
       );
       expect(page.request.id, demoReservationId);
-      tester.takeException();
+      expect(tester.takeException(), isNull);
       await tester.tap(find.byKey(const ValueKey<String>('reservation-map-close')));
       await tester.pumpAndSettle();
       expect(find.byType(ReservationRouteMapPage), findsNothing);
       expect(find.text('Reservation details'), findsOneWidget);
-      tester.takeException();
+      expect(tester.takeException(), isNull);
     });
 
     for (final won in [true, false]) {

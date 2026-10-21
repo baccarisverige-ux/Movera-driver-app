@@ -68,7 +68,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 3000));
     await tester.pump(const Duration(milliseconds: 300));
     expect(card, findsNothing);
-    tester.takeException();
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();
   });
@@ -120,7 +120,7 @@ void main() {
       find.byKey(const ValueKey<String>('radar-offer-card-nearby-1')),
       findsOneWidget,
     );
-    tester.takeException();
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();
   });
@@ -184,7 +184,7 @@ void main() {
 
     // The radar reads Accept while the deck shows.
     expect(find.byKey(const ValueKey<String>('home-radar-accept')), findsOneWidget);
-    tester.takeException();
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();
   });
