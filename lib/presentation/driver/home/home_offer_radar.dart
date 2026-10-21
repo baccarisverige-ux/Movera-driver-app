@@ -1228,20 +1228,33 @@ extension _HomeOfferRadar on _DriverHomeState {
           ids: [for (final offer in offers) offer.id],
           taken: taken,
           onFrontChanged: _onRadarDeckFront,
-          top: GestureDetector(
-            key: const ValueKey<String>('radar-home-all-offers'),
-            onTap: _openRideOffers,
-            child: LedCountBadge(
-              count: _radarTripTotal(),
-              label: tr.allOffers,
-              tone: LedCountTone.grey,
-              trailing: SvgPicture.asset(
-                AppAssets.offerChevron,
-                width: 13,
-                height: 13,
-                colorFilter: const ColorFilter.mode(
-                  Color(0xFF5F6B72),
-                  BlendMode.srcIn,
+          // driver-u136: a button, taking touches in a 44 px tall box (the
+          // room is above the badge, so the badge stays where it was).
+          top: Semantics(
+            button: true,
+            child: GestureDetector(
+              key: const ValueKey<String>('radar-home-all-offers'),
+              behavior: HitTestBehavior.opaque,
+              onTap: _openRideOffers,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  widthFactor: 1,
+                  child: LedCountBadge(
+                    count: _radarTripTotal(),
+                    label: tr.allOffers,
+                    tone: LedCountTone.grey,
+                    trailing: SvgPicture.asset(
+                      AppAssets.offerChevron,
+                      width: 13,
+                      height: 13,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF5F6B72),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

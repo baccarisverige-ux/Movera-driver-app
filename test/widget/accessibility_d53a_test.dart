@@ -20,6 +20,11 @@ import 'package:movera/presentation/driver/auth/phone%20verification/phone_verif
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/components/home_offer_sheet.dart';
+import 'package:movera/main.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/location/driver_start_position.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -302,5 +307,32 @@ void main() {
     // A corner of the box, outside the 34 px mark, still hides it.
     await tester.tapAt(tester.getTopLeft(hide) + const Offset(2, 2));
     expect(hidden, 1);
+  });
+
+  testWidgets('driver-u136: "All offers" is a 44 px button', (tester) async {
+    final semantics = tester.ensureSemantics();
+    SharedPreferences.setMockInitialValues({});
+    IslandMessages.reset();
+    ScheduledRideStore.reset();
+    DriverStartPosition.clearMemory();
+    await (await SharedPreferences.getInstance())
+        .setString(DriverStartPosition.key, '{"lat":59.3326,"lng":18.0649}');
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MoveraApp());
+    await tester.pump(const Duration(milliseconds: 120));
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 1550));
+    await tester.pump(const Duration(milliseconds: 2300));
+    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
+    await tester.pump(const Duration(milliseconds: 900));
+    final all = find.byKey(const ValueKey<String>('radar-home-all-offers'));
+    expect(tester.getSize(all).height, greaterThanOrEqualTo(44));
+    final data = tester.getSemantics(all).getSemanticsData();
+    expect(data.flagsCollection.isButton, isTrue);
+    expect(data.hasAction(SemanticsAction.tap), isTrue);
+    expect(data.label, contains('all offers'));
+    await _unmount(tester);
+    semantics.dispose();
   });
 }
