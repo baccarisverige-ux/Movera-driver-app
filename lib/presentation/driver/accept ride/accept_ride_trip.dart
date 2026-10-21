@@ -323,13 +323,21 @@ extension _AcceptRideTrip on _AcceptRideState {
         } else if (status.isTerminal) {
           final secured = _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer : null;
           final next = secured == null ? null : _snapshotForOffer(secured);
+          // A completed trip keeps what the driver's own finish records: the
+          // waiting fee and, for cash, what was collected.
+          final completed = status == TripStatus.completed;
+          final cash = completed && widget.paidByCash;
+          final paid = completed ? _paidWaybill() : null;
           await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
-            _waybills.current ?? _buildCurrentWaybill(), status: status, authoritative:true, next:next);
+            paid ?? _waybills.current ?? _buildCurrentWaybill(),
+            status: status, authoritative:true, next:next,
+            paymentMethod: cash ? 'Cash' : null,
+            cashCollected: cash ? _cashToCollect : null);
           if (!mounted) { return; }
           if (!await _rideLifecycle.applyProjection(status)) { return; }
           if (identical(event, _pendingProjection)) { _pendingProjection = null; }
           _projectionRetryDelay = _AcceptRideState._projectionRetryBase;
-          await _leaveAfterAuthoritativeOutcome(status, next);
+          await _leaveAfterAuthoritativeOutcome(status, next, paid);
           return;
         } else if (status.isReleasedToDispatch) {
           // X5: admin reassign or a released reservation. Already over here
@@ -347,8 +355,11 @@ extension _AcceptRideTrip on _AcceptRideState {
           }
           return;
         } else {
+          final before = _stage;
           if (!await _rideLifecycle.applyProjection(status)) { return; }
-          if (mounted) { _rebuild(() {}); _resumeStageSideEffects(); }
+          // A same-stage projection (in_trip, approaching_dropoff) changes
+          // nothing here: the next-trip radar, route and camera stay.
+          if (mounted) { _rebuild(() {}); if (_stage != before) { _resumeStageSideEffects(); } }
         }
         if (status == TripStatus.cancelledByRider && !_rideLifecycle.terminal) {
           _scheduleProjectionRetry();
@@ -378,12 +389,19 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     /// Shared exit for every authoritative terminal outcome: same timers,
     /// waybill, session and queued-trip handoff as driver completion.
-    Future<void> _leaveAfterAuthoritativeOutcome(TripStatus status, PersistedActiveRide? next) async {
+    /// [paid] is the completed trip's waybill, null for any other outcome.
+    Future<void> _leaveAfterAuthoritativeOutcome(TripStatus status, PersistedActiveRide? next, WaybillRecord? paid) async {
       _waitTimer?.cancel();
       _nextTripRadarDemoTimer?.cancel();
       _nextTripRadarMatchTimer?.cancel();
       _pauseLiveUpdates();
-      _waybills.discardCurrent();
+      if (paid != null) {
+        // Home's last trip is this one, as after the driver's own finish.
+        _waybills.beginCurrent(paid);
+        _waybills.completeCurrent();
+      } else {
+        _waybills.discardCurrent();
+      }
       await showTripOutcomeSheet(context, status: status, hasNext: next != null);
       if (!mounted) { return; }
       widget.sessionController?.stayOnlineAfterTrip();

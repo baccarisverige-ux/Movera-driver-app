@@ -3,10 +3,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/realtime/driver_realtime.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
@@ -18,6 +24,9 @@ import '../../integration_test/headless_map_platform.dart';
 
 // D3 (driver-74/75): "Leave now" while a screen or sheet covers Home keeps
 // the accepted ride and opens it once Home is back on top.
+// D4 (driver-37/38/39): an authoritative `completed` keeps the cash and
+// waiting-fee record and updates Home's last trip; a same-stage projection
+// leaves the next-trip offer alone.
 
 /// Dispatch with no offers of its own.
 class _Dispatch implements DispatchRepository {
@@ -88,9 +97,57 @@ Future<void> _pumpHome(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 200));
 }
 
+Future<void> _settle(WidgetTester tester, [int frames = 20]) async {
+  for (var i = 0; i < frames; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
+Future<void> _pumpTrip(
+  WidgetTester tester,
+  MemoryDriverRealtime realtime, {
+  bool paidByCash = false,
+}) async {
+  tester.view.physicalSize = const Size(375, 812);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(ScreenUtilInit(
+    designSize: const Size(375, 812),
+    builder: (_, __) => MaterialApp(
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: TextButton(
+              key: const ValueKey<String>('open-ride'),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => AcceptRide(
+                  tripId: 'trip-c',
+                  fare: '250,00 kr',
+                  paidByCash: paidByCash,
+                  initialStage: ActiveRideStage.onTrip,
+                  activeRideRepository: MemoryActiveRideRepository(),
+                  sessionController: DriverSessionController()..setOnline(true),
+                  realtime: realtime,
+                  waybillRepository: InMemoryWaybillRepository.instance,
+                ),
+              )),
+              child: const Text('home'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  ));
+  await tester.tap(find.byKey(const ValueKey<String>('open-ride')));
+  await _settle(tester);
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    CompletionJournal.resetForTesting();
+    InMemoryWaybillRepository.instance.reset();
     IslandMessages.reset();
     ScheduledRideStore.reset();
     ExclusiveAnswers.instance.reset();
@@ -140,6 +197,90 @@ void main() {
       },
     );
   }
+
+  testWidgets(
+    'driver-37: an authoritative completed keeps the cash trip\'s payment '
+    'method and cash collected in history',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      await _pumpTrip(tester, realtime, paidByCash: true);
+
+      realtime.emit(
+        tripId: 'trip-c',
+        kind: DriverRealtimeKind.tripProjection,
+        status: TripStatus.completed,
+      );
+      await _settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
+      await _settle(tester, 30);
+
+      final row = (await PrefsTripHistoryRepository().list()).single;
+      expect(row.tripId, 'trip-c');
+      expect(row.status, TripStatus.completed);
+      expect(row.paidByCash, isTrue);
+      expect(row.cashCollected, '250,00 kr');
+      expect(row.cashBalance, isNotNull);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
+
+  testWidgets(
+    'driver-39: an authoritative completed becomes Home\'s last trip',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      await _pumpTrip(tester, realtime);
+
+      realtime.emit(
+        tripId: 'trip-c',
+        kind: DriverRealtimeKind.tripProjection,
+        status: TripStatus.completed,
+      );
+      await _settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
+      await _settle(tester, 30);
+
+      final waybills = InMemoryWaybillRepository.instance;
+      expect(waybills.current, isNull);
+      expect(waybills.last?.tripId, 'trip-c');
+      expect(waybills.last?.fare, '250,00 kr');
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
+
+  testWidgets(
+    'driver-38: a same-stage projection keeps the next trip the driver '
+    'just accepted',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      await _pumpTrip(tester, realtime);
+      await tester.pump(const Duration(milliseconds: 3500));
+
+      final match = find.byKey(const ValueKey('on-trip-radar-match-next'));
+      expect(match, findsOneWidget);
+      await tester.ensureVisible(match);
+      await tester.tap(match);
+      await tester.pump(const Duration(milliseconds: 200));
+      realtime.emit(
+        tripId: 'trip-c',
+        kind: DriverRealtimeKind.tripProjection,
+        status: TripStatus.approachingDropoff,
+      );
+      await _settle(tester, 32);
+
+      expect(InMemoryWaybillRepository.instance.next, isNotNull);
+      expect(find.byKey(const ValueKey('on-trip-radar-match-next')), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
 }
 
 Iterable<String> get _saidTitles => IslandMessages.posted.map((m) => m.title);
