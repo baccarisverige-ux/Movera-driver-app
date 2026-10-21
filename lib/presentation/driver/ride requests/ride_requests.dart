@@ -86,6 +86,10 @@ class _RideRequestsState extends State<RideRequests> {
   static const Color _mint = MoveraRadarOrb.onlineGreen;
 
   Timer? _matchNoticeTimer;
+
+  /// Opens the trip of a won Match. Its own timer: a banner for another
+  /// trip must never cancel it (driver-89).
+  Timer? _matchOpenTimer;
   late final DispatchRepository _dispatch;
   late final bool _ownsDispatch;
   StreamSubscription<List<RideOffer>>? _nearbySubscription;
@@ -207,6 +211,7 @@ class _RideRequestsState extends State<RideRequests> {
     _nearbySubscription?.cancel();
     _withdrawalSubscription?.cancel();
     _matchNoticeTimer?.cancel();
+    _matchOpenTimer?.cancel();
     for (final timer in _claimedRemovalTimers.values) {
       timer.cancel();
     }
@@ -391,7 +396,8 @@ class _RideRequestsState extends State<RideRequests> {
       );
     });
 
-    _matchNoticeTimer = Timer(
+    _matchOpenTimer?.cancel();
+    _matchOpenTimer = Timer(
       const Duration(milliseconds: 500),
       () {
         if (!mounted) { return; }
@@ -451,8 +457,11 @@ class _RideRequestsState extends State<RideRequests> {
     bool notice = true,
   }) {
     // The card fades out; a short banner says why, since this driver
-    // tapped Match (or another driver of its radar group took it).
-    if (!notice) {
+    // tapped Match (or another driver of its radar group took it). While
+    // this driver's Match of another trip is with dispatch or opening its
+    // won trip, that Match keeps the banner (driver-89).
+    final otherMatch = _matchingOfferId != null && _matchingOfferId != trip.id;
+    if (!notice || otherMatch) {
       setState(() {
         _offerStates[trip.id] = _RadarOfferState.claimedElsewhere;
         _goneReasons[trip.id] = reason;

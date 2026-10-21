@@ -8,6 +8,7 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +17,8 @@ import '../../integration_test/headless_map_platform.dart';
 // The Radar list's match banner.
 // driver-u161: the "Could not match" banner after a network error clears
 // by itself, like the other banners, so Back and Refresh under it work.
+// driver-89: another trip withdrawn while a won Match is opening its trip
+// does not cancel the opening: the won trip opens.
 
 RideOffer _offer(String id, double km) => RideOffer(
   id: id,
@@ -127,5 +130,38 @@ void main() {
     expect(closes, 1);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('driver-89: another trip withdrawn while the won trip opens', (
+    tester,
+  ) async {
+    final dispatch = _Dispatch();
+    await _mount(tester, dispatch);
+    await _tapMatch(tester, 'a');
+    dispatch.claims.single.complete(ClaimResult.success(dispatch.offers[0]));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Trip matched'), findsOneWidget);
+
+    dispatch.withdrawals.add(const OfferWithdrawal(
+      offerId: 'b',
+      reason: OfferGoneReason.claimedElsewhere,
+    ));
+    await tester.pump(const Duration(milliseconds: 100));
+    // The won Match keeps its banner.
+    expect(find.text('Trip matched'), findsOneWidget);
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    tester.takeException();
+    expect(find.byType(AcceptRide, skipOffstage: false), findsOneWidget);
+    expect(find.byType(AcceptRide, skipOffstage: false).evaluate().single
+        .widget, isA<AcceptRide>().having((t) => t.offerId, 'offerId', 'a'));
+    tester.takeException();
+    await tester.pumpWidget(const SizedBox.shrink());
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    tester.takeException();
   });
 }
