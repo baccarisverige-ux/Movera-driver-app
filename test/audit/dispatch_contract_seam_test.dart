@@ -22,7 +22,7 @@ import '../../integration_test/headless_map_platform.dart';
 
 // Audit round 4, the dispatch contract seam (`ApiDispatchRepository`,
 // `OfferWire`) and the config readers: driver-r4-4, driver-r4-2,
-// driver-r4-26.
+// driver-r4-26, driver-r4-6.
 
 /// Contract `Offer` (openapi.yaml#Offer).
 Map<String, dynamic> _wire({
@@ -31,6 +31,7 @@ Map<String, dynamic> _wire({
   String source = 'system',
   String? reasonCode,
   String? expiresAt,
+  String paymentMethod = 'card',
 }) => {
   'offerId': id,
   'tripId': 'trip-$id',
@@ -44,7 +45,7 @@ Map<String, dynamic> _wire({
   'pickup': {'address': 'Tegnérgatan, Stockholm', 'lat': 59.3335, 'lng': 18.0610},
   'dropoff': {'address': 'Odengatan, Stockholm', 'lat': 59.3428, 'lng': 18.0475},
   'categoryId': 'comfort',
-  'paymentMethod': 'card',
+  'paymentMethod': paymentMethod,
   'pickupEtaSeconds': 180,
   'pickupMeters': 900,
   'tripSeconds': 720,
@@ -299,5 +300,14 @@ void main() {
       expect(requests.last.url.queryParameters['after'], '1');
       expect(live, [true, false, true, false, true]);
     });
+  });
+
+  test('driver-r4-6: the v0.3 payment ids and wallet are not "Card"', () {
+    String payment(String id) =>
+        OfferWire.parse(_wire(paymentMethod: id)).payment;
+    expect(payment('apple'), 'Apple Pay');
+    expect(payment('google'), 'Google Pay');
+    expect(payment('wallet'), 'Wallet');
+    expect(payment('cash'), 'Cash');
   });
 }

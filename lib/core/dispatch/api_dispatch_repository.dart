@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
@@ -16,7 +17,15 @@ abstract final class OfferWire {
     'card': 'Card',
     'apple_pay': 'Apple Pay',
     'google_pay': 'Google Pay',
+    'wallet': 'Wallet',
   };
+
+  /// Contract `PaymentMethod`, the v0.3 ids (`apple`, `google`) read as
+  /// their v0.4 names like the config reader does. Unknown: Card.
+  static String _payment(Object? id) {
+    final key = id is String ? id.trim() : null;
+    return _payments[ZoneDefaults.paymentMethodAliases[key] ?? key] ?? 'Card';
+  }
 
   /// Throws [FormatException] when a required field is missing or wrong.
   static RideOffer parse(Map<String, dynamic> json) {
@@ -85,7 +94,7 @@ abstract final class OfferWire {
               point: point(place(stop)),
             ),
       ],
-      payment: _payments[json['paymentMethod']] ?? 'Card',
+      payment: _payment(json['paymentMethod']),
       kind: OfferKind.fromWire(json['kind']),
       expiresAt: json['expiresAt'] is String
           ? DateTime.tryParse(json['expiresAt'] as String)
