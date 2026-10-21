@@ -117,6 +117,27 @@ final _away = RideOffer(
   followsDestination: false,
 );
 
+/// An admin direct assign (contract §3.1) that fits the gap before 07:40.
+final _assign = RideOffer(
+  id: 'assign',
+  category: 'Comfort',
+  fare: Money(minorUnits: 8810),
+  rating: '4.92',
+  riderName: 'Karim',
+  pickupMinutes: 2,
+  pickupKm: 0.8,
+  tripMinutes: 6,
+  tripKm: 3.1,
+  pickup: 'Tegnérgatan, Stockholm',
+  dropoff: 'Odengatan, Stockholm',
+  pickupPosition: const GeoPoint(59.3335, 18.0610),
+  dropoffPosition: const GeoPoint(59.3380, 18.0700),
+  isNearby: true,
+  followsDestination: false,
+  priority: true,
+  source: OfferSource.admin,
+);
+
 Future<void> _frames(WidgetTester tester, Duration total) async {
   const step = Duration(milliseconds: 100);
   for (var t = Duration.zero; t < total; t += step) {
@@ -125,9 +146,11 @@ Future<void> _frames(WidgetTester tester, Duration total) async {
 }
 
 /// Home with the 07:40 ride accepted, online, with "toward" on the deck.
+/// With [deck] false it returns once the Radar is on.
 Future<_Dispatch> _pumpHome(
   WidgetTester tester, {
   List<RideOffer>? offers,
+  bool deck = true,
 }) async {
   ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
   final dispatch = _Dispatch()..publish(offers ?? [_toward]);
@@ -161,6 +184,7 @@ Future<_Dispatch> _pumpHome(
       .onTap!
       .call();
   await _frames(tester, const Duration(milliseconds: 1500));
+  if (!deck) { return dispatch; }
   await _frames(
     tester,
     DriverOfferRules.current.exclusiveAcceptTime +
@@ -266,6 +290,59 @@ void main() {
         await _end(tester);
       });
     }
+  });
+
+  group('driver-fixrev2-1: an Exclusive Accept in flight at "Leave now"', () {
+    Future<_Dispatch> acceptAssign(WidgetTester tester) async {
+      final dispatch = await _pumpHome(tester, offers: [_assign], deck: false);
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-offer-card-assign')),
+        findsOneWidget,
+      );
+      // The sheet settles, then Accept.
+      await _frames(tester, const Duration(milliseconds: 1500));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('home-radar-exclusive')),
+      );
+      await tester.pump();
+      expect(dispatch.claims, hasLength(1));
+      // Accept held open about as long as the Radar tests wait in all.
+      await _frames(tester, const Duration(seconds: 50));
+      // The scheduled trip waits for dispatch's answer.
+      expect(find.byType(AcceptRide, skipOffstage: false), findsNothing);
+      expect(ScheduledRideStore.upcoming, contains(demoReservationRequest));
+      return dispatch;
+    }
+
+    testWidgets('won: only the assigned trip opens, one trip screen', (
+      tester,
+    ) async {
+      final dispatch = await acceptAssign(tester);
+      dispatch.claims.single.complete(ClaimResult.success(_assign));
+      await _frames(tester, const Duration(seconds: 2));
+      expect(find.byType(AcceptRide, skipOffstage: false), findsOneWidget);
+      final trip = tester.widget<AcceptRide>(
+        find.byType(AcceptRide, skipOffstage: false),
+      );
+      expect(trip.offerId, 'assign');
+      expect(trip.matchedVia, 'Assigned by Movera');
+      await _end(tester);
+    });
+
+    testWidgets('lost: the late scheduled trip opens right away', (
+      tester,
+    ) async {
+      final dispatch = await acceptAssign(tester);
+      dispatch.claims.single.complete(const ClaimResult.alreadyClaimed());
+      // Well before the backup minutes (10 s of the demo day).
+      await _frames(tester, const Duration(seconds: 2));
+      expect(find.byType(AcceptRide), findsOneWidget);
+      expect(
+        tester.widget<AcceptRide>(find.byType(AcceptRide)).matchedVia,
+        'Scheduled ride',
+      );
+      await _end(tester);
+    });
   });
 
   group('driver-fixrev-8: the toward-pickup window', () {

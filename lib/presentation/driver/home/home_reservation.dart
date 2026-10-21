@@ -359,7 +359,13 @@ extension _HomeReservation on _DriverHomeState {
       } catch (_) {
         result = const ClaimResult.networkError();
       }
-      if (mounted) { _rebuild(() => _reservation.claimingId = null); }
+      if (mounted) {
+        _rebuild(() => _reservation.claimingId = null);
+        // Runs after the caller: a reservation won inside its Exclusive
+        // window has its trip on screen by then, which keeps the late
+        // scheduled ride back.
+        _HomeScheduled(this)._afterClaimResolved();
+      }
       if (result.outcome == ClaimOutcome.networkError) {
         IslandMessages.show(HomeIslandNotices.reservationNoConnection);
       } else if (!result.isSuccess) {
