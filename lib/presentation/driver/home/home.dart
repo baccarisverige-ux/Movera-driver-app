@@ -187,7 +187,8 @@ class _DriverHomeState extends State<DriverHome>
   }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _foreground = state == AppLifecycleState.resumed;
+    // Inactive is still on screen: a call banner, a system dialog (driver-65).
+    _foreground = state == AppLifecycleState.resumed || state == AppLifecycleState.inactive;
     if (_liveVisible) { _resumeHomeUpdates(); } else { _pauseHomeUpdates(); }
   }
   void _pauseHomeUpdates() {
@@ -210,6 +211,7 @@ class _DriverHomeState extends State<DriverHome>
     _HomeOfferRadar(this)._resumeOfferTimers();
     _HomeOfferRules(this)._releaseHeldOffline();
     _HomeOfferRoute(this)._resumeRouteLine();
+    _HomeMapSheet(this)._showNextIslandMessage();
     if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); _radarMotionController.repeat(); }
     setState(() {});
   }
@@ -544,11 +546,7 @@ class _DriverHomeState extends State<DriverHome>
     if (snapshot == null) { setState(() => _recoveryResolved = true); return; }
 
     if (!snapshot.isFresh || !snapshot.hasVerifiedEndpoints) {
-      final resume = await showDialog<bool>(context: context, barrierDismissible: false,
-        builder: (context) => AlertDialog(title: Text(tr.unresolvedTrip),
-          content: Text(snapshot!.hasVerifiedEndpoints ? tr.thisSavedTripIsOlderThan : tr.savedRouteCoordinatesAreUnavailableClose),
-          actions: [TextButton(onPressed: () => popOwned(context, false), child: Text(tr.closeTrip)),
-            FilledButton(onPressed: snapshot.hasVerifiedEndpoints ? () => popOwned(context, true) : null, child: Text(tr.resumeTrip))]));
+      final resume = await _HomeBack(this)._askUnresolvedTrip(snapshot);
       if (!mounted) { return; }
       if (resume != true) {
         try {
@@ -956,6 +954,7 @@ class _DriverHomeState extends State<DriverHome>
   }
 
   Future<void> _goOffline() async {
+    final radarListOpen = showRideRequests; // driver-u118: it closes too.
     _destinationOpenTimer?.cancel();
     IslandMessages.show(HomeIslandNotices.offline);
     hideMainPanel = false;
@@ -982,12 +981,12 @@ class _DriverHomeState extends State<DriverHome>
       _destinationPosition = null;
       _destinationRouteMarkers = {};
       _destinationRoutePolylines = {};
-      _soonReservationReady = false;
+      _soonReservationReady = false; showRideRequests = false;
     });
     _destinationLimitTimer?.cancel(); DestinationModeSession.instance.ended();
     _HomeMapSheet(this)._clearDemoDestinationTrips();
     _HomeOfferRadar(this)._clearDirectOfferRoute();
-    await _HomeMapSheet(this)._closeDriverSheet();
+    if (!radarListOpen) { await _HomeMapSheet(this)._closeDriverSheet(); } // Its sheet is not mounted.
   }
 
   void _openRideOffers() {

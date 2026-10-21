@@ -1488,32 +1488,33 @@ void main() {
         await _advanceAnimation(tester, const Duration(milliseconds: 520));
       }
 
-      // Hidden → last trip → today → Ride history → hidden.
+      // Hidden → last trip → today → Ride history → hidden. No trip yet:
+      // no last fare and 0,00 kr today (driver-u125: sample figures before).
       expect(find.text('•••• kr'), findsOneWidget);
       await tap();
       expect(find.text('LAST TRIP'), findsOneWidget);
-      expect(find.text('126 kr'), findsOneWidget);
+      expect(find.text('—'), findsOneWidget);
       await tap();
       expect(find.text('TODAY'), findsOneWidget);
-      expect(find.text('183.25 kr'), findsOneWidget);
+      expect(find.text('0,00 kr'), findsOneWidget);
       await tap();
       expect(find.text('Ride history'), findsOneWidget);
       expect(find.text('SLIDE TO OPEN'), findsOneWidget);
       await tap();
       expect(find.text('•••• kr'), findsOneWidget);
-      expect(find.text('183.25 kr'), findsNothing);
+      expect(find.text('0,00 kr'), findsNothing);
       _expectNoException(tester);
 
       // Going online hides the money again.
       await tap();
       await tap();
-      expect(find.text('183.25 kr'), findsOneWidget);
+      expect(find.text('0,00 kr'), findsOneWidget);
       await tester.tap(find.text('OFF'));
       await tester.pump(const Duration(milliseconds: 1550));
       expect(find.text('LIVE'), findsOneWidget);
       // Let the screen finish its switch back to the hidden total.
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('183.25 kr'), findsNothing);
+      expect(find.text('0,00 kr'), findsNothing);
       _expectNoException(tester);
     },
   );
@@ -1717,17 +1718,17 @@ void main() {
     }
 
     await tap();
-    expect(find.text('126 kr'), findsOneWidget);
+    expect(find.text('—'), findsOneWidget);
     // A tap restarts the 5 s: 4 s, tap, 4 s later it still shows today.
     await tester.pump(const Duration(seconds: 4));
     await tap();
     await tester.pump(const Duration(seconds: 4));
-    expect(find.text('183.25 kr'), findsOneWidget);
+    expect(find.text('0,00 kr'), findsOneWidget);
     // Then 5 s without a touch brings back the hidden total.
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(milliseconds: 520));
     expect(find.text('•••• kr'), findsOneWidget);
-    expect(find.text('183.25 kr'), findsNothing);
+    expect(find.text('0,00 kr'), findsNothing);
     _expectNoException(tester);
   });
 

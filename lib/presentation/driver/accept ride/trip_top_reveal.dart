@@ -18,7 +18,7 @@ class TripTopReveal extends StatefulWidget {
     this.onSearch,
     this.onHistory,
     this.status,
-    this.lastTripLabel = DigitalIslandParts.sampleLastTrip,
+    this.lastTripLabel = DigitalIslandParts.noAmount,
     this.initiallyOpen = false,
   });
 

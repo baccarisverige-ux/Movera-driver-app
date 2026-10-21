@@ -1334,7 +1334,7 @@ class _AcceptRideState extends State<AcceptRide>
                         waitingMessage: _tripBarStatus,
                         paidWait: _paidStopWait || (_countingWait && !_inIncludedWait),
                         paidByCash: widget.paidByCash,
-                        lastTripLabel: _waybills.last?.fare ?? DigitalIslandParts.sampleLastTrip,
+                        lastTripLabel: _waybills.last?.fare ?? DigitalIslandParts.noAmount,
                         radarVisible: _stage == ActiveRideStage.onTrip,
                         radarOn: _onTripRadarOn,
                         onRadar: _AcceptRideTrip(this)._toggleOnTripRadar,

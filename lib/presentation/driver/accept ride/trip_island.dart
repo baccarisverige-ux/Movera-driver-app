@@ -79,6 +79,7 @@ class _TripIslandState extends State<TripIsland> {
     setState(
       () => _face = _Face.values[(_face.index + 1) % _Face.values.length],
     );
+    if (_face == _Face.today) { unawaited(DigitalIslandParts.refreshToday()); }
     _idle?.cancel();
     if (_face != _Face.hidden) {
       // Left alone for 5 s, the money hides again.
@@ -97,11 +98,7 @@ class _TripIslandState extends State<TripIsland> {
       tr.lastTrip,
       widget.lastTripLabel,
     ),
-    _Face.today => DigitalIslandParts.amountFace(
-      'island-today',
-      tr.todayCaps,
-      DigitalIslandParts.sampleToday,
-    ),
+    _Face.today => DigitalIslandParts.todayFace(),
     _Face.history => DigitalIslandParts.historyFace(),
   };
 

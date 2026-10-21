@@ -19,6 +19,9 @@ class DestinationModeSession {
 
   DateTime get now => _now();
 
+  /// When the current destination was set; null without one.
+  DateTime? get activeSince => _activeSince;
+
   /// Destinations set on [now]'s day.
   int usedToday([DateTime? at]) {
     final day = at ?? _now();

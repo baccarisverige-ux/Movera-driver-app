@@ -2,6 +2,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:movera/core/history/today_earnings.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 
@@ -670,9 +671,21 @@ class DigitalIslandParts {
   /// Normal width, before the scale.
   static const double width = 244;
 
-  // Sample figures until earnings come from the backend.
-  static const String sampleToday = '183.25 kr';
-  static const String sampleLastTrip = '126 kr';
+  /// A money face with nothing to show yet, e.g. LAST TRIP before the
+  /// first trip (driver-u125: it showed a sample figure).
+  static const String noAmount = TodayEarnings.unknown;
+
+  /// Reads today's total again; the island calls it as TODAY opens.
+  static Future<void> refreshToday() => TodayEarnings.refresh();
+
+  /// TODAY: the trips completed today on this phone (driver-u125: it was
+  /// a sample figure).
+  static Widget todayFace() => ValueListenableBuilder<String?>(
+        key: const ValueKey<String>('island-today'),
+        valueListenable: TodayEarnings.label,
+        builder: (context, total, _) => amountFace('island-today-amount',
+            tr.todayCaps, total ?? TodayEarnings.unknown),
+      );
 
   /// Menu icon; its arrow points right, the way the menu slides in.
   static Widget menuIcon() => Transform.flip(

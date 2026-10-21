@@ -309,7 +309,11 @@ class _RideRequestsState extends State<RideRequests> {
   }
 
   void _matchTrip(_RadarTrip trip) {
-    if (!_isOfferStillVisible(trip) ||
+    // driver-u118: an offline driver (the driving limit, Go offline)
+    // claims nothing.
+    final session = widget.sessionController;
+    if ((session != null && !session.availableForOffers) ||
+        !_isOfferStillVisible(trip) ||
         _stateFor(trip.id) != _RadarOfferState.available ||
         _matchingOfferId != null) {
       return;

@@ -299,7 +299,9 @@ extension _HomeMapSheet on _DriverHomeState {
             context,
             MaterialPageRoute(
               builder: (_) => DriverDestinationPicker(
-                origin: _driverPosition,
+                // driver-u121: no origin without a real position, so the
+                // picker skips its confirm step and invents no figures.
+                origin: _knownDriverPosition,
                 routeRepository: _roadRouteService,
               ),
             ),
@@ -317,17 +319,9 @@ extension _HomeMapSheet on _DriverHomeState {
       _destinationRoadRequests.cancel();
       _destinationRouteRefetch.reset();
       _cameraRoute = null;
-      final session = DestinationModeSession.instance..started();
+      DestinationModeSession.instance.started();
       _destinationLimitTimer?.cancel();
-      final left = session.timeLeft();
-      if (left != null) {
-        _destinationLimitTimer = Timer(left, () {
-          if (!mounted || !_destinationModeActive) { return; }
-          _endDestinationMode();
-          DestinationModeSession.instance.timedOut();
-          IslandMessages.show(HomeIslandNotices.destinationEnded);
-        });
-      }
+      _armDestinationLimit();
       _rebuild(() {
         _destinationModeActive = true;
         _destinationAddress = result.address;
@@ -357,6 +351,25 @@ extension _HomeMapSheet on _DriverHomeState {
       if (!_isOnline && !_isGoingOnline) {
         _goOnline();
       }
+    }
+    /// R13-9: the admin's time limit ends the destination. One set later
+    /// on a trip restarts the shared clock; Home then waits for that
+    /// one's limit instead of ending it early (driver-u122).
+    void _armDestinationLimit() {
+      final session = DestinationModeSession.instance;
+      final left = session.timeLeft();
+      if (left == null) { return; }
+      final since = session.activeSince;
+      _destinationLimitTimer = Timer(left, () {
+        if (!mounted || !_destinationModeActive) { return; }
+        if (DestinationModeSession.instance.activeSince != since) {
+          _armDestinationLimit();
+          return;
+        }
+        _endDestinationMode();
+        DestinationModeSession.instance.timedOut();
+        IslandMessages.show(HomeIslandNotices.destinationEnded);
+      });
     }
     Future<void> _refreshDestinationRoadRoute() =>
         _destinationRoadRefresh.request(_fetchLatestDestinationRoadRoute);
@@ -402,13 +415,16 @@ extension _HomeMapSheet on _DriverHomeState {
         _rebuild(() => _destinationRoutePolylines = <Polyline>{});
       }
     }
+    /// The driver's position once a saved or live one is known; null
+    /// while the map shows only the city-centre placeholder.
+    LatLng? get _knownDriverPosition => _startPositionKnown ? _driverPosition : null;
     Future<void> _fitDestinationRoute() async {
       final destination = _destinationPosition;
       if (destination == null || _mapController == null) { return; }
       final generation = _mapPreviews.begin();
 
       final routePoints = _destinationRoutePolylines.isEmpty
-          ? <LatLng>[_driverPosition, destination]
+          ? <LatLng>[?_knownDriverPosition, destination]
           : _destinationRoutePolylines.first.points;
 
       await Future<void>.delayed(const Duration(milliseconds: 80));
@@ -1237,8 +1253,7 @@ extension _HomeMapSheet on _DriverHomeState {
           return DigitalIslandParts.amountFace(
               'island-last-trip', tr.lastTrip, _lastTripFareLabel);
         case _IslandFace.today:
-          return DigitalIslandParts.amountFace(
-              'island-today', tr.todayCaps, DigitalIslandParts.sampleToday);
+          return DigitalIslandParts.todayFace();
         case _IslandFace.history:
           return DigitalIslandParts.historyFace();
       }
@@ -1271,8 +1286,11 @@ extension _HomeMapSheet on _DriverHomeState {
       }
       _showNextIslandMessage();
     }
+    /// D3.2 (driver-u110/u126): while a screen covers Home (a trip, a
+    /// menu screen) or the app is away, messages wait in the queue; Home
+    /// shows them once it is back on top.
     void _showNextIslandMessage() {
-      if (!mounted || _islandMessage != null) { return; }
+      if (!mounted || !_liveVisible || _islandMessage != null) { return; }
       final next = IslandMessages.take();
       if (next == null) { return; }
       _islandWakeTimer?.cancel();
@@ -1314,6 +1332,12 @@ extension _HomeMapSheet on _DriverHomeState {
     void _onIslandEarningsTap() {
       // The touch only closed "Finding trips" or a waiting message.
       if (_islandWaiting.takeSwallowedTap()) { return; }
+      // A screen reader's tap sends no pointer: it closes the waiting face
+      // like a touch, so Menu and Search come back (driver-u124).
+      if (_islandWaiting.touch()) {
+        _islandWaiting.takeSwallowedTap();
+        return;
+      }
       if (_islandWake < 2) {
         // A tap during the launch animation just finishes it.
         _islandWakeTimer?.cancel();
@@ -1325,6 +1349,7 @@ extension _HomeMapSheet on _DriverHomeState {
         _islandFace = _IslandFace
             .values[(_islandFace.index + 1) % _IslandFace.values.length];
       });
+      if (_islandFace == _IslandFace.today) { unawaited(DigitalIslandParts.refreshToday()); }
       _restartIslandIdle();
     }
     void _restartIslandIdle() {
@@ -1363,7 +1388,7 @@ extension _HomeMapSheet on _DriverHomeState {
     }
     String get _lastTripFareLabel {
       final fare = _waybills.last?.fare;
-      if (fare == null || !fare.contains(RegExp(r'\d'))) { return DigitalIslandParts.sampleLastTrip; }
+      if (fare == null || !fare.contains(RegExp(r'\d'))) { return DigitalIslandParts.noAmount; }
       return fare;
     }
     void _onLastTripChanged() {
