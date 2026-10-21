@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 
@@ -44,5 +45,13 @@ void main() {
     );
     final at = morning.pickupAt(DateTime(2026, 3, 29, 0, 30))!;
     expect([at.day, at.hour, at.minute], [29, 7, 40]);
+  });
+
+  test('demo documents expire on calendar days across the autumn change '
+      '(driver-r4-12)', () {
+    final now = DateTime(2026, 10, 21, 9);
+    final insurance = DocumentExpiryStore.demo(now).first;
+    expect(insurance.expiresOn, DateTime(2026, 10, 28));
+    expect(insurance.daysLeft(now), 7);
   });
 }
