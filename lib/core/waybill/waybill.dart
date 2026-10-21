@@ -311,16 +311,13 @@ class WaybillPayment {
     double feeRate = serviceFeeRate,
     String? bonus,
   }) {
-    final match = RegExp(r'\d+(?:[.,]\d{1,2})?').firstMatch(fare);
-    if (match == null) return null;
-    final text = match.group(0)!;
-    final value = double.tryParse(text.replaceAll(',', '.'));
-    if (value == null) return null;
-    final fareOre = (value * 100).round();
+    // driver-32: "1 234,50 kr" has a thousands group; read the whole label.
+    final fareOre = _ore(fare);
+    if (fareOre == null) return null;
     final bonusOre = bonus == null ? 0 : Money.parseLabel(bonus)?.minorUnits ?? 0;
     return WaybillPayment._(
       fareOre,
-      text.contains(','),
+      fare.contains(','),
       feeRate,
       bonusOre.clamp(0, fareOre),
     );
@@ -346,8 +343,29 @@ class WaybillPayment {
   /// Movera's bonus in the earnings; null without one.
   String? get bonus => _bonusOre > 0 ? _format(_bonusOre) : null;
 
+  /// [label] in öre: a whole label ("1 234,50 kr", "126.75 kr"), else the
+  /// first amount in it.
+  static int? _ore(String label) {
+    final money = Money.parseSekLabel(label);
+    if (money != null) return money.minorUnits;
+    final match = RegExp(r'\d+(?:[.,]\d{1,2})?').firstMatch(label);
+    if (match == null) return null;
+    final value = double.tryParse(match.group(0)!.replaceAll(',', '.'));
+    return value == null ? null : (value * 100).round();
+  }
+
   String _format(int ore) {
-    final text = '${ore ~/ 100}.${(ore % 100).toString().padLeft(2, '0')}';
-    return '${_comma ? text.replaceAll('.', ',') : text} kr';
+    final kronor = ore ~/ 100;
+    final cents = (ore % 100).toString().padLeft(2, '0');
+    // The comma form groups thousands like Money.formatted: "1 234,50 kr".
+    if (_comma) {
+      final digits = '$kronor';
+      final grouped = digits.replaceAllMapped(
+        RegExp(r'\B(?=(\d{3})+$)'),
+        (_) => ' ',
+      );
+      return '$grouped,$cents kr';
+    }
+    return '$kronor.$cents kr';
   }
 }
