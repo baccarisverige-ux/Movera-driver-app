@@ -142,5 +142,23 @@ void main() {
       await _unmount(tester);
       semantics.dispose();
     });
+
+    testWidgets('driver-48: route progress is read in French',
+        (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(_island(
+        banner: const NavigationBanner(
+          primary: 'Continuez tout droit',
+          distanceLabel: '1,2 km',
+          symbol: NavigationBannerSymbol.straight,
+        ),
+      ));
+      await _frames(tester, 40);
+      final island = _islandNode(tester);
+      expect(island.label, contains('Progression de l’itinéraire'));
+      expect(island.value, '42 %');
+      await _unmount(tester);
+      semantics.dispose();
+    });
   });
 }

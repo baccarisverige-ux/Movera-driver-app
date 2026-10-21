@@ -1120,7 +1120,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
   Widget _routeProgress(Color accent, bool available) => Semantics(
     label: tr.routeProgress,
     value: available
-        ? '${(widget.progress.clamp(0, 1) * 100).round()} percent'
+        ? tr.rcPercent((widget.progress.clamp(0, 1) * 100).round())
         : tr.unavailable,
     child: TweenAnimationBuilder<double>(
       tween: Tween<double>(
