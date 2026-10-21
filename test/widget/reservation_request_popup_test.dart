@@ -809,7 +809,13 @@ void main() {
   });
 
   group('on the real clock', () {
+    late DateTime Function() testNow;
     setUp(() {
+      // The app's real clock is local time, as DateTime.now() is; the test
+      // clock reads UTC. Read it as local so the booking "2 h from now"
+      // holds in every time zone.
+      testNow = ScheduledClock.realNow;
+      ScheduledClock.realNow = () => testNow().toLocal();
       // The app: the real clock and rides booked from now (2 h, 5 h).
       ScheduledClock.instance = ScheduledClock();
       DemoReservations.plan = DemoReservationPlan.app;
@@ -817,6 +823,7 @@ void main() {
       ScheduledRideStore.reset();
     });
     tearDown(() {
+      ScheduledClock.realNow = testNow;
       ScheduledClock.instance = ScheduledClock.fastDay();
       DemoReservations.plan = DemoReservationPlan.testDay;
       DemoReservations.reset();
