@@ -920,8 +920,8 @@ extension _AcceptRidePanel on _AcceptRideState {
               ),
             ),
             child: Semantics(
-              hint: near ? null : tr.moveWithin100MOfWhere(
-                  _stage == ActiveRideStage.onTrip ? 'stop' : 'pickup'),
+              hint: near ? null : _stage == ActiveRideStage.onTrip
+                  ? tr.moveWithin100MOfStop : tr.moveWithin100MOfPickup,
               child: Text(
                 driverText(DriverTexts.tripArrived),
                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),

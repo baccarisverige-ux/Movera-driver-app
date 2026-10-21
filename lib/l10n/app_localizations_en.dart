@@ -455,11 +455,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Precise location is off. Turn it on in Settings to show your position and confirm arrival.';
 
   @override
-  String moveWithin100MOfWhere(Object where) {
-    return 'Move within 100 m of the $where to arrive.';
-  }
-
-  @override
   String get yourDriverHasArrivedAtPickup =>
       'Your driver has arrived at the pickup point.';
 
@@ -4640,4 +4635,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pickupOnRightSide => 'Pickup on the right side';
+
+  @override
+  String get moveWithin100MOfPickup =>
+      'Move within 100 m of the pickup to arrive.';
+
+  @override
+  String get moveWithin100MOfStop => 'Move within 100 m of the stop to arrive.';
 }

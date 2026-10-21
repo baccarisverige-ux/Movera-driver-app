@@ -457,11 +457,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Exakt plats är avstängd. Slå på den i Inställningar för att visa din position och bekräfta att du är framme.';
 
   @override
-  String moveWithin100MOfWhere(Object where) {
-    return 'Kom inom 100 m ($where) för att vara framme.';
-  }
-
-  @override
   String get yourDriverHasArrivedAtPickup =>
       'Din förare har kommit till upphämtningsplatsen.';
 
@@ -4657,4 +4652,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get pickupOnRightSide => 'Upphämtning på höger sida';
+
+  @override
+  String get moveWithin100MOfPickup =>
+      'Kom inom 100 m från upphämtningsplatsen för att vara framme.';
+
+  @override
+  String get moveWithin100MOfStop =>
+      'Kom inom 100 m från stoppet för att vara framme.';
 }

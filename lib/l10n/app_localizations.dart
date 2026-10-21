@@ -878,12 +878,6 @@ abstract class AppLocalizations {
   /// **'Precise location is off. Turn it on in Settings to show your position and confirm arrival.'**
   String get preciseLocationOff;
 
-  /// No description provided for @moveWithin100MOfWhere.
-  ///
-  /// In en, this message translates to:
-  /// **'Move within 100 m of the {where} to arrive.'**
-  String moveWithin100MOfWhere(Object where);
-
   /// No description provided for @yourDriverHasArrivedAtPickup.
   ///
   /// In en, this message translates to:
@@ -8102,6 +8096,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pickup on the right side'**
   String get pickupOnRightSide;
+
+  /// No description provided for @moveWithin100MOfPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Move within 100 m of the pickup to arrive.'**
+  String get moveWithin100MOfPickup;
+
+  /// No description provided for @moveWithin100MOfStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Move within 100 m of the stop to arrive.'**
+  String get moveWithin100MOfStop;
 }
 
 class _AppLocalizationsDelegate

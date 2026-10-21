@@ -607,10 +607,10 @@ extension _AcceptRideTrip on _AcceptRideState {
         ));
         return;
       }
-      final where = _stage == ActiveRideStage.onTrip ? 'stop' : 'pickup';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(tr.moveWithin100MOfWhere(where)),
+          content: Text(_stage == ActiveRideStage.onTrip
+              ? tr.moveWithin100MOfStop : tr.moveWithin100MOfPickup),
           backgroundColor: _AcceptRideState._ink,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

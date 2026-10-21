@@ -457,11 +457,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'La position exacte est désactivée. Activez-la dans les réglages pour afficher votre position et confirmer l’arrivée.';
 
   @override
-  String moveWithin100MOfWhere(Object where) {
-    return 'Approchez-vous à moins de 100 m ($where) pour confirmer l’arrivée.';
-  }
-
-  @override
   String get yourDriverHasArrivedAtPickup =>
       'Votre chauffeur est arrivé au point de prise en charge.';
 
@@ -4704,4 +4699,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pickupOnRightSide => 'Prise en charge côté droit';
+
+  @override
+  String get moveWithin100MOfPickup =>
+      'Approchez-vous à moins de 100 m du point de prise en charge pour confirmer l’arrivée.';
+
+  @override
+  String get moveWithin100MOfStop =>
+      'Approchez-vous à moins de 100 m de l’arrêt pour confirmer l’arrivée.';
 }

@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/island/trip_island_controller.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 /// Wave 5 D5.1 (parts a and b): texts that stayed in English, or in the
 /// language a trip opened in, now follow the driver's language.
@@ -39,6 +44,28 @@ Future<void> show(WidgetTester tester, String code, Widget home) async {
 
 /// [text] on screen, also inside rich text.
 Finder words(String text) => find.textContaining(text, findRichText: true);
+
+/// A phone in Paris, far from the demo pickup.
+class FarAway implements DriverLocationRepository {
+  DriverLocation get _fix => DriverLocation(
+    point: const GeoPoint(48.8566, 2.3522),
+    measuredAt: DateTime.now(),
+    accuracyMeters: 5,
+  );
+
+  @override
+  Future<DriverLocation> getCurrentPosition() async => _fix;
+
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      Stream<DriverLocation>.value(_fix);
+}
+
+Future<void> frames(WidgetTester tester, int count) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
 
 /// What the island strip says for [inputs], in order.
 Future<List<String>> stripSays(
@@ -120,6 +147,32 @@ void main() {
         const TripStripInput(leg: TripLeg.pickup, pickupSide: 'left'),
       ]);
       expect(seen, [said]);
+    });
+  }
+
+  for (final code in languages) {
+    testWidgets('driver-41: arriving too far from the pickup in $code',
+        (tester) async {
+      final previous = DriverRuntimeConfig.current;
+      addTearDown(() => DriverRuntimeConfig.current = previous);
+      DriverRuntimeConfig.current = const DriverRuntimeConfig(
+        simulatedArrival: false,
+        externalRouting: false,
+        skipAccountActivation: false,
+        liveMapTicker: false,
+      );
+      await show(tester, code, AcceptRide(locationRepository: FarAway()));
+      await frames(tester, 10);
+      tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+          .controller!.animatePanelToSnapPoint();
+      await frames(tester, 14);
+      final button = find.byKey(const ValueKey('active-ride-arrived-button'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await frames(tester, 6);
+      expect(find.text(tr.moveWithin100MOfPickup), findsOneWidget);
+      expect(words('(pickup)'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
     });
   }
 }
