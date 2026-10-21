@@ -36,9 +36,9 @@ void main() {
     }
   });
 
-  test('the copy is contract v0.4.3', () {
+  test('the copy is contract v0.4.4', () {
     expect(File('contracts/contract.json').readAsStringSync(),
-        contains('"version": "0.4.3"'));
-    expect(TripTransitions.contractVersion, '0.4.3');
+        contains('"version": "0.4.4"'));
+    expect(TripTransitions.contractVersion, '0.4.4');
   });
 }
