@@ -7,6 +7,7 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
+import 'package:movera/core/scheduled/reservation_when.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
@@ -450,9 +451,16 @@ class ScheduledRideStore {
         tripKm: 9.4,
         pickup: GeoPoint(59.3134, 18.0727),
         dropoff: GeoPoint(59.3544, 17.9416),
-      ),
+      ).scheduledFor(_tomorrowAt(8, 15)),
     ),
   ];
+
+  /// [hour]:[minute] tomorrow, from now: the seed ride's date stays the
+  /// same after midnight (driver-u142).
+  static DateTime _tomorrowAt(int hour, int minute) {
+    final now = _now;
+    return DateTime(now.year, now.month, now.day + 1, hour, minute);
+  }
 
   /// Admin's on/off for this driver. Home sets it from the admin config.
   static ScheduledRidesDriverAccess get driverAccess => _driverAccess;
@@ -901,7 +909,7 @@ class _ScheduledRideCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          ride.time,
+                          ride.when,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -1178,6 +1186,7 @@ class _ScheduledRide {
     this.accepted = false,
     this.assigned = false,
     this.route,
+    this.window,
   });
 
   /// An accepted ride built from its route details.
@@ -1202,16 +1211,10 @@ class _ScheduledRide {
     Duration window = const Duration(minutes: 5),
     String? distance,
   }) {
-    final start = route.minuteOfDay;
-    var time = tr.schedSeedTime(route.pickupDay, route.pickupTime);
-    if (start != null) {
-      final end = (start + window.inMinutes) % (24 * 60);
-      String two(int v) => v.toString().padLeft(2, '0');
-      time = '$time–${two(end ~/ 60)}:${two(end % 60)}';
-    }
     return _ScheduledRide(
       price: route.fare,
-      time: time,
+      time: _timeOf(route, route.pickupDay, window),
+      window: window,
       category: route.category,
       distance: distance ?? driverDistanceKm(route.tripKm),
       pickup: route.pickupAddress,
@@ -1220,11 +1223,40 @@ class _ScheduledRide {
     );
   }
 
+  /// "Today, 07:40", with the pickup [window] when there is one:
+  /// "Today, 07:40–07:45".
+  static String _timeOf(
+    ReservationRequestPreview route,
+    String day,
+    Duration? window,
+  ) {
+    final start = route.minuteOfDay;
+    final time = tr.schedSeedTime(day, route.pickupTime);
+    if (start == null || window == null) { return time; }
+    final end = (start + window.inMinutes) % (24 * 60);
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '$time–${two(end ~/ 60)}:${two(end % 60)}';
+  }
+
   /// Movera assigned it to this driver (Q29).
   final bool assigned;
 
   final String price;
+
+  /// The card's time as written when the ride was booked; see [when].
   final String time;
+
+  /// The pickup window of an open request, else null.
+  final Duration? window;
+
+  /// The card's time seen now: a ride booked for a date says "Today"
+  /// once its "Tomorrow" has come (driver-u142).
+  String get when {
+    final route = this.route;
+    if (route?.scheduledAt == null) { return time; }
+    final day = route!.pickupDayAt(ScheduledRideStore._now);
+    return _timeOf(route, ReservationWhen.dayWord(day), window);
+  }
   final String category;
   final String distance;
   final String pickup;
@@ -1248,6 +1280,7 @@ class _ScheduledRide {
       accepted: accepted ?? this.accepted,
       assigned: assigned,
       route: route,
+      window: window,
     );
   }
 }
@@ -1587,7 +1620,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 7),
                     Text(
-                      ride.time,
+                      ride.when,
                       style: const TextStyle(
                         color: _ink,
                         fontSize: 15,

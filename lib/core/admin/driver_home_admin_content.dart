@@ -254,6 +254,21 @@ class ReservationRequestPreview {
         .add(Duration(minutes: minute));
   }
 
+  /// [pickupDay] as seen at [now]: a ride booked for a date says "Today"
+  /// once its "Tomorrow" has come (driver-u142); "Today" and "Tomorrow"
+  /// only, else [pickupDay].
+  String pickupDayAt(DateTime now) {
+    final at = scheduledAt;
+    if (at == null) { return pickupDay; }
+    // Rounded, as a day across a clock change is 23 or 25 hours.
+    final days = (DateTime.utc(at.year, at.month, at.day)
+                .difference(DateTime.utc(now.year, now.month, now.day))
+                .inHours /
+            24)
+        .round();
+    return days == 0 ? 'Today' : days == 1 ? 'Tomorrow' : pickupDay;
+  }
+
   /// This ride, picked up at [at].
   ReservationRequestPreview scheduledFor(DateTime at) =>
       ReservationRequestPreview(
