@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show SemanticsNode;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
@@ -45,6 +46,8 @@ import '../../integration_test/headless_map_platform.dart';
 //   from the city-centre placeholder.
 // - driver-u122: Home's time limit for its destination does not end a
 //   destination the driver set later on a trip.
+// - driver-u124: online and waiting, a screen reader's tap on the island
+//   brings Menu and Search destination back, as a touch does.
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -477,6 +480,28 @@ void main() {
       // Its own minute ends it.
       await pass(const Duration(seconds: 40));
       expect(session.expired(), isTrue);
+      await _end(tester);
+    });
+  });
+
+  group('driver-u124: Menu and Search with a screen reader while waiting', () {
+    testWidgets('a semantic tap on "Finding trips" brings them back', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await _pumpHome(tester);
+      bool side(SemanticsNode node) =>
+          node.tooltip == 'Menu' || node.tooltip == 'Search destination';
+      // The demo Exclusive offer passes first.
+      await _frames(tester, const Duration(seconds: 20));
+      expect(find.byKey(const ValueKey<String>('island-finding')),
+          findsOneWidget);
+      expect(find.semantics.byPredicate(side), findsNothing,
+          reason: 'tucked behind "Finding trips"');
+      tester.semantics.tap(find.semantics.byLabel(RegExp('Finding')));
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(find.semantics.byPredicate(side), findsExactly(2));
+      handle.dispose();
       await _end(tester);
     });
   });

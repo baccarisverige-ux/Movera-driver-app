@@ -1333,6 +1333,12 @@ extension _HomeMapSheet on _DriverHomeState {
     void _onIslandEarningsTap() {
       // The touch only closed "Finding trips" or a waiting message.
       if (_islandWaiting.takeSwallowedTap()) { return; }
+      // A screen reader's tap sends no pointer: it closes the waiting face
+      // like a touch, so Menu and Search come back (driver-u124).
+      if (_islandWaiting.touch()) {
+        _islandWaiting.takeSwallowedTap();
+        return;
+      }
       if (_islandWake < 2) {
         // A tap during the launch animation just finishes it.
         _islandWakeTimer?.cancel();
