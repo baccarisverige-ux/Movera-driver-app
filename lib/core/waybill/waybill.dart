@@ -19,6 +19,7 @@ class WaybillRecord {
     required this.passengerCapacity,
     this.waitingFee,
     this.driverBonus,
+    this.paidByCash = false,
   });
 
   final String tripId;
@@ -41,6 +42,9 @@ class WaybillRecord {
 
   /// Movera's bonus in [fare] (Q16/Q18), e.g. "40 kr"; null without one.
   final String? driverBonus;
+
+  /// The rider pays the driver in the car; otherwise in the app.
+  final bool paidByCash;
 
   /// Stored values of [statusLabel] and [source]. They stay in English in
   /// storage; the screens show them in the driver's language.
@@ -106,6 +110,7 @@ class WaybillRecord {
     DateTime? issuedAt,
     String? vehicle,
     String? licensePlate,
+    bool? paidByCash,
   }) {
     return WaybillRecord(
       tripId: tripId,
@@ -123,6 +128,7 @@ class WaybillRecord {
       passengerCapacity: passengerCapacity,
       waitingFee: waitingFee ?? this.waitingFee,
       driverBonus: driverBonus,
+      paidByCash: paidByCash ?? this.paidByCash,
     );
   }
 }

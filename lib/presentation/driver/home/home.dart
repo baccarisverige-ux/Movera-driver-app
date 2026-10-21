@@ -650,6 +650,7 @@ class _DriverHomeState extends State<DriverHome>
       vehicle: tr.vehicleDataUnavailable,
       licensePlate: tr.plateUnavailable,
       passengerCapacity: 4,
+      paidByCash: snapshot.paidByCash,
     );
   }
 
