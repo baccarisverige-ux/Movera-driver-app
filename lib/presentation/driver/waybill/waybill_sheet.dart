@@ -91,7 +91,7 @@ List<Widget> _rows(WaybillRecord record) {
     if (payment != null) ...[
       const SizedBox(height: 14),
       _Row(tr.paidByPassenger, payment.fare),
-      _Row(tr.payment, tr.inApp),
+      _Row(tr.payment, record.paidByCash ? tr.cash : tr.inApp),
       _Row(tr.basePriceService(record.service), payment.basePrice),
       // Q43: the waiting fee is all the driver's; Movera takes no fee on it.
       if (payment.waitingFee case final wait?) _Row(tr.waitingTime, '+$wait'),

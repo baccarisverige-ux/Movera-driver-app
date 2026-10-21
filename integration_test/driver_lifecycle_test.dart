@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/main.dart';
@@ -171,8 +173,23 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
     await tester.binding.setSurfaceSize(const Size(390, 844));
-    await tester.pumpWidget(const MaterialApp(home: AcceptRide(locationRepository: _ScriptedLocation())));
+    // driver-u3: the trip runs over a stand-in Home, as in the app. With
+    // AcceptRide as the only route a real cancel left it mounted, so the
+    // checks below held whether or not Keep trip ended the trip.
+    final active = MemoryActiveRideRepository();
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(MaterialApp(
+      navigatorKey: navigator,
+      home: const Scaffold(body: Text('Home stand-in')),
+    ));
+    navigator.currentState!.push(MaterialPageRoute<void>(
+      builder: (_) => AcceptRide(
+        locationRepository: const _ScriptedLocation(),
+        activeRideRepository: active,
+      ),
+    ));
     await tester.pump();
+    await _elapse(tester, const Duration(milliseconds: 400));
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await _elapse(tester, const Duration(milliseconds: 200));
 
@@ -196,11 +213,19 @@ void main() {
       ),
     );
     await _elapse(tester, const Duration(milliseconds: 300));
+    expect(await active.read(), isNotNull, reason: 'the running trip is saved');
     await tester.tap(find.text('Keep trip'));
-    await _elapse(tester, const Duration(milliseconds: 250));
-    // Still on the trip (an on-trip Radar offer may lift over the sheet).
+    await _elapse(tester, const Duration(milliseconds: 800));
+    // Still on the trip (an on-trip Radar offer may lift over the sheet),
+    // and nothing of a cancel happened: no pop back to Home, no history
+    // row, the trip snapshot kept, no "Trip ended early".
     expect(find.byType(AcceptRide), findsOneWidget);
-    expect(find.byType(DriverHome), findsNothing);
+    expect(ModalRoute.of(tester.element(find.byType(AcceptRide)))!.isCurrent, isTrue);
+    expect(find.text('Home stand-in'), findsNothing);
+    expect(find.textContaining('Trip ended early'), findsNothing);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(PrefsTripHistoryRepository.key), isNull, reason: 'no trip was archived');
+    expect(await active.read(), isNotNull, reason: 'the trip snapshot is kept');
     expect(tester.takeException(), isNull);
   });
 }

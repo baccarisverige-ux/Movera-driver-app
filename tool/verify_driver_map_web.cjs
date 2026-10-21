@@ -29,6 +29,10 @@ class MapMock {
         !this.options.isFractionalZoomEnabled) {
       next.zoom = Math.round(next.zoom);
     }
+    // Maps never shows a zoom above the map's maxZoom (raster cap 18).
+    if (next.zoom != null && this.options.maxZoom != null) {
+      next.zoom = Math.min(next.zoom, this.options.maxZoom);
+    }
     Object.assign(this.camera, next);
   }
   setOptions(options) { this.options = {...this.options, ...options}; }
@@ -359,6 +363,21 @@ div.fire('touchstart', [touch(100,100)]); div.fire('touchend');
 clock += 150;
 div.fire('touchstart', [touch(100,100)]); div.fire('touchend');
 assert.equal(map.getZoom(), 21, 'Double-tap zoom-in cannot exceed level 21');
+// driver-u192: at the raster cap (18) Maps keeps the zoom. The finger
+// compensation must use the zoom applied, or a double tap pans the map.
+{
+  rasterDiv.fire('touchend'); // the earlier raster pinch never lifted
+  raster.moveCamera({zoom: 18, center: {x: 0, y: 0}});
+  clock += 500;
+  const right = {clientX: 320, clientY: 400}; // 120 px right of centre
+  rasterDiv.fire('touchstart', [right]); rasterDiv.fire('touchend');
+  clock += 150;
+  rasterDiv.fire('touchstart', [right]); rasterDiv.fire('touchend');
+  assert.equal(raster.getZoom(), 18, 'Raster double tap at the cap keeps zoom 18');
+  assert.deepEqual(raster.camera.center, {x: 0, y: 0},
+    'Raster double tap at the cap does not pan the map sideways');
+  clock += 500;
+}
 api.configure(7, 100, 200, .72);
 map.moveCamera({center: {x:0,y:400}}); api.anchor(7);
 assert.equal(map.camera.center.y, 224, '72% screen anchor above overlays');

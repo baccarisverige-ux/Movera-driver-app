@@ -299,7 +299,11 @@ class TripStripController extends ChangeNotifier {
     if (_disposed) return;
     final last = _last;
     _last = next;
-    final newLeg = last == null || last.leg != next.leg;
+    // Stop to stop stays TripLeg.stop: the stop label tells the legs apart.
+    final newLeg =
+        last == null ||
+        last.leg != next.leg ||
+        last.stopLabel != next.stopLabel;
     if (newLeg) {
       _arrivingSaid = false;
       _bestEta = null;

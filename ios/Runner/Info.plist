@@ -6,6 +6,10 @@
     <string>$(GOOGLE_MAPS_API_KEY)</string>
     <key>NSCameraUsageDescription</key>
     <string>Movera Driver uses the camera to capture vehicle and document photos you choose to attach.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Movera Driver does not open your photo library. The document picker it uses can offer it, and it is used only if you choose a photo yourself.</string>
+    <key>NSAppleMusicUsageDescription</key>
+    <string>Movera Driver does not use your media library. The document picker it uses can offer it, and it is used only if you choose a file from it yourself.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Movera Driver uses the microphone only when you choose to record audio during a Ride check. The recording is saved only on this phone.</string>
     <key>NSLocationWhenInUseUsageDescription</key>

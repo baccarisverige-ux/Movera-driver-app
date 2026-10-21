@@ -22,6 +22,8 @@ class MapOverlayInsets {
 
   /// Anchor at 75% of the screen, clamped above overlays with car clearance.
   /// Web does not implement SDK padding: its projection adapter applies this.
+  /// [following] is true for the whole guidance, browsing included: native
+  /// SDK padding moves the map when it changes (driver-77).
   EdgeInsets drivingInsets(double height, {required bool following}) {
     if (kIsWeb) {
       return edgeInsets;

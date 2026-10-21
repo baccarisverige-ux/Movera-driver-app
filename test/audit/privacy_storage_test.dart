@@ -6,6 +6,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/vehicle/local_vehicle_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Every Android backup domain the app writes to: SharedPreferences, sqlite,
+/// getFilesDir() and app_flutter (getApplicationDocumentsDirectory).
+const _appDomains = {'sharedpref', 'database', 'file', 'root'};
+
+/// The body of `<tag>…</tag>` with XML comments removed, so a commented-out
+/// rule cannot satisfy the check.
+String _section(String xml, String tag) {
+  final plain = xml.replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
+  final body = RegExp('<$tag>(.*?)</$tag>', dotAll: true).firstMatch(plain)?.group(1);
+  expect(body, isNotNull, reason: '<$tag> is missing');
+  return body!;
+}
+
 String _photo(int bytes) => base64Encode(Uint8List(bytes));
 
 Map<String, dynamic> _vehicle(String id, {String? registration, String? insurance}) => {
@@ -57,9 +70,19 @@ void main() {
     expect(manifest, contains('android:allowBackup="false"'));
     expect(manifest, contains('android:dataExtractionRules="@xml/data_extraction_rules"'));
     expect(manifest, contains('android:fullBackupContent="@xml/backup_rules"'));
+    // driver-u186: check what each section excludes, not only that the tags
+    // exist. `root` covers app_flutter (Ride-check audio); `file` does not.
     final rules = File('android/app/src/main/res/xml/data_extraction_rules.xml').readAsStringSync();
-    expect(rules, contains('<cloud-backup>'));
-    expect(rules, contains('<device-transfer>'));
+    final legacy = File('android/app/src/main/res/xml/backup_rules.xml').readAsStringSync();
+    for (final (name, body) in [
+      ('cloud-backup', _section(rules, 'cloud-backup')),
+      ('device-transfer', _section(rules, 'device-transfer')),
+      ('full-backup-content', _section(legacy, 'full-backup-content')),
+    ]) {
+      expect(body, isNot(contains('<include')), reason: '$name must not include data');
+      final excluded = RegExp(r'<exclude\s+domain="([^"]+)"\s+path="\."\s*/>').allMatches(body).map((m) => m.group(1)).toSet();
+      expect(excluded, containsAll(_appDomains), reason: '$name must exclude every domain the app writes to');
+    }
   });
 
   test('PWA uses Movera colours, not the Flutter template blue', () {

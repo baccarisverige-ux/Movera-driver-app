@@ -108,6 +108,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       return (_waybills.current ?? _buildCurrentWaybill()).copyWith(
         fare: _fareWithWaiting,
         waitingFee: fee.isZero ? null : fee.formatted,
+        paidByCash: widget.paidByCash,
       );
     }
     void _restoreQueuedNextFromSnapshot() {
@@ -236,6 +237,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
         passengerCapacity: 4,
+        paidByCash: widget.paidByCash,
       );
     }
     /// Waybills show the same vehicle as Profile and Vehicles.

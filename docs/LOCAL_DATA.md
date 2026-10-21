@@ -13,6 +13,10 @@ Logout calls `clearLocalUserData` and returns the driver offline. That removes:
 - support drafts
 - settings, including trusted-contact phone numbers and vehicle drafts
 
+Logout also clears the in-memory notification feed (with its read state) and
+the document-renewal state, so the next driver on this phone starts from the
+demo lists.
+
 Active-trip recovery still works until logout. A corrupt value is treated as
 missing by the readers and is deleted by the same clear. Keys that are not in
 `localDataInventory` are not removed.
