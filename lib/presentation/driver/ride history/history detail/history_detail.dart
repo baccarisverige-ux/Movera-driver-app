@@ -112,35 +112,46 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
                   padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
                   child: Column(
                     children: [
-                      55.height,
+                      // driver-u154: a named 48 px back target; the circle
+                      // is drawn where it was (12 px of the box above it).
+                      43.height,
                       Row(
                         children: [
-                          InkWell(
-                            onTap: () {
-                              popOwned(context);
-                            },
-                            child: Container(
-                              height: ResSize.h * 24,
-                              width: ResSize.w * 24,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColor.white,
-                                boxShadow: [
-                                  BoxShadow(
-                                    offset: const Offset(0, 4),
-                                    // ignore: deprecated_member_use
-                                    color: Color(0xff606060)
-                                        .withValues(alpha: 0.12),
-                                    spreadRadius: 6,
-                                    blurRadius: 40,
+                          Tooltip(
+                            message: tr.back,
+                            child: InkWell(
+                              onTap: () {
+                                popOwned(context);
+                              },
+                              child: SizedBox.square(
+                                dimension: 48,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    height: ResSize.h * 24,
+                                    width: ResSize.w * 24,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColor.white,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          offset: const Offset(0, 4),
+                                          // ignore: deprecated_member_use
+                                          color: Color(0xff606060)
+                                              .withValues(alpha: 0.12),
+                                          spreadRadius: 6,
+                                          blurRadius: 40,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.arrow_back_ios_rounded,
+                                        color: AppColor.black,
+                                        size: ResSize.h * 18,
+                                      ),
+                                    ),
                                   ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.arrow_back_ios_rounded,
-                                  color: AppColor.black,
-                                  size: ResSize.h * 18,
                                 ),
                               ),
                             ),

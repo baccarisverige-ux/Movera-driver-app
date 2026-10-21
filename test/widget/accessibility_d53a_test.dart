@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show SemanticsNode;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -24,9 +25,12 @@ import 'package:movera/main.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+import '../../integration_test/headless_map_platform.dart';
 
 Future<void> _frames(WidgetTester tester, [int count = 10]) async {
   for (var i = 0; i < count; i++) {
@@ -332,6 +336,40 @@ void main() {
     expect(data.flagsCollection.isButton, isTrue);
     expect(data.hasAction(SemanticsAction.tap), isTrue);
     expect(data.label, contains('all offers'));
+    await _unmount(tester);
+    semantics.dispose();
+  });
+
+  testWidgets('driver-u154: the Ride detail back button is a named 48 px '
+      'target', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final maps = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    await tester.pumpWidget(ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, _) => MaterialApp(
+        home: DriverRideHistoryDetail(
+          record: const TripHistoryRecord(
+            tripId: 'detail-1',
+            riderName: 'Karin',
+            whenLabel: '15/10/2026, 07:59',
+            pickup: 'Gamla vägen',
+            dropoff: 'Solna centrum',
+            fare: '126,75 kr',
+            category: 'Comfort',
+          ),
+          loadRideChecks: (_) async => const [],
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 300));
+    final back = find.byTooltip('Back');
+    expect(back, findsOneWidget);
+    final box = find.descendant(of: back, matching: find.byType(InkWell));
+    expect(tester.getSize(box), const Size(48, 48));
+    expect(tester.getSemantics(box).getSemanticsData().hasAction(
+        SemanticsAction.tap), isTrue);
     await _unmount(tester);
     semantics.dispose();
   });
