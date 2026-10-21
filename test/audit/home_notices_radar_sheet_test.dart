@@ -9,6 +9,7 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -27,6 +28,8 @@ import '../../integration_test/headless_map_platform.dart';
 //   Home waits for Home instead of playing on its hidden island.
 // - driver-65: the app inactive but on screen (a call banner, Control
 //   Center, a system dialog) keeps Home's online face and its offers.
+// - driver-u113: system Back on "Unresolved trip" keeps the dialog and
+//   the saved trip; only "Close trip" closes it.
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -108,7 +111,11 @@ Future<void> _frames(WidgetTester tester, Duration total) async {
 
 /// Home with the app's route observer, so a screen pushed over Home
 /// covers it as in the app; with [online], the Radar is on.
-Future<_Home> _pumpHome(WidgetTester tester, {bool online = true}) async {
+Future<_Home> _pumpHome(
+  WidgetTester tester, {
+  bool online = true,
+  ActiveRideRepository? activeRides,
+}) async {
   final dispatch = _Dispatch();
   final session = DriverSessionController();
   final maps = GoogleMapsFlutterPlatform.instance;
@@ -128,6 +135,7 @@ Future<_Home> _pumpHome(WidgetTester tester, {bool online = true}) async {
           home: DriverHome(
             sessionController: session,
             dispatchRepository: dispatch,
+            activeRideRepository: activeRides,
           ),
         ),
       ),
@@ -245,6 +253,37 @@ void main() {
           findsOneWidget);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await _frames(tester, const Duration(milliseconds: 300));
+      await _end(tester);
+    });
+  });
+
+  group('driver-u113: system Back on the "Unresolved trip" dialog', () {
+    testWidgets('keeps the dialog and the saved trip', (tester) async {
+      final rides = MemoryActiveRideRepository();
+      // A trip saved 7 h ago: older than the 6 h window, still resumable.
+      await rides.save(PersistedActiveRide(
+        tripId: 'stale-trip',
+        stage: ActiveRideStage.onTrip,
+        savedAt: DateTime.now().subtract(const Duration(hours: 7)),
+        pickupLat: 59.3335,
+        pickupLng: 18.0610,
+        dropoffLat: 59.3380,
+        dropoffLng: 18.0700,
+      ));
+      await _pumpHome(tester, online: false, activeRides: rides);
+      await _frames(tester, const Duration(milliseconds: 500));
+      expect(find.text('Unresolved trip'), findsOneWidget);
+      // Android Back.
+      await tester.binding.handlePopRoute();
+      await _frames(tester, const Duration(milliseconds: 500));
+      expect(find.text('Unresolved trip'), findsOneWidget,
+          reason: 'Back is not "Close trip"');
+      expect(await rides.read(), isNotNull,
+          reason: 'the saved trip is kept');
+      await tester.tap(find.text('Close trip'));
+      await _frames(tester, const Duration(milliseconds: 500));
+      expect(find.text('Unresolved trip'), findsNothing);
+      expect(await rides.read(), isNull);
       await _end(tester);
     });
   });

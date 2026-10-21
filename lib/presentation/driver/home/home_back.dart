@@ -47,6 +47,36 @@ extension _HomeBack on _DriverHomeState {
       );
     }
 
+    /// "Unresolved trip": true resumes, false closes it. System Back
+    /// does neither: the dialog stays until the driver picks one
+    /// (driver-u113), since closing marks the saved trip as ended.
+    Future<bool?> _askUnresolvedTrip(PersistedActiveRide snapshot) =>
+        showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => PopScope(
+            canPop: false,
+            child: AlertDialog(
+              title: Text(tr.unresolvedTrip),
+              content: Text(snapshot.hasVerifiedEndpoints
+                  ? tr.thisSavedTripIsOlderThan
+                  : tr.savedRouteCoordinatesAreUnavailableClose),
+              actions: [
+                TextButton(
+                  onPressed: () => popOwned(context, false),
+                  child: Text(tr.closeTrip),
+                ),
+                FilledButton(
+                  onPressed: snapshot.hasVerifiedEndpoints
+                      ? () => popOwned(context, true)
+                      : null,
+                  child: Text(tr.resumeTrip),
+                ),
+              ],
+            ),
+          ),
+        );
+
     void _closeTopOverlay() {
       if (!mounted) { return; }
       final scaffold = _scaffoldKey.currentState;

@@ -546,11 +546,7 @@ class _DriverHomeState extends State<DriverHome>
     if (snapshot == null) { setState(() => _recoveryResolved = true); return; }
 
     if (!snapshot.isFresh || !snapshot.hasVerifiedEndpoints) {
-      final resume = await showDialog<bool>(context: context, barrierDismissible: false,
-        builder: (context) => AlertDialog(title: Text(tr.unresolvedTrip),
-          content: Text(snapshot!.hasVerifiedEndpoints ? tr.thisSavedTripIsOlderThan : tr.savedRouteCoordinatesAreUnavailableClose),
-          actions: [TextButton(onPressed: () => popOwned(context, false), child: Text(tr.closeTrip)),
-            FilledButton(onPressed: snapshot.hasVerifiedEndpoints ? () => popOwned(context, true) : null, child: Text(tr.resumeTrip))]));
+      final resume = await _HomeBack(this)._askUnresolvedTrip(snapshot);
       if (!mounted) { return; }
       if (resume != true) {
         try {
