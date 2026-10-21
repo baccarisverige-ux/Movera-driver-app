@@ -986,8 +986,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
     return Semantics(
       label:
           exit == null
-              ? symbol?.name ?? tr.navToDestination
-              : tr.navExitSemantics(symbol?.name ?? tr.navToDestination, exit),
+              ? symbol?.cueLabel() ?? tr.navToDestination
+              : tr.navExitSemantics(symbol?.cueLabel() ?? tr.navToDestination, exit),
       child: live == null || symbol == null
           ? const Icon(
               Icons.person_outline_rounded,

@@ -354,6 +354,45 @@ extension NavigationBannerSymbolX on NavigationBannerSymbol {
       this != NavigationBannerSymbol.depart &&
       this != NavigationBannerSymbol.toll &&
       this != NavigationBannerSymbol.tunnel;
+
+  /// The arrow read out in the driver's language (driver-u90), not its
+  /// Dart name.
+  String cueLabel([AppLocalizations? strings]) {
+    final l = strings ?? tr;
+    return switch (this) {
+      NavigationBannerSymbol.left => l.navTurnLeft,
+      NavigationBannerSymbol.right => l.navTurnRight,
+      NavigationBannerSymbol.slightLeft => l.navSlightLeft,
+      NavigationBannerSymbol.slightRight => l.navSlightRight,
+      NavigationBannerSymbol.sharpLeft => l.navSharpLeft,
+      NavigationBannerSymbol.sharpRight => l.navSharpRight,
+      NavigationBannerSymbol.straight => l.navContinueStraight,
+      NavigationBannerSymbol.uTurn ||
+      NavigationBannerSymbol.uTurnLeft ||
+      NavigationBannerSymbol.uTurnRight => l.navUTurn,
+      NavigationBannerSymbol.roundabout ||
+      NavigationBannerSymbol.roundaboutClockwise => l.navRoundabout,
+      NavigationBannerSymbol.roundaboutUTurn => l.navRoundaboutUTurn,
+      NavigationBannerSymbol.arrive ||
+      NavigationBannerSymbol.arriveLeft ||
+      NavigationBannerSymbol.arriveRight => l.navArrive,
+      NavigationBannerSymbol.merge => l.navMerge,
+      NavigationBannerSymbol.mergeLeft => l.navMergeLeft,
+      NavigationBannerSymbol.mergeRight => l.navMergeRight,
+      NavigationBannerSymbol.exit => l.navTakeExit,
+      NavigationBannerSymbol.exitLeft => l.navExitLeft,
+      NavigationBannerSymbol.exitRight => l.navExitRight,
+      NavigationBannerSymbol.keepLeft => l.navKeepLeft,
+      NavigationBannerSymbol.keepRight => l.navKeepRight,
+      NavigationBannerSymbol.forkLeft => l.navForkLeft,
+      NavigationBannerSymbol.forkRight => l.navForkRight,
+      NavigationBannerSymbol.onRampLeft => l.navRampLeft,
+      NavigationBannerSymbol.onRampRight => l.navRampRight,
+      NavigationBannerSymbol.depart => l.navHeadOut,
+      NavigationBannerSymbol.toll => l.navTollRoadAhead,
+      NavigationBannerSymbol.tunnel => l.navTunnelAhead,
+    };
+  }
 }
 
 extension RouteManeuverTypeX on RouteManeuverType {

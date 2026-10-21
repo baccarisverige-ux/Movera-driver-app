@@ -2,6 +2,7 @@
 import 'dart:ui' show SemanticsAction;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show SemanticsNode;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -70,6 +71,10 @@ Widget _island({NavigationBanner? banner, double progress = .42}) =>
       ),
     );
 
+/// The island's one button node (it reads the ETA among the rest).
+SemanticsNode _islandNode(WidgetTester tester) =>
+    tester.getSemantics(find.bySemanticsLabel(RegExp('2 min')).first);
+
 void main() {
   testWidgets('driver-u63: the trip slide is read once', (tester) async {
     final semantics = tester.ensureSemantics();
@@ -111,5 +116,31 @@ void main() {
         'Move within 100 m of the pickup to arrive.');
     await _unmount(tester);
     semantics.dispose();
+  });
+
+  group('the route island speaks the driver\'s language', () {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      await DriverLanguage.choose('fr');
+    });
+
+    testWidgets('driver-u90: the turn cue reads the turn, not its Dart name',
+        (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(_island(
+        banner: const NavigationBanner(
+          primary: 'Sveavägen',
+          distanceLabel: '150 m',
+          symbol: NavigationBannerSymbol.slightLeft,
+        ),
+      ));
+      await _frames(tester, 40);
+      // The island is one button; the cue is the first thing it reads.
+      final label = _islandNode(tester).label;
+      expect(label.split('\n').first, 'Tournez légèrement à gauche');
+      expect(label, isNot(contains('slightLeft')));
+      await _unmount(tester);
+      semantics.dispose();
+    });
   });
 }
