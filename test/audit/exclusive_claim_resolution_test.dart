@@ -364,7 +364,7 @@ void main() {
     }
 
     Future<void> untilRest(WidgetTester tester, _Home home) async {
-      for (var i = 0; i < 100 && !_said.any((t) => t.startsWith('Rest until')); i++) {
+      for (var i = 0; i < 200 && !_said.any((t) => t.startsWith('Rest until')); i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
       expect(_said.any((t) => t.startsWith('Rest until')), isTrue);

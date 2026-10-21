@@ -186,7 +186,10 @@ extension _HomeScheduled on _DriverHomeState {
     void _afterClaimResolved() {
       // Outside the claim's own build or setState.
       Timer.run(() {
-        if (!mounted || _scheduled.ride == null || _scheduled.lateSince == null) {
+        if (!mounted) { return; }
+        // Decision 3: a rule that waited for this answer applies now.
+        _HomeOfferRules(this)._releaseHeldOffline();
+        if (_scheduled.ride == null || _scheduled.lateSince == null) {
           return;
         }
         _planScheduled();

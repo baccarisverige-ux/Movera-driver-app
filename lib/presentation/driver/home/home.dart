@@ -207,6 +207,7 @@ class _DriverHomeState extends State<DriverHome>
     unawaited(_HomeMapSheet(this)._startDriverLocation());
     _HomeOfferRadar(this)._scheduleVisibleOffers();
     _HomeOfferRadar(this)._resumeOfferTimers();
+    _HomeOfferRules(this)._releaseHeldOffline();
     _HomeOfferRoute(this)._resumeRouteLine();
     if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); _radarMotionController.repeat(); }
     setState(() {});
@@ -288,6 +289,9 @@ class _DriverHomeState extends State<DriverHome>
   _HomeDirectOffer? _claimedHomeOffer;
   /// How [_claimedHomeOffer]'s trip was matched; null for a Radar Match.
   String? _claimedHomeSource;
+  /// Decision 3: a rule took the driver offline while a claim was with
+  /// dispatch; it applies once the claim is answered.
+  bool _offlineHeld = false;
   late final DriverLocationRepository _driverLocationService;
   late final RouteRepository _roadRouteService;
   late final WaybillRepository _waybills;
@@ -337,7 +341,8 @@ class _DriverHomeState extends State<DriverHome>
   /// answers, so a won trip still opens.
   final ValueNotifier<bool> _radarListClaiming = ValueNotifier<bool>(false);
   /// A Match or Accept is with dispatch, or its won trip is opening: Go
-  /// offline waits for its answer.
+  /// offline and the forced-offline rules wait for its answer (Decision
+  /// 3).
   bool get _claimInFlight =>
       _homeRadarMatchingOfferId != null ||
       _claimedHomeOffer != null ||
@@ -676,6 +681,9 @@ class _DriverHomeState extends State<DriverHome>
     DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
     _HomeAccount(this)._syncDrivingLimit();
     if (!mounted) { return; }
+    // Decision 3: a won trip began; the rule that waited makes the driver
+    // offline once it ends.
+    _HomeOfferRules(this)._releaseHeldOffline();
     _HomeScheduled(this)._recheckLateScheduled();
     if (_driverSession.consumeResumeHomeAfterTrip()) {
       setState(() {
@@ -967,6 +975,7 @@ class _DriverHomeState extends State<DriverHome>
     _expandedDirectOfferTimer?.cancel();
     _radarOfferTwoTimer?.cancel();
     _radarOfferThreeTimer?.cancel();
+    _offlineHeld = false;
 
     setState(() {
       _driverSession.setOnline(false);

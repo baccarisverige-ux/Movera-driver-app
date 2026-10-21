@@ -80,11 +80,40 @@ extension _HomeOfferRules on _DriverHomeState {
         IslandMessages.show(HomeIslandNotices.offlineAfterMissed(
           DriverOfferRules.current.autoOfflineAfter,
         ));
-        unawaited(_goOffline());
+        _forcedOffline();
         return;
       }
       if (answers.lastBeforeOffline()) {
         IslandMessages.show(HomeIslandNotices.lastMissedBeforeOffline);
       }
+    }
+
+    /// Decision 3 ("the accept wins"): a rule takes the driver offline
+    /// (the driving limit, the row of missed Exclusive offers). With a
+    /// Match or Accept with dispatch the app waits for its answer: won,
+    /// the driver does that trip and is offline once it ends; lost,
+    /// offline at once. Nothing dispatch gave this driver is dropped.
+    void _forcedOffline() {
+      if (_claimInFlight) {
+        _offlineHeld = true;
+        return;
+      }
+      unawaited(_goOffline());
+    }
+
+    /// The claim that held [_forcedOffline] back was answered.
+    void _releaseHeldOffline() {
+      if (!_offlineHeld || !mounted || _claimInFlight) { return; }
+      if (_driverSession.activeTripId != null) {
+        // Won: offline once this trip ends, like the driving limit on a
+        // trip ([_drivingLimitReached]).
+        _offlineHeld = false;
+        _driverSession.setOnline(false);
+        return;
+      }
+      // A won trip is opening over Home: its start settles this.
+      if (ModalRoute.of(context)?.isCurrent == false) { return; }
+      _offlineHeld = false;
+      unawaited(_goOffline());
     }
 }
