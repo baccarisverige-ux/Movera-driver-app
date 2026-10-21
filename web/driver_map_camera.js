@@ -568,7 +568,9 @@
         let scale = null;
         const setIcon = icon => {
           if (!icon?.url) return;
-          image.src = icon.url;
+          // The same picture again (each marker update sends the icon): no
+          // reload (driver-u174).
+          if (image.src !== icon.url) image.src = icon.url;
           const size = icon.scaledSize || icon.size;
           if (!size) return;
           image.style.width = `${size.width}px`; image.style.height = `${size.height}px`;

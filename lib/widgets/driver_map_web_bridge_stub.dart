@@ -1,4 +1,8 @@
+import 'dart:typed_data';
+
 bool get ready => true;
+String? createBlobUrl(Uint8List bytes) => null;
+void revokeBlobUrl(String url) {}
 void applyAnchor(int mapId) {}
 void claim(int mapId, {bool anchored = true, double? lead}) {}
 void gestures(int mapId, bool enabled) {}
