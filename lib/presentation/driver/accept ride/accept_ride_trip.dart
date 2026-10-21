@@ -92,6 +92,16 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// Q43: the fare with the driver's waiting fee in it, for the earnings.
     String get _fareWithWaiting => WaitingTerms.addFee(
         widget.fare, _waitTerms.driverWaitingFee(_paidWaitTotal));
+    /// driver-u61: what the rider pays, the fare without Movera's bonus
+    /// (the contract: the bonus is in the fare, the rider never pays it).
+    /// A cash trip with no server cash amount collects this.
+    String get _riderFare {
+      final bonus = widget.driverBonus;
+      if (bonus == null || bonus.minorUnits <= 0) { return widget.fare; }
+      final fare = Money.parseLabel(widget.fare, currency: bonus.currency);
+      if (fare == null || fare.minorUnits < bonus.minorUnits) { return widget.fare; }
+      return (fare - bonus).formatted;
+    }
     /// The current trip's waybill with the waiting fee in its fare.
     WaybillRecord _paidWaybill() {
       final fee = _waitTerms.driverWaitingFee(_paidWaitTotal);
@@ -174,11 +184,25 @@ extension _AcceptRideTrip on _AcceptRideState {
       unawaited(_startLiveLocation());
       _resumeOnTripOffer();
     }
+    /// D-05 / driver-u80: a route (History, Chat, Support, a sheet) covers
+    /// the trip: no offer comes, the one up keeps its deadline.
+    void _coverTrip() {
+      _tripCovered = true;
+      _nextTripRadarDemoTimer?.cancel();
+      _nextTripOfferExpiry?.cancel();
+    }
+    void _uncoverTrip() {
+      if (!_tripCovered) { return; }
+      _tripCovered = false;
+      if (!_liveUpdatesPaused) { _resumeOnTripOffer(); }
+    }
+    /// Next-trip offers wait: the app is hidden or a route covers the trip.
+    bool get _offersHeld => _liveUpdatesPaused || _tripCovered;
     /// D-05: back on screen. An offer whose time ran out while hidden
     /// leaves without counting as a miss (as on Home); one with time left
     /// counts down the rest. Radar then looks for the next one.
     void _resumeOnTripOffer() {
-      if (!mounted || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
+      if (!mounted || _tripCovered || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
       if (_onTripRadarState == _OnTripRadarState.offerAvailable) {
         final deadline = _nextTripOfferDeadline;
         final left = deadline?.difference(_offerNow());
@@ -762,7 +786,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     Future<void> _refreshRoadRoute({bool force = false}) async {
       if (_stage == ActiveRideStage.waitingForRider || _paidStopWait) { return; }
       if (!_allowExternalRouting) { return; }
-
+      // driver-u75: no real fix yet: _driverPosition is the placeholder, so
+      // no road route from it; the first accepted fix asks for the route.
+      if (_lastLocation == null) { return; }
       final target = _routeTarget;
       if (target == null) {
         _rebuild(() {
@@ -1110,7 +1136,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (destination == null) { return _uniqueDemoNext; }
       final address = _destinationAddress?.trim();
       return _NextTripRadarOffer(
-        id: '${widget.tripId}-next-destination',
+        id: tripOccurrenceId('${widget.tripId}-next-destination'),
         category: _AcceptRideState._demoNextTripOffer.category,
         fare: _AcceptRideState._demoNextTripOffer.fare,
         rating: _AcceptRideState._demoNextTripOffer.rating,
@@ -1145,7 +1171,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         return;
       }
       if (!mounted ||
-          _liveUpdatesPaused ||
+          _offersHeld ||
           _stage != ActiveRideStage.onTrip ||
           _onTripRadarState != _OnTripRadarState.scanning ||
           _onTripRadarDeclined ||
@@ -1179,7 +1205,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         const Duration(milliseconds: 2200),
         () {
           if (!mounted ||
-              _liveUpdatesPaused ||
+              _offersHeld ||
               _stage != ActiveRideStage.onTrip ||
               _onTripRadarState != _OnTripRadarState.scanning) {
             return;
@@ -1196,7 +1222,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     void _presentOnTripOffer() {
       // D-05: never while the trip is hidden; the resume looks again.
-      if (_liveUpdatesPaused) { return; }
+      if (_offersHeld) { return; }
       _rebuild(() {
         final offer = _onTripRadarOfferForDestination();
         if (!_dropoffFollowsDestination(offer.dropoffPosition)) { return; }

@@ -296,7 +296,13 @@ class WaybillStore {
 /// The fare text is the one shown to the driver ("128,40 kr" or
 /// "126.75 kr"). Amounts are kept in öre and keep its decimal separator.
 class WaybillPayment {
-  const WaybillPayment._(this._fareOre, this._comma, this._feeRate, this._bonusOre);
+  const WaybillPayment._(
+    this._fareOre,
+    this._comma,
+    this._feeRate,
+    this._bonusOre,
+    this._waitOre,
+  );
 
   /// Movera's share of each fare. Placeholder until per-trip pricing comes
   /// from the backend; change here.
@@ -305,24 +311,29 @@ class WaybillPayment {
   /// Null when [fare] holds no amount (for example "—"). [feeRate] is
   /// Movera's share. [bonus] (e.g. "40 kr", Q16/Q18) is Movera's extra
   /// already in [fare]: the rider never pays it and Movera takes no fee
-  /// on it, so it all goes to the driver's earnings.
+  /// on it, so it all goes to the driver's earnings. [waitingFee] (Q43,
+  /// e.g. "18,39 kr") is the driver's waiting fee already in [fare]: it is
+  /// all the driver's too, so Movera takes no fee on it (driver-u52).
   static WaybillPayment? fromFare(
     String fare, {
     double feeRate = serviceFeeRate,
     String? bonus,
+    String? waitingFee,
   }) {
-    final match = RegExp(r'\d+(?:[.,]\d{1,2})?').firstMatch(fare);
-    if (match == null) return null;
-    final text = match.group(0)!;
-    final value = double.tryParse(text.replaceAll(',', '.'));
-    if (value == null) return null;
-    final fareOre = (value * 100).round();
-    final bonusOre = bonus == null ? 0 : Money.parseLabel(bonus)?.minorUnits ?? 0;
+    // driver-32: "1 234,50 kr" has a thousands group; read the whole label.
+    final fareOre = _ore(fare);
+    if (fareOre == null) return null;
+    final bonusOre = (bonus == null
+            ? 0
+            : Money.parseLabel(bonus)?.minorUnits ?? 0)
+        .clamp(0, fareOre);
+    final waitOre = waitingFee == null ? 0 : _ore(waitingFee) ?? 0;
     return WaybillPayment._(
       fareOre,
-      text.contains(','),
+      fare.contains(','),
       feeRate,
-      bonusOre.clamp(0, fareOre),
+      bonusOre,
+      waitOre.clamp(0, fareOre - bonusOre),
     );
   }
 
@@ -330,24 +341,55 @@ class WaybillPayment {
   final bool _comma;
   final double _feeRate;
   final int _bonusOre;
+  final int _waitOre;
 
   /// What the rider pays: the fare without Movera's bonus.
   int get _riderOre => _fareOre - _bonusOre;
 
-  int get _feeOre => (_riderOre * _feeRate).round();
+  /// Movera's fee: on the rider's fare without the waiting fee.
+  int get _feeOre => ((_riderOre - _waitOre) * _feeRate).round();
 
-  /// Paid by the passenger (the base price).
+  /// Paid by the passenger: the base price plus the waiting fee.
   String get fare => _format(_riderOre);
+
+  /// The trip's base price: what the passenger paid without the waiting
+  /// fee (driver-u50).
+  String get basePrice => _format(_riderOre - _waitOre);
+
+  /// The driver's waiting fee in the fare; null without one.
+  String? get waitingFee => _waitOre > 0 ? _format(_waitOre) : null;
   String get serviceFee => _format(_feeOre);
 
-  /// The driver's: the rider's fare after Movera's fee, plus the bonus.
+  /// The driver's: the rider's fare after Movera's fee, plus the bonus
+  /// (the waiting fee is in the rider's fare and pays no fee).
   String get earnings => _format(_fareOre - _feeOre);
 
   /// Movera's bonus in the earnings; null without one.
   String? get bonus => _bonusOre > 0 ? _format(_bonusOre) : null;
 
+  /// [label] in öre: a whole label ("1 234,50 kr", "126.75 kr"), else the
+  /// first amount in it.
+  static int? _ore(String label) {
+    final money = Money.parseSekLabel(label);
+    if (money != null) return money.minorUnits;
+    final match = RegExp(r'\d+(?:[.,]\d{1,2})?').firstMatch(label);
+    if (match == null) return null;
+    final value = double.tryParse(match.group(0)!.replaceAll(',', '.'));
+    return value == null ? null : (value * 100).round();
+  }
+
   String _format(int ore) {
-    final text = '${ore ~/ 100}.${(ore % 100).toString().padLeft(2, '0')}';
-    return '${_comma ? text.replaceAll('.', ',') : text} kr';
+    final kronor = ore ~/ 100;
+    final cents = (ore % 100).toString().padLeft(2, '0');
+    // The comma form groups thousands like Money.formatted: "1 234,50 kr".
+    if (_comma) {
+      final digits = '$kronor';
+      final grouped = digits.replaceAllMapped(
+        RegExp(r'\B(?=(\d{3})+$)'),
+        (_) => ' ',
+      );
+      return '$grouped,$cents kr';
+    }
+    return '$kronor.$cents kr';
   }
 }

@@ -69,6 +69,11 @@ class OnTripDestination {
         : DriverTexts.islandDestinationsUsed);
   }
 
-  /// A destination was set on the trip: it counts for today.
-  static void started() => DestinationModeSession.instance.started();
+  /// A destination was set on the trip: it counts for today, and Home
+  /// takes it over when the trip ends (driver-u65).
+  static void started({String? address, GeoPoint? position}) =>
+      DestinationModeSession.instance.started(
+        address: address,
+        position: position,
+      );
 }

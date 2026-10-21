@@ -181,7 +181,10 @@ extension _AcceptRidePanel on _AcceptRideState {
           )
           .then((result) {
             if (!mounted || result == null) { return; }
-            OnTripDestination.started();
+            OnTripDestination.started(
+              address: result.address,
+              position: GeoPointMaps.fromLatLng(result.position),
+            );
             _rebuild(() {
               _destinationActive = true;
               _destinationAddress = result.address;
@@ -539,12 +542,28 @@ extension _AcceptRidePanel on _AcceptRideState {
         MaterialPageRoute<void>(builder: (_) => const Preferences()),
       );
     }
+    /// driver-u66: the label is bounded to the screen and lets touches
+    /// through to the map; only the buttons are a map overlay.
     Widget _buildMapControls() {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(_freshRadarLocation ? tr.demoOffers : tr.demoOffersLiveLocationUnavailableStale, style: const TextStyle(fontSize: 10)),
+          IgnorePointer(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: math.max(0, MediaQuery.sizeOf(context).width - 28)),
+              child: Text(
+                _freshRadarLocation ? tr.demoOffers : tr.demoOffersLiveLocationUnavailableStale,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: const TextStyle(fontSize: 10),
+              ),
+            ),
+          ),
           const SizedBox(height: 4),
+          _mapOverlay(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
           MapControlButton(
             key: const ValueKey<String>('active-ride-safety-button'),
             tooltip: tr.safetyToolkit,
@@ -613,6 +632,8 @@ extension _AcceptRidePanel on _AcceptRideState {
           ),
             ],
           ),
+        ],
+          )),
         ],
       );
     }

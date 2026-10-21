@@ -16,11 +16,18 @@ class DestinationModeSession {
   bool _timedOut = false;
   GeoPoint? _routeTo;
   List<GeoPoint> _route = const <GeoPoint>[];
+  String? _address;
+  GeoPoint? _position;
 
   DateTime get now => _now();
 
   /// When the current destination was set; null without one.
   DateTime? get activeSince => _activeSince;
+
+  /// The current destination, wherever it was set (Home or the trip
+  /// screen, driver-u65); null without one.
+  String? get activeAddress => _activeSince == null ? null : _address;
+  GeoPoint? get activePosition => _activeSince == null ? null : _position;
 
   /// Destinations set on [now]'s day.
   int usedToday([DateTime? at]) {
@@ -41,9 +48,11 @@ class DestinationModeSession {
   }
 
   /// A destination was set: it counts for today and its time starts.
-  void started() {
+  void started({String? address, GeoPoint? position}) {
     final at = _now();
     _activeSince = at;
+    _address = address;
+    _position = position;
     _timedOut = false;
     _started.add(at);
     _route = const <GeoPoint>[];
@@ -52,6 +61,8 @@ class DestinationModeSession {
 
   void ended() {
     _activeSince = null;
+    _address = null;
+    _position = null;
     _route = const <GeoPoint>[];
     _routeTo = null;
   }

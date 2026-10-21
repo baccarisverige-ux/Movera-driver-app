@@ -36,6 +36,7 @@ import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -47,6 +48,7 @@ import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/next_trip_gate.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
+import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/widgets/pickup_pay_line.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
@@ -340,7 +342,7 @@ class _TripCancellationReason {
 }
 
 class _AcceptRideState extends State<AcceptRide>
-    with TickerProviderStateMixin, WidgetsBindingObserver {
+    with TickerProviderStateMixin, WidgetsBindingObserver, RouteAware {
   final DriverRealtimeSequenceGate _realtimeGate = DriverRealtimeSequenceGate();
   static const Color _ink = Color(0xFF252E3A);
   static const Color _panel = Color(0xFFFFFFFF);
@@ -500,6 +502,7 @@ class _AcceptRideState extends State<AcceptRide>
   DateTime? _lastGpsAppliedAt;
   DateTime? _lastSnapshotAt;
   bool _liveUpdatesPaused = false;
+  bool _tripCovered = false; // driver-u80: a route covers the trip.
   int _waitSeconds = 0;
   /// Paid seconds of waits already over (Q42); [_acceptedAt]: contract
   /// `acceptedAt`, kept across restores (Q12).
@@ -660,10 +663,15 @@ class _AcceptRideState extends State<AcceptRide>
     }
     if(MediaQuery.disableAnimationsOf(context)) { _radarPulseController.stop(); _radarSweepController.stop(); }
     else if(!_liveUpdatesPaused) { _radarPulseController.repeat(reverse:true); _radarSweepController.repeat(); }
+    final route = ModalRoute.of(context);
+    if (route != null) { driverRouteObserver.subscribe(this, route); }
   }
+  @override void didPushNext() => _AcceptRideTrip(this)._coverTrip(); // driver-u80
+  @override void didPopNext() => _AcceptRideTrip(this)._uncoverTrip();
 
   @override
   void dispose() {
+    driverRouteObserver.unsubscribe(this);
     RideCheckGate.listenable.removeListener(_onRideCheckGateListener);
     _rideCheckTicker?.cancel();
     _hardStops?.cancel();
@@ -932,30 +940,16 @@ class _AcceptRideState extends State<AcceptRide>
 
   bool get _pendingTerminal => _pendingProjection?.kind==DriverRealtimeKind.riderCancelled || _pendingProjection?.status?.isTerminal==true;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   bool get _onTripRadarOn =>
       _onTripRadarState == _OnTripRadarState.scanning ||
       _onTripRadarState == _OnTripRadarState.offerAvailable ||
       _onTripRadarState == _OnTripRadarState.matching ||
       _onTripRadarState == _OnTripRadarState.secured;
 
-
+  /// driver-u60: one trip id per offer, so a cancelled next trip and a
+  /// later one never share a history row or terminal marker.
   _NextTripRadarOffer get _uniqueDemoNext => _NextTripRadarOffer(
-    id:'${widget.tripId}-next',category:_demoNextTripOffer.category,fare:_demoNextTripOffer.fare,rating:_demoNextTripOffer.rating,
+    id:tripOccurrenceId('${widget.tripId}-next'),category:_demoNextTripOffer.category,fare:_demoNextTripOffer.fare,rating:_demoNextTripOffer.rating,
     pickupMinutes:_demoNextTripOffer.pickupMinutes,pickupKm:_demoNextTripOffer.pickupKm,tripMinutes:_demoNextTripOffer.tripMinutes,riderName:_demoNextTripOffer.riderName,
     pickup:_demoNextTripOffer.pickup,dropoff:_demoNextTripOffer.dropoff,pickupPosition:_demoNextTripOffer.pickupPosition,dropoffPosition:_demoNextTripOffer.dropoffPosition);
 
@@ -999,7 +993,7 @@ class _AcceptRideState extends State<AcceptRide>
   /// R8-4: the cash taken from the rider; the fare unless a promotion
   /// changed it.
   String get _cashToCollect => WaitingTerms.addFee(
-      widget.cashToCollect ?? widget.fare,
+      widget.cashToCollect ?? _AcceptRideTrip(this)._riderFare,
       _waitTerms.waitingFee(_AcceptRideTrip(this)._paidWaitTotal));
   int get _includedWaitSeconds => _waitTerms.freeSeconds;
   int get _noShowWaitSeconds => _waitTerms.noShowSeconds;
@@ -1333,7 +1327,7 @@ class _AcceptRideState extends State<AcceptRide>
                       ),
                     );
                   },
-                  child: _AcceptRidePanel(this)._mapOverlay(child: _AcceptRidePanel(this)._buildMapControls()),
+                  child: _AcceptRidePanel(this)._buildMapControls(),
                 ),
               ],
             ),
@@ -1344,7 +1338,7 @@ class _AcceptRideState extends State<AcceptRide>
                   left: 12,
                   right: 12,
                   bottom: MediaQuery.paddingOf(context).bottom + 12,
-                  child: _AcceptRidePanel(this)._buildIncomingRideCard(),
+                  child: _AcceptRidePanel(this)._mapOverlay(child: _AcceptRidePanel(this)._buildIncomingRideCard()),
                 ),
               // Above the sheet and offers; nothing under it works until
               // the driver answers.

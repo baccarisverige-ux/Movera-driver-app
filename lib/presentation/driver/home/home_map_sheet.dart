@@ -311,15 +311,38 @@ extension _HomeMapSheet on _DriverHomeState {
             _activateDestinationMode(result);
           });
     }
+    /// driver-u65: a destination set on the trip screen is the driver's
+    /// destination here too once Home is visible again. It already counted
+    /// for today, so taking it over is not a new use.
+    void _adoptSessionDestination() {
+      final session = DestinationModeSession.instance;
+      final position = session.activePosition;
+      if (position == null || session.expired()) { return; }
+      final destination = position.toLatLng();
+      if (_destinationModeActive && _destinationPosition == destination) { return; }
+      unawaited(_activateDestinationMode(
+        DriverDestinationResult(
+          position: destination,
+          address: session.activeAddress ?? '',
+        ),
+        adopted: true,
+      ));
+    }
     Future<void> _activateDestinationMode(
-      DriverDestinationResult result,
-    ) async {
+      DriverDestinationResult result, {
+      bool adopted = false,
+    }) async {
       final destination = result.position;
       _mapPreviews.cancel(); // An old offer cannot reclaim the destination map.
       _destinationRoadRequests.cancel();
       _destinationRouteRefetch.reset();
       _cameraRoute = null;
-      DestinationModeSession.instance.started();
+      if (!adopted) {
+        DestinationModeSession.instance.started(
+          address: result.address,
+          position: GeoPointMaps.fromLatLng(destination),
+        );
+      }
       _destinationLimitTimer?.cancel();
       _armDestinationLimit();
       _rebuild(() {
@@ -348,7 +371,7 @@ extension _HomeMapSheet on _DriverHomeState {
       _seedDemoDestinationTrips();
       _HomeOfferRadar(this)._maybeShowSoonReservation();
 
-      if (!_isOnline && !_isGoingOnline) {
+      if (!adopted && !_isOnline && !_isGoingOnline) {
         _goOnline();
       }
     }
