@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/ride/active_ride_controller.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +16,21 @@ import 'package:movera/core/scheduled/scheduled_clock.dart';
 
 // Wave 5 D5.4 (parts a + b): state and time. Time cases also run under
 // TZ=Europe/Stockholm and TZ=America/New_York.
+
+/// Holds each save until the test lets it finish.
+class _SlowRides extends MemoryActiveRideRepository {
+  final List<Completer<void>> held = [];
+  final List<int> saved = [];
+
+  @override
+  Future<void> save(PersistedActiveRide ride) async {
+    final gate = Completer<void>();
+    held.add(gate);
+    await gate.future;
+    saved.add(ride.stopIndex);
+    await super.save(ride);
+  }
+}
 
 void main() {
   group('driver-8: a demo reservation after midnight on a clock-change day', () {
@@ -129,5 +147,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(menu, 1);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  test('driver-u32/u33: a save asked for during a background save still runs',
+      () async {
+    final repo = _SlowRides();
+    var stop = 0;
+    final ride = ActiveRideController(
+      tripId: 'trip-u33',
+      repository: repo,
+      initialStage: ActiveRideStage.onTrip,
+      snapshotBuilder: (stage) => PersistedActiveRide(
+          tripId: 'trip-u33', stage: stage, stopIndex: stop),
+    );
+    addTearDown(ride.dispose);
+    final gps = ride.persistNow(); // the 2-minute GPS snapshot
+    await pumpEventQueue();
+    stop = 1; // the driver leaves stop 1
+    final departure = ride.persistNow();
+    repo.held.first.complete();
+    expect(await gps, isTrue);
+    await pumpEventQueue();
+    expect(repo.held, hasLength(2), reason: 'the departure is saved too');
+    repo.held.last.complete();
+    expect(await departure, isTrue);
+    expect(repo.saved, [0, 1]);
+    expect((await repo.read())!.stopIndex, 1);
   });
 }
