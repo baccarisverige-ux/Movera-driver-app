@@ -62,6 +62,8 @@ class RideCheckController extends ChangeNotifier {
   DateTime? _audioStartedAt;
   int? _audioSeconds;
   Timer? _audioTicker;
+  // The recorder was started and not yet stopped, whatever [_audio] says.
+  bool _recorderRunning = false;
 
   RideCheckPhase get phase => _phase;
   bool get active => _phase != RideCheckPhase.idle;
@@ -113,6 +115,8 @@ class RideCheckController extends ChangeNotifier {
     _dialOpened = false;
     _dialFailed = false;
     _dialOutcome = null;
+    // driver-28: never leave a recorder running behind a new check.
+    if (_recorderRunning) _stopRecorderQuietly();
     _audio = RideCheckAudio.idle;
     _audioSeconds = null;
     _audioStartedAt = null;
@@ -274,10 +278,18 @@ class RideCheckController extends ChangeNotifier {
       }
       return;
     }
-    if (_disposed) {
-      unawaited(recorder.cancel());
+    // driver-28: the card may have closed (I'm OK, Done) or the trip screen
+    // gone while the start was in flight. Nothing on screen could show or
+    // stop this recording, so drop it.
+    if (_disposed || !_answerable) {
+      unawaited(recorder.cancel().catchError((Object _) {}));
+      if (!_disposed) {
+        _audio = RideCheckAudio.idle;
+        notifyListeners();
+      }
       return;
     }
+    _recorderRunning = true;
     _audio = RideCheckAudio.recording;
     _audioStartedAt = services.now();
     _audioTicker?.cancel();
@@ -292,6 +304,7 @@ class RideCheckController extends ChangeNotifier {
     if (recorder == null || _audio != RideCheckAudio.recording) return;
     _audioTicker?.cancel();
     final seconds = audioSeconds;
+    _recorderRunning = false;
     String? path;
     try {
       path = await recorder.stop();
@@ -305,6 +318,12 @@ class RideCheckController extends ChangeNotifier {
       _save();
     }
     if (!_disposed) notifyListeners();
+  }
+
+  void _stopRecorderQuietly() {
+    _recorderRunning = false;
+    _audioTicker?.cancel();
+    unawaited(_recorder?.stop().catchError((Object _) => null));
   }
 
   RideCheckAnswer _addAnswer(String question, String text) {
@@ -426,10 +445,8 @@ class RideCheckController extends ChangeNotifier {
     _syncGate(false);
     _phaseTimer?.cancel();
     _audioTicker?.cancel();
-    if (_audio == RideCheckAudio.recording) {
-      // The trip screen left: keep what was recorded on the phone.
-      unawaited(_recorder?.stop().catchError((Object _) => null));
-    }
+    // The trip screen left: keep what was recorded on the phone.
+    if (_recorderRunning) _stopRecorderQuietly();
     final done = _done;
     _done = null;
     final record = _record;

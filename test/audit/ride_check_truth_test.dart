@@ -117,4 +117,37 @@ void main() {
     expect(kit.alerts.alerts.single.topic, 'Call 112');
     expect(kit.alerts.alerts.single.answers.last.answer, 'Opened');
   });
+
+  test('driver-28: a recording still starting when the card closes does '
+      'not keep the microphone on', () async {
+    final kit = _Kit();
+    addTearDown(kit.dispose);
+    kit.recorder.holdStart = Completer<void>();
+    kit.controller.open(kit.event(), instant: true);
+    final starting = kit.controller.toggleRecording();
+    await Future<void>.delayed(Duration.zero);
+    expect(kit.controller.audio, RideCheckAudio.starting);
+    await kit.controller.imOk();
+    kit.recorder.holdStart!.complete();
+    await starting;
+    expect(kit.recorder.recording, isFalse,
+        reason: 'no recording may run behind a closed card');
+    expect(kit.controller.audio, isNot(RideCheckAudio.recording));
+  });
+
+  test('driver-28: a later check and dispose still stop a recorder that '
+      'is running', () async {
+    final kit = _Kit();
+    kit.recorder.holdStart = Completer<void>();
+    kit.controller.open(kit.event(), instant: true);
+    final starting = kit.controller.toggleRecording();
+    await Future<void>.delayed(Duration.zero);
+    await kit.controller.imOk();
+    kit.recorder.holdStart!.complete();
+    await starting;
+    kit.controller.open(kit.event(RideCheckTrigger.offRoute), instant: true);
+    kit.dispose();
+    await Future<void>.delayed(Duration.zero);
+    expect(kit.recorder.recording, isFalse);
+  });
 }
