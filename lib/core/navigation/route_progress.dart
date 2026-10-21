@@ -35,6 +35,7 @@ class RouteProgressCalculator {
     this.passedManeuverMeters = 4,
     this.backwardWindowMeters = 60,
     this.forwardWindowMeters = 400,
+    this.maxSkipMeters = 150,
   });
 
   final double offRouteThresholdMeters;
@@ -46,6 +47,12 @@ class RouteProgressCalculator {
   /// used when nothing inside it is on the road (rejoin, tunnel, reroute).
   final double backwardWindowMeters;
   final double forwardWindowMeters;
+
+  /// driver-u29: inside the window, a match this far ahead that also skips
+  /// a maneuver is taken only when the car is no longer on the road it was
+  /// following. One GPS sample that drifts toward a later leg (around the
+  /// block, the other carriageway) must not jump past the turns between.
+  final double maxSkipMeters;
 
   static final Expando<_RouteGeometry> _geometry = Expando<_RouteGeometry>();
 
@@ -88,6 +95,22 @@ class RouteProgressCalculator {
             toAlong: safePreviousAlong + forwardWindowMeters,
             preferAlong: safePreviousAlong,
           );
+    if (projection != null &&
+        safePreviousAlong != null &&
+        projection.distance <= offRouteThresholdMeters &&
+        projection.along - safePreviousAlong > maxSkipMeters &&
+        geometry.maneuverBetween(
+          safePreviousAlong + passedManeuverMeters,
+          projection.along,
+        )) {
+      final near = geometry.project(
+        position,
+        fromAlong: safePreviousAlong - backwardWindowMeters,
+        toAlong: safePreviousAlong + maxSkipMeters,
+        preferAlong: safePreviousAlong,
+      );
+      if (near.distance <= offRouteThresholdMeters) projection = near;
+    }
     if (projection == null || projection.distance > offRouteThresholdMeters) {
       final global = geometry.project(position);
       if (projection == null || global.distance < projection.distance) {
@@ -100,6 +123,15 @@ class RouteProgressCalculator {
     var instructionIndex = instructionHint
         .clamp(0, math.max(0, route.instructions.length - 1))
         .toInt();
+    // driver-u29: the hint only saves work. When the car is behind it
+    // (a drifting fix moved it on, then the car projected back), step back
+    // to the first maneuver not yet passed so no turn is skipped.
+    while (instructionIndex > 0 &&
+        projection.along <=
+            geometry.maneuverAlong[instructionIndex - 1] +
+                passedManeuverMeters) {
+      instructionIndex--;
+    }
     while (instructionIndex < route.instructions.length) {
       final instruction = route.instructions[instructionIndex];
       final maneuverAlong = geometry.maneuverAlong[instructionIndex];
@@ -176,6 +208,10 @@ class _RouteGeometry {
     ];
     return geometry;
   }
+
+  /// Whether a maneuver lies in (from, to] along the route.
+  bool maneuverBetween(double from, double to) =>
+      maneuverAlong.any((along) => along > from && along <= to);
 
   _Projection project(
     GeoPoint position, {
