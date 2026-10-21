@@ -79,7 +79,6 @@ void main() {
         ScheduledRideRules.fromJson('broken'),
       ]) {
         expect(rules.enabled, isTrue);
-        expect(rules.leaveNowOpensTrip, isTrue);
         expect(rules.lateWarning, isTrue);
         expect(rules.backupAfterMinutes, 5);
         expect(rules.homePopupAfterMinutes, 10);
@@ -156,7 +155,6 @@ void main() {
         },
       });
       expect(rules.enabled, isFalse);
-      expect(rules.leaveNowOpensTrip, isFalse);
       expect(rules.lateWarning, isFalse);
       expect(rules.backupAfterMinutes, 8);
       expect(rules.homePopupAfterMinutes, 12);
@@ -222,7 +220,6 @@ void main() {
 
     test('wrong types and unknown choices keep the defaults', () {
       final rules = ScheduledRideRules.fromJson({
-        'leaveNow': 'no',
         'offlineBackupAfterMin': '9',
         'onDriverCancel': 'somewhere',
         'longTripKm': double.nan,
@@ -232,7 +229,6 @@ void main() {
         },
         'lateEta': {'on': 1, 'reassignTo': 'teleport', 'toleranceMin': null},
       });
-      expect(rules.leaveNowOpensTrip, isTrue);
       expect(rules.backupAfterMinutes, 5);
       expect(rules.onDriverCancel, ReservationCancelReturn.byTime);
       expect(rules.longTripKm, 50);

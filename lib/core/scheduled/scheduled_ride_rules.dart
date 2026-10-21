@@ -140,7 +140,6 @@ class ScheduledRideKindRule {
 class ScheduledRideRules {
   const ScheduledRideRules({
     this.enabled = true,
-    this.leaveNowOpensTrip = true,
     this.lateWarning = true,
     this.homePopupAfterMinutes = 10,
     this.exclusiveBeforeMinutes = 20,
@@ -178,12 +177,9 @@ class ScheduledRideRules {
   /// `reservations.on`: reservations in this zone.
   final bool enabled;
 
-  /// `reservations.leaveNow`: at "Leave now" the trip opens by itself,
-  /// heading to the pickup. Off: only the warning ([lateWarning]).
-  final bool leaveNowOpensTrip;
-
   /// `reservations.lateWarn`: "Head to your 07:40 pickup" when "Leave now"
-  /// cannot start the trip.
+  /// cannot start the trip. "Leave now" itself always opens the trip: there
+  /// is no switch for it (owner decision 1, contract v0.4.2).
   final bool lateWarning;
 
   /// `reservations.towardPickupBeforeMin`.
@@ -195,7 +191,8 @@ class ScheduledRideRules {
   /// `DriverAppConfig.reservations`. Every field optional: a missing or
   /// broken value keeps the default, a number out of range is clamped and
   /// an unknown choice is the default. [includedWaitingMinutes] is not part
-  /// of it and keeps its default.
+  /// of it and keeps its default. A `leaveNow` field from an older document
+  /// is ignored (contract v0.4.2).
   factory ScheduledRideRules.fromJson(Object? json) {
     const seed = ScheduledRideRules();
     if (json is! Map) return seed;
@@ -210,7 +207,6 @@ class ScheduledRideRules {
     final assign = _clampInt(json['assignAcceptSeconds'], 5, 600);
     return ScheduledRideRules(
       enabled: _bool(json['on']) ?? seed.enabled,
-      leaveNowOpensTrip: _bool(json['leaveNow']) ?? seed.leaveNowOpensTrip,
       lateWarning: _bool(json['lateWarn']) ?? seed.lateWarning,
       backupAfterMinutes: _clampInt(json['offlineBackupAfterMin'], 1, 60) ??
           seed.backupAfterMinutes,
