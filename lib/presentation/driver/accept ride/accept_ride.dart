@@ -1295,7 +1295,8 @@ class _AcceptRideState extends State<AcceptRide>
                         paidWait: _paidStopWait || (_countingWait && !_inIncludedWait),
                         paidByCash: widget.paidByCash,
                         lastTripLabel: _waybills.last?.fare ?? DigitalIslandParts.noAmount,
-                        radarVisible: _stage == ActiveRideStage.onTrip,
+                        // driver-u79: a secured next trip cannot be turned off here.
+                        radarVisible: _stage == ActiveRideStage.onTrip && _onTripRadarState != _OnTripRadarState.secured,
                         radarOn: _onTripRadarOn,
                         onRadar: _AcceptRideTrip(this)._toggleOnTripRadar,
                         onMenu: () => _rideScaffoldKey.currentState?.openDrawer(),

@@ -232,4 +232,28 @@ void main() {
     expect(lines(), isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('driver-u79: with a next trip secured the island menu does '
+      'not offer to turn Exclusive offers off', (tester) async {
+    await _trip(tester, AcceptRide(
+      tripId: 'secured-trip',
+      initialStage: ActiveRideStage.onTrip,
+      locationRepository: _NoGps(),
+      restoredSnapshot: const PersistedActiveRide(
+        tripId: 'secured-trip',
+        stage: ActiveRideStage.onTrip,
+        next: PersistedQueuedTrip(
+          tripId: 'next-1', riderName: 'Sara', fare: '128,40 kr',
+          category: 'Comfort', pickup: 'Odengatan', dropoff: 'Kista',
+          pickupLat: 59.3428, pickupLng: 18.0475,
+          dropoffLat: 59.4032, dropoffLng: 17.9447,
+        ),
+      ),
+    ));
+    final island =
+        tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland));
+    expect(island.nextTripFare, isNotNull, reason: 'the next trip is secured');
+    expect(island.radarVisible, isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
