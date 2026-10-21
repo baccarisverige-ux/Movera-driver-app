@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show SemanticsNode;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -13,8 +14,11 @@ import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_card.dart';
+import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
 import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
+import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
+import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -240,4 +244,42 @@ void main() {
       expect(text.textScaler, const TextScaler.linear(1.5));
     });
   }
+
+  group('driver-u108: the × buttons have a name', () {
+    testWidgets('destination confirm', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(const MaterialApp(
+        home: DestinationConfirmScreen(
+          origin: LatLng(59.3617, 17.9714),
+          destination: DriverDestinationResult(
+            position: LatLng(59.4032, 17.9448),
+            address: 'Kista Galleria, Stockholm',
+            name: 'Kista centrum',
+          ),
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 800));
+      final close = tester.getSemantics(
+          find.byKey(const ValueKey<String>('destination-confirm-close')));
+      expect(close.tooltip, 'Close');
+      expect(close.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+      await _unmount(tester);
+      semantics.dispose();
+    });
+
+    testWidgets('waiting time sheet', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(body: WaitingTimeSheet(readSeconds: () => 30)),
+      ));
+      await tester.pump();
+      expect(
+        find.ancestor(
+          of: find.byIcon(Icons.close_rounded),
+          matching: find.byTooltip('Close'),
+        ),
+        findsOneWidget,
+      );
+      await _unmount(tester);
+    });
+  });
 }
