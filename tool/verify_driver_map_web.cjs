@@ -53,11 +53,17 @@ class OverlayMock {
 }
 class MarkerMock {
   constructor(options) { this.options = options; this.handlers = {}; }
-  addListener(event, callback) { this.handlers[event] = callback; }
-  setMap(map) { this.options.map = map; this.handlers.map_changed?.(); }
+  addListener(event, callback) { (this.handlers[event] ??= new Set()).add(callback);
+    return {remove: () => this.handlers[event].delete(callback)}; }
+  fire(event) { for (const callback of [...this.handlers[event] ?? []]) callback(); }
+  setMap(map) { this.options.map = map; this.fire('map_changed'); }
+  // Like MVCObject: each changed property fires its _changed event.
+  setOptions(options) { for (const [key, value] of Object.entries(options)) {
+    if (this.options[key] === value) continue;
+    this.options[key] = value; this.fire(`${key}_changed`); } }
   getMap() { return this.options.map; } getPosition() { return this.options.position; }
   getIcon() { return this.options.icon; } getVisible() { return this.options.visible; }
-  setVisible(visible) { this.options.visible = visible; this.handlers.visible_changed?.(); }
+  setVisible(visible) { this.options.visible = visible; this.fire('visible_changed'); }
 }
 const maps = {Map: MapMock, Marker: MarkerMock, OverlayView: OverlayMock,
   Point: class {constructor(x,y) {this.x=x;this.y=y;}}, RenderingType: {VECTOR: 'VECTOR', RASTER: 'RASTER'}};
@@ -463,6 +469,19 @@ assert.ok(halos[0].style.transform.includes(`scaleY(${Math.cos(60 * Math.PI / 18
 }
 map.moveCamera({heading:0, tilt:0, zoom: 16});
 marker.setMap(null);
+// driver-r4-36: the car is first built with the default icon (no URL;
+// the arrow is still being drawn) and gets its arrow by setOptions. The
+// overlay is installed when the arrow arrives, not never.
+{
+  const late = new maps.Marker({title:'Driver camera vehicle', position:{x:1,y:2}, visible:true});
+  late.setMap(map);
+  assert.equal(late.getVisible(), true, 'Default icon: the plain marker shows');
+  late.setOptions({icon:{url:'vehicle.png',scaledSize:{width:40,height:40}}});
+  assert.equal(late.getVisible(), false, 'Late arrow: the overlay replaces the marker');
+  api.vehicle(7, 90);
+  assert.ok(images.at(-1).style.transform.includes('rotate(90deg)'), 'Late arrow turns with the heading');
+  late.setMap(null);
+}
 // Native Maps +/- touches must not be cancelled by the map-wide custom
 // gesture interpreter. Mobile browsers need an intact touch-to-click chain.
 const beforeNativeTouch = gestures;
