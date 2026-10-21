@@ -637,7 +637,7 @@ class _DriverHomeState extends State<DriverHome>
     return WaybillRecord(
       tripId: snapshot.tripId,
       statusLabel: WaybillRecord.currentTrip,
-      issuedAt: snapshot.savedAt ?? DateTime.now(),
+      issuedAt: snapshot.acceptedAt ?? snapshot.savedAt ?? DateTime.now(), // driver-u114
       fare: snapshot.fare ?? '—',
       driverBonus: WaybillRecord.bonusLabel(snapshot.driverBonus),
       service: snapshot.category ?? 'Movera',

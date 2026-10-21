@@ -127,4 +127,27 @@ void main() {
         findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets("driver-u114: a restored trip's waybill is issued when the "
+      'trip was accepted, not at the last background save', (tester) async {
+    final now = DateTime.now();
+    final accepted = now.subtract(const Duration(minutes: 38));
+    final waybills = InMemoryWaybillRepository.instance..reset();
+    addTearDown(waybills.reset);
+    final store = MemoryActiveRideRepository();
+    await store.save(PersistedActiveRide(
+      tripId: 'restored-1',
+      stage: ActiveRideStage.headingToPickup,
+      riderName: 'Angelica',
+      pickupLat: 59.3326, pickupLng: 18.0649,
+      dropoffLat: 59.3428, dropoffLng: 18.0475,
+      acceptedAt: accepted,
+      savedAt: now.subtract(const Duration(minutes: 2)),
+    ));
+    await _home(tester, store, waybills: waybills);
+    expect(waybills.current?.tripId, 'restored-1');
+    expect(waybills.current?.issuedAt, accepted);
+    await tester.pumpWidget(const SizedBox());
+    await _frames(tester, 2);
+  });
 }
