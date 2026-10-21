@@ -60,4 +60,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('At the north entrance'), findsNothing);
   });
+
+  testWidgets("driver-u55: the driver's own message sits on the right with "
+      "no rider-style avatar", (tester) async {
+    await _openChat(tester, 'trip-3');
+    await _save(tester, "I'm outside");
+    final bubble = tester.getRect(find.ancestor(
+        of: find.text("I'm outside"), matching: find.byType(Container)).first);
+    expect(bubble.center.dx, greaterThan(375 / 2), reason: 'right-aligned');
+    expect(
+      find.descendant(
+        of: find.byType(SenderMessage),
+        matching: find.byWidgetPredicate((w) =>
+            w is Container &&
+            w.decoration is BoxDecoration &&
+            (w.decoration! as BoxDecoration).image != null),
+      ),
+      findsNothing,
+      reason: 'no stock avatar next to the driver\'s message',
+    );
+  });
 }

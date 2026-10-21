@@ -201,69 +201,50 @@ class _ChatState extends State<Chat> {
   }
 }
 
+/// The driver's own local message: on the right, in the dark bubble, with
+/// no avatar, like the driver's replies in Support (driver-u55). The
+/// rider's messages would sit on the left.
 class SenderMessage extends StatelessWidget {
   final String text;
 
   const SenderMessage({super.key, required this.text});
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(top: ResSize.h * 10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: ResSize.h * 32,
-                width: ResSize.w * 32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    image: AssetImage(AppAssets.chatProf1),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              8.width,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: EdgeInsets.only(right: 80),
-                      padding: EdgeInsets.only(
-                        left: ResSize.w * 8,
-                        right: ResSize.w * 8,
-                        top: ResSize.h * 8,
-                        bottom: ResSize.h * 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Color(0xffF6F6F6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TextWidget(
-                        text: text,
-                        fontSize: 14,
-                        color: AppColor.title,
-                        fontWeight: fwNormal,
-                      ),
-                    ),
-                    5.height,
-                    TextWidget(
-                      text: tr.chatLocalNotSent,
-                      color: Color(0xff858F94),
-                      fontSize: 12,
-                      fontWeight: fwNormal,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    return Padding(
+      padding: EdgeInsets.only(
+        top: ResSize.h * 10,
+        left: 80,
+        right: screenHorizPadding,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            key: const ValueKey<String>('chat-own-message'),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResSize.w * 12,
+              vertical: ResSize.h * 10,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF202A30),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextWidget(
+              text: text,
+              fontSize: 14,
+              color: AppColor.white,
+              fontWeight: fwNormal,
+            ),
           ),
-        ),
-      ],
+          5.height,
+          TextWidget(
+            text: tr.chatLocalNotSent,
+            color: Color(0xff858F94),
+            fontSize: 12,
+            fontWeight: fwNormal,
+          ),
+        ],
+      ),
     );
   }
 }
