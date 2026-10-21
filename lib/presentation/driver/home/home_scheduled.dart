@@ -186,7 +186,10 @@ extension _HomeScheduled on _DriverHomeState {
     void _afterClaimResolved() {
       // Outside the claim's own build or setState.
       Timer.run(() {
-        if (!mounted || _scheduled.ride == null || _scheduled.lateSince == null) {
+        if (!mounted) { return; }
+        // Decision 3: a rule that waited for this answer applies now.
+        _HomeOfferRules(this)._releaseHeldOffline();
+        if (_scheduled.ride == null || _scheduled.lateSince == null) {
           return;
         }
         _planScheduled();
@@ -447,16 +450,9 @@ extension _HomeScheduled on _DriverHomeState {
       if (result.outcome == ClaimOutcome.networkError) {
         IslandMessages.show(HomeIslandNotices.reservationNoConnection);
         // Nothing decided: the card counts down again.
-        _HomeExclusive(this)._startExclusiveClock(
+        _HomeExclusive(this)._restartExclusiveTimeout(
+          offer,
           offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
-        );
-        _outsideOfferTimeoutTimer = Timer(
-          offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
-          () {
-            if (mounted && _outsideRadarOffer?.id == offer.id) {
-              _HomeOfferRadar(this)._dismissOutsideRadarOffer();
-            }
-          },
         );
         return;
       }

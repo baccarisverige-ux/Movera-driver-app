@@ -492,9 +492,14 @@ extension _HomeReservation on _DriverHomeState {
       _outsideOfferTimeoutTimer?.cancel();
       _exclusive.clock.stop();
       final result = await _claimReservation(offer.id);
-      if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
+      if (!mounted) { return; }
+      final up = _outsideRadarOffer?.id == offer.id;
+      // Not won, and the offer left the screen meanwhile: nothing to show.
+      if (!up && !result.isSuccess) { return; }
       switch (result.outcome) {
         case ClaimOutcome.success:
+          // Won: dispatch gave the reservation to this driver, so it is
+          // recorded whether or not the offer is still up (driver-u140).
           final ride = _homeRequestById(offer.id) ??
               ScheduledRideStore.routeOf(offer.id);
           if (ride != null &&
@@ -505,26 +510,22 @@ extension _HomeReservation on _DriverHomeState {
             IslandMessages.show(
               HomeIslandNotices.reservationAcceptedAt(ride.pickupTime),
             );
-            _HomeOfferRadar(this)._dismissOutsideRadarOffer();
+            if (up) { _HomeOfferRadar(this)._dismissOutsideRadarOffer(); }
             return;
           }
           // Inside its Exclusive window: it is this driver's trip now.
           ScheduledRideStore.take(offer.id);
           _reservation.wonId = offer.id;
           IslandMessages.show(HomeIslandNotices.reservationAccepted);
-          _HomeOfferRadar(this)._acceptOutsideRadarOffer();
+          _HomeOfferRadar(this)._openWonOffer(
+            offer,
+            WaybillRecord.exclusiveReservationSource,
+          );
         case ClaimOutcome.networkError:
           // Nothing decided: the offer counts down again.
-          _HomeExclusive(this)._startExclusiveClock(
+          _HomeExclusive(this)._restartExclusiveTimeout(
+            offer,
             _DriverHomeState._outsideOfferLifetime,
-          );
-          _outsideOfferTimeoutTimer = Timer(
-            _DriverHomeState._outsideOfferLifetime,
-            () {
-              if (mounted && _outsideRadarOffer?.id == offer.id) {
-                _HomeOfferRadar(this)._dismissOutsideRadarOffer();
-              }
-            },
           );
         case ClaimOutcome.alreadyClaimed:
         case ClaimOutcome.expired:

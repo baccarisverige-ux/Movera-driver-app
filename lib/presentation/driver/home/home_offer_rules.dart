@@ -29,11 +29,18 @@ extension _HomeOfferRules on _DriverHomeState {
       bool off(_HomeDirectOffer offer) =>
           !DriverCategoryChoice.takes(offer.category);
       final gone = _radarHomeOffers.where(off).toList();
-      _rebuild(() => _pendingRadarHomeOffers.removeWhere(off));
+      _rebuild(() {
+        _pendingRadarHomeOffers.removeWhere(off);
+        _hasRideOffers =
+            _radarHomeOffers.isNotEmpty || _pendingRadarHomeOffers.isNotEmpty;
+      });
       for (final offer in gone) {
         _HomeOfferRadar(this)._dismissRadarHomeOffer(offer);
       }
-      if (_outsideRadarOffer case final offer? when off(offer)) {
+      // An Exclusive offer whose Accept is with dispatch stays: its
+      // answer decides, and a won trip is never dropped (driver-u140).
+      if (_outsideRadarOffer case final offer?
+          when off(offer) && !_HomeExclusive(this)._exclusiveClaiming) {
         _HomeOfferRadar(this)._dismissOutsideRadarOffer();
       }
     }
@@ -50,11 +57,16 @@ extension _HomeOfferRules on _DriverHomeState {
         return;
       }
       final cash = _radarHomeOffers.where((offer) => offer.cash).toList();
-      _rebuild(() => _pendingRadarHomeOffers.removeWhere((offer) => offer.cash));
+      _rebuild(() {
+        _pendingRadarHomeOffers.removeWhere((offer) => offer.cash);
+        _hasRideOffers =
+            _radarHomeOffers.isNotEmpty || _pendingRadarHomeOffers.isNotEmpty;
+      });
       for (final offer in cash) {
         _HomeOfferRadar(this)._dismissRadarHomeOffer(offer);
       }
-      if (_outsideRadarOffer?.cash ?? false) {
+      if ((_outsideRadarOffer?.cash ?? false) &&
+          !_HomeExclusive(this)._exclusiveClaiming) {
         _HomeOfferRadar(this)._dismissOutsideRadarOffer();
       }
     }
@@ -68,11 +80,49 @@ extension _HomeOfferRules on _DriverHomeState {
         IslandMessages.show(HomeIslandNotices.offlineAfterMissed(
           DriverOfferRules.current.autoOfflineAfter,
         ));
-        unawaited(_goOffline());
+        _forcedOffline();
         return;
       }
       if (answers.lastBeforeOffline()) {
         IslandMessages.show(HomeIslandNotices.lastMissedBeforeOffline);
       }
+    }
+
+    /// A Match or Accept is with dispatch, or its won trip is opening: Go
+    /// offline and the forced-offline rules wait for its answer (Decision
+    /// 3), and the offer settings are locked (Decision 4).
+    bool get _claimInFlight =>
+        _homeRadarMatchingOfferId != null ||
+        _claimedHomeOffer != null ||
+        _radarListClaiming.value ||
+        _HomeExclusive(this)._exclusiveClaiming;
+
+    /// Decision 3 ("the accept wins"): a rule takes the driver offline
+    /// (the driving limit, the row of missed Exclusive offers). With a
+    /// Match or Accept with dispatch the app waits for its answer: won,
+    /// the driver does that trip and is offline once it ends; lost,
+    /// offline at once. Nothing dispatch gave this driver is dropped.
+    void _forcedOffline() {
+      if (_claimInFlight) {
+        _offlineHeld = true;
+        return;
+      }
+      unawaited(_goOffline());
+    }
+
+    /// The claim that held [_forcedOffline] back was answered.
+    void _releaseHeldOffline() {
+      if (!_offlineHeld || !mounted || _claimInFlight) { return; }
+      if (_driverSession.activeTripId != null) {
+        // Won: offline once this trip ends, like the driving limit on a
+        // trip ([_drivingLimitReached]).
+        _offlineHeld = false;
+        _driverSession.setOnline(false);
+        return;
+      }
+      // A won trip is opening over Home: its start settles this.
+      if (ModalRoute.of(context)?.isCurrent == false) { return; }
+      _offlineHeld = false;
+      unawaited(_goOffline());
     }
 }

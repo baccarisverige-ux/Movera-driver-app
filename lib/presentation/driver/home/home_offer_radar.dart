@@ -608,12 +608,20 @@ extension _HomeOfferRadar on _DriverHomeState {
           _dismissOutsideRadarOffer();
         }
         for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
-          if (!ids.contains(offer.id) &&
-              _homeRadarStateFor(offer.id) == _HomeRadarMatchState.available) {
-            // Gone from Radar without a claim of ours: the reason is not
-            // known here (rider cancelled, expired, taken elsewhere…).
-            _resolveHomeRadarMatchLost(offer, _RadarOfferGone.unavailable);
+          if (ids.contains(offer.id) ||
+              _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
+            continue;
           }
+          if (_pendingRadarHomeOffers.contains(offer)) {
+            // Waiting off screen: there is no card to show as taken, so
+            // it just leaves. A "Taken" state with a removal timer could
+            // outlive a pause and land on the deck for good (driver-u129).
+            _dismissRadarHomeOffer(offer);
+            continue;
+          }
+          // Gone from Radar without a claim of ours: the reason is not
+          // known here (rider cancelled, expired, taken elsewhere…).
+          _resolveHomeRadarMatchLost(offer, _RadarOfferGone.unavailable);
         }
       });
     }
@@ -668,9 +676,31 @@ extension _HomeOfferRadar on _DriverHomeState {
         const Duration(milliseconds: 850),
         () {
           if (!mounted || !_liveVisible || _claimedHomeOffer?.id != offer.id) { return; }
-          _acceptRadarHomeOffer(offer);
+          final source = _claimedHomeSource;
+          if (source == null) {
+            _acceptRadarHomeOffer(offer);
+          } else {
+            _openOfferTrip(offer, source);
+          }
         },
       );
+    }
+    /// A won Exclusive Accept (a reservation close to pickup, an admin
+    /// direct assign) opens its trip now. With a screen over Home (a
+    /// drawer item, a dialog) it waits like a won Radar Match and opens
+    /// as soon as Home is back on top (driver-73). Dispatch gave the trip
+    /// to this driver: it is never dropped, even when the offer left the
+    /// screen while dispatch decided (driver-u131, driver-u140).
+    void _openWonOffer(_HomeDirectOffer offer, String matchedVia) {
+      if (_liveVisible && ModalRoute.of(context)?.isCurrent != false) {
+        _openOfferTrip(offer, matchedVia);
+        return;
+      }
+      _homeRadarNoticeTimer?.cancel();
+      _rebuild(() {
+        _claimedHomeOffer = offer;
+        _claimedHomeSource = matchedVia;
+      });
     }
     void _resolveHomeRadarMatchLost(
       _HomeDirectOffer offer,
@@ -807,7 +837,9 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (!preserveClaim) {
         _homeRadarMatchingOfferId = null;
         _claimedHomeOffer = null;
+        _claimedHomeSource = null;
         _homeRadarMatchStates.clear();
+        _syncClaimLock();
       }
       for (final timer in _radarOfferTimeoutTimers.values) {
         timer.cancel();
@@ -867,14 +899,16 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
       if (!mounted) { return; }
       _rebuild(() => _exclusive.claimingId = null);
-      if (_outsideRadarOffer?.id != offer.id) {
+      final up = _outsideRadarOffer?.id == offer.id;
+      // Not won, and the offer left the screen meanwhile: nothing to show.
+      if (!up && !result.isSuccess) {
         _HomeScheduled(this)._afterClaimResolved();
         return;
       }
       switch (result.outcome) {
         case ClaimOutcome.success:
           IslandMessages.show(HomeIslandNotices.matched);
-          _openOfferTrip(offer, WaybillRecord.assignedByMoveraSource);
+          _openWonOffer(offer, WaybillRecord.assignedByMoveraSource);
           return;
         case ClaimOutcome.alreadyClaimed:
           IslandMessages.show(HomeIslandNotices.takenByOther);
@@ -885,13 +919,11 @@ extension _HomeOfferRadar on _DriverHomeState {
           _dismissOutsideRadarOffer();
         case ClaimOutcome.networkError:
           IslandMessages.show(HomeIslandNotices.noConnection);
-          final lifetime = offer.lifetime ?? _DriverHomeState._outsideOfferLifetime;
-          _HomeExclusive(this)._startExclusiveClock(lifetime);
-          _outsideOfferTimeoutTimer = Timer(lifetime, () {
-            if (mounted && _outsideRadarOffer?.id == offer.id) {
-              _dismissOutsideRadarOffer(missed: true);
-            }
-          });
+          _HomeExclusive(this)._restartExclusiveTimeout(
+            offer,
+            offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
+            missed: true,
+          );
       }
       // Not won: a late scheduled ride held back by this Accept starts.
       _HomeScheduled(this)._afterClaimResolved();
@@ -933,7 +965,13 @@ extension _HomeOfferRadar on _DriverHomeState {
         _dismissOutsideRadarOffer();
         return;
       }
-      _rebuild(() => _pendingRadarHomeOffers.removeWhere((o) => o.id == gone.offerId));
+      _rebuild(() {
+        _pendingRadarHomeOffers.removeWhere((o) => o.id == gone.offerId);
+        // Nothing waiting any more: no "Trip found" and no Exclusive
+        // offer held back by it (driver-u132).
+        _hasRideOffers =
+            _radarHomeOffers.isNotEmpty || _pendingRadarHomeOffers.isNotEmpty;
+      });
       for (final offer in _radarHomeOffers.toList()) {
         if (offer.id == gone.offerId &&
             _homeRadarStateFor(offer.id) == _HomeRadarMatchState.available) {
@@ -1080,7 +1118,9 @@ extension _HomeOfferRadar on _DriverHomeState {
     RadarOfferView _radarOfferView(_HomeDirectOffer offer) => RadarOfferView(
           id: offer.id,
           category: offer.category,
-          payment: offer.cash ? tr.cash : offer.payment,
+          // The wire value, never the word in the driver's language: the
+          // card works the badge out from it (driver-u135).
+          payment: offer.cash ? RadarOfferView.cashPayment : offer.payment,
           rating: offer.rating,
           fare: offer.fare,
           pickupMinutes: offer.pickupMinutes,

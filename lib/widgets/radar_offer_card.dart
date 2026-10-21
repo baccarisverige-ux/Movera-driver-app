@@ -86,7 +86,11 @@ class RadarOfferView {
   /// The rider pays cash in the car (not paid in the app).
   bool get cash => isCash(payment);
 
-  static bool isCash(String payment) => payment.trim().toLowerCase() == 'cash';
+  /// The wire value for cash, which [isCash] recognises in any language.
+  static const String cashPayment = 'Cash';
+
+  static bool isCash(String payment) =>
+      payment.trim().toLowerCase() == cashPayment.toLowerCase();
 
   /// "Hantverkargatan 4, Stockholm" → "Stockholm".
   static String area(String address) {

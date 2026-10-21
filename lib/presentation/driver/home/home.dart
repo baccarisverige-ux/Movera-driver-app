@@ -27,6 +27,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/driver_home_config_repository.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
+import 'package:movera/core/dispatch/claim_lock.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/demo_destination_trips.dart';
@@ -207,6 +208,7 @@ class _DriverHomeState extends State<DriverHome>
     unawaited(_HomeMapSheet(this)._startDriverLocation());
     _HomeOfferRadar(this)._scheduleVisibleOffers();
     _HomeOfferRadar(this)._resumeOfferTimers();
+    _HomeOfferRules(this)._releaseHeldOffline();
     _HomeOfferRoute(this)._resumeRouteLine();
     if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); _radarMotionController.repeat(); }
     setState(() {});
@@ -283,7 +285,14 @@ class _DriverHomeState extends State<DriverHome>
   final Map<String, _HomeRadarMatchState> _homeRadarMatchStates =
       <String, _HomeRadarMatchState>{};
   String? _homeRadarMatchingOfferId;
+  /// A won offer whose trip opens as soon as Home is on top: a Radar
+  /// Match, or an Exclusive Accept won while a screen covered Home.
   _HomeDirectOffer? _claimedHomeOffer;
+  /// How [_claimedHomeOffer]'s trip was matched; null for a Radar Match.
+  String? _claimedHomeSource;
+  /// Decision 3: a rule took the driver offline while a claim was with
+  /// dispatch; it applies once the claim is answered.
+  bool _offlineHeld = false;
   late final DriverLocationRepository _driverLocationService;
   late final RouteRepository _roadRouteService;
   late final WaybillRepository _waybills;
@@ -332,6 +341,8 @@ class _DriverHomeState extends State<DriverHome>
   /// The Radar list is sending a Match: Back keeps it open until dispatch
   /// answers, so a won trip still opens.
   final ValueNotifier<bool> _radarListClaiming = ValueNotifier<bool>(false);
+  /// Decision 4: the offer settings are locked while a claim is out.
+  void _syncClaimLock() => ClaimLock.set(mounted && _HomeOfferRules(this)._claimInFlight);
   bool isAccountActivated = true;
   bool _activationHold = false;
   late final DriverSessionController _driverSession;
@@ -339,7 +350,7 @@ class _DriverHomeState extends State<DriverHome>
   bool get _isOnline => _liveVisible && _recoveryResolved && _driverSession.availableForOffers;
   bool get _isGoingOnline => _driverSession.isGoingOnline;
   // Offer orchestration lives in an extension, which cannot call setState.
-  void _rebuild(VoidCallback update) => setState(update);
+  void _rebuild(VoidCallback update) { setState(update); _syncClaimLock(); }
   void openDestinationPanel() => _HomeMapSheet(this).openDestinationPanel();
   bool _hasRideOffers = false;
   /// Green dot on the scheduled icon: on while any reservation request is
@@ -453,6 +464,7 @@ class _DriverHomeState extends State<DriverHome>
     _driverSession = widget.sessionController ??
         DriverSessionController(initialOnline: widget.initialOnline);
     _driverSession.addListener(_onDriverSessionChanged);
+    _radarListClaiming.addListener(_syncClaimLock);
     DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
     _driverLocationService =
         widget.locationRepository ?? const DriverLocationService();
@@ -665,6 +677,7 @@ class _DriverHomeState extends State<DriverHome>
     DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
     _HomeAccount(this)._syncDrivingLimit();
     if (!mounted) { return; }
+    _HomeOfferRules(this)._releaseHeldOffline(); // Decision 3: a won trip began.
     _HomeScheduled(this)._recheckLateScheduled();
     if (_driverSession.consumeResumeHomeAfterTrip()) {
       setState(() {
@@ -956,6 +969,7 @@ class _DriverHomeState extends State<DriverHome>
     _expandedDirectOfferTimer?.cancel();
     _radarOfferTwoTimer?.cancel();
     _radarOfferThreeTimer?.cancel();
+    _offlineHeld = false;
 
     setState(() {
       _driverSession.setOnline(false);
@@ -1145,7 +1159,9 @@ class _DriverHomeState extends State<DriverHome>
     RideCheckGate.listenable.removeListener(_rideCheckGateListener);
     _islandMessageTimer?.cancel();
     _islandWaiting.dispose();
+    _radarListClaiming.removeListener(_syncClaimLock);
     _radarListClaiming.dispose();
+    ClaimLock.set(false);
     _offerSimulationTimer?.cancel();
     _directOfferTimer?.cancel();
     _HomeOfferRadar(this)._cancelAllOfferTimers();

@@ -269,6 +269,8 @@ extension _HomeMapSheet on _DriverHomeState {
       await _camera.previewFit(fit, points: geo, padding: padding, takeOver: true);
     }
     void _openDestinationModePicker() {
+      // Decision 4: not while a Match or Accept is with dispatch.
+      if (_HomeOfferRules(this)._claimInFlight) { return; }
       // R13-9: admin can switch the mode off per zone and limit it per day.
       final refusal = DestinationModeSession.instance.refusal();
       if (refusal != null) {
@@ -431,7 +433,8 @@ extension _HomeMapSheet on _DriverHomeState {
         summary: _destinationSummary,
         until: _destinationUntil == null ? null : clockLabel(_destinationUntil!),
         onShowRoute: _fitDestinationRoute,
-        onTurnOff: _endDestinationMode,
+        // Decision 4: locked while a Match or Accept is with dispatch.
+        onTurnOff: _HomeOfferRules(this)._claimInFlight ? null : _endDestinationMode,
       );
     }
     /// R13-9 demo: with real filtering the fixed demo trips rarely head the
@@ -1174,11 +1177,16 @@ extension _HomeMapSheet on _DriverHomeState {
                   outward: AxisDirection.right,
                   child: InkWell(
                     key: const ValueKey<String>('destination-mode-open'),
-                    onTap: _openDestinationModePicker,
-                    child: const SizedBox(
-                      width: 54,
-                      height: height,
-                      child: DigitalIslandParts.searchIcon,
+                    // Decision 4: greyed while a Match or Accept is with
+                    // dispatch; the mode cannot change until it is answered.
+                    onTap: _HomeOfferRules(this)._claimInFlight ? null : _openDestinationModePicker,
+                    child: Opacity(
+                      opacity: _HomeOfferRules(this)._claimInFlight ? 0.4 : 1,
+                      child: const SizedBox(
+                        width: 54,
+                        height: height,
+                        child: DigitalIslandParts.searchIcon,
+                      ),
                     ),
                   ),
                 ),
@@ -1707,9 +1715,10 @@ extension _HomeMapSheet on _DriverHomeState {
       if (!mounted || !_isOnline || ModalRoute.of(context)?.isCurrent != true) {
         return;
       }
-      // A Match already sent is answered first: won, its trip opens; the
-      // driver can go offline after that.
-      if (_homeRadarMatchingOfferId != null || _claimedHomeOffer != null) {
+      // A Match or Accept already sent is answered first: won, its trip
+      // opens; the driver can go offline after that (driver-u131: the
+      // island's long press reaches here with an Exclusive Accept out).
+      if (_HomeOfferRules(this)._claimInFlight) {
         IslandMessages.show(HomeIslandNotices.matching);
         return;
       }

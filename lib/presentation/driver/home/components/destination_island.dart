@@ -87,7 +87,7 @@ Future<void> showDestinationDetailsSheet(
   required String? summary,
   required String? until,
   required VoidCallback onShowRoute,
-  required VoidCallback onTurnOff,
+  required VoidCallback? onTurnOff,
 }) {
   const ink = Color(0xFF111315);
   const muted = Color(0xFF5D646C);
@@ -183,10 +183,13 @@ Future<void> showDestinationDetailsSheet(
                 height: 50,
                 child: FilledButton(
                   key: const ValueKey<String>('destination-mode-end'),
-                  onPressed: () {
-                    Navigator.of(sheetContext).pop();
-                    onTurnOff();
-                  },
+                  // Null (a claim with dispatch): greyed, Decision 4.
+                  onPressed: onTurnOff == null
+                      ? null
+                      : () {
+                          Navigator.of(sheetContext).pop();
+                          onTurnOff();
+                        },
                   style: FilledButton.styleFrom(
                     backgroundColor: ink,
                     foregroundColor: Colors.white,
