@@ -195,27 +195,29 @@ void main() {
       expect(rules.lateEta.reassignTo, LateEtaReassignTo.radar);
     });
 
-    test('numbers out of range are clamped to the schema ranges', () {
-      final low = ScheduledRideRules.fromJson({
-        'offlineBackupAfterMin': 0,
-        'lateEta': {'toleranceMin': -4, 'checkEverySeconds': 1},
-      });
-      expect(low.backupAfterMinutes, 1);
-      expect(low.lateEta.toleranceMinutes, 0);
-      expect(low.lateEta.checkEverySeconds, 15);
-      final high = ScheduledRideRules.fromJson({
-        'offlineBackupAfterMin': 600,
-        'lateEta': {'toleranceMin': 45, 'checkEverySeconds': 3600},
-      });
-      expect(high.backupAfterMinutes, 60);
-      expect(high.lateEta.toleranceMinutes, 30);
-      expect(high.lateEta.checkEverySeconds, 600);
-      // A fraction is rounded.
-      expect(
-        ScheduledRideRules.fromJson({'offlineBackupAfterMin': 7.6})
-            .backupAfterMinutes,
-        8,
-      );
+    test('numbers out of the schema ranges keep the defaults', () {
+      // driver-r4-7 / CONTRACT.md §6.1: an invalid field keeps the
+      // default; it is not clamped.
+      for (final json in [
+        {
+          'offlineBackupAfterMin': 0,
+          'lateEta': {'toleranceMin': -4, 'checkEverySeconds': 1},
+        },
+        {
+          'offlineBackupAfterMin': 600,
+          'lateEta': {'toleranceMin': 45, 'checkEverySeconds': 3600},
+        },
+        // Not a whole number.
+        {
+          'offlineBackupAfterMin': 7.6,
+          'lateEta': {'toleranceMin': 2.5, 'checkEverySeconds': 30.5},
+        },
+      ]) {
+        final rules = ScheduledRideRules.fromJson(json);
+        expect(rules.backupAfterMinutes, 5);
+        expect(rules.lateEta.toleranceMinutes, 3);
+        expect(rules.lateEta.checkEverySeconds, 60);
+      }
     });
 
     test('wrong types and unknown choices keep the defaults', () {

@@ -13,6 +13,7 @@ import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
@@ -24,7 +25,7 @@ import '../../integration_test/headless_map_platform.dart';
 
 // Audit round 4, the dispatch contract seam (`ApiDispatchRepository`,
 // `OfferWire`) and the config readers: driver-r4-4, driver-r4-2,
-// driver-r4-26, driver-r4-6, driver-r4-8.
+// driver-r4-26, driver-r4-6, driver-r4-8, driver-r4-7.
 
 /// Contract `Offer` (openapi.yaml#Offer).
 Map<String, dynamic> _wire({
@@ -327,5 +328,37 @@ void main() {
     config = DriverAppConfig.fromJson(json);
     expect(config.destinationMode.destinationsPerDay, 2);
     expect(config.nextTrips.offerTypes, isNotEmpty);
+  });
+
+  test('driver-r4-7: a reservation value outside the schema keeps the '
+      'default; one inside is used', () {
+    const seed = ScheduledRideRules();
+    final bad = ScheduledRideRules.fromJson({
+      'exclusiveBeforeMin': 0,
+      'radarBeforeMin': 181,
+      'homePopupAfterMin': 0,
+      'pauseDays': 0,
+      'assignAcceptSeconds': 3,
+      'towardPickupBeforeMin': 0,
+      'longTripKm': 5,
+      'lateCancelLimit': 50,
+      'lateCancelPeriodDays': 91,
+      'offlineBackupAfterMin': 7.6,
+    });
+    expect(
+      [bad.exclusiveBeforeMinutes, bad.radarBeforeMinutes,
+        bad.homePopupAfterMinutes, bad.pauseDays, bad.assignAcceptTime,
+        bad.towardPickupBeforeMinutes, bad.longTripKm, bad.lateCancelLimit,
+        bad.lateCancelPeriodDays, bad.backupAfterMinutes],
+      [seed.exclusiveBeforeMinutes, seed.radarBeforeMinutes,
+        seed.homePopupAfterMinutes, seed.pauseDays, seed.assignAcceptTime,
+        seed.towardPickupBeforeMinutes, seed.longTripKm, seed.lateCancelLimit,
+        seed.lateCancelPeriodDays, seed.backupAfterMinutes],
+    );
+    final good = ScheduledRideRules.fromJson(
+        {'exclusiveBeforeMin': 180, 'pauseDays': 1, 'assignAcceptSeconds': 10});
+    expect(good.exclusiveBeforeMinutes, 180);
+    expect(good.pauseDays, 1);
+    expect(good.assignAcceptTime, const Duration(seconds: 10));
   });
 }
