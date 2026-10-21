@@ -337,29 +337,35 @@ class RadarOfferCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    text: whole,
-                    style: const TextStyle(
-                      color: ink,
-                      fontSize: 42,
-                      height: 1,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1.8,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: rest,
-                        style: const TextStyle(
-                          color: label,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.4,
-                        ),
+                // A fare wider than its slot (130 % text, fr/sv) scales
+                // down instead of wrapping and showing only "104,".
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.bottomLeft,
+                  child: Text.rich(
+                    TextSpan(
+                      text: whole,
+                      style: const TextStyle(
+                        color: ink,
+                        fontSize: 42,
+                        height: 1,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -1.8,
                       ),
-                    ],
+                      children: [
+                        TextSpan(
+                          text: rest,
+                          style: const TextStyle(
+                            color: label,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 1,
                   ),
-                  maxLines: 1,
                 ),
               ),
               Column(
