@@ -242,8 +242,12 @@ void main() {
       _show(tester);
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byKey(_offerCard), findsOneWidget);
-      // Seen and left unanswered on screen: that is a miss.
-      await _pumpFor(tester, DriverOfferRules.current.exclusiveAcceptTime);
+      // Seen and left unanswered on screen: that is a miss. Only the time
+      // left runs after resume; a fresh lifetime would still show it here.
+      await _pumpFor(
+          tester,
+          DriverOfferRules.current.exclusiveAcceptTime -
+              const Duration(milliseconds: 1750));
       expect(find.byKey(_offerCard), findsNothing);
       expect(ExclusiveAnswers.instance.missedInRow, 1);
       await _unmount(tester, location);
