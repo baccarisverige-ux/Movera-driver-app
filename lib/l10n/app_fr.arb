@@ -1333,5 +1333,6 @@
   "pickupOnRightSide": "Prise en charge côté droit",
   "moveWithin100MOfPickup": "Approchez-vous à moins de 100 m du point de prise en charge pour confirmer l’arrivée.",
   "moveWithin100MOfStop": "Approchez-vous à moins de 100 m de l’arrêt pour confirmer l’arrivée.",
-  "riderPhoneNotConnected": "Le contact téléphonique du passager n’est pas connecté dans cette démo."
+  "riderPhoneNotConnected": "Le contact téléphonique du passager n’est pas connecté dans cette démo.",
+  "recordAudioStarting": "démarrage…"
 }

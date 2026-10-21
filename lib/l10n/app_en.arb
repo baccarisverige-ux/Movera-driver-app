@@ -3141,5 +3141,6 @@
   "pickupOnRightSide": "Pickup on the right side",
   "moveWithin100MOfPickup": "Move within 100 m of the pickup to arrive.",
   "moveWithin100MOfStop": "Move within 100 m of the stop to arrive.",
-  "riderPhoneNotConnected": "Rider phone contact is not connected in this demo."
+  "riderPhoneNotConnected": "Rider phone contact is not connected in this demo.",
+  "recordAudioStarting": "starting…"
 }

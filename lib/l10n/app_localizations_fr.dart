@@ -4711,4 +4711,7 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get riderPhoneNotConnected =>
       'Le contact téléphonique du passager n’est pas connecté dans cette démo.';
+
+  @override
+  String get recordAudioStarting => 'démarrage…';
 }

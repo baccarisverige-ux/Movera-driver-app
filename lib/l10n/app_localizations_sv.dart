@@ -4664,4 +4664,7 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get riderPhoneNotConnected =>
       'Telefonkontakt med passageraren är inte ansluten i den här demon.';
+
+  @override
+  String get recordAudioStarting => 'startar…';
 }

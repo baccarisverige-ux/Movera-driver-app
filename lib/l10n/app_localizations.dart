@@ -8114,6 +8114,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rider phone contact is not connected in this demo.'**
   String get riderPhoneNotConnected;
+
+  /// No description provided for @recordAudioStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'starting…'**
+  String get recordAudioStarting;
 }
 
 class _AppLocalizationsDelegate
