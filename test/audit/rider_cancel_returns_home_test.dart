@@ -11,12 +11,15 @@ import 'package:movera/presentation/driver/home/components/island_messages.dart'
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  for (final (fee, title) in <(Money?, String)>[
-    (null, 'Rider cancelled'),
-    (Money.sek(45), 'Rider cancelled · +45 kr'),
-    (Money.ore(0), 'Rider cancelled · no fee'),
+  for (final (fee, title, status) in <(Money?, String, TripStatus?)>[
+    (null, 'Rider cancelled', TripStatus.cancelledByRider),
+    (Money.sek(45), 'Rider cancelled · +45 kr', TripStatus.cancelledByRider),
+    (Money.ore(0), 'Rider cancelled · no fee', TripStatus.cancelledByRider),
+    // driver-j2-4: a rider_cancelled event without a projection status.
+    (null, 'Rider cancelled', null),
   ]) {
-  testWidgets('rider cancellation goes back home and tells the island: $title', (tester) async {
+  testWidgets('rider cancellation goes back home and tells the island: '
+      '$title${status == null ? ' (no status)' : ''}', (tester) async {
     SharedPreferences.setMockInitialValues({});
     CompletionJournal.resetForTesting();
     IslandMessages.reset();
@@ -63,7 +66,7 @@ void main() {
     realtime.emit(
       tripId: 'cancel-home-trip',
       kind: DriverRealtimeKind.riderCancelled,
-      status: TripStatus.cancelledByRider,
+      status: status,
       cancelFee: fee,
     );
     for (var i = 0; i < 30; i++) {

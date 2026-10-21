@@ -212,20 +212,6 @@ void main() {
     expect(rideSource.contains("I've arrived"), isTrue);
   });
 
-  test('active ride consumes rider cancellation as rider-owned terminal state', () {
-    final source = activeRideLibrary();
-
-    expect(
-      source.contains('case DriverRealtimeKind.riderCancelled'),
-      isTrue,
-    );
-    expect(
-      source.contains('TripStatus.cancelledByRider'),
-      isTrue,
-    );
-    expect(source.contains('showRiderCancelledSheet'), isTrue);
-  });
-
   test('reconnect replays the last event for the trip', () async {
     final bus = MemoryDriverRealtime();
     bus.emit(
