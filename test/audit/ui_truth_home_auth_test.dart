@@ -8,6 +8,8 @@ import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/auth/additional%20detail/navigation.dart';
 import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
+import 'package:movera/presentation/driver/profile/profile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/presentation/driver/auth/additional%20detail/screens/upload%20document/take%20id%20photo/take_id_photo.dart';
 
 /// [first] as the app's first route, inside the app's runtime scope, with
@@ -55,4 +57,14 @@ void main() {
           findsOneWidget);
     });
   }
+
+  testWidgets('driver-81: Profile does not flash "Vehicle data unavailable" '
+      'while the vehicle is being read', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(const MaterialApp(home: DriverProfile()));
+    expect(find.text('Vehicle data unavailable'), findsNothing);
+    await tester.pumpAndSettle();
+    expect(find.text('Vehicle data unavailable'), findsNothing);
+    expect(find.text('Mercedes-Benz E 220'), findsOneWidget);
+  });
 }
