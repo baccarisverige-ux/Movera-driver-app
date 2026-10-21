@@ -112,9 +112,9 @@ void main() {
         ..add(DriverNotices.documentExpiring(
           now,
           documentId: 'DOC-INS-418',
-          title: 'Insurance letter',
-          shortTitle: 'Insurance',
-          when: 'in 7 days',
+          title: () => 'Insurance letter',
+          shortTitle: () => 'Insurance',
+          when: () => 'in 7 days',
         ));
       expect(feed.unread, 5);
       await _show(tester, const DriverNotificationsScreen(), height: 1400);

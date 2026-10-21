@@ -10,6 +10,7 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/navigation/navigation_controller.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
@@ -37,6 +38,7 @@ import 'package:movera/presentation/driver/ride%20history/history%20detail/ride_
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
+import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -472,5 +474,25 @@ void main() {
     expect(store.documents.first.title, tr.docInsuranceLetter);
     expect(words(tr.docInsuranceLetter), findsWidgets);
     expect(words('Försäkringsbrev'), findsNothing);
+  });
+
+  testWidgets('driver-u30: notifications made in Swedish read in French',
+      (tester) async {
+    speak('sv');
+    final feed = DriverNotificationFeed.instance;
+    feed
+      ..add(DriverNotices.exclusiveOffer(at: feed.now, seconds: 8))
+      ..add(DriverNotices.scheduledReminder(
+        at: feed.now,
+        title: () => tr.leaveNowForPickupTimePickup('14:00'),
+        body: () => 'Odlarvägen 22',
+        leaveNow: true,
+      ));
+    final swedish = tr.exclusiveOffer;
+    speak('fr');
+    await show(tester, 'fr', const DriverNotificationsScreen());
+    expect(words(tr.exclusiveOffer), findsWidgets);
+    expect(words(tr.leaveNowForPickupTimePickup('14:00')), findsOneWidget);
+    expect(words(swedish), findsNothing);
   });
 }

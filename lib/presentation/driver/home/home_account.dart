@@ -156,9 +156,9 @@ extension _HomeAccount on _DriverHomeState {
         _feed.add(DriverNotices.documentExpiring(
           _feed.now,
           documentId: document.id,
-          title: document.title,
-          shortTitle: document.shortTitle,
-          when: expiresInLabel(warning.daysLeft),
+          title: () => document.title,
+          shortTitle: () => document.shortTitle,
+          when: () => expiresInLabel(warning.daysLeft),
         ));
       }
     }

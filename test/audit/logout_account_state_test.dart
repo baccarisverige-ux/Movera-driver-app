@@ -32,8 +32,8 @@ void main() {
     final feed = DriverNotificationFeed.instance;
     final reminder = DriverNotices.scheduledReminder(
       at: feed.now,
-      title: 'Head to your 08:15 pickup',
-      body: 'Södermalm, Stockholm',
+      title: () => 'Head to your 08:15 pickup',
+      body: () => 'Södermalm, Stockholm',
     );
     feed.add(reminder, popup: false);
     feed.markAllRead();

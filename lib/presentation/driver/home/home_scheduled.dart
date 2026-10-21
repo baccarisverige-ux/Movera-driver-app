@@ -269,7 +269,7 @@ extension _HomeScheduled on _DriverHomeState {
           tr.headToYourPickupTimePickup(
               ride.pickupTime, ride.pickupAddress);
       _noteRideAlert(
-        tr.headToYourPickupTimePickup2(ride.pickupTime),
+        () => tr.headToYourPickupTimePickup2(ride.pickupTime),
         ride.pickupAddress,
       );
     }
@@ -285,7 +285,7 @@ extension _HomeScheduled on _DriverHomeState {
       ScheduledRideStore.reminder.value = null;
       IslandMessages.show(HomeIslandNotices.leaveNow(ride.pickupTime));
       _noteRideAlert(
-        tr.leaveNowForPickupTimePickup(ride.pickupTime),
+        () => tr.leaveNowForPickupTimePickup(ride.pickupTime),
         ride.pickupAddress,
         leaveNow: true,
       );
@@ -340,18 +340,18 @@ extension _HomeScheduled on _DriverHomeState {
       );
       ScheduledRideStore.reminder.value =
           tr.pickupAtPickupTimeInLeft(ride.pickupTime, left, ride.pickupAddress);
-      _noteRideAlert(tr.pickupTimePickupInLeft(ride.pickupTime, left), ride.pickupAddress);
+      _noteRideAlert(() => tr.pickupTimePickupInLeft(ride.pickupTime, left), ride.pickupAddress);
     }
 
     /// Reminders and "Leave now" are in Notifications too (Q31, N1); the
     /// island already said them.
-    void _noteRideAlert(String title, String body, {bool leaveNow = false}) {
+    void _noteRideAlert(NoticeText title, String body, {bool leaveNow = false}) {
       final feed = DriverNotificationFeed.instance;
       feed.add(
         DriverNotices.scheduledReminder(
           at: feed.now,
           title: title,
-          body: body,
+          body: () => body,
           leaveNow: leaveNow,
         ),
         popup: false,
@@ -364,7 +364,7 @@ extension _HomeScheduled on _DriverHomeState {
       ScheduledRideStore.reminder.value =
           tr.goOnlineNowForYourPickup(ride.pickupTime);
       _noteRideAlert(
-        tr.goOnlineForPickupTimePickup(ride.pickupTime),
+        () => tr.goOnlineForPickupTimePickup(ride.pickupTime),
         ride.pickupAddress,
       );
     }

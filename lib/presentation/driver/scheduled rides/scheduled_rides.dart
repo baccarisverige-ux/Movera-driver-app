@@ -259,7 +259,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
         final feed = DriverNotificationFeed.instance;
         feed.add(DriverNotices.scheduledPaused(
           feed.now,
-          until: until == null ? tr.laterLower : _dayMonth(until),
+          until: () => until == null ? tr.laterLower : _dayMonth(until),
         ));
       }
       // An open reservation goes back out to drivers (notes R24): where it
