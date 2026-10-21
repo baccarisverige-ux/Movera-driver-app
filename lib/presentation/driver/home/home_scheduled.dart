@@ -6,8 +6,8 @@ part of 'home.dart';
 //   pickup time, never the drive to it;
 // - the smart gap before the next accepted ride: reminders, "leave now"
 //   (the ride lands on screen as the active trip, heading to pickup, at
-//   its time and never before its "be online" window), then the late
-//   warning and the backup driver;
+//   the latest moment to set off: the drive plus the spare minutes before
+//   its pickup), then the late warning and the backup driver;
 // - before that ride, only trips that leave the gap and head toward its
 //   pickup;
 // - rides Movera assigns arrive like an Exclusive offer: Accept in time.
@@ -165,15 +165,20 @@ extension _HomeScheduled on _DriverHomeState {
       final onlineBy = pickupAt.subtract(
         Duration(minutes: rule.onlineBeforeMinutes),
       );
-      if (onlineBy.isAfter(now) && onlineBy.isBefore(leave)) {
-        at(onlineBy, () => _remindOnline(ride));
+      // A drive longer than the "be online" window: the driver must be
+      // online and on the way at [leave], so "Go online" comes then at the
+      // latest (driver-u144).
+      final goOnlineAt = onlineBy.isBefore(leave) ? onlineBy : leave;
+      if (goOnlineAt.isAfter(now)) {
+        at(goOnlineAt, () => _remindOnline(ride));
       }
-      // "Leave now" by the clock, and never before the "be online" window.
-      final start = leave.isBefore(onlineBy) ? onlineBy : leave;
-      if (state.lateSince != null || !now.isBefore(start)) {
+      // "Leave now" by the clock, at the latest moment to set off. With a
+      // long drive that is before the "be online" window; it waited for
+      // the window and the driver was late (driver-u144).
+      if (state.lateSince != null || !now.isBefore(leave)) {
         _leaveNow(ride);
       } else {
-        at(start, () => _leaveNow(ride));
+        at(leave, () => _leaveNow(ride));
       }
     }
 

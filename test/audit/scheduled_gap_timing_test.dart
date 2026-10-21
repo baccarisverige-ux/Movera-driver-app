@@ -8,8 +8,14 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
+import 'package:movera/core/scheduled/smart_gap.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
@@ -19,9 +25,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
-// Wave 3 (D3.2, part b): the smart gap and a ride whose pickup passed.
+// Wave 3 (D3.2, part b): the smart gap's times.
 // - driver-u143: a reservation accepted after its pickup time does not
 //   stay the "next" ride for good, holding every trip offer back.
+// - driver-u144: a drive longer than the "be online" window: "Leave now"
+//   opens the trip at the latest moment to set off, not later, and an
+//   offline driver is told to go online before it.
 
 /// Dispatch with the trips the test publishes.
 class _Dispatch implements DispatchRepository {
@@ -95,7 +104,25 @@ Future<void> _frames(WidgetTester tester, Duration total) async {
   }
 }
 
-Future<void> _pumpHome(WidgetTester tester, _Dispatch dispatch) async {
+/// Location blocked: Home measures from its map placeholder.
+class _NoGps implements DriverLocationRepository {
+  @override
+  Future<DriverLocation> getCurrentPosition() async =>
+      throw StateError('location denied');
+
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream<DriverLocation>.empty();
+}
+
+/// Where Home measures the drive from without a position.
+const _placeholder = GeoPoint(59.3293, 18.0686);
+
+Future<void> _pumpHome(
+  WidgetTester tester,
+  _Dispatch dispatch, {
+  bool online = true,
+}) async {
   final maps = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
   addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
@@ -112,12 +139,14 @@ Future<void> _pumpHome(WidgetTester tester, _Dispatch dispatch) async {
           home: DriverHome(
             sessionController: DriverSessionController(),
             dispatchRepository: dispatch,
+            locationRepository: _NoGps(),
           ),
         ),
       ),
     ),
   );
   await tester.pump(const Duration(milliseconds: 200));
+  if (!online) { return; }
   tester
       .widget<GestureDetector>(
         find.byKey(const ValueKey<String>('trip-radar-touch-target')),
@@ -130,6 +159,7 @@ Future<void> _pumpHome(WidgetTester tester, _Dispatch dispatch) async {
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    DriverStartPosition.clearMemory();
     IslandMessages.reset();
     ExclusiveAnswers.instance.reset();
   });
@@ -165,6 +195,74 @@ void main() {
       expect(ScheduledRideStore.upcoming.map((r) => r.pickupTime),
           isNot(contains('08:05')),
           reason: 'its pickup passed before anything could be planned');
+      tester.takeException();
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('driver-u144: a drive longer than the "be online" window', () {
+    /// A normal ride 19 km north, accepted for later: with its drive and
+    /// 15 spare minutes the driver must leave at 07:30, before its "be
+    /// online" time (30 min before pickup).
+    ReservationRequestPreview farRide() {
+      final now = ScheduledClock.instance.now();
+      const pickup = GeoPoint(59.50, 18.07);
+      final rule = ScheduledRideRules.current.ruleFor(ScheduledRideKind.normal);
+      final drive = SmartGap.driveMinutes(_placeholder, pickup);
+      final leave = DateTime(now.year, now.month, now.day, 7, 30);
+      final at = leave.add(Duration(minutes: drive + rule.spareMinutes));
+      expect(drive + rule.spareMinutes, greaterThan(rule.onlineBeforeMinutes),
+          reason: 'leaving comes before the "be online" time');
+      return ReservationRequestPreview(
+        id: 'far-ride',
+        kind: ScheduledRideKind.normal,
+        category: 'Movera',
+        fare: '312,40 kr',
+        pickupLabel: 'Pickup today at ${clockLabel(at)}',
+        pickupAddress: 'Norrviken, Sollentuna',
+        dropoffAddress: 'Kungsgatan, Stockholm',
+        pickupTime: clockLabel(at),
+        pickupDay: 'Today',
+        tripMinutes: 30,
+        tripKm: 20,
+        pickup: pickup,
+        dropoff: const GeoPoint(59.3343, 18.0615),
+        scheduledAt: at,
+      );
+    }
+
+    /// The demo minutes from 07:00 on the fast test day (30 times faster).
+    Duration demo(int minutes) => Duration(seconds: minutes * 2);
+
+    testWidgets('online: the trip opens at 07:30, the latest moment', (
+      tester,
+    ) async {
+      ScheduledClock.instance.now();
+      DemoReservations.reset();
+      ScheduledRideStore.reset();
+      ScheduledRideStore.acceptAssigned(farRide());
+      await _pumpHome(tester, _Dispatch());
+      // 07:29: not yet.
+      await _frames(tester, demo(29) - const Duration(milliseconds: 1700));
+      expect(find.byType(AcceptRide, skipOffstage: false), findsNothing);
+      // 07:32: on the way, not at the "be online" time (pickup - 30 min).
+      await _frames(tester, demo(3));
+      expect(find.byType(AcceptRide, skipOffstage: false), findsOneWidget,
+          reason: 'Leave now at 07:30');
+      tester.takeException();
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('offline: "Go online" comes by 07:30', (tester) async {
+      ScheduledClock.instance.now();
+      DemoReservations.reset();
+      ScheduledRideStore.reset();
+      final ride = farRide();
+      ScheduledRideStore.acceptAssigned(ride);
+      await _pumpHome(tester, _Dispatch(), online: false);
+      await _frames(tester, demo(31));
+      expect(IslandMessages.posted.map((m) => m.title),
+          contains(HomeIslandNotices.goOnlineFor(ride.pickupTime).title));
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     });
