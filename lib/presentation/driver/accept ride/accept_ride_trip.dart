@@ -242,7 +242,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         pickup: widget.pickupAddress,
         dropoff: widget.dropoffAddress,
         source: widget.matchedVia,
-        driverName: tr.moveraDriver,
+        driverName: WaybillRecord.moveraDriverName,
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
         passengerCapacity: 4,
@@ -279,7 +279,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         pickup: offer.pickup,
         dropoff: offer.dropoff,
         source: WaybillRecord.exclusiveOfferSource,
-        driverName: tr.moveraDriver,
+        driverName: WaybillRecord.moveraDriverName,
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
         passengerCapacity: 4,
@@ -1603,7 +1603,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     SafetyAlertTrip _safetyAlertTrip() => SafetyAlertTrip(
       tripId: widget.tripId, riderName: widget.riderName, riderRating: widget.riderRating,
       pickup: widget.pickupAddress, dropoff: widget.dropoffAddress, fare: widget.fare,
-      category: widget.category, driverName: tr.moveraDriver, vehicle: _vehicleLabel,
+      category: widget.category, driverName: WaybillRecord.moveraDriverName, vehicle: _vehicleLabel,
       plate: _vehiclePlate,
       position: _rideCheckGpsFresh ? GeoPointMaps.fromLatLng(_driverPosition) : null);
     /// driver-u86: GPS that went quiet (a tunnel, a garage) is lost, not a

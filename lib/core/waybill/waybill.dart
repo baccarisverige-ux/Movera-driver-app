@@ -69,6 +69,35 @@ class WaybillRecord {
       'Reservation assigned by Movera';
   static const String moveraRadarSource = 'Movera Radar';
 
+  /// Stored stand-ins for a name, vehicle or plate the app does not know,
+  /// and the brand driver name (driver-u69). Like [statusLabel], they stay
+  /// in English in storage and in the alert to Movera; the screens show
+  /// them in the driver's language.
+  static const String moveraDriverName = 'Movera Driver';
+  static const String demoDriverName = 'Demo driver — identity unavailable';
+  static const String riderUnavailable = 'Rider data unavailable';
+  static const String vehicleUnavailable = 'Vehicle data unavailable';
+  static const String plateUnavailable = 'Plate unavailable';
+
+  /// [riderName] in the driver's language.
+  String get riderNameText =>
+      riderName == riderUnavailable ? tr.riderDataUnavailable : riderName;
+
+  /// [driverName] in the driver's language.
+  String get driverNameText => switch (driverName) {
+    moveraDriverName => tr.moveraDriver,
+    demoDriverName => tr.demoDriverIdentityUnavailable,
+    _ => driverName,
+  };
+
+  /// [vehicle] in the driver's language.
+  String get vehicleText =>
+      vehicle == vehicleUnavailable ? tr.vehicleDataUnavailable : vehicle;
+
+  /// [licensePlate] in the driver's language.
+  String get licensePlateText =>
+      licensePlate == plateUnavailable ? tr.plateUnavailable : licensePlate;
+
   /// [statusLabel] in the driver's language ("Course en cours").
   String get statusText => switch (statusLabel) {
     currentTrip => tr.currentTrip,

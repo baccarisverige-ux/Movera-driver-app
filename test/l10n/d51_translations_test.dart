@@ -23,6 +23,7 @@ import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/safety/safety_alert_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/vehicle/local_vehicle_store.dart';
+import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/geo/driver_distance.dart';
@@ -35,6 +36,7 @@ import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/presentation/driver/auth/additional%20detail/screens/add_vehicle.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/ride_check_history_entry.dart';
+import 'package:movera/presentation/driver/waybill/waybill_sheet.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
@@ -510,6 +512,39 @@ void main() {
       for (final english in ['Bonus progress', 'Payout sent', 'Tap to view']) {
         expect(words(english), findsNothing, reason: english);
       }
+    });
+  }
+
+  for (final code in languages) {
+    testWidgets('driver-u69: the waybill names follow the language in $code',
+        (tester) async {
+      final record = WaybillRecord(
+        tripId: 'trip-1',
+        statusLabel: WaybillRecord.currentTrip,
+        issuedAt: DateTime(2026, 10, 21, 14, 5),
+        fare: '126,00 kr',
+        service: 'Comfort',
+        riderName: WaybillRecord.riderUnavailable,
+        pickup: 'Odlarvägen 22',
+        dropoff: 'T-Centralen',
+        source: WaybillRecord.moveraRadarSource,
+        driverName: WaybillRecord.moveraDriverName,
+        vehicle: WaybillRecord.vehicleUnavailable,
+        licensePlate: WaybillRecord.plateUnavailable,
+        passengerCapacity: 4,
+      );
+      await show(tester, code, Builder(
+        builder: (context) => Scaffold(body: TextButton(
+          onPressed: () => showMoveraWaybillSheet(context, record),
+          child: const Text('open'),
+        )),
+      ));
+      await tester.tap(find.text('open'));
+      await frames(tester, 10);
+      expect(words(tr.moveraDriver), findsOneWidget);
+      expect(words(tr.plateUnavailable), findsOneWidget);
+      expect(words(tr.riderDataUnavailable), findsOneWidget);
+      expect(words('Plate unavailable'), findsNothing);
     });
   }
 }
