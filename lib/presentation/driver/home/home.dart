@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart' show PointerDeviceKind, VelocityTracker;
 import 'package:movera/core/navigation/route_camera_fit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -325,7 +326,7 @@ class _DriverHomeState extends State<DriverHome>
   double _sheetPointerTravel = 0;
   double _sheetPointerStartPos = 0;
   double _sheetPointerLastY = 0;
-  int _sheetPointerLastMs = 0;
+  VelocityTracker _sheetVelocity = VelocityTracker.withKind(PointerDeviceKind.touch);
   double _lastSnapHapticAt = -1;
   late final MoveraSnapSheetController _snapSheet;
   bool showRideRequests = false;

@@ -34,6 +34,7 @@ import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:movera/widgets/offer_route_line.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
@@ -572,6 +573,22 @@ void main() {
           contains(OfferRouteLine.coreId));
       expect(find.byKey(const ValueKey<String>('exclusive-radar-touch-target')),
           findsOneWidget);
+      await _end(tester);
+    });
+  });
+
+  group('driver-r4-37: a flick on the Home sheet', () {
+    testWidgets('a short fast flick up opens it', (tester) async {
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 9));
+      final panel = tester
+          .widget<SlidingUpPanel>(find.byType(SlidingUpPanel).first)
+          .controller!;
+      expect(panel.panelPosition, lessThan(0.02));
+      // 15 px (under the 3 % rule) at 1500 px/s, from the dock's left end.
+      await tester.flingFrom(const Offset(30, 790), const Offset(0, -15), 1500);
+      await _frames(tester, const Duration(seconds: 1));
+      expect(panel.panelPosition, greaterThan(0.98));
       await _end(tester);
     });
   });
