@@ -17,6 +17,7 @@ import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +31,8 @@ import '../../integration_test/headless_map_platform.dart';
 //   Center, a system dialog) keeps Home's online face and its offers.
 // - driver-u113: system Back on "Unresolved trip" keeps the dialog and
 //   the saved trip; only "Close trip" closes it.
+// - driver-u117: trips the Radar list had when it closed that then leave
+//   dispatch no longer keep Home on "Trip found".
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -284,6 +287,47 @@ void main() {
       await _frames(tester, const Duration(milliseconds: 500));
       expect(find.text('Unresolved trip'), findsNothing);
       expect(await rides.read(), isNull);
+      await _end(tester);
+    });
+  });
+
+  group('driver-u117: the Radar list closed with trips that then leave', () {
+    testWidgets('Home goes back to scanning and "Finding trips"', (
+      tester,
+    ) async {
+      final home = await _pumpHome(tester);
+      home.dispatch.publish([_trip('a')]);
+      // The demo Exclusive passes, then "a" comes onto the Home deck.
+      await _frames(tester, const Duration(seconds: 26));
+      expect(find.byKey(const ValueKey<String>('radar-offer-card-a')),
+          findsOneWidget);
+      // "b" is on Radar only; the driver opens the full list.
+      home.dispatch.publish([_trip('a'), _trip('b')]);
+      await _frames(tester, const Duration(milliseconds: 300));
+      tester
+          .widget<GestureDetector>(
+            find.byKey(const ValueKey<String>('radar-home-all-offers')),
+          )
+          .onTap!
+          .call();
+      await _frames(tester, const Duration(seconds: 1));
+      expect(find.byType(RideRequests), findsOneWidget);
+      expect(home.dispatch.claims, isEmpty);
+      // "a" is taken by someone else and leaves the Home deck.
+      home.dispatch.publish([_trip('b')]);
+      await _frames(tester, const Duration(seconds: 4));
+      // The driver closes the list with "b" still in it.
+      tester.widget<RideRequests>(find.byType(RideRequests)).onCloseRides!(true);
+      await _frames(tester, const Duration(seconds: 1));
+      expect(find.text('Tap for all'), findsOneWidget);
+      // "b" leaves dispatch too: nothing is left to take.
+      home.dispatch.publish(const []);
+      await _frames(tester, const Duration(seconds: 3));
+      expect(find.text('Trip found'), findsNothing);
+      expect(find.text('Tap for all'), findsNothing);
+      expect(find.text('Scanning'), findsOneWidget);
+      expect(find.byKey(const ValueKey<String>('island-finding')),
+          findsOneWidget);
       await _end(tester);
     });
   });

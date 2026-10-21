@@ -582,7 +582,12 @@ extension _HomeOfferRadar on _DriverHomeState {
         _latestDispatchOffers = offers;
         // The radar button's trip count (D-16: counted per build, not per
         // frame) redraws only when it changes.
-        if (_radarTripsOpen != open) { _rebuild(() {}); }
+        if (_hasRideOffers && _radarTripsOpen == 0 &&
+            _radarHomeOffers.isEmpty && _pendingRadarHomeOffers.isEmpty) {
+          // driver-u117: the trips the Radar list had when it closed left
+          // dispatch; with none left anywhere, Home is scanning again.
+          _rebuild(() => _hasRideOffers = false);
+        } else if (_radarTripsOpen != open) { _rebuild(() {}); }
         // A reservation that just joined Radar (its Radar time, or back
         // after a cancel) comes onto the deck too, once its Exclusive step
         // on this phone is over.
