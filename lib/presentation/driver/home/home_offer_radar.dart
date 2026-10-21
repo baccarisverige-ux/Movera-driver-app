@@ -1080,7 +1080,9 @@ extension _HomeOfferRadar on _DriverHomeState {
     RadarOfferView _radarOfferView(_HomeDirectOffer offer) => RadarOfferView(
           id: offer.id,
           category: offer.category,
-          payment: offer.cash ? tr.cash : offer.payment,
+          // The wire value, never the word in the driver's language: the
+          // card works the badge out from it (driver-u135).
+          payment: offer.cash ? RadarOfferView.cashPayment : offer.payment,
           rating: offer.rating,
           fare: offer.fare,
           pickupMinutes: offer.pickupMinutes,
