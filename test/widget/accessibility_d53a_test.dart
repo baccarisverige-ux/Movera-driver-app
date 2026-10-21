@@ -3,7 +3,9 @@ import 'dart:ui' show SemanticsAction;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show SemanticsNode;
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/routing/route_instruction.dart';
@@ -11,6 +13,8 @@ import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_card.dart';
+import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
+import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -210,4 +214,30 @@ void main() {
       await _unmount(tester);
     });
   });
+
+  for (final (name, screen, words) in <(String, Widget, String Function())>[
+    ('the terms consent', const DriverCreateAccount(),
+        () => tr.byContinuingIAgreeTo),
+    ('the code explanation', const DriverPhoneVerification(),
+        () => tr.codeDeliveryUnavailableDemo),
+  ]) {
+    testWidgets('driver-u102: $name follows the system text size',
+        (tester) async {
+      await tester.pumpWidget(ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, _) => MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: screen,
+        ),
+      ));
+      await tester.pump();
+      final text = tester.widget<RichText>(find.byWidgetPredicate((w) =>
+          w is RichText && w.text.toPlainText().contains(words())));
+      expect(text.textScaler, const TextScaler.linear(1.5));
+    });
+  }
 }

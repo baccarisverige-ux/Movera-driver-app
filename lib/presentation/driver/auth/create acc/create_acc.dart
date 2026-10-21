@@ -117,6 +117,8 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
                   child: Transform.translate(
                     offset: Offset(ResSize.w * -10, 0),
                     child: RichText(
+                      // driver-u102: RichText does not follow the system text size itself.
+                      textScaler: MediaQuery.textScalerOf(context),
                       textAlign: TextAlign.start,
                       text: TextSpan(
                         children: [

@@ -57,6 +57,8 @@ class DriverPhoneVerification extends StatelessWidget {
             ),
             9.height,
             RichText(
+              // driver-u102: RichText does not follow the system text size itself.
+              textScaler: MediaQuery.textScalerOf(context),
               textAlign: TextAlign.start,
               text: TextSpan(
                 children: [
