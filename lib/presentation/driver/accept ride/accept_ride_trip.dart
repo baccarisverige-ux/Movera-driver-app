@@ -67,6 +67,7 @@ extension _AcceptRideTrip on _AcceptRideState {
                 tripId: securedOffer.id,
                 riderName: securedOffer.riderName,
                 fare: securedOffer.fare,
+                pickupPay: securedOffer.securedPickupPay,
                 category: securedOffer.category,
                 pickup: securedOffer.pickup,
                 dropoff: securedOffer.dropoff,
@@ -115,6 +116,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         dropoff: next.dropoff,
         pickupPosition: LatLng(next.pickupLat, next.pickupLng),
         dropoffPosition: LatLng(next.dropoffLat, next.dropoffLng),
+        securedPickupPay: next.pickupPay,
       );
     }
     void _resumeStageSideEffects() {
@@ -234,7 +236,9 @@ extension _AcceptRideTrip on _AcceptRideState {
         tripId: offer.id,
         statusLabel: WaybillRecord.nextTripSecured,
         issuedAt: DateTime.now(),
-        fare: offer.fare,
+        // The total the card showed, pickup pay in it (driver-12).
+        fare: offer.terms.fare,
+        driverBonus: WaybillRecord.bonusLabel(offer.terms.driverBonus),
         service: offer.category,
         riderName: offer.riderName,
         pickup: offer.pickup,
@@ -1007,7 +1011,8 @@ extension _AcceptRideTrip on _AcceptRideState {
               tripId: offer.id,
               riderName: offer.riderName,
               riderRating: offer.rating,
-              fare: offer.fare,
+              fare: offer.terms.fare,
+              driverBonus: offer.terms.driverBonus,
               category: offer.category,
               matchedVia: WaybillRecord.exclusiveOfferSource,
               pickupAddress: offer.pickup,
@@ -1043,7 +1048,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         destinationModeActive: _destinationActive,
         destinationAddress: _destinationAddress,
         destinationPoint: _destinationPosition == null ? null : GeoPointMaps.fromLatLng(_destinationPosition!), riderName: offer.riderName,
-      riderRating: offer.rating, fare: offer.fare, category: offer.category, matchedVia: WaybillRecord.exclusiveOfferSource,
+      riderRating: offer.rating, fare: offer.terms.fare, driverBonus: offer.terms.driverBonus, category: offer.category, matchedVia: WaybillRecord.exclusiveOfferSource,
       pickupAddress: offer.pickup, dropoffAddress: offer.dropoff,
       pickupLat: offer.pickupPosition.latitude, pickupLng: offer.pickupPosition.longitude,
       dropoffLat: offer.dropoffPosition.latitude, dropoffLng: offer.dropoffPosition.longitude);
@@ -1271,8 +1276,13 @@ extension _AcceptRideTrip on _AcceptRideState {
       _nextTripRadarMatchTimer?.cancel();
       _nextTripRadarMatchTimer = Timer(const Duration(milliseconds: 900), () {
         if (!mounted || _stage != ActiveRideStage.onTrip) { return; }
-        _rebuild(() => _onTripRadarState = _OnTripRadarState.secured);
-        _waybills.secureNext(_buildNextWaybill(offer));
+        // Accepted: its pickup pay is kept as it was shown (driver-12).
+        final secured = offer.secured();
+        _rebuild(() {
+          _onTripRadarState = _OnTripRadarState.secured;
+          _nextTripRadarOffer = secured;
+        });
+        _waybills.secureNext(_buildNextWaybill(secured));
         _rideLifecycle.persistNow();
       });
     }
@@ -1466,7 +1476,8 @@ extension _AcceptRideTrip on _AcceptRideState {
               tripId: offer.id,
               riderName: offer.riderName,
               riderRating: offer.rating,
-              fare: offer.fare,
+              fare: offer.terms.fare,
+              driverBonus: offer.terms.driverBonus,
               category: offer.category,
               matchedVia: WaybillRecord.exclusiveOfferSource,
               pickupAddress: offer.pickup,

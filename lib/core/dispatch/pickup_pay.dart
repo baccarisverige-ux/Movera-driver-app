@@ -43,6 +43,32 @@ class PickupPayQuote {
     return base == null ? fare : (base + pay).formatted;
   }
 
+  /// The accepted trip's terms with this pickup pay in them, so the trip,
+  /// its waybill and history keep the total the card showed (driver-12).
+  /// Movera pays it from its commission, like a bonus: it is added to
+  /// [driverBonus] (no fee on it, all of it the driver's), and a cash
+  /// rider still pays only [fare]. Unchanged without pickup pay.
+  ({String fare, Money? driverBonus, String? cashToCollect}) termsOf({
+    required String fare,
+    Money? driverBonus,
+    String? cashToCollect,
+    required bool paidByCash,
+  }) {
+    final base = hasPay ? Money.parseSekLabel(fare) : null;
+    if (base == null) {
+      return (
+        fare: fare,
+        driverBonus: driverBonus,
+        cashToCollect: cashToCollect,
+      );
+    }
+    return (
+      fare: (base + pay).formatted,
+      driverBonus: driverBonus == null ? pay : driverBonus + pay,
+      cashToCollect: paidByCash ? cashToCollect ?? fare : cashToCollect,
+    );
+  }
+
   /// "incl. 21,60 kr pickup · 4.2 km · 9 min", only when admin shows the
   /// pickup line.
   String? get line => hasPay && display == PickupPayDisplay.fareWithPickupLine

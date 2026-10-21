@@ -170,8 +170,11 @@ void main() {
       await _until(tester, find.byType(AcceptRide));
       final trip = tester.widget<AcceptRide>(find.byType(AcceptRide));
       expect(trip.offerId, 'admin-assign-1');
-      expect(trip.fare, '128,60 kr');
-      expect(trip.driverBonus, const Money(minorUnits: 3000));
+      // driver-12: the total its Exclusive sheet showed, 128,60 kr plus
+      // 0,80 kr pickup pay (3 min to pickup); the pickup pay is Movera's,
+      // on top of its 30 kr bonus.
+      expect(trip.fare, '129,40 kr');
+      expect(trip.driverBonus, const Money(minorUnits: 3080));
       expect(trip.matchedVia, 'Assigned by Movera');
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       tester.takeException();

@@ -381,6 +381,16 @@ class _RideRequestsState extends State<RideRequests> {
     }
   }
 
+  /// The pickup pay [trip]'s card adds to its fare, worked out now.
+  PickupPayQuote _pickupPayOf(_RadarTrip trip) => PickupPayCalculator.quote(
+    category: trip.category,
+    kind: PickupPayOfferKind.forHomeOffer(
+      onRadar: true,
+      reservation: trip.reservationTime != null,
+    ),
+    leg: PickupLeg(km: trip.pickupKm, minutes: trip.pickupMinutes),
+  );
+
   void _resolveMatchWon(_RadarTrip trip) {
     _matchNoticeTimer?.cancel();
 
@@ -403,6 +413,14 @@ class _RideRequestsState extends State<RideRequests> {
         if (!mounted) { return; }
         final navigator = Navigator.of(context);
         final rider = trip.source;
+        // The total the card showed, pickup pay in it (driver-12).
+        final paidByCash = RadarOfferView.isCash(trip.payment);
+        final terms = _pickupPayOf(trip).termsOf(
+          fare: trip.fare,
+          driverBonus: rider.driverBonus,
+          cashToCollect: rider.cashToCollectLabel,
+          paidByCash: paidByCash,
+        );
         final ride = AcceptRide(
           // X9: the offer and the trip keep their own ids. Until a backend
           // sends the trip id, the demo makes one per accepted occurrence.
@@ -412,10 +430,10 @@ class _RideRequestsState extends State<RideRequests> {
           riderName: rider.riderName.isEmpty ? tr.rider : rider.riderName,
           riderRating: double.tryParse(rider.rating) ?? 4.9,
           riderTrips: rider.riderTrips,
-          fare: trip.fare,
-          paidByCash: RadarOfferView.isCash(trip.payment),
-          cashToCollect: rider.cashToCollectLabel,
-          driverBonus: rider.driverBonus,
+          fare: terms.fare,
+          paidByCash: paidByCash,
+          cashToCollect: terms.cashToCollect,
+          driverBonus: terms.driverBonus,
           category: trip.category,
           matchedVia: 'Movera Radar',
           sessionController: widget.sessionController,
@@ -780,14 +798,7 @@ class _RideRequestsState extends State<RideRequests> {
         riderTrips: trip.source.riderTrips,
         priority: trip.source.isPriority,
         driverBonus: WaybillRecord.bonusLabel(trip.source.driverBonus),
-        pickupPay: PickupPayCalculator.quote(
-          category: trip.category,
-          kind: PickupPayOfferKind.forHomeOffer(
-            onRadar: true,
-            reservation: trip.reservationTime != null,
-          ),
-          leg: PickupLeg(km: trip.pickupKm, minutes: trip.pickupMinutes),
-        ),
+        pickupPay: _pickupPayOf(trip),
       ),
       state: claimed
           ? RadarOfferCardState.taken
