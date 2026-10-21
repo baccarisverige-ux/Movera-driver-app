@@ -124,6 +124,14 @@ extension _HomeScheduled on _DriverHomeState {
     void _planScheduled() {
       final state = _scheduled;
       state.cancelTimers();
+      // An open request whose pickup time passes leaves the list and the
+      // dot (driver-u164).
+      final expires = ScheduledRideStore.nextRequestPickup();
+      if (expires != null) {
+        state.timers.add(
+          Timer(_clock.realUntil(expires), ScheduledRideStore.refresh),
+        );
+      }
       final ride = _nextScheduledRide;
       if (!identical(ride, state.ride)) {
         state

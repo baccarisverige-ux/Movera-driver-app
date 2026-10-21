@@ -222,7 +222,13 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     if (action == _ScheduledRideAction.accepted) {
       // The request may have been answered on Home, or replaced by a new
       // session while this details route was open. Only its current owner can act.
-      if (!_requests.contains(ride)) return;
+      if (!_requests.contains(ride)) {
+        // Its pickup time passed while the details were open (driver-u164).
+        if (ScheduledRideStore._pickupPassed(ride)) {
+          _notice(tr.islandNoLongerAvailable);
+        }
+        return;
+      }
       if (!await _claim(ride) || !mounted) return;
       if (!ScheduledRideStore._requests.remove(ride)) return;
       _accepted.insert(0, ride.copyWith(accepted: true));
@@ -572,15 +578,41 @@ class ScheduledRideStore {
   }
 
   /// Requests this driver can take now: none while blocked, only in the
-  /// categories they drive (Q27), and none whose time clashes with a ride
-  /// they accepted (Q9).
+  /// categories they drive (Q27), none whose time clashes with a ride
+  /// they accepted (Q9) and none whose pickup time has passed.
   static List<_ScheduledRide> get _visibleRequests => block() != null
       ? const <_ScheduledRide>[]
       : _requests
           .where((ride) =>
+              !_pickupPassed(ride) &&
               DriverCategoryChoice.takes(ride.category) &&
               _clashWith(ride) == null)
           .toList();
+
+  /// [ride]'s pickup time has passed: nobody can take it any more
+  /// (driver-u164). False when its time is unknown.
+  static bool _pickupPassed(_ScheduledRide ride) {
+    final now = _now;
+    final at = ride.route?.pickupAt(now);
+    return at != null && !at.isAfter(now);
+  }
+
+  /// The next pickup time of an open request; Home refreshes the
+  /// requests ([refresh]) then, so the dot stops counting it.
+  static DateTime? nextRequestPickup() {
+    final now = _now;
+    DateTime? next;
+    for (final ride in _requests) {
+      final at = ride.route?.pickupAt(now);
+      if (at != null && at.isAfter(now) && (next == null || at.isBefore(next))) {
+        next = at;
+      }
+    }
+    return next;
+  }
+
+  /// Counts the open requests again: a pickup time passed.
+  static void refresh() => _changed();
 
   /// The driver's categories changed (Q27).
   static void categoriesChanged() => _changed();
@@ -588,7 +620,8 @@ class ScheduledRideStore {
   /// Requests left out because they clash with an accepted ride.
   static List<(_ScheduledRide, _ScheduledRide)> get _clashing => [
     for (final ride in _requests)
-      if (_clashWith(ride) case final taken?) (ride, taken),
+      if (!_pickupPassed(ride))
+        if (_clashWith(ride) case final taken?) (ride, taken),
   ];
 
   /// Requests the driver has not accepted or declined yet.
