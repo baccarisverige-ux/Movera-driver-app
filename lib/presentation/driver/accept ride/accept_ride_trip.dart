@@ -6,12 +6,18 @@ part of 'accept_ride.dart';
 
 extension _AcceptRideTrip on _AcceptRideState {
     /// Closes whatever this trip opened on top of it (chat, preferences, a
-    /// sheet) so a trip exit pops or replaces the trip screen itself.
+    /// sheet, the side menu) so a trip exit pops or replaces the trip
+    /// screen itself.
     NavigatorState _navigatorAtTripRoute() {
       final navigator = Navigator.of(context);
       final route = ModalRoute.of(context);
       if (route != null && route.isActive && !route.isCurrent) {
         navigator.popUntil((r) => r == route);
+      }
+      // The open drawer is local history on this route: a pop would only
+      // close it and leave the driver on the trip screen.
+      while (route != null && route.isCurrent && route.willHandlePopInternally) {
+        navigator.pop();
       }
       return navigator;
     }
@@ -310,6 +316,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     Future<void> _drainProjection() async {
       if (!mounted || _drainingProjection || _pendingProjection == null) { return; }
+      // Given to another driver here (late ETA): the trip is over for this
+      // phone while it leaves; a later event must not journal it.
+      if (_releasedForLateEta) { _pendingProjection = null; return; }
       if (_rideLifecycle.saving || _completionInFlight || _cancellationInFlight || _stageTransitioning) {
         _projectionRetry ??= Timer(const Duration(milliseconds: 100), () {
           _projectionRetry = null; unawaited(_drainProjection());
@@ -445,7 +454,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// [fee]: the driver's cancel fee from the backend (R15-7), if decided.
     Future<void> _handleRiderCancelled({Money? fee}) async {
       if (!mounted ||
-          _handlingRiderCancellation) {
+          _handlingRiderCancellation ||
+          _releasedForLateEta) {
         return;
       }
 
@@ -736,6 +746,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         });
         return;
       }
+      final fromLiveFix = _hasLiveLocation;
       await _navigation.ensureRoute(
         origin: GeoPointMaps.fromLatLng(_driverPosition),
         destination: GeoPointMaps.fromLatLng(target),
@@ -743,6 +754,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         force: force,
       );
       if (!mounted) { return; }
+      _routeFromLiveFix = fromLiveFix;
 
       final route = _navigation.route;
       final drawn = route != null && route.points.length >= 2;

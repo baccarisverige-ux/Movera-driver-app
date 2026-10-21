@@ -73,6 +73,16 @@ void _openChildPage(WidgetTester tester) {
   );
 }
 
+/// The trip's side menu, as the island's menu button opens it.
+Future<void> _openTripDrawer(WidgetTester tester) async {
+  final scaffold = find
+      .descendant(of: find.byType(AcceptRide), matching: find.byType(Scaffold))
+      .first;
+  tester.state<ScaffoldState>(scaffold).openDrawer();
+  await _settle(tester, 12);
+  expect(tester.state<ScaffoldState>(scaffold).isDrawerOpen, isTrue);
+}
+
 void main() {
   testWidgets('rider cancel while a page is open on the trip goes back to Home', (tester) async {
     final realtime = MemoryDriverRealtime();
@@ -149,6 +159,51 @@ void main() {
     expect(find.text('Home'), findsOneWidget);
     expect(session.activeTripId, isNull);
     expect(session.availableForOffers, isTrue);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  // driver-fixrev-2: the open drawer is local history on the trip route, so
+  // a plain pop only closed the menu and left a dead trip screen.
+  testWidgets('driver-fixrev-2: admin reassign with the side menu open goes back to Home', (tester) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    final session = DriverSessionController()..setOnline(true);
+    await _pumpHomeWithTrip(tester, session: session, realtime: realtime, stage: ActiveRideStage.headingToPickup);
+    await _openTripDrawer(tester);
+
+    realtime.emit(
+      tripId: 'exit-trip',
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.searching,
+    );
+    await _settle(tester);
+
+    expect(find.byType(AcceptRide), findsNothing);
+    expect(find.text('Home'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('driver-fixrev-2: rider cancel with the side menu open goes back to Home', (tester) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    final session = DriverSessionController()..setOnline(true);
+    await _pumpHomeWithTrip(tester, session: session, realtime: realtime);
+    await _openTripDrawer(tester);
+
+    realtime.emit(
+      tripId: 'exit-trip',
+      kind: DriverRealtimeKind.riderCancelled,
+      status: TripStatus.cancelledByRider,
+    );
+    await _settle(tester);
+
+    expect(find.byType(AcceptRide), findsNothing);
+    expect(find.text('Home'), findsOneWidget);
+    expect(session.activeTripId, isNull);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));

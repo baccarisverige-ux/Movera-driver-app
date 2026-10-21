@@ -69,6 +69,10 @@ extension _HomeScheduled on _DriverHomeState {
       }
       _scheduled.storeListener = changed;
       ScheduledRideStore.changes.addListener(changed);
+      // A Radar list Match held a due ride back: its answer decides.
+      _radarListClaiming.addListener(() {
+        if (!_radarListClaiming.value) { _afterClaimResolved(); }
+      });
       _planScheduled();
       _watchAssignments();
     }
@@ -170,7 +174,21 @@ extension _HomeScheduled on _DriverHomeState {
         _recoveryResolved &&
         _driverSession.availableForOffers &&
         _claimedHomeOffer == null &&
-        _homeRadarMatchingOfferId == null;
+        _homeRadarMatchingOfferId == null &&
+        !_radarListClaiming.value;
+
+    /// A Match that held "Leave now" back was answered: unless it won a
+    /// trip (which keeps Home covered or busy), the late ride starts now,
+    /// not at the backup timer.
+    void _afterClaimResolved() {
+      // Outside the claim's own build or setState.
+      Timer.run(() {
+        if (!mounted || _scheduled.ride == null || _scheduled.lateSince == null) {
+          return;
+        }
+        _planScheduled();
+      });
+    }
 
     /// "Leave now" (Q10 S1): the ride lands on screen as the active trip,
     /// heading to pickup. Not possible: the island warns once. An offline
@@ -329,8 +347,8 @@ extension _HomeScheduled on _DriverHomeState {
     }
 
     /// Before the next accepted ride, a trip must leave the smart gap; in
-    /// its "be online before" window it must also head toward the pickup
-    /// (like destination mode, aimed at the pickup).
+    /// the admin's `towardPickupBeforeMin` before it, it must also head
+    /// toward the pickup (like destination mode, aimed at the pickup).
     bool _fitsSchedule(_HomeDirectOffer offer) {
       final ride = _nextScheduledRide;
       if (offer.assigned || ride == null || ride.id == offer.id) {
@@ -348,7 +366,7 @@ extension _HomeScheduled on _DriverHomeState {
       );
       if (!fits) { return false; }
       final pickupAt = ride.pickupAt(now);
-      final window = SmartGap.ruleOf(ride, _rules).onlineBeforeMinutes;
+      final window = _rules.towardPickupBeforeMinutes;
       final inWindow = pickupAt != null &&
           now.isAfter(pickupAt.subtract(Duration(minutes: window)));
       return !_rules.towardPickupBeforeRide ||
@@ -369,7 +387,7 @@ extension _HomeScheduled on _DriverHomeState {
       if (ride == null || !_rules.towardPickupBeforeRide) { return null; }
       final now = _clock.now();
       final pickupAt = ride.pickupAt(now);
-      final window = SmartGap.ruleOf(ride, _rules).onlineBeforeMinutes;
+      final window = _rules.towardPickupBeforeMinutes;
       return pickupAt != null &&
               now.isAfter(pickupAt.subtract(Duration(minutes: window)))
           ? ride.pickupTime

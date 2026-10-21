@@ -566,6 +566,9 @@ extension _HomeOfferRadar on _DriverHomeState {
           });
           IslandMessages.show(HomeIslandNotices.noConnection);
       }
+      if (_homeRadarMatchingOfferId == null) {
+        _HomeScheduled(this)._afterClaimResolved();
+      }
     }
     void _watchDispatchRadar() {
       _withdrawalSubscription?.cancel();

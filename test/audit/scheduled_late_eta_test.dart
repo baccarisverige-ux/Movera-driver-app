@@ -79,6 +79,17 @@ class _Gps implements DriverLocationRepository {
   Future<void> close() => _moves.close();
 }
 
+/// GPS that never gives a fix: the trip keeps its fallback position.
+class _NoGps implements DriverLocationRepository {
+  @override
+  Future<DriverLocation> getCurrentPosition() async =>
+      throw StateError('no location');
+
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream<DriverLocation>.empty();
+}
+
 /// A road route of a fixed duration, whatever the ends.
 class _Route implements RouteRepository {
   _Route(this.seconds);
@@ -148,7 +159,7 @@ Future<void> _frames(WidgetTester tester, Duration total) async {
 /// Home with a button that opens the trip, as Home's "Leave now" does.
 Future<void> _pumpTrip(
   WidgetTester tester, {
-  required _Gps gps,
+  required DriverLocationRepository gps,
   required MemoryDriverRealtime realtime,
   DateTime? scheduledPickupAt,
   String? scheduledRideId = 'res-0740',
@@ -317,6 +328,73 @@ void main() {
       await _frames(tester, const Duration(seconds: 1));
       expect(find.byType(AcceptRide), findsNothing);
       expect(ScheduledRideStore.reassigned, hasLength(1));
+      await _end(tester);
+    });
+
+    testWidgets(
+        'driver-fixrev-1: no GPS fix: a road route from the fallback '
+        'position never reassigns the ride', (tester) async {
+      DriverRuntimeConfig.current = const DriverRuntimeConfig(
+        simulatedArrival: true,
+        externalRouting: true,
+        skipAccountActivation: true,
+        liveMapTicker: false,
+        reservationPopup: false,
+        islandHint: false,
+        radarSound: false,
+      );
+      // The fallback (Stockholm centre) is not where the car is: a route
+      // from there says nothing about this driver's ETA.
+      await _pumpTrip(
+        tester,
+        gps: _NoGps(),
+        realtime: realtime,
+        scheduledPickupAt: _pickupAt,
+        routes: _Route(90 * 60),
+      );
+      await _frames(tester, const Duration(seconds: 6));
+      expect(find.byType(AcceptRide), findsOneWidget);
+      expect(ScheduledRideStore.reassigned, isEmpty);
+      await _end(tester);
+    });
+
+    testWidgets(
+        'driver-fixrev-4: a rider cancel during the exit after a late-ETA '
+        'reassign is not journalled', (tester) async {
+      final gps = _Gps(_far);
+      addTearDown(gps.close);
+      // The rider cancels just as the ride goes to another driver, while
+      // the trip screen is still leaving (realtime still subscribed).
+      var emitted = false;
+      void riderCancels() {
+        if (emitted) {
+          return;
+        }
+        emitted = true;
+        realtime.emit(
+          tripId: 'late-eta-trip',
+          kind: DriverRealtimeKind.riderCancelled,
+          status: TripStatus.cancelledByRider,
+        );
+      }
+
+      ScheduledRideStore.backupNote.addListener(riderCancels);
+      addTearDown(() => ScheduledRideStore.backupNote.removeListener(riderCancels));
+      await _pumpTrip(
+        tester,
+        gps: gps,
+        realtime: realtime,
+        scheduledPickupAt: _pickupAt,
+      );
+      expect(emitted, isTrue);
+      expect(ScheduledRideStore.reassigned, hasLength(1));
+      await _frames(tester, const Duration(seconds: 1));
+      expect(find.byType(AcceptRide), findsNothing);
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        prefs.getString('movera_driver_completed_trips') ?? '',
+        isNot(contains('cancelled_by_rider')),
+      );
       await _end(tester);
     });
 
