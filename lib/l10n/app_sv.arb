@@ -1329,5 +1329,6 @@
   "mapOfArea": "Karta över {area}",
   "cashYouOweMovera": "Du är skyldig Movera",
   "cashMoveraOwesYou": "Movera är skyldig dig",
-  "cashSettled": "Kvitt"
+  "cashSettled": "Kvitt",
+  "stopNext": "Härnäst: {stop}"
 }

@@ -4634,4 +4634,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashSettled => 'Settled';
+
+  @override
+  String stopNext(String stop) {
+    return '$stop next';
+  }
 }

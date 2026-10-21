@@ -8090,6 +8090,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settled'**
   String get cashSettled;
+
+  /// No description provided for @stopNext.
+  ///
+  /// In en, this message translates to:
+  /// **'{stop} next'**
+  String stopNext(String stop);
 }
 
 class _AppLocalizationsDelegate

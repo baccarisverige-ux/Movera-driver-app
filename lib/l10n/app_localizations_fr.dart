@@ -4698,4 +4698,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cashSettled => 'Soldé';
+
+  @override
+  String stopNext(String stop) {
+    return 'Ensuite : $stop';
+  }
 }

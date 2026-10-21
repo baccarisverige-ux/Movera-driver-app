@@ -4651,4 +4651,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get cashSettled => 'Kvitt';
+
+  @override
+  String stopNext(String stop) {
+    return 'Härnäst: $stop';
+  }
 }

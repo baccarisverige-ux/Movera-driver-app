@@ -1329,5 +1329,6 @@
   "mapOfArea": "Carte de {area}",
   "cashYouOweMovera": "Vous devez à Movera",
   "cashMoveraOwesYou": "Movera vous doit",
-  "cashSettled": "Soldé"
+  "cashSettled": "Soldé",
+  "stopNext": "Ensuite : {stop}"
 }

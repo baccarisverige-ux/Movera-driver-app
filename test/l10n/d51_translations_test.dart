@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/driver_distance.dart';
+import 'package:movera/core/island/trip_island_controller.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
@@ -38,6 +39,26 @@ Future<void> show(WidgetTester tester, String code, Widget home) async {
 
 /// [text] on screen, also inside rich text.
 Finder words(String text) => find.textContaining(text, findRichText: true);
+
+/// What the island strip says for [inputs], in order.
+Future<List<String>> stripSays(
+  WidgetTester tester,
+  List<TripStripInput> inputs,
+) async {
+  final strip = TripStripController(clock: () => DateTime(2026, 1, 1, 6));
+  addTearDown(strip.dispose);
+  final seen = <String>[];
+  strip.addListener(() {
+    if (strip.current.kind == TripStripKind.message) {
+      seen.add(strip.current.text);
+    }
+  });
+  for (final input in inputs) {
+    strip.update(input);
+    await tester.pump(TripStripController.messageTime);
+  }
+  return seen;
+}
 
 /// The languages each screen is checked in.
 const languages = ['fr', 'sv'];
@@ -76,6 +97,16 @@ void main() {
       expect(words('2.4%'), findsNothing);
       expect(driverDistanceMeters(4200), '4,2 km');
       expect(driverDistanceAndMinutes(4.2, 9), '4,2 km · 9 min');
+    });
+  }
+
+  for (final (code, said) in [('fr', 'Ensuite : Arrêt 1'), ('sv', 'Härnäst: Stopp 1')]) {
+    testWidgets('driver-17: the next stop in $code', (tester) async {
+      speak(code);
+      final seen = await stripSays(tester, [
+        TripStripInput(leg: TripLeg.stop, stopLabel: tr.stopNumber(1)),
+      ]);
+      expect(seen, [said]);
     });
   }
 }

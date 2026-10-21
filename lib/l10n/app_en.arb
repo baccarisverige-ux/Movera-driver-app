@@ -3144,5 +3144,13 @@
   },
   "cashYouOweMovera": "You owe Movera",
   "cashMoveraOwesYou": "Movera owes you",
-  "cashSettled": "Settled"
+  "cashSettled": "Settled",
+  "stopNext": "{stop} next",
+  "@stopNext": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  }
 }

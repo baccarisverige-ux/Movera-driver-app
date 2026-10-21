@@ -323,7 +323,7 @@ class TripStripController extends ChangeNotifier {
       _say(tr.riderBags(next.bags));
     }
     if (newLeg && next.leg == TripLeg.stop && next.stopLabel != null) {
-      _say('${next.stopLabel} next');
+      _say(tr.stopNext(next.stopLabel!));
     }
     final eta = next.etaMinutes;
     if (eta != null) {
