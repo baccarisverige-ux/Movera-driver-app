@@ -640,9 +640,10 @@ class _AcceptRideState extends State<AcceptRide>
     _acceptedAt = restored?.acceptedAt ?? DateTime.now();
     // The waiting clocks on this trip follow its terms.
     WaitingTerms.active = _waitTerms;
-    if (restored?.savedAt != null &&
+    // driver-u58: past the freshness window the app was dead, not waiting.
+    if (restored?.savedAt != null && restored!.isFresh &&
         (widget.initialStage == ActiveRideStage.waitingForRider || _paidStopWait)) {
-      final elapsed = DateTime.now().difference(restored!.savedAt!).inSeconds;
+      final elapsed = DateTime.now().difference(restored.savedAt!).inSeconds;
       _waitSeconds += math.max(0, elapsed);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
