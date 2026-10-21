@@ -515,16 +515,9 @@ extension _HomeReservation on _DriverHomeState {
           _HomeOfferRadar(this)._acceptOutsideRadarOffer();
         case ClaimOutcome.networkError:
           // Nothing decided: the offer counts down again.
-          _HomeExclusive(this)._startExclusiveClock(
+          _HomeExclusive(this)._restartExclusiveTimeout(
+            offer,
             _DriverHomeState._outsideOfferLifetime,
-          );
-          _outsideOfferTimeoutTimer = Timer(
-            _DriverHomeState._outsideOfferLifetime,
-            () {
-              if (mounted && _outsideRadarOffer?.id == offer.id) {
-                _HomeOfferRadar(this)._dismissOutsideRadarOffer();
-              }
-            },
           );
         case ClaimOutcome.alreadyClaimed:
         case ClaimOutcome.expired:

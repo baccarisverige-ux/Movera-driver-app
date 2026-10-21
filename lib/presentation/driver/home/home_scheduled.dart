@@ -447,16 +447,9 @@ extension _HomeScheduled on _DriverHomeState {
       if (result.outcome == ClaimOutcome.networkError) {
         IslandMessages.show(HomeIslandNotices.reservationNoConnection);
         // Nothing decided: the card counts down again.
-        _HomeExclusive(this)._startExclusiveClock(
+        _HomeExclusive(this)._restartExclusiveTimeout(
+          offer,
           offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
-        );
-        _outsideOfferTimeoutTimer = Timer(
-          offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
-          () {
-            if (mounted && _outsideRadarOffer?.id == offer.id) {
-              _HomeOfferRadar(this)._dismissOutsideRadarOffer();
-            }
-          },
         );
         return;
       }

@@ -893,13 +893,11 @@ extension _HomeOfferRadar on _DriverHomeState {
           _dismissOutsideRadarOffer();
         case ClaimOutcome.networkError:
           IslandMessages.show(HomeIslandNotices.noConnection);
-          final lifetime = offer.lifetime ?? _DriverHomeState._outsideOfferLifetime;
-          _HomeExclusive(this)._startExclusiveClock(lifetime);
-          _outsideOfferTimeoutTimer = Timer(lifetime, () {
-            if (mounted && _outsideRadarOffer?.id == offer.id) {
-              _dismissOutsideRadarOffer(missed: true);
-            }
-          });
+          _HomeExclusive(this)._restartExclusiveTimeout(
+            offer,
+            offer.lifetime ?? _DriverHomeState._outsideOfferLifetime,
+            missed: true,
+          );
       }
       // Not won: a late scheduled ride held back by this Accept starts.
       _HomeScheduled(this)._afterClaimResolved();

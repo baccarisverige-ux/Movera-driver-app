@@ -29,6 +29,10 @@ class _HomeExclusiveState {
   /// When the offer's time runs out, so a paused tab can pick it up.
   DateTime? deadline;
 
+  /// Running out on screen counts as a miss (Q16); not after a network
+  /// error on a reservation's or an assigned ride's Accept.
+  bool timeoutIsMiss = true;
+
   /// Runs once the sheet is down.
   VoidCallback? onDown;
 
@@ -82,6 +86,7 @@ extension _HomeExclusive on _DriverHomeState {
         _exclusive.shown = offer;
         _exclusive.leaving = false;
         _exclusive.onDown = null;
+        _exclusive.timeoutIsMiss = true;
       });
       _startExclusiveClock(lifetime);
     }
@@ -90,6 +95,30 @@ extension _HomeExclusive on _DriverHomeState {
       _exclusive.clock.duration = lifetime;
       _exclusive.deadline = ScheduledClock.realNow().add(lifetime);
       unawaited(_exclusive.clock.reverse(from: 1));
+    }
+
+    /// Accept came back undecided (a network error): the offer counts
+    /// down again. With Home hidden (a locked phone, another screen) only
+    /// its deadline is kept, like the first count down (D-05/R13-3): back
+    /// on screen it gets the time left, or it leaves unseen, which is not
+    /// a miss. A timer started here would run in the background and could
+    /// count a miss, or take the driver offline (driver-r3-14).
+    void _restartExclusiveTimeout(
+      _HomeDirectOffer offer,
+      Duration lifetime, {
+      bool missed = false,
+    }) {
+      _outsideOfferTimeoutTimer?.cancel();
+      _outsideOfferTimeoutTimer = null;
+      _exclusive.timeoutIsMiss = missed;
+      _exclusive.clock.duration = lifetime;
+      _exclusive.deadline = ScheduledClock.realNow().add(lifetime);
+      if (!_liveVisible) { return; }
+      unawaited(_exclusive.clock.reverse(from: 1));
+      _outsideOfferTimeoutTimer = Timer(lifetime, () {
+        if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
+        _HomeOfferRadar(this)._dismissOutsideRadarOffer(missed: missed);
+      });
     }
 
     /// R13-3 (C): back from a hidden tab or locked phone, whose pause
@@ -115,9 +144,10 @@ extension _HomeExclusive on _DriverHomeState {
       final lifetime = _exclusive.clock.duration ?? left;
       final share = left.inMilliseconds / math.max(1, lifetime.inMilliseconds);
       unawaited(_exclusive.clock.reverse(from: share.clamp(0.0, 1.0)));
+      final missed = _exclusive.timeoutIsMiss;
       _outsideOfferTimeoutTimer = Timer(left, () {
         if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
-        _HomeOfferRadar(this)._dismissOutsideRadarOffer(missed: true);
+        _HomeOfferRadar(this)._dismissOutsideRadarOffer(missed: missed);
       });
     }
 
