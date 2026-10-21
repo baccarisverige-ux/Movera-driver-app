@@ -4667,4 +4667,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get recordAudioStarting => 'startar…';
+
+  @override
+  String get photoTooLargeForDevice =>
+      'Fotot är för stort för att sparas på den här enheten.';
+
+  @override
+  String get photoStorageFull =>
+      'Fotolagringen på den här enheten är full. Ta först bort foton från ett annat fordon.';
 }

@@ -4714,4 +4714,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recordAudioStarting => 'démarrage…';
+
+  @override
+  String get photoTooLargeForDevice =>
+      'La photo est trop volumineuse pour être conservée sur cet appareil.';
+
+  @override
+  String get photoStorageFull =>
+      'Le stockage des photos sur cet appareil est plein. Supprimez d’abord les photos d’un autre véhicule.';
 }

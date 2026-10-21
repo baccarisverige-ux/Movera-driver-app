@@ -8120,6 +8120,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'starting…'**
   String get recordAudioStarting;
+
+  /// No description provided for @photoTooLargeForDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo is too large to keep on this device.'**
+  String get photoTooLargeForDevice;
+
+  /// No description provided for @photoStorageFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo storage on this device is full. Remove photos from another vehicle first.'**
+  String get photoStorageFull;
 }
 
 class _AppLocalizationsDelegate
