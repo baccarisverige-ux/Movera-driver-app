@@ -86,6 +86,10 @@ class _RideRequestsState extends State<RideRequests> {
   static const Color _mint = MoveraRadarOrb.onlineGreen;
 
   Timer? _matchNoticeTimer;
+
+  /// Opens the trip of a won Match. Its own timer: a banner for another
+  /// trip must never cancel it (driver-89).
+  Timer? _matchOpenTimer;
   late final DispatchRepository _dispatch;
   late final bool _ownsDispatch;
   StreamSubscription<List<RideOffer>>? _nearbySubscription;
@@ -207,6 +211,7 @@ class _RideRequestsState extends State<RideRequests> {
     _nearbySubscription?.cancel();
     _withdrawalSubscription?.cancel();
     _matchNoticeTimer?.cancel();
+    _matchOpenTimer?.cancel();
     for (final timer in _claimedRemovalTimers.values) {
       timer.cancel();
     }
@@ -319,6 +324,8 @@ class _RideRequestsState extends State<RideRequests> {
       return;
     }
 
+    // An earlier banner's clear must not take this Match's banner away.
+    _matchNoticeTimer?.cancel();
     setState(() {
       _matchingOfferId = trip.id;
       _offerStates[trip.id] = _RadarOfferState.resolving;
@@ -356,6 +363,7 @@ class _RideRequestsState extends State<RideRequests> {
         _resolveMatchLost(trip, _RadarGone.unavailable);
       case ClaimOutcome.networkError:
         // Nothing was decided; let the driver try again.
+        _matchNoticeTimer?.cancel();
         setState(() {
           _matchingOfferId = null;
           _offerStates.remove(trip.id);
@@ -365,8 +373,23 @@ class _RideRequestsState extends State<RideRequests> {
             message: tr.rrConnectionInterrupted,
           );
         });
+        // It covers Back and Refresh: it clears like the other banners
+        // (driver-u161).
+        _matchNoticeTimer = Timer(const Duration(milliseconds: 2800), () {
+          if (mounted) { setState(() => _matchNotice = null); }
+        });
     }
   }
+
+  /// The pickup pay [trip]'s card adds to its fare, worked out now.
+  PickupPayQuote _pickupPayOf(_RadarTrip trip) => PickupPayCalculator.quote(
+    category: trip.category,
+    kind: PickupPayOfferKind.forHomeOffer(
+      onRadar: true,
+      reservation: trip.reservationTime != null,
+    ),
+    leg: PickupLeg(km: trip.pickupKm, minutes: trip.pickupMinutes),
+  );
 
   void _resolveMatchWon(_RadarTrip trip) {
     _matchNoticeTimer?.cancel();
@@ -383,12 +406,21 @@ class _RideRequestsState extends State<RideRequests> {
       );
     });
 
-    _matchNoticeTimer = Timer(
+    _matchOpenTimer?.cancel();
+    _matchOpenTimer = Timer(
       const Duration(milliseconds: 500),
       () {
         if (!mounted) { return; }
         final navigator = Navigator.of(context);
         final rider = trip.source;
+        // The total the card showed, pickup pay in it (driver-12).
+        final paidByCash = RadarOfferView.isCash(trip.payment);
+        final terms = _pickupPayOf(trip).termsOf(
+          fare: trip.fare,
+          driverBonus: rider.driverBonus,
+          cashToCollect: rider.cashToCollectLabel,
+          paidByCash: paidByCash,
+        );
         final ride = AcceptRide(
           // X9: the offer and the trip keep their own ids. Until a backend
           // sends the trip id, the demo makes one per accepted occurrence.
@@ -398,10 +430,10 @@ class _RideRequestsState extends State<RideRequests> {
           riderName: rider.riderName.isEmpty ? tr.rider : rider.riderName,
           riderRating: double.tryParse(rider.rating) ?? 4.9,
           riderTrips: rider.riderTrips,
-          fare: trip.fare,
-          paidByCash: RadarOfferView.isCash(trip.payment),
-          cashToCollect: rider.cashToCollectLabel,
-          driverBonus: rider.driverBonus,
+          fare: terms.fare,
+          paidByCash: paidByCash,
+          cashToCollect: terms.cashToCollect,
+          driverBonus: terms.driverBonus,
           category: trip.category,
           matchedVia: 'Movera Radar',
           sessionController: widget.sessionController,
@@ -443,8 +475,11 @@ class _RideRequestsState extends State<RideRequests> {
     bool notice = true,
   }) {
     // The card fades out; a short banner says why, since this driver
-    // tapped Match (or another driver of its radar group took it).
-    if (!notice) {
+    // tapped Match (or another driver of its radar group took it). While
+    // this driver's Match of another trip is with dispatch or opening its
+    // won trip, that Match keeps the banner (driver-89).
+    final otherMatch = _matchingOfferId != null && _matchingOfferId != trip.id;
+    if (!notice || otherMatch) {
       setState(() {
         _offerStates[trip.id] = _RadarOfferState.claimedElsewhere;
         _goneReasons[trip.id] = reason;
@@ -763,14 +798,7 @@ class _RideRequestsState extends State<RideRequests> {
         riderTrips: trip.source.riderTrips,
         priority: trip.source.isPriority,
         driverBonus: WaybillRecord.bonusLabel(trip.source.driverBonus),
-        pickupPay: PickupPayCalculator.quote(
-          category: trip.category,
-          kind: PickupPayOfferKind.forHomeOffer(
-            onRadar: true,
-            reservation: trip.reservationTime != null,
-          ),
-          leg: PickupLeg(km: trip.pickupKm, minutes: trip.pickupMinutes),
-        ),
+        pickupPay: _pickupPayOf(trip),
       ),
       state: claimed
           ? RadarOfferCardState.taken

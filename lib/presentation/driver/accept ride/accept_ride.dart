@@ -316,48 +316,6 @@ class AcceptRide extends StatefulWidget {
 
 enum _OnTripRadarState { off, scanning, offerAvailable, matching, secured, stopped }
 
-class _NextTripRadarOffer {
-  const _NextTripRadarOffer({
-    required this.id,
-    required this.category,
-    required this.fare,
-    required this.rating,
-    required this.pickupMinutes,
-    required this.tripMinutes,
-    required this.riderName,
-    required this.pickup,
-    required this.dropoff,
-    required this.pickupPosition,
-    required this.dropoffPosition,
-    this.pickupKm = 1.6,
-  });
-
-  final String id;
-  final String category;
-  final String fare;
-  final double rating;
-  final int pickupMinutes;
-
-  /// From the current trip's drop-off to this pickup.
-  final double pickupKm;
-
-  /// Pickup pay, worked out each time the offer shows.
-  PickupPayQuote get pickupPay => PickupPayCalculator.quote(
-    category: category,
-    kind: PickupPayOfferKind.nextTripWhileDriving,
-    leg: PickupLeg(km: pickupKm, minutes: pickupMinutes),
-  );
-
-  /// The fare plus the pickup pay: one total.
-  String get shownFare => pickupPay.totalOf(fare);
-  final int tripMinutes;
-  final String riderName;
-  final String pickup;
-  final String dropoff;
-  final LatLng pickupPosition;
-  final LatLng dropoffPosition;
-}
-
 class _TripCancellationReason {
   const _TripCancellationReason({
     required this.code,
@@ -1348,7 +1306,7 @@ class _AcceptRideState extends State<AcceptRide>
                         rideCheck: _rideCheck.active,
                         onRideCheckDemo: driverProductionRequested ? null : _AcceptRideTrip(this)._openRideCheckDemo,
                         pointKind: _approachKind, pointLabel: _approachLabel, bags: widget.bags,
-                        nextTripFare: _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer?.fare : null,
+                        nextTripFare: _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer?.shownFare : null,
                         sheetPosition: _ridePanelPosition, sheetRaisedAt: snap + 0.04,
                       ))),
                     ),

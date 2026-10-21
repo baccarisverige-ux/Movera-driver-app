@@ -222,23 +222,30 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     if (action == _ScheduledRideAction.accepted) {
       // The request may have been answered on Home, or replaced by a new
       // session while this details route was open. Only its current owner can act.
-      if (!_requests.contains(ride)) return;
-      if (!await _claim(ride) || !mounted) return;
-      if (!ScheduledRideStore._requests.remove(ride)) return;
-      _accepted.insert(0, ride.copyWith(accepted: true));
-      setState(() => _selectedTab = 1);
+      if (!_requests.contains(ride)) {
+        // Its pickup time passed while the details were open (driver-u164).
+        if (ScheduledRideStore._pickupPassed(ride)) {
+          _notice(tr.islandNoLongerAvailable);
+        }
+        return;
+      }
+      if (!await _claim(ride)) return;
+      // Dispatch gave it to this driver: it moves to Accepted even when
+      // the driver left this screen during the claim (driver-94).
       // Requests whose time now clashes leave the list (Q9); the Requests
       // tab says why.
-      ScheduledRideStore._changed();
+      if (!ScheduledRideStore._acceptRequest(ride)) return;
       // Only saved for later: it becomes the trip at its time ("Leave now"
       // by the real clock), never right after Accept.
       final time = ride.route?.pickupTime;
-      if (time == null) {
-        _notice(tr.islandReservationAccepted);
-      } else {
+      if (time != null) {
         IslandMessages.show(HomeIslandNotices.reservationAcceptedAt(time));
-        _notice(tr.schedAcceptedPickupAt(time));
       }
+      if (!mounted) return;
+      setState(() => _selectedTab = 1);
+      _notice(time == null
+          ? tr.islandReservationAccepted
+          : tr.schedAcceptedPickupAt(time));
     } else if (action == _ScheduledRideAction.cancelled ||
         action == _ScheduledRideAction.cancelledNotCounted) {
       if (!_accepted.contains(ride)) return;
@@ -266,7 +273,8 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
 
   /// Asks the server for [ride] when it is an open reservation. True when
   /// this driver got it (or there is no server to ask); lost, it leaves
-  /// the list and the driver is told it is no longer available.
+  /// the list and the driver is told it is no longer available. The
+  /// answer applies even after this screen closed (driver-94).
   Future<bool> _claim(_ScheduledRide ride) async {
     final dispatch = widget.dispatchRepository;
     if (dispatch == null || ride.id.isEmpty) return true;
@@ -279,19 +287,18 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       result = const ClaimResult.networkError();
     }
     _claiming.remove(ride.id);
-    if (!mounted) return false;
-    setState(() {});
+    if (mounted) setState(() {});
     switch (result.outcome) {
       case ClaimOutcome.success:
         return true;
       case ClaimOutcome.networkError:
-        _notice(tr.islandNoConnection);
+        if (mounted) _notice(tr.islandNoConnection);
         return false;
       case ClaimOutcome.alreadyClaimed:
       case ClaimOutcome.expired:
       case ClaimOutcome.unavailable:
         ScheduledRideStore.take(ride.id);
-        _notice(tr.islandNoLongerAvailable);
+        if (mounted) _notice(tr.islandNoLongerAvailable);
         return false;
     }
   }
@@ -477,10 +484,25 @@ class ScheduledRideStore {
 
   /// Records a late cancel made at [at] (a backend sends the count).
   static void addLateCancel(DateTime at) {
+    _recordLateCancel(at);
+    _changed();
+  }
+
+  /// The pause the late cancels started: set by the cancel that reached
+  /// the limit and kept to its end, the date the driver was told. Worked
+  /// out again from the period alone, it would end as soon as the first
+  /// counted cancel left the period (driver-u163).
+  static DateTime? _pauseUntil;
+
+  static void _recordLateCancel(DateTime at) {
     _lateCancels
       ..add(at)
       ..sort();
-    _changed();
+    final until = _pauseFromPeriod(at);
+    final kept = _pauseUntil;
+    if (until != null && (kept == null || until.isAfter(kept))) {
+      _pauseUntil = until;
+    }
   }
 
   static DateTime get _now => ScheduledClock.instance.now();
@@ -501,6 +523,16 @@ class ScheduledRideStore {
 
   /// Too many late cancels: Scheduled rides are paused until then.
   static DateTime? pausedUntil(DateTime now) {
+    final kept = _pauseUntil;
+    final fromPeriod = _pauseFromPeriod(now);
+    final until = kept != null && now.isBefore(kept) ? kept : null;
+    if (until == null) return fromPeriod;
+    if (fromPeriod == null) return until;
+    return fromPeriod.isAfter(until) ? fromPeriod : until;
+  }
+
+  /// The pause the late cancels in the period before [now] call for.
+  static DateTime? _pauseFromPeriod(DateTime now) {
     final rules = _rules;
     final since = now.subtract(Duration(days: rules.lateCancelPeriodDays));
     final recent = _lateCancels.where((at) => at.isAfter(since)).toList();
@@ -547,15 +579,41 @@ class ScheduledRideStore {
   }
 
   /// Requests this driver can take now: none while blocked, only in the
-  /// categories they drive (Q27), and none whose time clashes with a ride
-  /// they accepted (Q9).
+  /// categories they drive (Q27), none whose time clashes with a ride
+  /// they accepted (Q9) and none whose pickup time has passed.
   static List<_ScheduledRide> get _visibleRequests => block() != null
       ? const <_ScheduledRide>[]
       : _requests
           .where((ride) =>
+              !_pickupPassed(ride) &&
               DriverCategoryChoice.takes(ride.category) &&
               _clashWith(ride) == null)
           .toList();
+
+  /// [ride]'s pickup time has passed: nobody can take it any more
+  /// (driver-u164). False when its time is unknown.
+  static bool _pickupPassed(_ScheduledRide ride) {
+    final now = _now;
+    final at = ride.route?.pickupAt(now);
+    return at != null && !at.isAfter(now);
+  }
+
+  /// The next pickup time of an open request; Home refreshes the
+  /// requests ([refresh]) then, so the dot stops counting it.
+  static DateTime? nextRequestPickup() {
+    final now = _now;
+    DateTime? next;
+    for (final ride in _requests) {
+      final at = ride.route?.pickupAt(now);
+      if (at != null && at.isAfter(now) && (next == null || at.isBefore(next))) {
+        next = at;
+      }
+    }
+    return next;
+  }
+
+  /// Counts the open requests again: a pickup time passed.
+  static void refresh() => _changed();
 
   /// The driver's categories changed (Q27).
   static void categoriesChanged() => _changed();
@@ -563,7 +621,8 @@ class ScheduledRideStore {
   /// Requests left out because they clash with an accepted ride.
   static List<(_ScheduledRide, _ScheduledRide)> get _clashing => [
     for (final ride in _requests)
-      if (_clashWith(ride) case final taken?) (ride, taken),
+      if (!_pickupPassed(ride))
+        if (_clashWith(ride) case final taken?) (ride, taken),
   ];
 
   /// Requests the driver has not accepted or declined yet.
@@ -622,6 +681,15 @@ class ScheduledRideStore {
       _accepted.insert(0, ride.copyWith(accepted: true));
     }
     _changed();
+  }
+
+  /// This driver took open request [ride] for later: it moves to
+  /// Accepted. False when it is no longer among the requests.
+  static bool _acceptRequest(_ScheduledRide ride) {
+    if (!_requests.remove(ride)) return false;
+    _accepted.insert(0, ride.copyWith(accepted: true));
+    _changed();
+    return true;
   }
 
   /// Q29: the driver accepted a ride Movera assigned to them.
@@ -748,7 +816,7 @@ class ScheduledRideStore {
     }
     final wasPaused = pausedUntil(_now) != null;
     if (late) {
-      _lateCancels.add(_now);
+      _recordLateCancel(_now);
     }
     // An open reservation goes back out to drivers (notes R24).
     if (ride.id.isNotEmpty && !ride.assigned) {
@@ -758,7 +826,9 @@ class ScheduledRideStore {
     return !wasPaused && pausedUntil(_now) != null;
   }
 
-  @visibleForTesting
+  /// Back to a fresh session: logout calls it, so the previous driver's
+  /// accepted rides, late cancels and pause, reminder and backup note do
+  /// not carry over to the next driver on the device (driver-u167).
   static void reset() {
     _requests
       ..clear()
@@ -768,6 +838,7 @@ class ScheduledRideStore {
       ..addAll(_seedAccepted());
     _driverAccess = const ScheduledRidesDriverAccess();
     _lateCancels.clear();
+    _pauseUntil = null;
     reminder.value = null;
     backupNote.value = null;
     reassigned.clear();

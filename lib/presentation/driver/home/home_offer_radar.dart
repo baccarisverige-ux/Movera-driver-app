@@ -913,7 +913,13 @@ extension _HomeOfferRadar on _DriverHomeState {
       switch (result.outcome) {
         case ClaimOutcome.success:
           IslandMessages.show(HomeIslandNotices.matched);
-          _openWonOffer(offer, WaybillRecord.assignedByMoveraSource);
+          // A reservation keeps the scheduled waiting rules.
+          _openWonOffer(
+            offer,
+            offer.reservation
+                ? WaybillRecord.assignedReservationSource
+                : WaybillRecord.assignedByMoveraSource,
+          );
           return;
         case ClaimOutcome.alreadyClaimed:
           IslandMessages.show(HomeIslandNotices.takenByOther);
@@ -1008,6 +1014,26 @@ extension _HomeOfferRadar on _DriverHomeState {
       _offerSimulationTimer?.cancel();
       _radarOfferTwoTimer?.cancel();
       _radarOfferThreeTimer?.cancel();
+      // The total its card showed, pickup pay in it (driver-12). "Leave
+      // now" showed no card: its scheduled ride keeps its fare.
+      final quote = scheduledPickupAt == null && scheduledRideId == null
+          ? _pickupPayOf(
+              offer,
+              onRadar: matchedVia == WaybillRecord.moveraRadarSource ||
+                  _radarHomeOffers.any((item) => item.id == offer.id),
+            )
+          : null;
+      final terms = quote?.termsOf(
+            fare: offer.fare,
+            driverBonus: offer.driverBonus,
+            cashToCollect: offer.cashToCollect,
+            paidByCash: offer.cash,
+          ) ??
+          (
+            fare: offer.fare,
+            driverBonus: offer.driverBonus,
+            cashToCollect: offer.cashToCollect,
+          );
 
       pushSingle(
         context,
@@ -1023,10 +1049,10 @@ extension _HomeOfferRadar on _DriverHomeState {
             riderName: offer.riderName.isEmpty ? tr.rider : offer.riderName,
             riderRating: double.tryParse(offer.rating) ?? 4.9,
             riderTrips: offer.riderTrips,
-            fare: offer.fare,
+            fare: terms.fare,
             paidByCash: offer.cash,
-            cashToCollect: offer.cashToCollect,
-            driverBonus: offer.driverBonus,
+            cashToCollect: terms.cashToCollect,
+            driverBonus: terms.driverBonus,
             category: offer.category,
             matchedVia: matchedVia,
             waybillRepository: _waybills,
@@ -1142,16 +1168,21 @@ extension _HomeOfferRadar on _DriverHomeState {
           priority: offer.priority,
           driverBonus: WaybillRecord.bonusLabel(offer.driverBonus),
           // Worked out now, from the offer's pickup leg (never cached).
-          pickupPay: PickupPayCalculator.quote(
-            category: offer.category,
-            kind: PickupPayOfferKind.forHomeOffer(
-              onRadar: _radarHomeOffers.any((item) => item.id == offer.id),
-              reservation: offer.reservation,
-              assigned: offer.assigned,
-              driverSigned: offer.driverSigned,
-            ),
-            leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
+          pickupPay: _pickupPayOf(offer),
+        );
+    /// The pickup pay [offer]'s card adds to its fare. [onRadar] when the
+    /// card was a Radar card (it may have left the deck since).
+    PickupPayQuote _pickupPayOf(_HomeDirectOffer offer, {bool? onRadar}) =>
+        PickupPayCalculator.quote(
+          category: offer.category,
+          kind: PickupPayOfferKind.forHomeOffer(
+            onRadar: onRadar ??
+                _radarHomeOffers.any((item) => item.id == offer.id),
+            reservation: offer.reservation,
+            assigned: offer.assigned,
+            driverSigned: offer.driverSigned,
           ),
+          leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
         );
     /// Radar offers on Home: a deck of cards above the radar, with the
     /// total count on top (tap it for the full-screen list).

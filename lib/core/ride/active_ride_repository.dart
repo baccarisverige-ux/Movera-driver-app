@@ -20,6 +20,7 @@ class PersistedQueuedTrip {
     this.rating = 4.9,
     this.pickupMinutes = 4,
     this.tripMinutes = 16,
+    this.pickupPay,
   });
 
   final String tripId;
@@ -36,6 +37,9 @@ class PersistedQueuedTrip {
   final int pickupMinutes;
   final int tripMinutes;
 
+  /// The pickup pay accepted with it, on top of [fare] (driver-12).
+  final Money? pickupPay;
+
   Map<String, dynamic> toJson() => {
     'tripId': tripId,
     'riderName': riderName,
@@ -50,6 +54,7 @@ class PersistedQueuedTrip {
     'rating': rating,
     'pickupMinutes': pickupMinutes,
     'tripMinutes': tripMinutes,
+    if (pickupPay != null) 'pickupPay': pickupPay!.toJson(),
   };
 
   static PersistedQueuedTrip? fromJson(Map<String, dynamic>? json) {
@@ -92,6 +97,7 @@ class PersistedQueuedTrip {
       rating: (json['rating'] as num?)?.toDouble() ?? 4.9,
       pickupMinutes: (json['pickupMinutes'] as num?)?.toInt() ?? 4,
       tripMinutes: (json['tripMinutes'] as num?)?.toInt() ?? 16,
+      pickupPay: PersistedActiveRide._money(json['pickupPay']),
     );
   }
 }

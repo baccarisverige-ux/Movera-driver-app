@@ -299,3 +299,83 @@ extension _AcceptRideSheet on _AcceptRideState {
       );
     }
 }
+
+class _NextTripRadarOffer {
+  const _NextTripRadarOffer({
+    required this.id,
+    required this.category,
+    required this.fare,
+    required this.rating,
+    required this.pickupMinutes,
+    required this.tripMinutes,
+    required this.riderName,
+    required this.pickup,
+    required this.dropoff,
+    required this.pickupPosition,
+    required this.dropoffPosition,
+    this.pickupKm = 1.6,
+    this.securedPickupPay,
+  });
+
+  final String id;
+  final String category;
+  final String fare;
+  final double rating;
+  final int pickupMinutes;
+
+  /// From the current trip's drop-off to this pickup.
+  final double pickupKm;
+
+  /// The pickup pay the driver accepted, kept from the moment the trip
+  /// was secured; null while it is only offered.
+  final Money? securedPickupPay;
+
+  /// Pickup pay, worked out each time the offer shows; once secured, the
+  /// accepted one.
+  PickupPayQuote get pickupPay {
+    final leg = PickupLeg(km: pickupKm, minutes: pickupMinutes);
+    final secured = securedPickupPay;
+    return secured == null
+        ? PickupPayCalculator.quote(
+            category: category,
+            kind: PickupPayOfferKind.nextTripWhileDriving,
+            leg: leg,
+          )
+        : PickupPayQuote(
+            pay: secured,
+            leg: leg,
+            display: PickupPayConfig.current.display,
+          );
+  }
+
+  /// The fare plus the pickup pay: one total.
+  String get shownFare => pickupPay.totalOf(fare);
+
+  /// The trip's terms once accepted: the total the card showed, with the
+  /// pickup pay as Movera's bonus (driver-12).
+  ({String fare, Money? driverBonus, String? cashToCollect}) get terms =>
+      pickupPay.termsOf(fare: fare, paidByCash: false);
+
+  /// This offer, secured: its pickup pay no longer changes.
+  _NextTripRadarOffer secured() => _NextTripRadarOffer(
+    id: id,
+    category: category,
+    fare: fare,
+    rating: rating,
+    pickupMinutes: pickupMinutes,
+    tripMinutes: tripMinutes,
+    riderName: riderName,
+    pickup: pickup,
+    dropoff: dropoff,
+    pickupPosition: pickupPosition,
+    dropoffPosition: dropoffPosition,
+    pickupKm: pickupKm,
+    securedPickupPay: pickupPay.pay,
+  );
+  final int tripMinutes;
+  final String riderName;
+  final String pickup;
+  final String dropoff;
+  final LatLng pickupPosition;
+  final LatLng dropoffPosition;
+}

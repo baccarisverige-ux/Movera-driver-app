@@ -32,6 +32,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/session/driver_session_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 
 Future<void> main() async {
@@ -191,6 +192,7 @@ class _MoveraAppState extends State<MoveraApp> {
       dispatch.reset();
     }
     _safetyAlerts.reset();
+    ScheduledRideStore.reset();
     _session.reset();
   }
 
