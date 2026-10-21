@@ -1331,7 +1331,7 @@ class _AcceptRideState extends State<AcceptRide>
                   left: 12,
                   right: 12,
                   bottom: MediaQuery.paddingOf(context).bottom + 12,
-                  child: _AcceptRidePanel(this)._buildIncomingRideCard(),
+                  child: _AcceptRidePanel(this)._mapOverlay(child: _AcceptRidePanel(this)._buildIncomingRideCard()),
                 ),
               // Above the sheet and offers; nothing under it works until
               // the driver answers.

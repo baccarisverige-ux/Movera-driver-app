@@ -11,6 +11,7 @@ import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -125,6 +126,44 @@ void main() {
       expect(second, isNotNull);
       expect(second, isNot(first),
           reason: 'a cancelled and a later next trip never share an id');
+      await _unmount(tester, location);
+    });
+  });
+
+  group('driver-u62: the on-trip offer card is a map overlay', () {
+    testWidgets('it sits in a PointerInterceptor and blocks map gestures',
+        (tester) async {
+      final location = _Loc();
+      await _pumpTrip(tester, location);
+      await tester.pump(const Duration(milliseconds: 2600));
+      final card = find.byKey(_offerCard);
+      expect(card, findsOneWidget);
+      expect(
+        find.ancestor(of: card, matching: find.byType(PointerInterceptor)),
+        findsOneWidget,
+        reason: 'web: the map element must not take the card\'s touches',
+      );
+      final mapBlock = find.byWidgetPredicate(
+        (widget) =>
+            widget is AbsorbPointer &&
+            find
+                .descendant(
+                  of: find.byWidget(widget),
+                  matching: find.byKey(
+                    const ValueKey<String>('active-ride-throttled-map'),
+                  ),
+                )
+                .evaluate()
+                .isNotEmpty,
+      );
+      bool blocked() => tester.widgetList<AbsorbPointer>(mapBlock).last.absorbing;
+      expect(blocked(), isFalse);
+      final gesture = await tester.startGesture(tester.getCenter(card));
+      await tester.pump();
+      expect(blocked(), isTrue, reason: 'a touch on the card holds the map');
+      await gesture.up();
+      await tester.pump();
+      expect(blocked(), isFalse);
       await _unmount(tester, location);
     });
   });
