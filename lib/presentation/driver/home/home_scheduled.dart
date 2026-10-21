@@ -162,8 +162,11 @@ extension _HomeScheduled on _DriverHomeState {
       }
     }
 
-    /// The driver can take the ride onto the screen now.
+    /// The driver can take the ride onto the screen now. Home must be on
+    /// top: with a screen or sheet over it the trip cannot open, so the
+    /// ride stays in Accepted, late, and starts when Home is back on top.
     bool get _canStartScheduled =>
+        ModalRoute.of(context)?.isCurrent != false &&
         _recoveryResolved &&
         _driverSession.availableForOffers &&
         _claimedHomeOffer == null &&
