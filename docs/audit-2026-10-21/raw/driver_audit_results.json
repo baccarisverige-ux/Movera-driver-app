@@ -3997,7 +3997,8 @@
   "rider3",
   "rider4",
   "driver-j2",
-  "rider-j8"
+  "rider-j8",
+  "r2-driver2"
  ],
  "runs_pending": [
   "driver-w2a",
@@ -4027,6 +4028,13 @@
   "rider-j4",
   "rider-j5",
   "rider-j6",
-  "rider-j7"
+  "rider-j7",
+  "r2-driver1",
+  "r2-driver3",
+  "r2-driver4",
+  "r2-rider1",
+  "r2-rider2",
+  "r2-rider3",
+  "r2-rider4"
  ]
 }
