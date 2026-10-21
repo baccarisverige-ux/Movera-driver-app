@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/navigation/navigation_controller.dart';
 import 'package:movera/core/navigation/route_progress.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/routing/route_instruction.dart';
@@ -32,8 +34,40 @@ RoadRoute _outAndBack() => RoadRoute(
   ],
 );
 
+class _OneRoute implements RouteRepository {
+  @override
+  Future<RoadRoute> drivingRoute({
+    required GeoPoint origin,
+    required GeoPoint destination,
+  }) async => _outAndBack();
+}
+
+DriverLocation _at(double lat, double lng) => DriverLocation(
+  point: GeoPoint(lat, lng),
+  measuredAt: DateTime.now(),
+  accuracyMeters: 5,
+);
+
 void main() {
   const calculator = RouteProgressCalculator();
+
+  // driver-r4-34: one fix off the road must not lose which pass the car is on.
+  test('after one off-route fix the car stays on the return pass', () async {
+    final navigation = NavigationController(routeRepository: _OneRoute());
+    addTearDown(navigation.dispose);
+    navigation.setVehicle(_at(59.33, 18.0610));
+    await navigation.ensureRoute(origin: _start, destination: _start);
+    for (final lng in [18.0640, 18.0670, 18.0695, 18.0700, 18.0690, 18.0670, 18.0650]) {
+      navigation.setVehicle(_at(59.33, lng));
+    }
+    final before = navigation.routeFraction!;
+    expect(before, greaterThan(0.5));
+    navigation.setVehicle(_at(59.3307, 18.0650)); // 80 m off the road
+    navigation.setVehicle(_at(59.33, 18.0648));
+    navigation.setVehicle(_at(59.33, 18.0636));
+    expect(navigation.routeFraction, greaterThanOrEqualTo(before));
+    expect(navigation.snapshot.banner?.symbol, isNot(NavigationBannerSymbol.uTurn));
+  });
 
   test('arrival at the route start is resolved after the U-turn, not at 0 m', () {
     final route = _outAndBack();
