@@ -4696,4 +4696,25 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get aroundStockholm => 'Runt Stockholm';
+
+  @override
+  String get noticeBonusProgressTitle => 'Bonusframsteg';
+
+  @override
+  String noticeBonusProgressBody(
+    String done,
+    String goal,
+    String left,
+    String amount,
+  ) {
+    return '$done av $goal resor den här veckan. $left till för $amount.';
+  }
+
+  @override
+  String get noticePayoutSentTitle => 'Utbetalning skickad';
+
+  @override
+  String noticePayoutSentBody(String amount) {
+    return '$amount är på väg till din bank.';
+  }
 }

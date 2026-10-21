@@ -1343,5 +1343,9 @@
   "demandBusy": "Élevée",
   "demandSteady": "Stable",
   "demandQuiet": "Calme",
-  "aroundStockholm": "Autour de Stockholm"
+  "aroundStockholm": "Autour de Stockholm",
+  "noticeBonusProgressTitle": "Progression du bonus",
+  "noticeBonusProgressBody": "{done} courses sur {goal} cette semaine. Encore {left} pour {amount}.",
+  "noticePayoutSentTitle": "Paiement envoyé",
+  "noticePayoutSentBody": "{amount} est en route vers votre banque."
 }

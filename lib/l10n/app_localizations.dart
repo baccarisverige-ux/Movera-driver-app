@@ -8174,6 +8174,35 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Around Stockholm'**
   String get aroundStockholm;
+
+  /// No description provided for @noticeBonusProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus progress'**
+  String get noticeBonusProgressTitle;
+
+  /// No description provided for @noticeBonusProgressBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {goal} trips this week. {left} more for {amount}.'**
+  String noticeBonusProgressBody(
+    String done,
+    String goal,
+    String left,
+    String amount,
+  );
+
+  /// No description provided for @noticePayoutSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout sent'**
+  String get noticePayoutSentTitle;
+
+  /// No description provided for @noticePayoutSentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} is on its way to your bank.'**
+  String noticePayoutSentBody(String amount);
 }
 
 class _AppLocalizationsDelegate

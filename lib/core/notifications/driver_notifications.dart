@@ -2,6 +2,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 
 /// Admin's notification groups (Q31): N1 ride alerts, N2 demand and
@@ -366,29 +367,39 @@ class DriverNotices {
         actionLabel: () => tr.view,
       );
 
-  /// Already received when the demo opens.
+  /// Already received when the demo opens, in the driver's language
+  /// whenever read (driver-22).
   static List<DriverNotice> demoReceived(DateTime now) => <DriverNotice>[
-        DriverNotice(
+        DriverNotice.named(
           id: 'demo-scheduled-0740',
           kind: DriverNoticeKind.newScheduledRide,
-          title: tr.noticeNewScheduledRide,
-          body: 'Tomorrow 07:40 · 126 kr · Tap to view',
+          title: () => tr.noticeNewScheduledRide,
+          body: () => tr.noticeScheduledBody(
+            tr.tomorrow,
+            '07:40',
+            Money.sek(126).formattedShort,
+          ),
           at: now.subtract(const Duration(minutes: 18)),
           action: DriverNoticeAction.viewScheduledRides,
-          actionLabel: tr.view,
+          actionLabel: () => tr.view,
         ),
-        DriverNotice(
+        DriverNotice.named(
           id: 'demo-bonus',
           kind: DriverNoticeKind.bonusProgress,
-          title: 'Bonus progress',
-          body: '18 of 25 trips this week. 7 more for 350 kr.',
+          title: () => tr.noticeBonusProgressTitle,
+          body: () => tr.noticeBonusProgressBody(
+            '18',
+            '25',
+            '7',
+            Money.sek(350).formattedShort,
+          ),
           at: now.subtract(const Duration(hours: 3)),
         ),
-        DriverNotice(
+        DriverNotice.named(
           id: 'demo-payout',
           kind: DriverNoticeKind.payoutSent,
-          title: 'Payout sent',
-          body: '2 450,00 kr is on its way to your bank.',
+          title: () => tr.noticePayoutSentTitle,
+          body: () => tr.noticePayoutSentBody(Money.sek(2450).formatted),
           at: now.subtract(const Duration(days: 1, hours: 2)),
         ),
       ];

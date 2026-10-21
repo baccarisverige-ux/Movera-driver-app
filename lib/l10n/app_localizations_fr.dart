@@ -4743,4 +4743,25 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aroundStockholm => 'Autour de Stockholm';
+
+  @override
+  String get noticeBonusProgressTitle => 'Progression du bonus';
+
+  @override
+  String noticeBonusProgressBody(
+    String done,
+    String goal,
+    String left,
+    String amount,
+  ) {
+    return '$done courses sur $goal cette semaine. Encore $left pour $amount.';
+  }
+
+  @override
+  String get noticePayoutSentTitle => 'Paiement envoyé';
+
+  @override
+  String noticePayoutSentBody(String amount) {
+    return '$amount est en route vers votre banque.';
+  }
 }

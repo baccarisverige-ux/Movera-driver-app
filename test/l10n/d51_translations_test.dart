@@ -495,4 +495,21 @@ void main() {
     expect(words(tr.leaveNowForPickupTimePickup('14:00')), findsOneWidget);
     expect(words(swedish), findsNothing);
   });
+
+  for (final code in languages) {
+    testWidgets('driver-22: the demo notifications in $code', (tester) async {
+      speak(code);
+      DriverNotificationFeed.instance
+        ..reset()
+        ..arrivals = const [];
+      await show(tester, code, const DriverNotificationsScreen());
+      expect(words(tr.noticeBonusProgressTitle), findsOneWidget);
+      expect(words(tr.noticePayoutSentTitle), findsOneWidget);
+      expect(words(tr.noticeScheduledBody(tr.tomorrow, '07:40', '126 kr')),
+          findsOneWidget);
+      for (final english in ['Bonus progress', 'Payout sent', 'Tap to view']) {
+        expect(words(english), findsNothing, reason: english);
+      }
+    });
+  }
 }

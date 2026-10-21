@@ -3151,5 +3151,32 @@
   "demandBusy": "Busy",
   "demandSteady": "Steady",
   "demandQuiet": "Quiet",
-  "aroundStockholm": "Around Stockholm"
+  "aroundStockholm": "Around Stockholm",
+  "noticeBonusProgressTitle": "Bonus progress",
+  "noticeBonusProgressBody": "{done} of {goal} trips this week. {left} more for {amount}.",
+  "@noticeBonusProgressBody": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noticePayoutSentTitle": "Payout sent",
+  "noticePayoutSentBody": "{amount} is on its way to your bank.",
+  "@noticePayoutSentBody": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }
