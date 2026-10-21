@@ -273,10 +273,13 @@ class PersistedActiveRide {
     'stage': stage.name,
     if (nextTripId != null || next != null)
       'nextTripId': nextTripId ?? next?.tripId,
-    if (arrivedAt != null) 'arrivedAt': arrivedAt!.toIso8601String(),
-    if (acceptedAt != null) 'acceptedAt': acceptedAt!.toIso8601String(),
-    if (startedAt != null) 'startedAt': startedAt!.toIso8601String(),
-    if (savedAt != null) 'savedAt': savedAt!.toIso8601String(),
+    // Instants in UTC: a local time has no offset, so in the repeated
+    // autumn hour it read back an hour early (driver-u34). Older saves in
+    // local time still read as local.
+    if (arrivedAt != null) 'arrivedAt': arrivedAt!.toUtc().toIso8601String(),
+    if (acceptedAt != null) 'acceptedAt': acceptedAt!.toUtc().toIso8601String(),
+    if (startedAt != null) 'startedAt': startedAt!.toUtc().toIso8601String(),
+    if (savedAt != null) 'savedAt': savedAt!.toUtc().toIso8601String(),
     if (riderName != null) 'riderName': riderName,
     if (riderRating != null) 'riderRating': riderRating,
     if (riderTrips != null) 'riderTrips': riderTrips,
@@ -312,7 +315,7 @@ class PersistedActiveRide {
         'longitude': destinationPoint!.longitude,
       },
     if (scheduledPickupAt != null)
-      'scheduledPickupAt': scheduledPickupAt!.toIso8601String(),
+      'scheduledPickupAt': scheduledPickupAt!.toUtc().toIso8601String(),
     if (scheduledRideId != null) 'scheduledRideId': scheduledRideId,
     if (pickupKm != null) 'pickupKm': pickupKm,
     if (bags > 0) 'bags': bags,
@@ -422,10 +425,10 @@ class PersistedActiveRide {
       tripId: tripId,
       stage: stage.first,
       nextTripId: json['nextTripId'] as String?,
-      arrivedAt: DateTime.tryParse(json['arrivedAt'] as String? ?? ''),
-      acceptedAt: DateTime.tryParse(json['acceptedAt'] as String? ?? ''),
-      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? ''),
-      savedAt: DateTime.tryParse(json['savedAt'] as String? ?? ''),
+      arrivedAt: DateTime.tryParse(json['arrivedAt'] as String? ?? '')?.toLocal(),
+      acceptedAt: DateTime.tryParse(json['acceptedAt'] as String? ?? '')?.toLocal(),
+      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? '')?.toLocal(),
+      savedAt: DateTime.tryParse(json['savedAt'] as String? ?? '')?.toLocal(),
       riderName: json['riderName'] as String?,
       riderRating: (json['riderRating'] as num?)?.toDouble(),
       riderTrips: (json['riderTrips'] as num?)?.toInt(),
@@ -474,7 +477,8 @@ class PersistedActiveRide {
             )
           : null,
       scheduledPickupAt:
-          DateTime.tryParse(json['scheduledPickupAt'] as String? ?? ''),
+          DateTime.tryParse(json['scheduledPickupAt'] as String? ?? '')
+              ?.toLocal(),
       scheduledRideId: json['scheduledRideId'] is String
           ? json['scheduledRideId'] as String
           : null,

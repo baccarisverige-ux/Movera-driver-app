@@ -174,4 +174,31 @@ void main() {
     expect(repo.saved, [0, 1]);
     expect((await repo.read())!.stopIndex, 1);
   });
+
+  test('driver-u34: snapshot times survive the repeated autumn hour', () {
+    // The second 02:20 in Stockholm (25 Oct) and 01:20 in New York (1 Nov).
+    for (final instant in [
+      DateTime.utc(2026, 10, 25, 1, 20),
+      DateTime.utc(2026, 11, 1, 6, 20),
+    ]) {
+      final at = instant.toLocal();
+      final json = PersistedActiveRide(
+        tripId: 'trip-u34', stage: ActiveRideStage.onTrip, savedAt: at,
+        arrivedAt: at, acceptedAt: at, startedAt: at, scheduledPickupAt: at,
+      ).toJson();
+      final back = PersistedActiveRide.fromJson(json)!;
+      for (final t in [back.savedAt, back.arrivedAt, back.acceptedAt,
+          back.startedAt, back.scheduledPickupAt]) {
+        expect(t!.toUtc(), instant, reason: '$json');
+        expect(t.isUtc, isFalse);
+      }
+    }
+    // An older save in local time reads as before.
+    final old = PersistedActiveRide.fromJson({
+      ...PersistedActiveRide(tripId: 'old', stage: ActiveRideStage.onTrip)
+          .toJson(),
+      'savedAt': '2026-10-21T10:00:00.000',
+    })!;
+    expect(old.savedAt, DateTime(2026, 10, 21, 10));
+  });
 }
