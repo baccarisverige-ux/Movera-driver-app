@@ -554,8 +554,13 @@ void main() {
         findsOneWidget,
       );
     }
-    expect(find.byKey(const ValueKey<String>('home-reservation-barrier')),
-        findsNothing);
+    // driver-u190: no tinted barrier over Home (any route's own barrier
+    // is see-through).
+    expect(
+      find.byWidgetPredicate((w) =>
+          w is ModalBarrier && w.color != null && w.color!.a > 0),
+      findsNothing,
+    );
 
     // The radar orb sits centred on the sheet's top edge: the normal
     // Radar-offer orb with grey waves and MATCH in light black, no icon.
@@ -572,8 +577,15 @@ void main() {
     expect(match.style!.color, MoveraRadarOrb.reserveInk);
     expect(tester.widget<MoveraRadarOrb>(find.descendant(
       of: radar, matching: find.byType(MoveraRadarOrb))).reserve, isTrue);
-    expect(find.byKey(const ValueKey<String>('radar-reserve-icon')),
-        findsNothing);
+    // driver-u190: the orb draws no icon (the Exclusive check carries
+    // this key).
+    expect(
+      find.descendant(
+        of: radar,
+        matching: find.byKey(const ValueKey<String>('radar-exclusive-icon')),
+      ),
+      findsNothing,
+    );
 
     // The Home map shows the route with clock times on the pins.
     // The pins draw in real time and then fade in; a slow machine gets

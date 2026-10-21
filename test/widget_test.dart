@@ -1,7 +1,9 @@
+import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/main.dart';
@@ -36,6 +38,12 @@ import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+/// The refresh icon a Radar refresh pill draws (driver-u190: Home has none).
+final _refreshIcon = find.byWidgetPredicate((w) =>
+    w is SvgPicture &&
+    w.bytesLoader is SvgAssetLoader &&
+    (w.bytesLoader as SvgAssetLoader).assetName == AppAssets.offerRefresh);
 
 Future<void> _pumpHome(WidgetTester tester, Size size) async {
   IslandMessages.reset();
@@ -669,10 +677,7 @@ void main() {
     // New Radar matches join the deck behind it; no refresh on Home.
     await tester.pump(const Duration(milliseconds: 3100));
     expect(card('nearby-2'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey<String>('radar-home-refresh')),
-      findsNothing,
-    );
+    expect(_refreshIcon, findsNothing);
     await tester.pump(const Duration(milliseconds: 3100));
     await tester.pump(const Duration(milliseconds: 400));
     expect(card('nearby-4'), findsOneWidget);
