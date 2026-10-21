@@ -83,4 +83,33 @@ void main() {
     await _unmount(tester);
     semantics.dispose();
   });
+
+  testWidgets('driver-u67: "I\'ve arrived" away from pickup is readable '
+      'and says why', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final previous = DriverRuntimeConfig.current;
+    // A real build: arriving needs a GPS fix near the pickup.
+    DriverRuntimeConfig.current = DriverRuntimeConfig(
+      simulatedArrival: false,
+      externalRouting: previous.externalRouting,
+      skipAccountActivation: previous.skipAccountActivation,
+      liveMapTicker: previous.liveMapTicker,
+      reservationPopup: previous.reservationPopup,
+      islandHint: previous.islandHint,
+      radarSound: previous.radarSound,
+      adminDemoOffers: previous.adminDemoOffers,
+    );
+    addTearDown(() => DriverRuntimeConfig.current = previous);
+    await _trip(tester, ActiveRideStage.headingToPickup);
+    final button =
+        find.byKey(const ValueKey<String>('active-ride-arrived-button'));
+    final style = tester.widget<FilledButton>(button).style!;
+    // 5F6B72 on EEEFF1 is about 5:1 (8E979B was 2.6:1).
+    expect(style.foregroundColor!.resolve(<WidgetState>{}),
+        const Color(0xFF5F6B72));
+    expect(tester.getSemantics(button).hint,
+        'Move within 100 m of the pickup to arrive.');
+    await _unmount(tester);
+    semantics.dispose();
+  });
 }

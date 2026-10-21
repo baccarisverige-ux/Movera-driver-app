@@ -900,6 +900,8 @@ extension _AcceptRidePanel on _AcceptRideState {
            _stopCursor < widget.stopAddresses.length);
       if (arrival) {
         final near = _nearArrivalTarget;
+        // driver-u67: still a live button when not near (it says why), so
+        // its label stays readable, and a screen reader hears the reason.
         return SizedBox(
           width: double.infinity,
           height: 58,
@@ -912,14 +914,18 @@ extension _AcceptRidePanel on _AcceptRideState {
             style: FilledButton.styleFrom(
               elevation: 0,
               backgroundColor: near ? const Color(0xFF111614) : const Color(0xFFEEEFF1),
-              foregroundColor: near ? Colors.white : const Color(0xFF8E979B),
+              foregroundColor: near ? Colors.white : const Color(0xFF5F6B72),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: Text(
-              driverText(DriverTexts.tripArrived),
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            child: Semantics(
+              hint: near ? null : tr.moveWithin100MOfWhere(
+                  _stage == ActiveRideStage.onTrip ? 'stop' : 'pickup'),
+              child: Text(
+                driverText(DriverTexts.tripArrived),
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         );
