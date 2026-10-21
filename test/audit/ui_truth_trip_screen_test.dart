@@ -15,6 +15,7 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/routing/route_repository.dart';
+import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 
@@ -26,6 +27,40 @@ class _NoGps implements DriverLocationRepository {
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       const Stream.empty();
+}
+
+/// One fresh fix south of the demo pickup, then silence: the car stands.
+class _OneFix implements DriverLocationRepository {
+  @override
+  Future<DriverLocation> getCurrentPosition() async => DriverLocation(
+        point: const GeoPoint(59.3189, 18.0615),
+        speedMetersPerSecond: 0,
+        measuredAt: DateTime.now(),
+        accuracyMeters: 5,
+      );
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream.empty();
+}
+
+/// A straight road route between the two points.
+class _Routes implements RouteRepository {
+  @override
+  Future<RoadRoute> drivingRoute({
+    required GeoPoint origin,
+    required GeoPoint destination,
+  }) async => RoadRoute(
+        points: [
+          for (var i = 0; i <= 20; i++)
+            GeoPoint(
+              origin.latitude + (destination.latitude - origin.latitude) * i / 20,
+              origin.longitude +
+                  (destination.longitude - origin.longitude) * i / 20,
+            ),
+        ],
+        distanceMeters: 1500,
+        durationSeconds: 300,
+      );
 }
 
 /// Trip storage that fails every save while [fail] is set.
@@ -166,6 +201,35 @@ void main() {
     await _frames(tester);
     expect(find.byKey(waiting), findsOneWidget);
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('driver-42: after Arrived the pickup route line leaves the map '
+      'while the car stands still', (tester) async {
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      externalRouting: true,
+      liveMapTicker: false,
+      reservationPopup: false,
+      islandHint: false,
+      simulatedArrival: true,
+      skipAccountActivation: false,
+    );
+    await _trip(tester, AcceptRide(tripId: 'route-trip',
+        locationRepository: _OneFix(), routeRepository: _Routes()));
+    _clearSnackBars(tester);
+    await _frames(tester);
+    Set<Object> lines() => tester
+        .widget<CustomGoogleMap>(find.byKey(const ValueKey('active-ride-map')))
+        .polylines ?? const <Object>{};
+    expect(lines(), isNotEmpty, reason: 'the pickup route is drawn');
+    final arrive =
+        find.byKey(const ValueKey<String>('active-ride-arrived-button'));
+    await tester.ensureVisible(arrive);
+    await tester.tap(arrive);
+    await _frames(tester);
+    expect(find.byKey(const ValueKey('active-ride-panel-waitingForRider')),
+        findsOneWidget);
+    expect(lines(), isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }

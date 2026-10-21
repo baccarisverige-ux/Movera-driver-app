@@ -1119,6 +1119,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     void _unlockStageAfterFrame() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _stageTransitioning = false;
+        // driver-42: a route change (the pickup route cleared on arrival)
+        // notified while the stage was changing; apply it now.
+        if (mounted) { _onNavigationChanged(); }
       });
     }
     Future<void> _refreshOnTripRoute({bool fitCamera = false}) async {
