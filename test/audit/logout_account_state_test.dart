@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
@@ -15,7 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// the next driver sees the previous driver's reminders (with their rider
 /// pickup addresses) and documents in review.
 void main() {
-  testWidgets('logout clears the previous driver notifications and documents', (tester) async {
+  testWidgets('logout clears the previous driver notifications, documents '
+      'and destinations', (tester) async {
     SharedPreferences.setMockInitialValues({});
     IslandMessages.reset();
     ScheduledRideStore.reset();
@@ -46,6 +48,8 @@ void main() {
     ]);
     documents.uploadNew('DRIVER-A-INSURANCE');
     expect(documents.byId('DRIVER-A-INSURANCE')!.inReview, isTrue);
+    // driver-r4-11: today's destinations are the driver's too.
+    DestinationModeSession.instance.started(address: 'Solna');
 
     final runtime = DriverRuntimeScope.maybeOf(tester.element(find.byType(DriverHome)))!;
     await tester.runAsync(() => runtime.logout!());
@@ -54,6 +58,8 @@ void main() {
     expect(feed.items.map((n) => n.id), isNot(contains(reminder.id)));
     expect(feed.isRead(reminder), isFalse);
     expect(documents.byId('DRIVER-A-INSURANCE'), isNull);
+    expect(DestinationModeSession.instance.usedToday(), 0);
+    expect(DestinationModeSession.instance.activeAddress, isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));

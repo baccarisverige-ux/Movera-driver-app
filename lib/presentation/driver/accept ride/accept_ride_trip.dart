@@ -111,6 +111,15 @@ extension _AcceptRideTrip on _AcceptRideState {
         paidByCash: widget.paidByCash,
       );
     }
+    void _restoreDestinationFromSnapshot() {
+      final restored = widget.restoredSnapshot;
+      if (restored == null || !restored.destinationModeActive) { return; }
+      DestinationModeSession.instance.restored(
+        since: restored.savedAt ?? DateTime.now(),
+        address: restored.destinationAddress,
+        position: restored.destinationPoint,
+      );
+    }
     void _restoreQueuedNextFromSnapshot() {
       final next = widget.restoredSnapshot?.next;
       if (next == null) { return; }

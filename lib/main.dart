@@ -15,6 +15,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/core/admin/driver_home_config_repository.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
+import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
@@ -214,6 +215,8 @@ class _MoveraAppState extends State<MoveraApp> {
     // notifications (rider pickup addresses) or documents in review.
     DriverNotificationFeed.instance.reset();
     DocumentExpiryStore.instance.reset();
+    // And today's destinations (driver-r4-11).
+    DestinationModeSession.instance = DestinationModeSession();
     _session.reset();
   }
 

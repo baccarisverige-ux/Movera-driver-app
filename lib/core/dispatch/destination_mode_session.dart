@@ -59,6 +59,22 @@ class DestinationModeSession {
     _routeTo = null;
   }
 
+  /// A trip restored after a restart had a destination the empty session
+  /// does not know: it counts for today and its time runs from [since],
+  /// the trip's last save (driver-r4-11). Ignored when one is active.
+  void restored({
+    required DateTime since,
+    String? address,
+    GeoPoint? position,
+  }) {
+    if (_activeSince != null) { return; }
+    _activeSince = since;
+    _address = address;
+    _position = position;
+    _timedOut = false;
+    _started.add(since);
+  }
+
   void ended() {
     _activeSince = null;
     _address = null;
