@@ -305,6 +305,7 @@ class WaybillPayment {
   const WaybillPayment._(
     this._fareOre,
     this._comma,
+    this._currency,
     this._feeRate,
     this._bonusOre,
     this._waitOre,
@@ -327,24 +328,31 @@ class WaybillPayment {
     String? waitingFee,
   }) {
     // driver-32: "1 234,50 kr" has a thousands group; read the whole label.
-    final fareOre = _ore(fare);
-    if (fareOre == null) return null;
+    // driver-r4-15: a "24,75 €" or "12,950 DT" fare keeps its currency.
+    final money = _money(fare);
+    if (money == null) return null;
+    final fareOre = money.minorUnits;
+    final currency = money.currency;
     final bonusOre = (bonus == null
             ? 0
-            : Money.parseLabel(bonus)?.minorUnits ?? 0)
+            : Money.parseLabel(bonus, currency: currency)?.minorUnits ?? 0)
         .clamp(0, fareOre);
-    final waitOre = waitingFee == null ? 0 : _ore(waitingFee) ?? 0;
+    final wait = waitingFee == null ? null : _money(waitingFee);
+    final waitOre = wait?.currency == currency ? wait!.minorUnits : 0;
     return WaybillPayment._(
       fareOre,
       fare.contains(','),
+      currency,
       feeRate,
       bonusOre,
       waitOre.clamp(0, fareOre - bonusOre),
     );
   }
 
+  /// In [_currency]'s minor units (öre, cents, millimes).
   final int _fareOre;
   final bool _comma;
+  final String _currency;
   final double _feeRate;
   final int _bonusOre;
   final int _waitOre;
@@ -373,18 +381,21 @@ class WaybillPayment {
   /// Movera's bonus in the earnings; null without one.
   String? get bonus => _bonusOre > 0 ? _format(_bonusOre) : null;
 
-  /// [label] in öre: a whole label ("1 234,50 kr", "126.75 kr"), else the
-  /// first amount in it.
-  static int? _ore(String label) {
-    final money = Money.parseSekLabel(label);
-    if (money != null) return money.minorUnits;
+  /// [label] as money: a whole label in any currency ("1 234,50 kr",
+  /// "126.75 kr", "12,950 DT"), else the first amount in it, in kronor.
+  static Money? _money(String label) {
+    final money = Money.parseLabel(label);
+    if (money != null) return money;
     final match = RegExp(r'\d+(?:[.,]\d{1,2})?').firstMatch(label);
     if (match == null) return null;
     final value = double.tryParse(match.group(0)!.replaceAll(',', '.'));
-    return value == null ? null : (value * 100).round();
+    return value == null ? null : Money.ore((value * 100).round());
   }
 
   String _format(int ore) {
+    if (_currency != 'SEK') {
+      return Money(minorUnits: ore, currency: _currency).formatted;
+    }
     final kronor = ore ~/ 100;
     final cents = (ore % 100).toString().padLeft(2, '0');
     // The comma form groups thousands like Money.formatted: "1 234,50 kr".
