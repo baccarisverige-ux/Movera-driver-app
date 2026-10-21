@@ -589,8 +589,10 @@ class _DemoReservationSet {
     ReservationRequestPreview Function(String time, String day) build,
   ) {
     final at = anchor.add(lead);
-    final days = DateTime(at.year, at.month, at.day)
-        .difference(DateTime(anchor.year, anchor.month, anchor.day))
+    // Calendar days in UTC: a local spring-forward day is 23 hours, so
+    // its next day would be 0 whole days away (driver-8).
+    final days = DateTime.utc(at.year, at.month, at.day)
+        .difference(DateTime.utc(anchor.year, anchor.month, anchor.day))
         .inDays;
     return build(clockLabel(at), days == 0 ? 'Today' : 'Tomorrow')
         .scheduledFor(at);
