@@ -33,6 +33,8 @@ import '../../integration_test/headless_map_platform.dart';
 //   the saved trip; only "Close trip" closes it.
 // - driver-u117: trips the Radar list had when it closed that then leave
 //   dispatch no longer keep Home on "Trip found".
+// - driver-u118: the driving limit closes the Radar list, and the list
+//   never claims a trip for an offline driver.
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -328,6 +330,60 @@ void main() {
       expect(find.text('Scanning'), findsOneWidget);
       expect(find.byKey(const ValueKey<String>('island-finding')),
           findsOneWidget);
+      await _end(tester);
+    });
+  });
+
+  group('driver-u118: the driving limit with the Radar list open', () {
+    testWidgets('the list closes and the driver is offline', (tester) async {
+      final rule = DrivingTimeClock.instance.rule;
+      // The limit lands 32 s after going online.
+      DrivingTimeClock.instance.load(
+        worked: rule.work - const Duration(seconds: 32),
+        offlineSince: ScheduledClock.realNow(),
+      );
+      final home = await _pumpHome(tester);
+      home.dispatch.publish([_trip('a'), _trip('b')]);
+      await _frames(tester, const Duration(seconds: 20));
+      tester
+          .widget<GestureDetector>(
+            find.byKey(const ValueKey<String>('radar-home-all-offers')),
+          )
+          .onTap!
+          .call();
+      await _frames(tester, const Duration(seconds: 1));
+      expect(find.byType(RideRequests), findsOneWidget);
+      await _frames(tester, const Duration(seconds: 13));
+      expect(IslandMessages.posted.map((m) => m.title),
+          contains(startsWith('Rest until')));
+      expect(home.session.availableForOffers, isFalse);
+      expect(find.byType(RideRequests), findsNothing,
+          reason: 'no Match buttons left for a driver who must rest');
+      expect(home.dispatch.claims, isEmpty);
+      await _end(tester);
+    });
+
+    testWidgets('Match in the list claims nothing while offline', (
+      tester,
+    ) async {
+      final dispatch = _Dispatch()..publish([_trip('a')]);
+      final session = DriverSessionController();
+      expect(session.availableForOffers, isFalse);
+      await tester.binding.setSurfaceSize(const Size(375, 812));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(MaterialApp(
+        home: RideRequests(
+          dispatchRepository: dispatch,
+          sessionController: session,
+          onCloseRides: (_) {},
+        ),
+      ));
+      await _frames(tester, const Duration(seconds: 1));
+      final match = find.byKey(const ValueKey<String>('radar-match-a'));
+      await tester.ensureVisible(match);
+      await tester.tap(match);
+      await _frames(tester, const Duration(seconds: 1));
+      expect(dispatch.claims, isEmpty);
       await _end(tester);
     });
   });

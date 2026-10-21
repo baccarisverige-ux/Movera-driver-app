@@ -954,6 +954,7 @@ class _DriverHomeState extends State<DriverHome>
   }
 
   Future<void> _goOffline() async {
+    final radarListOpen = showRideRequests; // driver-u118: it closes too.
     _destinationOpenTimer?.cancel();
     IslandMessages.show(HomeIslandNotices.offline);
     hideMainPanel = false;
@@ -980,12 +981,12 @@ class _DriverHomeState extends State<DriverHome>
       _destinationPosition = null;
       _destinationRouteMarkers = {};
       _destinationRoutePolylines = {};
-      _soonReservationReady = false;
+      _soonReservationReady = false; showRideRequests = false;
     });
     _destinationLimitTimer?.cancel(); DestinationModeSession.instance.ended();
     _HomeMapSheet(this)._clearDemoDestinationTrips();
     _HomeOfferRadar(this)._clearDirectOfferRoute();
-    await _HomeMapSheet(this)._closeDriverSheet();
+    if (!radarListOpen) { await _HomeMapSheet(this)._closeDriverSheet(); } // Its sheet is not mounted.
   }
 
   void _openRideOffers() {
