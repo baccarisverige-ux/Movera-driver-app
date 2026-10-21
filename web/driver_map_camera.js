@@ -255,12 +255,16 @@
         camera = {...camera, tilt: tiltWithZoom(map.getTilt() || 0, current, next)};
       }
       map.moveCamera({...camera, zoom: next});
+      // Maps caps the zoom at maxZoom (raster 18): compensate for the zoom
+      // it applied, or a tap at the cap pans the map instead of zooming.
+      const shown = Number(map.getZoom());
+      const applied = Number.isFinite(shown) ? shown : next;
       let panX = gestureX, panY = gestureY;
       const width = div.clientWidth, height = div.clientHeight;
       if (width > 0 && height > 0 && Number.isFinite(x) &&
-          Number.isFinite(y) && next !== current) {
+          Number.isFinite(y) && applied !== current) {
         const rect = div.getBoundingClientRect?.() || {left: 0, top: 0};
-        const scale = 2 ** (next - current);
+        const scale = 2 ** (applied - current);
         const localX = clamp(x - rect.left, 0, width);
         const localY = clamp(y - rect.top, 0, height);
         panX += (1 - scale) * (localX - width / 2);
