@@ -8,6 +8,7 @@ import 'package:movera/presentation/driver/support/support_inbox.dart';
 class _Support extends LocalSupportRepository {
   Completer<Map<String, dynamic>>? pending;
   bool fail = false;
+  bool failUpdate = false;
   @override
   Future<Map<String, dynamic>> read() async {
     if (pending != null) return pending!.future;
@@ -16,7 +17,9 @@ class _Support extends LocalSupportRepository {
   }
 
   @override
-  Future<void> update(String field, Object value) async {}
+  Future<void> update(String field, Object value) async {
+    if (failUpdate) throw StateError('Storage full');
+  }
 }
 
 void main() {
@@ -63,6 +66,37 @@ void main() {
     await tester.pump();
     expect(find.text('Enter a message'), findsNothing);
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('a failing draft autosave says so once, not per keystroke '
+      '(driver-r4-25)', (tester) async {
+    final repository = _Support()..failUpdate = true;
+    await tester.pumpWidget(
+      MaterialApp(home: SupportInboxScreen(repository: repository)),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Draft local ticket'));
+    await tester.pumpAndSettle();
+    for (final text in ['A', 'Ap', 'App', 'App c', 'App cr', 'App crash']) {
+      await tester.enterText(find.byType(TextField).first, text);
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+    expect(find.text('Could not save local draft.'), findsOneWidget);
+    // One SnackBar's time later the notice is gone, not queued again.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Could not save local draft.'), findsNothing);
+    // A later save that works clears the failure; the next failure shows.
+    repository.failUpdate = false;
+    await tester.enterText(find.byType(TextField).first, 'App crashes');
+    await tester.pumpAndSettle();
+    repository.failUpdate = true;
+    await tester.enterText(find.byType(TextField).first, 'App crashes!');
+    await tester.pump();
+    expect(find.text('Could not save local draft.'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     await tester.pumpAndSettle();
   });

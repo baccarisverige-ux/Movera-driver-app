@@ -155,20 +155,34 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
     String category = categories.contains(draft['category'])
         ? draft['category'] as String
         : 'Trip & rider';
-    Future<void> saveDraft() async {
-      try {
-        await _repository.update('draft', {
-          'subject': subject.text,
-          'message': message.text,
-          'category': category,
-        });
-      } catch (_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(tr.supportCouldNotSaveDraft)),
-          );
+    // driver-r4-25: keystrokes during a write coalesce into one more write,
+    // and a failure says so once until a save works again.
+    Future<void>? draftWrite;
+    var draftDirty = false;
+    var draftFailed = false;
+    Future<void> saveDraft() {
+      draftDirty = true;
+      return draftWrite ??= () async {
+        while (draftDirty) {
+          draftDirty = false;
+          try {
+            await _repository.update('draft', {
+              'subject': subject.text,
+              'message': message.text,
+              'category': category,
+            });
+            draftFailed = false;
+          } catch (_) {
+            if (!draftFailed && mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(tr.supportCouldNotSaveDraft)),
+              );
+            }
+            draftFailed = true;
+          }
         }
-      }
+        draftWrite = null;
+      }();
     }
 
     subject.addListener(() {
