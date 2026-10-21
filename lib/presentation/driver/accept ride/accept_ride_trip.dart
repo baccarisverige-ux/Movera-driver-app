@@ -311,7 +311,9 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (event.status != null || event.kind == DriverRealtimeKind.riderCancelled) {
         _pendingProjection = event;
         unawaited(_drainProjection());
-        return;
+        // driver-r4-1: any kind may carry the projection; the rider's own
+        // signal is still shown.
+        if (event.kind != DriverRealtimeKind.riderOnTheWay || event.status?.isTerminal != false) { return; }
       }
 
       switch (event.kind) {
@@ -373,6 +375,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         if (status == TripStatus.cancelledByRider) {
           await _handleRiderCancelled(fee: event.cancelFee);
         } else if (status.isTerminal) {
+          _flushNextTripMatch();
           final secured = _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer : null;
           final next = secured == null ? null : _snapshotForOffer(secured);
           // A completed trip keeps what the driver's own finish records: the
@@ -517,6 +520,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       final wasOnTrip = _stage == ActiveRideStage.onTrip;
 
       if (_completionInFlight || _cancellationInFlight) { _handlingRiderCancellation=false; return; }
+      _flushNextTripMatch();
       final secured = _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer : null;
       final next = secured == null ? null : _snapshotForOffer(secured);
       try {
@@ -1015,6 +1019,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (_completionInFlight || _cancellationInFlight || _handlingRiderCancellation || !mounted || _rideLifecycle.terminal) { return; }
       _completionInFlight = true;
       _stageTransitioning = true;
+      _flushNextTripMatch();
       final offer = _nextTripRadarOffer;
       final queuedNext = _onTripRadarState == _OnTripRadarState.secured && offer != null;
       final next = queuedNext ? _snapshotForOffer(offer) : null;
@@ -1313,15 +1318,26 @@ extension _AcceptRideTrip on _AcceptRideState {
       _nextTripRadarMatchTimer?.cancel();
       _nextTripRadarMatchTimer = Timer(const Duration(milliseconds: 900), () {
         if (!mounted || _stage != ActiveRideStage.onTrip) { return; }
-        // Accepted: its pickup pay is kept as it was shown (driver-12).
-        final secured = offer.secured();
-        _rebuild(() {
-          _onTripRadarState = _OnTripRadarState.secured;
-          _nextTripRadarOffer = secured;
-        });
-        _waybills.secureNext(_buildNextWaybill(secured));
-        _rideLifecycle.persistNow();
+        _secureNextTrip(offer);
       });
+    }
+    void _secureNextTrip(_NextTripRadarOffer offer) {
+      // Accepted: its pickup pay is kept as it was shown (driver-12).
+      final secured = offer.secured();
+      _rebuild(() {
+        _onTripRadarState = _OnTripRadarState.secured;
+        _nextTripRadarOffer = secured;
+      });
+      _waybills.secureNext(_buildNextWaybill(secured));
+      _rideLifecycle.persistNow();
+    }
+    /// driver-r4-29: a next trip accepted but still "Matching" is secured
+    /// now, before the current trip ends, so no exit drops it.
+    void _flushNextTripMatch() {
+      final offer = _nextTripRadarOffer;
+      if (_nextTripRadarMatchTimer?.isActive != true || offer == null) { return; }
+      _nextTripRadarMatchTimer!.cancel();
+      if (mounted && _onTripRadarState == _OnTripRadarState.matching) { _secureNextTrip(offer); }
     }
     void _denyNextTripRadar() {
       if (_stage != ActiveRideStage.onTrip) { return; }
@@ -1484,6 +1500,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         return;
       }
       try {
+        _flushNextTripMatch();
         final secured = _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer : null;
         await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
           _waybills.current ?? _buildCurrentWaybill(),

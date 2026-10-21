@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:movera/core/money/money.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -52,17 +54,18 @@ void main() {
     );
   });
 
-  test('close to pickup an untaken reservation joins the Radar trips', () async {
+  // On the test clock: the Radar delay passes only when the test says so.
+  testWidgets('close to pickup an untaken reservation joins the Radar trips',
+      (tester) async {
     final dispatch = _dispatch(
-      reservationRadarDelay: const Duration(milliseconds: 5),
+      reservationRadarDelay: const Duration(minutes: 1),
     );
     final events = <List<RideOffer>>[];
     final sub = dispatch.watchNearbyOffers().listen(events.add);
-    addTearDown(sub.cancel);
-    await Future<void>.delayed(const Duration(milliseconds: 1));
+    await tester.pump(const Duration(seconds: 59));
     expect(events.last.any((offer) => offer.isReservation), isFalse);
 
-    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await tester.pump(const Duration(seconds: 1));
     final reservation = events.last.singleWhere((o) => o.id == demoReservationId);
     expect(reservation.isReservation, isTrue);
     expect(reservation.reservationTime, '07:40');
@@ -71,12 +74,14 @@ void main() {
     expect(reservation.fareLabel, '126,75 kr');
 
     // Taken from Radar: it leaves Radar at once.
-    expect(
-      (await dispatch.claimOffer(demoReservationId)).outcome,
-      ClaimOutcome.success,
-    );
-    await Future<void>.delayed(Duration.zero);
+    ClaimResult? claim;
+    unawaited(dispatch.claimOffer(demoReservationId).then((r) => claim = r));
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(claim?.outcome, ClaimOutcome.success);
     expect(events.last.any((o) => o.id == demoReservationId), isFalse);
+    unawaited(sub.cancel());
+    dispatch.dispose(); // its other demo timers end with the test
+    await tester.pump();
   });
 
   test('a reservation taken before pickup never joins Radar', () async {

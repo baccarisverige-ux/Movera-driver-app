@@ -526,11 +526,14 @@ extension _HomeMapSheet on _DriverHomeState {
       _clearDemoDestinationTrips();
       _destinationLimitTimer?.cancel();
       DestinationModeSession.instance.ended();
-      _mapPreviews.cancel();
+      // driver-r4-38: an offer's route preview on screen keeps its road
+      // and its framing; only the destination's own preview ends.
+      final offerPreview = _HomeOfferRoute(this)._offerOnScreen;
+      if (!offerPreview) { _mapPreviews.cancel(); }
       _destinationRoadRequests.cancel();
       _destinationRoadRefresh.cancelPending();
       _cameraRoute = null;
-      _camera.endPreview();
+      if (!offerPreview) { _camera.endPreview(); }
       _rebuild(() {
         _destinationModeActive = false;
         _destinationAddress = null;
@@ -606,7 +609,8 @@ extension _HomeMapSheet on _DriverHomeState {
       _sheetTrace.down();
       _sheetPointerActive = true;
       _sheetPointerLastY = event.position.dy;
-      _sheetPointerLastMs = DateTime.now().millisecondsSinceEpoch;
+      _sheetVelocity = VelocityTracker.withKind(event.kind)
+        ..addPosition(event.timeStamp, event.position);
       _sheetPointerVelocity = 0;
       _sheetPointerTravel = 0;
       _sheetPointerStartPos =
@@ -619,8 +623,14 @@ extension _HomeMapSheet on _DriverHomeState {
       _trackSheetPointer(event);
     }
     void _onSheetPointerEnd(PointerEvent event) {
-      _sheetTrace.up(_sheetPointerVelocity);
       _trackSheetPointer(event);
+      // driver-r4-37: the finger's speed over its last moves, by the
+      // events' own time stamps. The up event repeats the last position,
+      // so measured against it alone a flick read 0.
+      _sheetPointerVelocity = event is PointerCancelEvent
+          ? 0
+          : _sheetVelocity.getVelocity().pixelsPerSecond.dy;
+      _sheetTrace.up(_sheetPointerVelocity);
       _sheetPointerActive = false;
       // Resting at middle or fully open cannot suppress gestures on the
       // *exposed* area above the sheet. Its own overlay handles touch blocking.
@@ -674,14 +684,9 @@ extension _HomeMapSheet on _DriverHomeState {
           MediaQuery.paddingOf(context).top;
     }
     void _trackSheetPointer(PointerEvent event) {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      if (_sheetPointerLastMs != 0) {
-        final dt = math.max(1, now - _sheetPointerLastMs);
-        _sheetPointerVelocity = (event.position.dy - _sheetPointerLastY) / dt * 1000;
-      }
+      _sheetVelocity.addPosition(event.timeStamp, event.position);
       _sheetPointerTravel += (event.position.dy - _sheetPointerLastY).abs();
       _sheetPointerLastY = event.position.dy;
-      _sheetPointerLastMs = now;
     }
     Future<void> _snapHomeSheet({double? velocity}) async {
       if (!_panelController.isAttached) { return; }

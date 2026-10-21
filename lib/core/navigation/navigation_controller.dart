@@ -483,7 +483,9 @@ class NavigationController extends ChangeNotifier {
         route: route,
         position: _snapshot.vehicle,
         instructionHint: _instructionHint,
-        previousAlongMeters: _progressAlong,
+        // driver-r4-34: off route, the last on-route progress still says
+        // which pass of a reused road (U-turn, loop) the car is on.
+        previousAlongMeters: _progressAlong ?? _drivenAlong,
       );
       _instructionHint = progress.instructionIndex;
       _progressAlong = progress.offRoute ? null : progress.alongMeters;

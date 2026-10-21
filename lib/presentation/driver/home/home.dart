@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart' show PointerDeviceKind, VelocityTracker;
 import 'package:movera/core/navigation/route_camera_fit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -169,22 +170,12 @@ class _DriverHomeState extends State<DriverHome>
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
     if (route != null) { driverRouteObserver.subscribe(this, route); }
+    if (route is PageRoute) { driverRouteObserver.pages.subscribe(_pageCover, route); }
     if(MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.stop(); _radarSweepController.stop(); _radarMotionController.stop(); }
   }
+  late final _pageCover = PageCover(covered: () => _HomeRoutes(this)._pageCovered(), uncovered: () => _HomeRoutes(this)._pageUncovered());
   @override
-  void didPushNext() { _routeVisible = false; _pauseHomeUpdates(); }
-  @override
-  void didPopNext() {
-    _routeVisible = true;
-    _resumeHomeUpdates(); _HomeMapSheet(this)._adoptSessionDestination(); // driver-u65
-    // A covering ride may have handed storage to a queued trip before it
-    // closed. Re-check ownership so a persisted trip is never hidden behind
-    // an available Home.
-    if (_recoveryResolved && _driverSession.activeTripId == null) {
-      _didAttemptActiveRideRestore = false;
-      unawaited(_restoreActiveRideIfNeeded());
-    }
-  }
+  void didPopNext() => _HomeRoutes(this)._backOnTop();
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Inactive is still on screen: a call banner, a system dialog (driver-65).
@@ -335,7 +326,7 @@ class _DriverHomeState extends State<DriverHome>
   double _sheetPointerTravel = 0;
   double _sheetPointerStartPos = 0;
   double _sheetPointerLastY = 0;
-  int _sheetPointerLastMs = 0;
+  VelocityTracker _sheetVelocity = VelocityTracker.withKind(PointerDeviceKind.touch);
   double _lastSnapHapticAt = -1;
   late final MoveraSnapSheetController _snapSheet;
   bool showRideRequests = false;
@@ -1143,7 +1134,7 @@ class _DriverHomeState extends State<DriverHome>
     _scheduled.dispose();
     _HomeAccount(this)._stopAccount();
     WidgetsBinding.instance.removeObserver(this);
-    driverRouteObserver.unsubscribe(this);
+    driverRouteObserver.unsubscribe(this); driverRouteObserver.pages.unsubscribe(_pageCover);
     _sheetTrace.dispose();
     _destinationOpenTimer?.cancel();
     _radarSubscription?.cancel(); _withdrawalSubscription?.cancel();

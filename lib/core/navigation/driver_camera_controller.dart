@@ -449,9 +449,19 @@ class DriverCameraController {
       _resumeTimer = null;
       // A tilt easing after the last pinch stops under the new finger.
       if (mode == DriverCameraMode.browsing) _port?.interrupt();
+      // driver-r4-39: following, the frame in flight stops too; the newest
+      // pose waits in _pending until the finger lifts.
+      if (mode == DriverCameraMode.following && _busy) {
+        _epoch++;
+        _busy = false;
+        _port?.interrupt();
+      }
+      _throttle?.cancel();
+      _throttle = null;
     } else {
       _scheduleResume();
       if (_settleOnRelease) browseSettled();
+      if (_canFollow) unawaited(_flush());
     }
   }
 
@@ -732,6 +742,7 @@ class DriverCameraController {
       _throttle = null;
     }
     final pending = _pending;
+    if (_touching) return; // flushed when the finger lifts (driver-r4-39)
     if (_busy && pending != null) {
       // D-14: the running animation now steers to this pose; animating
       // it again once that one ends would send the same move twice.
@@ -746,7 +757,7 @@ class DriverCameraController {
   Future<void> _flush() async {
     final port = _port;
     final pose = _pending;
-    if (!_canFollow || _busy || port == null || pose == null) {
+    if (!_canFollow || _busy || _touching || port == null || pose == null) {
       return;
     }
     final location = _location;

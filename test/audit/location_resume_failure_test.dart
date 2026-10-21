@@ -147,6 +147,28 @@ void main() {
     );
   }
 
+  // driver-r4-32: the shade, a permission prompt or a call banner makes the
+  // app inactive while the trip stays on screen.
+  testWidgets('inactive keeps the trip GPS and arrival', (tester) async {
+    final location = _DelayedLocation();
+    await _mount(tester, location);
+    location.requests.single.complete(_pickup());
+    await _frames(tester);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await _frames(tester, 2);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await _frames(tester, 2);
+    expect(location.requests, hasLength(1), reason: 'no new one-shot fix');
+    await _arrive(tester);
+    expect(
+      find.byKey(const ValueKey<String>('active-ride-panel-waitingForRider')),
+      findsOneWidget,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 2);
+    await location.updates.close();
+  });
+
   testWidgets('current GPS failure still blocks arrival', (tester) async {
     final location = _DelayedLocation();
     await _mount(tester, location);

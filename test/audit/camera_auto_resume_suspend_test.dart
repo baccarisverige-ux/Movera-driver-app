@@ -31,6 +31,25 @@ DriverLocation _fix(double lat) => DriverLocation(
     );
 
 void main() {
+  testWidgets('driver-r4-39: a finger held on the map stops follow frames',
+      (tester) async {
+    final camera = DriverCameraController(now: () => _now);
+    addTearDown(camera.dispose);
+    final port = _Port();
+    camera.attach(port);
+    camera.update(location: _fix(59), navigating: true);
+    await tester.pump(const Duration(milliseconds: 50));
+    final before = port.commands.length;
+    camera.touching = true; // pressed, not yet a gesture
+    camera.update(location: _fix(59.001), navigating: true);
+    await tester.pump(const Duration(seconds: 1));
+    expect(port.commands, hasLength(before), reason: 'no move under a finger');
+    camera.touching = false;
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(port.commands, hasLength(before + 1));
+    expect(port.commands.last.target.latitude, greaterThan(59.0005));
+  });
+
   testWidgets('driver-20: an auto-resume that came due while suspended '
       'still brings the camera back after resume', (tester) async {
     var resumes = 0;
