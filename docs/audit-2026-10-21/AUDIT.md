@@ -1,12 +1,16 @@
-# Movera driver app: bug audit (partial, saved 2026-10-21)
+# Movera driver app: bug audit
+
 Confirmed: 82 (high 5, medium 22, low 55). Rejected as false alarms: 35.
-Each finding was checked by an independent code tracer and a reproducer (often with a throwaway flutter test), with a third reviewer on disagreements. Deep-search runs still in progress at save time are not included.
+
+Runs finished: 10 of 38. Still running at this save: driver-w2a, driver-w2b, driver-w3a, driver-w3b, driver-w4a, driver-w4b, driver-w4c, driver-j1, driver-j3, driver-j4, driver-j5, driver-j6, driver-j7.
+
+Each finding was checked by an independent code tracer and a reproducer (often with a throwaway flutter test), with a third reviewer on disagreements. Findings from read-only runs were verified by code reading only. Possible duplicates across runs are not yet merged.
 
 ## High (5)
 
 ### H1. Terminal exits call Navigator.pop() on whatever route is on top, so a rider cancel (or any authoritative outcome) while Chat/Preferences/a modal sheet is open leaves the dead trip screen mounted
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:452`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:452` (found by driver1)
 
 **What happens:** Driver is waiting at pickup, opens Message rider (Chat page on top). The rider cancels; realtime delivers rider_cancelled. The Chat page closes, the trip screen stays with GPS stopped and the waybill discarded; nothing on it works any more and Back is blocked. The 'Rider cancelled' island notice is queued for Home, which is not reached.
 
@@ -16,7 +20,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### H2. After a driver cancel or no-show the session never ends the trip, so Home stays 'on trip': no offers and Go online does nothing
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:1384`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:1384` (found by driver-j2)
 
 **What happens:** The driver is online on Home and accepts a Radar trip. At pickup the wait passes the no-show time. The driver taps 'Rider didn't show' and confirms (or picks Cancel trip with any reason and confirms). The SnackBar 'Trip cancelled · …' appears and Home comes back, but the radar shows OFF and no offers ever arrive. Tapping OFF/Go online shows the 'online' island message, but the session stays onTrip and the driver never becomes available. The driving-time clock keeps running and can force a rest. Only an app restart recovers. Worked out by hand from the code; nothing was run.
 
@@ -26,7 +30,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### H3. Closing (×) the Radar card whose Match claim is in flight leaves Home permanently in "Matching": no other trip can be matched and the won claim is dropped
 
-`lib/presentation/driver/home/home_offer_radar.dart:895`
+`lib/presentation/driver/home/home_offer_radar.dart:895` (found by driver2)
 
 **What happens:** Driver taps Match on a Radar card, then (within the claim's network latency) taps the small × on that card. Dispatch answers success: the trip is assigned to this driver on the server, but no trip opens; the remaining cards' Match buttons are disabled and the radar says "Matching / please wait" indefinitely. The driver cannot accept any trip until they go offline and online again; a scheduled "Leave now" in that state is handed to a backup driver.
 
@@ -36,7 +40,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### H4. "Leave now" removes the accepted scheduled ride from the store before a push that silently does nothing when Home is not the current route
 
-`lib/presentation/driver/home/home_scheduled.dart:220`
+`lib/presentation/driver/home/home_scheduled.dart:220` (found by driver4)
 
 **What happens:** Driver is online, has an accepted reservation for 07:40, and at 07:0x opens Scheduled rides (or any other screen/sheet) over Home to check it. The "leave now" moment arrives while that screen is on top: the ride disappears from Scheduled rides › Accepted, the island later flashes "Leave now for 07:40" and a notification "Leave now for 07:40 pickup" appears, but no trip screen ever opens; returning to Home shows no trip and the ride is gone for good (no backup hand-off either, since `_scheduled.ride` was set to null).
 
@@ -46,7 +50,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### H5. Same defect as driver-74: "Leave now" removes the accepted ride from Accepted, then pushSingle silently does nothing while any route or sheet covers Home, so the trip never opens and the ride is lost
 
-`lib/presentation/driver/home/home_scheduled.dart:234`
+`lib/presentation/driver/home/home_scheduled.dart:234` (found by driver4)
 
 **What happens:** Driver has accepted the 07:40 reservation, is online, and opens Scheduled rides (or any other screen) at 07:33. The smart-gap timer fires "Leave now": the ride leaves Accepted, the island (hidden) says "Leave now", no trip screen opens. Driver returns to Home: no active trip, the reservation is no longer in Accepted, nothing is persisted. The rider's ride is silently lost on this phone.
 
@@ -58,7 +62,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M1. Pickup pay is added to the fare shown on offer cards but is dropped on accept, so the trip, waybill earnings and history show less than the card promised
 
-`lib/core/dispatch/pickup_pay.dart:38`
+`lib/core/dispatch/pickup_pay.dart:38` (found by driver4)
 
 **What happens:** While driving, the next-trip card says 132,20 kr (incl. 3,80 kr pickup) and the driver accepts. The secured-next banner, the next trip's screen, its waybill 'Your earnings' and the history row all say 128,40 kr; the 3,80 kr the card promised is gone. Same on Home radar/exclusive cards whenever pickup pay is non-zero.
 
@@ -68,7 +72,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M2. On web the 8 s GPS time limit is not enforced (geolocator_web 4.1.4 passes microseconds as ms, with no Dart timeout), so a browser that never answers blocks the one-shot fix and the GPS subscription on Home and the trip
 
-`lib/core/location/driver_location_service.dart:29`
+`lib/core/location/driver_location_service.dart:29` (found by driver3)
 
 **What happens:** Driver opens the PWA on a phone whose browser cannot obtain a fix right away: Home stays on the locating placeholder and the trip map shows no live car, no route and no status for as long as the browser withholds an answer (up to ~2.2 h) instead of falling back after 8 s as on native.
 
@@ -78,7 +82,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M3. Trip auto-resume timer that fires while suspended is dropped and never re-armed; resume() does not reschedule it
 
-`lib/core/navigation/driver_camera_controller.dart:474`
+`lib/core/navigation/driver_camera_controller.dart:474` (found by driver4)
 
 **What happens:** Driver on an active trip pans the map (camera enters Free), switches to another app for more than 12 s on Android, comes back: the trip map stays where it was panned indefinitely; the camera never returns to the car until the driver touches the map again or taps recenter.
 
@@ -88,7 +92,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M4. Corrupt local JSON records leak rider name, pickup/dropoff addresses (and trusted-contact phones) into DriverLog via FormatException source excerpts
 
-`lib/core/ride/prefs_active_ride_repository.dart:81`
+`lib/core/ride/prefs_active_ride_repository.dart:81` (found by driver2)
 
 **What happens:** localStorage/SharedPreferences holds a half-written movera_driver_active_ride (e.g. tab killed mid-write) -> next launch Home calls read() -> the rider's name, phone and pickup address are printed to the device/browser log in a release build and would be shipped to any future crash-reporting sink.
 
@@ -98,7 +102,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M5. Scheduled-ride waiting rule is found by searching the localized 'Scheduled ride' label, so French and Swedish drivers get different wait and no-show terms
 
-`lib/core/ride/waiting_rules.dart:250`
+`lib/core/ride/waiting_rules.dart:250` (found by driver-j2)
 
 **What happens:** Take a scheduled Movera XL reservation (category rule free 3 / no-show 3) and press Leave now. In English, termsFor applies XL, then scheduled sets free to 5, and the final guard lifts no-show to 5: 5 free minutes, no-show at 5 min. With the app in Swedish or French the same trip gets 3 free minutes and no-show at 3 min. Paid waiting therefore starts 2 minutes earlier (12,26 kr/min) and the driver can mark a no-show 2 minutes earlier, only because of the UI language. The waiting sheet also loses its 'Rule for this pickup: Scheduled ride' line. Worked out by hand from termsFor; nothing was run.
 
@@ -108,7 +112,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M6. Ride-check audio that is still starting when the card closes keeps the microphone recording with no UI, and dispose() never stops it after a later check opens
 
-`lib/core/safety/ride_check_controller.dart:260`
+`lib/core/safety/ride_check_controller.dart:260` (found by driver2)
 
 **What happens:** Long-stop card opens, driver taps 'Record audio' and, while the OS mic permission sheet / recorder start is still in flight (hundreds of ms on a phone), taps 'I'm OK'. The card closes but the phone keeps recording the cabin to ride_check_audio/*.m4a with no indicator; after the next Ride check on the same trip and leaving the trip screen, the recorder is still running until the app process dies.
 
@@ -118,7 +122,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M7. Saved Ride-preferences category choice is never restored at boot, so switched-off categories are offered again after every restart
 
-`lib/core/vehicle/ride_categories.dart:53`
+`lib/core/vehicle/ride_categories.dart:53` (found by driver3)
 
 **What happens:** Driver opens Ride preferences, switches off 'Movera Pet' (saved to settings), kills and relaunches the app, goes online. Home shows Radar/Exclusive/reservation offers in the Pet category (and scheduled Pet rides) because `DriverCategoryChoice.off` is empty; the filter only starts working again after the driver happens to open Ride preferences.
 
@@ -128,7 +132,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M8. WaybillPayment.fromFare reads only the first digit group of a thousands-grouped fare label, so earnings/fee are wrong for fares >= 1 000 kr
 
-`lib/core/waybill/waybill.dart:296`
+`lib/core/waybill/waybill.dart:296` (found by driver4)
 
 **What happens:** A driver completes a 1 234,50 kr trip (any backend Offer.fare >= 100000 minor units, or a demo fare pushed over 1 000 kr by waiting fees). Opening the waybill shows "Your earnings 0.75 kr" and "Service fee 0.25 kr" instead of about 925,88 kr / 308,62 kr; with netFare on, the offer card shows a 0.75 kr net fare for a 1 234 kr trip.
 
@@ -138,7 +142,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M9. An authoritative `completed` projection archives a cash trip without its payment method, cash collected or waiting fee
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:316`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:316` (found by driver1)
 
 **What happens:** Cash trip in progress; admin force-completes it (`POST /admin/trips/{id}/complete`) -> `trip_projection` status completed arrives -> history row shows the trip as card-paid with no 'Cash collected' line; the period's cash balance sheet omits it.
 
@@ -148,7 +152,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M10. A repeated same-stage (onTrip) projection restarts the next-trip radar: an accepted (matching) or shown Exclusive offer is dropped, and the route and camera are re-fitted
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:341`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:341` (found by driver1)
 
 **What happens:** Driver on trip accepts the Exclusive next-trip offer; within a second the app is resumed or a projection echo arrives with status in_trip. The match timer is cancelled, the state goes back to scanning, the accepted trip is lost and the same offer pops up again (or is gone if declined before); the long-stop ride-check timer also restarts from zero.
 
@@ -158,7 +162,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M11. An authoritative `completed` projection discards the waybill instead of completing it and journals the trip without payment method, cash collected or waiting fee
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:376`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:376` (found by driver1)
 
 **What happens:** Backend/admin marks the trip completed while the driver is on the last leg. The outcome sheet says 'Movera recorded this trip as completed', but the Home island still shows the previous trip as last trip and the history entry for this cash trip has no payment method or cash collected.
 
@@ -168,7 +172,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M12. Re-tapping Continue on Add vehicle after taking document photos silently deletes the saved photos
 
-`lib/presentation/driver/add vehicle/add_vehicle.dart:76`
+`lib/presentation/driver/add vehicle/add_vehicle.dart:76` (found by driver2)
 
 **What happens:** Vehicles > + > fill make/model/year/plate > Continue > Registration certificate > Take photo (saved locally) > Back > Continue again: the photo row is overwritten; the documents page shows no saved photo and the base64 image is gone from preferences.
 
@@ -178,7 +182,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M13. AppLifecycleState.inactive is treated as not foreground, so Home renders the driver as offline (radar "OFF · Tap to scan", offline dock, no "Finding trips") while the session is online
 
-`lib/presentation/driver/home/home.dart:189`
+`lib/presentation/driver/home/home.dart:189` (found by driver3)
 
 **What happens:** Driver is online on Home; a phone call comes in on iOS (app stays visible behind the call banner, state = inactive). Home immediately shows "Radar · OFF · Tap to scan" and the offline dock for the whole call; the driver believes they were taken offline. When the call ends, the online face returns. Offers arriving during the call were not listed.
 
@@ -188,7 +192,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M14. A Match claim that succeeds after the driver went offline is silently discarded although dispatch assigned the trip
 
-`lib/presentation/driver/home/home_offer_radar.dart:546`
+`lib/presentation/driver/home/home_offer_radar.dart:546` (found by driver2)
 
 **What happens:** Driver taps Match, then long-presses the radar and confirms "Go offline" before dispatch answers (slow network). Dispatch answers success → the trip is assigned to this driver server-side; the app shows nothing, stays offline, never opens the trip and never declines/cancels it.
 
@@ -198,7 +202,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M15. Two Radar offers lost within 2.8 s share one _homeRadarLostMatchTimer: only the last is dismissed, and the other stays in _radarHomeOffers (hidden by the deck), which keeps the deck slot and "trips found" up and holds back every Exclusive offer
 
-`lib/presentation/driver/home/home_offer_radar.dart:692`
+`lib/presentation/driver/home/home_offer_radar.dart:692` (found by driver2)
 
 **What happens:** Driver has two deck cards from destination mode and turns destination mode off. Both cards are marked taken; after 2.8 s only the second disappears, the first stays as a greyed "Taken by another driver" card and the radar keeps saying trips are found until the driver taps × or goes offline.
 
@@ -208,7 +212,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M16. Won admin direct assign or Exclusive reservation is lost (shows 'Trip matched' or 'accepted', no trip opens) when a drawer route covers Home as the claim resolves
 
-`lib/presentation/driver/home/home_reservation.dart:509`
+`lib/presentation/driver/home/home_reservation.dart:509` (found by driver4)
 
 **What happens:** Exclusive reservation (or admin direct assign) is up, driver taps Accept, edge-swipes the drawer and opens Ride history while the claim is pending. Dispatch answers success: the reservation disappears from Scheduled rides and from Home, the island says "accepted", but no trip screen ever opens and nothing is persisted; on the server the trip is this driver's.
 
@@ -218,7 +222,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M17. Native: the map padding switches between the 75% driving anchor and the plain top inset the instant a pan is reported or recenter starts, which the SDK realizes as an immediate content shift under the finger and a snap at the start of the 'no snap' recenter flight
 
-`lib/presentation/driver/overlays/map_overlay_insets.dart:34`
+`lib/presentation/driver/overlays/map_overlay_insets.dart:34` (found by driver2)
 
 **What happens:** Driver in guidance on Android/iOS starts dragging the map: as soon as the drag registers (6 px) the whole map lurches ~130 px up under the finger; tapping recenter produces an equal downward jump before the smooth flight begins.
 
@@ -228,7 +232,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M18. A ride-category choice saved in Ride preferences is not applied to offers after a cold start until the driver reopens Ride preferences
 
-`lib/presentation/driver/preferences/preferences.dart:122`
+`lib/presentation/driver/preferences/preferences.dart:122` (found by driver4)
 
 **What happens:** Driver switches off 'Priority' and 'Comfort' in Ride preferences (snackbar '4 ride categories saved'), kills and relaunches the app, goes online: Priority/Comfort offers appear on Home and in the Live list; reopening Ride preferences shows them correctly off and only then stops the offers.
 
@@ -238,7 +242,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M19. Logout clears the saved category preferences but leaves the in-memory offer filter, so the next session filters offers by the previous driver's choice
 
-`lib/presentation/driver/profile/profile.dart:394`
+`lib/presentation/driver/profile/profile.dart:394` (found by driver2)
 
 **What happens:** Switch off 'Comfort' in Ride preferences, Profile > Log out > Return to demo, go online: Comfort offers are still filtered out although Ride preferences (storage) now shows every category enabled; opening Ride preferences once makes them reappear.
 
@@ -248,7 +252,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M20. System Back while a Radar claim is in flight unmounts Radar and drops a won trip (the on-screen Back is covered by the Matching banner)
 
-`lib/presentation/driver/ride requests/ride_requests.dart:322`
+`lib/presentation/driver/ride requests/ride_requests.dart:322` (found by driver3)
 
 **What happens:** Driver taps Match, changes their mind and taps Back within a second, then reopens Radar: the trip is no longer listed (claim succeeded and removed it) and no active trip exists on this phone, while dispatch considers it accepted.
 
@@ -258,7 +262,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M21. A withdrawal of another offer cancels the won-match timer: the claimed trip never opens and Radar is stuck in Matching
 
-`lib/presentation/driver/ride requests/ride_requests.dart:435`
+`lib/presentation/driver/ride requests/ride_requests.dart:435` (found by driver3)
 
 **What happens:** Driver taps Match on a Radar trip, dispatch answers success; within half a second another driver's accept withdraws a different card. The 'Matched' banner is replaced by 'Taken by another driver', no trip screen opens, the matched card spins forever, and no other trip can be matched until the driver closes and reopens Radar. The accepted trip is gone from the server feed.
 
@@ -268,7 +272,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### M22. Reservation claim that succeeds after the list unmounts is lost and later reported 'No longer available'
 
-`lib/presentation/driver/scheduled rides/scheduled_rides.dart:278`
+`lib/presentation/driver/scheduled rides/scheduled_rides.dart:278` (found by driver3)
 
 **What happens:** Driver taps Accept on an open reservation and presses Back during the claim. Later they open Scheduled rides, see the reservation still under Requests, tap Accept, and get 'No longer available'. The reservation was assigned to them by dispatch and never reaches the Accepted tab, so no reminder, 'leave now' or waybill will come.
 
@@ -280,7 +284,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L1. DECISIONS.md still says contract v0.3.0 and has no record of the 0.4.0 bump that the code and tests pin
 
-`docs/DECISIONS.md:26`
+`docs/DECISIONS.md:26` (found by driver2)
 
 **What happens:** A reviewer syncing the contract from upstream reads DECISIONS.md, re-syncs v0.3.0 and breaks contract_copy_test / the Rider-Driver realtime kinds added in 0.4.0.
 
@@ -290,7 +294,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L2. DECISIONS.md describes a 5 Hz marker throttle and a 20 m web GPS filter; the code instead pushes markers on a 33 ms ticker with distanceFilter 0 (D-07/D-08 design)
 
-`docs/DECISIONS.md:85`
+`docs/DECISIONS.md:85` (found by driver2)
 
 **What happens:** An engineer reading DECISIONS.md believes web GPS is rate-limited to 20 m moves and markers to 5 Hz; on web every geolocation callback and up to 30 marker updates per second actually reach the map and the island (`NavigationController.setVehicle` → `notifyListeners`).
 
@@ -300,7 +304,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L3. Documented browser-key referrer restriction names a different Pages path than the one the deploy workflow actually serves
 
-`docs/PRIVACY_SECURITY.md:33`
+`docs/PRIVACY_SECURITY.md:33` (found by driver3)
 
 **What happens:** Owner applies the documented referrer restriction `.../Movera-drider-/*` in Cloud Console -> the deployed site at `/Movera-driver-app/` loads the Maps script, Google rejects it, driverMapCamera.ready() never becomes true (see the blank-map finding) and the demo map is dead; alternatively the restriction is skipped and the public key stays usable from any site.
 
@@ -310,7 +314,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L4. Gate doc says verify runs `flutter analyze --no-fatal-infos`; workflow runs `--fatal-infos`
 
-`docs/REVIEW_AND_MERGE_GATES.md:33`
+`docs/REVIEW_AND_MERGE_GATES.md:33` (found by driver1)
 
 **What happens:** Developer runs the documented command locally, sees no errors, pushes; the verify job fails on an info-level lint.
 
@@ -320,7 +324,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L5. docs/driver-camera-architecture.md is stale: it gives a 72% anchor, explore zoom 16.8, 45° following tilt, auto-zoom 17.5–14.75, 17.8/20° maneuver framing and a 35 m arrival flatten, but the code uses a 0.75 anchor, exploreZoom 11.7, tilt following zoom up to 67.5°, zoomForSpeed 15–13.625, turnZoom 15.4 and a 140 m ease to 60° tilt
 
-`docs/driver-camera-architecture.md:35`
+`docs/driver-camera-architecture.md:35` (found by driver2)
 
 **What happens:** Acceptance/device testers use the architecture doc as the spec (e.g. expect a 72% anchor or a flat arrival) and either pass wrong behaviour or fail correct behaviour; the CI web verifier gives no signal if the app's 0.75 anchor diverges from the doc.
 
@@ -330,7 +334,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L6. ReservationRequestPreview.pickupAt is one hour off on daylight-saving switch days (adds minutes as absolute Duration to local midnight)
 
-`lib/core/admin/driver_home_admin_content.dart:244`
+`lib/core/admin/driver_home_admin_content.dart:244` (found by driver4)
 
 **What happens:** On Sunday 25 Oct 2026 (DST ends) a driver has a reservation 'Today 07:40'. The island says 'Leave now' and the reminder fires an hour early (06:40), and the countdown reads 1 h less than the clock; on 29 Mar it is an hour late, so 'leave now' appears after the pickup time.
 
@@ -340,7 +344,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L7. _DemoReservationSet._at labels a next-day demo reservation 'Today' when the demo is booked on the spring-forward day itself (e.g. 29 Mar 2026), so its pickupAt is on the wrong day and untilPickup is null
 
-`lib/core/admin/driver_home_admin_content.dart:492`
+`lib/core/admin/driver_home_admin_content.dart:492` (found by driver4)
 
 **What happens:** Demo launched late on 28 March with a reservation lead that lands after midnight: Scheduled rides and the island show it as 'Today HH:mm' and its untilPickup is already negative, so it never becomes a 'Leave now' trip.
 
@@ -350,7 +354,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L8. Demo document titles and demo notifications are localised once and cached, so they stay in the old language after the driver switches language
 
-`lib/core/documents/document_expiry.dart:110`
+`lib/core/documents/document_expiry.dart:110` (found by driver1)
 
 **What happens:** App starts in Swedish (zone default), the Home island already read the documents; the driver picks English in Settings. The island later says 'Försäkringsbrev expires in 7 days', the notification is 'Försäkringsbrev expires tomorrow' and the Documents screen keeps the Swedish names until the app is restarted. Conversely a Swedish driver always sees the three demo notifications in English.
 
@@ -360,7 +364,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L9. Cash balance direction labels ('You owe Movera', 'Movera owes you', 'Settled') are hard-coded English and shown in the French/Swedish UI
 
-`lib/core/earnings/cash_balance.dart:46`
+`lib/core/earnings/cash_balance.dart:46` (found by driver2)
 
 **What happens:** Driver app language is Svenska. A cash Premium reservation (fare 248,40 kr, cash 300,00 kr) is finished: the Collect-cash sheet and the trip's history detail show 'You owe Movera  −51,60 kr' in English between Swedish labels.
 
@@ -370,7 +374,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L10. Offer, reservation and scheduled-ride distances and the rate percentages always use a '.' decimal in fr/sv, while the trip island and the route instruction copy use the localized ',' mark
 
-`lib/core/geo/driver_distance.dart:9`
+`lib/core/geo/driver_distance.dart:9` (found by driver3)
 
 **What happens:** Swedish driver on trip: island '1,2 km', navigation banner '1.2 km'; Radar card '4.2 km' beside a fare '104,80 kr'.
 
@@ -380,7 +384,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L11. Corrupt-record warnings log the raw stored JSON (rider names, addresses, free-text notes) through FormatException.toString()
 
-`lib/core/history/prefs_trip_history_repository.dart:88`
+`lib/core/history/prefs_trip_history_repository.dart:88` (found by driver4)
 
 **What happens:** A localStorage write is cut off mid-blob (web quota, process kill). On the next History open the console/crash log receives 'WARN History JSON malformed: FormatException: Unexpected end of input (at character N) ..."riderName":"Angelica Holm","pickup":"Sveavägen 12...' — rider PII in a log that is meant to be shippable to a crash reporter.
 
@@ -390,7 +394,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L12. Island strip message '<stop> next' concatenates a hardcoded English word onto a localized stop label
 
-`lib/core/island/trip_island_controller.dart:322`
+`lib/core/island/trip_island_controller.dart:322` (found by driver1)
 
 **What happens:** A French- or Swedish-language driver on a multi-stop trip sees the island strip read 'Arrêt 1 next' / 'Stopp 1 next' when heading to a stop.
 
@@ -400,7 +404,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L13. The 'same fix reported again' guard compares the route by identity, so every route refresh/reroute resolves the same GPS fix twice and doubles the per-fix zoom, speed and bearing smoothing steps
 
-`lib/core/navigation/driver_camera_controller.dart:552`
+`lib/core/navigation/driver_camera_controller.dart:552` (found by driver4)
 
 **What happens:** During a reroute mid-turn the camera rotates and zooms with a visibly bigger single step than on other fixes (e.g. zoom 0.5 instead of 0.25 in one frame), the exact effect the guard was written to prevent.
 
@@ -410,7 +414,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L14. Demo notifications (scheduled-ride body, Bonus progress, Payout sent) are hard-coded English although the arb has noticeScheduledBody; the event arrival texts are admin-authored by design
 
-`lib/core/notifications/driver_notifications.dart:333`
+`lib/core/notifications/driver_notifications.dart:333` (found by driver2)
 
 **What happens:** Swedish driver opens Notiser: 'Ny bokad resa' followed by the English body 'Tomorrow 07:40 · 126 kr · Tap to view', then 'Bonus progress' and 'Payout sent' cards; 50 s after Home opens the island says 'Event tonight · City'.
 
@@ -420,7 +424,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L15. formatDistance chooses the unit before rounding: 999.5-999.99 m shows '1000 m' and 9950-9999 m shows '10.0 km'
 
-`lib/core/routing/route_instruction.dart:539`
+`lib/core/routing/route_instruction.dart:539` (found by driver1)
 
 **What happens:** Island reads 'Turn left in 1000 m' for one or more fixes just before switching to '1.0 km'/'999 m', an inconsistent unit boundary visible to the driver.
 
@@ -430,7 +434,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L16. Ride-check recordings are written to the iOS Documents directory, which is included in iCloud/iTunes backups, contradicting the 'saved only on this phone' permission text
 
-`lib/core/safety/ride_check_recorder_native.dart:31`
+`lib/core/safety/ride_check_recorder_native.dart:31` (found by driver3)
 
 **What happens:** Driver with iCloud Backup enabled records a Ride check conversation with a rider; the .m4a is uploaded to Apple's servers with the next device backup although the app told the driver it stays only on the phone.
 
@@ -440,7 +444,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L17. NativeRideCheckRecorder never disposes its AudioRecorder, so each trip leaks a native recorder; an empty capture's file is also left on disk
 
-`lib/core/safety/ride_check_recorder_native.dart:48`
+`lib/core/safety/ride_check_recorder_native.dart:48` (found by driver3)
 
 **What happens:** Driver taps Record then immediately Stop on several trips: each leaves an empty `ride-check-<trip>-<ms>.m4a` in Documents/ride_check_audio (grows forever) and one undisposed native recorder per trip for the life of the process.
 
@@ -450,7 +454,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L18. French plurals written as =1{1 ...} render a literal '1 course' / '1 arrêt' for count 0 (gen-l10n maps =1 to the CLDR 'one' slot, which in fr covers 0)
 
-`lib/l10n/app_fr.arb:713`
+`lib/l10n/app_fr.arb:713` (found by driver1)
 
 **What happens:** French driver opens history with no rides or a reservation with zero stops; the counters read '0 courses' / '0 arrêts' instead of '0 course' / '0 arrêt'.
 
@@ -460,7 +464,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L19. A failed clearLocalUserData leaves the driver logged in with every long-lived storage repository invalidated (generation already bumped) and no recovery
 
-`lib/main.dart:184`
+`lib/main.dart:184` (found by driver2)
 
 **What happens:** On a device where SharedPreferences commit fails for one key (full disk, broken prefs file), the driver taps Log out, sees 'Could not clear local data', continues driving; the next accepted trip is not persisted, so a crash mid-trip comes back to an empty Home.
 
@@ -470,7 +474,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L20. Disposing AcceptRide while a Ride check is open makes Home call setState during finalizeTree: a debug-only 'widget tree was locked' error, and in debug the held radar offers are not released
 
-`lib/presentation/driver/accept ride/accept_ride.dart:679`
+`lib/presentation/driver/accept ride/accept_ride.dart:679` (found by driver1)
 
 **What happens:** A Ride check card is open (long stop / off-route) when the rider cancels (or admin releases the trip); the trip screen pops. In a debug or profile build the framework reports "setState() or markNeedsBuild() called when widget tree was locked" during finalizeTree and AcceptRide's dispose is cut short, leaving its realtime subscription and timers alive.
 
@@ -480,7 +484,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L21. Hard-coded English 'stop'/'pickup' is injected into the localized 'move within 100 m' message
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:503`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:503` (found by driver1)
 
 **What happens:** App language Swedish; driver taps 'I've arrived' more than 100 m from the pickup: snackbar reads 'Kom inom 100 m (pickup) för att vara framme.'
 
@@ -490,7 +494,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L22. After 'I've arrived', the pickup route line stays on the map during the wait until the car moves at least 0.4 m (or a GPS snapshot persist fires), because the route-cleared notification is dropped while _stageTransitioning is set
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:562`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:562` (found by driver1)
 
 **What happens:** Driver taps 'I've arrived' at the pickup. The waiting stage starts but the black route line to the pickup (and the old ETA value) remain on the map for the whole wait.
 
@@ -500,7 +504,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L23. DECISIONS.md's '20 m web GPS filter' is not applied: the active ride passes distanceFilter 0 on web, so every browser fix is processed (the per-fix rebuild cost is already handled by D-07)
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:605`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:605` (found by driver1)
 
 **What happens:** Safari PWA on an active trip: each raw geolocation fix (no distance gating) drives _applyDriverPosition, route-refresh checks and island updates, the very load pattern the recorded decision says was limited by a 20 m filter.
 
@@ -510,7 +514,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L24. A next-trip offer hidden for a Ride check comes back with a new full exclusiveAcceptTime, ignoring the time it was already on screen
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:1161`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:1161` (found by driver1)
 
 **What happens:** Offer shown with 20 s left; a Ride check opens and is answered after 10 s; the offer returns with the full exclusiveAcceptTime again instead of ~10 s.
 
@@ -520,7 +524,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L25. Cancelling the current trip with a secured next trip starts the next AcceptRide without destination mode, unlike completion and the journal snapshot
 
-`lib/presentation/driver/accept ride/accept_ride_trip.dart:1394`
+`lib/presentation/driver/accept ride/accept_ride_trip.dart:1394` (found by driver1)
 
 **What happens:** Driver has destination mode on, secures a next trip, then ends the current trip early. The next trip's screen has destination mode off; Exclusive offers no longer follow the destination.
 
@@ -530,7 +534,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L26. Route-progress semantics value is read out in English ('42 percent') in fr/sv
 
-`lib/presentation/driver/accept ride/adaptive_trip_island.dart:1123`
+`lib/presentation/driver/accept ride/adaptive_trip_island.dart:1123` (found by driver4)
 
 **What happens:** VoiceOver/TalkBack in Swedish announces 'Ruttframsteg, 42 percent'.
 
@@ -540,7 +544,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L27. Ride check card tells the driver 'Movera safety team alerted · Trip, driver and rider details were sent' while alerts only go to an in-memory demo outbox
 
-`lib/presentation/driver/accept ride/ride_check_card.dart:703`
+`lib/presentation/driver/accept ride/ride_check_card.dart:703` (found by driver3)
 
 **What happens:** On a trip the Ride check opens (long stop / off route), the driver picks 'Accident or collision' (a red topic): the card shows 'Movera safety team alerted. Trip, driver and rider details were sent.' although only DemoSafetyAlertRepository._alerts was updated.
 
@@ -550,7 +554,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L28. The 'photo storage full' budget error is shown in English in the vehicle documents SnackBar (the per-photo size error is already caught earlier with localized text)
 
-`lib/presentation/driver/add vehicle/add_vehicle.dart:501`
+`lib/presentation/driver/add vehicle/add_vehicle.dart:501` (found by driver2)
 
 **What happens:** Swedish driver attaches a large registration photo: a SnackBar in English appears on an otherwise Swedish screen.
 
@@ -560,7 +564,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L29. 'DEMO DATA' badges (Analytics, Driving log) and the 'DRIVING IN' header (Documents) are hardcoded English on localized screens
 
-`lib/presentation/driver/analytics/analytics.dart:60`
+`lib/presentation/driver/analytics/analytics.dart:60` (found by driver4)
 
 **What happens:** Swedish driver opens Dokument: a header 'DRIVING IN' sits above 'Stockholm'; Analys and Körlogg both open with an English 'DEMO DATA' badge.
 
@@ -570,7 +574,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L30. English copy 'Did you don’t get code?' is ungrammatical
 
-`lib/presentation/driver/auth/phone verification/phone_verify.dart:122`
+`lib/presentation/driver/auth/phone verification/phone_verify.dart:122` (found by driver3)
 
 **What happens:** Legacy auth > Create account > phone > Continue: the screen shows 'Did you don’t get code?'.
 
@@ -580,7 +584,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L31. Divider word 'or' is hardcoded English and not translated
 
-`lib/presentation/driver/auth/sign in/sign_in.dart:62`
+`lib/presentation/driver/auth/sign in/sign_in.dart:62` (found by driver4)
 
 **What happens:** Set language to Svenska and open Sign in: 'Fortsätt med telefon' / 'or' / 'Fortsätt med Apple'.
 
@@ -590,7 +594,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L32. Destination search result count is the English literal '${results.length} found'
 
-`lib/presentation/driver/destination mode/destination_picker.dart:361`
+`lib/presentation/driver/destination mode/destination_picker.dart:361` (found by driver2)
 
 **What happens:** French driver types a destination: header reads 'Résultats   3 found'.
 
@@ -600,7 +604,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L33. Section label 'DRIVING IN' is hardcoded English on the Documents screen
 
-`lib/presentation/driver/documents/documents.dart:76`
+`lib/presentation/driver/documents/documents.dart:76` (found by driver3)
 
 **What happens:** Language Svenska > Profile > Documents: 'DRIVING IN' above 'Stockholm-resor'.
 
@@ -610,7 +614,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L34. feeSuffix hardcodes 'kr' and a /100 divisor for whole cancel fees, ignoring the Money currency and exponent (latent until a non-SEK cancelFee arrives)
 
-`lib/presentation/driver/home/components/home_island_notices.dart:72`
+`lib/presentation/driver/home/components/home_island_notices.dart:72` (found by driver4)
 
 **What happens:** In a French zone the backend sends cancelFee {amountMinor: 500, currency: 'EUR'}: the island and the rider-cancelled sheet say '· +5 kr' instead of '· +5,00 €'; for TND 5000 millimes they say '+50 kr' instead of '5,000 DT'.
 
@@ -620,7 +624,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L35. IslandMessages.posted grows without bound in production: every show() appends and only the test-only reset() clears it
 
-`lib/presentation/driver/home/components/island_messages.dart:76`
+`lib/presentation/driver/home/components/island_messages.dart:76` (found by driver1)
 
 **What happens:** A driver keeps the app open for a long shift: every island message ever posted (and the closures of disposed Home states after logout/login) stays referenced in a static list until the process dies.
 
@@ -630,7 +634,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L36. _activateDestinationMode calls _goOnline() after its awaits without re-checking that destination mode is still active, so a driver who went offline or turned the destination off during the route fetch is put online
 
-`lib/presentation/driver/home/home_map_sheet.dart:346`
+`lib/presentation/driver/home/home_map_sheet.dart:346` (found by driver1)
 
 **What happens:** Driver confirms a destination, the road-route request is slow, and within those seconds they open the island sheet and tap "Turn off destination". The route request returns, and `_goOnline()` flips the driver online (radar starts, offers arrive) although destination mode is off and they never asked to go online.
 
@@ -640,7 +644,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L37. Re-showing the Exclusive offer already on screen restarts its countdown; the demo _directOfferTimer re-fires on every resume, so returning from any route resets the offer's time to the full lifetime (contradicts the D-04/R13-3 "time left" rule)
 
-`lib/presentation/driver/home/home_offer_radar.dart:1175`
+`lib/presentation/driver/home/home_offer_radar.dart:1175` (found by driver2)
 
 **What happens:** Exclusive offer shows 9 s left; driver long-presses the radar, gets "Go offline?", taps "Stay online". The offer resumes at ~8 s, then 2.2 s later jumps back to 15 s and the Q16 miss clock runs again from scratch.
 
@@ -650,7 +654,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L38. '1 ride categories saved' – the saved-count snackbar is not pluralized
 
-`lib/presentation/driver/preferences/preferences.dart:203`
+`lib/presentation/driver/preferences/preferences.dart:203` (found by driver4)
 
 **What happens:** Leave only 'Movera' on and tap Save preferences: snackbar '1 ride categories saved'.
 
@@ -660,7 +664,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L39. On first open, Profile shows 'Vehicle data unavailable' until primaryIdentity() resolves
 
-`lib/presentation/driver/profile/profile.dart:162`
+`lib/presentation/driver/profile/profile.dart:162` (found by driver2)
 
 **What happens:** Open Profile: the Vehicles row reads 'Vehicle data unavailable' for a frame or more, then 'Mercedes-Benz E 220'.
 
@@ -670,7 +674,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L40. Cancelled/no-fare trip detail shows the quoted fare as 'Ride Cost' and an 'incl. +X kr Movera bonus' note
 
-`lib/presentation/driver/ride history/history detail/history_detail.dart:400`
+`lib/presentation/driver/ride history/history detail/history_detail.dart:400` (found by driver3)
 
 **What happens:** Driver cancels a 152,40 kr admin radar-group trip with a 40 kr bonus before pickup. History list shows '—'; opening it shows 'Ride cost 152,40 kr' and 'incl. +40 kr Movera bonus' above 'Cancelled by driver'.
 
@@ -680,7 +684,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L41. Cash balance direction row is English-only ('You owe Movera') in the localized detail screen
 
-`lib/presentation/driver/ride history/history detail/history_detail.dart:432`
+`lib/presentation/driver/ride history/history detail/history_detail.dart:432` (found by driver3)
 
 **What happens:** Swedish driver opens a completed cash trip in History: 'Kontant insamlat 300,00 kr', then 'You owe Movera −51,60 kr', then the Swedish settlement note.
 
@@ -690,7 +694,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L42. Overview counts and empty-state disagree about what a 'ride' is (cancelled trips counted in some places, not others)
 
-`lib/presentation/driver/ride history/ride_history.dart:390`
+`lib/presentation/driver/ride history/ride_history.dart:390` (found by driver1)
 
 **What happens:** A week with 0 completed and 3 cancelled trips: Rides metric '0', no 'No completed rides in this period' text, two cancelled cards under Latest rides, button 'View all 3 rides', and the All rides header '0 rides in Last 7 days' above three cards.
 
@@ -700,7 +704,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L43. All-rides list prints raw wire status names and a hardcoded 'cancelled_by_driver'
 
-`lib/presentation/driver/ride history/ride_history.dart:940`
+`lib/presentation/driver/ride history/ride_history.dart:940` (found by driver1)
 
 **What happens:** A rider cancels a trip. In History › All rides the card's status line reads `cancelled_by_rider`; tapping it shows 'Cancelled by rider'. In Swedish the list still shows the English snake_case token.
 
@@ -710,7 +714,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L44. Hardcoded English UI strings in localized screens
 
-`lib/presentation/driver/ride requests/ride_requests.dart:648`
+`lib/presentation/driver/ride requests/ride_requests.dart:648` (found by driver3)
 
 **What happens:** Driver language is French. Radar header shows '3 OFFERS', destination search shows '2 found', the bank form shows 'ACCOUNT', Analytics and Driving logs show 'DEMO DATA', the queue sheet shows '15-30 mins EST time'.
 
@@ -720,7 +724,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L45. On web builds without a tel: handler (desktop or non-telephony tablet browsers), the Safety toolkit says 'Emergency dialer opened' because url_launcher_web always returns true
 
-`lib/presentation/driver/safety toolkits/safety_toolkits.dart:95`
+`lib/presentation/driver/safety toolkits/safety_toolkits.dart:95` (found by driver4)
 
 **What happens:** Driver using the PWA on a laptop/desktop (or a tablet without telephony) taps Call 112 -> browser does nothing or shows a silent protocol prompt -> app shows 'Dialer opened' / ride-check card advances to 'Called 112' with alertSent, though no call path exists.
 
@@ -730,7 +734,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L46. 'PIN verification' tile title is hardcoded although tr.pinVerification exists
 
-`lib/presentation/driver/safety toolkits/safety_toolkits.dart:179`
+`lib/presentation/driver/safety toolkits/safety_toolkits.dart:179` (found by driver4)
 
 **What happens:** Language Français > Settings > Safety > Safety preferences: tile reads 'PIN verification' with a French subtitle.
 
@@ -740,7 +744,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L47. Safety toolkit status banner shows a green success check for 'Could not open the dialer' and 'unavailable' messages
 
-`lib/presentation/driver/safety toolkits/safety_toolkits.dart:452`
+`lib/presentation/driver/safety toolkits/safety_toolkits.dart:452` (found by driver4)
 
 **What happens:** On a device/browser where `launchUrl(Uri.parse('tel:112'))` returns false (web, tablet without telephony), tap Contact 112 > Call 112: a green check banner appears reading 'Could not open the dialer...'.
 
@@ -750,7 +754,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L48. Sample accepted ride is seeded with a localized pickupDay, so its time logic silently differs by language
 
-`lib/presentation/driver/scheduled rides/scheduled_rides.dart:445`
+`lib/presentation/driver/scheduled rides/scheduled_rides.dart:445` (found by driver3)
 
 **What happens:** In Swedish, a request whose time clashes with the sample 08:15 ride is still listed and can be accepted, and cancelling the sample ride 30 minutes before pickup is not counted as late; in English the same actions are blocked/counted.
 
@@ -760,7 +764,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L49. Scheduled ride cards show English 'Today'/'Tomorrow' in the Swedish and French UI
 
-`lib/presentation/driver/scheduled rides/scheduled_rides.dart:1134`
+`lib/presentation/driver/scheduled rides/scheduled_rides.dart:1134` (found by driver3)
 
 **What happens:** Driver language is Swedish. Scheduled rides lists 'Today, 07:40–07:45' and 'Tomorrow, 08:15' while the header, tabs and notes are Swedish; the same label is used in the details hero (line 1518).
 
@@ -770,7 +774,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L50. 'tomorrow' is dropped from the free-cancel time on the spring DST day
 
-`lib/presentation/driver/scheduled rides/scheduled_rides_notes.dart:11`
+`lib/presentation/driver/scheduled rides/scheduled_rides_notes.dart:11` (found by driver3)
 
 **What happens:** On the last Sunday of March the driver opens an accepted ride for tomorrow 08:15. The plan card says 'Free cancel until 07:15.' with no day, which reads as today 07:15 (already passed), so the driver believes any cancel is now late.
 
@@ -780,7 +784,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L51. On web, if the Maps JavaScript script is blocked or fails to load, every CustomGoogleMap stays a plain land-colour box with no 'map unavailable' message (the poll is cancelled on dispose)
 
-`lib/widgets/custom_google_map.dart:281`
+`lib/widgets/custom_google_map.dart:281` (found by driver1)
 
 **What happens:** Driver opens the PWA with a content blocker that blocks maps.googleapis.com -> Home shows the beige placeholder forever, 'Finding your location' resolves, offers arrive, but no map, route or car is ever drawn and no message explains why; the 50 ms timer keeps polling until the screen is disposed.
 
@@ -790,7 +794,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L52. With reduced motion (and on the far-cut path) a GPS retarget that arrives during the single moveCamera await is dropped: retarget() requires _looping but _run has already captured the goal, and the controller nulls its pending pose after calling retarget
 
-`lib/widgets/google_driver_camera_port.dart:259`
+`lib/widgets/google_driver_camera_port.dart:259` (found by driver2)
 
 **What happens:** Driver with 'reduce motion' enabled on a 1 Hz GPS trip: occasionally a fix lands while the previous moveCamera is awaiting acknowledgement; that fix never reaches the map and the camera holds the previous position for an extra second.
 
@@ -800,7 +804,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L53. Counter badges show hard-coded English 'NEW' (default label) on Scheduled rides and 'OFFERS' on Ride requests
 
-`lib/widgets/led_count_badge.dart:12`
+`lib/widgets/led_count_badge.dart:12` (found by driver3)
 
 **What happens:** Swedish/French driver sees 'NEW' beside the request count on Bokade resor and 'OFFERS' on the Radar list.
 
@@ -810,7 +814,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L54. Source-grep test asserts a dead switch arm, and no behavioural test covers a rider_cancelled event without a status
 
-`test/core/driver_realtime_test.dart:215`
+`test/core/driver_realtime_test.dart:215` (found by driver-j2)
 
 **What happens:** A refactor changes line 252 to `if (event.status != null)`. A rider_cancelled event without a projection status then falls to the switch, where `_handleRiderCancelled` runs without the drain's retry or backoff. The source-grep test stays green because the dead case label still exists.
 
@@ -820,7 +824,7 @@ Each finding was checked by an independent code tracer and a reproducer (often w
 
 ### L55. Test 'the Home sound releases the player it made' only covers the injected (not-owned) case; the owned-player dispose path is never tested
 
-`test/core/radar_offer_sound_test.dart:92`
+`test/core/radar_offer_sound_test.dart:92` (found by driver2)
 
 **What happens:** A refactor stops disposing the internally created AudioPlayer on Home dispose; every test stays green; drivers accumulate live audio players across Home re-creations (sound keeps playing / memory grows).
 
