@@ -1,4 +1,5 @@
 import 'package:movera/core/scheduled/reservation_when.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'dart:async';
@@ -424,7 +425,9 @@ class ReservationRouteMapPage extends StatelessWidget {
               runSpacing: 8,
               children: [
                 Text(
-                  '${ReservationWhen.dayWord(request.pickupDay)} · ${request.category}',
+                  // The day as seen now, not as booked (driver-u142).
+                  '${ReservationWhen.dayWord(request.pickupDayAt(
+                      ScheduledClock.instance.now()))} · ${request.category}',
                   style: const TextStyle(color: _muted, fontSize: 13),
                 ),
                 Text(

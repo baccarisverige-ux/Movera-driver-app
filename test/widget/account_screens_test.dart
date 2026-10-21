@@ -159,7 +159,10 @@ void main() {
               alignment: Alignment.bottomCenter,
               child: ReservationRequestSheet(
                 request: demoReservationRequest,
-                clock: () => DateTime(2026, 10, 15, 7),
+                // 40 min before its pickup, on the date the demo booked it
+                // for (driver-u141: a fixed date no longer moves it).
+                clock: () => demoReservationRequest.scheduledAt!
+                    .subtract(const Duration(minutes: 40)),
               ),
             ),
           ),
