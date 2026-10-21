@@ -7,6 +7,8 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -23,6 +25,8 @@ import '../../integration_test/headless_map_platform.dart';
 // Wave 3 (D3.2, part a): Home's island notices, Radar, map sheet.
 // - driver-u110 / driver-u126: a notice posted while a screen covers
 //   Home waits for Home instead of playing on its hidden island.
+// - driver-65: the app inactive but on screen (a call banner, Control
+//   Center, a system dialog) keeps Home's online face and its offers.
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -73,6 +77,25 @@ class _Dispatch implements DispatchRepository {
   Stream<OfferWithdrawal> watchWithdrawals() =>
       const Stream<OfferWithdrawal>.empty();
 }
+
+/// A short Radar trip near the driver.
+RideOffer _trip(String id) => RideOffer(
+  id: id,
+  category: 'Comfort',
+  fare: Money(minorUnits: 8810),
+  rating: '4.92',
+  riderName: 'Sara',
+  pickupMinutes: 2,
+  pickupKm: 0.8,
+  tripMinutes: 6,
+  tripKm: 3.1,
+  pickup: 'Tegnérgatan, Stockholm',
+  dropoff: 'Odengatan, Stockholm',
+  pickupPosition: const GeoPoint(59.3335, 18.0610),
+  dropoffPosition: const GeoPoint(59.3380, 18.0700),
+  isNearby: true,
+  followsDestination: false,
+);
 
 typedef _Home = ({_Dispatch dispatch, DriverSessionController session});
 
@@ -188,6 +211,40 @@ void main() {
       navigator.pop();
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.text(warning.title), findsOneWidget);
+      await _end(tester);
+    });
+  });
+
+  group('driver-65: the app inactive but still on screen', () {
+    testWidgets('Home keeps the online Radar, not "OFF · Tap to scan"', (
+      tester,
+    ) async {
+      final home = await _pumpHome(tester);
+      expect(home.session.availableForOffers, isTrue);
+      expect(find.text('Tap to scan'), findsNothing);
+      // An incoming call banner: the app stays visible behind it.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await _frames(tester, const Duration(seconds: 2));
+      expect(find.text('Tap to scan'), findsNothing,
+          reason: 'the driver is still online');
+      expect(find.text('Scanning'), findsOneWidget);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await _frames(tester, const Duration(milliseconds: 300));
+      await _end(tester);
+    });
+
+    testWidgets('a trip published meanwhile still reaches Home', (
+      tester,
+    ) async {
+      final home = await _pumpHome(tester);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await _frames(tester, const Duration(milliseconds: 300));
+      home.dispatch.publish([_trip('call')]);
+      await _frames(tester, const Duration(seconds: 20));
+      expect(find.byKey(const ValueKey<String>('radar-offer-card-call')),
+          findsOneWidget);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await _frames(tester, const Duration(milliseconds: 300));
       await _end(tester);
     });
   });
