@@ -1,0 +1,42 @@
+// Wave 5 D5.2 (UI truth), part b: Home, onboarding and profile show only
+// what really happened.
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/session/driver_runtime_scope.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/presentation/driver/auth/additional%20detail/screens/upload%20document/take%20id%20photo/take_id_photo.dart';
+
+/// [first] as the app's first route, inside the app's runtime scope, with
+/// [push] opened on top of it.
+Future<void> _app(WidgetTester tester, Widget first, [Widget? push]) async {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  final navigator = GlobalKey<NavigatorState>();
+  await tester.pumpWidget(DriverRuntimeScope(
+    session: DriverSessionController(),
+    homeBuilder: () => const Scaffold(body: Text('Driver home')),
+    child: ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(navigatorKey: navigator, home: first),
+    ),
+  ));
+  if (push != null) {
+    navigator.currentState!.push(MaterialPageRoute<void>(builder: (_) => push));
+  }
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  testWidgets('driver-r3-10: "Return to home" at the end of onboarding opens '
+      'Home, not the Sign-in screen it started from', (tester) async {
+    await _app(tester, const Scaffold(body: Text('Sign in')),
+        const TakeIdPhoto());
+    await tester.tap(find.byKey(const ValueKey('id-preview-return')));
+    await tester.pumpAndSettle();
+    expect(find.text('Driver home'), findsOneWidget);
+    expect(find.text('Sign in'), findsNothing);
+  });
+}
