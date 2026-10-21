@@ -70,6 +70,9 @@ void main() {
 
     test('rounds to öre', () {
       expect(_pay(_config(), km: 1.234, minutes: 0), '3,70 kr');
+      // Half an öre and up rounds up; just under it rounds down.
+      expect(_pay(_config(), km: 1.235, minutes: 0), '3,71 kr');
+      expect(_pay(_config(), km: 1.2349, minutes: 0), '3,70 kr');
       final rate = _comfort.copyWith(krPerKm: 2.5, krPerMinute: 0.8);
       expect(_pay(_config(rate: rate), km: 2.1, minutes: 7), '10,85 kr');
     });
