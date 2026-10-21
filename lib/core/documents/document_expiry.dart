@@ -9,21 +9,42 @@ enum DocumentRenewal { none, inReview }
 /// A driver document with an end date (Q26).
 @immutable
 class TrackedDocument {
-  const TrackedDocument({
+  /// A document whose names are already in the driver's words, e.g. from
+  /// a backend.
+  TrackedDocument({
+    required String id,
+    required String title,
+    required String shortTitle,
+    required DateTime expiresOn,
+    DocumentRenewal renewal = DocumentRenewal.none,
+  }) : this.named(
+         id: id,
+         title: () => title,
+         shortTitle: () => shortTitle,
+         expiresOn: expiresOn,
+         renewal: renewal,
+       );
+
+  /// A document whose names the app writes, read in the driver's language
+  /// each time (driver-13: the demo list outlives a language switch).
+  const TrackedDocument.named({
     required this.id,
-    required this.title,
-    required this.shortTitle,
+    required String Function() title,
+    required String Function() shortTitle,
     required this.expiresOn,
     this.renewal = DocumentRenewal.none,
-  });
+  }) : _title = title,
+       _shortTitle = shortTitle;
 
   final String id;
+  final String Function() _title;
+  final String Function() _shortTitle;
 
   /// tr.docInsuranceLetter
-  final String title;
+  String get title => _title();
 
   /// tr.insurance, for the island.
-  final String shortTitle;
+  String get shortTitle => _shortTitle();
   final DateTime expiresOn;
   final DocumentRenewal renewal;
 
@@ -38,10 +59,10 @@ class TrackedDocument {
   bool expiredAt(DateTime now) => daysLeft(now) <= 0;
 
   TrackedDocument copyWith({DateTime? expiresOn, DocumentRenewal? renewal}) =>
-      TrackedDocument(
+      TrackedDocument.named(
         id: id,
-        title: title,
-        shortTitle: shortTitle,
+        title: _title,
+        shortTitle: _shortTitle,
         expiresOn: expiresOn ?? this.expiresOn,
         renewal: renewal ?? this.renewal,
       );
@@ -87,22 +108,22 @@ class DocumentExpiryStore {
     // a step at 23:00 the day before (driver-r4-12).
     DateTime inDays(int days) => DateTime(now.year, now.month, now.day + days);
     return <TrackedDocument>[
-      TrackedDocument(
+      TrackedDocument.named(
         id: 'DOC-INS-418',
-        title: tr.docInsuranceLetter,
-        shortTitle: tr.insurance,
+        title: () => tr.docInsuranceLetter,
+        shortTitle: () => tr.insurance,
         expiresOn: inDays(7),
       ),
-      TrackedDocument(
+      TrackedDocument.named(
         id: 'DOC-TAXI-418',
-        title: tr.docTaxiDriverLicense,
-        shortTitle: tr.docTaxiLicenseShort,
+        title: () => tr.docTaxiDriverLicense,
+        shortTitle: () => tr.docTaxiLicenseShort,
         expiresOn: inDays(214),
       ),
-      TrackedDocument(
+      TrackedDocument.named(
         id: 'DOC-REG-418',
-        title: tr.docRegistrationCertificate,
-        shortTitle: tr.docRegistrationShort,
+        title: () => tr.docRegistrationCertificate,
+        shortTitle: () => tr.docRegistrationShort,
         expiresOn: inDays(320),
       ),
     ];

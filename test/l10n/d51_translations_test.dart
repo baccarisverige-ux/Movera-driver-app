@@ -11,7 +11,6 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/navigation/navigation_controller.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
-import 'package:movera/core/routing/osrm_route_parser.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check.dart';
@@ -24,6 +23,7 @@ import 'package:movera/core/safety/safety_alert_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/vehicle/local_vehicle_store.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/island/trip_island_controller.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -461,5 +461,16 @@ void main() {
     island.update(input());
     expect(island.face.title, tr.gpsRestored);
     await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('driver-13: demo documents follow a language switch',
+      (tester) async {
+    speak('sv');
+    final store = DocumentExpiryStore.instance..reset();
+    expect(store.documents.first.title, tr.docInsuranceLetter);
+    await show(tester, 'fr', const DriverDocuments());
+    expect(store.documents.first.title, tr.docInsuranceLetter);
+    expect(words(tr.docInsuranceLetter), findsWidgets);
+    expect(words('Försäkringsbrev'), findsNothing);
   });
 }
