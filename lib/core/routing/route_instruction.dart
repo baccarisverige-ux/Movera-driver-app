@@ -572,6 +572,14 @@ class RouteInstructionCopy {
         return road.isEmpty ? l.navHeadOut : l.navHeadOutOn(road);
       case RouteManeuverType.continueStraight:
       case RouteManeuverType.newName:
+        // OSRM "continue" through a bend or turnaround: say the turn, as the
+        // arrow shows it (driver-u39).
+        final bend = _onwardTurn(modifier);
+        if (bend != null) {
+          return onto(
+            bend.kind == RouteCueKind.uTurn ? l.navMakeUTurn : bend.label(l),
+          );
+        }
         return road.isEmpty ? l.navContinueStraight : l.navContinueOn(road);
       case RouteManeuverType.roundabout:
       case RouteManeuverType.rotary:
@@ -660,7 +668,8 @@ class RouteInstructionCopy {
           if (tunnel) return const RouteCue(RouteCueKind.tunnelAhead);
           if (toll) return const RouteCue(RouteCueKind.tollAhead);
         }
-        return const RouteCue(RouteCueKind.continueStraight);
+        return _onwardTurn(modifier) ??
+            const RouteCue(RouteCueKind.continueStraight);
       case RouteManeuverType.roundabout:
       case RouteManeuverType.rotary:
       case RouteManeuverType.roundaboutTurn:
@@ -794,6 +803,16 @@ class RouteInstructionCopy {
   }) => !cue.isRoundabout && meters < nowMeters
       ? livePrimary(cue: cue, meters: meters, strings: strings)
       : cue.label(strings);
+
+  /// The turn cue for a "continue"/"new name" step whose modifier turns
+  /// (left, sharp right, uturn…), or null when it goes straight on or the
+  /// modifier is unknown. Highway slight left/right is handled by the caller
+  /// as keep left/right.
+  static RouteCue? _onwardTurn(String modifier) {
+    if (modifier.isEmpty || modifier == 'straight') return null;
+    final turn = _turn(modifier);
+    return turn.kind == RouteCueKind.proceed ? null : turn;
+  }
 
   static RouteCue _turn(String modifier) {
     switch (modifier) {
