@@ -436,7 +436,7 @@ class ScheduledRideStore {
   static final List<_ScheduledRide> _accepted = _seedAccepted();
   static List<_ScheduledRide> _seedAccepted() => [
     _ScheduledRide(
-      price: '184.00 kr',
+      price: '184,00 kr',
       time: tr.schedSeedTime(tr.tomorrow, '08:15'),
       category: 'Comfort',
       distance: '9.4 km',
@@ -445,7 +445,7 @@ class ScheduledRideStore {
       accepted: true,
       route: ReservationRequestPreview(
         category: 'Comfort',
-        fare: '184.00 kr',
+        fare: '184,00 kr',
         rating: '4.90',
         riderName: 'Lars',
         riderTrips: 47,
@@ -1295,7 +1295,7 @@ class _ScheduledRide {
     ReservationRequestPreview route, {
     bool assigned = false,
   }) => _ScheduledRide(
-    price: route.fare,
+    price: route.fareLabel,
     time: tr.schedSeedTime(route.pickupDay, route.pickupTime),
     category: route.category,
     distance: driverDistanceKm(route.tripKm),
@@ -1313,7 +1313,7 @@ class _ScheduledRide {
     String? distance,
   }) {
     return _ScheduledRide(
-      price: route.fare,
+      price: route.fareLabel,
       time: _timeOf(route, route.pickupDay, window),
       window: window,
       category: route.category,

@@ -59,9 +59,10 @@ class PrefsTripHistoryRepository {
             cancellationReasonCode: data['cancellationReasonCode'] as String?,
             cashCollected: data['cashCollected'] as String?,
             driverBonus: data['driverBonus'] as String?,
+            // Saved in UTC (driver-r4-14); older rows in local time.
             completedAt: DateTime.tryParse(
               data['completedAt'] as String? ?? '',
-            ),
+            )?.toLocal(),
           ),
         )
         .toList(growable: false);
@@ -185,7 +186,7 @@ class PrefsTripHistoryRepository {
         ArgumentError('A terminal trip with a nonempty ID is required'),
       );
     }
-    final at = completedAt ?? DateTime.now();
+    final at = (completedAt ?? DateTime.now()).toLocal();
     Future<void> write() async {
       final prefs = await _load();
       final raw = prefs.getString(key);
@@ -226,7 +227,9 @@ class PrefsTripHistoryRepository {
         if (cashCollected?.trim().isNotEmpty == true)
           'cashCollected': cashCollected!.trim(),
         if (record.driverBonus != null) 'driverBonus': record.driverBonus,
-        'completedAt': at.toIso8601String(),
+        // UTC: a local time has no offset, so the repeated autumn hour
+        // would read back an hour off (driver-r4-14).
+        'completedAt': at.toUtc().toIso8601String(),
       });
       rows.sort(
         (a, b) =>

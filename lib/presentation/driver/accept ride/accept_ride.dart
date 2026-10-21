@@ -44,6 +44,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/rider_contact.dart';
+import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
@@ -593,6 +594,7 @@ class _AcceptRideState extends State<AcceptRide>
     _syncNavigationStageListener();
     _rideLifecycle.addListener(_syncLateEtaListener);
     _AcceptRideTrip(this)._restoreQueuedNextFromSnapshot();
+    _AcceptRideTrip(this)._restoreDestinationFromSnapshot();
     final restored = widget.restoredSnapshot;
     _stopCursor = math.min(math.max(0, restored?.stopIndex ?? 0), widget.stopAddresses.length);
     _paidStopWait = restored?.paidStopWait == true;

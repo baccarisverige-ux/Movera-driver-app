@@ -49,7 +49,7 @@ void main() {
     await openScheduled(tester);
     await tester.tap(find.text('Gamla vägen, Stockholm'));
     await tester.pumpAndSettle();
-    final accept = filledAction(tester, 'Accept  •  126.75 kr');
+    final accept = filledAction(tester, 'Accept  •  126,75 kr');
     accept();
     accept();
     await tester.pumpAndSettle();
@@ -58,6 +58,16 @@ void main() {
     expect(ScheduledRideStore.openRequests.value, 0);
     expect(find.text('Gamla vägen, Stockholm'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('prices read "126,75 kr" as on every other screen '
+      '(driver-r4-20)', (tester) async {
+    await openScheduled(tester);
+    expect(find.text('126,75 kr'), findsOneWidget);
+    expect(find.textContaining('126.75'), findsNothing);
+    await tester.tap(find.text('Gamla vägen, Stockholm'));
+    await tester.pumpAndSettle();
+    expect(find.text('Accept  •  126,75 kr'), findsOneWidget);
   });
 
   testWidgets('repeated reason and confirmation preserve cancellation flow', (

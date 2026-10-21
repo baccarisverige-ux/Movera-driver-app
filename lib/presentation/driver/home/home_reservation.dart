@@ -213,7 +213,7 @@ extension _HomeReservation on _DriverHomeState {
             at: feed.now,
             day: request.pickupDay,
             time: request.pickupTime,
-            fare: request.fare,
+            fare: request.fareLabel,
           ),
           popup: false,
         );

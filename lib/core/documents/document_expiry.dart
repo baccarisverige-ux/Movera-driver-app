@@ -83,25 +83,27 @@ class DocumentExpiryStore {
 
   /// The demo: the insurance letter ends in 7 days, the others later.
   static List<TrackedDocument> demo(DateTime now) {
-    final today = DateTime(now.year, now.month, now.day);
+    // Calendar days, not 24 h steps: a clock change on the way would end
+    // a step at 23:00 the day before (driver-r4-12).
+    DateTime inDays(int days) => DateTime(now.year, now.month, now.day + days);
     return <TrackedDocument>[
       TrackedDocument(
         id: 'DOC-INS-418',
         title: tr.docInsuranceLetter,
         shortTitle: tr.insurance,
-        expiresOn: today.add(const Duration(days: 7)),
+        expiresOn: inDays(7),
       ),
       TrackedDocument(
         id: 'DOC-TAXI-418',
         title: tr.docTaxiDriverLicense,
         shortTitle: tr.docTaxiLicenseShort,
-        expiresOn: today.add(const Duration(days: 214)),
+        expiresOn: inDays(214),
       ),
       TrackedDocument(
         id: 'DOC-REG-418',
         title: tr.docRegistrationCertificate,
         shortTitle: tr.docRegistrationShort,
-        expiresOn: today.add(const Duration(days: 320)),
+        expiresOn: inDays(320),
       ),
     ];
   }

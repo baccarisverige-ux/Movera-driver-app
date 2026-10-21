@@ -59,7 +59,7 @@ void main() {
     await _open(tester);
     expect(find.text('Högsätravägen, Lidingö'), findsOneWidget);
     await _openRide(tester, 'Gamla vägen, Stockholm');
-    await tester.tap(find.text('Accept  •  126.75 kr'));
+    await tester.tap(find.text('Accept  •  126,75 kr'));
     await tester.pumpAndSettle();
     // Only saved for later: the trip opens at its time.
     expect(find.text('Accepted · pickup 07:40'), findsOneWidget);
@@ -308,11 +308,11 @@ void main() {
     expect(find.descendant(of: badge, matching: find.text('+40 kr')),
         findsOneWidget);
     // Only the new fare: no old price next to it.
-    expect(find.text('249.25 kr'), findsOneWidget);
-    expect(find.text('209.25 kr'), findsNothing);
+    expect(find.text('249,25 kr'), findsOneWidget);
+    expect(find.text('209,25 kr'), findsNothing);
     await _openRide(tester, 'Högsätravägen, Lidingö');
     expect(find.text('+40 kr'), findsOneWidget);
-    expect(find.text('Accept  •  249.25 kr'), findsOneWidget);
+    expect(find.text('Accept  •  249,25 kr'), findsOneWidget);
   });
 
   testWidgets('a ride Movera assigned is in Accepted, marked so (Q29)', (
