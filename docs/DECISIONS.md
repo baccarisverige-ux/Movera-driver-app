@@ -23,7 +23,7 @@ Terminal:
 
 `completed` · `cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `cancelled_by_system` · `no_show` · `expired` · `failed`
 
-The source of truth is now `contracts/contract.json` (v0.3.0, copied byte-for-byte; see "Contract v0.3" below).
+The source of truth is now `contracts/contract.json` (v0.4.4, copied byte-for-byte; see "Contract v0.3" and "Contract v0.4" below).
 
 Driver `ActiveRideStage` maps onto the live slice only:
 
@@ -98,9 +98,19 @@ Fix (no UX change, no lifecycle change):
 - Waiting and on-trip transitions do not re-fit the camera or flash `Routing…`. First map create and crash-restore may still fit.
 
 
+## Contract v0.4 (October 2026)
+
+`contracts/` now holds the shared Movera contract v0.4.4; `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
+
+- v0.4.0: per-zone config fields (languages, tips, payment methods, waiting by category, auto-offline, driver bonus limits), `TripProjection.acceptedAt`, whole-star ratings and admin dispatch (direct assign, radar group, lock after accept).
+- v0.4.1: `DriverAppConfig.reservations` carries the reservation timings and the running-late ETA watch.
+- v0.4.2: the `reservations.leaveNow` switch is gone (Leave now always opens the trip); reservations on/off for the zone and per driver.
+- v0.4.3: route-change pricing counts a booked stop once and keeps offer raises.
+- v0.4.4: the rider's after-cancel reason command (no driver change).
+
 ## Contract v0.3 (19 October 2026)
 
-`contracts/` holds the shared Movera contract v0.3.0 for Rider, Driver and Admin. It is copied byte-for-byte; `test/contract/contract_copy_test.dart` checks it against `contracts/CHECKSUMS`. Change it upstream and re-sync, never here. `docs/contracts/openapi.yaml` is now only a pointer to `contracts/openapi.yaml`.
+`contracts/` held the shared Movera contract v0.3 for Rider, Driver and Admin. It is copied byte-for-byte; `test/contract/contract_copy_test.dart` checks it against `contracts/CHECKSUMS`. Change it upstream and re-sync, never here. `docs/contracts/openapi.yaml` is now only a pointer to `contracts/openapi.yaml`.
 
 - `TripStatus` has 19 values incl. `cancelled_by_system`; one terminal set. Local storage (journal, history, terminal markers) writes the wire name and still reads older camelCase saves (`TripStatusWire.parse`).
 - `TripTransitions` (`lib/core/contracts/trip_transitions.dart`) mirrors `contract.json#transitions`; contract tests replay `fixtures/scenarios.json`. `ActiveRideController` checks every local stage change against it.
