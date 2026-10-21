@@ -32,6 +32,8 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/session/driver_session_repository.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
+import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/layout_viewport.dart';
@@ -198,6 +200,10 @@ class _MoveraAppState extends State<MoveraApp> {
     }
     _safetyAlerts.reset();
     ScheduledRideStore.reset();
+    // Per-driver state kept in memory: the next driver must not see these
+    // notifications (rider pickup addresses) or documents in review.
+    DriverNotificationFeed.instance.reset();
+    DocumentExpiryStore.instance.reset();
     _session.reset();
   }
 
