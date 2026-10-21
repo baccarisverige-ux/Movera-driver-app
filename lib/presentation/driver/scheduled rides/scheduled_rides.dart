@@ -229,22 +229,23 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
         }
         return;
       }
-      if (!await _claim(ride) || !mounted) return;
-      if (!ScheduledRideStore._requests.remove(ride)) return;
-      _accepted.insert(0, ride.copyWith(accepted: true));
-      setState(() => _selectedTab = 1);
+      if (!await _claim(ride)) return;
+      // Dispatch gave it to this driver: it moves to Accepted even when
+      // the driver left this screen during the claim (driver-94).
       // Requests whose time now clashes leave the list (Q9); the Requests
       // tab says why.
-      ScheduledRideStore._changed();
+      if (!ScheduledRideStore._acceptRequest(ride)) return;
       // Only saved for later: it becomes the trip at its time ("Leave now"
       // by the real clock), never right after Accept.
       final time = ride.route?.pickupTime;
-      if (time == null) {
-        _notice(tr.islandReservationAccepted);
-      } else {
+      if (time != null) {
         IslandMessages.show(HomeIslandNotices.reservationAcceptedAt(time));
-        _notice(tr.schedAcceptedPickupAt(time));
       }
+      if (!mounted) return;
+      setState(() => _selectedTab = 1);
+      _notice(time == null
+          ? tr.islandReservationAccepted
+          : tr.schedAcceptedPickupAt(time));
     } else if (action == _ScheduledRideAction.cancelled ||
         action == _ScheduledRideAction.cancelledNotCounted) {
       if (!_accepted.contains(ride)) return;
@@ -272,7 +273,8 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
 
   /// Asks the server for [ride] when it is an open reservation. True when
   /// this driver got it (or there is no server to ask); lost, it leaves
-  /// the list and the driver is told it is no longer available.
+  /// the list and the driver is told it is no longer available. The
+  /// answer applies even after this screen closed (driver-94).
   Future<bool> _claim(_ScheduledRide ride) async {
     final dispatch = widget.dispatchRepository;
     if (dispatch == null || ride.id.isEmpty) return true;
@@ -285,19 +287,18 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       result = const ClaimResult.networkError();
     }
     _claiming.remove(ride.id);
-    if (!mounted) return false;
-    setState(() {});
+    if (mounted) setState(() {});
     switch (result.outcome) {
       case ClaimOutcome.success:
         return true;
       case ClaimOutcome.networkError:
-        _notice(tr.islandNoConnection);
+        if (mounted) _notice(tr.islandNoConnection);
         return false;
       case ClaimOutcome.alreadyClaimed:
       case ClaimOutcome.expired:
       case ClaimOutcome.unavailable:
         ScheduledRideStore.take(ride.id);
-        _notice(tr.islandNoLongerAvailable);
+        if (mounted) _notice(tr.islandNoLongerAvailable);
         return false;
     }
   }
@@ -680,6 +681,15 @@ class ScheduledRideStore {
       _accepted.insert(0, ride.copyWith(accepted: true));
     }
     _changed();
+  }
+
+  /// This driver took open request [ride] for later: it moves to
+  /// Accepted. False when it is no longer among the requests.
+  static bool _acceptRequest(_ScheduledRide ride) {
+    if (!_requests.remove(ride)) return false;
+    _accepted.insert(0, ride.copyWith(accepted: true));
+    _changed();
+    return true;
   }
 
   /// Q29: the driver accepted a ride Movera assigned to them.
