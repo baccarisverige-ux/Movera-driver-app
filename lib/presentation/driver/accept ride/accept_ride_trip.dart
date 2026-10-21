@@ -34,6 +34,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         destinationPoint: _destinationPosition == null ? null : GeoPointMaps.fromLatLng(_destinationPosition!),
         scheduledPickupAt: widget.scheduledPickupAt,
         scheduledRideId: widget.scheduledRideId,
+        pickupKm: widget.pickupKm,
+        bags: widget.bags,
         nextTripId: securedOffer?.id,
         riderName: widget.riderName,
         riderRating: widget.riderRating,
@@ -1029,7 +1031,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       );
     }
     PersistedActiveRide _snapshotForOffer(_NextTripRadarOffer offer) => PersistedActiveRide(
-      tripId: offer.id, stage: ActiveRideStage.headingToPickup,
+      tripId: offer.id, stage: ActiveRideStage.headingToPickup, pickupKm: offer.pickupKm,
         destinationModeActive: _destinationActive,
         destinationAddress: _destinationAddress,
         destinationPoint: _destinationPosition == null ? null : GeoPointMaps.fromLatLng(_destinationPosition!), riderName: offer.riderName,

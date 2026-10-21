@@ -306,7 +306,7 @@ class AcceptRide extends StatefulWidget {
       destinationAddress: snapshot.destinationAddress,
       destinationPosition: snapshot.destinationPoint?.toLatLng(),
       scheduledPickupAt: snapshot.scheduledPickupAt,
-      scheduledRideId: snapshot.scheduledRideId,
+      scheduledRideId: snapshot.scheduledRideId, pickupKm: snapshot.pickupKm, bags: snapshot.bags,
     );
   }
 
