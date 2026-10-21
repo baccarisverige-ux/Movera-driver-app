@@ -83,7 +83,7 @@ Safari was killing the tab during an active trip (`A problem repeatedly occurred
 Fix (no UX change):
 
 - The map keeps a stable `ValueKey('active-ride-map')` and is not rebuilt for the moving car (D-07/D-08). A 33 ms ticker (about 30 Hz) checks the car's pose and, only when it moved, hands the one car marker to `CustomGoogleMap`, which sends it once per frame with `GoogleMapsFlutterPlatform.updateMarkers`; lines and pins are not sent again.
-- GPS `setState` is gone; web GPS filter is 20m.
+- GPS `setState` is gone. There is no web GPS distance filter: the trip watches with `distanceFilterMeters: 0` on every platform, and a fix that changes nothing on screen outside the map rebuilds nothing (D-07), so each browser fix is cheap.
 - `PrefsActiveRideRepository` stores `movera_driver_active_ride` (6h freshness). Home restores `AcceptRide.fromPersisted` after a crash, reload, or PWA resume.
 - Lifecycle pause persists the snapshot and stops GPS; resume continues the same trip.
 - D11 still holds: restoring a trip does **not** restore `online = true`.

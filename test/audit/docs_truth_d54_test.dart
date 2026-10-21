@@ -24,4 +24,14 @@ void main() {
     expect(decisions, contains('33 ms'));
     expect(decisions, contains('updateMarkers'));
   });
+
+  test('driver-43: DECISIONS.md says the trip takes every web GPS fix', () {
+    final decisions = _read('docs/DECISIONS.md');
+    final trip =
+        _read('lib/presentation/driver/accept ride/accept_ride_trip.dart');
+    // The trip takes every fix; a fix costs no rebuild (D-07).
+    expect(trip, contains('watchPosition(distanceFilterMeters: 0)'));
+    expect(decisions, isNot(contains('GPS filter is 20m')));
+    expect(decisions, contains('distanceFilterMeters: 0'));
+  });
 }
