@@ -185,6 +185,41 @@ Future<List<String>> stripSays(
 const languages = ['fr', 'sv'];
 
 void main() {
+  // First: a widget test that leaves a vehicle-store write pending in its
+  // fake clock would hold this plain test's writes behind it.
+  for (final code in languages) {
+    test('driver-51: the photo limits in $code', () async {
+      SharedPreferences.setMockInitialValues({});
+      speak(code);
+      String photo(int bytes) => base64Encode(Uint8List(bytes));
+      Map<String, dynamic> vehicle(String id, List<int> photos) => {
+        'id': id, 'make': 'Volvo', 'model': 'XC60', 'year': '2024',
+        'plate': 'ABC 123',
+        for (final (i, bytes) in photos.indexed)
+          ['registrationPhoto', 'insurancePhoto'][i]: photo(bytes),
+      };
+      final store = LocalVehicleStore();
+      Future<String> refusal(Map<String, dynamic> row) async {
+        try {
+          await store.upsert(row);
+        } on VehiclePhotoBudgetExceeded catch (error) {
+          return error.message;
+        }
+        return 'saved';
+      }
+
+      expect(
+        await refusal(vehicle('v1', [LocalVehicleStore.maxPhotoBytes + 1024])),
+        tr.photoTooLargeForDevice,
+      );
+      const each = 600 * 1024;
+      await store.upsert(vehicle('v1', [each, each]));
+      await store.upsert(vehicle('v2', [each]));
+      expect(await refusal(vehicle('v2', [each, each])), tr.photoStorageFull);
+      expect(tr.photoStorageFull, isNot(contains('Photo storage')));
+    });
+  }
+
   test('driver-33: French plurals take the singular for 0 and 1', () {
     speak('fr');
     expect(tr.tripsCount(0), '0 course');
@@ -299,39 +334,6 @@ void main() {
       ));
       expect(words(tr.recordAudioStarting), findsOneWidget);
       expect(words('starting…'), findsNothing);
-    });
-  }
-
-  for (final code in languages) {
-    test('driver-51: the photo limits in $code', () async {
-      SharedPreferences.setMockInitialValues({});
-      speak(code);
-      String photo(int bytes) => base64Encode(Uint8List(bytes));
-      Map<String, dynamic> vehicle(String id, List<int> photos) => {
-        'id': id, 'make': 'Volvo', 'model': 'XC60', 'year': '2024',
-        'plate': 'ABC 123',
-        for (final (i, bytes) in photos.indexed)
-          ['registrationPhoto', 'insurancePhoto'][i]: photo(bytes),
-      };
-      final store = LocalVehicleStore();
-      Future<String> refusal(Map<String, dynamic> row) async {
-        try {
-          await store.upsert(row);
-        } on VehiclePhotoBudgetExceeded catch (error) {
-          return error.message;
-        }
-        return 'saved';
-      }
-
-      expect(
-        await refusal(vehicle('v1', [LocalVehicleStore.maxPhotoBytes + 1024])),
-        tr.photoTooLargeForDevice,
-      );
-      const each = 600 * 1024;
-      await store.upsert(vehicle('v1', [each, each]));
-      await store.upsert(vehicle('v2', [each]));
-      expect(await refusal(vehicle('v2', [each, each])), tr.photoStorageFull);
-      expect(tr.photoStorageFull, isNot(contains('Photo storage')));
     });
   }
 
