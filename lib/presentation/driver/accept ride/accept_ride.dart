@@ -1710,7 +1710,7 @@ class _SlideRideActionState extends State<_SlideRideAction> {
               shortcuts:const <ShortcutActivator,Intent>{SingleActivator(LogicalKeyboardKey.enter):ActivateIntent(),SingleActivator(LogicalKeyboardKey.space):ActivateIntent()},
               actions:<Type,Action<Intent>>{ActivateIntent:CallbackAction<ActivateIntent>(onInvoke:(_) { _accessibleConfirm();return null; })},
               child:GestureDetector(
-            behavior: HitTestBehavior.opaque,
+            behavior: HitTestBehavior.opaque, excludeFromSemantics: true, // u64: a11y uses the tap above, which asks
             onHorizontalDragUpdate: (details) =>
                 _update(details.delta.dx, maxTravel),
             onHorizontalDragEnd: (_) => _finish(),
