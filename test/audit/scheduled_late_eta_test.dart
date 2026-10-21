@@ -209,7 +209,7 @@ Future<void> _pumpTrip(
   await _frames(tester, const Duration(milliseconds: 600));
 }
 
-Future<void> _pumpHome(WidgetTester tester) async {
+Future<void> _pumpHome(WidgetTester tester, {bool online = true}) async {
   final maps = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
   addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
@@ -225,8 +225,8 @@ Future<void> _pumpHome(WidgetTester tester) async {
         builder: (_, __) => MaterialApp(
           navigatorObservers: [driverRouteObserver],
           home: DriverHome(
-            sessionController: DriverSessionController(initialOnline: true),
-            initialOnline: true,
+            sessionController: DriverSessionController(initialOnline: online),
+            initialOnline: online,
             dispatchRepository: _Dispatch(),
           ),
         ),
@@ -531,31 +531,30 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('admin leaveNow off: no trip opens, only the warning',
+    // driver-fixrev-5 / owner decision 1: there is no Leave now switch.
+    // A config that still says leaveNow false opens the trip all the same,
+    // so an online driver's accepted ride is never stuck in Accepted.
+    testWidgets('an old config with leaveNow false still opens the trip',
         (tester) async {
-      ScheduledRideRules.current = const ScheduledRideRules(
-        leaveNowOpensTrip: false,
-      );
+      ScheduledRideRules.current =
+          ScheduledRideRules.fromJson(const {'leaveNow': false});
       ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
       await _pumpHome(tester);
       await _frames(tester, const Duration(seconds: 50));
-      expect(find.byType(AcceptRide), findsNothing);
-      expect(_saidTitles, contains('Head to your 07:40 pickup'));
-      expect(_saidTitles, isNot(contains('Leave now for 07:40 pickup')));
-      // Online: the ride stays theirs past the backup minutes.
-      await _frames(tester, const Duration(seconds: 12));
-      expect(ScheduledRideStore.upcoming, contains(demoReservationRequest));
+      expect(find.byType(AcceptRide), findsOneWidget);
+      expect(_saidTitles, contains('Leave now for 07:40 pickup'));
+      expect(ScheduledRideStore.upcoming, isNot(contains(demoReservationRequest)));
       await _end(tester);
     });
 
     testWidgets('admin lateWarn off: no "Head to your pickup" warning',
         (tester) async {
+      // Offline at Leave now: the trip cannot open, the late path runs.
       ScheduledRideRules.current = const ScheduledRideRules(
-        leaveNowOpensTrip: false,
         lateWarning: false,
       );
       ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
-      await _pumpHome(tester);
+      await _pumpHome(tester, online: false);
       await _frames(tester, const Duration(seconds: 50));
       expect(find.byType(AcceptRide), findsNothing);
       expect(_saidTitles, isNot(contains('Head to your 07:40 pickup')));

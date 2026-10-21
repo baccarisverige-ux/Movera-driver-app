@@ -18,7 +18,6 @@ Object? _read(String path) => jsonDecode(File(path).readAsStringSync());
 /// [rules] in the contract's `reservations` names.
 Map<String, Object?> _reservations(ScheduledRideRules rules) => {
   'on': rules.enabled,
-  'leaveNow': rules.leaveNowOpensTrip,
   'lateWarn': rules.lateWarning,
   'offlineBackupAfterMin': rules.backupAfterMinutes,
   'homePopupAfterMin': rules.homePopupAfterMinutes,
@@ -229,7 +228,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.4.1');
+      expect(contract['version'], '0.4.2');
       expect(ZoneDefaults.paymentMethods, contract['zonePaymentMethods']['values']);
       expect(ZoneDefaults.languages, contract['languages']['values']);
       expect(ZoneDefaults.maxStops, defaults['maxStops']);
@@ -349,7 +348,7 @@ void main() {
     });
   });
 
-  group('contract v0.4.1 reservations', () {
+  group('contract v0.4.2 reservations', () {
     test('ScheduledRideRules defaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = Map<String, dynamic>.from(
@@ -361,6 +360,37 @@ void main() {
         _reservations(ScheduledRideRules.fromJson(defaults)),
         defaults,
       );
+    });
+
+    // Owner decision 2: reservations on/off for the zone (either switch)
+    // and for one driver (`Driver.scheduledRides`) reach Home.
+    test('the zone switch and Driver.scheduledRides reach Home', () {
+      ScheduledRidesAdminConfig rides({
+        Map<String, Object?> config = const {},
+        Map<String, dynamic>? profile,
+      }) => DriverHomeAdminContentService(
+        appConfig: DriverAppConfig.fromJson(config),
+        driverProfile: profile,
+      ).load().scheduledRides;
+      expect(rides().enabled, isTrue);
+      expect(rides(config: {'reservations': {'on': false}}).enabled, isFalse);
+      expect(rides(config: {'features': {'scheduledRides': false}}).enabled,
+          isFalse);
+      final now = DateTime.utc(2026, 10, 21, 12);
+      expect(rides().driverAccess.offAt(now), isFalse);
+      expect(
+        rides(profile: {'scheduledRides': {'on': false, 'until': null}})
+            .driverAccess
+            .offAt(now),
+        isTrue,
+      );
+      final on = rides(profile: {
+        'scheduledRides': {'on': true, 'until': '2026-10-24T12:00:00.000Z'},
+      }).driverAccess;
+      expect([on.onAt(now), on.onAt(DateTime.utc(2026, 10, 25))],
+          [true, false]);
+      expect(rides(profile: {'scheduledRides': 'broken'}).driverAccess.onAt(now),
+          isFalse);
     });
 
     test('the contract fixture\'s reservations are read as sent', () {

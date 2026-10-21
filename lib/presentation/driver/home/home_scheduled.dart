@@ -221,14 +221,14 @@ extension _HomeScheduled on _DriverHomeState {
     }
 
     /// "Leave now" (Q10 S1): the ride lands on screen as the active trip,
-    /// heading to pickup. Not possible: the island warns once. An offline
-    /// driver loses the ride to a backup driver after the admin's minutes;
-    /// an online one keeps it, and it starts as soon as Home is free.
+    /// heading to pickup. Always: there is no admin switch for it (owner
+    /// decision 1, driver-fixrev-5). Not possible right now: the island
+    /// warns once. An offline driver loses the ride to a backup driver
+    /// after the admin's minutes; an online one keeps it, and it starts as
+    /// soon as Home is free.
     void _leaveNow(ReservationRequestPreview ride) {
       if (!mounted || !identical(_scheduled.ride, ride)) { return; }
-      // Admin "Leave now" off: the trip never opens by itself; only the
-      // warning (and, offline, the backup driver) follow.
-      if (!_rules.leaveNowOpensTrip || !_canStartScheduled) {
+      if (!_canStartScheduled) {
         _lateScheduled(ride);
         return;
       }
@@ -305,7 +305,7 @@ extension _HomeScheduled on _DriverHomeState {
     /// loses the ride; online, it stays theirs.
     void _giveToBackup(ReservationRequestPreview ride) {
       if (!mounted || !identical(_scheduled.ride, ride)) { return; }
-      if (_rules.leaveNowOpensTrip && _canStartScheduled) {
+      if (_canStartScheduled) {
         _leaveNow(ride);
         return;
       }

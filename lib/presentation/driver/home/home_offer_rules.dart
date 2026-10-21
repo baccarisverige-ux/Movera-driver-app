@@ -1,24 +1,28 @@
 part of 'home.dart';
 
 // Offer rules on Home (Round 3): the driver's Cash switch in the Home
-// sheet (Q23), the categories the driver drives (Q27), and the row of
-// missed Exclusive offers that takes the driver offline (Q16). Radar trips
-// never count in that row.
+// sheet (Q23), the categories the driver drives (Q27), reservations on or
+// off (owner decision 2), and the row of missed Exclusive offers that
+// takes the driver offline (Q16). Radar trips never count in that row.
 
 extension _HomeOfferRules on _DriverHomeState {
-    /// An offer on Home: no cash offers with cash rides off, and only the
-    /// categories this driver drives.
+    /// An offer on Home: no cash offers with cash rides off, only the
+    /// categories this driver drives, and no reservation while this
+    /// driver gets no new scheduled rides (off for the zone or for them).
     bool _offerAllowed(_HomeDirectOffer offer) =>
         (!offer.cash || DriverOfferPreferences.acceptsCash.value) &&
-        DriverCategoryChoice.takes(offer.category);
+        DriverCategoryChoice.takes(offer.category) &&
+        (!offer.reservation || ScheduledRideStore.block() == null);
 
     /// A dispatch trip this driver gets now, in the Live list and the
     /// counts: cash only with cash rides on, in a category the driver
-    /// drives, and within the smart gap.
+    /// drives, no reservation while scheduled rides are off or paused,
+    /// and within the smart gap.
     bool _rideAllowed(RideOffer offer) =>
         (DriverOfferPreferences.acceptsCash.value ||
             !RadarOfferView.isCash(offer.payment)) &&
         DriverCategoryChoice.takes(offer.category) &&
+        (!offer.isReservation || ScheduledRideStore.block() == null) &&
         _HomeScheduled(this)._rideFitsSchedule(offer);
 
     /// Ride preferences changed (Q27): offers of a category switched off

@@ -5847,6 +5847,12 @@ abstract class AppLocalizations {
   /// **'Scheduled rides paused until {date}'**
   String schedRidesPausedUntil(String date);
 
+  /// No description provided for @schedOffInYourArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera paused new scheduled rides in your area. Rides you already accepted still go ahead.'**
+  String get schedOffInYourArea;
+
   /// No description provided for @schedTurnedOffByMovera.
   ///
   /// In en, this message translates to:

@@ -3363,6 +3363,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get schedOffInYourArea =>
+      'Movera paused new scheduled rides in your area. Rides you already accepted still go ahead.';
+
+  @override
   String get schedTurnedOffByMovera =>
       'Movera turned off Scheduled rides for your account. Contact support if you have questions.';
 

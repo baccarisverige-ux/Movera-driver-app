@@ -956,6 +956,7 @@
   "schedRidesAreOff": "Bokade resor är avstängda",
   "schedRidesOffUntil": "Bokade resor avstängda till {date}",
   "schedRidesPausedUntil": "Bokade resor pausade till {date}",
+  "schedOffInYourArea": "Movera har pausat nya bokade resor i ditt område. Resor du redan har accepterat blir av ändå.",
   "schedTurnedOffByMovera": "Movera har stängt av bokade resor för ditt konto. Kontakta supporten om du har frågor.",
   "schedLateCancelsInDays": "Du har haft {count} sena avbokningar på {days} dagar. Dina accepterade resor finns kvar.",
   "schedNeverPayLateCounts": "Du betalar aldrig för att avboka, men den här sena avbokningen räknas.",

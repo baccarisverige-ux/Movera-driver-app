@@ -3400,6 +3400,10 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get schedOffInYourArea =>
+      'Movera a suspendu les nouvelles courses planifiées dans votre zone. Les courses que vous avez déjà acceptées ont quand même lieu.';
+
+  @override
   String get schedTurnedOffByMovera =>
       'Movera a désactivé les courses planifiées pour votre compte. Contactez l’assistance si vous avez des questions.';
 

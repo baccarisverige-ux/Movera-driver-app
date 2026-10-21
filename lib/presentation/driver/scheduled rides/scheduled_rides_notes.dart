@@ -95,7 +95,7 @@ class _ScheduledNote extends StatelessWidget {
 }
 
 /// Scheduled rides are paused by the late-cancel rule, or admin turned
-/// them off for this driver: no requests are listed.
+/// them off for this driver or the whole zone: no requests are listed.
 class _BlockNotice extends StatelessWidget {
   const _BlockNotice({required this.block});
 
@@ -110,7 +110,9 @@ class _BlockNotice extends StatelessWidget {
               ? tr.schedRidesAreOff
               : tr.schedRidesOffUntil(_dayMonth(until))
         : tr.schedRidesPausedUntil(until == null ? '' : _dayMonth(until));
-    final body = block.byAdmin
+    final body = block.zoneOff
+        ? tr.schedOffInYourArea
+        : block.byAdmin
         ? tr.schedTurnedOffByMovera
         : tr.schedLateCancelsInDays('${rules.lateCancelLimit}', '${rules.lateCancelPeriodDays}');
     return _ScheduledNote(
