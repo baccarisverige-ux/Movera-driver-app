@@ -242,11 +242,15 @@ class ReservationRequestPreview {
   String get arrivalTime => estimatedArrival ?? pickupTime;
 
   /// Expected drop-off time, or null when [pickupTime] is not "HH:mm" or
-  /// the ride time is unknown.
+  /// the ride time is unknown. Trip minutes run from the pickup instant,
+  /// so a clock change on the way moves the clock (driver-r4-13).
   String? get estimatedArrival {
     final pickupMinute = minuteOfDay;
     if (pickupMinute == null || tripMinutes < 0) {
       return null;
+    }
+    if (pickupAt(DateTime.now()) case final at?) {
+      return clockLabel(at.add(Duration(minutes: tripMinutes)));
     }
     final total = (pickupMinute + tripMinutes) % (24 * 60);
     String two(int v) => v.toString().padLeft(2, '0');
@@ -286,8 +290,15 @@ class ReservationRequestPreview {
     if (minute == null || offset == null) {
       return null;
     }
-    return DateTime(now.year, now.month, now.day + offset)
-        .add(Duration(minutes: minute));
+    // The clock time on that day, not minutes after midnight: a clock
+    // change before it would move it an hour.
+    return DateTime(
+      now.year,
+      now.month,
+      now.day + offset,
+      minute ~/ 60,
+      minute % 60,
+    );
   }
 
   /// [pickupDay] as seen at [now]: a ride booked for a date says "Today"
