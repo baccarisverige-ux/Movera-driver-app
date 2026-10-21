@@ -278,7 +278,7 @@ class _DriverHomeState extends State<DriverHome>
   Timer? _homeRadarNoticeTimer;
   Timer? _homeRadarExternalClaimTimer;
   Timer? _homeRadarExternalClaimCleanupTimer;
-  Timer? _homeRadarLostMatchTimer;
+  final Map<String, Timer> _homeRadarLostMatchTimers = <String, Timer>{};
   final Map<String, Timer> _radarOfferTimeoutTimers = <String, Timer>{};
   final Map<String, _HomeRadarMatchState> _homeRadarMatchStates =
       <String, _HomeRadarMatchState>{};
@@ -328,6 +328,10 @@ class _DriverHomeState extends State<DriverHome>
   double _lastSnapHapticAt = -1;
   late final MoveraSnapSheetController _snapSheet;
   bool showRideRequests = false;
+
+  /// The Radar list is sending a Match: Back keeps it open until dispatch
+  /// answers, so a won trip still opens.
+  final ValueNotifier<bool> _radarListClaiming = ValueNotifier<bool>(false);
   bool isAccountActivated = true;
   bool _activationHold = false;
   late final DriverSessionController _driverSession;
@@ -756,6 +760,7 @@ class _DriverHomeState extends State<DriverHome>
                   offerFilter: _HomeOfferRules(this)._rideAllowed,
                   followsDestination: (o) => _HomeOfferRadar(this)._followsDestination(o.dropoffPosition.toLatLng()),
                   towardPickupTime: _HomeScheduled(this)._towardPickupTime,
+                  claimPending: _radarListClaiming,
                   onCloseRides: (hasOffers) {
                     setState(() {
                       showRideRequests = false;
@@ -1139,6 +1144,7 @@ class _DriverHomeState extends State<DriverHome>
     RideCheckGate.listenable.removeListener(_rideCheckGateListener);
     _islandMessageTimer?.cancel();
     _islandWaiting.dispose();
+    _radarListClaiming.dispose();
     _offerSimulationTimer?.cancel();
     _directOfferTimer?.cancel();
     _HomeOfferRadar(this)._cancelAllOfferTimers();
@@ -1149,7 +1155,6 @@ class _DriverHomeState extends State<DriverHome>
     _homeRadarNoticeTimer?.cancel();
     _homeRadarExternalClaimTimer?.cancel();
     _homeRadarExternalClaimCleanupTimer?.cancel();
-    _homeRadarLostMatchTimer?.cancel();
     _driverLocationSubscription?.cancel();
     _radarSweepController.dispose();
     _radarMotionController.dispose();

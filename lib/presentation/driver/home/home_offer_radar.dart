@@ -477,6 +477,9 @@ extension _HomeOfferRadar on _DriverHomeState {
       _maybeShowSoonReservation();
     }
     void _dismissRadarHomeOffer(_HomeDirectOffer offer) {
+      // A Match already sent is answered first: its card stays until the
+      // claim is won (the trip opens) or lost (it leaves then).
+      if (offer.id == _homeRadarMatchingOfferId) { return; }
       _radarOfferTimeoutTimers.remove(offer.id)?.cancel();
       if (!mounted) { return; }
 
@@ -688,10 +691,12 @@ extension _HomeOfferRadar on _DriverHomeState {
         IslandMessages.show(HomeIslandNotices.tripUnavailable);
       }
 
-      _homeRadarLostMatchTimer?.cancel();
-      _homeRadarLostMatchTimer = Timer(
+      // Each lost offer leaves on its own timer: two lost together both go.
+      _homeRadarLostMatchTimers.remove(offer.id)?.cancel();
+      _homeRadarLostMatchTimers[offer.id] = Timer(
         const Duration(milliseconds: 2800),
         () {
+          _homeRadarLostMatchTimers.remove(offer.id);
           if (!mounted ||
               _homeRadarStateFor(offer.id) !=
                   _HomeRadarMatchState.claimedElsewhere) {
@@ -792,7 +797,10 @@ extension _HomeOfferRadar on _DriverHomeState {
       _homeRadarNoticeTimer?.cancel();
       _homeRadarExternalClaimTimer?.cancel();
       _homeRadarExternalClaimCleanupTimer?.cancel();
-      _homeRadarLostMatchTimer?.cancel();
+      for (final timer in _homeRadarLostMatchTimers.values) {
+        timer.cancel();
+      }
+      _homeRadarLostMatchTimers.clear();
       if (!preserveClaim) {
         _homeRadarMatchingOfferId = null;
         _claimedHomeOffer = null;
@@ -1128,9 +1136,10 @@ extension _HomeOfferRadar on _DriverHomeState {
                   ? null
                   : () => _startHomeRadarMatch(offer),
               onRoute: () => _previewDirectOfferRoute(offer),
-              // The radar's orange, and a small × that removes the offer.
+              // The radar's orange, and a small × that removes the offer;
+              // none while its Match is being sent.
               contour: MoveraRadarOrb.offerAccent,
-              onClose: () => _closeRadarHomeOffer(offer),
+              onClose: blocked == id ? null : () => _closeRadarHomeOffer(offer),
             );
           },
         ),

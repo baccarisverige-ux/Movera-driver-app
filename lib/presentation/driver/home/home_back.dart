@@ -55,7 +55,11 @@ extension _HomeBack on _DriverHomeState {
         return;
       }
       if (showRideRequests) {
-        _rebuild(() => showRideRequests = false);
+        // While its Match is being sent, Back waits (like the Exclusive's
+        // Accept): the claim's answer must reach the Radar list.
+        if (!_radarListClaiming.value) {
+          _rebuild(() => showRideRequests = false);
+        }
         return;
       }
       if (hideMainPanel) {
