@@ -319,6 +319,8 @@ class _RideRequestsState extends State<RideRequests> {
       return;
     }
 
+    // An earlier banner's clear must not take this Match's banner away.
+    _matchNoticeTimer?.cancel();
     setState(() {
       _matchingOfferId = trip.id;
       _offerStates[trip.id] = _RadarOfferState.resolving;
@@ -356,6 +358,7 @@ class _RideRequestsState extends State<RideRequests> {
         _resolveMatchLost(trip, _RadarGone.unavailable);
       case ClaimOutcome.networkError:
         // Nothing was decided; let the driver try again.
+        _matchNoticeTimer?.cancel();
         setState(() {
           _matchingOfferId = null;
           _offerStates.remove(trip.id);
@@ -364,6 +367,11 @@ class _RideRequestsState extends State<RideRequests> {
             title: tr.rrCouldNotMatch,
             message: tr.rrConnectionInterrupted,
           );
+        });
+        // It covers Back and Refresh: it clears like the other banners
+        // (driver-u161).
+        _matchNoticeTimer = Timer(const Duration(milliseconds: 2800), () {
+          if (mounted) { setState(() => _matchNotice = null); }
         });
     }
   }
