@@ -101,6 +101,8 @@ class _MoveraAppState extends State<MoveraApp> {
       log: PrefsRideCheckLog(),
     );
     unawaited(_session.restore());
+    // Offers follow the saved Ride-preferences choice from the first frame.
+    unawaited(DriverCategoryChoice.restore());
     DriverLanguage.current.addListener(_languageChanged);
   }
 

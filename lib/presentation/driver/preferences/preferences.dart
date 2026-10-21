@@ -27,7 +27,9 @@ class _PreferencesState extends State<Preferences> {
   static const Color _offBorder = Color(0xFFDDE1DF);
 
   // Stored order: the saved `selected` list is indexed by this list, so new
-  // categories are only ever appended. [_displayOrder] controls the grid.
+  // categories are only ever appended. It matches DriverCategoryAccess.all,
+  // which restores the choice at app start. [_displayOrder] controls the
+  // grid.
   final List<_DriverCategory> _categories = [
     _DriverCategory(
       title: 'Movera',
@@ -108,7 +110,7 @@ class _PreferencesState extends State<Preferences> {
       _restoreFailed = false;
     });
     try {
-      final data = await _settings.read('categories');
+      final data = await _settings.read(DriverCategoryChoice.section);
       if (!mounted) {
         return;
       }
@@ -143,7 +145,10 @@ class _PreferencesState extends State<Preferences> {
     final revision = ++_saveRevision;
     var saved = false;
     try {
-      await _settings.save('categories', {'selected': _selected});
+      await _settings.save(
+        DriverCategoryChoice.section,
+        {'selected': _selected},
+      );
       saved = true;
     } catch (_) {
       saved = false;
