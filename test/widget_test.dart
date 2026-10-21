@@ -2620,7 +2620,19 @@ void main() {
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(375, 812));
-    await tester.pumpWidget(const MaterialApp(home: AcceptRide()));
+    // driver-u3: over a stand-in Home, as in the app. With AcceptRide as the
+    // only route a real cancel left it mounted with the onTrip marker, so
+    // the Keep trip checks could not fail.
+    final active = MemoryActiveRideRepository();
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(MaterialApp(
+      navigatorKey: navigator,
+      home: const Scaffold(body: Text('Home stand-in')),
+    ));
+    navigator.currentState!.push(MaterialPageRoute<void>(
+      builder: (_) => AcceptRide(activeRideRepository: active),
+    ));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 160));
 
     await _tapArrived(tester);
@@ -2680,6 +2692,13 @@ void main() {
       find.byKey(const ValueKey<String>('active-ride-panel-onTrip')),
       findsOneWidget,
     );
+    // Nothing of a cancel happened.
+    expect(ModalRoute.of(tester.element(find.byType(AcceptRide)))!.isCurrent, isTrue);
+    expect(find.text('Home stand-in'), findsNothing);
+    expect(find.textContaining('Trip ended early'), findsNothing);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(PrefsTripHistoryRepository.key), isNull);
+    expect(await active.read(), isNotNull);
     _expectNoException(tester);
   });
 
