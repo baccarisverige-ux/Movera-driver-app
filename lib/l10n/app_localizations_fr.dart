@@ -2386,7 +2386,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Le passager a $count bagages',
-      one: 'Le passager a 1 bagage',
+      one: 'Le passager a $count bagage',
     );
     return '$_temp0';
   }
@@ -2515,7 +2515,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count courses',
-      one: '1 course',
+      one: '$count course',
     );
     return '$_temp0';
   }
@@ -2526,7 +2526,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count arrêts',
-      one: '1 arrêt',
+      one: '$count arrêt',
     );
     return '$_temp0';
   }
@@ -3057,7 +3057,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: 'dans $count jours',
-      one: 'dans 1 jour',
+      one: 'dans $count jour',
     );
     return '$_temp0';
   }
@@ -3212,7 +3212,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count courses masquées',
-      one: '1 course masquée',
+      one: '$count course masquée',
     );
     return '$_temp0';
   }
@@ -4680,7 +4680,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count courses',
-      one: '1 course',
+      one: '$count course',
     );
     return '$rating ★ · $_temp0';
   }
