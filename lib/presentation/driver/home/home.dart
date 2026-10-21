@@ -378,7 +378,6 @@ class _DriverHomeState extends State<DriverHome>
   String? _destinationAddress;
   LatLng? _destinationPosition;
   DriverDestinationResult? _destinationTrip; // Confirmed distance and time.
-  DateTime? _destinationUntil; // "Destination mode until 02:40".
   Timer? _destinationLimitTimer; // Admin's time limit (R13-9).
   _HomeDirectOffer? _destinationDemoExclusive; // Demo trip toward it.
 

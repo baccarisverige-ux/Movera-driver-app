@@ -350,8 +350,6 @@ extension _HomeMapSheet on _DriverHomeState {
         _destinationAddress = result.address;
         _destinationPosition = destination;
         _destinationTrip = result;
-        _destinationUntil = result.durationSeconds == null ? null
-            : DateTime.now().add(Duration(seconds: result.durationSeconds!.round()));
         _destinationRouteMarkers = {
           destinationModeMarker(destination, result.address),
         };
@@ -479,7 +477,12 @@ extension _HomeMapSheet on _DriverHomeState {
         place: _destinationShortLabel,
         address: _destinationAddress ?? '',
         summary: _destinationSummary,
-        until: _destinationUntil == null ? null : clockLabel(_destinationUntil!),
+        // driver-u123: when the mode really ends (the admin time limit),
+        // not the arrival time.
+        until: switch (DestinationModeSession.instance.endsAt()) {
+          final end? => clockLabel(end),
+          null => null,
+        },
         onShowRoute: _fitDestinationRoute,
         // Decision 4: locked while a Match or Accept is with dispatch.
         onTurnOff: _HomeOfferRules(this)._claimInFlight ? null : _endDestinationMode,

@@ -9,6 +9,8 @@ import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/admin/trip_rules_admin_config.dart';
+import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -149,5 +151,20 @@ void main() {
     expect(waybills.current?.issuedAt, accepted);
     await tester.pumpWidget(const SizedBox());
     await _frames(tester, 2);
+  });
+
+  test('driver-u123: "Destination mode until" is when the time limit ends '
+      'the mode, not the arrival time; no limit, no end time', () {
+    final confirmed = DateTime(2026, 10, 21, 10);
+    final session = DestinationModeSession(now: () => confirmed)
+      ..started(address: 'Kista centrum');
+    expect(session.endsAt(), DateTime(2026, 10, 21, 12));
+    expect(
+        session.endsAt(
+            rules: const DestinationModeRules(timeLimitHours: .25)),
+        DateTime(2026, 10, 21, 10, 15));
+    expect(
+        session.endsAt(rules: const DestinationModeRules(timeLimitOn: false)),
+        isNull);
   });
 }
