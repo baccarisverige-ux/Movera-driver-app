@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/waybill/waybill.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 
 // Wave 5 D5.4 (parts a + b): state and time. Time cases also run under
@@ -58,5 +62,40 @@ void main() {
         if (!RegExp('DriverTexts\\.${names[key.id]}\\b').hasMatch(used)) key.id,
     ];
     expect(dead, isEmpty);
+  });
+
+  test('driver-u18: history keeps every row the Month and Week views count', () async {
+    final now = DateTime(2026, 10, 22, 12);
+    Map<String, Object> row(String id, DateTime at) => {
+      'tripId': id, 'riderName': 'R', 'whenLabel': 'x', 'pickup': 'P',
+      'dropoff': 'D', 'fare': '10 kr', 'category': 'Comfort',
+      'status': 'completed', 'completedAt': at.toUtc().toIso8601String(),
+    };
+    // 600 October trips (every 30 min back from now) and 50 September ones.
+    SharedPreferences.setMockInitialValues({
+      PrefsTripHistoryRepository.key: jsonEncode({
+        'schemaVersion': 1,
+        'rows': [
+          for (var i = 0; i < 600; i++)
+            row('oct-$i', now.subtract(Duration(minutes: 30 * i))),
+          for (var i = 0; i < 50; i++)
+            row('sep-$i', DateTime(2026, 9, 20).add(Duration(hours: i))),
+        ],
+      }),
+    });
+    final repo = PrefsTripHistoryRepository(now: () => now);
+    var rows = await repo.list();
+    expect(rows.where((r) => r.tripId.startsWith('oct-')), hasLength(600));
+    expect(rows.where((r) => r.tripId.startsWith('sep-')), isEmpty);
+    await repo.archive(
+      WaybillRecord(tripId: 'new', statusLabel: 'Completed', issuedAt: now,
+        fare: '10 kr', service: 'Comfort', riderName: 'R', pickup: 'P',
+        dropoff: 'D', source: 'Demo', driverName: 'D', vehicle: 'V',
+        licensePlate: 'L', passengerCapacity: 4),
+      completedAt: now,
+    );
+    rows = await repo.list();
+    expect(rows, hasLength(601));
+    expect(rows.last.tripId, 'oct-599');
   });
 }

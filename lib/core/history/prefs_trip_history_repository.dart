@@ -15,11 +15,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Local frontend archive. Trip IDs are unique: a retried completion cannot
 /// add a second receipt. The backend adapter can replace this boundary later.
 class PrefsTripHistoryRepository {
-  PrefsTripHistoryRepository({Future<SharedPreferences> Function()? load})
-    : _load = load ?? SharedPreferences.getInstance;
+  PrefsTripHistoryRepository({
+    Future<SharedPreferences> Function()? load,
+    DateTime Function()? now,
+  }) : _load = load ?? SharedPreferences.getInstance,
+       _now = now ?? DateTime.now;
 
   static const key = 'movera_driver_completed_trips';
   final Future<SharedPreferences> Function() _load;
+  final DateTime Function() _now;
   static Future<void>? _pending;
   final int _generation = LocalWriteSession.generation;
   static Future<void> settle() async {
@@ -77,7 +81,34 @@ class PrefsTripHistoryRepository {
         (status.isReleasedToDispatch && actor == 'driver');
   }
 
+  /// Rows kept whatever their age.
   static const maxReceipts = 500;
+
+  /// Rows kept at most: older ones beyond [maxReceipts] stay while the
+  /// Month or Week view counts them (driver-u18), up to this ceiling.
+  static const maxPeriodReceipts = 5000;
+
+  /// Newest first: the newest [maxReceipts], then every row still in this
+  /// calendar month or the last 7 days. A busy driver passes 500 rows
+  /// before the month ends; dropping by count alone left the month's
+  /// earnings short.
+  List<Map<String, dynamic>> _retained(Iterable<Map<String, dynamic>> rows) {
+    final now = _now();
+    final month = DateTime(now.year, now.month);
+    final week = now.subtract(const Duration(days: 7));
+    final from = week.isBefore(month) ? week : month;
+    final kept = <Map<String, dynamic>>[];
+    for (final row in rows) {
+      if (kept.length >= maxPeriodReceipts) break;
+      if (kept.length >= maxReceipts) {
+        final at = DateTime.tryParse(row['completedAt'] as String? ?? '');
+        if (at == null || at.isBefore(from)) break;
+      }
+      kept.add(row);
+    }
+    return kept;
+  }
+
   _HistoryDecode _decode(String? raw) {
     if (raw == null) {
       return const _HistoryDecode([], invalid: true);
@@ -148,7 +179,7 @@ class PrefsTripHistoryRepository {
     // version after sorting rather than losing a corrected/newer receipt.
     final ids = <String>{};
     final unique = rows.where((row) => ids.add(row['tripId'] as String));
-    return _HistoryDecode(unique.take(maxReceipts).toList(), invalid: invalid);
+    return _HistoryDecode(_retained(unique), invalid: invalid);
   }
 
   Future<void> _preserveInvalid(
@@ -245,7 +276,7 @@ class PrefsTripHistoryRepository {
         key,
         jsonEncode({
           'schemaVersion': 1,
-          'rows': rows.take(maxReceipts).toList(),
+          'rows': _retained(rows),
         }),
       );
       if (!success) {
