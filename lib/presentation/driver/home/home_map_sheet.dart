@@ -319,17 +319,9 @@ extension _HomeMapSheet on _DriverHomeState {
       _destinationRoadRequests.cancel();
       _destinationRouteRefetch.reset();
       _cameraRoute = null;
-      final session = DestinationModeSession.instance..started();
+      DestinationModeSession.instance.started();
       _destinationLimitTimer?.cancel();
-      final left = session.timeLeft();
-      if (left != null) {
-        _destinationLimitTimer = Timer(left, () {
-          if (!mounted || !_destinationModeActive) { return; }
-          _endDestinationMode();
-          DestinationModeSession.instance.timedOut();
-          IslandMessages.show(HomeIslandNotices.destinationEnded);
-        });
-      }
+      _armDestinationLimit();
       _rebuild(() {
         _destinationModeActive = true;
         _destinationAddress = result.address;
@@ -359,6 +351,25 @@ extension _HomeMapSheet on _DriverHomeState {
       if (!_isOnline && !_isGoingOnline) {
         _goOnline();
       }
+    }
+    /// R13-9: the admin's time limit ends the destination. One set later
+    /// on a trip restarts the shared clock; Home then waits for that
+    /// one's limit instead of ending it early (driver-u122).
+    void _armDestinationLimit() {
+      final session = DestinationModeSession.instance;
+      final left = session.timeLeft();
+      if (left == null) { return; }
+      final since = session.activeSince;
+      _destinationLimitTimer = Timer(left, () {
+        if (!mounted || !_destinationModeActive) { return; }
+        if (DestinationModeSession.instance.activeSince != since) {
+          _armDestinationLimit();
+          return;
+        }
+        _endDestinationMode();
+        DestinationModeSession.instance.timedOut();
+        IslandMessages.show(HomeIslandNotices.destinationEnded);
+      });
     }
     Future<void> _refreshDestinationRoadRoute() =>
         _destinationRoadRefresh.request(_fetchLatestDestinationRoadRoute);

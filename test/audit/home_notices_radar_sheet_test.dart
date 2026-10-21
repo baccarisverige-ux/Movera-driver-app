@@ -5,7 +5,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/admin/trip_rules_admin_config.dart';
+import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/next_trip_gate.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -40,6 +43,8 @@ import '../../integration_test/headless_map_platform.dart';
 //   never claims a trip for an offline driver.
 // - driver-u121: with no known position, Destination mode does not measure
 //   from the city-centre placeholder.
+// - driver-u122: Home's time limit for its destination does not end a
+//   destination the driver set later on a trip.
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -204,6 +209,8 @@ void main() {
   tearDown(() {
     DriverOfferRules.current = const DriverOfferRules();
     DrivingTimeClock.instance.load(worked: Duration.zero);
+    DestinationModeRules.current = const DestinationModeRules();
+    DestinationModeSession.instance = DestinationModeSession();
   });
 
   group('driver-u110: a notice posted while a screen covers Home', () {
@@ -424,6 +431,52 @@ void main() {
       );
       expect(picker.origin, isNull,
           reason: 'no figures from the Stockholm placeholder');
+      await _end(tester);
+    });
+  });
+
+  group('driver-u122: a destination set on the trip after Home\'s', () {
+    testWidgets('Home\'s old time limit does not end it', (tester) async {
+      var now = DateTime(2026, 10, 21, 10);
+      DestinationModeSession.instance = DestinationModeSession(now: () => now);
+      Future<void> pass(Duration total) async {
+        for (var t = Duration.zero; t < total; t += const Duration(seconds: 1)) {
+          now = now.add(const Duration(seconds: 1));
+          await tester.pump(const Duration(seconds: 1));
+        }
+      }
+
+      await _pumpHome(tester, online: false, location: _NoGps());
+      await _frames(tester, const Duration(seconds: 9));
+      // The admin's time limit: 1 min here (2 h in the app).
+      DestinationModeRules.current =
+          const DestinationModeRules(timeLimitHours: 1 / 60);
+      // 10:00: a destination on Home.
+      tester
+          .widget<InkWell>(
+            find.byKey(const ValueKey<String>('destination-mode-open')),
+          )
+          .onTap!
+          .call();
+      await _frames(tester, const Duration(seconds: 1));
+      await tester.tap(
+          find.byKey(const ValueKey<String>('destination-result-solna')));
+      await _frames(tester, const Duration(seconds: 1));
+      expect(DestinationModeSession.instance.timeLeft(), isNotNull);
+      // A trip covers Home; 40 s later the driver sets a new destination
+      // there, which has its own minute.
+      await _cover(tester);
+      await pass(const Duration(seconds: 38));
+      OnTripDestination.started();
+      // Past Home's first minute.
+      await pass(const Duration(seconds: 25));
+      final session = DestinationModeSession.instance;
+      expect(session.expired(), isFalse,
+          reason: 'the trip\'s destination has about 35 s left');
+      expect(session.timeLeft()!.inSeconds, inInclusiveRange(30, 40));
+      // Its own minute ends it.
+      await pass(const Duration(seconds: 40));
+      expect(session.expired(), isTrue);
       await _end(tester);
     });
   });
