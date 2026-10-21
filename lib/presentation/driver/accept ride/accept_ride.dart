@@ -51,6 +51,11 @@ import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/widgets/pickup_pay_line.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
+import 'package:movera/core/scheduled/smart_gap.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
@@ -102,6 +107,7 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 part 'accept_ride_trip.dart';
 part 'accept_ride_panel.dart';
 part 'accept_ride_sheet.dart';
+part 'accept_ride_late_eta.dart';
 
 class AcceptRide extends StatefulWidget {
   const AcceptRide({
@@ -142,7 +148,18 @@ class AcceptRide extends StatefulWidget {
     this.pickupKm,
     this.bags = 0,
     this.dispatchRepository,
+    this.scheduledPickupAt,
+    this.scheduledRideId,
   }) : tripId = tripId ?? 'demo-radar-offer';
+
+  /// A scheduled ride opened at "Leave now": its pickup time, on
+  /// [ScheduledClock.instance]. While heading to the pickup the trip
+  /// watches the ETA to it (`reservations.lateEta`). Null: any other trip,
+  /// never watched.
+  final DateTime? scheduledPickupAt;
+
+  /// That reservation's id; empty for a sample ride.
+  final String? scheduledRideId;
 
   /// Bags the rider said they bring; the trip island mentions them.
   final int bags;
@@ -288,6 +305,8 @@ class AcceptRide extends StatefulWidget {
       destinationModeActive: snapshot.destinationModeActive,
       destinationAddress: snapshot.destinationAddress,
       destinationPosition: snapshot.destinationPoint?.toLatLng(),
+      scheduledPickupAt: snapshot.scheduledPickupAt,
+      scheduledRideId: snapshot.scheduledRideId,
     );
   }
 
@@ -543,6 +562,8 @@ class _AcceptRideState extends State<AcceptRide>
   LatLng _driverPosition = _fallbackDriverPosition;
   List<GeoPoint> _roadGeoPoints = <GeoPoint>[];
   double? _routeDurationSeconds;
+  /// The road route was asked from a live fix, not the fallback position.
+  bool _routeFromLiveFix = false;
   bool _hasLiveLocation = false;
   DriverLocation? _lastLocation;
   int _locationEpoch = 0;
@@ -570,6 +591,14 @@ class _AcceptRideState extends State<AcceptRide>
   /// Island demo: the next Finish opens "Finished far from drop-off".
   bool _rideCheckFinishDemo = false;
   StreamSubscription<DateTime>? _hardStops;
+  /// Late ETA: the next check of a scheduled trip's ETA to its pickup.
+  Timer? _lateEtaTimer;
+  /// Late ETA: the ride is being given to another driver.
+  bool _lateEtaReassigning = false;
+  /// Late ETA: an ETA was known at least once on this trip.
+  bool _lateEtaMeasured = false;
+  late final VoidCallback _syncLateEtaListener =
+      _AcceptRideLateEta(this)._syncLateEtaWatch;
 
   late final SheetTrace _sheetTrace = SheetTrace('active', () => _ridePanelController.isAttached ? _ridePanelController.panelPosition : 0);
 
@@ -600,6 +629,7 @@ class _AcceptRideState extends State<AcceptRide>
     _rideLifecycle.addListener(_AcceptRideTrip(this)._onPersistenceChanged);
     _rideLifecycle.addListener(_syncNavigationStageListener);
     _syncNavigationStageListener();
+    _rideLifecycle.addListener(_syncLateEtaListener);
     _AcceptRideTrip(this)._restoreQueuedNextFromSnapshot();
     final restored = widget.restoredSnapshot;
     _stopCursor = math.min(math.max(0, restored?.stopIndex ?? 0), widget.stopAddresses.length);
@@ -629,6 +659,8 @@ class _AcceptRideState extends State<AcceptRide>
       }
       _rideLifecycle.persistNow();
       unawaited(_AcceptRideTrip(this)._loadVehicleIdentity());
+      // Right after "Leave now" opened the trip: the first ETA check.
+      _AcceptRideLateEta(this)._syncLateEtaWatch(checkNow: true);
     });
     _radarPulseController = AnimationController(
       vsync: this,
@@ -700,6 +732,9 @@ class _AcceptRideState extends State<AcceptRide>
     _radarSweepController.dispose();
     _positionSubscription?.cancel();
     _rideLifecycle.removeListener(_syncNavigationStageListener);
+    _rideLifecycle.removeListener(_syncLateEtaListener);
+    _lateEtaTimer?.cancel();
+    _lateEtaTimer = null;
     _rideLifecycle.dispose();
     _navigation.removeListener(_onNavigationChangedListener);
     _navigation.dispose();

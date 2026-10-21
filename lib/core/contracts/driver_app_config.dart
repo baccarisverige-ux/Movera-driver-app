@@ -4,6 +4,7 @@ import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
 /// One ride category of the zone (`catalog.categories[]`).
 class DriverAppCategory {
@@ -55,6 +56,7 @@ class DriverAppConfig {
     this.missedExclusiveBeforeOffline =
         ZoneDefaults.missedExclusiveBeforeOffline,
     this.driverBonus,
+    this.reservations = const ScheduledRideRules(),
   });
 
   final int version;
@@ -98,6 +100,10 @@ class DriverAppConfig {
   /// `driverBonus` limits in the zone's currency (Q17); null = the
   /// country defaults ([driverBonusLimits]).
   final DriverBonusLimits? driverBonus;
+
+  /// `reservations`: Dispatch › Reservations, the scheduled-ride rules
+  /// (leave now, late ETA, offline backup, ride types).
+  final ScheduledRideRules reservations;
 
   /// The bonus limits of the zone, the defaults when the document has none.
   DriverBonusLimits get driverBonusLimits =>
@@ -166,6 +172,7 @@ class DriverAppConfig {
           ? missed
           : seed.missedExclusiveBeforeOffline,
       driverBonus: _bonus(_map(json['driverBonus']), currency),
+      reservations: ScheduledRideRules.fromJson(json['reservations']),
     );
   }
 
@@ -179,6 +186,7 @@ class DriverAppConfig {
     );
     DestinationModeRules.current = destinationMode;
     NextTripRules.current = nextTrips;
+    ScheduledRideRules.current = reservations;
   }
 
   /// The ids of [categories], or the seed ids when the document has none.

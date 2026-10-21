@@ -2,6 +2,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
@@ -116,7 +117,9 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
         _ScheduledNote(
           key: const ValueKey<String>('scheduled-backup-note'),
           icon: AppAssets.solarInfoCircle,
-          title: tr.islandGivenToBackup,
+          title: ScheduledRideStore._backupLate
+              ? tr.lateEtaReassignedTitle
+              : tr.islandGivenToBackup,
           body: backup,
         ),
     ];
@@ -644,10 +647,54 @@ class ScheduledRideStore {
     if (_removeAccepted(ride) == null) {
       return;
     }
+    _backupLate = false;
     backupNote.value =
         tr.schedBackupNote(ride.pickupTime);
     _changed();
   }
+
+  /// Late ETA (`reservations.lateEta`): on the way from "Leave now", the
+  /// driver would reach the [pickupTime] pickup [lateMinutes] late, so the
+  /// ride went to another driver early. The trip already left Accepted at
+  /// "Leave now"; one still there with [id] leaves too.
+  ///
+  /// [reassignTo] is the admin's choice of where the ride goes. The demo
+  /// has no backend, so it cannot send the Exclusive offer (or Radar trip)
+  /// to another driver: it only keeps the choice in [reassigned] and the
+  /// log. A backend makes this decision itself and releases the trip.
+  static void reassignLate({
+    required String id,
+    required String pickupTime,
+    required int lateMinutes,
+    required LateEtaReassignTo reassignTo,
+  }) {
+    if (id.isNotEmpty) {
+      _accepted.removeWhere((ride) => ride.id == id);
+    }
+    final note = tr.lateEtaReassignedNote(pickupTime, lateMinutes);
+    reassigned.add(ScheduledReassignment(
+      id: id,
+      pickupTime: pickupTime,
+      lateMinutes: lateMinutes,
+      reassignTo: reassignTo,
+      at: _now,
+    ));
+    DriverLog.info(
+      'Scheduled ride ${id.isEmpty ? pickupTime : id} reassigned '
+      '(late ETA, $lateMinutes min late) to ${reassignTo.name}',
+      name: 'movera.scheduled',
+    );
+    _backupLate = true;
+    backupNote.value = note;
+    _changed();
+  }
+
+  /// [backupNote] is about a late ETA, not an offline driver.
+  static bool _backupLate = false;
+
+  /// Rides given to another driver for a late ETA, oldest first.
+  static final List<ScheduledReassignment> reassigned =
+      <ScheduledReassignment>[];
 
   static _ScheduledRide? _removeAccepted(ReservationRequestPreview ride) {
     final index = _accepted.indexWhere((item) => identical(item.route, ride));
@@ -715,8 +762,33 @@ class ScheduledRideStore {
     _lateCancels.clear();
     reminder.value = null;
     backupNote.value = null;
+    reassigned.clear();
+    _backupLate = false;
     _changed();
   }
+}
+
+/// A scheduled ride given to another driver because the driver on the way
+/// would reach its pickup too late (`reservations.lateEta`).
+class ScheduledReassignment {
+  const ScheduledReassignment({
+    required this.id,
+    required this.pickupTime,
+    required this.lateMinutes,
+    required this.reassignTo,
+    required this.at,
+  });
+
+  /// The reservation id; empty for a sample ride.
+  final String id;
+  final String pickupTime;
+
+  /// How late the driver would have been, past the pickup time.
+  final int lateMinutes;
+
+  /// Where the admin sends it; the demo only records it.
+  final LateEtaReassignTo reassignTo;
+  final DateTime at;
 }
 
 /// Why a driver gets no scheduled rides right now.

@@ -6,12 +6,18 @@ part of 'accept_ride.dart';
 
 extension _AcceptRideTrip on _AcceptRideState {
     /// Closes whatever this trip opened on top of it (chat, preferences, a
-    /// sheet) so a trip exit pops or replaces the trip screen itself.
+    /// sheet, the side menu) so a trip exit pops or replaces the trip
+    /// screen itself.
     NavigatorState _navigatorAtTripRoute() {
       final navigator = Navigator.of(context);
       final route = ModalRoute.of(context);
       if (route != null && route.isActive && !route.isCurrent) {
         navigator.popUntil((r) => r == route);
+      }
+      // The open drawer is local history on this route: a pop would only
+      // close it and leave the driver on the trip screen.
+      while (route != null && route.isCurrent && route.willHandlePopInternally) {
+        navigator.pop();
       }
       return navigator;
     }
@@ -26,6 +32,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         destinationModeActive: _destinationActive,
         destinationAddress: _destinationAddress,
         destinationPoint: _destinationPosition == null ? null : GeoPointMaps.fromLatLng(_destinationPosition!),
+        scheduledPickupAt: widget.scheduledPickupAt,
+        scheduledRideId: widget.scheduledRideId,
         nextTripId: securedOffer?.id,
         riderName: widget.riderName,
         riderRating: widget.riderRating,
@@ -308,6 +316,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     Future<void> _drainProjection() async {
       if (!mounted || _drainingProjection || _pendingProjection == null) { return; }
+      // Given to another driver here (late ETA): the trip is over for this
+      // phone while it leaves; a later event must not journal it.
+      if (_releasedForLateEta) { _pendingProjection = null; return; }
       if (_rideLifecycle.saving || _completionInFlight || _cancellationInFlight || _stageTransitioning) {
         _projectionRetry ??= Timer(const Duration(milliseconds: 100), () {
           _projectionRetry = null; unawaited(_drainProjection());
@@ -419,7 +430,10 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// X5: the trip went back to dispatch without this driver. Navigation
     /// and offers stop, the island says so on Home, and the driver is back
     /// to the availability they had.
-    Future<void> _leaveAfterRelease(TripStatus status) async {
+    ///
+    /// [notice] replaces "Trip removed by Movera" on the island (a late
+    /// ETA says why the ride went to another driver).
+    Future<void> _leaveAfterRelease(TripStatus status, {IslandMessage? notice}) async {
       _waitTimer?.cancel();
       _nextTripRadarDemoTimer?.cancel();
       _nextTripRadarMatchTimer?.cancel();
@@ -430,16 +444,18 @@ extension _AcceptRideTrip on _AcceptRideState {
       widget.sessionController?.stayOnlineAfterTrip();
       final navigator = _navigatorAtTripRoute();
       if (navigator.canPop()) {
-        IslandMessages.show(HomeIslandNotices.tripRemoved);
+        IslandMessages.show(notice ?? HomeIslandNotices.tripRemoved);
         navigator.pop();
         return;
       }
+      if (notice != null) { IslandMessages.show(notice); }
       await showTripOutcomeSheet(context, status: status, hasNext: false);
     }
     /// [fee]: the driver's cancel fee from the backend (R15-7), if decided.
     Future<void> _handleRiderCancelled({Money? fee}) async {
       if (!mounted ||
-          _handlingRiderCancellation) {
+          _handlingRiderCancellation ||
+          _releasedForLateEta) {
         return;
       }
 
@@ -713,6 +729,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _maybeScheduleOnTripRadarDemoOffer();
         _rideCheckObserve();
       }
+      _AcceptRideLateEta(this)._checkLateEtaOnFirstFix();
       if (mounted && _fixView != shown) { _rebuild(() {}); }
     }
     Future<void> _refreshRoadRoute({bool force = false}) async {
@@ -729,6 +746,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         });
         return;
       }
+      final fromLiveFix = _hasLiveLocation;
       await _navigation.ensureRoute(
         origin: GeoPointMaps.fromLatLng(_driverPosition),
         destination: GeoPointMaps.fromLatLng(target),
@@ -736,6 +754,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         force: force,
       );
       if (!mounted) { return; }
+      _routeFromLiveFix = fromLiveFix;
 
       final route = _navigation.route;
       final drawn = route != null && route.points.length >= 2;

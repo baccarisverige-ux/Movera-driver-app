@@ -566,6 +566,9 @@ extension _HomeOfferRadar on _DriverHomeState {
           });
           IslandMessages.show(HomeIslandNotices.noConnection);
       }
+      if (_homeRadarMatchingOfferId == null) {
+        _HomeScheduled(this)._afterClaimResolved();
+      }
     }
     void _watchDispatchRadar() {
       _withdrawalSubscription?.cancel();
@@ -936,7 +939,16 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     /// Opens the trip for [offer], with its rider and stops, and clears
     /// the offers on Home behind it.
-    void _openOfferTrip(_HomeDirectOffer offer, String matchedVia) {
+    ///
+    /// A scheduled ride opened at "Leave now" passes its pickup time
+    /// [scheduledPickupAt] and reservation [scheduledRideId]: the trip
+    /// watches the ETA to that pickup.
+    void _openOfferTrip(
+      _HomeDirectOffer offer,
+      String matchedVia, {
+      DateTime? scheduledPickupAt,
+      String? scheduledRideId,
+    }) {
       _cancelAllOfferTimers();
       // An Exclusive card slides back down behind the trip.
       _HomeExclusive(this)._sinkExclusive();
@@ -984,6 +996,8 @@ extension _HomeOfferRadar on _DriverHomeState {
             destinationModeActive: _destinationModeActive,
             destinationAddress: _destinationAddress,
             destinationPosition: _destinationPosition,
+            scheduledPickupAt: scheduledPickupAt,
+            scheduledRideId: scheduledRideId,
           ),
         ),
       );

@@ -1278,6 +1278,31 @@
   "@islandGivenToBackup": {
     "description": "Admin text key island.givenToBackup (Content › Driver app texts)."
   },
+  "islandLateReassigned": "Given to another driver: {minutes} min late",
+  "@islandLateReassigned": {
+    "description": "Admin text key island.lateReassigned (Content › Driver app texts). The ETA showed the driver would reach the scheduled pickup too late, so the ride went to another driver.",
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "lateEtaReassignedTitle": "Ride given to another driver",
+  "@lateEtaReassignedTitle": {
+    "description": "Notification title: a scheduled ride was reassigned because the driver's ETA was too late."
+  },
+  "lateEtaReassignedNote": "Ride given to another driver — you would reach the {time} pickup about {minutes} min late.",
+  "@lateEtaReassignedNote": {
+    "description": "Why a scheduled ride was reassigned early: the driver's ETA to the pickup was too late.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "islandCashOn": "Cash rides on",
   "@islandCashOn": {
     "description": "Admin text key island.cashOn (Content › Driver app texts)."

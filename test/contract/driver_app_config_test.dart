@@ -8,11 +8,47 @@ import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
 /// X1: the driver app reads the admin app's `DriverAppConfig` (contract §6).
 /// `test/fixtures/config/driver_app_config.<zone>.json` are copies of the
 /// admin exporter's fixtures (admin `webapp/src/config/__fixtures__`).
 Object? _read(String path) => jsonDecode(File(path).readAsStringSync());
+
+/// [rules] in the contract's `reservations` names.
+Map<String, Object?> _reservations(ScheduledRideRules rules) => {
+  'on': rules.enabled,
+  'leaveNow': rules.leaveNowOpensTrip,
+  'lateWarn': rules.lateWarning,
+  'offlineBackupAfterMin': rules.backupAfterMinutes,
+  'homePopupAfterMin': rules.homePopupAfterMinutes,
+  'exclusiveBeforeMin': rules.exclusiveBeforeMinutes,
+  'radarBeforeMin': rules.radarBeforeMinutes,
+  'onDriverCancel': rules.onDriverCancel.name,
+  'hideClashing': rules.removeClashing,
+  'towardPickup': rules.towardPickupBeforeRide,
+  'towardPickupBeforeMin': rules.towardPickupBeforeMinutes,
+  'longTripKm': rules.longTripKm,
+  'driverLateCancelHours': rules.driverLateCancelHours,
+  'lateCancelLimit': rules.lateCancelLimit,
+  'lateCancelPeriodDays': rules.lateCancelPeriodDays,
+  'pauseDays': rules.pauseDays,
+  'assignAcceptSeconds': rules.assignAcceptTime.inSeconds,
+  'rideTypes': {
+    for (final kind in ScheduledRideKind.values)
+      kind.name: {
+        'onlineBeforeMin': rules.ruleFor(kind).onlineBeforeMinutes,
+        'spareMin': rules.ruleFor(kind).spareMinutes,
+        'reminderMin': rules.ruleFor(kind).reminderMinutes,
+      },
+  },
+  'lateEta': {
+    'on': rules.lateEta.on,
+    'toleranceMin': rules.lateEta.toleranceMinutes,
+    'checkEverySeconds': rules.lateEta.checkEverySeconds,
+    'reassignTo': rules.lateEta.reassignTo.name,
+  },
+};
 
 DriverAppConfig _admin(String zone) => DriverAppConfig.fromJson(
   _read('test/fixtures/config/driver_app_config.$zone.json'),
@@ -193,7 +229,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.4.0');
+      expect(contract['version'], '0.4.1');
       expect(ZoneDefaults.paymentMethods, contract['zonePaymentMethods']['values']);
       expect(ZoneDefaults.languages, contract['languages']['values']);
       expect(ZoneDefaults.maxStops, defaults['maxStops']);
@@ -310,6 +346,28 @@ void main() {
       expect(other.paymentMethods, ZoneDefaults.paymentMethods);
       expect(other.driverBonus, isNull, reason: 'another currency');
       expect(other.languages.driver, 'sv');
+    });
+  });
+
+  group('contract v0.4.1 reservations', () {
+    test('ScheduledRideRules defaults equal contract.json#configDefaults', () {
+      final contract = _read('contracts/contract.json') as Map<String, dynamic>;
+      final defaults = Map<String, dynamic>.from(
+        contract['configDefaults']['reservations'] as Map,
+      )..remove('note');
+      expect(_reservations(const ScheduledRideRules()), defaults);
+      // Read back from the contract's own defaults: the same rules.
+      expect(
+        _reservations(ScheduledRideRules.fromJson(defaults)),
+        defaults,
+      );
+    });
+
+    test('the contract fixture\'s reservations are read as sent', () {
+      final json = _read('contracts/fixtures/config/driver_app_config.json')
+          as Map<String, dynamic>;
+      final config = DriverAppConfig.fromJson(json);
+      expect(_reservations(config.reservations), json['reservations']);
     });
   });
 }
