@@ -106,6 +106,82 @@
    "source": "r2-driver2"
   },
   {
+   "id": "driver-fixrev-1",
+   "file": "lib/presentation/driver/accept ride/accept_ride_late_eta.dart",
+   "line": 66,
+   "title": "Late ETA reassigns a scheduled ride from an ETA computed from the hard-coded fallback position when GPS is unavailable",
+   "original_title": "Late ETA reassigns a scheduled ride from an ETA computed from the hard-coded fallback position when GPS is unavailable",
+   "category": "wrong-time",
+   "severity": "high",
+   "claimed_severity": "high",
+   "confidence": 0.8,
+   "reported_by": [
+    "area:fix-regressions-trip"
+   ],
+   "merged_from": [],
+   "description": "_lateEtaLeft() uses the road route whenever `_routeDurationSeconds != null && _navigation.route != null`, without checking `_hasLiveLocation`. Only the smart-gap fallback is gated on a live fix. When `getCurrentPosition` fails (permission denied, GPS off), `_startLiveLocation`'s catch (accept_ride_trip.dart:655-662) calls `_refreshRoadRoute(force: true)`. With external routing on, which is the build default, that fetches a route from `_driverPosition`, which is still `_fallbackDriverPosition` (Stockholm centre, accept_ride.dart:442/562), to the pickup. `_onNavigationChanged`/`_refreshRoadRoute` then set `_routeDurationSeconds` from that route. The next late-ETA check (the post-frame checkNow or the timer) treats that route as the driver's ETA and can call `_reassignLate`. The file's own comment says 'Null while neither is known (no decision on a guess)'. The placeholder route existed before (AUDIT M-entry about the fallback route), but the late-ETA watch now makes an irreversible dispatch decision from it.",
+   "failure_scenario": "I reproduced this with a throwaway widget test (now deleted). The driver accepted a 07:40 reservation in Uppsala and is next to the pickup, but the location provider throws (permission denied). Setup: externalRouting true, route duration proportional to distance. Within 4 s of the trip opening the ride was taken away: log 'Scheduled ride res-0740 reassigned (late ETA, 57 min late) to exclusive', AcceptRide count 0. The driver loses the ride and is told 'you would reach the pickup about 57 min late', computed from a position in central Stockholm.",
+   "evidence": "accept_ride_late_eta.dart:66-71:\n  final seconds = _routeDurationSeconds;\n  if (seconds != null && _navigation.route != null) {\n    final left = seconds * (1 - (_navigation.routeFraction ?? 0));\n    return Duration(seconds: math.max(0, left.ceil()));\n  }\n  if (!_hasLiveLocation) { return null; }\naccept_ride_trip.dart:655-662 (catch): ... unawaited(_refreshRoadRoute(force: true));\naccept_ride_trip.dart:739-741: await _navigation.ensureRoute(origin: GeoPointMaps.fromLatLng(_driverPosition), ...)",
+   "suggested_fix": "Return null from _lateEtaLeft unless `_hasLiveLocation` (or `_lastLocation` is usable) before using the route, or only use a route whose origin came from a real fix.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "high",
+     "reason": "_driverPosition is set only at its initializer, accept_ride.dart:562 (`_fallbackDriverPosition`, Stockholm, :442), and in _applyDriverPosition (accept_ride_trip.dart:694). If getCurrentPosition throws, the catch at accept_ride_trip.dart:655-662 sets _hasLiveLocation=false and still calls `_refreshRoadRoute(force: true)`. With external routing on (driver_runtime_config.dart:88-91, defaultValue true), that calls ensureRoute from the fallback origin (:739-741), and its result sets `_routeDurationSeconds` (:758). Nothing in ensureRoute (navigation_controller.dart:302ff) rejects that origin. _lateEtaLeft (accept_ride_late_eta.dart:66-70) uses the route without checking `_hasLiveLocation`; that check comes only after, at :71. routeFraction is null without a fix, so the ETA is the whole route from Stockholm. The periodic _checkLateEta (:82-115) has no live-fix check, so it calls _reassignLate, which is irreversible. The file's own comment at :63-64 says no decision should be made on a guess. This reaches any zone outside Stockholm (the SE, FR and TN zones) whenever GPS is denied or times out when the trip opens.",
+     "repro": "Traced the initState post-frame checkNow (accept_ride.dart:661) and _startLiveLocation (:686), then the catch, _refreshRoadRoute, the _routeDurationSeconds writes, _lateEtaLeft and _reassignLate. This matches the finder's widget-test reproduction. I did not rerun it.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "high",
+     "reason": "accept_ride_late_eta.dart:66-70 uses the road route without checking _hasLiveLocation. When getCurrentPosition throws, the catch at accept_ride_trip.dart:655-662 calls _refreshRoadRoute(force:true). That routes from _driverPosition, which is still _fallbackDriverPosition (accept_ride.dart:442,562), and sets _routeDurationSeconds (accept_ride_trip.dart:758). _checkLateEta then treats that route as the driver's ETA and calls _reassignLate. Only the smart-gap branch is gated on a live fix.",
+     "repro": "Ran a throwaway widget test (test/_audit_fixrev_v5_test.dart, now deleted) built on the harness in test/audit/scheduled_late_eta_test.dart. Setup: externalRouting true, route duration = distance/15 m/s, pickup in Uppsala, 07:40 reservation. Control with live GPS at the pickup printed 'AcceptRide=1 reassigned=0'. With a location repository whose getCurrentPosition throws it printed 'F1 denied: AcceptRide=0 reassigned=[33] said=[Given to another driver: 33 min late]'. The ride was taken away based on the Stockholm fallback position.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
+   "id": "driver-fixrev-2",
+   "file": "lib/presentation/driver/accept ride/accept_ride_trip.dart",
+   "line": 10,
+   "title": "Trip exits leave the driver on a dead trip screen when the side-menu drawer is open: pop() only closes the drawer",
+   "original_title": "_navigatorAtTripRoute does not close the trip's side-menu drawer, so every exit's pop() only closes the drawer and the driver is stranded on a dead trip screen",
+   "category": "state-corruption",
+   "severity": "high",
+   "claimed_severity": "high",
+   "confidence": 0.75,
+   "reported_by": [
+    "area:fix-regressions-trip"
+   ],
+   "merged_from": [],
+   "description": "The D1 helper closes only routes above the trip (`route.isActive && !route.isCurrent`). The trip's side menu is a Scaffold drawer (accept_ride.dart:1146, opened from the island via `_rideScaffoldKey.currentState?.openDrawer()`, accept_ride.dart:1338). A drawer is a LocalHistoryEntry on the trip's own route, not a route, so the trip route is still `isCurrent` and popUntil is skipped. `navigator.pop()` then reaches `LocalHistoryRoute.didPop`, which removes the drawer's history entry and returns false, so the trip route is not popped. By then every exit (`_leaveAfterRelease` used by the new late-ETA reassign and by X5, `_leaveAfterAuthoritativeOutcome`, `_handleRiderCancelled`) has already ended the session (`stayOnlineAfterTrip`), discarded the waybill, paused live updates and shown the Home island notice. The trip screen stays with a terminal lifecycle, and its `PopScope(canPop: false)` (accept_ride.dart:1140) blocks the back button.",
+   "failure_scenario": "I reproduced this with a throwaway widget test (now deleted). Heading to pickup, the driver opens the side menu from the island (isDrawerOpen=true). An admin reassign (`searching` projection) arrives; a late-ETA reassign takes the same `_leaveAfterRelease` path. Result: the island says 'Trip removed by Movera' and the drawer closes, but AcceptRide is still on screen (count 1), and after a system back (handlePopRoute) it is still there. The driver sits on a frozen trip that no longer exists, while the session already says they are free for offers.",
+   "evidence": "accept_ride_trip.dart:10-17:\n  final route = ModalRoute.of(context);\n  if (route != null && route.isActive && !route.isCurrent) {\n    navigator.popUntil((r) => r == route);\n  }\naccept_ride_trip.dart:436-440: final navigator = _navigatorAtTripRoute(); if (navigator.canPop()) { IslandMessages.show(notice ?? HomeIslandNotices.tripRemoved); navigator.pop(); return; }\naccept_ride.dart:1140-1146: PopScope(canPop: false, child: Scaffold(key: _rideScaffoldKey, drawer: ...",
+   "suggested_fix": "In _navigatorAtTripRoute, close the drawer first (`_rideScaffoldKey.currentState?.closeDrawer()`, or remove local history entries), or leave with `navigator.removeRoute(route)` instead of `pop()`.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "high",
+     "reason": "accept_ride_trip.dart:10-17 calls popUntil only when the trip route is not current. An open Scaffold drawer (accept_ride.dart:1146, opened at :1338) is a LocalHistoryEntry on the trip route itself, so the route stays isCurrent and popUntil is skipped. navigator.pop() at accept_ride_trip.dart:439 (and the other exits at :410, :486, :504, :1477) goes to LocalHistoryRoute.didPop. That call removes the drawer entry, returns false and leaves the route in place. Nothing else closes the drawer: there is no closeDrawer anywhere in the accept ride folder. By that point the session has already been released (stayOnlineAfterTrip), the waybill discarded and live updates paused. PopScope(canPop:false) at :1140 then blocks system back.",
+     "repro": "Ran a throwaway test, test/_audit_fixrev2_test.dart, now deleted. It pushes a route holding PopScope(canPop:false) > Scaffold(drawer), opens the drawer, checks ModalRoute.isCurrent, then calls Navigator.pop(). Output: 'isCurrent=true' and 'trip visible=1 drawerOpen=false'. The pop only closed the drawer and the trip route stayed. Realtime and timer events keep running while the drawer is open, so the release paths can fire at that moment.",
+     "evidence": "Flutter 3.47.6 test output: isCurrent=true / trip visible=1 drawerOpen=false"
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "high",
+     "reason": "_navigatorAtTripRoute (accept_ride_trip.dart:10-17) only pops routes above the trip. The side menu is a Scaffold drawer (accept_ride.dart:1143-1146), which is a local history entry on the trip's own route, so route.isCurrent is true and nothing is closed. The pop() in _leaveAfterRelease (accept_ride_trip.dart:436-440) then only closes the drawer. Before that, the session has been set free (stayOnlineAfterTrip) and the waybill discarded. PopScope(canPop:false) at accept_ride.dart:1140 then blocks system back, so the driver is stuck on a trip that has ended.",
+     "repro": "Ran a throwaway widget test (now deleted): heading to pickup, openDrawer() on the trip Scaffold printed 'F2 drawerOpen=true'. Then emitted a tripProjection with status searching (admin reassign, the same _leaveAfterRelease exit the late-ETA reassign uses). Output: 'F2 after reassign: AcceptRide=1 said=[Trip removed by Movera]'. After tester.binding.handlePopRoute() it printed 'F2 after back: AcceptRide=1'.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
    "file": "lib/presentation/driver/accept ride/accept_ride_trip.dart",
    "line": 452,
    "title": "Terminal exits call Navigator.pop() on whatever route is on top, so a rider cancel (or any authoritative outcome) while Chat/Preferences/a modal sheet is open leaves the dead trip screen mounted",
@@ -1612,6 +1688,44 @@
    "source": "driver1"
   },
   {
+   "id": "driver-r3-12",
+   "file": "lib/presentation/driver/accept ride/accept_ride_trip.dart",
+   "line": 348,
+   "title": "An authoritative terminal projection (admin/system cancel, completed, no_show, expired, failed) is dropped for good if a background save is in flight when the journal finishes",
+   "original_title": "An authoritative terminal projection (admin/system cancel, completed, no_show, expired, failed) is dropped for good if a background save is in flight when the journal finishes",
+   "category": "race",
+   "severity": "medium",
+   "claimed_severity": "medium",
+   "confidence": 0.75,
+   "reported_by": [
+    "area:r3-home-trip-deep"
+   ],
+   "merged_from": [],
+   "description": "_drainProjection checks `_rideLifecycle.saving` only once, before it starts. It then awaits `CompletionJournal(...).finish(...)` (several SharedPreferences round trips). During that await a background `persistNow()` can start: the GPS snapshot every 2 min (accept_ride_trip.dart:716-721), the lifecycle inactive/paused save (accept_ride.dart:759), the next-trip secure timer (1253), a stop arrival (573) and others. ActiveRideController.applyProjection returns false while `saving` is true (active_ride_controller.dart:113-117), and it does not wait for the background save the way transitionTo/complete/cancel do (D-09). The terminal branch then hits `if (!await _rideLifecycle.applyProjection(status)) { return; }`. That exit keeps `_pendingProjection`, schedules no retry and leaves the trip. The released-to-dispatch branch (357-359) and the rider-cancel branch (375-377) both call _scheduleProjectionRetry; this branch does not. The journal has already archived the trip and marked it terminal, but the trip screen stays live. With PrefsActiveRideRepository every later GPS persist throws 'Cannot revive a terminal trip', so the driver gets the 'Trip progress could not be saved' SnackBar every 2 minutes. The projection is only applied if the driver later slides Complete or Cancel (_yieldToAuthoritativeTerminal).",
+   "failure_scenario": "Reproduced with a throwaway widget test. AcceptRide at onTrip, a repository whose read() and save() are gated. Emit trip_projection cancelled_by_admin. While the journal is in its read, send AppLifecycleState.inactive, which starts a background persistNow. Then release both gates, resume and pump 40 s: 0 TripOutcomeSheet widgets. The control run, identical but without the inactive event, shows 1 TripOutcomeSheet. In the field: Movera cancels a trip, and that event lands while the 2-minute GPS snapshot or a lock-screen save is being written. The driver keeps navigating a trip that dispatch and history already show as cancelled.",
+   "evidence": "accept_ride_trip.dart:322 `if (_rideLifecycle.saving || _completionInFlight || ...) { _projectionRetry ??= ...; return; }`\naccept_ride_trip.dart:342-348 `await CompletionJournal(...).finish(...); if (!mounted) { return; } if (!await _rideLifecycle.applyProjection(status)) { return; }`\nactive_ride_controller.dart:113-117 `if (saving || _disposed || (terminal && ...)) { return false; }`\nCompare accept_ride_trip.dart:357-359 `if (!await _rideLifecycle.applyProjection(status)) { _scheduleProjectionRetry(); return; }`",
+   "suggested_fix": "In the terminal branch, call _scheduleProjectionRetry() when applyProjection returns false and the trip is not yet terminal, as the released branch does. Alternatively, make applyProjection await _afterBackgroundSave() like the driver commands.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "The terminal branch at accept_ride_trip.dart:348 returns when applyProjection is false and never calls _scheduleProjectionRetry. The released branch (357-359) and the catch block (385) both do. ActiveRideController.applyProjection (active_ride_controller.dart:113-117) returns false whenever `saving` is true, and unlike transitionTo/complete/cancel it does not await _afterBackgroundSave. The `saving` check in _drainProjection (accept_ride_trip.dart:322) runs only once, before the await on CompletionJournal.finish, so a background persistNow that starts during that await gets past it. After the early return, _pendingProjection stays set but nothing drains it again. The only callers of _drainProjection are a new realtime event (271-272), which the gate drops once a terminal status has been seen (the gate rule in CONTRACT.md:142), the timers at 324/398, which are not armed, and _yieldToAuthoritativeTerminal (947), which runs only when the driver slides Complete or Cancel. One caveat: no production emitter exists yet. MemoryDriverRealtime (driver_realtime.dart:344) is the stand-in, and DECISIONS.md says no backend is connected. So this is a real defect in the contract seam built for admin/system terminal projections, not something users hit today.",
+     "repro": "Static trace of _drainProjection (accept_ride_trip.dart:317-387), applyProjection (active_ride_controller.dart:110-160), every _drainProjection call site (grep: 272, 324, 384, 398, 947) and _onRealtimeEvent's gate handling (255-273). I did not rerun the finder's widget test; the code path matches their description exactly.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "accept_ride_trip.dart:322 checks _rideLifecycle.saving only before the awaited CompletionJournal.finish (342-346). active_ride_controller.dart:115 makes applyProjection return false while saving is true, and persistNow (active_ride_controller.dart:310-320) can start a background write during that await. The terminal branch at accept_ride_trip.dart:348 then returns without calling _scheduleProjectionRetry, unlike the released branch (357-359) and the rider-cancel path (375-377). _drainProjection runs again only on a new realtime event (271-272), a retry timer, the SnackBar action (384, which does not appear on this path) or _yieldToAuthoritativeTerminal (947), which needs the driver to slide Complete or Cancel. The journal has already marked the trip terminal, so later saves hit prefs_active_ride_repository.dart:139 'Cannot revive a terminal trip'.",
+     "repro": "Traced callers and guards by reading. The race needs a background persistNow (the 2-minute GPS snapshot or a lifecycle save) to start while the journal's SharedPreferences awaits are in flight. That is timing-dependent but realistic. I did not re-run the finder's widget test.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
    "file": "lib/presentation/driver/accept ride/accept_ride_trip.dart",
    "line": 376,
    "title": "An authoritative `completed` projection discards the waybill instead of completing it and journals the trip without payment method, cash collected or waiting fee",
@@ -2394,6 +2508,44 @@
    "source": "r2-driver4"
   },
   {
+   "id": "driver-r3-14",
+   "file": "lib/presentation/driver/home/home_offer_radar.dart",
+   "line": 887,
+   "title": "After a network error on an Exclusive Accept, the re-armed timeout runs while Home is hidden and counts the offer as a miss (against D-05/R13-3)",
+   "original_title": "After a network error on an Exclusive Accept, the re-armed timeout runs while Home is hidden and counts the offer as a miss (against D-05/R13-3)",
+   "category": "state-corruption",
+   "severity": "medium",
+   "claimed_severity": "medium",
+   "confidence": 0.65,
+   "reported_by": [
+    "area:r3-home-trip-deep"
+   ],
+   "merged_from": [],
+   "description": "_pauseHomeUpdates cancels _outsideOfferTimeoutTimer, and _resumeExclusiveTimeout is designed so that an Exclusive offer that runs out while the driver cannot see it leaves without counting as a miss (home_exclusive.dart:110-113). It also skips re-arming while a claim is in flight (`_exclusiveClaiming`). Suppose the claim's answer arrives while Home is paused (app backgrounded or locked after tapping Accept, or a route pushed). The networkError branch of _claimAdminAssign then calls _startExclusiveClock and starts a fresh `Timer(lifetime, ... _dismissOutsideRadarOffer(missed: true))`, with no _liveVisible check. That timer fires in the background, so _exclusiveMissed counts a miss, and at the admin's limit calls _goOffline(). The same unguarded re-arm exists in _claimExclusiveReservation (home_reservation.dart:516-528: the reservation offer leaves unseen) and _claimAssignment (home_scheduled.dart:447-460: the assigned ride is reported 'not accepted' and Movera gives it to someone else).",
+   "failure_scenario": "Reproduced with a throwaway test using the round3 admin-offers harness. Online, admin direct assign shown, tap Accept. The claim is gated, then the app is paused and the claim returns networkError. After exclusiveAcceptTime + 2 s: missedInRow=1, said=[..., 'Matching…', 'No connection']. After resume the card is gone and missed=1. The driver never saw the second countdown, yet it counts toward auto-offline.",
+   "evidence": "home_offer_radar.dart:883-891 `case ClaimOutcome.networkError: ... _HomeExclusive(this)._startExclusiveClock(lifetime); _outsideOfferTimeoutTimer = Timer(lifetime, () { if (mounted && _outsideRadarOffer?.id == offer.id) { _dismissOutsideRadarOffer(missed: true); } });`\nhome_exclusive.dart:110-112 `if (left <= Duration.zero) { // It ran out while the driver could not see it: not a miss. _HomeOfferRadar(this)._dismissOutsideRadarOffer();`",
+   "suggested_fix": "In the networkError branches, only start the clock and timeout when _liveVisible. Otherwise set _exclusive.deadline and leave _outsideOfferTimeoutTimer null, so _resumeExclusiveTimeout applies the D-05 rule on resume.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "home_offer_radar.dart:883-891: the networkError branch of _claimAdminAssign unconditionally calls _startExclusiveClock and arms a fresh Timer(lifetime) that calls _dismissOutsideRadarOffer(missed: true). It has no _liveVisible check. _pauseHomeUpdates (home.dart:192-203) only cancels timers when the pause starts, and the claim's await does not stop when the app pauses. So if the answer arrives after the app was locked or backgrounded, the new timer runs in the background. When it fires, _outsideRadarOfferGone calls _exclusiveMissed (home_offer_radar.dart:320), which can call _goOffline (home_offer_rules.dart:65-73). On resume, _resumeExclusiveTimeout (home_exclusive.dart:98-105) returns early because _outsideOfferTimeoutTimer != null, so the D-05/R13-3 'ran out unseen is not a miss' rule at home_exclusive.dart:110-113 is never applied.",
+     "repro": "Static trace of _claimAdminAssign → _dismissOutsideRadarOffer → _outsideRadarOfferGone → _exclusiveMissed, plus the pause and resume paths in home.dart:174-213 and home_exclusive.dart:98-120. I did not re-run the finder's harness test. I did not check the sibling branches in home_reservation.dart and home_scheduled.dart line by line.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "In home_offer_radar.dart:883-891 the networkError branch of the admin direct-assign claim calls _startExclusiveClock and sets a new _outsideOfferTimeoutTimer that calls _dismissOutsideRadarOffer(missed: true). Nothing there checks _liveVisible. _pauseHomeUpdates (home.dart:192-203) only cancels timers that already exist when the pause starts. When the claim answers during the pause, this branch arms a fresh timer, and it fires while Home is hidden. On resume, _resumeExclusiveTimeout (home_exclusive.dart:98-107) does nothing because the offer is already gone. The D-05 'ran out while hidden: not a miss' rule (home_exclusive.dart:110-113) therefore never applies. On real devices the app-background case depends on whether the OS keeps the Dart isolate running. The route-pushed case (didPushNext) always runs the timer.",
+     "repro": "Wrote test/_audit_r3_14_test.dart, a copy of the round3 admin-offers harness (test/round3/driver_admin_offers_home_test.dart) whose claimOffer waits on a Completer gate. Steps: go online, the direct assign appears, tap Accept, send handleAppLifecycleStateChanged(inactive), release the gate with a networkError, then pump exclusiveAcceptTime + 2 s. Output: 'after answer missed=0', 'hidden missed=1 said=[Radar online, Exclusive ride, Matching…, No connection]', 'resumed missed=1 card=0'. Result: All tests passed. File deleted afterwards. The reservation and assignment variants were not run.",
+     "evidence": "home_offer_radar.dart:887-891 arms Timer(lifetime, ... _dismissOutsideRadarOffer(missed: true)) with no _liveVisible check. The test printed hidden missed=1."
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
    "file": "lib/presentation/driver/home/home_offer_radar.dart",
    "line": 916,
    "title": "A withdrawn waiting (pending) Radar offer leaves _hasRideOffers true: Home shows 'Trip found / NEW' with no trips and blocks later Exclusive offers",
@@ -2678,6 +2830,120 @@
     }
    ],
    "source": "r2-driver4"
+  },
+  {
+   "id": "driver-fixrev-7",
+   "file": "lib/presentation/driver/home/home_scheduled.dart",
+   "line": 168,
+   "title": "Leave now can open the scheduled trip while a Radar-list Match is in flight; when that claim wins, a second trip is pushed on top",
+   "original_title": "Leave now can open the scheduled trip while a Radar-list Match is in flight; when that claim wins, a second trip is pushed on top",
+   "category": "race",
+   "severity": "medium",
+   "claimed_severity": "medium",
+   "confidence": 0.45,
+   "reported_by": [
+    "area:fix-regressions-home"
+   ],
+   "merged_from": [],
+   "description": "D2 added `_radarListClaiming` so Home knows when the full Radar list (RideRequests) has a Match in flight, and Back now waits for it. The D3 guard `_canStartScheduled` checks only Home's own claim fields, not `_radarListClaiming`. The Radar list is an overlay inside Home, so `ModalRoute.of(context)?.isCurrent` stays true and `availableForOffers` is true. Leave now therefore runs `_startScheduledTrip` → `_openOfferTrip` → `pushSingle(AcceptRide)`. RideRequests stays mounted under the new route. When its claim succeeds, `_resolveMatchWon` waits 500 ms and calls `Navigator.of(context).push(ActiveRideTransition(ride))`, a plain push that pushSingle does not guard. That puts a second AcceptRide over the scheduled one. The session refuses the second `beginTrip`, because `_activeTripId != tripId`, so the second trip screen shows a trip the session does not own.",
+   "failure_scenario": "The driver opens All offers, taps Match on a trip and, while 'Matching trip' shows, the 07:40 Leave now fires. The scheduled trip opens, the Radar claim wins half a second later, and a second trip screen for the Radar rider slides over the scheduled trip. The driver now holds two rides, one of them outside the session.",
+   "evidence": "home_scheduled.dart:168-173 `bool get _canStartScheduled => ModalRoute.of(context)?.isCurrent != false && _recoveryResolved && _driverSession.availableForOffers && _claimedHomeOffer == null && _homeRadarMatchingOfferId == null;`\nhome.dart:368 `final ValueNotifier<bool> _radarListClaiming`\nride_requests.dart:404 `navigator.push(ActiveRideTransition(ride));`",
+   "suggested_fix": "Add `!_radarListClaiming.value` to `_canStartScheduled`, and re-plan when it goes back to false.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "_canStartScheduled (home_scheduled.dart:168-173) does not check `_radarListClaiming`, which RideRequests sets through `claimPending` while its Match is in flight (ride_requests.dart:101-105). RideRequests is a widget inside Home's body (home.dart:722, 751-765), not a route, so `ModalRoute.isCurrent` stays true. The list claim does not change the session, so `availableForOffers` (status == online) stays true. Leave now therefore runs _startScheduledTrip → _openOfferTrip → pushSingle(AcceptRide) (home_offer_radar.dart). _openOfferTrip never sets `showRideRequests=false`, and didPushNext/_pauseHomeUpdates (home.dart:174, 192-203) does not unmount RideRequests or cancel its `_matchNoticeTimer`. When the claim succeeds, _resolveMatchWon's 500 ms timer passes its only guard, `mounted`, and calls a plain `navigator.push(ActiveRideTransition(ride))` (ride_requests.dart:421). That puts a second AcceptRide on top. Its beginTrip is ignored because `_activeTripId != tripId` (driver_session_controller.dart:55-61), so the session does not own the trip on screen.",
+     "repro": "Static trace: home_scheduled.dart:168-196, 229-254, home_offer_radar._openOfferTrip, ride_requests.dart:100-105, 321-430, home.dart:165-215 and 722-770, driver_session_controller.beginTrip. No test run (it needs a timing race between the list claim and the Leave now timer).",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "`_canStartScheduled` (home_scheduled.dart:168-173) checks Home's own claim fields (`_claimedHomeOffer`, `_homeRadarMatchingOfferId`) but never `_radarListClaiming`, the flag added for the full Radar list (home.dart:334, set by ride_requests.dart:101-105). Only Back reads that flag (home_back.dart:60). RideRequests is an overlay inside Home's own route (home.dart:751-772), so `ModalRoute.isCurrent` stays true, and `availableForOffers` stays true while its claim is in flight. So `_leaveNow` → `Timer.run` → `_startScheduledTrip` → `_openOfferTrip` → `pushSingle(AcceptRide)` (home_offer_radar.dart:957) runs. Nothing then closes the list: `_openOfferTrip` clears Home's deck in a post-frame callback but leaves `showRideRequests` alone, and `_onDriverSessionChanged` only clears it on `consumeResumeHomeAfterTrip`. RideRequests stays mounted under the new route and does not listen to the session. When `claimOffer` succeeds, `_claimTrip` → `_resolveMatchWon` (ride_requests.dart:367-421) checks only `mounted` before `navigator.push(ActiveRideTransition(ride))` 500 ms later. That plain push stacks a second AcceptRide. Its `beginTrip` is refused because `_activeTripId` is already the scheduled trip (driver_session_controller.dart:58-62). The demo `claimOffer` (demo_dispatch_repository.dart:527-550) does not refuse a driver who is already on a trip.",
+     "repro": "Read only; no test was run. Traced `_matchTrip` → `_claimTrip` → `_resolveMatchWon`, the same-route overlay mount in home.dart, and `_leaveNow` → `_startScheduledTrip` → `_openOfferTrip`. No guard in either path covers the other. It is reachable only when a Radar-list trip passes the smart-gap filter (`offerFilter: _rideAllowed`) right before Leave now, which narrows the window but does not close it.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
+   "id": "driver-fixrev2-1",
+   "file": "lib/presentation/driver/home/home_scheduled.dart",
+   "line": 172,
+   "title": "\"Leave now\" opens the scheduled trip while an Exclusive Accept claim (admin direct assign, reservation Exclusive, or assignment) is in flight; a claim that then succeeds is silently dropped",
+   "original_title": "\"Leave now\" still opens the scheduled trip while an Exclusive Accept (admin direct assign or reservation) is waiting for dispatch, so a trip the driver then wins is silently dropped",
+   "category": "race",
+   "severity": "medium",
+   "claimed_severity": "medium",
+   "confidence": 0.6,
+   "reported_by": [
+    "area:fix2-trip-and-home"
+   ],
+   "merged_from": [],
+   "description": "fixrev-6 and fixrev-7 made `_canStartScheduled` wait for a Home Radar Match (`_homeRadarMatchingOfferId`) and a Radar list Match (`_radarListClaiming`). They also added `_afterClaimResolved` so the late ride starts once a lost claim is answered. The same getter still ignores the other claim that Home has in flight: Accept on an Exclusive offer. That claim is `_exclusive.claimingId` (an admin direct assign, `_claimAdminAssign`), `_reservation.claimingId` (a reservation Exclusive, `_claimExclusiveReservation`) or `_scheduled.claimingId`. The guard already exists as `_HomeExclusive._exclusiveClaiming`, and Back uses it, but `_canStartScheduled` does not.\n\nWhat happens: the Leave-now timer fires during the claim. `_leaveNow` sees `_canStartScheduled == true` and calls `_startScheduledTrip`, which calls `_openOfferTrip`. That sinks the Exclusive card, pushes the scheduled trip, and in a post-frame callback sets `_outsideRadarOffer = null`. When dispatch then answers success, `_claimAdminAssign` returns at `if (_outsideRadarOffer?.id != offer.id) { return; }` (home_offer_radar.dart:867). `_claimExclusiveReservation` returns at the same check (home_reservation.dart:489). Dispatch has given the trip or reservation to this driver, but the phone never opens it, never says \"Matched\", and never records it. This is the same 'claim in flight at Leave now' case the commit set out to fix; this claim type was left out.",
+   "failure_scenario": "Reproduced with a throwaway widget test (since deleted), built on test/audit/scheduled_leave_claim_test.dart. Setup: the 07:40 ride is accepted and the driver is online with Radar on. An admin direct assign (source: admin, a short trip toward the pickup) shows as the Exclusive card. The driver taps Accept and the claim is held open. 50 s later (past Leave now), the claim is answered `ClaimResult.success`. Output:\n  AUDIT before claim answer: trips=[Scheduled ride]\n  AUDIT after claim won: trips=[Scheduled ride] said=[Radar online, Exclusive ride, Matching…, Leave now for 07:40 pickup]\nThe scheduled trip opened while the Accept was pending. The admin-assigned trip that dispatch says this driver won never opened, and no message was shown.",
+   "evidence": "home_scheduled.dart:172-178\n    bool get _canStartScheduled =>\n        ModalRoute.of(context)?.isCurrent != false &&\n        _recoveryResolved &&\n        _driverSession.availableForOffers &&\n        _claimedHomeOffer == null &&\n        _homeRadarMatchingOfferId == null &&\n        !_radarListClaiming.value;\nhome_exclusive.dart:58-61 (unused here)\n    bool get _exclusiveClaiming =>\n        _reservation.claimingId != null ||\n        _scheduled.claimingId != null ||\n        _exclusive.claimingId != null;\nhome_offer_radar.dart:866-867\n      _rebuild(() => _exclusive.claimingId = null);\n      if (_outsideRadarOffer?.id != offer.id) { return; }\nhome_reservation.dart:489\n      if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }",
+   "suggested_fix": "Add `!_HomeExclusive(this)._exclusiveClaiming` to `_canStartScheduled`. Call `_HomeScheduled(this)._afterClaimResolved()` when `_claimAdminAssign`, `_claimExclusiveReservation` and `_claimAssignment` finish without opening a trip (lost, unavailable or network error), the same way the Home Radar path does.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "`_canStartScheduled` (home_scheduled.dart:172-178) checks `_claimedHomeOffer`, `_homeRadarMatchingOfferId` and `_radarListClaiming`, but never checks `_exclusive.claimingId`, `_reservation.claimingId` or `_scheduled.claimingId`. The guard that covers those three, `_HomeExclusive._exclusiveClaiming` (home_exclusive.dart:58-61), exists but is used only by Back and by the card UI. The Exclusive card is part of Home, not a pushed route: there is no showModal or Navigator call in home_exclusive.dart, so `ModalRoute.isCurrent` stays true while the card is up. Here is the path. `_claimAdminAssign` sets `_exclusive.claimingId` and then awaits `claimOffer` (home_offer_radar.dart:857-861). If the Leave-now timer fires during that await, `_leaveNow` (home_scheduled.dart:197-214) passes both `_canStartScheduled` checks. It then calls `_startScheduledTrip`, which calls `_openOfferTrip` (home_scheduled.dart:265). `_openOfferTrip` sinks the Exclusive card, pushes AcceptRide, and in a post-frame callback sets `_outsideRadarOffer = null` (home_offer_radar.dart:946-1006). When the claim answers success, `_claimAdminAssign` returns at `if (_outsideRadarOffer?.id != offer.id) return;` (home_offer_radar.dart:867). `_claimExclusiveReservation` returns at the same check (home_reservation.dart:489). Dispatch has given the trip to this driver, but the phone never opens it and shows nothing. The other paths have no follow-up either: `_afterClaimResolved` is called only from the Radar paths (home_offer_radar.dart:570, home_scheduled.dart:74).",
+     "repro": "Static trace only; no new test was run. I read home_scheduled.dart:150-300 and home_offer_radar.dart:820-1006. I checked every place `claimingId` is written or read with grep, and every caller of `_canStartScheduled`, `_afterClaimResolved` and `_openOfferTrip`. No guard blocks the path. The finder's widget-test output (trips=[Scheduled ride], no 'Matched' after ClaimResult.success) matches the trace.",
+     "evidence": "home_scheduled.dart:172-178 does not reference _exclusiveClaiming; home_offer_radar.dart:866-867 returns early once _outsideRadarOffer was cleared by _openOfferTrip's post-frame callback (home_offer_radar.dart:1003-1006); home_reservation.dart:489 does the same."
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "`_canStartScheduled` (lib/presentation/driver/home/home_scheduled.dart:172-178) checks `_claimedHomeOffer`, `_homeRadarMatchingOfferId` and `_radarListClaiming`. It does not check `_exclusive.claimingId`, `_reservation.claimingId` or `_scheduled.claimingId`. The getter that covers all three is `_HomeExclusive._exclusiveClaiming` (home_exclusive.dart:58), and Back uses it, but `_canStartScheduled` does not. So when Leave now fires during an admin direct assign claim (`_claimAdminAssign`, home_offer_radar.dart:851), `_leaveNow` (home_scheduled.dart:197) goes ahead with `_startScheduledTrip`. That calls `_openOfferTrip` (home_offer_radar.dart:946), which sinks the Exclusive card and clears `_outsideRadarOffer`. When dispatch then answers success, `_claimAdminAssign` returns early at home_offer_radar.dart:867 (`_outsideRadarOffer?.id != offer.id`). The trip dispatch gave this driver never opens, and the driver sees neither 'Matched' nor any other message. `_claimExclusiveReservation` has the same early return at home_reservation.dart:489. No other guard stops this path.",
+     "repro": "I ran a throwaway widget test, test/_audit_fixrev2a_test.dart (now deleted). It reuses the _Dispatch fake and helpers from test/audit/scheduled_leave_claim_test.dart. Setup: the 07:40 ride is accepted, Radar is on, and dispatch publishes one RideOffer with source OfferSource.admin heading toward the pickup. That offer appears as the Exclusive card (key 'exclusive-offer-card-adm'). The test taps Accept, which opens 1 claim and holds it. It then runs about 50 s of frames, past Leave now, and completes the claim with ClaimResult.success. Output: 'AUDIT claims: 1', 'AUDIT before answer: [Scheduled ride]', 'AUDIT after answer: [Scheduled ride]', then 'All tests passed!'. The scheduled trip opened while the claim was still pending, and the admin-assigned trip the driver won never opened. The reservation-Exclusive path was checked by reading the code only, not run: it has the same `_outsideRadarOffer` id check at home_reservation.dart:489. Severity is medium rather than critical because it needs an admin direct assign or reservation claim to be in flight at the exact moment Leave now fires. When it does happen, a trip dispatch assigned to this driver is lost with no message.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev2"
+  },
+  {
+   "id": "driver-fixrev-5",
+   "file": "lib/presentation/driver/home/home_scheduled.dart",
+   "line": 183,
+   "title": "With admin leaveNow off, an online driver's accepted ride can never be started in the app and, once its pickup passes, it stays upcoming.first and makes the smart gap reject every non-assigned offer and every later scheduled ride",
+   "original_title": "With admin leaveNow off, an online driver's accepted ride is never started and never reassigned, and it then blocks every offer and every later scheduled ride",
+   "category": "state-corruption",
+   "severity": "medium",
+   "claimed_severity": "high",
+   "confidence": 0.6,
+   "reported_by": [
+    "area:fix-regressions-home"
+   ],
+   "merged_from": [],
+   "description": "With `reservations.leaveNow=false`, `_leaveNow` always goes to `_lateScheduled` (line 183). That shows the warning and arms the backup timer. When the timer fires, `_giveToBackup` skips the start branch, because `_rules.leaveNowOpensTrip && _canStartScheduled` is false at line 260. For an online driver it then returns at line 264 (`if (_driverSession.isOnline) { return; }`) and arms no further timer. Nothing in the app can start a scheduled ride by hand: Scheduled rides has no start or navigate action, and `ScheduledRideStore.start` is only called from `_startScheduledTrip`. The late-ETA watch only runs inside an AcceptRide that Leave now opened. So the ride sits in Accepted, past its pickup time, as `ScheduledRideStore.upcoming.first`. `_planScheduled` only plans for `upcoming.first`, so later accepted rides get no reminders, no Leave now and no backup. `_fitsSchedule` checks every Home and Radar offer against this stale ride with `SmartGap.offerFits`, which returns `!now.add(needed).isAfter(at)`. That is false for any pickup already in the past, so `_rideAllowed`, `_showRadarHomeOffer` and the Radar list filter reject every trip. `_towardPickupTime` also keeps showing \"toward 07:40\". The existing test only checks that the ride stays in `upcoming`. It does not check what happens to the rider or to the driver's offers after that.",
+   "failure_scenario": "An admin sets Dispatch › Reservations › Leave now to off. The driver accepts the 07:40 ride and stays online. At Leave now they see \"Head to your 07:40 pickup\" and no trip opens. After 07:40 the ride is still in Accepted, no backup driver gets it, and the rider is never picked up. For the rest of the day the online driver gets no Radar or Exclusive trips, because each one fails the smart gap against the past 07:40 ride, and their 10:00 reservation gets no reminder or Leave now. The only way out is to go offline (the ride then goes to backup) or to cancel, which counts as a late cancel.",
+   "evidence": "home_scheduled.dart:183 `if (!_rules.leaveNowOpensTrip || !_canStartScheduled) { _lateScheduled(ride); return; }`\nhome_scheduled.dart:260-264 `if (_rules.leaveNowOpensTrip && _canStartScheduled) { _leaveNow(ride); return; }\n      if (_driverSession.isOnline) { return; }`\nhome_scheduled.dart:113-116 `_nextScheduledRide => upcoming.first`\nhome_scheduled.dart:341-349 `final fits = SmartGap.offerFits(...); if (!fits) { return false; }`\nsmart_gap.dart:148 `return !now.add(Duration(minutes: needed)).isAfter(at);`",
+   "suggested_fix": "Give an online driver with leaveNow off a way to start the ride, such as a Start action on the warning or in Scheduled rides. Also stop a ride whose pickup has passed and that was never started from counting as `_nextScheduledRide` and in `_fitsSchedule`, for example by handing it to dispatch at pickup time plus tolerance.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "high",
+     "reason": "With leaveNowOpensTrip=false, _leaveNow always goes to _lateScheduled (home_scheduled.dart:183). At the backup time, _giveToBackup skips the start branch (line 260) and an online driver returns at line 264 with no new timer. That part is intentional: contract §6.1 (CONTRACT.md:253, 271), commit #329, and the test 'admin leaveNow off' in test/audit/scheduled_late_eta_test.dart:456-471 all say an online driver keeps the ride. But nothing else can ever start the ride. ScheduledRideStore.start is called only from _startScheduledTrip (home_scheduled.dart:231). The Scheduled rides details for an accepted ride offer only 'Cancel reservation' (scheduled_rides.dart:1848-1865). ScheduledRideStore.upcoming does not drop rides whose pickup has passed (scheduled_rides.dart:629-637), and pickupAt keeps today's time once it has passed (driver_home_admin_content.dart:237-246). So the dead ride stays `_nextScheduledRide`. SmartGap.offerFits then returns false for any pickup in the past (smart_gap.dart:148), and _fitsSchedule (home_scheduled.dart:334-349) rejects every offer that is not assigned, at home_offer_radar.dart:241 and 326 and home_offer_rules.dart:22 (the Radar list filter). _planScheduled only plans for upcoming.first and returns at line 140 once its pickup has passed, so later accepted rides get no reminders and no Leave now. The existing test only checks that the ride stays in upcoming.",
+     "repro": "Static trace through home_scheduled.dart:113-163, 179-271, 334-377, smart_gap.dart:130-149, scheduled_rides.dart:629-660 and 1848-1885, contract §6.1, and the existing test scheduled_late_eta_test.dart:456-471. No new test run.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "With leaveNowOpensTrip=false, `_leaveNow` always goes to `_lateScheduled` (home_scheduled.dart:183). `_giveToBackup` skips the start branch (line 260) and returns for an online driver (line 264) without arming a new timer. The contract says this is intended: no auto-open (CONTRACT.md:251) and an online driver is never removed (CONTRACT.md:271). What is not intended is the end state. `ScheduledRideStore.start` is called only from `_startScheduledTrip` (scheduled_rides.dart:641, home_scheduled.dart:231), so the driver has no manual way to start the ride. `ScheduledRideStore.upcoming` (scheduled_rides.dart:629-637) does not drop a ride whose pickup has passed, so the ride stays `_nextScheduledRide`. `SmartGap.offerFits` (smart_gap.dart:148) returns `!now.add(needed).isAfter(at)`. With now > at and needed ≥ 0, that is false, so `_fitsSchedule` (home_scheduled.dart:333-349) rejects every offer that is not assigned and not this ride. `_planScheduled` also plans only for `upcoming.first`, so later accepted rides get no reminders. The existing test 'admin leaveNow off' (test/audit/scheduled_late_eta_test.dart:456-470) only checks that the ride stays in upcoming. Severity is medium, not high: the path needs a non-default admin setting, and the backend side (CONTRACT.md:170, 'Reassigns a late or offline driver's ride') may reassign the ride, although the local store never learns of it.",
+     "repro": "Read only. Worked the offerFits arithmetic by hand: pickup 07:40, now 07:41, needed ≥ 15 (spare minutes alone) gives 07:56, which is after 07:40, so fits=false. Confirmed by grep that no other caller of `ScheduledRideStore.start` exists and that no start action exists in scheduled_rides.dart.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
   },
   {
    "file": "lib/presentation/driver/overlays/map_overlay_insets.dart",
@@ -4520,6 +4786,82 @@
    "source": "r2-driver3"
   },
   {
+   "id": "driver-fixrev-8",
+   "file": "lib/core/scheduled/scheduled_ride_rules.dart",
+   "line": 230,
+   "title": "The toward-pickup window uses each ride type's onlineBeforeMinutes (30 min for a normal ride), not reservations.towardPickupBeforeMinutes (default 60, which nothing reads)",
+   "original_title": "reservations.towardPickupBeforeMin is parsed but never used: the toward-pickup filter uses each ride type's onlineBeforeMin instead",
+   "category": "contract-mismatch",
+   "severity": "low",
+   "claimed_severity": "medium",
+   "confidence": 0.55,
+   "reported_by": [
+    "area:fix-regressions-home"
+   ],
+   "merged_from": [],
+   "description": "`fromJson` reads `towardPickupBeforeMin` into `towardPickupBeforeMinutes`, but no code reads that field. `_fitsSchedule` and `_towardPickupTime` decide when to offer only trips toward the pickup using `SmartGap.ruleOf(ride, _rules).onlineBeforeMinutes`, which is 30 min for a normal ride. CONTRACT.md §6.1 and contract.json configDefaults.reservations set `towardPickup: true, towardPickupBeforeMin: 60`. So even with the default document the window is 30 minutes for normal rides instead of 60, and an admin change to this value has no effect.",
+   "failure_scenario": "An admin publishes `towardPickupBeforeMin: 90`. For a normal 07:40 ride the driver still gets trips in any direction until 07:10, and only toward the pickup after that. With the defaults the window is 07:10 instead of 06:40.",
+   "evidence": "scheduled_ride_rules.dart:230-232 `towardPickupBeforeMinutes: _clampInt(json['towardPickupBeforeMin'], 0, 1440) ?? seed.towardPickupBeforeMinutes,`\nhome_scheduled.dart:351 `final window = SmartGap.ruleOf(ride, _rules).onlineBeforeMinutes;`\nhome_scheduled.dart:372 same in `_towardPickupTime`\ngrep: `towardPickupBeforeMinutes` has no reader in lib/",
+   "suggested_fix": "Use `_rules.towardPickupBeforeMinutes` as the window in `_fitsSchedule` and `_towardPickupTime`.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "`towardPickupBeforeMinutes` is written at scheduled_ride_rules.dart:151 and :230-232 and never read. home_scheduled.dart:351 (_fitsSchedule) and :372 (_towardPickupTime) take the window from `SmartGap.ruleOf(ride, _rules).onlineBeforeMinutes`, which defaults to 30 min for a normal ride (:155). CONTRACT.md:259 and contract.json:671-672 define `towardPickupBeforeMin: 60` as a separate admin setting. So an admin value is ignored, and the default window for normal rides is 30 min instead of 60. The code comment at home_scheduled.dart:331-333 describes the per-type 'be online before' window on purpose, and the contract does not spell out what the field means. The real effect is only how early the toward-pickup offer filter starts, so I rate it low, not medium.",
+     "repro": "Traced readers with grep (none outside the rules file). Read home_scheduled.dart:330-376 and the contract defaults. No test run.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "towardPickupBeforeMinutes is set at scheduled_ride_rules.dart:151 and :230-232, but nothing in lib/ reads it. home_scheduled.dart:351 and :372 take the window from SmartGap.ruleOf(ride,_rules).onlineBeforeMinutes, which is 30 for a normal ride (scheduled_ride_rules.dart:155). CONTRACT.md:259 and contract.json:672 set towardPickupBeforeMin: 60. So with the built-in defaults, a normal 07:40 ride filters offers toward the pickup from 07:10, not 06:40. For airport and long trips the window is already 60, and comfortPremium and event get 45. The admin-change part of the scenario cannot happen: DriverAppConfig.apply() is never called from lib/ (only from a test), so no admin value ever arrives. I rate it low: the default window differs from the contract for normal and 45-min ride types and only changes which offers the driver sees.",
+     "repro": "Read the code and worked the values by hand. normal onlineBeforeMinutes = 30 (scheduled_ride_rules.dart:155), so the window starts at pickup 07:40 - 30 = 07:10. The contract default of 60 gives 06:40. grep `towardPickupBeforeMinutes` in lib/ finds only its declaration and parsing.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
+   "id": "driver-r3-4",
+   "file": "lib/core/scheduled/scheduled_ride_rules.dart",
+   "line": 235,
+   "title": "driverLateCancelHours is read as a whole number of hours, but the contract allows fractions (number, minimum 0.5), so 1.5 h becomes 2 h",
+   "original_title": "driverLateCancelHours is read as a whole number of hours, but the contract allows fractions (number, minimum 0.5), so 1.5 h becomes 2 h",
+   "category": "contract-mismatch",
+   "severity": "low",
+   "claimed_severity": "medium",
+   "confidence": 0.75,
+   "reported_by": [
+    "area:r3-auth-scheduled"
+   ],
+   "merged_from": [],
+   "description": "contracts/openapi.yaml DriverReservations.driverLateCancelHours is `type: number, minimum: 0.5, maximum: 72`. ScheduledRideRules.fromJson reads it with `_clampInt(json['driverLateCancelHours'], 0, 72)`, which rounds (`json.round()`), and the field is an `int` used as `Duration(hours: _rules.driverLateCancelHours)` in ScheduledRideStore.freeCancelUntil (scheduled_rides.dart:519-522). Any fraction the admin sets is rounded to a whole hour, and 0 is accepted although the contract minimum is 0.5. freeCancelUntil and isLateCancel feed the late-cancel count, the pause, the cancel sheet's \"Free cancel until …\" line and the late warning.",
+   "failure_scenario": "The admin sets driverLateCancelHours 1.5 (90 min). A driver cancels an accepted reservation 100 minutes before pickup. The app says \"Late cancel: under 2 h to pickup\" and adds a late cancel (_lateCancels.add), which can pause Scheduled rides, although under the zone rule the cancel was free. With 0.5 the window becomes 1 h. Reproduced with a throwaway test: fromJson({'driverLateCancelHours': 1.5}) gives 2, and fromJson({'driverLateCancelHours': 0.5}) gives 1.",
+   "evidence": "scheduled_ride_rules.dart:235 `driverLateCancelHours: _clampInt(json['driverLateCancelHours'], 0, 72) ?? seed.driverLateCancelHours,`\nscheduled_ride_rules.dart:344-345 `int? _clampInt(...) => json is num && json.isFinite ? json.round().clamp(min, max) : null;`\nscheduled_rides.dart:519-522 `ride?.pickupAt(_now)?.subtract(Duration(hours: _rules.driverLateCancelHours));`\nopenapi.yaml: `driverLateCancelHours: type: number minimum: 0.5 maximum: 72`",
+   "suggested_fix": "Store the rule as minutes or as a double, read it with _clampNum (0.5 to 72), and build the Duration from minutes.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "The parser does not follow the contract. openapi.yaml:6743-6748 declares driverLateCancelHours as `type: number, minimum: 0.5, maximum: 72`. ScheduledRideRules.fromJson reads it with _clampInt(…, 0, 72), which calls json.round() (scheduled_ride_rules.dart:235, 344-345), and stores an int. That int is then used as Duration(hours: …) in freeCancelUntil (scheduled_rides.dart:519-522) and in the notes (scheduled_rides_notes.dart:25,139). As a result, 1.5 is read as 2, 0.5 as 1, and 0 is accepted. Severity is low rather than medium because fromJson is reached only through DriverAppConfig.apply(), which no production code calls yet (driver_app_config.dart:180). For now this is a latent bug in the contract parser, not live behaviour.",
+     "repro": "Static trace of fromJson, then _clampInt, then freeCancelUntil, checked against the openapi.yaml schema. The finder reports reproducing it with a throwaway test. I did not re-run one because the code path is unambiguous.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "scheduled_ride_rules.dart:235 reads the field with _clampInt(…, 0, 72), which calls json.round(), and stores it as an int (line 276). openapi.yaml:6743-6748 declares it `type: number, minimum: 0.5`. The value comes from the server: driver_app_config.dart:175 calls ScheduledRideRules.fromJson(json['reservations']) and line 189 assigns it to ScheduledRideRules.current. scheduled_rides.dart:519-522 then builds Duration(hours: int), and isLateCancel (513-516) uses that. Nothing in DECISIONS.md or CONTRACT.md makes whole hours intentional; CONTRACT.md:261 only shows the default of 1.",
+     "repro": "Traced by hand. Dart's 1.5.round() is 2 and 0.5.round() is 1 (it rounds half away from zero), so 1.5 h becomes 2 h and 0.5 h becomes 1 h. A cancel 100 min before pickup with 1.5 h configured: freeCancelUntil = pickup - 2 h, and now is after that, so isLateCancel is true, although 100 min > 90 min means the cancel should be free. 0 is accepted although the contract minimum is 0.5. Not run, since reading the code was decisive.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
    "file": "lib/l10n/app_fr.arb",
    "line": 713,
    "title": "French plurals written as =1{1 ...} render a literal '1 course' / '1 arrêt' for count 0 (gen-l10n maps =1 to the CLDR 'one' slot, which in fr covers 0)",
@@ -4774,6 +5116,44 @@
    "source": "r2-driver2"
   },
   {
+   "id": "driver-r3-16",
+   "file": "lib/presentation/driver/accept ride/accept_ride.dart",
+   "line": 1350,
+   "title": "The island's 'Next trip secured' announcement shows the base fare, while the secured next-trip card shows the fare plus pickup pay",
+   "original_title": "The trip island shows the secured next trip's fare without pickup pay, while the next-trip card on the same screen shows fare plus pickup pay",
+   "category": "ui-truth",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.45,
+   "reported_by": [
+    "area:r3-home-trip-deep"
+   ],
+   "merged_from": [],
+   "description": "Once a next trip is secured, the trip sheet's card uses `offer.shownFare` (fare + pickup pay, 'one total'; accept_ride_sheet.dart:132), but the island's next-trip face gets `_nextTripRadarOffer?.fare`, the base fare. With pickup pay on (it is on by default for nextTripWhileDriving), the driver sees two different amounts for the same secured trip at the same time. This is a separate symptom from the known finding that accept drops the pickup pay. Here the two amounts disagree on one screen before any accept happens.",
+   "failure_scenario": "A demo next trip is secured while driving: fare 128,40 kr, pickup leg 1.6 km / 4 min with a non-zero Comfort pickup rate. The full sheet's 'Next trip secured' card shows 128,40 kr + pickup pay (e.g. 140-something kr), while the island's next-trip face shows 128,40 kr.",
+   "evidence": "accept_ride.dart:1350 `nextTripFare: _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer?.fare : null,`\naccept_ride_sheet.dart:132 `fare: offer.shownFare,`\naccept_ride.dart:352 `String get shownFare => pickupPay.totalOf(fare);`",
+   "suggested_fix": "Use one amount for both: pass `_nextTripRadarOffer?.shownFare` to the island, or fix the fare model as a whole together with the known accept-drop finding.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "accept_ride.dart:1350 passes `_nextTripRadarOffer?.fare` (the base fare) to AdaptiveTripIsland. That value goes through adaptive_trip_island.dart:276 into trip_island_controller.dart:344-346, which announces tr.nextTripSecuredNextTripFare(fare). The card in accept_ride_sheet.dart:132 uses offer.shownFare = pickupPay.totalOf(fare) (accept_ride.dart:352). By default, PickupPayConfig has nextTripWhileDriving in defaultKinds and an enabled Comfort rate of 3 kr/km and 1 kr/min, with 1 free km and 2 free min (pickup_pay_config.dart:203-235). For the demo offer (Comfort, 128,40 kr, 1.6 km, 4 min; accept_ride.dart:444-456) the pickup pay is 0.6*3 + 2*1 = 3,80 kr. The card therefore shows 132,20 kr while the island says 'Next trip secured · 128,40 kr'. There is no guard.",
+     "repro": "Static trace of the nextTripFare data flow (accept_ride.dart:1350, then adaptive_trip_island.dart:276, then trip_island_controller.dart:346) and of shownFare/PickupPayCalculator.pay with the default config. The 3,80 kr figure is computed by hand.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "accept_ride.dart:1350 passes _nextTripRadarOffer?.fare. That goes through adaptive_trip_island.dart:276 into TripStripInput, and trip_island_controller.dart:344-346 says it as tr.nextTripSecuredNextTripFare. accept_ride_sheet.dart:132 shows offer.shownFare, which is pickupPay.totalOf(fare) (accept_ride.dart:352). Pickup pay is on by default: pickup_pay_config.dart:208 includes nextTripWhileDriving in the default kinds, and the default rates are enabled with krPerKm 2.5 or more, so pay > 0 and totalOf returns a different amount. The island shows it as a strip message when the trip becomes secured, not as a lasting face, but the two amounts still disagree.",
+     "repro": "Traced the code path. With the default config, pickup pay for a 1.6 km / 4 min leg is non-zero (km*2.5 + min*0.8 minus any free allowance), so the card shows 128,40 kr plus that pay while the island announces 128,40 kr.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
    "file": "lib/presentation/driver/accept ride/accept_ride.dart",
    "line": 1672,
    "title": "The slide action is read twice: its Semantics label is merged with the child Text",
@@ -4807,6 +5187,44 @@
     }
    ],
    "source": "r2-driver2"
+  },
+  {
+   "id": "driver-fixrev-4",
+   "file": "lib/presentation/driver/accept ride/accept_ride_late_eta.dart",
+   "line": 159,
+   "title": "After any local release to dispatch (including a late-ETA reassign), the realtime subscription stays live until dispose, so a riderCancelled event during the pop overwrites the journal with cancelled_by_rider",
+   "original_title": "After a late-ETA reassign the trip is still subscribed to realtime during the pop; a rider cancel then journals the reassigned ride as 'cancelled_by_rider' in this driver's history",
+   "category": "race",
+   "severity": "low",
+   "claimed_severity": "medium",
+   "confidence": 0.45,
+   "reported_by": [
+    "area:fix-regressions-trip"
+   ],
+   "merged_from": [],
+   "description": "_reassignLate ends the trip locally (applyProjection(requested)) and pops synchronously in _leaveAfterRelease, but the state stays mounted for the pop animation and keeps its realtime subscription. The sequence gate never saw a terminal status (the release was local), so it does not block later events. A riderCancelled event in that window reaches `_drainProjection` → `_handleRiderCancelled`. That path does not check `_rideLifecycle.terminal`; it writes CompletionJournal.finish(cancelledByRider, authoritative: true), and `applyProjection(cancelledByRider)` is accepted because a different terminal status may replace an earlier one. The busy guard in `_checkLateEta` only protects the moment before the reassign.",
+   "failure_scenario": "I reproduced this with a throwaway widget test (now deleted): a late-ETA reassign, then `realtime.emit(kind: riderCancelled)` on the next 10 ms frame. The trip leaves with 'Given to another driver: 120 min late', but `movera_driver_completed_trips` now has a row {tripId: late-eta-trip, status: cancelled_by_rider, cancellationActor: rider}. A ride this driver lost to another driver shows in their history as a rider cancel, and could carry a cancel fee.",
+   "evidence": "accept_ride_late_eta.dart:157-160: await _AcceptRideTrip(this)._leaveAfterRelease(status, notice: ...);\naccept_ride_trip.dart:446-465: _handleRiderCancelled: if (!mounted || _handlingRiderCancellation) return; ... CompletionJournal(...).finish(..., status: TripStatus.cancelledByRider, authoritative:true ...)\nactive_ride_controller.dart:115-117: (terminal && (!status.isTerminal || _terminalStatus == status)) -> a different terminal status is allowed",
+   "suggested_fix": "In _handleRiderCancelled (and _drainProjection), ignore events once `_rideLifecycle.releasedToDispatch` or `_lateEtaReassigning` is set, or cancel the realtime subscription in _leaveAfterRelease.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "_leaveAfterRelease (accept_ride_trip.dart:427-444) calls _pauseLiveUpdates, which cancels only the GPS stream (:128-148), and then pops. _realtimeSubscription is cancelled only in dispose (accept_ride.dart:721). The realtime gate blocks only after a terminal status (driver_realtime.dart:298), and `requested` is not terminal. _onRealtimeEvent (:249-267) still passes riderCancelled to _drainProjection, which calls _handleRiderCancelled (:324). _handleRiderCancelled (:446-466) never checks _rideLifecycle.terminal or _lateEtaReassigning. It writes an authoritative journal row with cancelled_by_rider, and applyProjection accepts a different terminal status (active_ride_controller.dart:115-117). The path is real, but it only opens during the pop animation, and it needs a rider cancel for a trip the backend has already taken from this driver. So the severity is low, not medium.",
+     "repro": "Traced the subscription lifecycle, the gate, _drainProjection, _handleRiderCancelled and applyProjection. This matches the finder's widget-test reproduction. I did not rerun it.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "The trip state keeps its realtime subscription while it pops after _leaveAfterRelease (accept_ride_trip.dart:436-440). _onRealtimeEvent (accept_ride_trip.dart:264-266) sends a riderCancelled event to _drainProjection, then to _handleRiderCancelled (accept_ride_trip.dart:446-465). That path has no check for terminal or released-to-dispatch, and it journals cancelled_by_rider as authoritative. The window is short (the pop animation right after a local release), and with a real backend a rider cancel for a ride already released should not be sent to this driver. So it is a narrow race, not a main-path failure.",
+     "repro": "Ran a throwaway widget test (now deleted): a late-ETA reassign (driver in Uppsala), then realtime.emit(kind: riderCancelled) on the next frame. Output: 'F4 history: {\"rows\":[{\"tripId\":\"late-eta-trip\",...,\"status\":\"cancelled_by_rider\",\"cancellationActor\":\"rider\",...}]}', a row in movera_driver_completed_trips for a ride this driver lost to the reassign.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
   },
   {
    "file": "lib/presentation/driver/accept ride/accept_ride_panel.dart",
@@ -5757,6 +6175,44 @@
    "source": "r2-driver1"
   },
   {
+   "id": "driver-r3-8",
+   "file": "lib/presentation/driver/auth/additional detail/navigation.dart",
+   "line": 139,
+   "title": "Onboarding steps lose what the driver entered: Back to a previous step shows the vehicle form reset to its samples and the picked registration or insurance document gone",
+   "original_title": "Onboarding steps lose what the driver entered: Back to a previous step shows the vehicle form reset to its samples and the picked registration or insurance document gone",
+   "category": "data-loss",
+   "severity": "low",
+   "claimed_severity": "medium",
+   "confidence": 0.7,
+   "reported_by": [
+    "area:r3-auth-scheduled"
+   ],
+   "merged_from": [],
+   "description": "The four onboarding steps live in a PageView.builder with the default cacheExtent of 0 and no AutomaticKeepAlive, so each step's State is disposed as soon as it scrolls off screen. AdditionDetailAddVehicle keeps its make, model, year, plate, type and color in State controllers, and VehicleDocumentUpload keeps selectedFileName and selectedFileBytes in State. A text field only keeps its page alive while it has focus (EditableText keep-alive), so entered data survives only by accident.",
+   "failure_scenario": "Legacy-auth build: the driver types year 2019 on Add vehicle, closes the keyboard and taps Continue, then taps Back. The year field is empty again and make, model and plate are back to Toyota / Mark X / AQS - 140. In the same way, a document picked on Vehicle registration is gone after Continue to Insurance and Back. Reproduced with a throwaway widget test: after enterText('2019'), unfocus, Continue, Back, find.text('2019') finds 0 widgets (with the field still focused it finds 1).",
+   "evidence": "navigation.dart:139-146 `PageView.builder(controller: controller.pageController, physics: const NeverScrollableScrollPhysics(), itemCount: controller.pages.length, itemBuilder: … controller.pages[index])`\nadd_vehicle.dart:23-35 State-owned TextEditingControllers\nvehicle_document_upload.dart:38-39 `String? selectedFileName; Uint8List? selectedFileBytes;`",
+   "suggested_fix": "Keep the step data in the navigation controller (or a draft model) and pass it in, or mix AutomaticKeepAliveClientMixin into each step with wantKeepAlive true.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "navigation.dart:139-146 uses PageView.builder with default settings (allowImplicitScrolling false, so cacheExtent 0) and no keep-alive anywhere in the folder (grep for AutomaticKeepAlive/wantKeepAlive/PageStorage found none). AdditionDetailAddVehicle keeps its TextEditingControllers in State, with sample defaults (add_vehicle.dart:23-35). So when the page scrolls off, its State is disposed, and Back rebuilds it with fresh sample values. Severity is low because the whole flow is legacy-gated: MOVERA_ENABLE_LEGACY_AUTH defaults to false (demo_features.dart:2, ROUTES.md:12), and it is a preview whose data is never submitted.",
+     "repro": "Static read of navigation.dart, add_vehicle.dart and the legacy gate. This is standard Flutter PageView behaviour, and the finder's widget test result is consistent with it. Not rerun.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "navigation.dart:139-146 uses PageView.builder with the default cacheExtent and no keep-alive (grep finds no AutomaticKeepAlive or cacheExtent in that directory). The page widgets are const-like instances, but their State (the add_vehicle.dart controllers seeded with Toyota / Mark X / AQS - 140, and vehicle_document_upload.dart:38-39 selectedFileName/Bytes) is disposed when animateToPage or jumpToPage moves the page off screen, then recreated fresh on Back. The flow is reachable only in the opt-in legacy-auth preview: demo_features.dart:2 MOVERA_ENABLE_LEGACY_AUTH defaults to false, and ROUTES.md:3 says legacy auth is disabled by default. So severity is low, not medium.",
+     "repro": "Read the code: Flutter PageView semantics with cacheExtent 0 and no keep-alive dispose off-screen children. This matches the finder's widget test result (0 widgets after unfocus, Continue, Back). Not re-run.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
    "file": "lib/presentation/driver/auth/additional detail/screens/add_vehicle.dart",
    "line": 38,
    "title": "Onboarding Add-vehicle type list ('Luxury', 'Standard', 'Economy', 'SUV') and the prefilled sample values are hard-coded English, not localized, and do not match the contract categories",
@@ -5792,6 +6248,44 @@
     }
    ],
    "source": "r2-driver4"
+  },
+  {
+   "id": "driver-r3-10",
+   "file": "lib/presentation/driver/auth/additional detail/screens/upload document/take id photo/take_id_photo.dart",
+   "line": 36,
+   "title": "'Return to home' at the end of legacy onboarding lands on the Sign-in (or Starter) screen, not Home",
+   "original_title": "'Return to home' at the end of legacy onboarding lands on the Sign-in (or Starter) screen, not Home",
+   "category": "ui-truth",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.45,
+   "reported_by": [
+    "area:r3-auth-scheduled"
+   ],
+   "merged_from": [],
+   "description": "In the legacy-auth flow the navigator stack is rebuilt by logout (`pushAndRemoveUntil(DriverStarter, (route) => false)`, profile.dart:414). DriverStarter then calls `Navigator.pushReplacement(DriverSignIn)`, so DriverSignIn becomes the first route. Onboarding is pushed from there (Apple/Google → AdditionalInfoNavigation → SelectDocumentType → TakeIdPhoto). The button labelled tr.returnToHome runs `popUntil((route) => route.isFirst)`, which stops at the first route: Sign in, or Starter on the registration path. Home is never in the stack.",
+   "failure_scenario": "Legacy-auth build: log out, tap the legacy sign-in, Continue with Google, go through the steps, tap Verify, then Continue, then 'Return to home'. The app shows the Sign in screen again instead of Home.",
+   "evidence": "take_id_photo.dart:36 `Navigator.of(context).popUntil((route) => route.isFirst);` with label `tr.returnToHome`\nstarter.dart:79-82 `Navigator.pushReplacement(context, BottomToTopTransition(const DriverSignIn()));`\nprofile.dart:414-417 `pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const DriverStarter()), (route) => false)`",
+   "suggested_fix": "Reset to the runtime home (DriverRuntimeScope.homeBuilder) with pushAndRemoveUntil, or relabel the button to match where it goes.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "DriverStarter is only reached through profile.dart:415, where logout does pushAndRemoveUntil with (route) => false. starter.dart:79-82 then calls pushReplacement to DriverSignIn, so Sign in becomes the first route, or Starter stays first on the registration path (Navigator.push, 91-97). The `id-preview-return` button (take_id_photo.dart:36) calls popUntil(isFirst), which lands on Sign in or Starter, never Home. The label tr.returnToHome is wrong for where it goes. Severity is low: the flow is legacy-gated and off by default, and since the driver is logged out at this point, the mislabel matters more than the destination.",
+     "repro": "Traced every DriverStarter construction (grep: only profile.dart:415), starter.dart's navigation calls, and the TakeIdPhoto button handler.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "The only way to DriverStarter is profile.dart:414-417, which calls pushAndRemoveUntil(DriverStarter, (r) => false). starter.dart:79-82 then calls pushReplacement(DriverSignIn), so Sign in becomes the first route. sign_in.dart:83/102 push AdditionalInfoNavigation, navigation.dart:61 pushes SelectDocumentType, and select_doc_typ.dart:173 pushes TakeIdPhoto. The button at take_id_photo.dart:36 runs popUntil(isFirst), so it lands on Sign in (or Starter on the registration path, which uses push). It is labelled tr.returnToHome. This is only in the legacy-auth preview, which is disabled by default (demo_features.dart:2).",
+     "repro": "Traced the route stack through the callers listed. No other route reaches DriverStarter (grep finds a single `DriverStarter()` construction at profile.dart:415).",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
   },
   {
    "file": "lib/presentation/driver/auth/create acc/create_acc.dart",
@@ -6742,6 +7236,44 @@
    "source": "driver2"
   },
   {
+   "id": "driver-r3-15",
+   "file": "lib/presentation/driver/home/home_offer_radar.dart",
+   "line": 1200,
+   "title": "Resuming Home while a Radar Match claim is in flight returns before re-arming the reservation's Exclusive-step timer, which the pause had cancelled",
+   "original_title": "Resuming Home while a Radar Match claim is in flight returns before re-arming the reservation's Exclusive-step timer, which the pause had cancelled",
+   "category": "state-corruption",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.4,
+   "reported_by": [
+    "area:r3-home-trip-deep"
+   ],
+   "merged_from": [],
+   "description": "_pauseHomeUpdates → _cancelAllOfferTimers(preserveClaim: true) cancels _reservationOfferTimer, along with the demo offer timers. On resume, _scheduleVisibleOffers re-subscribes to dispatch but returns early when `_homeRadarMatchingOfferId != null`, before it re-creates _reservationOfferTimer and calls _HomeScheduled._onRadarLive(). When that claim later resolves as lost or networkError, nothing re-arms them: _claimHomeRadarOffer only calls _afterClaimResolved, which re-plans late scheduled rides. _soonReservationReady therefore never becomes true. The open reservation's Exclusive step (_maybeShowSoonReservation) does not come on this phone until the driver toggles online or Home is paused and resumed again.",
+   "failure_scenario": "Online with an open Home reservation whose Exclusive step is minutes away. The driver taps Match on a Radar card and pulls down the notification shade (inactive → resumed) before dispatch answers. Dispatch answers 'already claimed'. The reservation's Exclusive offer never appears on Home at its time.",
+   "evidence": "home_offer_radar.dart:1192 `_cancelAllOfferTimers(preserveClaim: true);` ... 1195-1200 `_watchDispatchRadar(); if (_claimedHomeOffer != null) { _openClaimedHomeOffer(); return; } if (_homeRadarMatchingOfferId != null) { return; }` ... 1267-1273 `_reservationOfferTimer = Timer(untilExclusive, () { ... _soonReservationReady = true; _maybeShowSoonReservation(); });`",
+   "suggested_fix": "Arm _reservationOfferTimer (and call _onRadarLive) before the claim early-returns, or re-run the non-demo part of _scheduleVisibleOffers once the claim resolves without a win.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "_pauseHomeUpdates → _cancelAllOfferTimers(preserveClaim: true) cancels _reservationOfferTimer and sets it to null (home_offer_radar.dart:797-798). On resume, _scheduleVisibleOffers returns at line 1200 while _homeRadarMatchingOfferId != null, before _reservationOfferTimer is re-armed (1267-1273) and before _onRadarLive (1277). When _claimHomeRadarOffer later resolves as lost or networkError (541-571), it only calls _afterClaimResolved (home_scheduled.dart:186-194), which re-plans only a late scheduled ride. _scheduleVisibleOffers has just two callers, resume (home.dart:208) and going online (home.dart:940), so nothing sets _soonReservationReady = true until the next resume or online toggle. A notification-shade pull during a claim sets _foreground=false (home.dart:189), so the path is reachable. The window is narrow.",
+     "repro": "Static trace: grep of _scheduleVisibleOffers, _soonReservationReady and _reservationOfferTimer writers across lib/presentation/driver/home; read the claim resolution paths at home_offer_radar.dart:541-571, 676-690 and 795-815.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "_pauseHomeUpdates calls _cancelAllOfferTimers(preserveClaim: true) (home.dart:198), which cancels and nulls _reservationOfferTimer (home_offer_radar.dart:797-798). On resume, _scheduleVisibleOffers returns at home_offer_radar.dart:1200 while _homeRadarMatchingOfferId != null, before it re-arms _reservationOfferTimer (1267-1273) and before _onRadarLive. When the claim resolves (lost via _resolveHomeRadarMatchLost at 675-711, or networkError at 561-566), the code only calls _afterClaimResolved (home_scheduled.dart:186-194). That replans only a late scheduled ride. _reservationOfferTimer is assigned in one place only (line 1269), and _maybeShowSoonReservation returns early unless _soonReservationReady is true (line 160). So the reservation's Exclusive step never shows until _scheduleVisibleOffers runs again (go online, or another pause and resume). The window is narrow: Home must be paused and resumed while the Match claim is in flight.",
+     "repro": "Traced by reading. Checked every assignment of _reservationOfferTimer and _soonReservationReady = true (only lines 1269/1271) and every caller of _scheduleVisibleOffers (home.dart:208 resume, home.dart:940 go online). Not run.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
    "file": "lib/presentation/driver/home/home_reservation.dart",
    "line": 214,
    "title": "The 'New scheduled ride' notification body uses the raw English pickupDay ('Today'/'Tomorrow') in the sv/fr feed",
@@ -6811,6 +7343,82 @@
     }
    ],
    "source": "r2-driver4"
+  },
+  {
+   "id": "driver-fixrev-6",
+   "file": "lib/presentation/driver/home/home_scheduled.dart",
+   "line": 264,
+   "title": "An online driver blocked at Leave now by a Home Radar claim gets the trip only when the backup timer fires (default 5 min, up to 60) because a lost or network-error claim does not re-plan; if still blocked then, no further timer is armed",
+   "original_title": "An online driver blocked at Leave now (Radar claim in flight) starts the trip only at the backup minutes, or never if still blocked then: nothing re-plans when the claim resolves",
+   "category": "state-corruption",
+   "severity": "low",
+   "claimed_severity": "medium",
+   "confidence": 0.55,
+   "reported_by": [
+    "area:fix-regressions-home"
+   ],
+   "merged_from": [],
+   "description": "`_canStartScheduled` is false while `_homeRadarMatchingOfferId` or `_claimedHomeOffer` is set. If Leave now fires during a Home Radar Match, `_lateScheduled` sets `lateSince`, shows the late warning and arms one timer at `lateSince + backupAfterMinutes`. When the claim is lost or hits a network error (`_resolveHomeRadarMatchLost`, or the networkError case at home_offer_radar.dart:560-567), neither path calls `_planScheduled`. `_planScheduled` only runs on a ScheduledRideStore change or on `_onRadarLive`, which comes from `_scheduleVisibleOffers` when Home resumes or after going online. So the ride waits for the backup timer, which defaults to 5 minutes and can be set up to 60. If the driver is still blocked when that timer fires, `_giveToBackup` returns at line 264 for an online driver and arms nothing more, so the ride never starts until an unrelated trigger happens. A trip that opens that late is likely to be reassigned straight away by the late-ETA check (`checkNow` on open).",
+   "failure_scenario": "The driver is online on Home and taps Match on a Radar card a second before Leave now for the 07:40 ride. The claim comes back 'taken by another' a second later. The island says \"Head to your 07:40 pickup\" but no trip opens. The trip opens only 5 minutes later, when the backup timer calls `_leaveNow`, and the late-ETA watch then removes the driver from the ride for being late. If the admin set 60 minutes, the trip never opens before the pickup time.",
+   "evidence": "home_scheduled.dart:168-173 `_canStartScheduled => ... && _claimedHomeOffer == null && _homeRadarMatchingOfferId == null;`\nhome_scheduled.dart:205-214 (single backup timer)\nhome_scheduled.dart:264 `if (_driverSession.isOnline) { return; }`\nhome_offer_radar.dart:674-681 `_resolveHomeRadarMatchLost` clears `_homeRadarMatchingOfferId` without any re-plan\nhome_offer_radar.dart:560-567 networkError clears matching without any re-plan",
+   "suggested_fix": "When a Home claim resolves (lost or network error) and `_scheduled.lateSince != null`, call `_HomeScheduled(this)._leaveNow(_scheduled.ride!)` or `_planScheduled()`. While the driver is online and blocked, keep re-checking instead of returning with no timer.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "medium",
+     "reason": "If Leave now fires while `_homeRadarMatchingOfferId` is set, _lateScheduled sets lateSince and arms one timer at lateSince + backupAfterMinutes (home_scheduled.dart:199-214). Neither _resolveHomeRadarMatchLost (home_offer_radar.dart:674-707) nor the networkError branch (home_offer_radar.dart:563-568) calls _planScheduled or _scheduleVisibleOffers. The only exception is a reservation offer, where _reservationClaimedOnRadar changes the store and the store listener re-plans. Otherwise the ride waits for the backup timer, and _giveToBackup then starts it (line 260). If Home is still blocked at that moment, an online driver returns at line 264 with no timer left, until some unrelated trigger: a store change, or _onRadarLive through _scheduleVisibleOffers on resume or go-online (home_offer_radar.dart:1268). The finding's claim that the late-ETA check would 'likely reassign straight away' is overstated with defaults. Leave now is drive time + 15 min spare before pickup, so starting 5 min later still leaves about 10 min. It only bites with a large backupAfterMinutes.",
+     "repro": "Static trace through home_scheduled.dart:168-271, home_offer_radar.dart:542-568 and 660-707, 1240-1270, home.dart:174-212. No test run.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "`_resolveHomeRadarMatchLost` (home_offer_radar.dart:674+) and the networkError branch (560-567) clear `_homeRadarMatchingOfferId` without calling `_planScheduled` or `_leaveNow`. A re-plan happens only on ScheduledRideStore changes (home_scheduled.dart:68-71) or `_onRadarLive` (home_offer_radar.dart:1268, called from `_scheduleVisibleOffers` on resume or going online). For a non-reservation offer neither happens, so the single timer at lateSince + backupAfterMinutes (home_scheduled.dart:205-214) is what finally calls `_giveToBackup` → `_leaveNow`. The finder overstates two points. (1) 'Reassigned straight away' does not hold at defaults: Leave now = pickup − (drive + spare 15). Opened 5 min late, now + ETA ≈ pickup − 10, which is before pickup + 3 min tolerance, so the late-ETA check passes. Only a backup of more than about 18 min crosses the line. (2) 'Never' needs a second claim in flight at the exact backup instant. A won claim puts the driver on a trip, and returning Home re-plans through `_onRadarLive`. The window is also narrow, because a Radar offer near Leave now has to pass `_fitsSchedule`.",
+     "repro": "Read only. Traced both claim-resolution paths and every caller of `_planScheduled` and `_onRadarLive`. Worked the late-ETA inequality by hand with the contract defaults (spare 15, tolerance 3, backup 5).",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
+   "id": "driver-r3-2",
+   "file": "lib/presentation/driver/my bank/add new account/add_new_account.dart",
+   "line": 253,
+   "title": "Bank account form section header 'ACCOUNT' is hard-coded English in the fr/sv UI",
+   "original_title": "Bank account form section header 'ACCOUNT' is hard-coded English in the fr/sv UI",
+   "category": "l10n",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.65,
+   "reported_by": [
+    "area:r3-settings-money-history"
+   ],
+   "merged_from": [],
+   "description": "Every other label on the Bank account screen comes from `tr` (tr.bankHolder, tr.bank, tr.clearing, tr.account, tr.countrySweden, ...). The section caption above the fields is the literal string 'ACCOUNT', so French and Swedish drivers see an English header over localized rows.",
+   "failure_scenario": "Set the app language to Svenska in Settings, then open My bank > + (Bank account). The header above 'Kontohavare/Clearing/Konto' reads 'ACCOUNT'.",
+   "evidence": "add_new_account.dart:250-254 `const Padding(... child: Text('ACCOUNT', style: TextStyle(color: _muted, fontSize: 11.5, ...`",
+   "suggested_fix": "Use a localized key (for example tr.account.toUpperCase() or a new bankAccountSection string) instead of the literal.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "add_new_account.dart:250-254 renders the literal const Text('ACCOUNT'). Localized keys already exist: tr.account is 'Compte' in fr and 'Konto' in sv (app_localizations_fr.dart:391, app_localizations_sv.dart:391). The screen is reachable from my_bank.dart:44. No decision in DECISIONS.md exempts this header; D6 only concerns money literals.",
+     "repro": "Read the cited lines, grepped the l10n files for 'account', checked the route from my_bank.dart and grepped DECISIONS.md.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "add_new_account.dart:250-254 renders the const literal Text('ACCOUNT') as the section caption, so it shows in English whatever the language. DECISIONS.md has no exemption for it, and no l10n test allowlists it.",
+     "repro": "Read the source and grepped lib/ and docs for 'ACCOUNT'. It occurs only at add_new_account.dart:253. Not run.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
   },
   {
    "file": "lib/presentation/driver/my queue position/my_queue_pos.dart",
@@ -7242,6 +7850,44 @@
    "source": "driver3"
   },
   {
+   "id": "driver-r3-3",
+   "file": "lib/presentation/driver/ride history/history detail/ride_check_history_entry.dart",
+   "line": 117,
+   "title": "Ride check row in trip details mixes languages: the trigger follows the current language but the reason is text saved in the language active when the check opened",
+   "original_title": "Ride check row in trip details mixes languages: the trigger follows the current language but the reason is text saved in the language active when the check opened",
+   "category": "l10n",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.45,
+   "reported_by": [
+    "area:r3-settings-money-history"
+   ],
+   "merged_from": [],
+   "description": "RideCheckRecord.reason is a String saved to local storage (ride_check.dart:266 `final String reason;`, toJson 'reason': reason). It is built from tr.* at detection time (ride_check_detector.dart:163 and the *Reason helpers). In trip details the line is rendered as `'${check.trigger.text} · ${check.reason}'`, and trigger.text is re-translated on every build (ride_check_l10n.dart:9). After a language change, older checks show a translated trigger next to a reason in the previous language. The answers on the same card are re-translated from enums, so only the reason is stale.",
+   "failure_scenario": "Driver runs a trip in English and a Long stop Ride check opens. Later they switch to Français and open that trip in History. The card reads 'Arrêt prolongé · Stopped for 6 min near …', with the French trigger and the English reason.",
+   "evidence": "ride_check_history_entry.dart:117 `'${check.trigger.text} · ${check.reason}',`\nride_check.dart:266 `final String reason;` / ride_check.dart:298 `'reason': reason,`\nride_check_l10n.dart:9-14 `String get text => switch (this) { RideCheckTrigger.droppedFar => tr.rcTriggerDroppedFar, ...`",
+   "suggested_fix": "Store the reason's parameters (trigger, minutes/meters, place) instead of rendered text, and re-render with tr at display time. Or store the language with the text.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "ride_check_controller.dart:124 and :318 store event.reason.text, a String built from tr.* at detection time (ride_check_detector.dart:176-200, e.g. tr.rcStoppedLead, tr.rcMinutes). It is saved as the 'reason' String (ride_check.dart:266, 298). The trigger is stored as an enum name and re-translated at display time (ride_check_l10n.dart). History shows '${check.trigger.text} · ${check.reason}' (ride_check_history_entry.dart:117), so after a language switch one line mixes two languages. No document says saved Ride check text keeps its original language; LOCAL_DATA.md:12 only lists the data.",
+     "repro": "Static trace from detector to controller to record toJson to history entry rendering.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "RideCheckController builds the record with reason: event.reason.text (ride_check_controller.dart:124). That text comes from tr.* at detection time (ride_check_detector.dart:176-181, e.g. tr.rcStoppedLead + tr.rcMinutes), and it is saved as a String (ride_check.dart:266, 298). ride_check_history_entry.dart:117 shows the trigger text, which is translated again on every build, next to the stored reason. After a language change the two halves are in different languages. LOCAL_DATA.md:12 lists the record but does not say the reason is kept in its original language on purpose.",
+     "repro": "Traced how the reason is created, saved and shown. The arb files have different rcStoppedLead strings for en/fr/sv. Not run.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
    "file": "lib/presentation/driver/ride history/history detail/ride_check_history_entry.dart",
    "line": 156,
    "title": "Trip details keep claiming 'Movera safety team alerted' for Ride checks whose alert only reached the in-memory demo outbox",
@@ -7665,6 +8311,44 @@
     }
    ],
    "source": "r2-driver3"
+  },
+  {
+   "id": "driver-r3-9",
+   "file": "lib/presentation/driver/scheduled rides/scheduled_rides.dart",
+   "line": 571,
+   "title": "The Home Scheduled-rides dot (openRequests) is not refreshed when a late-cancel pause or an admin 'off until' ends by time",
+   "original_title": "The Home Scheduled-rides dot (openRequests) is not refreshed when a late-cancel pause or an admin 'off until' ends by time",
+   "category": "ui-truth",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.5,
+   "reported_by": [
+    "area:r3-auth-scheduled"
+   ],
+   "merged_from": [],
+   "description": "openRequests is recomputed only inside _changed(), which runs on store mutations. block() depends on the clock (pausedUntil(now), _driverAccess.offAt(now)), but nothing calls _changed() when `until` passes. Home reads `ScheduledRideStore.openRequests.value > 0` (home.dart:349) and listens to it for the dot.",
+   "failure_scenario": "A driver is paused after two late cancels, and openRequests becomes 0. Seven days later the pause ends while the app keeps running, and requests are visible again in Scheduled rides, but the Home green dot stays off until some unrelated store change (an accept, a category change) happens to call _changed().",
+   "evidence": "scheduled_rides.dart:562-564 `static final ValueNotifier<int> openRequests = ValueNotifier<int>(_visibleRequests.length);`\n:571-574 `static void _changed() { openRequests.value = _visibleRequests.length; _revision.value++; }`\n:495-504 pausedUntil depends on `now`\nhome.dart:349 `ScheduledRideStore.openRequests.value > 0;`",
+   "suggested_fix": "Schedule a timer for the block's `until` (or recompute on Home resume and tick) that calls _changed().",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "openRequests.value is recomputed only in ScheduledRideStore._changed() (scheduled_rides.dart:571-574). block() depends on the clock through pausedUntil(now) and _driverAccess.offAt(now) (scheduled_rides.dart:482-504). Every caller of _changed() is a store mutation: the driverAccess setter, addLateCancel, take, answer, acceptAssigned, _removeAccepted, riderCancelled, _cancelAccepted, categoriesChanged and reset. There is no timer or clock tick. Home sets driverAccess only once, in initState (home.dart:472-473). Home's dot getter _hasScheduledRideOffers (home.dart:347-349) reads the cached openRequests.value, and the openRequests listener (home.dart:474) fires only on a _changed(). So when a late-cancel pause or an admin offUntil runs out while the app keeps running, the dot stays off, and the Home reservation popup is not re-planned through _onScheduledRequestsChanged, until some unrelated store mutation happens. The impact is limited because any take(), accept or category change refreshes it, and these happen often whenever dispatch is active.",
+     "repro": "Static trace only; no test run. I grepped every _changed() call site in scheduled_rides.dart and every outside use of ScheduledRideStore in lib/. None runs on a timer or on resume. Home reads openRequests at home.dart:349 and listens to it at home.dart:474.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "openRequests is a cached ValueNotifier, and only _changed() updates it (scheduled_rides.dart:571-574). _changed() runs on store mutations, the driverAccess setter, and addLateCancel. block() depends on the clock (pausedUntil(now) at 494-503, _driverAccess.offAt(now) at 483), yet nothing schedules a recompute when 'until' passes. Home sets driverAccess only in initState (home.dart:473), and only when the value changed. Home's dot reads the cached openRequests.value (home.dart:349). So the dot stays off after the pause or admin 'off until' ends, until some unrelated mutation happens.",
+     "repro": "Traced by reading: grepped every _changed() caller and every assignment of driverAccess. None is time-driven. Not run.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
   },
   {
    "file": "lib/presentation/driver/scheduled rides/scheduled_rides.dart",
@@ -10617,6 +11301,322 @@
     }
    ],
    "source": "r2-driver4"
+  },
+  {
+   "id": "driver-fixrev-3",
+   "file": "lib/presentation/driver/accept ride/accept_ride_late_eta.dart",
+   "line": 127,
+   "title": "Late-ETA reassign uses `requested` from driver_to_pickup; the contract sends an on-the-way scheduled trip back to `searching`",
+   "original_title": "Late-ETA reassign uses `requested` from driver_to_pickup; the contract sends an on-the-way scheduled trip back to `searching`",
+   "category": "contract-mismatch",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.55,
+   "reported_by": [
+    "area:fix-regressions-trip"
+   ],
+   "merged_from": [],
+   "description": "_reassignLate applies `TripStatus.requested` and the comment calls it 'the same exit as an admin reassign'. In contract.json#transitions, admin `reassign` from driver_to_pickup goes to `searching`, and a scheduled trip 'already on the way' goes to `searching`. `requested` is only reachable from `accepted` (a claim not yet started). The watch only runs at headingToPickup (driver_to_pickup), so the terminal marker and the lifecycle's `terminalStatus` record a status the contract never produces for this state. A later server echo of `searching` then does not match `terminalStatus` in `_drainProjection` (line 355).",
+   "failure_scenario": "A late-ETA reassign of a trip heading to pickup writes a terminal marker `requested` for the trip, where the contract says `searching`. Anything that reads the marker or terminalStatus (restore suppression, a later server projection, the outcome sheet's text on the no-Home path) sees a status that is invalid for that transition.",
+   "evidence": "accept_ride_late_eta.dart:126-127: const status = TripStatus.requested; if (!await _rideLifecycle.applyProjection(status)) {\ncontract.json: {'command': 'reassign', 'actor': 'admin', 'from': ['offered','accepted','driver_to_pickup','arrived'], 'to': 'searching'}; {'command':'cancel','actor':'driver','from':['driver_to_pickup','arrived'],'to':'searching','when':'scheduled','note':'already on the way: ...dispatched again like a live one'}",
+   "suggested_fix": "Use TripStatus.searching (the contract's target from driver_to_pickup).",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "The deviation is real: trip_transitions.dart:152 sends an admin reassign from driver_to_pickup to `searching`, while the code writes `requested`. But the effect is harmless, because every reader treats `searching` and `requested` the same. ActiveRideController.applyProjection takes both through isReleasedToDispatch (active_ride_controller.dart:125-131; trip_transitions.dart:233-234). History shows the same label for both (history_detail.dart:461-462), as do the journal (completion_journal.dart:280-281) and the outcome sheet (trip_outcome_sheet.dart:48). A later server echo of `searching` is also a no-op. _drainProjection skips applyProjection because the lifecycle is already terminal (accept_ride_trip.dart:345), and it only skips a second _leaveAfterRelease that would be redundant, since the page has already popped. The demo has no backend that reads the marker. Worth tidying for contract accuracy, but no runtime path behaves differently.",
+     "repro": "Read contract transitions in trip_transitions.dart:131-156, DECISIONS.md:108, and every switch on TripStatus.requested/searching in lib/. No test run.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
+   "id": "driver-fixrev-9",
+   "file": "lib/presentation/driver/home/home_map_sheet.dart",
+   "line": 1712,
+   "title": "Going offline (and Back / × on the Radar list) is blocked for as long as a claim is pending; the API claim has no timeout, so a hung request traps the driver online",
+   "original_title": "Going offline (and Back / × on the Radar list) is blocked for as long as a claim is pending; the API claim has no timeout, so a hung request traps the driver online",
+   "category": "state-corruption",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.3,
+   "reported_by": [
+    "area:fix-regressions-home"
+   ],
+   "merged_from": [],
+   "description": "D2 refuses Go offline while `_homeRadarMatchingOfferId` or `_claimedHomeOffer` is set. It also blocks Back and the Radar list's Back while `_radarListClaiming` or `_matchingOfferId` is set, and removes × from the matching card. These only clear when `claimOffer` completes. `ApiDispatchRepository.claimOffer` awaits `_client.post(...)` with no `.timeout`, and neither caller adds one. A request that hangs (connection stalls with no RST) therefore leaves the driver unable to go offline from the Radar, or to leave the Radar list, for as long as the socket hangs. Before D2 they could. The demo repository always completes, and ApiDispatchRepository is not wired in lib/ yet, so today this is reachable only with the backend build.",
+   "failure_scenario": "With the backend build on a flaky mobile network, the driver taps Match and the accept POST hangs. Holding the Radar only shows 'Matching…'. In the Radar list, Back does nothing. The driver stays online and cannot go offline until the OS drops the TCP connection, which can take minutes.",
+   "evidence": "home_map_sheet.dart:1712 `if (_homeRadarMatchingOfferId != null || _claimedHomeOffer != null) { IslandMessages.show(HomeIslandNotices.matching); return; }`\nhome_back.dart:60 `if (!_radarListClaiming.value) {`\nride_requests.dart:286 `if (_matchingOfferId != null) { return; }`\napi_dispatch_repository.dart:346 `response = await _client.post(` (no timeout)",
+   "suggested_fix": "Put a timeout on claimOffer, mapped to `ClaimResult.networkError`, so the block always ends.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "The failure needs ApiDispatchRepository.claimOffer to hang. Nothing under lib/ constructs ApiDispatchRepository: grepping for 'ApiDispatchRepository(' outside lib/core/dispatch/api_dispatch_repository.dart finds nothing. The shipped app uses the demo repository, whose claim always completes, so no real caller reaches this path today; the finder says the same. If the repository were wired in, a transport error still maps to ClaimResult.networkError through the catch at api_dispatch_repository.dart:353. The only open gap would be an indefinitely stalled socket, which is a hardening point for when the backend is wired, not a reachable defect.",
+     "repro": "Traced code: grep for constructor callers of ApiDispatchRepository in lib/ found none. Read claimOffer at api_dispatch_repository.dart:340-360 and the matching-flag writes in home_offer_radar.dart (lines 535, 564, 680, 805) and ride_requests.dart (lines 319, 356, 426, 453).",
+     "evidence": "No ApiDispatchRepository( instantiation in lib/; claimOffer wraps post in try/catch returning networkError."
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
+   "id": "driver-fixrev-11",
+   "file": "lib/presentation/driver/home/home_scheduled.dart",
+   "line": 140,
+   "title": "A late ride kept by an online driver is never backed up or started after Home is recreated past the pickup time, even when the driver later goes offline",
+   "original_title": "A late ride kept by an online driver is never backed up or started after Home is recreated past the pickup time, even when the driver later goes offline",
+   "category": "state-corruption",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.3,
+   "reported_by": [
+    "area:fix-regressions-home"
+   ],
+   "merged_from": [],
+   "description": "Since #329 an online late driver keeps the ride, so it can now still be in Accepted after its pickup time. `lateSince` lives only in the Home state. A new DriverHome, for example the `pushReplacement(DriverHome(...))` path in ride_completed when nothing is under the trip, starts with `lateSince == null`. Line 140 then returns early because the pickup has passed, so no Leave now or backup timer is ever planned. `_recheckLateScheduled` also needs `lateSince != null`, so going offline no longer hands the ride to backup. The ride stays as `upcoming.first` and blocks the smart gap, as in the leaveNow-off finding.",
+   "failure_scenario": "An online driver is on a trip at Leave now and keeps the 07:40 ride. The trip finishes after 07:40 through the path that replaces the route with a new Home. The 07:40 ride stays in Accepted with no backup, even after the driver goes offline, and Home and Radar trips are filtered out against it.",
+   "evidence": "home_scheduled.dart:140 `if (state.lateSince == null && !pickupAt.isAfter(now)) { return; }`\nhome_scheduled.dart:277-279 `if (ride == null || _scheduled.lateSince == null || _driverSession.isOnline) { return; }`\nride_completed.dart:92 `navigator.pushReplacement(BottomToTopTransition(DriverHome(...)))`",
+   "suggested_fix": "Treat an accepted ride whose pickup has passed and that never started as late: give it to backup or dispatch, not silently skipped.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "The cited way to get a fresh Home is not reachable in real navigation. DriverHome is the MaterialApp root (main.dart:173 `home: _home()`), and every trip route is pushed over it: Home pushSingle → AcceptRide → pushReplacement(RideCompleted) at accept_ride_trip.dart:994. So in ride_completed.dart:77 `navigator.canPop()` is true and `popUntil(isFirst)` brings back the same Home, which still holds `_scheduled.lateSince`. The `pushReplacement(DriverHome(...))` at ride_completed.dart:83 only runs when RideCompleted is the root route, a fallback that no app flow creates. The one other way to rebuild Home in the same process is Profile logout → Starter 'Return to demo' (profile.dart:414, starter.dart:108). That is a demo-only detour taken in the middle of being late. Line 140 also deliberately skips a pickup that has passed ('A pickup that has passed never lands as the trip by itself'). The stale-ride effect that remains is already covered by driver-fixrev-5.",
+     "repro": "Traced every pushReplacement/pushAndRemoveUntil in lib (grep), RideCompleted._finish (ride_completed.dart:60-92), main.dart home/homeBuilder, and the didPopNext/lateSince lifecycle in home.dart:174-186 and home_scheduled.dart:120-163. No test run.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
+   "id": "driver-fixrev-10",
+   "file": "lib/presentation/driver/home/home_scheduled.dart",
+   "line": 282,
+   "title": "_recheckLateScheduled adds another backup timer on every session notification without cancelling the previous one",
+   "original_title": "_recheckLateScheduled adds another backup timer on every session notification without cancelling the previous one",
+   "category": "leak",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.3,
+   "reported_by": [
+    "area:fix-regressions-home"
+   ],
+   "merged_from": [],
+   "description": "`_onDriverSessionChanged` calls `_recheckLateScheduled` on every session notification. While the driver is offline (or going online, or suspended) and late, each call reaches `_lateScheduled`, which appends a new `Timer(... _giveToBackup)` to `_scheduled.timers` without cancelling the earlier ones. Notifications include beginGoingOnline, persistence error and recovery, and suspend. The copies are harmless only because the first `_giveToBackup` ends in `_planScheduled`, which cancels the rest, and because of the `identical(_scheduled.ride, ride)` guard. Until then the list keeps growing, and each copy is a separate start or backup attempt.",
+   "failure_scenario": "The driver is late and offline, taps Go online (goingOnline notifies, so a second timer is added) and then fails a persistence write a few times (each notify adds one more). Several identical backup timers are pending for one ride.",
+   "evidence": "home.dart:668 `_HomeScheduled(this)._recheckLateScheduled();`\nhome_scheduled.dart:212-214 `_scheduled.timers.add(Timer(_clock.realUntil(backupAt), () => _giveToBackup(ride)));` (no cancel)",
+   "suggested_fix": "In `_recheckLateScheduled`, call `_scheduled.cancelTimers()` and re-plan, or keep a single backup timer field.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "The extra timers are real but harmless, as the finding itself says. Every copy targets the same deadline (lateSince never changes for the same ride, home_scheduled.dart:201-207) and calls _giveToBackup. For an offline driver, the first copy runs ScheduledRideStore.giveToBackup and then _planScheduled synchronously (lines 265-270), and cancelTimers (line 122) cancels the rest before they fire. In the start branch, _startScheduledTrip clears `_scheduled.ride` (line 235), so any copy that fires later fails `identical(_scheduled.ride, ride)` at line 259 or 189. For an online driver, each copy just returns at line 264. Any re-plan clears the list as well. The count is bounded by session notifications during one late window, and there is no duplicate start, no duplicate backup and no lasting leak.",
+     "repro": "Traced _onDriverSessionChanged (home.dart:663-675) → _recheckLateScheduled → _lateScheduled, and every path out of _giveToBackup, _leaveNow and _startScheduledTrip, including the identical-ride guards. No test run.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
+   "id": "driver-fixrev-12",
+   "file": "lib/core/scheduled/scheduled_ride_rules.dart",
+   "line": 212,
+   "title": "reservations.on (enabled) is parsed but nothing honours it",
+   "original_title": "reservations.on (enabled) is parsed but nothing honours it",
+   "category": "contract-mismatch",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.3,
+   "reported_by": [
+    "area:fix-regressions-home"
+   ],
+   "merged_from": [],
+   "description": "`fromJson` maps `reservations.on` to `enabled`, documented as 'reservations in this zone', and CONTRACT.md §6.1 says `on: true // reservations enabled in this zone`. No code in lib/ reads `ScheduledRideRules.current.enabled`. A zone document with `on: false` still lists requests, shows the Home popup and Exclusive steps, and plans Leave now. (Contract line 183 also mentions `features.scheduledRides`, so the two flags may overlap, but this one is parsed as if it worked.)",
+   "failure_scenario": "An admin turns reservations off for a zone (`reservations.on=false`). Drivers in that zone still get reservation requests and Exclusive or Radar reservation offers.",
+   "evidence": "scheduled_ride_rules.dart:212 `enabled: _bool(json['on']) ?? seed.enabled,`\ngrep `\\.enabled` in lib/: no reader of ScheduledRideRules.enabled",
+   "suggested_fix": "Make ScheduledRideStore visibility and Home planning depend on `ScheduledRideRules.current.enabled`, or drop the field and document `features.scheduledRides` as the switch.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "confirmed",
+     "severity": "low",
+     "reason": "scheduled_ride_rules.dart:212 parses `on` into `enabled` (field documented at :178 as 'reservations in this zone'), but nothing in lib/ reads ScheduledRideRules.enabled. The only `.enabled` hits are unrelated classes. Home gates reservations on `_adminHomeConfig.scheduledRides` (home.dart:348/472, home_reservation.dart:60/79), not on this flag. CONTRACT.md:250 still documents `on: true // reservations enabled in this zone`. CONTRACT.md:183 names `features.scheduledRides` as the one switch, but that is only parsed into a generic map (driver_app_config.dart:145) and is not wired to reservations either. So a zone document with `reservations.on=false` has no effect. Severity is low because the app is a demo without a backend and Home has its own admin switch.",
+     "repro": "grep over lib/ for `.enabled`, `Rules.current.enabled`, `features.` and `scheduledRides`; read CONTRACT.md 183, 192 and 250, and DECISIONS.md (nothing marks it intentional). No test run.",
+     "evidence": ""
+    },
+    {
+     "lens": "reproducer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "Nothing in the app ever loads or applies a zone document. DriverAppConfig.apply() (lib/core/contracts/driver_app_config.dart:180), the only place that sets ScheduledRideRules.current from `reservations`, is called only in test/round2/driver_config_rules_test.dart:138, never from lib/. So no admin `reservations.on=false` can reach a driver, and the failure scenario cannot happen. Also, CONTRACT.md:183 says the five 'reservations on' switches are replaced by the single flag `features.scheduledRides`. In this demo the per-driver switch is ScheduledRidesDriverAccess (driver_home_admin_content.dart:112-123, read at home.dart:472). The unused `enabled` field is dead parsing, not a broken switch.",
+     "repro": "Read the code: grepped lib/ and test/ for `apply()`, `DriverAppConfig.fromJson` and `.enabled`. The only caller of apply() is a test. Read CONTRACT.md:183,250.",
+     "evidence": ""
+    },
+    {
+     "lens": "tiebreak",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "The parse gap is real, but the failure scenario cannot happen in this app. ScheduledRideRules.fromJson maps `on` to `enabled` (lib/core/scheduled/scheduled_ride_rules.dart:212), and nothing in lib/ reads ScheduledRideRules.enabled. Still, no zone document ever reaches the driver:\n\n- DriverAppConfig.apply() (lib/core/contracts/driver_app_config.dart:180-190) is the only code that sets ScheduledRideRules.current from `reservations`. Only tests call it (test/round2/driver_config_rules_test.dart:138, 151, 162, 171; test/contract/driver_app_config_test.dart).\n- Home loads its config from `const LocalDriverHomeConfigRepository()` (home.dart:467-469). That uses `const DriverHomeAdminContentService()` with appConfig == null (driver_home_config_repository.dart:9-11). No code in lib/ passes `appConfig:`. The only other uses of the service in lib/ are main.dart:44 and analytics.dart:139, and both use the const default.\n\nSo an admin's `reservations.on=false` has no path into the app. Every reservations.* field stays at its default whatever the document says.\n\nThe contract also points away from this flag. CONTRACT.md:183 says the \"five 'reservations on' switches\" are replaced by one flag, `features.scheduledRides`. That makes `reservations.on` in §6.1 (CONTRACT.md:250) a leftover duplicate, not the switch the app is supposed to honour.\n\nThe audit's earlier rulings say the same thing. driver-u8 (\"nextTrips.on switch is ignored\") and driver-u7 were refuted in docs/audit-2026-10-21/raw/driver_audit_results.json for exactly this reason: no shipped caller feeds a contract document, so it is \"a latent contract mismatch, not a live failure.\"\n\nWhat is left is dead parsing, plus an inconsistency inside the contract between §5 and §6.1. The tracer's confirmation relies on a scenario that is unreachable.",
+     "repro": "Settled by reading the code; no test was run.\n1. A grep of lib/ for `.apply(` and `apply()` finds DriverAppConfig.apply only at its definition (driver_app_config.dart:180). Its callers are all under test/.\n2. A grep of lib/ for `DriverHomeAdminContentService(` finds only const, no-argument calls (analytics.dart:139, main.dart:44, driver_home_config_repository.dart:10). A grep for `appConfig` finds it only inside driver_home_admin_content.dart.\n3. home.dart:467-469 loads `const LocalDriverHomeConfigRepository()`.\n4. A grep of lib/ for `.enabled` finds no reader of ScheduledRideRules.enabled, but the field is unreachable in any case.\n5. Read CONTRACT.md:183 (the single switch is `features.scheduledRides`) and CONTRACT.md:250.\n6. Read the verdicts for driver-u7 and driver-u8 in docs/audit-2026-10-21/raw/driver_audit_results.json. Both were refuted because no config document reaches the app.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-fixrev"
+  },
+  {
+   "id": "driver-r3-11",
+   "file": "lib/core/scheduled/reservation_when.dart",
+   "line": 132,
+   "title": "A weekday pickup day equal to today is dated today even when its time has passed, instead of 'the next one'",
+   "original_title": "A weekday pickup day equal to today is dated today even when its time has passed, instead of 'the next one'",
+   "category": "wrong-time",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.4,
+   "reported_by": [
+    "area:r3-auth-scheduled"
+   ],
+   "merged_from": [],
+   "description": "pickupOf documents a weekday as 'the next one'. The offset `(i + 1 - now.weekday) % 7` is 0 when the weekday is today, so the date is today whether or not the pickup minute has already passed. ofRequest then passes that past time to `of`, which shows it as 'soon' ('In 0 min').",
+   "failure_scenario": "On Saturday at 15:00, a request with pickupDay 'Saturday' and pickupTime '09:00' (next Saturday) is read as today 09:00. The reservation sheet and the island then say 'In 0 min · 09:00' instead of 'Saturday 09:00'.",
+   "evidence": "reservation_when.dart:129-136 `for (var i = 0; i < _weekdays.length; i++) { … if (day == name || day == name.substring(0, 3)) { final ahead = (i + 1 - now.weekday) % 7; date = DateTime(now.year, now.month, now.day + ahead); break; } }`\nreservation_when.dart:100-102 doc: 'or a weekday (\"Saturday\", the next one)'",
+   "suggested_fix": "When ahead == 0 and the minute of day is earlier than now, add 7 days.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "The weekday branch does give 'today' when the day is today (reservation_when.dart:129-136), but no real caller ever sends a weekday pickupDay. Every ReservationRequestPreview in lib gets its pickupDay from DemoReservations._at, which only produces 'Today' or 'Tomorrow' (driver_home_admin_content.dart:495), or from scheduled_rides.dart:448 (tr.tomorrow). The 'Today' and 'Tomorrow' values are resolved first by request.pickupAt (driver_home_admin_content.dart:237-246), so the weekday loop is never reached. No wire parser for reservation previews exists in lib. Only tests send weekday strings like 'Sat 24 Oct', and that one goes through the date-pattern branch, not the weekday branch.",
+     "repro": "Static trace. I grepped every `pickupDay:` writer in lib (driver_home_admin_content.dart:397/424/451/472 via _at:486-496, and scheduled_rides.dart:448) and checked both callers of ofRequest/pickupOf (reservation_request_sheet.dart:245, reservation_island_face.dart:37). SDK not used.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
+   "id": "driver-r3-6",
+   "file": "lib/core/scheduled/scheduled_ride_rules.dart",
+   "line": 212,
+   "title": "reservations.on (ScheduledRideRules.enabled) is parsed but never read: a zone with reservations off still lists, counts and offers them",
+   "original_title": "reservations.on (ScheduledRideRules.enabled) is parsed but never read: a zone with reservations off still lists, counts and offers them",
+   "category": "contract-mismatch",
+   "severity": "medium",
+   "claimed_severity": "medium",
+   "confidence": 0.55,
+   "reported_by": [
+    "area:r3-auth-scheduled"
+   ],
+   "merged_from": [],
+   "description": "CONTRACT.md §6.1 `on: true // reservations enabled in this zone`. fromJson sets `enabled: _bool(json['on'])`, and DriverAppConfig.apply puts the rules in ScheduledRideRules.current. No code anywhere in lib reads `.enabled` of ScheduledRideRules (grep shows only the field and its parse). ScheduledRideStore.block() checks only the admin per-driver access and the late-cancel pause, and _visibleRequests, isOpen, openRequests and the Home popup and Exclusive steps all follow from block(). Impact is limited today because DriverAppConfig.apply() is called only from tests, but this is the contract parser's documented switch and it has no effect.",
+   "failure_scenario": "A zone config arrives with reservations.on=false and is applied. The Scheduled rides Requests tab still lists the requests, the Home dot counts them (openRequests), and isOpen(id) stays true, so Home still raises the reservation popup and Exclusive offers for a zone where admin turned reservations off.",
+   "evidence": "scheduled_ride_rules.dart:178-179 `/// reservations.on: reservations in this zone. final bool enabled;`\n:212 `enabled: _bool(json['on']) ?? seed.enabled,`\nscheduled_rides.dart:482-492 `static ScheduledRidesBlock? block() { … if (_driverAccess.offAt(now)) {…} final until = pausedUntil(now); …}` (no rules.enabled check)\nscheduled_rides.dart:544 `static List<_ScheduledRide> get _visibleRequests => block() != null ? const [] : …`",
+   "suggested_fix": "Return a block (no requests, a zone-off notice) from ScheduledRideStore.block() when !ScheduledRideRules.current.enabled, and call _changed() when the rules are applied.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "It is true that `.enabled` is never read, but the failure needs a zone config with on=false to be applied, and that cannot happen at runtime. DriverAppConfig.apply() (driver_app_config.dart:180-190) is called only from tests (test/round2/driver_config_rules_test.dart, test/contract/driver_app_config_test.dart, test/core/scheduled_late_eta_rules_test.dart). DriverHomeAdminConfig.appConfig is never set in lib either. So ScheduledRideRules.current always stays at its const default, enabled=true (scheduled_ride_rules.dart:142,176). On top of that, CONTRACT.md:183 says the reservation 'on' switches are merged into one flag, `features.scheduledRides`, with country < zone < driver precedence. That flag, not reservations.on, is meant to be the gate, which weakens the claim that the missing reservations.on check is a bug.",
+     "repro": "Static trace. `grep -rn '.apply()' lib test` finds hits only in tests, and `grep appConfig lib` shows it is never assigned. I read CONTRACT.md §6.1 and line 183.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
+   "id": "driver-r3-13",
+   "file": "lib/presentation/driver/accept ride/accept_ride_trip.dart",
+   "line": 373,
+   "title": "A projection that moves the trip from waiting (or heading to pickup) to onTrip skips the start-of-trip bookkeeping: the paid pickup wait leaves the fare, the cash and the waybill",
+   "original_title": "A projection that moves the trip from waiting (or heading to pickup) to onTrip skips the start-of-trip bookkeeping: the paid pickup wait leaves the fare, the cash and the waybill",
+   "category": "wrong-math",
+   "severity": "medium",
+   "claimed_severity": "medium",
+   "confidence": 0.55,
+   "reported_by": [
+    "area:r3-home-trip-deep"
+   ],
+   "merged_from": [],
+   "description": "ActiveRideController.applyProjection supports skipped live stages ('including skipped live stages'), and _drainProjection applies rider_onboard/in_trip/approaching_dropoff while the local stage is waitingForRider or headingToPickup. All the onTrip bookkeeping lives only in _advanceRide (877-900): `_paidWaitSeconds += paidWait`, `_waitTimer.cancel()`, `_stopCursor = 0`, `_onTripStartedAt = DateTime.now()`, then persistNow. The projection path only calls `_resumeStageSideEffects()` (ride check, demo drive, radar, route). Once the stage is onTrip, `_countingWait` is false, so `_paidWaitNow` returns 0 and the pickup's paid minutes vanish from `_paidWaitTotal`. That drops them from `_fareWithWaiting`, `_paidWaybill()`, `_cashToCollect` and the persisted snapshot. `_onTripStartedAt` also stays null, so the short-finish check (_tripEndedTooQuickly) never fires and `startedAt` is never saved.",
+   "failure_scenario": "Reproduced with a throwaway test. AcceptRide(initialStage: waitingForRider, initialWaitSeconds: 1200, fare '100,00 kr'), default terms 5 free min at 12,26 kr/min. Before: stage=waitingForRider wait=1200 paid=0. After emitting trip_projection in_trip, the saved snapshot reads stage=onTrip wait=1200 paid=0 startedAt=null. The 15 paid minutes (about 184 kr) are gone from the trip's earnings, waybill and cash to collect. A real path is a resync or 409 projection after the driver's own Start slide failed to save locally.",
+   "evidence": "accept_ride_trip.dart:368-373 `final before = _stage; if (!await _rideLifecycle.applyProjection(status)) { return; } ... if (_stage != before) { _resumeStageSideEffects(); }`\naccept_ride_trip.dart:83-88 `int get _paidWaitNow => !_countingWait ? 0 : ...; int get _paidWaitTotal => _paidWaitSeconds + _paidWaitNow;`\naccept_ride_trip.dart:884-890 (only in _advanceRide) `_paidWaitSeconds += paidWait; ... _onTripStartedAt = DateTime.now();`",
+   "suggested_fix": "When a projection advances waiting→onTrip, run the same bookkeeping as _advanceRide: sync the wait clock and add the paid wait, cancel the wait timer, reset the stop cursor, set _onTripStartedAt, then persist. Factor that into a helper shared by both paths.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "No real input can reach this path. In the contract only the driver can perform `board` (arrived -> rider_onboard) and `start_trip` (contract.json:258-273, trip_transitions.dart:139-140). The driver's own Start slide goes through _advanceRide, which does all the bookkeeping (accept_ride_trip.dart:877-900). The driver app sends no trip commands to any server: TripCommand is only used for local contract checks, and there is no command transport. So no server can report rider_onboard or in_trip for this trip while the phone is still at waitingForRider. The finder's 'resync or 409 after a failed local save' path needs a command to have reached a backend that does not exist (DECISIONS.md: no backend connected; MemoryDriverRealtime is the only realtime and nothing in production emits on it). The missing bookkeeping on a projection-driven waiting->onTrip jump is a latent gap to handle once a backend arrives, but today it is speculative.",
+     "repro": "Traced the contract transitions (contracts/contract.json, lib/core/contracts/trip_transitions.dart), grepped TripCommand uses and DriverRealtime emitters under lib/ (only MemoryDriverRealtime, created at accept_ride.dart:621 with no producer), and read _advanceRide and _resumeStageSideEffects.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
+   "id": "driver-r3-1",
+   "file": "lib/presentation/driver/ride history/ride_history.dart",
+   "line": 104,
+   "title": "History rows with no completedAt (older saves) never appear in any period, so the code that labels them 'Previous' and the detail screen's whenLabel fallback can never be reached",
+   "original_title": "History rows with no completedAt (older saves) never appear in any period, so the code that labels them 'Previous' and the detail screen's whenLabel fallback can never be reached",
+   "category": "ui-truth",
+   "severity": "low",
+   "claimed_severity": "low",
+   "confidence": 0.5,
+   "reported_by": [
+    "area:r3-settings-money-history"
+   ],
+   "merged_from": [],
+   "description": "PrefsTripHistoryRepository._decode accepts rows with no completedAt (it only checks the type when the key is present, prefs_trip_history_repository.dart:128-130), and the screens clearly expect such rows. _loadHistory gives them `day: at == null ? tr.previous : ...` (ride_history.dart:75), and the detail screen documents 'the saved words for an older record without a time' (history_detail.dart:46-52). But every view (overview hero, Latest rides, the 'View all N rides' count, All rides groups, the cash balance) is built only from _periodRidesList, and that drops every row with a null completedAt: `if (at == null) { return false; }`. A stored receipt without a time is decoded, kept in storage and counted toward the 500-row cap, but the driver can never see or open it.",
+   "failure_scenario": "An install has a legacy history row {tripId, riderName, whenLabel:'Today, 14:42', pickup, dropoff, fare:'126 kr', category} with no completedAt. The driver opens Earnings history and sees 'No completed rides in this period' under Today, Week and Month. The row is never listed and its detail can never be opened, though it is still in storage.",
+   "evidence": "ride_history.dart:75 `day: at == null ? tr.previous : DriverDates.numericDate(at),`\nride_history.dart:102-104 `return _rides.where((ride) { final at = ride.completedAt; if (at == null) { return false; }`\nprefs_trip_history_repository.dart:128-130 `(row['completedAt'] != null && (row['completedAt'] is! String || ...))` (a missing completedAt is valid)\nhistory_detail.dart:46-51 `/// ... the saved words for an older record without a time. ... at == null ? _ride.whenLabel`",
+   "suggested_fix": "Show null-time rows in a 'Previous' group (for example in All rides, outside the period filter), or migrate them by parsing whenLabel. If they should not be shown, drop them in _decode so they stop using the 500-row cap.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "No writer produces a history row without completedAt. The only writer, prefs_trip_history_repository.dart:188/229, writes `completedAt: (completedAt ?? DateTime.now()).toIso8601String()`, and the earliest version in the repository's history (5127708, line 215) does the same. completion_journal.dart:189 also always passes `at`. The 'legacy row with no completedAt' scenario needs storage that no shipped build wrote. The null branches in ride_history.dart:75 and history_detail.dart:46-51 are defensive code against hand-edited or corrupted data, not a user-visible failure on any real path. At most this is dead defensive code.",
+     "repro": "Grepped every completedAt writer in lib and checked the oldest available git revision of prefs_trip_history_repository.dart. The git history is shallow (115 commits), so a pre-history format cannot be fully ruled out, but nothing in the repository or the docs records one.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
+  },
+  {
+   "id": "driver-r3-7",
+   "file": "lib/presentation/driver/scheduled rides/scheduled_rides.dart",
+   "line": 259,
+   "title": "Cancelling a Movera-assigned reservation never tells dispatch: the UI says it was cancelled, but the server still has it assigned to this driver",
+   "original_title": "Cancelling a Movera-assigned reservation never tells dispatch: the UI says it was cancelled, but the server still has it assigned to this driver",
+   "category": "state-corruption",
+   "severity": "medium",
+   "claimed_severity": "medium",
+   "confidence": 0.55,
+   "reported_by": [
+    "area:r3-auth-scheduled"
+   ],
+   "merged_from": [],
+   "description": "An assigned ride (Q29) is won through `_dispatch.claimOffer(offer.id)` (home_scheduled.dart _claimAssignment) and added with ScheduledRideStore.acceptAssigned, so dispatch records this driver as its owner. When the driver cancels it from the details screen, _openRideDetails removes it locally (_cancelAccepted) and shows 'Reservation cancelled'. The only dispatch call on this path is `releaseReservation`, which is skipped for assigned rides (`!ride.assigned`). No other code tells dispatch (grep: releaseReservation is called only here, and declineOffer only for live offers). The contract's `cancel (driver), scheduled: accepted → requested` is never sent for these rides.",
+   "failure_scenario": "The driver accepts the 'Assigned by Movera' Kungsholmen ride, then cancels it in Scheduled rides › Accepted with a counted reason. Locally the ride disappears and a late cancel may be counted, but dispatch is never told. With a backend the reservation stays assigned to this driver and nobody comes for the rider, while admin is never asked to reassign it.",
+   "evidence": "scheduled_rides.dart:257-262 `// An open reservation goes back out to drivers (notes R24)… if (ride.id.isNotEmpty && !ride.assigned) { widget.dispatchRepository?.releaseReservation(ride.id); } _notice(tr.schedReservationCancelled);`\nscheduled_rides.dart:746-748 `if (ride.id.isNotEmpty && !ride.assigned) { _requests.insert(0, …); }`\nhome_scheduled.dart:437-466 `result = await _dispatch.claimOffer(offer.id); … ScheduledRideStore.acceptAssigned(ride);`",
+   "suggested_fix": "Send the driver cancel to dispatch for every claimed reservation, assigned ones included (release, or a cancel command that admin turns into a reassign). Keep only the local re-listing conditional on !assigned.",
+   "verdicts": [
+    {
+     "lens": "tracer",
+     "verdict": "refuted",
+     "severity": "low",
+     "reason": "The failure only matters with a backend, and there it cannot happen. ApiDispatchRepository.watchAssignments() returns `const Stream.empty()` (\"Scheduled rides Movera assigns (Q29) are not mapped from the feed yet\", lib/core/dispatch/api_dispatch_repository.dart:207-210). So with a server no ride is ever added through ScheduledRideStore.acceptAssigned, and no assigned ride exists to cancel. The finding's asymmetry is also a misreading. ApiDispatchRepository.releaseReservation is an empty body (api_dispatch_repository.dart:216-217), so open reservations do not reach the server through this call either. Skipping it for assigned rides therefore changes nothing on the wire. Assigned rides exist only with DemoDispatchRepository, which is in-process and has no server to leave inconsistent. The `!ride.assigned` guard at scheduled_rides.dart:259 and :746 deliberately keeps an admin-assigned ride from going back onto the open list. The real gap is wider and is a different finding: the API path never sends any driver scheduled-cancel command (contract line 110, `cancel (driver), scheduled: accepted -> requested`).",
+     "repro": "Static trace only; I did not check whether the Flutter SDK was ready. I followed releaseReservation to every implementation: dispatch_repository.dart:278 (interface), demo_dispatch_repository.dart:636 (demo re-listing), api_dispatch_repository.dart:217 (empty). I followed watchAssignments to api_dispatch_repository.dart:209 (empty stream). acceptAssigned is called only from home_scheduled.dart _claimAssignment, which needs an assignment from watchAssignments.",
+     "evidence": ""
+    }
+   ],
+   "source": "r2-driver-r3"
   }
  ],
  "runs_done": [
@@ -10637,7 +11637,13 @@
   "r2-rider1",
   "r2-rider2",
   "r2-rider3",
-  "r2-rider4"
+  "r2-rider4",
+  "r2-driver-fixrev",
+  "r2-rider-fixrev",
+  "r2-driver-fixrev2",
+  "r2-rider-fixrev2",
+  "r2-rider-r3",
+  "r2-driver-r3"
  ],
  "runs_pending": []
 }
