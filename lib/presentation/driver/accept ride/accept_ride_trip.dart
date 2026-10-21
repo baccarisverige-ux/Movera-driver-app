@@ -345,7 +345,13 @@ extension _AcceptRideTrip on _AcceptRideState {
             paymentMethod: cash ? 'Cash' : null,
             cashCollected: cash ? _cashToCollect : null);
           if (!mounted) { return; }
-          if (!await _rideLifecycle.applyProjection(status)) { return; }
+          if (!await _rideLifecycle.applyProjection(status)) {
+            // driver-r3-12: a background save (GPS snapshot, lock screen)
+            // that started during the journal holds the lifecycle; retry
+            // unless this outcome is already applied.
+            if (_rideLifecycle.terminalStatus != status) { _scheduleProjectionRetry(); }
+            return;
+          }
           if (identical(event, _pendingProjection)) { _pendingProjection = null; }
           _projectionRetryDelay = _AcceptRideState._projectionRetryBase;
           await _leaveAfterAuthoritativeOutcome(status, next, paid);
