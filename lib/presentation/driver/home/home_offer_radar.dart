@@ -676,9 +676,31 @@ extension _HomeOfferRadar on _DriverHomeState {
         const Duration(milliseconds: 850),
         () {
           if (!mounted || !_liveVisible || _claimedHomeOffer?.id != offer.id) { return; }
-          _acceptRadarHomeOffer(offer);
+          final source = _claimedHomeSource;
+          if (source == null) {
+            _acceptRadarHomeOffer(offer);
+          } else {
+            _openOfferTrip(offer, source);
+          }
         },
       );
+    }
+    /// A won Exclusive Accept (a reservation close to pickup, an admin
+    /// direct assign) opens its trip now. With a screen over Home (a
+    /// drawer item, a dialog) it waits like a won Radar Match and opens
+    /// as soon as Home is back on top (driver-73). Dispatch gave the trip
+    /// to this driver: it is never dropped, even when the offer left the
+    /// screen while dispatch decided (driver-u131, driver-u140).
+    void _openWonOffer(_HomeDirectOffer offer, String matchedVia) {
+      if (_liveVisible && ModalRoute.of(context)?.isCurrent != false) {
+        _openOfferTrip(offer, matchedVia);
+        return;
+      }
+      _homeRadarNoticeTimer?.cancel();
+      _rebuild(() {
+        _claimedHomeOffer = offer;
+        _claimedHomeSource = matchedVia;
+      });
     }
     void _resolveHomeRadarMatchLost(
       _HomeDirectOffer offer,
@@ -815,6 +837,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (!preserveClaim) {
         _homeRadarMatchingOfferId = null;
         _claimedHomeOffer = null;
+        _claimedHomeSource = null;
         _homeRadarMatchStates.clear();
       }
       for (final timer in _radarOfferTimeoutTimers.values) {
@@ -875,14 +898,16 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
       if (!mounted) { return; }
       _rebuild(() => _exclusive.claimingId = null);
-      if (_outsideRadarOffer?.id != offer.id) {
+      final up = _outsideRadarOffer?.id == offer.id;
+      // Not won, and the offer left the screen meanwhile: nothing to show.
+      if (!up && !result.isSuccess) {
         _HomeScheduled(this)._afterClaimResolved();
         return;
       }
       switch (result.outcome) {
         case ClaimOutcome.success:
           IslandMessages.show(HomeIslandNotices.matched);
-          _openOfferTrip(offer, WaybillRecord.assignedByMoveraSource);
+          _openWonOffer(offer, WaybillRecord.assignedByMoveraSource);
           return;
         case ClaimOutcome.alreadyClaimed:
           IslandMessages.show(HomeIslandNotices.takenByOther);

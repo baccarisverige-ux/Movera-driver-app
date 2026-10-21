@@ -1707,9 +1707,10 @@ extension _HomeMapSheet on _DriverHomeState {
       if (!mounted || !_isOnline || ModalRoute.of(context)?.isCurrent != true) {
         return;
       }
-      // A Match already sent is answered first: won, its trip opens; the
-      // driver can go offline after that.
-      if (_homeRadarMatchingOfferId != null || _claimedHomeOffer != null) {
+      // A Match or Accept already sent is answered first: won, its trip
+      // opens; the driver can go offline after that (driver-u131: the
+      // island's long press reaches here with an Exclusive Accept out).
+      if (_claimInFlight) {
         IslandMessages.show(HomeIslandNotices.matching);
         return;
       }

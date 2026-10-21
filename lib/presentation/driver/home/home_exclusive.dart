@@ -58,11 +58,13 @@ extension _HomeExclusive on _DriverHomeState {
         MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
     /// Accept is being sent (a reservation, an assigned ride or an admin
-    /// direct assign): the orb waits and the down arrow is off.
+    /// direct assign), or won and its trip is opening: the orb waits and
+    /// the down arrow is off.
     bool get _exclusiveClaiming =>
         _reservation.claimingId != null ||
         _scheduled.claimingId != null ||
-        _exclusive.claimingId != null;
+        _exclusive.claimingId != null ||
+        _claimedHomeOffer != null;
 
     /// The Exclusive offer is up and its orb is Accept.
     bool get _exclusiveLive =>

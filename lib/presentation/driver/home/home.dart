@@ -283,7 +283,11 @@ class _DriverHomeState extends State<DriverHome>
   final Map<String, _HomeRadarMatchState> _homeRadarMatchStates =
       <String, _HomeRadarMatchState>{};
   String? _homeRadarMatchingOfferId;
+  /// A won offer whose trip opens as soon as Home is on top: a Radar
+  /// Match, or an Exclusive Accept won while a screen covered Home.
   _HomeDirectOffer? _claimedHomeOffer;
+  /// How [_claimedHomeOffer]'s trip was matched; null for a Radar Match.
+  String? _claimedHomeSource;
   late final DriverLocationRepository _driverLocationService;
   late final RouteRepository _roadRouteService;
   late final WaybillRepository _waybills;
@@ -332,6 +336,13 @@ class _DriverHomeState extends State<DriverHome>
   /// The Radar list is sending a Match: Back keeps it open until dispatch
   /// answers, so a won trip still opens.
   final ValueNotifier<bool> _radarListClaiming = ValueNotifier<bool>(false);
+  /// A Match or Accept is with dispatch, or its won trip is opening: Go
+  /// offline waits for its answer.
+  bool get _claimInFlight =>
+      _homeRadarMatchingOfferId != null ||
+      _claimedHomeOffer != null ||
+      _radarListClaiming.value ||
+      _HomeExclusive(this)._exclusiveClaiming;
   bool isAccountActivated = true;
   bool _activationHold = false;
   late final DriverSessionController _driverSession;
