@@ -1320,7 +1320,7 @@ class _AcceptRideState extends State<AcceptRide>
                       ),
                     );
                   },
-                  child: _AcceptRidePanel(this)._mapOverlay(child: _AcceptRidePanel(this)._buildMapControls()),
+                  child: _AcceptRidePanel(this)._buildMapControls(),
                 ),
               ],
             ),
