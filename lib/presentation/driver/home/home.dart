@@ -635,7 +635,7 @@ class _DriverHomeState extends State<DriverHome>
       riderName: snapshot.riderName ?? tr.riderDataUnavailable,
       pickup: snapshot.pickupAddress ?? '',
       dropoff: snapshot.dropoffAddress ?? '',
-      source: snapshot.matchedVia ?? 'Movera Radar',
+      source: snapshot.matchedVia ?? WaybillRecord.moveraRadarSource,
       driverName: tr.demoDriverIdentityUnavailable,
       vehicle: tr.vehicleDataUnavailable,
       licensePlate: tr.plateUnavailable,

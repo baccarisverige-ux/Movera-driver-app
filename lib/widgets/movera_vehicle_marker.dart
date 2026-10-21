@@ -5,6 +5,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import 'web_map_bitmap.dart';
+
 /// The driver's own position on Home and the active ride map: a flat blue
 /// navigation arrow with a white outline that stands up toward the viewer,
 /// over a soft grey halo on the ground, like the owner's reference
@@ -125,11 +127,10 @@ class MoveraVehicleMarker {
       Uint8List? png, double logical, double scale) {
     if (png == null) return null;
     final key = (scale * 100).round();
-    return cache[key] ??= BitmapDescriptor.bytes(
-      png,
-      width: logical * key / 100,
-      height: logical * key / 100,
-    );
+    final side = logical * key / 100;
+    // Web: one URL per picture, not a new Blob URL per push (driver-u174).
+    return cache[key] ??= WebMapBitmaps.of(png, width: side, height: side) ??
+        BitmapDescriptor.bytes(png, width: side, height: side);
   }
 
   static Future<Uint8List?> _png(

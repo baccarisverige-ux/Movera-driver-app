@@ -390,6 +390,10 @@ class _Legacy {
         return road.isEmpty ? 'Head out' : 'Head out on $road';
       case RouteManeuverType.continueStraight:
       case RouteManeuverType.newName:
+        // driver-u39: a turning "continue" says the turn.
+        if (modifier.isNotEmpty && modifier != 'straight') {
+          return _turnLine(modifier, onto);
+        }
         return road.isEmpty ? 'Continue straight' : 'Continue on $road';
       case RouteManeuverType.roundabout:
       case RouteManeuverType.rotary:
@@ -459,8 +463,10 @@ class _Legacy {
         if (modifier.isEmpty || modifier == 'straight') {
           if (tunnel) return 'Tunnel ahead';
           if (toll) return 'Toll road ahead';
+          return 'Continue straight';
         }
-        return 'Continue straight';
+        // driver-u39: a turning "continue" says the turn.
+        return _shortTurn(modifier);
       case RouteManeuverType.roundabout:
       case RouteManeuverType.rotary:
       case RouteManeuverType.roundaboutTurn:

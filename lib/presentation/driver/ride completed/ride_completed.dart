@@ -114,7 +114,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
         ? tr.justNow
         : '${_two(issued.hour)}:${_two(issued.minute)}';
 
-    return Scaffold(
+    final page = Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
@@ -284,6 +284,17 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
         ),
       ),
     );
+    // Back (Android, browser) takes the same exit as Done: the trip ends
+    // and a secured next trip opens. A plain pop left the session on
+    // trip, so Home could never go online again (driver-u149/u150).
+    // _finish runs once; a second Back while it leaves does nothing.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _finish();
+      },
+      child: page,
+    );
   }
 
   static const TextStyle _value = TextStyle(
@@ -339,7 +350,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   Widget _chip(WaybillRecord? record) {
     final label = [
       record?.service ?? 'Movera',
-      if (record != null && record.source.trim().isNotEmpty) record.source,
+      if (record != null && record.source.trim().isNotEmpty) record.sourceText,
     ].join(' · ');
     return Container(
       key: const ValueKey<String>('ride-completed-chip'),

@@ -1,5 +1,24 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
+import 'dart:typed_data';
+
+@JS('Blob')
+extension type _Blob._(JSObject _) implements JSObject {
+  external factory _Blob(JSArray<JSAny?> parts, JSObject options);
+}
+
+@JS('URL.createObjectURL')
+external JSString _createObjectUrl(JSObject blob);
+@JS('URL.revokeObjectURL')
+external void _revokeObjectUrl(JSString url);
+
+/// A Blob URL for a PNG [bytes] (see WebMapBitmaps).
+String? createBlobUrl(Uint8List bytes) {
+  final options = JSObject()..['type'] = 'image/png'.toJS;
+  return _createObjectUrl(_Blob(<JSAny?>[bytes.toJS].toJS, options)).toDart;
+}
+
+void revokeBlobUrl(String url) => _revokeObjectUrl(url.toJS);
 
 @JS('driverMapCamera')
 external JSObject? get _adapter;

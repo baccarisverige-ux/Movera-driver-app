@@ -1,0 +1,75 @@
+import 'dart:typed_data';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:movera/widgets/movera_vehicle_marker.dart';
+import 'package:movera/widgets/web_map_bitmap.dart';
+
+/// driver-u174: on web, google_maps_flutter_web 0.5.14+2 turns a
+/// BytesMapBitmap icon into a new Blob URL on every marker update and never
+/// revokes it (its URL cache is cleared after each batch), so the live car,
+/// pushed on almost every frame while driving, leaked one Blob URL and one
+/// image reload per push. On web the car's pictures are now one Blob URL
+/// each, made once, sent as a URL icon the plugin passes through.
+///
+/// This models the plugin's conversion of the icon on each update and
+/// counts the Blob URLs made, with the URL factory injected (tests do not
+/// run in a browser).
+void main() {
+  final created = <String>[];
+  final revoked = <String>[];
+  var pluginBlobs = 0;
+
+  setUp(() {
+    WebMapBitmaps.debugCreateUrl = (Uint8List png) {
+      final url = 'blob:test/${created.length}';
+      created.add(url);
+      return url;
+    };
+    WebMapBitmaps.debugRevokeUrl = revoked.add;
+  });
+
+  /// What google_maps_flutter_web does with the icon of one update batch.
+  String pluginUrlFor(BitmapDescriptor icon) => switch (icon) {
+    AssetMapBitmap(:final assetName) => assetName,
+    BytesMapBitmap() => 'blob:plugin/${pluginBlobs++}',
+    _ => throw UnsupportedError('$icon'),
+  };
+
+  test('600 live-car pushes make one Blob URL, not one each', () async {
+    await MoveraVehicleMarker.createIcon();
+    final urls = <String>{};
+    for (var push = 0; push < 600; push++) {
+      // The marker keeps the icon createIcon gave it (arrowAt(1)).
+      urls.add(pluginUrlFor(MoveraVehicleMarker.arrowAt(1)!));
+    }
+    expect(pluginBlobs, 0);
+    expect(urls, hasLength(1));
+    expect(created, hasLength(1));
+
+    // Every size bucket and the halo reuse their picture's one URL.
+    final a = MoveraVehicleMarker.arrowAt(.85)! as AssetMapBitmap;
+    final b = MoveraVehicleMarker.arrowAt(1.1)! as AssetMapBitmap;
+    final halo = MoveraVehicleMarker.haloAt(1)! as AssetMapBitmap;
+    expect(a.assetName, urls.single);
+    expect(b.assetName, urls.single);
+    expect(a.width, closeTo(MoveraVehicleMarker.size * .85, 1e-9));
+    expect(halo.width, closeTo(MoveraVehicleMarker.haloSize, 1e-9));
+    expect(created, hasLength(2), reason: 'one for the arrow, one for the halo');
+
+    // Released, each URL is revoked once.
+    WebMapBitmaps.release();
+    expect(revoked, unorderedEquals(created));
+    WebMapBitmaps.release();
+    expect(revoked, hasLength(2));
+  });
+
+  test('off web (no URL factory) the icon stays bytes', () {
+    WebMapBitmaps.debugCreateUrl = null;
+    expect(WebMapBitmaps.enabled, isFalse);
+    expect(
+      WebMapBitmaps.of(Uint8List(4), width: 10, height: 10),
+      isNull,
+    );
+  });
+}
