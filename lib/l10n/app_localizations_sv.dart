@@ -2972,6 +2972,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Inloggning med telefon kräver kontotjänsten.';
 
   @override
+  String get socialSignInNeedsService =>
+      'Inloggning med Apple eller Google kräver kontotjänsten.';
+
+  @override
   String get idPhotoPreview => 'Förhandsvisning av id-foto';
 
   @override

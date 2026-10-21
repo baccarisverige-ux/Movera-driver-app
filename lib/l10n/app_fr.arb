@@ -847,6 +847,7 @@
   "phoneSignInUnavailableDemo": "La connexion par téléphone n’est pas disponible dans cette démo. Aucun code n’est envoyé.",
   "phoneNumber": "Numéro de téléphone",
   "phoneSignInNeedsService": "La connexion par téléphone nécessite le service de compte.",
+  "socialSignInNeedsService": "La connexion avec Apple ou Google nécessite le service de compte.",
   "idPhotoPreview": "Aperçu de la photo d’identité",
   "idPhotoSampleOnly": "Image d’exemple uniquement. La prise de vue et la vérification ne sont pas connectées. Aucune pièce d’identité n’est envoyée.",
   "returnToHome": "Retour à l’accueil",

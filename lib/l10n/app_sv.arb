@@ -847,6 +847,7 @@
   "phoneSignInUnavailableDemo": "Inloggning med telefon är inte tillgänglig i den här demon. Ingen kod skickas.",
   "phoneNumber": "Telefonnummer",
   "phoneSignInNeedsService": "Inloggning med telefon kräver kontotjänsten.",
+  "socialSignInNeedsService": "Inloggning med Apple eller Google kräver kontotjänsten.",
   "idPhotoPreview": "Förhandsvisning av id-foto",
   "idPhotoSampleOnly": "Endast exempelbild. Kamera och verifiering är inte anslutna. Ingen id-handling skickas.",
   "returnToHome": "Tillbaka till start",

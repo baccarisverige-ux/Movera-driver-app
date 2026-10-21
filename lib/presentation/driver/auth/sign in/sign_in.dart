@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
-import 'package:movera/presentation/driver/auth/additional%20detail/navigation.dart';
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
 import 'package:movera/presentation/driver/auth/sign%20in%20phone/sign_in_phone.dart';
 import 'package:movera/widgets/custom_btn.dart';
@@ -14,6 +13,14 @@ import 'package:movera/widgets/sizedbox_extention.dart';
 
 class DriverSignIn extends StatelessWidget {
   const DriverSignIn({super.key});
+
+  /// driver-u106: no Apple or Google sign-in is connected, so the buttons
+  /// say so, as phone sign-in does, instead of opening onboarding as if
+  /// the driver had signed in.
+  static void _socialSignInUnavailable(BuildContext context) =>
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr.socialSignInNeedsService)),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -77,12 +84,7 @@ class DriverSignIn extends StatelessWidget {
                 child: Image.asset(AppAssets.apple, height: ResSize.h * 24),
               ),
               centerContent: tr.continueWithApple,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  BottomToTopTransition(const AdditionalInfoNavigation()),
-                );
-              },
+              onPressed: () => _socialSignInUnavailable(context),
               borderColor: AppColor.border,
               borderwidth: 0.5,
               textColor: AppColor.title,
@@ -96,12 +98,7 @@ class DriverSignIn extends StatelessWidget {
                 child: Image.asset(AppAssets.google, height: ResSize.h * 24),
               ),
               centerContent: tr.continueWithGoogle,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  BottomToTopTransition(const AdditionalInfoNavigation()),
-                );
-              },
+              onPressed: () => _socialSignInUnavailable(context),
               borderColor: AppColor.border,
               borderwidth: 0.5,
               textColor: AppColor.title,

@@ -2961,6 +2961,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Phone sign-in requires the account service.';
 
   @override
+  String get socialSignInNeedsService =>
+      'Apple and Google sign-in require the account service.';
+
+  @override
   String get idPhotoPreview => 'ID photo preview';
 
   @override

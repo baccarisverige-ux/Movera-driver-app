@@ -2994,6 +2994,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'La connexion par téléphone nécessite le service de compte.';
 
   @override
+  String get socialSignInNeedsService =>
+      'La connexion avec Apple ou Google nécessite le service de compte.';
+
+  @override
   String get idPhotoPreview => 'Aperçu de la photo d’identité';
 
   @override

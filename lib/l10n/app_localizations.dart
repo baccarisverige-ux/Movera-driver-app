@@ -5193,6 +5193,12 @@ abstract class AppLocalizations {
   /// **'Phone sign-in requires the account service.'**
   String get phoneSignInNeedsService;
 
+  /// No description provided for @socialSignInNeedsService.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple and Google sign-in require the account service.'**
+  String get socialSignInNeedsService;
+
   /// No description provided for @idPhotoPreview.
   ///
   /// In en, this message translates to:
