@@ -5,9 +5,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/routing/route_repository.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +25,23 @@ class _NoGps implements DriverLocationRepository {
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       updates.stream;
+}
+
+/// Records where each road route starts.
+class _Routes implements RouteRepository {
+  final origins = <GeoPoint>[];
+  @override
+  Future<RoadRoute> drivingRoute({
+    required GeoPoint origin,
+    required GeoPoint destination,
+  }) async {
+    origins.add(origin);
+    return RoadRoute(
+      points: [origin, destination],
+      distanceMeters: origin.distanceMetersTo(destination),
+      durationSeconds: 600,
+    );
+  }
 }
 
 Future<void> _frames(WidgetTester tester, int count, [int ms = 50]) async {
@@ -105,6 +126,47 @@ void main() {
       expect(_mapBlocked(tester), isTrue);
       await gesture.cancel();
       await tester.pump();
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await _frames(tester, 10, 100);
+      await location.updates.close();
+    });
+  });
+
+  group('driver-u75: no GPS fix, no route from a made-up position', () {
+    testWidgets('the trip asks for no road route without a real fix',
+        (tester) async {
+      final previous = DriverRuntimeConfig.current;
+      DriverRuntimeConfig.current = const DriverRuntimeConfig(
+        simulatedArrival: true,
+        externalRouting: true,
+        skipAccountActivation: true,
+        liveMapTicker: false,
+        reservationPopup: false,
+        islandHint: false,
+        radarSound: false,
+      );
+      addTearDown(() => DriverRuntimeConfig.current = previous);
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final location = _NoGps();
+      final routes = _Routes();
+      await tester.pumpWidget(ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: AcceptRide(
+            locationRepository: location,
+            routeRepository: routes,
+            // Gothenburg: hundreds of km from the Stockholm placeholder.
+            pickupPosition: const LatLng(57.7089, 11.9746),
+            dropoffPosition: const LatLng(57.6900, 11.9700),
+          ),
+        ),
+      ));
+      await _frames(tester, 30);
+      expect(routes.origins, isEmpty,
+          reason: 'no route from the placeholder in Stockholm');
 
       await tester.pumpWidget(const SizedBox.shrink());
       await _frames(tester, 10, 100);

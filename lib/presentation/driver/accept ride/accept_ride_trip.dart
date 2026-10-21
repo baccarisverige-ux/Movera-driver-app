@@ -772,7 +772,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     Future<void> _refreshRoadRoute({bool force = false}) async {
       if (_stage == ActiveRideStage.waitingForRider || _paidStopWait) { return; }
       if (!_allowExternalRouting) { return; }
-
+      // driver-u75: no real fix yet: _driverPosition is the placeholder, so
+      // no road route from it; the first accepted fix asks for the route.
+      if (_lastLocation == null) { return; }
       final target = _routeTarget;
       if (target == null) {
         _rebuild(() {
