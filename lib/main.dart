@@ -169,7 +169,17 @@ class _MoveraAppState extends State<MoveraApp> {
                     child: Column(
                       children: [
                         const DemoModeBanner(),
-                        Expanded(child: child ?? const SizedBox.shrink()),
+                        // The banner took the status-bar inset: the
+                        // screens below must not pad for it again.
+                        Expanded(
+                          child: Builder(
+                            builder: (viewport) => MediaQuery.removePadding(
+                              context: viewport,
+                              removeTop: true,
+                              child: child ?? const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
