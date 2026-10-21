@@ -526,11 +526,14 @@ extension _HomeMapSheet on _DriverHomeState {
       _clearDemoDestinationTrips();
       _destinationLimitTimer?.cancel();
       DestinationModeSession.instance.ended();
-      _mapPreviews.cancel();
+      // driver-r4-38: an offer's route preview on screen keeps its road
+      // and its framing; only the destination's own preview ends.
+      final offerPreview = _HomeOfferRoute(this)._offerOnScreen;
+      if (!offerPreview) { _mapPreviews.cancel(); }
       _destinationRoadRequests.cancel();
       _destinationRoadRefresh.cancelPending();
       _cameraRoute = null;
-      _camera.endPreview();
+      if (!offerPreview) { _camera.endPreview(); }
       _rebuild(() {
         _destinationModeActive = false;
         _destinationAddress = null;

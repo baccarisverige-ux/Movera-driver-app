@@ -17,6 +17,7 @@ import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -29,7 +30,9 @@ import 'package:movera/presentation/driver/destination%20mode/destination_picker
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/layout_viewport.dart';
+import 'package:movera/widgets/offer_route_line.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
@@ -115,6 +118,30 @@ class _NoGps implements DriverLocationRepository {
       const Stream<DriverLocation>.empty();
 }
 
+/// Roads that arrive when the test lets them.
+class _HeldRoads implements RouteRepository {
+  final held = <(GeoPoint, GeoPoint, Completer<RoadRoute>)>[];
+
+  @override
+  Future<RoadRoute> drivingRoute({
+    required GeoPoint origin,
+    required GeoPoint destination,
+  }) {
+    final road = Completer<RoadRoute>();
+    held.add((origin, destination, road));
+    return road.future;
+  }
+
+  void release() {
+    for (final (from, to, road) in held) {
+      if (!road.isCompleted) {
+        road.complete(RoadRoute(
+            points: [from, to], distanceMeters: 900, durationSeconds: 120));
+      }
+    }
+  }
+}
+
 /// A short Radar trip near the driver.
 RideOffer _trip(String id) => RideOffer(
   id: id,
@@ -150,6 +177,7 @@ Future<_Home> _pumpHome(
   bool online = true,
   ActiveRideRepository? activeRides,
   DriverLocationRepository? location,
+  RouteRepository? routes,
 }) async {
   final dispatch = _Dispatch();
   final session = DriverSessionController();
@@ -172,6 +200,7 @@ Future<_Home> _pumpHome(
             dispatchRepository: dispatch,
             activeRideRepository: activeRides,
             locationRepository: location,
+            routeRepository: routes,
           ),
         ),
       ),
@@ -507,6 +536,42 @@ void main() {
       // Its own minute ends it.
       await pass(const Duration(seconds: 40));
       expect(session.expired(), isTrue);
+      await _end(tester);
+    });
+  });
+
+  group('driver-r4-38: Destination mode ends under an Exclusive offer', () {
+    testWidgets('the offer keeps its route preview', (tester) async {
+      DestinationModeRules.current =
+          const DestinationModeRules(timeLimitHours: 8 / 3600);
+      final roads = _HeldRoads();
+      await _pumpHome(tester, online: false, routes: roads);
+      await _frames(tester, const Duration(seconds: 9));
+      tester
+          .widget<InkWell>(
+            find.byKey(const ValueKey<String>('destination-mode-open')),
+          )
+          .onTap!
+          .call();
+      await _frames(tester, const Duration(seconds: 1));
+      await tester.tap(
+          find.byKey(const ValueKey<String>('destination-result-solna')));
+      roads.release();
+      // Online toward Solna; an Exclusive rises, its road still coming.
+      await _frames(tester, const Duration(seconds: 6));
+      expect(find.byKey(const ValueKey<String>('exclusive-radar-touch-target')),
+          findsOneWidget);
+      // The 8 s limit ends Destination mode; then the road comes in.
+      await _frames(tester, const Duration(seconds: 3));
+      expect(IslandMessages.posted.map((m) => m.title),
+          contains(HomeIslandNotices.destinationEnded.title));
+      roads.release();
+      await _frames(tester, const Duration(seconds: 1));
+      final map = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
+      expect(map.polylines!.map((l) => l.polylineId.value),
+          contains(OfferRouteLine.coreId));
+      expect(find.byKey(const ValueKey<String>('exclusive-radar-touch-target')),
+          findsOneWidget);
       await _end(tester);
     });
   });
