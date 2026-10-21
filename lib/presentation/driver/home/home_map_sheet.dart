@@ -1253,8 +1253,7 @@ extension _HomeMapSheet on _DriverHomeState {
           return DigitalIslandParts.amountFace(
               'island-last-trip', tr.lastTrip, _lastTripFareLabel);
         case _IslandFace.today:
-          return DigitalIslandParts.amountFace(
-              'island-today', tr.todayCaps, DigitalIslandParts.sampleToday);
+          return DigitalIslandParts.todayFace();
         case _IslandFace.history:
           return DigitalIslandParts.historyFace();
       }
@@ -1350,6 +1349,7 @@ extension _HomeMapSheet on _DriverHomeState {
         _islandFace = _IslandFace
             .values[(_islandFace.index + 1) % _IslandFace.values.length];
       });
+      if (_islandFace == _IslandFace.today) { unawaited(DigitalIslandParts.refreshToday()); }
       _restartIslandIdle();
     }
     void _restartIslandIdle() {
@@ -1388,7 +1388,7 @@ extension _HomeMapSheet on _DriverHomeState {
     }
     String get _lastTripFareLabel {
       final fare = _waybills.last?.fare;
-      if (fare == null || !fare.contains(RegExp(r'\d'))) { return DigitalIslandParts.sampleLastTrip; }
+      if (fare == null || !fare.contains(RegExp(r'\d'))) { return DigitalIslandParts.noAmount; }
       return fare;
     }
     void _onLastTripChanged() {

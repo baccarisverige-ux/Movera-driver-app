@@ -12,6 +12,7 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/next_trip_gate.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/money/money.dart';
@@ -22,6 +23,8 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
@@ -48,6 +51,8 @@ import '../../integration_test/headless_map_platform.dart';
 //   destination the driver set later on a trip.
 // - driver-u124: online and waiting, a screen reader's tap on the island
 //   brings Menu and Search destination back, as a touch does.
+// - driver-u125: the island's TODAY face shows today's recorded earnings,
+//   not a sample figure; LAST TRIP shows none before the first trip.
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -502,6 +507,73 @@ void main() {
       await _frames(tester, const Duration(milliseconds: 600));
       expect(find.semantics.byPredicate(side), findsExactly(2));
       handle.dispose();
+      await _end(tester);
+    });
+  });
+
+  group('driver-u125: the island\'s money faces', () {
+    WaybillRecord receipt(String id, String fare) => WaybillRecord(
+      tripId: id,
+      statusLabel: 'Completed',
+      issuedAt: DateTime.now(),
+      fare: fare,
+      service: 'Comfort',
+      riderName: 'Sara',
+      pickup: 'Tegnérgatan',
+      dropoff: 'Odengatan',
+      source: 'Movera Radar',
+      driverName: 'Driver',
+      vehicle: 'Car',
+      licensePlate: 'ABC 123',
+      passengerCapacity: 4,
+    );
+
+    /// Two trips today (261,00 kr) and one yesterday.
+    Future<void> record() async {
+      final history = PrefsTripHistoryRepository();
+      await history.archive(receipt('t1', '104,80 kr'));
+      await history.archive(receipt('t2', '156,20 kr'));
+      await history.archive(receipt('y1', '99,00 kr'),
+          completedAt: DateTime.now().subtract(const Duration(days: 1)));
+    }
+
+    testWidgets('Home: TODAY is today\'s recorded total', (tester) async {
+      await record();
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 3));
+      final launcher = find.byKey(const ValueKey<String>('last-trip-launcher'));
+      tester.widget<InkWell>(launcher).onTap!.call();
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(find.text('LAST TRIP'), findsOneWidget);
+      expect(find.text('126 kr'), findsNothing, reason: 'no sample figure');
+      tester.widget<InkWell>(launcher).onTap!.call();
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(find.text('TODAY'), findsOneWidget);
+      expect(find.text('183.25 kr'), findsNothing);
+      expect(find.text('261,00 kr'), findsOneWidget);
+      await _end(tester);
+    });
+
+    testWidgets('trip screen: TODAY is today\'s recorded total', (
+      tester,
+    ) async {
+      await record();
+      await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.topCenter,
+            child: TripIsland(lastTripLabel: '104,80 kr'),
+          ),
+        ),
+      ));
+      final middle = find.byKey(const ValueKey<String>('trip-island-middle'));
+      await tester.tap(middle);
+      await _frames(tester, const Duration(milliseconds: 600));
+      await tester.tap(middle);
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(find.text('TODAY'), findsOneWidget);
+      expect(find.text('183.25 kr'), findsNothing);
+      expect(find.text('261,00 kr'), findsOneWidget);
       await _end(tester);
     });
   });
