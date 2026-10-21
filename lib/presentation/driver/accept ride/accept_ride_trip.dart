@@ -383,7 +383,14 @@ extension _AcceptRideTrip on _AcceptRideState {
           content: Text(tr.tripUpdateCouldNotBeSaved),
           action: SnackBarAction(label: tr.retryNow, onPressed: () => unawaited(_drainProjection())))); }
         _scheduleProjectionRetry();
-      } finally { _drainingProjection = false; }
+      } finally {
+        _drainingProjection = false;
+        // driver-u70: a newer event that came in while this one drained was
+        // turned away by the guard above; drain it now.
+        if (mounted && _projectionRetry == null && _pendingProjection != null && !identical(event, _pendingProjection)) {
+          unawaited(_drainProjection());
+        }
+      }
     }
     /// An authoritative terminal outcome must not depend on the driver seeing
     /// a SnackBar. Retry with bounded backoff until it is applied.
