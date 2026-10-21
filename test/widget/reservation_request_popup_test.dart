@@ -338,10 +338,14 @@ void main() {
     expect(find.text('41 km'), findsOneWidget);
     expect(find.text('In 2 h'), findsOneWidget);
     // A small grey down arrow in the top-right corner.
+    // driver-u111: a 48 px touch box around the 34 px mark, which stays
+    // 18 px from the right and 14 px below the top.
     final arrow = find.byKey(_hide);
-    expect(tester.getSize(arrow), const Size(34, 34));
-    expect(tester.getRect(arrow).right, closeTo(375 - 18, 1));
-    expect(tester.getRect(arrow).top, closeTo(up + 14, 1));
+    expect(tester.getSize(arrow), const Size(48, 48));
+    final mark = find.descendant(of: arrow, matching: find.byType(Material));
+    expect(tester.getSize(mark), const Size(34, 34));
+    expect(tester.getRect(mark).right, closeTo(375 - 18, 1));
+    expect(tester.getRect(mark).top, closeTo(up + 14, 1));
 
     await tester.tap(arrow);
     await tester.pump();

@@ -19,6 +19,7 @@ import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
 import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
+import 'package:movera/presentation/driver/home/components/home_offer_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -281,5 +282,25 @@ void main() {
       );
       await _unmount(tester);
     });
+  });
+
+  testWidgets('driver-u111: the offer sheet × is a 48 px target',
+      (tester) async {
+    var hidden = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: ReservationCloseArrow(
+            key: const ValueKey<String>('hide'),
+            onTap: () => hidden++,
+          ),
+        ),
+      ),
+    ));
+    final hide = find.byKey(const ValueKey<String>('hide'));
+    expect(tester.getSize(hide), const Size(48, 48));
+    // A corner of the box, outside the 34 px mark, still hides it.
+    await tester.tapAt(tester.getTopLeft(hide) + const Offset(2, 2));
+    expect(hidden, 1);
   });
 }
