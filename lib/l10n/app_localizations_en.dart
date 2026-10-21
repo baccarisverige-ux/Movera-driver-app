@@ -752,6 +752,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moveraSafetyTeamAlerted => 'Movera safety team alerted';
 
   @override
+  String get safetyAlertKeptOnPhoneDemo =>
+      'Demo: alert kept on this phone only. No one at Movera was notified.';
+
+  @override
   String get call112IfYouNeedHelp => '\nCall 112 if you need help now.';
 
   @override

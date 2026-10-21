@@ -212,6 +212,7 @@
   "yourDialerOpensWith112Movera": "Le clavier d’appel s’ouvre avec le 112. Movera n’appelle jamais à votre place.",
   "moveraCouldNotBeAlerted": "Impossible d’alerter Movera",
   "moveraSafetyTeamAlerted": "Équipe sécurité de Movera alertée",
+  "safetyAlertKeptOnPhoneDemo": "Démo : alerte gardée uniquement sur ce téléphone. Personne chez Movera n’a été prévenu.",
   "call112IfYouNeedHelp": "\nAppelez le 112 si vous avez besoin d’aide maintenant.",
   "tripDriverAndRiderDetailsWere": "\nLes détails de la course, du chauffeur et du passager ont été envoyés.",
   "call112Now": "Appelez le 112 maintenant",

@@ -212,6 +212,7 @@
   "yourDialerOpensWith112Movera": "Telefonen öppnas med 112. Movera ringer aldrig åt dig.",
   "moveraCouldNotBeAlerted": "Movera kunde inte larmas",
   "moveraSafetyTeamAlerted": "Moveras säkerhetsteam har larmats",
+  "safetyAlertKeptOnPhoneDemo": "Demo: larmet sparas bara på den här telefonen. Ingen på Movera har larmats.",
   "call112IfYouNeedHelp": "\nRing 112 om du behöver hjälp nu.",
   "tripDriverAndRiderDetailsWere": "\nUppgifter om resa, förare och passagerare har skickats.",
   "call112Now": "Ring 112 nu",

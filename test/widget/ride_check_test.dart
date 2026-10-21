@@ -685,7 +685,9 @@ void main() {
     expect(find.byKey(const ValueKey('ride-check-alert-sent')), findsOneWidget);
     expect(
       find.text(
-        'Movera safety team alerted\nTrip, driver and rider details were sent.',
+        // driver-49: the demo outbox reached no one at Movera.
+        'Demo: alert kept on this phone only. No one at Movera was notified.'
+        '\nCall 112 if you need help now.',
         findRichText: true,
       ),
       findsOneWidget,

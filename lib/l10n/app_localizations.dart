@@ -1376,6 +1376,12 @@ abstract class AppLocalizations {
   /// **'Movera safety team alerted'**
   String get moveraSafetyTeamAlerted;
 
+  /// No description provided for @safetyAlertKeptOnPhoneDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo: alert kept on this phone only. No one at Movera was notified.'**
+  String get safetyAlertKeptOnPhoneDemo;
+
   /// No description provided for @call112IfYouNeedHelp.
   ///
   /// In en, this message translates to:

@@ -756,6 +756,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get moveraSafetyTeamAlerted => 'Équipe sécurité de Movera alertée';
 
   @override
+  String get safetyAlertKeptOnPhoneDemo =>
+      'Démo : alerte gardée uniquement sur ce téléphone. Personne chez Movera n’a été prévenu.';
+
+  @override
   String get call112IfYouNeedHelp =>
       '\nAppelez le 112 si vous avez besoin d’aide maintenant.';
 

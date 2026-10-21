@@ -489,6 +489,7 @@
   "yourDialerOpensWith112Movera": "Your dialer opens with 112. Movera never calls for you.",
   "moveraCouldNotBeAlerted": "Movera could not be alerted",
   "moveraSafetyTeamAlerted": "Movera safety team alerted",
+  "safetyAlertKeptOnPhoneDemo": "Demo: alert kept on this phone only. No one at Movera was notified.",
   "call112IfYouNeedHelp": "\nCall 112 if you need help now.",
   "tripDriverAndRiderDetailsWere": "\nTrip, driver and rider details were sent.",
   "call112Now": "Call 112 now",

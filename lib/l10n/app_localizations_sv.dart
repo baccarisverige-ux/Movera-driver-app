@@ -753,6 +753,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get moveraSafetyTeamAlerted => 'Moveras säkerhetsteam har larmats';
 
   @override
+  String get safetyAlertKeptOnPhoneDemo =>
+      'Demo: larmet sparas bara på den här telefonen. Ingen på Movera har larmats.';
+
+  @override
   String get call112IfYouNeedHelp => '\nRing 112 om du behöver hjälp nu.';
 
   @override
