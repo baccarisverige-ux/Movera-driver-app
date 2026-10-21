@@ -1,3 +1,4 @@
+import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
@@ -65,14 +66,14 @@ class DriverPerformanceConfig {
   final bool showAcceptanceRate;
   final bool showCancellationRate;
 
-  /// "4.88"
-  String get ratingLabel => rating.toStringAsFixed(2);
+  /// "4.88", "4,88" in French and Swedish.
+  String get ratingLabel => driverDecimal(rating, 2);
 
   /// "94%"
   String get acceptanceLabel => '${acceptanceRate.toStringAsFixed(0)}%';
 
-  /// "2.4%"
-  String get cancellationLabel => '${cancellationRate.toStringAsFixed(1)}%';
+  /// "2.4%", "2,4%" in French and Swedish.
+  String get cancellationLabel => '${driverDecimal(cancellationRate, 1)}%';
 }
 
 class ScheduledRidesAdminConfig {

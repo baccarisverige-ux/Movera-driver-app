@@ -3,8 +3,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
+import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
 
 /// Wave 5 D5.1 (parts a and b): texts that stayed in English, or in the
 /// language a trip opened in, now follow the driver's language.
@@ -64,6 +66,16 @@ void main() {
       ));
       expect(words(tr.cashYouOweMovera), findsWidgets);
       expect(words('You owe Movera'), findsNothing);
+    });
+  }
+
+  for (final code in languages) {
+    testWidgets('driver-15: decimals take the comma in $code', (tester) async {
+      await show(tester, code, const CancelationRate());
+      expect(words('2,4%'), findsWidgets);
+      expect(words('2.4%'), findsNothing);
+      expect(driverDistanceMeters(4200), '4,2 km');
+      expect(driverDistanceAndMinutes(4.2, 9), '4,2 km · 9 min');
     });
   }
 }
