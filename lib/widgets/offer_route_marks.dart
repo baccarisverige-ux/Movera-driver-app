@@ -104,10 +104,7 @@ class OfferRouteMarks {
     if (data == null) {
       return BitmapDescriptor.defaultMarker;
     }
-    return BitmapDescriptor.bytes(
-      data.buffer.asUint8List(),
-      imagePixelRatio: _ratio,
-    );
+    return RouteMarkPins.bitmapOf(data.buffer.asUint8List(), s);
   }
 
   /// The markers: `radar_pickup` and `radar_dropoff` with their values

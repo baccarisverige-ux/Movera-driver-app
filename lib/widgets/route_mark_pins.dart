@@ -1,7 +1,9 @@
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:movera/widgets/web_map_bitmap.dart';
 
 enum RouteMarkKind { pickup, stop, dropoff }
 
@@ -279,9 +281,13 @@ class RouteMarkPins {
     if (data == null) {
       return BitmapDescriptor.defaultMarker;
     }
-    return BitmapDescriptor.bytes(
-      data.buffer.asUint8List(),
-      imagePixelRatio: _ratio,
-    );
+    return bitmapOf(data.buffer.asUint8List(), size);
   }
+
+  /// [png] painted at [size] (logical) as a map icon. Web: one URL per
+  /// picture, not a new Blob URL on every marker update, e.g. each step of
+  /// a route fade (driver-r4-21, like the car in driver-u174).
+  static BitmapDescriptor bitmapOf(Uint8List png, Size size) =>
+      WebMapBitmaps.of(png, width: size.width, height: size.height) ??
+      BitmapDescriptor.bytes(png, imagePixelRatio: _ratio);
 }

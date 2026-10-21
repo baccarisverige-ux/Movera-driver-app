@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/core/contracts/trip_status.dart';
@@ -23,6 +25,16 @@ void main() {
     await second.handoff('A',const PersistedActiveRide(tripId:'B',stage:ActiveRideStage.onTrip));
     await first.handoff('A',const PersistedActiveRide(tripId:'B',stage:ActiveRideStage.headingToPickup));
     expect((await second.read())!.stage,ActiveRideStage.onTrip);
+  });
+  test('driver-r4-23: web reads what another tab wrote before guarding a save', () async {
+    final prefs=await SharedPreferences.getInstance();
+    final tab=PrefsActiveRideRepository(load:() async=>prefs,sharedAcrossTabs:true);
+    const waiting=PersistedActiveRide(tripId:'A',stage:ActiveRideStage.waitingForRider);
+    await tab.save(waiting);
+    // Another tab moves the trip on in localStorage, behind this tab's cache.
+    SharedPreferences.setMockInitialValues({'flutter.${PrefsActiveRideRepository.key}':
+        jsonEncode(const PersistedActiveRide(tripId:'A',stage:ActiveRideStage.onTrip).toJson())});
+    await expectLater(tab.save(waiting),throwsStateError);
   });
   test('malformed storage is an error and remains available for recovery', () async {
     final prefs=await SharedPreferences.getInstance();

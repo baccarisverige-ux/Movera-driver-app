@@ -551,70 +551,82 @@
       }
     });
     const NativeMarker = sdk.Marker;
+    // The own vehicle as a rotatable overlay, once its icon has a URL.
+    const carOverlay = (marker, icon) => {
+      let state;
+      const car = new sdk.OverlayView();
+      // The own vehicle stands up (a billboard): never rotateX'd into the
+      // ground, only turned to its heading as the camera sees it. Its
+      // halo lies on the ground and flattens with the tilt.
+      const halo = document.createElement('div');
+      halo.style.cssText = `position:absolute;pointer-events:none;width:${HALO}px;height:${HALO}px;` +
+        'border-radius:50%;background:radial-gradient(circle,rgba(125,140,153,.32) 0,rgba(125,140,153,.26) 82%,rgba(125,140,153,0) 100%);';
+      const image = document.createElement('img');
+      image.style.cssText = 'position:absolute;pointer-events:none;';
+      let anchor = {x: .5, y: .5};
+      // Size bucket for the camera's zoom; the overlay redraws on every
+      // camera frame, the transform changes only on a new bucket.
+      let scale = null;
+      const setIcon = icon => {
+        if (!icon?.url) return;
+        // The same picture again (each marker update sends the icon): no
+        // reload (driver-u174).
+        if (image.src !== icon.url) image.src = icon.url;
+        const size = icon.scaledSize || icon.size;
+        if (!size) return;
+        image.style.width = `${size.width}px`; image.style.height = `${size.height}px`;
+        anchor = icon.anchor && size.width && size.height
+          ? {x: icon.anchor.x / size.width, y: icon.anchor.y / size.height}
+          : {x: .5, y: .5};
+        image.style.transformOrigin = `${anchor.x * 100}% ${anchor.y * 100}%`;
+      };
+      setIcon(icon);
+      car.onAdd = () => {
+        const pane = car.getPanes().overlayLayer;
+        pane.appendChild(halo); pane.appendChild(image);
+      };
+      car.draw = () => {
+        const pixel = car.getProjection()?.fromLatLngToDivPixel(marker.getPosition());
+        if (!pixel) return;
+        const tilt = state.map.getTilt() || 0;
+        scale = nextScale(scale, Number(state.map.getZoom()));
+        image.style.left = `${pixel.x}px`; image.style.top = `${pixel.y}px`;
+        image.style.transform = `translate(${-anchor.x * 100}%,${-anchor.y * 100}%) ` +
+          `rotate(${screenRotation(state.heading, state.map.getHeading() || 0, tilt)}deg) scale(${scale})`;
+        halo.style.left = `${pixel.x}px`; halo.style.top = `${pixel.y}px`;
+        halo.style.transform = `translate(-50%,-50%) scale(${scale}) scaleY(${Math.cos(tilt * Math.PI / 180)})`;
+      };
+      car.onRemove = () => { image.remove(); halo.remove(); };
+      marker.addListener('position_changed', () => car.draw());
+      marker.addListener('icon_changed', () => { setIcon(marker.getIcon()); car.draw(); });
+      const attach = () => {
+        car.setMap(null);
+        state = byMap.get(marker.getMap());
+        if (!state) return;
+        state.car?.setMap(null); state.car = car;
+        car.setMap(marker.getMap());
+      };
+      marker.addListener('map_changed', attach);
+      marker.addListener('visible_changed', () => {
+        if (marker.getVisible()) marker.setVisible(false);
+      });
+      attach();
+      marker.setVisible(false);
+    };
     sdk.Marker = class extends NativeMarker {
       constructor(options) {
         super(options);
-        if (options.title !== 'Driver camera vehicle' || !options.icon?.url) return;
-        const marker = this;
-        let state;
-        const car = new sdk.OverlayView();
-        // The own vehicle stands up (a billboard): never rotateX'd into the
-        // ground, only turned to its heading as the camera sees it. Its
-        // halo lies on the ground and flattens with the tilt.
-        const halo = document.createElement('div');
-        halo.style.cssText = `position:absolute;pointer-events:none;width:${HALO}px;height:${HALO}px;` +
-          'border-radius:50%;background:radial-gradient(circle,rgba(125,140,153,.32) 0,rgba(125,140,153,.26) 82%,rgba(125,140,153,0) 100%);';
-        const image = document.createElement('img');
-        image.style.cssText = 'position:absolute;pointer-events:none;';
-        let anchor = {x: .5, y: .5};
-        // Size bucket for the camera's zoom; the overlay redraws on every
-        // camera frame, the transform changes only on a new bucket.
-        let scale = null;
-        const setIcon = icon => {
+        if (options.title !== 'Driver camera vehicle') return;
+        if (options.icon?.url) { carOverlay(this, options.icon); return; }
+        // First built with the default icon (no URL) while the arrow is
+        // still being drawn: the arrow arrives later through setOptions,
+        // which never runs this constructor again (driver-r4-36).
+        const late = this.addListener('icon_changed', () => {
+          const icon = this.getIcon();
           if (!icon?.url) return;
-          // The same picture again (each marker update sends the icon): no
-          // reload (driver-u174).
-          if (image.src !== icon.url) image.src = icon.url;
-          const size = icon.scaledSize || icon.size;
-          if (!size) return;
-          image.style.width = `${size.width}px`; image.style.height = `${size.height}px`;
-          anchor = icon.anchor && size.width && size.height
-            ? {x: icon.anchor.x / size.width, y: icon.anchor.y / size.height}
-            : {x: .5, y: .5};
-          image.style.transformOrigin = `${anchor.x * 100}% ${anchor.y * 100}%`;
-        };
-        setIcon(options.icon);
-        car.onAdd = () => {
-          const pane = car.getPanes().overlayLayer;
-          pane.appendChild(halo); pane.appendChild(image);
-        };
-        car.draw = () => {
-          const pixel = car.getProjection()?.fromLatLngToDivPixel(marker.getPosition());
-          if (!pixel) return;
-          const tilt = state.map.getTilt() || 0;
-          scale = nextScale(scale, Number(state.map.getZoom()));
-          image.style.left = `${pixel.x}px`; image.style.top = `${pixel.y}px`;
-          image.style.transform = `translate(${-anchor.x * 100}%,${-anchor.y * 100}%) ` +
-            `rotate(${screenRotation(state.heading, state.map.getHeading() || 0, tilt)}deg) scale(${scale})`;
-          halo.style.left = `${pixel.x}px`; halo.style.top = `${pixel.y}px`;
-          halo.style.transform = `translate(-50%,-50%) scale(${scale}) scaleY(${Math.cos(tilt * Math.PI / 180)})`;
-        };
-        car.onRemove = () => { image.remove(); halo.remove(); };
-        this.addListener('position_changed', () => car.draw());
-        this.addListener('icon_changed', () => { setIcon(this.getIcon()); car.draw(); });
-        const attach = () => {
-          car.setMap(null);
-          state = byMap.get(this.getMap());
-          if (!state) return;
-          state.car?.setMap(null); state.car = car;
-          car.setMap(this.getMap());
-        };
-        this.addListener('map_changed', attach);
-        this.addListener('visible_changed', () => {
-          if (this.getVisible()) this.setVisible(false);
+          late.remove();
+          carOverlay(this, icon);
         });
-        attach();
-        this.setVisible(false);
       }
     };
   }

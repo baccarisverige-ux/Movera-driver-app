@@ -2,7 +2,10 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:movera/presentation/driver/home/components/route_fade.dart';
 import 'package:movera/widgets/movera_vehicle_marker.dart';
+import 'package:movera/widgets/offer_route_marks.dart';
+import 'package:movera/widgets/route_mark_pins.dart';
 import 'package:movera/widgets/web_map_bitmap.dart';
 
 /// driver-u174: on web, google_maps_flutter_web 0.5.14+2 turns a
@@ -62,6 +65,33 @@ void main() {
     expect(revoked, unorderedEquals(created));
     WebMapBitmaps.release();
     expect(revoked, hasLength(2));
+  });
+
+  // driver-r4-21: each offer-route fade step re-sends the pins with a new
+  // alpha, so bytes icons leaked a Blob URL per pin per step.
+  test('a route fade re-sends the offer pins with one URL each', () async {
+    OfferRouteMarks.debugClearCache();
+    final markers = await OfferRouteMarks.markers(
+      pickup: const LatLng(59.33, 18.06),
+      dropoff: const LatLng(59.36, 18.00),
+      pickupValue: '3 min',
+      dropoffValue: '12 min',
+      stops: const [LatLng(59.34, 18.04)],
+    );
+    final ids = {for (final m in markers) m.markerId};
+    final fade = RouteFade();
+    final urls = <String>{};
+    final before = pluginBlobs;
+    for (var step = 1; step < RouteFade.steps; step++) {
+      fade.value = step / RouteFade.steps;
+      urls.addAll(fade.markers(markers, ids).map((m) => pluginUrlFor(m.icon)));
+    }
+    expect(pluginBlobs, before);
+    expect(urls, hasLength(3), reason: 'pickup, drop-off and the stop');
+    final pickup = markers
+        .firstWhere((m) => m.markerId.value == 'radar_pickup')
+        .icon as AssetMapBitmap;
+    expect(pickup.width, RouteMarkPins.labelledSize('Pickup', '3 min').width);
   });
 
   test('off web (no URL factory) the icon stays bytes', () {
