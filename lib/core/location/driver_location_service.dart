@@ -62,7 +62,7 @@ class DriverLocationService implements DriverLocationRepository {
       return _toDriverLocation(position);
     } catch (error, stack) {
       DriverLog.warn('Current GPS failed, trying last known: $error');
-      final last = await Geolocator.getLastKnownPosition();
+      final last = await _lastKnown();
       final fallback = vetCachedFix(
         last == null ? null : _toDriverLocation(last),
         DateTime.now(),
@@ -72,6 +72,18 @@ class DriverLocationService implements DriverLocationRepository {
       }
       DriverLog.error('No recent accurate GPS fix available', error, stack);
       rethrow;
+    }
+  }
+
+  /// The platform's cached fix, or null where it has none to give: web
+  /// (geolocator_web throws UnsupportedError) must not replace the real
+  /// GPS error with that one (driver-r4-22).
+  static Future<Position?> _lastKnown() async {
+    try {
+      return await Geolocator.getLastKnownPosition();
+    } catch (error) {
+      DriverLog.warn('No last known GPS fix: $error');
+      return null;
     }
   }
 
