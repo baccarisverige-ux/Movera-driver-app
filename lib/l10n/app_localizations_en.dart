@@ -4540,6 +4540,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rcCalled112 => 'Called 112';
 
   @override
+  String get rcDialer112 => '112 dialer:';
+
+  @override
+  String get rcDialerOpened => 'opened';
+
+  @override
+  String get rcDialerDidNotOpen => 'did not open';
+
+  @override
   String get selectCountry => 'Select Country';
 
   @override

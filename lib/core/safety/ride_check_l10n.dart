@@ -63,6 +63,7 @@ String rideCheckQuestionWords(String text) => switch (text) {
     'Are you in danger right now?' => tr.rcQuestionInDanger,
     'Can you continue the trip?' => tr.rcQuestionCanContinue,
     'Call 112' => tr.call112,
+    '112 dialer' => tr.rcDialer112,
     'What happened' => tr.rcWhatHappened,
     _ => text,
   };
@@ -79,7 +80,11 @@ String rideCheckAnswerWords(String answer) {
     'Me' => tr.rcAnswerMe,
     'The rider' => tr.rcAnswerTheRider,
     'Someone else' => tr.rcAnswerSomeoneElse,
+    // Saved before driver-u43; new checks save 'Call 112' and the outcome.
     'Called 112' => tr.rcCalled112,
+    'Call 112' => tr.call112,
+    'Opened' => tr.rcDialerOpened,
+    'Did not open' => tr.rcDialerDidNotOpen,
     "I'm OK" => tr.iMOk,
     _ => answer,
   };

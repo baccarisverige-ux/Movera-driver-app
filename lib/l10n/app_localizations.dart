@@ -7923,6 +7923,24 @@ abstract class AppLocalizations {
   /// **'Called 112'**
   String get rcCalled112;
 
+  /// No description provided for @rcDialer112.
+  ///
+  /// In en, this message translates to:
+  /// **'112 dialer:'**
+  String get rcDialer112;
+
+  /// No description provided for @rcDialerOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'opened'**
+  String get rcDialerOpened;
+
+  /// No description provided for @rcDialerDidNotOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'did not open'**
+  String get rcDialerDidNotOpen;
+
   /// No description provided for @selectCountry.
   ///
   /// In en, this message translates to:

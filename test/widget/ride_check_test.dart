@@ -748,7 +748,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('ride-check-done')));
     await tester.pumpAndSettle();
     expect(_cardFinder, findsNothing);
-    expect(kit.log.rows.single.answers.first.answer, 'Called 112');
+    expect(kit.log.rows.single.answers.first.answer, 'Call 112');
     await _end(tester, controller);
   });
 

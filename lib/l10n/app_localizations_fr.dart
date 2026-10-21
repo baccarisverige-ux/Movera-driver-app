@@ -4604,6 +4604,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rcCalled112 => '112 appelé';
 
   @override
+  String get rcDialer112 => 'Composeur du 112 :';
+
+  @override
+  String get rcDialerOpened => 'ouvert';
+
+  @override
+  String get rcDialerDidNotOpen => 'ne s’est pas ouvert';
+
+  @override
   String get selectCountry => 'Choisir un pays';
 
   @override

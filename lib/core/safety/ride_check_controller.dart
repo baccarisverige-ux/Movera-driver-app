@@ -47,6 +47,7 @@ class RideCheckController extends ChangeNotifier {
   bool _alertFailed = false;
   bool _dialOpened = false;
   bool _dialFailed = false;
+  String? _dialOutcome;
   bool _instant = false;
   Completer<RideCheckRecord>? _done;
   Timer? _phaseTimer;
@@ -111,6 +112,7 @@ class RideCheckController extends ChangeNotifier {
     _alertFailed = false;
     _dialOpened = false;
     _dialFailed = false;
+    _dialOutcome = null;
     _audio = RideCheckAudio.idle;
     _audioSeconds = null;
     _audioStartedAt = null;
@@ -145,30 +147,45 @@ class RideCheckController extends ChangeNotifier {
       !_closing &&
       (_phase == RideCheckPhase.card || _phase == RideCheckPhase.pill);
 
+  /// The question under which the dialer's outcome is saved and sent.
+  static const String dialerQuestion = '112 dialer';
+  static const String dialerOpened = 'Opened';
+  static const String dialerDidNotOpen = 'Did not open';
+
   /// "Call 112": the phone dialer opens with 112; the driver calls. Movera
   /// is alerted at the same time.
+  ///
+  /// driver-u43: the app only opens the dialer, and that can fail. The
+  /// answer and the alert topic say "Call 112" (what the driver chose);
+  /// whether the dialer opened follows as its own answer and alert update.
   Future<void> callEmergency() async {
     if (!_answerable) return;
     switch (_step) {
       case RideCheckStep.main:
-        _addAnswer(RideCheckAnswer.first, 'Called 112');
+        _addAnswer(RideCheckAnswer.first, 'Call 112');
         _step = RideCheckStep.called;
         _phase = RideCheckPhase.card;
       case RideCheckStep.followUp:
-        _addAnswer('Call 112', 'Called 112');
       case RideCheckStep.called:
-        // Opening the dialer again adds no new answer.
+        // The dialer's outcome below is the answer.
         break;
     }
     _dialFailed = false;
     notifyListeners();
-    _ensureAlert('Called 112');
+    _ensureAlert('Call 112');
     final result = await handoffEmergencyDial(
       () => services.launch(RideCheckServices.emergencyNumber),
     );
     if (_disposed) return;
     _dialOpened = result == EmergencyDialResult.opened;
     _dialFailed = !_dialOpened;
+    final outcome = _dialOpened ? dialerOpened : dialerDidNotOpen;
+    // Opening the dialer again adds an answer only when the outcome changed.
+    if (_dialOutcome != outcome) {
+      _dialOutcome = outcome;
+      final answer = _addAnswer(dialerQuestion, outcome);
+      _queueAlert((alert) => services.alerts.update(alert.id, answer));
+    }
     notifyListeners();
   }
 

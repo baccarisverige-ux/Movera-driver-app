@@ -4557,6 +4557,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rcCalled112 => 'Ringde 112';
 
   @override
+  String get rcDialer112 => 'Uppringning till 112:';
+
+  @override
+  String get rcDialerOpened => 'öppnades';
+
+  @override
+  String get rcDialerDidNotOpen => 'öppnades inte';
+
+  @override
   String get selectCountry => 'Välj land';
 
   @override
