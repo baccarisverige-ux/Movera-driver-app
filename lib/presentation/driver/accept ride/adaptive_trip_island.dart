@@ -384,8 +384,13 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                 measure(subtitle, const TextStyle(fontSize: 9)),
               ) +
               84;
+          // driver-u88: capped at the documented maximum (+15 %); the
+          // title ellipsizes beyond it.
           size = Size(
-            desired.clamp(home.width, available).toDouble(),
+            desired
+                .clamp(home.width,
+                    math.min(available, TripIslandGeometry.maximumWidth))
+                .toDouble(),
             home.height,
           );
           content = Padding(
