@@ -133,6 +133,8 @@ class PersistedActiveRide {
     this.destinationPoint,
     this.scheduledPickupAt,
     this.scheduledRideId,
+    this.pickupKm,
+    this.bags = 0,
   });
 
   final String tripId;
@@ -186,6 +188,13 @@ class PersistedActiveRide {
   /// (`reservations.lateEta`). Null for every other trip.
   final DateTime? scheduledPickupAt;
   final String? scheduledRideId;
+
+  /// driver-u56: how far the pickup was at accept, so a restored trip keeps
+  /// the waiting terms it was accepted under (Q20). Null when not known.
+  final double? pickupKm;
+
+  /// The bags the rider said they bring.
+  final int bags;
   bool get hasVerifiedEndpoints =>
       validCoordinate(pickupLat, latitude: true) &&
       validCoordinate(pickupLng, latitude: false) &&
@@ -246,6 +255,8 @@ class PersistedActiveRide {
       destinationPoint: destinationPoint,
       scheduledPickupAt: scheduledPickupAt,
       scheduledRideId: scheduledRideId,
+      pickupKm: pickupKm,
+      bags: bags,
     );
   }
 
@@ -296,6 +307,8 @@ class PersistedActiveRide {
     if (scheduledPickupAt != null)
       'scheduledPickupAt': scheduledPickupAt!.toIso8601String(),
     if (scheduledRideId != null) 'scheduledRideId': scheduledRideId,
+    if (pickupKm != null) 'pickupKm': pickupKm,
+    if (bags > 0) 'bags': bags,
   };
 
   /// A saved Money, or null when absent or not readable.
@@ -389,6 +402,8 @@ class PersistedActiveRide {
             !validCoordinate(destination['longitude'], latitude: false))) {
       return null;
     }
+    final pickupKm = json['pickupKm'];
+    final bags = json['bags'];
     final nextJson = json['next'];
     final next = nextJson is Map
         ? PersistedQueuedTrip.fromJson(Map<String, dynamic>.from(nextJson))
@@ -456,6 +471,11 @@ class PersistedActiveRide {
       scheduledRideId: json['scheduledRideId'] is String
           ? json['scheduledRideId'] as String
           : null,
+      // Optional preview data: a bad value is dropped, not trusted.
+      pickupKm: pickupKm is num && pickupKm.isFinite && pickupKm >= 0
+          ? pickupKm.toDouble()
+          : null,
+      bags: bags is int && bags > 0 ? bags : 0,
     );
   }
 }
