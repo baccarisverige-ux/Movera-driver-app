@@ -67,7 +67,11 @@ const _ink = Color(0xFF303A3F);
 const _muted = Color(0xFF7D898F);
 
 List<Widget> _rows(WaybillRecord record) {
-  final payment = WaybillPayment.fromFare(record.fare, bonus: record.driverBonus);
+  final payment = WaybillPayment.fromFare(
+    record.fare,
+    bonus: record.driverBonus,
+    waitingFee: record.waitingFee,
+  );
   final bonus = record.driverBonus;
   return [
     _Row(tr.trip, record.tripId),
