@@ -15,4 +15,13 @@ void main() {
     expect(decisions, contains('shared Movera contract v$version'));
     expect(decisions, isNot(contains('v0.3.0')));
   });
+
+  test('driver-3: DECISIONS.md describes the live car marker as built', () {
+    final decisions = _read('docs/DECISIONS.md');
+    final trip = _read('lib/presentation/driver/accept ride/accept_ride.dart');
+    expect(trip, contains('Timer.periodic(const Duration(milliseconds: 33)'));
+    expect(decisions, isNot(contains('5Hz')));
+    expect(decisions, contains('33 ms'));
+    expect(decisions, contains('updateMarkers'));
+  });
 }
