@@ -20,7 +20,7 @@ void main() {
     expect(panel, contains('extension _AcceptRidePanel on _AcceptRideState'));
     expect(panel, contains('Widget _buildRidePanel'));
     expect(panel, contains('Widget _buildRiderRow'));
-    expect(panel, contains('Chat(riderDisplayName: widget.riderName)'));
+    expect(panel, contains('Chat(riderDisplayName: widget.riderName, tripId: widget.tripId)'));
     expect(panel, isNot(contains('setState(')));
     expect(ride.split('\n').length, lessThan(1800));
   });

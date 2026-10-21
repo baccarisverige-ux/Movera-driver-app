@@ -219,7 +219,7 @@ extension _AcceptRideSheet on _AcceptRideState {
                     pushSingle(
                       context,
                       BottomToTopTransition(
-                        Chat(riderDisplayName: offer.riderName),
+                        Chat(riderDisplayName: offer.riderName, tripId: offer.id),
                       ),
                     );
                   },

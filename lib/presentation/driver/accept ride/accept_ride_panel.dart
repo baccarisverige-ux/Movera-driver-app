@@ -882,7 +882,7 @@ extension _AcceptRidePanel on _AcceptRideState {
       pushSingle(
         context,
         BottomToTopTransition(
-          Chat(riderDisplayName: widget.riderName),
+          Chat(riderDisplayName: widget.riderName, tripId: widget.tripId),
         ),
       );
     }

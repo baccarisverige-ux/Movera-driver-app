@@ -9,10 +9,30 @@ import 'package:movera/widgets/custom_textfield.dart';
 import 'package:movera/widgets/responsive_size.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
+/// driver-u54: the driver's local chat messages, per trip, kept on this
+/// phone while the app runs so closing Chat does not lose them. Nothing is
+/// sent; logout clears them.
+class LocalChatMessages {
+  LocalChatMessages._();
+
+  static final Map<String, List<String>> _byTrip = {};
+
+  /// The trip's list (shared by every Chat opened for it); without a trip
+  /// id, a list for this Chat only.
+  static List<String> forTrip(String? tripId) => tripId == null
+      ? <String>[]
+      : _byTrip.putIfAbsent(tripId, () => <String>[]);
+
+  static void reset() => _byTrip.clear();
+}
+
 class Chat extends StatefulWidget {
-  const Chat({super.key, required this.riderDisplayName});
+  const Chat({super.key, required this.riderDisplayName, this.tripId});
 
   final String riderDisplayName;
+
+  /// The trip whose local messages this Chat shows and keeps.
+  final String? tripId;
 
   @override
   State<Chat> createState() => _ChatState();
@@ -21,7 +41,7 @@ class Chat extends StatefulWidget {
 class _ChatState extends State<Chat> {
   final TextEditingController _messageController = TextEditingController();
 
-  final List<String> _messages = [];
+  late final List<String> _messages = LocalChatMessages.forTrip(widget.tripId);
   final ScrollController _scroll = ScrollController();
   bool showSendIcon = false;
 
