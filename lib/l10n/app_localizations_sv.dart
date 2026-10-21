@@ -3375,6 +3375,10 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String get schedOffInYourArea =>
+      'Movera har pausat nya bokade resor i ditt område. Resor du redan har accepterat blir av ändå.';
+
+  @override
   String get schedTurnedOffByMovera =>
       'Movera har stängt av bokade resor för ditt konto. Kontakta supporten om du har frågor.';
 

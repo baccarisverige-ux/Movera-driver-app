@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
 // Scheduled rides, Round 3: clashing rides leave the list (Q9), the cancel
@@ -50,6 +51,7 @@ const _blockNotice = ValueKey<String>('scheduled-block-notice');
 
 void main() {
   setUp(ScheduledRideStore.reset);
+  tearDown(() => ScheduledRideRules.current = const ScheduledRideRules());
 
   testWidgets('taking a ride removes the clashing one, with a short note', (
     tester,
@@ -236,6 +238,15 @@ void main() {
     expect(find.text('Gamla vägen, Stockholm'), findsNothing);
     expect(find.text('Högsätravägen, Lidingö'), findsNothing);
     expect(tester.takeException(), isNull);
+
+    // Admin turned them on for this driver: the pause is skipped while it
+    // lasts (contract Driver.scheduledRides, owner decision 2).
+    ScheduledRideStore.driverAccess = ScheduledRidesDriverAccess.fromJson({
+      'on': true,
+      'until': now.add(const Duration(days: 1)).toUtc().toIso8601String(),
+    });
+    expect(ScheduledRideStore.block(), isNull);
+    expect(ScheduledRideStore.openRequests.value, greaterThan(0));
   });
 
   testWidgets('admin turned Scheduled rides off for this driver', (
@@ -258,10 +269,32 @@ void main() {
     final now = ScheduledClock.instance.now();
     ScheduledRideStore.driverAccess = ScheduledRidesDriverAccess(
       enabled: false,
-      offUntil: now.subtract(const Duration(minutes: 1)),
+      until: now.subtract(const Duration(minutes: 1)),
     );
     expect(ScheduledRideStore.block(), isNull);
     expect(ScheduledRideStore.openRequests.value, 2);
+  });
+
+  // Owner decision 2: the admin's Reservations switch is for every driver
+  // in the zone. Off: no new requests; accepted rides stay and run.
+  testWidgets('admin turned reservations off for the whole zone', (
+    tester,
+  ) async {
+    ScheduledRideRules.current = const ScheduledRideRules(enabled: false);
+    ScheduledRideStore.refresh();
+    await _open(tester);
+    expect(find.byKey(_blockNotice), findsOneWidget);
+    expect(find.text('Scheduled rides are off'), findsOneWidget);
+    expect(
+      find.text('Movera paused new scheduled rides in your area. '
+          'Rides you already accepted still go ahead.'),
+      findsOneWidget,
+    );
+    expect(find.text('Gamla vägen, Stockholm'), findsNothing);
+    expect(ScheduledRideStore.openRequests.value, 0);
+    await tester.tap(find.text('Accepted'));
+    await tester.pumpAndSettle();
+    expect(find.text('Södermalm, Stockholm'), findsOneWidget);
   });
 
   testWidgets('a raised fare shows as a "+40 kr" boost badge (Q13)', (

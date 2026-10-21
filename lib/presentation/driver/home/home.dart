@@ -483,8 +483,7 @@ class _DriverHomeState extends State<DriverHome>
         .load();
     if (_adminHomeConfig.destinationMode case final rules?) { DestinationModeRules.current = rules; }
     if (_adminHomeConfig.nextTrips case final rules?) { NextTripRules.current = rules; }
-    final access = _adminHomeConfig.scheduledRides.driverAccess;
-    if (!identical(ScheduledRideStore.driverAccess, access)) { ScheduledRideStore.driverAccess = access; }
+    ScheduledRideStore.applyAdmin(_adminHomeConfig.scheduledRides);
     ScheduledRideStore.openRequests.addListener(_onScheduledRequests);
     _HomeAccount(this)._startAccount();
     _goOnlinePulseController = AnimationController(

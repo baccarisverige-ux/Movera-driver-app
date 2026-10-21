@@ -85,6 +85,8 @@ class ScheduledRidesAdminConfig {
     this.driverAccess = const ScheduledRidesDriverAccess(),
   });
 
+  /// Reservations for every driver in the zone (owner decision 2). Off:
+  /// no new reservations; accepted rides still run.
   final bool enabled;
   final bool hasOpenRequests;
   final String title;
@@ -109,19 +111,47 @@ class ScheduledRidesAdminConfig {
 /// Scheduled rides on or off for one driver, set by admin on the driver's
 /// page (also in Reservations and Dispatch).
 class ScheduledRidesDriverAccess {
-  const ScheduledRidesDriverAccess({this.enabled = true, this.offUntil});
+  const ScheduledRidesDriverAccess({
+    this.enabled = true,
+    this.until,
+    this.setByAdmin = false,
+  });
+
+  /// `Driver.scheduledRides {on, until}` from `GET /driver/profile`
+  /// (owner decision 2, contract v0.4.2). Missing or broken: no admin
+  /// choice, the zone switch and the late-cancel pause decide.
+  factory ScheduledRidesDriverAccess.fromJson(Object? json) {
+    if (json is! Map || json['on'] is! bool) {
+      return const ScheduledRidesDriverAccess();
+    }
+    final until = json['until'];
+    return ScheduledRidesDriverAccess(
+      enabled: json['on'] as bool,
+      until: until is String ? DateTime.tryParse(until) : null,
+      setByAdmin: true,
+    );
+  }
 
   final bool enabled;
 
-  /// When admin turned them off: back on at this time; null means until
-  /// admin turns them on again.
-  final DateTime? offUntil;
+  /// When admin's choice ends (off: back on then); null means until admin
+  /// changes it.
+  final DateTime? until;
+
+  /// Admin chose on or off for this driver (not just the default on).
+  final bool setByAdmin;
+
+  bool _lastsAt(DateTime now) {
+    final end = until;
+    return end == null || now.isBefore(end);
+  }
 
   /// Off right now, at [now].
-  bool offAt(DateTime now) {
-    final until = offUntil;
-    return !enabled && (until == null || now.isBefore(until));
-  }
+  bool offAt(DateTime now) => !enabled && _lastsAt(now);
+
+  /// Admin turned them on right now, at [now]: the late-cancel pause is
+  /// skipped while it lasts.
+  bool onAt(DateTime now) => setByAdmin && enabled && _lastsAt(now);
 }
 
 class ReservationRequestPreview {
@@ -657,6 +687,7 @@ class DriverHomeAdminContentService {
   const DriverHomeAdminContentService({
     this.rulesExport,
     this.appConfig,
+    this.driverProfile,
     this.zoneId = defaultZoneId,
   });
 
@@ -671,6 +702,11 @@ class DriverHomeAdminContentService {
   /// Admin's `DriverAppConfig` for the zone (contract §6). When set, its
   /// destination mode and next trips win over [rulesExport].
   final DriverAppConfig? appConfig;
+
+  /// The driver's `Driver` document (`GET /driver/profile`); its
+  /// `scheduledRides` is admin's reservations on/off for this driver
+  /// (owner decision 2). Null in the demo: no admin choice.
+  final Map<String, dynamic>? driverProfile;
   final String zoneId;
 
   /// The zone's app languages and its default for the driver app
@@ -692,7 +728,12 @@ class DriverHomeAdminContentService {
       nextTrips: tripRules?.$2,
       performance: DriverPerformanceConfig.sample,
       scheduledRides: ScheduledRidesAdminConfig(
-        enabled: true,
+        // Owner decision 2: the zone's reservations switch, for every
+        // driver (`reservations.on`, also `features.scheduledRides`).
+        enabled: config?.reservations.enabled ?? true,
+        driverAccess: ScheduledRidesDriverAccess.fromJson(
+          driverProfile?['scheduledRides'],
+        ),
         hasOpenRequests: true,
         title: 'Scheduled rides available',
         subtitle: 'View open requests in your area',

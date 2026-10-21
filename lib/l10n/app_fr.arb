@@ -956,6 +956,7 @@
   "schedRidesAreOff": "Les courses planifiées sont désactivées",
   "schedRidesOffUntil": "Courses planifiées désactivées jusqu’au {date}",
   "schedRidesPausedUntil": "Courses planifiées en pause jusqu’au {date}",
+  "schedOffInYourArea": "Movera a suspendu les nouvelles courses planifiées dans votre zone. Les courses que vous avez déjà acceptées ont quand même lieu.",
   "schedTurnedOffByMovera": "Movera a désactivé les courses planifiées pour votre compte. Contactez l’assistance si vous avez des questions.",
   "schedLateCancelsInDays": "Vous avez eu {count} annulations tardives en {days} jours. Vos courses acceptées sont conservées.",
   "schedNeverPayLateCounts": "Vous ne payez jamais pour annuler, mais cette annulation tardive compte.",

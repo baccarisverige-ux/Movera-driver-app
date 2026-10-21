@@ -479,6 +479,23 @@ class ScheduledRideStore {
   static ScheduledRidesDriverAccess _driverAccess =
       const ScheduledRidesDriverAccess();
 
+  /// The zone's reservations switch, for every driver (owner decision 2).
+  /// Home sets it from the admin config.
+  static bool get zoneEnabled => _zoneEnabled;
+  static bool _zoneEnabled = true;
+
+  /// Home takes admin's switches from [config]: the zone's and this
+  /// driver's.
+  static void applyAdmin(ScheduledRidesAdminConfig config) {
+    if (identical(_driverAccess, config.driverAccess) &&
+        _zoneEnabled == config.enabled) {
+      return;
+    }
+    _driverAccess = config.driverAccess;
+    _zoneEnabled = config.enabled;
+    _changed();
+  }
+
   /// This driver's late cancels, oldest first.
   static final List<DateTime> _lateCancels = <DateTime>[];
 
@@ -508,15 +525,22 @@ class ScheduledRideStore {
   static DateTime get _now => ScheduledClock.instance.now();
   static ScheduledRideRules get _rules => ScheduledRideRules.current;
 
-  /// Why this driver gets no scheduled rides right now, or null.
+  /// Why this driver gets no new scheduled rides right now, or null
+  /// (owner decision 2): reservations off for the zone, off for this
+  /// driver, or paused by late cancels. Admin "on" for this driver skips
+  /// the pause while it lasts. Accepted rides are never affected.
   static ScheduledRidesBlock? block() {
     final now = _now;
+    if (!_zoneEnabled || !_rules.enabled) {
+      return const ScheduledRidesBlock(byAdmin: true, zoneOff: true);
+    }
     if (_driverAccess.offAt(now)) {
       return ScheduledRidesBlock(
         byAdmin: true,
-        until: _driverAccess.offUntil,
+        until: _driverAccess.until,
       );
     }
+    if (_driverAccess.onAt(now)) return null;
     final until = pausedUntil(now);
     return until == null ? null : ScheduledRidesBlock(until: until);
   }
@@ -837,6 +861,7 @@ class ScheduledRideStore {
       ..clear()
       ..addAll(_seedAccepted());
     _driverAccess = const ScheduledRidesDriverAccess();
+    _zoneEnabled = true;
     _lateCancels.clear();
     _pauseUntil = null;
     reminder.value = null;
@@ -872,11 +897,16 @@ class ScheduledReassignment {
 
 /// Why a driver gets no scheduled rides right now.
 class ScheduledRidesBlock {
-  const ScheduledRidesBlock({this.byAdmin = false, this.until});
+  const ScheduledRidesBlock({
+    this.byAdmin = false,
+    this.zoneOff = false,
+    this.until,
+  });
 
-  /// Admin turned them off for this driver; otherwise too many late
-  /// cancels paused them.
+  /// Admin turned them off for this driver ([zoneOff]: for every driver
+  /// in the zone); otherwise too many late cancels paused them.
   final bool byAdmin;
+  final bool zoneOff;
 
   /// Back on at this time; null until admin turns them on.
   final DateTime? until;

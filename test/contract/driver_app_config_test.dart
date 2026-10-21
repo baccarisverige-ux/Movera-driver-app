@@ -348,7 +348,7 @@ void main() {
     });
   });
 
-  group('contract v0.4.1 reservations', () {
+  group('contract v0.4.2 reservations', () {
     test('ScheduledRideRules defaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = Map<String, dynamic>.from(
@@ -360,6 +360,37 @@ void main() {
         _reservations(ScheduledRideRules.fromJson(defaults)),
         defaults,
       );
+    });
+
+    // Owner decision 2: reservations on/off for the zone (either switch)
+    // and for one driver (`Driver.scheduledRides`) reach Home.
+    test('the zone switch and Driver.scheduledRides reach Home', () {
+      ScheduledRidesAdminConfig rides({
+        Map<String, Object?> config = const {},
+        Map<String, dynamic>? profile,
+      }) => DriverHomeAdminContentService(
+        appConfig: DriverAppConfig.fromJson(config),
+        driverProfile: profile,
+      ).load().scheduledRides;
+      expect(rides().enabled, isTrue);
+      expect(rides(config: {'reservations': {'on': false}}).enabled, isFalse);
+      expect(rides(config: {'features': {'scheduledRides': false}}).enabled,
+          isFalse);
+      final now = DateTime.utc(2026, 10, 21, 12);
+      expect(rides().driverAccess.offAt(now), isFalse);
+      expect(
+        rides(profile: {'scheduledRides': {'on': false, 'until': null}})
+            .driverAccess
+            .offAt(now),
+        isTrue,
+      );
+      final on = rides(profile: {
+        'scheduledRides': {'on': true, 'until': '2026-10-24T12:00:00.000Z'},
+      }).driverAccess;
+      expect([on.onAt(now), on.onAt(DateTime.utc(2026, 10, 25))],
+          [true, false]);
+      expect(rides(profile: {'scheduledRides': 'broken'}).driverAccess.onAt(now),
+          isFalse);
     });
 
     test('the contract fixture\'s reservations are read as sent', () {

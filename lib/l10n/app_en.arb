@@ -2469,6 +2469,7 @@
       }
     }
   },
+  "schedOffInYourArea": "Movera paused new scheduled rides in your area. Rides you already accepted still go ahead.",
   "schedTurnedOffByMovera": "Movera turned off Scheduled rides for your account. Contact support if you have questions.",
   "schedLateCancelsInDays": "You had {count} late cancels in {days} days. Your accepted rides stay.",
   "@schedLateCancelsInDays": {

@@ -172,7 +172,7 @@ class DriverAppConfig {
           ? missed
           : seed.missedExclusiveBeforeOffline,
       driverBonus: _bonus(_map(json['driverBonus']), currency),
-      reservations: ScheduledRideRules.fromJson(json['reservations']),
+      reservations: _reservations(json),
     );
   }
 
@@ -195,6 +195,19 @@ class DriverAppConfig {
       : [for (final category in categories) category.id];
 
   static final RegExp _code = RegExp(r'^[a-z][a-z0-9_]{1,63}$');
+}
+
+/// `reservations`, off for the zone when either admin switch says so:
+/// `reservations.on` or `features.scheduledRides` (owner decision 2).
+ScheduledRideRules _reservations(Map<dynamic, dynamic> json) {
+  final reservations = json['reservations'];
+  if (_map(json['features'])?['scheduledRides'] != false) {
+    return ScheduledRideRules.fromJson(reservations);
+  }
+  return ScheduledRideRules.fromJson({
+    if (reservations is Map) ...reservations,
+    'on': false,
+  });
 }
 
 List<DriverAppCategory> _categories(Object? json) {

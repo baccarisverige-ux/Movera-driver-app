@@ -1,4 +1,5 @@
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -183,6 +184,56 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     IslandMessages.reset();
     ScheduledRideStore.reset();
+  });
+  tearDown(() => ScheduledRideRules.current = const ScheduledRideRules());
+
+  // Owner decision 2: with reservations off (here for the zone) the open
+  // reservation never comes as an Exclusive offer, but a ride the driver
+  // already accepted still opens at "Leave now".
+  group('reservations off', () {
+    setUp(() => ScheduledRideRules.current =
+        const ScheduledRideRules(enabled: false));
+
+    testWidgets('no Exclusive reservation offer', (tester) async {
+      await _pumpHome(tester, _Dispatch());
+      await _goOnline(tester);
+      await _frames(tester, const Duration(seconds: 40));
+      expect(
+        find.byKey(const ValueKey<String>(
+          'exclusive-offer-card-$demoReservationId',
+        )),
+        findsNothing,
+      );
+      await _end(tester);
+    });
+
+    testWidgets('no reservation among the Radar trips', (tester) async {
+      final dispatch = _Dispatch()
+        ..publish([
+          _trip('trip', dropoff: const GeoPoint(59.3380, 18.0700)),
+          RideOffer.reservation(demoAssignedReservation),
+        ]);
+      await _pumpHome(tester, dispatch);
+      await _goOnline(tester);
+      await _frames(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(milliseconds: 7000),
+      );
+      final deck = tester.widget<RadarOfferDeck>(
+        find.byKey(const ValueKey<String>('radar-home-deck')),
+      );
+      expect(deck.ids, ['trip']);
+      await _end(tester);
+    });
+
+    testWidgets('an accepted ride still opens at "Leave now"', (tester) async {
+      ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+      await _pumpHome(tester, _Dispatch(), online: true);
+      await _frames(tester, const Duration(seconds: 50));
+      expect(find.byType(AcceptRide), findsOneWidget);
+      await _end(tester);
+    });
   });
 
   group('smart gap before an accepted ride (Q10)', () {
