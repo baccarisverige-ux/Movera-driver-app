@@ -176,7 +176,7 @@ class _DriverHomeState extends State<DriverHome>
   @override
   void didPopNext() {
     _routeVisible = true;
-    _resumeHomeUpdates();
+    _resumeHomeUpdates(); _HomeMapSheet(this)._adoptSessionDestination(); // driver-u65
     // A covering ride may have handed storage to a queued trip before it
     // closed. Re-check ownership so a persisted trip is never hidden behind
     // an available Home.

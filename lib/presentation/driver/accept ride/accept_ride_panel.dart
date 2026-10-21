@@ -181,7 +181,10 @@ extension _AcceptRidePanel on _AcceptRideState {
           )
           .then((result) {
             if (!mounted || result == null) { return; }
-            OnTripDestination.started();
+            OnTripDestination.started(
+              address: result.address,
+              position: GeoPointMaps.fromLatLng(result.position),
+            );
             _rebuild(() {
               _destinationActive = true;
               _destinationAddress = result.address;
