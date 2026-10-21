@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
+import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/widgets/color_picker.dart';
 import 'package:movera/widgets/dropdown.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
@@ -20,26 +21,19 @@ class AdditionDetailAddVehicle extends StatefulWidget {
 }
 
 class _AdditionDetailAddVehicleState extends State<AdditionDetailAddVehicle> {
-  final TextEditingController _makeController = TextEditingController(
-    text: 'Toyota',
-  );
-  final TextEditingController _modelController = TextEditingController(
-    text: 'Mark X',
-  );
+  // Empty: the examples are hints only, so nobody keeps them as their
+  // vehicle (driver-u99).
+  final TextEditingController _makeController = TextEditingController();
+  final TextEditingController _modelController = TextEditingController();
   final TextEditingController _yearController = TextEditingController();
-  final TextEditingController _plateController = TextEditingController(
-    text: 'AQS - 140',
-  );
+  final TextEditingController _plateController = TextEditingController();
   final TextEditingController _vehicleTypePrimaryController =
-      TextEditingController(text: 'Luxury');
+      TextEditingController();
   final TextEditingController _colorController = TextEditingController();
 
-  // Example dropdown data; replace with your real lists if needed.
-  final List<String> vehicleTypes = const [
-    'Luxury',
-    'Standard',
-    'Economy',
-    'SUV',
+  /// The ride categories of the contract, by their driver names.
+  final List<String> vehicleTypes = [
+    for (final id in CategoryCatalog.seed) CategoryCatalog.labelOf(id),
   ];
 
   @override
@@ -168,7 +162,7 @@ class _AdditionDetailAddVehicleState extends State<AdditionDetailAddVehicle> {
                   8.height,
                   AppDropdownField(
                     controller: _vehicleTypePrimaryController,
-                    hint: 'Luxury',
+                    hint: tr.selectEllipsis,
                     items: vehicleTypes,
                   ),
                   16.height,

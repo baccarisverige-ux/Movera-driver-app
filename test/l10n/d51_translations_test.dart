@@ -28,6 +28,7 @@ import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
+import 'package:movera/presentation/driver/auth/additional%20detail/screens/add_vehicle.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
@@ -347,6 +348,21 @@ void main() {
         name: 'Solna', demandPercent: 86, demandLabel: 'Hög');
       expect(area.demand, AreaDemand.busy);
       expect(area.demandText, 'Hög');
+    });
+  }
+
+  for (final code in languages) {
+    testWidgets('driver-u99: onboarding vehicle starts empty in $code',
+        (tester) async {
+      await show(tester, code, Scaffold(
+        body: AdditionDetailAddVehicle(circleProgress: (_, _) => const SizedBox()),
+      ));
+      expect(words(tr.selectEllipsis), findsOneWidget);
+      expect(find.text('Luxury'), findsNothing);
+      final fields = tester.widgetList<EditableText>(find.byType(EditableText));
+      expect(fields, isNotEmpty);
+      expect([for (final f in fields) f.controller.text].where((t) => t.isNotEmpty),
+          isEmpty, reason: 'sample values are hints, not answers');
     });
   }
 }
