@@ -608,12 +608,20 @@ extension _HomeOfferRadar on _DriverHomeState {
           _dismissOutsideRadarOffer();
         }
         for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
-          if (!ids.contains(offer.id) &&
-              _homeRadarStateFor(offer.id) == _HomeRadarMatchState.available) {
-            // Gone from Radar without a claim of ours: the reason is not
-            // known here (rider cancelled, expired, taken elsewhere…).
-            _resolveHomeRadarMatchLost(offer, _RadarOfferGone.unavailable);
+          if (ids.contains(offer.id) ||
+              _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
+            continue;
           }
+          if (_pendingRadarHomeOffers.contains(offer)) {
+            // Waiting off screen: there is no card to show as taken, so
+            // it just leaves. A "Taken" state with a removal timer could
+            // outlive a pause and land on the deck for good (driver-u129).
+            _dismissRadarHomeOffer(offer);
+            continue;
+          }
+          // Gone from Radar without a claim of ours: the reason is not
+          // known here (rider cancelled, expired, taken elsewhere…).
+          _resolveHomeRadarMatchLost(offer, _RadarOfferGone.unavailable);
         }
       });
     }
