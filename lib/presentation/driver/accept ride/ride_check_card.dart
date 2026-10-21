@@ -483,30 +483,42 @@ class RideCheckCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _button(
-                key: const ValueKey('ride-check-call-112'),
-                label: tr.call112,
-                icon: AppAssets.solarPhoneCalling,
-                background: RideCheckStyle.red,
-                foreground: Colors.white,
-                onTap: c.callEmergency,
-              ),
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: _button(
-                key: const ValueKey('ride-check-ok'),
-                label: tr.iMOk,
-                icon: AppAssets.solarCheckCircle,
-                background: Colors.white,
-                foreground: RideCheckStyle.ink,
-                onTap: c.imOk,
-              ),
-            ),
-          ],
+        // driver-u92: side by side only when both labels fit whole;
+        // otherwise one above the other, so "Call 112" keeps its number.
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final call = _button(
+              key: const ValueKey('ride-check-call-112'),
+              label: tr.call112,
+              icon: AppAssets.solarPhoneCalling,
+              background: RideCheckStyle.red,
+              foreground: Colors.white,
+              onTap: c.callEmergency,
+            );
+            final ok = _button(
+              key: const ValueKey('ride-check-ok'),
+              label: tr.iMOk,
+              icon: AppAssets.solarCheckCircle,
+              background: Colors.white,
+              foreground: RideCheckStyle.ink,
+              onTap: c.imOk,
+            );
+            final room = (constraints.maxWidth - 9) / 2 - _buttonIconRoom;
+            final scaler = MediaQuery.textScalerOf(context);
+            if (_labelFits(tr.call112, room, scaler) && _labelFits(tr.iMOk, room, scaler)) {
+              return Row(
+                children: [
+                  Expanded(child: call),
+                  const SizedBox(width: 9),
+                  Expanded(child: ok),
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [call, const SizedBox(height: 9), ok],
+            );
+          },
         ),
         const SizedBox(height: 10),
         _RecordAudio(controller: c),
@@ -805,6 +817,23 @@ class RideCheckCard extends StatelessWidget {
     ),
   );
 
+  static const TextStyle _buttonLabel = TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700);
+
+  /// The icon and its gap before a button label.
+  static const double _buttonIconRoom = 19 + 8;
+
+  static bool _labelFits(String label, double room, TextScaler scaler) {
+    final painter = TextPainter(
+      text: TextSpan(text: label, style: _buttonLabel),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final fits = painter.width <= room;
+    painter.dispose();
+    return fits;
+  }
+
   static Widget _button({
     required Key key,
     required String label,
@@ -833,15 +862,14 @@ class RideCheckCard extends StatelessWidget {
                 _solar(icon, foreground, 19),
                 const SizedBox(width: 8),
               ],
+              // Never cut: a label that still does not fit scales down.
               Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: foreground,
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w700,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: _buttonLabel.copyWith(color: foreground),
                   ),
                 ),
               ),

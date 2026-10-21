@@ -1577,7 +1577,13 @@ extension _AcceptRideTrip on _AcceptRideState {
       pickup: widget.pickupAddress, dropoff: widget.dropoffAddress, fare: widget.fare,
       category: widget.category, driverName: tr.moveraDriver, vehicle: _vehicleLabel,
       plate: _vehiclePlate,
-      position: _hasLiveLocation ? GeoPointMaps.fromLatLng(_driverPosition) : null);
+      position: _rideCheckGpsFresh ? GeoPointMaps.fromLatLng(_driverPosition) : null);
+    /// driver-u86: GPS that went quiet (a tunnel, a garage) is lost, not a
+    /// car standing still: the native stream sends a fix every second even
+    /// when parked. On web the stream filters by distance, so quiet there
+    /// means still and the last fix is current.
+    bool get _rideCheckGpsFresh => _hasLiveLocation &&
+        (kIsWeb || _lastLocation?.isUsableAt(_rideCheckNow) == true);
     void _openRideCheck(RideCheckEvent? event) {
       if (event == null || !mounted) { return; }
       unawaited(_rideCheck.open(event, instant: MediaQuery.disableAnimationsOf(context)));
@@ -1596,7 +1602,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// GPS can stay quiet while the car stands still.
     void _rideCheckTick() {
       if (!_rideCheckWatching || _liveUpdatesPaused) { return; }
-      _openRideCheck(_rideCheckDetector.tick(_rideCheckNow, gps: _hasLiveLocation,
+      _openRideCheck(_rideCheckDetector.tick(_rideCheckNow, gps: _rideCheckGpsFresh,
         atPlannedStop: _rideCheckAtPlannedStop, place: _rideCheckPlace));
     }
     /// Possible-crash hook: a very hard stop from a motion sensor adapter.

@@ -534,21 +534,26 @@ void main() {
       await _frames(tester);
     });
 
-    testWidgets('long stop: a quiet GPS is caught by the trip clock', (
+    // driver-u86: a parked car still gets fixes (the native stream sends
+    // one a second); a GPS that goes quiet is lost, not a long stop
+    // (test/audit/trip_silent_gps_test.dart).
+    testWidgets('long stop: a parked car is caught by the trip clock', (
       tester,
     ) async {
       var now = DateTime(2026, 10, 15, 14, 30);
       final kit = _Kit(now: () => now);
+      final gps = _Gps(_north(_dropoff, 1000));
       await _mountRide(
         tester,
         AcceptRide(
           tripId: 'quiet-trip',
           initialStage: ActiveRideStage.onTrip,
-          locationRepository: _Gps(_north(_dropoff, 1000)),
+          locationRepository: gps,
           rideCheck: kit.services,
         ),
       );
       now = now.add(const Duration(minutes: 6));
+      gps.emit();
       await tester.pump(const Duration(seconds: 21));
       await _frames(tester);
       expect(
