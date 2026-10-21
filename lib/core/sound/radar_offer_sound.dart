@@ -66,7 +66,9 @@ class RadarOfferSound {
     silence();
     if (!_primed) {
       _primed = true;
-      unawaited(_player.prime().catchError((Object _) {}));
+      // driver-u49: a refused prime (no user activation yet) is tried
+      // again on the next tap.
+      unawaited(_player.prime().catchError((Object _) => _primed = false));
     }
   }
 
@@ -140,9 +142,13 @@ class AudioRadarSound implements RadarSoundPlayer {
   @override
   Future<void> prime() => _then((audio) async {
         await audio.setVolume(0);
-        await audio.play(_sound);
-        await audio.stop();
-        await audio.setVolume(1);
+        try {
+          await audio.play(_sound);
+          await audio.stop();
+        } finally {
+          // driver-u49: a refused play must not leave the player muted.
+          await audio.setVolume(1);
+        }
       });
 
   @override
