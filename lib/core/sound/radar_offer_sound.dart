@@ -27,6 +27,7 @@ class RadarOfferSound {
       : _ownsPlayer = player == null && debugPlayer == null,
         _player = player ??
             debugPlayer ??
+            debugCreate?.call() ??
             (DriverRuntimeConfig.current.radarSound
                 ? AudioRadarSound()
                 : _SilentSound());
@@ -34,6 +35,10 @@ class RadarOfferSound {
   /// Tests put a fake player here.
   @visibleForTesting
   static RadarSoundPlayer? debugPlayer;
+
+  /// Tests make the sound's own player here; it is released on [dispose].
+  @visibleForTesting
+  static RadarSoundPlayer Function()? debugCreate;
 
   final RadarSoundPlayer _player;
   final bool _ownsPlayer;
