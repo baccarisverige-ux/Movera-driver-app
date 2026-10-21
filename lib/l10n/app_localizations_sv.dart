@@ -4684,4 +4684,16 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get anaSampleTripRoute => 'Centralstationen → Södermalm';
+
+  @override
+  String get demandBusy => 'Hög';
+
+  @override
+  String get demandSteady => 'Jämn';
+
+  @override
+  String get demandQuiet => 'Lugn';
+
+  @override
+  String get aroundStockholm => 'Runt Stockholm';
 }

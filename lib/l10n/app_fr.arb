@@ -1339,5 +1339,9 @@
   "photoStorageFull": "Le stockage des photos sur cet appareil est plein. Supprimez d’abord les photos d’un autre véhicule.",
   "demoDataBadge": "DONNÉES DE DÉMO",
   "drivingInHeader": "ZONE DE CONDUITE",
-  "anaSampleTripRoute": "Gare centrale → Södermalm"
+  "anaSampleTripRoute": "Gare centrale → Södermalm",
+  "demandBusy": "Élevée",
+  "demandSteady": "Stable",
+  "demandQuiet": "Calme",
+  "aroundStockholm": "Autour de Stockholm"
 }

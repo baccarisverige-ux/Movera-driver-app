@@ -3147,5 +3147,9 @@
   "photoStorageFull": "Photo storage on this device is full. Remove photos from another vehicle first.",
   "demoDataBadge": "DEMO DATA",
   "drivingInHeader": "DRIVING IN",
-  "anaSampleTripRoute": "Central Station → Södermalm"
+  "anaSampleTripRoute": "Central Station → Södermalm",
+  "demandBusy": "Busy",
+  "demandSteady": "Steady",
+  "demandQuiet": "Quiet",
+  "aroundStockholm": "Around Stockholm"
 }

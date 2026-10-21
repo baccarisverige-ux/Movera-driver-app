@@ -4731,4 +4731,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get anaSampleTripRoute => 'Gare centrale → Södermalm';
+
+  @override
+  String get demandBusy => 'Élevée';
+
+  @override
+  String get demandSteady => 'Stable';
+
+  @override
+  String get demandQuiet => 'Calme';
+
+  @override
+  String get aroundStockholm => 'Autour de Stockholm';
 }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
@@ -331,6 +332,21 @@ void main() {
       await show(tester, code, const DriverDocuments());
       expect(words(tr.drivingInHeader), findsOneWidget);
       expect(words('DRIVING IN'), findsNothing);
+    });
+  }
+
+  for (final code in languages) {
+    testWidgets('driver-u96: area demand words in $code', (tester) async {
+      await show(tester, code, const Analytics());
+      expect(words(tr.demandBusy), findsWidgets);
+      expect(words(tr.aroundStockholm), findsOneWidget);
+      expect(find.text('Busy'), findsNothing);
+      expect(words('Around Stockholm'), findsNothing);
+      // Admin's own words in the zone's language still set the level.
+      const area = StockholmAreaConfig(
+        name: 'Solna', demandPercent: 86, demandLabel: 'Hög');
+      expect(area.demand, AreaDemand.busy);
+      expect(area.demandText, 'Hög');
     });
   }
 }

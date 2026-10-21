@@ -8150,6 +8150,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Central Station → Södermalm'**
   String get anaSampleTripRoute;
+
+  /// No description provided for @demandBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy'**
+  String get demandBusy;
+
+  /// No description provided for @demandSteady.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady'**
+  String get demandSteady;
+
+  /// No description provided for @demandQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet'**
+  String get demandQuiet;
+
+  /// No description provided for @aroundStockholm.
+  ///
+  /// In en, this message translates to:
+  /// **'Around Stockholm'**
+  String get aroundStockholm;
 }
 
 class _AppLocalizationsDelegate
