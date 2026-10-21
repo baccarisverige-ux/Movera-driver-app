@@ -101,7 +101,7 @@ class PrefsRideCheckLog implements RideCheckLog {
         }
       }
     } on FormatException catch (error) {
-      DriverLog.warn('Ride check log malformed: $error');
+      DriverLog.warn('Ride check log malformed: ${DriverLog.scrub(error)}');
     }
     return <RideCheckRecord>[];
   }

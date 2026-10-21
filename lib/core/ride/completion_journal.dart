@@ -11,6 +11,7 @@ import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/storage/local_quarantine.dart';
+import 'package:movera/core/logging/driver_log.dart';
 
 /// Result of applying a stored completion journal.
 enum JournalReplayOutcome {
@@ -154,7 +155,7 @@ class CompletionJournal {
         prefs,
         source: 'completion_journal',
         raw: raw,
-        reason: '$error',
+        reason: '${DriverLog.scrub(error)}',
       );
       if (!await prefs.remove(key)) {
         throw StateError('Completion journal cleanup failed');

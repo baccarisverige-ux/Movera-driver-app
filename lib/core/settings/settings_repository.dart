@@ -81,7 +81,7 @@ class SettingsRepository {
         prefs,
         source: 'settings',
         raw: raw,
-        reason: '$storageKey: $error',
+        reason: '$storageKey: ${DriverLog.scrub(error)}',
       );
       if (!await prefs.remove(storageKey)) {
         throw StateError('Settings recovery failed');

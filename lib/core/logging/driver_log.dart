@@ -30,6 +30,14 @@ class DriverLog {
 
   static DriverLogSink sink = _debugSink;
 
+  /// [error] without the stored text it may quote. A FormatException from
+  /// `jsonDecode` carries the record around the bad character (rider names,
+  /// addresses, phone numbers); only its message and offset are kept.
+  static Object scrub(Object error) => error is FormatException &&
+          error.source != null
+      ? FormatException(error.message, null, error.offset)
+      : error;
+
   static void _debugSink(DriverLogRecord record) {
     final prefix = switch (record.level) {
       DriverLogLevel.info => '',
@@ -61,7 +69,7 @@ class DriverLog {
       level: DriverLogLevel.error,
       name: name,
       message: message,
-      error: error,
+      error: error == null ? null : scrub(error),
       stack: stack,
     ));
   }

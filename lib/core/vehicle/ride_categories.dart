@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/settings/settings_repository.dart';
 
 /// Ride categories a driver can drive (Q27). Admin decides them from the
 /// car (Vehicles in admin); the driver can switch some off in Ride
@@ -9,7 +10,8 @@ class DriverCategoryAccess {
     required this.allowed,
   });
 
-  /// Every category in the app, by the name offers use.
+  /// Every category in the app, by the name offers use. This is also the
+  /// stored order of the Ride-preferences choice: append only.
   static const List<String> all = <String>[
     'Movera',
     'Comfort',
@@ -48,13 +50,49 @@ class DriverCategoryAccess {
   }
 }
 
-/// The categories this driver switched off (Q27), kept for the session.
-/// Ride preferences saves the choice and sets it here.
+/// The categories this driver switched off (Q27). Ride preferences saves
+/// the choice and sets it here; [restore] loads it at app start.
 class DriverCategoryChoice {
   DriverCategoryChoice._();
 
+  /// The settings section Ride preferences saves to.
+  static const String section = 'categories';
+
   static final ValueNotifier<Set<String>> off =
       ValueNotifier<Set<String>>(const <String>{});
+
+  /// Applies the saved choice, so offers follow it after a restart and not
+  /// only once Ride preferences is opened (driver-31, driver-78). A missing
+  /// or unreadable choice keeps every category on, as the screen does. A
+  /// choice published while the read is pending wins.
+  static Future<void> restore([SettingsRepository? repository]) async {
+    final before = off.value;
+    try {
+      final data = await (repository ?? SettingsRepository()).read(section);
+      if (identical(off.value, before)) {
+        off.value = fromSaved(data['selected']);
+      }
+    } catch (_) {
+      // Every category stays on.
+    }
+  }
+
+  /// The switched-off set for a saved `selected` list (indexed by
+  /// [DriverCategoryAccess.all]; missing entries are on).
+  static Set<String> fromSaved(Object? saved) {
+    const all = DriverCategoryAccess.all;
+    if (saved is! List ||
+        saved.length > all.length ||
+        !saved.every((value) => value is bool)) {
+      return const <String>{};
+    }
+    return {
+      for (var index = 0; index < saved.length; index++)
+        if (saved[index] == false &&
+            DriverCategoryAccess.current.allows(all[index]))
+          all[index],
+    };
+  }
 
   /// True when this driver gets [category] offers: admin allows it and
   /// the driver has not switched it off.
