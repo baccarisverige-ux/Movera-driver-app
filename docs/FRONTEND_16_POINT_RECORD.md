@@ -44,6 +44,7 @@ F14's pull-request head did not run the native jobs. Its squash SHA did, because
 ## Finding intent that landed
 
 - F01. `NSCameraUsageDescription` for the image-picker camera paths. No photo-library key was added. No always-location key.
+  - Update 2026-10-21 (audit driver-u6, owner decision): `NSPhotoLibraryUsageDescription` and `NSAppleMusicUsageDescription` are now declared, because image_picker and file_picker reference those APIs and App Store processing rejects the upload without them (ITMS-90683). The app still never requests either; the strings say so.
 - F02. Chat does not dial `tel:+46701234567` and does not show a hard-coded driver name. `Chat` takes `riderDisplayName`. With no rider phone connected, it does not dial; the message is `Rider phone contact is not connected in this demo.` Emergency `tel:112` and user-entered emergency contacts stay.
 - F03. My Bank matches the disconnected wallet preview. No invented account holder, bank, or IBAN. Add Account stays a local draft. The wallet chip says `Not set`, not a weekly payout.
 - F04. Android release does not silently use debug signing when `MOVERA_UPLOAD_STORE_FILE` is absent. Preview signing requires `MOVERA_ALLOW_DEBUG_SIGNED_PREVIEW=true`. `MOVERA_REQUIRE_MAPS_KEY=true` fails a native release when `GOOGLE_MAPS_API_KEY` is blank. Debug configuration itself does not throw. iOS preflight is `flutter build ios --release --no-codesign`. Application id stays `se.movera.driver`.

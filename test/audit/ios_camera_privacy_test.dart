@@ -30,6 +30,19 @@ void main() {
     expect(value, isNotNull);
     expect(value!.group(1)!.trim(), isNotEmpty);
     expect(value.group(1), contains('camera'));
-    expect(plist, isNot(contains('NSPhotoLibraryUsageDescription')));
+    // driver-u6: image_picker and file_picker reference the photo and media
+    // libraries, so App Store processing (ITMS-90683) needs both purpose
+    // strings even though the app never asks for them (owner decision,
+    // 2026-10-21). They must say so honestly.
+    for (final key in [
+      'NSPhotoLibraryUsageDescription',
+      'NSAppleMusicUsageDescription',
+    ]) {
+      final purpose = RegExp(
+        '<key>$key</key>\\s*<string>([^<]+)</string>',
+      ).firstMatch(plist);
+      expect(purpose, isNotNull, reason: key);
+      expect(purpose!.group(1), contains('only if you choose'), reason: key);
+    }
   });
 }
