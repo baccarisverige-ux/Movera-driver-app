@@ -167,6 +167,12 @@ class ApiDispatchRepository implements DispatchRepository {
   int _lastSequence = 0;
   StreamSubscription<String>? _feed;
 
+  /// One Idempotency-Key per offer command (its route and body) until the
+  /// server answers it: a retry after no answer, the app's or the
+  /// driver's, is the same command (openapi `Unavailable`: "retry with
+  /// the same Idempotency-Key"). A new body is a new command.
+  final Map<String, String> _commandKeys = <String, String>{};
+
   static final math.Random _random = math.Random.secure();
 
   static String _randomKey() => List<String>.generate(
@@ -182,15 +188,30 @@ class ApiDispatchRepository implements DispatchRepository {
     queryParameters: query,
   );
 
-  Future<Map<String, String>> _headers({bool mutation = false}) async {
+  Future<Map<String, String>> _headers({String? idempotencyKey}) async {
     final token = await _token();
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       'X-Api-Version': '0.4',
       if (token != null) 'Authorization': 'Bearer $token',
-      if (mutation) 'Idempotency-Key': _key(),
+      if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
     };
+  }
+
+  /// POST [path] with [body] under the command's key. The key is dropped
+  /// once the server answered (not on no answer or a 5xx).
+  Future<http.Response> _command(String path, Map<String, Object?> body) async {
+    final text = jsonEncode(body);
+    final command = '$path $text';
+    final key = _commandKeys.putIfAbsent(command, _key);
+    final response = await _client.post(
+      _uri(path),
+      headers: await _headers(idempotencyKey: key),
+      body: text,
+    );
+    if (response.statusCode < 500) _commandKeys.remove(command);
+    return response;
   }
 
   @override
@@ -351,10 +372,9 @@ class ApiDispatchRepository implements DispatchRepository {
     for (var attempt = 0; attempt < 2; attempt++) {
       final http.Response response;
       try {
-        response = await _client.post(
-          _uri('/offers/${Uri.encodeComponent(offerId)}/accept'),
-          headers: await _headers(mutation: true),
-          body: jsonEncode({'expectedVersion': version}),
+        response = await _command(
+          '/offers/${Uri.encodeComponent(offerId)}/accept',
+          {'expectedVersion': version},
         );
       } catch (_) {
         return const ClaimResult.networkError();
@@ -401,13 +421,12 @@ class ApiDispatchRepository implements DispatchRepository {
     final offer = _find(offerId);
     if (offer == null) return false;
     try {
-      final response = await _client.post(
-        _uri('/offers/${Uri.encodeComponent(offerId)}/decline'),
-        headers: await _headers(mutation: true),
-        body: jsonEncode({
+      final response = await _command(
+        '/offers/${Uri.encodeComponent(offerId)}/decline',
+        {
           'expectedVersion': offer.version,
           if (reasonCode != null) 'reasonCode': reasonCode,
-        }),
+        },
       );
       if (response.statusCode != 200 && response.statusCode != 409) {
         return false;

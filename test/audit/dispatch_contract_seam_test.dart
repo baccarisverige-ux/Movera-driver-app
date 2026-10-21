@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
@@ -16,7 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../integration_test/headless_map_platform.dart';
 
 // Audit round 4, the dispatch contract seam (`ApiDispatchRepository`,
-// `OfferWire`) and the config readers: driver-r4-4.
+// `OfferWire`) and the config readers: driver-r4-4, driver-r4-2.
 
 /// Contract `Offer` (openapi.yaml#Offer).
 Map<String, dynamic> _wire({
@@ -44,6 +48,44 @@ Map<String, dynamic> _wire({
   'tripSeconds': 720,
   'tripMeters': 5200,
 };
+
+/// The contract adapter over a scripted server; every new
+/// Idempotency-Key is a new number.
+class _Api {
+  final List<http.BaseRequest> requests = <http.BaseRequest>[];
+  final List<Object Function(http.BaseRequest request)> answers = [];
+  var _keys = 0;
+
+  /// Each request takes the next answer: an [http.Response], or an error
+  /// to throw (a dropped connection).
+  late final ApiDispatchRepository repo = ApiDispatchRepository(
+    client: MockClient((request) async {
+      requests.add(request);
+      final answer = answers.removeAt(0)(request);
+      if (answer is http.Response) return answer;
+      throw answer;
+    }),
+    baseUri: Uri.parse('https://api.dev.movera.invalid/api/v1'),
+    accessToken: () async => 'token',
+    idempotencyKey: () => 'key-${++_keys}',
+  );
+
+  /// The open offers from GET /driver/offers.
+  Future<void> open(List<Map<String, dynamic>> offers) async {
+    answers.add((_) => _json({'items': offers, 'nextCursor': null}));
+    final listed = repo.watchNearbyOffers().skip(1).first;
+    repo.refreshOffers();
+    await listed;
+    requests.clear();
+  }
+
+  List<String?> get keys =>
+      [for (final r in requests) r.headers['Idempotency-Key']];
+}
+
+http.Response _json(Object body, [int status = 200]) =>
+    http.Response(jsonEncode(body), status,
+        headers: {'content-type': 'application/json'});
 
 class _Dispatch implements DispatchRepository {
   _Dispatch(this.offers);
@@ -153,6 +195,37 @@ void main() {
           findsWidgets);
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('driver-r4-2: a retried offer command keeps its Idempotency-Key', () {
+    test('Accept again after no answer is the same command', () async {
+      final api = _Api();
+      await api.open([_wire()]);
+      api.answers
+        ..add((_) => http.ClientException('connection dropped'))
+        ..add((_) => _json({'tripId': 'trip-o1', 'status': 'accepted'}));
+      expect((await api.repo.claimOffer('o1')).outcome,
+          ClaimOutcome.networkError);
+      expect((await api.repo.claimOffer('o1')).isSuccess, isTrue);
+      expect(api.keys, ['key-1', 'key-1']);
+    });
+
+    test('a new version or a new answer is a new command', () async {
+      final api = _Api();
+      await api.open([_wire(), _wire(id: 'o2')]);
+      api.answers
+        ..add((_) => _json({
+              'code': 'version_mismatch',
+              'projection': {..._wire(), 'version': 2},
+            }, 409))
+        ..add((_) => _json({'tripId': 'trip-o1', 'status': 'accepted'}))
+        ..add((_) => _json({}, 503))
+        ..add((_) => _json(_wire(id: 'o2')));
+      expect((await api.repo.claimOffer('o1')).isSuccess, isTrue);
+      expect(await api.repo.declineOffer('o2'), isFalse);
+      expect(await api.repo.declineOffer('o2'), isTrue);
+      expect(api.keys, ['key-1', 'key-2', 'key-3', 'key-3']);
     });
   });
 }
