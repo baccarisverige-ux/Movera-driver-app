@@ -665,6 +665,7 @@ class _DriverHomeState extends State<DriverHome>
     DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
     _HomeAccount(this)._syncDrivingLimit();
     if (!mounted) { return; }
+    _HomeScheduled(this)._recheckLateScheduled();
     if (_driverSession.consumeResumeHomeAfterTrip()) {
       setState(() {
         showRideRequests = false;

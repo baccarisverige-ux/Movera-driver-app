@@ -69,7 +69,10 @@ Future<void> _frames(WidgetTester tester, Duration total) async {
   }
 }
 
-Future<void> _pumpHome(WidgetTester tester) async {
+Future<void> _pumpHome(
+  WidgetTester tester, {
+  DriverSessionController? session,
+}) async {
   final maps = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
   addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
@@ -86,7 +89,8 @@ Future<void> _pumpHome(WidgetTester tester) async {
           // As in the app: Home hears routes covering it and leaving.
           navigatorObservers: [driverRouteObserver],
           home: DriverHome(
-            sessionController: DriverSessionController(initialOnline: true),
+            sessionController:
+                session ?? DriverSessionController(initialOnline: true),
             initialOnline: true,
             dispatchRepository: _Dispatch(),
           ),
@@ -197,6 +201,57 @@ void main() {
       },
     );
   }
+
+  // Owner rule: a scheduled ride belongs to the driver who accepted it.
+  // Only an offline driver loses it to a backup driver.
+  testWidgets(
+    'scheduled rule: an online driver kept off Home past the backup '
+    'minutes keeps the ride',
+    (tester) async {
+      ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+      await _pumpHome(tester);
+      await _frames(tester, const Duration(seconds: 40));
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      navigator.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('covering')),
+      ));
+      // "Leave now" passes, then the 5 admin minutes (10 s of demo day).
+      await _frames(tester, const Duration(seconds: 25));
+      expect(_saidTitles, isNot(contains('Given to backup driver')));
+      expect(ScheduledRideStore.upcoming, contains(demoReservationRequest));
+      expect(ScheduledRideStore.backupNote.value, isNull);
+
+      navigator.pop();
+      await _frames(tester, const Duration(seconds: 2));
+      expect(find.byType(AcceptRide), findsOneWidget);
+      tester.takeException();
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'scheduled rule: a late driver who goes offline loses the ride to a '
+    'backup driver',
+    (tester) async {
+      ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+      final session = DriverSessionController(initialOnline: true);
+      await _pumpHome(tester, session: session);
+      await _frames(tester, const Duration(seconds: 40));
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      navigator.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('covering')),
+      ));
+      await _frames(tester, const Duration(seconds: 25));
+      expect(_saidTitles, isNot(contains('Given to backup driver')));
+
+      session.setOnline(false);
+      await _frames(tester, const Duration(seconds: 1));
+      expect(_saidTitles, contains('Given to backup driver'));
+      expect(ScheduledRideStore.upcoming, isNot(contains(demoReservationRequest)));
+      tester.takeException();
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   testWidgets(
     'driver-37: an authoritative completed keeps the cash trip\'s payment '

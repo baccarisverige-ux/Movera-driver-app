@@ -173,8 +173,9 @@ extension _HomeScheduled on _DriverHomeState {
         _homeRadarMatchingOfferId == null;
 
     /// "Leave now" (Q10 S1): the ride lands on screen as the active trip,
-    /// heading to pickup. Not possible (offline, busy): the island warns
-    /// once, and after the admin's minutes it goes to a backup driver.
+    /// heading to pickup. Not possible: the island warns once. An offline
+    /// driver loses the ride to a backup driver after the admin's minutes;
+    /// an online one keeps it, and it starts as soon as Home is free.
     void _leaveNow(ReservationRequestPreview ride) {
       if (!mounted || !identical(_scheduled.ride, ride)) { return; }
       if (!_canStartScheduled) {
@@ -241,19 +242,33 @@ extension _HomeScheduled on _DriverHomeState {
       _planScheduled();
     }
 
-    /// Late and still not on the way (Q10 S3).
+    /// Late and still not on the way (Q10 S3). Only an offline driver
+    /// loses the ride; online, it stays theirs.
     void _giveToBackup(ReservationRequestPreview ride) {
       if (!mounted || !identical(_scheduled.ride, ride)) { return; }
       if (_canStartScheduled) {
         _leaveNow(ride);
         return;
       }
+      if (_driverSession.isOnline) { return; }
       _scheduled.planning = true;
       ScheduledRideStore.giveToBackup(ride);
       ScheduledRideStore.reminder.value = null;
       _scheduled.planning = false;
       IslandMessages.show(HomeIslandNotices.givenToBackup);
       _planScheduled();
+    }
+
+    /// The driver went offline while late: the backup rule applies again,
+    /// now if the admin's minutes have passed, otherwise when they do.
+    void _recheckLateScheduled() {
+      final ride = _scheduled.ride;
+      if (ride == null ||
+          _scheduled.lateSince == null ||
+          _driverSession.isOnline) {
+        return;
+      }
+      _lateScheduled(ride);
     }
 
     void _remindScheduled(ReservationRequestPreview ride, int minutes) {
