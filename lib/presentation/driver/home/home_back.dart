@@ -117,3 +117,33 @@ extension _HomeBack on _DriverHomeState {
       }
     }
 }
+
+// driver-r4-31: routes over Home. Only a full screen (a trip, a menu
+// item) hides Home and pauses it; a sheet or a dialog leaves Home visible
+// and online. Whatever waited for Home to be on top (a won trip, a held
+// offline, a late scheduled ride) goes on when any route over it closes.
+extension _HomeRoutes on _DriverHomeState {
+    void _pageCovered() { _routeVisible = false; _pauseHomeUpdates(); }
+
+    void _pageUncovered() {
+      _routeVisible = true;
+      _resumeHomeUpdates(); _HomeMapSheet(this)._adoptSessionDestination(); // driver-u65
+      // A covering ride may have handed storage to a queued trip before it
+      // closed. Re-check ownership so a persisted trip is never hidden behind
+      // an available Home.
+      if (_recoveryResolved && _driverSession.activeTripId == null) {
+        _didAttemptActiveRideRestore = false;
+        unawaited(_restoreActiveRideIfNeeded());
+      }
+    }
+
+    /// A sheet or dialog over Home closed. After a full screen, the page
+    /// observer's [_pageUncovered] (told next) resumes everything.
+    void _backOnTop() {
+      if (!mounted || !_routeVisible) { return; }
+      if (_claimedHomeOffer != null) { _HomeOfferRadar(this)._openClaimedHomeOffer(); }
+      _HomeOfferRules(this)._releaseHeldOffline();
+      if (_isOnline) { _HomeScheduled(this)._planScheduled(); }
+      _HomeMapSheet(this)._showNextIslandMessage();
+    }
+}

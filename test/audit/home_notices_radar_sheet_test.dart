@@ -296,6 +296,28 @@ void main() {
     });
   });
 
+  group('driver-r4-31: a sheet or dialog over Home', () {
+    testWidgets('leaves Home online; only a screen covers it', (tester) async {
+      await _pumpHome(tester);
+      final context = tester.element(find.byType(DriverHome));
+      unawaited(showModalBottomSheet<void>(
+        context: context,
+        builder: (_) => const SizedBox(height: 200, child: Text('sheet')),
+      ));
+      await _frames(tester, const Duration(seconds: 1));
+      expect(find.text('sheet'), findsOneWidget);
+      expect(find.text('Tap to scan'), findsNothing,
+          reason: 'Home is still visible and the driver online');
+      expect(find.text('Scanning'), findsOneWidget);
+      Navigator.of(context).pop();
+      await _frames(tester, const Duration(seconds: 1));
+      await _cover(tester);
+      expect(find.text('Tap to scan', skipOffstage: false), findsOneWidget,
+          reason: 'a full screen still pauses Home');
+      await _end(tester);
+    });
+  });
+
   group('driver-u113: system Back on the "Unresolved trip" dialog', () {
     testWidgets('keeps the dialog and the saved trip', (tester) async {
       final rides = MemoryActiveRideRepository();
