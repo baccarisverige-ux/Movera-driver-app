@@ -5,6 +5,16 @@ part of 'accept_ride.dart';
 // This extension is the only place that advances that lifecycle.
 
 extension _AcceptRideTrip on _AcceptRideState {
+    /// Closes whatever this trip opened on top of it (chat, preferences, a
+    /// sheet) so a trip exit pops or replaces the trip screen itself.
+    NavigatorState _navigatorAtTripRoute() {
+      final navigator = Navigator.of(context);
+      final route = ModalRoute.of(context);
+      if (route != null && route.isActive && !route.isCurrent) {
+        navigator.popUntil((r) => r == route);
+      }
+      return navigator;
+    }
     PersistedActiveRide _buildSnapshot(ActiveRideStage stage) {
       _syncWaitClock();
       final offer = _nextTripRadarOffer;
@@ -377,15 +387,15 @@ extension _AcceptRideTrip on _AcceptRideState {
       await showTripOutcomeSheet(context, status: status, hasNext: next != null);
       if (!mounted) { return; }
       widget.sessionController?.stayOnlineAfterTrip();
+      final navigator = _navigatorAtTripRoute();
       if (next != null) {
         _waybills.promoteNextToCurrent();
-        Navigator.of(context).pushReplacement(BottomToTopTransition(AcceptRide.fromPersisted(next,
+        navigator.pushReplacement(BottomToTopTransition(AcceptRide.fromPersisted(next,
           waybillRepository:_waybills,sessionController:widget.sessionController,
           locationRepository:widget.locationRepository,routeRepository:widget.routeRepository,
           activeRideRepository:widget.activeRideRepository,dispatchRepository:widget.dispatchRepository)));
         return;
       }
-      final navigator = Navigator.of(context);
       if (navigator.canPop()) { navigator.pop(); }
     }
     /// X5: the trip went back to dispatch without this driver. Navigation
@@ -400,7 +410,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       _waybills.discardCurrent();
       _waybills.clearNext();
       widget.sessionController?.stayOnlineAfterTrip();
-      final navigator = Navigator.of(context);
+      final navigator = _navigatorAtTripRoute();
       if (navigator.canPop()) {
         IslandMessages.show(HomeIslandNotices.tripRemoved);
         navigator.pop();
@@ -449,7 +459,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       _waybills.discardCurrent();
 
       // Back to Home when it is underneath: its island tells the driver.
-      final home = Navigator.of(context);
+      final home = _navigatorAtTripRoute();
       if (next == null && home.canPop()) {
         IslandMessages.show(
             HomeIslandNotices.riderCancelledWithFee(fee, onTrip: wasOnTrip));
@@ -467,15 +477,15 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!mounted) { return; }
 
       widget.sessionController?.stayOnlineAfterTrip();
+      final navigator = _navigatorAtTripRoute();
       if(next!=null) {
         _waybills.promoteNextToCurrent();
-        Navigator.of(context).pushReplacement(BottomToTopTransition(AcceptRide.fromPersisted(next,
+        navigator.pushReplacement(BottomToTopTransition(AcceptRide.fromPersisted(next,
           waybillRepository:_waybills,sessionController:widget.sessionController,
           locationRepository:widget.locationRepository,routeRepository:widget.routeRepository,
           activeRideRepository:widget.activeRideRepository,dispatchRepository:widget.dispatchRepository)));
         return;
       }
-      final navigator = Navigator.of(context);
       if (navigator.canPop()) {
         navigator.pop();
       }
@@ -1436,7 +1446,10 @@ extension _AcceptRideTrip on _AcceptRideState {
         ),
       );
 
-      final navigator = Navigator.of(context);
+      // Like every other trip exit: the session is free again, so Home takes
+      // offers and the queued trip can begin.
+      widget.sessionController?.stayOnlineAfterTrip();
+      final navigator = _navigatorAtTripRoute();
       if (nextRide != null) {
         navigator.pushReplacement(BottomToTopTransition(nextRide));
         return;
