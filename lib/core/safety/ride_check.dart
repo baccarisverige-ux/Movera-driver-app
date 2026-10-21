@@ -179,6 +179,28 @@ class RideCheckReason {
     final (lead, bold, trail) = partsIn(l);
     return '$lead$bold$trail';
   }
+
+  Map<String, Object?> toJson() => {
+    'kind': kind.name,
+    if (number != null) 'number': number,
+    if (place != null) 'place': place,
+  };
+
+  /// Null for anything this app cannot read, e.g. a record saved before.
+  static RideCheckReason? fromJson(Object? data) {
+    if (data is! Map) return null;
+    final kind = RideCheckReasonKind.values
+        .where((value) => value.name == data['kind'])
+        .firstOrNull;
+    final number = data['number'];
+    final place = data['place'];
+    if (kind == null ||
+        (number != null && number is! num) ||
+        (place != null && place is! String)) {
+      return null;
+    }
+    return RideCheckReason(kind, number: number as num?, place: place as String?);
+  }
 }
 
 /// One Ride check that should open now.
@@ -348,6 +370,7 @@ class RideCheckRecord {
     required this.tripId,
     required this.trigger,
     required this.reason,
+    this.reasonParts,
     required this.openedAt,
     this.answers = const <RideCheckAnswer>[],
     this.answeredAt,
@@ -358,7 +381,15 @@ class RideCheckRecord {
   final String id;
   final String tripId;
   final RideCheckTrigger trigger;
+  /// In English, as the alert to Movera has it.
   final String reason;
+
+  /// What [reason] says, so the trip details can write it in the driver's
+  /// language (driver-u42); null for records saved before.
+  final RideCheckReason? reasonParts;
+
+  /// [reason] in the driver's language.
+  String get reasonText => reasonParts?.text ?? reason;
   final DateTime openedAt;
   final List<RideCheckAnswer> answers;
   final DateTime? answeredAt;
@@ -379,6 +410,7 @@ class RideCheckRecord {
     tripId: tripId,
     trigger: trigger,
     reason: reason,
+    reasonParts: reasonParts,
     openedAt: openedAt,
     answers: answers ?? this.answers,
     answeredAt: answeredAt ?? this.answeredAt,
@@ -391,6 +423,7 @@ class RideCheckRecord {
     'tripId': tripId,
     'trigger': trigger.name,
     'reason': reason,
+    if (reasonParts != null) 'reasonParts': reasonParts!.toJson(),
     // UTC, as local time has no offset (driver-r4-14); older records
     // saved local time and read the same.
     'openedAt': openedAt.toUtc().toIso8601String(),
@@ -429,6 +462,7 @@ class RideCheckRecord {
       tripId: tripId,
       trigger: trigger,
       reason: reason,
+      reasonParts: RideCheckReason.fromJson(data['reasonParts']),
       openedAt: openedAt,
       answers: answers.cast<RideCheckAnswer>(),
       answeredAt: data['answeredAt'] == null

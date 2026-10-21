@@ -134,6 +134,7 @@ class RideCheckController extends ChangeNotifier {
       tripId: tripId,
       trigger: event.trigger,
       reason: event.reason.english,
+      reasonParts: event.reason,
       openedAt: event.at,
     );
     _save();

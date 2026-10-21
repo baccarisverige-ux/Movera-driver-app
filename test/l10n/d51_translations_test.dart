@@ -30,6 +30,7 @@ import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart
 import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/presentation/driver/auth/additional%20detail/screens/add_vehicle.dart';
+import 'package:movera/presentation/driver/ride%20history/history%20detail/ride_check_history_entry.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
@@ -394,5 +395,23 @@ void main() {
     // The card itself is in the driver's language.
     expect(kit.controller.event!.reason.text, startsWith(tr.rcStoppedLead));
     expect(tr.rcStoppedLead, isNot(startsWith('Your car')));
+  });
+
+  testWidgets('driver-u42: trip details write the reason in the language '
+      'shown, not the one the check fired in', (tester) async {
+    speak('sv');
+    final kit = RideCheckKit();
+    addTearDown(kit.dispose);
+    kit.open();
+    await tester.pump();
+    // Saved and read back, as the phone keeps it.
+    final saved = RideCheckRecord.fromJson(kit.log.rows.single.toJson())!;
+    await show(tester, 'fr', RideCheckHistoryEntry(
+      tripId: 'trip-1',
+      load: (_) async => [saved],
+    ));
+    await tester.pump();
+    expect(words(tr.rcStoppedLead.trim()), findsOneWidget);
+    expect(words('Bilen'), findsNothing);
   });
 }

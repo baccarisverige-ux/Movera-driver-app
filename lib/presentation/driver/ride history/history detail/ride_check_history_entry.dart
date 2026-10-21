@@ -114,7 +114,7 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${check.trigger.text} · ${check.reason}',
+                  '${check.trigger.text} · ${check.reasonText}',
                   style: const TextStyle(
                     color: _muted,
                     fontSize: 12.5,
