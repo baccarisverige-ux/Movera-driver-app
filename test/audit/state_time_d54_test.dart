@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 
@@ -97,5 +99,35 @@ void main() {
     rows = await repo.list();
     expect(rows, hasLength(601));
     expect(rows.last.tripId, 'oct-599');
+  });
+
+  testWidgets('driver-u21: the side menu opens from the tools during a GPS fault',
+      (tester) async {
+    var menu = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: SizedBox(
+          width: 320,
+          height: 220,
+          child: AdaptiveTripIsland(
+            status: 'To pickup', address: 'Sveavägen 20',
+            detail: 'Picking up Angelica', eta: '2 min', progress: .4,
+            navigationStatus: 'Location updating…',
+            waitingMessage: 'Waiting', lastTripLabel: '120 kr',
+            onRadar: () {}, onMenu: () => menu++, onSearch: () {},
+            onHistory: () {}, onRoute: () {}, onSafety: () {}, onWait: () {},
+          ),
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(seconds: 1));
+    // The fault stays on the island (S03); a tap does not reveal the menu.
+    expect(find.text('Location updating…'), findsOneWidget);
+    await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Menu'));
+    await tester.pumpAndSettle();
+    expect(menu, 1);
+    await tester.pumpWidget(const SizedBox());
   });
 }
