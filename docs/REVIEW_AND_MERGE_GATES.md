@@ -30,7 +30,7 @@ The workflow on main is `.github/workflows/drider-ci.yml` (`Drider CI`). A green
 
 Jobs on a commit whose workflow file contains them:
 
-- `verify`: `flutter pub get`, `flutter analyze --no-fatal-infos`, `flutter test`, `flutter test integration_test/driver_lifecycle_test.dart -d flutter-tester`, `flutter build web --release`, artifact upload.
+- `verify`: `flutter pub get --enforce-lockfile`, `flutter analyze --fatal-infos`, `flutter test`, `flutter test integration_test/driver_lifecycle_test.dart -d flutter-tester`, `flutter build web --release`, artifact upload.
 - `android-release`: production `flutter build apk --release` must fail closed with `Production Android release refuses debug signing` when upload signing secrets are absent; a required-but-blank `GOOGLE_MAPS_API_KEY` must fail with `Native release requires GOOGLE_MAPS_API_KEY`; an explicit preview build uses `MOVERA_ALLOW_DEBUG_SIGNED_PREVIEW=true`.
 - `ios-release-preflight`: `flutter build ios --release --no-codesign`.
 
