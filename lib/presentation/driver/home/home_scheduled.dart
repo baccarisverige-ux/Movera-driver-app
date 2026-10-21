@@ -175,11 +175,14 @@ extension _HomeScheduled on _DriverHomeState {
         _driverSession.availableForOffers &&
         _claimedHomeOffer == null &&
         _homeRadarMatchingOfferId == null &&
-        !_radarListClaiming.value;
+        !_radarListClaiming.value &&
+        // An Exclusive Accept (reservation, assigned ride or admin direct
+        // assign) waits for dispatch: a won trip must not be dropped.
+        !_HomeExclusive(this)._exclusiveClaiming;
 
-    /// A Match that held "Leave now" back was answered: unless it won a
-    /// trip (which keeps Home covered or busy), the late ride starts now,
-    /// not at the backup timer.
+    /// A Match or Exclusive Accept that held "Leave now" back was
+    /// answered: unless it won a trip (which keeps Home covered or busy),
+    /// the late ride starts now, not at the backup timer.
     void _afterClaimResolved() {
       // Outside the claim's own build or setState.
       Timer.run(() {
@@ -438,6 +441,8 @@ extension _HomeScheduled on _DriverHomeState {
       }
       if (!mounted) { return; }
       _rebuild(() => _scheduled.claimingId = null);
+      // An assigned ride is only kept for later: never a trip now.
+      _afterClaimResolved();
       final ride = _scheduled.assigned[offer.id];
       if (result.outcome == ClaimOutcome.networkError) {
         IslandMessages.show(HomeIslandNotices.reservationNoConnection);

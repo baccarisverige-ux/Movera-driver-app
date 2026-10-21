@@ -864,11 +864,15 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
       if (!mounted) { return; }
       _rebuild(() => _exclusive.claimingId = null);
-      if (_outsideRadarOffer?.id != offer.id) { return; }
+      if (_outsideRadarOffer?.id != offer.id) {
+        _HomeScheduled(this)._afterClaimResolved();
+        return;
+      }
       switch (result.outcome) {
         case ClaimOutcome.success:
           IslandMessages.show(HomeIslandNotices.matched);
           _openOfferTrip(offer, ExclusiveReasons.text(ExclusiveReasons.assigned));
+          return;
         case ClaimOutcome.alreadyClaimed:
           IslandMessages.show(HomeIslandNotices.takenByOther);
           _dismissOutsideRadarOffer();
@@ -886,6 +890,8 @@ extension _HomeOfferRadar on _DriverHomeState {
             }
           });
       }
+      // Not won: a late scheduled ride held back by this Accept starts.
+      _HomeScheduled(this)._afterClaimResolved();
     }
     /// The down arrow, × or Back on the Exclusive offer: skipped like a
     /// time out (Q16/Q46). An admin direct assign also tells dispatch No.
