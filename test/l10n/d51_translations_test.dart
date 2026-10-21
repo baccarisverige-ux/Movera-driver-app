@@ -379,4 +379,20 @@ void main() {
     expect(terms.rule, contains(tr.pickupOverKmKm('5')));
     expect(terms.rule, isNot(contains('Upphämtning')));
   });
+
+  test('driver-u46: the record and the alert keep the reason in English',
+      () async {
+    speak('sv');
+    final kit = RideCheckKit();
+    addTearDown(kit.dispose);
+    kit.open();
+    await kit.controller.callEmergency();
+    await kit.controller.settleAlerts();
+    final english = RegExp(r'^Your car has stopped for \d+ min$');
+    expect(kit.log.rows.single.reason, matches(english));
+    expect(kit.alerts.alerts.single.reason, matches(english));
+    // The card itself is in the driver's language.
+    expect(kit.controller.event!.reason.text, startsWith(tr.rcStoppedLead));
+    expect(tr.rcStoppedLead, isNot(startsWith('Your car')));
+  });
 }

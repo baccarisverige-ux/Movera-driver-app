@@ -4,8 +4,12 @@
 /// [RideCheckRules] and `RideCheckDetector`.
 library;
 
+import 'dart:ui' show Locale;
+
 import 'package:movera/core/admin/ride_check_admin_config.dart';
 import 'package:movera/core/geo/driver_distance.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/l10n/app_localizations.dart';
 
 /// Why a Ride check opened.
 enum RideCheckTrigger {
@@ -78,12 +82,103 @@ class RideCheckRules {
   };
 }
 
-/// The line under the title, e.g. "Your car has stopped for **4 min**".
-class RideCheckReason {
-  const RideCheckReason(this.lead, this.bold, [this.trail = '']);
-  final String lead, bold, trail;
+/// What a [RideCheckReason] says.
+enum RideCheckReasonKind { longStop, droppedFar, offRoute, longer, crash }
 
-  String get text => '$lead$bold$trail';
+/// The line under the title, e.g. "Your car has stopped for **4 min**".
+///
+/// Kept as its kind and numbers, not as words: the card and the trip
+/// details write it in the driver's language when shown, and the record
+/// and the alert to Movera keep English (driver-u42, driver-u46).
+class RideCheckReason {
+  const RideCheckReason(this.kind, {this.number, this.place});
+
+  /// "Your car has stopped for {minutes} min · {place}".
+  const RideCheckReason.longStop(int minutes, String? place)
+    : this(RideCheckReasonKind.longStop, number: minutes, place: place);
+
+  /// "Your trip ended {meters} from {address}".
+  RideCheckReason.droppedFar(double meters, String address)
+    : this(
+        RideCheckReasonKind.droppedFar,
+        number: meters,
+        place: rideCheckPlace(address),
+      );
+
+  /// "You are {meters} off the route (to {destination})".
+  RideCheckReason.offRoute(double meters, String? destination)
+    : this(
+        RideCheckReasonKind.offRoute,
+        number: meters,
+        place: destination == null ? null : rideCheckPlace(destination),
+      );
+
+  /// "This trip is {percent}% longer than expected".
+  const RideCheckReason.longer(int percent)
+    : this(RideCheckReasonKind.longer, number: percent);
+
+  /// "A very hard stop was detected (· {place})".
+  const RideCheckReason.crash(String? place)
+    : this(RideCheckReasonKind.crash, place: place);
+
+  final RideCheckReasonKind kind;
+
+  /// Minutes, meters or percent, by [kind].
+  final num? number;
+  final String? place;
+
+  String? get _place {
+    final value = place?.trim();
+    return value == null || value.isEmpty ? null : value;
+  }
+
+  /// The lead, bold part and trail in [l].
+  (String, String, String) partsIn(AppLocalizations l) {
+    final n = number ?? 0;
+    final at = _place;
+    return switch (kind) {
+      RideCheckReasonKind.longStop => (
+        l.rcStoppedLead,
+        l.rcMinutes(n.round()),
+        at == null ? '' : ' · $at',
+      ),
+      RideCheckReasonKind.droppedFar => (
+        l.rcEndedLead,
+        driverDistanceMeters(n.toDouble(), l),
+        l.rcEndedFromTrail(at ?? ''),
+      ),
+      RideCheckReasonKind.offRoute => (
+        l.rcOffRouteLead,
+        driverDistanceMeters(n.toDouble(), l),
+        at == null ? l.rcOffRouteTrail : l.rcOffRouteToTrail(at),
+      ),
+      RideCheckReasonKind.longer => (
+        l.rcLongerLead,
+        l.rcPercent(n.round()),
+        l.rcLongerTrail,
+      ),
+      RideCheckReasonKind.crash => (
+        l.rcCrashLead,
+        l.rcCrashBold,
+        at == null ? l.rcCrashTrail : l.rcCrashTrailAt(at),
+      ),
+    };
+  }
+
+  String get lead => partsIn(tr).$1;
+  String get bold => partsIn(tr).$2;
+  String get trail => partsIn(tr).$3;
+
+  /// In the driver's language.
+  String get text => textIn(tr);
+
+  /// In English: what the record and the alert to Movera keep.
+  String get english => textIn(lookupAppLocalizations(const Locale('en')));
+
+  String textIn(AppLocalizations l) {
+    final (lead, bold, trail) = partsIn(l);
+    return '$lead$bold$trail';
+  }
 }
 
 /// One Ride check that should open now.

@@ -1,4 +1,3 @@
-import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
 import 'package:movera/core/geo/geo_point.dart';
@@ -160,7 +159,7 @@ class RideCheckDetector {
     return _fire(
       RideCheckTrigger.offRoute,
       at,
-      RideCheckReason(tr.rcLongerLead, tr.rcPercent(percent), tr.rcLongerTrail),
+      RideCheckReason.longer(percent),
     );
   }
 
@@ -174,35 +173,16 @@ class RideCheckDetector {
   }
 
   static RideCheckReason longStopReason(int minutes, String? place) =>
-      RideCheckReason(
-        tr.rcStoppedLead,
-        tr.rcMinutes(minutes),
-        place == null || place.isEmpty ? '' : ' · $place',
-      );
+      RideCheckReason.longStop(minutes, place);
 
   static RideCheckReason droppedFarReason(double meters, String address) =>
-      RideCheckReason(
-        tr.rcEndedLead,
-        rideCheckDistance(meters),
-        tr.rcEndedFromTrail(rideCheckPlace(address)),
-      );
+      RideCheckReason.droppedFar(meters, address);
 
   static RideCheckReason offRouteReason(double meters, String? destination) =>
-      RideCheckReason(
-        tr.rcOffRouteLead,
-        rideCheckDistance(meters),
-        destination == null
-            ? tr.rcOffRouteTrail
-            : tr.rcOffRouteToTrail(rideCheckPlace(destination)),
-      );
+      RideCheckReason.offRoute(meters, destination);
 
-  static RideCheckReason crashReason(String? place) => RideCheckReason(
-    tr.rcCrashLead,
-    tr.rcCrashBold,
-    place == null || place.isEmpty
-        ? tr.rcCrashTrail
-        : tr.rcCrashTrailAt(place),
-  );
+  static RideCheckReason crashReason(String? place) =>
+      RideCheckReason.crash(place);
 
   /// Shortest distance from [point] to the polyline [route], in meters.
   static double distanceToRouteMeters(GeoPoint point, List<GeoPoint> route) {
