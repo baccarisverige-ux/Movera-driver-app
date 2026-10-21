@@ -146,15 +146,18 @@ class ApiDispatchRepository implements DispatchRepository {
     required Uri baseUri,
     required Future<String?> Function() accessToken,
     String Function()? idempotencyKey,
+    Duration Function(int attempt)? reconnectDelay,
   }) : _client = client,
        _base = baseUri,
        _token = accessToken,
-       _key = idempotencyKey ?? _randomKey;
+       _key = idempotencyKey ?? _randomKey,
+       _reconnectDelay = reconnectDelay ?? _backoff;
 
   final http.Client _client;
   final Uri _base;
   final Future<String?> Function() _token;
   final String Function() _key;
+  final Duration Function(int attempt) _reconnectDelay;
 
   final Map<String, RideOffer> _offers = <String, RideOffer>{};
   final Map<String, RideOffer> _nextTrips = <String, RideOffer>{};
@@ -166,6 +169,11 @@ class ApiDispatchRepository implements DispatchRepository {
       StreamController<OfferWithdrawal>.broadcast();
   int _lastSequence = 0;
   StreamSubscription<String>? _feed;
+  final StreamController<bool> _live = StreamController<bool>.broadcast();
+  bool _feedLive = false;
+  int _reconnects = 0;
+  Timer? _reconnect;
+  bool _disposed = false;
 
   /// One Idempotency-Key per offer command (its route and body) until the
   /// server answers it: a retry after no answer, the app's or the
@@ -182,6 +190,23 @@ class ApiDispatchRepository implements DispatchRepository {
 
   /// The offer feed cursor, for `?after=` replay.
   int get lastSequence => _lastSequence;
+
+  /// 1 s, 2 s, 4 s … up to 30 s between tries.
+  static Duration _backoff(int attempt) =>
+      Duration(seconds: math.min(30, 1 << math.min(attempt, 5)));
+
+  /// True while the offer feed is open. When it is not, the offer list
+  /// is the last one known and may be stale; it reconnects by itself.
+  bool get feedLive => _feedLive;
+
+  /// [feedLive] as it changes.
+  Stream<bool> watchFeedLive() => _live.stream;
+
+  void _setLive(bool live) {
+    if (_feedLive == live) return;
+    _feedLive = live;
+    if (!_live.isClosed) _live.add(live);
+  }
 
   Uri _uri(String path, [Map<String, String>? query]) => _base.replace(
     path: '${_base.path.replaceFirst(RegExp(r'/$'), '')}$path',
@@ -269,16 +294,43 @@ class ApiDispatchRepository implements DispatchRepository {
     }
   }
 
-  /// Opens `GET /driver/offers/stream` (SSE) from [lastSequence].
+  /// Opens `GET /driver/offers/stream` (SSE) from [lastSequence]. An
+  /// error answer, a dropped connection or a feed the server ends is
+  /// retried with backoff from the last sequence; [feedLive] says when.
   Future<void> connect() async {
+    _reconnect?.cancel();
     await _feed?.cancel();
-    final request = http.Request(
-      'GET',
-      _uri('/driver/offers/stream', {
-        if (_lastSequence > 0) 'after': '$_lastSequence',
-      }),
-    )..headers.addAll({...await _headers(), 'Accept': 'text/event-stream'});
-    final response = await _client.send(request);
+    _feed = null;
+    if (_disposed) return;
+    final http.StreamedResponse response;
+    try {
+      final request = http.Request(
+        'GET',
+        _uri('/driver/offers/stream', {
+          if (_lastSequence > 0) 'after': '$_lastSequence',
+        }),
+      )..headers.addAll({
+          ...await _headers(),
+          'Accept': 'text/event-stream',
+          if (_lastSequence > 0) 'Last-Event-ID': '$_lastSequence',
+        });
+      response = await _client.send(request);
+    } catch (_) {
+      _feedLost();
+      return;
+    }
+    if (response.statusCode != 200) {
+      // An error body is not the feed.
+      unawaited(response.stream.drain<void>().catchError((_) {}));
+      _feedLost();
+      return;
+    }
+    if (_disposed) {
+      unawaited(response.stream.drain<void>().catchError((_) {}));
+      return;
+    }
+    _reconnects = 0;
+    _setLive(true);
     final data = StringBuffer();
     _feed = response.stream
         .transform(utf8.decoder)
@@ -296,7 +348,15 @@ class ApiDispatchRepository implements DispatchRepository {
               // A broken event is skipped; the next resync fixes the list.
             }
           }
-        });
+        }, onError: (_) => _feedLost(), onDone: _feedLost, cancelOnError: true);
+  }
+
+  /// The feed is gone: not live, and it tries again after a while.
+  void _feedLost() {
+    _setLive(false);
+    if (_disposed) return;
+    _reconnect?.cancel();
+    _reconnect = Timer(_reconnectDelay(_reconnects++), () => unawaited(connect()));
   }
 
   /// Applies one feed event (`offer_created`, `offer_updated`,
@@ -450,7 +510,10 @@ class ApiDispatchRepository implements DispatchRepository {
   }
 
   Future<void> dispose() async {
+    _disposed = true;
+    _reconnect?.cancel();
     await _feed?.cancel();
+    await _live.close();
     await _nearby.close();
     await _next.close();
     await _withdrawals.close();

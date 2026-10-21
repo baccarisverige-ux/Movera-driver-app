@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -20,7 +21,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../integration_test/headless_map_platform.dart';
 
 // Audit round 4, the dispatch contract seam (`ApiDispatchRepository`,
-// `OfferWire`) and the config readers: driver-r4-4, driver-r4-2.
+// `OfferWire`) and the config readers: driver-r4-4, driver-r4-2,
+// driver-r4-26.
 
 /// Contract `Offer` (openapi.yaml#Offer).
 Map<String, dynamic> _wire({
@@ -226,6 +228,76 @@ void main() {
       expect(await api.repo.declineOffer('o2'), isFalse);
       expect(await api.repo.declineOffer('o2'), isTrue);
       expect(api.keys, ['key-1', 'key-2', 'key-3', 'key-3']);
+    });
+  });
+
+  group('driver-r4-26: the offer feed', () {
+    /// GET /driver/offers/stream: a 503 first, then live feeds the test
+    /// writes to and ends.
+    late List<http.BaseRequest> requests;
+    late List<StreamController<List<int>>> feeds;
+    late Completer<void> next;
+    ApiDispatchRepository feedRepo() {
+      requests = [];
+      feeds = [];
+      next = Completer<void>();
+      return ApiDispatchRepository(
+        client: MockClient.streaming((request, _) async {
+          requests.add(request);
+          if (!next.isCompleted) next.complete();
+          if (requests.length == 1) {
+            return http.StreamedResponse(
+                Stream.value(utf8.encode('Service Unavailable')), 503);
+          }
+          final feed = StreamController<List<int>>();
+          feeds.add(feed);
+          return http.StreamedResponse(feed.stream, 200);
+        }),
+        baseUri: Uri.parse('https://api.dev.movera.invalid/api/v1'),
+        accessToken: () async => 'token',
+        reconnectDelay: (_) => Duration.zero,
+      );
+    }
+
+    Future<void> request(int count) async {
+      while (requests.length < count) {
+        next = Completer<void>();
+        await next.future;
+      }
+      // Let the response be read.
+      await pumpEventQueue();
+    }
+
+    void send(StreamController<List<int>> feed, int sequence) =>
+        feed.add(utf8.encode('id: $sequence\ndata: ${jsonEncode({
+          'eventId': 'e$sequence',
+          'sequence': sequence,
+          'kind': 'offer_created',
+          'offer': _wire(id: 'o$sequence'),
+        })}\n\n'));
+
+    test('an error answer, an ended or broken feed: it reconnects after the '
+        'last sequence, and says when it is not live', () async {
+      final repo = feedRepo();
+      addTearDown(repo.dispose);
+      final live = <bool>[];
+      repo.watchFeedLive().listen(live.add);
+      await repo.connect();
+      // 503: nothing read, tried again.
+      await request(2);
+      expect(repo.feedLive, isTrue);
+      send(feeds.last, 1);
+      await pumpEventQueue();
+      expect((await repo.watchNearbyOffers().first).map((o) => o.id), ['o1']);
+      // The server ends the feed: back from sequence 1.
+      await feeds.last.close();
+      await request(3);
+      expect(requests.last.url.queryParameters['after'], '1');
+      // The connection breaks: no unhandled error, back again.
+      feeds.last.addError(http.ClientException('connection reset'));
+      await request(4);
+      expect(requests.last.url.queryParameters['after'], '1');
+      expect(live, [true, false, true, false, true]);
     });
   });
 }
