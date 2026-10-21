@@ -34,4 +34,14 @@ void main() {
     expect(decisions, isNot(contains('GPS filter is 20m')));
     expect(decisions, contains('distanceFilterMeters: 0'));
   });
+
+  test('driver-4: the documented key referrer is the path Pages serves', () {
+    final base = RegExp(r'--base-href "(/[^"]+/)"')
+        .firstMatch(_read('.github/workflows/deploy-pages.yml'))!
+        .group(1)!;
+    expect(_read('docs/PRIVACY_SECURITY.md'),
+        contains('`https://baccarisverige-ux.github.io$base*`'));
+    expect(_read('docs/BASELINE.md'),
+        contains('`baccarisverige-ux${base.substring(0, base.length - 1)}`'));
+  });
 }
