@@ -477,10 +477,25 @@ class ScheduledRideStore {
 
   /// Records a late cancel made at [at] (a backend sends the count).
   static void addLateCancel(DateTime at) {
+    _recordLateCancel(at);
+    _changed();
+  }
+
+  /// The pause the late cancels started: set by the cancel that reached
+  /// the limit and kept to its end, the date the driver was told. Worked
+  /// out again from the period alone, it would end as soon as the first
+  /// counted cancel left the period (driver-u163).
+  static DateTime? _pauseUntil;
+
+  static void _recordLateCancel(DateTime at) {
     _lateCancels
       ..add(at)
       ..sort();
-    _changed();
+    final until = _pauseFromPeriod(at);
+    final kept = _pauseUntil;
+    if (until != null && (kept == null || until.isAfter(kept))) {
+      _pauseUntil = until;
+    }
   }
 
   static DateTime get _now => ScheduledClock.instance.now();
@@ -501,6 +516,16 @@ class ScheduledRideStore {
 
   /// Too many late cancels: Scheduled rides are paused until then.
   static DateTime? pausedUntil(DateTime now) {
+    final kept = _pauseUntil;
+    final fromPeriod = _pauseFromPeriod(now);
+    final until = kept != null && now.isBefore(kept) ? kept : null;
+    if (until == null) return fromPeriod;
+    if (fromPeriod == null) return until;
+    return fromPeriod.isAfter(until) ? fromPeriod : until;
+  }
+
+  /// The pause the late cancels in the period before [now] call for.
+  static DateTime? _pauseFromPeriod(DateTime now) {
     final rules = _rules;
     final since = now.subtract(Duration(days: rules.lateCancelPeriodDays));
     final recent = _lateCancels.where((at) => at.isAfter(since)).toList();
@@ -748,7 +773,7 @@ class ScheduledRideStore {
     }
     final wasPaused = pausedUntil(_now) != null;
     if (late) {
-      _lateCancels.add(_now);
+      _recordLateCancel(_now);
     }
     // An open reservation goes back out to drivers (notes R24).
     if (ride.id.isNotEmpty && !ride.assigned) {
@@ -768,6 +793,7 @@ class ScheduledRideStore {
       ..addAll(_seedAccepted());
     _driverAccess = const ScheduledRidesDriverAccess();
     _lateCancels.clear();
+    _pauseUntil = null;
     reminder.value = null;
     backupNote.value = null;
     reassigned.clear();
