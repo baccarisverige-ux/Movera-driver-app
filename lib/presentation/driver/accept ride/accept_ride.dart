@@ -15,6 +15,7 @@ import 'package:movera/core/navigation/trip_camera_sheet_inset.dart';
 import 'package:movera/widgets/google_driver_camera_port.dart';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:flutter/services.dart';
