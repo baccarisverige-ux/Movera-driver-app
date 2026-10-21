@@ -753,7 +753,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         _etaLabel, _freshRadarLocation, _camera.mode, _camera.isGuidance);
     /// The map's route lines for the route, the car's progress and zoom.
     void _syncRouteLines() =>
-        _routeLines.sync(_roadGeoPoints, _camera.alongMeters, _routeZoomStep);
+        _routeLines.sync(_roadGeoPoints, _camera.alongMetersOn(_roadGeoPoints),
+            _routeZoomStep);
     Future<void> _applyDriverPosition(
       DriverLocation location, {
       bool forceRoute = false,

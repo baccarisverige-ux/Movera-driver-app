@@ -86,6 +86,18 @@ class DriverCameraPolicy {
   double get vehicleCourse => _course;
   double get alongMeters => _along ?? 0;
 
+  /// driver-u73: how far the car is along [points]. A route the camera has
+  /// not taken yet (a reroute delivered between fixes) starts at the car,
+  /// so none of it is drawn as already driven.
+  double alongMetersOn(List<GeoPoint> points) {
+    final route = _route;
+    if (route == null || _along == null) return 0;
+    return identical(points, route.points) ||
+            _samePoints(points, _geometry?.points ?? route.points)
+        ? _along!
+        : 0;
+  }
+
   /// Home's free-map zoom: the area around the driver, about 10 km across
   /// a phone. Also the zoom Home's map opens at, so the first GPS frame
   /// does not zoom.
@@ -345,8 +357,10 @@ class DriverCameraPolicy {
     if (next == null || previous == null) {
       return false;
     }
-    final a = next.points;
-    final b = _geometry?.points ?? previous.points;
+    return _samePoints(next.points, _geometry?.points ?? previous.points);
+  }
+
+  static bool _samePoints(List<GeoPoint> a, List<GeoPoint> b) {
     if (a.length != b.length) {
       return false;
     }
@@ -424,6 +438,7 @@ class DriverCameraController {
   GeoPoint? get vehiclePoint => _policy.vehiclePoint;
   double get vehicleCourse => _policy.vehicleCourse;
   double get alongMeters => _policy.alongMeters;
+  double alongMetersOn(List<GeoPoint> points) => _policy.alongMetersOn(points);
   bool get isGuidance => _navigating && !_waiting;
   /// Trip guidance: how long the map may stay moved by the driver before
   /// the camera returns to the car. Null keeps the map until Recenter.
