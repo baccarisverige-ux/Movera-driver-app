@@ -278,4 +278,19 @@ void main() {
     expect(find.text('Location updating…'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('driver-u133: a rider without a usable rating is shown as New, '
+      'not as an invented 4.9', (tester) async {
+    await _trip(tester, AcceptRide(
+        riderRating: null, riderTrips: 0, locationRepository: _NoGps()));
+    final rider = find.descendant(
+        of: find.byKey(const ValueKey('active-ride-rider-card')),
+        matching: find.byType(InkWell));
+    await tester.ensureVisible(rider.first);
+    await tester.tap(rider.first);
+    await _frames(tester, 16);
+    expect(find.textContaining('New ★'), findsWidgets);
+    expect(find.textContaining('4.9 ★'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

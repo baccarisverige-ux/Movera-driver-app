@@ -19,7 +19,8 @@ class SafetyAlertTrip {
 
   final String tripId;
   final String riderName;
-  final double riderRating;
+  /// Null when the rider has no rating yet.
+  final double? riderRating;
   final String pickup;
   final String dropoff;
   final String fare;

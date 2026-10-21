@@ -1009,7 +1009,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      tr.ratingAndRides(widget.riderRating.toStringAsFixed(1), widget.riderTrips),
+                      tr.ratingAndRides(widget.riderRating?.toStringAsFixed(1) ?? tr.rrNew, widget.riderTrips),
                       style: const TextStyle(
                         color: _AcceptRideState._muted,
                         fontSize: 12,

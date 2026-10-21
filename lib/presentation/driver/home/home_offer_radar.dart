@@ -1074,7 +1074,8 @@ extension _HomeOfferRadar on _DriverHomeState {
                 tripOccurrenceId(offer.id.isEmpty ? 'scheduled' : offer.id),
             dispatchRepository: _dispatch,
             riderName: offer.riderName.isEmpty ? tr.rider : offer.riderName,
-            riderRating: double.tryParse(offer.rating) ?? 4.9,
+            // driver-u133: no usable rating stays unknown ("New").
+            riderRating: double.tryParse(offer.rating),
             riderTrips: offer.riderTrips,
             fare: terms.fare,
             paidByCash: offer.cash,

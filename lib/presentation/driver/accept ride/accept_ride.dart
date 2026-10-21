@@ -193,7 +193,8 @@ class AcceptRide extends StatefulWidget {
   /// accept; injectable for lifecycle verification.
   final DateTime Function()? waitNow;
   final String riderName;
-  final double riderRating;
+  /// Null when dispatch sent no usable rating (driver-u133).
+  final double? riderRating;
   final int riderTrips;
   final String fare;
 
@@ -275,7 +276,7 @@ class AcceptRide extends StatefulWidget {
       key: key,
       tripId: snapshot.tripId,
       riderName: snapshot.riderName ?? tr.riderDataUnavailable,
-      riderRating: snapshot.riderRating ?? 4.9,
+      riderRating: snapshot.riderRating,
       riderTrips: snapshot.riderTrips ?? 312,
       fare: snapshot.fare ?? '—',
       paidByCash: snapshot.paidByCash,
