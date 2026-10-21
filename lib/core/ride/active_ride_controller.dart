@@ -105,6 +105,7 @@ class ActiveRideController extends ChangeNotifier {
     return _write(
       () => _repository.save(_snapshot(next)),
       commit: () => _stage = next,
+      target: next,
     );
   }
 
@@ -227,6 +228,9 @@ class ActiveRideController extends ChangeNotifier {
       );
     }
     _terminalStatus = status;
+    // driver-u72: an earlier background-save failure is over with the trip.
+    persistenceError = null;
+    failedStage = null;
     if (!_disposed) {
       notifyListeners();
     }
@@ -255,6 +259,14 @@ class ActiveRideController extends ChangeNotifier {
   Completer<void>? _backgroundSave;
   int _revision = 0;
   Object? persistenceError;
+
+  /// driver-u72: counts failed writes, so a screen tells the driver once
+  /// per failure, not on every later notification.
+  int failures = 0;
+
+  /// The stage a failed driver command (Arrive, Start trip) was saving;
+  /// null when the failed write was a background save.
+  ActiveRideStage? failedStage;
   bool get saving => _writing;
   PersistedActiveRide _snapshot(ActiveRideStage stage) =>
       snapshotBuilder?.call(stage) ??
@@ -273,6 +285,7 @@ class ActiveRideController extends ChangeNotifier {
     Future<void> Function() operation, {
     VoidCallback? commit,
     bool background = false,
+    ActiveRideStage? target,
   }) async {
     if (_disposed || _writing) {
       return false;
@@ -286,6 +299,7 @@ class ActiveRideController extends ChangeNotifier {
     _backgroundSave = backgroundSave;
     _revision++;
     persistenceError = null;
+    failedStage = null;
     if (!_disposed) {
       notifyListeners();
     }
@@ -298,6 +312,8 @@ class ActiveRideController extends ChangeNotifier {
       return true;
     } catch (error) {
       persistenceError = error;
+      failedStage = target;
+      failures++;
       return false;
     } finally {
       _writing = false;

@@ -1,13 +1,70 @@
 // Wave 5 D5.2 (UI truth), part a: the trip screen shows only what really
 // happened.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/ride/active_ride_controller.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
+
+/// No GPS: the trip screen runs on the simulated arrival.
+class _NoGps implements DriverLocationRepository {
+  @override
+  Future<DriverLocation> getCurrentPosition() =>
+      Completer<DriverLocation>().future;
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream.empty();
+}
+
+/// Trip storage that fails every save while [fail] is set.
+class _FailingSave extends MemoryActiveRideRepository {
+  bool fail = true;
+  @override
+  Future<void> save(PersistedActiveRide ride) async {
+    if (fail) throw StateError('quota exceeded');
+    await super.save(ride);
+  }
+}
+
+Future<void> _frames(WidgetTester tester, [int count = 12]) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
+/// The trip screen on a phone, sheet at the middle.
+Future<void> _trip(WidgetTester tester, AcceptRide ride) async {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(ScreenUtilInit(
+    designSize: const Size(375, 812),
+    builder: (_, __) => MaterialApp(home: ride),
+  ));
+  await _frames(tester);
+  tester
+      .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+      .controller!
+      .animatePanelToSnapPoint();
+  await _frames(tester, 16);
+}
+
+void _clearSnackBars(WidgetTester tester) =>
+    ScaffoldMessenger.of(tester.element(find.byType(AcceptRide)))
+        .clearSnackBars();
 
 Widget _island({String? status, double width = 390}) => MaterialApp(
       home: Scaffold(
@@ -36,6 +93,20 @@ Widget _island({String? status, double width = 390}) => MaterialApp(
     );
 
 void main() {
+  final previous = DriverRuntimeConfig.current;
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      externalRouting: false,
+      liveMapTicker: false,
+      reservationPopup: false,
+      islandHint: false,
+      simulatedArrival: true,
+      skipAccountActivation: false,
+    );
+  });
+  tearDown(() => DriverRuntimeConfig.current = previous);
+
   testWidgets('driver-u88: a long status island stops at the documented '
       'maximum width', (tester) async {
     await tester.pumpWidget(_island(status: 'Mise à jour de la position…'));
@@ -60,5 +131,41 @@ void main() {
       );
     expect(policy.alongMetersOn(old), greaterThan(300));
     expect(policy.alongMetersOn(reroute), 0);
+  });
+
+  test('driver-u72: a finished trip no longer reports an old background '
+      'save failure', () async {
+    final ride = ActiveRideController(
+        tripId: 'A', repository: _FailingSave(),
+        initialStage: ActiveRideStage.onTrip);
+    expect(await ride.persistNow(), isFalse);
+    expect(ride.failures, 1);
+    expect(await ride.complete(clearSnapshot: false), isTrue);
+    expect(ride.persistenceError, isNull);
+    ride.dispose();
+  });
+
+  testWidgets('driver-u72: Retry after a failed Arrived save repeats the '
+      'arrival', (tester) async {
+    final store = _FailingSave();
+    await _trip(tester, AcceptRide(tripId: 'save-trip',
+        locationRepository: _NoGps(), activeRideRepository: store));
+    _clearSnackBars(tester);
+    await _frames(tester);
+    final arrive =
+        find.byKey(const ValueKey<String>('active-ride-arrived-button'));
+    await tester.ensureVisible(arrive);
+    await tester.tap(arrive);
+    await _frames(tester);
+    const waiting = ValueKey<String>('active-ride-panel-waitingForRider');
+    expect(find.byKey(waiting), findsNothing);
+    expect(find.text('Trip progress could not be saved. Keep this screen '
+        'open and retry.'), findsOneWidget);
+    store.fail = false;
+    await tester.tap(find.widgetWithText(SnackBarAction, 'Retry'));
+    await _frames(tester);
+    expect(find.byKey(waiting), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }

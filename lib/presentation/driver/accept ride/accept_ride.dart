@@ -503,6 +503,7 @@ class _AcceptRideState extends State<AcceptRide>
   static Duration get _onTripOfferLifetime => DriverOfferRules.current.exclusiveAcceptTime;
   DateTime? _lastGpsAppliedAt;
   DateTime? _lastSnapshotAt;
+  int _shownSaveFailures = 0; // driver-u72
   bool _liveUpdatesPaused = false;
   bool _tripCovered = false; // driver-u80: a route covers the trip.
   int _waitSeconds = 0;

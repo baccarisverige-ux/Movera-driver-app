@@ -590,11 +590,24 @@ extension _AcceptRideTrip on _AcceptRideState {
         navigator.pop();
       }
     }
+    /// driver-u72: once per failed write; Retry repeats the failed slide
+    /// (Arrive, Start trip), or the background save.
     void _onPersistenceChanged() {
-      if (!mounted || _rideLifecycle.persistenceError == null) { return; }
+      final ride = _rideLifecycle;
+      if (!mounted || ride.persistenceError == null ||
+          ride.failures == _shownSaveFailures) { return; }
+      _shownSaveFailures = ride.failures;
+      final failed = ride.failedStage;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(tr.tripProgressCouldNotBeSaved),
-        action: SnackBarAction(label: tr.retry, onPressed: () { _rideLifecycle.persistNow(); }),
+        action: SnackBarAction(label: tr.retry, onPressed: () {
+          if (!mounted) { return; }
+          switch (failed) {
+            case ActiveRideStage.waitingForRider: unawaited(_confirmPickupArrival());
+            case ActiveRideStage.onTrip: unawaited(_advanceRide());
+            default: unawaited(ride.persistNow());
+          }
+        }),
       ));
     }
     void _blockedArrival() {
