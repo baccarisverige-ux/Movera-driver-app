@@ -839,6 +839,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         _claimedHomeOffer = null;
         _claimedHomeSource = null;
         _homeRadarMatchStates.clear();
+        _syncClaimLock();
       }
       for (final timer in _radarOfferTimeoutTimers.values) {
         timer.cancel();

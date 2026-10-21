@@ -88,6 +88,15 @@ extension _HomeOfferRules on _DriverHomeState {
       }
     }
 
+    /// A Match or Accept is with dispatch, or its won trip is opening: Go
+    /// offline and the forced-offline rules wait for its answer (Decision
+    /// 3), and the offer settings are locked (Decision 4).
+    bool get _claimInFlight =>
+        _homeRadarMatchingOfferId != null ||
+        _claimedHomeOffer != null ||
+        _radarListClaiming.value ||
+        _HomeExclusive(this)._exclusiveClaiming;
+
     /// Decision 3 ("the accept wins"): a rule takes the driver offline
     /// (the driving limit, the row of missed Exclusive offers). With a
     /// Match or Accept with dispatch the app waits for its answer: won,

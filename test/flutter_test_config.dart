@@ -6,6 +6,7 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/dispatch/claim_lock.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/documents/document_expiry.dart';
@@ -60,6 +61,7 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   setUp(() {
     ScheduledClock.instance.reset();
     DriverOfferPreferences.reset();
+    ClaimLock.set(false);
     WaitingTerms.active = WaitingRules.current.base;
     DrivingTimeClock.instance.reset();
     DocumentExpiryStore.instance.load(const <TrackedDocument>[]);

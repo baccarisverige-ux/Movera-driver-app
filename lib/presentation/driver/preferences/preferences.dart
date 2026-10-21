@@ -5,6 +5,7 @@ import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/dispatch/claim_lock.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
 
@@ -93,7 +94,12 @@ class _PreferencesState extends State<Preferences> {
       mounted &&
       ModalRoute.of(context)?.isCurrent == true &&
       !_loading &&
-      !_restoreFailed;
+      !_restoreFailed &&
+      // Decision 4: not while a Match or Accept is with dispatch.
+      !ClaimLock.locked;
+  void _onClaimLock() {
+    if (mounted) setState(() {});
+  }
   Future<void> _restoreSettings() async {
     if (_restoring || !mounted) return;
     _restoring = true;
@@ -161,8 +167,15 @@ class _PreferencesState extends State<Preferences> {
   @override
   void initState() {
     super.initState();
+    ClaimLock.listenable.addListener(_onClaimLock);
     _selected = List<bool>.filled(_categories.length, true);
     _restoreSettings();
+  }
+
+  @override
+  void dispose() {
+    ClaimLock.listenable.removeListener(_onClaimLock);
+    super.dispose();
   }
 
   int get _selectedCount => _visible.where((index) => _selected[index]).length;
@@ -383,6 +396,9 @@ class _PreferencesState extends State<Preferences> {
       button: true,
       enabled: _canEdit,
       selected: selected,
+      // Greyed while a claim is with dispatch (Decision 4).
+      child: Opacity(
+      opacity: ClaimLock.locked ? 0.45 : 1,
       child: Material(
         color: Colors.white,
         borderRadius: radius,
@@ -451,6 +467,7 @@ class _PreferencesState extends State<Preferences> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
