@@ -146,6 +146,7 @@ class ReservationRequestPreview {
     this.riderTrips = 0,
     this.fareBoost,
     this.kind,
+    this.scheduledAt,
   });
 
   /// Dispatch id; claiming it decides which driver gets the reservation.
@@ -183,6 +184,12 @@ class ReservationRequestPreview {
   /// When the rider is picked up, e.g. "07:40" on "Today".
   final String pickupTime;
   final String pickupDay;
+
+  /// The pickup as a date and time (contract `scheduledAt`), fixed when
+  /// the ride was booked. [pickupDay]'s "Today"/"Tomorrow" are relative to
+  /// that moment, so after midnight only this still says which day it is
+  /// (driver-u141). Null: [pickupDay] is read against the time asked.
+  final DateTime? scheduledAt;
 
   /// The whole ride, pickup to drop-off.
   final int tripMinutes;
@@ -233,8 +240,10 @@ class ReservationRequestPreview {
   }
 
   /// When the rider is picked up, seen from [now]; null when the pickup
-  /// day is not "Today" / "Tomorrow" or the time is not "HH:mm".
+  /// day is not "Today" / "Tomorrow" or the time is not "HH:mm". A ride
+  /// with [scheduledAt] is picked up then, whatever [now] is.
   DateTime? pickupAt(DateTime now) {
+    if (scheduledAt case final at?) { return at; }
     final minute = minuteOfDay;
     final day = pickupDay.trim().toLowerCase();
     final offset = day == 'today' ? 0 : day == 'tomorrow' ? 1 : null;
@@ -244,6 +253,32 @@ class ReservationRequestPreview {
     return DateTime(now.year, now.month, now.day + offset)
         .add(Duration(minutes: minute));
   }
+
+  /// This ride, picked up at [at].
+  ReservationRequestPreview scheduledFor(DateTime at) =>
+      ReservationRequestPreview(
+        category: category,
+        fare: fare,
+        pickupLabel: pickupLabel,
+        pickupAddress: pickupAddress,
+        dropoffAddress: dropoffAddress,
+        pickupTime: pickupTime,
+        pickupDay: pickupDay,
+        tripMinutes: tripMinutes,
+        tripKm: tripKm,
+        pickup: pickup,
+        dropoff: dropoff,
+        stops: stops,
+        id: id,
+        paidByCash: paidByCash,
+        cashToCollect: cashToCollect,
+        rating: rating,
+        riderName: riderName,
+        riderTrips: riderTrips,
+        fareBoost: fareBoost,
+        kind: kind,
+        scheduledAt: at,
+      );
 }
 
 /// Where an untaken reservation shows, step by step (notes R21–R25). The
@@ -482,7 +517,8 @@ class _DemoReservationSet {
   final ReservationRequestPreview? airport;
   final ReservationRequestPreview assigned;
 
-  /// The ride [lead] after [anchor], as "HH:mm" and "Today"/"Tomorrow".
+  /// The ride [lead] after [anchor], as "HH:mm" and "Today"/"Tomorrow",
+  /// and as its date and time ([ReservationRequestPreview.scheduledAt]).
   static ReservationRequestPreview _at(
     DateTime anchor,
     Duration lead,
@@ -492,7 +528,8 @@ class _DemoReservationSet {
     final days = DateTime(at.year, at.month, at.day)
         .difference(DateTime(anchor.year, anchor.month, anchor.day))
         .inDays;
-    return build(clockLabel(at), days == 0 ? 'Today' : 'Tomorrow');
+    return build(clockLabel(at), days == 0 ? 'Today' : 'Tomorrow')
+        .scheduledFor(at);
   }
 }
 
