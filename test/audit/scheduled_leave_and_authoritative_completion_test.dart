@@ -336,6 +336,34 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
     },
   );
+
+  testWidgets(
+    'driver-r4-29: a completed during "Matching" keeps the accepted next trip',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      await _pumpTrip(tester, realtime);
+      await tester.pump(const Duration(milliseconds: 3500));
+      final match = find.byKey(const ValueKey('on-trip-radar-match-next'));
+      await tester.ensureVisible(match);
+      await tester.tap(match);
+      await tester.pump(const Duration(milliseconds: 100));
+      realtime.emit(
+        tripId: 'trip-c',
+        kind: DriverRealtimeKind.tripProjection,
+        status: TripStatus.completed,
+      );
+      await _settle(tester);
+      await tester.tap(find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
+      await _settle(tester, 30);
+
+      final trip = tester.widget<AcceptRide>(find.byType(AcceptRide));
+      expect(trip.tripId, isNot('trip-c'), reason: 'the next trip opens');
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
 }
 
 Iterable<String> get _saidTitles => IslandMessages.posted.map((m) => m.title);
