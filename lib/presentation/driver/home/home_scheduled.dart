@@ -267,7 +267,7 @@ extension _HomeScheduled on _DriverHomeState {
       // the driver's ETA (admin "Late ETA").
       _HomeOfferRadar(this)._openOfferTrip(
         _HomeDirectOffer.fromRide(offer),
-        tr.scheduledRide,
+        WaybillRecord.scheduledRideSource,
         scheduledPickupAt: ride.pickupAt(_clock.now()),
         scheduledRideId: ride.id,
       );

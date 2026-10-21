@@ -339,7 +339,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   Widget _chip(WaybillRecord? record) {
     final label = [
       record?.service ?? 'Movera',
-      if (record != null && record.source.trim().isNotEmpty) record.source,
+      if (record != null && record.source.trim().isNotEmpty) record.sourceText,
     ].join(' · ');
     return Container(
       key: const ValueKey<String>('ride-completed-chip'),

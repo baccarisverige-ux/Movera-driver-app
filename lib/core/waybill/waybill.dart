@@ -51,6 +51,14 @@ class WaybillRecord {
   static const String localDemoSource = 'Local demo';
   static const String demoRadarSource = 'Demo Radar';
 
+  /// How Home matched a trip (driver-u130). These are the trip's
+  /// `matchedVia` key as well: the waiting rules read them, so they must
+  /// not change with the driver's language.
+  static const String exclusiveReservationSource = 'Exclusive reservation';
+  static const String scheduledRideSource = 'Scheduled ride';
+  static const String assignedByMoveraSource = 'Assigned by Movera';
+  static const String moveraRadarSource = 'Movera Radar';
+
   /// [statusLabel] in the driver's language ("Course en cours").
   String get statusText => switch (statusLabel) {
     currentTrip => tr.currentTrip,
@@ -71,6 +79,10 @@ class WaybillRecord {
     exclusiveOfferSource => tr.exclusiveOffer,
     localDemoSource => tr.waybillLocalDemo,
     demoRadarSource => tr.waybillDemoRadar,
+    exclusiveReservationSource => tr.exclusiveReservation,
+    scheduledRideSource => tr.scheduledRide,
+    assignedByMoveraSource => tr.assignedByMovera,
+    moveraRadarSource => tr.moveraRadar,
     _ => source,
   };
 

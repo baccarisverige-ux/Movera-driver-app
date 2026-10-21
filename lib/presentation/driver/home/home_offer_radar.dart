@@ -845,7 +845,10 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (!offer.reservation) { _exclusiveDemoTaken = true; }
       _openOfferTrip(
         offer,
-        offer.reservation ? tr.exclusiveReservation : tr.exclusiveOffer,
+        // A stable key, not the label: the waiting rules read it (driver-u130).
+        offer.reservation
+            ? WaybillRecord.exclusiveReservationSource
+            : WaybillRecord.exclusiveOfferSource,
       );
     }
     /// Contract §3.1: Accept on an admin direct assign is the offer's
@@ -871,7 +874,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       switch (result.outcome) {
         case ClaimOutcome.success:
           IslandMessages.show(HomeIslandNotices.matched);
-          _openOfferTrip(offer, ExclusiveReasons.text(ExclusiveReasons.assigned));
+          _openOfferTrip(offer, WaybillRecord.assignedByMoveraSource);
           return;
         case ClaimOutcome.alreadyClaimed:
           IslandMessages.show(HomeIslandNotices.takenByOther);
@@ -941,7 +944,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     void _acceptRadarHomeOffer(_HomeDirectOffer offer) {
       if (!_radarHomeOffers.any((item) => item.id == offer.id)) { return; }
-      _openOfferTrip(offer, tr.moveraRadar);
+      _openOfferTrip(offer, WaybillRecord.moveraRadarSource);
     }
     /// Opens the trip for [offer], with its rider and stops, and clears
     /// the offers on Home behind it.
