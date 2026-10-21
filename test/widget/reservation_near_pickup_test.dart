@@ -398,7 +398,7 @@ void main() {
           );
           addTearDown(dispatch.dispose);
           await openDetails(tester, dispatch: dispatch);
-          await tester.tap(find.text('Accept  •  126.75 kr'));
+          await tester.tap(find.text('Accept  •  126,75 kr'));
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 350));
           expect(

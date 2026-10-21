@@ -71,7 +71,7 @@ Future<void> _acceptThenLeave(WidgetTester tester, _Dispatch dispatch) async {
   await tester.pumpAndSettle();
   await tester.tap(find.text('Gamla vägen, Stockholm').first);
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Accept  •  126.75 kr'));
+  await tester.tap(find.text('Accept  •  126,75 kr'));
   // The card spins while dispatch has the claim.
   await _settle(tester);
   expect(dispatch.claims.keys, [demoReservationId]);

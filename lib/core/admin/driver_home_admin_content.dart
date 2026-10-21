@@ -3,6 +3,7 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
@@ -207,6 +208,11 @@ class ReservationRequestPreview {
 
   final String category;
   final String fare;
+
+  /// [fare] as every screen shows money: "126,75 kr" for "126.75 kr"
+  /// (driver-r4-20); [fare] itself when it is not an amount.
+  String get fareLabel => Money.parseLabel(fare)?.formatted ?? fare;
+
   final String pickupLabel;
   final String pickupAddress;
   final String dropoffAddress;
