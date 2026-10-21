@@ -50,6 +50,10 @@ class RideRequests extends StatefulWidget {
   /// That ride's pickup time, e.g. "07:40", while trips head toward it.
   final String? towardPickupTime;
 
+  /// True while a Match is being sent or its won trip is opening: Home's
+  /// Back then keeps Radar open, so the claim's answer is not lost.
+  final ValueNotifier<bool>? claimPending;
+
   const RideRequests({
     super.key,
     this.onCloseRides,
@@ -65,6 +69,7 @@ class RideRequests extends StatefulWidget {
     this.offerFilter,
     this.followsDestination,
     this.towardPickupTime,
+    this.claimPending,
   });
 
   @override
@@ -90,7 +95,15 @@ class _RideRequestsState extends State<RideRequests> {
       <String, _RadarOfferState>{};
   bool _hasNewTripSignal = false;
   bool _hasDispatchSnapshot = false;
-  String? _matchingOfferId;
+  String? _matchingId;
+
+  /// The trip whose Match is being sent (or whose won trip is opening).
+  String? get _matchingOfferId => _matchingId;
+  set _matchingOfferId(String? id) {
+    _matchingId = id;
+    widget.claimPending?.value = id != null;
+  }
+
   _RadarMatchNotice? _matchNotice;
   List<RideOffer> _latestDispatchOffers = const <RideOffer>[];
 
@@ -190,6 +203,7 @@ class _RideRequestsState extends State<RideRequests> {
 
   @override
   void dispose() {
+    widget.claimPending?.value = false;
     _nearbySubscription?.cancel();
     _withdrawalSubscription?.cancel();
     _matchNoticeTimer?.cancel();
@@ -268,6 +282,8 @@ class _RideRequestsState extends State<RideRequests> {
   }
 
   void _closeRides() {
+    // A Match already sent is answered first (its banner covers Back too).
+    if (_matchingOfferId != null) { return; }
     final onClose = widget.onCloseRides;
     if (onClose != null) {
       onClose(_visibleOffers.isNotEmpty);

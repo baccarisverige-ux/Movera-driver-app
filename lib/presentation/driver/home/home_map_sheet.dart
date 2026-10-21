@@ -1707,6 +1707,12 @@ extension _HomeMapSheet on _DriverHomeState {
       if (!mounted || !_isOnline || ModalRoute.of(context)?.isCurrent != true) {
         return;
       }
+      // A Match already sent is answered first: won, its trip opens; the
+      // driver can go offline after that.
+      if (_homeRadarMatchingOfferId != null || _claimedHomeOffer != null) {
+        IslandMessages.show(HomeIslandNotices.matching);
+        return;
+      }
       if (!await showGoOfflineConfirm(context)) { return; }
       if (mounted && _isOnline) { await _goOffline(); }
     }
