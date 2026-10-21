@@ -299,7 +299,9 @@ extension _HomeMapSheet on _DriverHomeState {
             context,
             MaterialPageRoute(
               builder: (_) => DriverDestinationPicker(
-                origin: _driverPosition,
+                // driver-u121: no origin without a real position, so the
+                // picker skips its confirm step and invents no figures.
+                origin: _knownDriverPosition,
                 routeRepository: _roadRouteService,
               ),
             ),
@@ -402,13 +404,16 @@ extension _HomeMapSheet on _DriverHomeState {
         _rebuild(() => _destinationRoutePolylines = <Polyline>{});
       }
     }
+    /// The driver's position once a saved or live one is known; null
+    /// while the map shows only the city-centre placeholder.
+    LatLng? get _knownDriverPosition => _startPositionKnown ? _driverPosition : null;
     Future<void> _fitDestinationRoute() async {
       final destination = _destinationPosition;
       if (destination == null || _mapController == null) { return; }
       final generation = _mapPreviews.begin();
 
       final routePoints = _destinationRoutePolylines.isEmpty
-          ? <LatLng>[_driverPosition, destination]
+          ? <LatLng>[?_knownDriverPosition, destination]
           : _destinationRoutePolylines.first.points;
 
       await Future<void>.delayed(const Duration(milliseconds: 80));

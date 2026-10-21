@@ -8,6 +8,8 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -16,6 +18,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
@@ -35,6 +38,8 @@ import '../../integration_test/headless_map_platform.dart';
 //   dispatch no longer keep Home on "Trip found".
 // - driver-u118: the driving limit closes the Radar list, and the list
 //   never claims a trip for an offline driver.
+// - driver-u121: with no known position, Destination mode does not measure
+//   from the city-centre placeholder.
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -86,6 +91,17 @@ class _Dispatch implements DispatchRepository {
       const Stream<OfferWithdrawal>.empty();
 }
 
+/// Location blocked: no fix ever comes.
+class _NoGps implements DriverLocationRepository {
+  @override
+  Future<DriverLocation> getCurrentPosition() async =>
+      throw StateError('location denied');
+
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream<DriverLocation>.empty();
+}
+
 /// A short Radar trip near the driver.
 RideOffer _trip(String id) => RideOffer(
   id: id,
@@ -120,6 +136,7 @@ Future<_Home> _pumpHome(
   WidgetTester tester, {
   bool online = true,
   ActiveRideRepository? activeRides,
+  DriverLocationRepository? location,
 }) async {
   final dispatch = _Dispatch();
   final session = DriverSessionController();
@@ -141,6 +158,7 @@ Future<_Home> _pumpHome(
             sessionController: session,
             dispatchRepository: dispatch,
             activeRideRepository: activeRides,
+            locationRepository: location,
           ),
         ),
       ),
@@ -178,6 +196,7 @@ Future<void> _end(WidgetTester tester) async {
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    DriverStartPosition.clearMemory();
     IslandMessages.reset();
     ScheduledRideStore.reset();
     ExclusiveAnswers.instance.reset();
@@ -384,6 +403,27 @@ void main() {
       await tester.tap(match);
       await _frames(tester, const Duration(seconds: 1));
       expect(dispatch.claims, isEmpty);
+      await _end(tester);
+    });
+  });
+
+  group('driver-u121: Destination mode with no known position', () {
+    testWidgets('the picker gets no origin to measure from', (tester) async {
+      await _pumpHome(tester, online: false, location: _NoGps());
+      // The map opens without a car once GPS has failed.
+      await _frames(tester, const Duration(seconds: 9));
+      tester
+          .widget<InkWell>(
+            find.byKey(const ValueKey<String>('destination-mode-open')),
+          )
+          .onTap!
+          .call();
+      await _frames(tester, const Duration(seconds: 1));
+      final picker = tester.widget<DriverDestinationPicker>(
+        find.byType(DriverDestinationPicker),
+      );
+      expect(picker.origin, isNull,
+          reason: 'no figures from the Stockholm placeholder');
       await _end(tester);
     });
   });
