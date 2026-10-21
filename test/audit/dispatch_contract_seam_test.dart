@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,6 +9,7 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
@@ -22,7 +24,7 @@ import '../../integration_test/headless_map_platform.dart';
 
 // Audit round 4, the dispatch contract seam (`ApiDispatchRepository`,
 // `OfferWire`) and the config readers: driver-r4-4, driver-r4-2,
-// driver-r4-26, driver-r4-6.
+// driver-r4-26, driver-r4-6, driver-r4-8.
 
 /// Contract `Offer` (openapi.yaml#Offer).
 Map<String, dynamic> _wire({
@@ -309,5 +311,21 @@ void main() {
     expect(payment('google'), 'Google Pay');
     expect(payment('wallet'), 'Wallet');
     expect(payment('cash'), 'Cash');
+  });
+
+  test('driver-r4-8: destinationMode.perDay and nextTrips.on are read', () {
+    final json = jsonDecode(
+      File('contracts/fixtures/config/driver_app_config.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
+    var config = DriverAppConfig.fromJson({
+      ...json,
+      'destinationMode': {'perDay': 1},
+      'nextTrips': {'on': false},
+    });
+    expect(config.destinationMode.destinationsPerDay, 1);
+    expect(config.nextTrips.offerTypes, isEmpty);
+    config = DriverAppConfig.fromJson(json);
+    expect(config.destinationMode.destinationsPerDay, 2);
+    expect(config.nextTrips.offerTypes, isNotEmpty);
   });
 }

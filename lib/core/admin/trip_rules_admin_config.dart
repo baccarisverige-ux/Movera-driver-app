@@ -86,13 +86,20 @@ class DestinationModeRules {
     final wayFromFocus = focus is String
         ? focus == 'onTheWay' || focus == 'both'
         : base.focusOnTheWayOn;
+    // The contract's field (`DriverAppConfig.destinationMode.perDay`, a
+    // whole number ≥ 0); admin's own key wins when an export has both.
+    final perDay = json['perDay'];
+    final contractPerDay = perDay is num && perDay.isFinite &&
+            perDay >= 0 && perDay == perDay.roundToDouble()
+        ? perDay.toDouble()
+        : 2.0;
     return DestinationModeRules(
       enabled: _bool(json['enabled'], base.enabled),
       timeLimitOn: _bool(json['timeLimitOn'], base.timeLimitOn),
       timeLimitHours: _positive(json['timeLimitHours'], base.timeLimitHours),
       dailyLimitOn: _bool(json['dailyLimitOn'], base.dailyLimitOn),
       destinationsPerDay:
-          _positive(json['destinationsPerDay'], 2).round(),
+          _positive(json['destinationsPerDay'], contractPerDay).round(),
       corridorOn: _bool(json['corridorOn'], base.corridorOn),
       corridorKm: _positive(json['corridorKm'], base.corridorKm),
       focusFinalDestinationOn:
@@ -139,7 +146,11 @@ class NextTripRules {
     if (json is! Map) { return base; }
     final types = json['offerTypes'];
     return NextTripRules(
-      offerTypes: types is List
+      // The contract's switch (`DriverAppConfig.nextTrips.on`): off, no
+      // next-trip offers at all.
+      offerTypes: json['on'] == false
+          ? const <String>[]
+          : types is List
           ? [
               for (final type in types)
                 if (type == 'exclusive' || type == 'exclusiveReservation') type as String,
