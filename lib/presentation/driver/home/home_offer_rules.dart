@@ -37,7 +37,10 @@ extension _HomeOfferRules on _DriverHomeState {
       for (final offer in gone) {
         _HomeOfferRadar(this)._dismissRadarHomeOffer(offer);
       }
-      if (_outsideRadarOffer case final offer? when off(offer)) {
+      // An Exclusive offer whose Accept is with dispatch stays: its
+      // answer decides, and a won trip is never dropped (driver-u140).
+      if (_outsideRadarOffer case final offer?
+          when off(offer) && !_HomeExclusive(this)._exclusiveClaiming) {
         _HomeOfferRadar(this)._dismissOutsideRadarOffer();
       }
     }
@@ -62,7 +65,8 @@ extension _HomeOfferRules on _DriverHomeState {
       for (final offer in cash) {
         _HomeOfferRadar(this)._dismissRadarHomeOffer(offer);
       }
-      if (_outsideRadarOffer?.cash ?? false) {
+      if ((_outsideRadarOffer?.cash ?? false) &&
+          !_HomeExclusive(this)._exclusiveClaiming) {
         _HomeOfferRadar(this)._dismissOutsideRadarOffer();
       }
     }
