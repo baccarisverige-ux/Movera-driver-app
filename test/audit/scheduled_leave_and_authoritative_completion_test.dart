@@ -364,6 +364,25 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
     },
   );
+
+  testWidgets(
+    'driver-r4-1: rider_on_the_way with the trip projection still shows',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      await _pumpTrip(tester, realtime);
+      realtime.emit(
+        tripId: 'trip-c',
+        kind: DriverRealtimeKind.riderOnTheWay,
+        status: TripStatus.approachingDropoff,
+        message: 'Coming down now',
+      );
+      await _settle(tester);
+      expect(find.text('Coming down now'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
 }
 
 Iterable<String> get _saidTitles => IslandMessages.posted.map((m) => m.title);

@@ -311,7 +311,9 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (event.status != null || event.kind == DriverRealtimeKind.riderCancelled) {
         _pendingProjection = event;
         unawaited(_drainProjection());
-        return;
+        // driver-r4-1: any kind may carry the projection; the rider's own
+        // signal is still shown.
+        if (event.kind != DriverRealtimeKind.riderOnTheWay || event.status?.isTerminal != false) { return; }
       }
 
       switch (event.kind) {
