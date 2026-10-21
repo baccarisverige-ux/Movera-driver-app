@@ -47,6 +47,7 @@ import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/next_trip_gate.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
+import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/widgets/pickup_pay_line.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
@@ -932,30 +933,16 @@ class _AcceptRideState extends State<AcceptRide>
 
   bool get _pendingTerminal => _pendingProjection?.kind==DriverRealtimeKind.riderCancelled || _pendingProjection?.status?.isTerminal==true;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   bool get _onTripRadarOn =>
       _onTripRadarState == _OnTripRadarState.scanning ||
       _onTripRadarState == _OnTripRadarState.offerAvailable ||
       _onTripRadarState == _OnTripRadarState.matching ||
       _onTripRadarState == _OnTripRadarState.secured;
 
-
+  /// driver-u60: one trip id per offer, so a cancelled next trip and a
+  /// later one never share a history row or terminal marker.
   _NextTripRadarOffer get _uniqueDemoNext => _NextTripRadarOffer(
-    id:'${widget.tripId}-next',category:_demoNextTripOffer.category,fare:_demoNextTripOffer.fare,rating:_demoNextTripOffer.rating,
+    id:tripOccurrenceId('${widget.tripId}-next'),category:_demoNextTripOffer.category,fare:_demoNextTripOffer.fare,rating:_demoNextTripOffer.rating,
     pickupMinutes:_demoNextTripOffer.pickupMinutes,pickupKm:_demoNextTripOffer.pickupKm,tripMinutes:_demoNextTripOffer.tripMinutes,riderName:_demoNextTripOffer.riderName,
     pickup:_demoNextTripOffer.pickup,dropoff:_demoNextTripOffer.dropoff,pickupPosition:_demoNextTripOffer.pickupPosition,dropoffPosition:_demoNextTripOffer.dropoffPosition);
 

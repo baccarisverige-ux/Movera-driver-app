@@ -1110,7 +1110,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (destination == null) { return _uniqueDemoNext; }
       final address = _destinationAddress?.trim();
       return _NextTripRadarOffer(
-        id: '${widget.tripId}-next-destination',
+        id: tripOccurrenceId('${widget.tripId}-next-destination'),
         category: _AcceptRideState._demoNextTripOffer.category,
         fare: _AcceptRideState._demoNextTripOffer.fare,
         rating: _AcceptRideState._demoNextTripOffer.rating,

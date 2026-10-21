@@ -1,0 +1,131 @@
+// D3.4 regressions: next-trip offers on the trip screen (driver-u60,
+// driver-u62, driver-u80).
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+class _Loc implements DriverLocationRepository {
+  final updates = StreamController<DriverLocation>.broadcast();
+  @override
+  Future<DriverLocation> getCurrentPosition() async => _fix();
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      updates.stream;
+}
+
+DriverLocation _fix() => DriverLocation(
+  point: const GeoPoint(59.3279, 18.0615),
+  measuredAt: DateTime.now(),
+  accuracyMeters: 5,
+);
+
+Future<void> _settle(WidgetTester tester, [int frames = 12]) async {
+  for (var i = 0; i < frames; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+}
+
+Future<void> _pumpTrip(WidgetTester tester, _Loc location) async {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(ScreenUtilInit(
+    designSize: const Size(375, 812),
+    builder: (_, __) => MaterialApp(
+      home: AcceptRide(
+        locationRepository: location,
+        initialStage: ActiveRideStage.onTrip,
+        waitNow: () => tester.binding.clock.now(),
+      ),
+    ),
+  ));
+  await _settle(tester, 10);
+}
+
+Future<void> _unmount(WidgetTester tester, _Loc location) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await _settle(tester, 10);
+  await location.updates.close();
+}
+
+/// The id of the next-trip offer on screen, from its countdown key.
+String? _offerId(WidgetTester tester) {
+  for (final element in find.byType(TweenAnimationBuilder<double>).evaluate()) {
+    final key = element.widget.key;
+    if (key is ValueKey<String> && key.value.startsWith('on-trip-offer-')) {
+      return key.value.substring('on-trip-offer-'.length);
+    }
+  }
+  return null;
+}
+
+const _offerCard = ValueKey<String>('on-trip-radar-offer-button');
+
+void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    WaybillStore.reset();
+    ExclusiveAnswers.instance.reset();
+    DriverOfferRules.current = const DriverOfferRules(autoOffline: false);
+  });
+  tearDown(() {
+    WaybillStore.reset();
+    DriverOfferRules.current = const DriverOfferRules();
+  });
+
+  group('driver-u60: each next-trip offer has its own trip id', () {
+    testWidgets('a re-offered next trip after a cancel is a new trip',
+        (tester) async {
+      final location = _Loc();
+      await _pumpTrip(tester, location);
+      await tester.pump(const Duration(milliseconds: 2600));
+      final first = _offerId(tester);
+      expect(first, isNotNull);
+      final match = find.byKey(const ValueKey('on-trip-radar-match-next'));
+      await tester.ensureVisible(match);
+      await tester.tap(match);
+      await tester.pump(const Duration(milliseconds: 1600));
+      expect(WaybillStore.next?.tripId, first);
+
+      // Cancel the secured next trip: it is archived under its id.
+      tester
+          .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+          .controller!
+          .open();
+      await _settle(tester, 20);
+      await tester.tap(find.byKey(const ValueKey('next-trip-more')));
+      await _settle(tester, 4);
+      await tester.tap(find.byKey(const ValueKey('next-trip-cancel-option')));
+      await _settle(tester, 4);
+      await tester.tap(
+        find.byKey(
+          const ValueKey('trip-cancel-reason-next_trip_current_running_late'),
+        ),
+      );
+      await _settle(tester, 4);
+      await tester.tap(find.byKey(const ValueKey('confirm-trip-cancellation')));
+      await _settle(tester, 4);
+      expect(WaybillStore.next, isNull);
+
+      // Radar scans again; the next fix brings another offer.
+      location.updates.add(_fix());
+      await tester.pump(const Duration(milliseconds: 2600));
+      expect(find.byKey(_offerCard), findsOneWidget);
+      final second = _offerId(tester);
+      expect(second, isNotNull);
+      expect(second, isNot(first),
+          reason: 'a cancelled and a later next trip never share an id');
+      await _unmount(tester, location);
+    });
+  });
+}
