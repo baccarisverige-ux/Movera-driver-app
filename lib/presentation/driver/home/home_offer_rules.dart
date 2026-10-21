@@ -29,7 +29,11 @@ extension _HomeOfferRules on _DriverHomeState {
       bool off(_HomeDirectOffer offer) =>
           !DriverCategoryChoice.takes(offer.category);
       final gone = _radarHomeOffers.where(off).toList();
-      _rebuild(() => _pendingRadarHomeOffers.removeWhere(off));
+      _rebuild(() {
+        _pendingRadarHomeOffers.removeWhere(off);
+        _hasRideOffers =
+            _radarHomeOffers.isNotEmpty || _pendingRadarHomeOffers.isNotEmpty;
+      });
       for (final offer in gone) {
         _HomeOfferRadar(this)._dismissRadarHomeOffer(offer);
       }
@@ -50,7 +54,11 @@ extension _HomeOfferRules on _DriverHomeState {
         return;
       }
       final cash = _radarHomeOffers.where((offer) => offer.cash).toList();
-      _rebuild(() => _pendingRadarHomeOffers.removeWhere((offer) => offer.cash));
+      _rebuild(() {
+        _pendingRadarHomeOffers.removeWhere((offer) => offer.cash);
+        _hasRideOffers =
+            _radarHomeOffers.isNotEmpty || _pendingRadarHomeOffers.isNotEmpty;
+      });
       for (final offer in cash) {
         _HomeOfferRadar(this)._dismissRadarHomeOffer(offer);
       }

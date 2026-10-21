@@ -933,7 +933,13 @@ extension _HomeOfferRadar on _DriverHomeState {
         _dismissOutsideRadarOffer();
         return;
       }
-      _rebuild(() => _pendingRadarHomeOffers.removeWhere((o) => o.id == gone.offerId));
+      _rebuild(() {
+        _pendingRadarHomeOffers.removeWhere((o) => o.id == gone.offerId);
+        // Nothing waiting any more: no "Trip found" and no Exclusive
+        // offer held back by it (driver-u132).
+        _hasRideOffers =
+            _radarHomeOffers.isNotEmpty || _pendingRadarHomeOffers.isNotEmpty;
+      });
       for (final offer in _radarHomeOffers.toList()) {
         if (offer.id == gone.offerId &&
             _homeRadarStateFor(offer.id) == _HomeRadarMatchState.available) {
