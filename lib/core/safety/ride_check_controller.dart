@@ -47,6 +47,7 @@ class RideCheckController extends ChangeNotifier {
   bool _alertFailed = false;
   bool _dialOpened = false;
   bool _dialFailed = false;
+  String? _dialOutcome;
   bool _instant = false;
   Completer<RideCheckRecord>? _done;
   Timer? _phaseTimer;
@@ -61,6 +62,10 @@ class RideCheckController extends ChangeNotifier {
   DateTime? _audioStartedAt;
   int? _audioSeconds;
   Timer? _audioTicker;
+  // The recorder was started and not yet stopped, whatever [_audio] says.
+  bool _recorderRunning = false;
+  bool _dropStart = false;
+  bool _audioStoppedInBackground = false;
 
   RideCheckPhase get phase => _phase;
   bool get active => _phase != RideCheckPhase.idle;
@@ -87,6 +92,9 @@ class RideCheckController extends ChangeNotifier {
   RideCheckRecord? get record => _record;
 
   RideCheckAudio get audio => _audio;
+
+  /// The saved recording ended because the app left the screen.
+  bool get audioStoppedInBackground => _audioStoppedInBackground;
   int get audioSeconds => _audio == RideCheckAudio.recording
       ? services.now().difference(_audioStartedAt!).inSeconds
       : (_audioSeconds ?? 0);
@@ -111,7 +119,11 @@ class RideCheckController extends ChangeNotifier {
     _alertFailed = false;
     _dialOpened = false;
     _dialFailed = false;
+    _dialOutcome = null;
+    // driver-28: never leave a recorder running behind a new check.
+    if (_recorderRunning) _stopRecorderQuietly();
     _audio = RideCheckAudio.idle;
+    _audioStoppedInBackground = false;
     _audioSeconds = null;
     _audioStartedAt = null;
     _alertQueue = Future<void>.value();
@@ -145,30 +157,45 @@ class RideCheckController extends ChangeNotifier {
       !_closing &&
       (_phase == RideCheckPhase.card || _phase == RideCheckPhase.pill);
 
+  /// The question under which the dialer's outcome is saved and sent.
+  static const String dialerQuestion = '112 dialer';
+  static const String dialerOpened = 'Opened';
+  static const String dialerDidNotOpen = 'Did not open';
+
   /// "Call 112": the phone dialer opens with 112; the driver calls. Movera
   /// is alerted at the same time.
+  ///
+  /// driver-u43: the app only opens the dialer, and that can fail. The
+  /// answer and the alert topic say "Call 112" (what the driver chose);
+  /// whether the dialer opened follows as its own answer and alert update.
   Future<void> callEmergency() async {
     if (!_answerable) return;
     switch (_step) {
       case RideCheckStep.main:
-        _addAnswer(RideCheckAnswer.first, 'Called 112');
+        _addAnswer(RideCheckAnswer.first, 'Call 112');
         _step = RideCheckStep.called;
         _phase = RideCheckPhase.card;
       case RideCheckStep.followUp:
-        _addAnswer('Call 112', 'Called 112');
       case RideCheckStep.called:
-        // Opening the dialer again adds no new answer.
+        // The dialer's outcome below is the answer.
         break;
     }
     _dialFailed = false;
     notifyListeners();
-    _ensureAlert('Called 112');
+    _ensureAlert('Call 112');
     final result = await handoffEmergencyDial(
       () => services.launch(RideCheckServices.emergencyNumber),
     );
     if (_disposed) return;
     _dialOpened = result == EmergencyDialResult.opened;
     _dialFailed = !_dialOpened;
+    final outcome = _dialOpened ? dialerOpened : dialerDidNotOpen;
+    // Opening the dialer again adds an answer only when the outcome changed.
+    if (_dialOutcome != outcome) {
+      _dialOutcome = outcome;
+      final answer = _addAnswer(dialerQuestion, outcome);
+      _queueAlert((alert) => services.alerts.update(alert.id, answer));
+    }
     notifyListeners();
   }
 
@@ -238,6 +265,8 @@ class RideCheckController extends ChangeNotifier {
       return;
     }
     _audio = RideCheckAudio.starting;
+    _dropStart = false;
+    _audioStoppedInBackground = false;
     notifyListeners();
     try {
       if (!await recorder.requestPermission()) {
@@ -257,10 +286,18 @@ class RideCheckController extends ChangeNotifier {
       }
       return;
     }
-    if (_disposed) {
-      unawaited(recorder.cancel());
+    // driver-28: the card may have closed (I'm OK, Done) or the trip screen
+    // gone while the start was in flight. Nothing on screen could show or
+    // stop this recording, so drop it.
+    if (_disposed || !_answerable || _dropStart) {
+      unawaited(recorder.cancel().catchError((Object _) {}));
+      if (!_disposed) {
+        _audio = RideCheckAudio.idle;
+        notifyListeners();
+      }
       return;
     }
+    _recorderRunning = true;
     _audio = RideCheckAudio.recording;
     _audioStartedAt = services.now();
     _audioTicker?.cancel();
@@ -272,9 +309,15 @@ class RideCheckController extends ChangeNotifier {
 
   Future<void> _stopRecording() async {
     final recorder = _recorder;
-    if (recorder == null || _audio != RideCheckAudio.recording) return;
+    // A stop already in flight (hidden, then paused) is not repeated.
+    if (recorder == null ||
+        _audio != RideCheckAudio.recording ||
+        !_recorderRunning) {
+      return;
+    }
     _audioTicker?.cancel();
     final seconds = audioSeconds;
+    _recorderRunning = false;
     String? path;
     try {
       path = await recorder.stop();
@@ -288,6 +331,35 @@ class RideCheckController extends ChangeNotifier {
       _save();
     }
     if (!_disposed) notifyListeners();
+  }
+
+  /// driver-u41: the app left the screen (dialer, lock screen, another
+  /// app). Without background audio the phone stops capturing (iOS) or
+  /// records silence (Android), so stop and save now: the saved length is
+  /// what was really captured, and the card says why it stopped.
+  Future<void> appBackgrounded() async {
+    switch (_audio) {
+      case RideCheckAudio.starting:
+        _dropStart = true;
+      case RideCheckAudio.recording:
+        await _stopRecording();
+        if (_audio == RideCheckAudio.saved) {
+          _audioStoppedInBackground = true;
+          if (!_disposed) notifyListeners();
+        }
+      case RideCheckAudio.idle:
+      case RideCheckAudio.saved:
+      case RideCheckAudio.unavailable:
+      case RideCheckAudio.denied:
+      case RideCheckAudio.failed:
+        break;
+    }
+  }
+
+  void _stopRecorderQuietly() {
+    _recorderRunning = false;
+    _audioTicker?.cancel();
+    unawaited(_recorder?.stop().catchError((Object _) => null));
   }
 
   RideCheckAnswer _addAnswer(String question, String text) {
@@ -409,10 +481,8 @@ class RideCheckController extends ChangeNotifier {
     _syncGate(false);
     _phaseTimer?.cancel();
     _audioTicker?.cancel();
-    if (_audio == RideCheckAudio.recording) {
-      // The trip screen left: keep what was recorded on the phone.
-      unawaited(_recorder?.stop().catchError((Object _) => null));
-    }
+    // The trip screen left: keep what was recorded on the phone.
+    if (_recorderRunning) _stopRecorderQuietly();
     final done = _done;
     _done = null;
     final record = _record;

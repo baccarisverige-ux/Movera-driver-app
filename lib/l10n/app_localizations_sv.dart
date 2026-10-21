@@ -453,6 +453,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Position saknas. Slå på platstjänster för att bekräfta att du är framme.';
 
   @override
+  String get preciseLocationOff =>
+      'Exakt plats är avstängd. Slå på den i Inställningar för att visa din position och bekräfta att du är framme.';
+
+  @override
   String moveWithin100MOfWhere(Object where) {
     return 'Kom inom 100 m ($where) för att vara framme.';
   }
@@ -777,6 +781,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get recordAudio => 'Spela in ljud';
+
+  @override
+  String get audioStoppedWhenAppLeft => 'stoppades när Movera lämnade skärmen';
 
   @override
   String audioSavedTime(Object time) {
@@ -4551,6 +4558,15 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get rcCalled112 => 'Ringde 112';
+
+  @override
+  String get rcDialer112 => 'Uppringning till 112:';
+
+  @override
+  String get rcDialerOpened => 'öppnades';
+
+  @override
+  String get rcDialerDidNotOpen => 'öppnades inte';
 
   @override
   String get selectCountry => 'Välj land';

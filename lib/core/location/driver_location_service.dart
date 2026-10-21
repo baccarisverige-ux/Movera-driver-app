@@ -15,24 +15,50 @@ class DriverLocationException implements Exception {
   String toString() => message;
 }
 
+/// driver-u24: location is allowed but only approximately (Android 12+
+/// "Approximate", iOS 14+ "Precise Location" off). Every such fix is
+/// kilometres wide and fails the 50 m gate, so the driver must be asked to
+/// turn precise location on instead of waiting for a fix that never comes.
+class PreciseLocationRequiredException extends DriverLocationException {
+  const PreciseLocationRequiredException()
+    : super('Precise location is turned off.');
+}
+
 class DriverLocationService implements DriverLocationRepository {
   const DriverLocationService();
+
+  static const Duration _oneShotLimit = Duration(seconds: 8);
 
   LocationSettings get _settings => LocationSettings(
     accuracy: kIsWeb
         ? LocationAccuracy.high
         : LocationAccuracy.bestForNavigation,
-    timeLimit: const Duration(seconds: 8),
+    timeLimit: _oneShotLimit,
   );
+
+  /// The app's page in the device settings, where precise location is
+  /// turned on.
+  static Future<bool> openSettings() async {
+    try {
+      return await Geolocator.openAppSettings();
+    } catch (error) {
+      DriverLog.warn('Could not open app settings: $error');
+      return false;
+    }
+  }
 
   @override
   Future<DriverLocation> getCurrentPosition() async {
     await _ensurePermission();
 
     try {
+      // driver-18: the plugin's timeLimit alone is not enough. On web,
+      // geolocator_web passes it to the browser in the wrong unit (8 s
+      // becomes 8,000 s) and adds no timeout of its own, so a browser that
+      // never answers would block Home and the trip. Enforce it here too.
       final position = await Geolocator.getCurrentPosition(
         locationSettings: _settings,
-      );
+      ).timeout(_oneShotLimit);
       return _toDriverLocation(position);
     } catch (error, stack) {
       DriverLog.warn('Current GPS failed, trying last known: $error');
@@ -125,6 +151,19 @@ class DriverLocationService implements DriverLocationRepository {
       throw const DriverLocationException(
         'Location permission is blocked in device settings.',
       );
+    }
+
+    // Browsers have no approximate mode and the web plugin cannot tell.
+    if (kIsWeb) return;
+    LocationAccuracyStatus accuracy;
+    try {
+      accuracy = await Geolocator.getLocationAccuracy();
+    } catch (error) {
+      DriverLog.warn('Location accuracy status unknown: $error');
+      return;
+    }
+    if (accuracy == LocationAccuracyStatus.reduced) {
+      throw const PreciseLocationRequiredException();
     }
   }
 }

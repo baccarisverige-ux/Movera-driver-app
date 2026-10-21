@@ -451,6 +451,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Location unavailable. Enable location to confirm arrival.';
 
   @override
+  String get preciseLocationOff =>
+      'Precise location is off. Turn it on in Settings to show your position and confirm arrival.';
+
+  @override
   String moveWithin100MOfWhere(Object where) {
     return 'Move within 100 m of the $where to arrive.';
   }
@@ -776,6 +780,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recordAudio => 'Record audio';
+
+  @override
+  String get audioStoppedWhenAppLeft => 'stopped when Movera left the screen';
 
   @override
   String audioSavedTime(Object time) {
@@ -4534,6 +4541,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rcCalled112 => 'Called 112';
+
+  @override
+  String get rcDialer112 => '112 dialer:';
+
+  @override
+  String get rcDialerOpened => 'opened';
+
+  @override
+  String get rcDialerDidNotOpen => 'did not open';
 
   @override
   String get selectCountry => 'Select Country';

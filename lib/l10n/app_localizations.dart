@@ -872,6 +872,12 @@ abstract class AppLocalizations {
   /// **'Location unavailable. Enable location to confirm arrival.'**
   String get locationUnavailableEnableLocationToConfirm;
 
+  /// No description provided for @preciseLocationOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise location is off. Turn it on in Settings to show your position and confirm arrival.'**
+  String get preciseLocationOff;
+
   /// No description provided for @moveWithin100MOfWhere.
   ///
   /// In en, this message translates to:
@@ -1417,6 +1423,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Record audio'**
   String get recordAudio;
+
+  /// No description provided for @audioStoppedWhenAppLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'stopped when Movera left the screen'**
+  String get audioStoppedWhenAppLeft;
 
   /// No description provided for @audioSavedTime.
   ///
@@ -7916,6 +7928,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Called 112'**
   String get rcCalled112;
+
+  /// No description provided for @rcDialer112.
+  ///
+  /// In en, this message translates to:
+  /// **'112 dialer:'**
+  String get rcDialer112;
+
+  /// No description provided for @rcDialerOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'opened'**
+  String get rcDialerOpened;
+
+  /// No description provided for @rcDialerDidNotOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'did not open'**
+  String get rcDialerDidNotOpen;
 
   /// No description provided for @selectCountry.
   ///

@@ -459,7 +459,7 @@ void main() {
       expect(dialed, [Uri.parse('tel:112')]);
       expect(controller.step, RideCheckStep.called);
       expect(controller.dialOpened, isTrue);
-      expect(alerts.alerts.single.topic, 'Called 112');
+      expect(alerts.alerts.single.topic, 'Call 112');
       // The dialer again: no second alert.
       await controller.callEmergency();
       await controller.settleAlerts();

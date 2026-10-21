@@ -453,6 +453,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Position indisponible. Activez la localisation pour confirmer l’arrivée.';
 
   @override
+  String get preciseLocationOff =>
+      'La position exacte est désactivée. Activez-la dans les réglages pour afficher votre position et confirmer l’arrivée.';
+
+  @override
   String moveWithin100MOfWhere(Object where) {
     return 'Approchez-vous à moins de 100 m ($where) pour confirmer l’arrivée.';
   }
@@ -781,6 +785,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recordAudio => 'Enregistrer l’audio';
+
+  @override
+  String get audioStoppedWhenAppLeft => 'arrêté quand Movera a quitté l’écran';
 
   @override
   String audioSavedTime(Object time) {
@@ -4598,6 +4605,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rcCalled112 => '112 appelé';
+
+  @override
+  String get rcDialer112 => 'Composeur du 112 :';
+
+  @override
+  String get rcDialerOpened => 'ouvert';
+
+  @override
+  String get rcDialerDidNotOpen => 'ne s’est pas ouvert';
 
   @override
   String get selectCountry => 'Choisir un pays';

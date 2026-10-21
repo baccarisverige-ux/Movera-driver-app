@@ -692,6 +692,9 @@ class DriverCameraController {
 
   void resume() {
     _suspended = false;
+    // driver-20: a return to the car that came due while suspended was
+    // dropped by the timer; wait again from now instead of never.
+    if (_resumeTimer == null) _scheduleResume();
     _request(immediate: true);
   }
 

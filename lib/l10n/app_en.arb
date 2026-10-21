@@ -279,6 +279,7 @@
   "tripProgressCouldNotBeSaved": "Trip progress could not be saved. Keep this screen open and retry.",
   "thisStopNeedsVerifiedMapLocation": "This stop needs a verified map location before arrival.",
   "locationUnavailableEnableLocationToConfirm": "Location unavailable. Enable location to confirm arrival.",
+  "preciseLocationOff": "Precise location is off. Turn it on in Settings to show your position and confirm arrival.",
   "moveWithin100MOfWhere": "Move within 100 m of the {where} to arrive.",
   "@moveWithin100MOfWhere": {
     "placeholders": {
@@ -510,6 +511,7 @@
   },
   "savedOnlyOnThisPhone": "saved only on this phone",
   "recordAudio": "Record audio",
+  "audioStoppedWhenAppLeft": "stopped when Movera left the screen",
   "audioSavedTime": "Audio saved · {time}",
   "@audioSavedTime": {
     "placeholders": {
@@ -3099,6 +3101,9 @@
   },
   "rcWhatHappened": "What happened",
   "rcCalled112": "Called 112",
+  "rcDialer112": "112 dialer:",
+  "rcDialerOpened": "opened",
+  "rcDialerDidNotOpen": "did not open",
   "selectCountry": "Select Country",
   "searchCountry": "Search Country",
   "colorRed": "Red",
