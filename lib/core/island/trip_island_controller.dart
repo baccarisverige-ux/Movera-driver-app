@@ -352,7 +352,10 @@ class TripStripController extends ChangeNotifier {
     if (next.leg == TripLeg.pickup &&
         next.pickupSide != null &&
         last?.pickupSide != next.pickupSide) {
-      _say(tr.pickupOnPickupSideSide(next.pickupSide!));
+      // The side is data ('left' / 'right'); the words are the driver's.
+      _say(next.pickupSide == 'left'
+          ? tr.pickupOnLeftSide
+          : tr.pickupOnRightSide);
     }
     if (next.toll && !(last?.toll ?? false)) _say(tr.tollAhead);
 

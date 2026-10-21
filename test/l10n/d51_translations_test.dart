@@ -109,4 +109,17 @@ void main() {
       expect(seen, [said]);
     });
   }
+
+  for (final (code, said) in [
+    ('fr', 'Prise en charge côté gauche'),
+    ('sv', 'Upphämtning på vänster sida'),
+  ]) {
+    testWidgets('driver-u87: the pickup side in $code', (tester) async {
+      speak(code);
+      final seen = await stripSays(tester, [
+        const TripStripInput(leg: TripLeg.pickup, pickupSide: 'left'),
+      ]);
+      expect(seen, [said]);
+    });
+  }
 }

@@ -3261,12 +3261,6 @@ abstract class AppLocalizations {
   /// **'Next trip secured · {nextTripFare}'**
   String nextTripSecuredNextTripFare(Object nextTripFare);
 
-  /// No description provided for @pickupOnPickupSideSide.
-  ///
-  /// In en, this message translates to:
-  /// **'Pickup on the {pickupSide} side'**
-  String pickupOnPickupSideSide(Object pickupSide);
-
   /// No description provided for @tollAhead.
   ///
   /// In en, this message translates to:
@@ -8096,6 +8090,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{stop} next'**
   String stopNext(String stop);
+
+  /// No description provided for @pickupOnLeftSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup on the left side'**
+  String get pickupOnLeftSide;
+
+  /// No description provided for @pickupOnRightSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup on the right side'**
+  String get pickupOnRightSide;
 }
 
 class _AppLocalizationsDelegate

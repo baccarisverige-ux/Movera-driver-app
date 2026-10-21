@@ -525,7 +525,6 @@
   "trafficAheadValueMin": "Trafik framåt · +{value} min",
   "arrivingInEtaMinTimeTime2": "Framme om {eta} min · {time}:{time2}",
   "nextTripSecuredNextTripFare": "Nästa resa klar · {nextTripFare}",
-  "pickupOnPickupSideSide": "Upphämtning på {pickupSide} sida",
   "tollAhead": "Vägtull framåt",
   "pickupOverKmKm": "Upphämtning över {km} km",
   "assignedByMovera": "Tilldelad av Movera",
@@ -1330,5 +1329,7 @@
   "cashYouOweMovera": "Du är skyldig Movera",
   "cashMoveraOwesYou": "Movera är skyldig dig",
   "cashSettled": "Kvitt",
-  "stopNext": "Härnäst: {stop}"
+  "stopNext": "Härnäst: {stop}",
+  "pickupOnLeftSide": "Upphämtning på vänster sida",
+  "pickupOnRightSide": "Upphämtning på höger sida"
 }

@@ -1822,11 +1822,6 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String pickupOnPickupSideSide(Object pickupSide) {
-    return 'Upphämtning på $pickupSide sida';
-  }
-
-  @override
   String get tollAhead => 'Vägtull framåt';
 
   @override
@@ -4656,4 +4651,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String stopNext(String stop) {
     return 'Härnäst: $stop';
   }
+
+  @override
+  String get pickupOnLeftSide => 'Upphämtning på vänster sida';
+
+  @override
+  String get pickupOnRightSide => 'Upphämtning på höger sida';
 }

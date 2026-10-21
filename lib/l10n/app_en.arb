@@ -1096,14 +1096,6 @@
       }
     }
   },
-  "pickupOnPickupSideSide": "Pickup on the {pickupSide} side",
-  "@pickupOnPickupSideSide": {
-    "placeholders": {
-      "pickupSide": {
-        "type": "Object"
-      }
-    }
-  },
   "tollAhead": "Toll ahead",
   "pickupOverKmKm": "Pickup over {km} km",
   "@pickupOverKmKm": {
@@ -3152,5 +3144,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "pickupOnLeftSide": "Pickup on the left side",
+  "pickupOnRightSide": "Pickup on the right side"
 }

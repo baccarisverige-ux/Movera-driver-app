@@ -1821,11 +1821,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String pickupOnPickupSideSide(Object pickupSide) {
-    return 'Pickup on the $pickupSide side';
-  }
-
-  @override
   String get tollAhead => 'Toll ahead';
 
   @override
@@ -4639,4 +4634,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String stopNext(String stop) {
     return '$stop next';
   }
+
+  @override
+  String get pickupOnLeftSide => 'Pickup on the left side';
+
+  @override
+  String get pickupOnRightSide => 'Pickup on the right side';
 }
