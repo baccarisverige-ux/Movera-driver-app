@@ -436,7 +436,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           _radarOfferExpired.contains(offer.id)) {
         return;
       }
-      final now = DateTime.now();
+      final now = ScheduledClock.realNow();
       final deadline = _radarOfferDeadlines.putIfAbsent(
           offer.id, () => now.add(_DriverHomeState._radarOfferPickWindow));
       final left = deadline.difference(now);
