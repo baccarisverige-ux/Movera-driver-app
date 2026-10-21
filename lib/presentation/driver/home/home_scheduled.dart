@@ -140,8 +140,19 @@ extension _HomeScheduled on _DriverHomeState {
         rules: _rules,
       );
       if (pickupAt == null || leave == null) { return; }
-      // A pickup that has passed never lands as the trip by itself.
-      if (state.lateSince == null && !pickupAt.isAfter(now)) { return; }
+      // A pickup that has passed never lands as the trip by itself. A ride
+      // that became the next one after its time (accepted late, or an
+      // assignment answered late) leaves Accepted for a backup driver:
+      // kept, nothing would ever be planned for it and it would hold every
+      // trip offer back (driver-u143).
+      if (state.lateSince == null && !pickupAt.isAfter(now)) {
+        state.planning = true;
+        ScheduledRideStore.giveToBackup(ride);
+        state.planning = false;
+        IslandMessages.show(HomeIslandNotices.givenToBackup);
+        if (!identical(_nextScheduledRide, ride)) { _planScheduled(); }
+        return;
+      }
       void at(DateTime time, VoidCallback run) =>
           state.timers.add(Timer(_clock.realUntil(time), run));
       final rule = SmartGap.ruleOf(ride, _rules);
