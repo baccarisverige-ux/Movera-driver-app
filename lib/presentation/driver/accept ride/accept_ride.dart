@@ -1219,9 +1219,9 @@ class _AcceptRideState extends State<AcceptRide>
                     padding: MapOverlayInsets.forActiveRide(
                       safeTop: safeTop,
                       collapsedSheet: _cameraSheet.resolve(collapsed),
-                    ).drivingInsets(MediaQuery.sizeOf(context).height,
-                      following: _camera.isGuidance &&
-                          _camera.mode == DriverCameraMode.following),
+                    // driver-77: browsing keeps the anchor; a flip moves the map.
+                    ).drivingInsets(MediaQuery.sizeOf(context).height, following:
+                      _camera.isGuidance && _camera.mode != DriverCameraMode.overview),
                     cameraAnchor: _camera.isGuidance &&
                         _camera.mode == DriverCameraMode.following ? .75 : .5,
                     blockGestures: _blockMapGestures,

@@ -35,7 +35,10 @@ Driver only. Rider, palette and trip business lifecycle are unchanged.
 The driving anchor is **72% of screen height**, clamped above the collapsed
 sheet and below the top banner with 24 dp vehicle clearance. Horizontal is 50%.
 Native SDK padding realizes the anchor; web uses OverlayView projection because
-the pinned Flutter web plugin does not implement camera padding.
+the pinned Flutter web plugin does not implement camera padding. During guidance
+the native padding stays anchored in Free too (only Preview drops it): the SDK
+keeps the camera target in the middle of the padded region, so changing the
+padding at the first pan or at Recenter would jump the map.
 
 Course is accepted only with valid speed >=1 m/s; otherwise retain the last good
 course (unknown speed is not evidence of movement). Look-ahead is 3 seconds of
