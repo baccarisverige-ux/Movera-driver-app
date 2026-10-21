@@ -238,6 +238,7 @@
   "cash": "Cash",
   "allOffers": "ALL OFFERS",
   "savedTripCouldNotBeOpened": "The saved trip could not be opened.",
+  "tripStorageUnavailable": "Trip storage on this device could not be opened, so no saved trip can be restored now. You can still go online.",
   "unresolvedTrip": "Unresolved trip",
   "thisSavedTripIsOlderThan": "This saved trip is older than six hours. Resume it or close it explicitly.",
   "savedRouteCoordinatesAreUnavailableClose": "Saved route coordinates are unavailable. Close this trip explicitly before accepting another.",

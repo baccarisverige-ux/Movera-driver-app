@@ -336,6 +336,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Den sparade resan gick inte att öppna.';
 
   @override
+  String get tripStorageUnavailable =>
+      'Resornas lagring på den här enheten kunde inte öppnas, så ingen sparad resa kan återställas nu. Du kan ändå gå online.';
+
+  @override
   String get unresolvedTrip => 'Oavslutad resa';
 
   @override

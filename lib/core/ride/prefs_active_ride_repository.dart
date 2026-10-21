@@ -44,7 +44,12 @@ class PrefsActiveRideRepository
   final bool _sharedAcrossTabs;
 
   Future<SharedPreferences> _load() async {
-    final prefs = await _loadCached();
+    final SharedPreferences prefs;
+    try {
+      prefs = await _loadCached();
+    } catch (error) {
+      throw ActiveRideStorageUnavailable(error);
+    }
     if (_sharedAcrossTabs) await prefs.reload();
     return prefs;
   }

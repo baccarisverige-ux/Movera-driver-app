@@ -336,6 +336,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d’ouvrir la course enregistrée.';
 
   @override
+  String get tripStorageUnavailable =>
+      'Le stockage des courses de cet appareil n’a pas pu être ouvert : aucune course enregistrée ne peut être restaurée pour l’instant. Vous pouvez quand même passer en ligne.';
+
+  @override
   String get unresolvedTrip => 'Course non clôturée';
 
   @override

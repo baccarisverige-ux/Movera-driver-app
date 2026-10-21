@@ -139,7 +139,15 @@ class CompletionJournal {
   /// quarantine and reported through the returned outcome.
   Future<JournalReplayOutcome> reconcile() async {
     var outcome = JournalReplayOutcome.none;
-    await _serial(() async => outcome = await _replay(await load()));
+    await _serial(() async {
+      final SharedPreferences prefs;
+      try {
+        prefs = await load();
+      } catch (error) {
+        throw ActiveRideStorageUnavailable(error);
+      }
+      outcome = await _replay(prefs);
+    });
     return outcome;
   }
 

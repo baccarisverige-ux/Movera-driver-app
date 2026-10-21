@@ -668,6 +668,12 @@ abstract class AppLocalizations {
   /// **'The saved trip could not be opened.'**
   String get savedTripCouldNotBeOpened;
 
+  /// No description provided for @tripStorageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip storage on this device could not be opened, so no saved trip can be restored now. You can still go online.'**
+  String get tripStorageUnavailable;
+
   /// No description provided for @unresolvedTrip.
   ///
   /// In en, this message translates to:

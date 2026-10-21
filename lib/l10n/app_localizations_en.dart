@@ -335,6 +335,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedTripCouldNotBeOpened => 'The saved trip could not be opened.';
 
   @override
+  String get tripStorageUnavailable =>
+      'Trip storage on this device could not be opened, so no saved trip can be restored now. You can still go online.';
+
+  @override
   String get unresolvedTrip => 'Unresolved trip';
 
   @override

@@ -583,6 +583,15 @@ class ActiveRideUnreadable implements Exception {
   String toString() => 'Active ride snapshot is unreadable: $cause';
 }
 
+/// driver-u112: the trip storage itself could not be opened (a browser
+/// that blocks site storage). Nothing can be saved or read while this
+/// lasts, so it says nothing about a saved trip. Still a [StateError]: a
+/// plugin hiccup stays retryable.
+class ActiveRideStorageUnavailable extends StateError {
+  ActiveRideStorageUnavailable(Object cause)
+    : super('Trip storage unavailable: ${DriverLog.scrub(cause)}');
+}
+
 /// Storage that can move an unreadable active-trip record aside.
 abstract interface class UnreadableRideRecovery {
   /// Moves the raw snapshot to a quarantine key and releases ownership.

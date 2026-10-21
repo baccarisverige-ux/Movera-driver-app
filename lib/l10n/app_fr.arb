@@ -94,6 +94,7 @@
   "cash": "Espèces",
   "allOffers": "TOUTES LES OFFRES",
   "savedTripCouldNotBeOpened": "Impossible d’ouvrir la course enregistrée.",
+  "tripStorageUnavailable": "Le stockage des courses de cet appareil n’a pas pu être ouvert : aucune course enregistrée ne peut être restaurée pour l’instant. Vous pouvez quand même passer en ligne.",
   "unresolvedTrip": "Course non clôturée",
   "thisSavedTripIsOlderThan": "Cette course enregistrée date de plus de six heures. Reprenez-la ou clôturez-la vous-même.",
   "savedRouteCoordinatesAreUnavailableClose": "Les coordonnées de l’itinéraire enregistré sont indisponibles. Clôturez cette course avant d’en accepter une autre.",

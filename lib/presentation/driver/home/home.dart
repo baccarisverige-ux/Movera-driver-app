@@ -520,6 +520,15 @@ class _DriverHomeState extends State<DriverHome>
         IslandMessages.show(HomeIslandNotices.recordSetAside);
       }
       snapshot = await repo.read();
+    } on ActiveRideStorageUnavailable {
+      // driver-u112: blocked storage holds no trip to recover; going online
+      // stays possible, and Retry reads again.
+      _didAttemptActiveRideRestore = false;
+      if (!mounted) { return; }
+      setState(() => _recoveryResolved = true);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripStorageUnavailable),
+          action: SnackBarAction(label: tr.retry, onPressed: () => unawaited(_restoreActiveRideIfNeeded()))));
+      return;
     } on ActiveRideUnreadable {
       _didAttemptActiveRideRestore = false;
       if (mounted) { await _offerUnreadableTripClosure(repo); }

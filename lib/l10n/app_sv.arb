@@ -94,6 +94,7 @@
   "cash": "Kontant",
   "allOffers": "ALLA ERBJUDANDEN",
   "savedTripCouldNotBeOpened": "Den sparade resan gick inte att öppna.",
+  "tripStorageUnavailable": "Resornas lagring på den här enheten kunde inte öppnas, så ingen sparad resa kan återställas nu. Du kan ändå gå online.",
   "unresolvedTrip": "Oavslutad resa",
   "thisSavedTripIsOlderThan": "Den här sparade resan är äldre än sex timmar. Återuppta den eller avsluta den själv.",
   "savedRouteCoordinatesAreUnavailableClose": "Den sparade ruttens koordinater saknas. Avsluta resan innan du accepterar en ny.",
