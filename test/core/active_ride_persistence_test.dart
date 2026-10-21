@@ -133,14 +133,22 @@ void main() async {
 
   test('clear wins over an in-flight save so a cancelled trip cannot revive', () async {
     SharedPreferences.setMockInitialValues({});
-    final store = PrefsActiveRideRepository();
-    await store.save(
+    // Only the save's storage load waits, so the save is still in flight
+    // when clear() is called.
+    final saveGate = Completer<SharedPreferences>();
+    var loads = 0;
+    final store = PrefsActiveRideRepository(
+      load: () => loads++ == 0 ? saveGate.future : SharedPreferences.getInstance(),
+    );
+    final save = store.save(
       const PersistedActiveRide(
         tripId: 'trip-cancel',
         stage: ActiveRideStage.headingToPickup,
       ),
     );
-    await store.clear();
+    final clear = store.clear();
+    saveGate.complete(await SharedPreferences.getInstance());
+    await Future.wait([save, clear]);
     expect(await store.read(), isNull);
   });
 

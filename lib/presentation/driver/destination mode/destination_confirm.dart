@@ -279,14 +279,18 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
                 shape: const CircleBorder(),
                 elevation: 3,
                 shadowColor: Colors.black26,
-                child: InkWell(
-                  key: const ValueKey<String>('destination-confirm-close'),
-                  customBorder: const CircleBorder(),
-                  onTap: () => Navigator.of(context).maybePop(),
-                  child: Padding(
-                    padding: const EdgeInsets.all(13),
-                    child: SvgPicture.asset(AppAssets.solarClose,
-                        width: 22, height: 22),
+                // driver-u108: the × has a name for screen readers.
+                child: Tooltip(
+                  message: tr.close,
+                  child: InkWell(
+                    key: const ValueKey<String>('destination-confirm-close'),
+                    customBorder: const CircleBorder(),
+                    onTap: () => Navigator.of(context).maybePop(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(13),
+                      child: SvgPicture.asset(AppAssets.solarClose,
+                          width: 22, height: 22),
+                    ),
                   ),
                 ),
               ),

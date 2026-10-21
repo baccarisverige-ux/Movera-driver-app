@@ -1,12 +1,17 @@
+import 'dart:async';
+
+import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/main.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -36,6 +41,12 @@ import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+/// The refresh icon a Radar refresh pill draws (driver-u190: Home has none).
+final _refreshIcon = find.byWidgetPredicate((w) =>
+    w is SvgPicture &&
+    w.bytesLoader is SvgAssetLoader &&
+    (w.bytesLoader as SvgAssetLoader).assetName == AppAssets.offerRefresh);
 
 Future<void> _pumpHome(WidgetTester tester, Size size) async {
   IslandMessages.reset();
@@ -669,10 +680,7 @@ void main() {
     // New Radar matches join the deck behind it; no refresh on Home.
     await tester.pump(const Duration(milliseconds: 3100));
     expect(card('nearby-2'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey<String>('radar-home-refresh')),
-      findsNothing,
-    );
+    expect(_refreshIcon, findsNothing);
     await tester.pump(const Duration(milliseconds: 3100));
     await tester.pump(const Duration(milliseconds: 400));
     expect(card('nearby-4'), findsOneWidget);
@@ -3125,18 +3133,43 @@ void main() {
   ) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(320, 700));
+    // Routing is on here, so the trip asks the failing repository.
+    final previous = DriverRuntimeConfig.current;
+    DriverRuntimeConfig.current = DriverRuntimeConfig(
+      simulatedArrival: previous.simulatedArrival,
+      externalRouting: true,
+      skipAccountActivation: previous.skipAccountActivation,
+      liveMapTicker: previous.liveMapTicker,
+      reservationPopup: previous.reservationPopup,
+      islandHint: previous.islandHint,
+      radarSound: previous.radarSound,
+      adminDemoOffers: previous.adminDemoOffers,
+    );
+    addTearDown(() => DriverRuntimeConfig.current = previous);
+    final routes = _FailingRouteRepository();
+    final location = _FixedLocation();
+    addTearDown(location.updates.close);
     await tester.pumpWidget(
-      MaterialApp(home: AcceptRide(routeRepository: _FailingRouteRepository())),
+      MaterialApp(
+        home: AcceptRide(routeRepository: routes, locationRepository: location),
+      ),
     );
     await tester.pump(const Duration(milliseconds: 160));
+    location.updates.add(location.fix());
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
 
+    expect(routes.calls, greaterThan(0));
+    expect(find.textContaining('Route unavailable'), findsWidgets);
     expect(find.byType(AcceptRide), findsOneWidget);
     expect(
       find.byKey(const ValueKey<String>('active-ride-panel-headingToPickup')),
       findsWidgets,
     );
+    // No route to guide along: the island says so on its status face.
     expect(
-      find.byKey(const ValueKey<String>('trip-guidance-island')),
+      find.byKey(const ValueKey<String>('trip-status-island')),
       findsOneWidget,
     );
     _expectNoException(tester);
@@ -3245,11 +3278,27 @@ void main() {
 }
 
 class _FailingRouteRepository implements RouteRepository {
+  var calls = 0;
   @override
   Future<RoadRoute> drivingRoute({
     required GeoPoint origin,
     required GeoPoint destination,
   }) async {
+    calls++;
     throw Exception('offline');
   }
+}
+
+class _FixedLocation implements DriverLocationRepository {
+  final updates = StreamController<DriverLocation>.broadcast();
+  DriverLocation fix() => DriverLocation(
+    point: const GeoPoint(59.3326, 18.0649),
+    measuredAt: DateTime.now(),
+    accuracyMeters: 5,
+  );
+  @override
+  Future<DriverLocation> getCurrentPosition() async => fix();
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      updates.stream;
 }

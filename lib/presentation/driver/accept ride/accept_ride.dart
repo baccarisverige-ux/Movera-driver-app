@@ -1662,8 +1662,8 @@ class _SlideRideActionState extends State<_SlideRideAction> {
           final maxTravel = math.max(0.0, constraints.maxWidth - _thumb);
 
           return Semantics(
-            button:true, enabled:!_confirming,
-            label:widget.label.replaceFirst('Slide to ',''),
+            button:true, enabled:!_confirming, excludeSemantics:true, // u63: read once
+            label:_confirmed ? widget.confirmedLabel : widget.label.replaceFirst('Slide to ',''),
             onTap:_confirming ? null : _accessibleConfirm,
             child:FocusableActionDetector(
               shortcuts:const <ShortcutActivator,Intent>{SingleActivator(LogicalKeyboardKey.enter):ActivateIntent(),SingleActivator(LogicalKeyboardKey.space):ActivateIntent()},

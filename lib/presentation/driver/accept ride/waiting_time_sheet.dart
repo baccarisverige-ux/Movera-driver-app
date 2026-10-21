@@ -458,21 +458,25 @@ class _CloseMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: const Color(0xFFE6E8EA)),
+    // driver-u108: the × has a name for screen readers.
+    return Tooltip(
+      message: tr.close,
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFE6E8EA)),
+            ),
+            child: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF1C242C)),
           ),
-          child: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF1C242C)),
         ),
       ),
     );

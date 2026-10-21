@@ -335,8 +335,8 @@ extension _AcceptRideTrip on _AcceptRideState {
               ),
             ),
           );
+        // A rider cancel always goes through the projection drain above.
         case DriverRealtimeKind.riderCancelled:
-          unawaited(_handleRiderCancelled(fee: event.cancelFee));
         case DriverRealtimeKind.tripProjection:
         case DriverRealtimeKind.location:
         case DriverRealtimeKind.driverArrived:

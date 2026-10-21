@@ -62,7 +62,9 @@ class TripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 10, 8, 6),
+      // driver-u94: the ••• touch box is 48 x 48; the padding gives back
+      // its extra room, so the dots and title stay where they were.
+      padding: const EdgeInsets.fromLTRB(16, 4, 2, 6),
       decoration: BoxDecoration(
         color: fill,
         borderRadius: BorderRadius.circular(18),
@@ -103,7 +105,7 @@ class TripCard extends StatelessWidget {
                     onTap: onMore,
                     customBorder: const CircleBorder(),
                     child: SizedBox.square(
-                      dimension: 36,
+                      dimension: 48,
                       child: Center(
                         child: SvgPicture.asset(
                           AppAssets.solarMenuDots,

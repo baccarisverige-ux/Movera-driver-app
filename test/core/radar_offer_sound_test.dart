@@ -48,6 +48,8 @@ void main() {
 
 /// A stand-in for the native player: records each call; play takes a while.
 class _FakeAudio implements AudioPlayer {
+  _FakeAudio({this.playTime = const Duration(milliseconds: 5)});
+  final Duration playTime;
   final calls = <String>[];
   bool released = false;
   @override
@@ -58,7 +60,7 @@ class _FakeAudio implements AudioPlayer {
     calls.add(name);
     if (name == 'dispose') released = true;
     return name == 'play'
-        ? Future<void>.delayed(const Duration(milliseconds: 5))
+        ? Future<void>.delayed(playTime)
         : Future<void>.value();
   }
 }
@@ -90,6 +92,19 @@ void d17() {
   });
 
   test('D-17: the Home sound releases the player it made', () async {
+    final audio = _FakeAudio(playTime: Duration.zero);
+    RadarOfferSound.debugCreate = () => AudioRadarSound(create: () => audio);
+    addTearDown(() => RadarOfferSound.debugCreate = null);
+    final sound = RadarOfferSound();
+    sound.sync(['a']);
+    await pumpEventQueue();
+    expect(audio.calls, contains('play'));
+    sound.dispose();
+    await pumpEventQueue();
+    expect(audio.released, isTrue);
+  });
+
+  test('D-17: an injected player is not released', () async {
     final audio = _FakeAudio();
     final sound = RadarOfferSound(
       player: AudioRadarSound(create: () => audio),

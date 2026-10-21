@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -8,6 +10,12 @@ import 'package:movera/presentation/driver/home/components/island_messages.dart'
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// The refresh icon a Radar refresh pill draws (driver-u190: Home has none).
+final _refreshIcon = find.byWidgetPredicate((w) =>
+    w is SvgPicture &&
+    w.bytesLoader is SvgAssetLoader &&
+    (w.bytesLoader as SvgAssetLoader).assetName == AppAssets.offerRefresh);
 
 void main() {
   setUp(() {
@@ -68,7 +76,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 3000));
     await tester.pump(const Duration(milliseconds: 300));
     expect(card, findsNothing);
-    tester.takeException();
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();
   });
@@ -120,7 +128,7 @@ void main() {
       find.byKey(const ValueKey<String>('radar-offer-card-nearby-1')),
       findsOneWidget,
     );
-    tester.takeException();
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();
   });
@@ -170,7 +178,7 @@ void main() {
           (w.key! as ValueKey<String>).value.startsWith('radar-offer-card-'),
     );
     expect(cards.evaluate().length, greaterThan(1));
-    expect(find.byKey(const ValueKey<String>('radar-home-refresh')), findsNothing);
+    expect(_refreshIcon, findsNothing);
     final badge = find.byKey(const ValueKey<String>('radar-home-all-offers'));
     expect(badge, findsOneWidget);
     expect(
@@ -184,7 +192,7 @@ void main() {
 
     // The radar reads Accept while the deck shows.
     expect(find.byKey(const ValueKey<String>('home-radar-accept')), findsOneWidget);
-    tester.takeException();
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();
   });

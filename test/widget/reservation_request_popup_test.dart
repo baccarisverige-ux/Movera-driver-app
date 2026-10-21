@@ -338,10 +338,14 @@ void main() {
     expect(find.text('41 km'), findsOneWidget);
     expect(find.text('In 2 h'), findsOneWidget);
     // A small grey down arrow in the top-right corner.
+    // driver-u111: a 48 px touch box around the 34 px mark, which stays
+    // 18 px from the right and 14 px below the top.
     final arrow = find.byKey(_hide);
-    expect(tester.getSize(arrow), const Size(34, 34));
-    expect(tester.getRect(arrow).right, closeTo(375 - 18, 1));
-    expect(tester.getRect(arrow).top, closeTo(up + 14, 1));
+    expect(tester.getSize(arrow), const Size(48, 48));
+    final mark = find.descendant(of: arrow, matching: find.byType(Material));
+    expect(tester.getSize(mark), const Size(34, 34));
+    expect(tester.getRect(mark).right, closeTo(375 - 18, 1));
+    expect(tester.getRect(mark).top, closeTo(up + 14, 1));
 
     await tester.tap(arrow);
     await tester.pump();
@@ -554,8 +558,13 @@ void main() {
         findsOneWidget,
       );
     }
-    expect(find.byKey(const ValueKey<String>('home-reservation-barrier')),
-        findsNothing);
+    // driver-u190: no tinted barrier over Home (any route's own barrier
+    // is see-through).
+    expect(
+      find.byWidgetPredicate((w) =>
+          w is ModalBarrier && w.color != null && w.color!.a > 0),
+      findsNothing,
+    );
 
     // The radar orb sits centred on the sheet's top edge: the normal
     // Radar-offer orb with grey waves and MATCH in light black, no icon.
@@ -572,8 +581,15 @@ void main() {
     expect(match.style!.color, MoveraRadarOrb.reserveInk);
     expect(tester.widget<MoveraRadarOrb>(find.descendant(
       of: radar, matching: find.byType(MoveraRadarOrb))).reserve, isTrue);
-    expect(find.byKey(const ValueKey<String>('radar-reserve-icon')),
-        findsNothing);
+    // driver-u190: the orb draws no icon (the Exclusive check carries
+    // this key).
+    expect(
+      find.descendant(
+        of: radar,
+        matching: find.byKey(const ValueKey<String>('radar-exclusive-icon')),
+      ),
+      findsNothing,
+    );
 
     // The Home map shows the route with clock times on the pins.
     // The pins draw in real time and then fade in; a slow machine gets

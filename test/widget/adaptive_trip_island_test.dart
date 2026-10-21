@@ -288,7 +288,8 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 1));
       expect(find.byKey(const ValueKey('trip-guidance-island')), findsOneWidget);
-      expect(find.byKey(const ValueKey('island-radar')), findsNothing);
+      // driver-u190: a radar button would draw the tools' radar icon.
+      expect(find.byIcon(Icons.radar_rounded), findsNothing);
       expect(find.byTooltip('Turn Exclusive offers on'), findsNothing);
       await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
       await tester.pumpAndSettle();

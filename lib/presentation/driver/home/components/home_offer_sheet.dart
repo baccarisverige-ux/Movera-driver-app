@@ -323,9 +323,10 @@ class _HomeOfferSheetState extends State<HomeOfferSheet>
                   ),
                   child: Builder(builder: content),
                 ),
+                // The 34 px mark stays where it was; its touch box is 48 px.
                 Positioned(
-                  top: 14,
-                  right: 18,
+                  top: 14 - ReservationCloseArrow.slop,
+                  right: 18 - ReservationCloseArrow.slop,
                   child: ReservationCloseArrow(
                     key: widget.closeKey,
                     onTap: widget.onDecline,
@@ -392,6 +393,11 @@ class ReservationCloseArrow extends StatelessWidget {
 
   static const double size = 34;
 
+  /// driver-u111: the touch box is 48 x 48; the mark is drawn [size] wide
+  /// in its middle, [slop] in from each edge.
+  static const double hitSize = 48;
+  static const double slop = (hitSize - size) / 2;
+
   @override
   Widget build(BuildContext context) {
     return Semantics(
@@ -399,24 +405,35 @@ class ReservationCloseArrow extends StatelessWidget {
       enabled: onTap != null,
       label: label ?? tr.hideReservationRequest,
       excludeSemantics: true,
-      child: Material(
-        color: _softFill,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: size,
-            height: size,
-            child: Center(
-              child: SvgPicture.asset(
-                AppAssets.solarClose,
-                width: 16,
-                height: 16,
-                colorFilter: ColorFilter.mode(
-                  onTap == null ? const Color(0xFFA2AAB0) : _ink,
-                  BlendMode.srcIn,
-                ),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: SizedBox.square(
+          dimension: hitSize,
+          child: Center(child: _mark()),
+        ),
+      ),
+    );
+  }
+
+  Widget _mark() {
+    return Material(
+      color: _softFill,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Center(
+            child: SvgPicture.asset(
+              AppAssets.solarClose,
+              width: 16,
+              height: 16,
+              colorFilter: ColorFilter.mode(
+                onTap == null ? const Color(0xFFA2AAB0) : _ink,
+                BlendMode.srcIn,
               ),
             ),
           ),

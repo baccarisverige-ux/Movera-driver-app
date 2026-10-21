@@ -14,6 +14,7 @@ import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/sound/radar_offer_sound.dart';
 import 'package:movera/main.dart';
@@ -158,18 +159,25 @@ void main() {
     testWidgets('a pause before the end keeps the window, then it ends',
         (tester) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
+      final realNow = ScheduledClock.realNow;
+      ScheduledClock.realNow = () => tester.binding.clock.now();
+      addTearDown(() => ScheduledClock.realNow = realNow);
       RadarOfferSound.debugPlayer = _SilentSound();
       await _toRadarOffer(tester);
       final match = find.byKey(const ValueKey<String>('radar-match-nearby-1'));
       bool enabled() => tester.widget<FilledButton>(match).onPressed != null;
+      // The pause eats most of the window. Only the time left counts after
+      // resume: a fresh window would keep Match lit well past that.
+      final window = DriverOfferRules.current.radarTime;
+      final pause = window * 0.6;
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(pause);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump(const Duration(milliseconds: 300));
       expect(enabled(), isTrue);
-      await tester.pump(DriverOfferRules.current.radarTime);
-      await tester.pump(const Duration(seconds: 1));
-      expect(enabled(), isFalse);
+      await tester.pump(window - pause);
+      expect(enabled(), isFalse,
+          reason: 'the window ends on its first deadline, not resume + window');
     });
   });
 
@@ -234,8 +242,12 @@ void main() {
       _show(tester);
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byKey(_offerCard), findsOneWidget);
-      // Seen and left unanswered on screen: that is a miss.
-      await _pumpFor(tester, DriverOfferRules.current.exclusiveAcceptTime);
+      // Seen and left unanswered on screen: that is a miss. Only the time
+      // left runs after resume; a fresh lifetime would still show it here.
+      await _pumpFor(
+          tester,
+          DriverOfferRules.current.exclusiveAcceptTime -
+              const Duration(milliseconds: 1750));
       expect(find.byKey(_offerCard), findsNothing);
       expect(ExclusiveAnswers.instance.missedInRow, 1);
       await _unmount(tester, location);
