@@ -1960,6 +1960,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get islandGivenToBackup => 'Confiée à un chauffeur de secours';
 
   @override
+  String islandLateReassigned(Object minutes) {
+    return 'Confiée à un autre chauffeur : $minutes min de retard';
+  }
+
+  @override
+  String get lateEtaReassignedTitle => 'Course confiée à un autre chauffeur';
+
+  @override
+  String lateEtaReassignedNote(String time, int minutes) {
+    return 'Course confiée à un autre chauffeur — vous arriveriez à la prise en charge de $time avec environ $minutes min de retard.';
+  }
+
+  @override
   String get islandCashOn => 'Courses en espèces activées';
 
   @override

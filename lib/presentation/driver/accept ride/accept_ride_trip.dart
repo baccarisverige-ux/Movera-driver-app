@@ -26,6 +26,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         destinationModeActive: _destinationActive,
         destinationAddress: _destinationAddress,
         destinationPoint: _destinationPosition == null ? null : GeoPointMaps.fromLatLng(_destinationPosition!),
+        scheduledPickupAt: widget.scheduledPickupAt,
+        scheduledRideId: widget.scheduledRideId,
         nextTripId: securedOffer?.id,
         riderName: widget.riderName,
         riderRating: widget.riderRating,
@@ -419,7 +421,10 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// X5: the trip went back to dispatch without this driver. Navigation
     /// and offers stop, the island says so on Home, and the driver is back
     /// to the availability they had.
-    Future<void> _leaveAfterRelease(TripStatus status) async {
+    ///
+    /// [notice] replaces "Trip removed by Movera" on the island (a late
+    /// ETA says why the ride went to another driver).
+    Future<void> _leaveAfterRelease(TripStatus status, {IslandMessage? notice}) async {
       _waitTimer?.cancel();
       _nextTripRadarDemoTimer?.cancel();
       _nextTripRadarMatchTimer?.cancel();
@@ -430,10 +435,11 @@ extension _AcceptRideTrip on _AcceptRideState {
       widget.sessionController?.stayOnlineAfterTrip();
       final navigator = _navigatorAtTripRoute();
       if (navigator.canPop()) {
-        IslandMessages.show(HomeIslandNotices.tripRemoved);
+        IslandMessages.show(notice ?? HomeIslandNotices.tripRemoved);
         navigator.pop();
         return;
       }
+      if (notice != null) { IslandMessages.show(notice); }
       await showTripOutcomeSheet(context, status: status, hasNext: false);
     }
     /// [fee]: the driver's cancel fee from the backend (R15-7), if decided.
@@ -713,6 +719,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _maybeScheduleOnTripRadarDemoOffer();
         _rideCheckObserve();
       }
+      _AcceptRideLateEta(this)._checkLateEtaOnFirstFix();
       if (mounted && _fixView != shown) { _rebuild(() {}); }
     }
     Future<void> _refreshRoadRoute({bool force = false}) async {

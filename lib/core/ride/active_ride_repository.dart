@@ -131,6 +131,8 @@ class PersistedActiveRide {
     this.destinationModeActive = false,
     this.destinationAddress,
     this.destinationPoint,
+    this.scheduledPickupAt,
+    this.scheduledRideId,
   });
 
   final String tripId;
@@ -178,6 +180,12 @@ class PersistedActiveRide {
   final bool destinationModeActive;
   final String? destinationAddress;
   final GeoPoint? destinationPoint;
+
+  /// A scheduled ride opened at "Leave now": its pickup time and
+  /// reservation id, so a restored trip keeps watching the ETA to it
+  /// (`reservations.lateEta`). Null for every other trip.
+  final DateTime? scheduledPickupAt;
+  final String? scheduledRideId;
   bool get hasVerifiedEndpoints =>
       validCoordinate(pickupLat, latitude: true) &&
       validCoordinate(pickupLng, latitude: false) &&
@@ -236,6 +244,8 @@ class PersistedActiveRide {
       destinationModeActive: destinationModeActive,
       destinationAddress: destinationAddress,
       destinationPoint: destinationPoint,
+      scheduledPickupAt: scheduledPickupAt,
+      scheduledRideId: scheduledRideId,
     );
   }
 
@@ -283,6 +293,9 @@ class PersistedActiveRide {
         'latitude': destinationPoint!.latitude,
         'longitude': destinationPoint!.longitude,
       },
+    if (scheduledPickupAt != null)
+      'scheduledPickupAt': scheduledPickupAt!.toIso8601String(),
+    if (scheduledRideId != null) 'scheduledRideId': scheduledRideId,
   };
 
   /// A saved Money, or null when absent or not readable.
@@ -311,7 +324,13 @@ class PersistedActiveRide {
     if (stage.isEmpty) {
       return null;
     }
-    for (final key in ['arrivedAt', 'acceptedAt', 'startedAt', 'savedAt']) {
+    for (final key in [
+      'arrivedAt',
+      'acceptedAt',
+      'startedAt',
+      'savedAt',
+      'scheduledPickupAt',
+    ]) {
       if (json[key] != null &&
           (json[key] is! String ||
               DateTime.tryParse(json[key] as String) == null)) {
@@ -431,6 +450,11 @@ class PersistedActiveRide {
               (destination['latitude'] as num).toDouble(),
               (destination['longitude'] as num).toDouble(),
             )
+          : null,
+      scheduledPickupAt:
+          DateTime.tryParse(json['scheduledPickupAt'] as String? ?? ''),
+      scheduledRideId: json['scheduledRideId'] is String
+          ? json['scheduledRideId'] as String
           : null,
     );
   }

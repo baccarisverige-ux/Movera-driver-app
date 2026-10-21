@@ -3459,6 +3459,24 @@ abstract class AppLocalizations {
   /// **'Given to backup driver'**
   String get islandGivenToBackup;
 
+  /// Admin text key island.lateReassigned (Content › Driver app texts). The ETA showed the driver would reach the scheduled pickup too late, so the ride went to another driver.
+  ///
+  /// In en, this message translates to:
+  /// **'Given to another driver: {minutes} min late'**
+  String islandLateReassigned(Object minutes);
+
+  /// Notification title: a scheduled ride was reassigned because the driver's ETA was too late.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride given to another driver'**
+  String get lateEtaReassignedTitle;
+
+  /// Why a scheduled ride was reassigned early: the driver's ETA to the pickup was too late.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride given to another driver — you would reach the {time} pickup about {minutes} min late.'**
+  String lateEtaReassignedNote(String time, int minutes);
+
   /// Admin text key island.cashOn (Content › Driver app texts).
   ///
   /// In en, this message translates to:

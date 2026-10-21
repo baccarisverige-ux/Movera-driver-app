@@ -178,7 +178,9 @@ extension _HomeScheduled on _DriverHomeState {
     /// an online one keeps it, and it starts as soon as Home is free.
     void _leaveNow(ReservationRequestPreview ride) {
       if (!mounted || !identical(_scheduled.ride, ride)) { return; }
-      if (!_canStartScheduled) {
+      // Admin "Leave now" off: the trip never opens by itself; only the
+      // warning (and, offline, the backup driver) follow.
+      if (!_rules.leaveNowOpensTrip || !_canStartScheduled) {
         _lateScheduled(ride);
         return;
       }
@@ -198,14 +200,7 @@ extension _HomeScheduled on _DriverHomeState {
       final now = _clock.now();
       if (_scheduled.lateSince == null) {
         _scheduled.lateSince = now;
-        IslandMessages.show(HomeIslandNotices.headToPickup(ride.pickupTime));
-        ScheduledRideStore.reminder.value =
-            tr.headToYourPickupTimePickup(
-                ride.pickupTime, ride.pickupAddress);
-        _noteRideAlert(
-          tr.headToYourPickupTimePickup2(ride.pickupTime),
-          ride.pickupAddress,
-        );
+        if (_rules.lateWarning) { _warnLateScheduled(ride); }
       }
       final backupAt = _scheduled.lateSince!.add(
         Duration(minutes: _rules.backupAfterMinutes),
@@ -216,6 +211,18 @@ extension _HomeScheduled on _DriverHomeState {
       }
       _scheduled.timers.add(
         Timer(_clock.realUntil(backupAt), () => _giveToBackup(ride)),
+      );
+    }
+
+    /// Admin "Late warning": the island, Scheduled rides and Notifications.
+    void _warnLateScheduled(ReservationRequestPreview ride) {
+      IslandMessages.show(HomeIslandNotices.headToPickup(ride.pickupTime));
+      ScheduledRideStore.reminder.value =
+          tr.headToYourPickupTimePickup(
+              ride.pickupTime, ride.pickupAddress);
+      _noteRideAlert(
+        tr.headToYourPickupTimePickup2(ride.pickupTime),
+        ride.pickupAddress,
       );
     }
 
@@ -235,9 +242,13 @@ extension _HomeScheduled on _DriverHomeState {
         leaveNow: true,
       );
       final offer = RideOffer.reservation(ride);
+      // The trip knows its pickup time: from here to the pickup it watches
+      // the driver's ETA (admin "Late ETA").
       _HomeOfferRadar(this)._openOfferTrip(
         _HomeDirectOffer.fromRide(offer),
         tr.scheduledRide,
+        scheduledPickupAt: ride.pickupAt(_clock.now()),
+        scheduledRideId: ride.id,
       );
       _planScheduled();
     }
@@ -246,7 +257,7 @@ extension _HomeScheduled on _DriverHomeState {
     /// loses the ride; online, it stays theirs.
     void _giveToBackup(ReservationRequestPreview ride) {
       if (!mounted || !identical(_scheduled.ride, ride)) { return; }
-      if (_canStartScheduled) {
+      if (_rules.leaveNowOpensTrip && _canStartScheduled) {
         _leaveNow(ride);
         return;
       }

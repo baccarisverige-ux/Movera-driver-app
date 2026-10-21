@@ -152,6 +152,9 @@ class DriverTexts {
       'island.headToPickup', 'Head to your {time} pickup', DriverTextArea.island);
   static const islandGivenToBackup = DriverTextKey(
       'island.givenToBackup', 'Given to backup driver', DriverTextArea.island);
+  /// Late ETA: the driver would reach the scheduled pickup too late.
+  static const islandLateReassigned = DriverTextKey('island.lateReassigned',
+      'Given to another driver: {minutes} min late', DriverTextArea.island);
   static const islandCashOn =
       DriverTextKey('island.cashOn', 'Cash rides on', DriverTextArea.island);
   static const islandCashOff =
@@ -296,6 +299,7 @@ class DriverTexts {
     islandLeaveNow,
     islandHeadToPickup,
     islandGivenToBackup,
+    islandLateReassigned,
     islandCashOn,
     islandCashOff,
     islandLastMissed,

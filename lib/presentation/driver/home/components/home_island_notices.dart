@@ -278,6 +278,15 @@ class HomeIslandNotices {
     group: 'scheduled',
   );
 
+  /// Late ETA: on the way, the driver would reach the pickup [minutes]
+  /// late, so the ride went to another driver early.
+  static IslandMessage lateReassigned(int minutes) => IslandMessage(
+    title: driverText(DriverTexts.islandLateReassigned, {'minutes': minutes}),
+    tone: IslandTone.alert,
+    priority: IslandPriority.high,
+    group: 'scheduled',
+  );
+
   /// Q23: the driver's Cash switch in the Home sheet.
   static IslandMessage get cashOn => IslandMessage(
     title: driverText(DriverTexts.islandCashOn),

@@ -108,6 +108,23 @@ class SmartGap {
     return at.subtract(Duration(minutes: minutes));
   }
 
+  /// `reservations.lateEta`: an online driver on the way with [eta] left
+  /// to the pickup would arrive too late, after [pickupAt] plus the
+  /// admin's tolerance. Arriving exactly at the tolerance is on time.
+  /// Always false while the rule is off.
+  static bool wouldBeLate({
+    required DateTime now,
+    required DateTime pickupAt,
+    required Duration eta,
+    required ScheduledRideRules rules,
+  }) {
+    final rule = rules.lateEta;
+    if (!rule.on) {
+      return false;
+    }
+    return now.add(eta).isAfter(pickupAt.add(rule.tolerance));
+  }
+
   /// A trip offered now still leaves time for [ride]: getting to the
   /// trip's pickup, the trip, the drive on to [ride]'s pickup and the spare
   /// minutes all fit before it.

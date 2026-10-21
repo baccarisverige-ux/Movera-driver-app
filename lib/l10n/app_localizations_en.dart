@@ -1939,6 +1939,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get islandGivenToBackup => 'Given to backup driver';
 
   @override
+  String islandLateReassigned(Object minutes) {
+    return 'Given to another driver: $minutes min late';
+  }
+
+  @override
+  String get lateEtaReassignedTitle => 'Ride given to another driver';
+
+  @override
+  String lateEtaReassignedNote(String time, int minutes) {
+    return 'Ride given to another driver — you would reach the $time pickup about $minutes min late.';
+  }
+
+  @override
   String get islandCashOn => 'Cash rides on';
 
   @override
