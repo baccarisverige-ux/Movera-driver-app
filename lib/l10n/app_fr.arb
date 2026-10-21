@@ -1326,5 +1326,8 @@
   "mapCameraUnavailable": "Caméra de la carte indisponible — touchez Recentrer pour réessayer",
   "dismiss": "Fermer",
   "ratingAndRides": "{rating} ★ · {count, plural, one{{count} course} other{{count} courses}}",
-  "mapOfArea": "Carte de {area}"
+  "mapOfArea": "Carte de {area}",
+  "cashYouOweMovera": "Vous devez à Movera",
+  "cashMoveraOwesYou": "Movera vous doit",
+  "cashSettled": "Soldé"
 }

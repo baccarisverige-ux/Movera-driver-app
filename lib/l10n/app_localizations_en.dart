@@ -4625,4 +4625,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String mapOfArea(String area) {
     return 'Map of $area';
   }
+
+  @override
+  String get cashYouOweMovera => 'You owe Movera';
+
+  @override
+  String get cashMoveraOwesYou => 'Movera owes you';
+
+  @override
+  String get cashSettled => 'Settled';
 }

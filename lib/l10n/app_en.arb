@@ -3141,5 +3141,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "cashYouOweMovera": "You owe Movera",
+  "cashMoveraOwesYou": "Movera owes you",
+  "cashSettled": "Settled"
 }

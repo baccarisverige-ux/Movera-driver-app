@@ -4642,4 +4642,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String mapOfArea(String area) {
     return 'Karta över $area';
   }
+
+  @override
+  String get cashYouOweMovera => 'Du är skyldig Movera';
+
+  @override
+  String get cashMoveraOwesYou => 'Movera är skyldig dig';
+
+  @override
+  String get cashSettled => 'Kvitt';
 }

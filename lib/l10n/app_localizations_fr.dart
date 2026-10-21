@@ -4689,4 +4689,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String mapOfArea(String area) {
     return 'Carte de $area';
   }
+
+  @override
+  String get cashYouOweMovera => 'Vous devez à Movera';
+
+  @override
+  String get cashMoveraOwesYou => 'Movera vous doit';
+
+  @override
+  String get cashSettled => 'Soldé';
 }

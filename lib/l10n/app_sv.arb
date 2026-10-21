@@ -1326,5 +1326,8 @@
   "mapCameraUnavailable": "Kartkameran är inte tillgänglig – tryck på centrera för att försöka igen",
   "dismiss": "Stäng",
   "ratingAndRides": "{rating} ★ · {count, plural, =1{1 resa} other{{count} resor}}",
-  "mapOfArea": "Karta över {area}"
+  "mapOfArea": "Karta över {area}",
+  "cashYouOweMovera": "Du är skyldig Movera",
+  "cashMoveraOwesYou": "Movera är skyldig dig",
+  "cashSettled": "Kvitt"
 }

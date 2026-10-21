@@ -8072,6 +8072,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Map of {area}'**
   String mapOfArea(String area);
+
+  /// No description provided for @cashYouOweMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe Movera'**
+  String get cashYouOweMovera;
+
+  /// No description provided for @cashMoveraOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera owes you'**
+  String get cashMoveraOwesYou;
+
+  /// No description provided for @cashSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get cashSettled;
 }
 
 class _AppLocalizationsDelegate
