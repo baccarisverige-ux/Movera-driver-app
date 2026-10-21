@@ -87,6 +87,10 @@ class NavigationController extends ChangeNotifier {
   DateTime? _lastRouteAt;
   int _instructionHint = 0;
   double? _progressAlong;
+  // driver-u26/u28: the last on-route progress. Off route the projection
+  // starts again from scratch (_progressAlong is null), but the share
+  // already driven, and with it the ETA and leg progress, stays known.
+  double? _drivenAlong;
   DateTime? _lastMeasuredAt;
   double? _routeLength;
   bool _userPausedFollow = false;
@@ -153,7 +157,7 @@ class NavigationController extends ChangeNotifier {
     if (route == null || length == null || length <= 0) {
       return null;
     }
-    return ((_progressAlong ?? 0) / length).clamp(0.0, 1.0);
+    return ((_progressAlong ?? _drivenAlong ?? 0) / length).clamp(0.0, 1.0);
   }
 
   bool get followCamera => !_userPausedFollow;
@@ -175,6 +179,7 @@ class NavigationController extends ChangeNotifier {
       _routeState = RouteLoadState.idle;
       _instructionHint = 0;
       _progressAlong = null;
+      _drivenAlong = null;
       _rerouteOrigin = null;
       _stuckReroutes = 0;
     }
@@ -322,6 +327,7 @@ class NavigationController extends ChangeNotifier {
       _route = null;
       _routeLength = null;
       _progressAlong = null;
+      _drivenAlong = null;
       _routeState = RouteLoadState.failed;
       _status = NavigationRouteStatus.unavailableCheckLocation;
       _rebuildBanner();
@@ -372,6 +378,7 @@ class NavigationController extends ChangeNotifier {
       _route = null;
       _instructionHint = 0;
       _progressAlong = null;
+      _drivenAlong = null;
       _status = NavigationRouteStatus.updating;
       _rebuildBanner();
     }
@@ -415,6 +422,7 @@ class NavigationController extends ChangeNotifier {
       }
       _instructionHint = 0;
       _progressAlong = null;
+      _drivenAlong = null;
       // The same road back is not "Route updated".
       if (rerouting && !_samePoints(kept.points, route.points)) _reroutes++;
       _status = null;
@@ -479,6 +487,7 @@ class NavigationController extends ChangeNotifier {
       );
       _instructionHint = progress.instructionIndex;
       _progressAlong = progress.offRoute ? null : progress.alongMeters;
+      if (!progress.offRoute) _drivenAlong = progress.alongMeters;
     }
 
     if (progress != null &&
