@@ -232,14 +232,14 @@ class RideCheckAnswer {
   Map<String, Object?> toJson() => {
     'question': question,
     'answer': answer,
-    'at': at.toIso8601String(),
+    'at': at.toUtc().toIso8601String(),
   };
 
   static RideCheckAnswer? fromJson(Object? data) {
     if (data is! Map) return null;
     final question = data['question'];
     final answer = data['answer'];
-    final at = DateTime.tryParse('${data['at']}');
+    final at = DateTime.tryParse('${data['at']}')?.toLocal();
     if (question is! String || answer is! String || at == null) return null;
     return RideCheckAnswer(question: question, answer: answer, at: at);
   }
@@ -296,9 +296,12 @@ class RideCheckRecord {
     'tripId': tripId,
     'trigger': trigger.name,
     'reason': reason,
-    'openedAt': openedAt.toIso8601String(),
+    // UTC, as local time has no offset (driver-r4-14); older records
+    // saved local time and read the same.
+    'openedAt': openedAt.toUtc().toIso8601String(),
     'answers': [for (final answer in answers) answer.toJson()],
-    if (answeredAt != null) 'answeredAt': answeredAt!.toIso8601String(),
+    if (answeredAt != null)
+      'answeredAt': answeredAt!.toUtc().toIso8601String(),
     'alertSent': alertSent,
     if (audioSeconds != null) 'audioSeconds': audioSeconds,
   };
@@ -308,7 +311,7 @@ class RideCheckRecord {
     final id = data['id'];
     final tripId = data['tripId'];
     final reason = data['reason'];
-    final openedAt = DateTime.tryParse('${data['openedAt']}');
+    final openedAt = DateTime.tryParse('${data['openedAt']}')?.toLocal();
     final trigger = RideCheckTrigger.values
         .where((value) => value.name == data['trigger'])
         .firstOrNull;
@@ -335,7 +338,7 @@ class RideCheckRecord {
       answers: answers.cast<RideCheckAnswer>(),
       answeredAt: data['answeredAt'] == null
           ? null
-          : DateTime.tryParse('${data['answeredAt']}'),
+          : DateTime.tryParse('${data['answeredAt']}')?.toLocal(),
       alertSent: data['alertSent'] == true,
       audioSeconds: audio is int ? audio : null,
     );

@@ -102,7 +102,8 @@ class CompletionJournal {
       // Contract wire name (v0.3). Older saves used camelCase; both parse.
       'status': status.wireName,
       'authoritative': authoritative,
-      'completedAt': terminalAt.toIso8601String(),
+      // UTC, as local time has no offset (driver-r4-14).
+      'completedAt': terminalAt.toUtc().toIso8601String(),
       'record': {
         'tripId': record.tripId,
         'riderName': record.riderName,
@@ -336,7 +337,9 @@ class _DecodedJournal {
         throw FormatException('Journal record field $field missing');
       }
     }
-    final completedAt = DateTime.parse(data['completedAt'] as String);
+    // UTC since driver-r4-14; older journals saved local time.
+    final completedAt =
+        DateTime.parse(data['completedAt'] as String).toLocal();
     final nextData = data['next'];
     PersistedActiveRide? next;
     if (nextData != null) {
