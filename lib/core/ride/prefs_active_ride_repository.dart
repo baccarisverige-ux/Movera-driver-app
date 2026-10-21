@@ -122,7 +122,7 @@ class PrefsActiveRideRepository
         prefs,
         source: 'active_ride',
         raw: raw,
-        reason: '$error',
+        reason: '${DriverLog.scrub(error)}',
       );
     }
     if (!await prefs.remove(key)) {

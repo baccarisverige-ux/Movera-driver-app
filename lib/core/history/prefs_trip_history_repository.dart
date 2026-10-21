@@ -85,7 +85,7 @@ class PrefsTripHistoryRepository {
     try {
       decoded = jsonDecode(raw);
     } catch (error) {
-      DriverLog.warn('History JSON malformed: $error');
+      DriverLog.warn('History JSON malformed: ${DriverLog.scrub(error)}');
       return const _HistoryDecode([], invalid: true);
     }
     if (decoded is Map) {

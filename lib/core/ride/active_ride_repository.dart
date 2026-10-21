@@ -1,5 +1,6 @@
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
 
 enum ActiveRideStage { headingToPickup, waitingForRider, onTrip }
@@ -549,7 +550,8 @@ class RideOwnershipConflict extends StateError {
 /// Distinct from a transient storage failure: retrying will never succeed, so
 /// the driver must be offered an explicit way to close it.
 class ActiveRideUnreadable implements Exception {
-  const ActiveRideUnreadable(this.cause);
+  /// Keeps [cause] without the snapshot text it may quote (driver-25).
+  ActiveRideUnreadable(Object cause) : cause = DriverLog.scrub(cause);
 
   final Object cause;
 
