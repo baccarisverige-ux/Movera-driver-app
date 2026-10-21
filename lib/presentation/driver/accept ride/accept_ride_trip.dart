@@ -92,6 +92,16 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// Q43: the fare with the driver's waiting fee in it, for the earnings.
     String get _fareWithWaiting => WaitingTerms.addFee(
         widget.fare, _waitTerms.driverWaitingFee(_paidWaitTotal));
+    /// driver-u61: what the rider pays, the fare without Movera's bonus
+    /// (the contract: the bonus is in the fare, the rider never pays it).
+    /// A cash trip with no server cash amount collects this.
+    String get _riderFare {
+      final bonus = widget.driverBonus;
+      if (bonus == null || bonus.minorUnits <= 0) { return widget.fare; }
+      final fare = Money.parseLabel(widget.fare, currency: bonus.currency);
+      if (fare == null || fare.minorUnits < bonus.minorUnits) { return widget.fare; }
+      return (fare - bonus).formatted;
+    }
     /// The current trip's waybill with the waiting fee in its fare.
     WaybillRecord _paidWaybill() {
       final fee = _waitTerms.driverWaitingFee(_paidWaitTotal);

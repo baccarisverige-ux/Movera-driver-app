@@ -986,7 +986,7 @@ class _AcceptRideState extends State<AcceptRide>
   /// R8-4: the cash taken from the rider; the fare unless a promotion
   /// changed it.
   String get _cashToCollect => WaitingTerms.addFee(
-      widget.cashToCollect ?? widget.fare,
+      widget.cashToCollect ?? _AcceptRideTrip(this)._riderFare,
       _waitTerms.waitingFee(_AcceptRideTrip(this)._paidWaitTotal));
   int get _includedWaitSeconds => _waitTerms.freeSeconds;
   int get _noShowWaitSeconds => _waitTerms.noShowSeconds;
