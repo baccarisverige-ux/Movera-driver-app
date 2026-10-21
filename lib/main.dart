@@ -30,6 +30,7 @@ import 'package:movera/core/safety/ride_check_log.dart';
 import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/session/driver_session_repository.dart';
+import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
@@ -185,6 +186,8 @@ class _MoveraAppState extends State<MoveraApp> {
     await clearLocalUserData();
     MapTrafficSetting.reset();
     DriverLanguage.reset();
+    // The saved category choice is gone with the settings (driver-82).
+    DriverCategoryChoice.reset();
     _activeRide = PrefsActiveRideRepository();
     _waybills.reset();
     final dispatch = _dispatch;
