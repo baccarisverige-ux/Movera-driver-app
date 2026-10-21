@@ -913,7 +913,13 @@ extension _HomeOfferRadar on _DriverHomeState {
       switch (result.outcome) {
         case ClaimOutcome.success:
           IslandMessages.show(HomeIslandNotices.matched);
-          _openWonOffer(offer, WaybillRecord.assignedByMoveraSource);
+          // A reservation keeps the scheduled waiting rules.
+          _openWonOffer(
+            offer,
+            offer.reservation
+                ? WaybillRecord.assignedReservationSource
+                : WaybillRecord.assignedByMoveraSource,
+          );
           return;
         case ClaimOutcome.alreadyClaimed:
           IslandMessages.show(HomeIslandNotices.takenByOther);

@@ -57,6 +57,12 @@ class WaybillRecord {
   static const String exclusiveReservationSource = 'Exclusive reservation';
   static const String scheduledRideSource = 'Scheduled ride';
   static const String assignedByMoveraSource = 'Assigned by Movera';
+
+  /// An admin direct assign of a reservation: shown as "Assigned by
+  /// Movera"; its key names a reservation, so it gets the scheduled
+  /// waiting rules.
+  static const String assignedReservationSource =
+      'Reservation assigned by Movera';
   static const String moveraRadarSource = 'Movera Radar';
 
   /// [statusLabel] in the driver's language ("Course en cours").
@@ -81,7 +87,7 @@ class WaybillRecord {
     demoRadarSource => tr.waybillDemoRadar,
     exclusiveReservationSource => tr.exclusiveReservation,
     scheduledRideSource => tr.scheduledRide,
-    assignedByMoveraSource => tr.assignedByMovera,
+    assignedByMoveraSource || assignedReservationSource => tr.assignedByMovera,
     moveraRadarSource => tr.moveraRadar,
     _ => source,
   };
