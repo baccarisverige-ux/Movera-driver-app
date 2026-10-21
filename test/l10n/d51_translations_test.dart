@@ -9,7 +9,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/navigation/navigation_controller.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
+import 'package:movera/core/routing/osrm_route_parser.dart';
+import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
@@ -147,6 +150,15 @@ class RideCheckKit {
     controller.dispose();
     alerts.dispose();
   }
+}
+
+/// No road routes: the trip keeps the straight line.
+class NoRoutes implements RouteRepository {
+  @override
+  Future<RoadRoute> drivingRoute({
+    required GeoPoint origin,
+    required GeoPoint destination,
+  }) async => throw Exception('offline');
 }
 
 /// What the island strip says for [inputs], in order.
@@ -413,5 +425,39 @@ void main() {
     await tester.pump();
     expect(words(tr.rcStoppedLead.trim()), findsOneWidget);
     expect(words('Bilen'), findsNothing);
+  });
+
+  testWidgets('driver-u74: lost GPS is said in the new language and '
+      '"GPS restored" follows', (tester) async {
+    speak('sv');
+    final navigation = NavigationController(routeRepository: NoRoutes());
+    addTearDown(navigation.dispose);
+    DriverLocation fix() => DriverLocation(
+      point: const GeoPoint(59.3279, 18.0615),
+      measuredAt: DateTime.now(),
+      accuracyMeters: 5,
+    );
+    navigation.setVehicle(fix());
+    navigation.keepLastKnown();
+    TripIslandInput input() => TripIslandInput(
+      status: tr.pickup,
+      address: 'Storgatan 8',
+      waitingMessage: '',
+      navigationStatus: navigation.locationLost
+          ? tr.locationUpdatingEllipsis
+          : navigation.status,
+    );
+    final island = TripIslandController(input());
+    addTearDown(island.dispose);
+    expect(navigation.status, tr.locationUpdatingEllipsis);
+    // The driver switches language; the trip screen builds again.
+    speak('fr');
+    expect(navigation.status, tr.locationUpdatingEllipsis);
+    island.update(input());
+    navigation.setVehicle(fix());
+    expect(navigation.locationLost, isFalse);
+    island.update(input());
+    expect(island.face.title, tr.gpsRestored);
+    await tester.pump(const Duration(seconds: 3));
   });
 }

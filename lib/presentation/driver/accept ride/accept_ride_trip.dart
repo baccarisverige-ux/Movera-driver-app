@@ -718,22 +718,22 @@ extension _AcceptRideTrip on _AcceptRideState {
           },
           onError: (Object error) {
             if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-            _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
+            _navigation.keepLastKnown();
             _rebuild(() {
               _preciseLocationOff = error is PreciseLocationRequiredException;
               _hasLiveLocation = false;
-              _locationStatus = tr.locationUpdatingEllipsis;
+              _locationStatus = _navigation.status;
             });
           },
         );
         await _applyDriverPosition(position, forceRoute: true);
       } catch (error) {
         if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-        _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
+        _navigation.keepLastKnown();
         _rebuild(() {
           _preciseLocationOff = error is PreciseLocationRequiredException;
           _hasLiveLocation = false;
-          _locationStatus = tr.locationUpdatingEllipsis;
+          _locationStatus = _navigation.status;
         });
         unawaited(_refreshRoadRoute(force: true));
       }
@@ -754,10 +754,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       final shown = _fixView;
       if (!location.isDisplayableAt(DateTime.now())) {
         // Keep the previous car position and route; do not draw a stale fix.
-        _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
+        _navigation.keepLastKnown();
         _rebuild(() {
           _hasLiveLocation = false;
-          _locationStatus = tr.locationUpdatingEllipsis;
+          _locationStatus = _navigation.status;
         });
         return;
       }

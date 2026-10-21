@@ -95,8 +95,14 @@ class NavigationController extends ChangeNotifier {
   double? _routeLength;
   bool _userPausedFollow = false;
   NavigationRouteStatus? _status;
-  String? _locationWarning;
-  String? get _displayStatus => _locationWarning ?? _status?.text;
+  // driver-u74: a flag, not the words, so the warning is in the driver's
+  // language whenever it is read.
+  bool _locationLost = false;
+  String? get _displayStatus =>
+      _locationLost ? tr.locationUpdatingEllipsis : _status?.text;
+
+  /// GPS went quiet and the last known position is kept.
+  bool get locationLost => _locationLost;
   Timer? _rerouteDebounce;
   bool _disposed = false;
   bool _routeInFlight = false;
@@ -239,9 +245,9 @@ class NavigationController extends ChangeNotifier {
     // point, especially after a brief stream interruption. Clear only the
     // transient GPS warning; a failed road route still needs explicit retry.
     final restoredGps =
-        _locationWarning != null && location.isUsableAt(DateTime.now());
+        _locationLost && location.isUsableAt(DateTime.now());
     if (restoredGps) {
-      _locationWarning = null;
+      _locationLost = false;
     }
     final moved = _snapshot.vehicle.distanceMetersTo(location.point);
     if (!restoredGps &&
@@ -299,8 +305,8 @@ class NavigationController extends ChangeNotifier {
     return math.max(0.0, meters) / seconds;
   }
 
-  void keepLastKnown({String? status}) {
-    _locationWarning = status ?? tr.locationUpdatingEllipsis;
+  void keepLastKnown() {
+    _locationLost = true;
     _rebuildBanner();
   }
 
