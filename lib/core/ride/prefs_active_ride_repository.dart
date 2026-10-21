@@ -3,6 +3,8 @@ import 'package:movera/core/contracts/trip_transitions.dart';
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:movera/core/storage/local_write_session.dart';
 
 import 'package:movera/core/logging/driver_log.dart';
@@ -21,8 +23,11 @@ class PrefsActiveRideRepository
         TerminalRideRepository,
         RideHandoffRepository,
         UnreadableRideRecovery {
-  PrefsActiveRideRepository({Future<SharedPreferences> Function()? load})
-    : _load = load ?? SharedPreferences.getInstance;
+  PrefsActiveRideRepository({
+    Future<SharedPreferences> Function()? load,
+    bool sharedAcrossTabs = kIsWeb,
+  }) : _loadCached = load ?? SharedPreferences.getInstance,
+       _sharedAcrossTabs = sharedAcrossTabs;
 
   /// SharedPreferences key. Web localStorage prefix is `flutter.`.
   static const key = 'movera_driver_active_ride';
@@ -30,7 +35,19 @@ class PrefsActiveRideRepository
   static const maxTerminalMarkers = 256;
   static const terminalRetention = Duration(days: 90);
 
-  final Future<SharedPreferences> Function() _load;
+  final Future<SharedPreferences> Function() _loadCached;
+
+  /// Web: other tabs of the app share this localStorage, and the
+  /// SharedPreferences cache never sees their writes. Each operation
+  /// re-reads storage first, so its guards (ownership, no rewind, terminal
+  /// trips) check what is really stored (driver-r4-23).
+  final bool _sharedAcrossTabs;
+
+  Future<SharedPreferences> _load() async {
+    final prefs = await _loadCached();
+    if (_sharedAcrossTabs) await prefs.reload();
+    return prefs;
+  }
   final int _generation = LocalWriteSession.generation;
 
   // SharedPreferences operations are asynchronous. Keep them in invocation
