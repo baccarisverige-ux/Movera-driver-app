@@ -220,6 +220,7 @@
   "recordingTime": "Enregistrement {time}",
   "savedOnlyOnThisPhone": "enregistré uniquement sur ce téléphone",
   "recordAudio": "Enregistrer l’audio",
+  "audioStoppedWhenAppLeft": "arrêté quand Movera a quitté l’écran",
   "audioSavedTime": "Audio enregistré · {time}",
   "onlyOnThisPhone": "uniquement sur ce téléphone",
   "notAvailableOnThisDevice": "indisponible sur cet appareil",

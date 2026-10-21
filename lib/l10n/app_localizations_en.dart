@@ -782,6 +782,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recordAudio => 'Record audio';
 
   @override
+  String get audioStoppedWhenAppLeft => 'stopped when Movera left the screen';
+
+  @override
   String audioSavedTime(Object time) {
     return 'Audio saved · $time';
   }

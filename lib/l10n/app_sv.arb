@@ -220,6 +220,7 @@
   "recordingTime": "Spelar in {time}",
   "savedOnlyOnThisPhone": "sparas bara på den här telefonen",
   "recordAudio": "Spela in ljud",
+  "audioStoppedWhenAppLeft": "stoppades när Movera lämnade skärmen",
   "audioSavedTime": "Ljud sparat · {time}",
   "onlyOnThisPhone": "bara på den här telefonen",
   "notAvailableOnThisDevice": "finns inte på den här enheten",

@@ -511,6 +511,7 @@
   },
   "savedOnlyOnThisPhone": "saved only on this phone",
   "recordAudio": "Record audio",
+  "audioStoppedWhenAppLeft": "stopped when Movera left the screen",
   "audioSavedTime": "Audio saved · {time}",
   "@audioSavedTime": {
     "placeholders": {

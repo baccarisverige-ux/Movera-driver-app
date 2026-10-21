@@ -787,6 +787,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recordAudio => 'Enregistrer l’audio';
 
   @override
+  String get audioStoppedWhenAppLeft => 'arrêté quand Movera a quitté l’écran';
+
+  @override
   String audioSavedTime(Object time) {
     return 'Audio enregistré · $time';
   }

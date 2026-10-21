@@ -1,6 +1,15 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/ride/completion_journal.dart';
+import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
@@ -9,6 +18,9 @@ import 'package:movera/core/safety/ride_check_log.dart';
 import 'package:movera/core/safety/ride_check_recorder.dart';
 import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/safety/safety_alert_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../integration_test/headless_map_platform.dart';
 
 // D3.6 Ride check: what is saved and sent must match what happened.
 
@@ -150,4 +162,111 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(kit.recorder.recording, isFalse);
   });
+
+  test('driver-u41: leaving the app stops the recording; the saved length '
+      'is what was captured, not the time away', () async {
+    final kit = _Kit();
+    addTearDown(kit.dispose);
+    final done = kit.controller.open(kit.event(), instant: true);
+    await kit.controller.toggleRecording();
+    kit.now = kit.now.add(const Duration(seconds: 12));
+    await kit.controller.appBackgrounded();
+    expect(kit.recorder.recording, isFalse,
+        reason: 'the phone does not capture in the background');
+    expect(kit.controller.audio, RideCheckAudio.saved);
+    expect(kit.controller.audioStoppedInBackground, isTrue);
+    kit.now = kit.now.add(const Duration(minutes: 3));
+    expect(kit.controller.audioSeconds, 12);
+    await kit.controller.imOk();
+    expect((await done).audioSeconds, 12);
+  });
+
+  testWidgets('driver-u41: the trip screen stops Ride-check audio when the '
+      'app is hidden and says so', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    CompletionJournal.resetForTesting();
+    WaybillStore.reset();
+    addTearDown(WaybillStore.reset);
+    final maps = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var now = DateTime.now();
+    final recorder = _Recorder();
+    final alerts = DemoSafetyAlertRepository();
+    addTearDown(alerts.dispose);
+    final services = RideCheckServices(
+      alerts: alerts,
+      log: MemoryRideCheckLog(),
+      now: () => now,
+      recorder: () => recorder,
+      launch: (_) async => true,
+    );
+    await tester.pumpWidget(ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, _) => MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child!,
+        ),
+        home: AcceptRide(
+          tripId: 'audio-trip',
+          initialStage: ActiveRideStage.onTrip,
+          locationRepository: _Gps(),
+          rideCheck: services,
+        ),
+      ),
+    ));
+    await _frames(tester);
+    await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
+    await _frames(tester);
+    final demo = find.byKey(const ValueKey('ride-check-demo-longStop'));
+    await tester.ensureVisible(demo);
+    await tester.tap(demo);
+    await _frames(tester, 30);
+    await tester.tap(find.byKey(const ValueKey('ride-check-record-audio')));
+    await _frames(tester, 4);
+    expect(recorder.recording, isTrue);
+    now = now.add(const Duration(seconds: 9));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await _frames(tester, 2);
+    expect(recorder.recording, isFalse);
+    now = now.add(const Duration(minutes: 3));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await _frames(tester, 4);
+    expect(
+      find.text('Audio saved · 0:09 · stopped when Movera left the screen',
+          findRichText: true),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester);
+  });
+}
+
+class _Gps implements DriverLocationRepository {
+  final _fixes = StreamController<DriverLocation>.broadcast();
+  @override
+  Future<DriverLocation> getCurrentPosition() async => DriverLocation(
+        point: const GeoPoint(59.3416, 18.0649),
+        measuredAt: DateTime.now(),
+        accuracyMeters: 5,
+      );
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      _fixes.stream;
+}
+
+Future<void> _frames(WidgetTester tester, [int count = 12]) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
 }

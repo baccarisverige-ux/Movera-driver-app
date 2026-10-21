@@ -1424,6 +1424,12 @@ abstract class AppLocalizations {
   /// **'Record audio'**
   String get recordAudio;
 
+  /// No description provided for @audioStoppedWhenAppLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'stopped when Movera left the screen'**
+  String get audioStoppedWhenAppLeft;
+
   /// No description provided for @audioSavedTime.
   ///
   /// In en, this message translates to:

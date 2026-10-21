@@ -783,6 +783,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get recordAudio => 'Spela in ljud';
 
   @override
+  String get audioStoppedWhenAppLeft => 'stoppades när Movera lämnade skärmen';
+
+  @override
   String audioSavedTime(Object time) {
     return 'Ljud sparat · $time';
   }

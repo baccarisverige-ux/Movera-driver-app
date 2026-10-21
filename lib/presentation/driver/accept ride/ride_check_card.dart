@@ -997,7 +997,9 @@ class _RecordAudio extends StatelessWidget {
       RideCheckAudio.starting => (tr.recordAudio, 'starting…'),
       RideCheckAudio.saved => (
         tr.audioSavedTime(_clock(c.audioSeconds)),
-        tr.onlyOnThisPhone,
+        c.audioStoppedInBackground
+            ? tr.audioStoppedWhenAppLeft
+            : tr.onlyOnThisPhone,
       ),
       RideCheckAudio.unavailable => (
         tr.recordAudio,

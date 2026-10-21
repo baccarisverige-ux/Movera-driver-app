@@ -759,10 +759,10 @@ class _AcceptRideState extends State<AcceptRide>
       case AppLifecycleState.detached:
         _rideLifecycle.persistNow();
         _AcceptRideTrip(this)._pauseLiveUpdates();
+        // driver-u41: no background capture; inactive (a shade) still records.
+        if (state != AppLifecycleState.inactive) unawaited(_rideCheck.appBackgrounded());
     }
   }
-
-
 
 
 
