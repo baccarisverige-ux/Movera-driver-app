@@ -18,11 +18,13 @@ class DriverLocationException implements Exception {
 class DriverLocationService implements DriverLocationRepository {
   const DriverLocationService();
 
+  static const Duration _oneShotLimit = Duration(seconds: 8);
+
   LocationSettings get _settings => LocationSettings(
     accuracy: kIsWeb
         ? LocationAccuracy.high
         : LocationAccuracy.bestForNavigation,
-    timeLimit: const Duration(seconds: 8),
+    timeLimit: _oneShotLimit,
   );
 
   @override
@@ -30,9 +32,13 @@ class DriverLocationService implements DriverLocationRepository {
     await _ensurePermission();
 
     try {
+      // driver-18: the plugin's timeLimit alone is not enough. On web,
+      // geolocator_web passes it to the browser in the wrong unit (8 s
+      // becomes 8,000 s) and adds no timeout of its own, so a browser that
+      // never answers would block Home and the trip. Enforce it here too.
       final position = await Geolocator.getCurrentPosition(
         locationSettings: _settings,
-      );
+      ).timeout(_oneShotLimit);
       return _toDriverLocation(position);
     } catch (error, stack) {
       DriverLog.warn('Current GPS failed, trying last known: $error');
