@@ -9,6 +9,7 @@ import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
@@ -36,13 +37,25 @@ Future<void> _settle(WidgetTester tester, [int frames = 12]) async {
   }
 }
 
-Future<void> _pumpTrip(WidgetTester tester, _Loc location) async {
+Future<void> _pumpFor(WidgetTester tester, Duration total) async {
+  for (var i = 0; i < total.inMilliseconds ~/ 250; i++) {
+    await tester.pump(const Duration(milliseconds: 250));
+  }
+}
+
+Future<void> _pumpTrip(
+  WidgetTester tester,
+  _Loc location, {
+  GlobalKey<NavigatorState>? navigator,
+}) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(ScreenUtilInit(
     designSize: const Size(375, 812),
     builder: (_, __) => MaterialApp(
+      navigatorKey: navigator,
+      navigatorObservers: [driverRouteObserver],
       home: AcceptRide(
         locationRepository: location,
         initialStage: ActiveRideStage.onTrip,
@@ -165,6 +178,47 @@ void main() {
       await tester.pump();
       expect(blocked(), isFalse);
       await _unmount(tester, location);
+    });
+  });
+
+  group('driver-u80: no next-trip offer behind a covering route (D-05)', () {
+    Future<void> covered(
+      WidgetTester tester, {
+      required bool offerFirst,
+    }) async {
+      final location = _Loc();
+      final navigator = GlobalKey<NavigatorState>();
+      await _pumpTrip(tester, location, navigator: navigator);
+      if (offerFirst) {
+        await tester.pump(const Duration(milliseconds: 2600));
+        expect(find.byKey(_offerCard), findsOneWidget);
+      }
+      // History, Chat and the other screens open over the trip.
+      unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('covering')),
+      )));
+      await tester.pump(const Duration(milliseconds: 400));
+      location.updates.add(_fix());
+      await _pumpFor(tester,
+          DriverOfferRules.current.exclusiveAcceptTime + const Duration(seconds: 4));
+      expect(ExclusiveAnswers.instance.missedInRow, 0,
+          reason: 'an offer the driver cannot see is not a miss');
+      navigator.currentState!.pop();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 2600));
+      expect(find.byKey(_offerCard), findsOneWidget,
+          reason: 'back on the trip, Radar offers again');
+      expect(ExclusiveAnswers.instance.missedInRow, 0);
+      await _unmount(tester, location);
+    }
+
+    testWidgets('none arrives or runs out while covered', (tester) async {
+      await covered(tester, offerFirst: false);
+    });
+
+    testWidgets('one already up waits behind the route, then counts down',
+        (tester) async {
+      await covered(tester, offerFirst: true);
     });
   });
 }

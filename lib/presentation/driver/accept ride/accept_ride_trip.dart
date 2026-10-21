@@ -184,11 +184,25 @@ extension _AcceptRideTrip on _AcceptRideState {
       unawaited(_startLiveLocation());
       _resumeOnTripOffer();
     }
+    /// D-05 / driver-u80: a route (History, Chat, Support, a sheet) covers
+    /// the trip: no offer comes, the one up keeps its deadline.
+    void _coverTrip() {
+      _tripCovered = true;
+      _nextTripRadarDemoTimer?.cancel();
+      _nextTripOfferExpiry?.cancel();
+    }
+    void _uncoverTrip() {
+      if (!_tripCovered) { return; }
+      _tripCovered = false;
+      if (!_liveUpdatesPaused) { _resumeOnTripOffer(); }
+    }
+    /// Next-trip offers wait: the app is hidden or a route covers the trip.
+    bool get _offersHeld => _liveUpdatesPaused || _tripCovered;
     /// D-05: back on screen. An offer whose time ran out while hidden
     /// leaves without counting as a miss (as on Home); one with time left
     /// counts down the rest. Radar then looks for the next one.
     void _resumeOnTripOffer() {
-      if (!mounted || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
+      if (!mounted || _tripCovered || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
       if (_onTripRadarState == _OnTripRadarState.offerAvailable) {
         final deadline = _nextTripOfferDeadline;
         final left = deadline?.difference(_offerNow());
@@ -1157,7 +1171,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         return;
       }
       if (!mounted ||
-          _liveUpdatesPaused ||
+          _offersHeld ||
           _stage != ActiveRideStage.onTrip ||
           _onTripRadarState != _OnTripRadarState.scanning ||
           _onTripRadarDeclined ||
@@ -1191,7 +1205,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         const Duration(milliseconds: 2200),
         () {
           if (!mounted ||
-              _liveUpdatesPaused ||
+              _offersHeld ||
               _stage != ActiveRideStage.onTrip ||
               _onTripRadarState != _OnTripRadarState.scanning) {
             return;
@@ -1208,7 +1222,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     void _presentOnTripOffer() {
       // D-05: never while the trip is hidden; the resume looks again.
-      if (_liveUpdatesPaused) { return; }
+      if (_offersHeld) { return; }
       _rebuild(() {
         final offer = _onTripRadarOfferForDestination();
         if (!_dropoffFollowsDestination(offer.dropoffPosition)) { return; }

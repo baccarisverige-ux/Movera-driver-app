@@ -36,6 +36,7 @@ import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -341,7 +342,7 @@ class _TripCancellationReason {
 }
 
 class _AcceptRideState extends State<AcceptRide>
-    with TickerProviderStateMixin, WidgetsBindingObserver {
+    with TickerProviderStateMixin, WidgetsBindingObserver, RouteAware {
   final DriverRealtimeSequenceGate _realtimeGate = DriverRealtimeSequenceGate();
   static const Color _ink = Color(0xFF252E3A);
   static const Color _panel = Color(0xFFFFFFFF);
@@ -501,6 +502,7 @@ class _AcceptRideState extends State<AcceptRide>
   DateTime? _lastGpsAppliedAt;
   DateTime? _lastSnapshotAt;
   bool _liveUpdatesPaused = false;
+  bool _tripCovered = false; // driver-u80: a route covers the trip.
   int _waitSeconds = 0;
   /// Paid seconds of waits already over (Q42); [_acceptedAt]: contract
   /// `acceptedAt`, kept across restores (Q12).
@@ -661,10 +663,15 @@ class _AcceptRideState extends State<AcceptRide>
     }
     if(MediaQuery.disableAnimationsOf(context)) { _radarPulseController.stop(); _radarSweepController.stop(); }
     else if(!_liveUpdatesPaused) { _radarPulseController.repeat(reverse:true); _radarSweepController.repeat(); }
+    final route = ModalRoute.of(context);
+    if (route != null) { driverRouteObserver.subscribe(this, route); }
   }
+  @override void didPushNext() => _AcceptRideTrip(this)._coverTrip(); // driver-u80
+  @override void didPopNext() => _AcceptRideTrip(this)._uncoverTrip();
 
   @override
   void dispose() {
+    driverRouteObserver.unsubscribe(this);
     RideCheckGate.listenable.removeListener(_onRideCheckGateListener);
     _rideCheckTicker?.cancel();
     _hardStops?.cancel();
