@@ -13,6 +13,7 @@ import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
 import 'package:movera/presentation/driver/settings/settings.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/presentation/driver/vehicles/vehicles.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
@@ -394,6 +395,7 @@ class _DriverProfileState extends State<DriverProfile> {
           await runtime!.logout!();
         } else {
           await clearLocalUserData();
+          ScheduledRideStore.reset();
           runtime?.session.reset();
         }
       } catch (_) {

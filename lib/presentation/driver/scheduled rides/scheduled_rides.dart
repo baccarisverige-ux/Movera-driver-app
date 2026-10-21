@@ -816,7 +816,9 @@ class ScheduledRideStore {
     return !wasPaused && pausedUntil(_now) != null;
   }
 
-  @visibleForTesting
+  /// Back to a fresh session: logout calls it, so the previous driver's
+  /// accepted rides, late cancels and pause, reminder and backup note do
+  /// not carry over to the next driver on the device (driver-u167).
   static void reset() {
     _requests
       ..clear()
