@@ -473,5 +473,23 @@ void main() {
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       await _end(tester);
     });
+
+    testWidgets('driver-r5-19: a network error on Accept keeps the time '
+        'the offer had left, not a fresh window', (tester) async {
+      final home = await assignUp(tester);
+      await _frames(tester, const Duration(seconds: 10));
+      await tester
+          .tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
+      await tester.pump();
+      expect(home.dispatch.claims, hasLength(1));
+      await _frames(tester, const Duration(milliseconds: 500));
+      home.dispatch.claims.single.complete(const ClaimResult.networkError());
+      await _frames(tester, const Duration(seconds: 1));
+      expect(card, findsOneWidget, reason: 'it still had time left');
+      // About 3 s were left of its 15 s, plus the slide down.
+      await _frames(tester, const Duration(seconds: 6));
+      expect(card, findsNothing);
+      await _end(tester);
+    });
   });
 }
