@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
@@ -13,6 +14,7 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
@@ -25,6 +27,7 @@ import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/widgets/google_driver_camera_port.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -155,6 +158,23 @@ Future<void> _scheduled(WidgetTester tester, {Duration? start}) async {
   await tester.pumpWidget(const MaterialApp(home: ScheduledRidesScreen()));
   await tester.pumpAndSettle();
 }
+
+/// The map's camera target after each move.
+class _CameraMoves extends HeadlessMapPlatform {
+  GeoPoint? camera;
+  @override
+  Future<void> moveCamera(CameraUpdate update, {required int mapId}) async {
+    final pose = (update.toJson() as List<dynamic>)[1] as Map<dynamic, dynamic>;
+    final target = pose['target'] as List<dynamic>;
+    camera = GeoPoint(target[0] as double, target[1] as double);
+  }
+}
+
+/// [point] is at least [meters] north of [fix].
+bool _ahead(GeoPoint? point, GeoPoint fix, {double meters = 8}) =>
+    point != null &&
+    point.latitude > fix.latitude &&
+    point.distanceMetersTo(fix) >= meters;
 
 void main() {
   tearDown(() {
@@ -325,5 +345,51 @@ void main() {
     ScheduledRideStore.riderCancelled(demoReservationId);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('scheduled-reminder')), findsNothing);
+  });
+
+  testWidgets('driver-u176: while the camera coasts ahead between fixes, '
+      'the car marker stays at the fix', (tester) async {
+    final maps = GoogleMapsFlutterPlatform.instance;
+    final platform = _CameraMoves();
+    GoogleMapsFlutterPlatform.instance = platform;
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    const fix = GeoPoint(59.33, 18.06);
+    // The camera starts 11 m behind the fix, so it chases the chase point.
+    final start = CameraPosition(
+        target: LatLng(fix.latitude - 0.0001, fix.longitude),
+        zoom: 17,
+        tilt: 45);
+    GoogleMapController? controller;
+    await tester.pumpWidget(MaterialApp(
+      home: GoogleMap(
+          initialCameraPosition: start,
+          onMapCreated: (value) => controller = value),
+    ));
+    await tester.pump();
+    final frames = <CameraPosition>[];
+    final port = GoogleDriverCameraPort(controller!,
+        initialPosition: start, onFrame: frames.add);
+    GeoPoint at(CameraPosition p) =>
+        GeoPoint(p.target.latitude, p.target.longitude);
+    // The coast runs on the wall clock: wait (really) until the camera is
+    // 8 m past the fix.
+    await tester.runAsync(() async {
+      unawaited(port.animate(const DriverCameraPose(fix, 17, 0, 45,
+          speedMetersPerSecond: 20, coast: true)));
+      final cameraAhead = Stopwatch()..start();
+      while (cameraAhead.elapsed < const Duration(seconds: 5) &&
+          !_ahead(platform.camera, fix)) {
+        await Future<void>.delayed(const Duration(milliseconds: 16));
+      }
+      port.dispose();
+    });
+    expect(_ahead(platform.camera, fix), isTrue,
+        reason: 'the camera coasted ahead');
+    expect(frames, isNotEmpty);
+    // The car may trail the fix (the camera is damped), never pass it.
+    for (final frame in frames) {
+      expect(_ahead(at(frame), fix, meters: 1), isFalse);
+    }
+    await tester.pumpWidget(const SizedBox());
   });
 }
