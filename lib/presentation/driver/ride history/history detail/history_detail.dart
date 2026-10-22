@@ -467,19 +467,9 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
   }
 
   Widget _buildMetaRows() {
-    final outcome = switch (_ride.status) {
-      TripStatus.completed => tr.rideCompletedOn,
-      TripStatus.cancelledByRider => tr.cancelledByRider,
-      TripStatus.cancelledByDriver => tr.cancelledByDriver,
-      TripStatus.cancelledByAdmin => tr.cancelledBySupport,
-      TripStatus.cancelledBySystem => tr.cancelledByMovera,
-      TripStatus.searching ||
-      TripStatus.requested => tr.cancelledByDriver,
-      TripStatus.noShow => tr.riderDidNotArrive,
-      TripStatus.expired => tr.tripExpired,
-      TripStatus.failed => tr.tripFailed,
-      _ => tr.tripEnded,
-    };
+    final outcome = _ride.status == TripStatus.completed
+        ? tr.rideCompletedOn
+        : tripOutcomeText(_ride.status);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

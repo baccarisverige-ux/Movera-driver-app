@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -16,6 +17,7 @@ import 'package:movera/presentation/driver/home/components/home_island_notices.d
 import 'package:movera/presentation/driver/my%20queue%20position/my_queue_pos.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
+import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
@@ -59,7 +61,10 @@ Future<void> showAccepted(WidgetTester tester, String code) async {
 }
 
 /// A finished trip in History, paid by [payment] as the journal keeps it.
-TripHistoryRecord historyTrip(String payment) => TripHistoryRecord(
+TripHistoryRecord historyTrip(
+  String payment, {
+  TripStatus status = TripStatus.completed,
+}) => TripHistoryRecord(
   tripId: 'trip-1',
   riderName: 'Lars',
   whenLabel: '21 Oct',
@@ -68,6 +73,8 @@ TripHistoryRecord historyTrip(String payment) => TripHistoryRecord(
   fare: '126,00 kr',
   category: 'Comfort',
   paymentMethod: payment,
+  status: status,
+  completedAt: DateTime.now(),
 );
 
 /// Wave 5 D5.1 (parts c, d and e): texts that stayed in English, or in
@@ -245,6 +252,31 @@ void main() {
       }
       await show(tester, code, const DriverRideCompleted(paymentMethod: 'Card'));
       expect(find.text(card), findsOneWidget, reason: '$code completed');
+    }
+  });
+
+  testWidgets('driver-86: All rides names each outcome in the driver\'s '
+      'language', (tester) async {
+    for (final code in languages) {
+      speak(code);
+      final outcomes = {
+        TripStatus.cancelledByRider: tr.cancelledByRider,
+        TripStatus.searching: tr.cancelledByDriver,
+        TripStatus.noShow: tr.riderDidNotArrive,
+      };
+      await show(tester, code, DriverRideHistory(loadHistory: () async => [
+        for (final status in outcomes.keys)
+          historyTrip('Cash', status: status),
+      ]));
+      await tester.pump();
+      await tester.tap(find.text(tr.allRides).last);
+      await tester.pump(const Duration(milliseconds: 400));
+      for (final said in outcomes.values) {
+        expect(words(said), findsWidgets, reason: '$code $said');
+      }
+      for (final wire in ['cancelled_by_rider', 'cancelled_by_driver', 'no_show']) {
+        expect(words(wire), findsNothing, reason: wire);
+      }
     }
   });
 }

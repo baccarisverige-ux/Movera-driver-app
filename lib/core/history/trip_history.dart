@@ -15,6 +15,22 @@ String paymentMethodText(String? method) =>
       _ => method!.trim(),
     };
 
+/// How a finished trip ended, in the driver's language: "Completed",
+/// "Cancelled by rider", … A trip released back to dispatch was the
+/// driver's cancel (driver-86).
+String tripOutcomeText(TripStatus status) => switch (status) {
+  TripStatus.completed => tr.completed,
+  TripStatus.cancelledByRider => tr.cancelledByRider,
+  TripStatus.cancelledByDriver => tr.cancelledByDriver,
+  TripStatus.cancelledByAdmin => tr.cancelledBySupport,
+  TripStatus.cancelledBySystem => tr.cancelledByMovera,
+  TripStatus.searching || TripStatus.requested => tr.cancelledByDriver,
+  TripStatus.noShow => tr.riderDidNotArrive,
+  TripStatus.expired => tr.tripExpired,
+  TripStatus.failed => tr.tripFailed,
+  _ => tr.tripEnded,
+};
+
 /// Completed-trip projection for History (D7).
 ///
 /// Distinct from [WaybillRecord]: a waybill is the live/queued slip, history
