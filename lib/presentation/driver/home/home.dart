@@ -334,6 +334,7 @@ class _DriverHomeState extends State<DriverHome>
   /// The Radar list is sending a Match: Back keeps it open until dispatch
   /// answers, so a won trip still opens.
   final ValueNotifier<bool> _radarListClaiming = ValueNotifier<bool>(false);
+  final RadarHiddenTrips _radarHidden = RadarHiddenTrips(); // u159
   /// Decision 4: the offer settings are locked while a claim is out.
   void _syncClaimLock() => ClaimLock.set(mounted && _HomeOfferRules(this)._claimInFlight);
   bool isAccountActivated = true;
@@ -772,6 +773,7 @@ class _DriverHomeState extends State<DriverHome>
                   followsDestination: (o) => _HomeOfferRadar(this)._followsDestination(o.dropoffPosition.toLatLng()),
                   towardPickupTime: _HomeScheduled(this)._towardPickupTime,
                   claimPending: _radarListClaiming,
+                  hiddenTrips: _radarHidden,
                   onCloseRides: (hasOffers) {
                     setState(() {
                       showRideRequests = false;

@@ -26,6 +26,25 @@ import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
+/// Q17: the trips hidden with ×, each with the time it comes back. Home
+/// keeps one, so a Live list closed and opened again still hides them
+/// (driver-u159).
+class RadarHiddenTrips {
+  final Map<String, DateTime> _until = <String, DateTime>{};
+
+  void hide(String id, Duration duration) =>
+      _until[id] = DateTime.now().add(duration);
+
+  void show(String id) => _until.remove(id);
+
+  /// The trips still hidden, with the time each has left.
+  Map<String, Duration> get left {
+    final now = DateTime.now();
+    _until.removeWhere((_, until) => !until.isAfter(now));
+    return {for (final e in _until.entries) e.key: e.value.difference(now)};
+  }
+}
+
 class RideRequests extends StatefulWidget {
   final ValueChanged<bool>? onCloseRides;
   final bool destinationModeActive;
@@ -54,6 +73,9 @@ class RideRequests extends StatefulWidget {
   /// Back then keeps Radar open, so the claim's answer is not lost.
   final ValueNotifier<bool>? claimPending;
 
+  /// Where hidden trips are kept past this list; its own when null.
+  final RadarHiddenTrips? hiddenTrips;
+
   const RideRequests({
     super.key,
     this.onCloseRides,
@@ -70,6 +92,7 @@ class RideRequests extends StatefulWidget {
     this.followsDestination,
     this.towardPickupTime,
     this.claimPending,
+    this.hiddenTrips,
   });
 
   @override
@@ -122,6 +145,8 @@ class _RideRequestsState extends State<RideRequests> {
   /// Q17: a trip hidden with × comes back after the admin's minutes if it
   /// is still open in Radar. Hiding never counts against the driver.
   final Map<String, Timer> _comeBackTimers = <String, Timer>{};
+  late final RadarHiddenTrips _hidden =
+      widget.hiddenTrips ?? RadarHiddenTrips();
 
   void _hide(_RadarTrip trip) {
     // An admin radar group's trip: × is the driver's No (§3.1). It never
@@ -130,18 +155,22 @@ class _RideRequestsState extends State<RideRequests> {
       unawaited(_dispatch.declineOffer(trip.id));
     }
     setState(() => _dismissed.add(trip.id));
-    _comeBackTimers.remove(trip.id)?.cancel();
-    _comeBackTimers[trip.id] = Timer(
-      DriverOfferRules.current.hiddenComesBackAfter,
-      () {
-        _comeBackTimers.remove(trip.id);
-        final open = _latestDispatchOffers.any((offer) => offer.id == trip.id);
-        if (!mounted || !open || _stateFor(trip.id) != _RadarOfferState.available) {
-          return;
-        }
-        setState(() => _dismissed.remove(trip.id));
-      },
-    );
+    final after = DriverOfferRules.current.hiddenComesBackAfter;
+    _hidden.hide(trip.id, after);
+    _comeBackAfter(trip.id, after);
+  }
+
+  void _comeBackAfter(String id, Duration after) {
+    _comeBackTimers.remove(id)?.cancel();
+    _comeBackTimers[id] = Timer(after, () {
+      _comeBackTimers.remove(id);
+      _hidden.show(id);
+      final open = _latestDispatchOffers.any((offer) => offer.id == id);
+      if (!mounted || !open || _stateFor(id) != _RadarOfferState.available) {
+        return;
+      }
+      setState(() => _dismissed.remove(id));
+    });
   }
 
   List<_RadarTrip> get _visibleOffers {
@@ -199,6 +228,11 @@ class _RideRequestsState extends State<RideRequests> {
     super.initState();
     _ownsDispatch = widget.dispatchRepository == null;
     _dispatch = widget.dispatchRepository ?? DemoDispatchRepository();
+    // Trips hidden before the list was last closed stay hidden (u159).
+    for (final hidden in _hidden.left.entries) {
+      _dismissed.add(hidden.key);
+      _comeBackAfter(hidden.key, hidden.value);
+    }
     _withdrawalSubscription = _dispatch.watchWithdrawals().listen(_onWithdrawn);
     _nearbySubscription = _dispatch.watchNearbyOffers().listen(_onDispatchOffers);
   }

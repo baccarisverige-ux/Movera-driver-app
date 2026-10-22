@@ -22,6 +22,7 @@ import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
+import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -253,6 +254,31 @@ void main() {
     expect(find.text('Payout'), findsOneWidget);
     expect(find.text('Wallet & payments'), findsOneWidget);
     expect(find.text('Old ticket'), findsOneWidget);
+    await _unmount(tester);
+  });
+
+  testWidgets('driver-u159: a trip hidden with × stays hidden when the Live '
+      'list is opened again', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(375, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final hidden = RadarHiddenTrips(); // Home's
+    const card = ValueKey<String>('radar-offer-card-nearby-1');
+    Future<void> open() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(
+        MaterialApp(home: RideRequests(hiddenTrips: hidden)),
+      );
+      await tester.pump(const Duration(milliseconds: 120));
+    }
+    await open();
+    expect(find.byKey(card), findsOneWidget);
+    await tester.tap(
+        find.byKey(const ValueKey<String>('radar-offer-dismiss-nearby-1')));
+    await tester.pump(const Duration(milliseconds: 120));
+    await open(); // closed and opened again
+    expect(find.byKey(card), findsNothing);
+    expect(find.byKey(const ValueKey<String>('radar-offer-card-nearby-2')),
+        findsOneWidget);
     await _unmount(tester);
   });
 
