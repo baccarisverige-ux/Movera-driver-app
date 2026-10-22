@@ -229,6 +229,7 @@ class _HomeGps implements DriverLocationRepository {
 Future<void> _pumpHome(WidgetTester tester, {
   DriverLocationRepository? location,
   DispatchRepository? dispatch,
+  DriverSessionController? session,
 }) async {
   final maps = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
@@ -254,6 +255,7 @@ Future<void> _pumpHome(WidgetTester tester, {
       home: DriverHome(
         locationRepository: location,
         dispatchRepository: dispatch,
+        sessionController: session,
       ),
     ),
   ));
@@ -331,8 +333,11 @@ class _NoGps implements DriverLocationRepository {
 }
 
 /// Home online with both [_RadarDispatch] trips on its deck.
-Future<void> _pumpDeck(WidgetTester tester, DispatchRepository dispatch) async {
-  await _pumpHome(tester, location: _NoGps(), dispatch: dispatch);
+Future<void> _pumpDeck(WidgetTester tester, DispatchRepository dispatch, {
+  DriverSessionController? session,
+}) async {
+  await _pumpHome(tester, location: _NoGps(), dispatch: dispatch,
+      session: session);
   await tester.tap(find.text('OFF'));
   await _pumpFor(tester, const Duration(seconds: 24));
   expect(find.byKey(const ValueKey<String>('radar-offer-card-first')),
@@ -657,6 +662,29 @@ void main() {
     await _pumpFor(tester, const Duration(seconds: 3)); // its card slides down
     expect(ExclusiveAnswers.instance.missedInRow, 0);
     expect(_exclusiveCard, findsNothing, reason: 'its time ran out unseen');
+    await _unmount(tester);
+  });
+
+  testWidgets('driver-u116: a trip matched from the full Radar list clears '
+      'Home\'s deck', (tester) async {
+    final dispatch = _RadarDispatch();
+    final session = DriverSessionController();
+    await _pumpDeck(tester, dispatch, session: session);
+    await tester.tap(find.byKey(const ValueKey<String>('radar-home-all-offers')));
+    await _settle(tester);
+    await tester.tap(find.byKey(const ValueKey<String>('radar-match-first')));
+    await tester.pump();
+    dispatch.publish([_radarTrip('second')]); // dispatch hands it to us
+    dispatch.claims.single.complete(ClaimResult.success(_radarTrip('first')));
+    await _until(tester, find.byType(AcceptRide));
+    await _settle(tester);
+    expect(IslandMessages.posted.map((m) => m.title),
+        isNot(contains('Trip unavailable')));
+    // The trip ends; Home is on top again, without the pre-trip cards.
+    session.endTrip();
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await _settle(tester);
+    expect(find.byKey(const ValueKey<String>('radar-home-deck')), findsNothing);
     await _unmount(tester);
   });
 

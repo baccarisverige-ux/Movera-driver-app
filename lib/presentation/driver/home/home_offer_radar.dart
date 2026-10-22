@@ -628,6 +628,9 @@ extension _HomeOfferRadar on _DriverHomeState {
           IslandMessages.show(HomeIslandNotices.tripUnavailable);
           _dismissOutsideRadarOffer();
         }
+        // driver-u116: the full Radar list's own Match took it; the trip
+        // that begins clears the deck.
+        if (_radarListClaiming.value) { return; }
         for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
           if (ids.contains(offer.id) ||
               _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
@@ -1113,6 +1116,12 @@ extension _HomeOfferRadar on _DriverHomeState {
         ),
       );
 
+      _clearHomeOffersAfterFrame();
+    }
+    /// A trip began: Home's offers (deck, waiting trips, the Exclusive
+    /// offer and its route) are done with. Also when the trip was matched
+    /// from the full Radar list, not the deck (driver-u116).
+    void _clearHomeOffersAfterFrame() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) { return; }
         _rebuild(() {

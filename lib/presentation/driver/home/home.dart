@@ -677,6 +677,7 @@ class _DriverHomeState extends State<DriverHome>
     if (!mounted) { return; }
     _HomeOfferRules(this)._releaseHeldOffline(); // Decision 3: a won trip began.
     _HomeScheduled(this)._recheckLateScheduled();
+    if (_driverSession.activeTripId != null && _radarHomeOffers.isNotEmpty) { _HomeOfferRadar(this)._cancelAllOfferTimers(); _HomeOfferRadar(this)._clearHomeOffersAfterFrame(); } // u116
     if (_driverSession.consumeResumeHomeAfterTrip()) {
       setState(() {
         showRideRequests = false;
