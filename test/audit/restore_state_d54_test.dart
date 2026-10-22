@@ -14,6 +14,7 @@ import 'package:movera/core/safety/ride_check_log.dart';
 import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
@@ -123,5 +124,45 @@ void main() {
     expect(PersistedActiveRide.fromJson(ride.stamped().toJson())!.rideCheckFired,
         ['longStop', 'offRoute']);
     expect(_saved({}).rideCheckFired, isEmpty);
+  });
+
+  testWidgets('driver-u68: next-trip offers held off stay off after a reload',
+      (tester) async {
+    final maps = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    DriverOfferRules.current = const DriverOfferRules(autoOffline: false);
+    final gps = _StillGps(DateTime.now);
+    Future<void> mount(PersistedActiveRide ride, ActiveRideRepository repo) =>
+        tester.pumpWidget(ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, _) => MaterialApp(
+            home: AcceptRide.fromPersisted(ride,
+                locationRepository: gps, activeRideRepository: repo),
+          ),
+        ));
+    bool radarOn() =>
+        tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).radarOn;
+    final repo = MemoryActiveRideRepository();
+    await mount(_saved({}), repo);
+    await _frames(tester);
+    expect(radarOn(), isTrue);
+    // The driver holds the radar: no next-trip offers.
+    tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).onRadar();
+    await _frames(tester);
+    expect(radarOn(), isFalse);
+    final saved = (await repo.read())!;
+    // Safari reloads the PWA.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester);
+    await mount(saved, MemoryActiveRideRepository());
+    await _frames(tester, 40);
+    expect(radarOn(), isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester);
+    await gps.updates.close();
   });
 }

@@ -143,6 +143,7 @@ class PersistedActiveRide {
     this.pickupKm,
     this.bags = 0,
     this.rideCheckFired = const <String>[],
+    this.nextOffersStopped = false,
   });
 
   final String tripId;
@@ -208,6 +209,10 @@ class PersistedActiveRide {
   /// ([RideCheckTrigger] names): each opens once per trip, also after a
   /// restore (driver-u44).
   final List<String> rideCheckFired;
+
+  /// The driver held the trip radar: no next-trip offers on this trip,
+  /// also after a restore (driver-u68).
+  final bool nextOffersStopped;
   bool get hasVerifiedEndpoints =>
       validCoordinate(pickupLat, latitude: true) &&
       validCoordinate(pickupLng, latitude: false) &&
@@ -271,6 +276,7 @@ class PersistedActiveRide {
       pickupKm: pickupKm,
       bags: bags,
       rideCheckFired: rideCheckFired,
+      nextOffersStopped: nextOffersStopped,
     );
   }
 
@@ -327,6 +333,7 @@ class PersistedActiveRide {
     if (pickupKm != null) 'pickupKm': pickupKm,
     if (bags > 0) 'bags': bags,
     if (rideCheckFired.isNotEmpty) 'rideCheckFired': rideCheckFired,
+    if (nextOffersStopped) 'nextOffersStopped': true,
   };
 
   /// A saved Money, or null when absent or not readable.
@@ -499,6 +506,7 @@ class PersistedActiveRide {
       rideCheckFired: fired is List
           ? List<String>.unmodifiable(fired.whereType<String>())
           : const <String>[],
+      nextOffersStopped: json['nextOffersStopped'] == true,
     );
   }
 }

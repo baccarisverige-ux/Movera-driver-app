@@ -37,6 +37,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         pickupKm: widget.pickupKm,
         bags: widget.bags,
         rideCheckFired: _rideCheckDetector.firedNames,
+        nextOffersStopped: _onTripRadarState == _OnTripRadarState.stopped,
         nextTripId: securedOffer?.id,
         riderName: widget.riderName,
         riderRating: widget.riderRating,
@@ -122,6 +123,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       );
     }
     void _restoreQueuedNextFromSnapshot() {
+      // driver-u68: offers the driver held off stay off.
+      if (widget.restoredSnapshot?.nextOffersStopped == true) {
+        _onTripRadarState = _OnTripRadarState.stopped;
+      }
       final next = widget.restoredSnapshot?.next;
       if (next == null) { return; }
       _onTripRadarState = _OnTripRadarState.secured;
@@ -1136,6 +1141,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       _onTripRadarDeclined = false;
       _rebuild(() => _onTripRadarState = _OnTripRadarState.off);
       _startOnTripRadar();
+      unawaited(_rideLifecycle.persistNow());
     }
     /// R13-18: the same on-the-way filter as Home (R13-9); the next trip
     /// starts at this trip's drop-off.
@@ -1181,6 +1187,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState = _OnTripRadarState.stopped;
         _nextTripRadarOffer = null;
       });
+      unawaited(_rideLifecycle.persistNow()); // kept for a restore (u68)
     }
     void _maybeScheduleOnTripRadarDemoOffer() {
       // Q18: while driving a rider only Exclusive offers come, when admin
