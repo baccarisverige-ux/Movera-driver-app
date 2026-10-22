@@ -13,12 +13,14 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
@@ -123,8 +125,27 @@ Future<void> _call112(WidgetTester tester,
   await tester.pumpAndSettle();
 }
 
+/// The demo day (07:00, or [start]) booked again, then Scheduled rides.
+/// The test day's requests are 40 and 65 min after the start.
+Future<void> _scheduled(WidgetTester tester, {Duration? start}) async {
+  if (start != null) {
+    ScheduledClock.instance = ScheduledClock(startTime: start);
+  }
+  DemoReservations.reset();
+  ScheduledRideStore.reset();
+  await tester.binding.setSurfaceSize(const Size(390, 844));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(const MaterialApp(home: ScheduledRidesScreen()));
+  await tester.pumpAndSettle();
+}
+
 void main() {
-  tearDown(() => DriverAppTexts.language = 'en');
+  tearDown(() {
+    DriverAppTexts.language = 'en';
+    ScheduledClock.instance = ScheduledClock.fastDay();
+    DemoReservations.reset();
+    ScheduledRideStore.reset();
+  });
 
   testWidgets("driver-u151: Ride completed names the payment in the driver's "
       'language and never calls an in-app payment Card', (tester) async {
@@ -222,5 +243,13 @@ void main() {
     expect(find.text('Could not open the dialer. Dial 112 manually.'),
         findsOneWidget);
     expect(find.byIcon(Icons.check_circle_outline_rounded), findsNothing);
+  });
+
+  testWidgets("driver-u162: requests picked up tomorrow are not 'Available "
+      "today'", (tester) async {
+    await _scheduled(tester, start: const Duration(hours: 23, minutes: 30));
+    expect(find.textContaining('Tomorrow'), findsWidgets);
+    expect(find.text('Available today'), findsNothing);
+    expect(find.text('Available'), findsWidgets);
   });
 }
