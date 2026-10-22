@@ -681,6 +681,40 @@ void main() {
     expect(find.byKey(warning), findsOneWidget,
         reason: 'before: it still read as free, and Confirm counted late');
   });
+
+  testWidgets('driver-r5-45: a reservation claim out from Scheduled rides '
+      'shows as Matching in a reopened screen', (tester) async {
+    _phone(tester);
+    SharedPreferences.setMockInitialValues({});
+    ScheduledRideStore.reset();
+    addTearDown(ScheduledRideStore.reset);
+    final dispatch = _RadarDispatch();
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(_app(const SizedBox(), navigator: navigator));
+    Future<void> open() async {
+      unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
+          builder: (_) => ScheduledRidesScreen(dispatchRepository: dispatch))));
+      await _frames(tester, 12);
+    }
+
+    await open();
+    await tester.tap(find.text('Gamla vägen, Stockholm').first);
+    await _frames(tester, 12);
+    final accept = find.textContaining('Accept  •');
+    await tester.ensureVisible(accept);
+    await tester.tap(accept);
+    await _frames(tester, 12);
+    expect(dispatch.claims, hasLength(1));
+    // Back while it says Matching, then Scheduled rides again.
+    navigator.currentState!.pop();
+    await _frames(tester, 12);
+    await open();
+    expect(find.byKey(const ValueKey<String>('scheduled-ride-matching')),
+        findsOneWidget,
+        reason: 'before: it showed as open, and Accept claimed it again');
+    dispatch.claims.single.complete(const ClaimResult.unavailable());
+    await _frames(tester, 6);
+  });
 }
 
 /// Contract `Offer` (openapi.yaml#Offer).

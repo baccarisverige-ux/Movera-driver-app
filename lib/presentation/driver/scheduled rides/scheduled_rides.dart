@@ -63,9 +63,6 @@ class ScheduledRidesScreen extends StatefulWidget {
 class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   int _selectedTab = 0;
 
-  /// Requests whose claim is with the server right now.
-  final Set<String> _claiming = <String>{};
-
   late final Listenable _store = Listenable.merge([
     ScheduledRideStore._revision,
     ScheduledRideStore.reminder,
@@ -194,7 +191,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                 }
                 final ride = rides[index - 1];
                 final claiming =
-                    ride.id.isNotEmpty && _claiming.contains(ride.id);
+                    ScheduledRideStore.claimPending(ride.id);
                 return _ScheduledRideCard(
                   ride: ride,
                   claiming: claiming,
@@ -251,7 +248,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       // the driver left this screen during the claim (driver-94).
       // Requests whose time now clashes leave the list (Q9); the Requests
       // tab says why.
-      if (!ScheduledRideStore._acceptRequest(ride)) return;
+      if (!ScheduledRideStore._acceptRequest(ride, won: true)) return;
       // Only saved for later: it becomes the trip at its time ("Leave now"
       // by the real clock), never right after Accept.
       final time = ride.route?.pickupTime;
@@ -295,16 +292,14 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   Future<bool> _claim(_ScheduledRide ride) async {
     final dispatch = widget.dispatchRepository;
     if (dispatch == null || ride.id.isEmpty) return true;
-    if (!_claiming.add(ride.id)) return false;
-    setState(() {});
+    if (!ScheduledRideStore.beginClaim(ride.id)) return false;
     ClaimResult result;
     try {
       result = await dispatch.claimOffer(ride.id);
     } catch (_) {
       result = const ClaimResult.networkError();
     }
-    _claiming.remove(ride.id);
-    if (mounted) setState(() {});
+    ScheduledRideStore.endClaim(ride.id);
     switch (result.outcome) {
       case ClaimOutcome.success:
         return true;
@@ -740,6 +735,25 @@ class ScheduledRideStore {
     return null;
   }
 
+  /// driver-r5-45: reservations whose claim is with dispatch, from this
+  /// screen or Home's popup. Kept here, not in one screen's State, so a
+  /// reopened screen shows "Matching" and no second Accept sends a
+  /// duplicate claim.
+  static final Set<String> _claims = <String>{};
+
+  static bool claimPending(String id) => id.isNotEmpty && _claims.contains(id);
+
+  /// False when a claim for [id] is already out.
+  static bool beginClaim(String id) {
+    if (id.isEmpty || !_claims.add(id)) return false;
+    _changed();
+    return true;
+  }
+
+  static void endClaim(String id) {
+    if (_claims.remove(id)) _changed();
+  }
+
   /// Whether reservation [id] is still open to take here.
   static bool isOpen(String id) =>
       id.isNotEmpty && _visibleRequests.any((ride) => ride.id == id);
@@ -804,9 +818,16 @@ class ScheduledRideStore {
   }
 
   /// This driver took open request [ride] for later: it moves to
-  /// Accepted. False when it is no longer among the requests.
-  static bool _acceptRequest(_ScheduledRide ride) {
-    if (!_requests.remove(ride)) return false;
+  /// Accepted. False when it is no longer among the requests, unless
+  /// dispatch [won] it for this driver: a late "unavailable" for a
+  /// duplicate claim may have taken it out meanwhile (driver-r5-45).
+  static bool _acceptRequest(_ScheduledRide ride, {bool won = false}) {
+    if (!_requests.remove(ride) &&
+        (!won ||
+            ride.id.isEmpty ||
+            _accepted.any((item) => item.id == ride.id))) {
+      return false;
+    }
     _accepted.insert(0, ride.copyWith(accepted: true));
     _changed();
     return true;
@@ -1031,6 +1052,7 @@ class ScheduledRideStore {
     backupNote.value = null;
     reassigned.clear();
     _backupLate = false;
+    _claims.clear();
     _changed();
   }
 }
