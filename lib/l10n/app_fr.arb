@@ -683,6 +683,7 @@
   "languageTitle": "Langue",
   "languageZoneDefault": "Langue par défaut de votre zone",
   "languageSaveFailed": "Langue non enregistrée. Réessayez.",
+  "trafficSaveFailed": "Réglage du trafic non enregistré. Réessayez.",
   "tomorrow": "Demain",
   "todayCaps": "AUJOURD’HUI",
   "statusRest": "REPOS",

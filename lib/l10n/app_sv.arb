@@ -683,6 +683,7 @@
   "languageTitle": "Språk",
   "languageZoneDefault": "Standard för din zon",
   "languageSaveFailed": "Språket sparades inte. Försök igen.",
+  "trafficSaveFailed": "Trafikinställningen sparades inte. Försök igen.",
   "tomorrow": "Imorgon",
   "todayCaps": "IDAG",
   "statusRest": "VILA",

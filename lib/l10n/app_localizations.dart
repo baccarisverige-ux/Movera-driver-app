@@ -4209,6 +4209,12 @@ abstract class AppLocalizations {
   /// **'Language not saved. Try again.'**
   String get languageSaveFailed;
 
+  /// No description provided for @trafficSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic setting not saved. Try again.'**
+  String get trafficSaveFailed;
+
   /// No description provided for @tomorrow.
   ///
   /// In en, this message translates to:

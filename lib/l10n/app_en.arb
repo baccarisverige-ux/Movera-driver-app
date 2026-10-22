@@ -1789,6 +1789,7 @@
   "languageTitle": "Language",
   "languageZoneDefault": "Default for your zone",
   "languageSaveFailed": "Language not saved. Try again.",
+  "trafficSaveFailed": "Traffic setting not saved. Try again.",
   "tomorrow": "Tomorrow",
   "todayCaps": "TODAY",
   "statusRest": "REST",
