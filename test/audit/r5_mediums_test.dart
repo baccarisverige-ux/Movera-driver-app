@@ -406,4 +406,32 @@ void main() {
       await _end(tester);
     });
   });
+
+  group('driver-r5-7', () {
+    setUp(ScheduledRideStore.reset);
+    tearDown(ScheduledRideStore.reset);
+
+    testWidgets("after the phone slept past 'Be online', resume plans "
+        "again and says it once", (tester) async {
+      final jump = _wallClock();
+      // 08:05 Premium: online 45 min before, at 07:20 (40 s of the demo
+      // day).
+      ScheduledRideStore.answer('Högsätravägen, Lidingö', accepted: true);
+      await _pumpHome(tester, online: false);
+      await _frames(tester, const Duration(seconds: 2));
+      Iterable<String> said() => IslandMessages.posted.map((m) => m.title);
+      expect(said(), isNot(contains('Go online for 08:05 pickup')));
+      _sleep(tester, const Duration(seconds: 45), jump);
+      await _frames(tester, const Duration(seconds: 1));
+      expect(said(), contains('Go online for 08:05 pickup'));
+      expect(ScheduledRideStore.reminder.value,
+          'Go online now for your 08:05 pickup.');
+      // A second lock and unlock does not say it again.
+      _sleep(tester, Duration.zero, jump);
+      await _frames(tester, const Duration(seconds: 1));
+      expect(said().where((t) => t == 'Go online for 08:05 pickup'),
+          hasLength(1));
+      await _end(tester);
+    });
+  });
 }

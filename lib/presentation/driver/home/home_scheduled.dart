@@ -26,6 +26,10 @@ class _HomeScheduledState {
   /// Planning right now: a store change it causes waits for the next plan.
   bool planning = false;
 
+  /// The ride "Go online" was said for: a plan after the phone slept
+  /// through its time says it then, once (driver-r5-7).
+  ReservationRequestPreview? onlineReminded;
+
   VoidCallback? storeListener;
   StreamSubscription<ReservationRequestPreview>? assignments;
 
@@ -120,8 +124,10 @@ extension _HomeScheduled on _DriverHomeState {
     }
 
     /// Plans reminders, "be online", "leave now" and the backup for the
-    /// next accepted ride.
-    void _planScheduled() {
+    /// next accepted ride. [catchUp] after the app resumes: a "be online"
+    /// whose time passed while the phone slept is said now, once
+    /// (driver-r5-7); a reminder of the time left is not, as it is stale.
+    void _planScheduled({bool catchUp = false}) {
       final state = _scheduled;
       state.cancelTimers();
       // An open request whose pickup time passes leaves the list and the
@@ -183,6 +189,10 @@ extension _HomeScheduled on _DriverHomeState {
       final goOnlineAt = onlineBy.isBefore(leave) ? onlineBy : leave;
       if (goOnlineAt.isAfter(now)) {
         at(goOnlineAt, () => _remindOnline(ride));
+      } else if (catchUp &&
+          now.isBefore(leave) &&
+          !identical(state.onlineReminded, ride)) {
+        _remindOnline(ride);
       }
       // "Leave now" by the clock, at the latest moment to set off. With a
       // long drive that is before the "be online" window; it waited for
@@ -363,6 +373,7 @@ extension _HomeScheduled on _DriverHomeState {
 
     void _remindOnline(ReservationRequestPreview ride) {
       if (!mounted || _driverSession.isOnline) { return; }
+      _scheduled.onlineReminded = ride;
       IslandMessages.show(HomeIslandNotices.goOnlineFor(ride.pickupTime));
       ScheduledRideStore.remind(
           ride, () => tr.goOnlineNowForYourPickup(ride.pickupTime));

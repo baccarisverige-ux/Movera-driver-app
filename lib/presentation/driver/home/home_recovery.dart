@@ -12,6 +12,9 @@ extension _HomeRecovery on _DriverHomeState {
       // The driving limit, its warnings and the end of a rest
       // (driver-r5-6).
       _HomeAccount(this)._syncDrivingLimit();
+      // Scheduled rides: reminders, "Be online", "Leave now", the backup
+      // and the request refreshes (driver-r5-7).
+      _HomeScheduled(this)._planScheduled(catchUp: true);
     }
 
     /// "Close trip" on a stale or endpoint-less saved trip. Its secured
