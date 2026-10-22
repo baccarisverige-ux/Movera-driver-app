@@ -12,6 +12,7 @@ import 'package:movera/core/routing/route_instruction.dart';
 import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/safety/ride_check_recorder_native.dart';
 import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
@@ -19,12 +20,14 @@ import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.da
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/widgets/checkbox.dart';
 import 'package:movera/widgets/custom_btn.dart';
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/routing/route_repository.dart';
 
@@ -107,6 +110,28 @@ DriverLocation _at(double meters) => DriverLocation(
 Future<void> _frames(WidgetTester tester, int count, [int ms = 50]) async {
   for (var i = 0; i < count; i++) {
     await tester.pump(Duration(milliseconds: ms));
+  }
+}
+
+/// A road route that arrives when the test says so.
+class _SlowRoutes implements RouteRepository {
+  final pending = <Completer<RoadRoute>>[];
+  @override
+  Future<RoadRoute> drivingRoute({
+    required GeoPoint origin,
+    required GeoPoint destination,
+  }) {
+    final route = Completer<RoadRoute>();
+    pending.add(route);
+    return route.future;
+  }
+
+  void arrive() {
+    for (final route in pending) {
+      if (!route.isCompleted) {
+        route.complete(_road(const GeoPoint(59.33, 18.06), const GeoPoint(59.36, 18.0)));
+      }
+    }
   }
 }
 
@@ -431,5 +456,48 @@ void main() {
     // Before: all 1000, for the life of the app.
     expect(IslandMessages.posted.length, IslandMessages.maxPosted);
     expect(IslandMessages.posted.last.title, 'm999');
+  });
+
+  testWidgets('driver-66: a destination turned off during its route fetch '
+      'does not put the driver online', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    DriverStartPosition.clearMemory();
+    IslandMessages.reset();
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final session = DriverSessionController();
+    final routes = _SlowRoutes();
+    final gps = _Gps();
+    await _pumpScreen(
+      tester,
+      DriverHome(
+        locationRepository: gps,
+        routeRepository: routes,
+        sessionController: session,
+      ),
+    );
+    await _frames(tester, 14);
+    Future<void> tap(String key) async {
+      await tester.tap(find.byKey(ValueKey<String>(key)));
+      await _frames(tester, 10);
+    }
+
+    tester
+        .widget<InkWell>(find.byKey(const ValueKey('destination-mode-open')))
+        .onTap!
+        .call();
+    await _frames(tester, 12);
+    await tap('destination-result-solna');
+    await tap('destination-confirm');
+    // The road route is still on its way: the driver turns it off.
+    await _frames(tester, 40);
+    await tap('island-destination');
+    await tap('destination-mode-end');
+    routes.arrive();
+    await _frames(tester, 20);
+    expect(session.isOnline || session.isGoingOnline, isFalse); // before: online
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10);
+    await gps.updates.close();
   });
 }
