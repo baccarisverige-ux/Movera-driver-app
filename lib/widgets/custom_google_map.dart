@@ -148,51 +148,32 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void _onCameraMove(CameraPosition position) {
     final band = _styleBand.at(position.zoom);
     if (band != _styleBand && mounted) setState(() => _styleBand = band);
-    _scaleVehicleWith(position.zoom);
     _turnVehicleWith(position);
     widget.onCameraMove?.call(position);
   }
 
-  /// The camera the own vehicle's billboard rotation was last worked out
-  /// for (native maps; web draws its own vehicle overlay).
+  /// The map bearing the own vehicle's billboard rotation was last worked
+  /// out for (native maps; web turns its own native marker). Zoom and tilt
+  /// play no part: the marker keeps one size and one picture.
   late double _vehicleBearing = widget.initialPosition?.bearing ?? 0;
-  late double _vehicleTilt = widget.initialPosition?.tilt ?? 0;
-
-  /// The own vehicle's size bucket for the camera's zoom (native maps; the
-  /// web overlay scales itself): bigger zoomed in, smaller zoomed out.
-  late double _vehicleScale = MoveraVehicleMarker.scaleAt(
-    widget.initialPosition?.zoom ?? _defaultPosition.zoom,
-  );
-
-  /// Only a new bucket rebuilds the markers, never every zoom frame.
-  void _scaleVehicleWith(double zoom) {
-    if (kIsWeb || !mounted) return;
-    final scale = MoveraVehicleMarker.nextScale(_vehicleScale, zoom);
-    if (scale != _vehicleScale) setState(() => _vehicleScale = scale);
-  }
 
   static bool _isOwnVehicle(Marker marker) =>
       marker.markerId.value == 'driver' ||
       marker.markerId.value == 'driver_location';
 
-  /// A billboard turns with the screen: as the camera turns or tilts, turn
-  /// the arrow back onto its heading. Only a visible change (over 1.5°)
+  /// A billboard turns with the screen: as the camera turns, turn the
+  /// arrow back onto its heading. Only a visible change (over 1.5°)
   /// rebuilds the markers, so a following camera does not churn them.
   void _turnVehicleWith(CameraPosition camera) {
     if (kIsWeb || !mounted) return;
     for (final marker in _allMarkers) {
       if (!_isOwnVehicle(marker) || marker.flat) continue;
-      final shown = MoveraVehicleMarker.screenRotation(
-          marker.rotation, _vehicleBearing, _vehicleTilt);
-      final wanted = MoveraVehicleMarker.screenRotation(
-          marker.rotation, camera.bearing, camera.tilt);
+      final shown =
+          MoveraVehicleMarker.screenRotation(marker.rotation, _vehicleBearing);
+      final wanted =
+          MoveraVehicleMarker.screenRotation(marker.rotation, camera.bearing);
       final change = ((wanted - shown + 540) % 360 - 180).abs();
-      if (change > 1.5) {
-        setState(() {
-          _vehicleBearing = camera.bearing;
-          _vehicleTilt = camera.tilt;
-        });
-      }
+      if (change > 1.5) setState(() => _vehicleBearing = camera.bearing);
       return;
     }
   }
@@ -254,23 +235,18 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   }
 
   /// The markers as the map gets them: the own vehicle (a billboard, its
-  /// rotation a compass heading) turned to the screen and sized for the
-  /// zoom, over its halo.
+  /// rotation a compass heading) turned to the screen. One marker, one
+  /// size: the ring is in its picture.
   Set<Marker> _shown(Iterable<Marker> markers) {
     if (kIsWeb) return markers.toSet();
-    final halo = MoveraVehicleMarker.haloAt(_vehicleScale);
-    final arrow = MoveraVehicleMarker.arrowAt(_vehicleScale);
     return {
       for (final marker in markers)
-        if (_isOwnVehicle(marker) && !marker.flat) ...[
+        if (_isOwnVehicle(marker) && !marker.flat)
           marker.copyWith(
-            iconParam: arrow ?? marker.icon,
             rotationParam: MoveraVehicleMarker.screenRotation(
-                marker.rotation, _vehicleBearing, _vehicleTilt),
-          ),
-          if (halo != null && marker.visible)
-            MoveraVehicleMarker.haloMarker(marker, halo),
-        ] else
+                marker.rotation, _vehicleBearing),
+          )
+        else
           marker,
     };
   }

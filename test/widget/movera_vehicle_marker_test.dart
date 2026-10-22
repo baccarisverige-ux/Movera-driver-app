@@ -9,110 +9,89 @@ import 'package:movera/widgets/movera_vehicle_marker.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
-Marker _own(double heading, {bool flat = false, String id = 'driver'}) =>
+Marker _own(double heading, {BitmapDescriptor? icon, String id = 'driver'}) =>
     Marker(
       markerId: MarkerId(id),
       position: const LatLng(59.33, 18.06),
       rotation: heading,
-      flat: flat,
+      flat: false,
       anchor: MoveraVehicleMarker.anchor,
+      icon: icon ?? BitmapDescriptor.defaultMarker,
       zIndexInt: 12,
     );
 
+/// The pixels of [paint] drawn in a [box] x [box] square at 1x.
+Future<Color Function(int x, int y)> _pixels(
+    void Function(Canvas, double) paint, double box) async {
+  final recorder = ui.PictureRecorder();
+  paint(Canvas(recorder), box);
+  final image = await recorder.endRecording().toImage(box.round(), box.round());
+  final data = (await image.toByteData())!;
+  return (int x, int y) {
+    final i = (y * box.round() + x) * 4;
+    return Color.fromARGB(data.getUint8(i + 3), data.getUint8(i),
+        data.getUint8(i + 1), data.getUint8(i + 2));
+  };
+}
+
 void main() {
-  group('the own vehicle is an upright arrow', () {
-    test('its rotation is the heading seen from the camera', () {
-      double r(double h, double b, double t) =>
-          MoveraVehicleMarker.screenRotation(h, b, t);
-      // Heading-up guidance: the arrow points straight up at any tilt.
-      expect(r(90, 90, 0), closeTo(0, 1e-9));
-      expect(r(90, 90, 67.5), closeTo(0, 1e-9));
-      // North-up flat map: the compass heading itself.
-      expect(r(135, 0, 0), closeTo(135, 1e-9));
+  group('the own vehicle is an upright arrow of one size over a small ring',
+      () {
+    test('its rotation is the heading minus the map bearing, nothing else',
+        () {
+      double r(double h, double b) => MoveraVehicleMarker.screenRotation(h, b);
+      // Heading-up guidance: the arrow points straight up.
+      expect(r(90, 90), closeTo(0, 1e-9));
+      // North-up map: the compass heading itself.
+      expect(r(135, 0), closeTo(135, 1e-9));
       // A camera turned 30 deg: the arrow turns back by 30.
-      expect(r(90, 30, 0), closeTo(60, 1e-9));
-      // Across a tilted view the course looks steeper, like the road.
-      expect(r(45, 0, 60), greaterThan(60));
-      expect(r(90, 0, 60), closeTo(90, 1e-9));
-      expect(r(270, 0, 60), closeTo(270, 1e-9));
-      expect(r(180, 0, 60), closeTo(180, 1e-9));
+      expect(r(90, 30), closeTo(60, 1e-9));
+      expect(r(10, 30), closeTo(340, 1e-9));
+      expect(r(-10, 0), closeTo(350, 1e-9));
     });
 
-    test('the bitmaps are drawn at 3x the largest size, shown at the '
-        'reference size at zoom 15', () async {
-      final arrow = await MoveraVehicleMarker.createIcon() as BytesMapBitmap;
-      expect(arrow.width, MoveraVehicleMarker.size);
-      expect(arrow.height, MoveraVehicleMarker.size);
-      final image = await decodeImageFromList(arrow.byteData);
-      expect(image.width,
-          (MoveraVehicleMarker.size * MoveraVehicleMarker.maxScale * 3).round());
-      final halo = MoveraVehicleMarker.halo! as BytesMapBitmap;
-      expect(halo.width, MoveraVehicleMarker.haloSize);
+    test('one bitmap holds the arrow and the ring, drawn at 3x', () async {
+      final icon = await MoveraVehicleMarker.createIcon() as BytesMapBitmap;
+      expect(identical(MoveraVehicleMarker.icon, icon), isTrue);
+      expect(icon.width, MoveraVehicleMarker.box);
+      expect(icon.height, MoveraVehicleMarker.box);
+      expect(MoveraVehicleMarker.box, greaterThan(MoveraVehicleMarker.size));
+      final image = await decodeImageFromList(icon.byteData);
+      expect(image.width, (MoveraVehicleMarker.box * 3).round());
+      expect(image.height, image.width);
+      // The ring: about 1.3 x the arrow's width (34 of 52 drawing units).
+      final arrowWidth = 34 / 52 * MoveraVehicleMarker.size;
+      expect(MoveraVehicleMarker.ringSize / arrowWidth, closeTo(1.3, .05));
     });
 
-    test('the arrow grows zoomed in and shrinks zoomed out, like the '
-        'reference', () {
-      double s(double z) => MoveraVehicleMarker.scaleAt(z);
-      // Reference: ~6.5 % of the screen width over the region, ~8 % at
-      // neighbourhood zoom, ~10 % at street zoom, ~11 % right in.
-      expect(s(11.7), .6); // Home opens here.
-      expect(s(14), .85);
-      expect(s(15), 1); // Locate and guidance standstill.
-      expect(s(17), 1.1);
-      expect(s(21), 1.1, reason: 'clamped');
-      expect(s(3), .6, reason: 'clamped');
-      expect(s(double.nan), 1);
-      // Interpolated: never shrinks while zooming in.
-      var previous = 0.0;
-      for (var z = 8.0; z <= 20; z += .01) {
-        final raw = MoveraVehicleMarker.scaleForZoom(z);
-        expect(raw, greaterThanOrEqualTo(previous - 1e-12));
-        previous = raw;
+    test('the ring sits centred under the arrow base, soft and grey',
+        () async {
+      const box = MoveraVehicleMarker.box;
+      final at = await _pixels(MoveraVehicleMarker.paintMarker, box);
+      final centre = Offset(MoveraVehicleMarker.anchor.dx * box,
+          MoveraVehicleMarker.anchor.dy * box);
+      final r = MoveraVehicleMarker.ringSize / 2;
+      // Beside the arrow's base and under its notch, inside the ring:
+      // translucent grey.
+      for (final d in [Offset(-r + 3, 0), Offset(r - 3, 0),
+          const Offset(0, 8), const Offset(0, 12)]) {
+        final p = at((centre.dx + d.dx).round(), (centre.dy + d.dy).round());
+        expect(p.a, inInclusiveRange(.12, .35), reason: 'soft grey at $d');
+        expect((p.r - p.b).abs(), lessThan(.1), reason: 'grey, not blue');
       }
-      // Small like the reference (owner: the old arrow looked too big):
-      // about 6.5 % of a phone (393 pt) at zoom 15, 4 % zoomed out. The
-      // arrow is 34 of its box's 52 drawing units wide.
-      expect(34 / 52 * MoveraVehicleMarker.size * s(15) / 393,
-          closeTo(.065, .01));
-      expect(34 / 52 * MoveraVehicleMarker.size * s(11.7) / 393,
-          closeTo(.04, .01));
-    });
-
-    test('size buckets: no flicker at a bucket edge', () {
-      double next(double shown, double z) =>
-          MoveraVehicleMarker.nextScale(shown, z);
-      expect(MoveraVehicleMarker.scaleAt(14.28), .9);
-      expect(next(.85, 14.28), .85, reason: 'under 0.7 of a bucket away');
-      expect(next(.85, 14.36), .9);
-      expect(next(.9, 14.28), .9);
-      expect(next(.6, 15), 1, reason: 'a jump goes straight to its bucket');
-    });
-
-    test('each bucket is one cached bitmap of the same picture', () async {
-      await MoveraVehicleMarker.createIcon();
-      final a = MoveraVehicleMarker.arrowAt(.85)! as BytesMapBitmap;
-      expect(identical(MoveraVehicleMarker.arrowAt(.85), a), isTrue);
-      expect(a.width, closeTo(MoveraVehicleMarker.size * .85, 1e-9));
-      final big = MoveraVehicleMarker.arrowAt(1.1)! as BytesMapBitmap;
-      expect(identical(big.byteData, a.byteData), isTrue);
-      final halo = MoveraVehicleMarker.haloAt(.6)! as BytesMapBitmap;
-      expect(halo.width, closeTo(MoveraVehicleMarker.haloSize * .6, 1e-9));
+      // The edge fades out: just outside the ring nothing is drawn.
+      expect(at((centre.dx - r - 2).round(), centre.dy.round()).a, 0);
+      expect(at(1, 1).a, 0);
+      expect(at(box.round() - 2, box.round() - 2).a, 0);
+      // The arrow's blue face is over the ring's centre line.
+      final face = at(centre.dx.round(), (centre.dy - 6).round());
+      expect(face.a, 1);
+      expect(face.b, greaterThan(face.r));
     });
 
     test('flat blue face, white outline, clear around it', () async {
       // Drawn in its 52-unit design box so the pixel spots stay fixed.
-      const box = 52.0;
-      final recorder = ui.PictureRecorder();
-      MoveraVehicleMarker.paintArrow(Canvas(recorder), box);
-      final image =
-          await recorder.endRecording().toImage(box.round(), box.round());
-      final data = (await image.toByteData())!;
-      Color at(int x, int y) {
-        final i = (y * box.round() + x) * 4;
-        return Color.fromARGB(data.getUint8(i + 3), data.getUint8(i),
-            data.getUint8(i + 1), data.getUint8(i + 2));
-      }
-
+      final at = await _pixels(MoveraVehicleMarker.paintArrow, 52);
       final face = at(26, 24);
       expect(face.a, 1);
       expect(face.b, greaterThan(face.r));
@@ -124,83 +103,95 @@ void main() {
       expect(at(2, 2).a, 0);
     });
 
-    testWidgets('CustomGoogleMap turns the billboard with the camera, '
-        'over a flat halo, without churning on small turns', (tester) async {
+    testWidgets('CustomGoogleMap shows one billboard of the same size at '
+        'every zoom, and no halo marker', (tester) async {
       final maps = GoogleMapsFlutterPlatform.instance;
       GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
       addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
-      await tester.runAsync(MoveraVehicleMarker.createIcon);
-      final other = const Marker(markerId: MarkerId('pickup'), rotation: 40);
+      final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
+      const other = Marker(markerId: MarkerId('pickup'), rotation: 40);
       await tester.pumpWidget(MaterialApp(
         home: CustomGoogleMap(
           initialPosition: const CameraPosition(
-              target: LatLng(59.33, 18.06), zoom: 15, bearing: 30),
-          markers: {_own(90), other},
+              target: LatLng(59.33, 18.06), zoom: 11),
+          markers: {_own(0, icon: icon), other},
+        ),
+      ));
+      await tester.pump();
+      GoogleMap map() => tester.widget<GoogleMap>(find.byType(GoogleMap));
+      Marker driver() =>
+          map().markers.singleWhere((m) => m.markerId.value == 'driver');
+      double width() => (driver().icon as BytesMapBitmap).width!;
+      expect(map().markers.map((m) => m.markerId.value),
+          unorderedEquals(['driver', 'pickup']));
+      expect(driver().flat, isFalse);
+      expect(driver().anchor, MoveraVehicleMarker.anchor);
+      final zoomedOut = width();
+      expect(zoomedOut, MoveraVehicleMarker.box);
+      // A zoom or tilt alone (inside one map style band) never rebuilds
+      // the markers.
+      final before = map().markers;
+      map().onCameraMove!(const CameraPosition(
+          target: LatLng(59.33, 18.06), zoom: 12, tilt: 30));
+      await tester.pump();
+      expect(identical(map().markers, before), isTrue);
+      map().onCameraMove!(const CameraPosition(
+          target: LatLng(59.33, 18.06), zoom: 18, tilt: 67.5));
+      await tester.pump();
+      expect(width(), zoomedOut);
+      expect(map().markers.map((m) => m.markerId.value),
+          unorderedEquals(['driver', 'pickup']));
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('CustomGoogleMap turns the billboard by the map bearing '
+        'only, tilt or not, without churning on small turns', (tester) async {
+      final maps = GoogleMapsFlutterPlatform.instance;
+      GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+      addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+      final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
+      const other = Marker(markerId: MarkerId('pickup'), rotation: 40);
+      await tester.pumpWidget(MaterialApp(
+        home: CustomGoogleMap(
+          initialPosition: const CameraPosition(
+              target: LatLng(59.33, 18.06), zoom: 15, bearing: 30, tilt: 60),
+          markers: {_own(90, icon: icon), other},
         ),
       ));
       await tester.pump();
       GoogleMap map() => tester.widget<GoogleMap>(find.byType(GoogleMap));
       Marker marker(String id) =>
           map().markers.singleWhere((m) => m.markerId.value == id);
-      expect(marker('driver').flat, isFalse);
       expect(marker('driver').rotation, closeTo(60, 1e-9));
       expect(marker('pickup').rotation, 40);
-      final halo = marker('driver_halo');
-      expect(halo.flat, isTrue);
-      expect(halo.position, marker('driver').position);
-      expect(halo.zIndexInt, 11);
+
+      // A course across a tilted north-up view: the heading itself, not
+      // leaned by the tilt (that turned the arrow off the road).
+      map().onCameraMove!(const CameraPosition(
+          target: LatLng(59.33, 18.06), zoom: 15, bearing: 0, tilt: 60));
+      await tester.pump();
+      expect(marker('driver').rotation, closeTo(90, 1e-9));
+      await tester.pumpWidget(MaterialApp(
+        home: CustomGoogleMap(
+          initialPosition: const CameraPosition(
+              target: LatLng(59.33, 18.06), zoom: 15, bearing: 0, tilt: 60),
+          markers: {_own(45, icon: icon), other},
+        ),
+      ));
+      await tester.pump();
+      expect(marker('driver').rotation, closeTo(45, 1e-9));
 
       // Heading-up and tilted: points straight up.
       map().onCameraMove!(const CameraPosition(
-          target: LatLng(59.33, 18.06), zoom: 15, bearing: 90, tilt: 58));
+          target: LatLng(59.33, 18.06), zoom: 15, bearing: 45, tilt: 58));
       await tester.pump();
       expect(marker('driver').rotation, closeTo(0, 1e-9));
       // A half-degree camera wobble does not rebuild the markers.
       final before = map().markers;
       map().onCameraMove!(const CameraPosition(
-          target: LatLng(59.33, 18.06), zoom: 15, bearing: 90.5, tilt: 58));
+          target: LatLng(59.33, 18.06), zoom: 15, bearing: 45.5, tilt: 58));
       await tester.pump();
       expect(identical(map().markers, before), isTrue);
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
-
-    testWidgets('CustomGoogleMap sizes the arrow and halo for the zoom, '
-        'rebuilding only on a new bucket', (tester) async {
-      final maps = GoogleMapsFlutterPlatform.instance;
-      GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
-      addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
-      await tester.runAsync(MoveraVehicleMarker.createIcon);
-      await tester.pumpWidget(MaterialApp(
-        home: CustomGoogleMap(
-          initialPosition: const CameraPosition(
-              target: LatLng(59.33, 18.06), zoom: 11.7),
-          markers: {_own(0)},
-        ),
-      ));
-      await tester.pump();
-      GoogleMap map() => tester.widget<GoogleMap>(find.byType(GoogleMap));
-      double width(String id) => (map().markers
-              .singleWhere((m) => m.markerId.value == id)
-              .icon as BytesMapBitmap)
-          .width!;
-      expect(width('driver'), closeTo(MoveraVehicleMarker.size * .6, 1e-9));
-      expect(width('driver_halo'),
-          closeTo(MoveraVehicleMarker.haloSize * .6, 1e-9));
-      // A smooth zoom in from Home to the locate view: a handful of
-      // rebuilds (one per bucket), not one per camera frame.
-      var rebuilds = 0;
-      var markers = map().markers;
-      for (var i = 1; i <= 120; i++) {
-        final zoom = 11.7 + 3.3 * i / 120;
-        map().onCameraMove!(CameraPosition(
-            target: const LatLng(59.33, 18.06), zoom: zoom));
-        await tester.pump();
-        if (!identical(map().markers, markers)) rebuilds++;
-        markers = map().markers;
-      }
-      expect(rebuilds, inInclusiveRange(1, 9));
-      expect(width('driver'), closeTo(MoveraVehicleMarker.size, 1e-9));
-      expect(width('driver_halo'), closeTo(MoveraVehicleMarker.haloSize, 1e-9));
       await tester.pumpWidget(const SizedBox.shrink());
     });
   });

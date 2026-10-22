@@ -43,28 +43,23 @@ void main() {
     await MoveraVehicleMarker.createIcon();
     final urls = <String>{};
     for (var push = 0; push < 600; push++) {
-      // The marker keeps the icon createIcon gave it (arrowAt(1)).
-      urls.add(pluginUrlFor(MoveraVehicleMarker.arrowAt(1)!));
+      // The marker keeps the icon createIcon gave it (the arrow and its
+      // ring, one picture).
+      urls.add(pluginUrlFor(MoveraVehicleMarker.icon!));
     }
     expect(pluginBlobs, 0);
     expect(urls, hasLength(1));
-    expect(created, hasLength(1));
+    expect(created, hasLength(1), reason: 'one picture: the arrow and ring');
+    final icon = MoveraVehicleMarker.icon! as AssetMapBitmap;
+    expect(icon.assetName, urls.single);
+    expect(icon.width, MoveraVehicleMarker.box);
+    expect(icon.height, MoveraVehicleMarker.box);
 
-    // Every size bucket and the halo reuse their picture's one URL.
-    final a = MoveraVehicleMarker.arrowAt(.85)! as AssetMapBitmap;
-    final b = MoveraVehicleMarker.arrowAt(1.1)! as AssetMapBitmap;
-    final halo = MoveraVehicleMarker.haloAt(1)! as AssetMapBitmap;
-    expect(a.assetName, urls.single);
-    expect(b.assetName, urls.single);
-    expect(a.width, closeTo(MoveraVehicleMarker.size * .85, 1e-9));
-    expect(halo.width, closeTo(MoveraVehicleMarker.haloSize, 1e-9));
-    expect(created, hasLength(2), reason: 'one for the arrow, one for the halo');
-
-    // Released, each URL is revoked once.
+    // Released, the URL is revoked once.
     WebMapBitmaps.release();
     expect(revoked, unorderedEquals(created));
     WebMapBitmaps.release();
-    expect(revoked, hasLength(2));
+    expect(revoked, hasLength(1));
   });
 
   // driver-r4-21: each offer-route fade step re-sends the pins with a new
