@@ -2940,27 +2940,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Verifiering är inte tillgänglig i den här demon.';
 
   @override
-  String get starterTagline =>
-      'Dags att köra. Ta emot resor i realtid och få varje minut att räknas';
-
-  @override
-  String get legacySignInPreview => 'Förhandsvisning av gammal inloggning';
-
-  @override
-  String get signInUnavailableDemo => 'Inloggning inte tillgänglig – demo';
-
-  @override
-  String get legacyRegistrationPreview =>
-      'Förhandsvisning av gammal registrering';
-
-  @override
-  String get registrationUnavailableDemo =>
-      'Registrering inte tillgänglig – demo';
-
-  @override
-  String get returnToDemo => 'Tillbaka till demon';
-
-  @override
   String get signIn => 'Logga in';
 
   @override

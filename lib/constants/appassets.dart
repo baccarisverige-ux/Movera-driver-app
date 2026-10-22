@@ -116,7 +116,6 @@ class AppAssets {
   static const String phoneSigninImg = 'assets/images/phone_signin_img.png';
   static const String profileImg = 'assets/images/profile_img.png';
   static const String hisImg = 'assets/images/his_img.png';
-  static const String getStartedDriver = 'assets/images/get_started_driver.png';
   static const String homeImage1 = 'assets/images/home_image2.png';
   static const String homeImage2 = 'assets/images/home_image1.png';
   static const String homeImage3 = 'assets/images/home_image3.png';

@@ -14,7 +14,7 @@ Refreshed against main `2b46a5711a9590da76b82d978f7103d045ad7f92` (F10d, pull re
 | CancelationRate | `lib/presentation/driver/analytics/cancelation rate/cancelation_rate.dart` | demo reachable | `lib/presentation/driver/analytics/analytics.dart` |
 | Chat | `lib/presentation/common/chat/chat.dart` | demo reachable | `lib/presentation/driver/accept ride/accept_ride_panel.dart` |
 | DocumentPreview | `lib/presentation/driver/documents/document_preview.dart` | demo reachable | `lib/presentation/driver/documents/documents.dart` |
-| DriverCreateAccount | `lib/presentation/driver/auth/create acc/create_acc.dart` | legacy gated | `lib/presentation/driver/auth/starter/starter.dart`, `lib/presentation/driver/auth/sign in/sign_in.dart` |
+| DriverCreateAccount | `lib/presentation/driver/auth/create acc/create_acc.dart` | legacy gated | `lib/presentation/driver/auth/sign in/sign_in.dart` |
 | DriverCreateAccountPhone | `lib/presentation/driver/auth/create acc/create_acc_phone.dart` | legacy gated | `lib/presentation/driver/auth/create acc/create_acc.dart` |
 | DriverDestinationPicker | `lib/presentation/driver/destination mode/destination_picker.dart` | demo reachable | `lib/presentation/driver/home/home_map_sheet.dart` |
 | DriverDocuments | `lib/presentation/driver/documents/documents.dart` | demo reachable | `lib/presentation/driver/profile/profile.dart`, `lib/presentation/driver/home/home.dart` |
@@ -24,9 +24,8 @@ Refreshed against main `2b46a5711a9590da76b82d978f7103d045ad7f92` (F10d, pull re
 | DriverRideCompleted | `lib/presentation/driver/ride completed/ride_completed.dart` | demo reachable | `lib/presentation/driver/accept ride/accept_ride_trip.dart` |
 | DriverRideHistory | `lib/presentation/driver/ride history/ride_history.dart` | demo reachable | `lib/presentation/driver/home/home_map_sheet.dart`, `lib/presentation/driver/side menu/side_menu.dart` |
 | DriverRideHistoryDetail | `lib/presentation/driver/ride history/history detail/history_detail.dart` | demo reachable | `lib/presentation/driver/ride history/ride_history.dart` |
-| DriverSignIn | `lib/presentation/driver/auth/sign in/sign_in.dart` | legacy gated | `lib/presentation/driver/auth/starter/starter.dart` |
+| DriverSignIn | `lib/presentation/driver/auth/sign in/sign_in.dart` | legacy gated | (none; the demo landing screen was removed) |
 | DriverSignInPhone | `lib/presentation/driver/auth/sign in phone/sign_in_phone.dart` | legacy gated | `lib/presentation/driver/auth/sign in/sign_in.dart` |
-| DriverStarter | `lib/presentation/driver/auth/starter/starter.dart` | demo reachable | `lib/presentation/driver/profile/profile.dart` |
 | DriverVehicles | `lib/presentation/driver/vehicles/vehicles.dart` | demo reachable | `lib/presentation/driver/profile/profile.dart` |
 | DrivingLogs | `lib/presentation/driver/driving logs/driving_logs.dart` | demo reachable | `lib/presentation/driver/side menu/side_menu.dart` |
 | EarningStatsScreen | `lib/presentation/driver/earning stats/earning_stats.dart` | demo reachable | `lib/presentation/driver/analytics/analytics.dart` |
@@ -53,6 +52,6 @@ Refreshed against main `2b46a5711a9590da76b82d978f7103d045ad7f92` (F10d, pull re
 - Documents: DriverDocuments → item-specific DocumentPreview (no legacy upload).
 - Support: SupportInboxScreen → local conversation draft.
 - Reservations: ScheduledRidesScreen → nonbinding preview detail.
-- Logout: DriverStarter displays demo account boundary; legacy sign-in is disabled by default.
+- Logout: back to Home in demo mode (the demo landing screen was removed); legacy sign-in is disabled by default.
 
 Phase 45 removed the unreferenced legacy Splash, UploadVehiclePhotos screen, stale `accept ride/components/cancel_ride.dart` helper and unused ReceiverMessage widget. LegalDocumentScreen remains reachable from Profile. F11 (pull request #81, merge `ca9c0089c532c3280d261c4ed13909145636cff7`) removed the unreachable withdrawal screens `choose_bank.dart` and `withdraw_sucess.dart`. `OnboardingScreen`, `recent_rides.dart`, and the analytics `insights.dart` / `earnings.dart` component files are not in the tree at this SHA; this note does not invent an earlier deletion commit for them. Constructor calls that moved with the F10 split are cited on the part file that contains the call: offer acceptance in `home_offer_radar.dart`, destination and history entry in `home_map_sheet.dart`, queued completion in `accept_ride_trip.dart`, and `Chat(riderDisplayName: widget.riderName)` in `accept_ride_panel.dart`. Remaining orphan candidates are not deleted without new reachability proof. This inventory does not by itself certify runtime navigation behavior.

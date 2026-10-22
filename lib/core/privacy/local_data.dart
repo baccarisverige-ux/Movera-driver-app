@@ -108,7 +108,7 @@ const localDataInventory = <LocalDataRecord>[
 
 /// The driver's language choice: a device setting, kept across logout like
 /// the rider app's `movera_app_language` (the next driver on this phone most
-/// likely speaks it too, and the Starter screen speaks it).
+/// likely speaks it too).
 const String languageSectionKey =
     '${SettingsRepository.sectionPrefix}${DriverLanguage.section}';
 
