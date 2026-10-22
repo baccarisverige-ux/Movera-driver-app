@@ -671,6 +671,18 @@ class ScheduledRideStore {
     return next;
   }
 
+  /// When the requests' block ends or admin's "on" stops skipping the
+  /// late-cancel pause, by time alone; Home refreshes then
+  /// (driver-r3-9). Null when nothing ends.
+  static DateTime? accessChangeAt() {
+    final now = _now;
+    final ends = [
+      block()?.until,
+      if (_driverAccess.onAt(now)) _driverAccess.until,
+    ].whereType<DateTime>().where((at) => at.isAfter(now));
+    return ends.isEmpty ? null : ends.reduce((a, b) => a.isBefore(b) ? a : b);
+  }
+
   /// Counts the open requests again: a pickup time passed.
   static void refresh() => _changed();
 

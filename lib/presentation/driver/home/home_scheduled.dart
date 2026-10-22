@@ -126,10 +126,14 @@ extension _HomeScheduled on _DriverHomeState {
       state.cancelTimers();
       // An open request whose pickup time passes leaves the list and the
       // dot (driver-u164).
-      final expires = ScheduledRideStore.nextRequestPickup();
-      if (expires != null) {
+      // So does a pause or admin's "off until" that ends (driver-r3-9).
+      for (final at in [
+        ScheduledRideStore.nextRequestPickup(),
+        ScheduledRideStore.accessChangeAt(),
+      ]) {
+        if (at == null) continue;
         state.timers.add(
-          Timer(_clock.realUntil(expires), ScheduledRideStore.refresh),
+          Timer(_clock.realUntil(at), ScheduledRideStore.refresh),
         );
       }
       final ride = _nextScheduledRide;

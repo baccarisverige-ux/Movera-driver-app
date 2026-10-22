@@ -14,14 +14,19 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:movera/core/safety/ride_check.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/widgets/layout_viewport.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
@@ -271,5 +276,40 @@ void main() {
     await _scheduled(tester);
     await _accept0740(tester);
     expect(find.byKey(const ValueKey('scheduled-clash-note')), findsNothing);
+  });
+
+  testWidgets("driver-r3-9: Home counts the requests again when admin's "
+      "'off until' ends", (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    IslandMessages.reset();
+    final maps = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(LayoutViewport(
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: DriverHome(sessionController: DriverSessionController()),
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 200));
+    // Off for 5 demo minutes: 10 s on the fast test day.
+    ScheduledRideStore.driverAccess = ScheduledRidesDriverAccess(
+      enabled: false,
+      until: ScheduledClock.instance.now().add(const Duration(minutes: 5)),
+      setByAdmin: true,
+    );
+    expect(ScheduledRideStore.openRequests.value, 0);
+    for (var i = 0;
+        i < 30 && ScheduledRideStore.openRequests.value == 0;
+        i++) {
+      await tester.pump(const Duration(seconds: 1));
+    }
+    expect(ScheduledRideStore.openRequests.value, 2);
+    tester.takeException();
+    await tester.pumpWidget(const SizedBox());
   });
 }
