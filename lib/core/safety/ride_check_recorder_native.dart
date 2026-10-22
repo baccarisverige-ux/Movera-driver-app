@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -10,14 +12,41 @@ export 'ride_check_recorder_stub.dart'
 
 RideCheckRecorder createRideCheckRecorder() => NativeRideCheckRecorder();
 
-/// Saves to the app's own documents folder on this phone. Nothing here
-/// sends the file anywhere.
+/// driver-29: the app's support folder, not Documents (which iOS backs
+/// up to iCloud and Finder); iOS also marks the folder excluded from
+/// backups, so a recording stays on this phone as the driver was told.
+@visibleForTesting
+Future<Directory> Function() rideCheckStorageRoot =
+    getApplicationSupportDirectory;
+
+const MethodChannel _backup = MethodChannel('movera/backup');
+
+/// The folder Ride check recordings are saved in, created if needed.
+Future<Directory> rideCheckAudioDirectory() async {
+  final directory = Directory(
+    '${(await rideCheckStorageRoot()).path}/ride_check_audio',
+  );
+  await directory.create(recursive: true);
+  if (Platform.isIOS) {
+    await _backup.invokeMethod<void>('excludeFromBackup', {
+      'path': directory.path,
+    });
+  }
+  return directory;
+}
+
+/// Saves to the app's own support folder on this phone, outside backups.
+/// Nothing here sends the file anywhere.
 class NativeRideCheckRecorder implements RideCheckRecorder {
+  NativeRideCheckRecorder({AudioRecorder Function()? createAudio})
+    : _createAudio = createAudio ?? AudioRecorder.new;
+
+  final AudioRecorder Function() _createAudio;
   AudioRecorder? _recorder;
 
   // Created on first use: the plugin is never touched unless the driver
   // taps Record audio.
-  AudioRecorder get _audio => _recorder ??= AudioRecorder();
+  AudioRecorder get _audio => _recorder ??= _createAudio();
 
   @override
   bool get supported => Platform.isAndroid || Platform.isIOS;
@@ -28,10 +57,7 @@ class NativeRideCheckRecorder implements RideCheckRecorder {
 
   @override
   Future<void> start(String recordingId) async {
-    final directory = Directory(
-      '${(await getApplicationDocumentsDirectory()).path}/ride_check_audio',
-    );
-    await directory.create(recursive: true);
+    final directory = await rideCheckAudioDirectory();
     await _audio.start(
       const RecordConfig(encoder: AudioEncoder.aacLc),
       path: '${directory.path}/$recordingId.m4a',

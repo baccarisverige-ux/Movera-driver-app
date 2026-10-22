@@ -14,6 +14,29 @@ import GoogleMaps
       GMSServices.provideAPIKey(mapsKey)
     }
     GeneratedPluginRegistrant.register(with: self)
+    // driver-29: Ride check recordings stay out of iCloud and Finder backups.
+    if let registrar = self.registrar(forPlugin: "MoveraBackupExclusion") {
+      let channel = FlutterMethodChannel(
+        name: "movera/backup", binaryMessenger: registrar.messenger())
+      channel.setMethodCallHandler { call, result in
+        guard call.method == "excludeFromBackup",
+              let arguments = call.arguments as? [String: Any],
+              let path = arguments["path"] as? String else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        var url = URL(fileURLWithPath: path, isDirectory: true)
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        do {
+          try url.setResourceValues(values)
+          result(nil)
+        } catch {
+          result(FlutterError(
+            code: "backup", message: error.localizedDescription, details: nil))
+        }
+      }
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

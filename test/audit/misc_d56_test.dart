@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/routing/route_instruction.dart';
+import 'package:movera/core/safety/ride_check_recorder_native.dart';
 import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
+import 'package:record/record.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/routing/route_repository.dart';
@@ -34,6 +36,41 @@ class _SpyPolicy extends DriverCameraPolicy {
     poses.add(pose);
     return pose;
   }
+}
+
+/// The record plugin's recorder without the platform: it writes [bytes]
+/// to the file it is asked to record to.
+class _FakeAudio implements AudioRecorder {
+  _FakeAudio({this.bytes = 3});
+  final int bytes;
+  String? path;
+  var disposed = false;
+  @override
+  Future<bool> hasPermission({bool request = true}) async => true;
+  @override
+  Future<void> start(RecordConfig config, {required String path}) async {
+    this.path = path;
+    File(path).writeAsBytesSync(List<int>.filled(bytes, 1));
+  }
+  @override
+  Future<String?> stop() async => path;
+  @override
+  Future<void> cancel() async {}
+  @override
+  Future<void> dispose() async => disposed = true;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// A fresh phone folder for the recorder.
+Directory _phoneFolder() {
+  final root = Directory.systemTemp.createTempSync('movera-d56-');
+  addTearDown(() => root.deleteSync(recursive: true));
+  final support = Directory('${root.path}/support')..createSync();
+  final original = rideCheckStorageRoot;
+  rideCheckStorageRoot = () async => support;
+  addTearDown(() => rideCheckStorageRoot = original);
+  return support;
 }
 
 final _en = lookupAppLocalizations(const Locale('en'));
@@ -148,5 +185,15 @@ void main() {
     await island(9960);
     expect(shown(), '10km'); // before: 10.0km
     await tester.pumpWidget(const SizedBox());
+  });
+
+  test('driver-29: recordings are saved in the support folder', () async {
+    final support = _phoneFolder();
+    final audio = _FakeAudio();
+    final recorder = NativeRideCheckRecorder(createAudio: () => audio);
+    await recorder.start('trip-1');
+    // Before: <documents>/ride_check_audio, backed up to iCloud.
+    expect(audio.path, '${support.path}/ride_check_audio/trip-1.m4a');
+    await recorder.stop();
   });
 }
