@@ -431,19 +431,30 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
 /// text now; setting it keeps a fixed text (or none).
 class DriverNote extends ChangeNotifier implements ValueListenable<String?> {
   String Function()? _text;
+  DateTime? _until;
 
+  /// The note, or null once its [say] `until` has passed (scheduled time).
   @override
-  String? get value => _text?.call();
+  String? get value {
+    final until = _until;
+    if (until != null && !ScheduledClock.instance.now().isBefore(until)) {
+      return null;
+    }
+    return _text?.call();
+  }
 
   set value(String? text) {
     if (text == null && _text == null) return;
     _text = text == null ? null : () => text;
+    _until = null;
     notifyListeners();
   }
 
-  /// The note is now [text], read each time it is shown.
-  void say(String Function() text) {
+  /// The note is now [text], read each time it is shown; it is gone from
+  /// [until] on when given.
+  void say(String Function() text, {DateTime? until}) {
     _text = text;
+    _until = until;
     notifyListeners();
   }
 }
@@ -869,7 +880,8 @@ class ScheduledRideStore {
       return;
     }
     _backupLate = false;
-    backupNote.say(() => tr.schedBackupNote(ride.pickupTime));
+    backupNote.say(() => tr.schedBackupNote(ride.pickupTime),
+        until: _backupNoteEnds(ride.pickupAt(_now)));
     _changed();
   }
 
@@ -888,6 +900,7 @@ class ScheduledRideStore {
     required int lateMinutes,
     required LateEtaReassignTo reassignTo,
   }) {
+    final pickupAt = routeOf(id)?.pickupAt(_now);
     if (id.isNotEmpty) {
       _accepted.removeWhere((ride) => ride.id == id);
     }
@@ -904,8 +917,19 @@ class ScheduledRideStore {
       name: 'movera.scheduled',
     );
     _backupLate = true;
-    backupNote.say(() => tr.lateEtaReassignedNote(pickupTime, lateMinutes));
+    backupNote.say(() => tr.lateEtaReassignedNote(pickupTime, lateMinutes),
+        until: _backupNoteEnds(pickupAt));
     _changed();
+  }
+
+  /// driver-r5-47: how long the backup / late-ETA note stays: until
+  /// [backupNoteLasts] past that ride's pickup (or past now without one),
+  /// not for the rest of the session above later rides at the same time.
+  static const Duration backupNoteLasts = Duration(hours: 2);
+  static DateTime _backupNoteEnds(DateTime? pickupAt) {
+    final now = _now;
+    final from = pickupAt != null && pickupAt.isAfter(now) ? pickupAt : now;
+    return from.add(backupNoteLasts);
   }
 
   /// [backupNote] is about a late ETA, not an offline driver.

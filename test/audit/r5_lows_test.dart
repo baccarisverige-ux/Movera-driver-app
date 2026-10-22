@@ -28,6 +28,7 @@ import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/routing/route_repository.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/main.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/home/components/destination_island.dart';
@@ -626,6 +627,22 @@ void main() {
     final late = tester.getTopLeft(find.textContaining('18:00').first).dy;
     expect(early, lessThan(late),
         reason: 'before: the newest acceptance was on top');
+  });
+
+  test('driver-r5-47: the backup-driver note does not stay for days', () {
+    var wall = DateTime.now();
+    final real = ScheduledClock.realNow;
+    ScheduledClock.realNow = () => wall;
+    addTearDown(() => ScheduledClock.realNow = real);
+    ScheduledRideStore.reset();
+    addTearDown(ScheduledRideStore.reset);
+    final ride = _reservation(18);
+    ScheduledRideStore.acceptAssigned(ride);
+    ScheduledRideStore.giveToBackup(ride);
+    expect(ScheduledRideStore.backupNote.value, contains('18:00'));
+    wall = wall.add(const Duration(days: 2));
+    expect(ScheduledRideStore.backupNote.value, isNull,
+        reason: 'before: it stayed above later 18:00 rides until logout');
   });
 }
 
