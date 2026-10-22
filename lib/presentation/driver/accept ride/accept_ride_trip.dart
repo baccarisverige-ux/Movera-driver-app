@@ -1073,29 +1073,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       if(!mounted) { return; }
       _waybills.completeCurrent();
       final nextRide = queuedNext
-          ? AcceptRide(
-              tripId: offer.id,
-              riderName: offer.riderName,
-              riderRating: offer.rating,
-              fare: offer.terms.fare,
-              driverBonus: offer.terms.driverBonus,
-              category: offer.category,
-              matchedVia: WaybillRecord.exclusiveOfferSource,
-              pickupAddress: offer.pickup,
-              pickupArea: offer.pickup.split(',').last.trim(),
-              dropoffAddress: offer.dropoff,
-              pickupPosition: offer.pickupPosition,
-              dropoffPosition: offer.dropoffPosition,
-              locationRepository: widget.locationRepository,
-              routeRepository: widget.routeRepository,
-              waybillRepository: _waybills,
-              sessionController: widget.sessionController,
-              activeRideRepository: widget.activeRideRepository,
-              dispatchRepository: widget.dispatchRepository,
-              destinationModeActive: _destinationActive,
-              destinationAddress: _destinationAddress,
-              destinationPosition: _destinationPosition,
-            )
+          ? _nextRideFor(offer)
           : null;
       Navigator.of(context).pushReplacement(
         BottomToTopTransition(
@@ -1109,6 +1087,31 @@ extension _AcceptRideTrip on _AcceptRideState {
         ),
       );
     }
+    /// The secured next trip, as completion, a driver cancel and the
+    /// journal's `next` snapshot all start it: destination mode included.
+    AcceptRide _nextRideFor(_NextTripRadarOffer offer) => AcceptRide(
+      tripId: offer.id,
+      riderName: offer.riderName,
+      riderRating: offer.rating,
+      fare: offer.terms.fare,
+      driverBonus: offer.terms.driverBonus,
+      category: offer.category,
+      matchedVia: WaybillRecord.exclusiveOfferSource,
+      pickupAddress: offer.pickup,
+      pickupArea: offer.pickup.split(',').last.trim(),
+      dropoffAddress: offer.dropoff,
+      pickupPosition: offer.pickupPosition,
+      dropoffPosition: offer.dropoffPosition,
+      locationRepository: widget.locationRepository,
+      routeRepository: widget.routeRepository,
+      waybillRepository: _waybills,
+      sessionController: widget.sessionController,
+      activeRideRepository: widget.activeRideRepository,
+      dispatchRepository: widget.dispatchRepository,
+      destinationModeActive: _destinationActive,
+      destinationAddress: _destinationAddress,
+      destinationPosition: _destinationPosition,
+    );
     PersistedActiveRide _snapshotForOffer(_NextTripRadarOffer offer) => PersistedActiveRide(
       tripId: offer.id, stage: ActiveRideStage.headingToPickup, pickupKm: offer.pickupKm,
         destinationModeActive: _destinationActive,
@@ -1555,26 +1558,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       final queuedNext =
           _onTripRadarState == _OnTripRadarState.secured && offer != null;
       final nextRide = queuedNext
-          ? AcceptRide(
-              tripId: offer.id,
-              riderName: offer.riderName,
-              riderRating: offer.rating,
-              fare: offer.terms.fare,
-              driverBonus: offer.terms.driverBonus,
-              category: offer.category,
-              matchedVia: WaybillRecord.exclusiveOfferSource,
-              pickupAddress: offer.pickup,
-              pickupArea: offer.pickup.split(',').last.trim(),
-              dropoffAddress: offer.dropoff,
-              pickupPosition: offer.pickupPosition,
-              dropoffPosition: offer.dropoffPosition,
-              locationRepository: widget.locationRepository,
-              routeRepository: widget.routeRepository,
-              waybillRepository: _waybills,
-              sessionController: widget.sessionController,
-              activeRideRepository: widget.activeRideRepository,
-              dispatchRepository: widget.dispatchRepository,
-            )
+          ? _nextRideFor(offer)
           : null;
       if (nextRide != null) {
         _waybills.promoteNextToCurrent();

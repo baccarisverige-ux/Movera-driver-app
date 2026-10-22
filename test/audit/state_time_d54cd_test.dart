@@ -150,4 +150,31 @@ void main() {
     expect(row.paymentMethod, 'Card');
     await _unmount(tester);
   });
+
+  testWidgets('driver-46: ending the trip early starts the secured next trip '
+      'with destination mode on', (tester) async {
+    await _pumpTrip(tester, destination: true);
+    await _until(tester, find.byKey(_matchNext));
+    await tester.ensureVisible(find.byKey(_matchNext));
+    await tester.tap(find.byKey(_matchNext));
+    await _pumpFor(tester, const Duration(seconds: 2));
+    expect(WaybillStore.next, isNotNull);
+    await tester.tap(find.byTooltip('Trip route and options').hitTestable());
+    await _settle(tester, 6);
+    await tester
+        .tap(find.byKey(const ValueKey<String>('active-ride-cancel-option')));
+    await _settle(tester, 6);
+    await tester.tap(find.byKey(
+      const ValueKey<String>('trip-cancel-reason-rider_requested_early_end'),
+    ));
+    await _settle(tester, 6);
+    await tester
+        .tap(find.byKey(const ValueKey<String>('confirm-trip-cancellation')));
+    await _settle(tester, 24);
+    final next = tester.widget<AcceptRide>(find.byType(AcceptRide));
+    expect(next.tripId, isNot('cd-trip'));
+    expect(next.destinationModeActive, isTrue);
+    expect(next.destinationAddress, 'Arlanda, Sigtuna');
+    await _unmount(tester);
+  });
 }
