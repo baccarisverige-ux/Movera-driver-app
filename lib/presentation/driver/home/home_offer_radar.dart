@@ -1053,6 +1053,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       String matchedVia, {
       DateTime? scheduledPickupAt,
       String? scheduledRideId,
+      Money? acceptedPickupPay,
     }) {
       _cancelAllOfferTimers();
       // An Exclusive card slides back down behind the trip.
@@ -1062,14 +1063,21 @@ extension _HomeOfferRadar on _DriverHomeState {
       _radarOfferTwoTimer?.cancel();
       _radarOfferThreeTimer?.cancel();
       // The total its card showed, pickup pay in it (driver-12). "Leave
-      // now" showed no card: its scheduled ride keeps its fare.
+      // now" shows no card: its scheduled ride keeps its fare, plus the
+      // pickup pay an Exclusive card showed when it was saved for later
+      // (driver-r5-12).
       final quote = scheduledPickupAt == null && scheduledRideId == null
           ? _pickupPayOf(
               offer,
               onRadar: matchedVia == WaybillRecord.moveraRadarSource ||
                   _radarHomeOffers.any((item) => item.id == offer.id),
             )
-          : null;
+          : acceptedPickupPay == null
+          ? null
+          : PickupPayQuote(
+              pay: acceptedPickupPay,
+              leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
+            );
       final terms = quote?.termsOf(
             fare: offer.fare,
             driverBonus: offer.driverBonus,

@@ -15,6 +15,7 @@ import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
@@ -489,6 +490,30 @@ void main() {
       // About 3 s were left of its 15 s, plus the slide down.
       await _frames(tester, const Duration(seconds: 6));
       expect(card, findsNothing);
+      await _end(tester);
+    });
+  });
+
+  group('driver-r5-12', () {
+    setUp(ScheduledRideStore.reset);
+    tearDown(ScheduledRideStore.reset);
+
+    testWidgets('pickup pay accepted with a ride saved for later is paid '
+        'when Leave now opens its trip', (tester) async {
+      final base = Money.parseSekLabel(
+          ScheduledRideStore.routeOf(demoReservationId)!.fare)!;
+      // An Exclusive reservation won before its Exclusive step: saved for
+      // later with the pickup pay its card showed.
+      ScheduledRideStore.take(demoReservationId,
+          upcoming: true, pickupPay: Money.ore(1395));
+      final total = (base + Money.ore(1395)).formatted;
+      expect(ScheduledRideStore.acceptedPickupPay(demoReservationId),
+          Money.ore(1395));
+      await _pumpHome(tester);
+      await _frames(tester, const Duration(seconds: 50));
+      final trip = tester.widget<AcceptRide>(find.byType(AcceptRide));
+      expect(trip.fare, total);
+      expect(trip.driverBonus, Money.ore(1395));
       await _end(tester);
     });
   });

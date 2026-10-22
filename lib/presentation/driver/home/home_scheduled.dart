@@ -310,6 +310,7 @@ extension _HomeScheduled on _DriverHomeState {
         WaybillRecord.scheduledRideSource,
         scheduledPickupAt: ride.pickupAt(_clock.now()),
         scheduledRideId: ride.id,
+        acceptedPickupPay: ScheduledRideStore.acceptedPickupPay(ride.id),
       );
       _planScheduled();
     }
@@ -496,7 +497,10 @@ extension _HomeScheduled on _DriverHomeState {
       }
       _scheduled.answered.add(offer.id);
       if (result.isSuccess && ride != null) {
-        ScheduledRideStore.acceptAssigned(ride);
+        // The pickup pay its card showed is paid at "Leave now"
+        // (driver-r5-12).
+        ScheduledRideStore.acceptAssigned(ride,
+            pickupPay: _HomeOfferRadar(this)._pickupPayOf(offer).pay);
         IslandMessages.show(HomeIslandNotices.assignmentAccepted);
       } else {
         IslandMessages.show(HomeIslandNotices.reservationUnavailable);
