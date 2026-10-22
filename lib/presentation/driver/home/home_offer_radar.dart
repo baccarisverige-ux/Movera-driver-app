@@ -238,8 +238,10 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (!mounted ||
           !_isOnline ||
           showRideRequests ||
-          // One Exclusive offer at a time: a waiting one never replaces it.
-          (_outsideRadarOffer != null && _outsideRadarOffer!.id != offer.id) ||
+          // One Exclusive offer at a time: a waiting one never replaces it,
+          // and the one up is not shown again (that would restart its
+          // countdown, driver-72).
+          _outsideRadarOffer != null ||
           // Its card is sliding down: it is leaving.
           _exclusive.leaving ||
           _radarHomeOffers.isNotEmpty ||
@@ -259,7 +261,6 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
 
       _outsideOfferTimeoutTimer?.cancel();
-      final arriving = _outsideRadarOffer?.id != offer.id;
       _rebuild(() {
         _outsideRadarOffer = offer;
       });
@@ -268,19 +269,17 @@ extension _HomeOfferRadar on _DriverHomeState {
       // route comes onto the map once the sheet has settled.
       _HomeExclusive(this)._raiseExclusive(offer, lifetime);
       // The island says it too while the card arrives.
-      if (arriving) {
-        IslandMessages.show(offer.assigned
-            ? HomeIslandNotices.assignedRide
-            : offer.reservation
-            ? HomeIslandNotices.exclusiveReservation
-            : HomeIslandNotices.exclusiveRide);
-        // And it is in Notifications (Q31, N1).
-        final feed = DriverNotificationFeed.instance;
-        feed.add(
-          DriverNotices.exclusiveOffer(at: feed.now, seconds: lifetime.inSeconds),
-          popup: false,
-        );
-      }
+      IslandMessages.show(offer.assigned
+          ? HomeIslandNotices.assignedRide
+          : offer.reservation
+          ? HomeIslandNotices.exclusiveReservation
+          : HomeIslandNotices.exclusiveRide);
+      // And it is in Notifications (Q31, N1).
+      final feed = DriverNotificationFeed.instance;
+      feed.add(
+        DriverNotices.exclusiveOffer(at: feed.now, seconds: lifetime.inSeconds),
+        popup: false,
+      );
 
       _outsideOfferTimeoutTimer = Timer(
         lifetime,

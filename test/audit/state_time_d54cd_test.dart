@@ -21,6 +21,7 @@ import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/safety/ride_check_gate.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/support/local_support_repository.dart';
@@ -248,6 +249,8 @@ Future<void> _pumpHome(WidgetTester tester, {
   await tester.pumpWidget(ScreenUtilInit(
     designSize: const Size(375, 812),
     builder: (_, _) => MaterialApp(
+      // As in the app: Home hears routes covering it and leaving.
+      navigatorObservers: [driverRouteObserver],
       home: DriverHome(
         locationRepository: location,
         dispatchRepository: dispatch,
@@ -335,6 +338,11 @@ Future<void> _pumpDeck(WidgetTester tester, DispatchRepository dispatch) async {
   expect(find.byKey(const ValueKey<String>('radar-offer-card-first')),
       findsOneWidget);
 }
+
+/// The Exclusive offer card on Home, if one is up.
+final _exclusiveCard = find.byWidgetPredicate((w) =>
+    w.key is ValueKey<String> &&
+    (w.key! as ValueKey<String>).value.startsWith('exclusive-offer-card-'));
 
 const _offerCard = ValueKey<String>('on-trip-radar-offer-button');
 const _matchNext = ValueKey<String>('on-trip-radar-match-next');
@@ -613,6 +621,26 @@ void main() {
     expect(find.byKey(
         const ValueKey<String>('exclusive-offer-card-$demoReservationId')),
         findsOneWidget);
+    await _unmount(tester);
+  });
+
+  testWidgets('driver-72: back on Home, the Exclusive offer keeps its time '
+      'left instead of starting over', (tester) async {
+    await _pumpHome(tester, location: _NoGps());
+    await tester.tap(find.text('OFF'));
+    await _until(tester, _exclusiveCard);
+    await _pumpFor(tester, const Duration(seconds: 5));
+    // Ride history (any route) covers Home and closes again.
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('covering'))));
+    await _settle(tester);
+    navigator.pop();
+    await _settle(tester);
+    expect(_exclusiveCard, findsOneWidget);
+    // About 9 s were left of its 15 s; it does not restart at 15.
+    await _pumpFor(tester, const Duration(seconds: 12));
+    expect(_exclusiveCard, findsNothing);
     await _unmount(tester);
   });
 
