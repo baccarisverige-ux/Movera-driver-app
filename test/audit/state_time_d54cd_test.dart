@@ -403,6 +403,27 @@ void main() {
     port.dispose();
   });
 
+  testWidgets('driver-u177: a recenter flight lands in about 1 s even when '
+      'each camera move takes 16 ms', (tester) async {
+    final camera = _Camera()..latency = const Duration(milliseconds: 16);
+    final port = GoogleDriverCameraPort(await _pumpMap(tester, camera),
+        initialPosition: _cameraStart, clock: tester.binding.clock.now);
+    var landed = false;
+    final started = tester.binding.clock.now();
+    unawaited(port.animate(const DriverCameraPose(
+      GeoPoint(59.004, 18.004), 17, 0, 0,
+      duration: Duration(milliseconds: 1000),
+    )).then((_) => landed = true));
+    while (!landed &&
+        tester.binding.clock.now().difference(started) < const Duration(seconds: 4)) {
+      await tester.pump(const Duration(milliseconds: 4));
+    }
+    final flight = tester.binding.clock.now().difference(started);
+    // 1 s of flight; before it ran about 2 s (only the 16 ms sleeps counted).
+    expect(flight, lessThan(const Duration(milliseconds: 1400)));
+    port.dispose();
+  });
+
   test('driver-u148: "Yesterday" only for the day before, by the calendar', () {
     final now = DateTime(2026, 10, 21, 1);
     expect(noticeTimeLabel(DateTime(2026, 10, 19, 23), now), '2 days ago');

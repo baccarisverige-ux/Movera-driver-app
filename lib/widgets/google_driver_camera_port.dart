@@ -27,14 +27,18 @@ class GoogleDriverCameraPort
     this.onFrame,
     this.onStatus,
     CameraPosition? initialPosition,
-  }) : _logical = initialPosition;
+    DateTime Function()? clock,
+  }) : _logical = initialPosition,
+       _clock = clock ?? DateTime.now;
   final GoogleMapController controller;
   final bool reducedMotion;
   final void Function(CameraPosition)? onFrame;
   final void Function(String?)? onStatus;
+  /// The camera's clock (a test's fake clock); [DateTime.now] by default.
+  final DateTime Function() _clock;
   CameraPosition? _logical;
   DriverCameraPose? _goal;
-  DateTime _goalAt = DateTime.now();
+  late DateTime _goalAt = _clock();
   Completer<void>? _active;
   int _generation = 0;
   bool _disposed = false;
@@ -119,7 +123,7 @@ class GoogleDriverCameraPort
     if (!goal.coast || goal.speedMetersPerSecond < 1) {
       return goal.target;
     }
-    final seconds = DateTime.now().difference(_goalAt).inMicroseconds / 1e6;
+    final seconds = _clock().difference(_goalAt).inMicroseconds / 1e6;
     final meters = math.min(
       goal.speedMetersPerSecond * math.min(seconds, 1.1),
       22,
@@ -240,7 +244,7 @@ class GoogleDriverCameraPort
       return;
     }
     _goal = pose;
-    _goalAt = DateTime.now();
+    _goalAt = _clock();
   }
 
   @override
@@ -249,7 +253,7 @@ class GoogleDriverCameraPort
       return Future<void>.value();
     }
     _goal = pose;
-    _goalAt = DateTime.now();
+    _goalAt = _clock();
     _followOwned = true;
     _producingFrames = true;
     // A recenter / locate: a flight, also when the follow loop is running.
@@ -329,18 +333,20 @@ class GoogleDriverCameraPort
           final next = after >= 1
               ? destination
               : _blend(from, destination, (after - before) / (1 - before));
+          // driver-u177: the frame's time includes the moveCamera await,
+          // so the flight lasts [flightDuration] whatever the SDK latency.
+          final stamp = _clock();
           await _move(next,
             trackVehicle: _trackCar(next, goal), generation: generation,
             coastLat: coastLat, coastLng: coastLng);
           if (_disposed || generation != _generation) {
             break;
           }
-          final stamp = DateTime.now();
           await _sleep(const Duration(milliseconds: 16));
           if (_disposed || generation != _generation) {
             break;
           }
-          dt = math.max(16000, DateTime.now().difference(stamp).inMicroseconds);
+          dt = math.max(16000, _clock().difference(stamp).inMicroseconds);
           continue;
         }
         final settled = _settled(from, destination);
@@ -356,12 +362,12 @@ class GoogleDriverCameraPort
         if (_disposed || generation != _generation || settled) {
           break;
         }
-        final stamp = DateTime.now();
+        final stamp = _clock();
         await _sleep(Duration(milliseconds: settled ? 50 : 16));
         if (_disposed || generation != _generation) {
           break;
         }
-        final real = DateTime.now().difference(stamp).inMicroseconds;
+        final real = _clock().difference(stamp).inMicroseconds;
         dt = math.max(settled ? 50000 : 16000, real);
       }
     } catch (_) {
@@ -466,9 +472,9 @@ class GoogleDriverCameraPort
             trackVehicle: false, generation: generation, anchored: false);
       } else {
         _producingFrames = true;
-        final started = DateTime.now();
+        final started = _clock();
         while (true) {
-          final t = (DateTime.now().difference(started).inMicroseconds /
+          final t = (_clock().difference(started).inMicroseconds /
                   previewFlight.inMicroseconds)
               .clamp(0.0, 1.0);
           final e = t < .5 ? 4 * t * t * t : 1 - math.pow(2 - 2 * t, 3) / 2;
@@ -539,14 +545,14 @@ class GoogleDriverCameraPort
         done: Completer<void>());
     _producingFrames = true;
     try {
-      final started = DateTime.now();
+      final started = _clock();
       final fromTilt = from.tilt;
       var frames = 0;
       while (true) {
         // Real time, but never slower than one 16 ms step per frame, so the
         // ease ends even where the clock barely moves (tests, fast frames).
         final micros = math.max(
-            DateTime.now().difference(started).inMicroseconds,
+            _clock().difference(started).inMicroseconds,
             frames * 16000);
         final t = (micros / tiltFlight.inMicroseconds).clamp(0.0, 1.0);
         frames++;
