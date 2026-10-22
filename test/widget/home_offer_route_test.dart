@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:movera/widgets/offer_route_line.dart';
+import 'package:movera/widgets/driver_route_style.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart'
     show GoogleMapsFlutterPlatform;
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -140,10 +142,15 @@ Future<_Routes> _homeWithRadarTrip(WidgetTester tester) async {
       )
       .onTap!
       .call();
-  final total = const Duration(milliseconds: 1500) +
+  final total =
+      const Duration(milliseconds: 1500) +
       DriverOfferRules.current.exclusiveAcceptTime +
       const Duration(milliseconds: 7500);
-  for (var t = Duration.zero; t < total; t += const Duration(milliseconds: 100)) {
+  for (
+    var t = Duration.zero;
+    t < total;
+    t += const Duration(milliseconds: 100)
+  ) {
     await tester.pump(const Duration(milliseconds: 100));
   }
   expect(
@@ -172,8 +179,7 @@ void main() {
 
   testWidgets('a Radar offer puts nothing on the map; its route button shows '
       'pickup → drop-off only, with minute chips, and the route leaves with '
-      'the last card',
-      (tester) async {
+      'the last card', (tester) async {
     final routes = await _homeWithRadarTrip(tester);
     bool offerLine(Polyline line) =>
         line.polylineId.value.startsWith('direct_offer') ||
@@ -200,11 +206,18 @@ void main() {
     expect(route, isNotEmpty);
     const pickup = LatLng(59.3335, 18.0610);
     const dropoff = LatLng(59.3428, 18.0475);
-    for (final line in route) {
-      expect(line.points.first, pickup);
-      expect(line.points.last, dropoff);
-      expect(line.points, hasLength(3));
-    }
+    // Owner round 4: the outline spans the route; the coloured core is
+    // drawn in pieces that together run pickup → drop-off.
+    final outline = route.singleWhere(
+      (line) => line.polylineId.value == OfferRouteLine.outlineId,
+    );
+    expect(outline.points.first, pickup);
+    expect(outline.points.last, dropoff);
+    expect(outline.points, hasLength(3));
+    final core = route.where(OfferRouteLine.isCore).toList();
+    expect(core, hasLength(DriverRouteStyle.gradientSteps));
+    expect(core.map((l) => l.points.first), contains(pickup));
+    expect(core.map((l) => l.points.last), contains(dropoff));
     // No drive from the driver to the pickup was asked for.
     expect(routes.origins, everyElement(_pickup));
 
