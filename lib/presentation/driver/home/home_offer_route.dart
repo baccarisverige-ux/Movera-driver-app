@@ -29,17 +29,17 @@ class _OfferRouteFrame {
   /// first fit of a new offer (which takes the map over).
   RouteCameraFit? fitted;
 
-  /// R14-2: the road the line animation runs along, and its clock.
+  /// R14-2: the road the line motion runs along, and its clock.
   List<GeoPoint> road = const <GeoPoint>[];
   Timer? line;
   final Stopwatch lineClock = Stopwatch();
   OfferLinePhase? linePhase;
 
-  /// The white part of the animated line; only the map listens to it.
-  final ValueNotifier<Set<Polyline>> lightLine =
+  /// The bright band moving along the line; only the map listens to it.
+  final ValueNotifier<Set<Polyline>> flowLine =
       ValueNotifier<Set<Polyline>>(const <Polyline>{});
 
-  /// Stops the animation (offer gone, app hidden); the line stays black.
+  /// Stops the motion (offer gone, app hidden); the line stays dark.
   void stopLine() {
     line?.cancel();
     line = null;
@@ -47,13 +47,13 @@ class _OfferRouteFrame {
       ..stop()
       ..reset();
     linePhase = null;
-    if (lightLine.value.isNotEmpty) { lightLine.value = const <Polyline>{}; }
+    if (flowLine.value.isNotEmpty) { flowLine.value = const <Polyline>{}; }
   }
 
   void dispose() {
     refit?.cancel();
     line?.cancel();
-    lightLine.dispose();
+    flowLine.dispose();
   }
 }
 
@@ -280,13 +280,14 @@ extension _HomeOfferRoute on _DriverHomeState {
       }
       final phase = OfferRouteLine.phaseAt(frame.lineClock.elapsed);
       final last = frame.linePhase;
-      // Resting black (or unchanged): nothing to send to the map.
-      if (last != null && (phase == last || (phase.dark && last.dark))) {
+      // Resting (or unchanged): nothing to send to the map.
+      if (last != null &&
+          (phase == last || (phase.resting && last.resting))) {
         return;
       }
       frame
         ..linePhase = phase
-        ..lightLine.value = OfferRouteLine.light(
+        ..flowLine.value = OfferRouteLine.flow(
           frame.road,
           phase,
           zoom: _routeZoomStep,

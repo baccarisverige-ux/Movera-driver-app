@@ -850,10 +850,10 @@ extension _HomeMapSheet on _DriverHomeState {
         child: Stack(
           children: [
             if (!_HomeStartPosition(this)._mapReady) _HomeStartPosition(this)._locating() else ValueListenableBuilder<Set<Polyline>>(
-              // Only the map redraws for each step of the line animation.
-              valueListenable: _offerRouteFrame.lightLine,
-              builder: (context, light, _) {
-              final layers = layersWith(light);
+              // Only the map redraws for each step of the line motion.
+              valueListenable: _offerRouteFrame.flowLine,
+              builder: (context, band, _) {
+              final layers = layersWith(band);
               return CustomGoogleMap(
               key: _homeMapKey,
               initialPosition: _initialPosition,

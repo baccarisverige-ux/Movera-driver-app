@@ -6,45 +6,42 @@ import 'package:movera/widgets/driver_route_style.dart';
 
 void main() {
   test('route line width follows the reference zoom steps', () {
-    // Total (casing) / core: ~6 at overview, 8 at city, 12 at street,
-    // 14 from zoom 17; the core is always 3 narrower (1.5 pt outline).
-    final expected = <double, (int, int)>{
-      3: (6, 3),
-      10.9: (6, 3),
-      11: (6, 3),
-      11.9: (6, 3),
-      12: (7, 4),
-      13: (8, 5),
-      13.9: (8, 5),
-      14: (9, 6),
-      15: (10, 7),
-      15.5: (11, 8),
-      16: (12, 9),
-      16.5: (13, 10),
-      17: (14, 11),
-      21: (14, 11),
+    // ~4 at overview, 6 at city, 10 at street, 12 from zoom 17.
+    final expected = <double, int>{
+      3: 4,
+      10.9: 4,
+      11: 4,
+      11.9: 4,
+      12: 5,
+      13: 6,
+      13.9: 6,
+      14: 7,
+      15: 8,
+      15.5: 9,
+      16: 10,
+      16.5: 11,
+      17: 12,
+      21: 12,
     };
-    expected.forEach((zoom, widths) {
+    expected.forEach((zoom, width) {
       final lines = DriverRouteStyle.polylines(
         id: 'r',
         points: const [LatLng(0, 0), LatLng(1, 1)],
         zoom: zoom,
       );
-      final casing = lines.firstWhere((l) => l.polylineId.value == 'r-casing');
-      final core = lines.firstWhere((l) => l.polylineId.value == 'r');
-      expect((casing.width, core.width), widths, reason: 'zoom $zoom');
-      expect(casing.color, DriverRouteStyle.casingColor);
-      expect(core.color, DriverRouteStyle.gradientColors.first);
-      expect(core.zIndex, greaterThan(casing.zIndex));
-      // Every core piece has the core width; sized() restyles stored lines
-      // exactly like a fresh build.
-      final pieces = lines.where(DriverRouteStyle.isCorePiece).toList();
+      final first = lines.firstWhere((l) => l.polylineId.value == 'r');
+      expect(first.width, width, reason: 'zoom $zoom');
+      expect(first.color, DriverRouteStyle.gradientColors.first);
+      // Every piece has the width; sized() restyles stored lines exactly
+      // like a fresh build.
+      final pieces = lines.where(DriverRouteStyle.isPiece).toList();
       expect(pieces, hasLength(DriverRouteStyle.gradientSteps));
+      expect(lines, hasLength(DriverRouteStyle.gradientSteps));
       for (final piece in pieces) {
-        expect(piece.width, widths.$2, reason: 'zoom $zoom');
+        expect(piece.width, width, reason: 'zoom $zoom');
       }
       final resized = DriverRouteStyle.sized(
-        DriverRouteStyle.polylines(id: 'r', points: casing.points),
+        DriverRouteStyle.polylines(id: 'r', points: first.points),
         zoom,
       );
       expect(
@@ -59,7 +56,7 @@ void main() {
     expect(DriverRouteStyle.stepZoom(15.7), 15.5);
     expect(DriverRouteStyle.stepZoom(16.8), 16.5);
     expect(DriverRouteStyle.stepZoom(18), 17);
-    expect(DriverRouteStyle.widthAt(DriverRouteStyle.defaultZoom), 9);
+    expect(DriverRouteStyle.widthAt(DriverRouteStyle.defaultZoom), 7);
   });
 
   test('route width never jumps more than one pixel between steps', () {
@@ -71,11 +68,23 @@ void main() {
     }
   });
 
-  test('route line is the Movera gradient, pickup green to destination blue, '
-      'under a white casing', () {
-    expect(DriverRouteStyle.pickupColor, const Color(0xFF079A60));
-    expect(DriverRouteStyle.destinationColor, const Color(0xFF1769E8));
-    expect(DriverRouteStyle.casingColor, const Color(0xFFFFFFFF));
+  test('route line is the Movera gradient in its dark shades, pickup green to '
+      'destination blue, with no outline and nothing white', () {
+    expect(DriverRouteStyle.pickupColor, const Color(0xFF05663F));
+    expect(DriverRouteStyle.destinationColor, const Color(0xFF0F4599));
+    expect(DriverRouteStyle.pickupLight, const Color(0xFF079A60));
+    expect(DriverRouteStyle.destinationLight, const Color(0xFF1769E8));
+    // Same hues, darker: every channel of the line is below the bright
+    // shade's, in the same proportions.
+    for (final (dark, light) in [
+      (DriverRouteStyle.pickupColor, DriverRouteStyle.pickupLight),
+      (DriverRouteStyle.destinationColor, DriverRouteStyle.destinationLight),
+    ]) {
+      expect(dark.r, lessThan(light.r));
+      expect(dark.g, lessThan(light.g));
+      expect(dark.b, lessThan(light.b));
+      expect(dark.g / light.g, closeTo(dark.b / light.b, 0.03));
+    }
     final lines = DriverRouteStyle.polylines(
       id: 'r',
       points: const [
@@ -84,10 +93,15 @@ void main() {
         LatLng(59.40, 18.0),
       ],
     );
-    final pieces = lines.where(DriverRouteStyle.isCorePiece).toList()
+    for (final line in lines) {
+      expect(line.color, isNot(const Color(0xFFFFFFFF)));
+      expect(line.polylineId.value, isNot(endsWith('-casing')));
+    }
+    final pieces = lines.where(DriverRouteStyle.isPiece).toList()
       ..sort(
         (a, b) => a.points.first.latitude.compareTo(b.points.first.latitude),
       );
+    expect(pieces, hasLength(lines.length));
     expect(pieces.first.points.first, const LatLng(59.30, 18.0));
     expect(pieces.last.points.last, const LatLng(59.40, 18.0));
     expect(pieces.first.color, DriverRouteStyle.at(0.5 / 12));
@@ -114,5 +128,6 @@ void main() {
       width: 4,
     );
     expect(flat.single.color, DriverRouteStyle.color);
+    expect(DriverRouteStyle.color, DriverRouteStyle.at(0.5));
   });
 }

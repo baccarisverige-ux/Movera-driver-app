@@ -39,9 +39,14 @@ void main() {
       expect(marker('destination-confirm-car').position, _driver);
       expect(marker('destination-confirm-pin').position, _kista);
       expect(line('destination-straight').points, [_driver, _kista]);
-      // Owner round 4: the arc is drawn in the Movera route colours, as a
-      // white casing plus gradient pieces whose first piece keeps the id.
-      expect(line('destination-arc-casing').points, hasLength(48));
+      // Owner round 4: the arc is drawn in the Movera route colours, as
+      // gradient pieces whose first piece keeps the id; no casing.
+      expect(
+        map.polylines!.where(
+          (p) => p.polylineId.value == 'destination-arc-casing',
+        ),
+        isEmpty,
+      );
       final pieces =
           map.polylines!
               .where(
