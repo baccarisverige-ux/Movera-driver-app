@@ -134,6 +134,9 @@ class DriverCameraPolicy {
   /// Smoothed GPS speed: one noisy reading must not zoom the map.
   double? _speed;
 
+  /// The smoothing state before the last fix was resolved.
+  (double?, double?, DriverCameraPose?, bool, double)? _beforeFix;
+
   /// Cruise zoom (speed only, before turn and arrival framing).
   double? _cruise;
 
@@ -229,7 +232,20 @@ class DriverCameraPolicy {
     bool navigating = false,
     bool waiting = false,
     bool immediate = false,
+    bool sameFix = false,
   }) {
+    // driver-21: the fix already resolved, now with a new route: smooth
+    // from where the last fix started, so this fix still counts once.
+    final before = _beforeFix;
+    if (sameFix && before != null) {
+      _speed = before.$1;
+      _cruise = before.$2;
+      _previous = before.$3;
+      _locating = before.$4 || _locating;
+      _exploreZoom = before.$5;
+    } else {
+      _beforeFix = (_speed, _cruise, _previous, _locating, _exploreZoom);
+    }
     if (!_samePolyline(route, _route)) {
       _along = null;
       _instructionHint = 0;
@@ -580,6 +596,7 @@ class DriverCameraController {
         waiting == _waiting) {
       return;
     }
+    final sameFix = identical(location, _location);
     _location = location;
     _route = route;
     final enteringGuidance =
@@ -594,6 +611,7 @@ class DriverCameraController {
       navigating: navigating,
       waiting: waiting,
       immediate: enteringGuidance,
+      sameFix: sameFix,
     );
     if (enteringGuidance && mode == DriverCameraMode.overview) {
       _mode = DriverCameraMode.following;
