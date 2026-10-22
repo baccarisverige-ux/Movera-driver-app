@@ -411,6 +411,28 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   }
 }
 
+/// A note in Scheduled rides, kept as how to write it so it reads in the
+/// driver's language whenever it is shown (driver-u145). [value] is the
+/// text now; setting it keeps a fixed text (or none).
+class DriverNote extends ChangeNotifier implements ValueListenable<String?> {
+  String Function()? _text;
+
+  @override
+  String? get value => _text?.call();
+
+  set value(String? text) {
+    if (text == null && _text == null) return;
+    _text = text == null ? null : () => text;
+    notifyListeners();
+  }
+
+  /// The note is now [text], read each time it is shown.
+  void say(String Function() text) {
+    _text = text;
+    notifyListeners();
+  }
+}
+
 /// Reservation requests for this app session. Decisions stay while the app
 /// runs, so the green dot on Home follows what is still unanswered.
 class ScheduledRideStore {
@@ -439,7 +461,6 @@ class ScheduledRideStore {
       price: '184,00 kr',
       time: tr.schedSeedTime(tr.tomorrow, '08:15'),
       category: 'Comfort',
-      distance: '9.4 km',
       pickup: 'Södermalm, Stockholm',
       destination: 'Bromma Airport',
       accepted: true,
@@ -748,8 +769,7 @@ class ScheduledRideStore {
       return;
     }
     _backupLate = false;
-    backupNote.value =
-        tr.schedBackupNote(ride.pickupTime);
+    backupNote.say(() => tr.schedBackupNote(ride.pickupTime));
     _changed();
   }
 
@@ -771,7 +791,6 @@ class ScheduledRideStore {
     if (id.isNotEmpty) {
       _accepted.removeWhere((ride) => ride.id == id);
     }
-    final note = tr.lateEtaReassignedNote(pickupTime, lateMinutes);
     reassigned.add(ScheduledReassignment(
       id: id,
       pickupTime: pickupTime,
@@ -785,7 +804,7 @@ class ScheduledRideStore {
       name: 'movera.scheduled',
     );
     _backupLate = true;
-    backupNote.value = note;
+    backupNote.say(() => tr.lateEtaReassignedNote(pickupTime, lateMinutes));
     _changed();
   }
 
@@ -807,12 +826,10 @@ class ScheduledRideStore {
   }
 
   /// The latest reminder for an accepted ride, shown in Scheduled rides.
-  static final ValueNotifier<String?> reminder = ValueNotifier<String?>(null);
+  static final DriverNote reminder = DriverNote();
 
   /// Set when a ride went to a backup driver.
-  static final ValueNotifier<String?> backupNote = ValueNotifier<String?>(
-    null,
-  );
+  static final DriverNote backupNote = DriverNote();
 
   /// R15-7: the rider cancelled reservation [id], which this driver had
   /// accepted. It leaves Accepted and the island says so, with the
@@ -1281,7 +1298,7 @@ class _ScheduledRide {
     required this.price,
     required this.time,
     required this.category,
-    required this.distance,
+    this.fixedDistance,
     required this.pickup,
     required this.destination,
     this.accepted = false,
@@ -1298,7 +1315,6 @@ class _ScheduledRide {
     price: route.fareLabel,
     time: _timeOf(route, ReservationWhen.dayWord(route.pickupDay), null),
     category: route.category,
-    distance: driverDistanceKm(route.tripKm),
     pickup: route.pickupAddress,
     destination: route.dropoffAddress,
     accepted: true,
@@ -1317,7 +1333,7 @@ class _ScheduledRide {
       time: _timeOf(route, ReservationWhen.dayWord(route.pickupDay), window),
       window: window,
       category: route.category,
-      distance: distance ?? driverDistanceKm(route.tripKm),
+      fixedDistance: distance,
       pickup: route.pickupAddress,
       destination: route.dropoffAddress,
       route: route,
@@ -1350,16 +1366,26 @@ class _ScheduledRide {
   /// The pickup window of an open request, else null.
   final Duration? window;
 
-  /// The card's time seen now: a ride booked for a date says "Today"
-  /// once its "Tomorrow" has come (driver-u142).
+  /// The card's time seen now, in the driver's language now
+  /// (driver-u145): a ride booked for a date says "Today" once its
+  /// "Tomorrow" has come (driver-u142).
   String get when {
     final route = this.route;
-    if (route?.scheduledAt == null) { return time; }
-    final day = route!.pickupDayAt(ScheduledRideStore._now);
+    if (route == null) { return time; }
+    final day = route.scheduledAt == null
+        ? route.pickupDay
+        : route.pickupDayAt(ScheduledRideStore._now);
     return _timeOf(route, ReservationWhen.dayWord(day), window);
   }
   final String category;
-  final String distance;
+
+  /// A distance given as text ("12 km"); null: the route's.
+  final String? fixedDistance;
+
+  /// "9.4 km" ("9,4 km" in French and Swedish), written when shown.
+  String get distance =>
+      fixedDistance ??
+      (route == null ? '' : driverDistanceKm(route!.tripKm));
   final String pickup;
   final String destination;
   final bool accepted;
@@ -1375,7 +1401,7 @@ class _ScheduledRide {
       price: price,
       time: time,
       category: category,
-      distance: distance,
+      fixedDistance: fixedDistance,
       pickup: pickup,
       destination: destination,
       accepted: accepted ?? this.accepted,

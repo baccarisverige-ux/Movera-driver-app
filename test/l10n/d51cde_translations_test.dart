@@ -147,4 +147,39 @@ void main() {
       expect(words('Today'), findsNothing);
     }
   });
+
+  testWidgets('driver-u145: scheduled notes and cards made in English read '
+      'in Swedish', (tester) async {
+    addTearDown(ScheduledRideStore.reset);
+    speak('en');
+    ScheduledRideStore.reset();
+    final kept = assignedRide('Today');
+    final given = ReservationRequestPreview(
+      category: 'Comfort', fare: '99,00 kr', pickupLabel: '',
+      pickupAddress: 'Solna', dropoffAddress: 'Kista', pickupTime: '09:10',
+      pickupDay: 'Today', tripMinutes: 12, tripKm: 6.2,
+      pickup: const GeoPoint(59.36, 18.0), dropoff: const GeoPoint(59.40, 17.94),
+    );
+    ScheduledRideStore.acceptAssigned(kept);
+    ScheduledRideStore.acceptAssigned(given);
+    ScheduledRideStore.giveToBackup(given);
+    // As Home's 1 h reminder sets it.
+    ScheduledRideStore.reminder.say(
+        () => tr.pickupAtPickupTimeInLeft('07:40', '1 h', 'Odlarvägen 22'));
+    final english = [
+      tr.pickupAtPickupTimeInLeft('07:40', '1 h', 'Odlarvägen 22'),
+      tr.schedBackupNote('09:10'),
+      'Today, 07:40',
+      '9.4 km',
+    ];
+    await showAccepted(tester, 'sv');
+    expect(words(tr.pickupAtPickupTimeInLeft('07:40', '1 h', 'Odlarvägen 22')),
+        findsOneWidget);
+    expect(words(tr.schedBackupNote('09:10')), findsOneWidget);
+    expect(find.text('Idag 07:40'), findsOneWidget);
+    expect(find.text('9,4 km'), findsWidgets);
+    for (final text in english) {
+      expect(words(text), findsNothing, reason: text);
+    }
+  });
 }
