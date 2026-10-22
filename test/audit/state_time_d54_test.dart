@@ -16,7 +16,9 @@ import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_detector.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
+import 'package:movera/core/privacy/local_data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
@@ -36,6 +38,18 @@ class _SlowRides extends MemoryActiveRideRepository {
     saved.add(ride.stopIndex);
     await super.save(ride);
   }
+}
+
+/// Storage whose removes fail (a full disk, a broken prefs file).
+class _RemoveFails extends SharedPreferencesStorePlatform {
+  @override
+  Future<Map<String, Object>> getAll() async => {};
+  @override
+  Future<bool> setValue(String type, String key, Object value) async => true;
+  @override
+  Future<bool> remove(String key) async => false;
+  @override
+  Future<bool> clear() async => true;
 }
 
 void main() {
@@ -282,5 +296,18 @@ void main() {
         .driverLateCancel, const Duration(minutes: 30));
     expect(ScheduledRideRules.fromJson({'driverLateCancelHours': 2})
         .driverLateCancel, const Duration(hours: 2));
+  });
+
+  test('driver-34: a failed logout cleanup leaves saving working', () async {
+    SharedPreferences.setMockInitialValues({});
+    final rides = PrefsActiveRideRepository(); // held by the app since start
+    final original = SharedPreferencesStorePlatform.instance;
+    SharedPreferencesStorePlatform.instance = _RemoveFails();
+    await expectLater(clearLocalUserData(), throwsStateError);
+    SharedPreferencesStorePlatform.instance = original;
+    // Still signed in ("Could not clear local data"): the next trip saves.
+    await rides.save(const PersistedActiveRide(
+        tripId: 'after-failed-logout', stage: ActiveRideStage.headingToPickup));
+    expect((await rides.read())?.tripId, 'after-failed-logout');
   });
 }
