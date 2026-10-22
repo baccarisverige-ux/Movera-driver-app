@@ -394,10 +394,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
             paid ?? _waybills.current ?? _buildCurrentWaybill(),
             status: status, authoritative:true, next:next,
-            // Kept in English; History shows it translated (driver-u155).
-            paymentMethod: completed
-                ? (widget.paidByCash ? 'Cash' : 'Card')
-                : null,
+            paymentMethod: completed ? (cash ? 'Cash' : 'Card') : null,
             cashCollected: cash ? _cashToCollect : null);
           if (!mounted) { return; }
           if (!await _rideLifecycle.applyProjection(status)) {
