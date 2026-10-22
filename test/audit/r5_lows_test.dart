@@ -10,6 +10,7 @@ import 'package:http/testing.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/privacy/local_data.dart';
@@ -159,6 +160,33 @@ void main() {
     expect([first.paidWaitSeconds, first.startedAt != null], [90, true],
         reason: 'before: the first onTrip save had 0 paid seconds and no '
             'start, and a kill then lost the waiting fee');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
+  });
+
+  testWidgets('driver-r5-33: a next-trip offer does not run out under the '
+      'trip\'s side menu', (tester) async {
+    _phone(tester);
+    SharedPreferences.setMockInitialValues({});
+    ExclusiveAnswers.instance.reset();
+    DriverOfferRules.current = const DriverOfferRules(autoOffline: false);
+    addTearDown(() => DriverOfferRules.current = const DriverOfferRules());
+    await tester.pumpWidget(_app(AcceptRide(
+      initialStage: ActiveRideStage.onTrip,
+      waitNow: () => tester.binding.clock.now(),
+    )));
+    await _frames(tester, 10);
+    await tester.pump(const Duration(milliseconds: 2600));
+    const card = ValueKey<String>('on-trip-radar-offer-button');
+    expect(find.byKey(card), findsOneWidget);
+    // The island's menu opens the drawer over the offer.
+    tester.state<ScaffoldState>(find.byWidgetPredicate(
+        (w) => w is Scaffold && w.drawer != null)).openDrawer();
+    final limit = DriverOfferRules.current.exclusiveAcceptTime +
+        const Duration(seconds: 4);
+    await _frames(tester, limit.inMilliseconds ~/ 250, 250);
+    expect(ExclusiveAnswers.instance.missedInRow, 0,
+        reason: 'before: it ran out under the menu and counted as missed');
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });

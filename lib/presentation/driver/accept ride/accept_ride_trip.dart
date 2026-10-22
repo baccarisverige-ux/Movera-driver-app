@@ -218,6 +218,21 @@ extension _AcceptRideTrip on _AcceptRideState {
       _tripCovered = false;
       if (!_liveUpdatesPaused) { _resumeOnTripOffer(); }
     }
+    /// driver-r5-33: the side menu covers the trip like a route (as
+    /// driver-u115 on Home): no offer comes and the one up keeps its
+    /// deadline; when the menu closes it gets the time left, or leaves
+    /// unseen (not a miss). Its own flag: a menu page pushed as the
+    /// drawer closes keeps the trip covered through _tripCovered.
+    void _menuChanged(bool open) {
+      if (_menuOpen == open) { return; }
+      _menuOpen = open;
+      if (open) {
+        _nextTripRadarDemoTimer?.cancel();
+        _nextTripOfferExpiry?.cancel();
+      } else if (!_liveUpdatesPaused) {
+        _resumeOnTripOffer();
+      }
+    }
     /// driver-u59: no camera moves on the hidden map. Only a full screen
     /// hides it; under a sheet or a dialog the camera keeps following the
     /// car (driver-r5-31).
@@ -231,12 +246,12 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!_liveUpdatesPaused) { _camera.resume(); }
     }
     /// Next-trip offers wait: the app is hidden or a route covers the trip.
-    bool get _offersHeld => _liveUpdatesPaused || _tripCovered;
+    bool get _offersHeld => _liveUpdatesPaused || _tripCovered || _menuOpen;
     /// D-05: back on screen. An offer whose time ran out while hidden
     /// leaves without counting as a miss (as on Home); one with time left
     /// counts down the rest. Radar then looks for the next one.
     void _resumeOnTripOffer() {
-      if (!mounted || _tripCovered || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
+      if (!mounted || _tripCovered || _menuOpen || _stage != ActiveRideStage.onTrip || _rideLifecycle.terminal) { return; }
       if (_onTripRadarState == _OnTripRadarState.offerAvailable) {
         final deadline = _nextTripOfferDeadline;
         final left = deadline?.difference(_offerNow());
