@@ -94,46 +94,37 @@
     const next = clamp(tilt + tiltForZoom(to) - tiltForZoom(from), 0, sdkMaxTilt(to));
     return next < 1e-9 ? 0 : next;
   };
-  // The own vehicle is an upright arrow (lib MoveraVehicleMarker): turned
-  // to its heading as seen from the camera, foreshortened like the tilted
-  // ground (MoveraVehicleMarker.screenRotation; keep both in step).
-  const HALO = 60;
-  // The arrow and its halo grow a little zoomed in and shrink zoomed out
-  // (MoveraVehicleMarker.scaleStops / nextScale; keep both in step):
-  // interpolated between these stops, clamped, in 0.05 buckets that change
-  // only once the zoom's scale is 0.7 of a bucket away.
-  const SCALE_STOPS = [[11.5, .6], [13.5, .75], [15, 1], [17, 1.1]];
-  const SCALE_STEP = .05;
-  const scaleForZoom = zoom => {
-    if (!Number.isFinite(zoom)) return 1;
-    if (zoom <= SCALE_STOPS[0][0]) return SCALE_STOPS[0][1];
-    for (let i = 1; i < SCALE_STOPS.length; i++) {
-      const [z1, s1] = SCALE_STOPS[i];
-      if (zoom <= z1) {
-        const [z0, s0] = SCALE_STOPS[i - 1];
-        return s0 + (s1 - s0) * (zoom - z0) / (z1 - z0);
-      }
-    }
-    return SCALE_STOPS[SCALE_STOPS.length - 1][1];
-  };
-  const bucket = scale => Math.round(Math.round(scale / SCALE_STEP) * SCALE_STEP * 100) / 100;
-  const nextScale = (shown, zoom) => {
-    const wanted = scaleForZoom(zoom);
-    if (shown != null && Math.abs(wanted - shown) < SCALE_STEP * .7) return shown;
-    return bucket(wanted);
-  };
-  const screenRotation = (heading, bearing, tilt) => {
-    const turn = (heading - bearing) * Math.PI / 180;
-    const lean = Math.cos(clamp(tilt, 0, 89) * Math.PI / 180);
-    const degrees = Math.atan2(Math.sin(turn), Math.cos(turn) * lean) * 180 / Math.PI;
-    return Math.round(((degrees % 360) + 360) % 360 * 100) / 100;
-  };
+  // The own vehicle (lib MoveraVehicleMarker; keep in step): an upright
+  // blue arrow of one size over a small soft ring. On web it is the
+  // plugin's own native marker, which Maps places on every frame, so it
+  // never lags the map under a pinch and snaps after, never steps through
+  // sizes with the zoom, and never leans or squashes with the tilt. Its
+  // icon is a Symbol (a path Maps can turn) of the arrow, rotated to the
+  // heading less the map heading; the ring is a second native marker
+  // under it with one still SVG, centred on the arrow's base.
+  const ARROW_PATH = 'M26 8L43 42L26 32.2L9 42Z';
+  const ARROW_BOX = 52, ARROW_SIZE = 38, ARROW_BASE = [26, 32.2];
+  const RING_SIZE = 32;
+  const RING_URL = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${RING_SIZE}" height="${RING_SIZE}" viewBox="0 0 32 32">` +
+    '<radialGradient id="r"><stop offset="0" stop-color="#7D8C99" stop-opacity=".28"/>' +
+    '<stop offset=".7" stop-color="#7D8C99" stop-opacity=".28"/>' +
+    '<stop offset="1" stop-color="#7D8C99" stop-opacity="0"/></radialGradient>' +
+    '<circle cx="16" cy="16" r="16" fill="url(#r)"/></svg>');
+  // The arrow's rotation on screen: its compass heading less the map's
+  // heading, nothing else (a billboard is not in the ground plane, so a
+  // tilt term turned it off the road), to a hundredth of a degree.
+  const vehicleRotation = (heading, mapHeading) =>
+    Math.round((((heading - mapHeading) % 360) + 360) % 360 * 100) / 100;
+  const arrowSymbol = rotation => ({path: ARROW_PATH, scale: ARROW_SIZE / ARROW_BOX, rotation,
+    anchor: new sdk.Point(ARROW_BASE[0], ARROW_BASE[1]),
+    fillColor: '#3FB6D3', fillOpacity: 1, strokeColor: '#FFFFFF', strokeOpacity: 1, strokeWeight: 3});
   // Raster tiles stop at about z18; closer, Google upscales them into giant
   // blurry street names. A vector map draws crisp at any zoom: no cap there.
   const RASTER_MAX_ZOOM = 18;
   function install(map, div, id, cloud) {
     const state = {map, div, top: 0, bottom: 0, anchor: .5,
-      callbacks: new Set(), rendererCallbacks: new Set(), heading: 0, car: null, claim: false, anchorToken: 0,
+      callbacks: new Set(), rendererCallbacks: new Set(), car: null, claim: false, anchorToken: 0,
       gesturesEnabled: true, lead: null, anchored: false, tiltFollowsZoom: true};
     const rendererListener = map.addListener?.('renderingtype_changed', () => {
       applyZoomCap();
@@ -507,7 +498,7 @@
     const observer = new MutationObserver(() => {
       wasConnected ||= div.isConnected;
       if (wasConnected && !div.isConnected) {
-        state.car?.setMap(null); overlay.setMap(null);
+        state.car?.release(); overlay.setMap(null);
         state.callbacks.clear(); state.rendererCallbacks.clear(); rendererListener?.remove(); states.delete(id); observer.disconnect();
       }
     });
@@ -551,82 +542,62 @@
       }
     });
     const NativeMarker = sdk.Marker;
-    // The own vehicle as a rotatable overlay, once its icon has a URL.
-    const carOverlay = (marker, icon) => {
-      let state;
-      const car = new sdk.OverlayView();
-      // The own vehicle stands up (a billboard): never rotateX'd into the
-      // ground, only turned to its heading as the camera sees it. Its
-      // halo lies on the ground and flattens with the tilt.
-      const halo = document.createElement('div');
-      halo.style.cssText = `position:absolute;pointer-events:none;width:${HALO}px;height:${HALO}px;` +
-        'border-radius:50%;background:radial-gradient(circle,rgba(125,140,153,.32) 0,rgba(125,140,153,.26) 82%,rgba(125,140,153,0) 100%);';
-      const image = document.createElement('img');
-      image.style.cssText = 'position:absolute;pointer-events:none;';
-      let anchor = {x: .5, y: .5};
-      // Size bucket for the camera's zoom; the overlay redraws on every
-      // camera frame, the transform changes only on a new bucket.
-      let scale = null;
-      const setIcon = icon => {
-        if (!icon?.url) return;
-        // The same picture again (each marker update sends the icon): no
-        // reload (driver-u174).
-        if (image.src !== icon.url) image.src = icon.url;
-        const size = icon.scaledSize || icon.size;
-        if (!size) return;
-        image.style.width = `${size.width}px`; image.style.height = `${size.height}px`;
-        anchor = icon.anchor && size.width && size.height
-          ? {x: icon.anchor.x / size.width, y: icon.anchor.y / size.height}
-          : {x: .5, y: .5};
-        image.style.transformOrigin = `${anchor.x * 100}% ${anchor.y * 100}%`;
-      };
-      setIcon(icon);
-      car.onAdd = () => {
-        const pane = car.getPanes().overlayLayer;
-        pane.appendChild(halo); pane.appendChild(image);
-      };
-      car.draw = () => {
-        const pixel = car.getProjection()?.fromLatLngToDivPixel(marker.getPosition());
-        if (!pixel) return;
-        const tilt = state.map.getTilt() || 0;
-        scale = nextScale(scale, Number(state.map.getZoom()));
-        image.style.left = `${pixel.x}px`; image.style.top = `${pixel.y}px`;
-        image.style.transform = `translate(${-anchor.x * 100}%,${-anchor.y * 100}%) ` +
-          `rotate(${screenRotation(state.heading, state.map.getHeading() || 0, tilt)}deg) scale(${scale})`;
-        halo.style.left = `${pixel.x}px`; halo.style.top = `${pixel.y}px`;
-        halo.style.transform = `translate(-50%,-50%) scale(${scale}) scaleY(${Math.cos(tilt * Math.PI / 180)})`;
-      };
-      car.onRemove = () => { image.remove(); halo.remove(); };
-      marker.addListener('position_changed', () => car.draw());
-      marker.addListener('icon_changed', () => { setIcon(marker.getIcon()); car.draw(); });
-      const attach = () => {
-        car.setMap(null);
-        state = byMap.get(marker.getMap());
-        if (!state) return;
-        state.car?.setMap(null); state.car = car;
-        car.setMap(marker.getMap());
-      };
-      marker.addListener('map_changed', attach);
-      marker.addListener('visible_changed', () => {
-        if (marker.getVisible()) marker.setVisible(false);
+    const ownVehicles = new WeakSet();
+    // The plugin's own-vehicle marker: its Symbol arrow and the ring under
+    // it. Returns the car's handle for driverMapCamera.vehicle().
+    const ownVehicle = (marker, zIndex) => {
+      const ring = new NativeMarker({
+        icon: {url: RING_URL, scaledSize: new sdk.Size(RING_SIZE, RING_SIZE),
+          anchor: new sdk.Point(RING_SIZE / 2, RING_SIZE / 2)},
+        clickable: false, zIndex: (zIndex ?? 0) - 1, position: marker.getPosition(),
       });
+      let heading = 0, state = null, mapListener = null;
+      const turn = () => {
+        const rotation = vehicleRotation(heading, marker.getMap()?.getHeading?.() || 0);
+        if (marker.getIcon()?.rotation !== rotation) marker.setIcon(arrowSymbol(rotation));
+      };
+      const car = {
+        turn(next) { heading = next; turn(); },
+        release() { mapListener?.remove(); mapListener = null; ring.setMap(null); },
+      };
+      const attach = () => {
+        mapListener?.remove(); mapListener = null;
+        if (state?.car === car) state.car = null;
+        const map = marker.getMap() ?? null;
+        ring.setMap(map);
+        state = map ? byMap.get(map) ?? null : null;
+        if (state) state.car = car;
+        // Every camera frame that turns the map turns the arrow back.
+        mapListener = map?.addListener?.('heading_changed', turn) ?? null;
+        turn();
+      };
+      marker.addListener('position_changed', () => ring.setPosition(marker.getPosition()));
+      marker.addListener('visible_changed', () => ring.setVisible(marker.getVisible() !== false));
+      marker.addListener('zindex_changed', () => ring.setZIndex((marker.getZIndex() ?? 0) - 1));
+      marker.addListener('map_changed', attach);
+      ring.setVisible(marker.getVisible() !== false);
       attach();
-      marker.setVisible(false);
+      return car;
+    };
+    // The plugin sends the car's raster icon (the arrow and ring drawn in
+    // Dart) and its title with every update; a raster icon cannot turn,
+    // so only a Symbol gets through and the arrow stays, and the car gets
+    // no tooltip or click.
+    const ownOptions = options => {
+      const {icon, title, clickable, ...rest} = options;
+      return icon && !icon.url ? {...rest, icon, clickable: false} : {...rest, clickable: false};
     };
     sdk.Marker = class extends NativeMarker {
       constructor(options) {
-        super(options);
-        if (options.title !== 'Driver camera vehicle') return;
-        if (options.icon?.url) { carOverlay(this, options.icon); return; }
-        // First built with the default icon (no URL) while the arrow is
-        // still being drawn: the arrow arrives later through setOptions,
-        // which never runs this constructor again (driver-r4-36).
-        const late = this.addListener('icon_changed', () => {
-          const icon = this.getIcon();
-          if (!icon?.url) return;
-          late.remove();
-          carOverlay(this, icon);
-        });
+        const own = options?.title === 'Driver camera vehicle';
+        super(own ? ownOptions(options) : options);
+        if (!own) return;
+        ownVehicles.add(this);
+        this.setIcon(arrowSymbol(0));
+        ownVehicle(this, options.zIndex);
+      }
+      setOptions(options) {
+        super.setOptions(ownVehicles.has(this) ? ownOptions(options) : options);
       }
     };
   }
@@ -675,11 +646,11 @@
       const state = states.get(id); state?.callbacks.add(callback);
       return () => state?.callbacks.delete(callback);
     },
-    // The own vehicle's size bucket at a zoom (for checks; see nextScale).
-    vehicleScale(zoom, shown) { return nextScale(shown ?? null, zoom); },
+    // The arrow's rotation on screen (for checks; see vehicleRotation).
+    vehicleRotation(heading, mapHeading) { return vehicleRotation(heading, mapHeading); },
+    // The own vehicle's compass heading (degrees, 0 north, clockwise).
     vehicle(id, heading) {
-      const state = states.get(id); if (!state) return;
-      state.heading = heading; state.car?.draw();
+      states.get(id)?.car?.turn(heading);
     },
     anchor(id) {
       const state = states.get(id); if (!state) return;

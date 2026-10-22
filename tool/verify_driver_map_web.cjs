@@ -33,7 +33,9 @@ class MapMock {
     if (next.zoom != null && this.options.maxZoom != null) {
       next.zoom = Math.min(next.zoom, this.options.maxZoom);
     }
+    const turned = next.heading != null && next.heading !== this.camera.heading;
     Object.assign(this.camera, next);
+    if (turned) this.listeners?.heading_changed?.();
   }
   setOptions(options) { this.options = {...this.options, ...options}; }
   addListener(event, callback) { this.listeners ??= {}; this.listeners[event] = callback; return {remove: () => delete this.listeners[event]}; }
@@ -52,21 +54,28 @@ class OverlayMock {
   }; }
 }
 class MarkerMock {
-  constructor(options) { this.options = options; this.handlers = {}; }
+  static all = [];
+  constructor(options) { this.options = {...options}; this.handlers = {}; MarkerMock.all.push(this); }
   addListener(event, callback) { (this.handlers[event] ??= new Set()).add(callback);
     return {remove: () => this.handlers[event].delete(callback)}; }
   fire(event) { for (const callback of [...this.handlers[event] ?? []]) callback(); }
   setMap(map) { this.options.map = map; this.fire('map_changed'); }
-  // Like MVCObject: each changed property fires its _changed event.
+  // Like MVCObject: each changed property fires its lower-case _changed
+  // event (zIndex: zindex_changed).
   setOptions(options) { for (const [key, value] of Object.entries(options)) {
     if (this.options[key] === value) continue;
-    this.options[key] = value; this.fire(`${key}_changed`); } }
+    this.options[key] = value; this.fire(`${key.toLowerCase()}_changed`); } }
   getMap() { return this.options.map; } getPosition() { return this.options.position; }
   getIcon() { return this.options.icon; } getVisible() { return this.options.visible; }
-  setVisible(visible) { this.options.visible = visible; this.fire('visible_changed'); }
+  setVisible(visible) { this.setOptions({visible}); }
+  setIcon(icon) { this.setOptions({icon}); }
+  setPosition(position) { this.setOptions({position}); }
+  getZIndex() { return this.options.zIndex; } setZIndex(zIndex) { this.setOptions({zIndex}); }
 }
 const maps = {Map: MapMock, Marker: MarkerMock, OverlayView: OverlayMock,
-  Point: class {constructor(x,y) {this.x=x;this.y=y;}}, RenderingType: {VECTOR: 'VECTOR', RASTER: 'RASTER'}};
+  Point: class {constructor(x,y) {this.x=x;this.y=y;}},
+  Size: class {constructor(width,height) {this.width=width;this.height=height;}},
+  RenderingType: {VECTOR: 'VECTOR', RASTER: 'RASTER'}};
 const images = [], halos = [];
 const frames = [];
 const flushFrames = (max = 200) => {
@@ -396,99 +405,87 @@ assert.equal(map.getZoom(), 21, 'Double-tap zoom-in cannot exceed level 21');
 api.configure(7, 100, 200, .75);
 map.moveCamera({center: {x:0,y:400}}); api.anchor(7);
 assert.equal(map.camera.center.y, 224, '75% screen anchor above overlays');
+// uat-d3: the own vehicle is a native marker (Maps places it on every
+// frame: no overlay that lags the map under a pinch and snaps after; no
+// size that steps with the zoom; nothing that leans or squashes with the
+// tilt) with a rotatable Symbol arrow (lib MoveraVehicleMarker; keep in
+// step), over a second native marker holding the still soft ring.
+const vehicleRotation = (heading, mapHeading) => (((heading - mapHeading) % 360) + 360) % 360;
+assert.equal(api.vehicleRotation(90, 90), 0, 'Heading-up: the arrow points up');
+assert.equal(api.vehicleRotation(90, 30), 60, 'Map turned 30: the arrow turns back by 30');
+assert.equal(api.vehicleRotation(10, 30), 340);
+assert.equal(api.vehicleRotation(-10, 0), 350);
+assert.equal(api.vehicleRotation(45, 0, 60), 45, 'No tilt term');
+const markersBefore = MarkerMock.all.length;
+map.moveCamera({heading: 0, tilt: 0}); // the twist test left the map turned
 const marker = new maps.Marker({title:'Driver camera vehicle', position:{x:1,y:2},
-  icon:{url:'vehicle.png',scaledSize:{width:40,height:40}}, visible:true});
+  icon:{url:'vehicle.png',scaledSize:{width:44,height:44}}, visible:true, zIndex: 12});
 marker.setMap(map); api.vehicle(7,90);
-assert.equal(marker.getVisible(), false, 'Rotatable vehicle overlay replaces bitmap');
-map.moveCamera({heading:90}); api.vehicle(7,90);
-assert.ok(images[0].style.transform.includes('rotate(0deg)'), 'Heading-up car points up');
+assert.equal(marker.getVisible(), true, 'The own vehicle is the native marker itself');
+assert.equal(images.length + halos.length, 0, 'No DOM overlay for the vehicle');
+const arrow = () => marker.getIcon();
+assert.equal(arrow().url, undefined, 'Not the raster icon (a raster icon cannot turn)');
+assert.equal(arrow().path, 'M26 8L43 42L26 32.2L9 42Z', 'The arrow path of MoveraVehicleMarker.paintArrow');
+assert.equal(arrow().scale, 38 / 52, 'Drawn at the 38 pt arrow size, whatever the zoom');
+assert.deepEqual([arrow().anchor.x, arrow().anchor.y], [26, 32.2], 'Anchored at the arrow base notch');
+assert.equal(arrow().fillColor, '#3FB6D3'); assert.equal(arrow().strokeColor, '#FFFFFF');
+assert.equal(marker.options.title, undefined, 'No tooltip on the car');
+assert.equal(marker.options.clickable, false, 'No info window on the car');
+assert.equal(arrow().rotation, 90, 'North-up: the compass heading itself');
+map.moveCamera({heading:90});
+assert.equal(arrow().rotation, 0, 'The map turning heading-up turns the arrow up on that frame');
 map.moveCamera({heading:30, tilt:0}); api.vehicle(7,90);
-assert.ok(images[0].style.transform.includes('rotate(60deg)'), 'Free rotation preserves real car course');
-// The own vehicle is an upright arrow: a tilted map never lays it into
-// the ground (no rotateX squash). Its course is turned as the tilted
-// ground shows it; its halo lies on the ground and flattens with the tilt.
-map.moveCamera({heading:90, tilt:60}); api.vehicle(7,90);
-assert.ok(!images[0].style.transform.includes('rotateX'), 'Tilted map: the arrow stays upright');
-assert.ok(images[0].style.transform.includes('rotate(0deg)'), 'Tilted heading-up arrow still points up');
-map.moveCamera({heading:45, tilt:60}); api.vehicle(7,90);
-assert.ok(images[0].style.transform.includes(`rotate(${Math.round(Math.atan2(Math.SQRT1_2, Math.SQRT1_2 * .5) * 18000 / Math.PI) / 100}deg)`),
-  'A course across the tilted view is foreshortened like the road');
-assert.equal(halos.length, 1, 'One ground halo under the vehicle');
-assert.ok(halos[0].style.transform.includes(`scaleY(${Math.cos(60 * Math.PI / 180)})`), 'Halo lies on the tilted ground');
-// The arrow and its halo scale with the zoom like the reference app:
-// smaller over the region, bigger close in, in 0.05 buckets (lib
-// MoveraVehicleMarker.scaleStops; parsed here so both stay in step).
-{
-  const dart = fs.readFileSync('lib/widgets/movera_vehicle_marker.dart', 'utf8');
-  const stops = [...dart.match(/scaleStops = \[([\s\S]*?)\];/)[1]
-    .matchAll(/\(([\d.]+),\s*([\d.]+)\)/g)].map(m => [Number(m[1]), Number(m[2])]);
-  assert.deepEqual(stops, [[11.5, .6], [13.5, .75], [15, 1], [17, 1.1]], 'Dart arrow scale stops');
-  const expected = z => {
-    if (z <= stops[0][0]) return stops[0][1];
-    for (let i = 1; i < stops.length; i++) if (z <= stops[i][0]) {
-      const [z0, s0] = stops[i - 1], [z1, s1] = stops[i];
-      return s0 + (s1 - s0) * (z - z0) / (z1 - z0);
-    }
-    return stops[stops.length - 1][1];
-  };
-  for (let z = 10; z <= 19; z += .05) {
-    assert.equal(api.vehicleScale(z), Math.round(Math.round(expected(z) / .05) * 5) / 100,
-      `JS arrow bucket at zoom ${z.toFixed(2)} matches Dart`);
-  }
-  const scaleOf = element => Number(/(?:^|\) )scale\(([\d.]+)\)/.exec(element.style.transform)?.[1]);
-  const shown = zoom => { map.moveCamera({zoom, heading: 0, tilt: 0}); api.vehicle(7, 0);
-    return [scaleOf(images[0]), scaleOf(halos[0])]; };
-  assert.deepEqual(shown(11.7), [.6, .6], 'Home (11.7): small arrow and halo');
-  assert.deepEqual(shown(14), [.85, .85], 'Neighbourhood zoom: mid-size arrow');
-  assert.deepEqual(shown(15), [1, 1], 'Locate / guidance standstill (15): full-size arrow');
-  assert.deepEqual(shown(17), [1.1, 1.1], 'Close in: a bit bigger');
-  assert.deepEqual(shown(20), [1.1, 1.1], 'Clamped zoomed right in');
-  assert.deepEqual(shown(5), [.6, .6], 'Clamped zoomed right out');
-  assert.equal(api.vehicleScale(11.7, 0.6), .6);
-  // Hysteresis: a zoom resting on a bucket edge never flickers.
-  shown(14);
-  assert.equal(api.vehicleScale(14.28), .9, 'Fresh: 14.28 rounds to the 0.9 bucket');
-  assert.deepEqual(shown(14.28), [.85, .85], 'Under 0.7 of a bucket away: no new size');
-  assert.deepEqual(shown(14.36), [.9, .9], 'Past it: the next bucket');
-  assert.deepEqual(shown(14.28), [.9, .9], 'And it stays there on the way back');
-  map.moveCamera({heading: 90, tilt: 60}); api.vehicle(7, 90);
-  assert.ok(images[0].style.transform.includes('rotate(0deg) scale(0.9)'), 'Scale after the heading turn');
-  assert.ok(halos[0].style.transform.includes(`scale(0.9) scaleY(${Math.cos(60 * Math.PI / 180)})`),
-    'Halo scales with the arrow and still lies on the tilted ground');
-  // Locate (lib DriverCameraPolicy.locateZoom): a street view tilted by the
-  // curve, never closer than guidance standstill; the arrow grows smoothly
-  // during the flight, in few monotonic steps (no marker churn).
-  const policy = fs.readFileSync('lib/core/navigation/driver_camera_controller.dart', 'utf8');
-  const locateZoom = Number(/static const double locateZoom = ([\d.]+);/.exec(policy)[1]);
-  const startZoom = Number(/static const double guidanceStartZoom = ([\d.]+);/.exec(policy)[1]);
-  const homeZoom = Number(/static const double exploreZoom = ([\d.]+);/.exec(policy)[1]);
-  assert.equal(locateZoom, 15, 'Locate zooms to street level (15)');
-  assert.ok(locateZoom <= startZoom, 'Locate is never closer than the guidance standstill view');
-  assert.equal(homeZoom, 11.7, 'Home still opens at 11.7');
-  const sizes = [];
-  for (let i = 0; i <= 60; i++) {
-    const t = i / 60, e = t * t * (3 - 2 * t);
-    const zoom = homeZoom + (locateZoom - homeZoom) * e;
-    map.moveCamera({zoom, heading: 0, tilt: 0}); api.vehicle(7, 0);
-    sizes.push(scaleOf(images[0]));
-  }
-  assert.equal(sizes[sizes.length - 1], 1, 'Locate view: full-size arrow');
-  assert.ok(sizes.every((s, i) => !i || s >= sizes[i - 1]), 'Arrow only grows during the locate flight');
-  assert.ok(new Set(sizes).size <= 9, `Few size steps during the flight: ${[...new Set(sizes)]}`);
+assert.equal(arrow().rotation, 60, 'Free rotation preserves the real car course');
+map.moveCamera({heading:0, tilt:60}); api.vehicle(7,45);
+assert.equal(arrow().rotation, 45, 'Tilted north-up: the course itself, not leaned by the tilt');
+map.moveCamera({heading:45, tilt:60});
+assert.equal(arrow().rotation, 0, 'Tilted heading-up: still straight up');
+api.vehicle(7, 45.004);
+const symbolAt45 = arrow();
+api.vehicle(7, 45.001);
+assert.equal(arrow(), symbolAt45, 'A hundredth of a degree is not a new icon');
+for (const zoom of [5, 11.7, 15, 18, 21]) {
+  map.moveCamera({zoom, heading: 0, tilt: zoom > 15 ? 67.5 : 0}); api.vehicle(7, 0);
+  assert.equal(arrow().scale, 38 / 52, `Same size at zoom ${zoom}`);
 }
+// The ring: a native marker under the arrow, centred on the arrow's
+// base, never squashed (a marker is a billboard), following the car.
+const ring = MarkerMock.all.slice(markersBefore).find(m => m !== marker);
+assert.ok(ring, 'One ring marker under the vehicle');
+assert.equal(MarkerMock.all.length - markersBefore, 2, 'Arrow and ring, nothing else');
+assert.match(ring.getIcon().url, /^data:image\/svg\+xml/, 'The ring is one still SVG');
+assert.match(decodeURIComponent(ring.getIcon().url), /7D8C99/i, 'Grey ring');
+assert.match(decodeURIComponent(ring.getIcon().url), /stop-opacity="\.28"/, 'At 28 %');
+assert.match(decodeURIComponent(ring.getIcon().url), /stop-opacity="0"/, 'Fading at its edge');
+assert.deepEqual([ring.getIcon().scaledSize.width, ring.getIcon().scaledSize.height], [32, 32], '32 pt ring: 1.3 x the arrow');
+assert.deepEqual([ring.getIcon().anchor.x, ring.getIcon().anchor.y], [16, 16], 'Anchored at its centre');
+assert.equal(ring.getMap(), map, 'The ring is on the car\'s map');
+assert.deepEqual(ring.getPosition(), {x:1,y:2}, 'The ring is under the car');
+assert.equal(ring.getZIndex(), 11, 'Under the arrow');
+assert.equal(ring.options.clickable, false);
+marker.setOptions({position: {x:3,y:4}, zIndex: 20, visible: true, title: 'Driver camera vehicle',
+  icon:{url:'vehicle.png',scaledSize:{width:44,height:44}}});
+assert.deepEqual(ring.getPosition(), {x:3,y:4}, 'A Flutter marker update moves the ring with the car');
+assert.equal(ring.getZIndex(), 19);
+assert.equal(arrow().path, 'M26 8L43 42L26 32.2L9 42Z', 'The update keeps the Symbol arrow, not the raster');
+assert.equal(marker.options.title, undefined);
+marker.setVisible(false);
+assert.equal(ring.getVisible(), false, 'Hidden car: hidden ring');
+marker.setVisible(true);
+assert.equal(ring.getVisible(), true);
 map.moveCamera({heading:0, tilt:0, zoom: 16});
 marker.setMap(null);
+assert.equal(ring.getMap(), null, 'The ring leaves with the car');
 // driver-r4-36: the car is first built with the default icon (no URL;
-// the arrow is still being drawn) and gets its arrow by setOptions. The
-// overlay is installed when the arrow arrives, not never.
+// the arrow was still being drawn) and gets its icon by setOptions. The
+// Symbol arrow is there from the start and the raster never replaces it.
 {
   const late = new maps.Marker({title:'Driver camera vehicle', position:{x:1,y:2}, visible:true});
   late.setMap(map);
-  assert.equal(late.getVisible(), true, 'Default icon: the plain marker shows');
-  late.setOptions({icon:{url:'vehicle.png',scaledSize:{width:40,height:40}}});
-  assert.equal(late.getVisible(), false, 'Late arrow: the overlay replaces the marker');
+  assert.equal(late.getIcon().path, 'M26 8L43 42L26 32.2L9 42Z', 'Default icon: the Symbol arrow already');
+  late.setOptions({icon:{url:'vehicle.png',scaledSize:{width:44,height:44}}});
   api.vehicle(7, 90);
-  assert.ok(images.at(-1).style.transform.includes('rotate(90deg)'), 'Late arrow turns with the heading');
+  assert.equal(late.getIcon().rotation, 90, 'Late raster ignored; the arrow turns with the heading');
   late.setMap(null);
 }
 // Native Maps +/- touches must not be cancelled by the map-wide custom
@@ -688,7 +685,7 @@ queueMicrotask(() => {
         queueMicrotask(() => {
           api.configure(8, 100, 400, .75);
           assert.ok(panned && panned.y > 0, 'A raised sheet glides the followed car up');
-          console.log('PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, live tilt-with-zoom, wheel glide, taps, anchor, look-ahead, sheet glide, vehicle overlay, zoom-scaled arrow and locate view');
+          console.log('PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, live tilt-with-zoom, wheel glide, taps, anchor, look-ahead, sheet glide, native vehicle marker with ring and locate view');
         });
       });
     });
