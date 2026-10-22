@@ -142,6 +142,7 @@ class PersistedActiveRide {
     this.scheduledRideId,
     this.pickupKm,
     this.bags = 0,
+    this.rideCheckFired = const <String>[],
   });
 
   final String tripId;
@@ -202,6 +203,11 @@ class PersistedActiveRide {
 
   /// The bags the rider said they bring.
   final int bags;
+
+  /// Ride check triggers that already opened on this trip
+  /// ([RideCheckTrigger] names): each opens once per trip, also after a
+  /// restore (driver-u44).
+  final List<String> rideCheckFired;
   bool get hasVerifiedEndpoints =>
       validCoordinate(pickupLat, latitude: true) &&
       validCoordinate(pickupLng, latitude: false) &&
@@ -264,6 +270,7 @@ class PersistedActiveRide {
       scheduledRideId: scheduledRideId,
       pickupKm: pickupKm,
       bags: bags,
+      rideCheckFired: rideCheckFired,
     );
   }
 
@@ -319,6 +326,7 @@ class PersistedActiveRide {
     if (scheduledRideId != null) 'scheduledRideId': scheduledRideId,
     if (pickupKm != null) 'pickupKm': pickupKm,
     if (bags > 0) 'bags': bags,
+    if (rideCheckFired.isNotEmpty) 'rideCheckFired': rideCheckFired,
   };
 
   /// A saved Money, or null when absent or not readable.
@@ -414,6 +422,7 @@ class PersistedActiveRide {
     }
     final pickupKm = json['pickupKm'];
     final bags = json['bags'];
+    final fired = json['rideCheckFired'];
     final nextJson = json['next'];
     final next = nextJson is Map
         ? PersistedQueuedTrip.fromJson(Map<String, dynamic>.from(nextJson))
@@ -487,6 +496,9 @@ class PersistedActiveRide {
           ? pickupKm.toDouble()
           : null,
       bags: bags is int && bags > 0 ? bags : 0,
+      rideCheckFired: fired is List
+          ? List<String>.unmodifiable(fired.whereType<String>())
+          : const <String>[],
     );
   }
 }

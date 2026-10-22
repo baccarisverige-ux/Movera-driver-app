@@ -36,6 +36,18 @@ class RideCheckDetector {
 
   bool fired(RideCheckTrigger trigger) => _fired.contains(trigger);
 
+  /// The triggers that opened on this trip, for the saved trip.
+  List<String> get firedNames =>
+      [for (final trigger in _fired) trigger.name];
+
+  /// A restored trip: the triggers that already opened before (by name;
+  /// unknown names are skipped) stay used (driver-u44).
+  void restoreFired(Iterable<String> names) {
+    for (final trigger in RideCheckTrigger.values) {
+      if (names.contains(trigger.name)) _fired.add(trigger);
+    }
+  }
+
   /// The rider is in the car. Restored trips pass their saved start.
   void startTrip(DateTime at) {
     _tripStartedAt ??= at;

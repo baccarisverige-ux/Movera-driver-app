@@ -36,6 +36,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         scheduledRideId: widget.scheduledRideId,
         pickupKm: widget.pickupKm,
         bags: widget.bags,
+        rideCheckFired: _rideCheckDetector.firedNames,
         nextTripId: securedOffer?.id,
         riderName: widget.riderName,
         riderRating: widget.riderRating,
@@ -147,7 +148,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         case ActiveRideStage.waitingForRider:
           unawaited(_focusWaitingPickup());
         case ActiveRideStage.onTrip:
-          _rideCheckDetector.startTrip(_rideCheckNow);
+          // A restored trip keeps its start (driver-u44).
+          _rideCheckDetector.startTrip(_onTripStartedAt ?? _rideCheckNow);
           _demoDrive?.startTrip();
           if (_onTripRadarState != _OnTripRadarState.secured) {
             _startOnTripRadar();
@@ -1616,6 +1618,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     void _openRideCheck(RideCheckEvent? event) {
       if (event == null || !mounted) { return; }
       _rideCheckDetector.unwatched(); // the card stops the watch
+      // The trigger is used for this trip: saved for a restore (u44).
+      if (!event.demo) { unawaited(_rideLifecycle.persistNow()); }
       unawaited(_rideCheck.open(event, instant: MediaQuery.disableAnimationsOf(context)));
     }
     void _rideCheckPlan(RoadRoute route) {
