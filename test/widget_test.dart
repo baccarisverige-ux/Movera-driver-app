@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/ride/completion_journal.dart';
@@ -1963,6 +1964,8 @@ void main() {
   testWidgets('Safety tools open from Home and basic actions remain usable', (
     WidgetTester tester,
   ) async {
+    SafetyAudioOption.debugEnabled = true; // owner decision 10: offered again
+    addTearDown(() => SafetyAudioOption.debugEnabled = null);
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await _pumpHome(tester, const Size(320, 700));
 

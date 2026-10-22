@@ -972,6 +972,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Share trip, record audio, get help';
 
   @override
+  String get shareTripGetHelp => 'Share trip, get help';
+
+  @override
   String get stopSafelyFirstReasonRequired =>
       'Stop safely first · reason required';
 

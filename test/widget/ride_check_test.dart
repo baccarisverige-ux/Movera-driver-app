@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/geo/geo_point.dart';
@@ -235,6 +236,8 @@ void main() {
       testWidgets('demo tools on the trip island: ${trigger.label}', (
         tester,
       ) async {
+        SafetyAudioOption.debugEnabled = true; // owner decision 10: offered again
+        addTearDown(() => SafetyAudioOption.debugEnabled = null);
         final kit = _Kit();
         await _mountRide(
           tester,

@@ -276,6 +276,7 @@
   "nextTripWaybill": "Bon de commande de la prochaine course",
   "nextTripsOnYourWay": "Prochaines courses sur votre trajet",
   "shareTripRecordAudioGetHelp": "Partager la course, enregistrer l’audio, obtenir de l’aide",
+  "shareTripGetHelp": "Partager la course, obtenir de l’aide",
   "stopSafelyFirstReasonRequired": "Arrêtez-vous d’abord en sécurité · motif requis",
   "whyAreYouCancellingNextTripQuestion": "Pourquoi annulez-vous la prochaine course ?",
   "whyAreYouEndingTripQuestion": "Pourquoi terminez-vous la course ?",

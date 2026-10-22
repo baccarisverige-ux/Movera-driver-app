@@ -1760,6 +1760,12 @@ abstract class AppLocalizations {
   /// **'Share trip, record audio, get help'**
   String get shareTripRecordAudioGetHelp;
 
+  /// No description provided for @shareTripGetHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share trip, get help'**
+  String get shareTripGetHelp;
+
   /// No description provided for @stopSafelyFirstReasonRequired.
   ///
   /// In en, this message translates to:

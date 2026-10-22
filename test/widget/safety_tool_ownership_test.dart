@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/presentation/driver/safety toolkits/safety_toolkits.dart';
 
 Future<GlobalKey<NavigatorState>> _open(
@@ -91,6 +92,8 @@ void main() {
     testWidgets(
       'late dial result is ignored when owner is ${disposed ? 'disposed' : 'covered'}',
       (tester) async {
+        SafetyAudioOption.debugEnabled = true; // owner decision 10: offered again
+        addTearDown(() => SafetyAudioOption.debugEnabled = null);
         final dial = Completer<bool>();
         final navigator = await _open(tester, () => dial.future);
         final contact = _tap(tester, 'Contact 112');

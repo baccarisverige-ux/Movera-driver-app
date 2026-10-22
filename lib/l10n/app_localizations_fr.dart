@@ -979,6 +979,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Partager la course, enregistrer l’audio, obtenir de l’aide';
 
   @override
+  String get shareTripGetHelp => 'Partager la course, obtenir de l’aide';
+
+  @override
   String get stopSafelyFirstReasonRequired =>
       'Arrêtez-vous d’abord en sécurité · motif requis';
 

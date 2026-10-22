@@ -10,6 +10,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
+import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 
 // Solar line icons only in this feature, tinted to the text around them.
@@ -521,8 +522,12 @@ class RideCheckCard extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: 10),
-        _RecordAudio(controller: c),
+        // Owner decision 10: hidden while the option is off, except a
+        // recording already under way, which keeps its Stop.
+        if (_RecordAudio.shown(c)) ...[
+          const SizedBox(height: 10),
+          _RecordAudio(controller: c),
+        ],
         Padding(
           padding: const EdgeInsets.fromLTRB(2, 14, 2, 2),
           child: Text(
@@ -1015,6 +1020,12 @@ class _NoteField extends StatelessWidget {
 class _RecordAudio extends StatelessWidget {
   const _RecordAudio({required this.controller});
   final RideCheckController controller;
+
+  /// Offered (owner decision 10's switch), or a recording to stop.
+  static bool shown(RideCheckController c) =>
+      SafetyAudioOption.enabled ||
+      c.audio == RideCheckAudio.recording ||
+      c.audio == RideCheckAudio.starting;
 
   static String _clock(int seconds) =>
       '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}';

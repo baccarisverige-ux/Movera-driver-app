@@ -226,7 +226,7 @@ extension _AcceptRideSheet on _AcceptRideState {
                 ),
                 _CleanRow(
                   title: tr.safetyToolkit,
-                  subtitle: tr.shareTripRecordAudioGetHelp,
+                  subtitle: SafetyAudioOption.toolkitSubtitle,
                   onTap: () {
                     if (popOwned(sheetContext)) { showSafetyToolKitSheet(context); }
                   },
