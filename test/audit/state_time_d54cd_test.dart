@@ -9,10 +9,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -223,6 +226,7 @@ class _HomeGps implements DriverLocationRepository {
 /// DriverHome on a headless map, with the demo extras off.
 Future<void> _pumpHome(WidgetTester tester, {
   DriverLocationRepository? location,
+  DispatchRepository? dispatch,
 }) async {
   final maps = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
@@ -243,7 +247,10 @@ Future<void> _pumpHome(WidgetTester tester, {
   await tester.pumpWidget(ScreenUtilInit(
     designSize: const Size(375, 812),
     builder: (_, _) => MaterialApp(
-      home: DriverHome(locationRepository: location),
+      home: DriverHome(
+        locationRepository: location,
+        dispatchRepository: dispatch,
+      ),
     ),
   ));
   await _settle(tester);
@@ -257,6 +264,68 @@ LatLng? _carOnHome(WidgetTester tester) {
     }
   }
   return null;
+}
+
+RideOffer _radarTrip(String id) => RideOffer(
+  id: id,
+  category: 'Comfort',
+  fare: Money(minorUnits: 10000),
+  rating: '4.9',
+  pickupMinutes: 2,
+  pickupKm: 1,
+  tripMinutes: 10,
+  tripKm: 5,
+  pickup: 'Pickup, Stockholm',
+  dropoff: 'Dropoff, Stockholm',
+  pickupPosition: const GeoPoint(59.3279, 18.0615),
+  dropoffPosition: const GeoPoint(59.3326, 18.0649),
+  isNearby: true,
+  followsDestination: true,
+);
+
+/// Dispatch with two Radar trips; each Match waits for the test's answer.
+class _RadarDispatch implements DispatchRepository {
+  final claims = <Completer<ClaimResult>>[];
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() => const Stream.empty();
+  @override
+  Stream<List<RideOffer>> watchNearbyOffers({
+    bool destinationModeActive = false,
+  }) => Stream.value([_radarTrip('first'), _radarTrip('second')]);
+  @override
+  Stream<List<RideOffer>> watchNextTripOffers() => const Stream.empty();
+  @override
+  void refreshOffers() {}
+  @override
+  void releaseReservation(String reservationId) {}
+  @override
+  Stream<ReservationRequestPreview> watchAssignments() => const Stream.empty();
+  @override
+  Future<ClaimResult> claimOffer(String offerId) {
+    claims.add(Completer<ClaimResult>());
+    return claims.last.future;
+  }
+}
+
+/// No GPS fix ever (Home stays on its start position).
+class _NoGps implements DriverLocationRepository {
+  @override
+  Future<DriverLocation> getCurrentPosition() => Completer<DriverLocation>().future;
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream.empty();
+}
+
+/// Home online with both [_RadarDispatch] trips on its deck.
+Future<void> _pumpDeck(WidgetTester tester, DispatchRepository dispatch) async {
+  await _pumpHome(tester, location: _NoGps(), dispatch: dispatch);
+  await tester.tap(find.text('OFF'));
+  await _pumpFor(tester, const Duration(seconds: 24));
+  expect(find.byKey(const ValueKey<String>('radar-offer-card-first')),
+      findsOneWidget);
 }
 
 const _offerCard = ValueKey<String>('on-trip-radar-offer-button');
@@ -494,6 +563,20 @@ void main() {
     gps.updates.add(gps.at(59.341, 18.071)); // the car moved on
     await _settle(tester);
     expect(_carOnHome(tester), const LatLng(59.341, 18.071));
+    await _unmount(tester);
+  });
+
+  testWidgets('driver-u128: a pick window that ends during a failed Match '
+      'claim still fades Match', (tester) async {
+    final dispatch = _RadarDispatch();
+    await _pumpDeck(tester, dispatch);
+    await tester.tap(find.byKey(const ValueKey<String>('radar-match-first')));
+    await tester.pump();
+    await _pumpFor(tester, const Duration(seconds: 20)); // window ends
+    dispatch.claims.single.complete(const ClaimResult.networkError());
+    await _settle(tester);
+    final match = find.byKey(const ValueKey<String>('radar-match-first'));
+    expect(tester.widget<FilledButton>(match).onPressed, isNull);
     await _unmount(tester);
   });
 

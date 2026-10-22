@@ -443,6 +443,9 @@ extension _HomeOfferRadar on _DriverHomeState {
       _radarOfferTimeoutTimers[offer.id] = Timer(
         left.isNegative ? Duration.zero : left,
         () {
+          // driver-u128: a window that ends during a Match claim can be
+          // armed again (at once) if the claim leaves the card available.
+          _radarOfferTimeoutTimers.remove(offer.id);
           if (!mounted ||
               !_radarHomeOffers.any((item) => item.id == offer.id) ||
               _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
@@ -574,6 +577,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             _homeRadarMatchingOfferId = null;
             _homeRadarMatchStates.remove(offer.id);
           });
+          _startRadarPickWindow(offer); // its time left, or Match fades
           IslandMessages.show(HomeIslandNotices.noConnection);
       }
       if (_homeRadarMatchingOfferId == null) {
