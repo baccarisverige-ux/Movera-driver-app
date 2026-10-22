@@ -715,6 +715,41 @@ void main() {
     dispatch.claims.single.complete(const ClaimResult.unavailable());
     await _frames(tester, 6);
   });
+
+  testWidgets('driver-r5-3: a Radar card\'s Match ends at the server\'s '
+      'expiresAt', (tester) async {
+    _homeSetUp(tester);
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      externalRouting: false,
+      liveMapTicker: false,
+      reservationPopup: false,
+      islandHint: false,
+      radarSound: false,
+      simulatedArrival: false,
+      skipAccountActivation: false,
+    );
+    // The server lets it go in 8 s; the app's own window is 15 s.
+    final expires = DateTime.now().add(const Duration(seconds: 8));
+    final dispatch = _RadarDispatch()
+      ..offers = [
+        OfferWire.parse(
+            {..._wireOffer, 'expiresAt': expires.toUtc().toIso8601String()}),
+      ];
+    await _pumpHome(tester, DriverHome(
+      locationRepository: _NoGps(),
+      dispatchRepository: dispatch,
+      sessionController: DriverSessionController(),
+    ));
+    await tester.tap(find.text('OFF'));
+    final match = find.byKey(const ValueKey<String>('radar-match-o1'));
+    await _until(tester, match, const Duration(seconds: 24));
+    expect(tester.widget<FilledButton>(match).onPressed, isNotNull);
+    await _frames(tester, 36, 250);
+    expect(tester.widget<FilledButton>(match).onPressed, isNull,
+        reason: 'before: Match stayed on for the app\'s full 15 s');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
+  });
 }
 
 /// Contract `Offer` (openapi.yaml#Offer).

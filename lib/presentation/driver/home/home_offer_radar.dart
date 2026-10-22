@@ -447,8 +447,17 @@ extension _HomeOfferRadar on _DriverHomeState {
         return;
       }
       final now = ScheduledClock.realNow();
-      final deadline = _radarOfferDeadlines.putIfAbsent(
-          offer.id, () => now.add(_DriverHomeState._radarOfferPickWindow));
+      final deadline = _radarOfferDeadlines.putIfAbsent(offer.id, () {
+        final window = _DriverHomeState._radarOfferPickWindow;
+        // driver-r5-3: never past the server's `expiresAt` (a card that
+        // waited behind the deck, or arrived late, has less time left).
+        final server = _latestDispatchOffers
+            .where((item) => item.id == offer.id)
+            .firstOrNull
+            ?.expiresAt
+            ?.difference(DateTime.now());
+        return now.add(server != null && server < window ? server : window);
+      });
       final left = deadline.difference(now);
       _radarOfferTimeoutTimers[offer.id] = Timer(
         left.isNegative ? Duration.zero : left,
