@@ -3,8 +3,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
+import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
+
+import '../../integration_test/headless_map_platform.dart';
 
 /// [screen] as the app's first route on a phone.
 Future<void> _show(WidgetTester tester, Widget screen) async {
@@ -15,6 +22,37 @@ Future<void> _show(WidgetTester tester, Widget screen) async {
   await tester.pumpWidget(ScreenUtilInit(
     designSize: const Size(375, 812),
     builder: (_, __) => MaterialApp(home: screen),
+  ));
+  await tester.pumpAndSettle();
+}
+
+/// Trip details of [status] for a 152,40 kr trip with a 40 kr bonus.
+Future<void> _detail(WidgetTester tester,
+    {TripStatus status = TripStatus.completed,
+    List<RideCheckRecord> checks = const []}) async {
+  final maps = GoogleMapsFlutterPlatform.instance;
+  GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+  addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+  await tester.binding.setSurfaceSize(const Size(390, 1600));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(ScreenUtilInit(
+    designSize: const Size(375, 812),
+    builder: (_, __) => MaterialApp(
+      home: DriverRideHistoryDetail(
+        record: TripHistoryRecord(
+          tripId: 'trip-1',
+          riderName: 'Karin',
+          whenLabel: '15/10/2026, 07:59',
+          pickup: 'Gamla vägen',
+          dropoff: 'Solna centrum',
+          fare: '152,40 kr',
+          category: 'Comfort',
+          status: status,
+          driverBonus: '40 kr',
+        ),
+        loadRideChecks: (_) async => checks,
+      ),
+    ),
   ));
   await tester.pumpAndSettle();
 }
@@ -30,5 +68,13 @@ void main() {
     expect(find.text('Card'), findsNothing);
     await _show(tester, const DriverRideCompleted(paidByCash: true));
     expect(find.text('Kontant'), findsOneWidget);
+  });
+
+  testWidgets('driver-83: a cancelled trip shows no ride cost and no bonus',
+      (tester) async {
+    await _detail(tester, status: TripStatus.cancelledByDriver);
+    expect(find.text('152,40 kr'), findsNothing);
+    expect(find.byKey(const ValueKey('history-driver-bonus')), findsNothing);
+    tester.takeException();
   });
 }
