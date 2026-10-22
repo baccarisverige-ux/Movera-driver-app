@@ -1,7 +1,19 @@
 part of 'home.dart';
 
-/// A saved trip Home could not simply resume.
+/// A saved trip Home could not simply resume, and the timers a resumed
+/// app arms again.
 extension _HomeRecovery on _DriverHomeState {
+    /// The app is back. Home's one-shot timers for wall-clock moments
+    /// count monotonic time, which stops while the phone sleeps, so they
+    /// would fire late by the time asleep: they are worked out again from
+    /// the wall clock, and what is due runs now.
+    void _rearmWallClockTimers() {
+      if (!mounted) { return; }
+      // The driving limit, its warnings and the end of a rest
+      // (driver-r5-6).
+      _HomeAccount(this)._syncDrivingLimit();
+    }
+
     /// "Close trip" on a stale or endpoint-less saved trip. Its secured
     /// next trip is handed off through the completion journal, as every
     /// other exit from the trip does, and Home then asks about it: it is

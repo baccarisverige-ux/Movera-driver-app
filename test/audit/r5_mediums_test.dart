@@ -18,6 +18,7 @@ import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/session/driving_time_clock.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
@@ -157,6 +158,36 @@ Future<_Home> _pumpHome(
 Future<void> _end(WidgetTester tester) async {
   tester.takeException();
   await tester.pumpWidget(const SizedBox());
+}
+
+/// The phone sleeps for [asleep]: the wall clock moves on, the app's
+/// timers (monotonic time) do not.
+void _sleep(WidgetTester tester, Duration asleep, void Function(Duration) jump) {
+  for (final state in [
+    AppLifecycleState.inactive,
+    AppLifecycleState.hidden,
+    AppLifecycleState.paused,
+  ]) {
+    tester.binding.handleAppLifecycleStateChanged(state);
+  }
+  jump(asleep);
+  for (final state in [
+    AppLifecycleState.hidden,
+    AppLifecycleState.inactive,
+    AppLifecycleState.resumed,
+  ]) {
+    tester.binding.handleAppLifecycleStateChanged(state);
+  }
+}
+
+/// Points the wall clock at the test's fake time plus a jump [_sleep]
+/// can move; restored after the test.
+void Function(Duration) _wallClock() {
+  final before = ScheduledClock.realNow;
+  var offset = Duration.zero;
+  ScheduledClock.realNow = () => before().add(offset);
+  addTearDown(() => ScheduledClock.realNow = before);
+  return (by) => offset += by;
 }
 
 void main() {
@@ -349,6 +380,29 @@ void main() {
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.text('Unresolved trip'), findsNothing);
       expect(await rides.read(), isNull);
+      await _end(tester);
+    });
+  });
+
+  group('driver-r5-6', () {
+    tearDown(() => DrivingTimeClock.instance.load(worked: Duration.zero));
+
+    testWidgets('after the phone slept past the driving limit, resume '
+        'ends the session at once', (tester) async {
+      final jump = _wallClock();
+      final rule = DrivingTimeClock.instance.rule;
+      DrivingTimeClock.instance.load(
+        worked: rule.work - const Duration(hours: 1),
+        offlineSince: ScheduledClock.realNow(),
+      );
+      final home = await _pumpHome(tester);
+      expect(home.session.availableForOffers, isTrue);
+      _sleep(tester, const Duration(hours: 2), jump);
+      await _frames(tester, const Duration(seconds: 1));
+      expect(DrivingTimeClock.instance.left, Duration.zero);
+      expect(IslandMessages.posted.map((m) => m.title),
+          contains(startsWith('Rest until')));
+      expect(home.session.availableForOffers, isFalse);
       await _end(tester);
     });
   });

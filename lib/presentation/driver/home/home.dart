@@ -181,6 +181,7 @@ class _DriverHomeState extends State<DriverHome>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Inactive is still on screen: a call banner, a system dialog (driver-65).
     _foreground = state == AppLifecycleState.resumed || state == AppLifecycleState.inactive;
+    if (state == AppLifecycleState.resumed) { _HomeRecovery(this)._rearmWallClockTimers(); }
     if (_liveVisible) { _resumeHomeUpdates(); } else { _pauseHomeUpdates(); }
   }
   void _pauseHomeUpdates() {
