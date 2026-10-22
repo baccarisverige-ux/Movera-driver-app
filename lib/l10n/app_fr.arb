@@ -1064,7 +1064,7 @@
   "prefLowEmissions": "Faibles émissions • Éco",
   "prefPetFriendly": "Animaux acceptés • Caisse OK",
   "prefChildSeat": "Siège enfant • Sûr pour les enfants",
-  "prefCategoriesSaved": "{count} catégories de course enregistrées",
+  "prefCategoriesSaved": "{count, plural, one{{count} catégorie de course enregistrée} other{{count} catégories de course enregistrées}}",
   "prefActiveOfTotal": "{active} sur {total} actives",
   "prefChooseRideOptions": "Choisissez vos options de course",
   "prefSelectRideTypes": "Sélectionnez les types de course que vous souhaitez recevoir",

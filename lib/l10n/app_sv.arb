@@ -1064,7 +1064,7 @@
   "prefLowEmissions": "Låga utsläpp • Eko",
   "prefPetFriendly": "Husdjursvänlig • Bur OK",
   "prefChildSeat": "Barnstol • Säkert för barn",
-  "prefCategoriesSaved": "{count} resekategorier sparade",
+  "prefCategoriesSaved": "{count, plural, =1{1 resekategori sparad} other{{count} resekategorier sparade}}",
   "prefActiveOfTotal": "{active} av {total} aktiva",
   "prefChooseRideOptions": "Välj dina reseval",
   "prefSelectRideTypes": "Välj vilka resetyper du vill få",

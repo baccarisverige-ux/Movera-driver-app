@@ -199,4 +199,18 @@ void main() {
       }
     }
   });
+
+  test('driver-80: the saved-categories message is pluralized', () {
+    final said = {
+      'en': ('1 ride category saved', '6 ride categories saved'),
+      'fr': ('1 catégorie de course enregistrée',
+          '6 catégories de course enregistrées'),
+      'sv': ('1 resekategori sparad', '6 resekategorier sparade'),
+    };
+    for (final MapEntry(key: code, value: (one, six)) in said.entries) {
+      speak(code);
+      expect(tr.prefCategoriesSaved(1), one);
+      expect(tr.prefCategoriesSaved(6), six);
+    }
+  });
 }

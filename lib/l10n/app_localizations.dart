@@ -6498,7 +6498,7 @@ abstract class AppLocalizations {
   /// No description provided for @prefCategoriesSaved.
   ///
   /// In en, this message translates to:
-  /// **'{count} ride categories saved'**
+  /// **'{count, plural, =1{1 ride category saved} other{{count} ride categories saved}}'**
   String prefCategoriesSaved(int count);
 
   /// No description provided for @prefActiveOfTotal.

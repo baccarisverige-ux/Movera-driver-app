@@ -3726,7 +3726,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String prefCategoriesSaved(int count) {
-    return '$count ride categories saved';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ride categories saved',
+      one: '1 ride category saved',
+    );
+    return '$_temp0';
   }
 
   @override

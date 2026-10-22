@@ -3774,7 +3774,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String prefCategoriesSaved(int count) {
-    return '$count catégories de course enregistrées';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count catégories de course enregistrées',
+      one: '$count catégorie de course enregistrée',
+    );
+    return '$_temp0';
   }
 
   @override

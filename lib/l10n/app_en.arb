@@ -2614,7 +2614,7 @@
   "prefLowEmissions": "Low emissions • Eco",
   "prefPetFriendly": "Pet friendly • Carrier OK",
   "prefChildSeat": "Child seat • Kids safe",
-  "prefCategoriesSaved": "{count} ride categories saved",
+  "prefCategoriesSaved": "{count, plural, =1{1 ride category saved} other{{count} ride categories saved}}",
   "@prefCategoriesSaved": {
     "placeholders": {
       "count": {

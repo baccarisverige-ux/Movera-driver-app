@@ -3743,7 +3743,13 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String prefCategoriesSaved(int count) {
-    return '$count resekategorier sparade';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count resekategorier sparade',
+      one: '1 resekategori sparad',
+    );
+    return '$_temp0';
   }
 
   @override
