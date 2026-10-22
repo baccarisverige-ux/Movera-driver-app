@@ -8239,6 +8239,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 found} other{{count} found}}'**
   String destResultsFound(int count);
+
+  /// Estimated wait in the queue position preview.
+  ///
+  /// In en, this message translates to:
+  /// **'About 15–30 min wait'**
+  String get queueEstimatedWait;
+
+  /// Label above the sample count of drivers ahead in the queue.
+  ///
+  /// In en, this message translates to:
+  /// **'Drivers ahead'**
+  String get queueDriversAhead;
 }
 
 class _AppLocalizationsDelegate

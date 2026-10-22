@@ -1353,5 +1353,7 @@
   "noticePayoutSentTitle": "Paiement envoyé",
   "noticePayoutSentBody": "{amount} est en route vers votre banque.",
   "signInOr": "ou",
-  "destResultsFound": "{count, plural, one{{count} trouvé} other{{count} trouvés}}"
+  "destResultsFound": "{count, plural, one{{count} trouvé} other{{count} trouvés}}",
+  "queueEstimatedWait": "Environ 15 à 30 min d’attente",
+  "queueDriversAhead": "Chauffeurs devant"
 }

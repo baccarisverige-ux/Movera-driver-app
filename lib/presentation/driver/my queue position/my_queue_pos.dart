@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
+import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/widgets/custom_btn.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/responsive_size.dart';
@@ -15,23 +16,30 @@ Future<T?> showMyQueuePositionSheet<T>(BuildContext context) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (BuildContext context) {
-      return MyQueuePosition();
+      return const MyQueuePosition();
     },
   );
 }
 
-// ignore: must_be_immutable
 class MyQueuePosition extends StatelessWidget {
-  MyQueuePosition({super.key});
+  const MyQueuePosition({super.key});
 
-  List<String> categories = [
-    "Electric",
-    "Comfort",
-    "Electric",
-    "Electric",
-    "Van",
-    "Van",
+  /// The sample ranks' categories: contract ids, shown with the app's
+  /// category names (driver-u146).
+  static const List<String> _sampleCategories = [
+    'electric',
+    'comfort',
+    'electric',
+    'economy',
+    'xl',
+    'xl',
   ];
+
+  /// The sample matches the airport card: 10 drivers ahead, so 11th.
+  static const int _sampleAhead = 10;
+
+  List<String> get categories =>
+      _sampleCategories.map(CategoryCatalog.labelOf).toList();
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -118,7 +126,7 @@ class MyQueuePosition extends StatelessWidget {
                                     ),
                                     2.height,
                                     TextWidget(
-                                      text: "15-30 mins EST time",
+                                      text: tr.queueEstimatedWait,
                                       color: AppColor.subtitle,
                                       fontSize: 14,
                                       fontWeight: fwNormal,
@@ -171,7 +179,7 @@ class MyQueuePosition extends StatelessWidget {
                                     color: AppColor.title,
                                   ),
                                   TextWidget(
-                                    text: tr.queueSampleRank,
+                                    text: tr.queueDriversAhead,
                                     color: AppColor.title,
                                     fontSize: 14,
                                     fontWeight: fwMedium,
@@ -192,7 +200,7 @@ class MyQueuePosition extends StatelessWidget {
                                     height: ResSize.h * 20,
                                   ),
                                   TextWidget(
-                                    text: "2",
+                                    text: '${_sampleAhead + 1}',
                                     color: AppColor.title,
                                     fontSize: 20,
                                     fontWeight: fwSemiBold,
@@ -204,7 +212,7 @@ class MyQueuePosition extends StatelessWidget {
                                 children: [
                                   20.width,
                                   TextWidget(
-                                    text: "1",
+                                    text: '$_sampleAhead',
                                     color: AppColor.title,
                                     fontSize: 20,
                                     fontWeight: fwSemiBold,

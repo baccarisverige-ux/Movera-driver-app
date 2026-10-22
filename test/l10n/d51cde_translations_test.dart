@@ -12,6 +12,7 @@ import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
+import 'package:movera/presentation/driver/my%20queue%20position/my_queue_pos.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
@@ -180,6 +181,22 @@ void main() {
     expect(find.text('9,4 km'), findsWidgets);
     for (final text in english) {
       expect(words(text), findsNothing, reason: text);
+    }
+  });
+
+  testWidgets('driver-u146: the queue preview is translated and matches '
+      'the 10-ahead card', (tester) async {
+    for (final (code, wait) in [
+      ('fr', 'Environ 15 à 30 min d’attente'),
+      ('sv', 'Cirka 15–30 min väntetid'),
+    ]) {
+      await show(tester, code, const Scaffold(body: MyQueuePosition()));
+      expect(find.text(wait), findsOneWidget, reason: code);
+      expect(find.text('10'), findsOneWidget);
+      expect(find.text('11'), findsOneWidget);
+      for (final english in ['15-30 mins EST time', 'Van']) {
+        expect(words(english), findsNothing, reason: english);
+      }
     }
   });
 }

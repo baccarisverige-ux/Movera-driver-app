@@ -4793,4 +4793,10 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get queueEstimatedWait => 'Environ 15 à 30 min d’attente';
+
+  @override
+  String get queueDriversAhead => 'Chauffeurs devant';
 }

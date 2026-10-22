@@ -4728,4 +4728,10 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get queueEstimatedWait => 'About 15–30 min wait';
+
+  @override
+  String get queueDriversAhead => 'Drivers ahead';
 }

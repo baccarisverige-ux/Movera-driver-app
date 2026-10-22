@@ -4746,4 +4746,10 @@ class AppLocalizationsSv extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get queueEstimatedWait => 'Cirka 15–30 min väntetid';
+
+  @override
+  String get queueDriversAhead => 'Förare före';
 }

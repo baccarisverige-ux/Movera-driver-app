@@ -1353,5 +1353,7 @@
   "noticePayoutSentTitle": "Utbetalning skickad",
   "noticePayoutSentBody": "{amount} är på väg till din bank.",
   "signInOr": "eller",
-  "destResultsFound": "{count, plural, =1{1 träff} other{{count} träffar}}"
+  "destResultsFound": "{count, plural, =1{1 träff} other{{count} träffar}}",
+  "queueEstimatedWait": "Cirka 15–30 min väntetid",
+  "queueDriversAhead": "Förare före"
 }

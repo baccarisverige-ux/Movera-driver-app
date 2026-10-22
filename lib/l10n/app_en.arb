@@ -3195,5 +3195,13 @@
         "type": "int"
       }
     }
+  },
+  "queueEstimatedWait": "About 15–30 min wait",
+  "@queueEstimatedWait": {
+    "description": "Estimated wait in the queue position preview."
+  },
+  "queueDriversAhead": "Drivers ahead",
+  "@queueDriversAhead": {
+    "description": "Label above the sample count of drivers ahead in the queue."
   }
 }
