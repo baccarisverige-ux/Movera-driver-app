@@ -1356,5 +1356,6 @@
   "destResultsFound": "{count, plural, =1{1 träff} other{{count} träffar}}",
   "queueEstimatedWait": "Cirka 15–30 min väntetid",
   "queueDriversAhead": "Förare före",
-  "paymentCard": "Kort"
+  "paymentCard": "Kort",
+  "offersBadge": "ERBJUDANDEN"
 }

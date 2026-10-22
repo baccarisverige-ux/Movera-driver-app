@@ -8257,6 +8257,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Card'**
   String get paymentCard;
+
+  /// Label after the live offer count on the Radar list.
+  ///
+  /// In en, this message translates to:
+  /// **'OFFERS'**
+  String get offersBadge;
 }
 
 class _AppLocalizationsDelegate

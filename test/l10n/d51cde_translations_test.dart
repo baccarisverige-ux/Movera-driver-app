@@ -18,6 +18,7 @@ import 'package:movera/presentation/driver/my%20queue%20position/my_queue_pos.da
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
+import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
@@ -278,5 +279,18 @@ void main() {
         expect(words(wire), findsNothing, reason: wire);
       }
     }
+  });
+
+  testWidgets('driver-90: the Radar list count says OFFERS in the driver\'s '
+      'language', (tester) async {
+    for (final (code, offers) in [('fr', 'OFFRES'), ('sv', 'ERBJUDANDEN')]) {
+      await show(tester, code, const RideRequests());
+      await tester.pump(const Duration(milliseconds: 120));
+      final count = find.byKey(const ValueKey<String>('radar-live-count'));
+      expect(find.descendant(of: count, matching: find.text(offers)),
+          findsOneWidget, reason: code);
+      expect(find.text('OFFERS'), findsNothing);
+    }
+    await tester.pumpWidget(const SizedBox());
   });
 }

@@ -3207,5 +3207,9 @@
   "paymentCard": "Card",
   "@paymentCard": {
     "description": "Payment method: paid by card in the app."
+  },
+  "offersBadge": "OFFERS",
+  "@offersBadge": {
+    "description": "Label after the live offer count on the Radar list."
   }
 }

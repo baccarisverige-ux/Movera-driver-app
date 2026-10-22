@@ -4761,4 +4761,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get paymentCard => 'Kort';
+
+  @override
+  String get offersBadge => 'ERBJUDANDEN';
 }

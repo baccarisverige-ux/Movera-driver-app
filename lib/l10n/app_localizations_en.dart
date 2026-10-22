@@ -4743,4 +4743,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentCard => 'Card';
+
+  @override
+  String get offersBadge => 'OFFERS';
 }

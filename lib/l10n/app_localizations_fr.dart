@@ -4808,4 +4808,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get paymentCard => 'Carte';
+
+  @override
+  String get offersBadge => 'OFFRES';
 }
