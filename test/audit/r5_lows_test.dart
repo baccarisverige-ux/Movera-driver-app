@@ -158,6 +158,16 @@ Future<void> _until(WidgetTester tester, Finder finder,
   }
 }
 
+/// Trip storage that is blocked: every read fails.
+class _BlockedStorage extends MemoryActiveRideRepository {
+  var reads = 0;
+  @override
+  Future<PersistedActiveRide?> read() async {
+    reads++;
+    throw ActiveRideStorageUnavailable('blocked');
+  }
+}
+
 /// Home's test setup: a headless map and the demo's quiet runtime.
 void _homeSetUp(WidgetTester tester) {
   _phone(tester);
@@ -501,6 +511,27 @@ void main() {
     await _until(tester, find.byKey(card), const Duration(seconds: 6));
     expect(find.byKey(card), findsNothing,
         reason: 'before: it got a fresh full countdown');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
+  });
+
+  testWidgets('driver-r5-37: the storage Retry bar goes by itself and does '
+      'not re-read during a trip', (tester) async {
+    _homeSetUp(tester);
+    final storage = _BlockedStorage();
+    final session = DriverSessionController();
+    await _pumpHome(tester, DriverHome(locationRepository: _NoGps(),
+        activeRideRepository: storage, sessionController: session));
+    final bar = find.byType(SnackBar);
+    expect(bar, findsOneWidget);
+    expect(tester.widget<SnackBar>(bar).persist, isFalse,
+        reason: 'before: with its action it stayed until swiped away');
+    session.beginTrip('live-trip');
+    final reads = storage.reads;
+    await tester.tap(find.text('Retry'));
+    await _frames(tester, 4);
+    expect(storage.reads, reads,
+        reason: 'before: Retry re-ran the restore over the live trip');
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });

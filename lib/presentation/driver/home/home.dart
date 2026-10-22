@@ -528,8 +528,8 @@ class _DriverHomeState extends State<DriverHome>
       _didAttemptActiveRideRestore = false;
       if (!mounted) { return; }
       setState(() => _recoveryResolved = true);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripStorageUnavailable),
-          action: SnackBarAction(label: tr.retry, onPressed: () => unawaited(_restoreActiveRideIfNeeded()))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripStorageUnavailable), persist: false, duration: _HomeRoutes.storageRetryShown,
+          action: SnackBarAction(label: tr.retry, onPressed: () => _HomeRoutes(this)._retryActiveRideRestore()))); // driver-r5-37
       return;
     } on ActiveRideUnreadable {
       _didAttemptActiveRideRestore = false;
