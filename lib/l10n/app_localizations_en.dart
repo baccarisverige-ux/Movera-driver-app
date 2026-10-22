@@ -4740,4 +4740,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get queueDriversAhead => 'Drivers ahead';
+
+  @override
+  String get paymentCard => 'Card';
 }

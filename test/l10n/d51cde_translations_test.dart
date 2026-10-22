@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
@@ -13,6 +14,8 @@ import 'package:movera/presentation/driver/destination%20mode/destination_confir
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/my%20queue%20position/my_queue_pos.dart';
+import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
+import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
@@ -54,6 +57,18 @@ Future<void> showAccepted(WidgetTester tester, String code) async {
   await tester.tap(find.text(tr.schedAcceptedTab).first);
   await tester.pump(const Duration(milliseconds: 600));
 }
+
+/// A finished trip in History, paid by [payment] as the journal keeps it.
+TripHistoryRecord historyTrip(String payment) => TripHistoryRecord(
+  tripId: 'trip-1',
+  riderName: 'Lars',
+  whenLabel: '21 Oct',
+  pickup: 'Odlarvägen 22',
+  dropoff: 'T-Centralen',
+  fare: '126,00 kr',
+  category: 'Comfort',
+  paymentMethod: payment,
+);
 
 /// Wave 5 D5.1 (parts c, d and e): texts that stayed in English, or in
 /// the language they were made in, now follow the driver's language.
@@ -211,6 +226,25 @@ void main() {
       speak(code);
       expect(tr.prefCategoriesSaved(1), one);
       expect(tr.prefCategoriesSaved(6), six);
+    }
+  });
+
+  testWidgets('driver-u155: the payment method is in the driver\'s '
+      'language, card trips included', (tester) async {
+    for (final (code, cash, card) in [
+      ('sv', 'Kontant', 'Kort'),
+      ('fr', 'Espèces', 'Carte'),
+    ]) {
+      for (final (stored, shown) in [('Cash', cash), ('Card', card)]) {
+        await show(tester, code, DriverRideHistoryDetail(
+          record: historyTrip(stored),
+          loadRideChecks: (_) async => const [],
+        ));
+        expect(find.text(shown), findsOneWidget, reason: '$code $stored');
+        expect(find.text(stored), findsNothing);
+      }
+      await show(tester, code, const DriverRideCompleted(paymentMethod: 'Card'));
+      expect(find.text(card), findsOneWidget, reason: '$code completed');
     }
   });
 }

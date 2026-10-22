@@ -3203,5 +3203,9 @@
   "queueDriversAhead": "Drivers ahead",
   "@queueDriversAhead": {
     "description": "Label above the sample count of drivers ahead in the queue."
+  },
+  "paymentCard": "Card",
+  "@paymentCard": {
+    "description": "Payment method: paid by card in the app."
   }
 }

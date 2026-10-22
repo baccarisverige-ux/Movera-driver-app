@@ -4758,4 +4758,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get queueDriversAhead => 'Förare före';
+
+  @override
+  String get paymentCard => 'Kort';
 }

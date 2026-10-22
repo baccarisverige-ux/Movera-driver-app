@@ -8251,6 +8251,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drivers ahead'**
   String get queueDriversAhead;
+
+  /// Payment method: paid by card in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get paymentCard;
 }
 
 class _AppLocalizationsDelegate

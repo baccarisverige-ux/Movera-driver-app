@@ -1,7 +1,19 @@
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
+
+/// A stored payment method as the driver reads it: 'Cash' and 'Card'
+/// (kept in English) in the driver's language, anything else (a method
+/// name such as Swish, or '—') as stored (driver-u155).
+String paymentMethodText(String? method) =>
+    switch (method?.trim().toLowerCase()) {
+      'cash' => tr.cash,
+      'card' => tr.paymentCard,
+      null || '' => '—',
+      _ => method!.trim(),
+    };
 
 /// Completed-trip projection for History (D7).
 ///

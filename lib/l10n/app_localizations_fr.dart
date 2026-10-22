@@ -4805,4 +4805,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get queueDriversAhead => 'Chauffeurs devant';
+
+  @override
+  String get paymentCard => 'Carte';
 }

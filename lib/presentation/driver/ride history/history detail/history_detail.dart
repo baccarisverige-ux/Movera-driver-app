@@ -428,7 +428,11 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
         16.height,
         _detailRow(tr.tip, _ride.tip),
         16.height,
-        _detailRow(tr.paymentMethod, _ride.paymentMethod, paymentIcon: true),
+        _detailRow(
+          tr.paymentMethod,
+          paymentMethodText(_ride.paymentMethod),
+          paymentIcon: true,
+        ),
         16.height,
         _detailRow(tr.rideType, _ride.category),
         // Q23 / R8-4: on a cash trip, the fare, the cash the driver
