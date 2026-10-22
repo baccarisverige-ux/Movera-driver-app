@@ -141,8 +141,9 @@ void main() {
     );
     expect(cash.fare, '132,20 kr');
     expect(cash.driverBonus, Money.ore(4380));
-    // The rider pays the fare; the pickup pay is Movera's.
-    expect(cash.cashToCollect, '128,40 kr');
+    // The rider pays the fare without Movera's bonus (it is in the fare,
+    // driver-r5-14); the pickup pay is Movera's.
+    expect(cash.cashToCollect, '88,40 kr');
     final none = PickupPayQuote(
       pay: Money.ore(0),
       leg: const PickupLeg(km: 0.5, minutes: 1),
