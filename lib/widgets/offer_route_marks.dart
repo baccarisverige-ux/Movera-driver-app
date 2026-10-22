@@ -69,7 +69,10 @@ class OfferRouteMarks {
 
   /// Clears the bitmap cache (tests painting with another font).
   @visibleForTesting
-  static void debugClearCache() => _cache.clear();
+  static void debugClearCache() {
+    _cache.clear();
+    RouteMarkPins.debugClearCache();
+  }
 
   /// The pickup or drop-off pin with [value]; cached once painted. A
   /// painting still under way is never shared: if its owner goes away

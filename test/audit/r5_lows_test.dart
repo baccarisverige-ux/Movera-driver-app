@@ -13,6 +13,8 @@ import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
+import 'package:movera/widgets/route_mark_pins.dart';
+import 'package:movera/widgets/web_map_bitmap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
@@ -75,6 +77,21 @@ void main() {
     final stored = await SharedPreferencesStorePlatform.instance.getAll();
     expect(stored.keys, isNot(contains('flutter.$key')),
         reason: 'before: only keys in this tab\'s cache were removed');
+  });
+
+  test('driver-r5-17: each trip reuses the route pins and their web URLs',
+      () async {
+    var urls = 0;
+    WebMapBitmaps.debugCreateUrl = (_) => 'blob:test/${urls++}';
+    addTearDown(() => WebMapBitmaps.debugCreateUrl = null);
+    // Two trips ask for the same three pins, as AcceptRide does on mount.
+    for (var trip = 0; trip < 2; trip++) {
+      for (final kind in RouteMarkKind.values) {
+        await RouteMarkPins.pin(kind);
+      }
+    }
+    expect(urls, RouteMarkKind.values.length,
+        reason: 'before: a new PNG and Blob URL per pin per trip');
   });
 }
 
