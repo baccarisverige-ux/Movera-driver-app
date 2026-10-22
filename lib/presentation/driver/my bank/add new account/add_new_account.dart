@@ -247,11 +247,11 @@ class _AddNewAccountState extends State<AddNewAccount> {
         children: [
           _tabs(),
           const SizedBox(height: 26),
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
-              'ACCOUNT',
-              style: TextStyle(
+              tr.bankAccountSection,
+              style: const TextStyle(
                 color: _muted,
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,

@@ -4811,4 +4811,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get offersBadge => 'OFFRES';
+
+  @override
+  String get bankAccountSection => 'COMPTE';
 }

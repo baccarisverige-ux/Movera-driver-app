@@ -8263,6 +8263,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OFFERS'**
   String get offersBadge;
+
+  /// Section header above the bank account fields.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT'**
+  String get bankAccountSection;
 }
 
 class _AppLocalizationsDelegate

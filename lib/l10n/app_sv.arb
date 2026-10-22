@@ -1357,5 +1357,6 @@
   "queueEstimatedWait": "Cirka 15–30 min väntetid",
   "queueDriversAhead": "Förare före",
   "paymentCard": "Kort",
-  "offersBadge": "ERBJUDANDEN"
+  "offersBadge": "ERBJUDANDEN",
+  "bankAccountSection": "KONTO"
 }

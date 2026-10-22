@@ -4764,4 +4764,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get offersBadge => 'ERBJUDANDEN';
+
+  @override
+  String get bankAccountSection => 'KONTO';
 }

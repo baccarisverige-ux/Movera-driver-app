@@ -14,6 +14,7 @@ import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
+import 'package:movera/presentation/driver/my%20bank/add%20new%20account/add_new_account.dart';
 import 'package:movera/presentation/driver/my%20queue%20position/my_queue_pos.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
@@ -292,5 +293,14 @@ void main() {
       expect(find.text('OFFERS'), findsNothing);
     }
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('driver-r3-2: the bank form section header is translated',
+      (tester) async {
+    for (final (code, header) in [('fr', 'COMPTE'), ('sv', 'KONTO')]) {
+      await show(tester, code, const AddNewAccount());
+      expect(find.text(header), findsOneWidget, reason: code);
+      expect(find.text('ACCOUNT'), findsNothing);
+    }
   });
 }

@@ -1357,5 +1357,6 @@
   "queueEstimatedWait": "Environ 15 à 30 min d’attente",
   "queueDriversAhead": "Chauffeurs devant",
   "paymentCard": "Carte",
-  "offersBadge": "OFFRES"
+  "offersBadge": "OFFRES",
+  "bankAccountSection": "COMPTE"
 }

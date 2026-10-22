@@ -3211,5 +3211,9 @@
   "offersBadge": "OFFERS",
   "@offersBadge": {
     "description": "Label after the live offer count on the Radar list."
+  },
+  "bankAccountSection": "ACCOUNT",
+  "@bankAccountSection": {
+    "description": "Section header above the bank account fields."
   }
 }
