@@ -53,7 +53,12 @@ class NativeRideCheckRecorder implements RideCheckRecorder {
 
   // hasPermission asks for the microphone if needed.
   @override
-  Future<bool> requestPermission() => _audio.hasPermission();
+  Future<bool> requestPermission() async {
+    final audio = _audio;
+    final granted = await audio.hasPermission();
+    if (!granted) await _release(audio);
+    return granted;
+  }
 
   @override
   Future<void> start(String recordingId) async {
@@ -68,15 +73,46 @@ class NativeRideCheckRecorder implements RideCheckRecorder {
   Future<String?> stop() async {
     final recorder = _recorder;
     if (recorder == null) return null;
-    final path = await recorder.stop();
+    final String? path;
+    try {
+      path = await recorder.stop();
+    } finally {
+      await _release(recorder);
+    }
     if (path == null) return null;
     final file = File(path);
-    if (!await file.exists() || await file.length() == 0) return null;
+    if (!await file.exists()) return null;
+    if (await file.length() == 0) {
+      // driver-30: nothing was captured; no empty file is left behind.
+      try {
+        await file.delete();
+      } on FileSystemException {
+        // Already gone.
+      }
+      return null;
+    }
     return path;
   }
 
   @override
   Future<void> cancel() async {
-    await _recorder?.cancel();
+    final recorder = _recorder;
+    if (recorder == null) return;
+    try {
+      await recorder.cancel();
+    } finally {
+      await _release(recorder);
+    }
+  }
+
+  /// driver-30: each recording gets its own native recorder, released
+  /// once it is stopped or cancelled; the next Record makes a new one.
+  Future<void> _release(AudioRecorder recorder) async {
+    if (identical(_recorder, recorder)) _recorder = null;
+    try {
+      await recorder.dispose();
+    } catch (_) {
+      // Released anyway.
+    }
   }
 }

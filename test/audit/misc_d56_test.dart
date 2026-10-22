@@ -196,4 +196,15 @@ void main() {
     expect(audio.path, '${support.path}/ride_check_audio/trip-1.m4a');
     await recorder.stop();
   });
+
+  test('driver-30: a stopped recorder is released; an empty file is deleted',
+      () async {
+    _phoneFolder();
+    final audio = _FakeAudio(bytes: 0);
+    final recorder = NativeRideCheckRecorder(createAudio: () => audio);
+    await recorder.start('trip-1');
+    expect(await recorder.stop(), isNull);
+    expect(File(audio.path!).existsSync(), isFalse); // before: left on disk
+    expect(audio.disposed, isTrue); // before: never disposed
+  });
 }
