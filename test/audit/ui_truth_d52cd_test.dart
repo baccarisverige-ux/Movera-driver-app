@@ -14,6 +14,7 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
@@ -127,6 +128,17 @@ Future<void> _call112(WidgetTester tester,
 
 /// The demo day (07:00, or [start]) booked again, then Scheduled rides.
 /// The test day's requests are 40 and 65 min after the start.
+/// Accepts the 07:40 Gamla vägen request in Scheduled rides; back on
+/// Requests.
+Future<void> _accept0740(WidgetTester tester) async {
+  await tester.tap(find.text('Gamla vägen, Stockholm').first);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Accept  •  126,75 kr'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Requests'));
+  await tester.pumpAndSettle();
+}
+
 Future<void> _scheduled(WidgetTester tester, {Duration? start}) async {
   if (start != null) {
     ScheduledClock.instance = ScheduledClock(startTime: start);
@@ -251,5 +263,13 @@ void main() {
     expect(find.textContaining('Tomorrow'), findsWidgets);
     expect(find.text('Available today'), findsNothing);
     expect(find.text('Available'), findsWidgets);
+  });
+
+  testWidgets('driver-u165: a clashing request in a category the driver does '
+      'not take is not counted as hidden by the clash', (tester) async {
+    DriverCategoryChoice.off.value = {'Premium'};
+    await _scheduled(tester);
+    await _accept0740(tester);
+    expect(find.byKey(const ValueKey('scheduled-clash-note')), findsNothing);
   });
 }

@@ -677,10 +677,11 @@ class ScheduledRideStore {
   /// The driver's categories changed (Q27).
   static void categoriesChanged() => _changed();
 
-  /// Requests left out because they clash with an accepted ride.
+  /// Requests left out because they clash with an accepted ride; one in
+  /// a category the driver does not take is left out anyway (driver-u165).
   static List<(_ScheduledRide, _ScheduledRide)> get _clashing => [
     for (final ride in _requests)
-      if (!_pickupPassed(ride))
+      if (!_pickupPassed(ride) && DriverCategoryChoice.takes(ride.category))
         if (_clashWith(ride) case final taken?) (ride, taken),
   ];
 
