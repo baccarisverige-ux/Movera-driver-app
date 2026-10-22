@@ -63,15 +63,15 @@ class HomeIslandNotices {
         priority: IslandPriority.high,
       );
 
-  /// " · +45 kr", " · no fee", or nothing when no fee was decided.
+  /// " · +45 kr", " · +5 €", " · no fee", or nothing when no fee was
+  /// decided.
   static String feeSuffix(Money? fee) {
     if (fee == null) { return ''; }
     if (fee.minorUnits <= 0) {
       return ' · ${driverText(DriverTexts.islandCancelNoFee)}';
     }
-    final amount = fee.minorUnits % 100 == 0
-        ? '${fee.minorUnits ~/ 100} kr'
-        : fee.formatted;
+    // In the fee's own currency and exponent: "45 kr", "5 €", "5 DT".
+    final amount = fee.formattedShort;
     return ' · ${driverText(DriverTexts.islandCancelFee, {'amount': amount})}';
   }
 

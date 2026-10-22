@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.dart';
 import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/sign%20in%20phone/sign_in_phone.dart';
 import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
+import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 
 import 'd51_translations_test.dart' as d51 show show;
 import 'd51_translations_test.dart' show languages, speak, words;
@@ -76,5 +78,15 @@ void main() {
       expect(find.text(count), findsOneWidget, reason: code);
       expect(words('found'), findsNothing);
     }
+  });
+
+  test('driver-62: a cancel fee keeps its own currency', () {
+    speak('fr');
+    String fee(int minor, String currency) => HomeIslandNotices.feeSuffix(
+        Money(minorUnits: minor, currency: currency));
+    expect(fee(500, 'EUR'), ' · +5 €');
+    expect(fee(5000, 'TND'), ' · +5 DT');
+    expect(fee(4500, 'SEK'), ' · +45 kr');
+    expect(fee(4550, 'SEK'), ' · +45,50 kr');
   });
 }
