@@ -269,7 +269,7 @@ extension _HomeScheduled on _DriverHomeState {
     /// Admin "Late warning": the island, Scheduled rides and Notifications.
     void _warnLateScheduled(ReservationRequestPreview ride) {
       IslandMessages.show(HomeIslandNotices.headToPickup(ride.pickupTime));
-      ScheduledRideStore.reminder.say(() =>
+      ScheduledRideStore.remind(ride, () =>
           tr.headToYourPickupTimePickup(ride.pickupTime, ride.pickupAddress));
       _noteRideAlert(
         () => tr.headToYourPickupTimePickup2(ride.pickupTime),
@@ -341,7 +341,7 @@ extension _HomeScheduled on _DriverHomeState {
       IslandMessages.show(
         HomeIslandNotices.scheduledReminder(ride.pickupTime, left),
       );
-      ScheduledRideStore.reminder.say(() =>
+      ScheduledRideStore.remind(ride, () =>
           tr.pickupAtPickupTimeInLeft(ride.pickupTime, left, ride.pickupAddress));
       _noteRideAlert(() => tr.pickupTimePickupInLeft(ride.pickupTime, left), ride.pickupAddress);
     }
@@ -364,8 +364,8 @@ extension _HomeScheduled on _DriverHomeState {
     void _remindOnline(ReservationRequestPreview ride) {
       if (!mounted || _driverSession.isOnline) { return; }
       IslandMessages.show(HomeIslandNotices.goOnlineFor(ride.pickupTime));
-      ScheduledRideStore.reminder.say(
-          () => tr.goOnlineNowForYourPickup(ride.pickupTime));
+      ScheduledRideStore.remind(
+          ride, () => tr.goOnlineNowForYourPickup(ride.pickupTime));
       _noteRideAlert(
         () => tr.goOnlineForPickupTimePickup(ride.pickupTime),
         ride.pickupAddress,

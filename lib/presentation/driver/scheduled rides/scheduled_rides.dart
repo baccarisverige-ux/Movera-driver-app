@@ -708,6 +708,11 @@ class ScheduledRideStore {
   static ValueListenable<int> get changes => _revision;
 
   static void _changed() {
+    if (_reminderRide case final ride?
+        when !_accepted.any((item) => identical(item.route, ride))) {
+      _reminderRide = null;
+      reminder.value = null;
+    }
     openRequests.value = _visibleRequests.length;
     _revision.value++;
   }
@@ -855,6 +860,17 @@ class ScheduledRideStore {
   /// The latest reminder for an accepted ride, shown in Scheduled rides.
   static final DriverNote reminder = DriverNote();
 
+  /// The ride [reminder] is about; when it leaves Accepted (cancelled by
+  /// the driver or the rider, reassigned) the reminder goes (driver-u166).
+  static ReservationRequestPreview? _reminderRide;
+
+  /// Shows [text] as the reminder for accepted [ride], read each time it is
+  /// shown so it follows the driver's language.
+  static void remind(ReservationRequestPreview ride, String Function() text) {
+    _reminderRide = ride;
+    reminder.say(text);
+  }
+
   /// Set when a ride went to a backup driver.
   static final DriverNote backupNote = DriverNote();
 
@@ -909,6 +925,7 @@ class ScheduledRideStore {
     _lateCancels.clear();
     _pauseUntil = null;
     reminder.value = null;
+    _reminderRide = null;
     backupNote.value = null;
     reassigned.clear();
     _backupLate = false;

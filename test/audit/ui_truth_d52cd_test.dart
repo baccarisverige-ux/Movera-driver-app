@@ -312,4 +312,18 @@ void main() {
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets('driver-u166: the reminder leaves with the ride the rider '
+      'cancelled', (tester) async {
+    await _scheduled(tester);
+    ScheduledRideStore.take(demoReservationId, upcoming: true);
+    ScheduledRideStore.remind(ScheduledRideStore.routeOf(demoReservationId)!,
+        () => 'Pickup at 07:40 in 30 min: Gamla vägen');
+    await tester.tap(find.text('Accepted'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('scheduled-reminder')), findsOneWidget);
+    ScheduledRideStore.riderCancelled(demoReservationId);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('scheduled-reminder')), findsNothing);
+  });
 }
