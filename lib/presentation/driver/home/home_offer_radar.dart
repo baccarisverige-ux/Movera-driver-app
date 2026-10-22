@@ -638,25 +638,32 @@ extension _HomeOfferRadar on _DriverHomeState {
           _dismissOutsideRadarOffer();
         }
         // driver-u116: the full Radar list's own Match took it; the trip
-        // that begins clears the deck.
+        // that begins clears the deck. A lost Match sweeps afterwards.
         if (_radarListClaiming.value) { return; }
-        for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
-          if (ids.contains(offer.id) ||
-              _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
-            continue;
-          }
-          if (_pendingRadarHomeOffers.contains(offer)) {
-            // Waiting off screen: there is no card to show as taken, so
-            // it just leaves. A "Taken" state with a removal timer could
-            // outlive a pause and land on the deck for good (driver-u129).
-            _dismissRadarHomeOffer(offer);
-            continue;
-          }
-          // Gone from Radar without a claim of ours: the reason is not
-          // known here (rider cancelled, expired, taken elsewhere…).
-          _resolveHomeRadarMatchLost(offer, _RadarOfferGone.unavailable);
-        }
+        _sweepGoneRadarOffers();
       });
+    }
+    /// Deck and waiting Radar offers that left dispatch without a claim of
+    /// ours are gone. driver-r5-32: also run when a full Radar list Match
+    /// ends with no trip, since the sweep was skipped while it was out.
+    void _sweepGoneRadarOffers() {
+      final ids = _latestDispatchOffers.map((item) => item.id).toSet();
+      for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
+        if (ids.contains(offer.id) ||
+            _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
+          continue;
+        }
+        if (_pendingRadarHomeOffers.contains(offer)) {
+          // Waiting off screen: there is no card to show as taken, so
+          // it just leaves. A "Taken" state with a removal timer could
+          // outlive a pause and land on the deck for good (driver-u129).
+          _dismissRadarHomeOffer(offer);
+          continue;
+        }
+        // Gone from Radar without a claim of ours: the reason is not
+        // known here (rider cancelled, expired, taken elsewhere…).
+        _resolveHomeRadarMatchLost(offer, _RadarOfferGone.unavailable);
+      }
     }
     /// Radar trips open right now, the ones the full Radar screen lists.
     int get _radarTripsOpen => _latestDispatchOffers

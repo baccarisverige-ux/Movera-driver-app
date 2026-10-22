@@ -14,6 +14,7 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/privacy/local_data.dart';
@@ -21,6 +22,7 @@ import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
 import 'package:movera/core/routing/route_repository.dart';
@@ -92,6 +94,67 @@ class _OnceRoutes implements RouteRepository {
     return RoadRoute(
         points: [origin, destination], distanceMeters: 10000,
         durationSeconds: 600);
+  }
+}
+
+RideOffer _radarTrip(String id) => RideOffer(
+      id: id,
+      category: 'Comfort',
+      fare: Money(minorUnits: 10000),
+      rating: '4.9',
+      pickupMinutes: 2,
+      pickupKm: 1,
+      tripMinutes: 10,
+      tripKm: 5,
+      pickup: 'Pickup, Stockholm',
+      dropoff: 'Dropoff, Stockholm',
+      pickupPosition: const GeoPoint(59.3279, 18.0615),
+      dropoffPosition: const GeoPoint(59.3326, 18.0649),
+      isNearby: true,
+      followsDestination: true,
+    );
+
+/// Dispatch with two Radar trips; each Match waits for the test's answer.
+class _RadarDispatch implements DispatchRepository {
+  final claims = <Completer<ClaimResult>>[];
+  List<RideOffer> offers = [_radarTrip('first'), _radarTrip('second')];
+  final updates = StreamController<List<RideOffer>>.broadcast();
+  void publish(List<RideOffer> next) => updates.add(offers = next);
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() => const Stream.empty();
+  @override
+  Stream<List<RideOffer>> watchNearbyOffers({
+    bool destinationModeActive = false,
+  }) =>
+      Stream.multi((sink) {
+        sink.addSync(offers);
+        final sub = updates.stream.listen(sink.addSync);
+        sink.onCancel = sub.cancel;
+      }, isBroadcast: true);
+  @override
+  Stream<List<RideOffer>> watchNextTripOffers() => const Stream.empty();
+  @override
+  void refreshOffers() {}
+  @override
+  void releaseReservation(String reservationId) {}
+  @override
+  Stream<ReservationRequestPreview> watchAssignments() => const Stream.empty();
+  @override
+  Future<ClaimResult> claimOffer(String offerId) {
+    claims.add(Completer<ClaimResult>());
+    return claims.last.future;
+  }
+}
+
+/// Waits (in test time) until [finder] shows, up to [limit].
+Future<void> _until(WidgetTester tester, Finder finder,
+    [Duration limit = const Duration(seconds: 10)]) async {
+  for (var t = Duration.zero; t < limit && finder.evaluate().isEmpty;
+      t += const Duration(milliseconds: 100)) {
+    await tester.pump(const Duration(milliseconds: 100));
   }
 }
 
@@ -361,6 +424,48 @@ void main() {
     await _frames(tester, 10);
     expect(tester.widget<DigitalDestinationFace>(face).eta, '10 min',
         reason: 'before: it fell back to the confirm-time figures');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
+  });
+
+  testWidgets('driver-r5-32: after a lost Match in the full Radar list, '
+      'trips that left dispatch leave Home\'s deck', (tester) async {
+    _homeSetUp(tester);
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      externalRouting: false,
+      liveMapTicker: false,
+      reservationPopup: false,
+      islandHint: false,
+      radarSound: false,
+      simulatedArrival: false,
+      skipAccountActivation: false,
+    );
+    final dispatch = _RadarDispatch();
+    await _pumpHome(tester, DriverHome(
+      locationRepository: _NoGps(),
+      dispatchRepository: dispatch,
+      sessionController: DriverSessionController(),
+    ));
+    await tester.tap(find.text('OFF'));
+    const second = ValueKey<String>('radar-offer-card-second');
+    await _until(tester, find.byKey(second), const Duration(seconds: 24));
+    await tester.tap(find.byKey(const ValueKey<String>('radar-home-all-offers')));
+    await _frames(tester, 12);
+    await tester.tap(find.byKey(const ValueKey<String>('radar-match-first')));
+    await tester.pump();
+    // Both trips leave dispatch (no withdrawal event); the Match is lost.
+    dispatch.publish([]);
+    await tester.pump();
+    dispatch.claims.single.complete(const ClaimResult.alreadyClaimed());
+    await _frames(tester, 12, 250); // the lost Match's notice clears
+    await tester.tap(find.byTooltip('Back'));
+    await _frames(tester, 4);
+    final match = find.byKey(const ValueKey<String>('radar-match-second'));
+    expect(
+        match.evaluate().isEmpty ||
+            tester.widget<FilledButton>(match).onPressed == null,
+        isTrue,
+        reason: 'before: it stayed on the deck with Match enabled');
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
