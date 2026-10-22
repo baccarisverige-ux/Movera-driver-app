@@ -90,6 +90,16 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   List<_ScheduledRide> get _requests => ScheduledRideStore._visibleRequests;
   List<_ScheduledRide> get _accepted => ScheduledRideStore._accepted;
 
+  /// No listed request is picked up on a later day (driver-u162): the
+  /// header says "Available today" only then.
+  bool get _requestsAllToday {
+    final now = ScheduledRideStore._now;
+    return _requests.every((ride) {
+      final at = ride.route?.pickupAt(now);
+      return at == null || DateUtils.isSameDay(at, now);
+    });
+  }
+
   /// Notes above the rides: paused or off, clashing rides left out, the
   /// latest reminder, a ride given to a backup driver.
   List<Widget> _notes() {
@@ -160,7 +170,11 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            _selectedTab == 0 ? tr.schedAvailableToday : tr.schedUpcoming,
+                            _selectedTab == 1
+                                ? tr.schedUpcoming
+                                : _requestsAllToday
+                                ? tr.schedAvailableToday
+                                : tr.schedAvailable,
                             style: const TextStyle(
                               color: Color(0xFF6F7B82),
                               fontSize: 13,
@@ -657,16 +671,29 @@ class ScheduledRideStore {
     return next;
   }
 
+  /// When the requests' block ends or admin's "on" stops skipping the
+  /// late-cancel pause, by time alone; Home refreshes then
+  /// (driver-r3-9). Null when nothing ends.
+  static DateTime? accessChangeAt() {
+    final now = _now;
+    final ends = [
+      block()?.until,
+      if (_driverAccess.onAt(now)) _driverAccess.until,
+    ].whereType<DateTime>().where((at) => at.isAfter(now));
+    return ends.isEmpty ? null : ends.reduce((a, b) => a.isBefore(b) ? a : b);
+  }
+
   /// Counts the open requests again: a pickup time passed.
   static void refresh() => _changed();
 
   /// The driver's categories changed (Q27).
   static void categoriesChanged() => _changed();
 
-  /// Requests left out because they clash with an accepted ride.
+  /// Requests left out because they clash with an accepted ride; one in
+  /// a category the driver does not take is left out anyway (driver-u165).
   static List<(_ScheduledRide, _ScheduledRide)> get _clashing => [
     for (final ride in _requests)
-      if (!_pickupPassed(ride))
+      if (!_pickupPassed(ride) && DriverCategoryChoice.takes(ride.category))
         if (_clashWith(ride) case final taken?) (ride, taken),
   ];
 
@@ -681,6 +708,11 @@ class ScheduledRideStore {
   static ValueListenable<int> get changes => _revision;
 
   static void _changed() {
+    if (_reminderRide case final ride?
+        when !_accepted.any((item) => identical(item.route, ride))) {
+      _reminderRide = null;
+      reminder.value = null;
+    }
     openRequests.value = _visibleRequests.length;
     _revision.value++;
   }
@@ -828,6 +860,17 @@ class ScheduledRideStore {
   /// The latest reminder for an accepted ride, shown in Scheduled rides.
   static final DriverNote reminder = DriverNote();
 
+  /// The ride [reminder] is about; when it leaves Accepted (cancelled by
+  /// the driver or the rider, reassigned) the reminder goes (driver-u166).
+  static ReservationRequestPreview? _reminderRide;
+
+  /// Shows [text] as the reminder for accepted [ride], read each time it is
+  /// shown so it follows the driver's language.
+  static void remind(ReservationRequestPreview ride, String Function() text) {
+    _reminderRide = ride;
+    reminder.say(text);
+  }
+
   /// Set when a ride went to a backup driver.
   static final DriverNote backupNote = DriverNote();
 
@@ -882,6 +925,7 @@ class ScheduledRideStore {
     _lateCancels.clear();
     _pauseUntil = null;
     reminder.value = null;
+    _reminderRide = null;
     backupNote.value = null;
     reassigned.clear();
     _backupLate = false;

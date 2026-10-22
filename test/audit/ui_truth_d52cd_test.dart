@@ -1,0 +1,419 @@
+// Wave 5 D5.2 (UI truth), parts c and d: history, safety, scheduled rides
+// and map widgets show only what really happened.
+import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/core/money/money.dart';
+import 'package:movera/core/navigation/driver_camera_controller.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/vehicle/ride_categories.dart';
+import 'package:movera/core/safety/ride_check.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
+import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
+import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
+import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
+import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/widgets/google_driver_camera_port.dart';
+import 'package:movera/widgets/layout_viewport.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../integration_test/headless_map_platform.dart';
+
+/// [screen] as the app's first route on a phone.
+/// A screen that never settles (a live animation) is pumped once.
+Future<void> _show(WidgetTester tester, Widget screen,
+    {bool settle = true}) async {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(ScreenUtilInit(
+    designSize: const Size(375, 812),
+    builder: (_, __) => MaterialApp(home: screen),
+  ));
+  settle ? await tester.pumpAndSettle() : await tester.pump();
+}
+
+/// Trip details of [status] for a 152,40 kr trip with a 40 kr bonus.
+Future<void> _detail(WidgetTester tester,
+    {TripStatus status = TripStatus.completed,
+    List<RideCheckRecord> checks = const []}) async {
+  final maps = GoogleMapsFlutterPlatform.instance;
+  GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+  addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+  await tester.binding.setSurfaceSize(const Size(390, 1600));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(ScreenUtilInit(
+    designSize: const Size(375, 812),
+    builder: (_, __) => MaterialApp(
+      home: DriverRideHistoryDetail(
+        record: TripHistoryRecord(
+          tripId: 'trip-1',
+          riderName: 'Karin',
+          whenLabel: '15/10/2026, 07:59',
+          pickup: 'Gamla vägen',
+          dropoff: 'Solna centrum',
+          fare: '152,40 kr',
+          category: 'Comfort',
+          status: status,
+          driverBonus: '40 kr',
+        ),
+        loadRideChecks: (_) async => checks,
+      ),
+    ),
+  ));
+  await tester.pumpAndSettle();
+}
+
+RideOffer _offer(String id, {String payment = 'Card'}) => RideOffer(
+      id: id,
+      category: 'Comfort',
+      fare: const Money(minorUnits: 10000),
+      rating: '4.9',
+      pickupMinutes: 2,
+      pickupKm: 1,
+      tripMinutes: 10,
+      tripKm: 5,
+      pickup: 'Pickup $id, Stockholm',
+      dropoff: 'Dropoff, Stockholm',
+      pickupPosition: const GeoPoint(59.3279, 18.0615),
+      dropoffPosition: const GeoPoint(59.3326, 18.0649),
+      isNearby: true,
+      followsDestination: true,
+      payment: payment,
+    );
+
+/// Dispatch whose nearby feed the test sends.
+class _Dispatch implements DispatchRepository {
+  final nearby = StreamController<List<RideOffer>>.broadcast();
+  @override
+  Stream<List<RideOffer>> watchNearbyOffers({
+    bool destinationModeActive = false,
+  }) => nearby.stream;
+  @override
+  Stream<List<RideOffer>> watchNextTripOffers() => const Stream.empty();
+  @override
+  void refreshOffers() {}
+  @override
+  void releaseReservation(String reservationId) {}
+  @override
+  Stream<ReservationRequestPreview> watchAssignments() => const Stream.empty();
+  @override
+  Future<ClaimResult> claimOffer(String offerId) async =>
+      const ClaimResult.unavailable();
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() => const Stream.empty();
+}
+
+/// Safety toolkit: Contact 112 > Call 112 with a dial launch answering
+/// [opened].
+Future<void> _call112(WidgetTester tester,
+    {required bool opened, bool web = false}) async {
+  await _show(tester, Scaffold(
+      body: SafetyToolKits(launchEmergencyDial: () async => opened, web: web)));
+  await tester.tap(find.text('Contact 112'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Call 112'));
+  await tester.pumpAndSettle();
+}
+
+/// The demo day (07:00, or [start]) booked again, then Scheduled rides.
+/// The test day's requests are 40 and 65 min after the start.
+/// Accepts the 07:40 Gamla vägen request in Scheduled rides; back on
+/// Requests.
+Future<void> _accept0740(WidgetTester tester) async {
+  await tester.tap(find.text('Gamla vägen, Stockholm').first);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Accept  •  126,75 kr'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Requests'));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _scheduled(WidgetTester tester, {Duration? start}) async {
+  if (start != null) {
+    ScheduledClock.instance = ScheduledClock(startTime: start);
+  }
+  DemoReservations.reset();
+  ScheduledRideStore.reset();
+  await tester.binding.setSurfaceSize(const Size(390, 844));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(const MaterialApp(home: ScheduledRidesScreen()));
+  await tester.pumpAndSettle();
+}
+
+/// The map's camera target after each move.
+class _CameraMoves extends HeadlessMapPlatform {
+  GeoPoint? camera;
+  @override
+  Future<void> moveCamera(CameraUpdate update, {required int mapId}) async {
+    final pose = (update.toJson() as List<dynamic>)[1] as Map<dynamic, dynamic>;
+    final target = pose['target'] as List<dynamic>;
+    camera = GeoPoint(target[0] as double, target[1] as double);
+  }
+}
+
+/// [point] is at least [meters] north of [fix].
+bool _ahead(GeoPoint? point, GeoPoint fix, {double meters = 8}) =>
+    point != null &&
+    point.latitude > fix.latitude &&
+    point.distanceMetersTo(fix) >= meters;
+
+void main() {
+  tearDown(() {
+    DriverAppTexts.language = 'en';
+    ScheduledClock.instance = ScheduledClock.fastDay();
+    DemoReservations.reset();
+    ScheduledRideStore.reset();
+  });
+
+  testWidgets("driver-u151: Ride completed names the payment in the driver's "
+      'language and never calls an in-app payment Card', (tester) async {
+    DriverAppTexts.language = 'sv';
+    await _show(tester, const DriverRideCompleted(paidByCash: false));
+    expect(find.text('I appen'), findsOneWidget);
+    expect(find.text('Card'), findsNothing);
+    await _show(tester, const DriverRideCompleted(paidByCash: true));
+    expect(find.text('Kontant'), findsOneWidget);
+  });
+
+  testWidgets('driver-83: a cancelled trip shows no ride cost and no bonus',
+      (tester) async {
+    await _detail(tester, status: TripStatus.cancelledByDriver);
+    expect(find.text('152,40 kr'), findsNothing);
+    expect(find.byKey(const ValueKey('history-driver-bonus')), findsNothing);
+    tester.takeException();
+  });
+
+  testWidgets("driver-u156: a Ride check alert kept in the demo outbox is not "
+      "shown as 'Movera safety team alerted'", (tester) async {
+    final at = DateTime(2026, 10, 15, 7, 50);
+    await _detail(tester, checks: [
+      RideCheckRecord(
+        id: 'rc-1',
+        tripId: 'trip-1',
+        trigger: RideCheckTrigger.longStop,
+        reason: 'Your car has stopped for 4 min',
+        openedAt: at,
+        answeredAt: at,
+        alertSent: true,
+      ),
+    ]);
+    expect(find.text('Movera safety team alerted'), findsNothing);
+    expect(find.text(
+            'Demo: alert kept on this phone only. No one at Movera was notified.'),
+        findsOneWidget);
+    tester.takeException();
+  });
+
+  testWidgets('driver-85: with only cancelled trips, History says there is no '
+      'completed ride and counts the trips it lists', (tester) async {
+    await _show(tester, DriverRideHistory(loadHistory: () async => [
+          for (var i = 0; i < 3; i++)
+            TripHistoryRecord(
+              tripId: 'c$i',
+              riderName: 'Karin',
+              whenLabel: 'Today',
+              pickup: 'Gamla vägen',
+              dropoff: 'Solna centrum',
+              fare: '152,40 kr',
+              category: 'Comfort',
+              status: TripStatus.cancelledByDriver,
+              completedAt: DateTime.now(),
+            ),
+        ]));
+    expect(find.text('No completed rides in this period.'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('history-view-all-rides')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('3 rides in'), findsOneWidget);
+  });
+
+  testWidgets("driver-u160: Radar's refresh pill lights only for new trips "
+      "the driver's filter shows", (tester) async {
+    final maps = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    final dispatch = _Dispatch();
+    await _show(tester, RideRequests(
+        dispatchRepository: dispatch,
+        offerFilter: (offer) => offer.payment != 'Cash'), settle: false);
+    const pill = ValueKey<String>('radar-refresh-new');
+    dispatch.nearby.add([_offer('a')]);
+    await tester.pump();
+    dispatch.nearby.add([_offer('a'), _offer('cash', payment: 'Cash')]);
+    await tester.pump();
+    expect(find.byKey(pill), findsNothing, reason: 'cash rides are off');
+    dispatch.nearby.add([_offer('a'), _offer('b')]);
+    await tester.pump();
+    expect(find.byKey(pill), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets("driver-91: in a browser the toolkit does not claim the dialer "
+      "opened", (tester) async {
+    await _call112(tester, opened: true, web: true);
+    expect(find.textContaining('dialer opened'), findsNothing);
+    expect(find.textContaining('Your browser was asked to call 112'),
+        findsOneWidget);
+  });
+
+  testWidgets("driver-93: 'Could not open the dialer' has no green success "
+      'check', (tester) async {
+    await _call112(tester, opened: false);
+    expect(find.text('Could not open the dialer. Dial 112 manually.'),
+        findsOneWidget);
+    expect(find.byIcon(Icons.check_circle_outline_rounded), findsNothing);
+  });
+
+  testWidgets("driver-u162: requests picked up tomorrow are not 'Available "
+      "today'", (tester) async {
+    await _scheduled(tester, start: const Duration(hours: 23, minutes: 30));
+    expect(find.textContaining('Tomorrow'), findsWidgets);
+    expect(find.text('Available today'), findsNothing);
+    expect(find.text('Available'), findsWidgets);
+  });
+
+  testWidgets('driver-u165: a clashing request in a category the driver does '
+      'not take is not counted as hidden by the clash', (tester) async {
+    DriverCategoryChoice.off.value = {'Premium'};
+    await _scheduled(tester);
+    await _accept0740(tester);
+    expect(find.byKey(const ValueKey('scheduled-clash-note')), findsNothing);
+  });
+
+  testWidgets("driver-r3-9: Home counts the requests again when admin's "
+      "'off until' ends", (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    IslandMessages.reset();
+    final maps = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(LayoutViewport(
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: DriverHome(sessionController: DriverSessionController()),
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 200));
+    // Off for 5 demo minutes: 10 s on the fast test day.
+    ScheduledRideStore.driverAccess = ScheduledRidesDriverAccess(
+      enabled: false,
+      until: ScheduledClock.instance.now().add(const Duration(minutes: 5)),
+      setByAdmin: true,
+    );
+    expect(ScheduledRideStore.openRequests.value, 0);
+    for (var i = 0;
+        i < 30 && ScheduledRideStore.openRequests.value == 0;
+        i++) {
+      await tester.pump(const Duration(seconds: 1));
+    }
+    expect(ScheduledRideStore.openRequests.value, 2);
+    tester.takeException();
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('driver-u166: the reminder leaves with the ride the rider '
+      'cancelled', (tester) async {
+    await _scheduled(tester);
+    ScheduledRideStore.take(demoReservationId, upcoming: true);
+    ScheduledRideStore.remind(ScheduledRideStore.routeOf(demoReservationId)!,
+        () => 'Pickup at 07:40 in 30 min: Gamla vägen');
+    await tester.tap(find.text('Accepted'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('scheduled-reminder')), findsOneWidget);
+    ScheduledRideStore.riderCancelled(demoReservationId);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('scheduled-reminder')), findsNothing);
+  });
+
+  testWidgets('driver-u176: while the camera coasts ahead between fixes, '
+      'the car marker stays at the fix', (tester) async {
+    final maps = GoogleMapsFlutterPlatform.instance;
+    final platform = _CameraMoves();
+    GoogleMapsFlutterPlatform.instance = platform;
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    const fix = GeoPoint(59.33, 18.06);
+    // The camera starts 11 m behind the fix, so it chases the chase point.
+    final start = CameraPosition(
+        target: LatLng(fix.latitude - 0.0001, fix.longitude),
+        zoom: 17,
+        tilt: 45);
+    GoogleMapController? controller;
+    await tester.pumpWidget(MaterialApp(
+      home: GoogleMap(
+          initialCameraPosition: start,
+          onMapCreated: (value) => controller = value),
+    ));
+    await tester.pump();
+    final frames = <CameraPosition>[];
+    final port = GoogleDriverCameraPort(controller!,
+        initialPosition: start, onFrame: frames.add);
+    GeoPoint at(CameraPosition p) =>
+        GeoPoint(p.target.latitude, p.target.longitude);
+    // The coast runs on the wall clock: wait (really) until the camera is
+    // 8 m past the fix.
+    await tester.runAsync(() async {
+      unawaited(port.animate(const DriverCameraPose(fix, 17, 0, 45,
+          speedMetersPerSecond: 20, coast: true)));
+      final cameraAhead = Stopwatch()..start();
+      while (cameraAhead.elapsed < const Duration(seconds: 5) &&
+          !_ahead(platform.camera, fix)) {
+        await Future<void>.delayed(const Duration(milliseconds: 16));
+      }
+      port.dispose();
+    });
+    expect(_ahead(platform.camera, fix), isTrue,
+        reason: 'the camera coasted ahead');
+    expect(frames, isNotEmpty);
+    // The car may trail the fix (the camera is damped), never pass it.
+    for (final frame in frames) {
+      expect(_ahead(at(frame), fix, meters: 1), isFalse);
+    }
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('driver-u180: the radar wedge fades toward its tail',
+      (tester) async {
+    // Leading edge at three o'clock (a quarter turn); the tail is above it.
+    final image = await tester.runAsync(() {
+      final recorder = ui.PictureRecorder();
+      const RadarWedgePainter(turn: .25, inner: 20)
+          .paint(Canvas(recorder), const Size(200, 200));
+      return recorder.endRecording().toImage(200, 200);
+    });
+    final bytes = (await tester.runAsync(
+        () => image!.toByteData(format: ui.ImageByteFormat.rawRgba)))!;
+    int alpha(double degrees) {
+      final rad = degrees * math.pi / 180;
+      final x = (100 + 70 * math.cos(rad)).round();
+      final y = (100 + 70 * math.sin(rad)).round();
+      return bytes.getUint8((y * 200 + x) * 4 + 3);
+    }
+    expect(alpha(-5), greaterThan(100), reason: 'bright at the lead');
+    expect(alpha(-55), lessThan(40), reason: 'faded at the tail');
+  });
+}

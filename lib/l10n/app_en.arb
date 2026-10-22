@@ -2640,6 +2640,7 @@
   "safetyContactEmergencyQ": "Contact emergency services?",
   "safetyUse112Only": "Use 112 only when you or someone else needs immediate help.",
   "safetyDialerOpened": "Emergency dialer opened — confirm the call on your device.",
+  "safetyDialerAskedBrowser": "Your browser was asked to call 112. If no call starts, dial 112 on your phone.",
   "safetyAudioUnavailable": "Audio recording is unavailable in this demo.",
   "safetyTripSharingUnavailable": "Trip sharing is unavailable in this demo.",
   "safetyPreferences": "Safety preferences",

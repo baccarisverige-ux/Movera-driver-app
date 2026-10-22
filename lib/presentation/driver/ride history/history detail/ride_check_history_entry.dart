@@ -153,7 +153,9 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          tr.moveraSafetyTeamAlerted,
+                          check.alertReachedMovera
+                              ? tr.moveraSafetyTeamAlerted
+                              : tr.safetyAlertKeptOnPhoneDemo,
                           style: TextStyle(
                             color: _red,
                             fontSize: 12.5,

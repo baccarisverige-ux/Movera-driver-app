@@ -3814,6 +3814,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Composeur d’urgence ouvert — confirmez l’appel sur votre appareil.';
 
   @override
+  String get safetyDialerAskedBrowser =>
+      'Votre navigateur a été invité à appeler le 112. Si aucun appel ne démarre, composez le 112 sur votre téléphone.';
+
+  @override
   String get safetyAudioUnavailable =>
       'L’enregistrement audio n’est pas disponible dans cette démo.';
 

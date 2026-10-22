@@ -191,11 +191,16 @@ class GoogleDriverCameraPort
     return meters < 25;
   }
 
+  /// [coastLat]/[coastLng]: how far the frame's chase point coasted ahead
+  /// of the car (degrees). The car marker gets the frame without it, so it
+  /// never slides along the camera bearing past the last fix (driver-u176).
   Future<void> _move(
     CameraPosition logical, {
     required bool trackVehicle,
     required int generation,
     bool anchored = true,
+    double coastLat = 0,
+    double coastLng = 0,
   }) async {
     if (_disposed || generation != _generation) return;
     _logical = logical;
@@ -215,7 +220,17 @@ class GoogleDriverCameraPort
     if (_disposed || generation != _generation) return;
     onStatus?.call(null);
     if (trackVehicle) {
-      onFrame?.call(logical);
+      onFrame?.call(coastLat == 0 && coastLng == 0
+          ? logical
+          : CameraPosition(
+              target: LatLng(
+                logical.target.latitude - coastLat,
+                logical.target.longitude - coastLng,
+              ),
+              zoom: logical.zoom,
+              bearing: logical.bearing,
+              tilt: logical.tilt,
+            ));
     }
   }
 
@@ -278,11 +293,15 @@ class GoogleDriverCameraPort
         if (goal == null || generation != _generation) {
           break;
         }
-        final destination = _at(goal, _coasted(goal));
+        final coasted = _coasted(goal);
+        final coastLat = coasted.latitude - goal.target.latitude;
+        final coastLng = coasted.longitude - goal.target.longitude;
+        final destination = _at(goal, coasted);
         final from = _logical ?? destination;
         if (_far(from, destination)) {
           _flightPending = false;
-          await _move(destination, trackVehicle: true, generation: generation);
+          await _move(destination, trackVehicle: true, generation: generation,
+            coastLat: coastLat, coastLng: coastLng);
           break;
         }
         if (_flightPending) {
@@ -301,7 +320,8 @@ class GoogleDriverCameraPort
               ? destination
               : _blend(from, destination, (after - before) / (1 - before));
           await _move(next,
-            trackVehicle: _trackCar(next, goal), generation: generation);
+            trackVehicle: _trackCar(next, goal), generation: generation,
+            coastLat: coastLat, coastLng: coastLng);
           if (_disposed || generation != _generation) {
             break;
           }
@@ -320,7 +340,8 @@ class GoogleDriverCameraPort
               ? destination
               : _approach(from, destination, dt, goal.duration);
           await _move(next,
-            trackVehicle: _trackCar(next, goal), generation: generation);
+            trackVehicle: _trackCar(next, goal), generation: generation,
+            coastLat: coastLat, coastLng: coastLng);
         }
         if (_disposed || generation != _generation || settled) {
           break;

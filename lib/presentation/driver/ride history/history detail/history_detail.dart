@@ -406,11 +406,14 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
   }
 
   Widget _buildSummaryRows(BuildContext context) {
+    // A trip that did not complete earned no fare and no bonus (as the
+    // list shows it); its record keeps only the quoted fare.
+    final completed = _ride.status == TripStatus.completed;
     return Column(
       children: [
-        _detailRow(tr.rideCost, _ride.fare),
+        _detailRow(tr.rideCost, completed ? _ride.fare : '—'),
         // Q16/Q18: Movera's bonus is in the fare.
-        if (_ride.driverBonus case final bonus?) ...[
+        if (_ride.driverBonus case final bonus? when completed) ...[
           6.height,
           Align(
             alignment: Alignment.centerRight,

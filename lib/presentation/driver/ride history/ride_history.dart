@@ -386,7 +386,10 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           ],
         ),
         const SizedBox(height: 3),
-        if (_periodRidesList.isEmpty)
+        // driver-85: the 'Rides' metric and this note count completed
+        // trips; the cards and the counts next to them count every
+        // finished trip listed, cancelled ones included.
+        if (_periodRides == '0')
           Padding(padding: EdgeInsets.all(18), child: Text(tr.noCompletedRidesInThisPeriod)),
         for (final ride in _periodRidesList.take(2)) ...[
           _HistoryRideCard(ride: ride, compact: true),
@@ -444,7 +447,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  tr.periodRidesRidesInPeriodLabel(_periodRides, _periodLabel),
+                  tr.periodRidesRidesInPeriodLabel(
+                      '${_periodRidesList.length}', _periodLabel),
                   style: const TextStyle(
                     color: _ink,
                     fontSize: 11.5,

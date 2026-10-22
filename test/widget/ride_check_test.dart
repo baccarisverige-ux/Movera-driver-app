@@ -867,6 +867,7 @@ void main() {
                 openedAt: at,
                 answeredAt: at,
                 alertSent: true,
+                alertReachedMovera: true,
                 answers: [
                   RideCheckAnswer(question: RideCheckAnswer.first, answer: 'Accident or collision', at: at),
                   RideCheckAnswer(question: 'Is anyone hurt?', answer: 'No', at: at),

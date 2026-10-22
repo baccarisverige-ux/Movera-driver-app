@@ -1073,6 +1073,7 @@
   "safetyContactEmergencyQ": "Contacter les services d’urgence ?",
   "safetyUse112Only": "N’appelez le 112 que si vous ou une autre personne avez besoin d’une aide immédiate.",
   "safetyDialerOpened": "Composeur d’urgence ouvert — confirmez l’appel sur votre appareil.",
+  "safetyDialerAskedBrowser": "Votre navigateur a été invité à appeler le 112. Si aucun appel ne démarre, composez le 112 sur votre téléphone.",
   "safetyAudioUnavailable": "L’enregistrement audio n’est pas disponible dans cette démo.",
   "safetyTripSharingUnavailable": "Le partage de course n’est pas disponible dans cette démo.",
   "safetyPreferences": "Préférences de sécurité",

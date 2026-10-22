@@ -1,5 +1,6 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -17,9 +18,17 @@ Future<T?> showSafetyToolKitSheet<T>(BuildContext context) {
 }
 
 class SafetyToolKits extends StatefulWidget {
-  const SafetyToolKits({super.key, this.launchEmergencyDial});
+  const SafetyToolKits({
+    super.key,
+    this.launchEmergencyDial,
+    this.web = kIsWeb,
+  });
 
   final Future<bool> Function()? launchEmergencyDial;
+
+  /// A browser build: its tel: launch reports success whether or not a
+  /// dialer opened (url_launcher_web), so the sheet never says it did.
+  final bool web;
 
   @override
   State<SafetyToolKits> createState() => _SafetyToolKitsState();
@@ -33,13 +42,20 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
   static const Color _canvas = Color(0xFFF4F6F7);
 
   String? _status;
+
+  /// The status reports something that worked (green check); otherwise it
+  /// is a failure or a feature that is not there (driver-93).
+  bool _statusOk = false;
   bool _emergencyInFlight = false;
 
   bool get _ownsRoute => mounted && ModalRoute.of(context)?.isCurrent == true;
 
-  void _showMessage(String message) {
+  void _showMessage(String message, {bool ok = false}) {
     if (!_ownsRoute) return;
-    setState(() => _status = message);
+    setState(() {
+      _status = message;
+      _statusOk = ok;
+    });
   }
 
   Future<void> _confirmEmergencyCall() async {
@@ -91,9 +107,12 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
           return;
         }
         _showMessage(
-          result == EmergencyDialResult.opened
-              ? tr.safetyDialerOpened
-              : tr.couldNotOpenDialerDial112,
+          result != EmergencyDialResult.opened
+              ? tr.couldNotOpenDialerDial112
+              : widget.web
+              ? tr.safetyDialerAskedBrowser
+              : tr.safetyDialerOpened,
+          ok: result == EmergencyDialResult.opened && !widget.web,
         );
       }
     } finally {
@@ -444,22 +463,28 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE7F4EE),
+                    color: _statusOk
+                        ? const Color(0xFFE7F4EE)
+                        : const Color(0xFFFCEEEE),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: _green,
+                      Icon(
+                        _statusOk
+                            ? Icons.check_circle_outline_rounded
+                            : Icons.info_outline_rounded,
+                        color: _statusOk ? _green : const Color(0xFFB3261E),
                         size: 17,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _status!,
-                          style: const TextStyle(
-                            color: Color(0xFF496158),
+                          style: TextStyle(
+                            color: _statusOk
+                                ? const Color(0xFF496158)
+                                : const Color(0xFF7A2E2A),
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),

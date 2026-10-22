@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/logging/driver_log.dart';
+import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/emergency_dial.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_gate.dart';
@@ -395,7 +396,10 @@ class RideCheckController extends ChangeNotifier {
         if (_disposed) return;
         _alert = sent;
         _alertFailed = false;
-        _record = _record?.copyWith(alertSent: true);
+        _record = _record?.copyWith(
+          alertSent: true,
+          alertReachedMovera: services.alerts is! DemoSafetyAlertRepository,
+        );
         _save();
       } catch (error) {
         DriverLog.warn('Ride check alert failed: $error');

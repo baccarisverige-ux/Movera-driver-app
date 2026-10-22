@@ -255,8 +255,8 @@ void main() {
         expect(find.text(shown), findsOneWidget, reason: '$code $stored');
         expect(find.text(stored), findsNothing);
       }
-      await show(tester, code, const DriverRideCompleted(paymentMethod: 'Card'));
-      expect(find.text(card), findsOneWidget, reason: '$code completed');
+      await show(tester, code, const DriverRideCompleted(paidByCash: true));
+      expect(find.text(cash), findsOneWidget, reason: '$code completed');
     }
   });
 
