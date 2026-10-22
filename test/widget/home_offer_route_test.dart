@@ -206,18 +206,17 @@ void main() {
     expect(route, isNotEmpty);
     const pickup = LatLng(59.3335, 18.0610);
     const dropoff = LatLng(59.3428, 18.0475);
-    // Owner round 4: the outline spans the route; the coloured core is
-    // drawn in pieces that together run pickup → drop-off.
-    final outline = route.singleWhere(
-      (line) => line.polylineId.value == OfferRouteLine.outlineId,
-    );
-    expect(outline.points.first, pickup);
-    expect(outline.points.last, dropoff);
-    expect(outline.points, hasLength(3));
+    // Owner round 4: the dark coloured line is drawn in pieces that
+    // together run pickup → drop-off; no outline, nothing white.
     final core = route.where(OfferRouteLine.isCore).toList();
     expect(core, hasLength(DriverRouteStyle.gradientSteps));
+    expect(route.where((l) => !OfferRouteLine.isCore(l)), isEmpty);
     expect(core.map((l) => l.points.first), contains(pickup));
     expect(core.map((l) => l.points.last), contains(dropoff));
+    expect(
+      core.map((l) => l.color),
+      everyElement(isNot(const Color(0xFFFFFFFF))),
+    );
     // No drive from the driver to the pickup was asked for.
     expect(routes.origins, everyElement(_pickup));
 

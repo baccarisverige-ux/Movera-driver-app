@@ -4,81 +4,75 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/navigation/route_camera_fit.dart';
 import 'package:movera/widgets/driver_route_style.dart';
 
-/// Where the offer line's animation is at one moment of its cycle.
+/// Where the offer line's motion is at one moment of its cycle.
 @immutable
 class OfferLinePhase {
-  const OfferLinePhase({required this.light, required this.front});
+  const OfferLinePhase({required this.front, required this.resting});
 
-  /// The white core's opacity, 0 (all black) to 1.
-  final double light;
-
-  /// How far the black core has filled back in from the pickup, 0 to 1
-  /// of the route's length.
+  /// The centre of the bright band, as a share of the route's length; it
+  /// starts before the pickup (negative) and ends past the drop-off (> 1),
+  /// so the band enters and leaves the line completely.
   final double front;
 
-  /// Nothing white is shown: the line is in its plain colours.
-  bool get dark => light <= 0.01 || front >= 1;
+  /// The line is at rest in its dark colours: no band is shown.
+  final bool resting;
 
   @override
   bool operator ==(Object other) =>
-      other is OfferLinePhase && other.light == light && other.front == front;
+      other is OfferLinePhase &&
+      other.front == front &&
+      other.resting == resting;
 
   @override
-  int get hashCode => Object.hash(light, front);
+  int get hashCode => Object.hash(front, resting);
 
   @override
-  String toString() => 'OfferLinePhase(light: $light, front: $front)';
+  String toString() => 'OfferLinePhase(front: $front, resting: $resting)';
 }
 
-/// R14-2: the offer route line on Home (Reservation, Exclusive and Radar).
-/// Owner round 4: the line is the Movera route (white casing, core from the
-/// pickup green to the drop-off blue, as [DriverRouteStyle]); the R14-2
-/// motion stays: the core turns white along the whole line, then the colour
-/// fills back in from the pickup to the drop-off like a progress bar, with a
-/// soft edge, rests, and repeats.
+/// R14-2 / owner round 4: the offer route line on Home (Reservation,
+/// Exclusive and Radar). The line is the Movera route in its dark colours
+/// ([DriverRouteStyle]), no outline; the motion is a soft band in the same
+/// hues' bright shades that flows from the pickup to the drop-off, rests,
+/// and repeats. Nothing turns white.
 ///
-/// Cycle 3.6 s: 0–0.25 s the core fades to white; 0.35–2.35 s the colour
-/// front runs pickup → drop-off (ease-in-out cubic), its edge fading over
-/// [soft] of the route; 2.35–3.6 s the line rests in colour.
+/// Cycle 2.6 s: 0–2.0 s the band's centre runs from just before the pickup
+/// to just past the drop-off (ease-in-out cubic); 2.0–2.6 s the line rests.
 abstract final class OfferRouteLine {
-  static const Color outlineColor = DriverRouteStyle.casingColor;
-  static const Color lightColor = Color(0xFFFFFFFF);
+  static const Duration cycle = Duration(milliseconds: 2600);
 
-  static const Duration cycle = Duration(milliseconds: 3600);
+  /// The band's run, from the cycle's start.
+  static const Duration run = Duration(milliseconds: 2000);
 
-  /// The soft edge's length, as a share of the route.
-  static const double soft = 0.10;
+  /// The band's length, as a share of the route; its colour fades to the
+  /// line's own towards both ends.
+  static const double band = 0.26;
 
-  /// The soft edge drawn as this many short lines of rising opacity.
-  static const int softSteps = 6;
+  /// The band drawn as this many short lines, brightest in the middle.
+  static const int bandSteps = 10;
 
-  /// Polyline ids: the core keeps the offer route's id, so lookups by it
-  /// still find the route.
+  /// Polyline ids: the first line piece keeps the offer route's id, so
+  /// lookups by it still find the route; the band's pieces carry [bandId].
   static const String coreId = 'direct_offer_road_route';
-  static const String outlineId = '$coreId-outline';
-  static const String lightId = 'offer_route_light';
+  static const String bandId = 'offer_route_band';
 
-  /// Outline width at a [DriverRouteStyle.stepZoom] step (R15-8): the same
-  /// 8 on every offer, however far the map zooms out to fit the trip; 11
-  /// only close up.
-  static int outlineWidthAt(double zoom) => zoom < 16 ? 8 : 11;
-
-  /// Core width inside the outline (about half of it).
-  static int coreWidthAt(double zoom) => zoom < 16 ? 4 : 6;
+  /// Line width at a [DriverRouteStyle.stepZoom] step (R15-8): the same 5
+  /// on every offer, however far the map zooms out to fit the trip; 7 only
+  /// close up.
+  static int widthAt(double zoom) => zoom < 16 ? 5 : 7;
 
   static double _ease(double t) => t < 0.5
       ? 4 * t * t * t
       : 1 - (-2 * t + 2) * (-2 * t + 2) * (-2 * t + 2) / 2;
 
-  /// The animation's phase [elapsed] into the repeating cycle.
+  /// The motion's phase [elapsed] into the repeating cycle.
   static OfferLinePhase phaseAt(Duration elapsed) {
-    final k = (elapsed.inMicroseconds % cycle.inMicroseconds) / 1e6;
-    if (k >= 2.35) {
-      return const OfferLinePhase(light: 0, front: 1);
+    final k = elapsed.inMicroseconds % cycle.inMicroseconds;
+    if (k >= run.inMicroseconds) {
+      return const OfferLinePhase(front: 1 + band / 2, resting: true);
     }
-    final light = k < 0.25 ? _ease(k / 0.25) : 1.0;
-    final front = k < 0.35 ? 0.0 : _ease(((k - 0.35) / 2.0).clamp(0.0, 1.0));
-    return OfferLinePhase(light: light, front: front);
+    final t = _ease(k / run.inMicroseconds);
+    return OfferLinePhase(front: -band / 2 + (1 + band) * t, resting: false);
   }
 
   static Polyline _line(
@@ -100,82 +94,74 @@ abstract final class OfferRouteLine {
     endCap: endCap,
   );
 
-  /// The still line: the white outline and the coloured core (its first
-  /// piece keeps [coreId]). With reduced motion this is all there is.
-  static Set<Polyline> polylines(List<LatLng> points, {double zoom = 14}) => {
-    _line(outlineId, points, outlineColor, outlineWidthAt(zoom), 1),
-    ...DriverRouteStyle.gradientPieces(
-      id: coreId,
-      points: points,
-      width: coreWidthAt(zoom),
-    ),
-  };
+  /// The still line: the dark gradient pieces (the first keeps [coreId]).
+  /// With reduced motion this is all there is.
+  static Set<Polyline> polylines(List<LatLng> points, {double zoom = 14}) =>
+      DriverRouteStyle.gradientPieces(
+        id: coreId,
+        points: points,
+        width: widthAt(zoom),
+      );
 
-  /// Whether [line] is a piece of the offer line's core.
+  /// Whether [line] is a piece of the offer line itself.
   static bool isCore(Polyline line) =>
       line.polylineId.value == coreId ||
       line.polylineId.value.startsWith('$coreId-g');
 
-  /// The white part of the core at [phase] over [route]: the soft edge
-  /// just ahead of the black front ([softSteps] short lines of rising
-  /// opacity), then plain white to the drop-off. Empty when all black.
-  static Set<Polyline> light(
+  /// Whether [line] is a piece of the moving band.
+  static bool isBand(Polyline line) => line.polylineId.value.startsWith(bandId);
+
+  /// The band at [phase] over [route]: [bandSteps] short lines around the
+  /// band's centre, each in the route's bright shade at its place mixed
+  /// into the dark line colour towards the band's ends. Empty at rest.
+  static Set<Polyline> flow(
     List<GeoPoint> route,
     OfferLinePhase phase, {
     double zoom = 14,
   }) {
-    if (route.length < 2 || phase.dark) {
+    if (route.length < 2 || phase.resting) {
       return const <Polyline>{};
     }
-    final width = coreWidthAt(zoom);
-    List<LatLng> slice(double a, double b) => [
-      for (final p in routeSlice(route, a, b)) LatLng(p.latitude, p.longitude),
-    ];
-    Color white(double alpha) =>
-        lightColor.withValues(alpha: (alpha * phase.light).clamp(0.0, 1.0));
+    final width = widthAt(zoom);
     final lines = <Polyline>{};
-    for (var i = 0; i < softSteps; i++) {
-      final a = phase.front + soft * i / softSteps;
-      final b = phase.front + soft * (i + 1) / softSteps;
-      if (a >= 1) {
-        break;
-      }
-      final points = slice(a, b > 1 ? 1 : b);
-      if (points.length < 2) {
-        continue;
-      }
+    final from = phase.front - band / 2;
+    for (var i = 0; i < bandSteps; i++) {
+      final a = from + band * i / bandSteps;
+      final b = from + band * (i + 1) / bandSteps;
+      if (b <= 0 || a >= 1) continue;
+      final points = [
+        for (final p in routeSlice(route, a < 0 ? 0 : a, b > 1 ? 1 : b))
+          LatLng(p.latitude, p.longitude),
+      ];
+      if (points.length < 2) continue;
+      final centre = (a + b) / 2;
+      final d = (centre - phase.front).abs() / (band / 2);
+      final bright = (1 - d * d).clamp(0.0, 1.0);
       lines.add(
         _line(
-          '$lightId-soft-$i',
+          '$bandId-$i',
           points,
-          white((i + 0.5) / softSteps),
+          Color.lerp(
+            DriverRouteStyle.at(centre),
+            DriverRouteStyle.lightAt(centre),
+            bright,
+          )!,
           width,
           3,
-          startCap: Cap.buttCap,
+          startCap: a <= 0 ? Cap.roundCap : Cap.buttCap,
           endCap: b >= 1 ? Cap.roundCap : Cap.buttCap,
         ),
       );
     }
-    final rest = phase.front + soft;
-    if (rest < 1) {
-      final points = slice(rest, 1);
-      if (points.length >= 2) {
-        lines.add(
-          _line(lightId, points, white(1), width, 3, startCap: Cap.buttCap),
-        );
-      }
-    }
     return lines;
   }
 
-  /// [lines] with the offer line's outline, core and white parts resized
-  /// for [zoom]; other polylines pass through unchanged.
+  /// [lines] with the offer line's pieces and band resized for [zoom];
+  /// other polylines pass through unchanged.
   static Set<Polyline> sized(Set<Polyline> lines, double zoom) => {
     for (final line in lines)
-      line.polylineId.value == outlineId
-          ? line.copyWith(widthParam: outlineWidthAt(zoom))
-          : isCore(line) || line.polylineId.value.startsWith(lightId)
-          ? line.copyWith(widthParam: coreWidthAt(zoom))
+      isCore(line) || isBand(line)
+          ? line.copyWith(widthParam: widthAt(zoom))
           : line,
   };
 }
