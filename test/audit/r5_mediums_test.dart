@@ -1,15 +1,31 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
-import 'package:movera/core/notifications/driver_notifications.dart';
-import 'package:movera/core/scheduled/scheduled_clock.dart';
-import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
+import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
+import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/widgets/layout_viewport.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../integration_test/headless_map_platform.dart';
 
 // Round-5 medium audit bugs (FIX_PLAN Wave 6b), one group per bug.
 
@@ -34,7 +50,122 @@ Map<String, dynamic> _wireOffer() => {
   'tripMeters': 5200,
 };
 
+/// Dispatch with no trips unless the test publishes some.
+class _Dispatch implements DispatchRepository {
+  final _nearby = StreamController<List<RideOffer>>.broadcast();
+  List<RideOffer> offers = const [];
+  final claims = <Completer<ClaimResult>>[];
+
+  void publish(List<RideOffer> next) {
+    offers = List<RideOffer>.unmodifiable(next);
+    _nearby.add(offers);
+  }
+
+  @override
+  Stream<List<RideOffer>> watchNearbyOffers({
+    bool destinationModeActive = false,
+  }) => Stream<List<RideOffer>>.multi((sink) {
+    final sub = _nearby.stream.listen(sink.addSync);
+    sink.onCancel = sub.cancel;
+    sink.addSync(offers);
+  }, isBroadcast: true);
+
+  @override
+  Stream<List<RideOffer>> watchNextTripOffers() =>
+      Stream.value(const <RideOffer>[]);
+
+  @override
+  void refreshOffers() {}
+
+  @override
+  void releaseReservation(String reservationId) {}
+
+  @override
+  Stream<ReservationRequestPreview> watchAssignments() =>
+      const Stream<ReservationRequestPreview>.empty();
+
+  @override
+  Future<ClaimResult> claimOffer(String offerId) {
+    final claim = Completer<ClaimResult>();
+    claims.add(claim);
+    return claim.future;
+  }
+
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() =>
+      const Stream<OfferWithdrawal>.empty();
+}
+
+typedef _Home = ({_Dispatch dispatch, DriverSessionController session});
+
+Future<void> _frames(WidgetTester tester, Duration total) async {
+  const step = Duration(milliseconds: 100);
+  for (var t = Duration.zero; t < total; t += step) {
+    await tester.pump(step);
+  }
+}
+
+/// Home with the app's route observer; with [online], the Radar is on.
+Future<_Home> _pumpHome(
+  WidgetTester tester, {
+  bool online = true,
+  ActiveRideRepository? activeRides,
+  _Dispatch? dispatch,
+}) async {
+  final repo = dispatch ?? _Dispatch();
+  final session = DriverSessionController();
+  final maps = GoogleMapsFlutterPlatform.instance;
+  GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+  addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+  await tester.binding.setSurfaceSize(const Size(375, 812));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(
+    LayoutViewport(
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        useInheritedMediaQuery: true,
+        builder: (_, __) => MaterialApp(
+          navigatorObservers: [driverRouteObserver],
+          home: DriverHome(
+            sessionController: session,
+            dispatchRepository: repo,
+            activeRideRepository: activeRides,
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pump(const Duration(milliseconds: 200));
+  if (online) {
+    tester
+        .widget<GestureDetector>(
+          find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+        )
+        .onTap!
+        .call();
+    await _frames(tester, const Duration(milliseconds: 1500));
+  }
+  return (dispatch: repo, session: session);
+}
+
+Future<void> _end(WidgetTester tester) async {
+  tester.takeException();
+  await tester.pumpWidget(const SizedBox());
+}
+
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    DriverStartPosition.clearMemory();
+    IslandMessages.reset();
+  });
+
   group('driver-r5-1', () {
     test("an API offer's card shows the server's driverEarnings and "
         'pickupPay', () {
@@ -169,6 +300,56 @@ void main() {
       // After a logout nothing is held back any more.
       ScheduledRideStore.reset();
       expect(ScheduledRideStore.openRequests.value, 2);
+    });
+  });
+
+  group('driver-r5-36', () {
+    testWidgets("'Close trip' on a stale saved trip hands its secured next "
+        'trip off and asks about it', (tester) async {
+      final rides = MemoryActiveRideRepository();
+      final savedAt = DateTime.now().subtract(const Duration(hours: 7));
+      await rides.save(PersistedActiveRide(
+        tripId: 'stale-a',
+        stage: ActiveRideStage.onTrip,
+        savedAt: savedAt,
+        fare: '120,00 kr',
+        pickupLat: 59.3335,
+        pickupLng: 18.0610,
+        dropoffLat: 59.3380,
+        dropoffLng: 18.0700,
+        next: const PersistedQueuedTrip(
+          tripId: 'next-b',
+          riderName: 'Omar',
+          fare: '90,00 kr',
+          category: 'Comfort',
+          pickup: 'Odengatan, Stockholm',
+          dropoff: 'Sveavägen, Stockholm',
+          pickupLat: 59.3428,
+          pickupLng: 18.0475,
+          dropoffLat: 59.3400,
+          dropoffLng: 18.0590,
+        ),
+      ));
+      await _pumpHome(tester, online: false, activeRides: rides);
+      await _frames(tester, const Duration(milliseconds: 500));
+      expect(find.text('Unresolved trip'), findsOneWidget);
+      await tester.tap(find.text('Close trip'));
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _frames(tester, const Duration(milliseconds: 800));
+      // B is now the saved trip, as old as A was: Home asks about it.
+      final saved = await rides.read();
+      expect(saved?.tripId, 'next-b');
+      expect(find.text('Unresolved trip'), findsOneWidget);
+      final history = await tester.runAsync(
+        () => PrefsTripHistoryRepository().list(),
+      );
+      expect(history!.map((r) => r.tripId), contains('stale-a'));
+      await tester.tap(find.text('Close trip'));
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      await _frames(tester, const Duration(milliseconds: 800));
+      expect(find.text('Unresolved trip'), findsNothing);
+      expect(await rides.read(), isNull);
+      await _end(tester);
     });
   });
 }

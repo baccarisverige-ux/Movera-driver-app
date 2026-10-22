@@ -89,13 +89,16 @@ class CompletionJournal {
     bool authoritative = false,
     String? paymentMethod,
     String? cashCollected,
+    DateTime? endedAt,
   }) => _serial(() async {
     final prefs = await load();
     // Do not overwrite an earlier unfinished transaction.
     if (prefs.getString(key) != null) {
       await _replay(prefs);
     }
-    final terminalAt = DateTime.now();
+    // [endedAt]: a saved trip closed long after it was last alive ended
+    // then, so its next trip keeps its own age (driver-r5-36).
+    final terminalAt = endedAt ?? DateTime.now();
     final payload = {
       'schemaVersion': 2,
       'tripId': record.tripId,

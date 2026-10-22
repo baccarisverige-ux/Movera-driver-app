@@ -130,6 +130,7 @@ part 'home_start_position.dart';
 part 'home_offer_route.dart';
 part 'home_offer_sound.dart';
 part 'home_back.dart';
+part 'home_recovery.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -547,21 +548,7 @@ class _DriverHomeState extends State<DriverHome>
     if (!snapshot.isFresh || !snapshot.hasVerifiedEndpoints) {
       final resume = await _HomeBack(this)._askUnresolvedTrip(snapshot);
       if (!mounted) { return; }
-      if (resume != true) {
-        try {
-          if (repo is TerminalRideRepository) { await (repo as TerminalRideRepository).markTerminal(snapshot.tripId, TripTransitions.target(snapshot.stage.tripStatus, TripCommand.cancel, TripActor.driver) ?? TripStatus.cancelledByDriver); }
-          if (repo is TerminalRideRepository) { await (repo as TerminalRideRepository).clearForTrip(snapshot.tripId); } else { await repo.clear(); }
-          if (mounted) { setState(() => _recoveryResolved = true); }
-        } catch (_) {
-          _didAttemptActiveRideRestore = false;
-          if (mounted) {
-            _HomeMapSheet(this)._tripProblem(
-                HomeIslandNotices.savedTripNotClosed,
-                tr.savedTripCouldNotBeClosed);
-          }
-        }
-        return;
-      }
+      if (resume != true) { return _HomeRecovery(this)._closeSavedTrip(repo, snapshot); }
     }
 
     setState(() => _recoveryResolved = true);
