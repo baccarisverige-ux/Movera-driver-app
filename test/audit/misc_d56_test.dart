@@ -1,11 +1,12 @@
 // Wave 5 D5.6: small local fixes, one test per bug.
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/routing/route_instruction.dart';
 import 'package:movera/l10n/app_localizations.dart';
+import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/routing/route_repository.dart';
@@ -110,5 +111,42 @@ void main() {
     expect(say(9949), '9.9 km');
     expect(say(9960), '10 km'); // before: 10.0 km
     expect(RouteInstructionCopy.formatDistance(9960, _sv), '10 km');
+  });
+
+  testWidgets('driver-u89: the island rounds its distance before the unit',
+      (tester) async {
+    Future<void> island(double meters) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 320,
+            height: 220,
+            child: AdaptiveTripIsland(
+              banner: NavigationBanner(
+                primary: 'Sveavägen',
+                distanceLabel: RouteInstructionCopy.formatDistance(meters),
+                distanceMeters: meters,
+              ),
+              status: 'To pickup', address: 'Sveavägen 20',
+              detail: 'Picking up Angelica', eta: '2 min', progress: .4,
+              waitingMessage: 'Waiting', lastTripLabel: '120 kr',
+              onRadar: () {}, onMenu: () {}, onSearch: () {},
+              onHistory: () {}, onRoute: () {}, onSafety: () {}, onWait: () {},
+            ),
+          ),
+        ),
+      ));
+      await tester.pump(const Duration(seconds: 1));
+    }
+
+    String shown() => tester
+        .widget<Text>(find.byKey(const ValueKey('island-distance')))
+        .textSpan!
+        .toPlainText();
+    await island(999.6);
+    expect(shown(), '1.0km'); // before: 1000m
+    await island(9960);
+    expect(shown(), '10km'); // before: 10.0km
+    await tester.pumpWidget(const SizedBox());
   });
 }
