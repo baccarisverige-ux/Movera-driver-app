@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
@@ -28,7 +30,10 @@ import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dar
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/widgets/custom_btn.dart';
+import 'package:movera/widgets/google_driver_camera_port.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+import '../../integration_test/headless_map_platform.dart';
 
 /// GPS the test feeds by hand, standing near the default drop-off.
 class _Loc implements DriverLocationRepository {
@@ -158,6 +163,42 @@ int _onboardingPage(WidgetTester tester) => tester
     .controller!
     .page!
     .round();
+
+/// A map whose camera moves are recorded; each waits [ack] when set, or
+/// takes [latency] of test time.
+class _Camera extends HeadlessMapPlatform {
+  final List<CameraUpdate> moves = [];
+  Completer<void>? ack;
+  Duration latency = Duration.zero;
+  @override
+  Future<void> moveCamera(CameraUpdate update, {required int mapId}) async {
+    moves.add(update);
+    final hold = ack;
+    if (hold != null) await hold.future;
+    if (latency > Duration.zero) await Future<void>.delayed(latency);
+  }
+
+  double latOf(CameraUpdate update) =>
+      (((update.toJson() as List)[1] as Map)['target'] as List)[0] as double;
+}
+
+const _cameraStart = CameraPosition(target: LatLng(59, 18), zoom: 16);
+
+/// A Google map on [_Camera]; returns its controller.
+Future<GoogleMapController> _pumpMap(WidgetTester tester, _Camera camera) async {
+  final original = GoogleMapsFlutterPlatform.instance;
+  GoogleMapsFlutterPlatform.instance = camera;
+  addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
+  GoogleMapController? controller;
+  await tester.pumpWidget(MaterialApp(
+    home: GoogleMap(
+      initialCameraPosition: _cameraStart,
+      onMapCreated: (value) => controller = value,
+    ),
+  ));
+  await tester.pump();
+  return controller!;
+}
 
 const _offerCard = ValueKey<String>('on-trip-radar-offer-button');
 const _matchNext = ValueKey<String>('on-trip-radar-match-next');
@@ -344,6 +385,22 @@ void main() {
     await _onboardingStep(tester, back: true);
     expect(_onboardingPage(tester), 0);
     expect(find.text('2019'), findsOneWidget);
+  });
+
+  testWidgets('driver-100: with reduced motion a fix that lands during the '
+      'camera move is still sent', (tester) async {
+    final camera = _Camera()..ack = Completer<void>();
+    final port = GoogleDriverCameraPort(await _pumpMap(tester, camera),
+        reducedMotion: true, initialPosition: _cameraStart);
+    final done = port.animate(const DriverCameraPose(GeoPoint(59.001, 18), 16, 0, 0));
+    await tester.pump();
+    port.retarget(const DriverCameraPose(GeoPoint(59.002, 18), 16, 0, 0));
+    camera.ack!.complete();
+    camera.ack = null;
+    await tester.pump();
+    await done;
+    expect(camera.moves.map(camera.latOf), [59.001, 59.002]);
+    port.dispose();
   });
 
   test('driver-u148: "Yesterday" only for the day before, by the calendar', () {

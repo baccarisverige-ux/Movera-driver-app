@@ -272,8 +272,16 @@ class GoogleDriverCameraPort
         return;
       }
       if (reducedMotion || _logical == null) {
-        await _move(_at(initial, initial.target),
-          trackVehicle: true, generation: generation);
+        // driver-100: a fix retargeted while the cut awaited the SDK is
+        // still sent: cut again to the newest goal until none came.
+        DriverCameraPose? sent;
+        while (!_disposed && generation == _generation) {
+          final goal = _goal;
+          if (goal == null || identical(goal, sent)) break;
+          sent = goal;
+          await _move(_at(goal, goal.target),
+            trackVehicle: true, generation: generation);
+        }
         return;
       }
       var dt = 16000;
@@ -302,7 +310,9 @@ class GoogleDriverCameraPort
           _flightPending = false;
           await _move(destination, trackVehicle: true, generation: generation,
             coastLat: coastLat, coastLng: coastLng);
-          break;
+          // A goal retargeted during the cut is followed from here (u100).
+          if (identical(_goal, goal)) break;
+          continue;
         }
         if (_flightPending) {
           _flightPending = false;
