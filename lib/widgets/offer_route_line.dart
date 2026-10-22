@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/navigation/route_camera_fit.dart';
+import 'package:movera/widgets/driver_route_style.dart';
 
 /// Where the offer line's animation is at one moment of its cycle.
 @immutable
@@ -15,7 +16,7 @@ class OfferLinePhase {
   /// of the route's length.
   final double front;
 
-  /// Nothing white is shown: the line is plain black.
+  /// Nothing white is shown: the line is in its plain colours.
   bool get dark => light <= 0.01 || front >= 1;
 
   @override
@@ -29,17 +30,18 @@ class OfferLinePhase {
   String toString() => 'OfferLinePhase(light: $light, front: $front)';
 }
 
-/// R14-2: the offer route line on Home (Reservation, Exclusive and Radar),
-/// "Black & white": a black outline at all times around a core that turns
-/// white along the whole line, then fills back in black from the pickup to
-/// the drop-off like a progress bar, with a soft edge, rests, and repeats.
+/// R14-2: the offer route line on Home (Reservation, Exclusive and Radar).
+/// Owner round 4: the line is the Movera route (white casing, core from the
+/// pickup green to the drop-off blue, as [DriverRouteStyle]); the R14-2
+/// motion stays: the core turns white along the whole line, then the colour
+/// fills back in from the pickup to the drop-off like a progress bar, with a
+/// soft edge, rests, and repeats.
 ///
-/// Cycle 3.6 s: 0–0.25 s the core fades to white; 0.35–2.35 s the black
+/// Cycle 3.6 s: 0–0.25 s the core fades to white; 0.35–2.35 s the colour
 /// front runs pickup → drop-off (ease-in-out cubic), its edge fading over
-/// [soft] of the route; 2.35–3.6 s the line rests all black.
+/// [soft] of the route; 2.35–3.6 s the line rests in colour.
 abstract final class OfferRouteLine {
-  static const Color outlineColor = Color(0xFF000000);
-  static const Color coreColor = Color(0xFF141414);
+  static const Color outlineColor = DriverRouteStyle.casingColor;
   static const Color lightColor = Color(0xFFFFFFFF);
 
   static const Duration cycle = Duration(milliseconds: 3600);
@@ -71,7 +73,9 @@ abstract final class OfferRouteLine {
   /// The animation's phase [elapsed] into the repeating cycle.
   static OfferLinePhase phaseAt(Duration elapsed) {
     final k = (elapsed.inMicroseconds % cycle.inMicroseconds) / 1e6;
-    if (k >= 2.35) { return const OfferLinePhase(light: 0, front: 1); }
+    if (k >= 2.35) {
+      return const OfferLinePhase(light: 0, front: 1);
+    }
     final light = k < 0.25 ? _ease(k / 0.25) : 1.0;
     final front = k < 0.35 ? 0.0 : _ease(((k - 0.35) / 2.0).clamp(0.0, 1.0));
     return OfferLinePhase(light: light, front: front);
@@ -96,15 +100,21 @@ abstract final class OfferRouteLine {
     endCap: endCap,
   );
 
-  /// The still line: the black outline and the black core. With reduced
-  /// motion this is all there is.
-  static Set<Polyline> polylines(
-    List<LatLng> points, {
-    double zoom = 14,
-  }) => {
+  /// The still line: the white outline and the coloured core (its first
+  /// piece keeps [coreId]). With reduced motion this is all there is.
+  static Set<Polyline> polylines(List<LatLng> points, {double zoom = 14}) => {
     _line(outlineId, points, outlineColor, outlineWidthAt(zoom), 1),
-    _line(coreId, points, coreColor, coreWidthAt(zoom), 2),
+    ...DriverRouteStyle.gradientPieces(
+      id: coreId,
+      points: points,
+      width: coreWidthAt(zoom),
+    ),
   };
+
+  /// Whether [line] is a piece of the offer line's core.
+  static bool isCore(Polyline line) =>
+      line.polylineId.value == coreId ||
+      line.polylineId.value.startsWith('$coreId-g');
 
   /// The white part of the core at [phase] over [route]: the soft edge
   /// just ahead of the black front ([softSteps] short lines of rising
@@ -114,7 +124,9 @@ abstract final class OfferRouteLine {
     OfferLinePhase phase, {
     double zoom = 14,
   }) {
-    if (route.length < 2 || phase.dark) { return const <Polyline>{}; }
+    if (route.length < 2 || phase.dark) {
+      return const <Polyline>{};
+    }
     final width = coreWidthAt(zoom);
     List<LatLng> slice(double a, double b) => [
       for (final p in routeSlice(route, a, b)) LatLng(p.latitude, p.longitude),
@@ -125,25 +137,32 @@ abstract final class OfferRouteLine {
     for (var i = 0; i < softSteps; i++) {
       final a = phase.front + soft * i / softSteps;
       final b = phase.front + soft * (i + 1) / softSteps;
-      if (a >= 1) { break; }
+      if (a >= 1) {
+        break;
+      }
       final points = slice(a, b > 1 ? 1 : b);
-      if (points.length < 2) { continue; }
-      lines.add(_line(
-        '$lightId-soft-$i',
-        points,
-        white((i + 0.5) / softSteps),
-        width,
-        3,
-        startCap: Cap.buttCap,
-        endCap: b >= 1 ? Cap.roundCap : Cap.buttCap,
-      ));
+      if (points.length < 2) {
+        continue;
+      }
+      lines.add(
+        _line(
+          '$lightId-soft-$i',
+          points,
+          white((i + 0.5) / softSteps),
+          width,
+          3,
+          startCap: Cap.buttCap,
+          endCap: b >= 1 ? Cap.roundCap : Cap.buttCap,
+        ),
+      );
     }
     final rest = phase.front + soft;
     if (rest < 1) {
       final points = slice(rest, 1);
       if (points.length >= 2) {
-        lines.add(_line(lightId, points, white(1), width, 3,
-            startCap: Cap.buttCap));
+        lines.add(
+          _line(lightId, points, white(1), width, 3, startCap: Cap.buttCap),
+        );
       }
     }
     return lines;
@@ -155,8 +174,7 @@ abstract final class OfferRouteLine {
     for (final line in lines)
       line.polylineId.value == outlineId
           ? line.copyWith(widthParam: outlineWidthAt(zoom))
-          : line.polylineId.value == coreId ||
-                line.polylineId.value.startsWith(lightId)
+          : isCore(line) || line.polylineId.value.startsWith(lightId)
           ? line.copyWith(widthParam: coreWidthAt(zoom))
           : line,
   };

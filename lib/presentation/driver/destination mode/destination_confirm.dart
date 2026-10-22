@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/geo/geo_point_maps.dart';
@@ -60,8 +61,10 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
     vsync: this,
     duration: const Duration(milliseconds: 1100),
   );
-  late final List<LatLng> _arc =
-      destinationArcPoints(widget.origin, widget.destination.position);
+  late final List<LatLng> _arc = destinationArcPoints(
+    widget.origin,
+    widget.destination.position,
+  );
   int _arcShown = 0; // Points of [_arc] drawn so far.
   BitmapDescriptor? _carIcon;
   BitmapDescriptor? _pinIcon = MoveraDestinationMarker.cachedPin;
@@ -78,8 +81,9 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
   void initState() {
     super.initState();
     // Until the road route answers: straight line x1.3 at ~40 km/h.
-    final straight = GeoPointMaps.fromLatLng(widget.origin)
-        .distanceMetersTo(GeoPointMaps.fromLatLng(widget.destination.position));
+    final straight = GeoPointMaps.fromLatLng(
+      widget.origin,
+    ).distanceMetersTo(GeoPointMaps.fromLatLng(widget.destination.position));
     _meters = straight * 1.3;
     _seconds = _meters / (40 / 3.6);
     unawaited(_loadRoute());
@@ -96,7 +100,9 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
         MoveraDestinationMarker.pin(),
         MoveraDestinationMarker.chip(_place),
       ]);
-      if (!mounted) { return; }
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _carIcon = icons[0];
         _pinIcon = icons[1];
@@ -107,7 +113,9 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
 
   void _startDraw() {
     _drawStart?.cancel();
-    if (!mounted || _draw.isAnimating || _draw.value > 0) { return; }
+    if (!mounted || _draw.isAnimating || _draw.value > 0) {
+      return;
+    }
     if (MediaQuery.disableAnimationsOf(context)) {
       _draw.value = 1;
     } else {
@@ -118,12 +126,16 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
   void _grow() {
     final t = Curves.easeInOutCubic.transform(_draw.value);
     final shown = (t * _arc.length).ceil().clamp(0, _arc.length);
-    if (shown != _arcShown) { setState(() => _arcShown = shown); }
+    if (shown != _arcShown) {
+      setState(() => _arcShown = shown);
+    }
   }
 
   Future<void> _loadRoute() async {
     final repo = widget.routeRepository;
-    if (repo == null) { return; }
+    if (repo == null) {
+      return;
+    }
     try {
       final route = await repo
           .drivingRoute(
@@ -131,7 +143,9 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
             destination: GeoPointMaps.fromLatLng(widget.destination.position),
           )
           .timeout(const Duration(seconds: 6));
-      if (!mounted || route.distanceMeters <= 0) { return; }
+      if (!mounted || route.distanceMeters <= 0) {
+        return;
+      }
       setState(() {
         _meters = route.distanceMeters;
         _seconds = route.durationSeconds;
@@ -160,11 +174,15 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
     await Future<void>.delayed(const Duration(milliseconds: 120));
-    if (!mounted) { return; }
+    if (!mounted) {
+      return;
+    }
     try {
       await controller.moveCamera(CameraUpdate.newLatLngBounds(_bounds, 80));
     } catch (_) {}
-    if (mounted) { _startDraw(); }
+    if (mounted) {
+      _startDraw();
+    }
   }
 
   /// Faint straight line under the black arc, grown to [_arcShown] points.
@@ -177,16 +195,13 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
       width: 3,
       zIndex: 1,
     ),
+    // Owner round 4: the arc in the Movera route colours (white casing,
+    // pickup green to destination blue), grown piece by piece.
     if (_arcShown >= 2)
-      Polyline(
-        polylineId: const PolylineId('destination-arc'),
+      ...DriverRouteStyle.polylines(
+        id: 'destination-arc',
         points: _arc.sublist(0, _arcShown),
-        color: _ink,
-        width: 6,
-        zIndex: 2,
-        jointType: JointType.round,
-        startCap: Cap.roundCap,
-        endCap: Cap.roundCap,
+        zoom: 15,
       ),
   };
 
@@ -196,7 +211,8 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
   Set<Marker> get markers {
     final to = widget.destination.position;
     final fallback = BitmapDescriptor.defaultMarkerWithHue(
-        BitmapDescriptor.hueAzure);
+      BitmapDescriptor.hueAzure,
+    );
     return {
       Marker(
         markerId: const MarkerId('destination-confirm-car'),
@@ -227,16 +243,20 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
   }
 
   void _confirm() {
-    if (_done || ModalRoute.of(context)?.isCurrent != true) { return; }
+    if (_done || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
     _done = true;
     final d = widget.destination;
-    Navigator.of(context).pop(DriverDestinationResult(
-      position: d.position,
-      address: d.address,
-      name: d.name,
-      distanceMeters: _meters,
-      durationSeconds: _seconds,
-    ));
+    Navigator.of(context).pop(
+      DriverDestinationResult(
+        position: d.position,
+        address: d.address,
+        name: d.name,
+        distanceMeters: _meters,
+        durationSeconds: _seconds,
+      ),
+    );
   }
 
   @override
@@ -257,9 +277,11 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
               initialPosition: CameraPosition(
                 target: LatLng(
                   (widget.origin.latitude +
-                          widget.destination.position.latitude) / 2,
+                          widget.destination.position.latitude) /
+                      2,
                   (widget.origin.longitude +
-                          widget.destination.position.longitude) / 2,
+                          widget.destination.position.longitude) /
+                      2,
                 ),
                 zoom: 10,
               ),
@@ -289,8 +311,11 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
                     onTap: () => Navigator.of(context).maybePop(),
                     child: Padding(
                       padding: const EdgeInsets.all(13),
-                      child: SvgPicture.asset(AppAssets.solarClose,
-                          width: 22, height: 22),
+                      child: SvgPicture.asset(
+                        AppAssets.solarClose,
+                        width: 22,
+                        height: 22,
+                      ),
                     ),
                   ),
                 ),
@@ -358,10 +383,15 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: SvgPicture.asset(AppAssets.solarClockCircle,
-                          width: 20, height: 20,
-                          colorFilter: const ColorFilter.mode(
-                              _ink, BlendMode.srcIn)),
+                      child: SvgPicture.asset(
+                        AppAssets.solarClockCircle,
+                        width: 20,
+                        height: 20,
+                        colorFilter: const ColorFilter.mode(
+                          _ink,
+                          BlendMode.srcIn,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(

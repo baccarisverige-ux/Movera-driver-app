@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/widgets/offer_route_line.dart';
 
 // R14-2: the offer line's black-and-white cycle.
@@ -41,28 +42,40 @@ void main() {
     expect(OfferRouteLine.light(route, at(3000)), isEmpty);
   });
 
-  test('a black outline around a black core, 15 / 8 px at offer zoom', () {
-    final lines = OfferRouteLine.polylines(
-      const [LatLng(59.3, 18.0), LatLng(59.4, 18.0)],
-    );
+  test('a white outline around the gradient core, 8 / 4 px at offer zoom', () {
+    final lines = OfferRouteLine.polylines(const [
+      LatLng(59.3, 18.0),
+      LatLng(59.4, 18.0),
+    ]);
     final outline = lines.firstWhere(
       (l) => l.polylineId.value == OfferRouteLine.outlineId,
     );
     final core = lines.firstWhere(
       (l) => l.polylineId.value == OfferRouteLine.coreId,
     );
-    expect(outline.color, const Color(0xFF000000));
+    expect(outline.color, const Color(0xFFFFFFFF));
     expect(outline.width, 8);
-    expect(core.color, const Color(0xFF141414));
+    expect(core.color, DriverRouteStyle.gradientColors.first);
     expect(core.width, 4);
-    // R15-8: 8 on every offer zoom, 11 only close up.
-    for (final (zoom, width) in [(10.0, 8), (12.0, 8), (14.0, 8), (16.0, 11)]) {
+    final pieces = lines.where(OfferRouteLine.isCore).toList();
+    expect(pieces, hasLength(DriverRouteStyle.gradientSteps));
+    // R15-8: 8 on every offer zoom, 11 only close up; the core follows.
+    for (final (zoom, width, coreWidth) in [
+      (10.0, 8, 4),
+      (12.0, 8, 4),
+      (14.0, 8, 4),
+      (16.0, 11, 6),
+    ]) {
+      final sized = OfferRouteLine.sized(lines, zoom);
       expect(
-        OfferRouteLine.sized(lines, zoom)
+        sized
             .firstWhere((l) => l.polylineId.value == OfferRouteLine.outlineId)
             .width,
         width,
       );
+      for (final piece in sized.where(OfferRouteLine.isCore)) {
+        expect(piece.width, coreWidth, reason: 'zoom $zoom');
+      }
     }
   });
 }
