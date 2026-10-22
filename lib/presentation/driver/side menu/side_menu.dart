@@ -195,6 +195,10 @@ class DriverSideMenu extends StatelessWidget {
     final statusColor = isOnline
         ? MoveraRadarOrb.onlineGreen
         : const Color(0xFF8A9390);
+    // The pill's word in a darker tone of its tint: 4.5:1 or more.
+    final statusInk = isOnline
+        ? const Color(0xFF1C6B45)
+        : const Color(0xFF5F6B72);
     final statusText = isOnline ? tr.menuOnline : tr.menuOffline;
 
     return LayoutBuilder(
@@ -368,7 +372,7 @@ class DriverSideMenu extends StatelessWidget {
                         : statusText,
                     maxLines: 1,
                     style: TextStyle(
-                      color: statusColor,
+                      color: statusInk,
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: compact ? 0.4 : 1.2,

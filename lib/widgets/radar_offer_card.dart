@@ -174,9 +174,10 @@ class RadarOfferCard extends StatelessWidget {
     final matching = state == RadarOfferCardState.matching;
     final enabled = state == RadarOfferCardState.available && onMatch != null;
 
+    // Room on the right for the corner × when it shows.
+    final headerRight = onClose != null ? 34.0 : 18.0;
     final header = Container(
-      // Room on the right for the corner × when it shows.
-      padding: EdgeInsets.fromLTRB(20, 16, onClose != null ? 34 : 18, 18),
+      padding: EdgeInsets.fromLTRB(20, 16, headerRight, 18),
       decoration: const BoxDecoration(
         color: headerTint,
         border: Border(bottom: BorderSide(color: Color(0xFFE6E8EA))),
@@ -293,29 +294,9 @@ class RadarOfferCard extends StatelessWidget {
                 ),
               ),
               ],
-              if (onDismiss != null) ...[
-                const SizedBox(width: 6),
-                Material(
-                  color: Colors.white,
-                  shape: const CircleBorder(
-                    side: BorderSide(color: Color(0xFFE3E6E8)),
-                  ),
-                  child: InkWell(
-                    key: ValueKey<String>('radar-offer-dismiss-${offer.id}'),
-                    customBorder: const CircleBorder(),
-                    onTap: onDismiss,
-                    child: const SizedBox(
-                      width: 30,
-                      height: 30,
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 17,
-                        color: Color(0xFF5F6B72),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              // The × itself is laid over the header (below): its 30 px
+              // circle sits here, its 48 px touch box around it.
+              if (onDismiss != null) const SizedBox(width: 36, height: 30),
             ],
           ),
           const SizedBox(height: 10),
@@ -493,15 +474,20 @@ class RadarOfferCard extends StatelessWidget {
                 Material(
                   color: const Color(0xFFF2F3F5),
                   borderRadius: BorderRadius.circular(17),
-                  child: InkWell(
-                    key: ValueKey<String>('radar-route-${offer.id}'),
-                    borderRadius: BorderRadius.circular(17),
-                    onTap: matching ? null : onRoute,
-                    child: SizedBox(
-                      width: 54,
-                      height: 54,
-                      child: Center(
-                        child: _icon(AppAssets.offerRoute, 22, ink),
+                  child: Semantics(
+                    button: true,
+                    enabled: !matching,
+                    label: tr.showRoute,
+                    child: InkWell(
+                      key: ValueKey<String>('radar-route-${offer.id}'),
+                      borderRadius: BorderRadius.circular(17),
+                      onTap: matching ? null : onRoute,
+                      child: SizedBox(
+                        width: 54,
+                        height: 54,
+                        child: Center(
+                          child: _icon(AppAssets.offerRoute, 22, ink),
+                        ),
                       ),
                     ),
                   ),
@@ -592,7 +578,57 @@ class RadarOfferCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [header, body],
+          children: [
+            if (onDismiss case final dismiss?)
+              Stack(
+                children: [
+                  header,
+                  // Centred on the 30 px circle the header row keeps for it.
+                  Positioned(
+                    top: 16 + 15 - 24,
+                    right: headerRight - 9,
+                    child: Semantics(
+                      button: true,
+                      label: tr.closeOffer,
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: InkWell(
+                          key: ValueKey<String>(
+                            'radar-offer-dismiss-${offer.id}',
+                          ),
+                          customBorder: const CircleBorder(),
+                          onTap: dismiss,
+                          child: SizedBox.square(
+                            dimension: kMinInteractiveDimension,
+                            child: Center(
+                              child: Ink(
+                                width: 30,
+                                height: 30,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  border: Border.fromBorderSide(
+                                    BorderSide(color: Color(0xFFE3E6E8)),
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  size: 17,
+                                  color: Color(0xFF5F6B72),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            else
+              header,
+            body,
+          ],
         ),
       ),
     );
