@@ -483,20 +483,21 @@ class RadarWedgePainter extends CustomPainter {
       ..addOval(Rect.fromCircle(center: center, radius: inner));
     canvas.save();
     canvas.clipPath(band);
-    // Drawn around zero and rotated, so the gradient never wraps.
+    // Drawn from zero to [tail] and rotated so it ends at the leading
+    // edge: a sweep gradient reads angles in [0, 2π), so one from -tail to
+    // 0 would clamp the whole wedge to its end colour (driver-u180).
     canvas.translate(center.dx, center.dy);
-    canvas.rotate(lead);
+    canvas.rotate(lead - tail);
     final rect = Rect.fromCircle(center: Offset.zero, radius: outer);
     final paint = Paint()
       ..shader = SweepGradient(
-        startAngle: -tail,
-        endAngle: 0,
+        endAngle: tail,
         colors: [
           Colors.white.withValues(alpha: 0),
           Colors.white.withValues(alpha: 0.6),
         ],
       ).createShader(rect);
-    canvas.drawArc(rect, -tail, tail, true, paint);
+    canvas.drawArc(rect, 0, tail, true, paint);
     canvas.restore();
   }
 

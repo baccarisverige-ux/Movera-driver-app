@@ -1,6 +1,8 @@
 // Wave 5 D5.2 (UI truth), parts c and d: history, safety, scheduled rides
 // and map widgets show only what really happened.
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -29,6 +31,7 @@ import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dar
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/google_driver_camera_port.dart';
 import 'package:movera/widgets/layout_viewport.dart';
+import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
@@ -391,5 +394,26 @@ void main() {
       expect(_ahead(at(frame), fix, meters: 1), isFalse);
     }
     await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('driver-u180: the radar wedge fades toward its tail',
+      (tester) async {
+    // Leading edge at three o'clock (a quarter turn); the tail is above it.
+    final image = await tester.runAsync(() {
+      final recorder = ui.PictureRecorder();
+      const RadarWedgePainter(turn: .25, inner: 20)
+          .paint(Canvas(recorder), const Size(200, 200));
+      return recorder.endRecording().toImage(200, 200);
+    });
+    final bytes = (await tester.runAsync(
+        () => image!.toByteData(format: ui.ImageByteFormat.rawRgba)))!;
+    int alpha(double degrees) {
+      final rad = degrees * math.pi / 180;
+      final x = (100 + 70 * math.cos(rad)).round();
+      final y = (100 + 70 * math.sin(rad)).round();
+      return bytes.getUint8((y * 200 + x) * 4 + 3);
+    }
+    expect(alpha(-5), greaterThan(100), reason: 'bright at the lead');
+    expect(alpha(-55), lessThan(40), reason: 'faded at the tail');
   });
 }
