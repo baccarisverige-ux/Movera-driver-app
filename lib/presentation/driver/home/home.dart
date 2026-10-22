@@ -633,7 +633,7 @@ class _DriverHomeState extends State<DriverHome>
       pickup: snapshot.pickupAddress ?? '',
       dropoff: snapshot.dropoffAddress ?? '',
       source: snapshot.matchedVia ?? WaybillRecord.moveraRadarSource,
-      driverName: WaybillRecord.demoDriverName,
+      driverName: WaybillRecord.moveraDriverName, // driver-r5-38: as a live trip
       vehicle: WaybillRecord.vehicleUnavailable,
       licensePlate: WaybillRecord.plateUnavailable,
       passengerCapacity: 4,
@@ -652,7 +652,7 @@ class _DriverHomeState extends State<DriverHome>
       pickup: next.pickup,
       dropoff: next.dropoff,
       source: 'Movera Radar',
-      driverName: WaybillRecord.demoDriverName,
+      driverName: WaybillRecord.moveraDriverName,
       vehicle: WaybillRecord.vehicleUnavailable,
       licensePlate: WaybillRecord.plateUnavailable,
       passengerCapacity: 4,

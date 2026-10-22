@@ -25,6 +25,7 @@ import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
+import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/main.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
@@ -532,6 +533,29 @@ void main() {
     await _frames(tester, 4);
     expect(storage.reads, reads,
         reason: 'before: Retry re-ran the restore over the live trip');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
+  });
+
+  testWidgets('driver-r5-38: a restored trip\'s waybill names the driver as '
+      'a live trip does', (tester) async {
+    _homeSetUp(tester);
+    final saved = MemoryActiveRideRepository();
+    await tester.pumpWidget(_app(AcceptRide(tripId: 'restored-trip',
+        initialStage: ActiveRideStage.onTrip, locationRepository: _NoGps(),
+        activeRideRepository: saved)));
+    await _frames(tester, 8);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
+    // The app was killed; Home restores the trip.
+    final waybills = InMemoryWaybillRepository.instance..reset();
+    addTearDown(waybills.reset);
+    await _pumpHome(tester, DriverHome(locationRepository: _NoGps(),
+        activeRideRepository: saved, waybillRepository: waybills));
+    await _until(tester, find.byType(AcceptRide));
+    expect(waybills.current?.tripId, 'restored-trip');
+    expect(waybills.current?.driverName, WaybillRecord.moveraDriverName,
+        reason: 'before: "Demo driver — identity unavailable"');
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
