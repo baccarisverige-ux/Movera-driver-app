@@ -558,14 +558,22 @@ void main() {
       await tester.tap(
           find.byKey(const ValueKey<String>('destination-result-solna')));
       roads.release();
-      // Online toward Solna; an Exclusive rises, its road still coming.
+      // The limit counts whole minutes, so 8 s is none: Destination mode
+      // ends at once, before its road comes. Since driver-66 that no
+      // longer puts the offline driver online; the driver goes online.
+      await _frames(tester, const Duration(seconds: 1));
+      expect(IslandMessages.posted.map((m) => m.title),
+          contains(HomeIslandNotices.destinationEnded.title));
+      tester
+          .widget<GestureDetector>(
+            find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+          )
+          .onTap!
+          .call();
+      // An Exclusive rises, its road still coming; then the road comes in.
       await _frames(tester, const Duration(seconds: 6));
       expect(find.byKey(const ValueKey<String>('exclusive-radar-touch-target')),
           findsOneWidget);
-      // The 8 s limit ends Destination mode; then the road comes in.
-      await _frames(tester, const Duration(seconds: 3));
-      expect(IslandMessages.posted.map((m) => m.title),
-          contains(HomeIslandNotices.destinationEnded.title));
       roads.release();
       await _frames(tester, const Duration(seconds: 1));
       final map = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
