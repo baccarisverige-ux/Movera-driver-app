@@ -455,6 +455,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Precise location is off. Turn it on in Settings to show your position and confirm arrival.';
 
   @override
+  String get preciseLocationOffShort => 'Precise location off';
+
+  @override
   String get yourDriverHasArrivedAtPickup =>
       'Your driver has arrived at the pickup point.';
 

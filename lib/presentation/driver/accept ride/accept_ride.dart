@@ -1289,7 +1289,7 @@ class _AcceptRideState extends State<AcceptRide>
                         waitingSeconds: _countingWait ? _waitSeconds : null,
                         paidSeconds: _countingWait ? _AcceptRideTrip(this)._paidWaitNow : null,
                         waitingAtStop: _paidStopWait,
-                        navigationStatus: _navigation.locationLost ? tr.locationUpdatingEllipsis : _locationStatus ?? _navigation.snapshot.status,
+                        navigationStatus: _navigation.locationLost ? _navigation.status : _locationStatus ?? _navigation.snapshot.status,
                         reroutes: _navigation.reroutes,
                         waitingMessage: _tripBarStatus,
                         paidWait: _paidStopWait || (_countingWait && !_inIncludedWait),

@@ -739,25 +739,27 @@ extension _AcceptRideTrip on _AcceptRideState {
           },
           onError: (Object error) {
             if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-            _navigation.keepLastKnown();
-            _rebuild(() {
-              _preciseLocationOff = error is PreciseLocationRequiredException;
-              _hasLiveLocation = false;
-              _locationStatus = _navigation.status;
-            });
+            _locationFailed(error);
           },
         );
         await _applyDriverPosition(position, forceRoute: true);
       } catch (error) {
         if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-        _navigation.keepLastKnown();
-        _rebuild(() {
-          _preciseLocationOff = error is PreciseLocationRequiredException;
-          _hasLiveLocation = false;
-          _locationStatus = _navigation.status;
-        });
+        _locationFailed(error);
         unawaited(_refreshRoadRoute(force: true));
       }
+    }
+    /// driver-u23: approximate-only location never gives a usable fix, so
+    /// the trip says "Precise location off" instead of "Location
+    /// updating…", which would never end.
+    void _locationFailed(Object error) {
+      final precise = error is PreciseLocationRequiredException;
+      _navigation.keepLastKnown(preciseLocationOff: precise);
+      _rebuild(() {
+        _preciseLocationOff = precise;
+        _hasLiveLocation = false;
+        _locationStatus = _navigation.status;
+      });
     }
     /// D-07: what the screen shows from a fix outside the map and the
     /// island (both follow on their own). A fix that changes none of it

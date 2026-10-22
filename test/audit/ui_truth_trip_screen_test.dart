@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/widgets/custom_google_map.dart';
@@ -61,6 +62,16 @@ class _Routes implements RouteRepository {
         distanceMeters: 1500,
         durationSeconds: 300,
       );
+}
+
+/// Location allowed only approximately (iOS Precise Location off).
+class _ApproximateOnly implements DriverLocationRepository {
+  @override
+  Future<DriverLocation> getCurrentPosition() async =>
+      throw const PreciseLocationRequiredException();
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream.empty();
 }
 
 /// Trip storage that fails every save while [fail] is set.
@@ -254,6 +265,17 @@ void main() {
         tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland));
     expect(island.nextTripFare, isNotNull, reason: 'the next trip is secured');
     expect(island.radarVisible, isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('driver-u23: approximate-only location says precise location '
+      'is off instead of a "Location updating…" that never ends',
+      (tester) async {
+    await _trip(tester, AcceptRide(locationRepository: _ApproximateOnly()));
+    final island =
+        tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland));
+    expect(island.navigationStatus, 'Precise location off');
+    expect(find.text('Location updating…'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }

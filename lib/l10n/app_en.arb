@@ -280,6 +280,7 @@
   "thisStopNeedsVerifiedMapLocation": "This stop needs a verified map location before arrival.",
   "locationUnavailableEnableLocationToConfirm": "Location unavailable. Enable location to confirm arrival.",
   "preciseLocationOff": "Precise location is off. Turn it on in Settings to show your position and confirm arrival.",
+  "preciseLocationOffShort": "Precise location off",
   "yourDriverHasArrivedAtPickup": "Your driver has arrived at the pickup point.",
   "locationUpdatingEllipsis": "Location updating…",
   "stopLocationUnavailable": "Stop location unavailable",

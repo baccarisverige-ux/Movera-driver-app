@@ -457,6 +457,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'La position exacte est désactivée. Activez-la dans les réglages pour afficher votre position et confirmer l’arrivée.';
 
   @override
+  String get preciseLocationOffShort => 'Position exacte désactivée';
+
+  @override
   String get yourDriverHasArrivedAtPickup =>
       'Votre chauffeur est arrivé au point de prise en charge.';
 

@@ -129,6 +129,7 @@
   "thisStopNeedsVerifiedMapLocation": "Stoppet behöver en bekräftad kartposition innan du kan vara framme.",
   "locationUnavailableEnableLocationToConfirm": "Position saknas. Slå på platstjänster för att bekräfta att du är framme.",
   "preciseLocationOff": "Exakt plats är avstängd. Slå på den i Inställningar för att visa din position och bekräfta att du är framme.",
+  "preciseLocationOffShort": "Exakt plats avstängd",
   "yourDriverHasArrivedAtPickup": "Din förare har kommit till upphämtningsplatsen.",
   "locationUpdatingEllipsis": "Uppdaterar position…",
   "stopLocationUnavailable": "Stoppets position saknas",

@@ -878,6 +878,12 @@ abstract class AppLocalizations {
   /// **'Precise location is off. Turn it on in Settings to show your position and confirm arrival.'**
   String get preciseLocationOff;
 
+  /// No description provided for @preciseLocationOffShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise location off'**
+  String get preciseLocationOffShort;
+
   /// No description provided for @yourDriverHasArrivedAtPickup.
   ///
   /// In en, this message translates to:

@@ -457,6 +457,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Exakt plats är avstängd. Slå på den i Inställningar för att visa din position och bekräfta att du är framme.';
 
   @override
+  String get preciseLocationOffShort => 'Exakt plats avstängd';
+
+  @override
   String get yourDriverHasArrivedAtPickup =>
       'Din förare har kommit till upphämtningsplatsen.';
 
