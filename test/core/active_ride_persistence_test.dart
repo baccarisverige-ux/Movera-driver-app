@@ -73,7 +73,7 @@ void main() async {
     expect(decoded.next?.riderName, 'Maya');
     expect(decoded.stopIndex, 1);
     expect(decoded.paidStopWait, isTrue);
-    expect(decoded.startedAt, DateTime.utc(2026, 9, 29, 12));
+    expect(decoded.startedAt!.toUtc(), DateTime.utc(2026, 9, 29, 12));
     expect(decoded.stopPoints, const <GeoPoint>[
       GeoPoint(59.3300, 18.0580),
       GeoPoint(59.3100, 18.0220),

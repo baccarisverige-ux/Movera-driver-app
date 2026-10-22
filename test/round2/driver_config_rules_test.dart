@@ -281,7 +281,7 @@ void main() {
         paidWaitSeconds: 95,
       );
       final back = PersistedActiveRide.fromJson(saved.toJson())!;
-      expect(back.acceptedAt, DateTime.utc(2026, 10, 20, 6));
+      expect(back.acceptedAt!.toUtc(), DateTime.utc(2026, 10, 20, 6));
       expect(back.paidWaitSeconds, 95);
       expect(back.stamped().paidWaitSeconds, 95);
       expect(back.stamped().acceptedAt, back.acceptedAt);

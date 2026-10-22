@@ -10,13 +10,25 @@ class LocalWriteSession {
     }
   }
 
+  static int? _before;
+
   static void beginCleanup() {
     if (_clearing) throw StateError('Local cleanup already in progress');
     _clearing = true;
+    _before = _generation;
     _generation++;
+  }
+
+  /// The cleanup failed and the driver stays signed in: the repositories
+  /// of this session keep working (driver-34), instead of every save
+  /// failing until the app restarts.
+  static void cancelCleanup() {
+    final before = _before;
+    if (_clearing && before != null) _generation = before;
   }
 
   static void endCleanup() {
     _clearing = false;
+    _before = null;
   }
 }

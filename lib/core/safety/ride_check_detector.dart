@@ -20,8 +20,33 @@ class RideCheckDetector {
   List<GeoPoint> _planned = const <GeoPoint>[];
   GeoPoint? _stillAt;
   DateTime? _stillSince;
+  bool _unwatched = false;
+
+  /// The trip screen stopped feeding fixes and ticks (app paused, a card
+  /// open). The car may drive meanwhile, so the next [observe] or [tick]
+  /// starts the stop clock again instead of counting the gap as a stop
+  /// (driver-u45).
+  void unwatched() => _unwatched = true;
+
+  void _rewatch(DateTime at) {
+    if (!_unwatched) return;
+    _unwatched = false;
+    if (_stillSince != null) _stillSince = at;
+  }
 
   bool fired(RideCheckTrigger trigger) => _fired.contains(trigger);
+
+  /// The triggers that opened on this trip, for the saved trip.
+  List<String> get firedNames =>
+      [for (final trigger in _fired) trigger.name];
+
+  /// A restored trip: the triggers that already opened before (by name;
+  /// unknown names are skipped) stay used (driver-u44).
+  void restoreFired(Iterable<String> names) {
+    for (final trigger in RideCheckTrigger.values) {
+      if (names.contains(trigger.name)) _fired.add(trigger);
+    }
+  }
 
   /// The rider is in the car. Restored trips pass their saved start.
   void startTrip(DateTime at) {
@@ -53,6 +78,7 @@ class RideCheckDetector {
     String? place,
     String? destination,
   }) {
+    _rewatch(at);
     final still = _stillAt;
     if (atPlannedStop ||
         still == null ||
@@ -73,6 +99,7 @@ class RideCheckDetector {
     bool atPlannedStop = false,
     String? place,
   }) {
+    _rewatch(at);
     if (atPlannedStop) {
       _stillSince = at;
       return _longer(at);

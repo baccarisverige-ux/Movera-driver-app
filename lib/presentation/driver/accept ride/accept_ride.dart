@@ -658,7 +658,8 @@ class _AcceptRideState extends State<AcceptRide>
     if (_rideCheckServices == null) {
       final services = widget.rideCheck ?? RideCheckScope.read(context) ?? RideCheckServices.fallback;
       _rideCheckServices = services;
-      _rideCheckDetector = RideCheckDetector(rules: services.rules);
+      _rideCheckDetector = RideCheckDetector(rules: services.rules) // u44: once per trip, also restored
+        ..restoreFired(widget.restoredSnapshot?.rideCheckFired ?? const <String>[]);
       _rideCheck = RideCheckController(services: services, tripId: widget.tripId,
         tripDetails: _AcceptRideTrip(this)._safetyAlertTrip);
       _rideCheckTicker = Timer.periodic(const Duration(seconds: 20), (_) => _AcceptRideTrip(this)._rideCheckTick());

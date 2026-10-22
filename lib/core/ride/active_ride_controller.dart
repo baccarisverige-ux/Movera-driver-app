@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/contracts/trip_status.dart';
@@ -277,6 +278,10 @@ class ActiveRideController extends ChangeNotifier {
       return false;
     }
     _writing = true;
+    if (!background) {
+      _lastSaved = null;
+    }
+    final done = _writeDone = Completer<void>();
     final backgroundSave = background ? Completer<void>() : null;
     _backgroundSave = backgroundSave;
     _revision++;
@@ -303,8 +308,20 @@ class ActiveRideController extends ChangeNotifier {
         notifyListeners();
       }
       backgroundSave?.complete();
+      done.complete();
     }
   }
+
+  /// Completes when the write in flight (any kind) ends.
+  Completer<void>? _writeDone;
+
+  /// The one save queued behind the write in flight (driver-u33).
+  Future<bool>? _queuedSave;
+
+  /// The snapshot the last background save wrote; null after any other
+  /// write. A queued save with nothing new is skipped, so it does not hold
+  /// the write lock for nothing.
+  String? _lastSaved;
 
   /// Errors are observable; fire-and-forget lifecycle saves never throw.
   Future<bool> persistNow() async {
@@ -314,10 +331,29 @@ class ActiveRideController extends ChangeNotifier {
     if (terminal || tripId == null) {
       return true;
     }
-    return _write(
-      () => _repository.save(_snapshot(_stage)),
-      background: true,
-    );
+    if (_writing) {
+      // driver-u33: a change made while another save is in flight (a stop
+      // reached or left, a next trip secured or cancelled) was dropped
+      // until the next GPS snapshot. Save once more after it, with the
+      // state as it is then; later asks join that one save.
+      return _queuedSave ??= () async {
+        while (_writing && !_disposed) {
+          await _writeDone!.future;
+        }
+        _queuedSave = null;
+        if (!_disposed && !_writing && !terminal && _lastSaved != null &&
+            jsonEncode(_snapshot(_stage).toJson()) == _lastSaved) {
+          return true;
+        }
+        return persistNow();
+      }();
+    }
+    _lastSaved = null;
+    return _write(() async {
+      final snapshot = _snapshot(_stage);
+      await _repository.save(snapshot);
+      _lastSaved = jsonEncode(snapshot.toJson());
+    }, background: true);
   }
 
   @override

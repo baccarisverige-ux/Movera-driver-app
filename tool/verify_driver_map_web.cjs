@@ -393,9 +393,9 @@ assert.equal(map.getZoom(), 21, 'Double-tap zoom-in cannot exceed level 21');
     'Raster double tap at the cap does not pan the map sideways');
   clock += 500;
 }
-api.configure(7, 100, 200, .72);
+api.configure(7, 100, 200, .75);
 map.moveCamera({center: {x:0,y:400}}); api.anchor(7);
-assert.equal(map.camera.center.y, 224, '72% screen anchor above overlays');
+assert.equal(map.camera.center.y, 224, '75% screen anchor above overlays');
 const marker = new maps.Marker({title:'Driver camera vehicle', position:{x:1,y:2},
   icon:{url:'vehicle.png',scaledSize:{width:40,height:40}}, visible:true});
 marker.setMap(map); api.vehicle(7,90);
@@ -659,7 +659,7 @@ queueMicrotask(() => {
   // Flat north-up map driving south (lead 180): the road ahead is below
   // the car, so the car sits above the free middle (100 + 500 / 2 = 350).
   rasterDiv.clientWidth = 400;
-  api.configure(8, 100, 200, .72);
+  api.configure(8, 100, 200, .75);
   raster.moveCamera({center: {x: 0, y: 400}, heading: 0});
   api.claim(8, true, 180);
   raster.panTo({x: 0, y: 400});
@@ -681,12 +681,12 @@ queueMicrotask(() => {
         assert.deepEqual(raster.camera.center, {x: 0, y: 400}, 'Preview frame not shifted');
         let panned = null;
         raster.panBy = (x, y) => { panned = {x, y}; };
-        api.configure(8, 100, 300, .72);
+        api.configure(8, 100, 300, .75);
         assert.equal(panned, null, 'Insets after a preview do not move the map');
         api.claim(8, true, 0);
         raster.panTo({x: 0, y: 400});
         queueMicrotask(() => {
-          api.configure(8, 100, 400, .72);
+          api.configure(8, 100, 400, .75);
           assert.ok(panned && panned.y > 0, 'A raised sheet glides the followed car up');
           console.log('PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, live tilt-with-zoom, wheel glide, taps, anchor, look-ahead, sheet glide, vehicle overlay, zoom-scaled arrow and locate view');
         });

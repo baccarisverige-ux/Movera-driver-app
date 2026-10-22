@@ -288,7 +288,7 @@ void main() {
         scheduledRideId: 'res-1',
       );
       final json = ride.toJson();
-      expect(json['scheduledPickupAt'], _pickup.toIso8601String());
+      expect(json['scheduledPickupAt'], _pickup.toUtc().toIso8601String());
       final back = PersistedActiveRide.fromJson(json)!;
       expect(back.scheduledPickupAt, _pickup);
       expect(back.scheduledRideId, 'res-1');

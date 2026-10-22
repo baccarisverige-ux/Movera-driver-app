@@ -2,7 +2,7 @@
 
 ## Scope
 
-This repository is **Movera Drider**: `baccarisverige-ux/Movera-drider-`.
+This repository is **Movera Drider**: `baccarisverige-ux/Movera-driver-app` (formerly `Movera-drider-`).
 The separate Rider repository is out of scope.
 
 The application remains a Flutter frontend/demo. Architecture and reliability work must preserve the current product design unless a later task explicitly authorizes redesign.

@@ -941,6 +941,9 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
         excludeSemantics: true,
         child: Tooltip(
           message: [title, if (subtitle.isNotEmpty) subtitle].join(' · '),
+          // Hover only: a long press on the island opens its tools
+          // (driver-u21), which a touch tooltip would take.
+          triggerMode: TooltipTriggerMode.manual,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -1033,6 +1036,10 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
   }
 
   Future<void> _showTools() async {
+    // driver-u21: a GPS or route fault keeps its face on the island (S03),
+    // so the menu button there cannot show; the menu is here meanwhile.
+    final fault = widget.navigationStatus ?? widget.banner?.status;
+    final menuHere = fault != null && fault.isNotEmpty;
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => SafeArea(
@@ -1040,6 +1047,12 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
           child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (menuHere)
+              ListTile(
+                leading: const Icon(Icons.menu_rounded),
+                title: Text(tr.menu),
+                onTap: () => popOwned(context, 'menu'),
+              ),
             ListTile(
               leading: const Icon(Icons.alt_route_rounded),
               title: Text(tr.tripRouteAndOptions),
@@ -1104,6 +1117,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
     );
     if (!mounted) return;
     switch (action) {
+      case 'menu':
+        widget.onMenu();
       case 'route':
         widget.onRoute();
       case 'safety':

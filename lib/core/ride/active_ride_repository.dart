@@ -142,6 +142,8 @@ class PersistedActiveRide {
     this.scheduledRideId,
     this.pickupKm,
     this.bags = 0,
+    this.rideCheckFired = const <String>[],
+    this.nextOffersStopped = false,
   });
 
   final String tripId;
@@ -202,6 +204,15 @@ class PersistedActiveRide {
 
   /// The bags the rider said they bring.
   final int bags;
+
+  /// Ride check triggers that already opened on this trip
+  /// ([RideCheckTrigger] names): each opens once per trip, also after a
+  /// restore (driver-u44).
+  final List<String> rideCheckFired;
+
+  /// The driver held the trip radar: no next-trip offers on this trip,
+  /// also after a restore (driver-u68).
+  final bool nextOffersStopped;
   bool get hasVerifiedEndpoints =>
       validCoordinate(pickupLat, latitude: true) &&
       validCoordinate(pickupLng, latitude: false) &&
@@ -264,6 +275,8 @@ class PersistedActiveRide {
       scheduledRideId: scheduledRideId,
       pickupKm: pickupKm,
       bags: bags,
+      rideCheckFired: rideCheckFired,
+      nextOffersStopped: nextOffersStopped,
     );
   }
 
@@ -273,10 +286,13 @@ class PersistedActiveRide {
     'stage': stage.name,
     if (nextTripId != null || next != null)
       'nextTripId': nextTripId ?? next?.tripId,
-    if (arrivedAt != null) 'arrivedAt': arrivedAt!.toIso8601String(),
-    if (acceptedAt != null) 'acceptedAt': acceptedAt!.toIso8601String(),
-    if (startedAt != null) 'startedAt': startedAt!.toIso8601String(),
-    if (savedAt != null) 'savedAt': savedAt!.toIso8601String(),
+    // Instants in UTC: a local time has no offset, so in the repeated
+    // autumn hour it read back an hour early (driver-u34). Older saves in
+    // local time still read as local.
+    if (arrivedAt != null) 'arrivedAt': arrivedAt!.toUtc().toIso8601String(),
+    if (acceptedAt != null) 'acceptedAt': acceptedAt!.toUtc().toIso8601String(),
+    if (startedAt != null) 'startedAt': startedAt!.toUtc().toIso8601String(),
+    if (savedAt != null) 'savedAt': savedAt!.toUtc().toIso8601String(),
     if (riderName != null) 'riderName': riderName,
     if (riderRating != null) 'riderRating': riderRating,
     if (riderTrips != null) 'riderTrips': riderTrips,
@@ -312,10 +328,12 @@ class PersistedActiveRide {
         'longitude': destinationPoint!.longitude,
       },
     if (scheduledPickupAt != null)
-      'scheduledPickupAt': scheduledPickupAt!.toIso8601String(),
+      'scheduledPickupAt': scheduledPickupAt!.toUtc().toIso8601String(),
     if (scheduledRideId != null) 'scheduledRideId': scheduledRideId,
     if (pickupKm != null) 'pickupKm': pickupKm,
     if (bags > 0) 'bags': bags,
+    if (rideCheckFired.isNotEmpty) 'rideCheckFired': rideCheckFired,
+    if (nextOffersStopped) 'nextOffersStopped': true,
   };
 
   /// A saved Money, or null when absent or not readable.
@@ -411,6 +429,7 @@ class PersistedActiveRide {
     }
     final pickupKm = json['pickupKm'];
     final bags = json['bags'];
+    final fired = json['rideCheckFired'];
     final nextJson = json['next'];
     final next = nextJson is Map
         ? PersistedQueuedTrip.fromJson(Map<String, dynamic>.from(nextJson))
@@ -422,10 +441,10 @@ class PersistedActiveRide {
       tripId: tripId,
       stage: stage.first,
       nextTripId: json['nextTripId'] as String?,
-      arrivedAt: DateTime.tryParse(json['arrivedAt'] as String? ?? ''),
-      acceptedAt: DateTime.tryParse(json['acceptedAt'] as String? ?? ''),
-      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? ''),
-      savedAt: DateTime.tryParse(json['savedAt'] as String? ?? ''),
+      arrivedAt: DateTime.tryParse(json['arrivedAt'] as String? ?? '')?.toLocal(),
+      acceptedAt: DateTime.tryParse(json['acceptedAt'] as String? ?? '')?.toLocal(),
+      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? '')?.toLocal(),
+      savedAt: DateTime.tryParse(json['savedAt'] as String? ?? '')?.toLocal(),
       riderName: json['riderName'] as String?,
       riderRating: (json['riderRating'] as num?)?.toDouble(),
       riderTrips: (json['riderTrips'] as num?)?.toInt(),
@@ -474,7 +493,8 @@ class PersistedActiveRide {
             )
           : null,
       scheduledPickupAt:
-          DateTime.tryParse(json['scheduledPickupAt'] as String? ?? ''),
+          DateTime.tryParse(json['scheduledPickupAt'] as String? ?? '')
+              ?.toLocal(),
       scheduledRideId: json['scheduledRideId'] is String
           ? json['scheduledRideId'] as String
           : null,
@@ -483,6 +503,10 @@ class PersistedActiveRide {
           ? pickupKm.toDouble()
           : null,
       bags: bags is int && bags > 0 ? bags : 0,
+      rideCheckFired: fired is List
+          ? List<String>.unmodifiable(fired.whereType<String>())
+          : const <String>[],
+      nextOffersStopped: json['nextOffersStopped'] == true,
     );
   }
 }

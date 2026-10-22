@@ -149,6 +149,9 @@ Future<void> clearLocalUserData({
         throw StateError('Could not clear local data: $key');
       }
     }
+  } catch (_) {
+    LocalWriteSession.cancelCleanup();
+    rethrow;
   } finally {
     LocalWriteSession.endCleanup();
   }

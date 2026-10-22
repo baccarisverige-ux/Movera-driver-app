@@ -222,7 +222,10 @@ class CompletionJournal {
       );
     }
     afterWrite?.call('terminal');
-    final next = entry.next;
+    // Stamped when trip A ended, not now: a journal replayed days later
+    // must leave B as old as it is, so Home still asks before restoring
+    // it (driver-u37).
+    final next = entry.next?.stamped(at);
     if (next != null) {
       try {
         if (repository is RideHandoffRepository) {

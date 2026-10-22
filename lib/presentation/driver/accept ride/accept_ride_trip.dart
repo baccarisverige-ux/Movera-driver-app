@@ -36,6 +36,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         scheduledRideId: widget.scheduledRideId,
         pickupKm: widget.pickupKm,
         bags: widget.bags,
+        rideCheckFired: _rideCheckDetector.firedNames,
+        nextOffersStopped: _onTripRadarState == _OnTripRadarState.stopped,
         nextTripId: securedOffer?.id,
         riderName: widget.riderName,
         riderRating: widget.riderRating,
@@ -121,6 +123,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       );
     }
     void _restoreQueuedNextFromSnapshot() {
+      // driver-u68: offers the driver held off stay off.
+      if (widget.restoredSnapshot?.nextOffersStopped == true) {
+        _onTripRadarState = _OnTripRadarState.stopped;
+      }
       final next = widget.restoredSnapshot?.next;
       if (next == null) { return; }
       _onTripRadarState = _OnTripRadarState.secured;
@@ -147,7 +153,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         case ActiveRideStage.waitingForRider:
           unawaited(_focusWaitingPickup());
         case ActiveRideStage.onTrip:
-          _rideCheckDetector.startTrip(_rideCheckNow);
+          // A restored trip keeps its start (driver-u44).
+          _rideCheckDetector.startTrip(_onTripStartedAt ?? _rideCheckNow);
           _demoDrive?.startTrip();
           if (_onTripRadarState != _OnTripRadarState.secured) {
             _startOnTripRadar();
@@ -161,6 +168,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       _syncWaitClock();
       _waitTimer?.cancel();
       _liveUpdatesPaused = true;
+      _rideCheckDetector.unwatched(); // driver-u45
       // D-05: no next-trip offer comes or runs out while the driver cannot
       // see the trip; the offer up keeps its deadline for the resume.
       _nextTripRadarDemoTimer?.cancel();
@@ -1133,6 +1141,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       _onTripRadarDeclined = false;
       _rebuild(() => _onTripRadarState = _OnTripRadarState.off);
       _startOnTripRadar();
+      unawaited(_rideLifecycle.persistNow());
     }
     /// R13-18: the same on-the-way filter as Home (R13-9); the next trip
     /// starts at this trip's drop-off.
@@ -1178,6 +1187,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState = _OnTripRadarState.stopped;
         _nextTripRadarOffer = null;
       });
+      unawaited(_rideLifecycle.persistNow()); // kept for a restore (u68)
     }
     void _maybeScheduleOnTripRadarDemoOffer() {
       // Q18: while driving a rider only Exclusive offers come, when admin
@@ -1614,6 +1624,9 @@ extension _AcceptRideTrip on _AcceptRideState {
         (kIsWeb || _lastLocation?.isUsableAt(_rideCheckNow) == true);
     void _openRideCheck(RideCheckEvent? event) {
       if (event == null || !mounted) { return; }
+      _rideCheckDetector.unwatched(); // the card stops the watch
+      // The trigger is used for this trip: saved for a restore (u44).
+      if (!event.demo) { unawaited(_rideLifecycle.persistNow()); }
       unawaited(_rideCheck.open(event, instant: MediaQuery.disableAnimationsOf(context)));
     }
     void _rideCheckPlan(RoadRoute route) {
@@ -1629,7 +1642,11 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     /// GPS can stay quiet while the car stands still.
     void _rideCheckTick() {
-      if (!_rideCheckWatching || _liveUpdatesPaused) { return; }
+      if (!_rideCheckWatching || _liveUpdatesPaused) {
+        // driver-u45: nobody watched; the stop clock restarts after.
+        _rideCheckDetector.unwatched();
+        return;
+      }
       _openRideCheck(_rideCheckDetector.tick(_rideCheckNow, gps: _rideCheckGpsFresh,
         atPlannedStop: _rideCheckAtPlannedStop, place: _rideCheckPlace));
     }

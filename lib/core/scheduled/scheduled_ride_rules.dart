@@ -230,7 +230,9 @@ class ScheduledRideRules {
           seed.towardPickupBeforeMinutes,
       longTripKm: _numIn(json['longTripKm'], 10, 500) ?? seed.longTripKm,
       kinds: kinds,
-      driverLateCancelHours: _numIn(json['driverLateCancelHours'], 0.5, 72)?.round() ??
+      // A number in the contract (0.5 to 72): 1.5 is 90 minutes, not 2 h
+      // (driver-r3-4).
+      driverLateCancelHours: _numIn(json['driverLateCancelHours'], 0.5, 72) ??
           seed.driverLateCancelHours,
       lateCancelLimit:
           _intIn(json['lateCancelLimit'], 1, 20) ?? seed.lateCancelLimit,
@@ -271,7 +273,11 @@ class ScheduledRideRules {
 
   /// A driver cancel with less than this left to pickup is a late cancel.
   /// Drivers never pay to cancel.
-  final int driverLateCancelHours;
+  final double driverLateCancelHours;
+
+  /// [driverLateCancelHours] as a duration, to the minute.
+  Duration get driverLateCancel =>
+      Duration(minutes: (driverLateCancelHours * 60).round());
 
   /// This many late cancels within [lateCancelPeriodDays] pause Scheduled
   /// rides for [pauseDays].
