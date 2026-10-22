@@ -1,4 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
+import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
@@ -92,6 +97,58 @@ void main() {
             )
             .cashToCollect,
         '120,00 kr',
+      );
+    });
+  });
+
+  group('driver-r5-41', () {
+    setUp(ScheduledRideStore.reset);
+    tearDown(ScheduledRideStore.reset);
+
+    testWidgets("while admin has Scheduled rides on, a late cancel at the "
+        'limit neither warns nor notifies a pause', (tester) async {
+      final now = ScheduledClock.instance.now();
+      ScheduledRideStore.driverAccess = ScheduledRidesDriverAccess.fromJson({
+        'on': true,
+        'until': now.add(const Duration(days: 3)).toUtc().toIso8601String(),
+      });
+      ScheduledRideStore.addLateCancel(now.subtract(const Duration(days: 2)));
+      ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+      final paused = DriverNotificationFeed.instance.items
+          .where((n) => n.kind == DriverNoticeKind.scheduledPaused)
+          .length;
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(const MaterialApp(home: ScheduledRidesScreen()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Accepted'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Gamla vägen, Stockholm').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Gamla vägen, Stockholm').first);
+      await tester.pumpAndSettle();
+      await tester
+          .tap(find.widgetWithText(OutlinedButton, 'Cancel reservation'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Personal emergency'));
+      await tester.tap(find.text('Personal emergency'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Continue'));
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+      final warning = tester.widget<Text>(
+          find.byKey(const ValueKey<String>('scheduled-late-cancel')));
+      expect(warning.data, isNot(contains('pause')));
+      final confirm = find.widgetWithText(FilledButton, 'Cancel reservation');
+      await tester.ensureVisible(confirm);
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+      expect(ScheduledRideStore.block(), isNull);
+      expect(
+        DriverNotificationFeed.instance.items
+            .where((n) => n.kind == DriverNoticeKind.scheduledPaused)
+            .length,
+        paused,
       );
     });
   });

@@ -898,7 +898,7 @@ class ScheduledRideStore {
     if (!_accepted.remove(ride)) {
       return false;
     }
-    final wasPaused = pausedUntil(_now) != null;
+    final wasPaused = _pauseInForce(_now);
     if (late) {
       _recordLateCancel(_now);
     }
@@ -907,8 +907,14 @@ class ScheduledRideStore {
       _requests.insert(0, ride.copyWith(accepted: false));
     }
     _changed();
-    return !wasPaused && pausedUntil(_now) != null;
+    return !wasPaused && _pauseInForce(_now);
   }
+
+  /// The late-cancel pause holds back rides at [now], as [block] sees
+  /// it: never while admin has Scheduled rides on for this driver
+  /// (driver-r5-41).
+  static bool _pauseInForce(DateTime now) =>
+      !_driverAccess.onAt(now) && pausedUntil(now) != null;
 
   /// Back to a fresh session: logout calls it, so the previous driver's
   /// accepted rides, late cancels and pause, reminder and backup note do

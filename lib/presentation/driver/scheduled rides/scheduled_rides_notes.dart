@@ -215,7 +215,9 @@ class _LateCancelWarning extends StatelessWidget {
   Widget build(BuildContext context) {
     final rules = ScheduledRideRules.current;
     final count = ScheduledRideStore.lateCancelsInPeriod() + 1;
+    // Admin's "on" for this driver skips the pause (driver-r5-41).
     final pauses = count >= rules.lateCancelLimit &&
+        !ScheduledRideStore._driverAccess.onAt(ScheduledRideStore._now) &&
         ScheduledRideStore.pausedUntil(ScheduledRideStore._now) == null;
     final until = ScheduledRideStore._now.add(Duration(days: rules.pauseDays));
     return Text(
