@@ -114,6 +114,22 @@ class _AdditionalInfoNavigationState extends State<AdditionalInfoNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    // driver-u98: system back (and predictive back) goes one step back,
+    // like the on-screen arrow; only the first step leaves the wizard.
+    return ValueListenableBuilder<int>(
+      valueListenable: controller.currentPageIndex,
+      builder: (context, page, scaffold) => PopScope(
+        canPop: page == 0,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) controller.moveToPreviousStep(context);
+        },
+        child: scaffold!,
+      ),
+      child: _scaffold(context),
+    );
+  }
+
+  Widget _scaffold(BuildContext context) {
     return Scaffold(
       body: SizedBox(
         child: Column(

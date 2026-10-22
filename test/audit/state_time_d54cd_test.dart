@@ -19,6 +19,7 @@ import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/support/local_support_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/presentation/driver/auth/additional%20detail/navigation.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
@@ -26,6 +27,7 @@ import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:movera/widgets/custom_btn.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 /// GPS the test feeds by hand, standing near the default drop-off.
@@ -122,6 +124,40 @@ Future<void> _until(WidgetTester tester, Finder finder,
     await tester.pump(const Duration(milliseconds: 100));
   }
 }
+
+/// The onboarding wizard, pushed over a plain home.
+Future<void> _pumpOnboarding(WidgetTester tester) async {
+  tester.view.physicalSize = const Size(430, 1000);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  final navigator = GlobalKey<NavigatorState>();
+  await tester.pumpWidget(ScreenUtilInit(
+    designSize: const Size(375, 812),
+    builder: (_, _) => MaterialApp(
+      navigatorKey: navigator,
+      home: const Scaffold(body: Text('Existing home')),
+    ),
+  ));
+  navigator.currentState!.push(MaterialPageRoute<void>(
+    builder: (_) => const AdditionalInfoNavigation(),
+  ));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _onboardingStep(WidgetTester tester, {bool back = false}) async {
+  if (back) {
+    await tester.tap(find.byTooltip('Back'));
+  } else {
+    await tester.tap(find.byType(CustomButton));
+  }
+  await tester.pumpAndSettle();
+}
+
+int _onboardingPage(WidgetTester tester) => tester
+    .widget<PageView>(find.byType(PageView))
+    .controller!
+    .page!
+    .round();
 
 const _offerCard = ValueKey<String>('on-trip-radar-offer-button');
 const _matchNext = ValueKey<String>('on-trip-radar-match-next');
@@ -280,6 +316,18 @@ void main() {
     expect(find.byKey(const ValueKey<String>('radar-offer-card-nearby-2')),
         findsOneWidget);
     await _unmount(tester);
+  });
+
+  testWidgets('driver-u98: system back goes to the previous onboarding step',
+      (tester) async {
+    await _pumpOnboarding(tester);
+    await _onboardingStep(tester);
+    await _onboardingStep(tester);
+    expect(_onboardingPage(tester), 2);
+    await tester.binding.handlePopRoute(); // Android back
+    await tester.pumpAndSettle();
+    expect(find.byType(AdditionalInfoNavigation), findsOneWidget);
+    expect(_onboardingPage(tester), 1);
   });
 
   test('driver-u148: "Yesterday" only for the day before, by the calendar', () {
