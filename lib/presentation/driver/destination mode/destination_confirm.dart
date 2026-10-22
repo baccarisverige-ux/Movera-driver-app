@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/geo/geo_point_maps.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -14,9 +15,9 @@ import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/movera_destination_marker.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
-/// "38.1 km · 34 min" (confirm sheet).
+/// "38.1 km · 34 min" (confirm sheet); "38,1 km" in French and Swedish.
 String destinationDistanceTimeLabel(double meters, double seconds) =>
-    '${(meters / 1000).toStringAsFixed(1)} km · ${_minutes(seconds)} min';
+    '${driverDecimal(meters / 1000, 1)} km · ${_minutes(seconds)} min';
 
 /// "35 min · 35 km" (Home bar once Destination mode is on).
 String destinationTimeDistanceLabel(double meters, double seconds) =>

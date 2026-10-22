@@ -5,6 +5,7 @@ import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.da
 import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/sign%20in%20phone/sign_in_phone.dart';
 import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
+import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 
 import 'd51_translations_test.dart' as d51 show show;
 import 'd51_translations_test.dart' show languages, speak, words;
@@ -51,5 +52,14 @@ void main() {
       expect(find.text(or), findsOneWidget, reason: code);
       expect(find.text('or'), findsNothing);
     }
+  });
+
+  test('driver-u107: the destination summary uses the decimal comma', () {
+    for (final code in languages) {
+      speak(code);
+      expect(destinationDistanceTimeLabel(38100, 2040), '38,1 km · 34 min');
+    }
+    speak('en');
+    expect(destinationDistanceTimeLabel(38100, 2040), '38.1 km · 34 min');
   });
 }
