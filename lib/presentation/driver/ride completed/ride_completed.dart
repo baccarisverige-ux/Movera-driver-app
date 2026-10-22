@@ -1,5 +1,4 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
-import 'package:movera/core/history/trip_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -23,7 +22,7 @@ class DriverRideCompleted extends StatefulWidget {
     this.sessionController,
     this.activeRideRepository,
     this.nextRide,
-    this.paymentMethod,
+    this.paidByCash,
   });
 
   final WaybillRepository? waybillRepository;
@@ -31,8 +30,9 @@ class DriverRideCompleted extends StatefulWidget {
   final ActiveRideRepository? activeRideRepository;
   final Widget? nextRide;
 
-  /// "Card" or "Cash"; unknown shows a dash.
-  final String? paymentMethod;
+  /// True for a cash trip, false for one paid in the app (card, Apple Pay,
+  /// Google Pay, Swish …); null shows a dash.
+  final bool? paidByCash;
 
   @override
   State<DriverRideCompleted> createState() => _DriverRideCompletedState();
@@ -213,8 +213,15 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                     const SizedBox(height: 20),
                     const Divider(height: 1, thickness: 1, color: _line),
                     const SizedBox(height: 16),
-                    _row(tr.payment, Text(paymentMethodText(widget.paymentMethod),
-                        style: _value)),
+                    _row(
+                        tr.payment,
+                        Text(
+                            switch (widget.paidByCash) {
+                              true => tr.cash,
+                              false => tr.inApp,
+                              null => '—',
+                            },
+                            style: _value)),
                     _row(
                       tr.waybill,
                       record == null
