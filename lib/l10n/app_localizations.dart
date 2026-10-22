@@ -8299,6 +8299,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ACCOUNT'**
   String get bankAccountSection;
+
+  /// No description provided for @locationNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera can\'t see your location, so trips can\'t reach you.'**
+  String get locationNotAllowed;
+
+  /// Snackbar action: show the system location prompt again (driver-r5-51).
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get allowLocation;
+
+  /// No description provided for @locationBlockedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is blocked for Movera. Allow it in Settings to get trips.'**
+  String get locationBlockedSettings;
 }
 
 class _AppLocalizationsDelegate

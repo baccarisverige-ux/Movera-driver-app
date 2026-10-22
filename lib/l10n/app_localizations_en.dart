@@ -4768,4 +4768,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bankAccountSection => 'ACCOUNT';
+
+  @override
+  String get locationNotAllowed =>
+      'Movera can\'t see your location, so trips can\'t reach you.';
+
+  @override
+  String get allowLocation => 'Allow';
+
+  @override
+  String get locationBlockedSettings =>
+      'Location is blocked for Movera. Allow it in Settings to get trips.';
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
@@ -12,6 +13,7 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
@@ -52,6 +54,32 @@ Map<String, dynamic> _wireOffer() => {
   'tripSeconds': 720,
   'tripMeters': 5200,
 };
+
+/// Android after "Don't allow": still `denied` (the rationale can show),
+/// and each request shows the system prompt again.
+class _DeclinedGps extends GeolocatorPlatform {
+  var prompts = 0;
+  final pending = <Completer<LocationPermission>>[];
+
+  @override
+  Future<bool> isLocationServiceEnabled() async => true;
+  @override
+  Future<LocationPermission> checkPermission() async =>
+      LocationPermission.denied;
+  @override
+  Future<LocationPermission> requestPermission() {
+    prompts++;
+    final answer = Completer<LocationPermission>();
+    pending.add(answer);
+    return answer.future;
+  }
+
+  void decline() {
+    for (final answer in pending) {
+      if (!answer.isCompleted) answer.complete(LocationPermission.denied);
+    }
+  }
+}
 
 /// Dispatch with no trips unless the test publishes some.
 class _Dispatch implements DispatchRepository {
@@ -515,6 +543,47 @@ void main() {
       expect(trip.fare, total);
       expect(trip.driverBonus, Money.ore(1395));
       await _end(tester);
+    });
+  });
+
+  group('driver-r5-51', () {
+    late GeolocatorPlatform original;
+    late _DeclinedGps gps;
+    setUp(() {
+      original = GeolocatorPlatform.instance;
+      GeolocatorPlatform.instance = gps = _DeclinedGps();
+      DriverLocationService.resetForTesting();
+    });
+    tearDown(() {
+      GeolocatorPlatform.instance = original;
+      DriverLocationService.resetForTesting();
+    });
+
+    test("one prompt at a time, and none again after \"Don't allow\"",
+        () async {
+      const service = DriverLocationService();
+      // Home's one-shot and a resume while the prompt is up: one prompt.
+      final first = service.getCurrentPosition();
+      final second = service.getCurrentPosition();
+      await Future<void>.delayed(Duration.zero);
+      expect(gps.prompts, 1);
+      gps.decline();
+      await expectLater(first,
+          throwsA(isA<LocationPermissionDeniedException>()));
+      await expectLater(second,
+          throwsA(isA<LocationPermissionDeniedException>()));
+      // Home then starts the stream: no second system prompt.
+      await expectLater(service.watchPosition().first,
+          throwsA(isA<LocationPermissionDeniedException>()));
+      expect(gps.prompts, 1);
+      // Only the driver's own "Allow" asks again.
+      DriverLocationService.allowPrompt();
+      final again = service.getCurrentPosition();
+      await Future<void>.delayed(Duration.zero);
+      expect(gps.prompts, 2);
+      gps.decline();
+      await expectLater(again,
+          throwsA(isA<LocationPermissionDeniedException>()));
     });
   });
 }

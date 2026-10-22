@@ -4834,4 +4834,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bankAccountSection => 'COMPTE';
+
+  @override
+  String get locationNotAllowed =>
+      'Movera ne voit pas votre position : aucune course ne peut vous parvenir.';
+
+  @override
+  String get allowLocation => 'Autoriser';
+
+  @override
+  String get locationBlockedSettings =>
+      'La localisation est bloquée pour Movera. Autorisez-la dans les réglages pour recevoir des courses.';
 }

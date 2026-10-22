@@ -1363,5 +1363,8 @@
   "queueDriversAhead": "Förare före",
   "paymentCard": "Kort",
   "offersBadge": "ERBJUDANDEN",
-  "bankAccountSection": "KONTO"
+  "bankAccountSection": "KONTO",
+  "locationNotAllowed": "Movera ser inte din position, så inga resor kan nå dig.",
+  "allowLocation": "Tillåt",
+  "locationBlockedSettings": "Platsåtkomst är blockerad för Movera. Tillåt den i Inställningar för att få resor."
 }
