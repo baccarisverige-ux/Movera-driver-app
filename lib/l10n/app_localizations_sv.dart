@@ -4787,4 +4787,15 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get bankAccountSection => 'KONTO';
+
+  @override
+  String get locationNotAllowed =>
+      'Movera ser inte din position, så inga resor kan nå dig.';
+
+  @override
+  String get allowLocation => 'Tillåt';
+
+  @override
+  String get locationBlockedSettings =>
+      'Platsåtkomst är blockerad för Movera. Tillåt den i Inställningar för att få resor.';
 }

@@ -56,6 +56,7 @@ class TripHistoryRecord {
     this.cashCollected,
     this.driverBonus,
     this.waitingFee,
+    this.feeEarned,
   });
 
   final String tripId;
@@ -88,6 +89,20 @@ class TripHistoryRecord {
   /// on the trip's waybill; null for none. Movera takes no fee on it
   /// (driver-u19). Rows saved before it was kept have none.
   final String? waitingFee;
+
+  /// driver-r5-13: on a trip that did not complete, the fee the driver
+  /// was told they earn, e.g. "45,00 kr": the rider's cancel fee, or the
+  /// driver's share of the no-show fee with any paid wait. Null for none
+  /// (and on rows saved before it was kept).
+  final String? feeEarned;
+
+  /// What the trip earned the driver: the fare when completed, else
+  /// [feeEarned] (zero without one); null when it cannot be read.
+  Money? get earnedMoney {
+    if (status == TripStatus.completed) return fareMoney;
+    final fee = feeEarned;
+    return fee == null ? Money.ore(0) : Money.parseLabel(fee);
+  }
 
   /// The rider paid cash in the car (Q23).
   bool get paidByCash => paymentMethod.trim().toLowerCase() == 'cash';

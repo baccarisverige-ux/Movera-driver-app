@@ -61,6 +61,26 @@ extension _HomeMapSheet on _DriverHomeState {
                 onPressed: () => unawaited(DriverLocationService.openSettings())),
           ));
         }
+        // driver-r5-51: location not allowed. No prompt comes back by
+        // itself: the driver allows it here, or in Settings when blocked.
+        if (error is LocationPermissionDeniedException) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+            content: Text(error.forever
+                ? tr.locationBlockedSettings
+                : tr.locationNotAllowed),
+            action: SnackBarAction(
+              label: error.forever ? tr.settings : tr.allowLocation,
+              onPressed: () {
+                if (error.forever) {
+                  unawaited(DriverLocationService.openSettings());
+                  return;
+                }
+                DriverLocationService.allowPrompt();
+                if (mounted) { unawaited(_startDriverLocation()); }
+              },
+            ),
+          ));
+        }
         // A transient one-shot GPS failure must not leave Home without a
         // location subscription until the next app resume or recenter tap.
         // Continuous updates can recover when permissions/provider return.

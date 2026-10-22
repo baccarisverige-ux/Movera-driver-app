@@ -550,6 +550,8 @@ extension _AcceptRideTrip on _AcceptRideState {
           authoritative:true,
           // The rider's own reason code is not sent to the driver yet.
           cancellationActor: 'rider',
+          // The fee the island tells the driver they earn (driver-r5-13).
+          feeEarned: fee == null || fee.minorUnits <= 0 ? null : fee.formatted,
           next: next);
         if (!mounted) { return; }
         if (!await _rideLifecycle.applyProjection(TripStatus.cancelledByRider)) {
@@ -1550,6 +1552,14 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
       _submitTripCancellation(reason);
     }
+    /// A no-show's earnings for the driver: their share of the no-show fee
+    /// plus their share of the paid wait (the waiting sheet's words).
+    String? get _noShowEarned {
+      final fee = _waitTerms.driverNoShowFee;
+      final wait = _waitTerms.driverWaitingFee(_paidWaitTotal);
+      final total = wait.currency == fee.currency ? fee + wait : fee;
+      return total.minorUnits <= 0 ? null : total.formatted;
+    }
     Future<void> _submitTripCancellation(_TripCancellationReason reason) async {
       if(_cancellationInFlight || _completionInFlight || _handlingRiderCancellation) { return; }
       _cancellationInFlight=true;
@@ -1571,6 +1581,9 @@ extension _AcceptRideTrip on _AcceptRideState {
           status: outcome,
           cancellationReasonCode: reason.code,
           cancellationActor: 'driver',
+          // driver-r5-13: the no-show fee share and paid wait the waiting
+          // sheet told the driver they get.
+          feeEarned: noShow ? _noShowEarned : null,
           next: secured == null ? null : _snapshotForOffer(secured));
       } catch (_) {
         if(mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.couldNotSaveCancellationRetry))); }

@@ -24,8 +24,42 @@ class PreciseLocationRequiredException extends DriverLocationException {
     : super('Precise location is turned off.');
 }
 
+/// driver-r5-51: the driver did not allow location. [forever]: the
+/// device blocks the prompt (Settings is the only way back); otherwise
+/// the app asks again only when the driver says so
+/// ([DriverLocationService.allowPrompt]).
+class LocationPermissionDeniedException extends DriverLocationException {
+  const LocationPermissionDeniedException({this.forever = false})
+    : super(
+        forever
+            ? 'Location permission is blocked in device settings.'
+            : 'Location permission was denied.',
+      );
+
+  final bool forever;
+}
+
 class DriverLocationService implements DriverLocationRepository {
   const DriverLocationService();
+
+  /// driver-r5-51: the system prompt now on screen; every caller waits
+  /// for its answer instead of asking again (Android has no guard and
+  /// would lose the earlier answers).
+  static Future<LocationPermission>? _prompt;
+
+  /// The driver answered "Don't allow" this session: no prompt comes
+  /// back by itself (on Android a second decline blocks it for good).
+  static bool _declined = false;
+
+  /// The driver asked to allow location (a tap, not a resume): the next
+  /// check may show the system prompt again.
+  static void allowPrompt() => _declined = false;
+
+  @visibleForTesting
+  static void resetForTesting() {
+    _prompt = null;
+    _declined = false;
+  }
 
   static const Duration _oneShotLimit = Duration(seconds: 8);
 
@@ -152,17 +186,24 @@ class DriverLocationService implements DriverLocationRepository {
 
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+      if (_declined) {
+        throw const LocationPermissionDeniedException();
+      }
+      final prompt = _prompt ??= Geolocator.requestPermission()
+          .whenComplete(() => _prompt = null);
+      permission = await prompt;
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _declined = true;
+      }
     }
 
     if (permission == LocationPermission.denied) {
-      throw const DriverLocationException('Location permission was denied.');
+      throw const LocationPermissionDeniedException();
     }
 
     if (permission == LocationPermission.deniedForever) {
-      throw const DriverLocationException(
-        'Location permission is blocked in device settings.',
-      );
+      throw const LocationPermissionDeniedException(forever: true);
     }
 
     // Browsers have no approximate mode and the web plugin cannot tell.

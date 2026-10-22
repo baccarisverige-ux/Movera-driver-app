@@ -431,6 +431,7 @@ class _RideRequestsState extends State<RideRequests> {
       reservation: trip.reservationTime != null,
     ),
     leg: PickupLeg(km: trip.pickupKm, minutes: trip.pickupMinutes),
+    serverPay: trip.source.pickupPay,
   );
 
   void _resolveMatchWon(_RadarTrip trip) {
@@ -837,6 +838,7 @@ class _RideRequestsState extends State<RideRequests> {
         riderTrips: trip.source.riderTrips,
         priority: trip.source.isPriority,
         driverBonus: WaybillRecord.bonusLabel(trip.source.driverBonus),
+        driverEarnings: trip.source.driverEarnings?.formatted,
         pickupPay: _pickupPayOf(trip),
       ),
       state: claimed

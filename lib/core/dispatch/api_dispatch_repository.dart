@@ -72,6 +72,8 @@ abstract final class OfferWire {
       category: CategoryCatalog.labelOf(text('categoryId')),
       fare: money('fare') ?? (throw const FormatException('Offer.fare missing')),
       driverBonus: money('driverBonus'),
+      driverEarnings: money('driverEarnings'),
+      pickupPay: money('pickupPay'),
       fareBoost: money('fareBoost'),
       priority: json['priority'] == true,
       source: OfferSource.fromWire(json['source']),

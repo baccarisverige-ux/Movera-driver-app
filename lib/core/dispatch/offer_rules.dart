@@ -149,10 +149,20 @@ class OfferCardDetails {
 
   /// The fare as the card shows it: the full fare, or the driver's share
   /// after Movera's commission. Movera's [bonus] in [full] (Q16) is never
-  /// charged commission: the share keeps all of it.
-  String fare(String full, {double? commissionRate, String? bonus}) {
+  /// charged commission: the share keeps all of it. The server's
+  /// [earnings] (`Offer.driverEarnings`), when sent, is the share
+  /// (driver-r5-1).
+  String fare(
+    String full, {
+    double? commissionRate,
+    String? bonus,
+    String? earnings,
+  }) {
     if (!netFare) {
       return full;
+    }
+    if (earnings != null) {
+      return earnings;
     }
     final payment = WaybillPayment.fromFare(
       full,

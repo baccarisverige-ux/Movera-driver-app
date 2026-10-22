@@ -32,6 +32,7 @@ class RadarOfferView {
     this.pickupPay,
     this.priority = false,
     this.driverBonus,
+    this.driverEarnings,
   });
 
   final String id;
@@ -73,13 +74,18 @@ class RadarOfferView {
   /// is taken on it when the card shows the driver's share.
   final String? driverBonus;
 
+  /// The server's driver net (`Offer.driverEarnings`), e.g. "170,00 kr":
+  /// a net-fare card shows it (driver-r5-1); null for demo offers.
+  final String? driverEarnings;
+
   /// Pickup pay worked out when the offer shows; null for none.
   final PickupPayQuote? pickupPay;
 
   /// The fare as the card shows it ([OfferCardDetails.fare]) with the
   /// pickup pay added: one total.
   String shownFare(OfferCardDetails show) {
-    final base = show.fare(fare, bonus: driverBonus);
+    final base =
+        show.fare(fare, bonus: driverBonus, earnings: driverEarnings);
     return pickupPay?.totalOf(base) ?? base;
   }
 

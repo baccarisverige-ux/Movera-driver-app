@@ -3227,5 +3227,11 @@
   "bankAccountSection": "ACCOUNT",
   "@bankAccountSection": {
     "description": "Section header above the bank account fields."
+  },
+  "locationNotAllowed": "Movera can't see your location, so trips can't reach you.",
+  "allowLocation": "Allow",
+  "locationBlockedSettings": "Location is blocked for Movera. Allow it in Settings to get trips.",
+  "@allowLocation": {
+    "description": "Snackbar action: show the system location prompt again (driver-r5-51)."
   }
 }

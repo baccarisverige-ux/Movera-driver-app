@@ -89,13 +89,17 @@ class CompletionJournal {
     bool authoritative = false,
     String? paymentMethod,
     String? cashCollected,
+    DateTime? endedAt,
+    String? feeEarned,
   }) => _serial(() async {
     final prefs = await load();
     // Do not overwrite an earlier unfinished transaction.
     if (prefs.getString(key) != null) {
       await _replay(prefs);
     }
-    final terminalAt = DateTime.now();
+    // [endedAt]: a saved trip closed long after it was last alive ended
+    // then, so its next trip keeps its own age (driver-r5-36).
+    final terminalAt = endedAt ?? DateTime.now();
     final payload = {
       'schemaVersion': 2,
       'tripId': record.tripId,
@@ -120,6 +124,8 @@ class CompletionJournal {
         if (record.driverBonus != null) 'driverBonus': record.driverBonus,
         // Q43 / driver-u19: the waiting fee in the fare (no Movera fee).
         if (record.waitingFee != null) 'waitingFee': record.waitingFee,
+        // driver-r5-13: the cancel or no-show fee the driver earned.
+        if (feeEarned != null) 'feeEarned': feeEarned,
       },
       if (cancellationReasonCode != null || cancellationActor != null)
         'cancellation': {
@@ -208,6 +214,9 @@ class CompletionJournal {
             : null,
         cashCollected: row['cashCollected'] is String
             ? row['cashCollected'] as String
+            : null,
+        feeEarned: row['feeEarned'] is String
+            ? row['feeEarned'] as String
             : null,
         authoritative: data['authoritative'] == true,
         cancellationActor: data['cancellation'] is Map

@@ -5,6 +5,7 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/scheduled/reservation_when.dart';
@@ -627,7 +628,7 @@ class ScheduledRideStore {
       return null;
     }
     final now = _now;
-    for (final taken in _accepted) {
+    for (final taken in [..._accepted, ?_driving]) {
       final other = taken.route;
       if (other != null &&
           SmartGap.clash(route, other, now: now, rules: _rules)) {
@@ -733,17 +734,45 @@ class ScheduledRideStore {
   /// Reservation [id] was taken. By this driver for later ([upcoming]) it
   /// moves to Accepted; taken now (an Exclusive or Radar trip) or by
   /// another driver it only leaves the requests (notes R23).
-  static void take(String id, {bool upcoming = false}) {
+  static void take(String id, {bool upcoming = false, Money? pickupPay}) {
     final index = _requests.indexWhere((ride) => ride.id == id);
     if (id.isEmpty || index < 0) {
       return;
     }
     final ride = _requests.removeAt(index);
     if (upcoming) {
-      _accepted.insert(0, ride.copyWith(accepted: true));
+      _keepPickupPay(id, pickupPay);
+      _accepted.insert(
+        0,
+        ride.copyWith(accepted: true, price: _withPay(ride.price, pickupPay)),
+      );
     }
     _changed();
   }
+
+  /// driver-r5-12: the pickup pay an Exclusive card showed for a ride its
+  /// Accept only saved for later (an assigned ride, a reservation won
+  /// before its Exclusive step), by ride id. "Leave now" opens the trip
+  /// with it, as the card promised.
+  static final Map<String, Money> _pickupPays = <String, Money>{};
+
+  /// The pickup pay accepted with ride [id]; null for none.
+  static Money? acceptedPickupPay(String id) => _pickupPays[id];
+
+  static void _keepPickupPay(String id, Money? pay) {
+    if (id.isEmpty) return;
+    if (pay == null || pay.minorUnits <= 0) {
+      _pickupPays.remove(id);
+    } else {
+      _pickupPays[id] = pay;
+    }
+  }
+
+  /// [price] with [pay] in it, as the card showed one total.
+  static String _withPay(String price, Money? pay) => pay == null
+      ? price
+      : PickupPayQuote(pay: pay, leg: const PickupLeg(km: 0, minutes: 0))
+          .totalOf(price);
 
   /// A request answered outside this screen, found by its pickup. Taken
   /// by this driver ([accepted]) it moves to Accepted; otherwise it only
@@ -755,6 +784,7 @@ class ScheduledRideStore {
     }
     final ride = _requests.removeAt(index);
     if (accepted) {
+      _keepPickupPay(ride.id, null);
       _accepted.insert(0, ride.copyWith(accepted: true));
     }
     _changed();
@@ -770,11 +800,17 @@ class ScheduledRideStore {
   }
 
   /// Q29: the driver accepted a ride Movera assigned to them.
-  static void acceptAssigned(ReservationRequestPreview ride) {
+  static void acceptAssigned(ReservationRequestPreview ride,
+      {Money? pickupPay}) {
     if (_accepted.any((item) => identical(item.route, ride))) {
       return;
     }
-    _accepted.insert(0, _ScheduledRide.fromRoute(ride, assigned: true));
+    _keepPickupPay(ride.id, pickupPay);
+    final kept = _ScheduledRide.fromRoute(ride, assigned: true);
+    _accepted.insert(
+      0,
+      kept.copyWith(price: _withPay(kept.price, pickupPay)),
+    );
     _changed();
   }
 
@@ -790,9 +826,24 @@ class ScheduledRideStore {
   }
 
   /// "Leave now" put [ride] on screen as the active trip: it leaves
-  /// Accepted. False when it was not there.
-  static bool start(ReservationRequestPreview ride) =>
-      _removeAccepted(ride) != null;
+  /// Accepted. False when it was not there. It still counts in the clash
+  /// check while it is driven (driver-r5-42).
+  static bool start(ReservationRequestPreview ride) {
+    if (!_accepted.any((item) => identical(item.route, ride))) {
+      return false;
+    }
+    // Its pickup fixed to the time it had: a "Today" ride must not move
+    // to the next day.
+    final at = ride.pickupAt(_now);
+    _driving =
+        _ScheduledRide.fromRoute(at == null ? ride : ride.scheduledFor(at));
+    return _removeAccepted(ride) != null;
+  }
+
+  /// The scheduled ride "Leave now" started: requests that clash with it
+  /// stay hidden (contract §6.1 hideClashing), as when it was Accepted.
+  /// Its time is fixed, so once it is over it clashes with nothing.
+  static _ScheduledRide? _driving;
 
   /// The driver was not on the way in time: [ride] went to a backup
   /// driver (Q10 S3).
@@ -898,7 +949,7 @@ class ScheduledRideStore {
     if (!_accepted.remove(ride)) {
       return false;
     }
-    final wasPaused = pausedUntil(_now) != null;
+    final wasPaused = _pauseInForce(_now);
     if (late) {
       _recordLateCancel(_now);
     }
@@ -907,8 +958,14 @@ class ScheduledRideStore {
       _requests.insert(0, ride.copyWith(accepted: false));
     }
     _changed();
-    return !wasPaused && pausedUntil(_now) != null;
+    return !wasPaused && _pauseInForce(_now);
   }
+
+  /// The late-cancel pause holds back rides at [now], as [block] sees
+  /// it: never while admin has Scheduled rides on for this driver
+  /// (driver-r5-41).
+  static bool _pauseInForce(DateTime now) =>
+      !_driverAccess.onAt(now) && pausedUntil(now) != null;
 
   /// Back to a fresh session: logout calls it, so the previous driver's
   /// accepted rides, late cancels and pause, reminder and backup note do
@@ -924,6 +981,8 @@ class ScheduledRideStore {
     _zoneEnabled = true;
     _lateCancels.clear();
     _pauseUntil = null;
+    _driving = null;
+    _pickupPays.clear();
     reminder.value = null;
     _reminderRide = null;
     backupNote.value = null;
@@ -1440,9 +1499,9 @@ class _ScheduledRide {
   /// Dispatch id of an open reservation; empty for a sample ride.
   String get id => route?.id ?? '';
 
-  _ScheduledRide copyWith({bool? accepted}) {
+  _ScheduledRide copyWith({bool? accepted, String? price}) {
     return _ScheduledRide(
-      price: price,
+      price: price ?? this.price,
       time: time,
       category: category,
       fixedDistance: fixedDistance,

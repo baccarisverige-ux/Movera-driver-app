@@ -105,6 +105,11 @@ extension _HomeExclusive on _DriverHomeState {
     /// on screen it gets the time left, or it leaves unseen, which is not
     /// a miss. A timer started here would run in the background and could
     /// count a miss, or take the driver offline (driver-r3-14).
+    ///
+    /// driver-r5-19: the offer keeps the deadline it had (the time spent
+    /// waiting for dispatch is gone): no fresh [lifetime], which is only
+    /// for an offer that has none. Run out meanwhile, it leaves, not a
+    /// miss.
     void _restartExclusiveTimeout(
       _HomeDirectOffer offer,
       Duration lifetime, {
@@ -113,15 +118,28 @@ extension _HomeExclusive on _DriverHomeState {
       _outsideOfferTimeoutTimer?.cancel();
       _outsideOfferTimeoutTimer = null;
       _exclusive.timeoutIsMiss = missed;
-      _exclusive.clock.duration = lifetime;
-      _exclusive.deadline = ScheduledClock.realNow().add(lifetime);
-      if (!_liveVisible) { return; }
-      unawaited(_exclusive.clock.reverse(from: 1));
-      _outsideOfferTimeoutTimer = Timer(lifetime, () {
+      final now = ScheduledClock.realNow();
+      final deadline = _exclusive.deadline ?? now.add(lifetime);
+      _exclusive.clock.duration ??= lifetime;
+      _exclusive.deadline = deadline;
+      // Under the side menu only the deadline is kept (driver-r5-30).
+      if (!_liveVisible || _drawerOpen) { return; }
+      final left = deadline.difference(now);
+      if (left <= Duration.zero) {
+        _HomeOfferRadar(this)._dismissOutsideRadarOffer();
+        return;
+      }
+      final full = _exclusive.clock.duration ?? lifetime;
+      final share = left.inMilliseconds / math.max(1, full.inMilliseconds);
+      unawaited(_exclusive.clock.reverse(from: share.clamp(0.0, 1.0)));
+      _outsideOfferTimeoutTimer = Timer(left, () {
         if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
         _HomeOfferRadar(this)._dismissOutsideRadarOffer(missed: missed);
       });
     }
+
+    /// The side menu is open over Home.
+    bool get _drawerOpen => _scaffoldKey.currentState?.isDrawerOpen ?? false;
 
     /// driver-u115: the side menu covers the offer like a screen pushed
     /// over Home: its time out waits (the deadline stays), and when the
@@ -148,7 +166,10 @@ extension _HomeExclusive on _DriverHomeState {
           deadline == null ||
           _exclusive.leaving ||
           _outsideOfferTimeoutTimer != null ||
-          _exclusiveClaiming) {
+          _exclusiveClaiming ||
+          // An app resume under the open side menu: the menu still covers
+          // the offer, and its closing re-arms it (driver-r5-30).
+          _drawerOpen) {
         return;
       }
       final left = deadline.difference(ScheduledClock.realNow());
