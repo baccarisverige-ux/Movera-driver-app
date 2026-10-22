@@ -6,7 +6,7 @@ import 'package:flutter/widgets.dart';
 class DriverRouteObserver extends RouteObserver<ModalRoute<void>> {
   /// driver-r4-31: a sheet or a dialog leaves the screen under it visible,
   /// so a screen that pauses itself while covered listens here.
-  final pages = RouteObserver<PageRoute<dynamic>>();
+  final pages = _ScreenObserver();
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
@@ -30,6 +30,24 @@ class DriverRouteObserver extends RouteObserver<ModalRoute<void>> {
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
     pages.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+  }
+}
+
+/// driver-r5-28: a full screen is an opaque route, whatever its class.
+/// The trip (ActiveRideTransition, BottomToTopTransition) and the side
+/// menu's pages are plain [ModalRoute]s, not [PageRoute]s.
+class _ScreenObserver extends RouteObserver<ModalRoute<dynamic>> {
+  static bool _opaque(Route<dynamic> route) =>
+      route is ModalRoute && route.opaque;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (_opaque(route)) { super.didPush(route, previousRoute); }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (_opaque(route)) { super.didPop(route, previousRoute); }
   }
 }
 

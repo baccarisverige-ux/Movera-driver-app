@@ -119,7 +119,7 @@ extension _HomeBack on _DriverHomeState {
 }
 
 // driver-r4-31: routes over Home. Only a full screen (a trip, a menu
-// item) hides Home and pauses it; a sheet or a dialog leaves Home visible
+// item: an opaque route, driver-r5-28) hides Home and pauses it; a sheet or a dialog leaves Home visible
 // and online. Whatever waited for Home to be on top (a won trip, a held
 // offline, a late scheduled ride) goes on when any route over it closes.
 extension _HomeRoutes on _DriverHomeState {
@@ -135,6 +135,7 @@ extension _HomeRoutes on _DriverHomeState {
         _didAttemptActiveRideRestore = false;
         unawaited(_restoreActiveRideIfNeeded());
       }
+      _backOnTop(); // what waited for Home on top goes on, as after a sheet
     }
 
     /// A sheet or dialog over Home closed. After a full screen, the page
