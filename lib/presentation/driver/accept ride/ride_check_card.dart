@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/ride_check.dart';
+import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
 
@@ -694,6 +695,9 @@ class RideCheckCard extends StatelessWidget {
 
   Widget _alertNote() {
     final failed = controller.alertFailed;
+    // driver-49: the demo outbox keeps the alert in memory; nothing reached
+    // Movera, so the card must not say the safety team was alerted.
+    final demo = !failed && controller.services.alerts is DemoSafetyAlertRepository;
     return Container(
       key: ValueKey(failed ? 'ride-check-alert-failed' : 'ride-check-alert-sent'),
       margin: const EdgeInsets.only(top: 12),
@@ -713,6 +717,8 @@ class RideCheckCard extends StatelessWidget {
                   TextSpan(
                     text: failed
                         ? tr.moveraCouldNotBeAlerted
+                        : demo
+                        ? tr.safetyAlertKeptOnPhoneDemo
                         : tr.moveraSafetyTeamAlerted,
                     style: const TextStyle(
                       color: Colors.white,
@@ -721,7 +727,7 @@ class RideCheckCard extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text: failed
+                    text: failed || demo
                         ? tr.call112IfYouNeedHelp
                         : tr.tripDriverAndRiderDetailsWere,
                   ),

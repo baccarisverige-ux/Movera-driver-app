@@ -335,6 +335,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedTripCouldNotBeOpened => 'The saved trip could not be opened.';
 
   @override
+  String get tripStorageUnavailable =>
+      'Trip storage on this device could not be opened, so no saved trip can be restored now. You can still go online.';
+
+  @override
   String get unresolvedTrip => 'Unresolved trip';
 
   @override
@@ -453,6 +457,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get preciseLocationOff =>
       'Precise location is off. Turn it on in Settings to show your position and confirm arrival.';
+
+  @override
+  String get preciseLocationOffShort => 'Precise location off';
 
   @override
   String get yourDriverHasArrivedAtPickup =>
@@ -747,6 +754,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moveraSafetyTeamAlerted => 'Movera safety team alerted';
+
+  @override
+  String get safetyAlertKeptOnPhoneDemo =>
+      'Demo: alert kept on this phone only. No one at Movera was notified.';
 
   @override
   String get call112IfYouNeedHelp => '\nCall 112 if you need help now.';
@@ -2952,6 +2963,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get phoneSignInNeedsService =>
       'Phone sign-in requires the account service.';
+
+  @override
+  String get socialSignInNeedsService =>
+      'Apple and Google sign-in require the account service.';
 
   @override
   String get idPhotoPreview => 'ID photo preview';

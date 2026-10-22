@@ -93,6 +93,13 @@ class DestinationModeSession {
     return left.isNegative ? Duration.zero : left;
   }
 
+  /// driver-u123: when the admin time limit ends the destination; null
+  /// without a limit (it then never ends on its own) or a destination.
+  DateTime? endsAt({DestinationModeRules? rules}) {
+    final left = timeLeft(rules: rules);
+    return left == null ? null : _now().add(left);
+  }
+
   /// The admin time limit has run out (or ended the destination).
   bool expired({DestinationModeRules? rules}) =>
       _timedOut || timeLeft(rules: rules) == Duration.zero;

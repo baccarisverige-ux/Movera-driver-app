@@ -378,7 +378,6 @@ class _DriverHomeState extends State<DriverHome>
   String? _destinationAddress;
   LatLng? _destinationPosition;
   DriverDestinationResult? _destinationTrip; // Confirmed distance and time.
-  DateTime? _destinationUntil; // "Destination mode until 02:40".
   Timer? _destinationLimitTimer; // Admin's time limit (R13-9).
   _HomeDirectOffer? _destinationDemoExclusive; // Demo trip toward it.
 
@@ -520,6 +519,15 @@ class _DriverHomeState extends State<DriverHome>
         IslandMessages.show(HomeIslandNotices.recordSetAside);
       }
       snapshot = await repo.read();
+    } on ActiveRideStorageUnavailable {
+      // driver-u112: blocked storage holds no trip to recover; going online
+      // stays possible, and Retry reads again.
+      _didAttemptActiveRideRestore = false;
+      if (!mounted) { return; }
+      setState(() => _recoveryResolved = true);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripStorageUnavailable),
+          action: SnackBarAction(label: tr.retry, onPressed: () => unawaited(_restoreActiveRideIfNeeded()))));
+      return;
     } on ActiveRideUnreadable {
       _didAttemptActiveRideRestore = false;
       if (mounted) { await _offerUnreadableTripClosure(repo); }
@@ -628,7 +636,7 @@ class _DriverHomeState extends State<DriverHome>
     return WaybillRecord(
       tripId: snapshot.tripId,
       statusLabel: WaybillRecord.currentTrip,
-      issuedAt: snapshot.savedAt ?? DateTime.now(),
+      issuedAt: snapshot.acceptedAt ?? snapshot.savedAt ?? DateTime.now(), // driver-u114
       fare: snapshot.fare ?? '—',
       driverBonus: WaybillRecord.bonusLabel(snapshot.driverBonus),
       service: snapshot.category ?? 'Movera',

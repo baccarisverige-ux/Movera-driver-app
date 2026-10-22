@@ -98,8 +98,14 @@ class NavigationController extends ChangeNotifier {
   // driver-u74: a flag, not the words, so the warning is in the driver's
   // language whenever it is read.
   bool _locationLost = false;
-  String? get _displayStatus =>
-      _locationLost ? tr.locationUpdatingEllipsis : _status?.text;
+  // driver-u23: lost because only approximate location is allowed; no
+  // update will come, so the warning says so.
+  bool _preciseLocationOff = false;
+  String? get _displayStatus => _locationLost
+      ? (_preciseLocationOff
+          ? tr.preciseLocationOffShort
+          : tr.locationUpdatingEllipsis)
+      : _status?.text;
 
   /// GPS went quiet and the last known position is kept.
   bool get locationLost => _locationLost;
@@ -305,8 +311,9 @@ class NavigationController extends ChangeNotifier {
     return math.max(0.0, meters) / seconds;
   }
 
-  void keepLastKnown() {
+  void keepLastKnown({bool preciseLocationOff = false}) {
     _locationLost = true;
+    _preciseLocationOff = preciseLocationOff;
     _rebuildBanner();
   }
 

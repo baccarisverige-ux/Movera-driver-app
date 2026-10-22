@@ -65,28 +65,20 @@ class IslandWaitingSignals {
   final int? promotionRides;
   final int? promotionKr;
 
-  /// Busy enough to say "Busy area" (the admin's demand percent).
-  static const int busyPercent = 75;
-
-  /// Busy enough to promise a trip in 2–5 min.
-  static const int expectPercent = 80;
-
-  /// What Home knows today: the admin's Stockholm demand per area and the
-  /// busy windows of today's events. Boosts, promotions, the airport
-  /// queue and streaks come from dispatch once it sends them.
+  /// What Home knows today: the busy windows of today's events. Boosts,
+  /// promotions, the airport queue and streaks come from dispatch once it
+  /// sends them.
+  ///
+  /// driver-u20: the admin's Stockholm demand per area says nothing about
+  /// the area the driver is in (areas have no position) and is a level,
+  /// not a trend, so it never makes "Busy area", "Expect a trip in 2–5
+  /// min" or "Demand rising" here; those come from dispatch for the
+  /// driver's own area once it sends them.
   factory IslandWaitingSignals.fromHome(
     DriverHomeAdminConfig config, {
     required DateTime now,
     int streak = 0,
   }) {
-    final areas = [
-      ...config.stockholmWork.innerAreas,
-      ...config.stockholmWork.surroundingAreas,
-    ];
-    var top = 0;
-    for (final area in areas) {
-      if (area.demandPercent > top) { top = area.demandPercent; }
-    }
     String? peak;
     for (final event in config.events) {
       if (!event.enabled || !_isToday(event.dateLabel, now)) { continue; }
@@ -97,9 +89,6 @@ class IslandWaitingSignals {
       }
     }
     return IslandWaitingSignals(
-      busyArea: top >= busyPercent,
-      demandRising: areas.any((a) => a.demand == AreaDemand.busy),
-      expectTripSoon: top >= expectPercent,
       peakStart: peak,
       streak: streak,
     );

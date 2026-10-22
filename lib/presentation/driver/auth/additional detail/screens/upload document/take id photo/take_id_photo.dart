@@ -1,6 +1,7 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 
 /// A sample image preview. Camera capture and ID submission are not connected.
@@ -33,7 +34,17 @@ class TakeIdPhoto extends StatelessWidget {
             if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) {
               return;
             }
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            // driver-r3-10: in the app, Sign in or Starter is the first
+            // route here, not Home; "Return to home" opens Home itself.
+            final runtime = DriverRuntimeScope.maybeOf(context);
+            if (runtime == null) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              return;
+            }
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(builder: (_) => runtime.homeBuilder()),
+              (_) => false,
+            );
           },
           child: Text(tr.returnToHome),
         ),

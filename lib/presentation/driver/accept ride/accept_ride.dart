@@ -193,7 +193,8 @@ class AcceptRide extends StatefulWidget {
   /// accept; injectable for lifecycle verification.
   final DateTime Function()? waitNow;
   final String riderName;
-  final double riderRating;
+  /// Null when dispatch sent no usable rating (driver-u133).
+  final double? riderRating;
   final int riderTrips;
   final String fare;
 
@@ -275,7 +276,7 @@ class AcceptRide extends StatefulWidget {
       key: key,
       tripId: snapshot.tripId,
       riderName: snapshot.riderName ?? tr.riderDataUnavailable,
-      riderRating: snapshot.riderRating ?? 4.9,
+      riderRating: snapshot.riderRating,
       riderTrips: snapshot.riderTrips ?? 312,
       fare: snapshot.fare ?? '—',
       paidByCash: snapshot.paidByCash,
@@ -503,6 +504,7 @@ class _AcceptRideState extends State<AcceptRide>
   static Duration get _onTripOfferLifetime => DriverOfferRules.current.exclusiveAcceptTime;
   DateTime? _lastGpsAppliedAt;
   DateTime? _lastSnapshotAt;
+  int _shownSaveFailures = 0; // driver-u72
   bool _liveUpdatesPaused = false;
   bool _tripCovered = false; // driver-u80: a route covers the trip.
   int _waitSeconds = 0;
@@ -1288,13 +1290,14 @@ class _AcceptRideState extends State<AcceptRide>
                         waitingSeconds: _countingWait ? _waitSeconds : null,
                         paidSeconds: _countingWait ? _AcceptRideTrip(this)._paidWaitNow : null,
                         waitingAtStop: _paidStopWait,
-                        navigationStatus: _navigation.locationLost ? tr.locationUpdatingEllipsis : _locationStatus ?? _navigation.snapshot.status,
+                        navigationStatus: _navigation.locationLost ? _navigation.status : _locationStatus ?? _navigation.snapshot.status,
                         reroutes: _navigation.reroutes,
                         waitingMessage: _tripBarStatus,
                         paidWait: _paidStopWait || (_countingWait && !_inIncludedWait),
                         paidByCash: widget.paidByCash,
                         lastTripLabel: _waybills.last?.fare ?? DigitalIslandParts.noAmount,
-                        radarVisible: _stage == ActiveRideStage.onTrip,
+                        // driver-u79: a secured next trip cannot be turned off here.
+                        radarVisible: _stage == ActiveRideStage.onTrip && _onTripRadarState != _OnTripRadarState.secured,
                         radarOn: _onTripRadarOn,
                         onRadar: _AcceptRideTrip(this)._toggleOnTripRadar,
                         onMenu: () => _rideScaffoldKey.currentState?.openDrawer(),

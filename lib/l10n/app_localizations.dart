@@ -668,6 +668,12 @@ abstract class AppLocalizations {
   /// **'The saved trip could not be opened.'**
   String get savedTripCouldNotBeOpened;
 
+  /// No description provided for @tripStorageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip storage on this device could not be opened, so no saved trip can be restored now. You can still go online.'**
+  String get tripStorageUnavailable;
+
   /// No description provided for @unresolvedTrip.
   ///
   /// In en, this message translates to:
@@ -877,6 +883,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Precise location is off. Turn it on in Settings to show your position and confirm arrival.'**
   String get preciseLocationOff;
+
+  /// No description provided for @preciseLocationOffShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise location off'**
+  String get preciseLocationOffShort;
 
   /// No description provided for @yourDriverHasArrivedAtPickup.
   ///
@@ -1369,6 +1381,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Movera safety team alerted'**
   String get moveraSafetyTeamAlerted;
+
+  /// No description provided for @safetyAlertKeptOnPhoneDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo: alert kept on this phone only. No one at Movera was notified.'**
+  String get safetyAlertKeptOnPhoneDemo;
 
   /// No description provided for @call112IfYouNeedHelp.
   ///
@@ -5180,6 +5198,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Phone sign-in requires the account service.'**
   String get phoneSignInNeedsService;
+
+  /// No description provided for @socialSignInNeedsService.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple and Google sign-in require the account service.'**
+  String get socialSignInNeedsService;
 
   /// No description provided for @idPhotoPreview.
   ///

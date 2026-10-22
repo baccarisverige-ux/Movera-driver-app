@@ -336,6 +336,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d’ouvrir la course enregistrée.';
 
   @override
+  String get tripStorageUnavailable =>
+      'Le stockage des courses de cet appareil n’a pas pu être ouvert : aucune course enregistrée ne peut être restaurée pour l’instant. Vous pouvez quand même passer en ligne.';
+
+  @override
   String get unresolvedTrip => 'Course non clôturée';
 
   @override
@@ -455,6 +459,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get preciseLocationOff =>
       'La position exacte est désactivée. Activez-la dans les réglages pour afficher votre position et confirmer l’arrivée.';
+
+  @override
+  String get preciseLocationOffShort => 'Position exacte désactivée';
 
   @override
   String get yourDriverHasArrivedAtPickup =>
@@ -751,6 +758,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get moveraSafetyTeamAlerted => 'Équipe sécurité de Movera alertée';
+
+  @override
+  String get safetyAlertKeptOnPhoneDemo =>
+      'Démo : alerte gardée uniquement sur ce téléphone. Personne chez Movera n’a été prévenu.';
 
   @override
   String get call112IfYouNeedHelp =>
@@ -2985,6 +2996,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get phoneSignInNeedsService =>
       'La connexion par téléphone nécessite le service de compte.';
+
+  @override
+  String get socialSignInNeedsService =>
+      'La connexion avec Apple ou Google nécessite le service de compte.';
 
   @override
   String get idPhotoPreview => 'Aperçu de la photo d’identité';

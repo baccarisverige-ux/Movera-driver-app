@@ -90,7 +90,7 @@ void main() {
     expect(appBar, isNot(contains('46701234567')));
     expect(appBar, isNot(contains('url_launcher')));
     expect(chat, isNot(contains('tel:')));
-    expect(ride, contains('Chat(riderDisplayName: widget.riderName)'));
+    expect(ride, contains('Chat(riderDisplayName: widget.riderName, tripId: widget.tripId)'));
     expect(RiderContactPolicy.available, isFalse);
     expect(
       RiderContactPolicy.unavailableMessage,

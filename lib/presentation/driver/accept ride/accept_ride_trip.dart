@@ -590,11 +590,24 @@ extension _AcceptRideTrip on _AcceptRideState {
         navigator.pop();
       }
     }
+    /// driver-u72: once per failed write; Retry repeats the failed slide
+    /// (Arrive, Start trip), or the background save.
     void _onPersistenceChanged() {
-      if (!mounted || _rideLifecycle.persistenceError == null) { return; }
+      final ride = _rideLifecycle;
+      if (!mounted || ride.persistenceError == null ||
+          ride.failures == _shownSaveFailures) { return; }
+      _shownSaveFailures = ride.failures;
+      final failed = ride.failedStage;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(tr.tripProgressCouldNotBeSaved),
-        action: SnackBarAction(label: tr.retry, onPressed: () { _rideLifecycle.persistNow(); }),
+        action: SnackBarAction(label: tr.retry, onPressed: () {
+          if (!mounted) { return; }
+          switch (failed) {
+            case ActiveRideStage.waitingForRider: unawaited(_confirmPickupArrival());
+            case ActiveRideStage.onTrip: unawaited(_advanceRide());
+            default: unawaited(ride.persistNow());
+          }
+        }),
       ));
     }
     void _blockedArrival() {
@@ -726,25 +739,27 @@ extension _AcceptRideTrip on _AcceptRideState {
           },
           onError: (Object error) {
             if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-            _navigation.keepLastKnown();
-            _rebuild(() {
-              _preciseLocationOff = error is PreciseLocationRequiredException;
-              _hasLiveLocation = false;
-              _locationStatus = _navigation.status;
-            });
+            _locationFailed(error);
           },
         );
         await _applyDriverPosition(position, forceRoute: true);
       } catch (error) {
         if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-        _navigation.keepLastKnown();
-        _rebuild(() {
-          _preciseLocationOff = error is PreciseLocationRequiredException;
-          _hasLiveLocation = false;
-          _locationStatus = _navigation.status;
-        });
+        _locationFailed(error);
         unawaited(_refreshRoadRoute(force: true));
       }
+    }
+    /// driver-u23: approximate-only location never gives a usable fix, so
+    /// the trip says "Precise location off" instead of "Location
+    /// updating…", which would never end.
+    void _locationFailed(Object error) {
+      final precise = error is PreciseLocationRequiredException;
+      _navigation.keepLastKnown(preciseLocationOff: precise);
+      _rebuild(() {
+        _preciseLocationOff = precise;
+        _hasLiveLocation = false;
+        _locationStatus = _navigation.status;
+      });
     }
     /// D-07: what the screen shows from a fix outside the map and the
     /// island (both follow on their own). A fix that changes none of it
@@ -753,7 +768,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         _etaLabel, _freshRadarLocation, _camera.mode, _camera.isGuidance);
     /// The map's route lines for the route, the car's progress and zoom.
     void _syncRouteLines() =>
-        _routeLines.sync(_roadGeoPoints, _camera.alongMeters, _routeZoomStep);
+        _routeLines.sync(_roadGeoPoints, _camera.alongMetersOn(_roadGeoPoints),
+            _routeZoomStep);
     Future<void> _applyDriverPosition(
       DriverLocation location, {
       bool forceRoute = false,
@@ -1105,6 +1121,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     void _unlockStageAfterFrame() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _stageTransitioning = false;
+        // driver-42: a route change (the pickup route cleared on arrival)
+        // notified while the stage was changing; apply it now.
+        if (mounted) { _onNavigationChanged(); }
       });
     }
     Future<void> _refreshOnTripRoute({bool fitCamera = false}) async {

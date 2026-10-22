@@ -160,7 +160,12 @@ class _DriverProfileState extends State<DriverProfile> {
                 context,
                 icon: Icons.directions_car_outlined,
                 title: tr.vehicles,
-                detail: snapshot.data?.vehicle ?? tr.vehicleDataUnavailable,
+                // driver-81: blank while reading; "unavailable" only when the
+                // read ended without a vehicle.
+                detail: snapshot.data?.vehicle ??
+                    (snapshot.connectionState == ConnectionState.done
+                        ? tr.vehicleDataUnavailable
+                        : ''),
                 page: const DriverVehicles(),
                 refreshVehicle: true,
               ),

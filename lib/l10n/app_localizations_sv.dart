@@ -336,6 +336,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Den sparade resan gick inte att öppna.';
 
   @override
+  String get tripStorageUnavailable =>
+      'Resornas lagring på den här enheten kunde inte öppnas, så ingen sparad resa kan återställas nu. Du kan ändå gå online.';
+
+  @override
   String get unresolvedTrip => 'Oavslutad resa';
 
   @override
@@ -455,6 +459,9 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get preciseLocationOff =>
       'Exakt plats är avstängd. Slå på den i Inställningar för att visa din position och bekräfta att du är framme.';
+
+  @override
+  String get preciseLocationOffShort => 'Exakt plats avstängd';
 
   @override
   String get yourDriverHasArrivedAtPickup =>
@@ -748,6 +755,10 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get moveraSafetyTeamAlerted => 'Moveras säkerhetsteam har larmats';
+
+  @override
+  String get safetyAlertKeptOnPhoneDemo =>
+      'Demo: larmet sparas bara på den här telefonen. Ingen på Movera har larmats.';
 
   @override
   String get call112IfYouNeedHelp => '\nRing 112 om du behöver hjälp nu.';
@@ -2963,6 +2974,10 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get phoneSignInNeedsService =>
       'Inloggning med telefon kräver kontotjänsten.';
+
+  @override
+  String get socialSignInNeedsService =>
+      'Inloggning med Apple eller Google kräver kontotjänsten.';
 
   @override
   String get idPhotoPreview => 'Förhandsvisning av id-foto';
