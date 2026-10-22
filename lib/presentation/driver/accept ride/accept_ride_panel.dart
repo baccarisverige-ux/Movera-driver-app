@@ -1113,7 +1113,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                       ),
                     _CleanRow(
                       title: tr.safetyToolkit,
-                      subtitle: tr.shareTripRecordAudioGetHelp,
+                      subtitle: SafetyAudioOption.toolkitSubtitle,
                       onTap: () {
                         if (!popOwned(sheetContext)) return;
                         showSafetyToolKitSheet(context);

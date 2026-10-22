@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -183,6 +184,8 @@ void main() {
 
   testWidgets('driver-u41: the trip screen stops Ride-check audio when the '
       'app is hidden and says so', (tester) async {
+    SafetyAudioOption.debugEnabled = true; // owner decision 10: offered again
+    addTearDown(() => SafetyAudioOption.debugEnabled = null);
     SharedPreferences.setMockInitialValues({});
     CompletionJournal.resetForTesting();
     WaybillStore.reset();

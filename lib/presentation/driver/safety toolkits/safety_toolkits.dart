@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/emergency_dial.dart';
+import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 Future<T?> showSafetyToolKitSheet<T>(BuildContext context) {
@@ -436,14 +437,17 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                       onTap: _confirmEmergencyCall,
                     ),
                   ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: _SafetyToolButton(
-                      icon: Icons.mic_outlined,
-                      label: tr.recordAudio,
-                      onTap: _toggleRecording,
+                  // Owner decision 10: hidden while the option is off.
+                  if (SafetyAudioOption.enabled) ...[
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: _SafetyToolButton(
+                        icon: Icons.mic_outlined,
+                        label: tr.recordAudio,
+                        onTap: _toggleRecording,
+                      ),
                     ),
-                  ),
+                  ],
                   const SizedBox(width: 9),
                   Expanded(
                     child: _SafetyToolButton(

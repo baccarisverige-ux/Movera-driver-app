@@ -972,6 +972,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Dela resan, spela in ljud, få hjälp';
 
   @override
+  String get shareTripGetHelp => 'Dela resan, få hjälp';
+
+  @override
   String get stopSafelyFirstReasonRequired =>
       'Stanna säkert först · orsak krävs';
 
