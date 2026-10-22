@@ -393,7 +393,7 @@ void main() {
       ),
     );
     final match = tester.widget<Text>(find.text('MATCH'));
-    expect(match.style!.color, const Color(0xFF2E3338));
+    expect(match.style!.color, MoveraRadarOrb.offerInk);
     // "Accept" is black; the normal radar keeps it white.
     final accept = tester.widget<Text>(find.text('Accept'));
     expect(accept.style!.color, const Color(0xFF111518));
@@ -578,7 +578,7 @@ void main() {
     final match = tester.widget<Text>(
       find.descendant(of: radar, matching: find.text('MATCH')),
     );
-    expect(match.style!.color, MoveraRadarOrb.reserveInk);
+    expect(match.style!.color, MoveraRadarOrb.offerInk);
     expect(tester.widget<MoveraRadarOrb>(find.descendant(
       of: radar, matching: find.byType(MoveraRadarOrb))).reserve, isTrue);
     // driver-u190: the orb draws no icon (the Exclusive check carries

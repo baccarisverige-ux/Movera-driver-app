@@ -310,7 +310,7 @@ void main() {
       find.descendant(of: _orbFinder, matching: find.text(t)),
     );
     expect(text('Accept').style!.color, MoveraRadarOrb.reserveTitle);
-    expect(text('MATCH').style!.color, MoveraRadarOrb.reserveInk);
+    expect(text('MATCH').style!.color, MoveraRadarOrb.offerInk);
     expect(find.text('Tap to accept'), findsOneWidget);
     // No icon inside.
     expect(find.byKey(const ValueKey<String>('radar-exclusive-icon')),

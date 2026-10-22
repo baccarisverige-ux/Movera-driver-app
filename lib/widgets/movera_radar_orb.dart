@@ -41,7 +41,7 @@ class MoveraRadarOrb extends StatelessWidget {
 
   /// A reservation request on Home: the normal grey Radar-offer orb with
   /// its green waves turned grey ([reserveLight] pulsing to [reserveGrey],
-  /// halo [reserveHalo]) and [status] ("MATCH") in [reserveInk]. Same
+  /// halo [reserveHalo]) and [status] ("MATCH") in [offerInk]. Same
   /// core, sizes, pulse and sweep; no icon.
   final bool reserve;
 
@@ -52,7 +52,7 @@ class MoveraRadarOrb extends StatelessWidget {
   ///
   /// With [reserve] as well it is the Exclusive offer on Home: the
   /// reservation's grey look (grey waves and halo, black "Accept", MATCH in
-  /// [reserveInk], no icon) inside a hairline [reserveInk] time ring. No
+  /// [offerInk], no icon) inside a hairline [reserveInk] time ring. No
   /// blue anywhere.
   final bool exclusive;
   final double timeLeft;
@@ -70,7 +70,7 @@ class MoveraRadarOrb extends StatelessWidget {
 
   /// A reservation request ([reserve]): grey waves, breathing from
   /// [reserveLight] into [reserveGrey], a soft grey halo and "MATCH" in
-  /// light black.
+  /// black; [reserveInk] is its light black time ring.
   static const Color reserveLight = Color(0xFFC6CBD0);
   static const Color reserveGrey = Color(0xFF8E959C);
   static const Color reserveHalo = Color(0xFFD5D9DD);
@@ -375,30 +375,36 @@ class MoveraRadarOrb extends StatelessWidget {
                                     ),
                                   ),
                                   SizedBox(height: 2.5 * s),
+                                  // Status and subtitle: 10 px on Home's
+                                  // 104 px radar, dark on the grey disc
+                                  // and white on the red one (4.5:1).
                                   Transform.scale(
                                     scale: found ? 1 + 0.05 * p : 1,
-                                    child: Text(
-                                      status,
-                                      key: found
-                                          ? const ValueKey<String>(
-                                              'radar-status-found',
-                                            )
-                                          : null,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: reserve
-                                            ? reserveInk
-                                            : found
-                                            ? offerInk.withValues(
-                                                alpha: 0.82 + 0.18 * p,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        status,
+                                        key: found
+                                            ? const ValueKey<String>(
+                                                'radar-status-found',
                                               )
-                                            : hot
-                                            ? accent
-                                            : const Color(0xFFE2E9E6),
-                                        fontSize: 6.1 * s,
-                                        height: 1,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: 0.9,
+                                            : null,
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: blocked
+                                              ? Colors.white
+                                              : found
+                                              ? offerInk.withValues(
+                                                  alpha: 0.82 + 0.18 * p,
+                                                )
+                                              : offerInk,
+                                          fontSize: 10 * s,
+                                          height: 1,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.9,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -419,8 +425,10 @@ class MoveraRadarOrb extends StatelessWidget {
                                       softWrap: false,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        color: const Color(0xFFB7C2BE),
-                                        fontSize: 5.9 * s,
+                                        color: blocked
+                                            ? Colors.white
+                                            : offerInk,
+                                        fontSize: 10 * s,
                                         height: 1.12,
                                         fontWeight: FontWeight.w400,
                                       ),
