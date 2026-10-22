@@ -455,11 +455,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Precise location is off. Turn it on in Settings to show your position and confirm arrival.';
 
   @override
-  String moveWithin100MOfWhere(Object where) {
-    return 'Move within 100 m of the $where to arrive.';
-  }
-
-  @override
   String get yourDriverHasArrivedAtPickup =>
       'Your driver has arrived at the pickup point.';
 
@@ -1818,11 +1813,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String nextTripSecuredNextTripFare(Object nextTripFare) {
     return 'Next trip secured · $nextTripFare';
-  }
-
-  @override
-  String pickupOnPickupSideSide(Object pickupSide) {
-    return 'Pickup on the $pickupSide side';
   }
 
   @override
@@ -4624,5 +4614,89 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String mapOfArea(String area) {
     return 'Map of $area';
+  }
+
+  @override
+  String get cashYouOweMovera => 'You owe Movera';
+
+  @override
+  String get cashMoveraOwesYou => 'Movera owes you';
+
+  @override
+  String get cashSettled => 'Settled';
+
+  @override
+  String stopNext(String stop) {
+    return '$stop next';
+  }
+
+  @override
+  String get pickupOnLeftSide => 'Pickup on the left side';
+
+  @override
+  String get pickupOnRightSide => 'Pickup on the right side';
+
+  @override
+  String get moveWithin100MOfPickup =>
+      'Move within 100 m of the pickup to arrive.';
+
+  @override
+  String get moveWithin100MOfStop => 'Move within 100 m of the stop to arrive.';
+
+  @override
+  String get riderPhoneNotConnected =>
+      'Rider phone contact is not connected in this demo.';
+
+  @override
+  String get recordAudioStarting => 'starting…';
+
+  @override
+  String get photoTooLargeForDevice =>
+      'Photo is too large to keep on this device.';
+
+  @override
+  String get photoStorageFull =>
+      'Photo storage on this device is full. Remove photos from another vehicle first.';
+
+  @override
+  String get demoDataBadge => 'DEMO DATA';
+
+  @override
+  String get drivingInHeader => 'DRIVING IN';
+
+  @override
+  String get anaSampleTripRoute => 'Central Station → Södermalm';
+
+  @override
+  String get demandBusy => 'Busy';
+
+  @override
+  String get demandSteady => 'Steady';
+
+  @override
+  String get demandQuiet => 'Quiet';
+
+  @override
+  String get aroundStockholm => 'Around Stockholm';
+
+  @override
+  String get noticeBonusProgressTitle => 'Bonus progress';
+
+  @override
+  String noticeBonusProgressBody(
+    String done,
+    String goal,
+    String left,
+    String amount,
+  ) {
+    return '$done of $goal trips this week. $left more for $amount.';
+  }
+
+  @override
+  String get noticePayoutSentTitle => 'Payout sent';
+
+  @override
+  String noticePayoutSentBody(String amount) {
+    return '$amount is on its way to your bank.';
   }
 }

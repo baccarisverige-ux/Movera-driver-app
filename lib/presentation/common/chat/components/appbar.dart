@@ -65,7 +65,7 @@ class ChatAppBar extends StatelessWidget {
               return;
             }
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text(RiderContactPolicy.unavailableMessage),
               ),
             );

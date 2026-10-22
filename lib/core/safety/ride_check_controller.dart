@@ -133,7 +133,8 @@ class RideCheckController extends ChangeNotifier {
       id: 'ride-check-$tripId-${event.at.microsecondsSinceEpoch}',
       tripId: tripId,
       trigger: event.trigger,
-      reason: event.reason.text,
+      reason: event.reason.english,
+      reasonParts: event.reason,
       openedAt: event.at,
     );
     _save();
@@ -387,7 +388,7 @@ class RideCheckController extends ChangeNotifier {
         final sent = await services.alerts.send(
           trip: trip,
           trigger: event.trigger,
-          reason: event.reason.text,
+          reason: event.reason.english,
           topic: topic,
           answers: answers,
         );

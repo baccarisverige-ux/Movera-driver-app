@@ -457,11 +457,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'La position exacte est désactivée. Activez-la dans les réglages pour afficher votre position et confirmer l’arrivée.';
 
   @override
-  String moveWithin100MOfWhere(Object where) {
-    return 'Approchez-vous à moins de 100 m ($where) pour confirmer l’arrivée.';
-  }
-
-  @override
   String get yourDriverHasArrivedAtPickup =>
       'Votre chauffeur est arrivé au point de prise en charge.';
 
@@ -1842,11 +1837,6 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String pickupOnPickupSideSide(Object pickupSide) {
-    return 'Prise en charge côté $pickupSide';
-  }
-
-  @override
   String get tollAhead => 'Péage devant';
 
   @override
@@ -2386,7 +2376,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: 'Le passager a $count bagages',
-      one: 'Le passager a 1 bagage',
+      one: 'Le passager a $count bagage',
     );
     return '$_temp0';
   }
@@ -2515,7 +2505,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count courses',
-      one: '1 course',
+      one: '$count course',
     );
     return '$_temp0';
   }
@@ -2526,7 +2516,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count arrêts',
-      one: '1 arrêt',
+      one: '$count arrêt',
     );
     return '$_temp0';
   }
@@ -3057,7 +3047,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: 'dans $count jours',
-      one: 'dans 1 jour',
+      one: 'dans $count jour',
     );
     return '$_temp0';
   }
@@ -3212,7 +3202,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count courses masquées',
-      one: '1 course masquée',
+      one: '$count course masquée',
     );
     return '$_temp0';
   }
@@ -4680,7 +4670,7 @@ class AppLocalizationsFr extends AppLocalizations {
       count,
       locale: localeName,
       other: '$count courses',
-      one: '1 course',
+      one: '$count course',
     );
     return '$rating ★ · $_temp0';
   }
@@ -4688,5 +4678,90 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String mapOfArea(String area) {
     return 'Carte de $area';
+  }
+
+  @override
+  String get cashYouOweMovera => 'Vous devez à Movera';
+
+  @override
+  String get cashMoveraOwesYou => 'Movera vous doit';
+
+  @override
+  String get cashSettled => 'Soldé';
+
+  @override
+  String stopNext(String stop) {
+    return 'Ensuite : $stop';
+  }
+
+  @override
+  String get pickupOnLeftSide => 'Prise en charge côté gauche';
+
+  @override
+  String get pickupOnRightSide => 'Prise en charge côté droit';
+
+  @override
+  String get moveWithin100MOfPickup =>
+      'Approchez-vous à moins de 100 m du point de prise en charge pour confirmer l’arrivée.';
+
+  @override
+  String get moveWithin100MOfStop =>
+      'Approchez-vous à moins de 100 m de l’arrêt pour confirmer l’arrivée.';
+
+  @override
+  String get riderPhoneNotConnected =>
+      'Le contact téléphonique du passager n’est pas connecté dans cette démo.';
+
+  @override
+  String get recordAudioStarting => 'démarrage…';
+
+  @override
+  String get photoTooLargeForDevice =>
+      'La photo est trop volumineuse pour être conservée sur cet appareil.';
+
+  @override
+  String get photoStorageFull =>
+      'Le stockage des photos sur cet appareil est plein. Supprimez d’abord les photos d’un autre véhicule.';
+
+  @override
+  String get demoDataBadge => 'DONNÉES DE DÉMO';
+
+  @override
+  String get drivingInHeader => 'ZONE DE CONDUITE';
+
+  @override
+  String get anaSampleTripRoute => 'Gare centrale → Södermalm';
+
+  @override
+  String get demandBusy => 'Élevée';
+
+  @override
+  String get demandSteady => 'Stable';
+
+  @override
+  String get demandQuiet => 'Calme';
+
+  @override
+  String get aroundStockholm => 'Autour de Stockholm';
+
+  @override
+  String get noticeBonusProgressTitle => 'Progression du bonus';
+
+  @override
+  String noticeBonusProgressBody(
+    String done,
+    String goal,
+    String left,
+    String amount,
+  ) {
+    return '$done courses sur $goal cette semaine. Encore $left pour $amount.';
+  }
+
+  @override
+  String get noticePayoutSentTitle => 'Paiement envoyé';
+
+  @override
+  String noticePayoutSentBody(String amount) {
+    return '$amount est en route vers votre banque.';
   }
 }

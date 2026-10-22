@@ -98,7 +98,7 @@ class IslandWaitingSignals {
     }
     return IslandWaitingSignals(
       busyArea: top >= busyPercent,
-      demandRising: areas.any((a) => a.demandLabel.toLowerCase() == 'busy'),
+      demandRising: areas.any((a) => a.demand == AreaDemand.busy),
       expectTripSoon: top >= expectPercent,
       peakStart: peak,
       streak: streak,

@@ -280,14 +280,6 @@
   "thisStopNeedsVerifiedMapLocation": "This stop needs a verified map location before arrival.",
   "locationUnavailableEnableLocationToConfirm": "Location unavailable. Enable location to confirm arrival.",
   "preciseLocationOff": "Precise location is off. Turn it on in Settings to show your position and confirm arrival.",
-  "moveWithin100MOfWhere": "Move within 100 m of the {where} to arrive.",
-  "@moveWithin100MOfWhere": {
-    "placeholders": {
-      "where": {
-        "type": "Object"
-      }
-    }
-  },
   "yourDriverHasArrivedAtPickup": "Your driver has arrived at the pickup point.",
   "locationUpdatingEllipsis": "Location updating…",
   "stopLocationUnavailable": "Stop location unavailable",
@@ -1092,14 +1084,6 @@
   "@nextTripSecuredNextTripFare": {
     "placeholders": {
       "nextTripFare": {
-        "type": "Object"
-      }
-    }
-  },
-  "pickupOnPickupSideSide": "Pickup on the {pickupSide} side",
-  "@pickupOnPickupSideSide": {
-    "placeholders": {
-      "pickupSide": {
         "type": "Object"
       }
     }
@@ -3138,6 +3122,59 @@
   "@mapOfArea": {
     "placeholders": {
       "area": {
+        "type": "String"
+      }
+    }
+  },
+  "cashYouOweMovera": "You owe Movera",
+  "cashMoveraOwesYou": "Movera owes you",
+  "cashSettled": "Settled",
+  "stopNext": "{stop} next",
+  "@stopNext": {
+    "placeholders": {
+      "stop": {
+        "type": "String"
+      }
+    }
+  },
+  "pickupOnLeftSide": "Pickup on the left side",
+  "pickupOnRightSide": "Pickup on the right side",
+  "moveWithin100MOfPickup": "Move within 100 m of the pickup to arrive.",
+  "moveWithin100MOfStop": "Move within 100 m of the stop to arrive.",
+  "riderPhoneNotConnected": "Rider phone contact is not connected in this demo.",
+  "recordAudioStarting": "starting…",
+  "photoTooLargeForDevice": "Photo is too large to keep on this device.",
+  "photoStorageFull": "Photo storage on this device is full. Remove photos from another vehicle first.",
+  "demoDataBadge": "DEMO DATA",
+  "drivingInHeader": "DRIVING IN",
+  "anaSampleTripRoute": "Central Station → Södermalm",
+  "demandBusy": "Busy",
+  "demandSteady": "Steady",
+  "demandQuiet": "Quiet",
+  "aroundStockholm": "Around Stockholm",
+  "noticeBonusProgressTitle": "Bonus progress",
+  "noticeBonusProgressBody": "{done} of {goal} trips this week. {left} more for {amount}.",
+  "@noticeBonusProgressBody": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "noticePayoutSentTitle": "Payout sent",
+  "noticePayoutSentBody": "{amount} is on its way to your bank.",
+  "@noticePayoutSentBody": {
+    "placeholders": {
+      "amount": {
         "type": "String"
       }
     }

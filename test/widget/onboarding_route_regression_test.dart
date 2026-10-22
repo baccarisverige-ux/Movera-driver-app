@@ -123,7 +123,8 @@ void main() {
       await _open(tester, const AdditionalInfoNavigation());
       final plate = tester.widget<TextField>(
         find.byWidgetPredicate(
-          (w) => w is TextField && w.controller?.text == 'AQS - 140',
+          // driver-u99: the sample plate is a hint, the field starts empty.
+          (w) => w is TextField && w.decoration?.hintText == 'AQS - 140',
         ),
       );
       expect(plate.keyboardType, TextInputType.text);

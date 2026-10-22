@@ -878,12 +878,6 @@ abstract class AppLocalizations {
   /// **'Precise location is off. Turn it on in Settings to show your position and confirm arrival.'**
   String get preciseLocationOff;
 
-  /// No description provided for @moveWithin100MOfWhere.
-  ///
-  /// In en, this message translates to:
-  /// **'Move within 100 m of the {where} to arrive.'**
-  String moveWithin100MOfWhere(Object where);
-
   /// No description provided for @yourDriverHasArrivedAtPickup.
   ///
   /// In en, this message translates to:
@@ -3260,12 +3254,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next trip secured · {nextTripFare}'**
   String nextTripSecuredNextTripFare(Object nextTripFare);
-
-  /// No description provided for @pickupOnPickupSideSide.
-  ///
-  /// In en, this message translates to:
-  /// **'Pickup on the {pickupSide} side'**
-  String pickupOnPickupSideSide(Object pickupSide);
 
   /// No description provided for @tollAhead.
   ///
@@ -8072,6 +8060,149 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Map of {area}'**
   String mapOfArea(String area);
+
+  /// No description provided for @cashYouOweMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'You owe Movera'**
+  String get cashYouOweMovera;
+
+  /// No description provided for @cashMoveraOwesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera owes you'**
+  String get cashMoveraOwesYou;
+
+  /// No description provided for @cashSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get cashSettled;
+
+  /// No description provided for @stopNext.
+  ///
+  /// In en, this message translates to:
+  /// **'{stop} next'**
+  String stopNext(String stop);
+
+  /// No description provided for @pickupOnLeftSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup on the left side'**
+  String get pickupOnLeftSide;
+
+  /// No description provided for @pickupOnRightSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup on the right side'**
+  String get pickupOnRightSide;
+
+  /// No description provided for @moveWithin100MOfPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Move within 100 m of the pickup to arrive.'**
+  String get moveWithin100MOfPickup;
+
+  /// No description provided for @moveWithin100MOfStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Move within 100 m of the stop to arrive.'**
+  String get moveWithin100MOfStop;
+
+  /// No description provided for @riderPhoneNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rider phone contact is not connected in this demo.'**
+  String get riderPhoneNotConnected;
+
+  /// No description provided for @recordAudioStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'starting…'**
+  String get recordAudioStarting;
+
+  /// No description provided for @photoTooLargeForDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo is too large to keep on this device.'**
+  String get photoTooLargeForDevice;
+
+  /// No description provided for @photoStorageFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo storage on this device is full. Remove photos from another vehicle first.'**
+  String get photoStorageFull;
+
+  /// No description provided for @demoDataBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'DEMO DATA'**
+  String get demoDataBadge;
+
+  /// No description provided for @drivingInHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'DRIVING IN'**
+  String get drivingInHeader;
+
+  /// No description provided for @anaSampleTripRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Central Station → Södermalm'**
+  String get anaSampleTripRoute;
+
+  /// No description provided for @demandBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy'**
+  String get demandBusy;
+
+  /// No description provided for @demandSteady.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady'**
+  String get demandSteady;
+
+  /// No description provided for @demandQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet'**
+  String get demandQuiet;
+
+  /// No description provided for @aroundStockholm.
+  ///
+  /// In en, this message translates to:
+  /// **'Around Stockholm'**
+  String get aroundStockholm;
+
+  /// No description provided for @noticeBonusProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus progress'**
+  String get noticeBonusProgressTitle;
+
+  /// No description provided for @noticeBonusProgressBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {goal} trips this week. {left} more for {amount}.'**
+  String noticeBonusProgressBody(
+    String done,
+    String goal,
+    String left,
+    String amount,
+  );
+
+  /// No description provided for @noticePayoutSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payout sent'**
+  String get noticePayoutSentTitle;
+
+  /// No description provided for @noticePayoutSentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} is on its way to your bank.'**
+  String noticePayoutSentBody(String amount);
 }
 
 class _AppLocalizationsDelegate

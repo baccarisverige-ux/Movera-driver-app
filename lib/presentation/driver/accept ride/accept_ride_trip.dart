@@ -242,7 +242,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         pickup: widget.pickupAddress,
         dropoff: widget.dropoffAddress,
         source: widget.matchedVia,
-        driverName: tr.moveraDriver,
+        driverName: WaybillRecord.moveraDriverName,
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
         passengerCapacity: 4,
@@ -279,7 +279,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         pickup: offer.pickup,
         dropoff: offer.dropoff,
         source: WaybillRecord.exclusiveOfferSource,
-        driverName: tr.moveraDriver,
+        driverName: WaybillRecord.moveraDriverName,
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
         passengerCapacity: 4,
@@ -607,10 +607,10 @@ extension _AcceptRideTrip on _AcceptRideState {
         ));
         return;
       }
-      final where = _stage == ActiveRideStage.onTrip ? 'stop' : 'pickup';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(tr.moveWithin100MOfWhere(where)),
+          content: Text(_stage == ActiveRideStage.onTrip
+              ? tr.moveWithin100MOfStop : tr.moveWithin100MOfPickup),
           backgroundColor: _AcceptRideState._ink,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -718,22 +718,22 @@ extension _AcceptRideTrip on _AcceptRideState {
           },
           onError: (Object error) {
             if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-            _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
+            _navigation.keepLastKnown();
             _rebuild(() {
               _preciseLocationOff = error is PreciseLocationRequiredException;
               _hasLiveLocation = false;
-              _locationStatus = tr.locationUpdatingEllipsis;
+              _locationStatus = _navigation.status;
             });
           },
         );
         await _applyDriverPosition(position, forceRoute: true);
       } catch (error) {
         if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-        _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
+        _navigation.keepLastKnown();
         _rebuild(() {
           _preciseLocationOff = error is PreciseLocationRequiredException;
           _hasLiveLocation = false;
-          _locationStatus = tr.locationUpdatingEllipsis;
+          _locationStatus = _navigation.status;
         });
         unawaited(_refreshRoadRoute(force: true));
       }
@@ -754,10 +754,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       final shown = _fixView;
       if (!location.isDisplayableAt(DateTime.now())) {
         // Keep the previous car position and route; do not draw a stale fix.
-        _navigation.keepLastKnown(status: tr.locationUpdatingEllipsis);
+        _navigation.keepLastKnown();
         _rebuild(() {
           _hasLiveLocation = false;
-          _locationStatus = tr.locationUpdatingEllipsis;
+          _locationStatus = _navigation.status;
         });
         return;
       }
@@ -1603,7 +1603,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     SafetyAlertTrip _safetyAlertTrip() => SafetyAlertTrip(
       tripId: widget.tripId, riderName: widget.riderName, riderRating: widget.riderRating,
       pickup: widget.pickupAddress, dropoff: widget.dropoffAddress, fare: widget.fare,
-      category: widget.category, driverName: tr.moveraDriver, vehicle: _vehicleLabel,
+      category: widget.category, driverName: WaybillRecord.moveraDriverName, vehicle: _vehicleLabel,
       plate: _vehiclePlate,
       position: _rideCheckGpsFresh ? GeoPointMaps.fromLatLng(_driverPosition) : null);
     /// driver-u86: GPS that went quiet (a tunnel, a garage) is lost, not a

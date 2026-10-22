@@ -1,8 +1,10 @@
+import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
@@ -65,14 +67,14 @@ class DriverPerformanceConfig {
   final bool showAcceptanceRate;
   final bool showCancellationRate;
 
-  /// "4.88"
-  String get ratingLabel => rating.toStringAsFixed(2);
+  /// "4.88", "4,88" in French and Swedish.
+  String get ratingLabel => driverDecimal(rating, 2);
 
   /// "94%"
   String get acceptanceLabel => '${acceptanceRate.toStringAsFixed(0)}%';
 
-  /// "2.4%"
-  String get cancellationLabel => '${cancellationRate.toStringAsFixed(1)}%';
+  /// "2.4%", "2,4%" in French and Swedish.
+  String get cancellationLabel => '${driverDecimal(cancellationRate, 1)}%';
 }
 
 class ScheduledRidesAdminConfig {
@@ -668,6 +670,9 @@ class DriverEventConfig {
   final bool enabled;
 }
 
+/// How busy an area is.
+enum AreaDemand { busy, steady, quiet }
+
 class StockholmAreaConfig {
   const StockholmAreaConfig({
     required this.name,
@@ -677,7 +682,32 @@ class StockholmAreaConfig {
 
   final String name;
   final int demandPercent;
+
+  /// Admin's label. The shipped English ones ('Busy', 'Steady', 'Quiet')
+  /// show in the driver's language ([demandText]).
   final String demandLabel;
+
+  /// The level: from a shipped label, otherwise from [demandPercent], so a
+  /// label admin writes in the zone's language still colours the area
+  /// (driver-u96).
+  AreaDemand get demand => switch (demandLabel.trim().toLowerCase()) {
+    'busy' => AreaDemand.busy,
+    'steady' => AreaDemand.steady,
+    'quiet' => AreaDemand.quiet,
+    _ => demandPercent >= 70
+        ? AreaDemand.busy
+        : demandPercent < 50
+        ? AreaDemand.quiet
+        : AreaDemand.steady,
+  };
+
+  /// [demandLabel] as the driver reads it.
+  String get demandText => switch (demandLabel.trim()) {
+    'Busy' => tr.demandBusy,
+    'Steady' => tr.demandSteady,
+    'Quiet' => tr.demandQuiet,
+    final label => label,
+  };
 }
 
 class StockholmWorkStatsConfig {
@@ -694,6 +724,11 @@ class StockholmWorkStatsConfig {
   final List<StockholmAreaConfig> innerAreas;
   final String surroundingTitle;
   final List<StockholmAreaConfig> surroundingAreas;
+
+  /// [surroundingTitle] as the driver reads it: the shipped English one
+  /// in the driver's language, admin's own as written.
+  String get surroundingTitleText =>
+      surroundingTitle == 'Around Stockholm' ? tr.aroundStockholm : surroundingTitle;
 }
 
 /// Driver-side contract for content controlled by the Movera admin system.

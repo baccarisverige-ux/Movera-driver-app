@@ -534,8 +534,8 @@ class _AcceptRideState extends State<AcceptRide>
   DriverRealtimeEvent? _pendingProjection;
   bool _drainingProjection = false;
   Timer? _projectionRetry;
-  String _vehicleLabel = tr.vehicleDataUnavailable;
-  String _vehiclePlate = tr.plateUnavailable;
+  String _vehicleLabel = WaybillRecord.vehicleUnavailable;
+  String _vehiclePlate = WaybillRecord.plateUnavailable;
   static const Duration _projectionRetryBase = Duration(seconds: 1);
   static const Duration _projectionRetryMax = Duration(seconds: 30);
   Duration _projectionRetryDelay = _projectionRetryBase;
@@ -1287,7 +1287,7 @@ class _AcceptRideState extends State<AcceptRide>
                         waitingSeconds: _countingWait ? _waitSeconds : null,
                         paidSeconds: _countingWait ? _AcceptRideTrip(this)._paidWaitNow : null,
                         waitingAtStop: _paidStopWait,
-                        navigationStatus: _locationStatus ?? _navigation.snapshot.status,
+                        navigationStatus: _navigation.locationLost ? tr.locationUpdatingEllipsis : _locationStatus ?? _navigation.snapshot.status,
                         reroutes: _navigation.reroutes,
                         waitingMessage: _tripBarStatus,
                         paidWait: _paidStopWait || (_countingWait && !_inIncludedWait),

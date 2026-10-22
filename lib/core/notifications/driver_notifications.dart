@@ -2,6 +2,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 
 /// Admin's notification groups (Q31): N1 ride alerts, N2 demand and
@@ -40,38 +41,74 @@ class DemandArea {
   final double radiusKm;
 }
 
+/// Words of a notification, written when they are read.
+typedef NoticeText = String Function();
+
 /// One notification for the driver (Q31).
+///
+/// The words the app writes are kept as [NoticeText]s and read in the
+/// driver's language when shown, so the list follows a language switch
+/// (driver-u30). Texts from a backend or admin are kept as written.
 @immutable
 class DriverNotice {
-  const DriverNotice({
+  DriverNotice({
+    required String id,
+    required DriverNoticeKind kind,
+    required String title,
+    required String body,
+    required DateTime at,
+    String? island,
+    DriverNoticeAction? action,
+    String? actionLabel,
+    String? documentId,
+    DemandArea? area,
+  }) : this.named(
+         id: id,
+         kind: kind,
+         title: () => title,
+         body: () => body,
+         at: at,
+         island: island == null ? null : () => island,
+         action: action,
+         actionLabel: actionLabel == null ? null : () => actionLabel,
+         documentId: documentId,
+         area: area,
+       );
+
+  const DriverNotice.named({
     required this.id,
     required this.kind,
-    required this.title,
-    required this.body,
+    required NoticeText title,
+    required NoticeText body,
     required this.at,
-    this.island,
+    NoticeText? island,
     this.action,
-    this.actionLabel,
+    NoticeText? actionLabel,
     this.documentId,
     this.area,
-  });
+  }) : _title = title,
+       _body = body,
+       _island = island,
+       _actionLabel = actionLabel;
 
   final String id;
   final DriverNoticeKind kind;
+  final NoticeText _title, _body;
+  final NoticeText? _island, _actionLabel;
 
   /// "High demand in Stockholm City"
-  final String title;
+  String get title => _title();
 
   /// tr.noticeGoOnlineNow
-  final String body;
+  String get body => _body();
   final DateTime at;
 
   /// The few words of its island popup, e.g. "High demand · City".
-  final String? island;
+  String? get island => _island?.call();
   final DriverNoticeAction? action;
 
   /// tr.uploadNew
-  final String? actionLabel;
+  String? get actionLabel => _actionLabel?.call();
 
   /// The document a document notification is about.
   final String? documentId;
@@ -195,36 +232,36 @@ class DriverNotices {
     required String time,
     required String fare,
   }) =>
-      DriverNotice(
+      DriverNotice.named(
         id: _feed.nextId('scheduled'),
         kind: DriverNoticeKind.newScheduledRide,
-        title: tr.noticeNewScheduledRide,
-        body: tr.noticeScheduledBody(day, time, fare),
+        title: () => tr.noticeNewScheduledRide,
+        body: () => tr.noticeScheduledBody(day, time, fare),
         at: at,
-        island: driverText(DriverTexts.islandNewReservation),
+        island: () => driverText(DriverTexts.islandNewReservation),
         action: DriverNoticeAction.viewScheduledRides,
-        actionLabel: tr.view,
+        actionLabel: () => tr.view,
       );
 
   /// N1: "Exclusive offer · 8 s to accept".
   static DriverNotice exclusiveOffer({required DateTime at, required int seconds}) =>
-      DriverNotice(
+      DriverNotice.named(
         id: _feed.nextId('exclusive'),
         kind: DriverNoticeKind.exclusiveOffer,
-        title: tr.exclusiveOffer,
-        body: tr.noticeSecondsToAccept(seconds),
+        title: () => tr.exclusiveOffer,
+        body: () => tr.noticeSecondsToAccept(seconds),
         at: at,
-        island: driverText(DriverTexts.islandExclusiveRide),
+        island: () => driverText(DriverTexts.islandExclusiveRide),
       );
 
   /// N1: a reminder before a scheduled pickup, or "Leave now".
   static DriverNotice scheduledReminder({
     required DateTime at,
-    required String title,
-    required String body,
+    required NoticeText title,
+    required NoticeText body,
     bool leaveNow = false,
   }) =>
-      DriverNotice(
+      DriverNotice.named(
         id: _feed.nextId('reminder'),
         kind: leaveNow
             ? DriverNoticeKind.leaveNow
@@ -234,18 +271,18 @@ class DriverNotices {
         at: at,
         island: title,
         action: DriverNoticeAction.viewScheduledRides,
-        actionLabel: tr.view,
+        actionLabel: () => tr.view,
       );
 
   /// N2: "High demand in Stockholm City · Go online now", with a map.
   static DriverNotice highDemand(DateTime at, {DemandArea area = stockholmCity}) =>
-      DriverNotice(
+      DriverNotice.named(
         id: _feed.nextId('demand'),
         kind: DriverNoticeKind.highDemand,
-        title: tr.noticeHighDemandIn(area.name),
-        body: tr.noticeGoOnlineNow,
+        title: () => tr.noticeHighDemandIn(area.name),
+        body: () => tr.noticeGoOnlineNow,
         at: at,
-        island: driverText(DriverTexts.islandHighDemand, {
+        island: () => driverText(DriverTexts.islandHighDemand, {
           'area': area.name.replaceFirst('Stockholm ', ''),
         }),
         area: area,
@@ -271,82 +308,98 @@ class DriverNotices {
   static DriverNotice documentExpiring(
     DateTime at, {
     required String documentId,
-    required String title,
-    required String shortTitle,
-    required String when,
+    required NoticeText title,
+    required NoticeText shortTitle,
+    required NoticeText when,
   }) =>
-      DriverNotice(
+      DriverNotice.named(
         id: _feed.nextId('document'),
         kind: DriverNoticeKind.documentExpiring,
-        title: tr.noticeDocExpires(title, when),
-        body: tr.noticeUploadNewKeepDriving,
+        title: () => tr.noticeDocExpires(title(), when()),
+        body: () => tr.noticeUploadNewKeepDriving,
         at: at,
-        island: driverText(DriverTexts.islandDocumentExpires, {
-          'document': shortTitle,
-          'when': when,
+        island: () => driverText(DriverTexts.islandDocumentExpires, {
+          'document': shortTitle(),
+          'when': when(),
         }),
         action: DriverNoticeAction.uploadDocument,
-        actionLabel: tr.uploadNew,
+        actionLabel: () => tr.uploadNew,
         documentId: documentId,
       );
 
   /// N3: admin approved the new document.
-  static DriverNotice documentApproved(DateTime at, {required String title}) =>
-      DriverNotice(
+  static DriverNotice documentApproved(
+    DateTime at, {
+    required NoticeText title,
+  }) =>
+      DriverNotice.named(
         id: _feed.nextId('document'),
         kind: DriverNoticeKind.documentApproved,
-        title: tr.islandDocumentApproved,
-        body: tr.noticeDocApprovedBody(title),
+        title: () => tr.islandDocumentApproved,
+        body: () => tr.noticeDocApprovedBody(title()),
         at: at,
-        island: driverText(DriverTexts.islandDocumentApproved),
+        island: () => driverText(DriverTexts.islandDocumentApproved),
       );
 
   /// N3: the rest after the driving limit is over.
-  static DriverNotice restOver(DateTime at) => DriverNotice(
+  static DriverNotice restOver(DateTime at) => DriverNotice.named(
         id: _feed.nextId('rest'),
         kind: DriverNoticeKind.restOver,
-        title: tr.islandRestOver,
-        body: tr.noticeCanGoOnlineAgain,
+        title: () => tr.islandRestOver,
+        body: () => tr.noticeCanGoOnlineAgain,
         at: at,
-        island: driverText(DriverTexts.islandRestOver),
+        island: () => driverText(DriverTexts.islandRestOver),
       );
 
   /// N3: too many late cancels paused Scheduled rides.
-  static DriverNotice scheduledPaused(DateTime at, {required String until}) =>
-      DriverNotice(
+  static DriverNotice scheduledPaused(
+    DateTime at, {
+    required NoticeText until,
+  }) =>
+      DriverNotice.named(
         id: _feed.nextId('paused'),
         kind: DriverNoticeKind.scheduledPaused,
-        title: tr.islandScheduledPaused,
-        body: tr.noticeTooManyLateCancels(until),
+        title: () => tr.islandScheduledPaused,
+        body: () => tr.noticeTooManyLateCancels(until()),
         at: at,
-        island: driverText(DriverTexts.islandScheduledPaused),
+        island: () => driverText(DriverTexts.islandScheduledPaused),
         action: DriverNoticeAction.viewScheduledRides,
-        actionLabel: tr.view,
+        actionLabel: () => tr.view,
       );
 
-  /// Already received when the demo opens.
+  /// Already received when the demo opens, in the driver's language
+  /// whenever read (driver-22).
   static List<DriverNotice> demoReceived(DateTime now) => <DriverNotice>[
-        DriverNotice(
+        DriverNotice.named(
           id: 'demo-scheduled-0740',
           kind: DriverNoticeKind.newScheduledRide,
-          title: tr.noticeNewScheduledRide,
-          body: 'Tomorrow 07:40 · 126 kr · Tap to view',
+          title: () => tr.noticeNewScheduledRide,
+          body: () => tr.noticeScheduledBody(
+            tr.tomorrow,
+            '07:40',
+            Money.sek(126).formattedShort,
+          ),
           at: now.subtract(const Duration(minutes: 18)),
           action: DriverNoticeAction.viewScheduledRides,
-          actionLabel: tr.view,
+          actionLabel: () => tr.view,
         ),
-        DriverNotice(
+        DriverNotice.named(
           id: 'demo-bonus',
           kind: DriverNoticeKind.bonusProgress,
-          title: 'Bonus progress',
-          body: '18 of 25 trips this week. 7 more for 350 kr.',
+          title: () => tr.noticeBonusProgressTitle,
+          body: () => tr.noticeBonusProgressBody(
+            '18',
+            '25',
+            '7',
+            Money.sek(350).formattedShort,
+          ),
           at: now.subtract(const Duration(hours: 3)),
         ),
-        DriverNotice(
+        DriverNotice.named(
           id: 'demo-payout',
           kind: DriverNoticeKind.payoutSent,
-          title: 'Payout sent',
-          body: '2 450,00 kr is on its way to your bank.',
+          title: () => tr.noticePayoutSentTitle,
+          body: () => tr.noticePayoutSentBody(Money.sek(2450).formatted),
           at: now.subtract(const Duration(days: 1, hours: 2)),
         ),
       ];

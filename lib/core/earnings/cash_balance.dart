@@ -1,3 +1,4 @@
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 
 /// R8-4: a cash trip's balance between the driver and Movera.
@@ -44,10 +45,10 @@ class CashBalance {
       amount.minorUnits > 0 ? '+${amount.formatted}' : amount.formatted;
 
   static String direction(Money amount) => amount.minorUnits < 0
-      ? 'You owe Movera'
+      ? tr.cashYouOweMovera
       : amount.minorUnits > 0
-      ? 'Movera owes you'
-      : 'Settled';
+      ? tr.cashMoveraOwesYou
+      : tr.cashSettled;
 
   /// The sum of several trips' balances.
   static Money total(Iterable<CashBalance> balances) =>

@@ -323,7 +323,7 @@ class TripStripController extends ChangeNotifier {
       _say(tr.riderBags(next.bags));
     }
     if (newLeg && next.leg == TripLeg.stop && next.stopLabel != null) {
-      _say('${next.stopLabel} next');
+      _say(tr.stopNext(next.stopLabel!));
     }
     final eta = next.etaMinutes;
     if (eta != null) {
@@ -352,7 +352,10 @@ class TripStripController extends ChangeNotifier {
     if (next.leg == TripLeg.pickup &&
         next.pickupSide != null &&
         last?.pickupSide != next.pickupSide) {
-      _say(tr.pickupOnPickupSideSide(next.pickupSide!));
+      // The side is data ('left' / 'right'); the words are the driver's.
+      _say(next.pickupSide == 'left'
+          ? tr.pickupOnLeftSide
+          : tr.pickupOnRightSide);
     }
     if (next.toll && !(last?.toll ?? false)) _say(tr.tollAhead);
 

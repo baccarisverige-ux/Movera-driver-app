@@ -1,12 +1,23 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+
+/// Which local photo limit a photo would break.
+enum VehiclePhotoLimit { photoTooLarge, storageFull }
 
 /// The local photo budget would be exceeded.
 class VehiclePhotoBudgetExceeded implements Exception {
-  const VehiclePhotoBudgetExceeded(this.message);
-  final String message;
+  const VehiclePhotoBudgetExceeded(this.limit);
+  final VehiclePhotoLimit limit;
+
+  /// What the driver reads, in their language (driver-51).
+  String get message => switch (limit) {
+    VehiclePhotoLimit.photoTooLarge => tr.photoTooLargeForDevice,
+    VehiclePhotoLimit.storageFull => tr.photoStorageFull,
+  };
+
   @override
   String toString() => message;
 }
@@ -147,7 +158,7 @@ class LocalVehicleStore {
       }
       if (!unchanged && _encodedPhotoBytes(value) > maxPhotoBytes) {
         throw const VehiclePhotoBudgetExceeded(
-          'Photo is too large to keep on this device.',
+          VehiclePhotoLimit.photoTooLarge,
         );
       }
       // Size alone is not proof of valid base64. Refuse a poisoned draft now
@@ -166,9 +177,7 @@ class LocalVehicleStore {
     final total = rows.fold<int>(0, (sum, row) => sum + _photoBytes(row));
     final before = previous.fold<int>(0, (sum, row) => sum + _photoBytes(row));
     if (total > maxStoredPhotoBytes && _photoBytes(vehicle) > before) {
-      throw const VehiclePhotoBudgetExceeded(
-        'Photo storage on this device is full. Remove photos from another vehicle first.',
-      );
+      throw const VehiclePhotoBudgetExceeded(VehiclePhotoLimit.storageFull);
     }
     await _settings.save('vehicles', {'rows': rows});
     _changes.value++;

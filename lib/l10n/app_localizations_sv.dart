@@ -457,11 +457,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Exakt plats är avstängd. Slå på den i Inställningar för att visa din position och bekräfta att du är framme.';
 
   @override
-  String moveWithin100MOfWhere(Object where) {
-    return 'Kom inom 100 m ($where) för att vara framme.';
-  }
-
-  @override
   String get yourDriverHasArrivedAtPickup =>
       'Din förare har kommit till upphämtningsplatsen.';
 
@@ -1819,11 +1814,6 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String nextTripSecuredNextTripFare(Object nextTripFare) {
     return 'Nästa resa klar · $nextTripFare';
-  }
-
-  @override
-  String pickupOnPickupSideSide(Object pickupSide) {
-    return 'Upphämtning på $pickupSide sida';
   }
 
   @override
@@ -4641,5 +4631,90 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String mapOfArea(String area) {
     return 'Karta över $area';
+  }
+
+  @override
+  String get cashYouOweMovera => 'Du är skyldig Movera';
+
+  @override
+  String get cashMoveraOwesYou => 'Movera är skyldig dig';
+
+  @override
+  String get cashSettled => 'Kvitt';
+
+  @override
+  String stopNext(String stop) {
+    return 'Härnäst: $stop';
+  }
+
+  @override
+  String get pickupOnLeftSide => 'Upphämtning på vänster sida';
+
+  @override
+  String get pickupOnRightSide => 'Upphämtning på höger sida';
+
+  @override
+  String get moveWithin100MOfPickup =>
+      'Kom inom 100 m från upphämtningsplatsen för att vara framme.';
+
+  @override
+  String get moveWithin100MOfStop =>
+      'Kom inom 100 m från stoppet för att vara framme.';
+
+  @override
+  String get riderPhoneNotConnected =>
+      'Telefonkontakt med passageraren är inte ansluten i den här demon.';
+
+  @override
+  String get recordAudioStarting => 'startar…';
+
+  @override
+  String get photoTooLargeForDevice =>
+      'Fotot är för stort för att sparas på den här enheten.';
+
+  @override
+  String get photoStorageFull =>
+      'Fotolagringen på den här enheten är full. Ta först bort foton från ett annat fordon.';
+
+  @override
+  String get demoDataBadge => 'DEMODATA';
+
+  @override
+  String get drivingInHeader => 'KÖR I';
+
+  @override
+  String get anaSampleTripRoute => 'Centralstationen → Södermalm';
+
+  @override
+  String get demandBusy => 'Hög';
+
+  @override
+  String get demandSteady => 'Jämn';
+
+  @override
+  String get demandQuiet => 'Lugn';
+
+  @override
+  String get aroundStockholm => 'Runt Stockholm';
+
+  @override
+  String get noticeBonusProgressTitle => 'Bonusframsteg';
+
+  @override
+  String noticeBonusProgressBody(
+    String done,
+    String goal,
+    String left,
+    String amount,
+  ) {
+    return '$done av $goal resor den här veckan. $left till för $amount.';
+  }
+
+  @override
+  String get noticePayoutSentTitle => 'Utbetalning skickad';
+
+  @override
+  String noticePayoutSentBody(String amount) {
+    return '$amount är på väg till din bank.';
   }
 }

@@ -57,7 +57,7 @@ class Analytics extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'DEMO DATA',
+                  tr.demoDataBadge,
                   style: TextStyle(
                     color: _muted,
                     fontSize: 10,
@@ -105,7 +105,7 @@ class Analytics extends StatelessWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Central Station → Södermalm',
+                        tr.anaSampleTripRoute,
                         style: TextStyle(
                           color: _ink,
                           fontSize: 14,
@@ -290,7 +290,7 @@ class Analytics extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(child: Text(
-                    stats.surroundingTitle,
+                    stats.surroundingTitleText,
                     style: const TextStyle(
                       color: Color(0xFF22312D),
                       fontSize: 13,
@@ -351,7 +351,7 @@ class Analytics extends StatelessWidget {
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
-                  area.demandLabel,
+                  area.demandText,
                   style: TextStyle(
                     color: busy ? const Color(0xFF155F47) : const Color(0xFF737F7A),
                     fontSize: 11,
@@ -386,9 +386,8 @@ class Analytics extends StatelessWidget {
   }
 
   Widget _chip(StockholmAreaConfig area) {
-    final status = area.demandLabel.toLowerCase();
-    final isBusy = status == 'busy';
-    final isQuiet = status == 'quiet';
+    final isBusy = area.demand == AreaDemand.busy;
+    final isQuiet = area.demand == AreaDemand.quiet;
     final accent = isBusy
         ? const Color(0xFF167653)
         : isQuiet

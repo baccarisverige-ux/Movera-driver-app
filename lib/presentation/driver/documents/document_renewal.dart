@@ -122,7 +122,7 @@ void approveDocumentDemo(TrackedDocument document, {DocumentExpiryStore? store})
   final documents = store ?? DocumentExpiryStore.instance;
   documents.approve(document.id);
   final feed = DriverNotificationFeed.instance;
-  feed.add(DriverNotices.documentApproved(feed.now, title: document.title));
+  feed.add(DriverNotices.documentApproved(feed.now, title: () => document.title));
 }
 
 /// Going online was blocked by an expired [document]: what to do next.

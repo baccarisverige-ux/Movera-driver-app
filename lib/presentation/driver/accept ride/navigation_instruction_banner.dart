@@ -1,3 +1,4 @@
+import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
@@ -330,7 +331,7 @@ class _ArrivalApproachBannerState extends State<_ArrivalApproachBanner>
     if (meters < 25) { return tr.navNow; }
     if (meters < 1000) { return '${meters.round()} m'; }
     final km = meters / 1000;
-    return '${km.toStringAsFixed(km < 10 ? 1 : 0)} km';
+    return '${driverDecimal(km, km < 10 ? 1 : 0)} km';
   }
 
   @override

@@ -155,8 +155,8 @@ extension _AcceptRideLateEta on _AcceptRideState {
     feed.add(
       DriverNotices.scheduledReminder(
         at: feed.now,
-        title: tr.lateEtaReassignedTitle,
-        body: tr.lateEtaReassignedNote(time, minutes),
+        title: () => tr.lateEtaReassignedTitle,
+        body: () => tr.lateEtaReassignedNote(time, minutes),
       ),
       popup: false,
     );

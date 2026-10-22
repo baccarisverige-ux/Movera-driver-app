@@ -1,3 +1,4 @@
+import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,7 @@ class AcceptanceRate extends StatelessWidget {
   /// What is left of 100 %.
   String get _otherShare {
     final rest = 100 - performance.acceptanceRate;
-    return '${rest.toStringAsFixed(rest == rest.roundToDouble() ? 0 : 1)}%';
+    return '${driverDecimal(rest, rest == rest.roundToDouble() ? 0 : 1)}%';
   }
 
   @override

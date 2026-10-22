@@ -80,13 +80,13 @@ List<Widget> _rows(WaybillRecord record) {
     // Q16/Q18: the fare has Movera's bonus in it.
     if (bonus != null)
       _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
-    _Row(tr.passenger, record.riderName),
+    _Row(tr.passenger, record.riderNameText),
     _Row(tr.via, record.sourceText),
     _Row(tr.from, record.pickup),
     _Row(tr.to2, record.dropoff),
     const SizedBox(height: 14),
-    _Row(tr.driver, record.driverName),
-    _Row(tr.licensePlate, record.licensePlate),
+    _Row(tr.driver, record.driverNameText),
+    _Row(tr.licensePlate, record.licensePlateText),
     _Row(tr.passengerCapacity, '${record.passengerCapacity}'),
     if (payment != null) ...[
       const SizedBox(height: 14),
