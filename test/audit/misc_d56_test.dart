@@ -4,11 +4,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/routing/route_instruction.dart';
 import 'package:movera/core/safety/ride_check_recorder_native.dart';
 import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:record/record.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/routing/route_repository.dart';
@@ -67,9 +69,17 @@ Directory _phoneFolder() {
   final root = Directory.systemTemp.createTempSync('movera-d56-');
   addTearDown(() => root.deleteSync(recursive: true));
   final support = Directory('${root.path}/support')..createSync();
-  final original = rideCheckStorageRoot;
+  final documents = Directory('${root.path}/documents')..createSync();
+  final (storage, legacy, phone) =
+      (rideCheckStorageRoot, rideCheckLegacyRoot, rideCheckOnPhone);
   rideCheckStorageRoot = () async => support;
-  addTearDown(() => rideCheckStorageRoot = original);
+  rideCheckLegacyRoot = () async => documents;
+  rideCheckOnPhone = () => true;
+  addTearDown(() {
+    rideCheckStorageRoot = storage;
+    rideCheckLegacyRoot = legacy;
+    rideCheckOnPhone = phone;
+  });
   return support;
 }
 
@@ -206,5 +216,19 @@ void main() {
     expect(await recorder.stop(), isNull);
     expect(File(audio.path!).existsSync(), isFalse); // before: left on disk
     expect(audio.disposed, isTrue); // before: never disposed
+  });
+
+  test('driver-u31: logout deletes the Ride check recordings', () async {
+    SharedPreferences.setMockInitialValues({});
+    final support = _phoneFolder();
+    final recorder = NativeRideCheckRecorder(createAudio: _FakeAudio.new);
+    await recorder.start('trip-1');
+    final saved = await recorder.stop();
+    expect(File(saved!).existsSync(), isTrue);
+    final older = File('${support.parent.path}/documents/ride_check_audio/a.m4a')
+      ..createSync(recursive: true);
+    await clearLocalUserData();
+    expect(File(saved).existsSync(), isFalse); // before: kept after logout
+    expect(older.existsSync(), isFalse);
   });
 }

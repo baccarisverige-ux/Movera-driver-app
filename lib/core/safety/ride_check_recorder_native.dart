@@ -19,7 +19,26 @@ RideCheckRecorder createRideCheckRecorder() => NativeRideCheckRecorder();
 Future<Directory> Function() rideCheckStorageRoot =
     getApplicationSupportDirectory;
 
+/// Where recordings were saved before driver-29 (Documents).
+@visibleForTesting
+Future<Directory> Function() rideCheckLegacyRoot =
+    getApplicationDocumentsDirectory;
+
+/// Recordings are made only on Android and iOS.
+@visibleForTesting
+bool Function() rideCheckOnPhone = () => Platform.isAndroid || Platform.isIOS;
+
 const MethodChannel _backup = MethodChannel('movera/backup');
+
+/// driver-u31: logout deletes every Ride check recording on this phone,
+/// including ones saved in Documents by an older version.
+Future<void> deleteRideCheckRecordings() async {
+  if (!rideCheckOnPhone()) return; // Only phones record.
+  for (final root in [rideCheckStorageRoot, rideCheckLegacyRoot]) {
+    final directory = Directory('${(await root()).path}/ride_check_audio');
+    if (await directory.exists()) await directory.delete(recursive: true);
+  }
+}
 
 /// The folder Ride check recordings are saved in, created if needed.
 Future<Directory> rideCheckAudioDirectory() async {
@@ -49,7 +68,7 @@ class NativeRideCheckRecorder implements RideCheckRecorder {
   AudioRecorder get _audio => _recorder ??= _createAudio();
 
   @override
-  bool get supported => Platform.isAndroid || Platform.isIOS;
+  bool get supported => rideCheckOnPhone();
 
   // hasPermission asks for the microphone if needed.
   @override
