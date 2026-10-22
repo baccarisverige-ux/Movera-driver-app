@@ -4,6 +4,9 @@ class LocalWriteSession {
   static int _generation = 0;
   static bool _clearing = false;
   static int get generation => _generation;
+
+  /// Logout is clearing the local data right now.
+  static bool get clearing => _clearing;
   static void check(int generation) {
     if (_clearing || generation != _generation) {
       throw StateError('Local session ended; reopen the screen before saving');

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/storage/local_write_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Where Home's map opens: the driver's last known position, so the app
@@ -50,12 +51,14 @@ class DriverStartPosition {
   }
 
   /// Remembers [point]; writes to storage at most every [saveEvery].
+  /// Not while logout clears local data (driver-r5-40): a fix landing then
+  /// would put the departing driver's position back after it was cleared.
   static Future<void> save(
     GeoPoint point, {
     DateTime? now,
     Future<SharedPreferences> Function()? prefs,
   }) async {
-    if (!point.isValid) return;
+    if (!point.isValid || LocalWriteSession.clearing) return;
     _memory = point;
     final at = now ?? DateTime.now();
     final last = _lastSave;

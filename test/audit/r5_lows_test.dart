@@ -8,6 +8,10 @@ import 'package:http/testing.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_start_position.dart';
+import 'package:movera/core/storage/local_write_session.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   test('driver-r5-8: admin\'s scheduled-rides "until" is a local time', () {
@@ -39,6 +43,21 @@ void main() {
     await tester.pump();
     expect(result?.outcome, ClaimOutcome.networkError,
         reason: 'before: the claim waited for the socket forever');
+  });
+
+  test('driver-r5-40: a GPS fix during logout cleanup is not saved',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    DriverStartPosition.clearMemory();
+    // Logout has begun and cleared the position; a Home fix lands now.
+    LocalWriteSession.beginCleanup();
+    DriverStartPosition.clearMemory();
+    await DriverStartPosition.save(const GeoPoint(59.33, 18.06));
+    LocalWriteSession.endCleanup();
+    expect(DriverStartPosition.cached, isNull);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(DriverStartPosition.key), isNull,
+        reason: 'before: the departing driver\'s position was written back');
   });
 }
 
