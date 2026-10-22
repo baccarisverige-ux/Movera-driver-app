@@ -2,6 +2,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -11,12 +13,56 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/privacy/local_data.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
 import 'package:movera/widgets/web_map_bitmap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+Future<void> _frames(WidgetTester tester, int count, [int ms = 50]) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(Duration(milliseconds: ms));
+  }
+}
+
+void _phone(WidgetTester tester) {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
+Widget _app(Widget home, {GlobalKey<NavigatorState>? navigator}) =>
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, _) => MaterialApp(navigatorKey: navigator, home: home),
+    );
+
+/// Slides the trip's primary action, opening its panel first.
+Future<void> _slide(WidgetTester tester) async {
+  final action = find.byKey(const ValueKey('active-ride-primary-action'));
+  if (action.evaluate().isEmpty) {
+    tester.widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel)).last
+        .controller!.animatePanelToSnapPoint();
+    await _frames(tester, 20);
+  }
+  await tester.ensureVisible(action);
+  await tester.drag(action, const Offset(320, 0));
+  await _frames(tester, 8, 30);
+}
+
+/// Every trip save, in order.
+class _Saves extends MemoryActiveRideRepository {
+  final saved = <PersistedActiveRide>[];
+  @override
+  Future<void> save(PersistedActiveRide ride) {
+    saved.add(ride);
+    return super.save(ride);
+  }
+}
 
 void main() {
   test('driver-r5-8: admin\'s scheduled-rides "until" is a local time', () {
@@ -92,6 +138,29 @@ void main() {
     }
     expect(urls, RouteMarkKind.values.length,
         reason: 'before: a new PNG and Blob URL per pin per trip');
+  });
+
+  testWidgets('driver-r5-39: the Start-trip save holds the pickup\'s paid '
+      'wait and the start time', (tester) async {
+    _phone(tester);
+    SharedPreferences.setMockInitialValues({});
+    final saves = _Saves();
+    await tester.pumpWidget(_app(AcceptRide(
+      tripId: 'start-save',
+      initialStage: ActiveRideStage.waitingForRider,
+      initialWaitSeconds: 6 * 60 + 30,
+      waitNow: () => DateTime(2026, 10, 20, 12),
+      activeRideRepository: saves,
+    )));
+    await _frames(tester, 8);
+    await _slide(tester);
+    final first = saves.saved
+        .firstWhere((ride) => ride.stage == ActiveRideStage.onTrip);
+    expect([first.paidWaitSeconds, first.startedAt != null], [90, true],
+        reason: 'before: the first onTrip save had 0 paid seconds and no '
+            'start, and a kill then lost the waiting fee');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
   });
 }
 

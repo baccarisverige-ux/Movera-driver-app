@@ -26,6 +26,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       final offer = _nextTripRadarOffer;
       final securedOffer =
           _onTripRadarState == _OnTripRadarState.secured ? offer : null;
+      // driver-r5-39: the Start-trip save is the trip as it starts, with
+      // the pickup's paid wait in: a kill before the next save keeps it.
+      final starting = stage == ActiveRideStage.onTrip &&
+          _stage == ActiveRideStage.waitingForRider;
       return PersistedActiveRide(
         tripId: widget.tripId,
         stage: stage,
@@ -58,7 +62,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         dropoffLat: widget.dropoffPosition.latitude,
         dropoffLng: widget.dropoffPosition.longitude,
         waitSeconds: _waitSeconds,
-        paidWaitSeconds: _paidWaitSeconds,
+        paidWaitSeconds: _paidWaitSeconds + (starting ? _paidWaitNow : 0),
         acceptedAt: _acceptedAt,
         stopIndex: _stopCursor,
         paidStopWait: _paidStopWait,
@@ -994,7 +998,10 @@ extension _AcceptRideTrip on _AcceptRideState {
         case ActiveRideStage.waitingForRider:
           _syncWaitClock();
           final paidWait = _paidWaitNow;
+          // In the Start-trip save already (driver-r5-39).
+          _onTripStartedAt = DateTime.now();
           if (!await _rideLifecycle.transitionTo(ActiveRideStage.onTrip)) {
+            _onTripStartedAt = null;
             _stageTransitioning = false;
             return;
           }
@@ -1004,7 +1011,6 @@ extension _AcceptRideTrip on _AcceptRideState {
           _stopCursor = 0;
           _nextTripRadarDemoTimer?.cancel();
           _nextTripRadarMatchTimer?.cancel();
-          _onTripStartedAt = DateTime.now();
           _rideCheckDetector.startTrip(_rideCheckNow);
           _demoDrive?.startTrip();
           await _rideLifecycle.persistNow();
