@@ -49,6 +49,20 @@ DriverLocation at(double meters) => DriverLocation(
       accuracyMeters: 5,
     );
 
+/// A headless map that counts the camera moves sent to it.
+class _Camera extends HeadlessMapPlatform {
+  int moves = 0;
+  @override
+  Future<void> moveCamera(CameraUpdate update, {required int mapId}) async {
+    moves++;
+  }
+
+  @override
+  Future<void> animateCamera(CameraUpdate update, {required int mapId}) async {
+    moves++;
+  }
+}
+
 Future<void> _frames(WidgetTester tester, int count, [int ms = 50]) async {
   for (var i = 0; i < count; i++) {
     await tester.pump(Duration(milliseconds: ms));
@@ -258,6 +272,46 @@ void main() {
     await _until(tester, find.byType(AcceptRide));
     expect(find.byType(AcceptRide), findsOneWidget,
         reason: 'before: the won trip was dropped');
+    await _unmount(tester);
+  });
+
+  testWidgets('driver-r5-31: the trip camera follows the car under a sheet; '
+      'a full screen stops it', (tester) async {
+    final camera = _Camera();
+    _setUp(tester, map: camera);
+    final gps = _Gps();
+    addTearDown(gps.updates.close);
+    final navigator = await _pumpApp(tester, AcceptRide(
+      initialStage: ActiveRideStage.onTrip,
+      locationRepository: gps,
+    ));
+    Future<void> drive(double from) async {
+      for (var i = 1; i <= 4; i++) {
+        gps.updates.add(at(from + i * 15));
+        await _frames(tester, 20);
+      }
+    }
+
+    await drive(0);
+    expect(camera.moves, greaterThan(0), reason: 'the camera follows');
+    // The island's tools sheet opens over the visible map.
+    unawaited(showModalBottomSheet<void>(
+        context: tester.element(find.byType(AcceptRide)),
+        builder: (_) => const Text('tools')));
+    await _frames(tester, 10);
+    camera.moves = 0;
+    await drive(60);
+    expect(camera.moves, greaterThan(0),
+        reason: 'before: suspended under every sheet');
+    navigator.currentState!.pop();
+    await _frames(tester, 10);
+    // A full screen hides the map (driver-u59).
+    unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('covering')))));
+    await _frames(tester, 20);
+    camera.moves = 0;
+    await drive(120);
+    expect(camera.moves, 0);
     await _unmount(tester);
   });
 }
