@@ -583,7 +583,7 @@ class ScheduledRideStore {
   static DateTime? freeCancelUntil(ReservationRequestPreview? ride) =>
       ride
           ?.pickupAt(_now)
-          ?.subtract(Duration(hours: _rules.driverLateCancelHours));
+          ?.subtract(_rules.driverLateCancel);
 
   /// [ride] clashes with an accepted ride: the accepted one, else null.
   static _ScheduledRide? _clashWith(_ScheduledRide ride) {

@@ -18,6 +18,7 @@ import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
 // Wave 5 D5.4 (parts a + b): state and time. Time cases also run under
 // TZ=Europe/Stockholm and TZ=America/New_York.
@@ -270,5 +271,16 @@ void main() {
       }
       expect(event?.trigger, RideCheckTrigger.longStop);
     });
+  });
+
+  test('driver-r3-4: driverLateCancelHours keeps the fraction the contract allows', () {
+    // contracts/openapi.yaml: number, minimum 0.5, maximum 72.
+    final half = ScheduledRideRules.fromJson({'driverLateCancelHours': 1.5});
+    expect(half.driverLateCancelHours, 1.5);
+    expect(half.driverLateCancel, const Duration(minutes: 90));
+    expect(ScheduledRideRules.fromJson({'driverLateCancelHours': 0.5})
+        .driverLateCancel, const Duration(minutes: 30));
+    expect(ScheduledRideRules.fromJson({'driverLateCancelHours': 2})
+        .driverLateCancel, const Duration(hours: 2));
   });
 }

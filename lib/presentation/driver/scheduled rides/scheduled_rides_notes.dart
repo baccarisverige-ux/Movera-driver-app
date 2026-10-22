@@ -19,15 +19,23 @@ String _timeFrom(DateTime time, DateTime now) {
       : '${_dayMonth(time)} $clock';
 }
 
+/// The late-cancel window in hours as the language writes it: "1", "1.5"
+/// ("1,5" in French and Swedish).
+String _lateCancelHours() {
+  final hours = ScheduledRideRules.current.driverLateCancelHours;
+  if (hours == hours.roundToDouble()) return '${hours.round()}';
+  return '$hours'.replaceAll('.', tr.navDecimalMark);
+}
+
 /// "Free cancel until 06:40." or "Late cancel: under 1 h to pickup."
 String _freeCancelLine(ReservationRequestPreview? ride) {
   final until = ScheduledRideStore.freeCancelUntil(ride);
-  final hours = ScheduledRideRules.current.driverLateCancelHours;
+  final hours = _lateCancelHours();
   if (until == null) {
-    return tr.schedFreeCancelHoursBefore('$hours');
+    return tr.schedFreeCancelHoursBefore(hours);
   }
   if (ScheduledRideStore.isLateCancel(ride)) {
-    return tr.schedLateCancelUnder('$hours');
+    return tr.schedLateCancelUnder(hours);
   }
   return tr.schedFreeCancelUntil(_timeFrom(until, ScheduledRideStore._now));
 }
@@ -138,7 +146,7 @@ class _CancelRulesBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final late = ScheduledRideStore.isLateCancel(ride);
-    final hours = ScheduledRideRules.current.driverLateCancelHours;
+    final hours = _lateCancelHours();
     return Container(
       key: const ValueKey<String>('scheduled-cancel-rules'),
       width: double.infinity,
@@ -175,7 +183,7 @@ class _CancelRulesBox extends StatelessWidget {
                 Text(
                   late
                       ? tr.schedNeverPayLateCounts
-                      : tr.schedNeverPayUnderHours('$hours'),
+                      : tr.schedNeverPayUnderHours(hours),
                   style: const TextStyle(
                     color: Color(0xFF5F6B72),
                     fontSize: 12,
