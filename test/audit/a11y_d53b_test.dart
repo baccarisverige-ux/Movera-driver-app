@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/presentation/driver/side%20menu/side_menu.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
+import 'package:movera/widgets/radar_offer_card.dart';
 
 /// WCAG contrast of [fg] on [bg] (both opaque).
 double _contrast(Color fg, Color bg) {
@@ -121,5 +122,44 @@ void main() {
         }
       }
     }
+  });
+
+  testWidgets('driver-u183: the Radar card Route and × are named, the × '
+      'a 48 px target', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var hidden = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: RadarOfferCard(
+            offer: const RadarOfferView(
+              id: 'o1',
+              category: 'Comfort',
+              payment: 'Card',
+              rating: '4.96',
+              fare: '104,80 kr',
+              pickupMinutes: 2,
+              pickupKm: 0.65,
+              tripMinutes: 9,
+              tripKm: 4.2,
+              pickup: 'Kungsgatan 42, Stockholm',
+              dropoff: 'Hornstull, Stockholm',
+            ),
+            onRoute: () {},
+            onDismiss: () => hidden++,
+          ),
+        ),
+      ),
+    ));
+    final route = find.byKey(const ValueKey<String>('radar-route-o1'));
+    final dismiss = find.byKey(const ValueKey<String>('radar-offer-dismiss-o1'));
+    expect(tester.getSemantics(route).label, 'Show route');
+    expect(tester.getSemantics(dismiss).label, 'Close offer');
+    expect(tester.getSize(dismiss), const Size.square(48));
+    // A corner of the box, outside the 30 px circle, still hides it.
+    await tester.tapAt(tester.getTopLeft(dismiss) + const Offset(3, 3));
+    expect(hidden, 1);
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+    semantics.dispose();
   });
 }
