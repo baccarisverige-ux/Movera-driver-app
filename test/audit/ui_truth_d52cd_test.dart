@@ -10,6 +10,7 @@ import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
+import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
@@ -97,5 +98,27 @@ void main() {
             'Demo: alert kept on this phone only. No one at Movera was notified.'),
         findsOneWidget);
     tester.takeException();
+  });
+
+  testWidgets('driver-85: with only cancelled trips, History says there is no '
+      'completed ride and counts the trips it lists', (tester) async {
+    await _show(tester, DriverRideHistory(loadHistory: () async => [
+          for (var i = 0; i < 3; i++)
+            TripHistoryRecord(
+              tripId: 'c$i',
+              riderName: 'Karin',
+              whenLabel: 'Today',
+              pickup: 'Gamla vägen',
+              dropoff: 'Solna centrum',
+              fare: '152,40 kr',
+              category: 'Comfort',
+              status: TripStatus.cancelledByDriver,
+              completedAt: DateTime.now(),
+            ),
+        ]));
+    expect(find.text('No completed rides in this period.'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('history-view-all-rides')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('3 rides in'), findsOneWidget);
   });
 }
