@@ -7,6 +7,7 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
+import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
@@ -431,6 +432,45 @@ void main() {
       await _frames(tester, const Duration(seconds: 1));
       expect(said().where((t) => t == 'Go online for 08:05 pickup'),
           hasLength(1));
+      await _end(tester);
+    });
+  });
+
+  group('admin direct assign (Exclusive)', () {
+    setUp(() {
+      ScheduledRideStore.reset();
+      ExclusiveAnswers.instance.reset();
+    });
+    tearDown(() => DriverOfferRules.current = const DriverOfferRules());
+
+    final card = find.byKey(ValueKey<String>(
+        'exclusive-offer-card-${DemoAdminOffers.directAssign.id}'));
+
+    Future<_Home> assignUp(WidgetTester tester) async {
+      final home = await _pumpHome(tester,
+          dispatch: _Dispatch()..offers = [DemoAdminOffers.directAssign]);
+      for (var i = 0; i < 50 && card.evaluate().isEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(card, findsOneWidget);
+      return home;
+    }
+
+    testWidgets('driver-r5-30: a lock and unlock under the open side menu '
+        'does not run the offer out as a miss', (tester) async {
+      await assignUp(tester);
+      final scaffold = tester.state<ScaffoldState>(
+          find.byWidgetPredicate((w) => w is Scaffold && w.drawer != null));
+      scaffold.openDrawer();
+      await _frames(tester, const Duration(seconds: 1));
+      _sleep(tester, Duration.zero, (_) {});
+      await _frames(tester, const Duration(seconds: 20));
+      expect(scaffold.isDrawerOpen, isTrue);
+      expect(ExclusiveAnswers.instance.missedInRow, 0);
+      scaffold.closeDrawer();
+      await _frames(tester, const Duration(seconds: 3));
+      expect(card, findsNothing, reason: 'its time ran out unseen');
+      expect(ExclusiveAnswers.instance.missedInRow, 0);
       await _end(tester);
     });
   });

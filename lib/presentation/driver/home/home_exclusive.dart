@@ -115,13 +115,17 @@ extension _HomeExclusive on _DriverHomeState {
       _exclusive.timeoutIsMiss = missed;
       _exclusive.clock.duration = lifetime;
       _exclusive.deadline = ScheduledClock.realNow().add(lifetime);
-      if (!_liveVisible) { return; }
+      // Under the side menu only the deadline is kept (driver-r5-30).
+      if (!_liveVisible || _drawerOpen) { return; }
       unawaited(_exclusive.clock.reverse(from: 1));
       _outsideOfferTimeoutTimer = Timer(lifetime, () {
         if (!mounted || _outsideRadarOffer?.id != offer.id) { return; }
         _HomeOfferRadar(this)._dismissOutsideRadarOffer(missed: missed);
       });
     }
+
+    /// The side menu is open over Home.
+    bool get _drawerOpen => _scaffoldKey.currentState?.isDrawerOpen ?? false;
 
     /// driver-u115: the side menu covers the offer like a screen pushed
     /// over Home: its time out waits (the deadline stays), and when the
@@ -148,7 +152,10 @@ extension _HomeExclusive on _DriverHomeState {
           deadline == null ||
           _exclusive.leaving ||
           _outsideOfferTimeoutTimer != null ||
-          _exclusiveClaiming) {
+          _exclusiveClaiming ||
+          // An app resume under the open side menu: the menu still covers
+          // the offer, and its closing re-arms it (driver-r5-30).
+          _drawerOpen) {
         return;
       }
       final left = deadline.difference(ScheduledClock.realNow());
