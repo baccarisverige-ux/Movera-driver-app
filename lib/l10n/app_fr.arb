@@ -393,6 +393,7 @@
   "rideType": "Type de course",
   "cashCollected": "Espèces encaissées",
   "cashMatchedYourFare": "Les espèces correspondent à votre tarif",
+  "cashMatchedYourEarnings": "Les espèces correspondent à vos gains : rien à régler",
   "settledInYourNextPayout": "Réglé lors de votre prochain versement",
   "rideCompletedOn": "Course terminée le",
   "cancelledByRider": "Annulée par le passager",

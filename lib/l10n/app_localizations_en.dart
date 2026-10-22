@@ -1381,6 +1381,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cashMatchedYourFare => 'Cash matched your fare';
 
   @override
+  String get cashMatchedYourEarnings =>
+      'Cash matched your earnings: nothing to settle';
+
+  @override
   String get settledInYourNextPayout => 'Settled in your next payout';
 
   @override

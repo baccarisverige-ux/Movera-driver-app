@@ -14,6 +14,7 @@ import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
@@ -32,6 +33,7 @@ import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/home/components/destination_island.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
 import 'package:movera/widgets/web_map_bitmap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -558,6 +560,32 @@ void main() {
         reason: 'before: "Demo driver — identity unavailable"');
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
+  });
+
+  testWidgets('driver-r5-34: a zero cash balance after Movera\'s fee does '
+      'not say the cash matched the fare', (tester) async {
+    _homeSetUp(tester);
+    // 200 kr fare, 25 % fee: the rider paid 150 kr, the driver's earnings.
+    await tester.pumpWidget(_app(DriverRideHistoryDetail(
+      record: const TripHistoryRecord(
+        tripId: 'cash-trip',
+        riderName: 'Karin',
+        whenLabel: '15/10/2026, 07:59',
+        pickup: 'Gamla vägen',
+        dropoff: 'Solna centrum',
+        fare: '200,00 kr',
+        category: 'Comfort',
+        paymentMethod: 'Cash',
+        cashCollected: '150,00 kr',
+      ),
+      loadRideChecks: (_) async => const [],
+    )));
+    await _frames(tester, 10);
+    final note = find.byKey(const ValueKey<String>('history-owed-note'));
+    await tester.ensureVisible(note);
+    expect(tester.widget<Text>(note).data,
+        'Cash matched your earnings: nothing to settle',
+        reason: 'before: "Cash matched your fare" although 50 kr less');
   });
 }
 
