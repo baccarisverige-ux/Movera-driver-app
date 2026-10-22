@@ -5,16 +5,21 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
@@ -27,6 +32,8 @@ import 'package:movera/widgets/web_map_bitmap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+import '../../integration_test/headless_map_platform.dart';
 
 Future<void> _frames(WidgetTester tester, int count, [int ms = 50]) async {
   for (var i = 0; i < count; i++) {
@@ -45,6 +52,51 @@ Widget _app(Widget home, {GlobalKey<NavigatorState>? navigator}) =>
       designSize: const Size(375, 812),
       builder: (_, _) => MaterialApp(navigatorKey: navigator, home: home),
     );
+
+/// No GPS fix ever (Home stays on its start position).
+class _NoGps implements DriverLocationRepository {
+  @override
+  Future<DriverLocation> getCurrentPosition() =>
+      Completer<DriverLocation>().future;
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream.empty();
+}
+
+/// Home's test setup: a headless map and the demo's quiet runtime.
+void _homeSetUp(WidgetTester tester) {
+  _phone(tester);
+  SharedPreferences.setMockInitialValues({});
+  final maps = GoogleMapsFlutterPlatform.instance;
+  GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+  addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+  final config = DriverRuntimeConfig.current;
+  DriverRuntimeConfig.current = const DriverRuntimeConfig(
+    externalRouting: false,
+    liveMapTicker: false,
+    reservationPopup: false,
+    islandHint: false,
+    radarSound: false,
+    simulatedArrival: true,
+    skipAccountActivation: true,
+  );
+  addTearDown(() => DriverRuntimeConfig.current = config);
+}
+
+Future<GlobalKey<NavigatorState>> _pumpHome(
+    WidgetTester tester, Widget home) async {
+  final navigator = GlobalKey<NavigatorState>();
+  await tester.pumpWidget(ScreenUtilInit(
+    designSize: const Size(375, 812),
+    builder: (_, _) => MaterialApp(
+      navigatorKey: navigator,
+      navigatorObservers: [driverRouteObserver],
+      home: home,
+    ),
+  ));
+  await _frames(tester, 20);
+  return navigator;
+}
 
 /// Slides the trip's primary action, opening its panel first.
 Future<void> _slide(WidgetTester tester) async {
@@ -217,6 +269,34 @@ void main() {
             'bound to the old Home');
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('driver-r5-9: back from a sleep past the destination limit, '
+      'Home ends destination mode', (tester) async {
+    _homeSetUp(tester);
+    var wall = DateTime(2026, 10, 22, 9);
+    final before = DestinationModeSession.instance;
+    DestinationModeSession.instance = DestinationModeSession(now: () => wall);
+    addTearDown(() => DestinationModeSession.instance = before);
+    final navigator = await _pumpHome(tester, DriverHome(locationRepository: _NoGps()));
+    // A destination set on the trip (2 h limit) is Home's once it closes.
+    unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('trip')))));
+    await _frames(tester, 10);
+    DestinationModeSession.instance.started(
+        address: 'Solna', position: const GeoPoint(59.36, 18.00));
+    navigator.currentState!.pop();
+    await _frames(tester, 10);
+    expect(DestinationModeSession.instance.activeAddress, 'Solna');
+    // The phone sleeps 3 h: the wall clock moves, the Timer's does not.
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    wall = wall.add(const Duration(hours: 3));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await _frames(tester, 4);
+    expect(DestinationModeSession.instance.activeAddress, isNull,
+        reason: 'before: it kept filtering offers until the late Timer');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
   });
 }
 

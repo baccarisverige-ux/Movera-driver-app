@@ -199,7 +199,7 @@ class _DriverHomeState extends State<DriverHome>
   void _resumeHomeUpdates() {
     if (!mounted || !_liveVisible) { return; }
     _camera.resume();
-    unawaited(_HomeMapSheet(this)._startDriverLocation());
+    unawaited(_HomeMapSheet(this)._startDriverLocation()); _HomeMapSheet(this)._recheckDestinationLimit();
     _HomeOfferRadar(this)._scheduleVisibleOffers();
     _HomeOfferRadar(this)._resumeOfferTimers();
     _HomeOfferRules(this)._releaseHeldOffline();

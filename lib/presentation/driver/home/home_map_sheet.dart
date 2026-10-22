@@ -421,6 +421,15 @@ extension _HomeMapSheet on _DriverHomeState {
         IslandMessages.show(HomeIslandNotices.destinationEnded);
       });
     }
+    /// driver-r5-9: Home is back on screen. The limit's Timer counts on the
+    /// monotonic clock, which stops while the phone sleeps, but the limit is
+    /// wall-clock time: re-armed from it, a destination whose time passed
+    /// meanwhile ends now instead of filtering offers late.
+    void _recheckDestinationLimit() {
+      if (!_destinationModeActive) { return; }
+      _destinationLimitTimer?.cancel();
+      _armDestinationLimit();
+    }
     Future<void> _refreshDestinationRoadRoute() =>
         _destinationRoadRefresh.request(_fetchLatestDestinationRoadRoute);
 
