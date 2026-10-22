@@ -1321,6 +1321,18 @@ extension _HomeOfferRadar on _DriverHomeState {
             _openClaimedHomeOffer();
             return;
           }
+          // Close to pickup (job L3, [ScheduledRideRules.exclusiveBeforeMinutes]
+          // before its pickup time) the untaken reservation becomes an
+          // Exclusive offer; it waits while other offers are on screen.
+          // driver-r3-15: armed also while a Match claim is in flight.
+          final untilExclusive = _HomeScheduled(this)._untilExclusiveStep();
+          if (untilExclusive != null) {
+            _reservationOfferTimer = Timer(untilExclusive, () {
+              if (!mounted || !_isOnline) { return; }
+              _soonReservationReady = true;
+              _maybeShowSoonReservation();
+            });
+          }
           if (_homeRadarMatchingOfferId != null) { return; }
 
           // Frontend demo only. Outside-Radar offers remain exclusive and
@@ -1385,17 +1397,6 @@ extension _HomeOfferRadar on _DriverHomeState {
             },
           );
 
-          // Close to pickup (job L3, [ScheduledRideRules.exclusiveBeforeMinutes]
-          // before its pickup time) the untaken reservation becomes an
-          // Exclusive offer; it waits while other offers are on screen.
-          final untilExclusive = _HomeScheduled(this)._untilExclusiveStep();
-          if (untilExclusive != null) {
-            _reservationOfferTimer = Timer(untilExclusive, () {
-              if (!mounted || !_isOnline) { return; }
-              _soonReservationReady = true;
-              _maybeShowSoonReservation();
-            });
-          }
           // Radar is live: the smart gap may start the next scheduled ride,
           // and rides Movera assigns come in.
           _HomeScheduled(this)._onRadarLive();

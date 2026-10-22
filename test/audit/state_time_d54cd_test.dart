@@ -26,6 +26,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/support/local_support_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/auth/additional%20detail/navigation.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
@@ -294,7 +295,14 @@ class _RadarDispatch implements DispatchRepository {
   @override
   Stream<List<RideOffer>> watchNearbyOffers({
     bool destinationModeActive = false,
-  }) => Stream.value([_radarTrip('first'), _radarTrip('second')]);
+  }) => Stream.multi((sink) {
+    sink.addSync(offers);
+    final sub = updates.stream.listen(sink.addSync);
+    sink.onCancel = sub.cancel;
+  }, isBroadcast: true);
+  List<RideOffer> offers = [_radarTrip('first'), _radarTrip('second')];
+  final updates = StreamController<List<RideOffer>>.broadcast();
+  void publish(List<RideOffer> next) => updates.add(offers = next);
   @override
   Stream<List<RideOffer>> watchNextTripOffers() => const Stream.empty();
   @override
@@ -338,6 +346,8 @@ void main() {
     InMemoryWaybillRepository.instance.reset();
     WaybillStore.reset();
     ExclusiveAnswers.instance.reset();
+    IslandMessages.reset();
+    ScheduledRideStore.reset();
     DriverOfferRules.current = const DriverOfferRules(autoOffline: false);
   });
   tearDown(() {
@@ -577,6 +587,32 @@ void main() {
     await _settle(tester);
     final match = find.byKey(const ValueKey<String>('radar-match-first'));
     expect(tester.widget<FilledButton>(match).onPressed, isNull);
+    await _unmount(tester);
+  });
+
+  testWidgets('driver-r3-15: a resume during a Match claim keeps the '
+      'reservation\'s Exclusive step', (tester) async {
+    final dispatch = _RadarDispatch();
+    await _pumpDeck(tester, dispatch);
+    await tester.tap(find.byKey(const ValueKey<String>('radar-match-first')));
+    await tester.pump();
+    // The shade comes down and up while dispatch has not answered.
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    dispatch.claims.single.complete(const ClaimResult.alreadyClaimed());
+    dispatch.publish(const []); // both trips leave Radar
+    await _pumpFor(tester, const Duration(seconds: 5));
+    expect(find.byKey(const ValueKey<String>('radar-offer-card-second')),
+        findsNothing);
+    // The demo reservation's Exclusive step is about 50 s into the day.
+    await _until(tester,
+        find.byKey(const ValueKey<String>('exclusive-offer-card-$demoReservationId')),
+        const Duration(seconds: 40));
+    expect(find.byKey(
+        const ValueKey<String>('exclusive-offer-card-$demoReservationId')),
+        findsOneWidget);
     await _unmount(tester);
   });
 
