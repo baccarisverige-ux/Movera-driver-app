@@ -21,6 +21,7 @@ import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
+import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
 import 'package:movera/widgets/checkbox.dart';
 import 'package:movera/widgets/custom_btn.dart';
 import 'package:movera/widgets/custom_google_map.dart';
@@ -499,5 +500,12 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10);
     await gps.updates.close();
+  });
+
+  testWidgets('driver-u147: Recent payouts has no See all to My bank',
+      (tester) async {
+    await _pumpScreen(tester, const WalletScreen());
+    expect(find.text('Recent payouts'), findsOneWidget);
+    expect(find.text('See all'), findsNothing); // before: opened My bank
   });
 }

@@ -45,7 +45,9 @@ class WalletScreen extends StatelessWidget {
                     const SizedBox(height: 14),
                     _payoutInfoStrip(),
                     const SizedBox(height: 28),
-                    _sectionHeader(title: tr.recentPayouts, action: tr.seeAll),
+                    // driver-u147: no 'See all' until there is a payouts list;
+                    // it opened My bank.
+                    _sectionHeader(title: tr.recentPayouts),
                     const SizedBox(height: 12),
                     _recentPayouts(),
                     const SizedBox(height: 22),
@@ -260,41 +262,15 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  Widget _sectionHeader({required String title, required String action}) {
-    return Builder(
-      builder: (context) {
-        return Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: _text,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                pushSingle(
-                  context,
-                  MaterialPageRoute<void>(builder: (_) => const MyBank()),
-                );
-              },
-              child: Text(
-                action,
-                style: const TextStyle(
-                  color: _text,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+  Widget _sectionHeader({required String title}) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: _text,
+        fontSize: 19,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.3,
+      ),
     );
   }
 
