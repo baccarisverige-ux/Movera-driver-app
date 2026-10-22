@@ -1671,7 +1671,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language => 'Language';
 
   @override
-  String get pinVerification => 'Pin verification';
+  String get pinVerification => 'PIN verification';
 
   @override
   String get emergencyContacts => 'Emergency contacts';

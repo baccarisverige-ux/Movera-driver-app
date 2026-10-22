@@ -21,6 +21,7 @@ import 'package:movera/presentation/driver/ride%20history/history%20detail/histo
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
+import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
 import 'd51_translations_test.dart' as d51 show show;
@@ -301,6 +302,20 @@ void main() {
       await show(tester, code, const AddNewAccount());
       expect(find.text(header), findsOneWidget, reason: code);
       expect(find.text('ACCOUNT'), findsNothing);
+    }
+  });
+
+  testWidgets('driver-92: the PIN tile in Safety preferences is translated',
+      (tester) async {
+    for (final (code, pin) in [
+      ('fr', 'Vérification par code'),
+      ('sv', 'PIN-verifiering'),
+    ]) {
+      await show(tester, code, const Scaffold(body: SafetyToolKits()));
+      await tester.tap(find.text(tr.safetyPreferences).first);
+      await tester.pumpAndSettle();
+      expect(find.text(pin), findsOneWidget, reason: code);
+      expect(find.text('PIN verification'), findsNothing);
     }
   });
 }

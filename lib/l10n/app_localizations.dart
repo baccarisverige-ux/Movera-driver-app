@@ -3006,7 +3006,7 @@ abstract class AppLocalizations {
   /// No description provided for @pinVerification.
   ///
   /// In en, this message translates to:
-  /// **'Pin verification'**
+  /// **'PIN verification'**
   String get pinVerification;
 
   /// No description provided for @emergencyContacts.
