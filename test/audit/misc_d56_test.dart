@@ -22,6 +22,8 @@ import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.da
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
+import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:movera/widgets/checkbox.dart';
 import 'package:movera/widgets/custom_btn.dart';
 import 'package:movera/widgets/custom_google_map.dart';
@@ -507,5 +509,25 @@ void main() {
     await _pumpScreen(tester, const WalletScreen());
     expect(find.text('Recent payouts'), findsOneWidget);
     expect(find.text('See all'), findsNothing); // before: opened My bank
+  });
+
+  testWidgets('driver-u153: dragging across the stars queues one notice',
+      (tester) async {
+    await _pumpScreen(tester, const DriverRideCompleted());
+    final stars = find.byType(RatingBar);
+    await tester.ensureVisible(stars);
+    final box = tester.getRect(stars);
+    final drag = await tester.startGesture(box.centerLeft + const Offset(8, 0));
+    for (var i = 1; i <= 20; i++) {
+      await drag.moveTo(box.centerLeft + Offset(8 + i * (box.width - 16) / 20, 0));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await drag.up();
+    await tester.pump();
+    expect(find.text('Rating not sent (demo)'), findsOneWidget);
+    // Past the first notice's 4 s, none queued behind it.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Rating not sent (demo)'), findsNothing); // before: next one
   });
 }

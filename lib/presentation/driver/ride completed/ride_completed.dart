@@ -48,6 +48,9 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   static const Color _starOn = Color(0xFFF2A12E);
 
   double _rating = 0;
+
+  /// driver-u153: 'Rating not sent' shows once, not once per drag update.
+  bool _ratingNoticeShown = false;
   bool _finishing = false;
   late final WaybillRepository _waybills;
 
@@ -406,6 +409,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
           ),
           onRatingUpdate: (rating) {
             setState(() => _rating = rating);
+            if (_ratingNoticeShown) return;
+            _ratingNoticeShown = true;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(tr.ratingNotSentDemo)),
             );
