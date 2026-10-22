@@ -1,8 +1,11 @@
 // Wave 5 D5.6: small local fixes, one test per bug.
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/routing/route_instruction.dart';
+import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/routing/route_repository.dart';
@@ -31,6 +34,9 @@ class _SpyPolicy extends DriverCameraPolicy {
     return pose;
   }
 }
+
+final _en = lookupAppLocalizations(const Locale('en'));
+final _sv = lookupAppLocalizations(const Locale('sv'));
 
 RoadRoute _road(GeoPoint from, GeoPoint to) => RoadRoute(
       points: [from, to],
@@ -95,5 +101,14 @@ void main() {
     expect(again.zoom, once.zoom);
     expect(again.bearing, once.bearing);
     camera.dispose();
+  });
+
+  test('driver-27: a distance is rounded before its unit is picked', () {
+    String say(double m) => RouteInstructionCopy.formatDistance(m, _en);
+    expect(say(999.4), '999 m');
+    expect(say(999.6), '1.0 km'); // before: 1000 m
+    expect(say(9949), '9.9 km');
+    expect(say(9960), '10 km'); // before: 10.0 km
+    expect(RouteInstructionCopy.formatDistance(9960, _sv), '10 km');
   });
 }
