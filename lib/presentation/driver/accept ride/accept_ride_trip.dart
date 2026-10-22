@@ -730,25 +730,31 @@ extension _AcceptRideTrip on _AcceptRideState {
         _preciseLocationOff = false;
         // Subscribe before routing: fresh GPS must remain usable even when
         // the first road-route request is slow or never resolves.
-        _positionSubscription?.cancel();
-        _positionSubscription = _locationService
-            .watchPosition(distanceFilterMeters: 0)
-            .listen(
-          (position) {
-            if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-            _applyDriverPosition(position);
-          },
-          onError: (Object error) {
-            if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
-            _locationFailed(error);
-          },
-        );
+        _watchLiveLocation(epoch);
         await _applyDriverPosition(position, forceRoute: true);
       } catch (error) {
         if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
         _locationFailed(error);
+        // driver-r5-15: a missed first fix (8 s limit, a permission prompt)
+        // must not leave the trip without GPS until the next app resume.
+        if (_positionSubscription == null) { _watchLiveLocation(epoch); }
         unawaited(_refreshRoadRoute(force: true));
       }
+    }
+    void _watchLiveLocation(int epoch) {
+      _positionSubscription?.cancel();
+      _positionSubscription = _locationService
+          .watchPosition(distanceFilterMeters: 0)
+          .listen(
+        (position) {
+          if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
+          _applyDriverPosition(position);
+        },
+        onError: (Object error) {
+          if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) { return; }
+          _locationFailed(error);
+        },
+      );
     }
     /// driver-u23: approximate-only location never gives a usable fix, so
     /// the trip says "Precise location off" instead of "Location

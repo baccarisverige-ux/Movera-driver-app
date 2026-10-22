@@ -22,10 +22,15 @@ import '../../integration_test/headless_map_platform.dart';
 /// GPS the test feeds by hand; [listening] says whether a screen
 /// follows the stream.
 class _Gps implements DriverLocationRepository {
+  _Gps({this.firstFixFails = false});
+  final bool firstFixFails;
   final updates = StreamController<DriverLocation>.broadcast();
   bool get listening => updates.hasListener;
   @override
-  Future<DriverLocation> getCurrentPosition() async => at(0);
+  Future<DriverLocation> getCurrentPosition() async {
+    if (firstFixFails) throw TimeoutException('no first fix');
+    return at(0);
+  }
 
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
@@ -131,6 +136,20 @@ void main() {
     navigator.currentState!.pop();
     await _frames(tester, 10);
     expect(homeGps.listening, isTrue);
+    await _unmount(tester);
+  });
+
+  testWidgets('driver-r5-15: a failed first GPS fix still follows the GPS '
+      'stream on the trip', (tester) async {
+    _setUp(tester);
+    final gps = _Gps(firstFixFails: true);
+    addTearDown(gps.updates.close);
+    await _pumpApp(tester, AcceptRide(
+      initialStage: ActiveRideStage.onTrip,
+      locationRepository: gps,
+    ));
+    expect(gps.listening, isTrue,
+        reason: 'before: no subscription until the app went to the background');
     await _unmount(tester);
   });
 }
