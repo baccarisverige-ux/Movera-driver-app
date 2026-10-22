@@ -226,8 +226,10 @@ extension _HomeOfferRadar on _DriverHomeState {
       const wait = Duration(seconds: 2);
       final lifetime = offer.lifetime ?? _DriverHomeState._outsideOfferLifetime;
       if (wait * held > lifetime) { return; }
-      // So does an open Ride check (R10-2) until the driver answers.
-      if (mounted && (RideCheckGate.open || _HomeReservation(this)._reservationUp)) {
+      // So does an open Ride check (R10-2) until the driver answers, and
+      // the side menu, which would cover it (driver-u115).
+      if (mounted && (RideCheckGate.open || _HomeReservation(this)._reservationUp ||
+          (_scaffoldKey.currentState?.isDrawerOpen ?? false))) {
         _directOfferTimer?.cancel();
         _directOfferTimer = Timer(
           wait,

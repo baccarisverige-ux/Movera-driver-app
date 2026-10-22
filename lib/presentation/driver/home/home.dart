@@ -725,6 +725,7 @@ class _DriverHomeState extends State<DriverHome>
       // UI-03: Back closes the overlay on top before it leaves Home.
       child: _HomeBack(this)._backScope(Scaffold(
       key: _scaffoldKey,
+      onDrawerChanged: (open) => _HomeExclusive(this)._drawerChanged(open),
       drawer: DriverSideMenu(
         isOnline: _isOnline,
         accountActive: isAccountActivated,

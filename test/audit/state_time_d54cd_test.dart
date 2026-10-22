@@ -644,6 +644,22 @@ void main() {
     await _unmount(tester);
   });
 
+  testWidgets('driver-u115: an Exclusive offer under the open side menu '
+      'does not count as missed', (tester) async {
+    await _pumpHome(tester, location: _NoGps());
+    await tester.tap(find.text('OFF'));
+    await _until(tester, _exclusiveCard);
+    final home = tester.state<ScaffoldState>(
+        find.byWidgetPredicate((w) => w is Scaffold && w.drawer != null));
+    home.openDrawer();
+    await _pumpFor(tester, const Duration(seconds: 20)); // reads the menu
+    home.closeDrawer();
+    await _pumpFor(tester, const Duration(seconds: 3)); // its card slides down
+    expect(ExclusiveAnswers.instance.missedInRow, 0);
+    expect(_exclusiveCard, findsNothing, reason: 'its time ran out unseen');
+    await _unmount(tester);
+  });
+
   test('driver-u148: "Yesterday" only for the day before, by the calendar', () {
     final now = DateTime(2026, 10, 21, 1);
     expect(noticeTimeLabel(DateTime(2026, 10, 19, 23), now), '2 days ago');

@@ -123,6 +123,20 @@ extension _HomeExclusive on _DriverHomeState {
       });
     }
 
+    /// driver-u115: the side menu covers the offer like a screen pushed
+    /// over Home: its time out waits (the deadline stays), and when the
+    /// menu closes it gets the time left, or leaves unseen (not a miss).
+    void _drawerChanged(bool open) {
+      if (!open) {
+        if (_liveVisible) { _resumeExclusiveTimeout(); }
+        return;
+      }
+      if (_outsideOfferTimeoutTimer == null) { return; }
+      _outsideOfferTimeoutTimer?.cancel();
+      _outsideOfferTimeoutTimer = null;
+      _exclusive.clock.stop();
+    }
+
     /// R13-3 (C): back from a hidden tab or locked phone, whose pause
     /// cancelled the offer's time out. Gone if its time ran out meanwhile,
     /// else it counts down the time it has left.
