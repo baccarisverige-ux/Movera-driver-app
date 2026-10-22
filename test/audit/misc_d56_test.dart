@@ -18,6 +18,7 @@ import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/widgets/checkbox.dart';
 import 'package:movera/widgets/custom_btn.dart';
 import 'package:movera/widgets/custom_google_map.dart';
@@ -418,5 +419,17 @@ void main() {
     await tester.tap(find.byType(CustomButton));
     await _frames(tester, 12);
     expect(find.byType(DriverCreateAccountPhone), findsOneWidget);
+  });
+
+  test('driver-63: the island keeps only its newest posted messages', () {
+    IslandMessages.reset();
+    addTearDown(IslandMessages.reset);
+    for (var i = 0; i < 1000; i++) {
+      IslandMessages.show(IslandMessage(title: 'm$i'));
+      IslandMessages.take();
+    }
+    // Before: all 1000, for the life of the app.
+    expect(IslandMessages.posted.length, IslandMessages.maxPosted);
+    expect(IslandMessages.posted.last.title, 'm999');
   });
 }
