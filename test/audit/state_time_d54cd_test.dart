@@ -227,4 +227,12 @@ void main() {
     expect(noticeTimeLabel(DateTime(2026, 10, 19, 23, 30),
         DateTime(2026, 10, 20, 23, 45)), 'Yesterday');
   });
+
+  test('driver-97: a time tomorrow says "tomorrow" on the spring DST day', () {
+    // 28 Mar 2027 in Europe, 14 Mar 2027 in the US: a 23 h local day.
+    for (final now in [DateTime(2027, 3, 28, 12), DateTime(2027, 3, 14, 12)]) {
+      final until = DateTime(now.year, now.month, now.day + 1, 7);
+      expect(scheduledTimeFrom(until, now), 'tomorrow 07:00');
+    }
+  });
 }

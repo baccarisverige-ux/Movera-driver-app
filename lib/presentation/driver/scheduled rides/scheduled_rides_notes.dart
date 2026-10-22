@@ -7,9 +7,13 @@ part of 'scheduled_rides.dart';
 String _dayMonth(DateTime time) => DriverDates.dayMonth(time);
 
 /// "07:15", "tomorrow 07:15" or "22 Oct 07:15", seen from [now].
+@visibleForTesting
+String scheduledTimeFrom(DateTime time, DateTime now) => _timeFrom(time, now);
+
 String _timeFrom(DateTime time, DateTime now) {
-  final days = DateTime(time.year, time.month, time.day)
-      .difference(DateTime(now.year, now.month, now.day))
+  // Calendar days, counted in UTC: a local day can be 23 h (spring DST).
+  final days = DateTime.utc(time.year, time.month, time.day)
+      .difference(DateTime.utc(now.year, now.month, now.day))
       .inDays;
   final clock = clockLabel(time);
   return days == 0
