@@ -18,6 +18,7 @@ import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart'
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
+import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
@@ -110,6 +111,18 @@ class _Dispatch implements DispatchRepository {
   Stream<OfferWithdrawal> watchWithdrawals() => const Stream.empty();
 }
 
+/// Safety toolkit: Contact 112 > Call 112 with a dial launch answering
+/// [opened].
+Future<void> _call112(WidgetTester tester,
+    {required bool opened, bool web = false}) async {
+  await _show(tester, Scaffold(
+      body: SafetyToolKits(launchEmergencyDial: () async => opened, web: web)));
+  await tester.tap(find.text('Contact 112'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Call 112'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   tearDown(() => DriverAppTexts.language = 'en');
 
@@ -193,5 +206,13 @@ void main() {
     await tester.pump();
     expect(find.byKey(pill), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets("driver-91: in a browser the toolkit does not claim the dialer "
+      "opened", (tester) async {
+    await _call112(tester, opened: true, web: true);
+    expect(find.textContaining('dialer opened'), findsNothing);
+    expect(find.textContaining('Your browser was asked to call 112'),
+        findsOneWidget);
   });
 }

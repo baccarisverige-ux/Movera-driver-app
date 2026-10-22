@@ -1,5 +1,6 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
@@ -17,9 +18,17 @@ Future<T?> showSafetyToolKitSheet<T>(BuildContext context) {
 }
 
 class SafetyToolKits extends StatefulWidget {
-  const SafetyToolKits({super.key, this.launchEmergencyDial});
+  const SafetyToolKits({
+    super.key,
+    this.launchEmergencyDial,
+    this.web = kIsWeb,
+  });
 
   final Future<bool> Function()? launchEmergencyDial;
+
+  /// A browser build: its tel: launch reports success whether or not a
+  /// dialer opened (url_launcher_web), so the sheet never says it did.
+  final bool web;
 
   @override
   State<SafetyToolKits> createState() => _SafetyToolKitsState();
@@ -91,9 +100,11 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
           return;
         }
         _showMessage(
-          result == EmergencyDialResult.opened
-              ? tr.safetyDialerOpened
-              : tr.couldNotOpenDialerDial112,
+          result != EmergencyDialResult.opened
+              ? tr.couldNotOpenDialerDial112
+              : widget.web
+              ? tr.safetyDialerAskedBrowser
+              : tr.safetyDialerOpened,
         );
       }
     } finally {

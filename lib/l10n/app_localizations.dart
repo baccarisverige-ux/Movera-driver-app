@@ -6549,6 +6549,12 @@ abstract class AppLocalizations {
   /// **'Emergency dialer opened — confirm the call on your device.'**
   String get safetyDialerOpened;
 
+  /// No description provided for @safetyDialerAskedBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Your browser was asked to call 112. If no call starts, dial 112 on your phone.'**
+  String get safetyDialerAskedBrowser;
+
   /// No description provided for @safetyAudioUnavailable.
   ///
   /// In en, this message translates to:

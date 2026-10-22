@@ -3766,6 +3766,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Emergency dialer opened — confirm the call on your device.';
 
   @override
+  String get safetyDialerAskedBrowser =>
+      'Your browser was asked to call 112. If no call starts, dial 112 on your phone.';
+
+  @override
   String get safetyAudioUnavailable =>
       'Audio recording is unavailable in this demo.';
 

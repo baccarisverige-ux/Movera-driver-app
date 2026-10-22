@@ -1073,6 +1073,7 @@
   "safetyContactEmergencyQ": "Kontakta räddningstjänsten?",
   "safetyUse112Only": "Ring 112 bara när du eller någon annan behöver hjälp direkt.",
   "safetyDialerOpened": "Nödsamtalet är förberett – bekräfta samtalet på din enhet.",
+  "safetyDialerAskedBrowser": "Webbläsaren ombads ringa 112. Om inget samtal startar, slå 112 på din telefon.",
   "safetyAudioUnavailable": "Ljudinspelning är inte tillgänglig i den här demon.",
   "safetyTripSharingUnavailable": "Delning av resa är inte tillgänglig i den här demon.",
   "safetyPreferences": "Säkerhetsinställningar",

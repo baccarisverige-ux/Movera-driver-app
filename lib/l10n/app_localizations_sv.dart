@@ -3782,6 +3782,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Nödsamtalet är förberett – bekräfta samtalet på din enhet.';
 
   @override
+  String get safetyDialerAskedBrowser =>
+      'Webbläsaren ombads ringa 112. Om inget samtal startar, slå 112 på din telefon.';
+
+  @override
   String get safetyAudioUnavailable =>
       'Ljudinspelning är inte tillgänglig i den här demon.';
 
