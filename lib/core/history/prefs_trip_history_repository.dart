@@ -63,6 +63,7 @@ class PrefsTripHistoryRepository {
             cancellationReasonCode: data['cancellationReasonCode'] as String?,
             cashCollected: data['cashCollected'] as String?,
             driverBonus: data['driverBonus'] as String?,
+            waitingFee: data['waitingFee'] as String?,
             // Saved in UTC (driver-r4-14); older rows in local time.
             completedAt: DateTime.tryParse(
               data['completedAt'] as String? ?? '',
@@ -153,6 +154,7 @@ class PrefsTripHistoryRepository {
             'cancellationReasonCode',
             'cashCollected',
             'driverBonus',
+            'waitingFee',
           ].every((key) => row[key] == null || row[key] is String) ||
           (row['fareMinorUnits'] != null && row['fareMinorUnits'] is! int) ||
           (row['status'] != null &&
@@ -258,6 +260,8 @@ class PrefsTripHistoryRepository {
         if (cashCollected?.trim().isNotEmpty == true)
           'cashCollected': cashCollected!.trim(),
         if (record.driverBonus != null) 'driverBonus': record.driverBonus,
+        // driver-u19: Movera takes no fee on it, as on the waybill.
+        if (record.waitingFee != null) 'waitingFee': record.waitingFee,
         // UTC: a local time has no offset, so the repeated autumn hour
         // would read back an hour off (driver-r4-14).
         'completedAt': at.toUtc().toIso8601String(),
