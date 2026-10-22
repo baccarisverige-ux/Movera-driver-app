@@ -5127,42 +5127,6 @@ abstract class AppLocalizations {
   /// **'Verification is unavailable in this demo.'**
   String get verificationUnavailableDemo;
 
-  /// No description provided for @starterTagline.
-  ///
-  /// In en, this message translates to:
-  /// **'Let’s hit the road. Accept rides in real time and make every minute count'**
-  String get starterTagline;
-
-  /// No description provided for @legacySignInPreview.
-  ///
-  /// In en, this message translates to:
-  /// **'Legacy sign-in preview'**
-  String get legacySignInPreview;
-
-  /// No description provided for @signInUnavailableDemo.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign-in unavailable — demo'**
-  String get signInUnavailableDemo;
-
-  /// No description provided for @legacyRegistrationPreview.
-  ///
-  /// In en, this message translates to:
-  /// **'Legacy registration preview'**
-  String get legacyRegistrationPreview;
-
-  /// No description provided for @registrationUnavailableDemo.
-  ///
-  /// In en, this message translates to:
-  /// **'Registration unavailable — demo'**
-  String get registrationUnavailableDemo;
-
-  /// No description provided for @returnToDemo.
-  ///
-  /// In en, this message translates to:
-  /// **'Return to demo'**
-  String get returnToDemo;
-
   /// No description provided for @signIn.
   ///
   /// In en, this message translates to:

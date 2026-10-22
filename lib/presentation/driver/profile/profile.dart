@@ -7,7 +7,6 @@ import 'package:movera/core/vehicle/local_vehicle_store.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
-import 'package:movera/presentation/driver/auth/starter/starter.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
@@ -420,8 +419,15 @@ class _DriverProfileState extends State<DriverProfile> {
       if (!context.mounted) {
         return;
       }
+      // uat-d2: the demo landing screen is gone; a logged-out driver is
+      // back on Home (demo mode), where the real sign-in will start.
+      final home = runtime?.homeBuilder;
+      if (home == null) {
+        Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
+        return;
+      }
       Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-        MaterialPageRoute<void>(builder: (_) => const DriverStarter()),
+        MaterialPageRoute<void>(builder: (_) => home()),
         (route) => false,
       );
     }

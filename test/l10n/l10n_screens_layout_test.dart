@@ -14,7 +14,6 @@ import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
 import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/sign%20in%20phone/sign_in_phone.dart';
 import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
-import 'package:movera/presentation/driver/auth/starter/starter.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
@@ -104,7 +103,6 @@ void main() {
 
       // Each screen with a text of its own that must show translated.
       final screens = <String, (Widget Function(), String Function())>{
-        'Starter': (() => const DriverStarter(), () => tr.demoModeNoAccount),
         'Sign in': (() => const DriverSignIn(), () => tr.continueWithPhone),
         'Sign in with phone': (
           () => const DriverSignInPhone(),

@@ -2964,25 +2964,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'La vérification n’est pas disponible dans cette démo.';
 
   @override
-  String get starterTagline =>
-      'En route ! Acceptez des courses en temps réel et faites compter chaque minute';
-
-  @override
-  String get legacySignInPreview => 'Aperçu de l’ancienne connexion';
-
-  @override
-  String get signInUnavailableDemo => 'Connexion indisponible — démo';
-
-  @override
-  String get legacyRegistrationPreview => 'Aperçu de l’ancienne inscription';
-
-  @override
-  String get registrationUnavailableDemo => 'Inscription indisponible — démo';
-
-  @override
-  String get returnToDemo => 'Retour à la démo';
-
-  @override
   String get signIn => 'Se connecter';
 
   @override

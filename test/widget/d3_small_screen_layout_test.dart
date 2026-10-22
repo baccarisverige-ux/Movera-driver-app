@@ -11,13 +11,11 @@ import 'package:movera/presentation/driver/accept%20ride/trip_outcome_sheet.dart
 import 'package:movera/presentation/driver/analytics/acceptance%20rate/acceptance_rate.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
-import 'package:movera/presentation/driver/auth/starter/starter.dart';
 import 'package:movera/presentation/driver/documents/document_preview.dart';
 import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
-import 'package:movera/widgets/custom_btn.dart';
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -215,39 +213,6 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    // UI-11: after Log out the landing screen scrolls, its title has a
-    // margin and the unavailable buttons look disabled.
-    testWidgets('UI-11 logout landing fits and greys its disabled buttons '
-        'at $at', (tester) async {
-      await _pumpAt(tester, size, const DriverStarter());
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      final title = find.text('Demo mode — no account');
-      expect(tester.getRect(title).left, greaterThanOrEqualTo(8));
-      expect(tester.getRect(title).right, lessThanOrEqualTo(size.width - 8));
-      for (final button in tester.widgetList<CustomButton>(
-        find.byType(CustomButton),
-      )) {
-        expect(button.onPressed, isNull);
-        final box = tester
-            .widgetList<Container>(find.descendant(
-              of: find.byWidget(button),
-              matching: find.byType(Container),
-            ))
-            .first;
-        final decoration = box.decoration! as BoxDecoration;
-        expect(
-          decoration.color == CustomButton.disabledFill ||
-              decoration.color == Colors.transparent,
-          isTrue,
-        );
-        final label = tester.widget<Text>(find.descendant(
-          of: find.byWidget(button),
-          matching: find.byType(Text),
-        ));
-        expect(label.style?.color, CustomButton.disabledText);
-      }
-    });
 
     // UI-02: Documents says it is a sample, not a real checklist.
     testWidgets('UI-02 Documents is labelled as a sample at $at',

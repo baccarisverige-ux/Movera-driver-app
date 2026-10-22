@@ -2930,25 +2930,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Verification is unavailable in this demo.';
 
   @override
-  String get starterTagline =>
-      'Let’s hit the road. Accept rides in real time and make every minute count';
-
-  @override
-  String get legacySignInPreview => 'Legacy sign-in preview';
-
-  @override
-  String get signInUnavailableDemo => 'Sign-in unavailable — demo';
-
-  @override
-  String get legacyRegistrationPreview => 'Legacy registration preview';
-
-  @override
-  String get registrationUnavailableDemo => 'Registration unavailable — demo';
-
-  @override
-  String get returnToDemo => 'Return to demo';
-
-  @override
   String get signIn => 'Sign in';
 
   @override

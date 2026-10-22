@@ -34,7 +34,7 @@ class TakeIdPhoto extends StatelessWidget {
             if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) {
               return;
             }
-            // driver-r3-10: in the app, Sign in or Starter is the first
+            // driver-r3-10: in the app, Sign in is the first
             // route here, not Home; "Return to home" opens Home itself.
             final runtime = DriverRuntimeScope.maybeOf(context);
             if (runtime == null) {
