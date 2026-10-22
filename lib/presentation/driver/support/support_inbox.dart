@@ -351,6 +351,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                                       message.text.trim(),
                                       'LOCAL DRAFT',
                                       false,
+                                      category: category,
                                     );
                                     setSheetState(() {
                                       saving = true;
@@ -626,29 +627,44 @@ class _TicketCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: open
-                            ? const Color(0xFFE7F6EF)
-                            : const Color(0xFFF0F2F3),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        ticket.status == 'LOCAL DRAFT'
-                            ? tr.supportLocalDraftBadge
-                            : ticket.status,
-                        style: TextStyle(
-                          color: open
-                              ? const Color(0xFF16895B)
-                              : const Color(0xFF758087),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
+                    Wrap(
+                      spacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: open
+                                ? const Color(0xFFE7F6EF)
+                                : const Color(0xFFF0F2F3),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            ticket.status == 'LOCAL DRAFT'
+                                ? tr.supportLocalDraftBadge
+                                : ticket.status,
+                            style: TextStyle(
+                              color: open
+                                  ? const Color(0xFF16895B)
+                                  : const Color(0xFF758087),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ),
-                      ),
+                        if (ticket.category case final category?)
+                          Text(
+                            _supportCategoryLabel(category),
+                            style: const TextStyle(
+                              color: Color(0xFF6F7B82),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -835,10 +851,14 @@ class _Ticket {
   final String status;
   bool unread;
   final List<_Message> messages;
-  _Ticket(this.subject, this.preview, this.status, this.unread)
+  /// The category picked in the draft; null on tickets saved before it
+  /// was kept (driver-u171).
+  final String? category;
+  _Ticket(this.subject, this.preview, this.status, this.unread, {this.category})
     : messages = [_Message(preview, false)];
   Map<String, dynamic> toJson() => {
     'subject': subject,
+    if (category != null) 'category': category,
     'preview': preview,
     'status': status,
     'unread': unread,
@@ -855,6 +875,7 @@ class _Ticket {
       json['preview'] as String,
       'LOCAL DRAFT',
       false,
+      category: json['category'] is String ? json['category'] as String : null,
     );
     ticket.messages.clear();
     for (final row in (json['messages'] as List? ?? [])) {

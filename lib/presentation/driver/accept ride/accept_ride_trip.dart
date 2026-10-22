@@ -394,10 +394,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
             paid ?? _waybills.current ?? _buildCurrentWaybill(),
             status: status, authoritative:true, next:next,
-            // Kept in English; History shows it translated (driver-u155).
-            paymentMethod: completed
-                ? (widget.paidByCash ? 'Cash' : 'Card')
-                : null,
+            paymentMethod: completed ? (cash ? 'Cash' : 'Card') : null,
             cashCollected: cash ? _cashToCollect : null);
           if (!mounted) { return; }
           if (!await _rideLifecycle.applyProjection(status)) {
@@ -1076,29 +1073,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       if(!mounted) { return; }
       _waybills.completeCurrent();
       final nextRide = queuedNext
-          ? AcceptRide(
-              tripId: offer.id,
-              riderName: offer.riderName,
-              riderRating: offer.rating,
-              fare: offer.terms.fare,
-              driverBonus: offer.terms.driverBonus,
-              category: offer.category,
-              matchedVia: WaybillRecord.exclusiveOfferSource,
-              pickupAddress: offer.pickup,
-              pickupArea: offer.pickup.split(',').last.trim(),
-              dropoffAddress: offer.dropoff,
-              pickupPosition: offer.pickupPosition,
-              dropoffPosition: offer.dropoffPosition,
-              locationRepository: widget.locationRepository,
-              routeRepository: widget.routeRepository,
-              waybillRepository: _waybills,
-              sessionController: widget.sessionController,
-              activeRideRepository: widget.activeRideRepository,
-              dispatchRepository: widget.dispatchRepository,
-              destinationModeActive: _destinationActive,
-              destinationAddress: _destinationAddress,
-              destinationPosition: _destinationPosition,
-            )
+          ? _nextRideFor(offer)
           : null;
       Navigator.of(context).pushReplacement(
         BottomToTopTransition(
@@ -1112,6 +1087,31 @@ extension _AcceptRideTrip on _AcceptRideState {
         ),
       );
     }
+    /// The secured next trip, as completion, a driver cancel and the
+    /// journal's `next` snapshot all start it: destination mode included.
+    AcceptRide _nextRideFor(_NextTripRadarOffer offer) => AcceptRide(
+      tripId: offer.id,
+      riderName: offer.riderName,
+      riderRating: offer.rating,
+      fare: offer.terms.fare,
+      driverBonus: offer.terms.driverBonus,
+      category: offer.category,
+      matchedVia: WaybillRecord.exclusiveOfferSource,
+      pickupAddress: offer.pickup,
+      pickupArea: offer.pickup.split(',').last.trim(),
+      dropoffAddress: offer.dropoff,
+      pickupPosition: offer.pickupPosition,
+      dropoffPosition: offer.dropoffPosition,
+      locationRepository: widget.locationRepository,
+      routeRepository: widget.routeRepository,
+      waybillRepository: _waybills,
+      sessionController: widget.sessionController,
+      activeRideRepository: widget.activeRideRepository,
+      dispatchRepository: widget.dispatchRepository,
+      destinationModeActive: _destinationActive,
+      destinationAddress: _destinationAddress,
+      destinationPosition: _destinationPosition,
+    );
     PersistedActiveRide _snapshotForOffer(_NextTripRadarOffer offer) => PersistedActiveRide(
       tripId: offer.id, stage: ActiveRideStage.headingToPickup, pickupKm: offer.pickupKm,
         destinationModeActive: _destinationActive,
@@ -1221,6 +1221,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!mounted ||
           _offersHeld ||
           _stage != ActiveRideStage.onTrip ||
+          // u76: the trip has ended (its outcome sheet may still be up).
+          _rideLifecycle.terminal ||
           _onTripRadarState != _OnTripRadarState.scanning ||
           _onTripRadarDeclined ||
           (_nextTripRadarDemoTimer?.isActive ?? false)) {
@@ -1261,6 +1263,8 @@ extension _AcceptRideTrip on _AcceptRideState {
 
           // R10-2: a Ride check is open; the offer waits for the answer.
           if (RideCheckGate.open) {
+            // Not yet seen: it gets its whole time after the answer.
+            if (_nextTripOfferHeldAt == null) { _nextTripOfferDeadline = null; }
             _nextTripOfferHeldAt ??= DateTime.now();
             return;
           }
@@ -1268,16 +1272,17 @@ extension _AcceptRideTrip on _AcceptRideState {
         },
       );
     }
-    void _presentOnTripOffer() {
+    void _presentOnTripOffer({Duration? left}) {
       // D-05: never while the trip is hidden; the resume looks again.
-      if (_offersHeld) { return; }
+      // Never after the trip ended either (u76).
+      if (_offersHeld || _rideLifecycle.terminal) { return; }
       _rebuild(() {
         final offer = _onTripRadarOfferForDestination();
         if (!_dropoffFollowsDestination(offer.dropoffPosition)) { return; }
         _nextTripRadarOffer = offer;
         _onTripRadarState = _OnTripRadarState.offerAvailable;
       });
-      _armOnTripOfferExpiry();
+      _armOnTripOfferExpiry(left: left);
       _hideRideSheetForOffer();
     }
     /// R10-2: no next-trip offer while the Ride check is open. One already
@@ -1303,11 +1308,15 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (heldAt == null) { return; }
       _nextTripOfferHeldAt = null;
       if (_onTripRadarState != _OnTripRadarState.scanning || _onTripRadarDeclined) { return; }
-      if (DateTime.now().difference(heldAt) >= _AcceptRideState._onTripOfferLifetime) {
+      // driver-45: an offer that was on screen keeps its deadline; only
+      // the rest of its time is left.
+      final left = _nextTripOfferDeadline?.difference(_offerNow());
+      if ((left ?? _AcceptRideState._onTripOfferLifetime - DateTime.now().difference(heldAt)) <= Duration.zero) {
+        _nextTripOfferDeadline = null;
         _maybeScheduleOnTripRadarDemoOffer();
         return;
       }
-      _presentOnTripOffer();
+      _presentOnTripOffer(left: left);
     }
     void _armOnTripOfferExpiry({Duration? left}) {
       _nextTripOfferExpiry?.cancel();
@@ -1558,26 +1567,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       final queuedNext =
           _onTripRadarState == _OnTripRadarState.secured && offer != null;
       final nextRide = queuedNext
-          ? AcceptRide(
-              tripId: offer.id,
-              riderName: offer.riderName,
-              riderRating: offer.rating,
-              fare: offer.terms.fare,
-              driverBonus: offer.terms.driverBonus,
-              category: offer.category,
-              matchedVia: WaybillRecord.exclusiveOfferSource,
-              pickupAddress: offer.pickup,
-              pickupArea: offer.pickup.split(',').last.trim(),
-              dropoffAddress: offer.dropoff,
-              pickupPosition: offer.pickupPosition,
-              dropoffPosition: offer.dropoffPosition,
-              locationRepository: widget.locationRepository,
-              routeRepository: widget.routeRepository,
-              waybillRepository: _waybills,
-              sessionController: widget.sessionController,
-              activeRideRepository: widget.activeRideRepository,
-              dispatchRepository: widget.dispatchRepository,
-            )
+          ? _nextRideFor(offer)
           : null;
       if (nextRide != null) {
         _waybills.promoteNextToCurrent();

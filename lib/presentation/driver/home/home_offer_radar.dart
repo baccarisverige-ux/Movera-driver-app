@@ -226,8 +226,10 @@ extension _HomeOfferRadar on _DriverHomeState {
       const wait = Duration(seconds: 2);
       final lifetime = offer.lifetime ?? _DriverHomeState._outsideOfferLifetime;
       if (wait * held > lifetime) { return; }
-      // So does an open Ride check (R10-2) until the driver answers.
-      if (mounted && (RideCheckGate.open || _HomeReservation(this)._reservationUp)) {
+      // So does an open Ride check (R10-2) until the driver answers, and
+      // the side menu, which would cover it (driver-u115).
+      if (mounted && (RideCheckGate.open || _HomeReservation(this)._reservationUp ||
+          (_scaffoldKey.currentState?.isDrawerOpen ?? false))) {
         _directOfferTimer?.cancel();
         _directOfferTimer = Timer(
           wait,
@@ -238,8 +240,10 @@ extension _HomeOfferRadar on _DriverHomeState {
       if (!mounted ||
           !_isOnline ||
           showRideRequests ||
-          // One Exclusive offer at a time: a waiting one never replaces it.
-          (_outsideRadarOffer != null && _outsideRadarOffer!.id != offer.id) ||
+          // One Exclusive offer at a time: a waiting one never replaces it,
+          // and the one up is not shown again (that would restart its
+          // countdown, driver-72).
+          _outsideRadarOffer != null ||
           // Its card is sliding down: it is leaving.
           _exclusive.leaving ||
           _radarHomeOffers.isNotEmpty ||
@@ -259,7 +263,6 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
 
       _outsideOfferTimeoutTimer?.cancel();
-      final arriving = _outsideRadarOffer?.id != offer.id;
       _rebuild(() {
         _outsideRadarOffer = offer;
       });
@@ -268,19 +271,17 @@ extension _HomeOfferRadar on _DriverHomeState {
       // route comes onto the map once the sheet has settled.
       _HomeExclusive(this)._raiseExclusive(offer, lifetime);
       // The island says it too while the card arrives.
-      if (arriving) {
-        IslandMessages.show(offer.assigned
-            ? HomeIslandNotices.assignedRide
-            : offer.reservation
-            ? HomeIslandNotices.exclusiveReservation
-            : HomeIslandNotices.exclusiveRide);
-        // And it is in Notifications (Q31, N1).
-        final feed = DriverNotificationFeed.instance;
-        feed.add(
-          DriverNotices.exclusiveOffer(at: feed.now, seconds: lifetime.inSeconds),
-          popup: false,
-        );
-      }
+      IslandMessages.show(offer.assigned
+          ? HomeIslandNotices.assignedRide
+          : offer.reservation
+          ? HomeIslandNotices.exclusiveReservation
+          : HomeIslandNotices.exclusiveRide);
+      // And it is in Notifications (Q31, N1).
+      final feed = DriverNotificationFeed.instance;
+      feed.add(
+        DriverNotices.exclusiveOffer(at: feed.now, seconds: lifetime.inSeconds),
+        popup: false,
+      );
 
       _outsideOfferTimeoutTimer = Timer(
         lifetime,
@@ -443,6 +444,9 @@ extension _HomeOfferRadar on _DriverHomeState {
       _radarOfferTimeoutTimers[offer.id] = Timer(
         left.isNegative ? Duration.zero : left,
         () {
+          // driver-u128: a window that ends during a Match claim can be
+          // armed again (at once) if the claim leaves the card available.
+          _radarOfferTimeoutTimers.remove(offer.id);
           if (!mounted ||
               !_radarHomeOffers.any((item) => item.id == offer.id) ||
               _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
@@ -574,6 +578,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             _homeRadarMatchingOfferId = null;
             _homeRadarMatchStates.remove(offer.id);
           });
+          _startRadarPickWindow(offer); // its time left, or Match fades
           IslandMessages.show(HomeIslandNotices.noConnection);
       }
       if (_homeRadarMatchingOfferId == null) {
@@ -623,6 +628,9 @@ extension _HomeOfferRadar on _DriverHomeState {
           IslandMessages.show(HomeIslandNotices.tripUnavailable);
           _dismissOutsideRadarOffer();
         }
+        // driver-u116: the full Radar list's own Match took it; the trip
+        // that begins clears the deck.
+        if (_radarListClaiming.value) { return; }
         for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
           if (ids.contains(offer.id) ||
               _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
@@ -1108,6 +1116,12 @@ extension _HomeOfferRadar on _DriverHomeState {
         ),
       );
 
+      _clearHomeOffersAfterFrame();
+    }
+    /// A trip began: Home's offers (deck, waiting trips, the Exclusive
+    /// offer and its route) are done with. Also when the trip was matched
+    /// from the full Radar list, not the deck (driver-u116).
+    void _clearHomeOffersAfterFrame() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) { return; }
         _rebuild(() {
@@ -1317,6 +1331,18 @@ extension _HomeOfferRadar on _DriverHomeState {
             _openClaimedHomeOffer();
             return;
           }
+          // Close to pickup (job L3, [ScheduledRideRules.exclusiveBeforeMinutes]
+          // before its pickup time) the untaken reservation becomes an
+          // Exclusive offer; it waits while other offers are on screen.
+          // driver-r3-15: armed also while a Match claim is in flight.
+          final untilExclusive = _HomeScheduled(this)._untilExclusiveStep();
+          if (untilExclusive != null) {
+            _reservationOfferTimer = Timer(untilExclusive, () {
+              if (!mounted || !_isOnline) { return; }
+              _soonReservationReady = true;
+              _maybeShowSoonReservation();
+            });
+          }
           if (_homeRadarMatchingOfferId != null) { return; }
 
           // Frontend demo only. Outside-Radar offers remain exclusive and
@@ -1381,17 +1407,6 @@ extension _HomeOfferRadar on _DriverHomeState {
             },
           );
 
-          // Close to pickup (job L3, [ScheduledRideRules.exclusiveBeforeMinutes]
-          // before its pickup time) the untaken reservation becomes an
-          // Exclusive offer; it waits while other offers are on screen.
-          final untilExclusive = _HomeScheduled(this)._untilExclusiveStep();
-          if (untilExclusive != null) {
-            _reservationOfferTimer = Timer(untilExclusive, () {
-              if (!mounted || !_isOnline) { return; }
-              _soonReservationReady = true;
-              _maybeShowSoonReservation();
-            });
-          }
           // Radar is live: the smart gap may start the next scheduled ride,
           // and rides Movera assigns come in.
           _HomeScheduled(this)._onRadarLive();

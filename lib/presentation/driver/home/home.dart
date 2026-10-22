@@ -334,6 +334,7 @@ class _DriverHomeState extends State<DriverHome>
   /// The Radar list is sending a Match: Back keeps it open until dispatch
   /// answers, so a won trip still opens.
   final ValueNotifier<bool> _radarListClaiming = ValueNotifier<bool>(false);
+  final RadarHiddenTrips _radarHidden = RadarHiddenTrips(); // u159
   /// Decision 4: the offer settings are locked while a claim is out.
   void _syncClaimLock() => ClaimLock.set(mounted && _HomeOfferRules(this)._claimInFlight);
   bool isAccountActivated = true;
@@ -676,6 +677,7 @@ class _DriverHomeState extends State<DriverHome>
     if (!mounted) { return; }
     _HomeOfferRules(this)._releaseHeldOffline(); // Decision 3: a won trip began.
     _HomeScheduled(this)._recheckLateScheduled();
+    if (_driverSession.activeTripId != null && _radarHomeOffers.isNotEmpty) { _HomeOfferRadar(this)._cancelAllOfferTimers(); _HomeOfferRadar(this)._clearHomeOffersAfterFrame(); } // u116
     if (_driverSession.consumeResumeHomeAfterTrip()) {
       setState(() {
         showRideRequests = false;
@@ -724,6 +726,7 @@ class _DriverHomeState extends State<DriverHome>
       // UI-03: Back closes the overlay on top before it leaves Home.
       child: _HomeBack(this)._backScope(Scaffold(
       key: _scaffoldKey,
+      onDrawerChanged: (open) => _HomeExclusive(this)._drawerChanged(open),
       drawer: DriverSideMenu(
         isOnline: _isOnline,
         accountActive: isAccountActivated,
@@ -772,6 +775,7 @@ class _DriverHomeState extends State<DriverHome>
                   followsDestination: (o) => _HomeOfferRadar(this)._followsDestination(o.dropoffPosition.toLatLng()),
                   towardPickupTime: _HomeScheduled(this)._towardPickupTime,
                   claimPending: _radarListClaiming,
+                  hiddenTrips: _radarHidden,
                   onCloseRides: (hasOffers) {
                     setState(() {
                       showRideRequests = false;

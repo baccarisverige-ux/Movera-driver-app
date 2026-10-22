@@ -34,6 +34,9 @@ extension _HomeMapSheet on _DriverHomeState {
     Future<void> _startDriverLocation({bool moveCamera = false}) async {
       final epoch = ++_locationEpoch;
       if (!_liveVisible) { return; }
+      // driver-u119: a stream already running keeps delivering under the
+      // new epoch while the one-shot fix is awaited.
+      if (_driverLocationSubscription != null) { _listenToDriverLocation(); }
       try {
         final position = await _driverLocationService.getCurrentPosition();
         if (!mounted) { return; }
@@ -41,7 +44,7 @@ extension _HomeMapSheet on _DriverHomeState {
         final validInitial = position.isDisplayableAt(DateTime.now()) &&
             position.isUsableAt(DateTime.now());
         _applyDriverLocation(position);
-        _listenToDriverLocation();
+        if (_driverLocationSubscription == null) { _listenToDriverLocation(); }
         if (validInitial && (moveCamera || !_didCenterOnLiveLocation)) {
           _didCenterOnLiveLocation = true;
           await _animateToDriverLocation();
@@ -61,7 +64,7 @@ extension _HomeMapSheet on _DriverHomeState {
         // A transient one-shot GPS failure must not leave Home without a
         // location subscription until the next app resume or recenter tap.
         // Continuous updates can recover when permissions/provider return.
-        _listenToDriverLocation();
+        if (_driverLocationSubscription == null) { _listenToDriverLocation(); }
       }
     }
     void _listenToDriverLocation() {
