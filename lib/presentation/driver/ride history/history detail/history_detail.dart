@@ -411,7 +411,8 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
     final completed = _ride.status == TripStatus.completed;
     return Column(
       children: [
-        _detailRow(tr.rideCost, completed ? _ride.fare : '—'),
+        // A cancel or no-show fee the driver earned (driver-r5-13).
+        _detailRow(tr.rideCost, completed ? _ride.fare : _ride.feeEarned ?? '—'),
         // Q16/Q18: Movera's bonus is in the fare.
         if (_ride.driverBonus case final bonus? when completed) ...[
           6.height,

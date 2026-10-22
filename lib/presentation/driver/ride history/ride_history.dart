@@ -78,9 +78,12 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           dropoff: record.dropoff,
           distance: record.distance,
           duration: record.duration,
-          earnings: record.status == TripStatus.completed ? record.fare : '—',
+          earnings: record.status == TripStatus.completed
+              ? record.fare
+              : record.feeEarned ?? '—',
           status:record.status,
-          fareMoney:record.fareMoney,
+          // The fare, or a cancel / no-show fee earned (driver-r5-13).
+          fareMoney:record.earnedMoney,
           completedAt: at,
         );
       }).toList());
@@ -122,7 +125,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
 
   String get _periodEarnings {
     var total=0;
-    for(final ride in _periodRidesList.where((ride)=>ride.status==TripStatus.completed)) {
+    for(final ride in _periodRidesList) {
       if(ride.fareMoney==null) { return tr.unavailable; }
       total+=ride.fareMoney!.minorUnits;
     }

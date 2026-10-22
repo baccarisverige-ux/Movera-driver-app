@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/money/money.dart';
@@ -30,19 +29,20 @@ class TodayEarnings {
     }
   }
 
-  /// The completed trips on [now]'s day; null when one has no readable
-  /// fare (Ride history then says "unavailable").
+  /// The trips on [now]'s day: completed fares, and the cancel and
+  /// no-show fees the driver earned (driver-r5-13); null when one cannot
+  /// be read (Ride history then says "unavailable").
   static String? totalOf(Iterable<TripHistoryRecord> records, DateTime now) {
     var total = 0;
     for (final record in records) {
       final at = record.completedAt;
-      if (record.status != TripStatus.completed || at == null) { continue; }
+      if (at == null) { continue; }
       final local = at.toLocal();
       if (local.year != now.year || local.month != now.month ||
           local.day != now.day) {
         continue;
       }
-      final fare = record.fareMoney;
+      final fare = record.earnedMoney;
       if (fare == null) { return null; }
       total += fare.minorUnits;
     }

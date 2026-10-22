@@ -12,7 +12,11 @@ import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
+import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/history/today_earnings.dart';
+import 'package:movera/core/ride/completion_journal.dart';
+import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/money/money.dart';
@@ -584,6 +588,63 @@ void main() {
       gps.decline();
       await expectLater(again,
           throwsA(isA<LocationPermissionDeniedException>()));
+    });
+  });
+
+  group('driver-r5-13', () {
+    WaybillRecord trip(String id) => WaybillRecord(
+      tripId: id,
+      statusLabel: WaybillRecord.currentTrip,
+      issuedAt: DateTime.now(),
+      fare: '120,00 kr',
+      service: 'Comfort',
+      riderName: 'Sara',
+      pickup: 'Tegnérgatan, Stockholm',
+      dropoff: 'Odengatan, Stockholm',
+      source: WaybillRecord.moveraRadarSource,
+      driverName: WaybillRecord.demoDriverName,
+      vehicle: WaybillRecord.vehicleUnavailable,
+      licensePlate: WaybillRecord.plateUnavailable,
+      passengerCapacity: 4,
+    );
+
+    test('a rider-cancel fee and a no-show fee are kept and counted in '
+        "today's earnings", () async {
+      final journal = CompletionJournal(active: MemoryActiveRideRepository());
+      await journal.finish(trip('done'));
+      await journal.finish(
+        trip('cancelled'),
+        status: TripStatus.cancelledByRider,
+        authoritative: true,
+        cancellationActor: 'rider',
+        feeEarned: '45,00 kr',
+      );
+      await journal.finish(
+        trip('no-show'),
+        status: TripStatus.noShow,
+        cancellationActor: 'driver',
+        feeEarned: '52,00 kr',
+      );
+      final rows = await PrefsTripHistoryRepository().list();
+      final byId = {for (final row in rows) row.tripId: row};
+      expect(byId['cancelled']!.feeEarned, '45,00 kr');
+      expect(byId['no-show']!.feeEarned, '52,00 kr');
+      expect(byId['cancelled']!.earnedMoney, Money.ore(4500));
+      // 120 + 45 + 52.
+      expect(TodayEarnings.totalOf(rows, DateTime.now()), '217,00 kr');
+    });
+
+    test('rows saved before it was kept still read, with no fee', () async {
+      SharedPreferences.setMockInitialValues({
+        PrefsTripHistoryRepository.key: '[{"tripId":"old","riderName":"Sara",'
+            '"whenLabel":"1/1/2026, 10:00","pickup":"A","dropoff":"B",'
+            '"fare":"120,00 kr","category":"Comfort",'
+            '"status":"cancelled_by_rider","cancellationActor":"rider",'
+            '"completedAt":"2026-01-01T10:00:00.000Z"}]',
+      });
+      final rows = await PrefsTripHistoryRepository().list();
+      expect(rows.single.feeEarned, isNull);
+      expect(rows.single.earnedMoney, Money.ore(0));
     });
   });
 }
