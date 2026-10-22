@@ -23,6 +23,8 @@ import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/widgets/offer_route_marks.dart';
+import 'package:movera/widgets/route_mark_pins.dart';
 
 import 'd51_translations_test.dart' as d51 show show;
 import 'd51_translations_test.dart' show languages, speak, words;
@@ -328,6 +330,20 @@ void main() {
       await show(tester, code, const ScheduledRidesScreen());
       expect(find.text(fresh), findsOneWidget, reason: code);
       expect(find.text('NEW'), findsNothing);
+    }
+  });
+
+  test('driver-u181: offer pins are painted again after a language switch',
+      () async {
+    OfferRouteMarks.debugClearCache();
+    speak('en');
+    final english = await OfferRouteMarks.pin(RouteMarkKind.pickup, '4 min');
+    expect(await OfferRouteMarks.pin(RouteMarkKind.pickup, '4 min'),
+        same(english), reason: 'still cached in one language');
+    for (final code in languages) {
+      speak(code);
+      expect(await OfferRouteMarks.pin(RouteMarkKind.pickup, '4 min'),
+          isNot(same(english)), reason: code);
     }
   });
 }
