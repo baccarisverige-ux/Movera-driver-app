@@ -1,15 +1,21 @@
 // Wave 5 D5.6: small local fixes, one test per bug.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/privacy/local_data.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/routing/route_instruction.dart';
 import 'package:movera/core/safety/ride_check_gate.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/safety/ride_check_recorder_native.dart';
 import 'package:movera/l10n/app_localizations.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
+import 'package:movera/widgets/custom_google_map.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -63,6 +69,30 @@ class _FakeAudio implements AudioRecorder {
   Future<void> dispose() async => disposed = true;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// GPS the test sends by hand.
+class _Gps implements DriverLocationRepository {
+  final updates = StreamController<DriverLocation>.broadcast();
+  @override
+  Future<DriverLocation> getCurrentPosition() async => _at(0);
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      updates.stream;
+}
+
+/// [meters] north of Stockholm Central, driving north.
+DriverLocation _at(double meters) => DriverLocation(
+      point: GeoPoint(59.3300 + meters / 111000, 18.0600),
+      speedMetersPerSecond: 10,
+      measuredAt: DateTime.now(),
+      accuracyMeters: 5,
+    );
+
+Future<void> _frames(WidgetTester tester, int count, [int ms = 50]) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(Duration(milliseconds: ms));
+  }
 }
 
 /// Rebuilds when the Ride check gate changes, as Home does.
@@ -296,5 +326,64 @@ void main() {
     expect(RideCheckGate.open, isFalse);
     await tester.pump();
     expect(find.text('builds 2'), findsOneWidget, reason: 'Home heard it');
+  });
+
+  testWidgets('driver-u59: the hidden trip map gets no car updates',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final config = DriverRuntimeConfig.current;
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      simulatedArrival: true,
+      externalRouting: false,
+      skipAccountActivation: true,
+      reservationPopup: false,
+      islandHint: false,
+      radarSound: false,
+    ); // with the 33 ms car ticker
+    addTearDown(() => DriverRuntimeConfig.current = config);
+    final gps = _Gps();
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(MaterialApp(
+      navigatorKey: navigator,
+      navigatorObservers: [driverRouteObserver],
+      // Reduced motion: each fix puts the car straight on its new spot.
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: true),
+        child: child!,
+      ),
+      home: AcceptRide(
+        locationRepository: gps,
+        initialStage: ActiveRideStage.onTrip,
+      ),
+    ));
+    await _frames(tester, 10);
+    final map = tester.widget<CustomGoogleMap>(find.descendant(
+      of: find.byKey(const ValueKey<String>('active-ride-throttled-map')),
+      matching: find.byType(CustomGoogleMap),
+    ));
+    var pushes = 0;
+    void count() => pushes++;
+    map.liveMarker!.addListener(count);
+    Future<void> drive(double from) async {
+      for (var i = 1; i <= 4; i++) {
+        gps.updates.add(_at(from + i * 15));
+        await _frames(tester, 10);
+      }
+    }
+
+    await drive(0);
+    expect(pushes, greaterThan(0), reason: 'the visible car moves');
+    // Ride history (or Chat, Safety…) opens over the trip.
+    unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
+      builder: (_) => const Scaffold(body: Text('covering')),
+    )));
+    await tester.pumpAndSettle(); // the trip is hidden once it is covered
+    pushes = 0;
+    await drive(60);
+    expect(pushes, 0); // before: the 33 ms ticker kept pushing the car
+    map.liveMarker!.removeListener(count);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10);
+    await gps.updates.close();
   });
 }
