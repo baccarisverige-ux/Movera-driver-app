@@ -1263,6 +1263,8 @@ extension _AcceptRideTrip on _AcceptRideState {
 
           // R10-2: a Ride check is open; the offer waits for the answer.
           if (RideCheckGate.open) {
+            // Not yet seen: it gets its whole time after the answer.
+            if (_nextTripOfferHeldAt == null) { _nextTripOfferDeadline = null; }
             _nextTripOfferHeldAt ??= DateTime.now();
             return;
           }
@@ -1270,7 +1272,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         },
       );
     }
-    void _presentOnTripOffer() {
+    void _presentOnTripOffer({Duration? left}) {
       // D-05: never while the trip is hidden; the resume looks again.
       // Never after the trip ended either (u76).
       if (_offersHeld || _rideLifecycle.terminal) { return; }
@@ -1280,7 +1282,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _nextTripRadarOffer = offer;
         _onTripRadarState = _OnTripRadarState.offerAvailable;
       });
-      _armOnTripOfferExpiry();
+      _armOnTripOfferExpiry(left: left);
       _hideRideSheetForOffer();
     }
     /// R10-2: no next-trip offer while the Ride check is open. One already
@@ -1306,11 +1308,15 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (heldAt == null) { return; }
       _nextTripOfferHeldAt = null;
       if (_onTripRadarState != _OnTripRadarState.scanning || _onTripRadarDeclined) { return; }
-      if (DateTime.now().difference(heldAt) >= _AcceptRideState._onTripOfferLifetime) {
+      // driver-45: an offer that was on screen keeps its deadline; only
+      // the rest of its time is left.
+      final left = _nextTripOfferDeadline?.difference(_offerNow());
+      if ((left ?? _AcceptRideState._onTripOfferLifetime - DateTime.now().difference(heldAt)) <= Duration.zero) {
+        _nextTripOfferDeadline = null;
         _maybeScheduleOnTripRadarDemoOffer();
         return;
       }
-      _presentOnTripOffer();
+      _presentOnTripOffer(left: left);
     }
     void _armOnTripOfferExpiry({Duration? left}) {
       _nextTripOfferExpiry?.cancel();

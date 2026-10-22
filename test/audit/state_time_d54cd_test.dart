@@ -175,6 +175,25 @@ void main() {
     await _unmount(tester);
   });
 
+  testWidgets('driver-45: a next-trip offer hidden for a Ride check comes '
+      'back with only the time it had left', (tester) async {
+    await _pumpTrip(tester);
+    await _until(tester, find.byKey(_offerCard));
+    // 15 s offer: 6 s on screen, then a 4 s Ride check.
+    await _pumpFor(tester, const Duration(seconds: 6));
+    RideCheckGate.set(true);
+    await _pumpFor(tester, const Duration(seconds: 4));
+    expect(find.byKey(_offerCard), findsNothing);
+    RideCheckGate.set(false);
+    await tester.pump();
+    expect(find.byKey(_offerCard), findsOneWidget);
+    // About 9 s were left; it runs out then, not 15 s later.
+    await _pumpFor(tester, const Duration(seconds: 10));
+    expect(find.byKey(_offerCard), findsNothing);
+    expect(ExclusiveAnswers.instance.missedInRow, 1);
+    await _unmount(tester);
+  });
+
   testWidgets('driver-46: ending the trip early starts the secured next trip '
       'with destination mode on', (tester) async {
     await _pumpTrip(tester, destination: true);
