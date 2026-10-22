@@ -1,7 +1,6 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:country_pickers/country.dart';
-import 'package:country_pickers/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:movera/constants/appcolors.dart';
@@ -12,6 +11,7 @@ import 'package:movera/widgets/custom_btn.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/custom_textfield.dart';
 import 'package:movera/widgets/navigation_transition.dart';
+import 'package:movera/widgets/phone_picker.dart';
 import 'package:movera/widgets/responsive_size.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
@@ -23,15 +23,16 @@ class DriverCreateAccount extends StatefulWidget {
 }
 
 class _DriverCreateAccountState extends State<DriverCreateAccount> {
-  String selectedCountryCode = '+92';
+  late String selectedCountryCode;
   Country? selectedCountry; // Add this to store the selected country
 
   @override
   void initState() {
     super.initState();
-    // Set default country (United States)
-    selectedCountry = CountryPickerUtils.getCountryByIsoCode('US');
-    selectedCountryCode = '+1';
+    // The driver's market country (Sweden, +46) until they pick another.
+    final market = marketPhoneCountry();
+    selectedCountry = market;
+    selectedCountryCode = '+${market.phoneCode}';
   }
 
   void updateCountryCode(String newCode, Country country) {
