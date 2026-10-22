@@ -77,4 +77,25 @@ void main() {
     expect(find.byKey(const ValueKey('history-driver-bonus')), findsNothing);
     tester.takeException();
   });
+
+  testWidgets("driver-u156: a Ride check alert kept in the demo outbox is not "
+      "shown as 'Movera safety team alerted'", (tester) async {
+    final at = DateTime(2026, 10, 15, 7, 50);
+    await _detail(tester, checks: [
+      RideCheckRecord(
+        id: 'rc-1',
+        tripId: 'trip-1',
+        trigger: RideCheckTrigger.longStop,
+        reason: 'Your car has stopped for 4 min',
+        openedAt: at,
+        answeredAt: at,
+        alertSent: true,
+      ),
+    ]);
+    expect(find.text('Movera safety team alerted'), findsNothing);
+    expect(find.text(
+            'Demo: alert kept on this phone only. No one at Movera was notified.'),
+        findsOneWidget);
+    tester.takeException();
+  });
 }

@@ -375,6 +375,7 @@ class RideCheckRecord {
     this.answers = const <RideCheckAnswer>[],
     this.answeredAt,
     this.alertSent = false,
+    this.alertReachedMovera = false,
     this.audioSeconds,
   });
 
@@ -395,6 +396,10 @@ class RideCheckRecord {
   final DateTime? answeredAt;
   final bool alertSent;
 
+  /// The alert went to a Movera service, not only to the demo outbox on
+  /// this phone (driver-u156). False for records saved before.
+  final bool alertReachedMovera;
+
   /// Length of an audio recording saved on this phone; null without one.
   final int? audioSeconds;
 
@@ -404,6 +409,7 @@ class RideCheckRecord {
     List<RideCheckAnswer>? answers,
     DateTime? answeredAt,
     bool? alertSent,
+    bool? alertReachedMovera,
     int? audioSeconds,
   }) => RideCheckRecord(
     id: id,
@@ -415,6 +421,7 @@ class RideCheckRecord {
     answers: answers ?? this.answers,
     answeredAt: answeredAt ?? this.answeredAt,
     alertSent: alertSent ?? this.alertSent,
+    alertReachedMovera: alertReachedMovera ?? this.alertReachedMovera,
     audioSeconds: audioSeconds ?? this.audioSeconds,
   );
 
@@ -431,6 +438,7 @@ class RideCheckRecord {
     if (answeredAt != null)
       'answeredAt': answeredAt!.toUtc().toIso8601String(),
     'alertSent': alertSent,
+    if (alertReachedMovera) 'alertReachedMovera': true,
     if (audioSeconds != null) 'audioSeconds': audioSeconds,
   };
 
@@ -469,6 +477,7 @@ class RideCheckRecord {
           ? null
           : DateTime.tryParse('${data['answeredAt']}')?.toLocal(),
       alertSent: data['alertSent'] == true,
+      alertReachedMovera: data['alertReachedMovera'] == true,
       audioSeconds: audio is int ? audio : null,
     );
   }
