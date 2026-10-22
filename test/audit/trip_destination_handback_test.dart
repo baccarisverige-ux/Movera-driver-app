@@ -20,6 +20,7 @@ import 'package:movera/presentation/driver/home/components/island_messages.dart'
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/custom_google_map.dart';
+import 'package:movera/widgets/navigation_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Loc implements DriverLocationRepository {
@@ -103,13 +104,12 @@ void main() {
     await _frames(tester, 20);
     expect(_homeHasDestination(tester), isFalse);
 
-    unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
-      builder: (_) => AcceptRide(
-        initialStage: ActiveRideStage.onTrip,
-        locationRepository: tripLocation,
-        routeRepository: routes,
-      ),
-    )));
+    // driver-r5-29: the route the app opens a won trip with.
+    unawaited(navigator.currentState!.push(ActiveRideTransition(AcceptRide(
+      initialStage: ActiveRideStage.onTrip,
+      locationRepository: tripLocation,
+      routeRepository: routes,
+    ))));
     await _frames(tester, 20);
     tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).onSearch();
     await _frames(tester, 12);
