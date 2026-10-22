@@ -107,13 +107,6 @@ void main() {
       expect(await DriverLanguage.restore(), 'sv');
     });
 
-    test('sign-out goes back to the zone default', () async {
-      DriverLanguage.applyZone(AppLanguages.forCountry('SE'));
-      await DriverLanguage.choose('en');
-      DriverLanguage.reset();
-      expect(DriverLanguage.current.value, 'sv');
-    });
-
     test('a language the app has not got is refused', () async {
       await expectLater(DriverLanguage.choose('ar'), throwsArgumentError);
       expect(DriverLanguage.current.value, 'en');

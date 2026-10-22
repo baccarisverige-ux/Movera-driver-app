@@ -81,13 +81,6 @@ abstract final class DriverLanguage {
     return (repository ?? SettingsRepository()).save(section, {key: usable});
   }
 
-  /// Back to the zone default, e.g. after local data is cleared on
-  /// sign-out (the saved choice is cleared with the other settings).
-  static void reset() {
-    _choice = null;
-    _apply();
-  }
-
   /// Tests: no zone, no choice, English.
   @visibleForTesting
   static void resetForTest() {

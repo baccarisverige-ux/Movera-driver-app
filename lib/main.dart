@@ -202,7 +202,7 @@ class _MoveraAppState extends State<MoveraApp> {
     await SettingsRepository.settle();
     await clearLocalUserData();
     MapTrafficSetting.reset();
-    DriverLanguage.reset();
+    // The language stays: a device setting (clearLocalUserData keeps it).
     // The saved category choice is gone with the settings (driver-82).
     DriverCategoryChoice.reset();
     _activeRide = PrefsActiveRideRepository();

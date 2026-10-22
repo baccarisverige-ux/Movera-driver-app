@@ -1,4 +1,5 @@
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
@@ -89,7 +90,7 @@ const localDataInventory = <LocalDataRecord>[
     dataClass: LocalDataClass.personal,
     purpose:
         'Section settings such as trusted-contact phones and vehicle drafts.',
-    retention: 'Until logout.',
+    retention: 'Until logout; the language section is kept (device setting).',
   ),
   LocalDataRecord(
     key: DriverStartPosition.key,
@@ -104,6 +105,12 @@ const localDataInventory = <LocalDataRecord>[
     retention: 'Newest ${LocalQuarantine.maxEntries} entries, until logout.',
   ),
 ];
+
+/// The driver's language choice: a device setting, kept across logout like
+/// the rider app's `movera_app_language` (the next driver on this phone most
+/// likely speaks it too, and the Starter screen speaks it).
+const String languageSectionKey =
+    '${SettingsRepository.sectionPrefix}${DriverLanguage.section}';
 
 /// Removes classified personal and recovery keys.
 ///
@@ -146,7 +153,8 @@ Future<void> clearLocalUserData({
         .getKeys()
         .where(
           (key) =>
-              key.startsWith(SettingsRepository.sectionPrefix) ||
+              (key.startsWith(SettingsRepository.sectionPrefix) &&
+                  key != languageSectionKey) ||
               key.startsWith(LocalQuarantine.prefix),
         )
         .toList(growable: false);
