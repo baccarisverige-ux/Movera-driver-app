@@ -9,6 +9,8 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/ride/completion_journal.dart';
+import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -200,5 +202,40 @@ void main() {
       'savedAt': '2026-10-21T10:00:00.000',
     })!;
     expect(old.savedAt, DateTime(2026, 10, 21, 10));
+  });
+
+  test('driver-u37: a journal replayed days later keeps the queued trip stale',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    CompletionJournal.resetForTesting();
+    final active = PrefsActiveRideRepository();
+    await active.save(
+        const PersistedActiveRide(tripId: 'A', stage: ActiveRideStage.onTrip));
+    final journal = CompletionJournal(active: active, afterWrite: (step) {
+      if (step == 'journal') throw StateError('app killed');
+    });
+    await expectLater(
+      journal.finish(
+        WaybillRecord(tripId: 'A', statusLabel: 'Completed',
+          issuedAt: DateTime(2026), fare: '10 kr', service: 'Comfort',
+          riderName: 'R', pickup: 'P', dropoff: 'D', source: 'Demo',
+          driverName: 'D', vehicle: 'V', licensePlate: 'L',
+          passengerCapacity: 4),
+        next: const PersistedActiveRide(
+            tripId: 'B', stage: ActiveRideStage.headingToPickup),
+      ),
+      throwsStateError,
+    );
+    // The app opens again two days later.
+    final prefs = await SharedPreferences.getInstance();
+    final entry = jsonDecode(prefs.getString(CompletionJournal.key)!) as Map;
+    final completed = DateTime.now().subtract(const Duration(days: 2));
+    entry['completedAt'] = completed.toUtc().toIso8601String();
+    await prefs.setString(CompletionJournal.key, jsonEncode(entry));
+    await CompletionJournal(active: PrefsActiveRideRepository()).reconcile();
+    final b = (await PrefsActiveRideRepository().read())!;
+    expect(b.tripId, 'B');
+    expect(b.isFresh, isFalse, reason: 'Home asks before restoring it');
+    expect(b.savedAt!.toUtc(), completed.toUtc());
   });
 }

@@ -198,7 +198,9 @@ class PrefsActiveRideRepository
         if (terminal.any((item) => _terminalTripId(item) == next.tripId)) {
           throw RideOwnershipConflict('Queued trip is already terminal');
         }
-        if (!await prefs.setString(key, jsonEncode(next.stamped().toJson()))) {
+        // Keeps a stamp the journal gave it (driver-u37).
+        final stamped = next.stamped(next.savedAt);
+        if (!await prefs.setString(key, jsonEncode(stamped.toJson()))) {
           throw StateError('Queued handoff write failed');
         }
       });
