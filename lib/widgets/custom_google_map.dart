@@ -9,6 +9,7 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
     show GoogleMapsFlutterPlatform, MarkerUpdates;
 
 
+import '../core/l10n/driver_l10n.dart';
 import '../core/navigation/map_double_tap_policy.dart';
 import '../styles/movera_map_palette.dart';
 import '../styles/movera_map_style.dart';
@@ -18,6 +19,15 @@ import 'driver_map_web_bridge_stub.dart'
     as web;
 
 class CustomGoogleMap extends StatefulWidget {
+  /// Web: Maps JavaScript is installed. Tests replace it.
+  @visibleForTesting
+  static bool Function() mapsReadyProbe = () => web.ready;
+
+  /// driver-99: how long the map waits for Maps JavaScript before it says
+  /// the map is unavailable (a blocker, a rejected key, offline). It still
+  /// shows the map if the script arrives later.
+  static const Duration mapsUnavailableAfter = Duration(seconds: 12);
+
   final CameraPosition? initialPosition;
   final Set<Marker>? markers;
 
@@ -270,7 +280,8 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   /// [GoogleMap] before then throws on every rebuild; the framework swaps
   /// the rebuilding Home subtree (popup, offer cards) for an [ErrorWidget]
   /// while the map platform view stays on screen. Wait for it instead.
-  bool _mapsReady = web.ready;
+  bool _mapsReady = CustomGoogleMap.mapsReadyProbe();
+  bool _mapsUnavailable = false;
   Timer? _mapsReadyPoll;
 
   @override
@@ -278,10 +289,23 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     super.initState();
     widget.liveMarker?.addListener(_onLiveMarker);
     if (_mapsReady) return;
-    _mapsReadyPoll = Timer.periodic(const Duration(milliseconds: 50), (timer) {
-      if (!web.ready) return;
+    const poll = Duration(milliseconds: 50);
+    _mapsReadyPoll = Timer.periodic(poll, (timer) {
+      if (!CustomGoogleMap.mapsReadyProbe()) {
+        if (!_mapsUnavailable &&
+            poll * timer.tick >= CustomGoogleMap.mapsUnavailableAfter &&
+            mounted) {
+          setState(() => _mapsUnavailable = true);
+        }
+        return;
+      }
       timer.cancel();
-      if (mounted) setState(() => _mapsReady = true);
+      if (mounted) {
+        setState(() {
+          _mapsReady = true;
+          _mapsUnavailable = false;
+        });
+      }
     });
   }
 
@@ -405,7 +429,26 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
         fit: StackFit.expand,
         children: [
           if (!_mapsReady)
-            const ColoredBox(color: MoveraMapPalette.land)
+            ColoredBox(
+              color: MoveraMapPalette.land,
+              child: !_mapsUnavailable
+                  ? null
+                  : Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          tr.mapUnavailable,
+                          key: const ValueKey<String>('map-unavailable'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xFF3F4A52),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+            )
           else
             GoogleMap(
               initialCameraPosition: widget.initialPosition ?? _defaultPosition,

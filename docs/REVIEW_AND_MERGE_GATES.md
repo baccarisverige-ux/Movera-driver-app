@@ -32,7 +32,7 @@ Jobs on a commit whose workflow file contains them:
 
 - `verify`: `flutter pub get --enforce-lockfile`, `flutter analyze --fatal-infos`, `flutter test`, `flutter test integration_test/driver_lifecycle_test.dart -d flutter-tester`, `flutter build web --release`, artifact upload.
 - `android-release`: production `flutter build apk --release` must fail closed with `Production Android release refuses debug signing` when upload signing secrets are absent; a required-but-blank `GOOGLE_MAPS_API_KEY` must fail with `Native release requires GOOGLE_MAPS_API_KEY`; an explicit preview build uses `MOVERA_ALLOW_DEBUG_SIGNED_PREVIEW=true`.
-- `ios-release-preflight`: `flutter build ios --release --no-codesign`.
+- `ios-release-preflight`: `flutter build ios --release --no-codesign`; with `MOVERA_REQUIRE_MAPS_KEY=true` and a blank `GOOGLE_MAPS_API_KEY` the build must fail with `Native release requires GOOGLE_MAPS_API_KEY` (the Runner's Require Maps Key build phase, `ios/scripts/require_maps_key.sh`).
 
 The native jobs were added in F04 (pull request #76). The lifecycle step was added in F05 (pull request #85). Earlier exact-head runs that list only "Analyze, test and build web" did not execute those later jobs. See [FRONTEND_16_POINT_RECORD.md](FRONTEND_16_POINT_RECORD.md) for the recorded run IDs. Do not copy those IDs onto a newer SHA.
 

@@ -2402,6 +2402,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get languageSaveFailed => 'Langue non enregistrée. Réessayez.';
 
   @override
+  String get trafficSaveFailed =>
+      'Réglage du trafic non enregistré. Réessayez.';
+
+  @override
+  String get mapUnavailable =>
+      'Carte indisponible. Vérifiez votre connexion, puis rouvrez Movera.';
+
+  @override
   String get tomorrow => 'Demain';
 
   @override

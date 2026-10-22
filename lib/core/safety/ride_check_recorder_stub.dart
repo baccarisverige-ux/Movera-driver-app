@@ -14,6 +14,9 @@ abstract class RideCheckRecorder {
 RideCheckRecorder createRideCheckRecorder() =>
     const UnsupportedRideCheckRecorder();
 
+/// No recordings are made here, so there are none to delete.
+Future<void> deleteRideCheckRecordings() async {}
+
 class UnsupportedRideCheckRecorder implements RideCheckRecorder {
   const UnsupportedRideCheckRecorder();
 

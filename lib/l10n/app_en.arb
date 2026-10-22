@@ -1789,6 +1789,8 @@
   "languageTitle": "Language",
   "languageZoneDefault": "Default for your zone",
   "languageSaveFailed": "Language not saved. Try again.",
+  "trafficSaveFailed": "Traffic setting not saved. Try again.",
+  "mapUnavailable": "Map unavailable. Check your connection, then reopen Movera.",
   "tomorrow": "Tomorrow",
   "todayCaps": "TODAY",
   "statusRest": "REST",

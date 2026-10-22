@@ -368,11 +368,14 @@ class _Legacy {
     if (meters < 25) {
       return 'now';
     }
-    if (meters < 1000) {
+    // driver-27: rounded before the unit is picked (9 950 m is 10 km).
+    if (meters.round() < 1000) {
       return '${meters.round()} m';
     }
-    final km = meters / 1000;
-    return '${km.toStringAsFixed(km < 10 ? 1 : 0)} km';
+    final tenths = (meters / 100).round();
+    return tenths < 100
+        ? '${(tenths / 10).toStringAsFixed(1)} km'
+        : '${(meters / 1000).round()} km';
   }
 
   static String build({

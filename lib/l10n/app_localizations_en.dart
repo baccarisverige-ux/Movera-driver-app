@@ -2371,6 +2371,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSaveFailed => 'Language not saved. Try again.';
 
   @override
+  String get trafficSaveFailed => 'Traffic setting not saved. Try again.';
+
+  @override
+  String get mapUnavailable =>
+      'Map unavailable. Check your connection, then reopen Movera.';
+
+  @override
   String get tomorrow => 'Tomorrow';
 
   @override

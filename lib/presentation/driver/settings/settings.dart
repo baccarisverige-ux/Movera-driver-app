@@ -267,7 +267,18 @@ class _SettingsState extends State<Settings> {
     return ValueListenableBuilder<bool>(
       valueListenable: MapTrafficSetting.enabled,
       builder: (context, on, _) {
-        void toggle(bool value) => MapTrafficSetting.set(value, _settings);
+        // driver-u168: a failed save puts the switch back and says so.
+        Future<void> toggle(bool value) async {
+          try {
+            await MapTrafficSetting.set(value, _settings);
+          } catch (_) {
+            MapTrafficSetting.enabled.value = !value;
+            if (!mounted) return;
+            ScaffoldMessenger.of(this.context).showSnackBar(
+              SnackBar(content: Text(tr.trafficSaveFailed)),
+            );
+          }
+        }
         return Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
           child: Row(

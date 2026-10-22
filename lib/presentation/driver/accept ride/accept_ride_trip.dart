@@ -192,7 +192,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _startWaitTimer();
         _rebuild(() {});
       }
-      _camera.resume();
+      if (!_tripCovered) { _camera.resume(); }
       if (!MediaQuery.disableAnimationsOf(context) && !_radarPulseController.isAnimating) {
         _radarPulseController.repeat(reverse: true);
       }
@@ -206,13 +206,14 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// the trip: no offer comes, the one up keeps its deadline.
     void _coverTrip() {
       _tripCovered = true;
+      _camera.suspend(); // driver-u59: no camera moves on the hidden map
       _nextTripRadarDemoTimer?.cancel();
       _nextTripOfferExpiry?.cancel();
     }
     void _uncoverTrip() {
       if (!_tripCovered) { return; }
       _tripCovered = false;
-      if (!_liveUpdatesPaused) { _resumeOnTripOffer(); }
+      if (!_liveUpdatesPaused) { _camera.resume(); _resumeOnTripOffer(); }
     }
     /// Next-trip offers wait: the app is hidden or a route covers the trip.
     bool get _offersHeld => _liveUpdatesPaused || _tripCovered;

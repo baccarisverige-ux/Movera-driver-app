@@ -2376,6 +2376,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get languageSaveFailed => 'Språket sparades inte. Försök igen.';
 
   @override
+  String get trafficSaveFailed =>
+      'Trafikinställningen sparades inte. Försök igen.';
+
+  @override
+  String get mapUnavailable =>
+      'Kartan är inte tillgänglig. Kontrollera anslutningen och öppna Movera igen.';
+
+  @override
   String get tomorrow => 'Imorgon';
 
   @override

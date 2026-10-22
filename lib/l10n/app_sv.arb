@@ -683,6 +683,8 @@
   "languageTitle": "Språk",
   "languageZoneDefault": "Standard för din zon",
   "languageSaveFailed": "Språket sparades inte. Försök igen.",
+  "trafficSaveFailed": "Trafikinställningen sparades inte. Försök igen.",
+  "mapUnavailable": "Kartan är inte tillgänglig. Kontrollera anslutningen och öppna Movera igen.",
   "tomorrow": "Imorgon",
   "todayCaps": "IDAG",
   "statusRest": "VILA",

@@ -1454,7 +1454,8 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     _car = ValueNotifier<Marker?>(_carMarker);
     if (!DriverRuntimeConfig.current.liveMapTicker) { return; }
     _ticker = Timer.periodic(const Duration(milliseconds: 33), (_) {
-      if (!mounted) { return; }
+      // driver-u59: a route covering the trip turns tickers off here.
+      if (!mounted || !TickerMode.valuesOf(context).enabled) { return; }
       final next = widget.vehicle.current;
       if (next.position.latitude == _pose.position.latitude &&
           next.position.longitude == _pose.position.longitude &&

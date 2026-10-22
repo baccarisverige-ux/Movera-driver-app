@@ -68,12 +68,20 @@ class IslandMessages {
 
   static bool get hasPending => _queue.isNotEmpty;
 
-  /// Every message posted since the last [reset], oldest first.
+  /// The newest messages posted since the last [reset] (at most
+  /// [maxPosted]), oldest first.
   @visibleForTesting
   static final List<IslandMessage> posted = <IslandMessage>[];
 
+  /// driver-63: a long shift posts many messages, each often holding a
+  /// closure over Home; only the newest are kept for tests to read.
+  static const int maxPosted = 100;
+
   static void show(IslandMessage message) {
     posted.add(message);
+    if (posted.length > maxPosted) {
+      posted.removeRange(0, posted.length - maxPosted);
+    }
     if (message.priority == IslandPriority.high) {
       final at = _queue.indexWhere(
         (queued) => queued.priority != IslandPriority.high,

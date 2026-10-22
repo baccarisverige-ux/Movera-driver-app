@@ -527,12 +527,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
       return _distanceParts(banner?.distanceLabel);
     }
     if (meters < RouteInstructionCopy.nowMeters) return (tr.now, null);
-    if (meters < 1000) return ('${meters.round()}', 'm');
-    final km = meters / 1000;
-    return (
-      km.toStringAsFixed(km < 10 ? 1 : 0).replaceAll('.', tr.navDecimalMark),
-      'km',
-    );
+    // driver-u89: rounded before the unit, like the banner's own words.
+    return RouteInstructionCopy.distanceValue(meters);
   }
 
   /// "300 m" -> ("300", "m"); "now" -> ("Now", null).

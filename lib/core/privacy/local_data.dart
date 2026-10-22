@@ -3,6 +3,7 @@ import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
+import 'package:movera/core/safety/ride_check_recorder.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_quarantine.dart';
 import 'package:movera/core/support/local_support_repository.dart';
@@ -68,7 +69,8 @@ const localDataInventory = <LocalDataRecord>[
     dataClass: LocalDataClass.personal,
     purpose: 'Ride checks for the trip details: time, trigger and answers.',
     retention: 'Newest ${PrefsRideCheckLog.maxRows} checks, until logout. '
-        'Audio recordings are separate files on the phone.',
+        'Audio recordings are separate files on the phone, deleted at '
+        'logout too.',
   ),
   LocalDataRecord(
     key: LocalSupportRepository.key,
@@ -149,6 +151,8 @@ Future<void> clearLocalUserData({
         throw StateError('Could not clear local data: $key');
       }
     }
+    // driver-u31: the Ride check audio files the cleared log pointed at.
+    await deleteRideCheckRecordings();
   } catch (_) {
     LocalWriteSession.cancelCleanup();
     rethrow;

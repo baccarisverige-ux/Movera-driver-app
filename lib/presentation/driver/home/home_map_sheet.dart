@@ -367,12 +367,18 @@ extension _HomeMapSheet on _DriverHomeState {
         }));
       }
 
+      // Only an offline driver is put online by the destination.
+      final goOnline = !adopted && !_isOnline && !_isGoingOnline;
       await _refreshDestinationRoadRoute();
       await _fitDestinationRoute();
+      // driver-66: the driver may have turned the destination off (or gone
+      // offline, or left Home) while the road route was on its way.
+      if (!mounted || !_destinationModeActive ||
+          _destinationPosition != destination) { return; }
       _seedDemoDestinationTrips();
       _HomeOfferRadar(this)._maybeShowSoonReservation();
 
-      if (!adopted && !_isOnline && !_isGoingOnline) {
+      if (goOnline && !_isOnline && !_isGoingOnline) {
         _goOnline();
       }
     }

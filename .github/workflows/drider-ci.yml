@@ -147,3 +147,17 @@ jobs:
 
       - name: Compile iOS release without codesign
         run: flutter build ios --release --no-codesign
+
+      - name: Missing maps key fails an iOS release candidate
+        run: |
+          set +e
+          MOVERA_REQUIRE_MAPS_KEY=true \
+            flutter build ios --release --no-codesign > /tmp/movera-ios-maps.txt 2>&1
+          code=$?
+          set -e
+          cat /tmp/movera-ios-maps.txt
+          if [ "$code" -eq 0 ]; then
+            echo "iOS release must fail when GOOGLE_MAPS_API_KEY is required and absent."
+            exit 1
+          fi
+          grep -q "Native release requires GOOGLE_MAPS_API_KEY" /tmp/movera-ios-maps.txt

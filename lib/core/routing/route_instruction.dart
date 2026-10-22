@@ -575,13 +575,28 @@ class RouteInstructionCopy {
     if (meters < nowMeters) {
       return l.navDistanceNow;
     }
-    if (meters < 1000) {
-      return l.navMeters('${meters.round()}');
+    final (value, unit) = distanceValue(meters, l);
+    return unit == 'm' ? l.navMeters(value) : l.navKilometers(value);
+  }
+
+  /// [meters] as a number and its unit, "m" or "km". driver-27: rounded
+  /// before the unit is picked, so 999.6 m is "1.0" km (not "1000" m) and
+  /// 9 960 m is "10" km (not "10.0").
+  static (String, String) distanceValue(
+    double meters, [
+    AppLocalizations? strings,
+  ]) {
+    final l = strings ?? tr;
+    final metres = meters.round();
+    if (metres < 1000) return ('$metres', 'm');
+    final tenths = (meters / 100).round();
+    if (tenths < 100) {
+      return (
+        (tenths / 10).toStringAsFixed(1).replaceAll('.', l.navDecimalMark),
+        'km',
+      );
     }
-    final km = meters / 1000;
-    return l.navKilometers(
-      km.toStringAsFixed(km < 10 ? 1 : 0).replaceAll('.', l.navDecimalMark),
-    );
+    return ('${(meters / 1000).round()}', 'km');
   }
 
   /// "in 150 m", or "now" at the point.
