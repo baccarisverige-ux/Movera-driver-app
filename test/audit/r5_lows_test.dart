@@ -23,8 +23,10 @@ import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
+import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/main.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:movera/presentation/driver/home/components/destination_island.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
@@ -61,6 +63,36 @@ class _NoGps implements DriverLocationRepository {
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       const Stream.empty();
+}
+
+/// GPS the test feeds by hand.
+class _Gps implements DriverLocationRepository {
+  final updates = StreamController<DriverLocation>.broadcast();
+  @override
+  Future<DriverLocation> getCurrentPosition() async => fix();
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      updates.stream;
+  DriverLocation fix() => DriverLocation(
+        point: const GeoPoint(59.3300, 18.0600),
+        measuredAt: DateTime.now(),
+        accuracyMeters: 5,
+      );
+}
+
+/// Road routing that answers once (10 km, 10 min), then fails.
+class _OnceRoutes implements RouteRepository {
+  var calls = 0;
+  @override
+  Future<RoadRoute> drivingRoute({
+    required GeoPoint origin,
+    required GeoPoint destination,
+  }) async {
+    if (calls++ > 0) throw StateError('routing offline');
+    return RoadRoute(
+        points: [origin, destination], distanceMeters: 10000,
+        durationSeconds: 600);
+  }
 }
 
 /// Home's test setup: a headless map and the demo's quiet runtime.
@@ -295,6 +327,40 @@ void main() {
     await _frames(tester, 4);
     expect(DestinationModeSession.instance.activeAddress, isNull,
         reason: 'before: it kept filtering offers until the late Timer');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
+  });
+
+  testWidgets('driver-r5-20: a lost GPS fix keeps the last live destination '
+      'figures', (tester) async {
+    _homeSetUp(tester);
+    final before = DestinationModeSession.instance;
+    DestinationModeSession.instance = DestinationModeSession();
+    addTearDown(() => DestinationModeSession.instance = before);
+    final gps = _Gps(), routes = _OnceRoutes();
+    addTearDown(gps.updates.close);
+    final navigator = await _pumpHome(tester,
+        DriverHome(locationRepository: gps, routeRepository: routes));
+    unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('trip')))));
+    await _frames(tester, 10);
+    DestinationModeSession.instance.started(
+        address: 'Solna', position: const GeoPoint(59.36, 18.00));
+    navigator.currentState!.pop();
+    await _frames(tester, 10);
+    gps.updates.add(gps.fix());
+    await _frames(tester, 10);
+    final face = find.byType(DigitalDestinationFace);
+    for (var i = 0; i < 100 && face.evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(tester.widget<DigitalDestinationFace>(face).eta, '10 min');
+    // A fix that is not usable (no time or accuracy): Home drops the live
+    // route as when GPS is lost.
+    gps.updates.add(const DriverLocation(point: GeoPoint(59.3301, 18.0600)));
+    await _frames(tester, 10);
+    expect(tester.widget<DigitalDestinationFace>(face).eta, '10 min',
+        reason: 'before: it fell back to the confirm-time figures');
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });

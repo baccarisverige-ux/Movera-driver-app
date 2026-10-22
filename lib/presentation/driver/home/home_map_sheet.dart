@@ -457,7 +457,8 @@ extension _HomeMapSheet on _DriverHomeState {
 
         _cameraRoute = route;
         DestinationModeSession.instance.keepRoute(
-            GeoPointMaps.fromLatLng(destination), route.points);
+            GeoPointMaps.fromLatLng(destination), route.points,
+            meters: route.distanceMeters, seconds: route.durationSeconds);
         unawaited(_animateToDriverLocation());
 
         _rebuild(() {
@@ -494,9 +495,16 @@ extension _HomeMapSheet on _DriverHomeState {
       await _fitPoints(routePoints, padding: 74);
     }
     /// Live road route when GPS has one, else the confirmed figures.
+    /// driver-r5-20: after a failed refresh or a lost fix, the last live
+    /// figures for a few minutes, then none: once Home had live ones, the
+    /// confirm-time figures are from far back and would read as live.
     (double, double)? get _destinationFigures {
       final route = _cameraRoute;
       if (route != null) { return (route.distanceMeters, route.durationSeconds); }
+      final to = _destinationPosition, session = DestinationModeSession.instance;
+      if (to != null && session.hadRouteTo(GeoPointMaps.fromLatLng(to))) {
+        return session.figuresTo(GeoPointMaps.fromLatLng(to));
+      }
       final trip = _destinationTrip;
       final m = trip?.distanceMeters, sec = trip?.durationSeconds;
       return m == null || sec == null ? null : (m, sec);
