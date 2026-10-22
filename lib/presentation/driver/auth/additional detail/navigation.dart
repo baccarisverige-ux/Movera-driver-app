@@ -156,8 +156,10 @@ class _AdditionalInfoNavigationState extends State<AdditionalInfoNavigation> {
                   controller: controller.pageController,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: controller.pages.length,
+                  // driver-r3-8: a step keeps what was entered (its
+                  // fields and picked document) when it scrolls off.
                   itemBuilder: (BuildContext context, int index) {
-                    return controller.pages[index];
+                    return _KeepStep(child: controller.pages[index]);
                   },
                 ),
               ),
@@ -183,6 +185,26 @@ class _AdditionalInfoNavigationState extends State<AdditionalInfoNavigation> {
         ),
       ),
     );
+  }
+}
+
+/// Keeps an onboarding step's State alive off screen.
+class _KeepStep extends StatefulWidget {
+  const _KeepStep({required this.child});
+  final Widget child;
+  @override
+  State<_KeepStep> createState() => _KeepStepState();
+}
+
+class _KeepStepState extends State<_KeepStep>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }
 

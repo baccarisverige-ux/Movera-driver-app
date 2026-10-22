@@ -330,6 +330,22 @@ void main() {
     expect(_onboardingPage(tester), 1);
   });
 
+  testWidgets('driver-r3-8: Back to an onboarding step keeps what was entered',
+      (tester) async {
+    await _pumpOnboarding(tester);
+    await tester.enterText(
+      find.byWidgetPredicate((w) =>
+          w is TextField && w.decoration?.hintText == 'Enter model year'),
+      '2019',
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await _onboardingStep(tester);
+    await _onboardingStep(tester, back: true);
+    expect(_onboardingPage(tester), 0);
+    expect(find.text('2019'), findsOneWidget);
+  });
+
   test('driver-u148: "Yesterday" only for the day before, by the calendar', () {
     final now = DateTime(2026, 10, 21, 1);
     expect(noticeTimeLabel(DateTime(2026, 10, 19, 23), now), '2 days ago');
