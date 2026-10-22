@@ -42,13 +42,20 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
   static const Color _canvas = Color(0xFFF4F6F7);
 
   String? _status;
+
+  /// The status reports something that worked (green check); otherwise it
+  /// is a failure or a feature that is not there (driver-93).
+  bool _statusOk = false;
   bool _emergencyInFlight = false;
 
   bool get _ownsRoute => mounted && ModalRoute.of(context)?.isCurrent == true;
 
-  void _showMessage(String message) {
+  void _showMessage(String message, {bool ok = false}) {
     if (!_ownsRoute) return;
-    setState(() => _status = message);
+    setState(() {
+      _status = message;
+      _statusOk = ok;
+    });
   }
 
   Future<void> _confirmEmergencyCall() async {
@@ -105,6 +112,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
               : widget.web
               ? tr.safetyDialerAskedBrowser
               : tr.safetyDialerOpened,
+          ok: result == EmergencyDialResult.opened && !widget.web,
         );
       }
     } finally {
@@ -455,22 +463,28 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE7F4EE),
+                    color: _statusOk
+                        ? const Color(0xFFE7F4EE)
+                        : const Color(0xFFFCEEEE),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: _green,
+                      Icon(
+                        _statusOk
+                            ? Icons.check_circle_outline_rounded
+                            : Icons.info_outline_rounded,
+                        color: _statusOk ? _green : const Color(0xFFB3261E),
                         size: 17,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _status!,
-                          style: const TextStyle(
-                            color: Color(0xFF496158),
+                          style: TextStyle(
+                            color: _statusOk
+                                ? const Color(0xFF496158)
+                                : const Color(0xFF7A2E2A),
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),

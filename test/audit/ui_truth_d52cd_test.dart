@@ -215,4 +215,12 @@ void main() {
     expect(find.textContaining('Your browser was asked to call 112'),
         findsOneWidget);
   });
+
+  testWidgets("driver-93: 'Could not open the dialer' has no green success "
+      'check', (tester) async {
+    await _call112(tester, opened: false);
+    expect(find.text('Could not open the dialer. Dial 112 manually.'),
+        findsOneWidget);
+    expect(find.byIcon(Icons.check_circle_outline_rounded), findsNothing);
+  });
 }
