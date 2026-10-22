@@ -177,8 +177,12 @@ String noticeTimeLabel(DateTime at, DateTime now) {
   if (ago.inMinutes < 1) { return tr.now; }
   if (ago.inMinutes < 60) { return tr.minutesAgo(ago.inMinutes); }
   if (ago.inHours < 24) { return tr.hoursAgo(ago.inHours); }
-  if (ago.inDays == 1) { return tr.yesterday; }
-  return tr.daysAgo(ago.inDays);
+  // Calendar days, not 24 h spans: 26 h back at 01:00 is two days ago.
+  final days = DateTime.utc(now.year, now.month, now.day)
+      .difference(DateTime.utc(at.year, at.month, at.day))
+      .inDays;
+  if (days <= 1) { return tr.yesterday; }
+  return tr.daysAgo(days);
 }
 
 /// The Solar icon of each kind.
