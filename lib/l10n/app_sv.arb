@@ -1351,5 +1351,6 @@
   "noticeBonusProgressTitle": "Bonusframsteg",
   "noticeBonusProgressBody": "{done} av {goal} resor den här veckan. {left} till för {amount}.",
   "noticePayoutSentTitle": "Utbetalning skickad",
-  "noticePayoutSentBody": "{amount} är på väg till din bank."
+  "noticePayoutSentBody": "{amount} är på väg till din bank.",
+  "signInOr": "eller"
 }

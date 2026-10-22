@@ -4,8 +4,17 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.dart';
 import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/sign%20in%20phone/sign_in_phone.dart';
+import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
 
-import 'd51_translations_test.dart' show languages, show, speak, words;
+import 'd51_translations_test.dart' as d51 show show;
+import 'd51_translations_test.dart' show languages, speak, words;
+
+/// [d51.show], after clearing the screen: a const screen pumped again in
+/// another language is built anew, as the app root does on a switch.
+Future<void> show(WidgetTester tester, String code, Widget home) async {
+  await tester.pumpWidget(const SizedBox());
+  await d51.show(tester, code, home);
+}
 
 /// The country flag the phone field starts with, by ISO code.
 Finder flag(String iso) => find.byWidgetPredicate((widget) =>
@@ -32,6 +41,15 @@ void main() {
       await show(tester, 'sv', screen);
       expect(flag('se'), findsOneWidget, reason: '${screen.runtimeType}');
       expect(flag('us'), findsNothing);
+    }
+  });
+
+  testWidgets('driver-58: the sign-in divider word is translated',
+      (tester) async {
+    for (final (code, or) in [('fr', 'ou'), ('sv', 'eller')]) {
+      await show(tester, code, const DriverSignIn());
+      expect(find.text(or), findsOneWidget, reason: code);
+      expect(find.text('or'), findsNothing);
     }
   });
 }

@@ -4732,4 +4732,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String noticePayoutSentBody(String amount) {
     return '$amount är på väg till din bank.';
   }
+
+  @override
+  String get signInOr => 'eller';
 }

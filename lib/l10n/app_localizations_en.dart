@@ -4714,4 +4714,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String noticePayoutSentBody(String amount) {
     return '$amount is on its way to your bank.';
   }
+
+  @override
+  String get signInOr => 'or';
 }

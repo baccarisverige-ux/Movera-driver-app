@@ -3182,5 +3182,9 @@
         "type": "String"
       }
     }
+  },
+  "signInOr": "or",
+  "@signInOr": {
+    "description": "Divider word between the sign-in options."
   }
 }

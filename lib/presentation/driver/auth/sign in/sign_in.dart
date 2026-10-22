@@ -66,7 +66,7 @@ class DriverSignIn extends StatelessWidget {
                 ),
                 10.width,
                 TextWidget(
-                  text: "or",
+                  text: tr.signInOr,
                   color: AppColor.title,
                   fontSize: 16,
                   fontWeight: fwMedium,

@@ -4779,4 +4779,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String noticePayoutSentBody(String amount) {
     return '$amount est en route vers votre banque.';
   }
+
+  @override
+  String get signInOr => 'ou';
 }

@@ -8227,6 +8227,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{amount} is on its way to your bank.'**
   String noticePayoutSentBody(String amount);
+
+  /// Divider word between the sign-in options.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get signInOr;
 }
 
 class _AppLocalizationsDelegate
