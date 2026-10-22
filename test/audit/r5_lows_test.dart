@@ -469,6 +469,41 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
+
+  testWidgets('driver-r5-2: an Exclusive offer past its server expiresAt is '
+      'not shown', (tester) async {
+    _homeSetUp(tester);
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      externalRouting: false,
+      liveMapTicker: false,
+      reservationPopup: false,
+      islandHint: false,
+      radarSound: false,
+      simulatedArrival: false,
+      skipAccountActivation: false,
+    );
+    final dispatch = _RadarDispatch()
+      ..offers = [
+        OfferWire.parse({
+          ..._wireOffer,
+          'kind': 'assigned',
+          'expiresAt': DateTime.now()
+              .subtract(const Duration(seconds: 2)).toUtc().toIso8601String(),
+        }),
+      ];
+    await _pumpHome(tester, DriverHome(
+      locationRepository: _NoGps(),
+      dispatchRepository: dispatch,
+      sessionController: DriverSessionController(),
+    ));
+    await tester.tap(find.text('OFF'));
+    const card = ValueKey<String>('exclusive-offer-card-o1');
+    await _until(tester, find.byKey(card), const Duration(seconds: 6));
+    expect(find.byKey(card), findsNothing,
+        reason: 'before: it got a fresh full countdown');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _frames(tester, 10, 100);
+  });
 }
 
 /// Contract `Offer` (openapi.yaml#Offer).

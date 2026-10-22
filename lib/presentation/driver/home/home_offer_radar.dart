@@ -619,7 +619,8 @@ extension _HomeOfferRadar on _DriverHomeState {
           // Q16: an admin direct assign or dispatch's Exclusive offer
           // arriving now is an Exclusive offer.
           if (offer.isExclusive && !known.contains(offer.id) &&
-              !_adminAssignsShown.contains(offer.id)) {
+              !_adminAssignsShown.contains(offer.id) &&
+              !_passedServerExpiry(offer)) {
             unawaited(_showOutsideRadarOffer(_adminAssignOffer(offer)));
           }
           if (offer.isReservation &&
@@ -694,10 +695,18 @@ extension _HomeOfferRadar on _DriverHomeState {
         lifetime: left != null && left > Duration.zero ? left : null,
       );
     }
+    /// driver-r5-2: the server's `expiresAt` has passed: the offer is gone,
+    /// even before its withdrawal arrives. It is not shown with the app's
+    /// own full time (Accept would only answer "expired").
+    bool _passedServerExpiry(RideOffer offer) {
+      final expires = offer.expiresAt;
+      return expires != null && !expires.isAfter(DateTime.now());
+    }
     /// The first dispatch Exclusive offer not shown yet.
     _HomeDirectOffer? get _pendingAdminAssign {
       for (final offer in _latestDispatchOffers) {
-        if (offer.isExclusive && !_adminAssignsShown.contains(offer.id)) {
+        if (offer.isExclusive && !_adminAssignsShown.contains(offer.id) &&
+            !_passedServerExpiry(offer)) {
           return _adminAssignOffer(offer);
         }
       }
