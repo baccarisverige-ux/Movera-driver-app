@@ -138,6 +138,10 @@ Future<void> clearLocalUserData({
         throw StateError('Could not clear local data: $key');
       }
     }
+    // driver-r5-18: list from the store, not this instance's cache. On web
+    // another tab of the app shares localStorage, and the cache never sees
+    // the section or quarantine keys it wrote after this tab loaded.
+    await prefs.reload();
     final sectionKeys = prefs
         .getKeys()
         .where(

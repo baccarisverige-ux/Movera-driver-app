@@ -10,8 +10,11 @@ import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_start_position.dart';
+import 'package:movera/core/privacy/local_data.dart';
+import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 void main() {
   test('driver-r5-8: admin\'s scheduled-rides "until" is a local time', () {
@@ -58,6 +61,20 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString(DriverStartPosition.key), isNull,
         reason: 'before: the departing driver\'s position was written back');
+  });
+
+  test('driver-r5-18: logout removes a settings section another tab wrote',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    await SharedPreferences.getInstance();
+    // Another tab writes to the shared store; this tab's cache never sees it.
+    const key = '${SettingsRepository.sectionPrefix}contacts';
+    await SharedPreferencesStorePlatform.instance
+        .setValue('String', 'flutter.$key', '{"phones":["+46700000000"]}');
+    await clearLocalUserData();
+    final stored = await SharedPreferencesStorePlatform.instance.getAll();
+    expect(stored.keys, isNot(contains('flutter.$key')),
+        reason: 'before: only keys in this tab\'s cache were removed');
   });
 }
 
