@@ -1,6 +1,7 @@
 // Wave 5 D5.4 (parts c + d): state and time. Time cases also run under
 // TZ=Europe/Stockholm and TZ=America/New_York.
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,11 +17,13 @@ import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/support/local_support_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
+import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -218,6 +221,38 @@ void main() {
     expect(next.tripId, isNot('cd-trip'));
     expect(next.destinationModeActive, isTrue);
     expect(next.destinationAddress, 'Arlanda, Sigtuna');
+    await _unmount(tester);
+  });
+
+  testWidgets('driver-u171: a saved ticket keeps its category; older '
+      'tickets still load', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      LocalSupportRepository.key: jsonEncode({
+        'schemaVersion': 1,
+        'tickets': [{'subject': 'Old ticket', 'preview': 'Saved before'}],
+        'draft': {
+          'subject': 'Payout',
+          'message': 'Missing',
+          'category': 'Wallet & payments',
+        },
+      }),
+    });
+    Future<void> open() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpWidget(MaterialApp(
+        home: SupportInboxScreen(repository: LocalSupportRepository()),
+      ));
+      await tester.pumpAndSettle();
+    }
+    await open();
+    await tester.tap(find.text('Draft local ticket'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save draft in demo'));
+    await tester.pumpAndSettle();
+    await open(); // read back from storage
+    expect(find.text('Payout'), findsOneWidget);
+    expect(find.text('Wallet & payments'), findsOneWidget);
+    expect(find.text('Old ticket'), findsOneWidget);
     await _unmount(tester);
   });
 

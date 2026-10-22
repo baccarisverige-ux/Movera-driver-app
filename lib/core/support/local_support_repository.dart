@@ -67,6 +67,7 @@ class LocalSupportRepository {
             'subject',
             'preview',
             'status',
+            'category',
           ].every((key) => row[key] == null || row[key] is String) ||
           (row['unread'] != null && row['unread'] is! bool)) {
         return false;
