@@ -34,6 +34,7 @@ import 'package:movera/presentation/driver/home/components/destination_island.da
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
 import 'package:movera/widgets/web_map_bitmap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -169,6 +170,27 @@ class _BlockedStorage extends MemoryActiveRideRepository {
     reads++;
     throw ActiveRideStorageUnavailable('blocked');
   }
+}
+
+/// A reservation picked up tomorrow at [hour]:00.
+ReservationRequestPreview _reservation(int hour) {
+  final now = DateTime.now();
+  return ReservationRequestPreview(
+    category: 'Comfort',
+    fare: '210,00 kr',
+    rating: '4.80',
+    riderName: 'Eva',
+    riderTrips: 12,
+    pickupLabel: 'Tomorrow at $hour:00',
+    pickupAddress: 'Kungsholmen, Stockholm',
+    dropoffAddress: 'Arlanda Airport',
+    pickupTime: '$hour:00',
+    pickupDay: 'Tomorrow',
+    tripMinutes: 35,
+    tripKm: 40,
+    pickup: const GeoPoint(59.3326, 18.0300),
+    dropoff: const GeoPoint(59.6498, 17.9238),
+  ).scheduledFor(DateTime(now.year, now.month, now.day + 1, hour));
 }
 
 /// Home's test setup: a headless map and the demo's quiet runtime.
@@ -586,6 +608,24 @@ void main() {
     expect(tester.widget<Text>(note).data,
         'Cash matched your earnings: nothing to settle',
         reason: 'before: "Cash matched your fare" although 50 kr less');
+  });
+
+  testWidgets('driver-r5-49: the Accepted tab lists rides by pickup time',
+      (tester) async {
+    _phone(tester);
+    SharedPreferences.setMockInitialValues({});
+    ScheduledRideStore.reset();
+    addTearDown(ScheduledRideStore.reset);
+    // The seed's 08:15 ride is accepted; an 18:00 one is accepted after it.
+    ScheduledRideStore.acceptAssigned(_reservation(18));
+    await tester.pumpWidget(_app(const ScheduledRidesScreen()));
+    await _frames(tester, 6);
+    await tester.tap(find.text('Accepted'));
+    await _frames(tester, 6);
+    final early = tester.getTopLeft(find.textContaining('08:15').first).dy;
+    final late = tester.getTopLeft(find.textContaining('18:00').first).dy;
+    expect(early, lessThan(late),
+        reason: 'before: the newest acceptance was on top');
   });
 }
 

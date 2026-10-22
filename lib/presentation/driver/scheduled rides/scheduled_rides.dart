@@ -89,7 +89,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   /// Requests this driver can take: clashing ones and every request while
   /// Scheduled rides are paused or off are left out.
   List<_ScheduledRide> get _requests => ScheduledRideStore._visibleRequests;
-  List<_ScheduledRide> get _accepted => ScheduledRideStore._accepted;
+  List<_ScheduledRide> get _accepted => ScheduledRideStore._acceptedByPickup;
 
   /// No listed request is picked up on a later day (driver-u162): the
   /// header says "Available today" only then.
@@ -815,6 +815,23 @@ class ScheduledRideStore {
   }
 
   /// Accepted rides with a known pickup time, soonest first.
+  /// driver-r5-49: Accepted as the tab lists it under "Upcoming": by
+  /// pickup time, rides without one last, newest acceptance first on a tie.
+  static List<_ScheduledRide> get _acceptedByPickup {
+    final now = _now;
+    final order = [for (var i = 0; i < _accepted.length; i++) i];
+    DateTime? at(int i) => _accepted[i].route?.pickupAt(now);
+    order.sort((a, b) {
+      final x = at(a), y = at(b);
+      if (x == null || y == null) {
+        return x == y ? a - b : (x == null ? 1 : -1);
+      }
+      final by = x.compareTo(y);
+      return by != 0 ? by : a - b;
+    });
+    return [for (final i in order) _accepted[i]];
+  }
+
   static List<ReservationRequestPreview> get upcoming {
     final now = _now;
     final rides = [
