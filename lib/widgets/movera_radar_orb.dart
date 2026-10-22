@@ -148,8 +148,9 @@ class MoveraRadarOrb extends StatelessWidget {
     final s = size / 104;
     final hit = touchSize ?? size;
 
+    // Only a radar that does something on a tap reads as a button.
     return Semantics(
-      button: true,
+      button: onTap != null,
       label: "$title, $status. $subtitle",
       child: GestureDetector(
         key: touchKey,
