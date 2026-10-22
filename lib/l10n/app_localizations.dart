@@ -5082,7 +5082,7 @@ abstract class AppLocalizations {
   /// No description provided for @didNotGetCode.
   ///
   /// In en, this message translates to:
-  /// **'Did you don’t get code?'**
+  /// **'Didn’t get the code?'**
   String get didNotGetCode;
 
   /// No description provided for @signInUnavailableInPreview.

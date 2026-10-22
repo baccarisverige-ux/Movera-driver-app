@@ -2901,7 +2901,7 @@ class AppLocalizationsEn extends AppLocalizations {
       ' Account verification requires the account service.';
 
   @override
-  String get didNotGetCode => 'Did you don’t get code?';
+  String get didNotGetCode => 'Didn’t get the code?';
 
   @override
   String get signInUnavailableInPreview => 'Sign in unavailable in preview';

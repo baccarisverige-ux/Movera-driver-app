@@ -2161,7 +2161,7 @@
   "phoneVerification": "Phone verification",
   "codeDeliveryUnavailableDemo": "Code delivery is unavailable in this demo",
   "accountVerificationNeedsService": " Account verification requires the account service.",
-  "didNotGetCode": "Did you don’t get code?",
+  "didNotGetCode": "Didn’t get the code?",
   "signInUnavailableInPreview": "Sign in unavailable in preview",
   "verificationUnavailableDemo": "Verification is unavailable in this demo.",
   "starterTagline": "Let’s hit the road. Accept rides in real time and make every minute count",
