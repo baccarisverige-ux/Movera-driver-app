@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
@@ -11,6 +13,7 @@ import 'package:movera/presentation/driver/destination%20mode/destination_confir
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
+import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 
 import 'd51_translations_test.dart' as d51 show show;
 import 'd51_translations_test.dart' show languages, speak, words;
@@ -27,6 +30,29 @@ Finder flag(String iso) => find.byWidgetPredicate((widget) =>
     widget is Image &&
     widget.image is AssetImage &&
     (widget.image as AssetImage).assetName.endsWith('/$iso.png'));
+
+/// A ride Movera assigned for [day] 07:40, with no date of its own.
+ReservationRequestPreview assignedRide(String day) => ReservationRequestPreview(
+  id: 'assigned-0740',
+  category: 'Comfort',
+  fare: '126,75 kr',
+  pickupLabel: 'Pickup today at 07:40',
+  pickupAddress: 'Odlarvägen 22',
+  dropoffAddress: 'T-Centralen',
+  pickupTime: '07:40',
+  pickupDay: day,
+  tripMinutes: 18,
+  tripKm: 9.4,
+  pickup: const GeoPoint(59.3134, 18.0727),
+  dropoff: const GeoPoint(59.3300, 18.0581),
+);
+
+/// Scheduled rides in [code], on its Accepted tab.
+Future<void> showAccepted(WidgetTester tester, String code) async {
+  await show(tester, code, const ScheduledRidesScreen());
+  await tester.tap(find.text(tr.schedAcceptedTab).first);
+  await tester.pump(const Duration(milliseconds: 600));
+}
 
 /// Wave 5 D5.1 (parts c, d and e): texts that stayed in English, or in
 /// the language they were made in, now follow the driver's language.
@@ -105,6 +131,20 @@ void main() {
       await show(tester, code, const DriverNotificationsScreen());
       expect(words('$today 09:30'), findsOneWidget, reason: code);
       expect(words('Today 09:30'), findsNothing);
+    }
+  });
+
+  testWidgets('driver-96: scheduled ride cards say Today in the driver\'s '
+      'language', (tester) async {
+    addTearDown(ScheduledRideStore.reset);
+    for (final (code, today) in [('sv', 'Idag 07:40'), ('fr', 'Aujourd’hui, 07:40')]) {
+      speak(code);
+      ScheduledRideStore.reset();
+      // As Home hands it over: the stored English day.
+      ScheduledRideStore.acceptAssigned(assignedRide('Today'));
+      await showAccepted(tester, code);
+      expect(find.text(today), findsOneWidget, reason: code);
+      expect(words('Today'), findsNothing);
     }
   });
 }

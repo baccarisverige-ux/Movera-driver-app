@@ -1296,7 +1296,7 @@ class _ScheduledRide {
     bool assigned = false,
   }) => _ScheduledRide(
     price: route.fareLabel,
-    time: tr.schedSeedTime(route.pickupDay, route.pickupTime),
+    time: _timeOf(route, ReservationWhen.dayWord(route.pickupDay), null),
     category: route.category,
     distance: driverDistanceKm(route.tripKm),
     pickup: route.pickupAddress,
@@ -1314,7 +1314,7 @@ class _ScheduledRide {
   }) {
     return _ScheduledRide(
       price: route.fareLabel,
-      time: _timeOf(route, route.pickupDay, window),
+      time: _timeOf(route, ReservationWhen.dayWord(route.pickupDay), window),
       window: window,
       category: route.category,
       distance: distance ?? driverDistanceKm(route.tripKm),
