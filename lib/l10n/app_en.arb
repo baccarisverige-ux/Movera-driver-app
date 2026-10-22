@@ -910,6 +910,14 @@
   "totalBalance": "Total balance",
   "settledInYourNextPayout2": "Settled in your next payout.",
   "fareFareFormattedCashCashCollected": "Fare {fareFormatted} · Cash {cashCollectedFormatted}",
+  "cashFareFeeLine": "Fare {fare} · Fee {fee} · Cash {cash}",
+  "@cashFareFeeLine": {
+    "placeholders": {
+      "fare": {"type": "String"},
+      "fee": {"type": "String"},
+      "cash": {"type": "String"}
+    }
+  },
   "@fareFareFormattedCashCashCollected": {
     "placeholders": {
       "fareFormatted": {

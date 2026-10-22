@@ -428,6 +428,7 @@
   "totalBalance": "Totalt saldo",
   "settledInYourNextPayout2": "Regleras i din nästa utbetalning.",
   "fareFareFormattedCashCashCollected": "Pris {fareFormatted} · Kontant {cashCollectedFormatted}",
+  "cashFareFeeLine": "Pris {fare} · Avgift {fee} · Kontant {cash}",
   "driver2": "FÖRARE",
   "profile": "Profil",
   "accountVehicleAndDocuments": "Konto, fordon och dokument",

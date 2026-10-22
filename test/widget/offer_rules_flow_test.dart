@@ -467,7 +467,8 @@ void main() {
       expect(find.byKey(const ValueKey<String>('cash-collect-sheet')), findsOneWidget);
       expect(find.text('250 kr'), findsWidgets);
       expect(find.text('You owe Movera'), findsOneWidget);
-      expect(find.text('−50,00 kr'), findsOneWidget);
+      // driver-u19: 200 − Movera's 50 fee − 250 cash.
+      expect(find.text('−100,00 kr'), findsOneWidget);
       expect(find.text('Finish Comfort'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
       await tester.pump(const Duration(milliseconds: 400));

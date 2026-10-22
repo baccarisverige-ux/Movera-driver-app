@@ -947,10 +947,15 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// completes it.
     Future<void> _collectCash() async {
       if (!_collectsCashNow || _stageTransitioning || _rideLifecycle.terminal) { return; }
+      final wait = _waitTerms.driverWaitingFee(_paidWaitTotal);
       final complete = await showCashCollectSheet(
         context,
         fare: _fareWithWaiting,
         cash: _cashToCollect,
+        // driver-u19: the waybill's fee, so both say the same money.
+        serviceFee: WaybillPayment.fromFare(_fareWithWaiting,
+            bonus: widget.driverBonus?.formatted,
+            waitingFee: wait.isZero ? null : wait.formatted)?.serviceFee,
         riderName: widget.riderName,
         category: widget.category,
       );

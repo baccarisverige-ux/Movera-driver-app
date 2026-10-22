@@ -1514,6 +1514,11 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String cashFareFeeLine(String fare, String fee, String cash) {
+    return 'Tarif $fare · Frais $fee · Espèces $cash';
+  }
+
+  @override
   String get driver2 => 'CHAUFFEUR';
 
   @override

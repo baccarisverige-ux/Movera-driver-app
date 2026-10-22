@@ -86,10 +86,16 @@ class TripHistoryRecord {
   /// The rider paid cash in the car (Q23).
   bool get paidByCash => paymentMethod.trim().toLowerCase() == 'cash';
 
-  /// On a completed cash trip: fare − cash collected, owed by (−) or to
-  /// (+) the driver. Null otherwise.
+  /// On a completed cash trip: fare − Movera's fee − cash collected, owed
+  /// by (−) or to (+) the driver; the fee is the waybill's (driver-u19).
+  /// Null otherwise.
   CashBalance? get cashBalance => paidByCash && status == TripStatus.completed
-      ? CashBalance.fromLabels(fare: fare, cashCollected: cashCollected ?? fare)
+      ? CashBalance.fromLabels(
+          fare: fare,
+          cashCollected: cashCollected ?? fare,
+          serviceFee:
+              WaybillPayment.fromFare(fare, bonus: driverBonus)?.serviceFee,
+        )
       : null;
 
   Money? get fareMoney => status != TripStatus.completed

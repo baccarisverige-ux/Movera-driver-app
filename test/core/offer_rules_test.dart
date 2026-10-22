@@ -202,7 +202,7 @@ void main() {
   });
 
   group('cash (Q23)', () {
-    test('a cash trip without a recorded cash amount balances to zero', () {
+    test('a cash trip without a recorded cash amount holds Movera\'s fee', () {
       const cash = TripHistoryRecord(
         tripId: 't1',
         riderName: 'Karin',
@@ -214,7 +214,8 @@ void main() {
         paymentMethod: 'Cash',
       );
       expect(cash.paidByCash, isTrue);
-      expect(cash.cashBalance?.balance.minorUnits, 0);
+      // driver-u19: the driver holds Movera's 25 % fee (31,69 kr).
+      expect(cash.cashBalance?.balance.minorUnits, -3169);
       const card = TripHistoryRecord(
         tripId: 't2',
         riderName: 'Karin',
@@ -267,7 +268,8 @@ void main() {
       final row = (await history.list()).single;
       expect(row.paymentMethod, 'Cash');
       expect(row.cashCollected, '150 kr');
-      expect(row.cashBalance?.signedLabel, '−23,25 kr');
+      // driver-u19: 126,75 − 31,69 fee − 150 cash.
+      expect(row.cashBalance?.signedLabel, '−54,94 kr');
     });
   });
 }

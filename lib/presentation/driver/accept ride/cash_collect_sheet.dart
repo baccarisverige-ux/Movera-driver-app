@@ -15,6 +15,7 @@ Future<bool> showCashCollectSheet(
   BuildContext context, {
   required String fare,
   String? cash,
+  String? serviceFee,
   required String riderName,
   String category = '',
 }) async {
@@ -26,6 +27,7 @@ Future<bool> showCashCollectSheet(
     builder: (_) => CashCollectSheet(
       fare: fare,
       cash: cash ?? fare,
+      serviceFee: serviceFee,
       riderName: riderName,
       category: category,
     ),
@@ -38,6 +40,7 @@ class CashCollectSheet extends StatelessWidget {
     super.key,
     required this.fare,
     String? cash,
+    this.serviceFee,
     required this.riderName,
     this.category = '',
   }) : cash = cash ?? fare;
@@ -47,6 +50,10 @@ class CashCollectSheet extends StatelessWidget {
 
   /// The cash to take from the rider; can differ from [fare].
   final String cash;
+
+  /// driver-u19: Movera's fee on the fare, as on the waybill; the driver
+  /// keeps the fare after it. Null for none.
+  final String? serviceFee;
   final String riderName;
   final String category;
 
@@ -73,7 +80,11 @@ class CashCollectSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final amount = _short(cash);
-    final balance = CashBalance.fromLabels(fare: fare, cashCollected: cash);
+    final balance = CashBalance.fromLabels(
+      fare: fare,
+      cashCollected: cash,
+      serviceFee: serviceFee,
+    );
     final first = riderName.trim().split(' ').first;
     final height = MediaQuery.sizeOf(context).height * heightFactor;
     return SizedBox(
@@ -284,6 +295,10 @@ class CashCollectSheet extends StatelessWidget {
       child: Column(
         children: [
           _row(tr.yourFare, _short(fare)),
+          if (balance.serviceFee case final fee?) ...[
+            const SizedBox(height: 8),
+            _row(tr.moveraFee, '−${fee.formattedShort}'),
+          ],
           const SizedBox(height: 8),
           _row(tr.cashFromRider, _short(cash)),
           const Padding(
@@ -296,12 +311,14 @@ class CashCollectSheet extends StatelessWidget {
             color: color,
             strong: true,
           ),
-          if (balance.balance.minorUnits != 0) ...[
+          // A promotion: the rider paid other than the fare (Movera's fee
+          // alone is the row above).
+          if (balance.cashCollected.minorUnits != balance.fare.minorUnits) ...[
             const SizedBox(height: 6),
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                balance.driverOwesMovera
+                balance.cashCollected.minorUnits > balance.fare.minorUnits
                     ? tr.riderPaidMoreThanYourFare
                     : tr.riderPaidLessThanYourFare,
                 style: const TextStyle(
