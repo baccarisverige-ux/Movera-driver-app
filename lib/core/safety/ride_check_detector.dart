@@ -20,6 +20,19 @@ class RideCheckDetector {
   List<GeoPoint> _planned = const <GeoPoint>[];
   GeoPoint? _stillAt;
   DateTime? _stillSince;
+  bool _unwatched = false;
+
+  /// The trip screen stopped feeding fixes and ticks (app paused, a card
+  /// open). The car may drive meanwhile, so the next [observe] or [tick]
+  /// starts the stop clock again instead of counting the gap as a stop
+  /// (driver-u45).
+  void unwatched() => _unwatched = true;
+
+  void _rewatch(DateTime at) {
+    if (!_unwatched) return;
+    _unwatched = false;
+    if (_stillSince != null) _stillSince = at;
+  }
 
   bool fired(RideCheckTrigger trigger) => _fired.contains(trigger);
 
@@ -53,6 +66,7 @@ class RideCheckDetector {
     String? place,
     String? destination,
   }) {
+    _rewatch(at);
     final still = _stillAt;
     if (atPlannedStop ||
         still == null ||
@@ -73,6 +87,7 @@ class RideCheckDetector {
     bool atPlannedStop = false,
     String? place,
   }) {
+    _rewatch(at);
     if (atPlannedStop) {
       _stillSince = at;
       return _longer(at);

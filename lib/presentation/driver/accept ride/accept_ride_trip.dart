@@ -161,6 +161,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       _syncWaitClock();
       _waitTimer?.cancel();
       _liveUpdatesPaused = true;
+      _rideCheckDetector.unwatched(); // driver-u45
       // D-05: no next-trip offer comes or runs out while the driver cannot
       // see the trip; the offer up keeps its deadline for the resume.
       _nextTripRadarDemoTimer?.cancel();
@@ -1614,6 +1615,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         (kIsWeb || _lastLocation?.isUsableAt(_rideCheckNow) == true);
     void _openRideCheck(RideCheckEvent? event) {
       if (event == null || !mounted) { return; }
+      _rideCheckDetector.unwatched(); // the card stops the watch
       unawaited(_rideCheck.open(event, instant: MediaQuery.disableAnimationsOf(context)));
     }
     void _rideCheckPlan(RoadRoute route) {
@@ -1629,7 +1631,11 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     /// GPS can stay quiet while the car stands still.
     void _rideCheckTick() {
-      if (!_rideCheckWatching || _liveUpdatesPaused) { return; }
+      if (!_rideCheckWatching || _liveUpdatesPaused) {
+        // driver-u45: nobody watched; the stop clock restarts after.
+        _rideCheckDetector.unwatched();
+        return;
+      }
       _openRideCheck(_rideCheckDetector.tick(_rideCheckNow, gps: _rideCheckGpsFresh,
         atPlannedStop: _rideCheckAtPlannedStop, place: _rideCheckPlace));
     }

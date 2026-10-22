@@ -11,6 +11,9 @@ import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/safety/ride_check.dart';
+import 'package:movera/core/safety/ride_check_detector.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -237,5 +240,35 @@ void main() {
     expect(b.tripId, 'B');
     expect(b.isFresh, isFalse, reason: 'Home asks before restoring it');
     expect(b.savedAt!.toUtc(), completed.toUtc());
+  });
+
+  group('driver-u45: Ride check after a pause', () {
+    const car = GeoPoint(59.33, 18.06);
+    final t0 = DateTime(2026, 10, 22, 9);
+    const rules = RideCheckRules();
+    final stop = Duration(minutes: rules.longStopMinutes);
+
+    test('the first tick after a pause does not count the pause as a stop', () {
+      final detector = RideCheckDetector()..startTrip(t0);
+      expect(detector.observe(car, t0), isNull);
+      // Paused (another app) or a card open: the screen says so and then
+      // feeds nothing.
+      detector.unwatched();
+      final back = t0.add(stop + const Duration(minutes: 1));
+      expect(detector.tick(back), isNull);
+      expect(detector.tick(back.add(const Duration(seconds: 20))), isNull);
+      expect(detector.fired(RideCheckTrigger.longStop), isFalse);
+    });
+
+    test('a car standing still with ticks running is still a long stop', () {
+      final detector = RideCheckDetector()..startTrip(t0);
+      detector.observe(car, t0);
+      RideCheckEvent? event;
+      for (var t = t0; event == null && t.isBefore(t0.add(stop * 2));) {
+        t = t.add(const Duration(seconds: 20));
+        event = detector.tick(t);
+      }
+      expect(event?.trigger, RideCheckTrigger.longStop);
+    });
   });
 }
