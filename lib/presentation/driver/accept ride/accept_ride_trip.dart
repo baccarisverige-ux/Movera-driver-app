@@ -1221,6 +1221,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!mounted ||
           _offersHeld ||
           _stage != ActiveRideStage.onTrip ||
+          // u76: the trip has ended (its outcome sheet may still be up).
+          _rideLifecycle.terminal ||
           _onTripRadarState != _OnTripRadarState.scanning ||
           _onTripRadarDeclined ||
           (_nextTripRadarDemoTimer?.isActive ?? false)) {
@@ -1270,7 +1272,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     void _presentOnTripOffer() {
       // D-05: never while the trip is hidden; the resume looks again.
-      if (_offersHeld) { return; }
+      // Never after the trip ended either (u76).
+      if (_offersHeld || _rideLifecycle.terminal) { return; }
       _rebuild(() {
         final offer = _onTripRadarOfferForDestination();
         if (!_dropoffFollowsDestination(offer.dropoffPosition)) { return; }

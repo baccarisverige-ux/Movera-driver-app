@@ -137,6 +137,30 @@ void main() {
     DriverOfferRules.current = const DriverOfferRules();
   });
 
+  testWidgets('driver-u76: no next-trip offer after the trip ended, even '
+      'after a resume and a GPS fix', (tester) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    final location = await _pumpTrip(tester, realtime: realtime);
+    realtime.emit(
+      tripId: 'cd-trip',
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.cancelledByAdmin,
+    );
+    await _until(tester,
+        find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
+    // The driver leaves the app and comes back; the sheet is still up.
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    location.updates.add(location.fix());
+    await _pumpFor(tester, const Duration(seconds: 20));
+    expect(find.byKey(_offerCard), findsNothing);
+    expect(ExclusiveAnswers.instance.missedInRow, 0);
+    await _unmount(tester);
+  });
+
   testWidgets('driver-u77: a card trip is archived as paid by Card',
       (tester) async {
     await _pumpTrip(tester, stage: ActiveRideStage.waitingForRider);
