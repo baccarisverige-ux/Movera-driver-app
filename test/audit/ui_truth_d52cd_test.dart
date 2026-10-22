@@ -1,21 +1,30 @@
 // Wave 5 D5.2 (UI truth), parts c and d: history, safety, scheduled rides
 // and map widgets show only what really happened.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
+import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
 /// [screen] as the app's first route on a phone.
-Future<void> _show(WidgetTester tester, Widget screen) async {
+/// A screen that never settles (a live animation) is pumped once.
+Future<void> _show(WidgetTester tester, Widget screen,
+    {bool settle = true}) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -24,7 +33,7 @@ Future<void> _show(WidgetTester tester, Widget screen) async {
     designSize: const Size(375, 812),
     builder: (_, __) => MaterialApp(home: screen),
   ));
-  await tester.pumpAndSettle();
+  settle ? await tester.pumpAndSettle() : await tester.pump();
 }
 
 /// Trip details of [status] for a 152,40 kr trip with a 40 kr bonus.
@@ -56,6 +65,49 @@ Future<void> _detail(WidgetTester tester,
     ),
   ));
   await tester.pumpAndSettle();
+}
+
+RideOffer _offer(String id, {String payment = 'Card'}) => RideOffer(
+      id: id,
+      category: 'Comfort',
+      fare: const Money(minorUnits: 10000),
+      rating: '4.9',
+      pickupMinutes: 2,
+      pickupKm: 1,
+      tripMinutes: 10,
+      tripKm: 5,
+      pickup: 'Pickup $id, Stockholm',
+      dropoff: 'Dropoff, Stockholm',
+      pickupPosition: const GeoPoint(59.3279, 18.0615),
+      dropoffPosition: const GeoPoint(59.3326, 18.0649),
+      isNearby: true,
+      followsDestination: true,
+      payment: payment,
+    );
+
+/// Dispatch whose nearby feed the test sends.
+class _Dispatch implements DispatchRepository {
+  final nearby = StreamController<List<RideOffer>>.broadcast();
+  @override
+  Stream<List<RideOffer>> watchNearbyOffers({
+    bool destinationModeActive = false,
+  }) => nearby.stream;
+  @override
+  Stream<List<RideOffer>> watchNextTripOffers() => const Stream.empty();
+  @override
+  void refreshOffers() {}
+  @override
+  void releaseReservation(String reservationId) {}
+  @override
+  Stream<ReservationRequestPreview> watchAssignments() => const Stream.empty();
+  @override
+  Future<ClaimResult> claimOffer(String offerId) async =>
+      const ClaimResult.unavailable();
+  @override
+  Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
+      false;
+  @override
+  Stream<OfferWithdrawal> watchWithdrawals() => const Stream.empty();
 }
 
 void main() {
@@ -120,5 +172,26 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('history-view-all-rides')));
     await tester.pumpAndSettle();
     expect(find.textContaining('3 rides in'), findsOneWidget);
+  });
+
+  testWidgets("driver-u160: Radar's refresh pill lights only for new trips "
+      "the driver's filter shows", (tester) async {
+    final maps = GoogleMapsFlutterPlatform.instance;
+    GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+    final dispatch = _Dispatch();
+    await _show(tester, RideRequests(
+        dispatchRepository: dispatch,
+        offerFilter: (offer) => offer.payment != 'Cash'), settle: false);
+    const pill = ValueKey<String>('radar-refresh-new');
+    dispatch.nearby.add([_offer('a')]);
+    await tester.pump();
+    dispatch.nearby.add([_offer('a'), _offer('cash', payment: 'Cash')]);
+    await tester.pump();
+    expect(find.byKey(pill), findsNothing, reason: 'cash rides are off');
+    dispatch.nearby.add([_offer('a'), _offer('b')]);
+    await tester.pump();
+    expect(find.byKey(pill), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }

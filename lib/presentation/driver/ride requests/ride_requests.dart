@@ -159,6 +159,15 @@ class _RideRequestsState extends State<RideRequests> {
     return List<_RadarTrip>.unmodifiable(nearby);
   }
 
+  /// A new dispatch offer Refresh would add as a card: the same rules as
+  /// [_visibleOffers] (driver-u160).
+  bool _wouldShow(RideOffer offer) =>
+      offer.isNearby &&
+      !offer.isExclusive &&
+      !_dismissed.contains(offer.id) &&
+      (widget.offerFilter?.call(offer) ?? true) &&
+      (!widget.destinationModeActive || _follows(offer));
+
   bool _follows(RideOffer offer) =>
       widget.followsDestination?.call(offer) ?? offer.followsDestination;
 
@@ -247,9 +256,7 @@ class _RideRequestsState extends State<RideRequests> {
     final displayedIds = _offers.map((trip) => trip.id).toSet();
     final incomingIds = offers.map((offer) => offer.id).toSet();
     final hasNew = offers.any(
-      (offer) => offer.isNearby &&
-          !offer.isExclusive &&
-          !displayedIds.contains(offer.id),
+      (offer) => !displayedIds.contains(offer.id) && _wouldShow(offer),
     );
     final disappeared = _offers.where((trip) {
       return !incomingIds.contains(trip.id) &&
@@ -602,10 +609,7 @@ class _RideRequestsState extends State<RideRequests> {
   Widget _header(int count) {
     final shown = _offers.map((trip) => trip.id).toSet();
     final fresh = _latestDispatchOffers
-        .where((offer) =>
-            offer.isNearby &&
-            !shown.contains(offer.id) &&
-            (!widget.destinationModeActive || _follows(offer)))
+        .where((offer) => !shown.contains(offer.id) && _wouldShow(offer))
         .length;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
