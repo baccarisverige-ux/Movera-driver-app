@@ -428,7 +428,11 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
         16.height,
         _detailRow(tr.tip, _ride.tip),
         16.height,
-        _detailRow(tr.paymentMethod, _ride.paymentMethod, paymentIcon: true),
+        _detailRow(
+          tr.paymentMethod,
+          paymentMethodText(_ride.paymentMethod),
+          paymentIcon: true,
+        ),
         16.height,
         _detailRow(tr.rideType, _ride.category),
         // Q23 / R8-4: on a cash trip, the fare, the cash the driver
@@ -463,19 +467,9 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
   }
 
   Widget _buildMetaRows() {
-    final outcome = switch (_ride.status) {
-      TripStatus.completed => tr.rideCompletedOn,
-      TripStatus.cancelledByRider => tr.cancelledByRider,
-      TripStatus.cancelledByDriver => tr.cancelledByDriver,
-      TripStatus.cancelledByAdmin => tr.cancelledBySupport,
-      TripStatus.cancelledBySystem => tr.cancelledByMovera,
-      TripStatus.searching ||
-      TripStatus.requested => tr.cancelledByDriver,
-      TripStatus.noShow => tr.riderDidNotArrive,
-      TripStatus.expired => tr.tripExpired,
-      TripStatus.failed => tr.tripFailed,
-      _ => tr.tripEnded,
-    };
+    final outcome = _ride.status == TripStatus.completed
+        ? tr.rideCompletedOn
+        : tripOutcomeText(_ride.status);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

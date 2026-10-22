@@ -701,7 +701,7 @@ class _RideRequestsState extends State<RideRequests> {
                     LedCountBadge(
                       key: const ValueKey<String>('radar-live-count'),
                       count: count,
-                      label: 'OFFERS',
+                      label: tr.offersBadge,
                       tone: LedCountTone.grey,
                     ),
                   ],

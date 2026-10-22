@@ -358,7 +358,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                   const SizedBox(width: 8),
                   if (_searchController.text.trim().isNotEmpty)
                     Text(
-                      '${results.length} found',
+                      tr.destResultsFound(results.length),
                       style: const TextStyle(
                         color: _muted,
                         fontSize: 10.5,

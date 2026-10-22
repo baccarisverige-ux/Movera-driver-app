@@ -1671,7 +1671,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language => 'Language';
 
   @override
-  String get pinVerification => 'Pin verification';
+  String get pinVerification => 'PIN verification';
 
   @override
   String get emergencyContacts => 'Emergency contacts';
@@ -2901,7 +2901,7 @@ class AppLocalizationsEn extends AppLocalizations {
       ' Account verification requires the account service.';
 
   @override
-  String get didNotGetCode => 'Did you don’t get code?';
+  String get didNotGetCode => 'Didn’t get the code?';
 
   @override
   String get signInUnavailableInPreview => 'Sign in unavailable in preview';
@@ -3726,7 +3726,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String prefCategoriesSaved(int count) {
-    return '$count ride categories saved';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ride categories saved',
+      one: '1 ride category saved',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4714,4 +4720,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String noticePayoutSentBody(String amount) {
     return '$amount is on its way to your bank.';
   }
+
+  @override
+  String get signInOr => 'or';
+
+  @override
+  String destResultsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count found',
+      one: '1 found',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get queueEstimatedWait => 'About 15–30 min wait';
+
+  @override
+  String get queueDriversAhead => 'Drivers ahead';
+
+  @override
+  String get paymentCard => 'Card';
+
+  @override
+  String get offersBadge => 'OFFERS';
+
+  @override
+  String get bankAccountSection => 'ACCOUNT';
 }

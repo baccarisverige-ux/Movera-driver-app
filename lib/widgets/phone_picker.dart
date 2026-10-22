@@ -3,10 +3,24 @@ import 'package:country_pickers/country.dart';
 import 'package:country_pickers/country_pickers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/responsive_size.dart';
+
+/// The phone screens' default country: the driver's market
+/// ([DriverAccountRules.country], Sweden and +46 in the demo), so a number
+/// typed without picking a country is read in that market (driver-u105).
+Country marketPhoneCountry() {
+  try {
+    return CountryPickerUtils.getCountryByIsoCode(
+      DriverAccountRules.current.country,
+    );
+  } catch (_) {
+    return CountryPickerUtils.getCountryByIsoCode('SE');
+  }
+}
 
 class PhoneNumberPicker extends StatefulWidget {
   final Function(String, Country)?

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/scheduled/reservation_when.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 
 /// Admin's notification groups (Q31): N1 ride alerts, N2 demand and
@@ -236,7 +237,10 @@ class DriverNotices {
         id: _feed.nextId('scheduled'),
         kind: DriverNoticeKind.newScheduledRide,
         title: () => tr.noticeNewScheduledRide,
-        body: () => tr.noticeScheduledBody(day, time, fare),
+        // [day] is the reservation's stored word ('Today'); it is read in
+        // the driver's language each time the notice is shown.
+        body: () =>
+            tr.noticeScheduledBody(ReservationWhen.dayWord(day), time, fare),
         at: at,
         island: () => driverText(DriverTexts.islandNewReservation),
         action: DriverNoticeAction.viewScheduledRides,

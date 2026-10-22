@@ -3743,7 +3743,13 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String prefCategoriesSaved(int count) {
-    return '$count resekategorier sparade';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count resekategorier sparade',
+      one: '1 resekategori sparad',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4732,4 +4738,33 @@ class AppLocalizationsSv extends AppLocalizations {
   String noticePayoutSentBody(String amount) {
     return '$amount är på väg till din bank.';
   }
+
+  @override
+  String get signInOr => 'eller';
+
+  @override
+  String destResultsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count träffar',
+      one: '1 träff',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get queueEstimatedWait => 'Cirka 15–30 min väntetid';
+
+  @override
+  String get queueDriversAhead => 'Förare före';
+
+  @override
+  String get paymentCard => 'Kort';
+
+  @override
+  String get offersBadge => 'ERBJUDANDEN';
+
+  @override
+  String get bankAccountSection => 'KONTO';
 }

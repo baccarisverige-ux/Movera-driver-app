@@ -48,7 +48,7 @@ void main() {
 
       // The last categories and the dismiss control must both be reachable
       // even after the sheet initially opens in a short landscape viewport.
-      await tester.ensureVisible(find.text('Van').last);
+      await tester.ensureVisible(find.text('Movera XL').last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
 

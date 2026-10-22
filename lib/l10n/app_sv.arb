@@ -1064,7 +1064,7 @@
   "prefLowEmissions": "Låga utsläpp • Eko",
   "prefPetFriendly": "Husdjursvänlig • Bur OK",
   "prefChildSeat": "Barnstol • Säkert för barn",
-  "prefCategoriesSaved": "{count} resekategorier sparade",
+  "prefCategoriesSaved": "{count, plural, =1{1 resekategori sparad} other{{count} resekategorier sparade}}",
   "prefActiveOfTotal": "{active} av {total} aktiva",
   "prefChooseRideOptions": "Välj dina reseval",
   "prefSelectRideTypes": "Välj vilka resetyper du vill få",
@@ -1351,5 +1351,12 @@
   "noticeBonusProgressTitle": "Bonusframsteg",
   "noticeBonusProgressBody": "{done} av {goal} resor den här veckan. {left} till för {amount}.",
   "noticePayoutSentTitle": "Utbetalning skickad",
-  "noticePayoutSentBody": "{amount} är på väg till din bank."
+  "noticePayoutSentBody": "{amount} är på väg till din bank.",
+  "signInOr": "eller",
+  "destResultsFound": "{count, plural, =1{1 träff} other{{count} träffar}}",
+  "queueEstimatedWait": "Cirka 15–30 min väntetid",
+  "queueDriversAhead": "Förare före",
+  "paymentCard": "Kort",
+  "offersBadge": "ERBJUDANDEN",
+  "bankAccountSection": "KONTO"
 }

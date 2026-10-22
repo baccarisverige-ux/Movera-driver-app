@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/history/trip_history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -212,7 +213,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                     const SizedBox(height: 20),
                     const Divider(height: 1, thickness: 1, color: _line),
                     const SizedBox(height: 16),
-                    _row(tr.payment, Text(widget.paymentMethod ?? '—',
+                    _row(tr.payment, Text(paymentMethodText(widget.paymentMethod),
                         style: _value)),
                     _row(
                       tr.waybill,

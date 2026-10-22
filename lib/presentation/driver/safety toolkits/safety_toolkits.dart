@@ -176,7 +176,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                     const SizedBox(height: 14),
                     _preferenceTile(
                       icon: Icons.pin_outlined,
-                      title: 'PIN verification',
+                      title: tr.pinVerification,
                       subtitle: tr.safetyUnavailableWithoutVerification,
                       value: false,
                       onChanged: null,

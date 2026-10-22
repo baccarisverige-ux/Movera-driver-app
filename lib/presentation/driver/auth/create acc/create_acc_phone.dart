@@ -23,15 +23,16 @@ class DriverCreateAccountPhone extends StatefulWidget {
 }
 
 class _DriverCreateAccountPhoneState extends State<DriverCreateAccountPhone> {
-  String selectedCountryCode = '+92';
+  late String selectedCountryCode;
   Country? selectedCountry; // Add this to store the selected country
 
   @override
   void initState() {
     super.initState();
-    // Set default country (United States)
-    selectedCountry = CountryPickerUtils.getCountryByIsoCode('US');
-    selectedCountryCode = '+1';
+    // The driver's market country (Sweden, +46) until they pick another.
+    final market = marketPhoneCountry();
+    selectedCountry = market;
+    selectedCountryCode = '+${market.phoneCode}';
   }
 
   void updateCountryCode(String newCode, Country country) {

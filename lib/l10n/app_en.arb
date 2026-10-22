@@ -981,7 +981,7 @@
   "darkMode": "Dark mode",
   "unavailableInDemo": "Unavailable in demo",
   "language": "Language",
-  "pinVerification": "Pin verification",
+  "pinVerification": "PIN verification",
   "emergencyContacts": "Emergency contacts",
   "safety": "Safety",
   "showTrafficOnMap": "Show traffic on map",
@@ -2161,7 +2161,7 @@
   "phoneVerification": "Phone verification",
   "codeDeliveryUnavailableDemo": "Code delivery is unavailable in this demo",
   "accountVerificationNeedsService": " Account verification requires the account service.",
-  "didNotGetCode": "Did you don’t get code?",
+  "didNotGetCode": "Didn’t get the code?",
   "signInUnavailableInPreview": "Sign in unavailable in preview",
   "verificationUnavailableDemo": "Verification is unavailable in this demo.",
   "starterTagline": "Let’s hit the road. Accept rides in real time and make every minute count",
@@ -2614,7 +2614,7 @@
   "prefLowEmissions": "Low emissions • Eco",
   "prefPetFriendly": "Pet friendly • Carrier OK",
   "prefChildSeat": "Child seat • Kids safe",
-  "prefCategoriesSaved": "{count} ride categories saved",
+  "prefCategoriesSaved": "{count, plural, =1{1 ride category saved} other{{count} ride categories saved}}",
   "@prefCategoriesSaved": {
     "placeholders": {
       "count": {
@@ -3182,5 +3182,38 @@
         "type": "String"
       }
     }
+  },
+  "signInOr": "or",
+  "@signInOr": {
+    "description": "Divider word between the sign-in options."
+  },
+  "destResultsFound": "{count, plural, =1{1 found} other{{count} found}}",
+  "@destResultsFound": {
+    "description": "How many places match the destination search.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "queueEstimatedWait": "About 15–30 min wait",
+  "@queueEstimatedWait": {
+    "description": "Estimated wait in the queue position preview."
+  },
+  "queueDriversAhead": "Drivers ahead",
+  "@queueDriversAhead": {
+    "description": "Label above the sample count of drivers ahead in the queue."
+  },
+  "paymentCard": "Card",
+  "@paymentCard": {
+    "description": "Payment method: paid by card in the app."
+  },
+  "offersBadge": "OFFERS",
+  "@offersBadge": {
+    "description": "Label after the live offer count on the Radar list."
+  },
+  "bankAccountSection": "ACCOUNT",
+  "@bankAccountSection": {
+    "description": "Section header above the bank account fields."
   }
 }

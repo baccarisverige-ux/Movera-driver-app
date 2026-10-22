@@ -75,12 +75,14 @@ class OfferRouteMarks {
   /// painting still under way is never shared: if its owner goes away
   /// first (a test ending, a closed zone) a shared future could never
   /// complete, and every later pin would wait on it forever.
+  /// The key holds the title too: after a language switch a pin is
+  /// painted again with the new language's "Pickup" (driver-u181).
   static Future<BitmapDescriptor> pin(RouteMarkKind kind, String value) async {
-    final key = '${kind.name}|$value';
+    final title = titleOf(kind);
+    final key = '${kind.name}|$title|$value';
     final painted = _cache[key];
     if (painted != null) return painted;
-    return _cache[key] =
-        await RouteMarkPins.labelled(kind, titleOf(kind), value);
+    return _cache[key] = await RouteMarkPins.labelled(kind, title, value);
   }
 
   /// The stop circle's bitmap; cached once painted, like [pin].

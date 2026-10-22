@@ -3774,7 +3774,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String prefCategoriesSaved(int count) {
-    return '$count catégories de course enregistrées';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count catégories de course enregistrées',
+      one: '$count catégorie de course enregistrée',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -4779,4 +4785,33 @@ class AppLocalizationsFr extends AppLocalizations {
   String noticePayoutSentBody(String amount) {
     return '$amount est en route vers votre banque.';
   }
+
+  @override
+  String get signInOr => 'ou';
+
+  @override
+  String destResultsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trouvés',
+      one: '$count trouvé',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get queueEstimatedWait => 'Environ 15 à 30 min d’attente';
+
+  @override
+  String get queueDriversAhead => 'Chauffeurs devant';
+
+  @override
+  String get paymentCard => 'Carte';
+
+  @override
+  String get offersBadge => 'OFFRES';
+
+  @override
+  String get bankAccountSection => 'COMPTE';
 }
