@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -2214,8 +2216,10 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) =>
-          _CancelConfirmationSheet(reason: reason, ride: ride.route),
+      builder: (sheetContext) => _AtFreeCancelEnd(
+        ride: ride.route,
+        child: () => _CancelConfirmationSheet(reason: reason, ride: ride.route),
+      ),
     );
 
     if (confirmed == true && context.mounted) {
@@ -2421,7 +2425,10 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                child: _CancelRulesBox(ride: widget.ride),
+                child: _AtFreeCancelEnd(
+                  ride: widget.ride,
+                  child: () => _CancelRulesBox(ride: widget.ride),
+                ),
               ),
               ListView.separated(
                 shrinkWrap: true,

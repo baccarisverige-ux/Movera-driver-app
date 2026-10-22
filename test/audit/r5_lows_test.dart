@@ -173,8 +173,8 @@ class _BlockedStorage extends MemoryActiveRideRepository {
   }
 }
 
-/// A reservation picked up tomorrow at [hour]:00.
-ReservationRequestPreview _reservation(int hour) {
+/// A reservation picked up tomorrow at [hour]:00, or [at].
+ReservationRequestPreview _reservation(int hour, {DateTime? at}) {
   final now = DateTime.now();
   return ReservationRequestPreview(
     category: 'Comfort',
@@ -191,7 +191,7 @@ ReservationRequestPreview _reservation(int hour) {
     tripKm: 40,
     pickup: const GeoPoint(59.3326, 18.0300),
     dropoff: const GeoPoint(59.6498, 17.9238),
-  ).scheduledFor(DateTime(now.year, now.month, now.day + 1, hour));
+  ).scheduledFor(at ?? DateTime(now.year, now.month, now.day + 1, hour));
 }
 
 /// Home's test setup: a headless map and the demo's quiet runtime.
@@ -643,6 +643,43 @@ void main() {
     wall = wall.add(const Duration(days: 2));
     expect(ScheduledRideStore.backupNote.value, isNull,
         reason: 'before: it stayed above later 18:00 rides until logout');
+  });
+
+  testWidgets('driver-r5-46: the cancel confirmation turns late when the '
+      'free cancel ends while it is open', (tester) async {
+    _phone(tester);
+    final real = ScheduledClock.realNow, clock = ScheduledClock.instance;
+    ScheduledClock.realNow = () => tester.binding.clock.now();
+    ScheduledClock.instance = ScheduledClock();
+    addTearDown(() {
+      ScheduledClock.realNow = real;
+      ScheduledClock.instance = clock;
+    });
+    ScheduledRideStore.reset();
+    addTearDown(ScheduledRideStore.reset);
+    // Free cancel ends 30 s from now (1 h before pickup).
+    ScheduledRideStore.acceptAssigned(_reservation(0, at: tester.binding.clock
+        .now().add(const Duration(hours: 1, seconds: 30))));
+    await tester.pumpWidget(_app(const ScheduledRidesScreen()));
+    await _frames(tester, 6);
+    await tester.tap(find.text('Accepted'));
+    await _frames(tester, 6);
+    await tester.tap(find.text('Kungsholmen, Stockholm').first);
+    await _frames(tester, 12);
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel reservation'));
+    await _frames(tester, 12);
+    await tester.ensureVisible(find.text('Personal emergency'));
+    await tester.tap(find.text('Personal emergency'));
+    await _frames(tester, 6);
+    await tester.ensureVisible(find.text('Continue'));
+    await tester.tap(find.text('Continue'));
+    await _frames(tester, 12);
+    const warning = ValueKey<String>('scheduled-late-cancel');
+    expect(find.byKey(warning), findsNothing);
+    await tester.pump(const Duration(seconds: 31));
+    await tester.pump();
+    expect(find.byKey(warning), findsOneWidget,
+        reason: 'before: it still read as free, and Confirm counted late');
   });
 }
 
