@@ -8233,6 +8233,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'or'**
   String get signInOr;
+
+  /// How many places match the destination search.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 found} other{{count} found}}'**
+  String destResultsFound(int count);
 }
 
 class _AppLocalizationsDelegate

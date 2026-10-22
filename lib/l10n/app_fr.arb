@@ -1352,5 +1352,6 @@
   "noticeBonusProgressBody": "{done} courses sur {goal} cette semaine. Encore {left} pour {amount}.",
   "noticePayoutSentTitle": "Paiement envoyé",
   "noticePayoutSentBody": "{amount} est en route vers votre banque.",
-  "signInOr": "ou"
+  "signInOr": "ou",
+  "destResultsFound": "{count, plural, one{{count} trouvé} other{{count} trouvés}}"
 }

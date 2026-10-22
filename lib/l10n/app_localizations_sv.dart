@@ -4735,4 +4735,15 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get signInOr => 'eller';
+
+  @override
+  String destResultsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count träffar',
+      one: '1 träff',
+    );
+    return '$_temp0';
+  }
 }

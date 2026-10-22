@@ -3186,5 +3186,14 @@
   "signInOr": "or",
   "@signInOr": {
     "description": "Divider word between the sign-in options."
+  },
+  "destResultsFound": "{count, plural, =1{1 found} other{{count} found}}",
+  "@destResultsFound": {
+    "description": "How many places match the destination search.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

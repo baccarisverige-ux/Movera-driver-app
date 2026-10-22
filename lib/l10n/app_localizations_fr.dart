@@ -4782,4 +4782,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get signInOr => 'ou';
+
+  @override
+  String destResultsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trouvés',
+      one: '$count trouvé',
+    );
+    return '$_temp0';
+  }
 }

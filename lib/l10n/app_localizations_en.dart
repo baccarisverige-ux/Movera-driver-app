@@ -4717,4 +4717,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signInOr => 'or';
+
+  @override
+  String destResultsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count found',
+      one: '1 found',
+    );
+    return '$_temp0';
+  }
 }

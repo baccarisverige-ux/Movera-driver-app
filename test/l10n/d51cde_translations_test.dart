@@ -6,6 +6,7 @@ import 'package:movera/presentation/driver/auth/phone%20verification/phone_verif
 import 'package:movera/presentation/driver/auth/sign%20in%20phone/sign_in_phone.dart';
 import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
+import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 
 import 'd51_translations_test.dart' as d51 show show;
 import 'd51_translations_test.dart' show languages, speak, words;
@@ -61,5 +62,19 @@ void main() {
     }
     speak('en');
     expect(destinationDistanceTimeLabel(38100, 2040), '38.1 km · 34 min');
+  });
+
+  testWidgets('driver-60: the destination search count is translated',
+      (tester) async {
+    for (final (code, query, count) in [
+      ('fr', 'airport', '2 trouvés'),
+      ('sv', 'kista', '1 träff'),
+    ]) {
+      await show(tester, code, const DriverDestinationPicker());
+      await tester.enterText(find.byType(TextField), query);
+      await tester.pump();
+      expect(find.text(count), findsOneWidget, reason: code);
+      expect(words('found'), findsNothing);
+    }
   });
 }
