@@ -18,10 +18,12 @@ import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/safety/ride_check_gate.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/support/local_support_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/auth/additional%20detail/navigation.dart';
+import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
@@ -198,6 +200,63 @@ Future<GoogleMapController> _pumpMap(WidgetTester tester, _Camera camera) async 
   ));
   await tester.pump();
   return controller!;
+}
+
+/// Home's GPS: the first one-shot fix answers, later ones wait (weak
+/// signal) while the stream keeps delivering.
+class _HomeGps implements DriverLocationRepository {
+  final updates = StreamController<DriverLocation>.broadcast();
+  int oneShots = 0;
+  @override
+  Future<DriverLocation> getCurrentPosition() =>
+      oneShots++ == 0 ? Future.value(at(59.34, 18.07)) : Completer<DriverLocation>().future;
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      updates.stream;
+  DriverLocation at(double lat, double lng) => DriverLocation(
+    point: GeoPoint(lat, lng),
+    measuredAt: DateTime.now(),
+    accuracyMeters: 4,
+  );
+}
+
+/// DriverHome on a headless map, with the demo extras off.
+Future<void> _pumpHome(WidgetTester tester, {
+  DriverLocationRepository? location,
+}) async {
+  final maps = GoogleMapsFlutterPlatform.instance;
+  GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+  addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+  final config = DriverRuntimeConfig.current;
+  DriverRuntimeConfig.current = const DriverRuntimeConfig(
+    externalRouting: false,
+    liveMapTicker: false,
+    reservationPopup: false,
+    islandHint: false,
+    simulatedArrival: false,
+    skipAccountActivation: false,
+  );
+  addTearDown(() => DriverRuntimeConfig.current = config);
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(ScreenUtilInit(
+    designSize: const Size(375, 812),
+    builder: (_, _) => MaterialApp(
+      home: DriverHome(locationRepository: location),
+    ),
+  ));
+  await _settle(tester);
+}
+
+/// Where Home's car marker is.
+LatLng? _carOnHome(WidgetTester tester) {
+  for (final map in tester.widgetList<GoogleMap>(find.byType(GoogleMap))) {
+    for (final marker in map.markers) {
+      if (marker.markerId.value == 'driver_location') return marker.position;
+    }
+  }
+  return null;
 }
 
 const _offerCard = ValueKey<String>('on-trip-radar-offer-button');
@@ -422,6 +481,20 @@ void main() {
     // 1 s of flight; before it ran about 2 s (only the 16 ms sleeps counted).
     expect(flight, lessThan(const Duration(milliseconds: 1400)));
     port.dispose();
+  });
+
+  testWidgets('driver-u119: Locate does not mute the running GPS stream '
+      'while its one-shot fix waits', (tester) async {
+    final gps = _HomeGps();
+    addTearDown(gps.updates.close);
+    await _pumpHome(tester, location: gps);
+    expect(_carOnHome(tester), const LatLng(59.34, 18.07));
+    await tester.tap(find.byKey(const ValueKey<String>('driver-location-zoom')));
+    await _settle(tester);
+    gps.updates.add(gps.at(59.341, 18.071)); // the car moved on
+    await _settle(tester);
+    expect(_carOnHome(tester), const LatLng(59.341, 18.071));
+    await _unmount(tester);
   });
 
   test('driver-u148: "Yesterday" only for the day before, by the calendar', () {
