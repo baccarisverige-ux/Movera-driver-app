@@ -2466,6 +2466,12 @@ abstract class AppLocalizations {
   /// **'Cash matched your fare'**
   String get cashMatchedYourFare;
 
+  /// No description provided for @cashMatchedYourEarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash matched your earnings: nothing to settle'**
+  String get cashMatchedYourEarnings;
+
   /// No description provided for @settledInYourNextPayout.
   ///
   /// In en, this message translates to:

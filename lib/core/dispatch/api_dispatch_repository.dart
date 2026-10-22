@@ -202,6 +202,12 @@ class ApiDispatchRepository implements DispatchRepository {
   /// The offer feed cursor, for `?after=` replay.
   int get lastSequence => _lastSequence;
 
+  /// The longest any request waits for the server's answer (driver-r5-21):
+  /// a stalled connection is then no answer, as when it drops, so a claim
+  /// ends as a network error (same Idempotency-Key on a retry) instead of
+  /// leaving Home "Matching" until the OS gives up on the socket.
+  static const requestTimeout = Duration(seconds: 10);
+
   /// 1 s, 2 s, 4 s … up to 30 s between tries.
   static Duration _backoff(int attempt) =>
       Duration(seconds: math.min(30, 1 << math.min(attempt, 5)));
@@ -241,11 +247,10 @@ class ApiDispatchRepository implements DispatchRepository {
     final text = jsonEncode(body);
     final command = '$path $text';
     final key = _commandKeys.putIfAbsent(command, _key);
-    final response = await _client.post(
-      _uri(path),
-      headers: await _headers(idempotencyKey: key),
-      body: text,
-    );
+    final headers = await _headers(idempotencyKey: key);
+    final response = await _client
+        .post(_uri(path), headers: headers, body: text)
+        .timeout(requestTimeout);
     if (response.statusCode < 500) _commandKeys.remove(command);
     return response;
   }
@@ -286,10 +291,13 @@ class ApiDispatchRepository implements DispatchRepository {
 
   Future<void> _load() async {
     try {
-      final response = await _client.get(
-        _uri('/driver/offers', const {'status': 'open'}),
-        headers: await _headers(),
-      );
+      final headers = await _headers();
+      final response = await _client
+          .get(
+            _uri('/driver/offers', const {'status': 'open'}),
+            headers: headers,
+          )
+          .timeout(requestTimeout);
       if (response.statusCode != 200) return;
       final body = jsonDecode(response.body);
       final items = body is Map ? body['items'] : null;
@@ -325,7 +333,7 @@ class ApiDispatchRepository implements DispatchRepository {
           'Accept': 'text/event-stream',
           if (_lastSequence > 0) 'Last-Event-ID': '$_lastSequence',
         });
-      response = await _client.send(request);
+      response = await _client.send(request).timeout(requestTimeout);
     } catch (_) {
       _feedLost();
       return;

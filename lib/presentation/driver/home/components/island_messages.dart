@@ -99,9 +99,14 @@ class IslandMessages {
   /// Next message to show, removed from the queue.
   static IslandMessage? take() => _queue.isEmpty ? null : _queue.removeAt(0);
 
-  @visibleForTesting
-  static void reset() {
+  /// Drops every waiting message (logout, driver-r5-27): each may hold a
+  /// closure over the departing driver's Home, and the next driver must
+  /// not see the previous one's notices.
+  static void clear() {
     _queue.clear();
     posted.clear();
   }
+
+  @visibleForTesting
+  static void reset() => clear();
 }

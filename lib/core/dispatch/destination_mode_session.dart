@@ -16,6 +16,7 @@ class DestinationModeSession {
   bool _timedOut = false;
   GeoPoint? _routeTo;
   List<GeoPoint> _route = const <GeoPoint>[];
+  ({double meters, double seconds, DateTime at})? _figures;
   String? _address;
   GeoPoint? _position;
 
@@ -57,6 +58,7 @@ class DestinationModeSession {
     _started.add(at);
     _route = const <GeoPoint>[];
     _routeTo = null;
+    _figures = null;
   }
 
   /// A trip restored after a restart had a destination the empty session
@@ -81,6 +83,7 @@ class DestinationModeSession {
     _position = null;
     _route = const <GeoPoint>[];
     _routeTo = null;
+    _figures = null;
   }
 
   /// Time left before the admin time limit ends it; null without a limit
@@ -110,11 +113,35 @@ class DestinationModeSession {
     _timedOut = true;
   }
 
-  /// The road route Home drew to [destination].
-  void keepRoute(GeoPoint destination, List<GeoPoint> points) {
+  /// The road route Home drew to [destination], with its distance and
+  /// time when known.
+  void keepRoute(
+    GeoPoint destination,
+    List<GeoPoint> points, {
+    double? meters,
+    double? seconds,
+  }) {
     _routeTo = destination;
     _route = List<GeoPoint>.unmodifiable(points);
+    _figures = meters == null || seconds == null
+        ? null
+        : (meters: meters, seconds: seconds, at: _now());
   }
+
+  /// How long the last road figures stand in for a failed refresh or a
+  /// lost GPS fix (driver-r5-20).
+  static const Duration figuresLast = Duration(minutes: 5);
+
+  /// The last road route's (meters, seconds) to [destination] while they
+  /// are recent; null without a route or once older than [figuresLast].
+  (double, double)? figuresTo(GeoPoint destination) {
+    final f = _figures;
+    if (f == null || routeTo(destination).isEmpty) { return null; }
+    return _now().difference(f.at) > figuresLast ? null : (f.meters, f.seconds);
+  }
+
+  /// A road route to [destination] was drawn since it was set.
+  bool hadRouteTo(GeoPoint destination) => routeTo(destination).isNotEmpty;
 
   /// The road route to [destination], or empty when there is none.
   List<GeoPoint> routeTo(GeoPoint destination) =>

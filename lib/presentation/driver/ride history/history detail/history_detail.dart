@@ -454,9 +454,14 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              cash.balance.minorUnits == 0
+              // driver-r5-34: with Movera's fee in the balance (driver-u19)
+              // a zero balance means the cash matched the earnings, not
+              // the fare, unless there was no fee.
+              cash.balance.minorUnits != 0
+                  ? tr.settledInYourNextPayout
+                  : cash.cashCollected == cash.fare
                   ? tr.cashMatchedYourFare
-                  : tr.settledInYourNextPayout,
+                  : tr.cashMatchedYourEarnings,
               key: const ValueKey<String>('history-owed-note'),
               style: const TextStyle(
                 color: Color(0xFF7D898F),

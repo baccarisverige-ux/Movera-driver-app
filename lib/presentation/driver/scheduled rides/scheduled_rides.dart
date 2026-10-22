@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -61,9 +63,6 @@ class ScheduledRidesScreen extends StatefulWidget {
 class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   int _selectedTab = 0;
 
-  /// Requests whose claim is with the server right now.
-  final Set<String> _claiming = <String>{};
-
   late final Listenable _store = Listenable.merge([
     ScheduledRideStore._revision,
     ScheduledRideStore.reminder,
@@ -89,7 +88,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   /// Requests this driver can take: clashing ones and every request while
   /// Scheduled rides are paused or off are left out.
   List<_ScheduledRide> get _requests => ScheduledRideStore._visibleRequests;
-  List<_ScheduledRide> get _accepted => ScheduledRideStore._accepted;
+  List<_ScheduledRide> get _accepted => ScheduledRideStore._acceptedByPickup;
 
   /// No listed request is picked up on a later day (driver-u162): the
   /// header says "Available today" only then.
@@ -192,7 +191,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                 }
                 final ride = rides[index - 1];
                 final claiming =
-                    ride.id.isNotEmpty && _claiming.contains(ride.id);
+                    ScheduledRideStore.claimPending(ride.id);
                 return _ScheduledRideCard(
                   ride: ride,
                   claiming: claiming,
@@ -249,7 +248,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       // the driver left this screen during the claim (driver-94).
       // Requests whose time now clashes leave the list (Q9); the Requests
       // tab says why.
-      if (!ScheduledRideStore._acceptRequest(ride)) return;
+      if (!ScheduledRideStore._acceptRequest(ride, won: true)) return;
       // Only saved for later: it becomes the trip at its time ("Leave now"
       // by the real clock), never right after Accept.
       final time = ride.route?.pickupTime;
@@ -293,16 +292,14 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   Future<bool> _claim(_ScheduledRide ride) async {
     final dispatch = widget.dispatchRepository;
     if (dispatch == null || ride.id.isEmpty) return true;
-    if (!_claiming.add(ride.id)) return false;
-    setState(() {});
+    if (!ScheduledRideStore.beginClaim(ride.id)) return false;
     ClaimResult result;
     try {
       result = await dispatch.claimOffer(ride.id);
     } catch (_) {
       result = const ClaimResult.networkError();
     }
-    _claiming.remove(ride.id);
-    if (mounted) setState(() {});
+    ScheduledRideStore.endClaim(ride.id);
     switch (result.outcome) {
       case ClaimOutcome.success:
         return true;
@@ -431,19 +428,30 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
 /// text now; setting it keeps a fixed text (or none).
 class DriverNote extends ChangeNotifier implements ValueListenable<String?> {
   String Function()? _text;
+  DateTime? _until;
 
+  /// The note, or null once its [say] `until` has passed (scheduled time).
   @override
-  String? get value => _text?.call();
+  String? get value {
+    final until = _until;
+    if (until != null && !ScheduledClock.instance.now().isBefore(until)) {
+      return null;
+    }
+    return _text?.call();
+  }
 
   set value(String? text) {
     if (text == null && _text == null) return;
     _text = text == null ? null : () => text;
+    _until = null;
     notifyListeners();
   }
 
-  /// The note is now [text], read each time it is shown.
-  void say(String Function() text) {
+  /// The note is now [text], read each time it is shown; it is gone from
+  /// [until] on when given.
+  void say(String Function() text, {DateTime? until}) {
     _text = text;
+    _until = until;
     notifyListeners();
   }
 }
@@ -727,6 +735,25 @@ class ScheduledRideStore {
     return null;
   }
 
+  /// driver-r5-45: reservations whose claim is with dispatch, from this
+  /// screen or Home's popup. Kept here, not in one screen's State, so a
+  /// reopened screen shows "Matching" and no second Accept sends a
+  /// duplicate claim.
+  static final Set<String> _claims = <String>{};
+
+  static bool claimPending(String id) => id.isNotEmpty && _claims.contains(id);
+
+  /// False when a claim for [id] is already out.
+  static bool beginClaim(String id) {
+    if (id.isEmpty || !_claims.add(id)) return false;
+    _changed();
+    return true;
+  }
+
+  static void endClaim(String id) {
+    if (_claims.remove(id)) _changed();
+  }
+
   /// Whether reservation [id] is still open to take here.
   static bool isOpen(String id) =>
       id.isNotEmpty && _visibleRequests.any((ride) => ride.id == id);
@@ -791,9 +818,16 @@ class ScheduledRideStore {
   }
 
   /// This driver took open request [ride] for later: it moves to
-  /// Accepted. False when it is no longer among the requests.
-  static bool _acceptRequest(_ScheduledRide ride) {
-    if (!_requests.remove(ride)) return false;
+  /// Accepted. False when it is no longer among the requests, unless
+  /// dispatch [won] it for this driver: a late "unavailable" for a
+  /// duplicate claim may have taken it out meanwhile (driver-r5-45).
+  static bool _acceptRequest(_ScheduledRide ride, {bool won = false}) {
+    if (!_requests.remove(ride) &&
+        (!won ||
+            ride.id.isEmpty ||
+            _accepted.any((item) => item.id == ride.id))) {
+      return false;
+    }
     _accepted.insert(0, ride.copyWith(accepted: true));
     _changed();
     return true;
@@ -815,6 +849,23 @@ class ScheduledRideStore {
   }
 
   /// Accepted rides with a known pickup time, soonest first.
+  /// driver-r5-49: Accepted as the tab lists it under "Upcoming": by
+  /// pickup time, rides without one last, newest acceptance first on a tie.
+  static List<_ScheduledRide> get _acceptedByPickup {
+    final now = _now;
+    final order = [for (var i = 0; i < _accepted.length; i++) i];
+    DateTime? at(int i) => _accepted[i].route?.pickupAt(now);
+    order.sort((a, b) {
+      final x = at(a), y = at(b);
+      if (x == null || y == null) {
+        return x == y ? a - b : (x == null ? 1 : -1);
+      }
+      final by = x.compareTo(y);
+      return by != 0 ? by : a - b;
+    });
+    return [for (final i in order) _accepted[i]];
+  }
+
   static List<ReservationRequestPreview> get upcoming {
     final now = _now;
     final rides = [
@@ -852,7 +903,8 @@ class ScheduledRideStore {
       return;
     }
     _backupLate = false;
-    backupNote.say(() => tr.schedBackupNote(ride.pickupTime));
+    backupNote.say(() => tr.schedBackupNote(ride.pickupTime),
+        until: _backupNoteEnds(ride.pickupAt(_now)));
     _changed();
   }
 
@@ -871,6 +923,7 @@ class ScheduledRideStore {
     required int lateMinutes,
     required LateEtaReassignTo reassignTo,
   }) {
+    final pickupAt = routeOf(id)?.pickupAt(_now);
     if (id.isNotEmpty) {
       _accepted.removeWhere((ride) => ride.id == id);
     }
@@ -887,8 +940,19 @@ class ScheduledRideStore {
       name: 'movera.scheduled',
     );
     _backupLate = true;
-    backupNote.say(() => tr.lateEtaReassignedNote(pickupTime, lateMinutes));
+    backupNote.say(() => tr.lateEtaReassignedNote(pickupTime, lateMinutes),
+        until: _backupNoteEnds(pickupAt));
     _changed();
+  }
+
+  /// driver-r5-47: how long the backup / late-ETA note stays: until
+  /// [backupNoteLasts] past that ride's pickup (or past now without one),
+  /// not for the rest of the session above later rides at the same time.
+  static const Duration backupNoteLasts = Duration(hours: 2);
+  static DateTime _backupNoteEnds(DateTime? pickupAt) {
+    final now = _now;
+    final from = pickupAt != null && pickupAt.isAfter(now) ? pickupAt : now;
+    return from.add(backupNoteLasts);
   }
 
   /// [backupNote] is about a late ETA, not an offline driver.
@@ -988,6 +1052,7 @@ class ScheduledRideStore {
     backupNote.value = null;
     reassigned.clear();
     _backupLate = false;
+    _claims.clear();
     _changed();
   }
 }
@@ -2173,8 +2238,10 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) =>
-          _CancelConfirmationSheet(reason: reason, ride: ride.route),
+      builder: (sheetContext) => _AtFreeCancelEnd(
+        ride: ride.route,
+        child: () => _CancelConfirmationSheet(reason: reason, ride: ride.route),
+      ),
     );
 
     if (confirmed == true && context.mounted) {
@@ -2380,7 +2447,10 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                child: _CancelRulesBox(ride: widget.ride),
+                child: _AtFreeCancelEnd(
+                  ride: widget.ride,
+                  child: () => _CancelRulesBox(ride: widget.ride),
+                ),
               ),
               ListView.separated(
                 shrinkWrap: true,

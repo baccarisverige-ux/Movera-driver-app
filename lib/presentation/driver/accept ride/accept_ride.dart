@@ -508,6 +508,7 @@ class _AcceptRideState extends State<AcceptRide>
   int _shownSaveFailures = 0; // driver-u72
   bool _liveUpdatesPaused = false;
   bool _tripCovered = false; // driver-u80: a route covers the trip.
+  bool _menuOpen = false; // driver-r5-33: so does the side menu.
   bool _tripHidden = false; // driver-r5-31: a full screen does (not a sheet).
   int _waitSeconds = 0;
   /// Paid seconds of waits already over (Q42); [_acceptedAt]: contract
@@ -1110,6 +1111,7 @@ class _AcceptRideState extends State<AcceptRide>
       key: _rideScaffoldKey,
       // The menu opens from the island, not by swiping over the map.
       // UI-04: the same dispatch and the real status as Home's menu.
+      onDrawerChanged: (open) => _AcceptRideTrip(this)._menuChanged(open),
       drawer: ListenableBuilder(
         listenable: widget.sessionController ?? const AlwaysStoppedAnimation<double>(0),
         builder: (_, __) => DriverSideMenu(

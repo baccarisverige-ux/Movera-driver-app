@@ -1392,6 +1392,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cashMatchedYourFare => 'Les espèces correspondent à votre tarif';
 
   @override
+  String get cashMatchedYourEarnings =>
+      'Les espèces correspondent à vos gains : rien à régler';
+
+  @override
   String get settledInYourNextPayout =>
       'Réglé lors de votre prochain versement';
 

@@ -199,7 +199,7 @@ class _DriverHomeState extends State<DriverHome>
   void _resumeHomeUpdates() {
     if (!mounted || !_liveVisible) { return; }
     _camera.resume();
-    unawaited(_HomeMapSheet(this)._startDriverLocation());
+    unawaited(_HomeMapSheet(this)._startDriverLocation()); _HomeMapSheet(this)._recheckDestinationLimit();
     _HomeOfferRadar(this)._scheduleVisibleOffers();
     _HomeOfferRadar(this)._resumeOfferTimers();
     _HomeOfferRules(this)._releaseHeldOffline();
@@ -528,8 +528,8 @@ class _DriverHomeState extends State<DriverHome>
       _didAttemptActiveRideRestore = false;
       if (!mounted) { return; }
       setState(() => _recoveryResolved = true);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripStorageUnavailable),
-          action: SnackBarAction(label: tr.retry, onPressed: () => unawaited(_restoreActiveRideIfNeeded()))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripStorageUnavailable), persist: false, duration: _HomeRoutes.storageRetryShown,
+          action: SnackBarAction(label: tr.retry, onPressed: () => _HomeRoutes(this)._retryActiveRideRestore()))); // driver-r5-37
       return;
     } on ActiveRideUnreadable {
       _didAttemptActiveRideRestore = false;
@@ -633,7 +633,7 @@ class _DriverHomeState extends State<DriverHome>
       pickup: snapshot.pickupAddress ?? '',
       dropoff: snapshot.dropoffAddress ?? '',
       source: snapshot.matchedVia ?? WaybillRecord.moveraRadarSource,
-      driverName: WaybillRecord.demoDriverName,
+      driverName: WaybillRecord.moveraDriverName, // driver-r5-38: as a live trip
       vehicle: WaybillRecord.vehicleUnavailable,
       licensePlate: WaybillRecord.plateUnavailable,
       passengerCapacity: 4,
@@ -652,7 +652,7 @@ class _DriverHomeState extends State<DriverHome>
       pickup: next.pickup,
       dropoff: next.dropoff,
       source: 'Movera Radar',
-      driverName: WaybillRecord.demoDriverName,
+      driverName: WaybillRecord.moveraDriverName,
       vehicle: WaybillRecord.vehicleUnavailable,
       licensePlate: WaybillRecord.plateUnavailable,
       passengerCapacity: 4,

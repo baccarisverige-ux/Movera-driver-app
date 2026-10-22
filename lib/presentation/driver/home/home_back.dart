@@ -138,6 +138,19 @@ extension _HomeRoutes on _DriverHomeState {
       _backOnTop(); // what waited for Home on top goes on, as after a sheet
     }
 
+    /// driver-r5-37: how long the "trip storage unavailable / Retry" bar
+    /// stays up. With an action it would persist until swiped away, over
+    /// the trip screen too.
+    static const Duration storageRetryShown = Duration(seconds: 10);
+
+    /// Its Retry reads the saved trip again only while Home is on top with
+    /// no trip: during a trip it would read that trip's own snapshot and
+    /// overwrite its waybill with placeholders.
+    void _retryActiveRideRestore() {
+      if (!mounted || !_routeVisible || _driverSession.activeTripId != null) { return; }
+      unawaited(_restoreActiveRideIfNeeded());
+    }
+
     /// A sheet or dialog over Home closed. After a full screen, the page
     /// observer's [_pageUncovered] (told next) resumes everything.
     void _backOnTop() {

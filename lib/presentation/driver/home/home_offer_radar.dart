@@ -447,8 +447,17 @@ extension _HomeOfferRadar on _DriverHomeState {
         return;
       }
       final now = ScheduledClock.realNow();
-      final deadline = _radarOfferDeadlines.putIfAbsent(
-          offer.id, () => now.add(_DriverHomeState._radarOfferPickWindow));
+      final deadline = _radarOfferDeadlines.putIfAbsent(offer.id, () {
+        final window = _DriverHomeState._radarOfferPickWindow;
+        // driver-r5-3: never past the server's `expiresAt` (a card that
+        // waited behind the deck, or arrived late, has less time left).
+        final server = _latestDispatchOffers
+            .where((item) => item.id == offer.id)
+            .firstOrNull
+            ?.expiresAt
+            ?.difference(DateTime.now());
+        return now.add(server != null && server < window ? server : window);
+      });
       final left = deadline.difference(now);
       _radarOfferTimeoutTimers[offer.id] = Timer(
         left.isNegative ? Duration.zero : left,
@@ -619,7 +628,8 @@ extension _HomeOfferRadar on _DriverHomeState {
           // Q16: an admin direct assign or dispatch's Exclusive offer
           // arriving now is an Exclusive offer.
           if (offer.isExclusive && !known.contains(offer.id) &&
-              !_adminAssignsShown.contains(offer.id)) {
+              !_adminAssignsShown.contains(offer.id) &&
+              !_passedServerExpiry(offer)) {
             unawaited(_showOutsideRadarOffer(_adminAssignOffer(offer)));
           }
           if (offer.isReservation &&
@@ -638,25 +648,32 @@ extension _HomeOfferRadar on _DriverHomeState {
           _dismissOutsideRadarOffer();
         }
         // driver-u116: the full Radar list's own Match took it; the trip
-        // that begins clears the deck.
+        // that begins clears the deck. A lost Match sweeps afterwards.
         if (_radarListClaiming.value) { return; }
-        for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
-          if (ids.contains(offer.id) ||
-              _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
-            continue;
-          }
-          if (_pendingRadarHomeOffers.contains(offer)) {
-            // Waiting off screen: there is no card to show as taken, so
-            // it just leaves. A "Taken" state with a removal timer could
-            // outlive a pause and land on the deck for good (driver-u129).
-            _dismissRadarHomeOffer(offer);
-            continue;
-          }
-          // Gone from Radar without a claim of ours: the reason is not
-          // known here (rider cancelled, expired, taken elsewhere…).
-          _resolveHomeRadarMatchLost(offer, _RadarOfferGone.unavailable);
-        }
+        _sweepGoneRadarOffers();
       });
+    }
+    /// Deck and waiting Radar offers that left dispatch without a claim of
+    /// ours are gone. driver-r5-32: also run when a full Radar list Match
+    /// ends with no trip, since the sweep was skipped while it was out.
+    void _sweepGoneRadarOffers() {
+      final ids = _latestDispatchOffers.map((item) => item.id).toSet();
+      for (final offer in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
+        if (ids.contains(offer.id) ||
+            _homeRadarStateFor(offer.id) != _HomeRadarMatchState.available) {
+          continue;
+        }
+        if (_pendingRadarHomeOffers.contains(offer)) {
+          // Waiting off screen: there is no card to show as taken, so
+          // it just leaves. A "Taken" state with a removal timer could
+          // outlive a pause and land on the deck for good (driver-u129).
+          _dismissRadarHomeOffer(offer);
+          continue;
+        }
+        // Gone from Radar without a claim of ours: the reason is not
+        // known here (rider cancelled, expired, taken elsewhere…).
+        _resolveHomeRadarMatchLost(offer, _RadarOfferGone.unavailable);
+      }
     }
     /// Radar trips open right now, the ones the full Radar screen lists.
     int get _radarTripsOpen => _latestDispatchOffers
@@ -687,10 +704,18 @@ extension _HomeOfferRadar on _DriverHomeState {
         lifetime: left != null && left > Duration.zero ? left : null,
       );
     }
+    /// driver-r5-2: the server's `expiresAt` has passed: the offer is gone,
+    /// even before its withdrawal arrives. It is not shown with the app's
+    /// own full time (Accept would only answer "expired").
+    bool _passedServerExpiry(RideOffer offer) {
+      final expires = offer.expiresAt;
+      return expires != null && !expires.isAfter(DateTime.now());
+    }
     /// The first dispatch Exclusive offer not shown yet.
     _HomeDirectOffer? get _pendingAdminAssign {
       for (final offer in _latestDispatchOffers) {
-        if (offer.isExclusive && !_adminAssignsShown.contains(offer.id)) {
+        if (offer.isExclusive && !_adminAssignsShown.contains(offer.id) &&
+            !_passedServerExpiry(offer)) {
           return _adminAssignOffer(offer);
         }
       }

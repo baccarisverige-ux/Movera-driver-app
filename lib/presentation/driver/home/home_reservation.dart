@@ -136,7 +136,10 @@ extension _HomeReservation on _DriverHomeState {
           !hideMainPanel &&
           !_HomeMapSheet(this)._homeSheetInactive &&
           _mainPanelPosition <= 0.04 &&
-          ScheduledRideStore.isOpen(request.id);
+          ScheduledRideStore.isOpen(request.id) &&
+          // driver-r5-45: not while Scheduled rides claims it.
+          (!ScheduledRideStore.claimPending(request.id) ||
+              _reservation.claimingId == request.id);
     }
 
     /// Risen: the orb is Accept and the island shows the pickup time,
@@ -352,6 +355,8 @@ extension _HomeReservation on _DriverHomeState {
     /// driver (R25). A failed call decides nothing.
     Future<ClaimResult> _claimReservation(String id) async {
       _rebuild(() => _reservation.claimingId = id);
+      // driver-r5-45: Scheduled rides shows it as Matching meanwhile.
+      final listed = ScheduledRideStore.beginClaim(id);
       IslandMessages.show(HomeIslandNotices.reservationMatching);
       ClaimResult result;
       try {
@@ -359,6 +364,7 @@ extension _HomeReservation on _DriverHomeState {
       } catch (_) {
         result = const ClaimResult.networkError();
       }
+      if (listed) { ScheduledRideStore.endClaim(id); }
       if (mounted) {
         _rebuild(() => _reservation.claimingId = null);
         // Runs after the caller: a reservation won inside its Exclusive
@@ -384,6 +390,7 @@ extension _HomeReservation on _DriverHomeState {
       final request = _reservation.request;
       if (request == null ||
           _reservation.claimingId != null ||
+          ScheduledRideStore.claimPending(request.id) ||
           !_reservationOnDock) {
         return;
       }

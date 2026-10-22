@@ -65,23 +65,47 @@ class RouteMarkPins {
     return Offset(0.5, (size.height - 2 - markSize / 2) / size.height);
   }
 
-  static Future<BitmapDescriptor> mark(RouteMarkKind kind) {
-    return _toBitmap(
+  static Future<BitmapDescriptor> mark(RouteMarkKind kind) => _cached(
+    'mark|${kind.name}',
+    () => _toBitmap(
       const Size(markSize, markSize),
       (canvas, size) => paintMark(canvas, size.center(Offset.zero), kind),
-    );
-  }
+    ),
+  );
 
   static Future<BitmapDescriptor> labelled(
     RouteMarkKind kind,
     String title,
     String? time,
-  ) {
-    return _toBitmap(
+  ) => _cached(
+    'labelled|${kind.name}|$title|${time ?? ''}',
+    () => _toBitmap(
       labelledSize(title, time),
       (canvas, size) => paintLabelled(canvas, size, kind, title, time),
-    );
+    ),
+  );
+
+  /// Painted pictures, by what they show (driver-r5-17). Every trip and
+  /// every reservation map asks for the same few pins; painted afresh each
+  /// time, each new PNG got its own web Blob URL in [WebMapBitmaps] that
+  /// lives as long as the page. A painting still under way is never
+  /// shared (see OfferRouteMarks.pin): only finished pictures are kept.
+  static final Map<String, BitmapDescriptor> _painted = {};
+
+  static Future<BitmapDescriptor> _cached(
+    String key,
+    Future<BitmapDescriptor> Function() paint,
+  ) async {
+    final painted = _painted[key];
+    if (painted != null) return painted;
+    final bitmap = await paint();
+    if (bitmap != BitmapDescriptor.defaultMarker) _painted[key] = bitmap;
+    return bitmap;
   }
+
+  /// Clears the picture cache (tests painting with another font, through
+  /// OfferRouteMarks.debugClearCache).
+  static void debugClearCache() => _painted.clear();
 
   /// Colour of each kind: green pickup, orange stop, black drop-off.
   static Color colorOf(RouteMarkKind kind) => switch (kind) {
@@ -125,8 +149,10 @@ class RouteMarkPins {
 
   /// Map pin: a drop-shaped head in the kind's colour with its white mark
   /// inside, the tip on the point. Anchor with [pinAnchor].
-  static Future<BitmapDescriptor> pin(RouteMarkKind kind) =>
-      _toBitmap(pinSize, (canvas, size) => paintPin(canvas, size, kind));
+  static Future<BitmapDescriptor> pin(RouteMarkKind kind) => _cached(
+    'pin|${kind.name}',
+    () => _toBitmap(pinSize, (canvas, size) => paintPin(canvas, size, kind)),
+  );
 
   static const Size pinSize = Size(30, 40);
   static const Offset pinAnchor = Offset(0.5, 0.97);

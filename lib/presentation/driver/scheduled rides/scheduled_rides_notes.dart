@@ -140,6 +140,43 @@ class _BlockNotice extends StatelessWidget {
   }
 }
 
+/// driver-r5-46: builds [child] again when [ride]'s free cancel ends, so a
+/// sheet opened just before shows the late-cancel terms the confirmation
+/// will count (they were read once, at the first build).
+class _AtFreeCancelEnd extends StatefulWidget {
+  const _AtFreeCancelEnd({required this.ride, required this.child});
+
+  final ReservationRequestPreview? ride;
+  final Widget Function() child;
+
+  @override
+  State<_AtFreeCancelEnd> createState() => _AtFreeCancelEndState();
+}
+
+class _AtFreeCancelEndState extends State<_AtFreeCancelEnd> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    final until = ScheduledRideStore.freeCancelUntil(widget.ride);
+    if (until != null && !ScheduledRideStore.isLateCancel(widget.ride)) {
+      _timer = Timer(ScheduledClock.instance.realUntil(until), () {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child();
+}
+
 /// In the cancel sheet: until when it is free and that a late cancel
 /// counts. Drivers never pay.
 class _CancelRulesBox extends StatelessWidget {

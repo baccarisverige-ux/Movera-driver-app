@@ -75,7 +75,16 @@ extension _HomeScheduled on _DriverHomeState {
       ScheduledRideStore.changes.addListener(changed);
       // A Radar list Match held a due ride back: its answer decides.
       _radarListClaiming.addListener(() {
-        if (!_radarListClaiming.value) { _afterClaimResolved(); }
+        if (_radarListClaiming.value) { return; }
+        _afterClaimResolved();
+        // driver-r5-32: the list answered a lost (or undecided) Match and
+        // Home is still on top: what left dispatch meanwhile leaves the
+        // deck too. A won Match's trip covers Home first and clears the
+        // deck itself (u116).
+        if (mounted && showRideRequests && _routeVisible &&
+            _driverSession.activeTripId == null) {
+          _HomeOfferRadar(this)._sweepGoneRadarOffers();
+        }
       });
       _planScheduled();
       _watchAssignments();

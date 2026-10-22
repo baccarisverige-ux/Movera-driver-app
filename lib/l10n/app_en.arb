@@ -851,6 +851,7 @@
   "rideType": "Ride Type",
   "cashCollected": "Cash collected",
   "cashMatchedYourFare": "Cash matched your fare",
+  "cashMatchedYourEarnings": "Cash matched your earnings: nothing to settle",
   "settledInYourNextPayout": "Settled in your next payout",
   "rideCompletedOn": "Ride completed on",
   "cancelledByRider": "Cancelled by rider",

@@ -393,6 +393,7 @@
   "rideType": "Resetyp",
   "cashCollected": "Kontant mottaget",
   "cashMatchedYourFare": "Kontanterna stämde med ditt pris",
+  "cashMatchedYourEarnings": "Kontanterna motsvarade din förtjänst: inget att reglera",
   "settledInYourNextPayout": "Regleras i din nästa utbetalning",
   "rideCompletedOn": "Resan klar",
   "cancelledByRider": "Avbokad av passageraren",

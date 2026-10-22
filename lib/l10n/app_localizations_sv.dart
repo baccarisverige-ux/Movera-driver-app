@@ -1382,6 +1382,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get cashMatchedYourFare => 'Kontanterna stämde med ditt pris';
 
   @override
+  String get cashMatchedYourEarnings =>
+      'Kontanterna motsvarade din förtjänst: inget att reglera';
+
+  @override
   String get settledInYourNextPayout => 'Regleras i din nästa utbetalning';
 
   @override
