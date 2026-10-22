@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.dart';
 import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/sign%20in%20phone/sign_in_phone.dart';
@@ -9,6 +10,7 @@ import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
+import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 
 import 'd51_translations_test.dart' as d51 show show;
 import 'd51_translations_test.dart' show languages, speak, words;
@@ -88,5 +90,21 @@ void main() {
     expect(fee(5000, 'TND'), ' · +5 DT');
     expect(fee(4500, 'SEK'), ' · +45 kr');
     expect(fee(4550, 'SEK'), ' · +45,50 kr');
+  });
+
+  testWidgets('driver-u139: a new scheduled ride notice says the day in '
+      'the driver\'s language', (tester) async {
+    final feed = DriverNotificationFeed.instance
+      ..reset()
+      ..arrivals = const [];
+    // As Home adds it: the reservation's stored English day.
+    feed.add(DriverNotices.newScheduledRide(
+      at: feed.now, day: 'Today', time: '09:30', fare: '126,75 kr',
+    ));
+    for (final (code, today) in [('sv', 'Idag'), ('fr', 'Aujourd’hui')]) {
+      await show(tester, code, const DriverNotificationsScreen());
+      expect(words('$today 09:30'), findsOneWidget, reason: code);
+      expect(words('Today 09:30'), findsNothing);
+    }
   });
 }
