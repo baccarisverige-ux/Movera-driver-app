@@ -4215,6 +4215,12 @@ abstract class AppLocalizations {
   /// **'Traffic setting not saved. Try again.'**
   String get trafficSaveFailed;
 
+  /// No description provided for @mapUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Map unavailable. Check your connection, then reopen Movera.'**
+  String get mapUnavailable;
+
   /// No description provided for @tomorrow.
   ///
   /// In en, this message translates to:

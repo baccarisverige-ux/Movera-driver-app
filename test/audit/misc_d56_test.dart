@@ -556,4 +556,20 @@ void main() {
     expect(tester.widget<Switch>(traffic).value, isTrue);
     expect(find.text('Traffic setting not saved. Try again.'), findsOneWidget);
   });
+
+  testWidgets('driver-99: a map whose script never loads says so',
+      (tester) async {
+    final probe = CustomGoogleMap.mapsReadyProbe;
+    CustomGoogleMap.mapsReadyProbe = () => false; // Maps JavaScript blocked
+    addTearDown(() => CustomGoogleMap.mapsReadyProbe = probe);
+    await _pumpScreen(tester, const Scaffold(body: CustomGoogleMap()));
+    const unavailable = ValueKey<String>('map-unavailable');
+    expect(find.byKey(unavailable), findsNothing, reason: 'still loading');
+    await tester.pump(CustomGoogleMap.mapsUnavailableAfter);
+    await tester.pump();
+    // Before: a plain land-colour box, for as long as the screen stayed.
+    expect(find.text('Map unavailable. Check your connection, then reopen '
+        'Movera.'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
 }

@@ -684,6 +684,7 @@
   "languageZoneDefault": "Langue par défaut de votre zone",
   "languageSaveFailed": "Langue non enregistrée. Réessayez.",
   "trafficSaveFailed": "Réglage du trafic non enregistré. Réessayez.",
+  "mapUnavailable": "Carte indisponible. Vérifiez votre connexion, puis rouvrez Movera.",
   "tomorrow": "Demain",
   "todayCaps": "AUJOURD’HUI",
   "statusRest": "REPOS",

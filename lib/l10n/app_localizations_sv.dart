@@ -2380,6 +2380,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Trafikinställningen sparades inte. Försök igen.';
 
   @override
+  String get mapUnavailable =>
+      'Kartan är inte tillgänglig. Kontrollera anslutningen och öppna Movera igen.';
+
+  @override
   String get tomorrow => 'Imorgon';
 
   @override

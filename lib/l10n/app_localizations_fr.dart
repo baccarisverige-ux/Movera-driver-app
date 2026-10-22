@@ -2406,6 +2406,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Réglage du trafic non enregistré. Réessayez.';
 
   @override
+  String get mapUnavailable =>
+      'Carte indisponible. Vérifiez votre connexion, puis rouvrez Movera.';
+
+  @override
   String get tomorrow => 'Demain';
 
   @override
