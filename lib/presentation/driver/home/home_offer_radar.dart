@@ -711,6 +711,9 @@ extension _HomeOfferRadar on _DriverHomeState {
         const Duration(milliseconds: 850),
         () {
           if (!mounted || !_liveVisible || _claimedHomeOffer?.id != offer.id) { return; }
+          // driver-r5-24: a sheet or dialog is over Home. The trip cannot
+          // open yet; the claim waits and [_backOnTop] opens it.
+          if (ModalRoute.of(context)?.isCurrent == false) { return; }
           final source = _claimedHomeSource;
           if (source == null) {
             _acceptRadarHomeOffer(offer);

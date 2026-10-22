@@ -170,7 +170,7 @@ class _DriverHomeState extends State<DriverHome>
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
     if (route != null) { driverRouteObserver.subscribe(this, route); }
-    if (route is PageRoute) { driverRouteObserver.pages.subscribe(_pageCover, route); }
+    if (route != null) { driverRouteObserver.pages.subscribe(_pageCover, route); }
     if(MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.stop(); _radarSweepController.stop(); _radarMotionController.stop(); }
   }
   late final _pageCover = PageCover(covered: () => _HomeRoutes(this)._pageCovered(), uncovered: () => _HomeRoutes(this)._pageUncovered());

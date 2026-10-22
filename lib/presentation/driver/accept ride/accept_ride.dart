@@ -508,6 +508,7 @@ class _AcceptRideState extends State<AcceptRide>
   int _shownSaveFailures = 0; // driver-u72
   bool _liveUpdatesPaused = false;
   bool _tripCovered = false; // driver-u80: a route covers the trip.
+  bool _tripHidden = false; // driver-r5-31: a full screen does (not a sheet).
   int _waitSeconds = 0;
   /// Paid seconds of waits already over (Q42); [_acceptedAt]: contract
   /// `acceptedAt`, kept across restores (Q12).
@@ -671,14 +672,15 @@ class _AcceptRideState extends State<AcceptRide>
     if(MediaQuery.disableAnimationsOf(context)) { _radarPulseController.stop(); _radarSweepController.stop(); }
     else if(!_liveUpdatesPaused) { _radarPulseController.repeat(reverse:true); _radarSweepController.repeat(); }
     final route = ModalRoute.of(context);
-    if (route != null) { driverRouteObserver.subscribe(this, route); }
+    if (route != null) { driverRouteObserver.subscribe(this, route); driverRouteObserver.pages.subscribe(_screenCover, route); }
   }
+  late final _screenCover = PageCover(covered: () => _AcceptRideTrip(this)._hideTrip(), uncovered: () => _AcceptRideTrip(this)._showTrip());
   @override void didPushNext() => _AcceptRideTrip(this)._coverTrip(); // driver-u80
   @override void didPopNext() => _AcceptRideTrip(this)._uncoverTrip();
 
   @override
   void dispose() {
-    driverRouteObserver.unsubscribe(this);
+    driverRouteObserver.unsubscribe(this); driverRouteObserver.pages.unsubscribe(_screenCover);
     RideCheckGate.listenable.removeListener(_onRideCheckGateListener);
     _rideCheckTicker?.cancel();
     _hardStops?.cancel();
