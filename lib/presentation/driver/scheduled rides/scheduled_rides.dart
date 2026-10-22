@@ -627,7 +627,7 @@ class ScheduledRideStore {
       return null;
     }
     final now = _now;
-    for (final taken in _accepted) {
+    for (final taken in [..._accepted, ?_driving]) {
       final other = taken.route;
       if (other != null &&
           SmartGap.clash(route, other, now: now, rules: _rules)) {
@@ -790,9 +790,24 @@ class ScheduledRideStore {
   }
 
   /// "Leave now" put [ride] on screen as the active trip: it leaves
-  /// Accepted. False when it was not there.
-  static bool start(ReservationRequestPreview ride) =>
-      _removeAccepted(ride) != null;
+  /// Accepted. False when it was not there. It still counts in the clash
+  /// check while it is driven (driver-r5-42).
+  static bool start(ReservationRequestPreview ride) {
+    if (!_accepted.any((item) => identical(item.route, ride))) {
+      return false;
+    }
+    // Its pickup fixed to the time it had: a "Today" ride must not move
+    // to the next day.
+    final at = ride.pickupAt(_now);
+    _driving =
+        _ScheduledRide.fromRoute(at == null ? ride : ride.scheduledFor(at));
+    return _removeAccepted(ride) != null;
+  }
+
+  /// The scheduled ride "Leave now" started: requests that clash with it
+  /// stay hidden (contract §6.1 hideClashing), as when it was Accepted.
+  /// Its time is fixed, so once it is over it clashes with nothing.
+  static _ScheduledRide? _driving;
 
   /// The driver was not on the way in time: [ride] went to a backup
   /// driver (Q10 S3).
@@ -930,6 +945,7 @@ class ScheduledRideStore {
     _zoneEnabled = true;
     _lateCancels.clear();
     _pauseUntil = null;
+    _driving = null;
     reminder.value = null;
     _reminderRide = null;
     backupNote.value = null;

@@ -152,4 +152,23 @@ void main() {
       );
     });
   });
+
+  group('driver-r5-42', () {
+    setUp(ScheduledRideStore.reset);
+    tearDown(ScheduledRideStore.reset);
+
+    test('at Leave now, requests that clash with the trip being driven stay '
+        'hidden', () {
+      ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+      expect(ScheduledRideStore.openRequests.value, 0);
+      final ride = ScheduledRideStore.upcoming.firstWhere(
+          (r) => r.pickupAddress == 'Gamla vägen, Stockholm');
+      expect(ScheduledRideStore.start(ride), isTrue);
+      // The Lidingö request clashes with the 07:40 trip now on the road.
+      expect(ScheduledRideStore.openRequests.value, 0);
+      // After a logout nothing is held back any more.
+      ScheduledRideStore.reset();
+      expect(ScheduledRideStore.openRequests.value, 2);
+    });
+  });
 }
