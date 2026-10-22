@@ -43,6 +43,22 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
   }
 
   bool isAccept = false;
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+
+  /// driver-u103: Continue needs the terms accepted, a name and an email.
+  bool get _canContinue =>
+      isAccept &&
+      _name.text.trim().isNotEmpty &&
+      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_email.text.trim());
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -82,6 +98,8 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
             ),
             14.height,
             customTextfield(
+              controller: _name,
+              onChanged: (_) => setState(() {}),
               hint: tr.fullName,
               prefixWidget: Icon(
                 Icons.person_outline_rounded,
@@ -91,6 +109,9 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
             ),
             16.height,
             customTextfield(
+              controller: _email,
+              onChanged: (_) => setState(() {}),
+              keyboardType: TextInputType.emailAddress,
               hint: tr.emailAddress,
               prefixWidget: Icon(
                 Icons.email_outlined,
@@ -176,7 +197,7 @@ class _DriverCreateAccountState extends State<DriverCreateAccount> {
             children: [
               CustomButton(
                 centerContent: tr.navContinue,
-                onPressed: () {
+                onPressed: !_canContinue ? null : () {
                   Navigator.push(
                     context,
                     BottomToTopTransition(const DriverCreateAccountPhone()),
