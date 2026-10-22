@@ -130,7 +130,9 @@ class ScheduledRidesDriverAccess {
     final until = json['until'];
     return ScheduledRidesDriverAccess(
       enabled: json['on'] as bool,
-      until: until is String ? DateTime.tryParse(until) : null,
+      // Local, like every other contract time the app shows (driver-r5-8):
+      // the notice prints this date.
+      until: until is String ? DateTime.tryParse(until)?.toLocal() : null,
       setByAdmin: true,
     );
   }
