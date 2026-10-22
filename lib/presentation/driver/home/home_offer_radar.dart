@@ -84,6 +84,11 @@ class _HomeDirectOffer {
   /// assign, or `kind: exclusive` / `assigned`): Accept is its claim.
   final bool dispatchExclusive;
 
+  /// The server's driver net and pickup pay (driver-r5-1); null for demo
+  /// offers.
+  final String? driverEarnings;
+  final Money? serverPickupPay;
+
   /// Accept is dispatch's claim (§3, §3.1).
   bool get claimedViaDispatch => adminAssigned || dispatchExclusive;
 
@@ -121,6 +126,8 @@ class _HomeDirectOffer {
     this.driverBonus,
     this.groupId,
     this.dispatchExclusive = false,
+    this.driverEarnings,
+    this.serverPickupPay,
   });
 
   /// A dispatch offer on Home. A reservation keeps its pickup time for
@@ -162,6 +169,8 @@ class _HomeDirectOffer {
     driverBonus: offer.driverBonus,
     groupId: offer.groupId,
     dispatchExclusive: dispatchExclusive,
+    driverEarnings: offer.driverEarnings?.formatted,
+    serverPickupPay: offer.pickupPay,
   );
 }
 
@@ -1208,6 +1217,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           riderTrips: offer.riderTrips,
           priority: offer.priority,
           driverBonus: WaybillRecord.bonusLabel(offer.driverBonus),
+          driverEarnings: offer.driverEarnings,
           // Worked out now, from the offer's pickup leg (never cached).
           pickupPay: _pickupPayOf(offer),
         );
@@ -1224,6 +1234,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             driverSigned: offer.driverSigned,
           ),
           leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
+          serverPay: offer.serverPickupPay,
         );
     /// Radar offers on Home: a deck of cards above the radar, with the
     /// total count on top (tap it for the full-screen list).

@@ -125,16 +125,20 @@ abstract final class PickupPayCalculator {
     return Money.ore(math.max(0, ore));
   }
 
-  /// The quote an offer card shows now.
+  /// The quote an offer card shows now. [serverPay] is the offer's own
+  /// `Offer.pickupPay`: when the server sent one, it is the pay
+  /// (driver-r5-1); the local rates are for demo offers.
   static PickupPayQuote quote({
     required String category,
     required PickupPayOfferKind kind,
     required PickupLeg leg,
     PickupPayConfig? config,
+    Money? serverPay,
   }) {
     final rules = config ?? PickupPayConfig.current;
     return PickupPayQuote(
-      pay: pay(category: category, kind: kind, leg: leg, config: rules),
+      pay: serverPay ??
+          pay(category: category, kind: kind, leg: leg, config: rules),
       leg: leg,
       display: rules.display,
     );

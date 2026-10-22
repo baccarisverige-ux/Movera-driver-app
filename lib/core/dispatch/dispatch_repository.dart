@@ -68,6 +68,8 @@ class RideOffer {
     this.fareBoost,
     this.cashToCollect,
     this.driverBonus,
+    this.driverEarnings,
+    this.pickupPay,
     this.priority = false,
     this.source = OfferSource.system,
     this.groupId,
@@ -187,6 +189,17 @@ class RideOffer {
   /// Movera-paid extra for this driver (contract `Offer.driverBonus`, owner
   /// Q16). [fare] already includes it: the driver sees one total.
   final Money? driverBonus;
+
+  /// Contract `Offer.driverEarnings`: the driver's net from the server's
+  /// quote engine, [driverBonus] included (driver-r5-1). A net-fare card
+  /// shows it instead of a share worked out on the phone; null for demo
+  /// offers.
+  final Money? driverEarnings;
+
+  /// Contract `Offer.pickupPay`: the server's pickup pay for this offer
+  /// (driver-r5-1). When set, cards and accepted terms use it instead of
+  /// the local pickup pay rates; null for demo offers.
+  final Money? pickupPay;
 
   /// Contract `Offer.priority`: the card shows the red "Priority" badge.
   final bool priority;
