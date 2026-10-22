@@ -259,6 +259,7 @@ extension _HomeAccount on _DriverHomeState {
     }
 
     void _openNotifications() {
+      if (!mounted) { return; }
       pushSingle(
         context,
         MaterialPageRoute<void>(
@@ -268,6 +269,7 @@ extension _HomeAccount on _DriverHomeState {
     }
 
     void _openDocuments() {
+      if (!mounted) { return; }
       pushSingle(
         context,
         MaterialPageRoute<void>(builder: (_) => const DriverDocuments()),

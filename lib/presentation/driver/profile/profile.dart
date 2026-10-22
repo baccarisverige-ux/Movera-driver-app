@@ -9,6 +9,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/presentation/driver/auth/starter/starter.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
 import 'package:movera/presentation/driver/settings/settings.dart';
@@ -401,6 +402,7 @@ class _DriverProfileState extends State<DriverProfile> {
         } else {
           await clearLocalUserData();
           ScheduledRideStore.reset();
+          IslandMessages.clear(); // driver-r5-27
           runtime?.session.reset();
         }
       } catch (_) {

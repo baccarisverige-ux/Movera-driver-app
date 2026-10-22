@@ -36,6 +36,7 @@ import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/layout_viewport.dart';
@@ -220,6 +221,9 @@ class _MoveraAppState extends State<MoveraApp> {
     // And today's destinations (driver-r4-11).
     DestinationModeSession.instance = DestinationModeSession();
     _session.reset();
+    // Last: the resets above can make the old Home, still mounted under
+    // Profile, post notices (driver-r5-27).
+    IslandMessages.clear();
   }
 
   Widget _home() => DriverHome(

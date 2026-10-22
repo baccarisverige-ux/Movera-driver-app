@@ -15,9 +15,13 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/storage/local_write_session.dart';
+import 'package:movera/main.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
 import 'package:movera/widgets/web_map_bitmap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -189,6 +193,30 @@ void main() {
         reason: 'before: it ran out under the menu and counted as missed');
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
+  });
+
+  testWidgets('driver-r5-27: logout drops the island messages waiting for '
+      'Home', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    IslandMessages.reset();
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MoveraApp());
+    await tester.pump(const Duration(milliseconds: 120));
+    // Profile covers Home; a notice posted now waits in the queue.
+    final home = tester.element(find.byType(DriverHome));
+    unawaited(Navigator.of(home).push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('Profile')))));
+    await _frames(tester, 10);
+    IslandMessages.show(
+        const IslandMessage(title: 'Insurance expires in 7 days'));
+    final runtime = DriverRuntimeScope.maybeOf(home)!;
+    await tester.runAsync(() => runtime.logout!());
+    expect(IslandMessages.hasPending, isFalse,
+        reason: 'before: the next driver\'s Home showed it, with a tap '
+            'bound to the old Home');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
   });
 }
 
