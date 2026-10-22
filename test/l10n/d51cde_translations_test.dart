@@ -318,4 +318,16 @@ void main() {
       expect(find.text('PIN verification'), findsNothing);
     }
   });
+
+  testWidgets('driver-101: the Scheduled rides request count says NEW in '
+      'the driver\'s language', (tester) async {
+    addTearDown(ScheduledRideStore.reset);
+    for (final (code, fresh) in [('fr', 'NOUVEAU'), ('sv', 'NY')]) {
+      speak(code);
+      ScheduledRideStore.reset();
+      await show(tester, code, const ScheduledRidesScreen());
+      expect(find.text(fresh), findsOneWidget, reason: code);
+      expect(find.text('NEW'), findsNothing);
+    }
+  });
 }

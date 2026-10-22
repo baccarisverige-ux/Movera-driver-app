@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 
 enum LedCountTone { mint, grey }
@@ -9,13 +10,17 @@ class LedCountBadge extends StatelessWidget {
   const LedCountBadge({
     super.key,
     required this.count,
-    this.label = 'NEW',
+    String? label,
     this.tone = LedCountTone.mint,
     this.trailing,
-  });
+  }) : _label = label;
 
   final int count;
-  final String label;
+  final String? _label;
+
+  /// The word after the count; "NEW" in the driver's language by default
+  /// (driver-101).
+  String get label => _label ?? tr.orbNew;
   final LedCountTone tone;
 
   /// Small mark after the label, e.g. a chevron when the badge opens a list.
