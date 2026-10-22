@@ -428,6 +428,7 @@
   "totalBalance": "Solde total",
   "settledInYourNextPayout2": "Réglé lors de votre prochain versement.",
   "fareFareFormattedCashCashCollected": "Tarif {fareFormatted} · Espèces {cashCollectedFormatted}",
+  "cashFareFeeLine": "Tarif {fare} · Frais {fee} · Espèces {cash}",
   "driver2": "CHAUFFEUR",
   "profile": "Profil",
   "accountVehicleAndDocuments": "Compte, véhicule et documents",

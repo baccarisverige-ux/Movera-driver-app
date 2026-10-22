@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/history/prefs_trip_history_repository.dart';
+import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/core/ride/completion_journal.dart';
+import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/routing/route_instruction.dart';
@@ -571,5 +575,58 @@ void main() {
     expect(find.text('Map unavailable. Check your connection, then reopen '
         'Movera.'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
+  });
+
+  test('driver-u19: History\'s cash balance uses the waybill\'s money', () {
+    const trip = TripHistoryRecord(
+      tripId: 'cash-1',
+      riderName: 'Karin',
+      whenLabel: '',
+      pickup: '',
+      dropoff: '',
+      fare: '128,40 kr',
+      category: 'Comfort',
+      paymentMethod: 'Cash',
+      cashCollected: '128,40 kr',
+    );
+    final waybill = WaybillPayment.fromFare('128,40 kr')!;
+    expect(waybill.serviceFee, '32,10 kr');
+    // Before: +0,00 kr 'Settled', while the waybill took a 32,10 kr fee.
+    expect(trip.cashBalance!.signedLabel, '−32,10 kr');
+    expect(trip.cashBalance!.earnings.formatted, waybill.earnings);
+  });
+
+  test('driver-u19: a cash trip with a waiting fee owes what its waybill says',
+      () async {
+    SharedPreferences.setMockInitialValues({});
+    final history = PrefsTripHistoryRepository();
+    // 128,40 kr base price + 18,39 kr waiting fee, all paid in cash.
+    final waybill = WaybillRecord(
+      tripId: 'cash-wait-1',
+      statusLabel: 'Current trip',
+      issuedAt: DateTime(2026, 10, 22, 7),
+      fare: '146,79 kr',
+      waitingFee: '18,39 kr',
+      service: 'Comfort',
+      riderName: 'Karin',
+      pickup: 'Gamla vägen',
+      dropoff: 'Solna centrum',
+      source: 'Movera Radar',
+      driverName: 'Driver',
+      vehicle: 'Car',
+      licensePlate: 'ABC 123',
+      passengerCapacity: 4,
+    );
+    await CompletionJournal(
+      active: MemoryActiveRideRepository(),
+      history: history,
+    ).finish(waybill, paymentMethod: 'Cash', cashCollected: '146,79 kr');
+    final row = (await history.list()).single;
+    final slip = WaybillPayment.fromFare(waybill.fare,
+        waitingFee: waybill.waitingFee)!;
+    expect(slip.serviceFee, '32,10 kr'); // no fee on the waiting fee
+    // Before: −36,70 kr, a 25 % fee on the waiting fee too.
+    expect(row.cashBalance!.serviceFee!.formatted, slip.serviceFee);
+    expect(row.cashBalance!.signedLabel, '−32,10 kr');
   });
 }

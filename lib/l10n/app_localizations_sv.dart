@@ -1499,6 +1499,11 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
+  String cashFareFeeLine(String fare, String fee, String cash) {
+    return 'Pris $fare · Avgift $fee · Kontant $cash';
+  }
+
+  @override
   String get driver2 => 'FÖRARE';
 
   @override

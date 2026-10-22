@@ -2679,6 +2679,12 @@ abstract class AppLocalizations {
     Object cashCollectedFormatted,
   );
 
+  /// No description provided for @cashFareFeeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Fare {fare} · Fee {fee} · Cash {cash}'**
+  String cashFareFeeLine(String fare, String fee, String cash);
+
   /// No description provided for @driver2.
   ///
   /// In en, this message translates to:

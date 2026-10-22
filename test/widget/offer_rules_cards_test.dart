@@ -310,13 +310,14 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    // R8-4: balance = fare − cash = 126,75 − 150 = −23,25 kr.
+    // R8-4 / driver-u19: balance = fare − Movera's 25 % fee − cash
+    // = 126,75 − 31,69 − 150 = −54,94 kr, the waybill's money.
     final owed = find.text('You owe Movera');
     await tester.ensureVisible(owed);
     expect(find.text('Cash collected'), findsOneWidget);
     expect(find.text('150,00 kr'), findsOneWidget);
     expect(owed, findsOneWidget);
-    expect(find.text('−23,25 kr'), findsOneWidget);
+    expect(find.text('−54,94 kr'), findsOneWidget);
     expect(find.text('Settled in your next payout'), findsOneWidget);
     tester.takeException();
   });

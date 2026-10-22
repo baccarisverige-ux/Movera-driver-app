@@ -210,7 +210,13 @@ class CashBalanceSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  tr.fareFareFormattedCashCashCollected(balance.fare.formatted, balance.cashCollected.formatted),
+                  switch (balance.serviceFee) {
+                    // driver-u19: Movera's fee is part of the balance.
+                    final fee? => tr.cashFareFeeLine(balance.fare.formatted,
+                        fee.formatted, balance.cashCollected.formatted),
+                    null => tr.fareFareFormattedCashCashCollected(
+                        balance.fare.formatted, balance.cashCollected.formatted),
+                  },
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

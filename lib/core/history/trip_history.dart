@@ -55,6 +55,7 @@ class TripHistoryRecord {
     this.cancellationReasonCode,
     this.cashCollected,
     this.driverBonus,
+    this.waitingFee,
   });
 
   final String tripId;
@@ -83,13 +84,27 @@ class TripHistoryRecord {
   /// none. Shown as "incl. +40 kr Movera bonus".
   final String? driverBonus;
 
+  /// Q43: the driver's waiting fee already in [fare], e.g. "18,39 kr", as
+  /// on the trip's waybill; null for none. Movera takes no fee on it
+  /// (driver-u19). Rows saved before it was kept have none.
+  final String? waitingFee;
+
   /// The rider paid cash in the car (Q23).
   bool get paidByCash => paymentMethod.trim().toLowerCase() == 'cash';
 
-  /// On a completed cash trip: fare − cash collected, owed by (−) or to
-  /// (+) the driver. Null otherwise.
+  /// On a completed cash trip: fare − Movera's fee − cash collected, owed
+  /// by (−) or to (+) the driver; the fee is the waybill's (driver-u19).
+  /// Null otherwise.
   CashBalance? get cashBalance => paidByCash && status == TripStatus.completed
-      ? CashBalance.fromLabels(fare: fare, cashCollected: cashCollected ?? fare)
+      ? CashBalance.fromLabels(
+          fare: fare,
+          cashCollected: cashCollected ?? fare,
+          serviceFee: WaybillPayment.fromFare(
+            fare,
+            bonus: driverBonus,
+            waitingFee: waitingFee,
+          )?.serviceFee,
+        )
       : null;
 
   Money? get fareMoney => status != TripStatus.completed
