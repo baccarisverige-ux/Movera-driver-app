@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/routing/route_instruction.dart';
+import 'package:movera/core/safety/ride_check_gate.dart';
 import 'package:movera/core/safety/ride_check_recorder_native.dart';
 import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
@@ -62,6 +63,50 @@ class _FakeAudio implements AudioRecorder {
   Future<void> dispose() async => disposed = true;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Rebuilds when the Ride check gate changes, as Home does.
+class _GateListener extends StatefulWidget {
+  const _GateListener();
+  @override
+  State<_GateListener> createState() => _GateListenerState();
+}
+
+class _GateListenerState extends State<_GateListener> {
+  var builds = 0;
+  void _changed() => setState(() {});
+  @override
+  void initState() {
+    super.initState();
+    RideCheckGate.listenable.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    RideCheckGate.listenable.removeListener(_changed);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Text('builds ${++builds}');
+}
+
+/// Closes the gate when it leaves, as the trip screen's Ride check does.
+class _GateHolder extends StatefulWidget {
+  const _GateHolder();
+  @override
+  State<_GateHolder> createState() => _GateHolderState();
+}
+
+class _GateHolderState extends State<_GateHolder> {
+  @override
+  void dispose() {
+    RideCheckGate.set(false);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox();
 }
 
 /// A fresh phone folder for the recorder.
@@ -230,5 +275,26 @@ void main() {
     await clearLocalUserData();
     expect(File(saved).existsSync(), isFalse); // before: kept after logout
     expect(older.existsSync(), isFalse);
+  });
+
+  testWidgets('driver-36: a Ride check closed by the leaving trip screen '
+      'does not rebuild Home inside the locked tree', (tester) async {
+    RideCheckGate.set(true);
+    addTearDown(() => RideCheckGate.set(false));
+    Widget app({required bool trip}) => Directionality(
+          textDirection: TextDirection.ltr,
+          child: Column(children: [
+            const _GateListener(),
+            if (trip) const _GateHolder(),
+          ]),
+        );
+    await tester.pumpWidget(app(trip: true));
+    await tester.pumpWidget(app(trip: false));
+    // Before: 'setState() or markNeedsBuild() called when widget tree was
+    // locked' from the trip screen's dispose.
+    expect(tester.takeException(), isNull);
+    expect(RideCheckGate.open, isFalse);
+    await tester.pump();
+    expect(find.text('builds 2'), findsOneWidget, reason: 'Home heard it');
   });
 }
