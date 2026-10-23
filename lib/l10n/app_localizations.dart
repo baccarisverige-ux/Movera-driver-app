@@ -403,7 +403,7 @@ abstract class AppLocalizations {
   /// No description provided for @tapToAccept.
   ///
   /// In en, this message translates to:
-  /// **'Tap to accept'**
+  /// **'Tap here'**
   String get tapToAccept;
 
   /// No description provided for @headToYourPickupTimePickup.

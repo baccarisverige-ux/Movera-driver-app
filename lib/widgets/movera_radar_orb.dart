@@ -90,6 +90,9 @@ class MoveraRadarOrb extends StatelessWidget {
   /// A found trip's [status] ("MATCH"): black.
   static const Color offerInk = Color(0xFF111614);
 
+  /// The orb's labels: Urbanist (bundled), the rider sign-in face.
+  static const String orbFontFamily = 'Urbanist';
+
   /// Radar on, outside the radar itself (side menu, lists): green.
   static const Color onlineGreen = Color(0xFF5FB87D);
 
@@ -112,6 +115,13 @@ class MoveraRadarOrb extends StatelessWidget {
     const detectedLight = offerAccentLight;
     const detectedGrey = offerAccent;
     // Exclusive is the normal radar in blue, with its time ring.
+    // The ink of the orb's three lines: white on the red (blocked) disc,
+    // black for a reservation's Accept, the offer ink otherwise.
+    final labelInk = blocked
+        ? Colors.white
+        : reserve
+        ? reserveTitle
+        : offerInk;
     final accent = reserve
         ? Color.lerp(reserveLight, reserveGrey, pulse) ?? reserveGrey
         : exclusive
@@ -129,22 +139,22 @@ class MoveraRadarOrb extends StatelessWidget {
     final glowStrength = !active
         ? 0.08
         : loading
-            ? 0.10 + (pulse * 0.14)
-            : hot
-                ? 0.14 + (pulse * 0.26)
-                : 0.11 + (pulse * 0.16);
+        ? 0.10 + (pulse * 0.14)
+        : hot
+        ? 0.14 + (pulse * 0.26)
+        : 0.11 + (pulse * 0.16);
     final ringScale = !active
         ? 1.0
         : loading
-            ? 0.96 + (pulse * 0.07)
-            : hot
-                ? 0.84 + (pulse * 0.22)
-                : 0.91 + (pulse * 0.12);
+        ? 0.96 + (pulse * 0.07)
+        : hot
+        ? 0.84 + (pulse * 0.22)
+        : 0.91 + (pulse * 0.12);
     final secondWaveScale = !active
         ? 1.0
         : loading
-            ? 0.90 + ((1 - pulse) * 0.10)
-            : 0.86 + ((1 - pulse) * 0.16);
+        ? 0.90 + ((1 - pulse) * 0.10)
+        : 0.86 + ((1 - pulse) * 0.16);
     final s = size / 104;
     final hit = touchSize ?? size;
 
@@ -214,12 +224,13 @@ class MoveraRadarOrb extends StatelessWidget {
                     height: 79 * s,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: (reserve
-                              ? reserveHalo
-                              : exclusive
-                              ? const Color(0xFFCFE0FB)
-                              : reserveHalo)
-                          .withValues(alpha: 0.12),
+                      color:
+                          (reserve
+                                  ? reserveHalo
+                                  : exclusive
+                                  ? const Color(0xFFCFE0FB)
+                                  : reserveHalo)
+                              .withValues(alpha: 0.12),
                       border: Border.all(
                         color: accent.withValues(alpha: active ? 0.38 : 0.19),
                         width: 1.1,
@@ -290,7 +301,9 @@ class MoveraRadarOrb extends StatelessWidget {
                   Material(
                     color: Colors.transparent,
                     elevation: 16,
-                    shadowColor: const Color(0xFF12201C).withValues(alpha: 0.38),
+                    shadowColor: const Color(
+                      0xFF12201C,
+                    ).withValues(alpha: 0.38),
                     shape: const CircleBorder(),
                     clipBehavior: Clip.antiAlias,
                     child: Ink(
@@ -340,101 +353,126 @@ class MoveraRadarOrb extends StatelessWidget {
                                 6 * s,
                                 4 * s,
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (tinted) ...[
-                                    SvgPicture.asset(
-                                      AppAssets.solarCheckCircle,
-                                      key: const ValueKey<String>(
-                                        'radar-exclusive-icon',
-                                      ),
-                                      width: 8 * s,
-                                      height: 8 * s,
-                                      colorFilter: const ColorFilter.mode(
-                                        Colors.white,
-                                        BlendMode.srcIn,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2 * s),
-                                  ],
-                                  Text(
-                                    title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      // A reservation's "Accept" is black.
-                                      color: reserve
-                                          ? reserveTitle
-                                          : Colors.white,
-                                      fontSize: 8.8 * s,
-                                      height: 1.1,
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: -0.3,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2.5 * s),
-                                  // Status and subtitle: 10 px on Home's
-                                  // 104 px radar, dark on the grey disc
-                                  // and white on the red one (4.5:1).
-                                  Transform.scale(
-                                    scale: found ? 1 + 0.05 * p : 1,
-                                    child: FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      child: Text(
-                                        status,
-                                        key: found
-                                            ? const ValueKey<String>(
-                                                'radar-status-found',
-                                              )
-                                            : null,
-                                        maxLines: 1,
-                                        softWrap: false,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color: blocked
-                                              ? Colors.white
-                                              : found
-                                              ? offerInk.withValues(
-                                                  alpha: 0.82 + 0.18 * p,
-                                                )
-                                              : offerInk,
-                                          fontSize: 10 * s,
-                                          height: 1,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 0.9,
+                              // Large text (200 %): the orb is a fixed
+                              // control, so its labels follow the system
+                              // text size only up to 1.25x, and the whole
+                              // block shrinks together inside a square set
+                              // well inside the disc, so nothing leaves it
+                              // (release evidence b8bd860, F1).
+                              child: MediaQuery.withClampedTextScaling(
+                                maxScaleFactor: 1.25,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: SizedBox(
+                                    width: 58 * s,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        if (tinted) ...[
+                                          SvgPicture.asset(
+                                            AppAssets.solarCheckCircle,
+                                            key: const ValueKey<String>(
+                                              'radar-exclusive-icon',
+                                            ),
+                                            width: 8 * s,
+                                            height: 8 * s,
+                                            colorFilter: const ColorFilter.mode(
+                                              Colors.white,
+                                              BlendMode.srcIn,
+                                            ),
+                                          ),
+                                          SizedBox(height: 2 * s),
+                                        ],
+                                        // One ink for the three lines (the
+                                        // title used to be white on the grey
+                                        // disc while the rest was dark): the
+                                        // title is the quiet label, the status
+                                        // the big word, the hint the small
+                                        // line. The title shrinks rather than
+                                        // cuts ("Acce…" at 200 %, F2).
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            title,
+                                            maxLines: 1,
+                                            softWrap: false,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: labelInk.withValues(
+                                                alpha: reserve ? 1 : 0.72,
+                                              ),
+                                              fontFamily: orbFontFamily,
+                                              fontSize: 7.5 * s,
+                                              height: 1.1,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        SizedBox(height: 1.5 * s),
+                                        // Status and subtitle: 10 px on Home's
+                                        // 104 px radar, dark on the grey disc
+                                        // and white on the red one (4.5:1).
+                                        Transform.scale(
+                                          scale: found ? 1 + 0.05 * p : 1,
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              status,
+                                              key: found
+                                                  ? const ValueKey<String>(
+                                                      'radar-status-found',
+                                                    )
+                                                  : null,
+                                              maxLines: 1,
+                                              softWrap: false,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: blocked
+                                                    ? Colors.white
+                                                    : found
+                                                    ? offerInk.withValues(
+                                                        alpha: 0.94 + 0.06 * p,
+                                                      )
+                                                    : offerInk,
+                                                fontFamily: orbFontFamily,
+                                                fontSize: 11.5 * s,
+                                                height: 1,
+                                                fontWeight: FontWeight.w800,
+                                                letterSpacing: 0.6,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(height: 3 * s),
+                                        Container(
+                                          width: 12 * s,
+                                          height: 1,
+                                          color: labelInk.withValues(
+                                            alpha: blocked ? 0.36 : 0.22,
+                                          ),
+                                        ),
+                                        SizedBox(height: 3.5 * s),
+                                        // Round 4: one line in every language;
+                                        // longer words shrink to fit the orb.
+                                        Text(
+                                          subtitle,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: blocked
+                                                ? Colors.white
+                                                : offerInk,
+                                            fontFamily: orbFontFamily,
+                                            fontSize: 7.5 * s,
+                                            height: 1.2,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  SizedBox(height: 3 * s),
-                                  Container(
-                                    width: 10 * s,
-                                    height: 1,
-                                    color: Colors.white.withValues(alpha: 0.36),
-                                  ),
-                                  SizedBox(height: 4 * s),
-                                  // Round 4: one line in every language;
-                                  // longer words shrink to fit the orb.
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      subtitle,
-                                      maxLines: 1,
-                                      softWrap: false,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: blocked
-                                            ? Colors.white
-                                            : offerInk,
-                                        fontSize: 10 * s,
-                                        height: 1.12,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                             if (loading)
@@ -546,7 +584,9 @@ class ExclusiveTimeRingPainter extends CustomPainter {
       paint..color = track.withValues(alpha: 0.35),
     );
     final left = timeLeft.clamp(0.0, 1.0);
-    if (left <= 0) { return; }
+    if (left <= 0) {
+      return;
+    }
     final spent = (1 - left) * math.pi * 2;
     canvas.drawArc(
       rect,

@@ -183,7 +183,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseWait => 'Please wait';
 
   @override
-  String get tapToAccept => 'Tap to accept';
+  String get tapToAccept => 'Tap here';
 
   @override
   String headToYourPickupTimePickup(Object pickupTime, Object pickupAddress) {

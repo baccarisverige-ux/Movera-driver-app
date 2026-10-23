@@ -97,11 +97,21 @@ flutter:
     - assets/sounds/
 
   # DSEG7 Classic (SIL OFL 1.1) — see assets/fonts/DSEG-LICENSE.txt
+  # Urbanist (SIL OFL 1.1) — see assets/fonts/urbanist/OFL.txt; the radar
+  # orb's labels (owner, 23 Oct 2026), the same face as the rider sign-in.
   fonts:
     - family: DSEG7
       fonts:
         - asset: assets/fonts/DSEG7Classic-Bold.ttf
           weight: 700
+    - family: Urbanist
+      fonts:
+        - asset: assets/fonts/urbanist/Urbanist-500.ttf
+          weight: 500
+        - asset: assets/fonts/urbanist/Urbanist-600.ttf
+          weight: 600
+        - asset: assets/fonts/urbanist/Urbanist-800.ttf
+          weight: 800
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
