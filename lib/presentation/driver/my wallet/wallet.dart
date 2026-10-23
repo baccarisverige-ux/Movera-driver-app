@@ -6,13 +6,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
 
-Widget _solarIcon(String asset, {double size = 20, Color color = const Color(0xFF1F2933)}) =>
-    SvgPicture.asset(
-      asset,
-      width: size,
-      height: size,
-      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-    );
+Widget _solarIcon(
+  String asset, {
+  double size = 20,
+  Color color = const Color(0xFF1F2933),
+}) => SvgPicture.asset(
+  asset,
+  width: size,
+  height: size,
+  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+);
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
@@ -43,7 +46,7 @@ class WalletScreen extends StatelessWidget {
                   children: [
                     _balanceHero(),
                     const SizedBox(height: 14),
-                    _payoutInfoStrip(),
+                    _payoutInfoStrip(context),
                     const SizedBox(height: 28),
                     // driver-u147: no 'See all' until there is a payouts list;
                     // it opened My bank.
@@ -79,9 +82,7 @@ class WalletScreen extends StatelessWidget {
                 child: SizedBox(
                   height: 42,
                   width: 42,
-                  child: Center(
-                    child: _solarIcon(AppAssets.solarAltArrowLeft),
-                  ),
+                  child: Center(child: _solarIcon(AppAssets.solarAltArrowLeft)),
                 ),
               ),
             ),
@@ -195,7 +196,28 @@ class WalletScreen extends StatelessWidget {
     );
   }
 
-  Widget _payoutInfoStrip() {
+  Widget _payoutInfoStrip(BuildContext context) {
+    // Large text (release evidence b8bd860, F3): the "not set" chip moves
+    // under the texts so the subtitle keeps the width of the strip, and
+    // the strip's scale is capped so its longest word ("Utbetalningsdatum")
+    // still fits one line instead of being split inside the word.
+    final large = MediaQuery.textScalerOf(context).scale(14) > 20;
+    final chip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: _white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: Text(
+        tr.notSet,
+        style: TextStyle(
+          color: _subtle,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
@@ -204,60 +226,49 @@ class WalletScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _line),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _tile,
-              borderRadius: BorderRadius.circular(13),
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.5,
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: _tile,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: _solarIcon(AppAssets.solarRefresh),
             ),
-            child: _solarIcon(AppAssets.solarRefresh),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  tr.noAutomaticPayout,
-                  style: TextStyle(
-                    color: _text,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr.noAutomaticPayout,
+                    style: TextStyle(
+                      color: _text,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  tr.payoutDateIsNotAvailable,
-                  style: TextStyle(
-                    color: _muted,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
+                  SizedBox(height: 3),
+                  Text(
+                    tr.payoutDateIsNotAvailable,
+                    style: TextStyle(
+                      color: _muted,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            decoration: BoxDecoration(
-              color: _white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _line),
-            ),
-            child: Text(
-              tr.notSet,
-              style: TextStyle(
-                color: _subtle,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
+                  if (large) ...[const SizedBox(height: 8), chip],
+                ],
               ),
             ),
-          ),
-        ],
+            if (!large) chip,
+          ],
+        ),
       ),
     );
   }
