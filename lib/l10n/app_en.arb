@@ -123,7 +123,7 @@
   "documentExpired": "Document expired",
   "skipExclusiveOffer": "Skip Exclusive offer",
   "pleaseWait": "Please wait",
-  "tapToAccept": "Tap to accept",
+  "tapToAccept": "Tap here",
   "headToYourPickupTimePickup": "Head to your {pickupTime} pickup now: {pickupAddress}.",
   "@headToYourPickupTimePickup": {
     "placeholders": {

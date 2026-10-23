@@ -311,7 +311,7 @@ void main() {
     );
     expect(text('Accept').style!.color, MoveraRadarOrb.reserveTitle);
     expect(text('MATCH').style!.color, MoveraRadarOrb.offerInk);
-    expect(find.text('Tap to accept'), findsOneWidget);
+    expect(find.text('Tap here'), findsOneWidget);
     // No icon inside.
     expect(find.byKey(const ValueKey<String>('radar-exclusive-icon')),
         findsNothing);

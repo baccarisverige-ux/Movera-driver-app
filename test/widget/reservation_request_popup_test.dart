@@ -572,7 +572,7 @@ void main() {
     final orb = tester.getRect(radar);
     expect(orb.center.dy, closeTo(settled.top, 2));
     expect(orb.center.dx, closeTo(375 / 2, 1));
-    for (final text in ['Accept', 'MATCH', 'Tap to accept']) {
+    for (final text in ['Accept', 'MATCH', 'Tap here']) {
       expect(find.descendant(of: radar, matching: find.text(text)), findsOneWidget);
     }
     final match = tester.widget<Text>(

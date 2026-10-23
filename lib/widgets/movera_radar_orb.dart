@@ -90,6 +90,9 @@ class MoveraRadarOrb extends StatelessWidget {
   /// A found trip's [status] ("MATCH"): black.
   static const Color offerInk = Color(0xFF111614);
 
+  /// The orb's labels: Urbanist (bundled), the rider sign-in face.
+  static const String orbFontFamily = 'Urbanist';
+
   /// Radar on, outside the radar itself (side menu, lists): green.
   static const Color onlineGreen = Color(0xFF5FB87D);
 
@@ -361,7 +364,7 @@ class MoveraRadarOrb extends StatelessWidget {
                                 child: FittedBox(
                                   fit: BoxFit.scaleDown,
                                   child: SizedBox(
-                                    width: 56 * s,
+                                    width: 58 * s,
                                     child: Column(
                                       mainAxisSize: MainAxisSize.min,
                                       mainAxisAlignment:
@@ -397,11 +400,13 @@ class MoveraRadarOrb extends StatelessWidget {
                                             softWrap: false,
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
-                                              color: labelInk,
-                                              fontSize: 9 * s,
+                                              color: labelInk.withValues(
+                                                alpha: reserve ? 1 : 0.72,
+                                              ),
+                                              fontFamily: orbFontFamily,
+                                              fontSize: 8 * s,
                                               height: 1.1,
                                               fontWeight: FontWeight.w600,
-                                              letterSpacing: 0.1,
                                             ),
                                           ),
                                         ),
@@ -428,13 +433,14 @@ class MoveraRadarOrb extends StatelessWidget {
                                                     ? Colors.white
                                                     : found
                                                     ? offerInk.withValues(
-                                                        alpha: 0.9 + 0.1 * p,
+                                                        alpha: 0.94 + 0.06 * p,
                                                       )
                                                     : offerInk,
-                                                fontSize: 13 * s,
+                                                fontFamily: orbFontFamily,
+                                                fontSize: 12 * s,
                                                 height: 1,
                                                 fontWeight: FontWeight.w800,
-                                                letterSpacing: 1,
+                                                letterSpacing: 0.6,
                                               ),
                                             ),
                                           ),
@@ -450,21 +456,17 @@ class MoveraRadarOrb extends StatelessWidget {
                                         SizedBox(height: 3.5 * s),
                                         // Round 4: one line in every language;
                                         // longer words shrink to fit the orb.
-                                        FittedBox(
-                                          fit: BoxFit.scaleDown,
-                                          child: Text(
-                                            subtitle,
-                                            maxLines: 1,
-                                            softWrap: false,
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              color: blocked
-                                                  ? Colors.white
-                                                  : offerInk,
-                                              fontSize: 10 * s,
-                                              height: 1.12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
+                                        Text(
+                                          subtitle,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: blocked
+                                                ? Colors.white
+                                                : offerInk,
+                                            fontFamily: orbFontFamily,
+                                            fontSize: 10 * s,
+                                            height: 1.15,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                       ],
