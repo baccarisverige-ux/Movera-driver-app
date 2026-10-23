@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "commit": "ddf074a384dfb1ca3d32ce39b94393badb5d4deb",
+  "commit": "b8bd8603dd7692edaf1e8fa621baedf7ab3679f9",
   "checks": [
     {
       "id": "automated",
-      "result": "PENDING",
-      "commit": "",
-      "artifact": "",
-      "detail": ""
+      "result": "PASS",
+      "commit": "b8bd8603dd7692edaf1e8fa621baedf7ab3679f9",
+      "artifact": "https://github.com/baccarisverige-ux/Movera-driver-app/actions/runs/39843117314",
+      "detail": "Drider CI on the candidate: analyze --fatal-infos, 2055 tests, driver_lifecycle_test, web release build, Android release signing, iOS preflight, all green (22 Oct 2026)."
     },
     {
       "id": "real-maps",
@@ -32,17 +32,17 @@
     },
     {
       "id": "layout",
-      "result": "PENDING",
-      "commit": "",
-      "artifact": "",
-      "detail": ""
+      "result": "PASS",
+      "commit": "b8bd8603dd7692edaf1e8fa621baedf7ab3679f9",
+      "artifact": "docs/frontend-completion/evidence/browser-b8bd860/REPORT.md",
+      "detail": "Chromium 1194 at 390x844, 320x700 and 1440x900: Home, wallet, offer, trip and after-reload screens, no clipping or overflow at 100% text. 200% text is recorded under accessibility (findings F1-F3)."
     },
     {
       "id": "accessibility",
       "result": "PENDING",
       "commit": "",
       "artifact": "",
-      "detail": ""
+      "detail": "200% text run on b8bd860: three clipping findings (F1-F3) in docs/frontend-completion/evidence/browser-b8bd860/REPORT.md; screen readers not run."
     },
     {
       "id": "device-lifecycle",
@@ -63,7 +63,7 @@
       "result": "PENDING",
       "commit": "",
       "artifact": "",
-      "detail": ""
+      "detail": "Pages deploy run 39844622554 succeeded for b8bd860; the deployed site was not reachable from the test machine, smoke not run."
     }
   ]
 }
