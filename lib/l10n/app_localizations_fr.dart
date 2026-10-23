@@ -150,7 +150,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get stayOnline => 'Rester en ligne';
 
   @override
-  String get goOffline => 'Passer hors ligne';
+  String get goOffline => 'Hors ligne';
 
   @override
   String restUntilTime(Object time) {
@@ -183,7 +183,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pleaseWait => 'Patientez';
 
   @override
-  String get tapToAccept => 'Touchez pour accepter';
+  String get tapToAccept => 'Touchez ici';
 
   @override
   String headToYourPickupTimePickup(Object pickupTime, Object pickupAddress) {
@@ -404,7 +404,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get notActive => 'Inactif';
 
   @override
-  String get tapToScan => 'Touchez pour scanner';
+  String get tapToScan => 'Touchez ici';
 
   @override
   String get connecting => 'Connexion';
@@ -413,7 +413,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripFound => 'Course trouvée';
 
   @override
-  String get tapForAll => 'Touchez pour tout voir';
+  String get tapForAll => 'Tout voir';
 
   @override
   String get scanning => 'Recherche';
@@ -890,10 +890,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Maintenez pour lancer les courses suivantes';
 
   @override
-  String get stopRadar => 'Arrêter le radar';
+  String get stopRadar => 'Arrêter';
 
   @override
-  String get startRadar => 'Lancer le radar';
+  String get startRadar => 'Lancer';
 
   @override
   String get headingToPickup => 'En route vers la prise en charge';

@@ -183,7 +183,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get pleaseWait => 'Vänta';
 
   @override
-  String get tapToAccept => 'Tryck för att acceptera';
+  String get tapToAccept => 'Tryck här';
 
   @override
   String headToYourPickupTimePickup(Object pickupTime, Object pickupAddress) {
@@ -404,7 +404,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get notActive => 'Inte aktiv';
 
   @override
-  String get tapToScan => 'Tryck för att söka';
+  String get tapToScan => 'Tryck här';
 
   @override
   String get connecting => 'Ansluter';
@@ -413,7 +413,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tripFound => 'Resa hittad';
 
   @override
-  String get tapForAll => 'Tryck för alla';
+  String get tapForAll => 'Visa alla';
 
   @override
   String get scanning => 'Söker';
@@ -883,10 +883,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get holdToStartNextTrips => 'Håll för att starta nästa resor';
 
   @override
-  String get stopRadar => 'Stoppa radar';
+  String get stopRadar => 'Stoppa';
 
   @override
-  String get startRadar => 'Starta radar';
+  String get startRadar => 'Starta';
 
   @override
   String get headingToPickup => 'På väg till upphämtning';
