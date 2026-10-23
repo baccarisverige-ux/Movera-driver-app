@@ -74,7 +74,7 @@ void main() {
       expect(DriverLanguage.current.value, 'sv');
       await DriverLanguage.choose('fr', store);
       expect(DriverLanguage.current.value, 'fr');
-      expect(tr.goOffline, 'Passer hors ligne');
+      expect(tr.goOffline, 'Hors ligne');
 
       // A new app start: memory is gone, the zone default comes first.
       DriverLanguage.resetForTest();
