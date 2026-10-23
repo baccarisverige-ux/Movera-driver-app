@@ -235,7 +235,7 @@ class ApiDispatchRepository implements DispatchRepository {
     return {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'X-Api-Version': '0.4',
+      'X-Api-Version': '0.5',
       if (token != null) 'Authorization': 'Bearer $token',
       if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
     };

@@ -162,7 +162,7 @@ void main() {
       expect(request.url.path, '/api/v1/offers/off-1/accept');
       expect(jsonDecode(request.body), {'expectedVersion': 3});
       expect(request.headers['Idempotency-Key'], 'key-0123456789abcdef');
-      expect(request.headers['X-Api-Version'], '0.4');
+      expect(request.headers['X-Api-Version'], '0.5');
       expect(request.headers['Authorization'], 'Bearer token');
       expect(await repo.watchNearbyOffers().first, isEmpty);
     });
