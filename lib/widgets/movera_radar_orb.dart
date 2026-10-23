@@ -404,7 +404,7 @@ class MoveraRadarOrb extends StatelessWidget {
                                                 alpha: reserve ? 1 : 0.72,
                                               ),
                                               fontFamily: orbFontFamily,
-                                              fontSize: 8 * s,
+                                              fontSize: 7.5 * s,
                                               height: 1.1,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -437,7 +437,7 @@ class MoveraRadarOrb extends StatelessWidget {
                                                       )
                                                     : offerInk,
                                                 fontFamily: orbFontFamily,
-                                                fontSize: 12 * s,
+                                                fontSize: 11.5 * s,
                                                 height: 1,
                                                 fontWeight: FontWeight.w800,
                                                 letterSpacing: 0.6,
@@ -464,8 +464,8 @@ class MoveraRadarOrb extends StatelessWidget {
                                                 ? Colors.white
                                                 : offerInk,
                                             fontFamily: orbFontFamily,
-                                            fontSize: 10 * s,
-                                            height: 1.15,
+                                            fontSize: 7.5 * s,
+                                            height: 1.2,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),

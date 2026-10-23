@@ -25,33 +25,35 @@ Widget _orb({
   bool blocked = false,
   String status = 'LIVE',
   String subtitle = 'Scanning',
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: MoveraRadarOrb(
-            title: 'Radar',
-            status: status,
-            subtitle: subtitle,
-            active: active,
-            offer: offer,
-            reserve: reserve,
-            blocked: blocked,
-            onTap: onTap,
-          ),
-        ),
+}) => MaterialApp(
+  home: Scaffold(
+    body: Center(
+      child: MoveraRadarOrb(
+        title: 'Radar',
+        status: status,
+        subtitle: subtitle,
+        active: active,
+        offer: offer,
+        reserve: reserve,
+        blocked: blocked,
+        onTap: onTap,
       ),
-    );
+    ),
+  ),
+);
 
 /// The orb's disc colour under [at], over a white sheet.
 Color _discAt(WidgetTester tester, Offset at) {
   final ink = find.byType(Ink);
   final disc = tester.getRect(ink);
-  final g = (tester.widget<Ink>(ink).decoration! as BoxDecoration).gradient!
-      as RadialGradient;
+  final g =
+      (tester.widget<Ink>(ink).decoration! as BoxDecoration).gradient!
+          as RadialGradient;
   final centre = (g.center as Alignment).withinRect(disc);
-  final t = ((at - centre).distance / (g.radius * disc.shortestSide))
-      .clamp(0.0, 1.0);
+  final t = ((at - centre).distance / (g.radius * disc.shortestSide)).clamp(
+    0.0,
+    1.0,
+  );
   final stops = g.stops!;
   var i = 0;
   while (i < stops.length - 2 && t > stops[i + 1]) {
@@ -62,25 +64,32 @@ Color _discAt(WidgetTester tester, Offset at) {
 }
 
 void main() {
-  testWidgets('driver-u170: the menu ONLINE / OFFLINE pill reads at 4.5:1',
-      (tester) async {
+  testWidgets('driver-u170: the menu ONLINE / OFFLINE pill reads at 4.5:1', (
+    tester,
+  ) async {
     for (final online in [true, false]) {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(body: DriverSideMenu(isOnline: online)),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: DriverSideMenu(isOnline: online)),
+        ),
+      );
       final pill = find.byKey(const ValueKey<String>('menu-live-status'));
-      final fill = (tester.widget<Container>(pill).decoration! as BoxDecoration)
-          .color!;
-      final word = tester
-          .widget<Text>(find.descendant(of: pill, matching: find.byType(Text)));
-      expect(_contrast(word.style!.color!, _onWhite(fill)),
-          greaterThanOrEqualTo(4.5),
-          reason: online ? 'online' : 'offline');
+      final fill =
+          (tester.widget<Container>(pill).decoration! as BoxDecoration).color!;
+      final word = tester.widget<Text>(
+        find.descendant(of: pill, matching: find.byType(Text)),
+      );
+      expect(
+        _contrast(word.style!.color!, _onWhite(fill)),
+        greaterThanOrEqualTo(4.5),
+        reason: online ? 'online' : 'offline',
+      );
     }
   });
 
-  testWidgets('driver-u178: the radar orb is a button only when a tap acts',
-      (tester) async {
+  testWidgets('driver-u178: the radar orb is a button only when a tap acts', (
+    tester,
+  ) async {
     final semantics = tester.ensureSemantics();
     for (final onTap in [null, () {}]) {
       await tester.pumpWidget(_orb(onTap: onTap));
@@ -93,15 +102,24 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('driver-u179: the radar status and subtitle are 10 px and '
+  testWidgets('driver-u179: the radar status and subtitle keep their size and '
       'read at 4.5:1 on the disc', (tester) async {
     for (final (name, orb) in [
       ('off', _orb(status: 'OFF', subtitle: 'Tap to scan')),
       ('live', _orb(active: true)),
-      ('found', _orb(active: true, offer: true, status: 'NEW',
-          subtitle: 'Tap for all')),
-      ('reservation', _orb(active: true, reserve: true, status: 'MATCH',
-          subtitle: 'Tap to accept')),
+      (
+        'found',
+        _orb(active: true, offer: true, status: 'NEW', subtitle: 'Tap for all'),
+      ),
+      (
+        'reservation',
+        _orb(
+          active: true,
+          reserve: true,
+          status: 'MATCH',
+          subtitle: 'Tap to accept',
+        ),
+      ),
       ('on hold', _orb(blocked: true, status: 'PAUSED', subtitle: 'Hold')),
     ]) {
       await tester.pumpWidget(orb);
@@ -109,16 +127,28 @@ void main() {
       for (final words in [widget.status, widget.subtitle]) {
         final text = find.text(words);
         final style = tester.widget<Text>(text).style!;
-        expect(style.fontSize, greaterThanOrEqualTo(10), reason: '$name $words');
+        // Owner (23 Oct 2026): the orb's word is 11.5 px and its hint 7.5 px,
+        // Urbanist; the 4.5:1 contrast rule below still holds for both.
+        expect(
+          style.fontSize,
+          greaterThanOrEqualTo(7.5),
+          reason: '$name $words',
+        );
         final ink = style.color!;
         final box = tester.getRect(text);
         for (final at in [
-          box.topLeft, box.topRight, box.center,
-          box.bottomLeft, box.bottomRight,
+          box.topLeft,
+          box.topRight,
+          box.center,
+          box.bottomLeft,
+          box.bottomRight,
         ]) {
           final bg = _discAt(tester, at);
-          expect(_contrast(Color.alphaBlend(ink, bg), bg),
-              greaterThanOrEqualTo(4.5), reason: '$name $words at $at');
+          expect(
+            _contrast(Color.alphaBlend(ink, bg), bg),
+            greaterThanOrEqualTo(4.5),
+            reason: '$name $words at $at',
+          );
         }
       }
     }
@@ -128,31 +158,35 @@ void main() {
       'a 48 px target', (tester) async {
     final semantics = tester.ensureSemantics();
     var hidden = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: RadarOfferCard(
-            offer: const RadarOfferView(
-              id: 'o1',
-              category: 'Comfort',
-              payment: 'Card',
-              rating: '4.96',
-              fare: '104,80 kr',
-              pickupMinutes: 2,
-              pickupKm: 0.65,
-              tripMinutes: 9,
-              tripKm: 4.2,
-              pickup: 'Kungsgatan 42, Stockholm',
-              dropoff: 'Hornstull, Stockholm',
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: RadarOfferCard(
+              offer: const RadarOfferView(
+                id: 'o1',
+                category: 'Comfort',
+                payment: 'Card',
+                rating: '4.96',
+                fare: '104,80 kr',
+                pickupMinutes: 2,
+                pickupKm: 0.65,
+                tripMinutes: 9,
+                tripKm: 4.2,
+                pickup: 'Kungsgatan 42, Stockholm',
+                dropoff: 'Hornstull, Stockholm',
+              ),
+              onRoute: () {},
+              onDismiss: () => hidden++,
             ),
-            onRoute: () {},
-            onDismiss: () => hidden++,
           ),
         ),
       ),
-    ));
+    );
     final route = find.byKey(const ValueKey<String>('radar-route-o1'));
-    final dismiss = find.byKey(const ValueKey<String>('radar-offer-dismiss-o1'));
+    final dismiss = find.byKey(
+      const ValueKey<String>('radar-offer-dismiss-o1'),
+    );
     expect(tester.getSemantics(route).label, 'Show route');
     expect(tester.getSemantics(dismiss).label, 'Close offer');
     expect(tester.getSize(dismiss), const Size.square(48));
