@@ -1,6 +1,6 @@
 import 'package:movera/core/contracts/trip_status.dart';
 
-/// Pure transition engine for `contracts/contract.json#transitions` (v0.4.4).
+/// Pure transition engine for `contracts/contract.json#transitions` (v0.5.0).
 ///
 /// The table below is a hand copy of the contract. `test/contract/` checks it
 /// row by row against `contracts/contract.json` and replays
@@ -124,7 +124,7 @@ class InvalidTripTransition implements Exception {
 }
 
 abstract final class TripTransitions {
-  static const String contractVersion = '0.4.4';
+  static const String contractVersion = '0.5.0';
 
   static const List<TripTransition> table = [
     TripTransition(TripCommand.quote, TripActor.system, [TripStatus.draft], TripStatus.quoted),
