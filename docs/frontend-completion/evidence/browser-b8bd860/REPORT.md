@@ -1,7 +1,12 @@
 # Browser evidence · candidate b8bd8603dd7692edaf1e8fa621baedf7ab3679f9 (main, 22 Oct 2026)
 
 Recorded 23 Oct 2026 by the design session, on the owner's request, for the
-rows of `docs/certification/RELEASE_EVIDENCE_MATRIX.md` a browser can answer.
+rows of the release evidence matrix a browser can answer. The repository's
+templates (`docs/certification/RELEASE_EVIDENCE_MATRIX.md`,
+`docs/frontend-completion/09-release-candidate.json`) stay PENDING by rule;
+the filled copies for this candidate are `RELEASE_EVIDENCE_MATRIX-b8bd860.md`
+and `release-candidate-b8bd860.json` in this folder
+(`python3 tool/check_frontend_release.py docs/frontend-completion/evidence/browser-b8bd860/release-candidate-b8bd860.json`).
 Phones, screen readers, performance and the real Google map are not covered
 here and their rows stay PENDING.
 
