@@ -5437,4 +5437,59 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get fleetVehiclesAwait =>
       'Votre flotte ajoute ses voitures ; vous choisissez ici celle que vous conduisez.';
+
+  @override
+  String get liveOnlineFailed => 'Impossible de passer en ligne. Réessayez.';
+
+  @override
+  String get liveOfflineFailed =>
+      'Movera n\'a pas pu enregistrer votre passage hors ligne. Réessayez.';
+
+  @override
+  String get liveOnlineNotActive =>
+      'Votre compte n\'est pas encore actif : vous ne pouvez pas passer en ligne.';
+
+  @override
+  String get liveOnlineNoFleet =>
+      'Rejoignez une flotte avant de passer en ligne.';
+
+  @override
+  String get liveOnlineFleetNotApproved =>
+      'Votre flotte n\'est pas encore approuvée : vous ne pouvez pas passer en ligne.';
+
+  @override
+  String get liveOnlineNoVehicle =>
+      'Choisissez un véhicule approuvé avant de passer en ligne.';
+
+  @override
+  String get liveOnlineVehicleNotApproved =>
+      'Votre véhicule n\'est pas encore approuvé : vous ne pouvez pas passer en ligne.';
+
+  @override
+  String get liveOnlineVehicleInUse =>
+      'Un autre chauffeur utilise ce véhicule. Choisissez à nouveau votre véhicule.';
+
+  @override
+  String get liveOnlineNoCategory =>
+      'Aucun type de course n\'est défini pour votre véhicule.';
+
+  @override
+  String get liveOfflineOnTrip =>
+      'Terminez votre course avant de passer hors ligne.';
+
+  @override
+  String get liveTripNotAtPickup =>
+      'Movera ne vous voit pas encore au point de prise en charge. Approchez-vous et réessayez.';
+
+  @override
+  String get liveTripNoShowTooEarly =>
+      'Il est trop tôt pour signaler une absence. Patientez encore un peu.';
+
+  @override
+  String get liveTripChanged =>
+      'Cette course a changé entre-temps. Vérifiez-la et réessayez.';
+
+  @override
+  String get liveTripFailed =>
+      'Movera n\'a pas pu enregistrer cette étape. Réessayez.';
 }

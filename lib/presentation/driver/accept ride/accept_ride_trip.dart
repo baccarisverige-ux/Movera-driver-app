@@ -700,6 +700,12 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
 
       _stageTransitioning = true;
+      if (LiveDriverServices.active &&
+          (!await _AcceptRideLive(this)._serverStep((trips) => trips.arrive(widget.tripId)) ||
+              !mounted || _rideLifecycle.terminal || _stage != ActiveRideStage.headingToPickup)) {
+        _stageTransitioning = false;
+        return;
+      }
       if (!await _rideLifecycle.transitionTo(ActiveRideStage.waitingForRider)) {
         _stageTransitioning = false;
         return;
@@ -1011,6 +1017,12 @@ extension _AcceptRideTrip on _AcceptRideState {
           return;
 
         case ActiveRideStage.waitingForRider:
+          if (LiveDriverServices.active &&
+              (!await _AcceptRideLive(this)._serverStep((trips) => trips.start(widget.tripId)) ||
+                  !mounted || _rideLifecycle.terminal || _stage != ActiveRideStage.waitingForRider)) {
+            _stageTransitioning = false;
+            return;
+          }
           _syncWaitClock();
           final paidWait = _paidWaitNow;
           // In the Start-trip save already (driver-r5-39).
@@ -1093,6 +1105,12 @@ extension _AcceptRideTrip on _AcceptRideState {
       final offer = _nextTripRadarOffer;
       final queuedNext = _onTripRadarState == _OnTripRadarState.secured && offer != null;
       final next = queuedNext ? _snapshotForOffer(offer) : null;
+      if (LiveDriverServices.active &&
+          (!await _AcceptRideLive(this)._serverStep((trips) => trips.complete(widget.tripId)) ||
+              !mounted || _rideLifecycle.terminal)) {
+        _completionInFlight = false; _stageTransitioning = false;
+        return;
+      }
       try {
         // Q43: the waiting fee is the driver's, in the trip's earnings.
         final paid = _paidWaybill();
@@ -1258,6 +1276,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       unawaited(_rideLifecycle.persistNow()); // kept for a restore (u68)
     }
     void _maybeScheduleOnTripRadarDemoOffer() {
+      // A live build: no demo next trip; the server sends real ones.
+      if (LiveDriverServices.active) { return; }
       // Q18: while driving a rider only Exclusive offers come, when admin
       // allows them; never Radar trips.
       if (!DriverOfferRules.current.exclusiveWhileDriving ||
@@ -1591,6 +1611,14 @@ extension _AcceptRideTrip on _AcceptRideState {
       final outcome = _rideLifecycle.driverTarget(noShow ? TripCommand.noShow : TripCommand.cancel);
       if (outcome == null) {
         if(mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.thisTripCannotBeCancelledRight))); }
+        _cancellationInFlight=false;
+        return;
+      }
+      if (LiveDriverServices.active &&
+          (!await _AcceptRideLive(this)._serverStep((trips) => noShow
+                  ? trips.noShow(widget.tripId, reasonCode: reason.code)
+                  : trips.cancel(widget.tripId, reasonCode: reason.code)) ||
+              !mounted || _rideLifecycle.terminal)) {
         _cancellationInFlight=false;
         return;
       }

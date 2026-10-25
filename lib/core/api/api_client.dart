@@ -245,6 +245,18 @@ class ApiClient {
         .timeout(_timeout);
   }
 
+  /// Renews the session after a `401` another transport saw (the offer
+  /// feed, a trip stream): the same refresh as a 401 here, shared with any
+  /// in flight. A refused refresh ends the session; no answer keeps it.
+  Future<void> renewAccess() async {
+    final access = await _tokens.readAccess();
+    if (access == null || access.isEmpty) return;
+    final refresh = await _refreshAccess(access);
+    if (!refresh.unavailable && refresh.access == null) {
+      await _expireSession(access, cause: refresh.cause);
+    }
+  }
+
   /// One refresh at a time: a burst of concurrent 401s shares it.
   Future<_Refresh> _refreshAccess(String failedAccess) async {
     final active = _refreshInFlight;
@@ -325,6 +337,7 @@ class ApiClient {
     var code = 'http_${response.statusCode}';
     var message = 'Request failed.';
     String? reason;
+    Map<String, dynamic>? projection;
     try {
       final decoded = jsonDecode(response.body);
       if (decoded is Map<String, dynamic>) {
@@ -340,6 +353,10 @@ class ApiClient {
         if (rawReason is String && rawReason.trim().isNotEmpty) {
           reason = rawReason.trim();
         }
+        final rawProjection = decoded['projection'];
+        if (rawProjection is Map) {
+          projection = Map<String, dynamic>.from(rawProjection);
+        }
       }
     } on FormatException {
       // A non-JSON error body still keeps the HTTP status and request id.
@@ -354,6 +371,7 @@ class ApiClient {
       requestId: requestId,
       statusCode: response.statusCode,
       retryAfter: retrySeconds == null ? null : Duration(seconds: retrySeconds),
+      projection: projection,
     );
   }
 }

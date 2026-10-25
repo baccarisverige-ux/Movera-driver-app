@@ -1,0 +1,42 @@
+part of 'home.dart';
+
+/// A live build (`MOVERA_AUTH_REQUIRED`): Home's switch is the server's
+/// availability (`POST /driver/availability`). The demo has no
+/// [LiveDriverServices]; nothing here runs there.
+extension _HomeLive on _DriverHomeState {
+  /// Asks the server to go online while the switch animates; null in the
+  /// demo.
+  Future<String?>? _askServerOnline() =>
+      LiveDriverServices.instance?.presence.goOnline();
+
+  /// After the animation: true when Home may go online. A refusal (no car,
+  /// fleet not approved, no connection…) is said plainly and Home goes back
+  /// offline.
+  Future<bool> _serverAgreed(Future<String?> answer) async {
+    final refused = await answer;
+    if (!mounted || !_driverSession.isGoingOnline) { return false; }
+    if (refused == null) { return true; }
+    await _goOffline(notice: false);
+    _showLiveProblem(refused);
+    return false;
+  }
+
+  /// Offline on the server too; Home goes offline either way (the feed
+  /// closes at once), and a refusal is shown.
+  void _tellServerOffline() {
+    final answer = LiveDriverServices.instance?.presence.goOffline();
+    if (answer == null) { return; }
+    unawaited(answer.then((refused) {
+      if (refused != null) { _showLiveProblem(refused); }
+    }));
+  }
+
+  void _showLiveProblem(String message) {
+    if (!mounted) { return; }
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+      content: Text(message),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 6),
+    ));
+  }
+}

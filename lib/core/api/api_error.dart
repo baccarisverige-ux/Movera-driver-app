@@ -9,6 +9,7 @@ class ApiError implements Exception {
     this.requestId,
     this.statusCode,
     this.retryAfter,
+    this.projection,
   });
 
   /// Client code for a request that never got an answer from the server.
@@ -33,6 +34,11 @@ class ApiError implements Exception {
 
   /// `Retry-After` of a 429, when the server sent one.
   final Duration? retryAfter;
+
+  /// The contract error's `projection`: the object as the server has it now
+  /// (a `409 version_mismatch` or `invalid_transition` sends it), so the
+  /// caller can retry with its version.
+  final Map<String, dynamic>? projection;
 
   /// True when the request never got an answer (offline, timed out).
   bool get neverReachedServer => code == network || code == timeout;

@@ -3520,5 +3520,19 @@
   },
   "fleetJoinLink": "Join a fleet",
   "docChooseHow": "How do you want to add it?",
-  "fleetVehiclesAwait": "Your fleet adds its cars; you pick the one you drive here."
+  "fleetVehiclesAwait": "Your fleet adds its cars; you pick the one you drive here.",
+  "liveOnlineFailed": "Could not go online. Try again.",
+  "liveOfflineFailed": "Movera could not record that you went offline. Try again.",
+  "liveOnlineNotActive": "Your account is not active yet, so you can't go online.",
+  "liveOnlineNoFleet": "Join a fleet before you go online.",
+  "liveOnlineFleetNotApproved": "Your fleet is not approved yet, so you can't go online.",
+  "liveOnlineNoVehicle": "Choose an approved car before you go online.",
+  "liveOnlineVehicleNotApproved": "Your car is not approved yet, so you can't go online.",
+  "liveOnlineVehicleInUse": "Another driver has this car now. Choose your car again.",
+  "liveOnlineNoCategory": "No ride type is set for your car yet.",
+  "liveOfflineOnTrip": "Finish your trip before you go offline.",
+  "liveTripNotAtPickup": "Movera doesn't see you at the pickup yet. Drive closer and try again.",
+  "liveTripNoShowTooEarly": "It's too early for a no-show. Wait a little longer.",
+  "liveTripChanged": "This trip changed meanwhile. Check it and try again.",
+  "liveTripFailed": "Movera could not record this step. Try again."
 }

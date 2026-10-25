@@ -75,7 +75,9 @@ extension _HomeReservation on _DriverHomeState {
     /// all of them, or [only] the ones that went back out.
     void _scheduleReservationPopup([List<ReservationRequestPreview>? only]) {
       final requests = only ?? _homeRequests;
+      // A live build has no demo reservations to send.
       if (!DriverRuntimeConfig.current.reservationPopup ||
+          LiveDriverServices.active ||
           !_adminHomeConfig.scheduledRides.hasOpenRequests ||
           requests.isEmpty ||
           _reservation.sent) {

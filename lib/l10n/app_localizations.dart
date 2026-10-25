@@ -9306,6 +9306,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your fleet adds its cars; you pick the one you drive here.'**
   String get fleetVehiclesAwait;
+
+  /// No description provided for @liveOnlineFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not go online. Try again.'**
+  String get liveOnlineFailed;
+
+  /// No description provided for @liveOfflineFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera could not record that you went offline. Try again.'**
+  String get liveOfflineFailed;
+
+  /// No description provided for @liveOnlineNotActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is not active yet, so you can\'t go online.'**
+  String get liveOnlineNotActive;
+
+  /// No description provided for @liveOnlineNoFleet.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a fleet before you go online.'**
+  String get liveOnlineNoFleet;
+
+  /// No description provided for @liveOnlineFleetNotApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fleet is not approved yet, so you can\'t go online.'**
+  String get liveOnlineFleetNotApproved;
+
+  /// No description provided for @liveOnlineNoVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an approved car before you go online.'**
+  String get liveOnlineNoVehicle;
+
+  /// No description provided for @liveOnlineVehicleNotApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your car is not approved yet, so you can\'t go online.'**
+  String get liveOnlineVehicleNotApproved;
+
+  /// No description provided for @liveOnlineVehicleInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Another driver has this car now. Choose your car again.'**
+  String get liveOnlineVehicleInUse;
+
+  /// No description provided for @liveOnlineNoCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'No ride type is set for your car yet.'**
+  String get liveOnlineNoCategory;
+
+  /// No description provided for @liveOfflineOnTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish your trip before you go offline.'**
+  String get liveOfflineOnTrip;
+
+  /// No description provided for @liveTripNotAtPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera doesn\'t see you at the pickup yet. Drive closer and try again.'**
+  String get liveTripNotAtPickup;
+
+  /// No description provided for @liveTripNoShowTooEarly.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s too early for a no-show. Wait a little longer.'**
+  String get liveTripNoShowTooEarly;
+
+  /// No description provided for @liveTripChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip changed meanwhile. Check it and try again.'**
+  String get liveTripChanged;
+
+  /// No description provided for @liveTripFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera could not record this step. Try again.'**
+  String get liveTripFailed;
 }
 
 class _AppLocalizationsDelegate

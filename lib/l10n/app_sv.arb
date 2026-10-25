@@ -1530,5 +1530,19 @@
   "fleetCarSeatsCount": "{count, plural, =1{1 säte} other{{count} säten}}",
   "fleetJoinLink": "Gå med i ett åkeri",
   "docChooseHow": "Hur vill du lägga till det?",
-  "fleetVehiclesAwait": "Ditt åkeri lägger till sina bilar; här väljer du den du kör."
+  "fleetVehiclesAwait": "Ditt åkeri lägger till sina bilar; här väljer du den du kör.",
+  "liveOnlineFailed": "Kunde inte gå online. Försök igen.",
+  "liveOfflineFailed": "Movera kunde inte registrera att du gick offline. Försök igen.",
+  "liveOnlineNotActive": "Ditt konto är inte aktivt än, så du kan inte gå online.",
+  "liveOnlineNoFleet": "Gå med i ett åkeri innan du går online.",
+  "liveOnlineFleetNotApproved": "Ditt åkeri är inte godkänt än, så du kan inte gå online.",
+  "liveOnlineNoVehicle": "Välj en godkänd bil innan du går online.",
+  "liveOnlineVehicleNotApproved": "Din bil är inte godkänd än, så du kan inte gå online.",
+  "liveOnlineVehicleInUse": "En annan förare har den här bilen nu. Välj din bil igen.",
+  "liveOnlineNoCategory": "Ingen resetyp är vald för din bil än.",
+  "liveOfflineOnTrip": "Avsluta din resa innan du går offline.",
+  "liveTripNotAtPickup": "Movera ser dig inte vid upphämtningen än. Kör närmare och försök igen.",
+  "liveTripNoShowTooEarly": "Det är för tidigt för en utebliven resenär. Vänta lite till.",
+  "liveTripChanged": "Resan har ändrats under tiden. Kontrollera den och försök igen.",
+  "liveTripFailed": "Movera kunde inte registrera det här steget. Försök igen."
 }

@@ -1530,5 +1530,19 @@
   "fleetCarSeatsCount": "{count, plural, =1{1 place} other{{count} places}}",
   "fleetJoinLink": "Rejoindre une flotte",
   "docChooseHow": "Comment souhaitez-vous l’ajouter ?",
-  "fleetVehiclesAwait": "Votre flotte ajoute ses voitures ; vous choisissez ici celle que vous conduisez."
+  "fleetVehiclesAwait": "Votre flotte ajoute ses voitures ; vous choisissez ici celle que vous conduisez.",
+  "liveOnlineFailed": "Impossible de passer en ligne. Réessayez.",
+  "liveOfflineFailed": "Movera n'a pas pu enregistrer votre passage hors ligne. Réessayez.",
+  "liveOnlineNotActive": "Votre compte n'est pas encore actif : vous ne pouvez pas passer en ligne.",
+  "liveOnlineNoFleet": "Rejoignez une flotte avant de passer en ligne.",
+  "liveOnlineFleetNotApproved": "Votre flotte n'est pas encore approuvée : vous ne pouvez pas passer en ligne.",
+  "liveOnlineNoVehicle": "Choisissez un véhicule approuvé avant de passer en ligne.",
+  "liveOnlineVehicleNotApproved": "Votre véhicule n'est pas encore approuvé : vous ne pouvez pas passer en ligne.",
+  "liveOnlineVehicleInUse": "Un autre chauffeur utilise ce véhicule. Choisissez à nouveau votre véhicule.",
+  "liveOnlineNoCategory": "Aucun type de course n'est défini pour votre véhicule.",
+  "liveOfflineOnTrip": "Terminez votre course avant de passer hors ligne.",
+  "liveTripNotAtPickup": "Movera ne vous voit pas encore au point de prise en charge. Approchez-vous et réessayez.",
+  "liveTripNoShowTooEarly": "Il est trop tôt pour signaler une absence. Patientez encore un peu.",
+  "liveTripChanged": "Cette course a changé entre-temps. Vérifiez-la et réessayez.",
+  "liveTripFailed": "Movera n'a pas pu enregistrer cette étape. Réessayez."
 }

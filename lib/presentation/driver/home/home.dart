@@ -56,6 +56,7 @@ import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -133,6 +134,7 @@ part 'home_offer_route.dart';
 part 'home_offer_sound.dart';
 part 'home_back.dart';
 part 'home_recovery.dart';
+part 'home_live.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -933,11 +935,14 @@ class _DriverHomeState extends State<DriverHome>
     _HomeOfferRadar(this)._clearDirectOfferRoute();
     unawaited(_HomeMapSheet(this)._startDriverLocation(moveCamera: true));
     IslandMessages.show(HomeIslandNotices.online);
+    // A live build asks the server while the switch animates.
+    final serverAnswer = _HomeLive(this)._askServerOnline();
 
     _onlineTransitionTimer = Timer(
       const Duration(milliseconds: 1400),
-      () {
+      () async {
         if (!mounted) { return; }
+        if (serverAnswer != null && !await _HomeLive(this)._serverAgreed(serverAnswer)) { return; }
         setState(() {
           _driverSession.completeGoingOnline();
         });
@@ -946,10 +951,11 @@ class _DriverHomeState extends State<DriverHome>
     );
   }
 
-  Future<void> _goOffline() async {
+  Future<void> _goOffline({bool notice = true}) async {
     final radarListOpen = showRideRequests; // driver-u118: it closes too.
     _destinationOpenTimer?.cancel();
-    IslandMessages.show(HomeIslandNotices.offline);
+    if (notice) { IslandMessages.show(HomeIslandNotices.offline); }
+    _HomeLive(this)._tellServerOffline();
     hideMainPanel = false;
     unawaited(_radarSubscription?.cancel() ?? Future<void>.value());
     _radarSubscription = null; unawaited(_withdrawalSubscription?.cancel());

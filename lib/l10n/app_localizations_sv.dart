@@ -5372,4 +5372,55 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get fleetVehiclesAwait =>
       'Ditt åkeri lägger till sina bilar; här väljer du den du kör.';
+
+  @override
+  String get liveOnlineFailed => 'Kunde inte gå online. Försök igen.';
+
+  @override
+  String get liveOfflineFailed =>
+      'Movera kunde inte registrera att du gick offline. Försök igen.';
+
+  @override
+  String get liveOnlineNotActive =>
+      'Ditt konto är inte aktivt än, så du kan inte gå online.';
+
+  @override
+  String get liveOnlineNoFleet => 'Gå med i ett åkeri innan du går online.';
+
+  @override
+  String get liveOnlineFleetNotApproved =>
+      'Ditt åkeri är inte godkänt än, så du kan inte gå online.';
+
+  @override
+  String get liveOnlineNoVehicle => 'Välj en godkänd bil innan du går online.';
+
+  @override
+  String get liveOnlineVehicleNotApproved =>
+      'Din bil är inte godkänd än, så du kan inte gå online.';
+
+  @override
+  String get liveOnlineVehicleInUse =>
+      'En annan förare har den här bilen nu. Välj din bil igen.';
+
+  @override
+  String get liveOnlineNoCategory => 'Ingen resetyp är vald för din bil än.';
+
+  @override
+  String get liveOfflineOnTrip => 'Avsluta din resa innan du går offline.';
+
+  @override
+  String get liveTripNotAtPickup =>
+      'Movera ser dig inte vid upphämtningen än. Kör närmare och försök igen.';
+
+  @override
+  String get liveTripNoShowTooEarly =>
+      'Det är för tidigt för en utebliven resenär. Vänta lite till.';
+
+  @override
+  String get liveTripChanged =>
+      'Resan har ändrats under tiden. Kontrollera den och försök igen.';
+
+  @override
+  String get liveTripFailed =>
+      'Movera kunde inte registrera det här steget. Försök igen.';
 }

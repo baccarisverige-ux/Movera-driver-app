@@ -29,6 +29,7 @@ import 'package:movera/core/admin/driver_home_config_repository.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -116,6 +117,10 @@ class _MoveraAppState extends State<MoveraApp> {
   late final AuthController _auth;
   late final DriverAccountSession _account;
 
+  /// Live builds only (MOVERA_AUTH_REQUIRED): dispatch, availability,
+  /// location and trip steps through movera-server. Null in the demo.
+  LiveDriverServices? _live;
+
   @override
   void initState() {
     super.initState();
@@ -142,7 +147,23 @@ class _MoveraAppState extends State<MoveraApp> {
     _waybills = InMemoryWaybillRepository.instance;
     _location = widget.locationRepository ?? const DriverLocationService();
     _routing = RoadRouteService();
-    _dispatch = DemoDispatchRepository();
+    // A live build takes its offers from the server and tells it when the
+    // driver goes online, where the car is and each trip step; the demo
+    // keeps its in-process dispatch.
+    if (DriverRuntimeConfig.current.authRequired) {
+      final live = _live = LiveDriverServices(
+        client: _http,
+        origin: DriverRuntimeConfig.current.apiBaseUri,
+        tokens: _tokens,
+        api: _api,
+        location: _location,
+      );
+      LiveDriverServices.instance = live;
+      live.attach(_session);
+      _dispatch = live.dispatch;
+    } else {
+      _dispatch = DemoDispatchRepository();
+    }
     _homeConfig = const LocalDriverHomeConfigRepository();
     _activeRide = PrefsActiveRideRepository();
     // Ride check alerts go to admin and Dispatch; demo outbox until a
@@ -179,6 +200,13 @@ class _MoveraAppState extends State<MoveraApp> {
     final dispatch = _dispatch;
     if (dispatch is DemoDispatchRepository) {
       dispatch.dispose();
+    }
+    final live = _live;
+    if (live != null) {
+      unawaited(live.dispose());
+      if (identical(LiveDriverServices.instance, live)) {
+        LiveDriverServices.instance = null;
+      }
     }
     _safetyAlerts.dispose();
     if (widget.httpClient == null) _http.close();
@@ -284,6 +312,11 @@ class _MoveraAppState extends State<MoveraApp> {
     // none possible) keeps its logout as it was and never touches the
     // token store.
     if (DriverRuntimeConfig.current.authRequired) {
+      // Offline on the server while the token is still there.
+      await _live?.presence.goOffline().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => null,
+      );
       await _auth.signOut();
       _account.clear();
     }

@@ -149,8 +149,8 @@ class OfferFeedEvent {
 /// `GET /driver/offers`, `GET /driver/offers/stream`,
 /// `POST /offers/{offerId}/accept` and `POST /offers/{offerId}/decline`.
 ///
-/// No backend exists yet and nothing installs this class in the app; the
-/// demo builds use the in-process demo dispatch.
+/// A live build (`MOVERA_AUTH_REQUIRED`) installs it through
+/// `LiveDriverServices`; the demo builds use the in-process demo dispatch.
 class ApiDispatchRepository implements DispatchRepository {
   ApiDispatchRepository({
     required http.Client client,
@@ -158,6 +158,8 @@ class ApiDispatchRepository implements DispatchRepository {
     required Future<String?> Function() accessToken,
     String Function()? idempotencyKey,
     Duration Function(int attempt)? reconnectDelay,
+    this.renewSession,
+    this.onAccepted,
   }) : _client = client,
        _base = baseUri,
        _token = accessToken,
@@ -169,6 +171,15 @@ class ApiDispatchRepository implements DispatchRepository {
   final Future<String?> Function() _token;
   final String Function() _key;
   final Duration Function(int attempt) _reconnectDelay;
+
+  /// Renews the access token after a `401` (the app's [ApiClient] refresh),
+  /// so a command is sent once more and the feed reconnects with the new
+  /// token. Null: a 401 is only an error.
+  final Future<void> Function()? renewSession;
+
+  /// The trip (`TripProjection`) an accepted offer answered with: its
+  /// version is the trip's first `expectedVersion`.
+  final void Function(Map<String, dynamic> trip)? onAccepted;
 
   final Map<String, RideOffer> _offers = <String, RideOffer>{};
   final Map<String, RideOffer> _nextTrips = <String, RideOffer>{};
@@ -185,6 +196,13 @@ class ApiDispatchRepository implements DispatchRepository {
   int _reconnects = 0;
   Timer? _reconnect;
   bool _disposed = false;
+
+  /// False after [disconnect]: a lost feed is not opened again.
+  bool _wanted = true;
+
+  /// Bumped by every [connect] and [disconnect]: an older answer that
+  /// arrives late is not the feed.
+  int _generation = 0;
 
   /// One Idempotency-Key per offer command (its route and body) until the
   /// server answers it: a retry after no answer, the app's or the
@@ -247,10 +265,17 @@ class ApiDispatchRepository implements DispatchRepository {
     final text = jsonEncode(body);
     final command = '$path $text';
     final key = _commandKeys.putIfAbsent(command, _key);
-    final headers = await _headers(idempotencyKey: key);
-    final response = await _client
-        .post(_uri(path), headers: headers, body: text)
+    var response = await _client
+        .post(_uri(path), headers: await _headers(idempotencyKey: key), body: text)
         .timeout(requestTimeout);
+    final renew = renewSession;
+    if (response.statusCode == 401 && renew != null) {
+      // An expired access token: renewed once, then the same command.
+      await renew();
+      response = await _client
+          .post(_uri(path), headers: await _headers(idempotencyKey: key), body: text)
+          .timeout(requestTimeout);
+    }
     if (response.statusCode < 500) _commandKeys.remove(command);
     return response;
   }
@@ -317,10 +342,12 @@ class ApiDispatchRepository implements DispatchRepository {
   /// error answer, a dropped connection or a feed the server ends is
   /// retried with backoff from the last sequence; [feedLive] says when.
   Future<void> connect() async {
+    _wanted = true;
+    final generation = ++_generation;
     _reconnect?.cancel();
     await _feed?.cancel();
     _feed = null;
-    if (_disposed) return;
+    if (_disposed || generation != _generation) return;
     final http.StreamedResponse response;
     try {
       final request = http.Request(
@@ -335,16 +362,27 @@ class ApiDispatchRepository implements DispatchRepository {
         });
       response = await _client.send(request).timeout(requestTimeout);
     } catch (_) {
-      _feedLost();
+      if (generation == _generation) _feedLost();
+      return;
+    }
+    if (generation != _generation) {
+      unawaited(response.stream.drain<void>().catchError((_) {}));
       return;
     }
     if (response.statusCode != 200) {
       // An error body is not the feed.
       unawaited(response.stream.drain<void>().catchError((_) {}));
+      if (response.statusCode == 401) {
+        try {
+          await renewSession?.call();
+        } catch (_) {
+          // The next try asks again.
+        }
+      }
       _feedLost();
       return;
     }
-    if (_disposed) {
+    if (_disposed || !_wanted) {
       unawaited(response.stream.drain<void>().catchError((_) {}));
       return;
     }
@@ -373,9 +411,27 @@ class ApiDispatchRepository implements DispatchRepository {
   /// The feed is gone: not live, and it tries again after a while.
   void _feedLost() {
     _setLive(false);
-    if (_disposed) return;
+    if (_disposed || !_wanted) return;
     _reconnect?.cancel();
     _reconnect = Timer(_reconnectDelay(_reconnects++), () => unawaited(connect()));
+  }
+
+  /// Closes the feed and forgets the offers (the driver went offline: the
+  /// server withdraws them). [connect] opens it again from [lastSequence].
+  Future<void> disconnect() async {
+    _wanted = false;
+    _generation++;
+    _reconnect?.cancel();
+    _reconnect = null;
+    final feed = _feed;
+    _feed = null;
+    _setLive(false);
+    if (_offers.isNotEmpty || _nextTrips.isNotEmpty) {
+      _offers.clear();
+      _nextTrips.clear();
+      _emit();
+    }
+    await feed?.cancel();
   }
 
   /// Applies one feed event (`offer_created`, `offer_updated`,
@@ -463,6 +519,9 @@ class ApiDispatchRepository implements DispatchRepository {
         case 200:
           // The body is the trip (TripProjection); the offer already
           // carries its tripId, so the trip opens under the server's id.
+          if (body != null && body['tripId'] is String) {
+            onAccepted?.call(body);
+          }
           _offers.remove(offerId);
           _nextTrips.remove(offerId);
           _emit();

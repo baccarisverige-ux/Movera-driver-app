@@ -5352,4 +5352,55 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fleetVehiclesAwait =>
       'Your fleet adds its cars; you pick the one you drive here.';
+
+  @override
+  String get liveOnlineFailed => 'Could not go online. Try again.';
+
+  @override
+  String get liveOfflineFailed =>
+      'Movera could not record that you went offline. Try again.';
+
+  @override
+  String get liveOnlineNotActive =>
+      'Your account is not active yet, so you can\'t go online.';
+
+  @override
+  String get liveOnlineNoFleet => 'Join a fleet before you go online.';
+
+  @override
+  String get liveOnlineFleetNotApproved =>
+      'Your fleet is not approved yet, so you can\'t go online.';
+
+  @override
+  String get liveOnlineNoVehicle =>
+      'Choose an approved car before you go online.';
+
+  @override
+  String get liveOnlineVehicleNotApproved =>
+      'Your car is not approved yet, so you can\'t go online.';
+
+  @override
+  String get liveOnlineVehicleInUse =>
+      'Another driver has this car now. Choose your car again.';
+
+  @override
+  String get liveOnlineNoCategory => 'No ride type is set for your car yet.';
+
+  @override
+  String get liveOfflineOnTrip => 'Finish your trip before you go offline.';
+
+  @override
+  String get liveTripNotAtPickup =>
+      'Movera doesn\'t see you at the pickup yet. Drive closer and try again.';
+
+  @override
+  String get liveTripNoShowTooEarly =>
+      'It\'s too early for a no-show. Wait a little longer.';
+
+  @override
+  String get liveTripChanged =>
+      'This trip changed meanwhile. Check it and try again.';
+
+  @override
+  String get liveTripFailed => 'Movera could not record this step. Try again.';
 }

@@ -638,6 +638,14 @@ extension _HomeOfferRadar on _DriverHomeState {
               _HomeScheduled(this)._exclusiveStepReached(offer.id)) {
             _HomeReservation(this)._reservationToDeck(offer.id);
           }
+          // A live build: a Radar trip the server just sent joins the deck
+          // at once (the demo brings its trips in on timers).
+          if (LiveDriverServices.active && !known.contains(offer.id) &&
+              !offer.isExclusive && !offer.isReservation && offer.isNearby &&
+              _homeRadarMatchingOfferId == null &&
+              _followsDestination(offer.dropoffPosition.toLatLng())) {
+            _showRadarHomeOffer(_homeOfferFromDispatch(offer));
+          }
         }
         final ids = offers.map((item) => item.id).toSet();
         // An admin direct assign on screen that left dispatch is gone.
@@ -813,6 +821,8 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     void _scheduleHomeRadarExternalClaimDemo() {
       _homeRadarExternalClaimTimer?.cancel();
+      // A live build: only the server says a trip went to someone else.
+      if (LiveDriverServices.active) { return; }
 
       _HomeDirectOffer? offer;
       for (final item in _radarHomeOffers) {
@@ -1391,6 +1401,21 @@ extension _HomeOfferRadar on _DriverHomeState {
             });
           }
           if (_homeRadarMatchingOfferId != null) { return; }
+
+          // A live build: the server's offers only, as they come (the
+          // listener above); the ones open now go up at once.
+          if (LiveDriverServices.active) {
+            final exclusive = _pendingAdminAssign;
+            if (exclusive != null) { unawaited(_showOutsideRadarOffer(exclusive)); }
+            for (final offer in _latestDispatchOffers) {
+              if (!offer.isExclusive && !offer.isReservation && offer.isNearby &&
+                  _followsDestination(offer.dropoffPosition.toLatLng())) {
+                _showRadarHomeOffer(_homeOfferFromDispatch(offer));
+              }
+            }
+            _HomeScheduled(this)._onRadarLive();
+            return;
+          }
 
           // Frontend demo only. Outside-Radar offers remain exclusive and
           // never enter the Trip Radar list.
