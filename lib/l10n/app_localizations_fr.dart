@@ -4978,4 +4978,463 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authSignInRestricted =>
       'Ce numéro ne fait pas encore partie de la liste de test des chauffeurs. Contactez Movera pour obtenir l’accès.';
+
+  @override
+  String get acctDetailsTitle => 'Vos informations';
+
+  @override
+  String get acctDetailsIntro =>
+      'Movera les vérifie avant que vous puissiez conduire. À remplir une seule fois.';
+
+  @override
+  String get acctFirstName => 'Prénom';
+
+  @override
+  String get acctLastName => 'Nom';
+
+  @override
+  String get acctDateOfBirth => 'Date de naissance';
+
+  @override
+  String get acctPickDate => 'Choisir une date';
+
+  @override
+  String get acctEmail => 'E-mail';
+
+  @override
+  String get acctCountry => 'Pays';
+
+  @override
+  String get acctCity => 'Ville';
+
+  @override
+  String get acctChooseCity => 'Choisissez votre ville';
+
+  @override
+  String get acctLanguage => 'Langue';
+
+  @override
+  String get acctAccountType => 'Type de compte';
+
+  @override
+  String get acctComingSoon => 'Bientôt';
+
+  @override
+  String get acctCountrySweden => 'Suède';
+
+  @override
+  String get acctCountryFrance => 'France';
+
+  @override
+  String get acctCountryTunisia => 'Tunisie';
+
+  @override
+  String get acctTypeDriverTitle => 'Chauffeur';
+
+  @override
+  String get acctTypeDriverBody => 'Je conduis pour une flotte';
+
+  @override
+  String get acctTypeFleetTitle => 'Flotte';
+
+  @override
+  String get acctTypeFleetBody =>
+      'Je dirige une société avec des voitures et des chauffeurs';
+
+  @override
+  String get acctCompanyName => 'Nom de la société';
+
+  @override
+  String get acctOrgNumberSe => 'Numéro d’organisation';
+
+  @override
+  String get acctOrgNumberFr => 'SIREN';
+
+  @override
+  String get acctCompanyAddress => 'Adresse de la société';
+
+  @override
+  String get acctJoinNow => 'Rejoindre votre flotte maintenant';
+
+  @override
+  String get acctJoinNowBody =>
+      'Le responsable de votre flotte vous transmet un code Movera. Vous pourrez aussi le faire plus tard depuis Profil › Ma flotte.';
+
+  @override
+  String get acctFleetCode => 'Code de la flotte';
+
+  @override
+  String get acctOwnerName => 'Nom complet du responsable';
+
+  @override
+  String get acctOwnerEmail => 'E-mail du responsable';
+
+  @override
+  String get acctRequired => 'Obligatoire';
+
+  @override
+  String acctUnderAge(int age) {
+    return 'Vous devez avoir au moins $age ans pour conduire avec Movera.';
+  }
+
+  @override
+  String get acctInvalidDate => 'Saisissez une date valide.';
+
+  @override
+  String get acctInvalidEmail => 'Saisissez un e-mail valide.';
+
+  @override
+  String get acctCountryNotOpen =>
+      'Movera n’est pas encore ouvert dans ce pays.';
+
+  @override
+  String get acctInvalidCity => 'Choisissez une ville de votre pays.';
+
+  @override
+  String get acctTermsRequired => 'Acceptez les conditions pour continuer.';
+
+  @override
+  String get acctCompanyRequired =>
+      'Renseignez les informations de votre société.';
+
+  @override
+  String get acctDetailsLocked =>
+      'Vos informations sont déjà approuvées. Contactez le support pour les modifier.';
+
+  @override
+  String get acctCouldNotSend =>
+      'Impossible d’envoyer vos informations. Réessayez.';
+
+  @override
+  String get acctTooManyTriesHour =>
+      'Trop de tentatives. Patientez environ une heure et réessayez.';
+
+  @override
+  String get acctChangedReload =>
+      'Votre compte a changé entre-temps. Actualisez et réessayez.';
+
+  @override
+  String get acctCouldNotLoad => 'Impossible de charger votre compte.';
+
+  @override
+  String get acctTryAgain => 'Une erreur s’est produite. Réessayez.';
+
+  @override
+  String get holdBeingChecked =>
+      'Votre compte est en cours de vérification. Envoyez vos documents ; nous vous dirons quand vous pourrez conduire.';
+
+  @override
+  String get holdWaitingFleetVehicle =>
+      'En attente des informations véhicule de votre flotte';
+
+  @override
+  String get myFleet => 'Ma flotte';
+
+  @override
+  String get docYou => 'Vous';
+
+  @override
+  String get docCompany => 'Société';
+
+  @override
+  String docCar(Object plate) {
+    return 'Voiture $plate';
+  }
+
+  @override
+  String get docStatusRejected => 'Refusé';
+
+  @override
+  String get docStatusExpired => 'Expiré';
+
+  @override
+  String get docMoveraBooks => 'Movera l’organise avec vous';
+
+  @override
+  String get docTakePhoto => 'Prendre une photo';
+
+  @override
+  String get docChoosePhoto => 'Choisir une photo';
+
+  @override
+  String get docChoosePdf => 'Choisir un PDF';
+
+  @override
+  String get docUploading => 'Envoi en cours…';
+
+  @override
+  String get docUploaded => 'Envoyé. Movera le vérifie.';
+
+  @override
+  String get docUploadFailed => 'Impossible d’envoyer le fichier. Réessayez.';
+
+  @override
+  String get docFileTooLarge => 'Le fichier dépasse 10 Mo.';
+
+  @override
+  String get docUnsupportedFile => 'Envoyez un JPEG, PNG, HEIC ou PDF.';
+
+  @override
+  String get docEmptyFile => 'Le fichier est vide.';
+
+  @override
+  String get docTypeNotAccepted => 'Ce document ne peut pas être envoyé ici.';
+
+  @override
+  String get docCouldNotLoad => 'Impossible de charger vos documents.';
+
+  @override
+  String get docNoneYet => 'Rien à envoyer pour le moment.';
+
+  @override
+  String get docUploadNew => 'Envoyer un nouveau';
+
+  @override
+  String get fleetJoinTitle => 'Rejoindre votre flotte';
+
+  @override
+  String get fleetJoinBody =>
+      'Le responsable de votre flotte vous transmet le code Movera. Saisissez-le avec le nom et l’e-mail du responsable tels qu’enregistrés chez Movera.';
+
+  @override
+  String get fleetJoin => 'Rejoindre';
+
+  @override
+  String fleetJoined(Object name) {
+    return 'Vous faites partie de $name.';
+  }
+
+  @override
+  String get fleetJoinMismatch =>
+      'Le code, le nom et l’e-mail du responsable ne correspondent à aucune flotte. Vérifiez-les avec votre responsable.';
+
+  @override
+  String get fleetAlreadyIn =>
+      'Vous faites déjà partie d’une flotte. Quittez-la d’abord.';
+
+  @override
+  String get fleetAccountHasOwn => 'Un compte flotte a sa propre flotte.';
+
+  @override
+  String get fleetOnTrip => 'Terminez d’abord la course.';
+
+  @override
+  String get fleetOwnerCannotLeave =>
+      'Le responsable ne peut pas quitter la flotte.';
+
+  @override
+  String get fleetNotInOne => 'Vous ne faites partie d’aucune flotte.';
+
+  @override
+  String get fleetOwnerOnly =>
+      'Seul le responsable de la flotte peut faire cela.';
+
+  @override
+  String get fleetYourCompany => 'Votre société';
+
+  @override
+  String get fleetYourFleet => 'Votre flotte';
+
+  @override
+  String get fleetCode => 'Code de la flotte';
+
+  @override
+  String get fleetCodeHint =>
+      'Partagez-le avec vos chauffeurs, avec votre nom et votre e-mail.';
+
+  @override
+  String get fleetCodeWaiting => 'En attente de l’approbation de Movera';
+
+  @override
+  String fleetCodeShareText(
+    Object name,
+    Object code,
+    Object owner,
+    Object email,
+  ) {
+    return 'Rejoignez $name sur Movera Driver. Code : $code. Responsable : $owner, $email.';
+  }
+
+  @override
+  String get fleetShare => 'Partager';
+
+  @override
+  String get fleetCopy => 'Copier';
+
+  @override
+  String get fleetCodeCopied => 'Code copié';
+
+  @override
+  String get fleetDrivers => 'Chauffeurs';
+
+  @override
+  String get fleetNoDrivers =>
+      'Aucun chauffeur pour le moment. Partagez votre code.';
+
+  @override
+  String get fleetRemove => 'Retirer';
+
+  @override
+  String fleetRemoveDriverQ(Object name) {
+    return 'Retirer $name de votre flotte ?';
+  }
+
+  @override
+  String get fleetCars => 'Voitures';
+
+  @override
+  String get fleetNoCars => 'Aucune voiture pour le moment.';
+
+  @override
+  String get fleetNoCarsMember =>
+      'Votre flotte n’a pas encore de voiture approuvée.';
+
+  @override
+  String get fleetAddCar => 'Ajouter une voiture';
+
+  @override
+  String get fleetChooseCar => 'Choisir cette voiture';
+
+  @override
+  String get fleetYourCar => 'Votre voiture';
+
+  @override
+  String get fleetInUse => 'Utilisée par un autre chauffeur';
+
+  @override
+  String fleetPickedBy(Object name) {
+    return 'Choisie par $name';
+  }
+
+  @override
+  String get fleetLeave => 'Quitter la flotte';
+
+  @override
+  String fleetLeaveQ(Object name) {
+    return 'Quitter $name ? Vous pourrez rejoindre une autre flotte avec un nouveau code.';
+  }
+
+  @override
+  String get fleetCouldNotLoad => 'Impossible de charger votre flotte.';
+
+  @override
+  String get fleetStatusPending => 'En attente d’approbation';
+
+  @override
+  String get fleetStatusApproved => 'Approuvée';
+
+  @override
+  String get fleetStatusRejected => 'Refusée';
+
+  @override
+  String get fleetStatusBlocked => 'Bloquée';
+
+  @override
+  String get fleetVehicleInUse =>
+      'Un autre chauffeur conduit cette voiture en ce moment.';
+
+  @override
+  String get fleetVehicleNotApproved =>
+      'Cette voiture n’est pas encore approuvée.';
+
+  @override
+  String get fleetVehicleNotYours =>
+      'Cette voiture n’appartient pas à votre flotte.';
+
+  @override
+  String get fleetPlateTaken =>
+      'Une voiture avec cette plaque est déjà enregistrée.';
+
+  @override
+  String get fleetCarAdded => 'Voiture ajoutée. Movera la vérifie.';
+
+  @override
+  String get fleetCouldNotAddCar =>
+      'Impossible d’ajouter la voiture. Réessayez.';
+
+  @override
+  String get fleetCouldNotPick =>
+      'Impossible de choisir la voiture. Réessayez.';
+
+  @override
+  String get fleetColour => 'Couleur';
+
+  @override
+  String get fleetPlate => 'Plaque';
+
+  @override
+  String get fleetSeats => 'Places';
+
+  @override
+  String get fleetCarTypes => 'Types de voiture';
+
+  @override
+  String fleetMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chauffeurs',
+      one: '1 chauffeur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fleetCarCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voitures',
+      one: '1 voiture',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fleetOrgNumber(Object number) {
+    return 'N° $number';
+  }
+
+  @override
+  String get fleetOnline => 'En ligne';
+
+  @override
+  String get fleetOffline => 'Hors ligne';
+
+  @override
+  String get vehStatusPending => 'En cours de vérification';
+
+  @override
+  String get vehStatusApproved => 'Approuvée';
+
+  @override
+  String get vehStatusRejected => 'Refusée';
+
+  @override
+  String get vehStatusBlocked => 'Bloquée';
+
+  @override
+  String get vehDocumentsOnDocs =>
+      'Envoyez les documents de la voiture dans Documents.';
+
+  @override
+  String fleetCarSeatsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count places',
+      one: '1 place',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fleetJoinLink => 'Rejoindre une flotte';
+
+  @override
+  String get docChooseHow => 'Comment souhaitez-vous l’ajouter ?';
+
+  @override
+  String get fleetVehiclesAwait =>
+      'Votre flotte ajoute ses voitures ; vous choisissez ici celle que vous conduisez.';
 }

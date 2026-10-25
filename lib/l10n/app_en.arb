@@ -3305,5 +3305,220 @@
   "authCodeExpired": "This code has expired. Tap Resend code for a new one.",
   "authErrSendCode": "Couldn't send the code. Try again.",
   "authErrCheckCode": "Couldn't check the code. Try again.",
-  "authSignInRestricted": "This number isn't on the driver test list yet. Contact Movera to get access."
+  "authSignInRestricted": "This number isn't on the driver test list yet. Contact Movera to get access.",
+  "acctDetailsTitle": "Your details",
+  "acctDetailsIntro": "Movera checks these before you can drive. Fill them in once.",
+  "acctFirstName": "First name",
+  "acctLastName": "Last name",
+  "acctDateOfBirth": "Date of birth",
+  "acctPickDate": "Pick a date",
+  "acctEmail": "E-mail",
+  "acctCountry": "Country",
+  "acctCity": "City",
+  "acctChooseCity": "Choose your city",
+  "acctLanguage": "Language",
+  "acctAccountType": "Account type",
+  "acctComingSoon": "Coming soon",
+  "acctCountrySweden": "Sweden",
+  "acctCountryFrance": "France",
+  "acctCountryTunisia": "Tunisia",
+  "acctTypeDriverTitle": "Driver",
+  "acctTypeDriverBody": "I drive for a fleet",
+  "acctTypeFleetTitle": "Fleet",
+  "acctTypeFleetBody": "I run a company with cars and drivers",
+  "acctCompanyName": "Company name",
+  "acctOrgNumberSe": "Organisation number",
+  "acctOrgNumberFr": "SIREN",
+  "acctCompanyAddress": "Company address",
+  "acctJoinNow": "Join your fleet now",
+  "acctJoinNowBody": "Your fleet owner shares a Movera code with you. You can also do this later from Profile › My fleet.",
+  "acctFleetCode": "Fleet code",
+  "acctOwnerName": "Owner’s full name",
+  "acctOwnerEmail": "Owner’s e-mail",
+  "acctRequired": "Required",
+  "acctUnderAge": "You must be at least {age} to drive with Movera.",
+  "@acctUnderAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "acctInvalidDate": "Enter a valid date.",
+  "acctInvalidEmail": "Enter a valid e-mail.",
+  "acctCountryNotOpen": "Movera is not open in this country yet.",
+  "acctInvalidCity": "Choose a city of your country.",
+  "acctTermsRequired": "Accept the terms to continue.",
+  "acctCompanyRequired": "Fill in your company’s details.",
+  "acctDetailsLocked": "Your details are already approved. Contact support to change them.",
+  "acctCouldNotSend": "Couldn’t send your details. Try again.",
+  "acctTooManyTriesHour": "Too many tries. Wait about an hour and try again.",
+  "acctChangedReload": "Your account changed meanwhile. Pull to refresh and try again.",
+  "acctCouldNotLoad": "Couldn’t load your account.",
+  "acctTryAgain": "Something went wrong. Try again.",
+  "holdBeingChecked": "Your account is being checked. Upload your documents; we tell you when you can drive.",
+  "holdWaitingFleetVehicle": "Waiting for your fleet’s vehicle details",
+  "myFleet": "My fleet",
+  "docYou": "You",
+  "docCompany": "Company",
+  "docCar": "Car {plate}",
+  "@docCar": {
+    "placeholders": {
+      "plate": {
+        "type": "Object"
+      }
+    }
+  },
+  "docStatusRejected": "Rejected",
+  "docStatusExpired": "Expired",
+  "docMoveraBooks": "Movera books this with you",
+  "docTakePhoto": "Take photo",
+  "docChoosePhoto": "Choose photo",
+  "docChoosePdf": "Choose PDF",
+  "docUploading": "Uploading…",
+  "docUploaded": "Uploaded. Movera checks it.",
+  "docUploadFailed": "Couldn’t upload. Try again.",
+  "docFileTooLarge": "The file is larger than 10 MB.",
+  "docUnsupportedFile": "Send a JPEG, PNG, HEIC or PDF.",
+  "docEmptyFile": "The file is empty.",
+  "docTypeNotAccepted": "This document can’t be uploaded here.",
+  "docCouldNotLoad": "Couldn’t load your documents.",
+  "docNoneYet": "Nothing to upload yet.",
+  "docUploadNew": "Upload a new one",
+  "fleetJoinTitle": "Join your fleet",
+  "fleetJoinBody": "Your fleet owner shares the Movera code with you. Enter it with the owner’s name and e-mail as registered with Movera.",
+  "fleetJoin": "Join",
+  "fleetJoined": "You’re in {name}.",
+  "@fleetJoined": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetJoinMismatch": "The code, the owner’s name and e-mail don’t match a fleet. Check them with your fleet owner.",
+  "fleetAlreadyIn": "You’re already in a fleet. Leave it first.",
+  "fleetAccountHasOwn": "A fleet account has its own fleet.",
+  "fleetOnTrip": "Finish the trip first.",
+  "fleetOwnerCannotLeave": "The owner can’t leave the fleet.",
+  "fleetNotInOne": "You’re not in a fleet.",
+  "fleetOwnerOnly": "Only the fleet owner can do that.",
+  "fleetYourCompany": "Your company",
+  "fleetYourFleet": "Your fleet",
+  "fleetCode": "Fleet code",
+  "fleetCodeHint": "Share it with your drivers together with your name and e-mail.",
+  "fleetCodeWaiting": "Waiting for Movera’s approval",
+  "fleetCodeShareText": "Join {name} on Movera Driver. Code: {code}. Owner: {owner}, {email}.",
+  "@fleetCodeShareText": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      },
+      "code": {
+        "type": "Object"
+      },
+      "owner": {
+        "type": "Object"
+      },
+      "email": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetShare": "Share",
+  "fleetCopy": "Copy",
+  "fleetCodeCopied": "Code copied",
+  "fleetDrivers": "Drivers",
+  "fleetNoDrivers": "No drivers yet. Share your code.",
+  "fleetRemove": "Remove",
+  "fleetRemoveDriverQ": "Remove {name} from your fleet?",
+  "@fleetRemoveDriverQ": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetCars": "Cars",
+  "fleetNoCars": "No cars yet.",
+  "fleetNoCarsMember": "Your fleet has no approved car yet.",
+  "fleetAddCar": "Add car",
+  "fleetChooseCar": "Choose this car",
+  "fleetYourCar": "Your car",
+  "fleetInUse": "In use by another driver",
+  "fleetPickedBy": "Picked by {name}",
+  "@fleetPickedBy": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetLeave": "Leave fleet",
+  "fleetLeaveQ": "Leave {name}? You can join another fleet with a new code.",
+  "@fleetLeaveQ": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetCouldNotLoad": "Couldn’t load your fleet.",
+  "fleetStatusPending": "Waiting for approval",
+  "fleetStatusApproved": "Approved",
+  "fleetStatusRejected": "Rejected",
+  "fleetStatusBlocked": "Blocked",
+  "fleetVehicleInUse": "Another driver is driving this car right now.",
+  "fleetVehicleNotApproved": "This car isn’t approved yet.",
+  "fleetVehicleNotYours": "This car isn’t your fleet’s.",
+  "fleetPlateTaken": "A car with this plate is already registered.",
+  "fleetCarAdded": "Car added. Movera checks it.",
+  "fleetCouldNotAddCar": "Couldn’t add the car. Try again.",
+  "fleetCouldNotPick": "Couldn’t choose the car. Try again.",
+  "fleetColour": "Colour",
+  "fleetPlate": "Plate",
+  "fleetSeats": "Seats",
+  "fleetCarTypes": "Car types",
+  "fleetMemberCount": "{count, plural, =1{1 driver} other{{count} drivers}}",
+  "@fleetMemberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetCarCount": "{count, plural, =1{1 car} other{{count} cars}}",
+  "@fleetCarCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetOrgNumber": "Org. no. {number}",
+  "@fleetOrgNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "fleetOnline": "Online",
+  "fleetOffline": "Offline",
+  "vehStatusPending": "In review",
+  "vehStatusApproved": "Approved",
+  "vehStatusRejected": "Rejected",
+  "vehStatusBlocked": "Blocked",
+  "vehDocumentsOnDocs": "Upload the car’s documents under Documents.",
+  "fleetCarSeatsCount": "{count, plural, =1{1 seat} other{{count} seats}}",
+  "@fleetCarSeatsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetJoinLink": "Join a fleet",
+  "docChooseHow": "How do you want to add it?",
+  "fleetVehiclesAwait": "Your fleet adds its cars; you pick the one you drive here."
 }

@@ -78,6 +78,8 @@ import 'package:movera/presentation/driver/home/components/destination_island.da
 import 'package:movera/presentation/driver/home/components/reservation_island_face.dart';
 import 'package:movera/presentation/driver/home/components/home_map_layers.dart';
 import 'package:movera/widgets/movera_destination_marker.dart';
+import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
+import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';

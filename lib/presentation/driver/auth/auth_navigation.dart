@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
+import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 
 /// The sign-in flow's controller for [context]: the one the app root put
 /// in [DriverRuntimeScope], or null in a host without one.
 AuthController? authControllerOf(BuildContext context) =>
     DriverRuntimeScope.maybeOf(context)?.auth;
 
+/// The live account for [context] (round 4), or null in the demo and in
+/// hosts without one.
+DriverAccountSession? accountSessionOf(BuildContext context) =>
+    DriverRuntimeScope.maybeOf(context)?.account;
+
 /// Leaves the sign-in flow for the app, clearing it from the back stack.
 ///
-/// The one place that decides what a signed-in driver sees first. For now
-/// that is always Home ([DriverRuntimeScope.homeBuilder]). Round 5 hook:
-/// `authControllerOf(context)?.signInResult?.isNewDriver` (and the
-/// account's pending state) choose the details screen here instead.
+/// The one place that decides what a signed-in driver sees first: the
+/// details screen for a new driver (`isNewDriver`, or a live account still
+/// `pending`), else Home ([DriverRuntimeScope.homeBuilder]); Home itself
+/// shows the hold while the account is not active.
 void enterDriverApp(BuildContext context) {
   final scope = DriverRuntimeScope.maybeOf(context);
   final home = scope?.homeBuilder;
@@ -23,7 +30,27 @@ void enterDriverApp(BuildContext context) {
     navigator.popUntil((route) => route.isFirst);
     return;
   }
-  navigator.pushAndRemoveUntil(
+  final account = scope?.account;
+  final isNew = scope?.auth?.signInResult?.isNewDriver ?? false;
+  final pending = account?.account?.needsDetails ?? false;
+  if (account != null && (isNew || pending)) {
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: 'driver-details'),
+        builder: (_) => DriverDetailsScreen(
+          account: account,
+          onDone: (context) => _openHome(context, home),
+        ),
+      ),
+      (_) => false,
+    );
+    return;
+  }
+  _openHome(context, home);
+}
+
+void _openHome(BuildContext context, Widget Function() home) {
+  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
     MaterialPageRoute<void>(
       settings: const RouteSettings(name: 'driver-home'),
       builder: (_) => home(),

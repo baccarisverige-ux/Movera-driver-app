@@ -4907,4 +4907,449 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authSignInRestricted =>
       'This number isn\'t on the driver test list yet. Contact Movera to get access.';
+
+  @override
+  String get acctDetailsTitle => 'Your details';
+
+  @override
+  String get acctDetailsIntro =>
+      'Movera checks these before you can drive. Fill them in once.';
+
+  @override
+  String get acctFirstName => 'First name';
+
+  @override
+  String get acctLastName => 'Last name';
+
+  @override
+  String get acctDateOfBirth => 'Date of birth';
+
+  @override
+  String get acctPickDate => 'Pick a date';
+
+  @override
+  String get acctEmail => 'E-mail';
+
+  @override
+  String get acctCountry => 'Country';
+
+  @override
+  String get acctCity => 'City';
+
+  @override
+  String get acctChooseCity => 'Choose your city';
+
+  @override
+  String get acctLanguage => 'Language';
+
+  @override
+  String get acctAccountType => 'Account type';
+
+  @override
+  String get acctComingSoon => 'Coming soon';
+
+  @override
+  String get acctCountrySweden => 'Sweden';
+
+  @override
+  String get acctCountryFrance => 'France';
+
+  @override
+  String get acctCountryTunisia => 'Tunisia';
+
+  @override
+  String get acctTypeDriverTitle => 'Driver';
+
+  @override
+  String get acctTypeDriverBody => 'I drive for a fleet';
+
+  @override
+  String get acctTypeFleetTitle => 'Fleet';
+
+  @override
+  String get acctTypeFleetBody => 'I run a company with cars and drivers';
+
+  @override
+  String get acctCompanyName => 'Company name';
+
+  @override
+  String get acctOrgNumberSe => 'Organisation number';
+
+  @override
+  String get acctOrgNumberFr => 'SIREN';
+
+  @override
+  String get acctCompanyAddress => 'Company address';
+
+  @override
+  String get acctJoinNow => 'Join your fleet now';
+
+  @override
+  String get acctJoinNowBody =>
+      'Your fleet owner shares a Movera code with you. You can also do this later from Profile › My fleet.';
+
+  @override
+  String get acctFleetCode => 'Fleet code';
+
+  @override
+  String get acctOwnerName => 'Owner’s full name';
+
+  @override
+  String get acctOwnerEmail => 'Owner’s e-mail';
+
+  @override
+  String get acctRequired => 'Required';
+
+  @override
+  String acctUnderAge(int age) {
+    return 'You must be at least $age to drive with Movera.';
+  }
+
+  @override
+  String get acctInvalidDate => 'Enter a valid date.';
+
+  @override
+  String get acctInvalidEmail => 'Enter a valid e-mail.';
+
+  @override
+  String get acctCountryNotOpen => 'Movera is not open in this country yet.';
+
+  @override
+  String get acctInvalidCity => 'Choose a city of your country.';
+
+  @override
+  String get acctTermsRequired => 'Accept the terms to continue.';
+
+  @override
+  String get acctCompanyRequired => 'Fill in your company’s details.';
+
+  @override
+  String get acctDetailsLocked =>
+      'Your details are already approved. Contact support to change them.';
+
+  @override
+  String get acctCouldNotSend => 'Couldn’t send your details. Try again.';
+
+  @override
+  String get acctTooManyTriesHour =>
+      'Too many tries. Wait about an hour and try again.';
+
+  @override
+  String get acctChangedReload =>
+      'Your account changed meanwhile. Pull to refresh and try again.';
+
+  @override
+  String get acctCouldNotLoad => 'Couldn’t load your account.';
+
+  @override
+  String get acctTryAgain => 'Something went wrong. Try again.';
+
+  @override
+  String get holdBeingChecked =>
+      'Your account is being checked. Upload your documents; we tell you when you can drive.';
+
+  @override
+  String get holdWaitingFleetVehicle =>
+      'Waiting for your fleet’s vehicle details';
+
+  @override
+  String get myFleet => 'My fleet';
+
+  @override
+  String get docYou => 'You';
+
+  @override
+  String get docCompany => 'Company';
+
+  @override
+  String docCar(Object plate) {
+    return 'Car $plate';
+  }
+
+  @override
+  String get docStatusRejected => 'Rejected';
+
+  @override
+  String get docStatusExpired => 'Expired';
+
+  @override
+  String get docMoveraBooks => 'Movera books this with you';
+
+  @override
+  String get docTakePhoto => 'Take photo';
+
+  @override
+  String get docChoosePhoto => 'Choose photo';
+
+  @override
+  String get docChoosePdf => 'Choose PDF';
+
+  @override
+  String get docUploading => 'Uploading…';
+
+  @override
+  String get docUploaded => 'Uploaded. Movera checks it.';
+
+  @override
+  String get docUploadFailed => 'Couldn’t upload. Try again.';
+
+  @override
+  String get docFileTooLarge => 'The file is larger than 10 MB.';
+
+  @override
+  String get docUnsupportedFile => 'Send a JPEG, PNG, HEIC or PDF.';
+
+  @override
+  String get docEmptyFile => 'The file is empty.';
+
+  @override
+  String get docTypeNotAccepted => 'This document can’t be uploaded here.';
+
+  @override
+  String get docCouldNotLoad => 'Couldn’t load your documents.';
+
+  @override
+  String get docNoneYet => 'Nothing to upload yet.';
+
+  @override
+  String get docUploadNew => 'Upload a new one';
+
+  @override
+  String get fleetJoinTitle => 'Join your fleet';
+
+  @override
+  String get fleetJoinBody =>
+      'Your fleet owner shares the Movera code with you. Enter it with the owner’s name and e-mail as registered with Movera.';
+
+  @override
+  String get fleetJoin => 'Join';
+
+  @override
+  String fleetJoined(Object name) {
+    return 'You’re in $name.';
+  }
+
+  @override
+  String get fleetJoinMismatch =>
+      'The code, the owner’s name and e-mail don’t match a fleet. Check them with your fleet owner.';
+
+  @override
+  String get fleetAlreadyIn => 'You’re already in a fleet. Leave it first.';
+
+  @override
+  String get fleetAccountHasOwn => 'A fleet account has its own fleet.';
+
+  @override
+  String get fleetOnTrip => 'Finish the trip first.';
+
+  @override
+  String get fleetOwnerCannotLeave => 'The owner can’t leave the fleet.';
+
+  @override
+  String get fleetNotInOne => 'You’re not in a fleet.';
+
+  @override
+  String get fleetOwnerOnly => 'Only the fleet owner can do that.';
+
+  @override
+  String get fleetYourCompany => 'Your company';
+
+  @override
+  String get fleetYourFleet => 'Your fleet';
+
+  @override
+  String get fleetCode => 'Fleet code';
+
+  @override
+  String get fleetCodeHint =>
+      'Share it with your drivers together with your name and e-mail.';
+
+  @override
+  String get fleetCodeWaiting => 'Waiting for Movera’s approval';
+
+  @override
+  String fleetCodeShareText(
+    Object name,
+    Object code,
+    Object owner,
+    Object email,
+  ) {
+    return 'Join $name on Movera Driver. Code: $code. Owner: $owner, $email.';
+  }
+
+  @override
+  String get fleetShare => 'Share';
+
+  @override
+  String get fleetCopy => 'Copy';
+
+  @override
+  String get fleetCodeCopied => 'Code copied';
+
+  @override
+  String get fleetDrivers => 'Drivers';
+
+  @override
+  String get fleetNoDrivers => 'No drivers yet. Share your code.';
+
+  @override
+  String get fleetRemove => 'Remove';
+
+  @override
+  String fleetRemoveDriverQ(Object name) {
+    return 'Remove $name from your fleet?';
+  }
+
+  @override
+  String get fleetCars => 'Cars';
+
+  @override
+  String get fleetNoCars => 'No cars yet.';
+
+  @override
+  String get fleetNoCarsMember => 'Your fleet has no approved car yet.';
+
+  @override
+  String get fleetAddCar => 'Add car';
+
+  @override
+  String get fleetChooseCar => 'Choose this car';
+
+  @override
+  String get fleetYourCar => 'Your car';
+
+  @override
+  String get fleetInUse => 'In use by another driver';
+
+  @override
+  String fleetPickedBy(Object name) {
+    return 'Picked by $name';
+  }
+
+  @override
+  String get fleetLeave => 'Leave fleet';
+
+  @override
+  String fleetLeaveQ(Object name) {
+    return 'Leave $name? You can join another fleet with a new code.';
+  }
+
+  @override
+  String get fleetCouldNotLoad => 'Couldn’t load your fleet.';
+
+  @override
+  String get fleetStatusPending => 'Waiting for approval';
+
+  @override
+  String get fleetStatusApproved => 'Approved';
+
+  @override
+  String get fleetStatusRejected => 'Rejected';
+
+  @override
+  String get fleetStatusBlocked => 'Blocked';
+
+  @override
+  String get fleetVehicleInUse =>
+      'Another driver is driving this car right now.';
+
+  @override
+  String get fleetVehicleNotApproved => 'This car isn’t approved yet.';
+
+  @override
+  String get fleetVehicleNotYours => 'This car isn’t your fleet’s.';
+
+  @override
+  String get fleetPlateTaken => 'A car with this plate is already registered.';
+
+  @override
+  String get fleetCarAdded => 'Car added. Movera checks it.';
+
+  @override
+  String get fleetCouldNotAddCar => 'Couldn’t add the car. Try again.';
+
+  @override
+  String get fleetCouldNotPick => 'Couldn’t choose the car. Try again.';
+
+  @override
+  String get fleetColour => 'Colour';
+
+  @override
+  String get fleetPlate => 'Plate';
+
+  @override
+  String get fleetSeats => 'Seats';
+
+  @override
+  String get fleetCarTypes => 'Car types';
+
+  @override
+  String fleetMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count drivers',
+      one: '1 driver',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fleetCarCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cars',
+      one: '1 car',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fleetOrgNumber(Object number) {
+    return 'Org. no. $number';
+  }
+
+  @override
+  String get fleetOnline => 'Online';
+
+  @override
+  String get fleetOffline => 'Offline';
+
+  @override
+  String get vehStatusPending => 'In review';
+
+  @override
+  String get vehStatusApproved => 'Approved';
+
+  @override
+  String get vehStatusRejected => 'Rejected';
+
+  @override
+  String get vehStatusBlocked => 'Blocked';
+
+  @override
+  String get vehDocumentsOnDocs =>
+      'Upload the car’s documents under Documents.';
+
+  @override
+  String fleetCarSeatsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count seats',
+      one: '1 seat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fleetJoinLink => 'Join a fleet';
+
+  @override
+  String get docChooseHow => 'How do you want to add it?';
+
+  @override
+  String get fleetVehiclesAwait =>
+      'Your fleet adds its cars; you pick the one you drive here.';
 }

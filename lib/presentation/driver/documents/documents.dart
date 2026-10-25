@@ -1,4 +1,7 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/presentation/driver/auth/auth_navigation.dart';
+import 'package:movera/presentation/driver/documents/live_documents_screen.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +41,12 @@ class DriverDocuments extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Round 4 (live): the server's lists and real uploads; the demo keeps
+    // its sample list below.
+    if (DriverRuntimeConfig.current.authRequired) {
+      final session = accountSessionOf(context);
+      if (session != null) return LiveDocumentsScreen(account: session);
+    }
     final all = [..._driver, ..._vehicle];
     final approved = all.where((d) => d.status == DocStatus.approved).length;
     final left = all.length - approved;

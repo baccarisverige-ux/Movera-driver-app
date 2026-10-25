@@ -8,6 +8,8 @@ import 'package:movera/core/logging/global_error_hooks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
+import 'package:movera/core/account/driver_account_repository.dart';
+import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/auth_controller.dart';
@@ -112,6 +114,7 @@ class _MoveraAppState extends State<MoveraApp> {
   late final http.Client _http;
   late final ApiClient _api;
   late final AuthController _auth;
+  late final DriverAccountSession _account;
 
   @override
   void initState() {
@@ -130,6 +133,9 @@ class _MoveraAppState extends State<MoveraApp> {
     );
     _auth = AuthController(
       repository: AuthRepository(api: _api, tokens: _tokens),
+    );
+    _account = DriverAccountSession(
+      repository: DriverAccountRepository(_api),
     );
     _sessionStore = MemoryDriverSessionRepository();
     _session = DriverSessionController(repository: _sessionStore);
@@ -222,6 +228,9 @@ class _MoveraAppState extends State<MoveraApp> {
                   logout: _logout,
                   auth: _auth,
                   signInBuilder: _signIn,
+                  account: DriverRuntimeConfig.current.authRequired
+                      ? _account
+                      : null,
                   child: LayoutViewport(
                     child: Column(
                       children: [
@@ -258,6 +267,7 @@ class _MoveraAppState extends State<MoveraApp> {
           auth: _auth,
           homeBuilder: _home,
           signInBuilder: _signIn,
+          account: _account,
         )
       : _home();
 
@@ -268,7 +278,10 @@ class _MoveraAppState extends State<MoveraApp> {
     // the tokens go whatever it answers. The demo (no session required,
     // none possible) keeps its logout as it was and never touches the
     // token store.
-    if (DriverRuntimeConfig.current.authRequired) await _auth.signOut();
+    if (DriverRuntimeConfig.current.authRequired) {
+      await _auth.signOut();
+      _account.clear();
+    }
     await PrefsActiveRideRepository.settle();
     await CompletionJournal.settle();
     await SettingsRepository.settle();
@@ -298,8 +311,10 @@ class _MoveraAppState extends State<MoveraApp> {
     IslandMessages.clear();
   }
 
+  // Round 4 (live): the hold is the server's account state; the demo
+  // keeps its hold with "Skip demo".
   Widget _home() => DriverHome(
-    accountPending: true,
+    accountPending: !DriverRuntimeConfig.current.authRequired || _account.onHold,
     sessionController: _session,
     waybillRepository: _waybills,
     locationRepository: _location,

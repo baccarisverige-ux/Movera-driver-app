@@ -2,7 +2,10 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/vehicle/local_vehicle_store.dart';
+import 'package:movera/presentation/driver/auth/auth_navigation.dart';
+import 'package:movera/presentation/driver/vehicles/live_vehicles_screen.dart';
 import 'package:movera/presentation/driver/add%20vehicle/add_vehicle.dart';
 
 class DriverVehicles extends StatefulWidget {
@@ -50,6 +53,11 @@ class _DriverVehiclesState extends State<DriverVehicles> {
 
   @override
   Widget build(BuildContext context) {
+    // Round 4 (live): the fleet's cars from the server, with the pick.
+    if (DriverRuntimeConfig.current.authRequired) {
+      final session = accountSessionOf(context);
+      if (session != null) return LiveVehiclesScreen(account: session);
+    }
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F7),
       appBar: AppBar(

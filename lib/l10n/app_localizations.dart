@@ -8527,6 +8527,785 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This number isn\'t on the driver test list yet. Contact Movera to get access.'**
   String get authSignInRestricted;
+
+  /// No description provided for @acctDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details'**
+  String get acctDetailsTitle;
+
+  /// No description provided for @acctDetailsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera checks these before you can drive. Fill them in once.'**
+  String get acctDetailsIntro;
+
+  /// No description provided for @acctFirstName.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get acctFirstName;
+
+  /// No description provided for @acctLastName.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name'**
+  String get acctLastName;
+
+  /// No description provided for @acctDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get acctDateOfBirth;
+
+  /// No description provided for @acctPickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get acctPickDate;
+
+  /// No description provided for @acctEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail'**
+  String get acctEmail;
+
+  /// No description provided for @acctCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get acctCountry;
+
+  /// No description provided for @acctCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get acctCity;
+
+  /// No description provided for @acctChooseCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your city'**
+  String get acctChooseCity;
+
+  /// No description provided for @acctLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get acctLanguage;
+
+  /// No description provided for @acctAccountType.
+  ///
+  /// In en, this message translates to:
+  /// **'Account type'**
+  String get acctAccountType;
+
+  /// No description provided for @acctComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get acctComingSoon;
+
+  /// No description provided for @acctCountrySweden.
+  ///
+  /// In en, this message translates to:
+  /// **'Sweden'**
+  String get acctCountrySweden;
+
+  /// No description provided for @acctCountryFrance.
+  ///
+  /// In en, this message translates to:
+  /// **'France'**
+  String get acctCountryFrance;
+
+  /// No description provided for @acctCountryTunisia.
+  ///
+  /// In en, this message translates to:
+  /// **'Tunisia'**
+  String get acctCountryTunisia;
+
+  /// No description provided for @acctTypeDriverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver'**
+  String get acctTypeDriverTitle;
+
+  /// No description provided for @acctTypeDriverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I drive for a fleet'**
+  String get acctTypeDriverBody;
+
+  /// No description provided for @acctTypeFleetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet'**
+  String get acctTypeFleetTitle;
+
+  /// No description provided for @acctTypeFleetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I run a company with cars and drivers'**
+  String get acctTypeFleetBody;
+
+  /// No description provided for @acctCompanyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Company name'**
+  String get acctCompanyName;
+
+  /// No description provided for @acctOrgNumberSe.
+  ///
+  /// In en, this message translates to:
+  /// **'Organisation number'**
+  String get acctOrgNumberSe;
+
+  /// No description provided for @acctOrgNumberFr.
+  ///
+  /// In en, this message translates to:
+  /// **'SIREN'**
+  String get acctOrgNumberFr;
+
+  /// No description provided for @acctCompanyAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Company address'**
+  String get acctCompanyAddress;
+
+  /// No description provided for @acctJoinNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Join your fleet now'**
+  String get acctJoinNow;
+
+  /// No description provided for @acctJoinNowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fleet owner shares a Movera code with you. You can also do this later from Profile › My fleet.'**
+  String get acctJoinNowBody;
+
+  /// No description provided for @acctFleetCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet code'**
+  String get acctFleetCode;
+
+  /// No description provided for @acctOwnerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner’s full name'**
+  String get acctOwnerName;
+
+  /// No description provided for @acctOwnerEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner’s e-mail'**
+  String get acctOwnerEmail;
+
+  /// No description provided for @acctRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get acctRequired;
+
+  /// No description provided for @acctUnderAge.
+  ///
+  /// In en, this message translates to:
+  /// **'You must be at least {age} to drive with Movera.'**
+  String acctUnderAge(int age);
+
+  /// No description provided for @acctInvalidDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid date.'**
+  String get acctInvalidDate;
+
+  /// No description provided for @acctInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid e-mail.'**
+  String get acctInvalidEmail;
+
+  /// No description provided for @acctCountryNotOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera is not open in this country yet.'**
+  String get acctCountryNotOpen;
+
+  /// No description provided for @acctInvalidCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a city of your country.'**
+  String get acctInvalidCity;
+
+  /// No description provided for @acctTermsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the terms to continue.'**
+  String get acctTermsRequired;
+
+  /// No description provided for @acctCompanyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in your company’s details.'**
+  String get acctCompanyRequired;
+
+  /// No description provided for @acctDetailsLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details are already approved. Contact support to change them.'**
+  String get acctDetailsLocked;
+
+  /// No description provided for @acctCouldNotSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t send your details. Try again.'**
+  String get acctCouldNotSend;
+
+  /// No description provided for @acctTooManyTriesHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Wait about an hour and try again.'**
+  String get acctTooManyTriesHour;
+
+  /// No description provided for @acctChangedReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account changed meanwhile. Pull to refresh and try again.'**
+  String get acctChangedReload;
+
+  /// No description provided for @acctCouldNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load your account.'**
+  String get acctCouldNotLoad;
+
+  /// No description provided for @acctTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get acctTryAgain;
+
+  /// No description provided for @holdBeingChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is being checked. Upload your documents; we tell you when you can drive.'**
+  String get holdBeingChecked;
+
+  /// No description provided for @holdWaitingFleetVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your fleet’s vehicle details'**
+  String get holdWaitingFleetVehicle;
+
+  /// No description provided for @myFleet.
+  ///
+  /// In en, this message translates to:
+  /// **'My fleet'**
+  String get myFleet;
+
+  /// No description provided for @docYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get docYou;
+
+  /// No description provided for @docCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get docCompany;
+
+  /// No description provided for @docCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Car {plate}'**
+  String docCar(Object plate);
+
+  /// No description provided for @docStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get docStatusRejected;
+
+  /// No description provided for @docStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get docStatusExpired;
+
+  /// No description provided for @docMoveraBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera books this with you'**
+  String get docMoveraBooks;
+
+  /// No description provided for @docTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get docTakePhoto;
+
+  /// No description provided for @docChoosePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get docChoosePhoto;
+
+  /// No description provided for @docChoosePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose PDF'**
+  String get docChoosePdf;
+
+  /// No description provided for @docUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get docUploading;
+
+  /// No description provided for @docUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded. Movera checks it.'**
+  String get docUploaded;
+
+  /// No description provided for @docUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t upload. Try again.'**
+  String get docUploadFailed;
+
+  /// No description provided for @docFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is larger than 10 MB.'**
+  String get docFileTooLarge;
+
+  /// No description provided for @docUnsupportedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a JPEG, PNG, HEIC or PDF.'**
+  String get docUnsupportedFile;
+
+  /// No description provided for @docEmptyFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is empty.'**
+  String get docEmptyFile;
+
+  /// No description provided for @docTypeNotAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'This document can’t be uploaded here.'**
+  String get docTypeNotAccepted;
+
+  /// No description provided for @docCouldNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load your documents.'**
+  String get docCouldNotLoad;
+
+  /// No description provided for @docNoneYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to upload yet.'**
+  String get docNoneYet;
+
+  /// No description provided for @docUploadNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a new one'**
+  String get docUploadNew;
+
+  /// No description provided for @fleetJoinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join your fleet'**
+  String get fleetJoinTitle;
+
+  /// No description provided for @fleetJoinBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fleet owner shares the Movera code with you. Enter it with the owner’s name and e-mail as registered with Movera.'**
+  String get fleetJoinBody;
+
+  /// No description provided for @fleetJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get fleetJoin;
+
+  /// No description provided for @fleetJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re in {name}.'**
+  String fleetJoined(Object name);
+
+  /// No description provided for @fleetJoinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The code, the owner’s name and e-mail don’t match a fleet. Check them with your fleet owner.'**
+  String get fleetJoinMismatch;
+
+  /// No description provided for @fleetAlreadyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re already in a fleet. Leave it first.'**
+  String get fleetAlreadyIn;
+
+  /// No description provided for @fleetAccountHasOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'A fleet account has its own fleet.'**
+  String get fleetAccountHasOwn;
+
+  /// No description provided for @fleetOnTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish the trip first.'**
+  String get fleetOnTrip;
+
+  /// No description provided for @fleetOwnerCannotLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'The owner can’t leave the fleet.'**
+  String get fleetOwnerCannotLeave;
+
+  /// No description provided for @fleetNotInOne.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re not in a fleet.'**
+  String get fleetNotInOne;
+
+  /// No description provided for @fleetOwnerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the fleet owner can do that.'**
+  String get fleetOwnerOnly;
+
+  /// No description provided for @fleetYourCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Your company'**
+  String get fleetYourCompany;
+
+  /// No description provided for @fleetYourFleet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fleet'**
+  String get fleetYourFleet;
+
+  /// No description provided for @fleetCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Fleet code'**
+  String get fleetCode;
+
+  /// No description provided for @fleetCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share it with your drivers together with your name and e-mail.'**
+  String get fleetCodeHint;
+
+  /// No description provided for @fleetCodeWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Movera’s approval'**
+  String get fleetCodeWaiting;
+
+  /// No description provided for @fleetCodeShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Join {name} on Movera Driver. Code: {code}. Owner: {owner}, {email}.'**
+  String fleetCodeShareText(
+    Object name,
+    Object code,
+    Object owner,
+    Object email,
+  );
+
+  /// No description provided for @fleetShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get fleetShare;
+
+  /// No description provided for @fleetCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get fleetCopy;
+
+  /// No description provided for @fleetCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied'**
+  String get fleetCodeCopied;
+
+  /// No description provided for @fleetDrivers.
+  ///
+  /// In en, this message translates to:
+  /// **'Drivers'**
+  String get fleetDrivers;
+
+  /// No description provided for @fleetNoDrivers.
+  ///
+  /// In en, this message translates to:
+  /// **'No drivers yet. Share your code.'**
+  String get fleetNoDrivers;
+
+  /// No description provided for @fleetRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get fleetRemove;
+
+  /// No description provided for @fleetRemoveDriverQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from your fleet?'**
+  String fleetRemoveDriverQ(Object name);
+
+  /// No description provided for @fleetCars.
+  ///
+  /// In en, this message translates to:
+  /// **'Cars'**
+  String get fleetCars;
+
+  /// No description provided for @fleetNoCars.
+  ///
+  /// In en, this message translates to:
+  /// **'No cars yet.'**
+  String get fleetNoCars;
+
+  /// No description provided for @fleetNoCarsMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fleet has no approved car yet.'**
+  String get fleetNoCarsMember;
+
+  /// No description provided for @fleetAddCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Add car'**
+  String get fleetAddCar;
+
+  /// No description provided for @fleetChooseCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose this car'**
+  String get fleetChooseCar;
+
+  /// No description provided for @fleetYourCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Your car'**
+  String get fleetYourCar;
+
+  /// No description provided for @fleetInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'In use by another driver'**
+  String get fleetInUse;
+
+  /// No description provided for @fleetPickedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked by {name}'**
+  String fleetPickedBy(Object name);
+
+  /// No description provided for @fleetLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave fleet'**
+  String get fleetLeave;
+
+  /// No description provided for @fleetLeaveQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave {name}? You can join another fleet with a new code.'**
+  String fleetLeaveQ(Object name);
+
+  /// No description provided for @fleetCouldNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load your fleet.'**
+  String get fleetCouldNotLoad;
+
+  /// No description provided for @fleetStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get fleetStatusPending;
+
+  /// No description provided for @fleetStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get fleetStatusApproved;
+
+  /// No description provided for @fleetStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get fleetStatusRejected;
+
+  /// No description provided for @fleetStatusBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get fleetStatusBlocked;
+
+  /// No description provided for @fleetVehicleInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Another driver is driving this car right now.'**
+  String get fleetVehicleInUse;
+
+  /// No description provided for @fleetVehicleNotApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'This car isn’t approved yet.'**
+  String get fleetVehicleNotApproved;
+
+  /// No description provided for @fleetVehicleNotYours.
+  ///
+  /// In en, this message translates to:
+  /// **'This car isn’t your fleet’s.'**
+  String get fleetVehicleNotYours;
+
+  /// No description provided for @fleetPlateTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'A car with this plate is already registered.'**
+  String get fleetPlateTaken;
+
+  /// No description provided for @fleetCarAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Car added. Movera checks it.'**
+  String get fleetCarAdded;
+
+  /// No description provided for @fleetCouldNotAddCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t add the car. Try again.'**
+  String get fleetCouldNotAddCar;
+
+  /// No description provided for @fleetCouldNotPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t choose the car. Try again.'**
+  String get fleetCouldNotPick;
+
+  /// No description provided for @fleetColour.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour'**
+  String get fleetColour;
+
+  /// No description provided for @fleetPlate.
+  ///
+  /// In en, this message translates to:
+  /// **'Plate'**
+  String get fleetPlate;
+
+  /// No description provided for @fleetSeats.
+  ///
+  /// In en, this message translates to:
+  /// **'Seats'**
+  String get fleetSeats;
+
+  /// No description provided for @fleetCarTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Car types'**
+  String get fleetCarTypes;
+
+  /// No description provided for @fleetMemberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 driver} other{{count} drivers}}'**
+  String fleetMemberCount(int count);
+
+  /// No description provided for @fleetCarCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 car} other{{count} cars}}'**
+  String fleetCarCount(int count);
+
+  /// No description provided for @fleetOrgNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Org. no. {number}'**
+  String fleetOrgNumber(Object number);
+
+  /// No description provided for @fleetOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get fleetOnline;
+
+  /// No description provided for @fleetOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get fleetOffline;
+
+  /// No description provided for @vehStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get vehStatusPending;
+
+  /// No description provided for @vehStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get vehStatusApproved;
+
+  /// No description provided for @vehStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get vehStatusRejected;
+
+  /// No description provided for @vehStatusBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get vehStatusBlocked;
+
+  /// No description provided for @vehDocumentsOnDocs.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload the car’s documents under Documents.'**
+  String get vehDocumentsOnDocs;
+
+  /// No description provided for @fleetCarSeatsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 seat} other{{count} seats}}'**
+  String fleetCarSeatsCount(int count);
+
+  /// No description provided for @fleetJoinLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a fleet'**
+  String get fleetJoinLink;
+
+  /// No description provided for @docChooseHow.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you want to add it?'**
+  String get docChooseHow;
+
+  /// No description provided for @fleetVehiclesAwait.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fleet adds its cars; you pick the one you drive here.'**
+  String get fleetVehiclesAwait;
 }
 
 class _AppLocalizationsDelegate

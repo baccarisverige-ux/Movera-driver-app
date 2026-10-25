@@ -65,6 +65,8 @@ dependencies:
   # tab's sessionStorage on web (lib/core/auth).
   flutter_secure_storage: ^10.3.4
   web: ^1.1.2
+  share_plus: ^12.0.2
+  http_parser: ^4.1.2
 
 dev_dependencies:
   integration_test:

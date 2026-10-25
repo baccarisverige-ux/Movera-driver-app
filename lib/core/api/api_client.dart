@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' show MediaType;
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -100,6 +102,34 @@ class ApiClient {
     bool authenticated = true,
   }) => _send('DELETE', path, authenticated: authenticated);
 
+  /// `POST path` as `multipart/form-data`: the text [fields] and one file
+  /// part named [fileField]. Same headers, `Idempotency-Key` and refresh
+  /// handling as [post]; the body is built again for the retry.
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    required Map<String, String> fields,
+    required String fileField,
+    required Uint8List bytes,
+    required String fileName,
+    required String mediaType,
+    String? idempotencyKey,
+  }) => _send(
+    'POST',
+    path,
+    idempotencyKey: idempotencyKey ?? _idempotencyKey(),
+    authenticated: true,
+    build: (uri) => http.MultipartRequest('POST', uri)
+      ..fields.addAll(fields)
+      ..files.add(
+        http.MultipartFile.fromBytes(
+          fileField,
+          bytes,
+          filename: fileName,
+          contentType: MediaType.parse(mediaType),
+        ),
+      ),
+  );
+
   Uri uriFor(String path) =>
       _base.replace(path: '${_base.path.replaceFirst(RegExp(r'/$'), '')}$path');
 
@@ -109,6 +139,7 @@ class ApiClient {
     Map<String, dynamic>? body,
     String? idempotencyKey,
     required bool authenticated,
+    http.BaseRequest Function(Uri uri)? build,
   }) async {
     final requestId = _requestId();
     final uri = uriFor(path);
@@ -116,14 +147,15 @@ class ApiClient {
       final access = authenticated ? await _tokens.readAccess() : null;
       final headers = <String, String>{
         'Accept': 'application/json',
-        'Content-Type': 'application/json',
+        // A multipart request writes its own Content-Type (the boundary).
+        if (build == null) 'Content-Type': 'application/json',
         'X-Request-Id': requestId,
         'X-Api-Version': apiVersion,
         if (access != null && access.isNotEmpty)
           'Authorization': 'Bearer $access',
         if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
       };
-      var response = await _request(method, uri, headers, body);
+      var response = await _request(method, uri, headers, body, build);
       if (response.statusCode == 401 && access != null && access.isNotEmpty) {
         final refresh = await _refreshAccess(access);
         if (refresh.unavailable) {
@@ -138,10 +170,13 @@ class ApiClient {
         }
         final replacement = refresh.access;
         if (replacement != null) {
-          response = await _request(method, uri, {
-            ...headers,
-            'Authorization': 'Bearer $replacement',
-          }, body);
+          response = await _request(
+            method,
+            uri,
+            {...headers, 'Authorization': 'Bearer $replacement'},
+            body,
+            build,
+          );
         }
         if (replacement == null || response.statusCode == 401) {
           await _expireSession(
@@ -192,10 +227,17 @@ class ApiClient {
     Uri uri,
     Map<String, String> headers,
     Map<String, dynamic>? body,
+    http.BaseRequest Function(Uri uri)? build,
   ) {
-    final request = http.Request(method, uri)..headers.addAll(headers);
-    if (method != 'GET' && method != 'DELETE') {
-      request.body = jsonEncode(body ?? <String, dynamic>{});
+    final http.BaseRequest request;
+    if (build != null) {
+      request = build(uri)..headers.addAll(headers);
+    } else {
+      final plain = http.Request(method, uri)..headers.addAll(headers);
+      if (method != 'GET' && method != 'DELETE') {
+        plain.body = jsonEncode(body ?? <String, dynamic>{});
+      }
+      request = plain;
     }
     return _client
         .send(request)

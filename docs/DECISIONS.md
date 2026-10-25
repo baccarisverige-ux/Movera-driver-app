@@ -23,7 +23,7 @@ Terminal:
 
 `completed` · `cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `cancelled_by_system` · `no_show` · `expired` · `failed`
 
-The source of truth is now `contracts/contract.json` (v0.5.0, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
+The source of truth is now `contracts/contract.json` (v0.5.3, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
 
 Driver `ActiveRideStage` maps onto the live slice only:
 
@@ -101,7 +101,7 @@ Fix (no UX change, no lifecycle change):
 
 ## Contract v0.4 (October 2026)
 
-`contracts/` now holds the shared Movera contract v0.5.0 (from the `movera-contracts` repository, `tool/sync_contract.sh v0.5.0`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
+`contracts/` now holds the shared Movera contract v0.5.3 (from the `movera-contracts` repository, `tool/sync_contract.sh v0.5.3`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
 
 - v0.4.0: per-zone config fields (languages, tips, payment methods, waiting by category, auto-offline, driver bonus limits), `TripProjection.acceptedAt`, whole-star ratings and admin dispatch (direct assign, radar group, lock after accept).
 - v0.4.1: `DriverAppConfig.reservations` carries the reservation timings and the running-late ETA watch.
@@ -109,6 +109,7 @@ Fix (no UX change, no lifecycle change):
 - v0.4.3: route-change pricing counts a booked stop once and keeps offer raises.
 - v0.4.4: the rider's after-cancel reason command (no driver change).
 - v0.5.0 (23 Oct 2026, additive): pickup pay per category (`pickupPay.byCategory`: tiered km ranges, a maximum per ride, the rider's fixed fee; `Offer.pickupPay` is the server's number, the driver sees the total only), the stopped / driving signal (`GeoFix.moving`, `speedMps`) with the Radar limits per state in `offers.radarApp` / `exclusiveWhileDriving`, the surge schedule, sign-in / tokens / push devices (`/auth/*`, `/push/devices`, test numbers with a fixed code outside production) and the config document version. The app keeps its demo pickup-pay maths until the server sends `Offer.pickupPay`; the v0.4 `pickupPay` keys stay in the document until v0.6.
+- v0.5.1–v0.5.3 (25 Oct 2026, additive): a live trip is accepted only from an offer (`accept` from `requested` is scheduled-only); §14 driver sign-up, fleets and documents (`driverOnboarding`: the details screen after the first sign-in, `driver` and `fleet` accounts, the fleet code with the owner's name and e-mail, cars owned by fleets and picked by drivers, documents per country uploaded to the server). The driver app's live mode (`MOVERA_AUTH_REQUIRED=true`) uses these; the demo keeps its local sample data.
 
 ## Contract v0.3 (19 October 2026)
 
