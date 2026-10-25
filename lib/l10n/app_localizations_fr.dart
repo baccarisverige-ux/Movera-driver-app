@@ -4830,4 +4830,152 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get locationBlockedSettings =>
       'La localisation est bloquée pour Movera. Autorisez-la dans les réglages pour recevoir des courses.';
+
+  @override
+  String get authDriverWord => 'Chauffeur';
+
+  @override
+  String get authBrandTagline => 'Vers une nouvelle ère.';
+
+  @override
+  String get authEnterPhone => 'Saisissez votre numéro de téléphone';
+
+  @override
+  String get authTextFourDigitCode =>
+      'Nous vous enverrons un code à 4 chiffres par SMS.';
+
+  @override
+  String get authInvalidMobileNumber => 'Saisissez un numéro de mobile valide.';
+
+  @override
+  String get authConsentLabel =>
+      'J’accepte les conditions d’utilisation et la politique de confidentialité';
+
+  @override
+  String get authConsentPrefix => 'En continuant, vous acceptez nos ';
+
+  @override
+  String get authConsentTerms => 'conditions d’utilisation';
+
+  @override
+  String get authAnd => ' et ';
+
+  @override
+  String get authConsentPrivacy => 'politique de confidentialité';
+
+  @override
+  String get authConsentTickFirst =>
+      'Cochez la case pour accepter avant de continuer.';
+
+  @override
+  String get authContinue => 'Continuer';
+
+  @override
+  String authStepOf(Object step, Object total) {
+    return 'Étape $step sur $total';
+  }
+
+  @override
+  String get authChangeLanguage => 'Changer de langue';
+
+  @override
+  String get authChooseCountry => 'Choisissez votre pays';
+
+  @override
+  String get authSearchCountry => 'Rechercher un pays ou un indicatif';
+
+  @override
+  String get authNoCountryFound =>
+      'Aucun pays ne correspond à votre recherche.';
+
+  @override
+  String authPhoneCountryCode(Object country, Object dial) {
+    return 'Indicatif : $country, $dial';
+  }
+
+  @override
+  String get authChangeCountryCode => 'Changer de pays';
+
+  @override
+  String get authEnterYourCodeHead => 'Saisissez votre ';
+
+  @override
+  String get authEnterYourCodeAccent => 'code';
+
+  @override
+  String get authCodeSentToPhone =>
+      'Nous avons envoyé un code sur votre téléphone.';
+
+  @override
+  String get authSentTo => 'Envoyé au ';
+
+  @override
+  String get authNewCodeSent => 'Nouveau code envoyé.';
+
+  @override
+  String get authReenterPhone =>
+      'Revenez en arrière et saisissez à nouveau votre numéro.';
+
+  @override
+  String get authRequestNewCode =>
+      'Revenez en arrière et demandez un nouveau code.';
+
+  @override
+  String get authNeverAskCode =>
+      'Movera ne vous appellera ni ne vous écrira jamais pour vous demander ce code.';
+
+  @override
+  String get authVerify => 'Vérifier';
+
+  @override
+  String get authResendCodeIn => 'Renvoyer le code dans ';
+
+  @override
+  String get authResendCode => 'Renvoyer le code';
+
+  @override
+  String get authErrOffline =>
+      'Pas de connexion. Vérifiez votre accès à Internet et réessayez.';
+
+  @override
+  String get authErrTooManyWait =>
+      'Trop de tentatives. Patientez un instant et réessayez.';
+
+  @override
+  String authErrTooManyIn(Object wait) {
+    return 'Trop de tentatives. Réessayez dans $wait.';
+  }
+
+  @override
+  String authRetrySeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count secondes',
+      one: '1 seconde',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authErrServer =>
+      'Movera rencontre un problème en ce moment. Réessayez dans un instant.';
+
+  @override
+  String get authErrWrongCode =>
+      'Ce code n’est pas correct. Vérifiez-le et réessayez.';
+
+  @override
+  String get authCodeExpired =>
+      'Ce code a expiré. Touchez « Renvoyer le code » pour en recevoir un nouveau.';
+
+  @override
+  String get authErrSendCode => 'Impossible d’envoyer le code. Réessayez.';
+
+  @override
+  String get authErrCheckCode => 'Impossible de vérifier le code. Réessayez.';
+
+  @override
+  String get authSignInRestricted =>
+      'Ce numéro ne fait pas encore partie de la liste de test des chauffeurs. Contactez Movera pour obtenir l’accès.';
 }

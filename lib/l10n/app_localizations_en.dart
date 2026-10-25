@@ -4764,4 +4764,147 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get locationBlockedSettings =>
       'Location is blocked for Movera. Allow it in Settings to get trips.';
+
+  @override
+  String get authDriverWord => 'Driver';
+
+  @override
+  String get authBrandTagline => 'Moving to a new era.';
+
+  @override
+  String get authEnterPhone => 'Enter your phone number';
+
+  @override
+  String get authTextFourDigitCode => 'We\'ll text you a 4-digit code.';
+
+  @override
+  String get authInvalidMobileNumber => 'Enter a valid mobile number.';
+
+  @override
+  String get authConsentLabel =>
+      'I agree to the terms of service and the privacy policy';
+
+  @override
+  String get authConsentPrefix => 'By continuing you agree to our ';
+
+  @override
+  String get authConsentTerms => 'terms of service';
+
+  @override
+  String get authAnd => ' and ';
+
+  @override
+  String get authConsentPrivacy => 'privacy policy';
+
+  @override
+  String get authConsentTickFirst =>
+      'Tick the box to agree before you continue.';
+
+  @override
+  String get authContinue => 'Continue';
+
+  @override
+  String authStepOf(Object step, Object total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get authChangeLanguage => 'Change language';
+
+  @override
+  String get authChooseCountry => 'Choose your country';
+
+  @override
+  String get authSearchCountry => 'Search country or code';
+
+  @override
+  String get authNoCountryFound => 'No country matches your search.';
+
+  @override
+  String authPhoneCountryCode(Object country, Object dial) {
+    return 'Country code: $country, $dial';
+  }
+
+  @override
+  String get authChangeCountryCode => 'Change country';
+
+  @override
+  String get authEnterYourCodeHead => 'Enter your ';
+
+  @override
+  String get authEnterYourCodeAccent => 'code';
+
+  @override
+  String get authCodeSentToPhone => 'We\'ve sent a code to your phone.';
+
+  @override
+  String get authSentTo => 'Sent to ';
+
+  @override
+  String get authNewCodeSent => 'New code sent.';
+
+  @override
+  String get authReenterPhone => 'Go back and enter your phone number again.';
+
+  @override
+  String get authRequestNewCode => 'Go back and request a new code.';
+
+  @override
+  String get authNeverAskCode =>
+      'Movera will never call or text you asking for this code.';
+
+  @override
+  String get authVerify => 'Verify';
+
+  @override
+  String get authResendCodeIn => 'Resend code in ';
+
+  @override
+  String get authResendCode => 'Resend code';
+
+  @override
+  String get authErrOffline =>
+      'No connection. Check your internet and try again.';
+
+  @override
+  String get authErrTooManyWait =>
+      'Too many tries. Wait a moment and try again.';
+
+  @override
+  String authErrTooManyIn(Object wait) {
+    return 'Too many tries. Try again in $wait.';
+  }
+
+  @override
+  String authRetrySeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count seconds',
+      one: '1 second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authErrServer =>
+      'Movera is having trouble right now. Try again in a moment.';
+
+  @override
+  String get authErrWrongCode =>
+      'That code isn\'t right. Check it and try again.';
+
+  @override
+  String get authCodeExpired =>
+      'This code has expired. Tap Resend code for a new one.';
+
+  @override
+  String get authErrSendCode => 'Couldn\'t send the code. Try again.';
+
+  @override
+  String get authErrCheckCode => 'Couldn\'t check the code. Try again.';
+
+  @override
+  String get authSignInRestricted =>
+      'This number isn\'t on the driver test list yet. Contact Movera to get access.';
 }

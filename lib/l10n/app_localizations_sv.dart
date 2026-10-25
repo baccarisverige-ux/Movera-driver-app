@@ -4781,4 +4781,148 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get locationBlockedSettings =>
       'Platsåtkomst är blockerad för Movera. Tillåt den i Inställningar för att få resor.';
+
+  @override
+  String get authDriverWord => 'Förare';
+
+  @override
+  String get authBrandTagline => 'På väg mot en ny era.';
+
+  @override
+  String get authEnterPhone => 'Ange ditt telefonnummer';
+
+  @override
+  String get authTextFourDigitCode => 'Vi skickar en fyrsiffrig kod via sms.';
+
+  @override
+  String get authInvalidMobileNumber => 'Ange ett giltigt mobilnummer.';
+
+  @override
+  String get authConsentLabel =>
+      'Jag godkänner användarvillkoren och integritetspolicyn';
+
+  @override
+  String get authConsentPrefix => 'Genom att fortsätta godkänner du våra ';
+
+  @override
+  String get authConsentTerms => 'användarvillkor';
+
+  @override
+  String get authAnd => ' och ';
+
+  @override
+  String get authConsentPrivacy => 'integritetspolicy';
+
+  @override
+  String get authConsentTickFirst =>
+      'Bocka i rutan för att godkänna innan du fortsätter.';
+
+  @override
+  String get authContinue => 'Fortsätt';
+
+  @override
+  String authStepOf(Object step, Object total) {
+    return 'Steg $step av $total';
+  }
+
+  @override
+  String get authChangeLanguage => 'Byt språk';
+
+  @override
+  String get authChooseCountry => 'Välj ditt land';
+
+  @override
+  String get authSearchCountry => 'Sök land eller landsnummer';
+
+  @override
+  String get authNoCountryFound => 'Inget land matchar din sökning.';
+
+  @override
+  String authPhoneCountryCode(Object country, Object dial) {
+    return 'Landsnummer: $country, $dial';
+  }
+
+  @override
+  String get authChangeCountryCode => 'Byt land';
+
+  @override
+  String get authEnterYourCodeHead => 'Ange din ';
+
+  @override
+  String get authEnterYourCodeAccent => 'kod';
+
+  @override
+  String get authCodeSentToPhone => 'Vi har skickat en kod till din telefon.';
+
+  @override
+  String get authSentTo => 'Skickad till ';
+
+  @override
+  String get authNewCodeSent => 'Ny kod skickad.';
+
+  @override
+  String get authReenterPhone =>
+      'Gå tillbaka och ange ditt telefonnummer igen.';
+
+  @override
+  String get authRequestNewCode => 'Gå tillbaka och begär en ny kod.';
+
+  @override
+  String get authNeverAskCode =>
+      'Movera ringer eller sms:ar aldrig och ber om den här koden.';
+
+  @override
+  String get authVerify => 'Verifiera';
+
+  @override
+  String get authResendCodeIn => 'Skicka koden igen om ';
+
+  @override
+  String get authResendCode => 'Skicka koden igen';
+
+  @override
+  String get authErrOffline =>
+      'Ingen anslutning. Kontrollera internet och försök igen.';
+
+  @override
+  String get authErrTooManyWait =>
+      'För många försök. Vänta en stund och försök igen.';
+
+  @override
+  String authErrTooManyIn(Object wait) {
+    return 'För många försök. Försök igen om $wait.';
+  }
+
+  @override
+  String authRetrySeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sekunder',
+      one: '1 sekund',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authErrServer =>
+      'Movera har problem just nu. Försök igen om en stund.';
+
+  @override
+  String get authErrWrongCode =>
+      'Koden stämmer inte. Kontrollera den och försök igen.';
+
+  @override
+  String get authCodeExpired =>
+      'Koden har gått ut. Tryck på Skicka koden igen för att få en ny.';
+
+  @override
+  String get authErrSendCode => 'Kunde inte skicka koden. Försök igen.';
+
+  @override
+  String get authErrCheckCode => 'Kunde inte kontrollera koden. Försök igen.';
+
+  @override
+  String get authSignInRestricted =>
+      'Det här numret finns inte med på förarnas testlista ännu. Kontakta Movera för att få tillgång.';
 }

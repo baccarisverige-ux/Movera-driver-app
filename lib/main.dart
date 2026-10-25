@@ -7,7 +7,17 @@ import 'package:movera/core/logging/global_error_hooks.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:http/http.dart' as http;
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/auth/auth_controller.dart';
+import 'package:movera/core/auth/auth_repository.dart';
+import 'package:movera/core/auth/secure_token_store.dart';
+import 'package:movera/core/auth/token_store.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/presentation/driver/auth/auth_navigation.dart';
+import 'package:movera/presentation/driver/auth/session_gate.dart';
+import 'package:movera/presentation/driver/auth/sign_in.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/widgets/demo_mode_banner.dart';
@@ -63,11 +73,24 @@ Future<void> main() async {
 /// feature screens. When backend adapters replace the current frontend
 /// implementations, screen code does not need to change.
 class MoveraApp extends StatefulWidget {
-  const MoveraApp({super.key, this.locationRepository});
+  const MoveraApp({
+    super.key,
+    this.locationRepository,
+    this.tokenStore,
+    this.httpClient,
+  });
 
   /// Defaults to the device GPS. Tests inject a scripted source so the app
   /// root never depends on host location services.
   final DriverLocationRepository? locationRepository;
+
+  /// Round 4 sign-in: where the session's tokens live. Defaults to the
+  /// secure store (Keychain/Keystore, web sessionStorage); tests inject a
+  /// memory store.
+  final TokenStore? tokenStore;
+
+  /// The HTTP client the API calls go through. Tests inject a fake.
+  final http.Client? httpClient;
 
   @override
   State<MoveraApp> createState() => _MoveraAppState();
@@ -85,11 +108,29 @@ class _MoveraAppState extends State<MoveraApp> {
   late ActiveRideRepository _activeRide;
   late final DemoSafetyAlertRepository _safetyAlerts;
   late final RideCheckServices _rideCheck;
+  late final TokenStore _tokens;
+  late final http.Client _http;
+  late final ApiClient _api;
+  late final AuthController _auth;
 
   @override
   void initState() {
     super.initState();
     validateDriverComposition(production: driverProductionRequested);
+    // Round 4 sign-in: the real API, with the session's tokens. With
+    // MOVERA_AUTH_REQUIRED off (the demo) nothing here is called until a
+    // logout, which then only clears a session that was never there.
+    _tokens = widget.tokenStore ?? SecureTokenStore();
+    _http = widget.httpClient ?? http.Client();
+    _api = ApiClient(
+      client: _http,
+      baseUri: DriverRuntimeConfig.current.apiBaseUri,
+      tokens: _tokens,
+      onSessionExpired: _sessionExpired,
+    );
+    _auth = AuthController(
+      repository: AuthRepository(api: _api, tokens: _tokens),
+    );
     _sessionStore = MemoryDriverSessionRepository();
     _session = DriverSessionController(repository: _sessionStore);
     _waybills = InMemoryWaybillRepository.instance;
@@ -134,7 +175,18 @@ class _MoveraAppState extends State<MoveraApp> {
       dispatch.dispose();
     }
     _safetyAlerts.dispose();
+    if (widget.httpClient == null) _http.close();
     super.dispose();
+  }
+
+  /// The refresh was refused: the tokens are gone (ApiClient cleared them).
+  /// A build that requires a session goes back to Sign in; the demo path
+  /// never gets here.
+  Future<void> _sessionExpired() async {
+    if (!DriverRuntimeConfig.current.authRequired) return;
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) return;
+    showDriverSignIn(navigator, _signIn);
   }
 
   @override
@@ -168,6 +220,8 @@ class _MoveraAppState extends State<MoveraApp> {
                   session: _session,
                   homeBuilder: _home,
                   logout: _logout,
+                  auth: _auth,
+                  signInBuilder: _signIn,
                   child: LayoutViewport(
                     child: Column(
                       children: [
@@ -189,14 +243,32 @@ class _MoveraAppState extends State<MoveraApp> {
                 ),
               );
             },
-            home: _home(),
+            home: _root(),
           );
         },
       ),
     );
   }
 
+  /// The first route: Home in the demo (MOVERA_AUTH_REQUIRED off, as the
+  /// GitHub Pages build runs); with a session required, Sign in until the
+  /// token store holds one.
+  Widget _root() => DriverRuntimeConfig.current.authRequired
+      ? DriverSessionGate(
+          auth: _auth,
+          homeBuilder: _home,
+          signInBuilder: _signIn,
+        )
+      : _home();
+
+  Widget _signIn() => DriverSignIn(controller: _auth);
+
   Future<void> _logout() async {
+    // Round 4: the server's session first, while the token is still there;
+    // the tokens go whatever it answers. The demo (no session required,
+    // none possible) keeps its logout as it was and never touches the
+    // token store.
+    if (DriverRuntimeConfig.current.authRequired) await _auth.signOut();
     await PrefsActiveRideRepository.settle();
     await CompletionJournal.settle();
     await SettingsRepository.settle();

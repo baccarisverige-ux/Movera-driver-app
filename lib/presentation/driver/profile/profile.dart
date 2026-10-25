@@ -7,6 +7,7 @@ import 'package:movera/core/vehicle/local_vehicle_store.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
+import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
@@ -420,8 +421,9 @@ class _DriverProfileState extends State<DriverProfile> {
         return;
       }
       // uat-d2: the demo landing screen is gone; a logged-out driver is
-      // back on Home (demo mode), where the real sign-in will start.
-      final home = runtime?.homeBuilder;
+      // back on Home (demo mode). Round 4: a build that requires a session
+      // lands on Sign in instead (driverRootAfterSignOut).
+      final home = driverRootAfterSignOut(runtime);
       if (home == null) {
         Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
         return;

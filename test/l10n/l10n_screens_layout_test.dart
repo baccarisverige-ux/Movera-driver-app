@@ -10,10 +10,9 @@ import 'package:movera/presentation/driver/add%20vehicle/add_vehicle.dart';
 import 'package:movera/presentation/driver/analytics/acceptance%20rate/acceptance_rate.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
-import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
-import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
-import 'package:movera/presentation/driver/auth/sign%20in%20phone/sign_in_phone.dart';
-import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
+import 'package:movera/core/auth/otp_challenge.dart';
+import 'package:movera/presentation/driver/auth/phone_verify.dart';
+import 'package:movera/presentation/driver/auth/sign_in.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
@@ -103,15 +102,17 @@ void main() {
 
       // Each screen with a text of its own that must show translated.
       final screens = <String, (Widget Function(), String Function())>{
-        'Sign in': (() => const DriverSignIn(), () => tr.continueWithPhone),
-        'Sign in with phone': (
-          () => const DriverSignInPhone(),
-          () => tr.signInWithPhone,
-        ),
-        'Create account': (() => const DriverCreateAccount(), () => tr.fullName),
+        'Sign in': (() => const DriverSignIn(), () => tr.authEnterPhone),
         'Phone verification': (
-          () => const DriverPhoneVerification(),
-          () => tr.phoneVerification,
+          () => DriverPhoneVerification(
+            challenge: OtpChallenge(
+              phone: '+46701234567',
+              sessionId: 'otp-1',
+              expiresAt: DateTime.utc(2030),
+              retryAfter: const Duration(seconds: 30),
+            ),
+          ),
+          () => tr.authNeverAskCode,
         ),
         'Documents': (() => const DriverDocuments(), () => tr.documents),
         'Scheduled rides': (

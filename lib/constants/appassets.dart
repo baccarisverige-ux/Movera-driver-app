@@ -1,8 +1,5 @@
 class AppAssets {
   // Icons
-  static const String apple = 'assets/icons/apple.png';
-  static const String google = 'assets/icons/google.png';
-  static const String mobile = 'assets/icons/mobile.png';
   static const String locationFill = 'assets/icons/location_fill.png';
   static const String send = 'assets/icons/send.png';
   static const String phoneOutl = 'assets/icons/phone_outl.png';
@@ -112,8 +109,6 @@ class AppAssets {
   static const String flight = 'assets/icons/flight.png';
 
   // Images
-  static const String phoneSigninBg = 'assets/images/phone_signin_bg.png';
-  static const String phoneSigninImg = 'assets/images/phone_signin_img.png';
   static const String profileImg = 'assets/images/profile_img.png';
   static const String hisImg = 'assets/images/his_img.png';
   static const String homeImage1 = 'assets/images/home_image2.png';

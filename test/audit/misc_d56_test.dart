@@ -21,8 +21,6 @@ import 'package:movera/core/safety/ride_check_recorder_native.dart';
 import 'package:movera/l10n/app_localizations.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
-import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
-import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
@@ -31,8 +29,6 @@ import 'package:movera/presentation/driver/settings/settings.dart';
 import 'package:movera/core/settings/map_traffic_setting.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:movera/widgets/checkbox.dart';
-import 'package:movera/widgets/custom_btn.dart';
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:record/record.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -442,25 +438,6 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10);
     await gps.updates.close();
-  });
-
-  testWidgets('driver-u103: Create account continues only with the terms '
-      'accepted and the name and email filled in', (tester) async {
-    await _pumpScreen(tester, const DriverCreateAccount());
-    bool enabled() =>
-        tester.widget<CustomButton>(find.byType(CustomButton)).onPressed != null;
-    // Before: Continue opened the phone step with nothing filled in.
-    expect(enabled(), isFalse);
-    await tester.enterText(find.byType(TextFormField).at(0), 'Nils Berg');
-    await tester.enterText(find.byType(TextFormField).at(1), 'nils@example.se');
-    await tester.pump();
-    expect(enabled(), isFalse, reason: 'the terms are not accepted yet');
-    await tester.tap(find.byType(CustomCheckBox));
-    await tester.pump();
-    expect(enabled(), isTrue);
-    await tester.tap(find.byType(CustomButton));
-    await _frames(tester, 12);
-    expect(find.byType(DriverCreateAccountPhone), findsOneWidget);
   });
 
   test('driver-63: the island keeps only its newest posted messages', () {

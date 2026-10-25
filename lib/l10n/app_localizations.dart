@@ -8287,6 +8287,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Location is blocked for Movera. Allow it in Settings to get trips.'**
   String get locationBlockedSettings;
+
+  /// Under the Movera wordmark on the sign-in screens: this is the driver app.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver'**
+  String get authDriverWord;
+
+  /// No description provided for @authBrandTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving to a new era.'**
+  String get authBrandTagline;
+
+  /// No description provided for @authEnterPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your phone number'**
+  String get authEnterPhone;
+
+  /// No description provided for @authTextFourDigitCode.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll text you a 4-digit code.'**
+  String get authTextFourDigitCode;
+
+  /// No description provided for @authInvalidMobileNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid mobile number.'**
+  String get authInvalidMobileNumber;
+
+  /// No description provided for @authConsentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree to the terms of service and the privacy policy'**
+  String get authConsentLabel;
+
+  /// No description provided for @authConsentPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing you agree to our '**
+  String get authConsentPrefix;
+
+  /// No description provided for @authConsentTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'terms of service'**
+  String get authConsentTerms;
+
+  /// No description provided for @authAnd.
+  ///
+  /// In en, this message translates to:
+  /// **' and '**
+  String get authAnd;
+
+  /// No description provided for @authConsentPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'privacy policy'**
+  String get authConsentPrivacy;
+
+  /// No description provided for @authConsentTickFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick the box to agree before you continue.'**
+  String get authConsentTickFirst;
+
+  /// No description provided for @authContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get authContinue;
+
+  /// No description provided for @authStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String authStepOf(Object step, Object total);
+
+  /// No description provided for @authChangeLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change language'**
+  String get authChangeLanguage;
+
+  /// No description provided for @authChooseCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your country'**
+  String get authChooseCountry;
+
+  /// No description provided for @authSearchCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Search country or code'**
+  String get authSearchCountry;
+
+  /// No description provided for @authNoCountryFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No country matches your search.'**
+  String get authNoCountryFound;
+
+  /// No description provided for @authPhoneCountryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Country code: {country}, {dial}'**
+  String authPhoneCountryCode(Object country, Object dial);
+
+  /// No description provided for @authChangeCountryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Change country'**
+  String get authChangeCountryCode;
+
+  /// No description provided for @authEnterYourCodeHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your '**
+  String get authEnterYourCodeHead;
+
+  /// No description provided for @authEnterYourCodeAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'code'**
+  String get authEnterYourCodeAccent;
+
+  /// No description provided for @authCodeSentToPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ve sent a code to your phone.'**
+  String get authCodeSentToPhone;
+
+  /// No description provided for @authSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to '**
+  String get authSentTo;
+
+  /// No description provided for @authNewCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'New code sent.'**
+  String get authNewCodeSent;
+
+  /// No description provided for @authReenterPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Go back and enter your phone number again.'**
+  String get authReenterPhone;
+
+  /// No description provided for @authRequestNewCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Go back and request a new code.'**
+  String get authRequestNewCode;
+
+  /// No description provided for @authNeverAskCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera will never call or text you asking for this code.'**
+  String get authNeverAskCode;
+
+  /// No description provided for @authVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get authVerify;
+
+  /// No description provided for @authResendCodeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code in '**
+  String get authResendCodeIn;
+
+  /// No description provided for @authResendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get authResendCode;
+
+  /// No description provided for @authErrOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Check your internet and try again.'**
+  String get authErrOffline;
+
+  /// No description provided for @authErrTooManyWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Wait a moment and try again.'**
+  String get authErrTooManyWait;
+
+  /// No description provided for @authErrTooManyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Try again in {wait}.'**
+  String authErrTooManyIn(Object wait);
+
+  /// No description provided for @authRetrySeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 second} other{{count} seconds}}'**
+  String authRetrySeconds(int count);
+
+  /// No description provided for @authErrServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera is having trouble right now. Try again in a moment.'**
+  String get authErrServer;
+
+  /// No description provided for @authErrWrongCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code isn\'t right. Check it and try again.'**
+  String get authErrWrongCode;
+
+  /// No description provided for @authCodeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This code has expired. Tap Resend code for a new one.'**
+  String get authCodeExpired;
+
+  /// No description provided for @authErrSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the code. Try again.'**
+  String get authErrSendCode;
+
+  /// No description provided for @authErrCheckCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check the code. Try again.'**
+  String get authErrCheckCode;
+
+  /// No description provided for @authSignInRestricted.
+  ///
+  /// In en, this message translates to:
+  /// **'This number isn\'t on the driver test list yet. Contact Movera to get access.'**
+  String get authSignInRestricted;
 }
 
 class _AppLocalizationsDelegate

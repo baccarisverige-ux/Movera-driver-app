@@ -1,0 +1,295 @@
+import 'package:flutter/material.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/presentation/driver/auth/widgets/auth_language_button.dart';
+import 'package:movera/presentation/driver/auth/widgets/auth_scene.dart';
+import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
+import 'package:movera/presentation/driver/auth/widgets/movera_wordmark.dart';
+
+/// Shared layout of both sign-in steps: progress, wordmark, a headline whose
+/// last word is green, the illustration, and a white card holding the form.
+///
+/// The whole page scrolls when space runs short (small phones, landscape, or
+/// the keyboard up), so the card's controls stay reachable.
+class AuthScaffold extends StatelessWidget {
+  const AuthScaffold({
+    super.key,
+    required this.step,
+    this.totalSteps = 2,
+    this.onBack,
+    required this.headline,
+    required this.headlineAccent,
+    this.headlineSize = 40,
+    this.lede,
+    this.hero,
+    this.sceneProgress,
+    this.sceneKey,
+    this.overlay,
+    this.showCar = true,
+    required this.card,
+  });
+
+  final int step;
+
+  /// The driver signs in in two steps: phone, code.
+  final int totalSteps;
+
+  /// Null hides the back button (the first screen of the flow).
+  final VoidCallback? onBack;
+
+  /// Headline text in ink, followed by [headlineAccent] in green.
+  final String headline;
+  final String headlineAccent;
+  final double headlineSize;
+  final Widget? lede;
+  final Widget? hero;
+  final Animation<double>? sceneProgress;
+
+  /// Put on the scene, so an [overlay] can find it (the balloon flight).
+  final Key? sceneKey;
+
+  /// Painted over the whole page, above the card; never takes touches.
+  final Widget? overlay;
+  final bool showCar;
+  final Widget card;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    return Scaffold(
+      backgroundColor: AuthColors.ground,
+      body: SafeArea(
+        bottom: false,
+        child: CustomScrollView(
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Stack(
+                children: [
+                  _page(context, bottomInset),
+                  if (overlay != null)
+                    Positioned.fill(child: IgnorePointer(child: overlay)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _page(BuildContext context, double bottomInset) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
+          child: _TopBar(step: step, totalSteps: totalSteps, onBack: onBack),
+        ),
+        if (hero != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+            child: hero!,
+          )
+        else ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const MoveraWordmark(),
+                  const SizedBox(height: 3),
+                  Text(
+                    tr.authDriverWord.toUpperCase(),
+                    style: AuthText.urbanist(
+                      size: 10,
+                      height: 1.2,
+                      weight: FontWeight.w600,
+                      letterSpacing: 1.8,
+                      color: AuthColors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
+            child: Semantics(
+              header: true,
+              child: Text.rich(
+                TextSpan(
+                  text: headline,
+                  children: [
+                    TextSpan(
+                      text: headlineAccent,
+                      style: const TextStyle(color: AuthColors.green),
+                    ),
+                  ],
+                ),
+                style: AuthText.headline(headlineSize),
+              ),
+            ),
+          ),
+          if (lede != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 40, 0),
+              child: DefaultTextStyle(style: AuthText.lede(), child: lede!),
+            ),
+        ],
+        // Takes whatever height the card leaves, never less than 96: on
+        // short screens (landscape, keyboard up) the page scrolls instead
+        // of squeezing the form.
+        Expanded(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 96),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                AuthScene(
+                  key: sceneKey,
+                  showCar: showCar,
+                  storyProgress: sceneProgress,
+                ),
+                // The scene darkens a little just above the card, part of
+                // the raised edge.
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: 64,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0x00000000), Color(0x1A000000)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // A white, square card edge to edge, raised over the scene by a
+        // shadow cast upward.
+        Container(
+          key: const ValueKey('auth-card'),
+          padding: EdgeInsets.fromLTRB(20, 22, 20, 18 + bottomInset),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x26000000),
+                blurRadius: 36,
+                offset: Offset(0, -14),
+              ),
+              BoxShadow(
+                color: Color(0x12000000),
+                blurRadius: 6,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          child: card,
+        ),
+      ],
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({
+    required this.step,
+    required this.totalSteps,
+    required this.onBack,
+  });
+
+  final int step;
+  final int totalSteps;
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: Row(
+        children: [
+          // 48 px, so Back is a full-size target.
+          SizedBox(
+            width: 48,
+            child: onBack == null
+                ? null
+                : Material(
+                    color: Colors.white,
+                    shape: const CircleBorder(),
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                    child: IconButton(
+                      key: const ValueKey('auth-back'),
+                      tooltip: tr.back,
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.chevron_left_rounded,
+                        color: AuthColors.ink,
+                        size: 26,
+                      ),
+                      onPressed: onBack,
+                    ),
+                  ),
+          ),
+          Expanded(
+            child: Semantics(
+              label: tr.authStepOf('$step', '$totalSteps'),
+              excludeSemantics: true,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 1; i <= totalSteps; i++) ...[
+                    if (i > 1) const SizedBox(width: 6),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      width: i == step ? 32 : 20,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: i == step
+                            ? AuthColors.ink
+                            : i < step
+                            ? AuthColors.stepDone
+                            : AuthColors.stepIdle,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 40,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                '$step / $totalSteps',
+                textAlign: TextAlign.right,
+                style: AuthText.urbanist(
+                  size: 13,
+                  color: const Color(0xFF647069),
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+          ),
+          // The language switch on every sign-in step.
+          const AuthLanguageButton(),
+        ],
+      ),
+    );
+  }
+}

@@ -3228,5 +3228,82 @@
   "locationBlockedSettings": "Location is blocked for Movera. Allow it in Settings to get trips.",
   "@allowLocation": {
     "description": "Snackbar action: show the system location prompt again (driver-r5-51)."
-  }
+  },
+  "authDriverWord": "Driver",
+  "@authDriverWord": {
+    "description": "Under the Movera wordmark on the sign-in screens: this is the driver app."
+  },
+  "authBrandTagline": "Moving to a new era.",
+  "authEnterPhone": "Enter your phone number",
+  "authTextFourDigitCode": "We'll text you a 4-digit code.",
+  "authInvalidMobileNumber": "Enter a valid mobile number.",
+  "authConsentLabel": "I agree to the terms of service and the privacy policy",
+  "authConsentPrefix": "By continuing you agree to our ",
+  "authConsentTerms": "terms of service",
+  "authAnd": " and ",
+  "authConsentPrivacy": "privacy policy",
+  "authConsentTickFirst": "Tick the box to agree before you continue.",
+  "authContinue": "Continue",
+  "authStepOf": "Step {step} of {total}",
+  "@authStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "authChangeLanguage": "Change language",
+  "authChooseCountry": "Choose your country",
+  "authSearchCountry": "Search country or code",
+  "authNoCountryFound": "No country matches your search.",
+  "authPhoneCountryCode": "Country code: {country}, {dial}",
+  "@authPhoneCountryCode": {
+    "placeholders": {
+      "country": {
+        "type": "Object"
+      },
+      "dial": {
+        "type": "Object"
+      }
+    }
+  },
+  "authChangeCountryCode": "Change country",
+  "authEnterYourCodeHead": "Enter your ",
+  "authEnterYourCodeAccent": "code",
+  "authCodeSentToPhone": "We've sent a code to your phone.",
+  "authSentTo": "Sent to ",
+  "authNewCodeSent": "New code sent.",
+  "authReenterPhone": "Go back and enter your phone number again.",
+  "authRequestNewCode": "Go back and request a new code.",
+  "authNeverAskCode": "Movera will never call or text you asking for this code.",
+  "authVerify": "Verify",
+  "authResendCodeIn": "Resend code in ",
+  "authResendCode": "Resend code",
+  "authErrOffline": "No connection. Check your internet and try again.",
+  "authErrTooManyWait": "Too many tries. Wait a moment and try again.",
+  "authErrTooManyIn": "Too many tries. Try again in {wait}.",
+  "@authErrTooManyIn": {
+    "placeholders": {
+      "wait": {
+        "type": "Object"
+      }
+    }
+  },
+  "authRetrySeconds": "{count, plural, =1{1 second} other{{count} seconds}}",
+  "@authRetrySeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "authErrServer": "Movera is having trouble right now. Try again in a moment.",
+  "authErrWrongCode": "That code isn't right. Check it and try again.",
+  "authCodeExpired": "This code has expired. Tap Resend code for a new one.",
+  "authErrSendCode": "Couldn't send the code. Try again.",
+  "authErrCheckCode": "Couldn't check the code. Try again.",
+  "authSignInRestricted": "This number isn't on the driver test list yet. Contact Movera to get access."
 }
