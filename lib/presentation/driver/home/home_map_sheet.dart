@@ -591,6 +591,31 @@ extension _HomeMapSheet on _DriverHomeState {
         _destinationRoutePolylines = {};
       });
     }
+  /// Round 4 (live): the hold is the server's account state, not the demo
+  /// hold with its "Skip demo".
+  bool get _liveHold =>
+      DriverRuntimeConfig.current.authRequired &&
+      accountSessionOf(context) != null;
+
+  bool get _liveAwaitsFleet =>
+      accountSessionOf(context)?.account?.awaitsFleet ?? false;
+
+  void _openHoldDocuments() {
+    pushSingle(
+      context,
+      MaterialPageRoute<void>(builder: (_) => const DriverDocuments()),
+    );
+  }
+
+  void _openHoldFleet() {
+    final session = accountSessionOf(context);
+    if (session == null) return;
+    pushSingle(
+      context,
+      MaterialPageRoute<void>(builder: (_) => MyFleetScreen(account: session)),
+    );
+  }
+
     Widget _inactiveSheetFace() {
       return PhysicalShape(
         clipper: const RadarSheetClipper(
@@ -612,23 +637,70 @@ extension _HomeMapSheet on _DriverHomeState {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Round 4 (live): the account is on hold with Movera; the
+                // driver uploads documents and sees the fleet meanwhile.
+                if (_liveHold) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                    child: Text(
+                      tr.holdBeingChecked,
+                      key: const ValueKey('hold-being-checked'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        height: 1.35,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (_liveAwaitsFleet)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        tr.holdWaitingFleetVehicle,
+                        key: const ValueKey('hold-awaiting-fleet'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFFF2D9D4),
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  TextButton(
+                    key: const ValueKey('hold-documents'),
+                    onPressed: _openHoldDocuments,
+                    child: Text(tr.documents,
+                      style: TextStyle(color: Colors.white, fontSize: 18,
+                        fontWeight: FontWeight.w800)),
+                  ),
+                  TextButton(
+                    key: const ValueKey('hold-fleet'),
+                    onPressed: _openHoldFleet,
+                    child: Text(tr.myFleet,
+                      style: TextStyle(color: Colors.white, fontSize: 18,
+                        fontWeight: FontWeight.w800)),
+                  ),
+                ],
                 TextButton(
                   onPressed: _openActivationSupport,
                   child: Text(tr.contactSupport,
                     style: TextStyle(color: Colors.white, fontSize: 18,
                       fontWeight: FontWeight.w800)),
                 ),
-                TextButton(
-                  onPressed: _skipActivationDemo,
-                  child: Text(
-                    tr.skipDemo,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                if (!_liveHold)
+                  TextButton(
+                    onPressed: _skipActivationDemo,
+                    child: Text(
+                      tr.skipDemo,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

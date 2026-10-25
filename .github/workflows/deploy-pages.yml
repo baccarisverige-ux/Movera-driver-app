@@ -89,10 +89,30 @@ jobs:
               f'src="driver_map_camera.js?v={sha}"'))
           PY
 
+      # The live driver app (the test week's server) next to the demo, once
+      # the repository variable MOVERA_LIVE_API_URL names the server. Built
+      # first: the demo build below reuses build/web. Arrival keeps the real
+      # 100 m check here.
+      - name: Build live Drider web
+        if: ${{ vars.MOVERA_LIVE_API_URL != '' }}
+        env:
+          LIVE_API: ${{ vars.MOVERA_LIVE_API_URL }}
+        run: |
+          case "$LIVE_API" in https://*) ;; *) echo "::error::MOVERA_LIVE_API_URL must start with https://"; exit 1 ;; esac
+          flutter build web --release --base-href "/Movera-driver-app/live/" \
+            --dart-define=MOVERA_AUTH_REQUIRED=true \
+            --dart-define=MOVERA_API_BASE_URL="$LIVE_API"
+          rm -rf "$RUNNER_TEMP/drider-live"
+          mv build/web "$RUNNER_TEMP/drider-live"
+
       # The Pages site is the owner's demo: arrival works away from the
       # demo pickup. Store and other release builds keep the 100 m check (D-12).
       - name: Build Drider web
         run: flutter build web --release --base-href "/Movera-driver-app/" --dart-define=MOVERA_DEMO_ARRIVAL=true
+
+      - name: Add the live build under /live/
+        if: ${{ vars.MOVERA_LIVE_API_URL != '' }}
+        run: cp -a "$RUNNER_TEMP/drider-live" build/web/live
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

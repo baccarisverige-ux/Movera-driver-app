@@ -1,6 +1,6 @@
 import 'package:movera/core/contracts/trip_status.dart';
 
-/// Pure transition engine for `contracts/contract.json#transitions` (v0.5.0).
+/// Pure transition engine for `contracts/contract.json#transitions` (v0.5.3).
 ///
 /// The table below is a hand copy of the contract. `test/contract/` checks it
 /// row by row against `contracts/contract.json` and replays
@@ -124,7 +124,7 @@ class InvalidTripTransition implements Exception {
 }
 
 abstract final class TripTransitions {
-  static const String contractVersion = '0.5.0';
+  static const String contractVersion = '0.5.3';
 
   static const List<TripTransition> table = [
     TripTransition(TripCommand.quote, TripActor.system, [TripStatus.draft], TripStatus.quoted),
@@ -132,7 +132,10 @@ abstract final class TripTransitions {
     TripTransition(TripCommand.startSearch, TripActor.system, [TripStatus.requested], TripStatus.searching),
     TripTransition(TripCommand.sendOffer, TripActor.system, [TripStatus.searching], TripStatus.offered),
     TripTransition(TripCommand.offerLapsed, TripActor.system, [TripStatus.offered], TripStatus.searching),
-    TripTransition(TripCommand.accept, TripActor.driver, [TripStatus.offered, TripStatus.requested], TripStatus.accepted),
+    TripTransition(TripCommand.accept, TripActor.driver, [TripStatus.offered], TripStatus.accepted),
+    // v0.5.1: a live trip is accepted only from an offer; a scheduled one
+    // straight from its request.
+    TripTransition(TripCommand.accept, TripActor.driver, [TripStatus.requested], TripStatus.accepted, when: TripKind.scheduled),
     TripTransition(TripCommand.assign, TripActor.admin, [TripStatus.requested, TripStatus.searching, TripStatus.offered], TripStatus.offered),
     TripTransition(TripCommand.headToPickup, TripActor.driver, [TripStatus.accepted], TripStatus.driverToPickup),
     TripTransition(TripCommand.arrive, TripActor.driver, [TripStatus.driverToPickup], TripStatus.arrived),

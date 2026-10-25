@@ -46,10 +46,14 @@ class DocumentExpiryRule {
   /// The warning step [daysLeft] is in: 5 days left is the 7 day warning.
   /// Null before the first warning and once the document has expired.
   int? warningFor(int daysLeft) {
-    if (daysLeft <= 0) { return null; }
+    if (daysLeft <= 0) {
+      return null;
+    }
     final days = [...warnDaysBefore]..sort();
     for (final day in days) {
-      if (daysLeft <= day) { return day; }
+      if (daysLeft <= day) {
+        return day;
+      }
     }
     return null;
   }

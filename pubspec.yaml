@@ -61,6 +61,12 @@ dependencies:
   # R15-5: the radar sound while Radar offers are on Home.
   audioplayers: ^6.8.1
   path_provider: ^2.1.5
+  # Round 4 sign-in: the session's tokens in Keychain/Keystore, and this
+  # tab's sessionStorage on web (lib/core/auth).
+  flutter_secure_storage: ^10.3.4
+  web: ^1.1.2
+  share_plus: ^12.0.2
+  http_parser: ^4.1.2
 
 dev_dependencies:
   integration_test:

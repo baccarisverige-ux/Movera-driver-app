@@ -1,0 +1,519 @@
+/// The driver's account as the server keeps it (contract v0.5.3 §14:
+/// `Driver`, `Fleet`, `FleetView`, `Vehicle`, `Document`).
+library;
+
+String? _text(Object? value) =>
+    value is String && value.isNotEmpty ? value : null;
+
+List<String> _strings(Object? value) => [
+  if (value is List)
+    for (final item in value)
+      if (item is String) item,
+];
+
+DateTime? _time(Object? value) =>
+    value is String ? DateTime.tryParse(value)?.toUtc() : null;
+
+int _whole(Object? value, [int fallback = 0]) =>
+    value is num ? value.toInt() : fallback;
+
+Map<String, dynamic> _map(Object? value) =>
+    value is Map ? Map<String, dynamic>.from(value) : const {};
+
+/// `DocumentSummary` on a driver or a car.
+class DocumentSummary {
+  const DocumentSummary({
+    required this.documentId,
+    required this.type,
+    required this.status,
+    this.expiresAt,
+  });
+
+  factory DocumentSummary.fromJson(Map<String, dynamic> json) =>
+      DocumentSummary(
+        documentId: _text(json['documentId']) ?? '',
+        type: _text(json['type']) ?? '',
+        status: _text(json['status']) ?? 'missing',
+        expiresAt: _time(json['expiresAt']),
+      );
+
+  final String documentId;
+  final String type;
+
+  /// `missing`, `in_review`, `approved`, `rejected`, `expired`.
+  final String status;
+  final DateTime? expiresAt;
+}
+
+/// `Document`, as `GET /driver/documents` and an upload answer it.
+class AccountDocument {
+  const AccountDocument({
+    required this.documentId,
+    required this.ownerId,
+    required this.type,
+    required this.status,
+    required this.version,
+    this.expiresAt,
+    this.fileUrl,
+    this.fileName,
+    this.mediaType,
+    this.uploadedAt,
+    this.reviewNote,
+  });
+
+  factory AccountDocument.fromJson(Map<String, dynamic> json) =>
+      AccountDocument(
+        documentId: _text(json['documentId']) ?? '',
+        ownerId: _text(json['ownerId']) ?? '',
+        type: _text(json['type']) ?? '',
+        status: _text(json['status']) ?? 'missing',
+        version: _whole(json['version'], 1),
+        expiresAt: _time(json['expiresAt']),
+        fileUrl: _text(json['fileUrl']),
+        fileName: _text(json['fileName']),
+        mediaType: _text(json['mediaType']),
+        uploadedAt: _time(json['uploadedAt']),
+        reviewNote: _text(json['reviewNote']),
+      );
+
+  final String documentId;
+
+  /// The driverId, or the vehicleId of a car document.
+  final String ownerId;
+  final String type;
+  final String status;
+  final int version;
+  final DateTime? expiresAt;
+  final String? fileUrl;
+  final String? fileName;
+  final String? mediaType;
+  final DateTime? uploadedAt;
+  final String? reviewNote;
+
+  DocumentSummary get summary => DocumentSummary(
+    documentId: documentId,
+    type: type,
+    status: status,
+    expiresAt: expiresAt,
+  );
+}
+
+/// `Driver.fleet`.
+class FleetSummary {
+  const FleetSummary({
+    required this.fleetId,
+    required this.name,
+    required this.role,
+    required this.status,
+  });
+
+  factory FleetSummary.fromJson(Map<String, dynamic> json) => FleetSummary(
+    fleetId: _text(json['fleetId']) ?? '',
+    name: _text(json['name']) ?? '',
+    role: _text(json['role']) ?? 'member',
+    status: _text(json['status']) ?? 'pending',
+  );
+
+  final String fleetId;
+  final String name;
+
+  /// `owner` or `member`.
+  final String role;
+
+  /// `pending`, `approved`, `rejected`, `blocked`.
+  final String status;
+
+  bool get isOwner => role == 'owner';
+}
+
+/// `Driver` (`GET /driver/profile`).
+class DriverAccount {
+  const DriverAccount({
+    required this.driverId,
+    required this.accountStatus,
+    required this.firstName,
+    required this.version,
+    this.accountType,
+    this.lastName,
+    this.dateOfBirth,
+    this.email,
+    this.country,
+    this.cityId,
+    this.language,
+    this.zoneIds = const [],
+    this.vehicleId,
+    this.fleet,
+    this.payoutTo,
+    this.documents = const [],
+    this.requiredDocuments = const [],
+    this.requiredFleetDocuments = const [],
+  });
+
+  factory DriverAccount.fromJson(Map<String, dynamic> json) {
+    final fleet = json['fleet'];
+    return DriverAccount(
+      driverId: _text(json['driverId']) ?? '',
+      accountStatus: _text(json['accountStatus']) ?? 'pending',
+      firstName: _text(json['firstName']) ?? '',
+      version: _whole(json['version'], 1),
+      accountType: _text(json['accountType']),
+      lastName: _text(json['lastName']),
+      dateOfBirth: _text(json['dateOfBirth']),
+      email: _text(json['email']),
+      country: _text(json['country']),
+      cityId: _text(json['cityId']),
+      language: _text(json['language']),
+      zoneIds: _strings(json['zoneIds']),
+      vehicleId: _text(json['vehicleId']),
+      fleet: fleet is Map ? FleetSummary.fromJson(_map(fleet)) : null,
+      payoutTo: _text(json['payoutTo']),
+      documents: [
+        if (json['documents'] is List)
+          for (final item in json['documents'] as List)
+            if (item is Map) DocumentSummary.fromJson(_map(item)),
+      ],
+      requiredDocuments: _strings(json['requiredDocuments']),
+      requiredFleetDocuments: _strings(json['requiredFleetDocuments']),
+    );
+  }
+
+  final String driverId;
+
+  /// `pending` (no details yet), `on_hold`, `active`, `suspended`.
+  final String accountStatus;
+  final String firstName;
+  final int version;
+
+  /// `driver` or `fleet`; null before the details were sent.
+  final String? accountType;
+  final String? lastName;
+
+  /// `YYYY-MM-DD`.
+  final String? dateOfBirth;
+  final String? email;
+  final String? country;
+  final String? cityId;
+  final String? language;
+  final List<String> zoneIds;
+  final String? vehicleId;
+  final FleetSummary? fleet;
+
+  /// `fleet` or `self`.
+  final String? payoutTo;
+  final List<DocumentSummary> documents;
+  final List<String> requiredDocuments;
+  final List<String> requiredFleetDocuments;
+
+  bool get isActive => accountStatus == 'active';
+
+  /// Signed in, details not sent yet: the details screen comes next.
+  bool get needsDetails => accountStatus == 'pending';
+
+  /// The details may be (re)sent.
+  bool get canSendDetails =>
+      accountStatus == 'pending' || accountStatus == 'on_hold';
+
+  bool get isFleetAccount => accountType == 'fleet';
+
+  /// A driver account that has no fleet yet: no cars until it joins one.
+  bool get awaitsFleet => accountType == 'driver' && fleet == null;
+
+  String get fullName =>
+      [firstName, if (lastName != null) lastName!].join(' ').trim();
+}
+
+/// `Vehicle` with its v0.5.3 fields.
+class FleetVehicle {
+  const FleetVehicle({
+    required this.vehicleId,
+    required this.make,
+    required this.model,
+    required this.year,
+    required this.color,
+    required this.plate,
+    required this.seats,
+    required this.categoryIds,
+    required this.status,
+    required this.version,
+    this.fleetId,
+    this.driverId,
+    this.inUse = false,
+    this.documents = const [],
+    this.requiredDocuments = const [],
+  });
+
+  factory FleetVehicle.fromJson(Map<String, dynamic> json) => FleetVehicle(
+    vehicleId: _text(json['vehicleId']) ?? '',
+    make: _text(json['make']) ?? '',
+    model: _text(json['model']) ?? '',
+    year: _whole(json['year']),
+    color: _text(json['color']) ?? '',
+    plate: _text(json['plate']) ?? '',
+    seats: _whole(json['seats'], 4),
+    categoryIds: _strings(json['categoryIds']),
+    status: _text(json['status']) ?? 'pending',
+    version: _whole(json['version'], 1),
+    fleetId: _text(json['fleetId']),
+    driverId: _text(json['driverId']),
+    inUse: json['inUse'] == true,
+    documents: [
+      if (json['documents'] is List)
+        for (final item in json['documents'] as List)
+          if (item is Map) DocumentSummary.fromJson(_map(item)),
+    ],
+    requiredDocuments: _strings(json['requiredDocuments']),
+  );
+
+  final String vehicleId;
+  final String make;
+  final String model;
+  final int year;
+  final String color;
+  final String plate;
+  final int seats;
+  final List<String> categoryIds;
+
+  /// `pending`, `approved`, `rejected`, `blocked`.
+  final String status;
+  final int version;
+  final String? fleetId;
+
+  /// The driver who has the car picked; null = free.
+  final String? driverId;
+
+  /// That driver is online or on a trip.
+  final bool inUse;
+  final List<DocumentSummary> documents;
+  final List<String> requiredDocuments;
+
+  bool get isApproved => status == 'approved';
+
+  /// "Volvo XC60 2022".
+  String get title => '$make $model${year > 0 ? ' $year' : ''}'.trim();
+}
+
+/// `Fleet`.
+class Fleet {
+  const Fleet({
+    required this.fleetId,
+    required this.name,
+    required this.orgNumber,
+    required this.country,
+    required this.cityId,
+    required this.ownerName,
+    required this.status,
+    required this.driverCount,
+    required this.vehicleCount,
+    required this.version,
+    this.address,
+    this.ownerEmail,
+    this.code,
+  });
+
+  factory Fleet.fromJson(Map<String, dynamic> json) => Fleet(
+    fleetId: _text(json['fleetId']) ?? '',
+    name: _text(json['name']) ?? '',
+    orgNumber: _text(json['orgNumber']) ?? '',
+    country: _text(json['country']) ?? '',
+    cityId: _text(json['cityId']) ?? '',
+    ownerName: _text(json['ownerName']) ?? '',
+    status: _text(json['status']) ?? 'pending',
+    driverCount: _whole(json['driverCount']),
+    vehicleCount: _whole(json['vehicleCount']),
+    version: _whole(json['version'], 1),
+    address: _text(json['address']),
+    ownerEmail: _text(json['ownerEmail']),
+    code: _text(json['code']),
+  );
+
+  final String fleetId;
+  final String name;
+  final String orgNumber;
+  final String country;
+  final String cityId;
+  final String ownerName;
+  final String status;
+  final int driverCount;
+  final int vehicleCount;
+  final int version;
+  final String? address;
+  final String? ownerEmail;
+
+  /// Only after approval, only to the owner.
+  final String? code;
+
+  bool get isApproved => status == 'approved';
+}
+
+/// `FleetDriver`.
+class FleetDriver {
+  const FleetDriver({
+    required this.driverId,
+    required this.firstName,
+    required this.accountStatus,
+    required this.onlineStatus,
+    this.lastName,
+    this.vehicleId,
+    this.linkedAt,
+  });
+
+  factory FleetDriver.fromJson(Map<String, dynamic> json) => FleetDriver(
+    driverId: _text(json['driverId']) ?? '',
+    firstName: _text(json['firstName']) ?? '',
+    accountStatus: _text(json['accountStatus']) ?? 'pending',
+    onlineStatus: _text(json['onlineStatus']) ?? 'offline',
+    lastName: _text(json['lastName']),
+    vehicleId: _text(json['vehicleId']),
+    linkedAt: _time(json['linkedAt']),
+  );
+
+  final String driverId;
+  final String firstName;
+  final String accountStatus;
+  final String onlineStatus;
+  final String? lastName;
+  final String? vehicleId;
+  final DateTime? linkedAt;
+
+  String get fullName =>
+      [firstName, if (lastName != null) lastName!].join(' ').trim();
+}
+
+/// `FleetView`.
+class FleetView {
+  const FleetView({
+    required this.fleet,
+    required this.drivers,
+    required this.vehicles,
+  });
+
+  factory FleetView.fromJson(Map<String, dynamic> json) => FleetView(
+    fleet: Fleet.fromJson(_map(json['fleet'])),
+    drivers: [
+      if (json['drivers'] is List)
+        for (final item in json['drivers'] as List)
+          if (item is Map) FleetDriver.fromJson(_map(item)),
+    ],
+    vehicles: [
+      if (json['vehicles'] is List)
+        for (final item in json['vehicles'] as List)
+          if (item is Map) FleetVehicle.fromJson(_map(item)),
+    ],
+  );
+
+  final Fleet fleet;
+  final List<FleetDriver> drivers;
+  final List<FleetVehicle> vehicles;
+}
+
+/// `DriverOnboardingRequest`.
+class DriverDetailsRequest {
+  const DriverDetailsRequest({
+    required this.firstName,
+    required this.lastName,
+    required this.dateOfBirth,
+    required this.email,
+    required this.country,
+    required this.cityId,
+    required this.language,
+    required this.accountType,
+    this.company,
+    this.fleetJoin,
+  });
+
+  final String firstName;
+  final String lastName;
+
+  /// `YYYY-MM-DD`.
+  final String dateOfBirth;
+  final String email;
+  final String country;
+  final String cityId;
+  final String language;
+
+  /// `driver` or `fleet`.
+  final String accountType;
+  final FleetCompany? company;
+  final FleetJoinRequest? fleetJoin;
+
+  Map<String, dynamic> toJson() => {
+    'firstName': firstName.trim(),
+    'lastName': lastName.trim(),
+    'dateOfBirth': dateOfBirth,
+    'email': email.trim(),
+    'country': country,
+    'cityId': cityId,
+    'language': language,
+    'accountType': accountType,
+    'termsAccepted': true,
+    if (company != null) 'company': company!.toJson(),
+    if (fleetJoin != null) 'fleetJoin': fleetJoin!.toJson(),
+  };
+}
+
+class FleetCompany {
+  const FleetCompany({
+    required this.name,
+    required this.orgNumber,
+    required this.address,
+  });
+
+  final String name;
+  final String orgNumber;
+  final String address;
+
+  Map<String, dynamic> toJson() => {
+    'name': name.trim(),
+    'orgNumber': orgNumber.trim(),
+    'address': address.trim(),
+  };
+}
+
+class FleetJoinRequest {
+  const FleetJoinRequest({
+    required this.code,
+    required this.ownerName,
+    required this.ownerEmail,
+  });
+
+  final String code;
+  final String ownerName;
+  final String ownerEmail;
+
+  Map<String, dynamic> toJson() => {
+    'code': code.trim(),
+    'ownerName': ownerName.trim(),
+    'ownerEmail': ownerEmail.trim(),
+  };
+}
+
+/// `VehicleRequest`.
+class NewVehicle {
+  const NewVehicle({
+    required this.make,
+    required this.model,
+    required this.year,
+    required this.color,
+    required this.plate,
+    required this.seats,
+    required this.categoryIds,
+  });
+
+  final String make;
+  final String model;
+  final int year;
+  final String color;
+  final String plate;
+  final int seats;
+  final List<String> categoryIds;
+
+  Map<String, dynamic> toJson() => {
+    'make': make.trim(),
+    'model': model.trim(),
+    'year': year,
+    'color': color.trim(),
+    'plate': plate.trim().toUpperCase(),
+    'seats': seats,
+    'categoryIds': categoryIds,
+  };
+}

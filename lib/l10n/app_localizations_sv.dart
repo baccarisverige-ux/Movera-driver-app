@@ -4781,4 +4781,646 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get locationBlockedSettings =>
       'Platsåtkomst är blockerad för Movera. Tillåt den i Inställningar för att få resor.';
+
+  @override
+  String get authDriverWord => 'Förare';
+
+  @override
+  String get authBrandTagline => 'På väg mot en ny era.';
+
+  @override
+  String get authEnterPhone => 'Ange ditt telefonnummer';
+
+  @override
+  String get authTextFourDigitCode => 'Vi skickar en fyrsiffrig kod via sms.';
+
+  @override
+  String get authInvalidMobileNumber => 'Ange ett giltigt mobilnummer.';
+
+  @override
+  String get authConsentLabel =>
+      'Jag godkänner användarvillkoren och integritetspolicyn';
+
+  @override
+  String get authConsentPrefix => 'Genom att fortsätta godkänner du våra ';
+
+  @override
+  String get authConsentTerms => 'användarvillkor';
+
+  @override
+  String get authAnd => ' och ';
+
+  @override
+  String get authConsentPrivacy => 'integritetspolicy';
+
+  @override
+  String get authConsentTickFirst =>
+      'Bocka i rutan för att godkänna innan du fortsätter.';
+
+  @override
+  String get authContinue => 'Fortsätt';
+
+  @override
+  String authStepOf(Object step, Object total) {
+    return 'Steg $step av $total';
+  }
+
+  @override
+  String get authChangeLanguage => 'Byt språk';
+
+  @override
+  String get authChooseCountry => 'Välj ditt land';
+
+  @override
+  String get authSearchCountry => 'Sök land eller landsnummer';
+
+  @override
+  String get authNoCountryFound => 'Inget land matchar din sökning.';
+
+  @override
+  String authPhoneCountryCode(Object country, Object dial) {
+    return 'Landsnummer: $country, $dial';
+  }
+
+  @override
+  String get authChangeCountryCode => 'Byt land';
+
+  @override
+  String get authEnterYourCodeHead => 'Ange din ';
+
+  @override
+  String get authEnterYourCodeAccent => 'kod';
+
+  @override
+  String get authCodeSentToPhone => 'Vi har skickat en kod till din telefon.';
+
+  @override
+  String get authSentTo => 'Skickad till ';
+
+  @override
+  String get authNewCodeSent => 'Ny kod skickad.';
+
+  @override
+  String get authReenterPhone =>
+      'Gå tillbaka och ange ditt telefonnummer igen.';
+
+  @override
+  String get authRequestNewCode => 'Gå tillbaka och begär en ny kod.';
+
+  @override
+  String get authNeverAskCode =>
+      'Movera ringer eller sms:ar aldrig och ber om den här koden.';
+
+  @override
+  String get authVerify => 'Verifiera';
+
+  @override
+  String get authResendCodeIn => 'Skicka koden igen om ';
+
+  @override
+  String get authResendCode => 'Skicka koden igen';
+
+  @override
+  String get authErrOffline =>
+      'Ingen anslutning. Kontrollera internet och försök igen.';
+
+  @override
+  String get authErrTooManyWait =>
+      'För många försök. Vänta en stund och försök igen.';
+
+  @override
+  String authErrTooManyIn(Object wait) {
+    return 'För många försök. Försök igen om $wait.';
+  }
+
+  @override
+  String authRetrySeconds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sekunder',
+      one: '1 sekund',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authErrServer =>
+      'Movera har problem just nu. Försök igen om en stund.';
+
+  @override
+  String get authErrWrongCode =>
+      'Koden stämmer inte. Kontrollera den och försök igen.';
+
+  @override
+  String get authCodeExpired =>
+      'Koden har gått ut. Tryck på Skicka koden igen för att få en ny.';
+
+  @override
+  String get authErrSendCode => 'Kunde inte skicka koden. Försök igen.';
+
+  @override
+  String get authErrCheckCode => 'Kunde inte kontrollera koden. Försök igen.';
+
+  @override
+  String get authSignInRestricted =>
+      'Det här numret finns inte med på förarnas testlista ännu. Kontakta Movera för att få tillgång.';
+
+  @override
+  String get acctDetailsTitle => 'Dina uppgifter';
+
+  @override
+  String get acctDetailsIntro =>
+      'Movera kontrollerar dem innan du kan köra. Fyll i dem en gång.';
+
+  @override
+  String get acctFirstName => 'Förnamn';
+
+  @override
+  String get acctLastName => 'Efternamn';
+
+  @override
+  String get acctDateOfBirth => 'Födelsedatum';
+
+  @override
+  String get acctPickDate => 'Välj datum';
+
+  @override
+  String get acctEmail => 'E-post';
+
+  @override
+  String get acctCountry => 'Land';
+
+  @override
+  String get acctCity => 'Stad';
+
+  @override
+  String get acctChooseCity => 'Välj din stad';
+
+  @override
+  String get acctLanguage => 'Språk';
+
+  @override
+  String get acctAccountType => 'Kontotyp';
+
+  @override
+  String get acctComingSoon => 'Kommer snart';
+
+  @override
+  String get acctCountrySweden => 'Sverige';
+
+  @override
+  String get acctCountryFrance => 'Frankrike';
+
+  @override
+  String get acctCountryTunisia => 'Tunisien';
+
+  @override
+  String get acctTypeDriverTitle => 'Förare';
+
+  @override
+  String get acctTypeDriverBody => 'Jag kör för ett åkeri';
+
+  @override
+  String get acctTypeFleetTitle => 'Åkeri';
+
+  @override
+  String get acctTypeFleetBody => 'Jag driver ett företag med bilar och förare';
+
+  @override
+  String get acctCompanyName => 'Företagsnamn';
+
+  @override
+  String get acctOrgNumberSe => 'Organisationsnummer';
+
+  @override
+  String get acctOrgNumberFr => 'SIREN';
+
+  @override
+  String get acctCompanyAddress => 'Företagsadress';
+
+  @override
+  String get acctJoinNow => 'Gå med i ditt åkeri nu';
+
+  @override
+  String get acctJoinNowBody =>
+      'Ägaren av ditt åkeri delar en Movera-kod med dig. Du kan också göra det senare i Profil › Mitt åkeri.';
+
+  @override
+  String get acctFleetCode => 'Åkerikod';
+
+  @override
+  String get acctOwnerName => 'Ägarens fullständiga namn';
+
+  @override
+  String get acctOwnerEmail => 'Ägarens e-post';
+
+  @override
+  String get acctRequired => 'Obligatoriskt';
+
+  @override
+  String acctUnderAge(int age) {
+    return 'Du måste vara minst $age år för att köra med Movera.';
+  }
+
+  @override
+  String get acctInvalidDate => 'Ange ett giltigt datum.';
+
+  @override
+  String get acctInvalidEmail => 'Ange en giltig e-postadress.';
+
+  @override
+  String get acctCountryNotOpen =>
+      'Movera är inte öppet i det här landet ännu.';
+
+  @override
+  String get acctInvalidCity => 'Välj en stad i ditt land.';
+
+  @override
+  String get acctTermsRequired => 'Godkänn villkoren för att fortsätta.';
+
+  @override
+  String get acctCompanyRequired => 'Fyll i företagets uppgifter.';
+
+  @override
+  String get acctDetailsLocked =>
+      'Dina uppgifter är redan godkända. Kontakta supporten för att ändra dem.';
+
+  @override
+  String get acctCouldNotSend =>
+      'Kunde inte skicka dina uppgifter. Försök igen.';
+
+  @override
+  String get acctTooManyTriesHour =>
+      'För många försök. Vänta ungefär en timme och försök igen.';
+
+  @override
+  String get acctChangedReload =>
+      'Ditt konto ändrades under tiden. Dra för att uppdatera och försök igen.';
+
+  @override
+  String get acctCouldNotLoad => 'Kunde inte läsa in ditt konto.';
+
+  @override
+  String get acctTryAgain => 'Något gick fel. Försök igen.';
+
+  @override
+  String get holdBeingChecked =>
+      'Ditt konto kontrolleras. Ladda upp dina dokument så säger vi till när du kan köra.';
+
+  @override
+  String get holdWaitingFleetVehicle =>
+      'Väntar på ditt åkeris fordonsuppgifter';
+
+  @override
+  String get myFleet => 'Mitt åkeri';
+
+  @override
+  String get docYou => 'Du';
+
+  @override
+  String get docCompany => 'Företag';
+
+  @override
+  String docCar(Object plate) {
+    return 'Bil $plate';
+  }
+
+  @override
+  String get docStatusRejected => 'Avvisat';
+
+  @override
+  String get docStatusExpired => 'Utgånget';
+
+  @override
+  String get docMoveraBooks => 'Movera bokar detta med dig';
+
+  @override
+  String get docTakePhoto => 'Ta foto';
+
+  @override
+  String get docChoosePhoto => 'Välj foto';
+
+  @override
+  String get docChoosePdf => 'Välj PDF';
+
+  @override
+  String get docUploading => 'Laddar upp…';
+
+  @override
+  String get docUploaded => 'Uppladdat. Movera kontrollerar det.';
+
+  @override
+  String get docUploadFailed => 'Kunde inte ladda upp. Försök igen.';
+
+  @override
+  String get docFileTooLarge => 'Filen är större än 10 MB.';
+
+  @override
+  String get docUnsupportedFile => 'Skicka en JPEG, PNG, HEIC eller PDF.';
+
+  @override
+  String get docEmptyFile => 'Filen är tom.';
+
+  @override
+  String get docTypeNotAccepted =>
+      'Det här dokumentet kan inte laddas upp här.';
+
+  @override
+  String get docCouldNotLoad => 'Kunde inte läsa in dina dokument.';
+
+  @override
+  String get docNoneYet => 'Inget att ladda upp ännu.';
+
+  @override
+  String get docUploadNew => 'Ladda upp nytt';
+
+  @override
+  String get fleetJoinTitle => 'Gå med i ditt åkeri';
+
+  @override
+  String get fleetJoinBody =>
+      'Ägaren av ditt åkeri delar Movera-koden med dig. Ange den tillsammans med ägarens namn och e-post så som de är registrerade hos Movera.';
+
+  @override
+  String get fleetJoin => 'Gå med';
+
+  @override
+  String fleetJoined(Object name) {
+    return 'Du är med i $name.';
+  }
+
+  @override
+  String get fleetJoinMismatch =>
+      'Koden, ägarens namn och e-post matchar inget åkeri. Kontrollera dem med ägaren.';
+
+  @override
+  String get fleetAlreadyIn => 'Du är redan med i ett åkeri. Lämna det först.';
+
+  @override
+  String get fleetAccountHasOwn => 'Ett åkerikonto har sitt eget åkeri.';
+
+  @override
+  String get fleetOnTrip => 'Avsluta resan först.';
+
+  @override
+  String get fleetOwnerCannotLeave => 'Ägaren kan inte lämna åkeriet.';
+
+  @override
+  String get fleetNotInOne => 'Du är inte med i något åkeri.';
+
+  @override
+  String get fleetOwnerOnly => 'Bara åkeriets ägare kan göra det.';
+
+  @override
+  String get fleetYourCompany => 'Ditt företag';
+
+  @override
+  String get fleetYourFleet => 'Ditt åkeri';
+
+  @override
+  String get fleetCode => 'Åkerikod';
+
+  @override
+  String get fleetCodeHint =>
+      'Dela den med dina förare tillsammans med ditt namn och din e-post.';
+
+  @override
+  String get fleetCodeWaiting => 'Väntar på Moveras godkännande';
+
+  @override
+  String fleetCodeShareText(
+    Object name,
+    Object code,
+    Object owner,
+    Object email,
+  ) {
+    return 'Gå med i $name på Movera Driver. Kod: $code. Ägare: $owner, $email.';
+  }
+
+  @override
+  String get fleetShare => 'Dela';
+
+  @override
+  String get fleetCopy => 'Kopiera';
+
+  @override
+  String get fleetCodeCopied => 'Koden kopierad';
+
+  @override
+  String get fleetDrivers => 'Förare';
+
+  @override
+  String get fleetNoDrivers => 'Inga förare ännu. Dela din kod.';
+
+  @override
+  String get fleetRemove => 'Ta bort';
+
+  @override
+  String fleetRemoveDriverQ(Object name) {
+    return 'Ta bort $name från ditt åkeri?';
+  }
+
+  @override
+  String get fleetCars => 'Bilar';
+
+  @override
+  String get fleetNoCars => 'Inga bilar ännu.';
+
+  @override
+  String get fleetNoCarsMember => 'Ditt åkeri har ingen godkänd bil ännu.';
+
+  @override
+  String get fleetAddCar => 'Lägg till bil';
+
+  @override
+  String get fleetChooseCar => 'Välj den här bilen';
+
+  @override
+  String get fleetYourCar => 'Din bil';
+
+  @override
+  String get fleetInUse => 'Används av en annan förare';
+
+  @override
+  String fleetPickedBy(Object name) {
+    return 'Vald av $name';
+  }
+
+  @override
+  String get fleetLeave => 'Lämna åkeriet';
+
+  @override
+  String fleetLeaveQ(Object name) {
+    return 'Lämna $name? Du kan gå med i ett annat åkeri med en ny kod.';
+  }
+
+  @override
+  String get fleetCouldNotLoad => 'Kunde inte läsa in ditt åkeri.';
+
+  @override
+  String get fleetStatusPending => 'Väntar på godkännande';
+
+  @override
+  String get fleetStatusApproved => 'Godkänt';
+
+  @override
+  String get fleetStatusRejected => 'Avvisat';
+
+  @override
+  String get fleetStatusBlocked => 'Blockerat';
+
+  @override
+  String get fleetVehicleInUse => 'En annan förare kör den här bilen just nu.';
+
+  @override
+  String get fleetVehicleNotApproved => 'Den här bilen är inte godkänd ännu.';
+
+  @override
+  String get fleetVehicleNotYours => 'Den här bilen tillhör inte ditt åkeri.';
+
+  @override
+  String get fleetPlateTaken =>
+      'En bil med det här registreringsnumret finns redan.';
+
+  @override
+  String get fleetCarAdded => 'Bilen är tillagd. Movera kontrollerar den.';
+
+  @override
+  String get fleetCouldNotAddCar => 'Kunde inte lägga till bilen. Försök igen.';
+
+  @override
+  String get fleetCouldNotPick => 'Kunde inte välja bilen. Försök igen.';
+
+  @override
+  String get fleetColour => 'Färg';
+
+  @override
+  String get fleetPlate => 'Registreringsnummer';
+
+  @override
+  String get fleetSeats => 'Säten';
+
+  @override
+  String get fleetCarTypes => 'Biltyper';
+
+  @override
+  String fleetMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count förare',
+      one: '1 förare',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fleetCarCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bilar',
+      one: '1 bil',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fleetOrgNumber(Object number) {
+    return 'Org.nr $number';
+  }
+
+  @override
+  String get fleetOnline => 'Online';
+
+  @override
+  String get fleetOffline => 'Offline';
+
+  @override
+  String get vehStatusPending => 'Granskas';
+
+  @override
+  String get vehStatusApproved => 'Godkänd';
+
+  @override
+  String get vehStatusRejected => 'Avvisad';
+
+  @override
+  String get vehStatusBlocked => 'Blockerad';
+
+  @override
+  String get vehDocumentsOnDocs => 'Ladda upp bilens dokument under Dokument.';
+
+  @override
+  String fleetCarSeatsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count säten',
+      one: '1 säte',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fleetJoinLink => 'Gå med i ett åkeri';
+
+  @override
+  String get docChooseHow => 'Hur vill du lägga till det?';
+
+  @override
+  String get fleetVehiclesAwait =>
+      'Ditt åkeri lägger till sina bilar; här väljer du den du kör.';
+
+  @override
+  String get liveOnlineFailed => 'Kunde inte gå online. Försök igen.';
+
+  @override
+  String get liveOfflineFailed =>
+      'Movera kunde inte registrera att du gick offline. Försök igen.';
+
+  @override
+  String get liveOnlineNotActive =>
+      'Ditt konto är inte aktivt än, så du kan inte gå online.';
+
+  @override
+  String get liveOnlineNoFleet => 'Gå med i ett åkeri innan du går online.';
+
+  @override
+  String get liveOnlineFleetNotApproved =>
+      'Ditt åkeri är inte godkänt än, så du kan inte gå online.';
+
+  @override
+  String get liveOnlineNoVehicle => 'Välj en godkänd bil innan du går online.';
+
+  @override
+  String get liveOnlineVehicleNotApproved =>
+      'Din bil är inte godkänd än, så du kan inte gå online.';
+
+  @override
+  String get liveOnlineVehicleInUse =>
+      'En annan förare har den här bilen nu. Välj din bil igen.';
+
+  @override
+  String get liveOnlineNoCategory => 'Ingen resetyp är vald för din bil än.';
+
+  @override
+  String get liveOfflineOnTrip => 'Avsluta din resa innan du går offline.';
+
+  @override
+  String get liveTripNotAtPickup =>
+      'Movera ser dig inte vid upphämtningen än. Kör närmare och försök igen.';
+
+  @override
+  String get liveTripNoShowTooEarly =>
+      'Det är för tidigt för en utebliven resenär. Vänta lite till.';
+
+  @override
+  String get liveTripChanged =>
+      'Resan har ändrats under tiden. Kontrollera den och försök igen.';
+
+  @override
+  String get liveTripFailed =>
+      'Movera kunde inte registrera det här steget. Försök igen.';
 }

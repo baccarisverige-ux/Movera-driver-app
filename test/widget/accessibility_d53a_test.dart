@@ -16,8 +16,9 @@ import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_card.dart';
 import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
-import 'package:movera/presentation/driver/auth/create%20acc/create_acc.dart';
-import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
+import 'package:movera/core/auth/otp_challenge.dart';
+import 'package:movera/presentation/driver/auth/phone_verify.dart';
+import 'package:movera/presentation/driver/auth/sign_in.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/components/home_offer_sheet.dart';
@@ -230,10 +231,19 @@ void main() {
   });
 
   for (final (name, screen, words) in <(String, Widget, String Function())>[
-    ('the terms consent', const DriverCreateAccount(),
-        () => tr.byContinuingIAgreeTo),
-    ('the code explanation', const DriverPhoneVerification(),
-        () => tr.codeDeliveryUnavailableDemo),
+    ('the terms consent', const DriverSignIn(), () => tr.authConsentPrefix),
+    (
+      'the code explanation',
+      DriverPhoneVerification(
+        challenge: OtpChallenge(
+          phone: '+46701234567',
+          sessionId: 'otp-1',
+          expiresAt: DateTime.utc(2030),
+          retryAfter: Duration.zero,
+        ),
+      ),
+      () => tr.authNeverAskCode,
+    ),
   ]) {
     testWidgets('driver-u102: $name follows the system text size',
         (tester) async {

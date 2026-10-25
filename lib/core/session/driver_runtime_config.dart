@@ -17,6 +17,8 @@ class DriverRuntimeConfig {
     this.islandHint = true,
     this.radarSound = true,
     this.adminDemoOffers = false,
+    this.authRequired = false,
+    this.apiBaseUrl = '',
   });
 
   /// Demo builds only: arrival does not require a live GPS fix within 100 m of
@@ -54,6 +56,19 @@ class DriverRuntimeConfig {
   /// and production leave it off.
   final bool adminDemoOffers;
 
+  /// Round 4 sign-in: the app opens on Sign in until the driver has a
+  /// session (`MOVERA_AUTH_REQUIRED=true`). Off, the GitHub Pages demo
+  /// keeps opening Home as before, with no sign-in reachable.
+  final bool authRequired;
+
+  /// The API origin, no trailing slash (`MOVERA_API_BASE_URL`, e.g.
+  /// `https://api.staging.movera.se`). Empty: no server; a sign-in call
+  /// ends as a network error.
+  final String apiBaseUrl;
+
+  /// [apiBaseUrl] as a [Uri].
+  Uri get apiBaseUri => Uri.parse(apiBaseUrl);
+
   /// D-12: whether a build lets the driver arrive from anywhere.
   ///
   /// A production composition never does. Otherwise an explicit
@@ -82,6 +97,8 @@ class DriverRuntimeConfig {
     externalRouting: _externalRouting,
     skipAccountActivation: _skipAccountActivation,
     adminDemoOffers: !driverProductionRequested,
+    authRequired: _authRequired,
+    apiBaseUrl: _apiBaseUrl,
   );
 
   // Web (dart2js) only allows these reads as const values.
@@ -93,12 +110,22 @@ class DriverRuntimeConfig {
     'MOVERA_SKIP_ACTIVATION',
     defaultValue: false,
   );
+  static const bool _authRequired = bool.fromEnvironment(
+    'MOVERA_AUTH_REQUIRED',
+    defaultValue: false,
+  );
+  static const String _apiBaseUrl = String.fromEnvironment(
+    'MOVERA_API_BASE_URL',
+    defaultValue: '',
+  );
 
   /// Production policy: every gate enforced.
   static const DriverRuntimeConfig production = DriverRuntimeConfig(
     simulatedArrival: false,
     externalRouting: true,
     skipAccountActivation: false,
+    authRequired: true,
+    apiBaseUrl: _apiBaseUrl,
   );
 
   /// Config read by screens. Tests replace it; app code never writes it.

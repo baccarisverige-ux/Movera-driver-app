@@ -7,10 +7,7 @@ import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
-import 'package:movera/presentation/driver/auth/create%20acc/create_acc_phone.dart';
-import 'package:movera/presentation/driver/auth/phone%20verification/phone_verify.dart';
-import 'package:movera/presentation/driver/auth/sign%20in%20phone/sign_in_phone.dart';
-import 'package:movera/presentation/driver/auth/sign%20in/sign_in.dart';
+import 'package:movera/presentation/driver/auth/sign_in.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
@@ -35,12 +32,6 @@ Future<void> show(WidgetTester tester, String code, Widget home) async {
   await tester.pumpWidget(const SizedBox());
   await d51.show(tester, code, home);
 }
-
-/// The country flag the phone field starts with, by ISO code.
-Finder flag(String iso) => find.byWidgetPredicate((widget) =>
-    widget is Image &&
-    widget.image is AssetImage &&
-    (widget.image as AssetImage).assetName.endsWith('/$iso.png'));
 
 /// A ride Movera assigned for [day] 07:40, with no date of its own.
 ReservationRequestPreview assignedRide(String day) => ReservationRequestPreview(
@@ -85,31 +76,20 @@ TripHistoryRecord historyTrip(
 /// Wave 5 D5.1 (parts c, d and e): texts that stayed in English, or in
 /// the language they were made in, now follow the driver's language.
 void main() {
-  testWidgets('driver-57: the English code prompt is grammatical',
+  testWidgets('driver-u105: the sign-in phone field starts on Sweden, +46',
       (tester) async {
-    await show(tester, 'en', const DriverPhoneVerification());
-    expect(words('Didn’t get the code?'), findsOneWidget);
-    expect(words('Did you don’t'), findsNothing);
+    await show(tester, 'sv', const DriverSignIn());
+    expect(find.text('+46'), findsOneWidget);
+    expect(find.text('+1'), findsNothing);
+    expect(words(tr.authEnterPhone), findsOneWidget);
   });
 
-  testWidgets('driver-u105: phone screens start on Sweden, +46', (tester) async {
-    final screens = <Widget>[
-      const DriverSignInPhone(),
-      const DriverCreateAccountPhone(),
-    ];
-    for (final screen in screens) {
-      await show(tester, 'sv', screen);
-      expect(flag('se'), findsOneWidget, reason: '${screen.runtimeType}');
-      expect(flag('us'), findsNothing);
-    }
-  });
-
-  testWidgets('driver-58: the sign-in divider word is translated',
+  testWidgets('driver-58: the sign-in consent line is translated',
       (tester) async {
-    for (final (code, or) in [('fr', 'ou'), ('sv', 'eller')]) {
+    for (final (code, word) in [('fr', 'En continuant'), ('sv', 'fortsätta')]) {
       await show(tester, code, const DriverSignIn());
-      expect(find.text(or), findsOneWidget, reason: code);
-      expect(find.text('or'), findsNothing);
+      expect(words(word), findsOneWidget, reason: code);
+      expect(words('By continuing'), findsNothing);
     }
   });
 

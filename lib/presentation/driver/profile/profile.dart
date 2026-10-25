@@ -7,6 +7,11 @@ import 'package:movera/core/vehicle/local_vehicle_store.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
+import 'package:movera/core/account/driver_account.dart';
+import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
+import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
@@ -69,6 +74,12 @@ class _DriverProfileState extends State<DriverProfile> {
   static const Color _ink = Color(0xFF252E3A);
   static const Color _muted = Color(0xFF7D898F);
   static const Color _line = Color(0xFFE6E8EA);
+
+  /// Round 4: the live account session, when the build requires one.
+  DriverAccountSession? get _liveSession =>
+      DriverRuntimeConfig.current.authRequired ? accountSessionOf(context) : null;
+
+  DriverAccount? get _liveAccount => _liveSession?.account;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +173,11 @@ class _DriverProfileState extends State<DriverProfile> {
                 title: tr.vehicles,
                 // driver-81: blank while reading; "unavailable" only when the
                 // read ended without a vehicle.
-                detail: snapshot.data?.vehicle ??
+                // Round 4 (live): a driver account without a fleet waits
+                // for the fleet's cars.
+                detail: _liveAccount?.awaitsFleet == true
+                    ? tr.holdWaitingFleetVehicle
+                    : snapshot.data?.vehicle ??
                     (snapshot.connectionState == ConnectionState.done
                         ? tr.vehicleDataUnavailable
                         : ''),
@@ -172,6 +187,12 @@ class _DriverProfileState extends State<DriverProfile> {
             ),
             const SizedBox(height: 12),
             _group(context, [
+              if (_liveSession != null)
+                _item(
+                  Icons.groups_outlined,
+                  tr.myFleet,
+                  MyFleetScreen(account: _liveSession!),
+                ),
               _item(Icons.insights_outlined, tr.analytics, const Analytics()),
               _item(Icons.account_balance_outlined, tr.myBank, const MyBank()),
               _item(
@@ -420,8 +441,9 @@ class _DriverProfileState extends State<DriverProfile> {
         return;
       }
       // uat-d2: the demo landing screen is gone; a logged-out driver is
-      // back on Home (demo mode), where the real sign-in will start.
-      final home = runtime?.homeBuilder;
+      // back on Home (demo mode). Round 4: a build that requires a session
+      // lands on Sign in instead (driverRootAfterSignOut).
+      final home = driverRootAfterSignOut(runtime);
       if (home == null) {
         Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
         return;

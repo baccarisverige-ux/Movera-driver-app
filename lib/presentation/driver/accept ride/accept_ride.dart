@@ -37,6 +37,9 @@ import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
+import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/live_error_message.dart';
+import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/routing/road_route_service.dart';
@@ -113,6 +116,7 @@ part 'accept_ride_trip.dart';
 part 'accept_ride_panel.dart';
 part 'accept_ride_sheet.dart';
 part 'accept_ride_late_eta.dart';
+part 'accept_ride_live.dart';
 
 class AcceptRide extends StatefulWidget {
   const AcceptRide({
@@ -586,7 +590,11 @@ class _AcceptRideState extends State<AcceptRide>
     _navigation.addListener(_onNavigationChangedListener);
     RideCheckGate.listenable.addListener(_onRideCheckGateListener);
     _ownsRealtime = widget.realtime == null;
-    _realtime = widget.realtime ?? MemoryDriverRealtime();
+    // A live build follows the server's trip events; the demo its own bus.
+    _realtime = widget.realtime ??
+        LiveDriverServices.instance?.realtime() ??
+        MemoryDriverRealtime();
+    _AcceptRideLive(this)._beginLiveTrip();
     _realtimeSubscription =
         _realtime.subscribe(widget.tripId).listen(_AcceptRideTrip(this)._onRealtimeEvent, onError: (Object error) {
           if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripUpdatesDisconnectedReconnectingIsRequired))); }
