@@ -21,7 +21,7 @@ DriverAccountSession? accountSessionOf(BuildContext context) =>
 /// details screen for a new driver (`isNewDriver`, or a live account still
 /// `pending`), else Home ([DriverRuntimeScope.homeBuilder]); Home itself
 /// shows the hold while the account is not active.
-void enterDriverApp(BuildContext context) {
+Future<void> enterDriverApp(BuildContext context) async {
   final scope = DriverRuntimeScope.maybeOf(context);
   final home = scope?.homeBuilder;
   final navigator = Navigator.of(context, rootNavigator: true);
@@ -32,6 +32,17 @@ void enterDriverApp(BuildContext context) {
   }
   final account = scope?.account;
   final isNew = scope?.auth?.signInResult?.isNewDriver ?? false;
+  if (!isNew && account != null && account.account == null) {
+    // A returning driver: read the live profile first, so one who never
+    // sent the details still lands on the details screen. A failed read
+    // opens Home, which shows the hold and retries.
+    try {
+      await account.refresh();
+    } catch (_) {
+      // Home handles it.
+    }
+    if (!context.mounted) return;
+  }
   final pending = account?.account?.needsDetails ?? false;
   if (account != null && (isNew || pending)) {
     navigator.pushAndRemoveUntil(

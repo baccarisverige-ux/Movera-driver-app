@@ -149,9 +149,9 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
       await auth.verify(challenge: challenge, code: code);
       if (!mounted) return;
       _ticker?.cancel();
-      // Always Home for now; enterDriverApp is where isNewDriver will
-      // open the details screen (round 5).
-      enterDriverApp(context);
+      // enterDriverApp decides: the details screen for a new or still
+      // pending driver, else Home.
+      await enterDriverApp(context);
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = authErrorMessage(error, AuthAction.verifyCode));

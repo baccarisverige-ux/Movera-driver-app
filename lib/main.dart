@@ -234,7 +234,12 @@ class _MoveraAppState extends State<MoveraApp> {
                   child: LayoutViewport(
                     child: Column(
                       children: [
-                        const DemoModeBanner(),
+                        // A live build (round 4) has an account: no demo
+                        // banner, only the status-bar inset it would take.
+                        if (DriverRuntimeConfig.current.authRequired)
+                          const SafeArea(bottom: false, child: SizedBox.shrink())
+                        else
+                          const DemoModeBanner(),
                         // The banner took the status-bar inset: the
                         // screens below must not pad for it again.
                         Expanded(
