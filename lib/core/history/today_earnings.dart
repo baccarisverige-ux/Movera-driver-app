@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/money/money.dart';
 
 /// Today's earnings for the island's TODAY face, on Home and on the trip
@@ -21,6 +22,17 @@ class TodayEarnings {
   static Future<void> refresh({
     Future<List<TripHistoryRecord>> Function()? read,
   }) async {
+    // A live build shows the server's figure, in its currency: this
+    // device's trips are not all the driver's trips (audit R3).
+    final live = LiveDriverServices.instance;
+    if (live != null && read == null) {
+      try {
+        _label.value = (await live.earnings.today())?.formatted;
+      } catch (_) {
+        _label.value = null;
+      }
+      return;
+    }
     try {
       final records = await (read ?? PrefsTripHistoryRepository().list)();
       _label.value = totalOf(records, DateTime.now());
@@ -34,6 +46,7 @@ class TodayEarnings {
   /// be read (Ride history then says "unavailable").
   static String? totalOf(Iterable<TripHistoryRecord> records, DateTime now) {
     var total = 0;
+    String? currency;
     for (final record in records) {
       final at = record.completedAt;
       if (at == null) {
@@ -49,9 +62,15 @@ class TodayEarnings {
       if (fare == null) {
         return null;
       }
+      // Never add kronor to euros (audit R3): mixed currencies are
+      // unknown, and one currency is shown as itself.
+      if (fare.minorUnits != 0) {
+        if (currency != null && currency != fare.currency) return null;
+        currency = fare.currency;
+      }
       total += fare.minorUnits;
     }
-    return Money.ore(total).formatted;
+    return Money(minorUnits: total, currency: currency ?? 'SEK').formatted;
   }
 
   @visibleForTesting

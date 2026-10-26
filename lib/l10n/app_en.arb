@@ -492,6 +492,7 @@
   "moveraCouldNotBeAlerted": "Movera could not be alerted",
   "moveraSafetyTeamAlerted": "Movera safety team alerted",
   "safetyAlertKeptOnPhoneDemo": "Demo: alert kept on this phone only. No one at Movera was notified.",
+  "safetyAlertNotSentLive": "Not sent: Movera cannot receive ride-check alerts yet. In danger, call 112.",
   "call112IfYouNeedHelp": "\nCall 112 if you need help now.",
   "tripDriverAndRiderDetailsWere": "\nTrip, driver and rider details were sent.",
   "call112Now": "Call 112 now",
@@ -2330,6 +2331,7 @@
   "schedAvailableToday": "Available today",
   "schedUpcoming": "Upcoming",
   "schedPreviewNotBinding": "Preview — not binding. Decisions last until the app restarts.",
+  "schedNoneYet": "No scheduled rides yet. Reservations from Movera will show up here.",
   "schedAcceptedPickupAt": "Accepted · pickup {time}",
   "@schedAcceptedPickupAt": {
     "placeholders": {

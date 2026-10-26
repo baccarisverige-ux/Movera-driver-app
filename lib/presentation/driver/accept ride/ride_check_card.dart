@@ -1,3 +1,4 @@
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/safety/ride_check_l10n.dart';
 import 'dart:math' as math;
@@ -736,7 +737,11 @@ class RideCheckCard extends StatelessWidget {
                     text: failed
                         ? tr.moveraCouldNotBeAlerted
                         : demo
-                        ? tr.safetyAlertKeptOnPhoneDemo
+                        // A live build has no alert endpoint yet (audit
+                        // R2): said plainly, without "Demo".
+                        ? (LiveDriverServices.active
+                              ? tr.safetyAlertNotSentLive
+                              : tr.safetyAlertKeptOnPhoneDemo)
                         : tr.moveraSafetyTeamAlerted,
                     style: const TextStyle(
                       color: Colors.white,

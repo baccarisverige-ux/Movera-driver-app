@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
@@ -153,7 +154,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               shrinkWrap: compact,
               physics: compact ? const NeverScrollableScrollPhysics() : null,
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
-              itemCount: rides.length + notes.length + 1,
+              itemCount: (rides.isEmpty ? 1 : rides.length) + notes.length + 1,
               separatorBuilder: (_, __) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
                 if (index > 0 && index <= notes.length) {
@@ -188,6 +189,21 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                     ),
                   );
                 }
+                if (rides.isEmpty) {
+                  // Nothing to show is said, not left blank (audit R1).
+                  return Padding(
+                    key: const ValueKey<String>('scheduled-rides-empty'),
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      tr.schedNoneYet,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Color(0xFF6F7B82),
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }
                 final ride = rides[index - 1];
                 final claiming = ScheduledRideStore.claimPending(ride.id);
                 return _ScheduledRideCard(
@@ -201,13 +217,14 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
               children: [
                 _buildHeader(context),
-                Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Text(
-                    tr.schedPreviewNotBinding,
-                    style: TextStyle(fontSize: 12),
+                if (!LiveDriverServices.active)
+                  Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Text(
+                      tr.schedPreviewNotBinding,
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
-                ),
                 _buildTabs(),
                 if (compact) list else Expanded(child: list),
               ],
@@ -464,24 +481,29 @@ class ScheduledRideStore {
   const ScheduledRideStore._();
 
   static final List<_ScheduledRide> _requests = _seedRequests();
-  static List<_ScheduledRide> _seedRequests() => [
-    // The same reservation the Home popup shows later (notes R21). The
-    // demo books them relative to now.
-    _ScheduledRide.request(DemoReservations.main),
-    // No driver near Lidingö: admin raised the fare (Q13). Its time
-    // clashes with the first ride (Q9).
-    _ScheduledRide.request(
-      DemoReservations.clashing,
-      window: const Duration(minutes: 10),
-      distance: '12 km',
-    ),
-    // An airport ride, sent to the Home popup after the first.
-    if (DemoReservations.airport case final airport?)
-      _ScheduledRide.request(airport),
-  ];
+  // Audit Phase 1 R1 (S2): a live build shows no sample reservations;
+  // the server has no driver reservations to list yet.
+  static List<_ScheduledRide> _seedRequests() => LiveDriverServices.active
+      ? []
+      : [
+          // The same reservation the Home popup shows later (notes R21). The
+          // demo books them relative to now.
+          _ScheduledRide.request(DemoReservations.main),
+          // No driver near Lidingö: admin raised the fare (Q13). Its time
+          // clashes with the first ride (Q9).
+          _ScheduledRide.request(
+            DemoReservations.clashing,
+            window: const Duration(minutes: 10),
+            distance: '12 km',
+          ),
+          // An airport ride, sent to the Home popup after the first.
+          if (DemoReservations.airport case final airport?)
+            _ScheduledRide.request(airport),
+        ];
 
   static final List<_ScheduledRide> _accepted = _seedAccepted();
   static List<_ScheduledRide> _seedAccepted() {
+    if (LiveDriverServices.active) return [];
     final route = ReservationRequestPreview(
       category: 'Comfort',
       fare: '184,00 kr',

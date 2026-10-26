@@ -1388,6 +1388,12 @@ abstract class AppLocalizations {
   /// **'Demo: alert kept on this phone only. No one at Movera was notified.'**
   String get safetyAlertKeptOnPhoneDemo;
 
+  /// No description provided for @safetyAlertNotSentLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent: Movera cannot receive ride-check alerts yet. In danger, call 112.'**
+  String get safetyAlertNotSentLive;
+
   /// No description provided for @call112IfYouNeedHelp.
   ///
   /// In en, this message translates to:
@@ -5576,6 +5582,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview — not binding. Decisions last until the app restarts.'**
   String get schedPreviewNotBinding;
+
+  /// No description provided for @schedNoneYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No scheduled rides yet. Reservations from Movera will show up here.'**
+  String get schedNoneYet;
 
   /// No description provided for @schedAcceptedPickupAt.
   ///

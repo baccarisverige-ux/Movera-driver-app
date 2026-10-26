@@ -8,6 +8,7 @@ import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_active_trip.dart';
+import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
@@ -45,6 +46,7 @@ class LiveDriverServices {
     chat = LiveTripChat(api: api);
     places = LiveAddressLookup(api: api);
     activeTrip = LiveActiveTrip(api: api);
+    earnings = LiveEarnings(api: api);
     dispatch = ApiDispatchRepository(
       client: client,
       baseUri: apiBase,
@@ -79,6 +81,9 @@ class LiveDriverServices {
 
   /// The trip the server holds for this driver (D-3).
   late final LiveActiveTrip activeTrip;
+
+  /// Today's earnings from the server (audit R3).
+  late final LiveEarnings earnings;
   late final ApiDispatchRepository dispatch;
   late final LivePresence presence;
 

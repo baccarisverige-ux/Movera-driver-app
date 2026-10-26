@@ -768,6 +768,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Demo: alert kept on this phone only. No one at Movera was notified.';
 
   @override
+  String get safetyAlertNotSentLive =>
+      'Not sent: Movera cannot receive ride-check alerts yet. In danger, call 112.';
+
+  @override
   String get call112IfYouNeedHelp => '\nCall 112 if you need help now.';
 
   @override
@@ -3205,6 +3209,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get schedPreviewNotBinding =>
       'Preview — not binding. Decisions last until the app restarts.';
+
+  @override
+  String get schedNoneYet =>
+      'No scheduled rides yet. Reservations from Movera will show up here.';
 
   @override
   String schedAcceptedPickupAt(String time) {

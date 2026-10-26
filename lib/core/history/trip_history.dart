@@ -122,8 +122,12 @@ class TripHistoryRecord {
   Money? get fareMoney => status != TripStatus.completed
       ? null
       : fareMinorUnits == null
-      ? Money.parseSekLabel(fare)
-      : Money.ore(fareMinorUnits!);
+      ? Money.parseLabel(fare)
+      // The label names the currency (a Paris trip is in euros, R3).
+      : Money(
+          minorUnits: fareMinorUnits!,
+          currency: Money.parseLabel(fare)?.currency ?? 'SEK',
+        );
 }
 
 abstract interface class TripHistoryRepository {
