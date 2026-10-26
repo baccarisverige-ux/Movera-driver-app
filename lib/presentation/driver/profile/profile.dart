@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -50,10 +51,21 @@ class _DriverProfileState extends State<DriverProfile> {
     super.didChangeDependencies();
     // Round 4b (live): the picked fleet car, read through the server (the
     // scope is only reachable here, not in initState).
-    if (!_liveRead && _liveSession != null) {
+    final live = _liveSession;
+    if (!_liveRead && live != null) {
       _liveRead = true;
       _identity = _readIdentity();
+      // The header follows the account; a session opened without a profile
+      // read yet (a restored token) reads it now.
+      live.addListener(_accountChanged);
+      if (live.account == null) {
+        unawaited(live.refresh().then((_) => _vehicleChanged(), onError: (_) {}));
+      }
     }
+  }
+
+  void _accountChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<({String vehicle, String plate})?> _readIdentity() {
@@ -110,6 +122,7 @@ class _DriverProfileState extends State<DriverProfile> {
   @override
   void dispose() {
     LocalVehicleStore.changes.removeListener(_vehicleChanged);
+    if (_liveRead) _liveSession?.removeListener(_accountChanged);
     super.dispose();
   }
 
