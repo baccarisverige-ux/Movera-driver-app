@@ -341,6 +341,8 @@ class _MoveraAppState extends State<MoveraApp> {
     DriverNotificationFeed.instance.reset();
     DocumentExpiryStore.instance.reset();
     LocalChatMessages.reset();
+    // Nor the trip chats read from the server.
+    _live?.chat.reset();
     // And today's destinations (driver-r4-11).
     DestinationModeSession.instance = DestinationModeSession();
     _session.reset();

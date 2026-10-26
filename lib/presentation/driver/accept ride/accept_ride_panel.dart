@@ -856,14 +856,33 @@ extension _AcceptRidePanel on _AcceptRideState {
               asset: AppAssets.solarPhoneCalling,
             ),
             const SizedBox(width: 12),
-            TripRoundButton(
-              key: const ValueKey<String>('active-ride-message-rider'),
-              tooltip: tr.messageRider,
-              onTap: _messageRider,
-              asset: AppAssets.solarChatRoundDots,
-            ),
+            _chatButton(),
           ],
         ),
+      );
+    }
+    /// Chat with the rider; a live build counts their unread messages on it.
+    Widget _chatButton() {
+      final chat = LiveDriverServices.instance?.chat;
+      TripRoundButton button(String tooltip) => TripRoundButton(
+        key: const ValueKey<String>('active-ride-message-rider'),
+        tooltip: tooltip,
+        onTap: _messageRider,
+        asset: AppAssets.solarChatRoundDots,
+      );
+      if (chat == null) { return button(tr.messageRider); }
+      return ListenableBuilder(
+        listenable: chat.thread(widget.tripId),
+        builder: (_, __) {
+          final unread = chat.unreadOf(widget.tripId);
+          return Badge.count(
+            key: const ValueKey<String>('active-ride-chat-unread'),
+            count: unread,
+            isLabelVisible: unread > 0,
+            backgroundColor: const Color(0xFFE0474C),
+            child: button(unread > 0 ? tr.chatNewMessages(unread) : tr.messageRider),
+          );
+        },
       );
     }
     void _callRider() {
