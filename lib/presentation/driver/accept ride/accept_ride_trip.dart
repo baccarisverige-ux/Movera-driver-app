@@ -72,7 +72,8 @@ extension _AcceptRideTrip on _AcceptRideState {
             : PersistedQueuedTrip(
                 tripId: securedOffer.id,
                 riderName: securedOffer.riderName,
-                fare: securedOffer.fare,
+                // The driver's pay, as the live ride's fare is.
+                fare: securedOffer.driverPay,
                 pickupPay: securedOffer.securedPickupPay,
                 category: securedOffer.category,
                 pickup: securedOffer.pickup,
@@ -98,9 +99,11 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// Q43: the fare with the driver's waiting fee in it, for the earnings.
     String get _fareWithWaiting => WaitingTerms.addFee(
         widget.fare, _waitTerms.driverWaitingFee(_paidWaitTotal));
-    /// driver-u61: what the rider pays, the fare without Movera's bonus
-    /// (the contract: the bonus is in the fare, the rider never pays it).
-    /// A cash trip with no server cash amount collects this.
+    /// The cash of a cash trip saved before the trip's fare became the
+    /// driver's own pay (owner decision 2026-10-26): the fare without
+    /// Movera's bonus, which the rider never pays (driver-u61). Trips
+    /// accepted since carry the rider's cash in `cashToCollect`
+    /// (`RideOffer.riderCash`).
     String get _riderFare {
       final bonus = widget.driverBonus;
       if (bonus == null || bonus.minorUnits <= 0) { return widget.fare; }
@@ -137,7 +140,9 @@ extension _AcceptRideTrip on _AcceptRideState {
       _nextTripRadarOffer = _NextTripRadarOffer(
         id: next.tripId,
         category: next.category,
+        // Saved as the driver's pay: not reduced again.
         fare: next.fare,
+        driverEarnings: next.fare,
         rating: next.rating,
         pickupMinutes: next.pickupMinutes,
         tripMinutes: next.tripMinutes,
@@ -991,15 +996,12 @@ extension _AcceptRideTrip on _AcceptRideState {
     /// completes it.
     Future<void> _collectCash() async {
       if (!_collectsCashNow || _stageTransitioning || _rideLifecycle.terminal) { return; }
-      final wait = _waitTerms.driverWaitingFee(_paidWaitTotal);
       final complete = await showCashCollectSheet(
         context,
+        // The driver's own money (owner decision 2026-10-26): no fee is
+        // taken off it again.
         fare: _fareWithWaiting,
         cash: _cashToCollect,
-        // driver-u19: the waybill's fee, so both say the same money.
-        serviceFee: WaybillPayment.fromFare(_fareWithWaiting,
-            bonus: widget.driverBonus?.formatted,
-            waitingFee: wait.isZero ? null : wait.formatted)?.serviceFee,
         riderName: widget.riderName,
         category: widget.category,
       );

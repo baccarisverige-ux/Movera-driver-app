@@ -201,13 +201,20 @@ class AcceptRide extends StatefulWidget {
   /// Null when dispatch sent no usable rating (driver-u133).
   final double? riderRating;
   final int riderTrips;
+
+  /// The driver's own money for the trip, e.g. "83,26 kr": the offer's
+  /// `driverPay` with the card's pickup pay in it (owner decision
+  /// 2026-10-26, "price must be after commission that show to driver").
+  /// The trip card, the waybill, the finish screen and history all show
+  /// it; the rider's fare is never shown.
   final String fare;
 
   /// Cash in the car; otherwise paid by card. Shown as a logo in the bar.
   final bool paidByCash;
 
-  /// R8-4: on a cash trip, the cash to take from the rider when it is not
-  /// [fare] (rider promotions). Null: the fare.
+  /// R8-4: on a cash trip, the cash to take from the rider: their own
+  /// fare (`RideOffer.riderCash`), never [fare]. Null only on a trip saved
+  /// before [fare] became the driver's pay.
   final String? cashToCollect;
 
   /// Q16/Q18: Movera's bonus already in [fare]; earnings say "incl. +X".

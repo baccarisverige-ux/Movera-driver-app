@@ -3,6 +3,7 @@ import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
@@ -214,8 +215,16 @@ class ReservationRequestPreview {
   final String fare;
 
   /// [fare] as every screen shows money: "126,75 kr" for "126.75 kr"
-  /// (driver-r4-20); [fare] itself when it is not an amount.
+  /// (driver-r4-20); [fare] itself when it is not an amount. The driver
+  /// is never shown it: see [driverPayLabel].
   String get fareLabel => Money.parseLabel(fare)?.formatted ?? fare;
+
+  /// The driver's own money for the ride, the number its sheet and the
+  /// Scheduled rides list show (owner decision 2026-10-26): [fare] after
+  /// Movera's commission ([OfferCardDetails.fare]); a preview carries no
+  /// server earnings, so it is the demo's share. Pickup pay, when the
+  /// ride has it, comes on top.
+  String get driverPayLabel => DriverOfferRules.current.card.fare(fareLabel);
 
   final String pickupLabel;
   final String pickupAddress;

@@ -585,10 +585,12 @@ void main() {
     await _frames(tester, 10, 100);
   });
 
-  testWidgets('driver-r5-34: a zero cash balance after Movera\'s fee does '
-      'not say the cash matched the fare', (tester) async {
+  testWidgets('driver-r5-34: a zero cash balance says the cash matched the '
+      'earnings, never a fare', (tester) async {
     _homeSetUp(tester);
-    // 200 kr fare, 25 % fee: the rider paid 150 kr, the driver's earnings.
+    // Owner decision 2026-10-26: the record's fare is the driver's
+    // earnings after Movera's commission; the rider's 150 kr cash matched
+    // them exactly.
     await tester.pumpWidget(_app(DriverRideHistoryDetail(
       record: const TripHistoryRecord(
         tripId: 'cash-trip',
@@ -596,7 +598,7 @@ void main() {
         whenLabel: '15/10/2026, 07:59',
         pickup: 'Gamla vägen',
         dropoff: 'Solna centrum',
-        fare: '200,00 kr',
+        fare: '150,00 kr',
         category: 'Comfort',
         paymentMethod: 'Cash',
         cashCollected: '150,00 kr',
@@ -608,7 +610,9 @@ void main() {
     await tester.ensureVisible(note);
     expect(tester.widget<Text>(note).data,
         'Cash matched your earnings: nothing to settle',
-        reason: 'before: "Cash matched your fare" although 50 kr less');
+        reason: 'before: "Cash matched your fare"');
+    expect(find.text('Your earnings'), findsOneWidget);
+    expect(find.text('Ride Cost'), findsNothing);
   });
 
   testWidgets('driver-r5-49: the Accepted tab lists rides by pickup time',

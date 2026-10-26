@@ -365,8 +365,9 @@ class DemoDispatchRepository implements DispatchRepository {
       followsDestination: false,
     ),
     // R8-4 demo: cash trips, so "Collect cash" can be tried end to end.
-    // A rider promotion makes the cash differ from the driver's fare.
-    // Fare 200, cash 250: the driver owes Movera 50.
+    // The cash is the rider's fare; the driver's money is their share of
+    // it (owner decision 2026-10-26). Fare 200 → 150 earnings, cash 250:
+    // the driver owes Movera 100.
     RideOffer(
       id: 'nearby-6',
       riderName: 'Noah',
@@ -387,7 +388,8 @@ class DemoDispatchRepository implements DispatchRepository {
       followsDestination: false,
       payment: 'Cash',
     ),
-    // Fare 300, cash 200: Movera owes the driver 100.
+    // Fare 300 → 225 earnings, cash 200 (a rider promotion): Movera owes
+    // the driver 25.
     RideOffer(
       id: 'nearby-7',
       riderName: 'Ida',
@@ -408,7 +410,8 @@ class DemoDispatchRepository implements DispatchRepository {
       followsDestination: false,
       payment: 'Cash',
     ),
-    // More cash trips (R9). Fare 158,40, cash 120: Movera owes 38,40.
+    // More cash trips (R9). Fare 158,40 → 118,80 earnings, cash 120: the
+    // driver owes Movera 1,20.
     RideOffer(
       id: 'nearby-8',
       riderName: 'Hanna',
@@ -429,7 +432,7 @@ class DemoDispatchRepository implements DispatchRepository {
       followsDestination: false,
       payment: 'Cash',
     ),
-    // Fare 214,90, cash 260: the driver owes Movera 45,10.
+    // Fare 214,90 → 161,17 earnings, cash 260: the driver owes Movera 98,83.
     RideOffer(
       id: 'nearby-9',
       riderName: 'Viktor',
@@ -450,7 +453,7 @@ class DemoDispatchRepository implements DispatchRepository {
       followsDestination: false,
       payment: 'Cash',
     ),
-    // Fare 96, cash 130: the driver owes Movera 34.
+    // Fare 96 → 72 earnings, cash 130: the driver owes Movera 58.
     RideOffer(
       id: 'nearby-10',
       riderName: 'Sofia',

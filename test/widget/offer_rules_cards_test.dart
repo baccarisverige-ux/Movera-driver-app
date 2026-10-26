@@ -68,7 +68,10 @@ void main() {
   group('offer card details (Q14)', () {
     testWidgets('everything on: the full Exclusive sheet', (tester) async {
       await _pump(tester, _exclusive(const OfferCardDetails()));
-      expect(find.text('100,00 kr', findRichText: true), findsOneWidget);
+      // The driver's share of the 100 kr fare, never the fare (owner
+      // decision 2026-10-26).
+      expect(find.text('75,00 kr', findRichText: true), findsOneWidget);
+      expect(find.text('100,00 kr', findRichText: true), findsNothing);
       expect(find.text('Gamla vägen'), findsOneWidget);
       expect(find.text('Solna centrum'), findsOneWidget);
       expect(find.text('19 min trip'), findsOneWidget);
@@ -310,14 +313,16 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    // R8-4 / driver-u19: balance = fare − Movera's 25 % fee − cash
-    // = 126,75 − 31,69 − 150 = −54,94 kr, the waybill's money.
+    // R8-4: balance = the driver's earnings (the record's fare, already
+    // after Movera's commission, owner decision 2026-10-26) − cash
+    // = 126,75 − 150 = −23,25 kr.
     final owed = find.text('You owe Movera');
     await tester.ensureVisible(owed);
     expect(find.text('Cash collected'), findsOneWidget);
     expect(find.text('150,00 kr'), findsOneWidget);
     expect(owed, findsOneWidget);
-    expect(find.text('−54,94 kr'), findsOneWidget);
+    expect(find.text('−23,25 kr'), findsOneWidget);
+    expect(find.text('Your earnings'), findsOneWidget);
     expect(find.text('Settled in your next payout'), findsOneWidget);
     tester.takeException();
   });

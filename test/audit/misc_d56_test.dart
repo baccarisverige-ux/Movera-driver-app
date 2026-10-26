@@ -555,34 +555,36 @@ void main() {
   });
 
   test('driver-u19: History\'s cash balance uses the waybill\'s money', () {
+    // Owner decision 2026-10-26: the record's fare is already the driver's
+    // money after Movera's commission (96,30 kr of a 128,40 kr fare), so
+    // the balance takes no fee off it again: earnings − cash.
     const trip = TripHistoryRecord(
       tripId: 'cash-1',
       riderName: 'Karin',
       whenLabel: '',
       pickup: '',
       dropoff: '',
-      fare: '128,40 kr',
+      fare: '96,30 kr',
       category: 'Comfort',
       paymentMethod: 'Cash',
       cashCollected: '128,40 kr',
     );
-    final waybill = WaybillPayment.fromFare('128,40 kr')!;
-    expect(waybill.serviceFee, '32,10 kr');
-    // Before: +0,00 kr 'Settled', while the waybill took a 32,10 kr fee.
+    expect(trip.cashBalance!.serviceFee, isNull);
+    expect(trip.cashBalance!.earnings.formatted, '96,30 kr');
     expect(trip.cashBalance!.signedLabel, '−32,10 kr');
-    expect(trip.cashBalance!.earnings.formatted, waybill.earnings);
   });
 
   test('driver-u19: a cash trip with a waiting fee owes what its waybill says',
       () async {
     SharedPreferences.setMockInitialValues({});
     final history = PrefsTripHistoryRepository();
-    // 128,40 kr base price + 18,39 kr waiting fee, all paid in cash.
+    // 96,30 kr earnings + 18,39 kr waiting fee (all the driver's); the
+    // rider paid their 128,40 kr fare + the 18,39 kr wait in cash.
     final waybill = WaybillRecord(
       tripId: 'cash-wait-1',
       statusLabel: 'Current trip',
       issuedAt: DateTime(2026, 10, 22, 7),
-      fare: '146,79 kr',
+      fare: '114,69 kr',
       waitingFee: '18,39 kr',
       service: 'Comfort',
       riderName: 'Karin',
@@ -599,11 +601,8 @@ void main() {
       history: history,
     ).finish(waybill, paymentMethod: 'Cash', cashCollected: '146,79 kr');
     final row = (await history.list()).single;
-    final slip = WaybillPayment.fromFare(waybill.fare,
-        waitingFee: waybill.waitingFee)!;
-    expect(slip.serviceFee, '32,10 kr'); // no fee on the waiting fee
-    // Before: −36,70 kr, a 25 % fee on the waiting fee too.
-    expect(row.cashBalance!.serviceFee!.formatted, slip.serviceFee);
+    // No fee on the waiting fee, and none on the earnings again.
+    expect(row.cashBalance!.serviceFee, isNull);
     expect(row.cashBalance!.signedLabel, '−32,10 kr');
   });
 }

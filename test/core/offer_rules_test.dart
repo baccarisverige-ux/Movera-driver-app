@@ -57,12 +57,15 @@ void main() {
       expect(ExclusiveReasons.text('unknown', edited), '');
     });
 
-    test('net fare: the driver\'s share after the commission', () {
+    test('the card amount is the driver\'s share after the commission, '
+        'with or without the "Your share" caption (owner 2026-10-26)', () {
       const card = OfferCardDetails(netFare: true);
       expect(card.fare('100,00 kr'), '75,00 kr');
       expect(card.fare('126,75 kr', commissionRate: 0.2), '101,40 kr');
-      expect(const OfferCardDetails().fare('126,75 kr'), '126,75 kr');
+      expect(const OfferCardDetails().fare('126,75 kr'), '95,06 kr');
       expect(card.fare('—'), '—');
+      // The server's earnings win over the local rule.
+      expect(card.fare('200,00 kr', earnings: '170,00 kr'), '170,00 kr');
     });
 
     test('Q46: 3 Exclusive offers in a row without Accept go offline', () {
@@ -202,7 +205,10 @@ void main() {
   });
 
   group('cash (Q23)', () {
-    test('a cash trip without a recorded cash amount holds Movera\'s fee', () {
+    test('a cash trip without a recorded cash amount is settled', () {
+      // Owner decision 2026-10-26: the record's fare is the driver's own
+      // money after Movera's commission; without a recorded cash amount
+      // the cash counts as that, so nothing is owed either way.
       const cash = TripHistoryRecord(
         tripId: 't1',
         riderName: 'Karin',
@@ -214,8 +220,8 @@ void main() {
         paymentMethod: 'Cash',
       );
       expect(cash.paidByCash, isTrue);
-      // driver-u19: the driver holds Movera's 25 % fee (31,69 kr).
-      expect(cash.cashBalance?.balance.minorUnits, -3169);
+      expect(cash.cashBalance?.serviceFee, isNull);
+      expect(cash.cashBalance?.balance.minorUnits, 0);
       const card = TripHistoryRecord(
         tripId: 't2',
         riderName: 'Karin',
@@ -268,8 +274,8 @@ void main() {
       final row = (await history.list()).single;
       expect(row.paymentMethod, 'Cash');
       expect(row.cashCollected, '150 kr');
-      // driver-u19: 126,75 − 31,69 fee − 150 cash.
-      expect(row.cashBalance?.signedLabel, '−54,94 kr');
+      // The driver's 126,75 kr earnings − 150 kr cash: no fee off again.
+      expect(row.cashBalance?.signedLabel, '−23,25 kr');
     });
   });
 }

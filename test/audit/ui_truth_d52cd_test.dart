@@ -144,7 +144,7 @@ Future<void> _call112(WidgetTester tester,
 Future<void> _accept0740(WidgetTester tester) async {
   await tester.tap(find.text('Gamla vägen, Stockholm').first);
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Accept  •  126,75 kr'));
+  await tester.tap(find.text('Accept  •  95,06 kr'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Requests'));
   await tester.pumpAndSettle();

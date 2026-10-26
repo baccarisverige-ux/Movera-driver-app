@@ -418,7 +418,7 @@
   "periodRidesRidesInPeriodLabel": "{periodRides} courses · {periodLabel}",
   "week": "Semaine",
   "month": "Mois",
-  "recordedFares": "Tarifs enregistrés",
+  "recordedFares": "Gains enregistrés",
   "tipsAndFees": "Pourboires et frais",
   "notAvailable": "Indisponible",
   "otherEarnings": "Autres gains",
@@ -429,7 +429,7 @@
   "totalMoveraOwesYou": "Total que Movera vous doit",
   "totalBalance": "Solde total",
   "settledInYourNextPayout2": "Réglé lors de votre prochain versement.",
-  "fareFareFormattedCashCashCollected": "Tarif {fareFormatted} · Espèces {cashCollectedFormatted}",
+  "fareFareFormattedCashCashCollected": "Gains {fareFormatted} · Espèces {cashCollectedFormatted}",
   "cashFareFeeLine": "Tarif {fare} · Frais {fee} · Espèces {cash}",
   "driver2": "CHAUFFEUR",
   "profile": "Profil",
@@ -1550,5 +1550,10 @@
   "liveTripNotAtPickup": "Movera ne vous voit pas encore au point de prise en charge. Approchez-vous et réessayez.",
   "liveTripNoShowTooEarly": "Il est trop tôt pour signaler une absence. Patientez encore un peu.",
   "liveTripChanged": "Cette course a changé entre-temps. Vérifiez-la et réessayez.",
+  "earningsBaseService": "Base · {service}",
+  "@earningsBaseService": {
+    "description": "Waybill: the trip's own part of the driver's earnings, without the waiting fee and the Movera bonus.",
+    "placeholders": {"service": {"type": "String"}}
+  },
   "liveTripFailed": "Movera n'a pas pu enregistrer cette étape. Réessayez."
 }

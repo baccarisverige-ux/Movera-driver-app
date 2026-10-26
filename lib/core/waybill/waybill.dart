@@ -25,6 +25,10 @@ class WaybillRecord {
   final String tripId;
   final String statusLabel;
   final DateTime issuedAt;
+
+  /// The driver's own money for the trip, e.g. "128,40 kr": after Movera's
+  /// commission, with the pickup pay, the bonus and the waiting fee in it
+  /// (owner decision 2026-10-26). Never the rider's fare.
   final String fare;
   final String service;
   final String riderName;
@@ -343,6 +347,26 @@ class WaybillPayment {
   /// Movera's share of each fare. Placeholder until per-trip pricing comes
   /// from the backend; change here.
   static const double serviceFeeRate = 0.25;
+
+  /// The driver's share of [fare] as money: [fare] less Movera's fee, the
+  /// fee taken on [fare] without Movera's [bonus] (the rider never pays
+  /// the bonus, so it is all the driver's). The same split as [fromFare]
+  /// for a fare without a waiting fee. Owner decision 2026-10-26: this,
+  /// never [fare], is what a demo offer shows the driver (the server
+  /// sends `Offer.driverEarnings` for its own). A fare of 0 or less, or a
+  /// bonus in another currency, is left as it is.
+  static Money shareOf(
+    Money fare, {
+    Money? bonus,
+    double feeRate = serviceFeeRate,
+  }) {
+    if (fare.minorUnits <= 0) return fare;
+    final bonusMinor = bonus == null || bonus.currency != fare.currency
+        ? 0
+        : bonus.minorUnits.clamp(0, fare.minorUnits);
+    final fee = ((fare.minorUnits - bonusMinor) * feeRate).round();
+    return Money(minorUnits: fare.minorUnits - fee, currency: fare.currency);
+  }
 
   /// Null when [fare] holds no amount (for example "—"). [feeRate] is
   /// Movera's share. [bonus] (e.g. "40 kr", Q16/Q18) is Movera's extra

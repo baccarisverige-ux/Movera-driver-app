@@ -573,9 +573,10 @@ void main() {
 
       // Exclusive Radar offer uses its own exclusive surface.
       await tester.pump(const Duration(milliseconds: 2300));
-      // One total: the 104,80 kr fare plus 1,00 kr pickup pay (Comfort,
+      // One total: the driver's 78,60 kr share of the 104,80 kr fare
+      // (owner decision 2026-10-26) plus 1,00 kr pickup pay (Comfort,
       // 0.9 km / 3 min: 1 km and 2 min free, 1 kr/min).
-      expect(find.text('105,80 kr'), findsOneWidget);
+      expect(find.text('79,60 kr'), findsOneWidget);
       expect(find.text('Kungsgatan 42'), findsOneWidget);
       expect(
         find.byKey(const ValueKey<String>('radar-home-deck')),
@@ -667,7 +668,7 @@ void main() {
 
     // Outside offer first, still isolated from Radar.
     await tester.pump(const Duration(milliseconds: 2300));
-    expect(find.text('105,80 kr'), findsOneWidget);
+    expect(find.text('79,60 kr'), findsOneWidget);
     expect(find.byKey(const ValueKey<String>('radar-home-deck')), findsNothing);
     _expectNoException(tester);
 
@@ -1446,7 +1447,7 @@ void main() {
 
     // Advance beyond the first direct-offer timer. Nothing may appear offline.
     await tester.pump(const Duration(milliseconds: 4200));
-    expect(find.text('105,80 kr'), findsNothing);
+    expect(find.text('79,60 kr'), findsNothing);
     expect(find.text('Kungsgatan 42'), findsNothing);
     expect(find.text('OFF'), findsOneWidget);
     _expectNoException(tester);
@@ -1461,7 +1462,7 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 3800));
 
-    expect(find.text('105,80 kr'), findsOneWidget);
+    expect(find.text('79,60 kr'), findsOneWidget);
     // The grey Exclusive orb is up on its sheet.
     expect(find.byKey(const ValueKey<String>('home-radar-exclusive')),
         findsOneWidget);
@@ -1469,11 +1470,11 @@ void main() {
     // Advance in small frames so the async route-preview continuation can
     // install and then fire the 15 s timeout timer.
     for (var i = 0; i < 40; i++) {
-      if (find.text('105,80 kr').evaluate().isEmpty) break;
+      if (find.text('79,60 kr').evaluate().isEmpty) break;
       await tester.pump(const Duration(milliseconds: 500));
     }
 
-    expect(find.text('105,80 kr'), findsNothing);
+    expect(find.text('79,60 kr'), findsNothing);
     expect(find.text('Kungsgatan 42'), findsNothing);
     // The radar is itself again (the demo's Radar trips may follow at
     // once, their sheet having gone down first).
@@ -1661,7 +1662,7 @@ void main() {
     // The demo's Exclusive offer arrives: the island is itself again.
     await tester.pump(const Duration(milliseconds: 1500));
     await _advanceAnimation(tester, const Duration(milliseconds: 900));
-    expect(find.text('105,80 kr'), findsOneWidget);
+    expect(find.text('79,60 kr'), findsOneWidget);
     expect(find.text('Finding trips'), findsNothing);
     expect(find.byKey(const ValueKey<String>('island-finding')), findsNothing);
     _expectNoException(tester);
@@ -2050,13 +2051,13 @@ void main() {
       await tester.tap(find.text('OFF'));
       await tester.pump(const Duration(milliseconds: 3800));
 
-      expect(find.text('105,80 kr'), findsOneWidget);
+      expect(find.text('79,60 kr'), findsOneWidget);
       expect(find.text('Kungsgatan 42'), findsOneWidget);
 
       // The sheet settles, then the route is on the map.
       await tester.pump(const Duration(milliseconds: 16));
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('105,80 kr'), findsOneWidget);
+      expect(find.text('79,60 kr'), findsOneWidget);
       _expectNoException(tester);
 
       // The grey orb is the Accept.
@@ -2608,20 +2609,22 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Waybill'), findsWidgets);
-      // Fare marked for rounding, then what the passenger paid and what the
-      // driver keeps after Movera's fee.
-      expect(find.text('111,02 kr*'), findsOneWidget);
-      expect(find.text('111,02 kr'), findsWidgets);
+      // The trip's fare is the driver's own money (owner decision
+      // 2026-10-26): shown as the earnings, with no rider fare marked for
+      // the taximeter and no Movera fee taken off it again.
+      expect(find.text('111,02 kr*'), findsNothing);
       await tester.scrollUntilVisible(
-        find.text('83,26 kr'),
+        find.text('Your earnings'),
         200,
         scrollable: find.descendant(
           of: find.byKey(const ValueKey<String>('waybill-waybill-current-test')),
           matching: find.byType(Scrollable),
         ),
       );
-      expect(find.text('−27,76 kr'), findsOneWidget);
-      expect(find.text('83,26 kr'), findsOneWidget);
+      expect(find.text('111,02 kr'), findsWidgets);
+      expect(find.text('Movera fee'), findsNothing);
+      expect(find.text('−27,76 kr'), findsNothing);
+      expect(find.text('83,26 kr'), findsNothing);
       _expectNoException(tester);
     },
   );
@@ -2750,7 +2753,7 @@ void main() {
     await tester.tap(find.text('OFF'));
     await tester.pump(const Duration(milliseconds: 3800));
 
-    expect(find.text('105,80 kr'), findsOneWidget);
+    expect(find.text('79,60 kr'), findsOneWidget);
     expect(find.text('Kungsgatan 42'), findsOneWidget);
     _expectNoException(tester);
   });

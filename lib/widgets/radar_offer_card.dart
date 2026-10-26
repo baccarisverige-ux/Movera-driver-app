@@ -42,6 +42,9 @@ class RadarOfferView {
   /// says it when it is cash (see [cash]).
   final String payment;
   final String rating;
+
+  /// The rider's fare label as dispatch sent it, e.g. "104,80 kr". The
+  /// card never shows it (owner decision 2026-10-26): see [shownFare].
   final String fare;
   final int pickupMinutes;
   final double pickupKm;
@@ -75,14 +78,17 @@ class RadarOfferView {
   final String? driverBonus;
 
   /// The server's driver net (`Offer.driverEarnings`), e.g. "170,00 kr":
-  /// a net-fare card shows it (driver-r5-1); null for demo offers.
+  /// the card shows it (driver-r5-1); null for demo offers, whose [fare]
+  /// is reduced by the demo's commission instead.
   final String? driverEarnings;
 
   /// Pickup pay worked out when the offer shows; null for none.
   final PickupPayQuote? pickupPay;
 
-  /// The fare as the card shows it ([OfferCardDetails.fare]) with the
-  /// pickup pay added: one total.
+  /// The amount the card shows: the driver's own money
+  /// ([OfferCardDetails.fare]: [driverEarnings], else the share of [fare]
+  /// after Movera's commission) with the pickup pay added, one total:
+  /// `driverEarnings + pickupPay`. Never the rider's [fare].
   String shownFare(OfferCardDetails show) {
     final base =
         show.fare(fare, bonus: driverBonus, earnings: driverEarnings);

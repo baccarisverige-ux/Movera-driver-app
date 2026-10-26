@@ -1,7 +1,9 @@
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/waybill/waybill.dart';
 
 enum ClaimOutcome {
   success,
@@ -131,11 +133,56 @@ class RideOffer {
   String? get categoryId => CategoryCatalog.idForLabel(category);
 
   /// What the rider pays (contract `Offer.fare`, minor units). Formatted
-  /// locally: see [fareLabel].
+  /// locally: see [fareLabel]. The driver is never shown it (owner
+  /// decision 2026-10-26): the cards, the accepted trip and its history
+  /// carry [driverPay]; a cash trip shows it only as the cash to collect
+  /// ([riderCash]).
   final Money fare;
 
   /// Display form of [fare], e.g. `111,02 kr`.
   String get fareLabel => fare.formatted;
+
+  /// The driver's own money for this trip, after Movera's commission
+  /// (owner decision 2026-10-26, "price must be after commission that
+  /// show to driver"): the server's [driverEarnings] (Movera's bonus in
+  /// it); for a demo offer without them, [fare] after the demo's
+  /// commission with the [driverBonus] kept whole
+  /// ([WaybillPayment.shareOf]), the same number the offer card shows
+  /// ([OfferCardDetails.fare]). Pickup pay is added on top of it
+  /// (`PickupPayQuote.totalOf`): the driver's total is
+  /// `driverEarnings + pickupPay`.
+  Money get driverPay =>
+      driverEarnings ??
+      WaybillPayment.shareOf(
+        fare,
+        bonus: driverBonus,
+        feeRate: DriverOfferRules.current.commissionRate,
+      );
+
+  /// Display form of [driverPay], e.g. `83,26 kr`.
+  String get driverPayLabel => driverPay.formatted;
+
+  /// On a cash trip, the cash the rider hands over: [cashToCollect] when
+  /// dispatch sent one (R8-4), else [fare] without Movera's [driverBonus],
+  /// which the rider never pays (driver-u61). The rider's money, not the
+  /// driver's ([driverPay]): the trip shows it only as the cash to
+  /// collect.
+  Money get riderCash => cashToCollect ?? riderCashOf(fare, driverBonus);
+
+  /// Display form of [riderCash], e.g. `112,40 kr`.
+  String get riderCashLabel => riderCash.formatted;
+
+  /// [fare] without Movera's [bonus]: [fare] itself when there is no
+  /// bonus, it is another currency or larger than the fare.
+  static Money riderCashOf(Money fare, Money? bonus) {
+    if (bonus == null ||
+        bonus.minorUnits <= 0 ||
+        bonus.currency != fare.currency ||
+        bonus.minorUnits > fare.minorUnits) {
+      return fare;
+    }
+    return fare - bonus;
+  }
 
   final String rating;
   final int pickupMinutes;

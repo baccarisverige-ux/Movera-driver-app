@@ -154,8 +154,11 @@ void main() {
       expect(find.byKey(const ValueKey<String>('exclusive-count')),
           findsNothing);
 
-      // Big whole kronor with grey decimals, the trip minutes under it.
-      expect(find.text('104,80 kr', findRichText: true), findsOneWidget);
+      // Big whole kronor with grey decimals, the trip minutes under it:
+      // the driver's share of the 104,80 kr fare (owner decision
+      // 2026-10-26), never the fare.
+      expect(find.text('78,60 kr', findRichText: true), findsOneWidget);
+      expect(find.text('104,80 kr', findRichText: true), findsNothing);
       expect(find.text('14 min trip'), findsOneWidget);
 
       // Pickup with its minutes, drop-off with the trip distance.
@@ -256,7 +259,9 @@ void main() {
       expect(badge, findsOneWidget);
       expect(find.descendant(of: badge, matching: find.text('+40 kr')),
           findsOneWidget);
-      expect(find.text('249,25 kr', findRichText: true), findsOneWidget);
+      // The driver's share of the new 249,25 kr fare.
+      expect(find.text('186,94 kr', findRichText: true), findsOneWidget);
+      expect(find.text('249,25 kr', findRichText: true), findsNothing);
       expect(tester.takeException(), isNull);
     });
 

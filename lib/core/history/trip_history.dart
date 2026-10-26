@@ -64,6 +64,10 @@ class TripHistoryRecord {
   final String whenLabel;
   final String pickup;
   final String dropoff;
+
+  /// The driver's own money for the trip, e.g. "126,75 kr": after
+  /// Movera's commission, pickup pay, bonus and waiting fee in it (owner
+  /// decision 2026-10-26). Never the rider's fare.
   final String fare;
   final String category;
   final String distance;
@@ -107,18 +111,14 @@ class TripHistoryRecord {
   /// The rider paid cash in the car (Q23).
   bool get paidByCash => paymentMethod.trim().toLowerCase() == 'cash';
 
-  /// On a completed cash trip: fare − Movera's fee − cash collected, owed
-  /// by (−) or to (+) the driver; the fee is the waybill's (driver-u19).
-  /// Null otherwise.
+  /// On a completed cash trip: the driver's earnings ([fare]) − the cash
+  /// collected, owed by (−) or to (+) the driver. [fare] is already after
+  /// Movera's commission (owner decision 2026-10-26), so no fee is taken
+  /// off again. Null otherwise.
   CashBalance? get cashBalance => paidByCash && status == TripStatus.completed
       ? CashBalance.fromLabels(
           fare: fare,
           cashCollected: cashCollected ?? fare,
-          serviceFee: WaybillPayment.fromFare(
-            fare,
-            bonus: driverBonus,
-            waitingFee: waitingFee,
-          )?.serviceFee,
         )
       : null;
 

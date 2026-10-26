@@ -256,13 +256,13 @@ void main() {
         await tester.tap(find.text('Accepted'));
         await tester.pumpAndSettle();
         await tester.scrollUntilVisible(
-          find.text('184,00 kr'),
+          find.text('138,00 kr'),
           150,
           scrollable: find.byType(Scrollable).first,
         );
         await tester.pumpAndSettle();
-        expect(find.text('184,00 kr').hitTestable(), findsOneWidget);
-        await tester.tap(find.text('184,00 kr'));
+        expect(find.text('138,00 kr').hitTestable(), findsOneWidget);
+        await tester.tap(find.text('138,00 kr'));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         await tester.tap(
@@ -290,7 +290,7 @@ void main() {
         await tester.tap(confirm);
         await tester.pumpAndSettle();
         expect(find.text('Reservation cancelled'), findsOneWidget);
-        expect(find.text('184,00 kr'), findsNothing);
+        expect(find.text('138,00 kr'), findsNothing);
         expect(tester.takeException(), isNull);
       },
     );
@@ -304,14 +304,14 @@ void main() {
           const MaterialApp(home: ScheduledRidesScreen()),
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.text('126,75 kr'));
+        await tester.tap(find.text('95,06 kr'));
         await tester.pumpAndSettle();
         if (reset) {
           ScheduledRideStore.reset();
         } else {
           ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: false);
         }
-        await tester.tap(find.text('Accept  •  126,75 kr'));
+        await tester.tap(find.text('Accept  •  95,06 kr'));
         await tester.pumpAndSettle();
         expect(find.textContaining('Reservation accepted'), findsNothing);
         expect(ScheduledRideStore.openRequests.value, reset ? 2 : 1);

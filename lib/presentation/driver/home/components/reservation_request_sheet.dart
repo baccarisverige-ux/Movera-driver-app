@@ -5,7 +5,6 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
-import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/reservation_when.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
@@ -222,11 +221,11 @@ class ReservationRequestSheet extends StatelessWidget {
 
   OfferCardDetails get _show => details ?? DriverOfferRules.current.card;
 
-  /// "126,75 kr" → "126" and ",75 kr", for the grey decimals.
+  /// "95,06 kr" → "95" and ",06 kr", for the grey decimals. The amount is
+  /// the driver's share of the ride's fare, never the fare itself (owner
+  /// decision 2026-10-26; [ReservationRequestPreview.driverPayLabel]).
   (String, String) _fareParts() {
-    final base = _show.fare(
-      Money.parseSekLabel(request.fare)?.formatted ?? request.fare,
-    );
+    final base = _show.fare(request.fareLabel);
     // One total, like the Radar and Exclusive cards.
     return OfferSheetBody.fareParts(pickupPay?.totalOf(base) ?? base);
   }

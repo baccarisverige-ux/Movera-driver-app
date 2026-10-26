@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1462,7 +1463,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get month => 'Month';
 
   @override
-  String get recordedFares => 'Recorded fares';
+  String get recordedFares => 'Recorded earnings';
 
   @override
   String get tipsAndFees => 'Tips and fees';
@@ -1502,7 +1503,7 @@ class AppLocalizationsEn extends AppLocalizations {
     Object fareFormatted,
     Object cashCollectedFormatted,
   ) {
-    return 'Fare $fareFormatted · Cash $cashCollectedFormatted';
+    return 'Earnings $fareFormatted · Cash $cashCollectedFormatted';
   }
 
   @override
@@ -5426,6 +5427,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get liveTripChanged =>
       'This trip changed meanwhile. Check it and try again.';
+
+  @override
+  String earningsBaseService(String service) {
+    return 'Base · $service';
+  }
 
   @override
   String get liveTripFailed => 'Movera could not record this step. Try again.';

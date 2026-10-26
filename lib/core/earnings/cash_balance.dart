@@ -3,12 +3,14 @@ import 'package:movera/core/money/money.dart';
 
 /// R8-4: a cash trip's balance between the driver and Movera.
 ///
-/// The cash the rider pays in the car can differ from the fare (rider
-/// promotions etc.). driver-u19: the driver's money is the fare after
-/// Movera's fee, as on the waybill, so balance = fare − fee − cash:
-/// - fare 200, no fee, cash 250 → −50: the driver owes Movera 50.
-/// - fare 300, no fee, cash 200 → +100: Movera owes the driver 100.
-/// - fare 128,40, fee 32,10, cash 128,40 → −32,10: Movera's fee.
+/// The cash the rider pays in the car is their fare; the driver's money
+/// is their earnings after Movera's commission (owner decision
+/// 2026-10-26: the trip's [fare] is already that), so
+/// balance = earnings − cash:
+/// - earnings 150, cash 200 → −50: the driver owes Movera 50.
+/// - earnings 225, cash 200 → +25: Movera owes the driver 25.
+/// [serviceFee] is kept for a fee not yet taken off [fare]; the app's own
+/// records carry none.
 class CashBalance {
   const CashBalance({
     required this.fare,
@@ -38,7 +40,8 @@ class CashBalance {
     );
   }
 
-  /// The trip's fare (Movera's fee not taken off).
+  /// The driver's money for the trip ([serviceFee], if any, not yet taken
+  /// off).
   final Money fare;
 
   /// What the driver took from the rider in cash.

@@ -57,7 +57,8 @@ extension _HomeRecovery on _DriverHomeState {
     }
 
     /// [next] as the trip it becomes, heading to its pickup, with the
-    /// pickup pay accepted with it (driver-12).
+    /// pickup pay accepted with it (driver-12). Its fare is the driver's
+    /// pay, as saved.
     PersistedActiveRide _queuedAsActive(PersistedQueuedTrip next) {
       final pay = next.pickupPay;
       final terms = pay == null
@@ -65,7 +66,7 @@ extension _HomeRecovery on _DriverHomeState {
           : PickupPayQuote(
               pay: pay,
               leg: PickupLeg(km: 0, minutes: next.pickupMinutes),
-            ).termsOf(fare: next.fare, paidByCash: false);
+            ).termsOf(fare: next.fare);
       return PersistedActiveRide(
         tripId: next.tripId,
         stage: ActiveRideStage.headingToPickup,

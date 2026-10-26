@@ -15,7 +15,6 @@ Future<bool> showCashCollectSheet(
   BuildContext context, {
   required String fare,
   String? cash,
-  String? serviceFee,
   required String riderName,
   String category = '',
 }) async {
@@ -27,7 +26,6 @@ Future<bool> showCashCollectSheet(
     builder: (_) => CashCollectSheet(
       fare: fare,
       cash: cash ?? fare,
-      serviceFee: serviceFee,
       riderName: riderName,
       category: category,
     ),
@@ -40,20 +38,17 @@ class CashCollectSheet extends StatelessWidget {
     super.key,
     required this.fare,
     String? cash,
-    this.serviceFee,
     required this.riderName,
     this.category = '',
   }) : cash = cash ?? fare;
 
-  /// The driver's fare.
+  /// The driver's own money for the trip, after Movera's commission
+  /// (owner decision 2026-10-26); no fee is taken off it again.
   final String fare;
 
-  /// The cash to take from the rider; can differ from [fare].
+  /// The cash to take from the rider: their fare, which differs from
+  /// [fare]; the difference is settled with Movera.
   final String cash;
-
-  /// driver-u19: Movera's fee on the fare, as on the waybill; the driver
-  /// keeps the fare after it. Null for none.
-  final String? serviceFee;
   final String riderName;
   final String category;
 
@@ -80,11 +75,7 @@ class CashCollectSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final amount = _short(cash);
-    final balance = CashBalance.fromLabels(
-      fare: fare,
-      cashCollected: cash,
-      serviceFee: serviceFee,
-    );
+    final balance = CashBalance.fromLabels(fare: fare, cashCollected: cash);
     final first = riderName.trim().split(' ').first;
     final height = MediaQuery.sizeOf(context).height * heightFactor;
     return SizedBox(
@@ -277,7 +268,8 @@ class CashCollectSheet extends StatelessWidget {
     );
   }
 
-  /// Fare, cash, and what is owed by or to Movera (R8-4).
+  /// The driver's earnings, the cash, and what is owed by or to Movera
+  /// (R8-4).
   Widget _balanceCard(CashBalance balance) {
     final color = balance.driverOwesMovera
         ? _owe
@@ -294,11 +286,7 @@ class CashCollectSheet extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _row(tr.yourFare, _short(fare)),
-          if (balance.serviceFee case final fee?) ...[
-            const SizedBox(height: 8),
-            _row(tr.moveraFee, '−${fee.formattedShort}'),
-          ],
+          _row(tr.yourEarnings, _short(fare)),
           const SizedBox(height: 8),
           _row(tr.cashFromRider, _short(cash)),
           const Padding(
@@ -311,16 +299,12 @@ class CashCollectSheet extends StatelessWidget {
             color: color,
             strong: true,
           ),
-          // A promotion: the rider paid other than the fare (Movera's fee
-          // alone is the row above).
-          if (balance.cashCollected.minorUnits != balance.fare.minorUnits) ...[
+          if (balance.balance.minorUnits != 0) ...[
             const SizedBox(height: 6),
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                balance.cashCollected.minorUnits > balance.fare.minorUnits
-                    ? tr.riderPaidMoreThanYourFare
-                    : tr.riderPaidLessThanYourFare,
+                tr.settledInYourNextPayout,
                 style: const TextStyle(
                   color: _muted,
                   fontSize: 12,
