@@ -19,7 +19,10 @@ void main() {
 
   test('driver-3: DECISIONS.md describes the live car marker as built', () {
     final decisions = _read('docs/DECISIONS.md');
-    final trip = _read('lib/presentation/driver/accept ride/accept_ride.dart');
+    // Whitespace-insensitive: `dart format` may wrap the expression.
+    final trip = _read(
+      'lib/presentation/driver/accept ride/accept_ride.dart',
+    ).replaceAll(RegExp(r'\s+'), ' ');
     expect(trip, contains('Timer.periodic(const Duration(milliseconds: 33)'));
     expect(decisions, isNot(contains('5Hz')));
     expect(decisions, contains('33 ms'));
@@ -57,7 +60,10 @@ void main() {
   test('driver-6: the camera doc gives the numbers the camera uses', () {
     final doc = _read('docs/driver-camera-architecture.md');
     String n(double v) => v == v.roundToDouble() ? '${v.toInt()}' : '$v';
-    final trip = _read('lib/presentation/driver/accept ride/accept_ride.dart');
+    // Whitespace-insensitive: `dart format` may wrap the expression.
+    final trip = _read(
+      'lib/presentation/driver/accept ride/accept_ride.dart',
+    ).replaceAll(RegExp(r'\s+'), ' ');
     expect(trip, contains('DriverCameraMode.following ? .75 : .5'));
     expect(doc, contains('**75% of screen height**'));
     expect(doc, isNot(contains('72%')));

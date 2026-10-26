@@ -21,6 +21,8 @@ void main() {
     expect(sheet, contains('Future<void> _startDriverLocation'));
     expect(sheet, contains('Widget panelColumn'));
     expect(sheet, isNot(contains('setState(')));
-    expect(home.split('\n').length, lessThan(1200));
+    // Phase 2: was < 1200 before `dart format` (tall style); same code
+    // measured 1198 → 1407 lines, so the limit scales by the same factor.
+    expect(home.split('\n').length, lessThan(1410));
   });
 }

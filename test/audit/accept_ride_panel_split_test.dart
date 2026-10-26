@@ -29,7 +29,9 @@ void main() {
         ),
       );
       expect(panel, isNot(contains('setState(')));
-      expect(ride.split('\n').length, lessThan(1800));
+      // Phase 2: was < 1800 before `dart format` (tall style); same code
+      // measured 1798 → 2146 lines, so the limit scales by the same factor.
+      expect(ride.split('\n').length, lessThan(2150));
     },
   );
 }
