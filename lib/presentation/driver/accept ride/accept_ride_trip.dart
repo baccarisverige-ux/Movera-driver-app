@@ -326,7 +326,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
     }
     Future<void> _loadLiveIdentity(DriverAccountSession live) async {
-      DriverAccount? account = live.account;
+      var account = live.account;
       if (account == null) {
         try { account = await live.refresh(); } catch (_) { /* offline: the name stays */ }
       }

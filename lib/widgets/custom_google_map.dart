@@ -10,6 +10,7 @@ import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platf
 
 
 import '../core/l10n/driver_l10n.dart';
+import '../core/navigation/map_camera_report.dart';
 import '../core/navigation/map_double_tap_policy.dart';
 import '../styles/movera_map_palette.dart';
 import '../styles/movera_map_style.dart';
@@ -144,6 +145,11 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   );
 
   void _onCameraMove(CameraPosition position) {
+    // Owner N6 (live test 2026-10-26): the web plugin reports zoom 0 and
+    // a (0, 0) centre when Maps has none to give; that is no camera frame
+    // (see MapCameraReport), and the follow, the route line width and the
+    // zoom detector must not take it for one.
+    if (!MapCameraReport.isFrame(position)) return;
     final band = _styleBand.at(position.zoom);
     if (band != _styleBand && mounted) setState(() => _styleBand = band);
     _turnVehicleWith(position);

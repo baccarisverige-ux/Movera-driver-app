@@ -37,8 +37,6 @@ import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/live/live_driver_services.dart';
-import 'package:movera/core/live/live_trip_money.dart';
-import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/live/live_error_message.dart';
@@ -221,9 +219,7 @@ class AcceptRide extends StatefulWidget {
   /// before [fare] became the driver's pay.
   final String? cashToCollect;
 
-  /// Owner N11 (live test 2026-10-26): what the rider pays, e.g.
-  /// "208,00 kr" (`RideOffer.fareLabel`), for the waybill only. Null when
-  /// the trip was made without it (a sample ride, an older save).
+  /// Owner N11: what the rider pays ("208,00 kr"), for the waybill only.
   final String? riderFare;
 
   /// Q16/Q18: Movera's bonus already in [fare]; earnings say "incl. +X".
@@ -569,13 +565,9 @@ class _AcceptRideState extends State<AcceptRide>
   Timer? _projectionRetry;
   String _vehicleLabel = WaybillRecord.vehicleUnavailable;
   String _vehiclePlate = WaybillRecord.plateUnavailable;
-
-  /// The driver on the waybill: the signed-in driver's name in a live
-  /// build (owner N11), the brand name in the demo.
+  /// Owner N11: the signed-in driver (live), the brand name in the demo.
   String _driverName = WaybillRecord.moveraDriverName;
-
-  /// The pickup's address looked up from its coordinates when the offer
-  /// came with none (owner N11); null while the offer's own is shown.
+  /// Owner N11: the pickup's address looked up from its coordinates.
   String? _resolvedPickup;
   String get _pickupAddress => _resolvedPickup ?? widget.pickupAddress;
   static const Duration _projectionRetryBase = Duration(seconds: 1);

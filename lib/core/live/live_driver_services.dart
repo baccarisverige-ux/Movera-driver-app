@@ -16,6 +16,8 @@ import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 
+export 'package:movera/core/live/live_trip_money.dart' show LiveTripMoney;
+
 /// A live build's link to movera-server (`MOVERA_AUTH_REQUIRED=true`):
 /// dispatch over the offer endpoints, the driver's availability and
 /// location, and the trip's commands and live events. The app root
