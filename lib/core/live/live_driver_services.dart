@@ -96,6 +96,9 @@ class LiveDriverServices {
   /// did not come from Home's switch (after a trip, a hold, sign-out).
   void attach(DriverSessionController session) => presence.attach(session);
 
+  /// The app is on screen again ([LivePresence.resumed]).
+  void resumed() => presence.resumed();
+
   Future<void> dispose() async {
     presence.detach();
     reporter.stop();
@@ -289,6 +292,19 @@ class LivePresence {
     _reporter.start();
     if (_feedOpen) return;
     _feedOpen = true;
+    unawaited(_dispatch.connect());
+    _dispatch.refreshOffers();
+  }
+
+  /// Back on screen (owner, live test 2026-10-26: "driver don't receive
+  /// offers"). A locked phone may have lost the offer feed without it
+  /// closing and sent no position for minutes, so the server stopped
+  /// choosing the driver. While online the feed is opened again from its
+  /// last sequence, the open offers are read, and a fix goes out now
+  /// rather than at the next tick.
+  void resumed() {
+    if (!_feedOpen) return;
+    unawaited(_reporter.sendNow());
     unawaited(_dispatch.connect());
     _dispatch.refreshOffers();
   }

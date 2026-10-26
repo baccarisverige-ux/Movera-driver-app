@@ -86,7 +86,7 @@ class MoveraApp extends StatefulWidget {
   final DriverLocationRepository? locationRepository;
 
   /// Round 4 sign-in: where the session's tokens live. Defaults to the
-  /// secure store (Keychain/Keystore, web sessionStorage); tests inject a
+  /// secure store (Keychain/Keystore, web localStorage); tests inject a
   /// memory store.
   final TokenStore? tokenStore;
 
@@ -118,6 +118,9 @@ class _MoveraAppState extends State<MoveraApp> {
   /// Live builds only (MOVERA_AUTH_REQUIRED): dispatch, availability,
   /// location and trip steps through movera-server. Null in the demo.
   LiveDriverServices? _live;
+
+  /// Live builds: tells [LiveDriverServices] when the app is back on screen.
+  AppLifecycleListener? _lifecycle;
 
   @override
   void initState() {
@@ -156,6 +159,7 @@ class _MoveraAppState extends State<MoveraApp> {
       );
       LiveDriverServices.instance = live;
       live.attach(_session);
+      _lifecycle = AppLifecycleListener(onResume: live.resumed);
       _dispatch = live.dispatch;
     } else {
       _dispatch = DemoDispatchRepository();
@@ -197,6 +201,7 @@ class _MoveraAppState extends State<MoveraApp> {
     if (dispatch is DemoDispatchRepository) {
       dispatch.dispose();
     }
+    _lifecycle?.dispose();
     final live = _live;
     if (live != null) {
       unawaited(live.dispose());
