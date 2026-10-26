@@ -67,6 +67,9 @@ class _LiveVehiclesScreenState extends State<LiveVehiclesScreen> {
   }
 
   Future<void> _pick(FleetVehicle vehicle) async {
+    // One pick at a time: a second car tapped meanwhile would race the
+    // first on the profile's version (audit Phase 5).
+    if (_busyId != null) return;
     setState(() => _busyId = vehicle.vehicleId);
     try {
       if (await pickFleetCar(context, widget.account, vehicle)) await _load();

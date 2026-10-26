@@ -769,6 +769,10 @@ class AppLocalizationsSv extends AppLocalizations {
       'Demo: larmet sparas bara på den här telefonen. Ingen på Movera har larmats.';
 
   @override
+  String get safetyAlertNotSentLive =>
+      'Inte skickat: Movera kan inte ta emot larm från resekontrollen än. Vid fara, ring 112.';
+
+  @override
   String get call112IfYouNeedHelp => '\nRing 112 om du behöver hjälp nu.';
 
   @override
@@ -1309,7 +1313,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get moveraFee => 'Moveras avgift';
 
   @override
-  String get moveraBonus => 'Movera-bonus';
+  String get moveraBonus => 'Betalt av Movera';
 
   @override
   String get yourEarnings => 'Din intäkt';
@@ -1857,7 +1861,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String inclBonusMoveraBonus(Object bonus) {
-    return 'inkl. +$bonus Movera-bonus';
+    return 'inkl. +$bonus betalt av Movera';
   }
 
   @override
@@ -3215,6 +3219,10 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get schedPreviewNotBinding =>
       'Förhandsvisning – inte bindande. Valen gäller tills appen startas om.';
+
+  @override
+  String get schedNoneYet =>
+      'Inga schemalagda resor än. Bokningar från Movera visas här.';
 
   @override
   String schedAcceptedPickupAt(String time) {

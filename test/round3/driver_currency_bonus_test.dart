@@ -122,7 +122,7 @@ void main() {
       expect(WaybillRecord.bonusLabel(const Money(minorUnits: 3000)), '30 kr');
       expect(WaybillRecord.bonusLabel(const Money(minorUnits: 0)), isNull);
       expect(WaybillRecord.bonusLabel(null), isNull);
-      expect(WaybillRecord.bonusNote('30 kr'), 'incl. +30 kr Movera bonus');
+      expect(WaybillRecord.bonusNote('30 kr'), 'incl. +30 kr paid by Movera');
       expect(_record().copyWith(fare: '130,00 kr').driverBonus, '30 kr');
     });
 

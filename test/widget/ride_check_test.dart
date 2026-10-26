@@ -35,6 +35,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../integration_test/headless_map_platform.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/live/live_driver_services.dart';
+import '../audit/phase5/live_fixture.dart';
 
 /// The default demo drop-off of [AcceptRide].
 const _dropoff = GeoPoint(59.3326, 18.0649);
@@ -766,6 +769,31 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('ride-check-done')));
     await tester.pumpAndSettle();
     expect(_cardFinder, findsNothing);
+    await _end(tester, controller);
+  });
+
+  testWidgets('live build: the alert note says it was not sent, no "Demo"', (
+    tester,
+  ) async {
+    // Audit R2: no alert endpoint exists yet; a live driver must not read
+    // a demo label, nor that the safety team was alerted.
+    installLive();
+    addTearDown(() => LiveDriverServices.instance = null);
+    final kit = _Kit();
+    final controller = await _card(tester, kit);
+    await tester.tap(find.byKey(const ValueKey('ride-check-row-unsafe')));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining(tr.safetyAlertNotSentLive, findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Demo:', findRichText: true), findsNothing);
+    expect(
+      find.textContaining(tr.moveraSafetyTeamAlerted, findRichText: true),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const ValueKey('ride-check-done')));
+    await tester.pumpAndSettle();
     await _end(tester, controller);
   });
 

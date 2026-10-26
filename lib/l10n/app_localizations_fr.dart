@@ -772,6 +772,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Démo : alerte gardée uniquement sur ce téléphone. Personne chez Movera n’a été prévenu.';
 
   @override
+  String get safetyAlertNotSentLive =>
+      'Non envoyée : Movera ne peut pas encore recevoir les alertes de contrôle de course. En cas de danger, appelez le 112.';
+
+  @override
   String get call112IfYouNeedHelp =>
       '\nAppelez le 112 si vous avez besoin d’aide maintenant.';
 
@@ -1319,7 +1323,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get moveraFee => 'Frais Movera';
 
   @override
-  String get moveraBonus => 'Bonus Movera';
+  String get moveraBonus => 'Payé par Movera';
 
   @override
   String get yourEarnings => 'Vos gains';
@@ -1876,7 +1880,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String inclBonusMoveraBonus(Object bonus) {
-    return 'dont +$bonus de bonus Movera';
+    return 'dont +$bonus payés par Movera';
   }
 
   @override
@@ -3240,6 +3244,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get schedPreviewNotBinding =>
       'Aperçu — sans engagement. Vos choix durent jusqu’au redémarrage de l’application.';
+
+  @override
+  String get schedNoneYet =>
+      'Aucune course programmée pour l’instant. Les réservations de Movera apparaîtront ici.';
 
   @override
   String schedAcceptedPickupAt(String time) {

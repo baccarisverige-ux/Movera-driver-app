@@ -105,7 +105,7 @@ void main() {
     final last = InMemoryWaybillRepository.instance.last!;
     expect(last.fare, '128,60 kr');
     expect(last.driverBonus, '30 kr');
-    expect(find.text('incl. +30 kr Movera bonus'), findsOneWidget);
+    expect(find.text('incl. +30 kr paid by Movera'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester);
