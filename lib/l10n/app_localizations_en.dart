@@ -4206,6 +4206,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatLocalNotSent => 'Local preview · not sent';
 
   @override
+  String get chatSend => 'Send message';
+
+  @override
+  String get chatSending => 'Sending…';
+
+  @override
+  String get chatNotSentTapToRetry => 'Not sent · Tap to retry';
+
+  @override
+  String get chatSendFailed => 'Movera could not send your message. Try again.';
+
+  @override
+  String get chatHistoryFailed => 'Earlier messages could not be loaded.';
+
+  @override
+  String chatNewMessages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new messages from the rider',
+      one: '1 new message from the rider',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get queueAirportPreview => 'Airport queue preview';
 
   @override

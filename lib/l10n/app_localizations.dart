@@ -7317,6 +7317,42 @@ abstract class AppLocalizations {
   /// **'Local preview · not sent'**
   String get chatLocalNotSent;
 
+  /// No description provided for @chatSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get chatSend;
+
+  /// No description provided for @chatSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get chatSending;
+
+  /// No description provided for @chatNotSentTapToRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent · Tap to retry'**
+  String get chatNotSentTapToRetry;
+
+  /// No description provided for @chatSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera could not send your message. Try again.'**
+  String get chatSendFailed;
+
+  /// No description provided for @chatHistoryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier messages could not be loaded.'**
+  String get chatHistoryFailed;
+
+  /// No description provided for @chatNewMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new message from the rider} other{{count} new messages from the rider}}'**
+  String chatNewMessages(int count);
+
   /// No description provided for @queueAirportPreview.
   ///
   /// In en, this message translates to:

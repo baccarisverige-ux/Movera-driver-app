@@ -2865,6 +2865,19 @@
   "chatSendMessageHint": "send message...",
   "chatSaveLocally": "Save message locally",
   "chatLocalNotSent": "Local preview · not sent",
+  "chatSend": "Send message",
+  "chatSending": "Sending…",
+  "chatNotSentTapToRetry": "Not sent · Tap to retry",
+  "chatSendFailed": "Movera could not send your message. Try again.",
+  "chatHistoryFailed": "Earlier messages could not be loaded.",
+  "chatNewMessages": "{count, plural, =1{1 new message from the rider} other{{count} new messages from the rider}}",
+  "@chatNewMessages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "queueAirportPreview": "Airport queue preview",
   "queueSample10Ahead": "Sample: 10 drivers ahead",
   "queueViewSampleDetails": "view sample details",

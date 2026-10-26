@@ -5,8 +5,10 @@ import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_error_message.dart';
+import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -37,6 +39,7 @@ class LiveDriverServices {
       every: locationEvery,
     );
     trips = LiveTripCommands(api: api, lastFix: () => reporter.lastFix);
+    chat = LiveTripChat(api: api);
     dispatch = ApiDispatchRepository(
       client: client,
       baseUri: apiBase,
@@ -62,6 +65,9 @@ class LiveDriverServices {
 
   late final LiveLocationReporter reporter;
   late final LiveTripCommands trips;
+
+  /// The trip's chat with the rider (messages and unread count per trip).
+  late final LiveTripChat chat;
   late final ApiDispatchRepository dispatch;
   late final LivePresence presence;
 
@@ -76,6 +82,7 @@ class LiveDriverServices {
     accessToken: _tokens.readAccess,
     renewSession: _api.renewAccess,
     trips: trips,
+    chat: chat,
   );
 
   /// Follows the app's availability: the feed and location run while the
@@ -273,6 +280,18 @@ class LiveLocationReporter {
 
   /// The last fix sent, as the contract's `GeoFix`.
   LiveFix? lastFix;
+
+  /// Where the phone last was, from [lastFix]: a screen that opens before its
+  /// own GPS read lands (the trip screen right after an accept) starts the
+  /// car here instead of at a fixed point in Stockholm.
+  GeoPoint? get lastKnownPoint {
+    final fix = lastFix;
+    final lat = fix?['lat'];
+    final lng = fix?['lng'];
+    if (lat is! num || lng is! num) return null;
+    final point = GeoPoint(lat.toDouble(), lng.toDouble());
+    return point.isValid ? point : null;
+  }
 
   bool get running => _timer != null;
 
