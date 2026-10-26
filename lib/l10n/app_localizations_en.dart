@@ -5687,4 +5687,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notifNone =>
       'No notifications yet. Fleet invitations and answers show here.';
+
+  @override
+  String get profLiveNoNameYet => 'Your details are not sent yet';
+
+  @override
+  String get profStatusActive => 'Active account';
+
+  @override
+  String get profStatusOnHold => 'Waiting for Movera’s approval';
+
+  @override
+  String get profStatusPending => 'Details not sent yet';
+
+  @override
+  String get profStatusSuspended => 'Account suspended';
 }

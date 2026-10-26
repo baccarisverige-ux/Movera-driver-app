@@ -9828,6 +9828,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No notifications yet. Fleet invitations and answers show here.'**
   String get notifNone;
+
+  /// Profile header (live): profLiveNoNameYet
+  ///
+  /// In en, this message translates to:
+  /// **'Your details are not sent yet'**
+  String get profLiveNoNameYet;
+
+  /// Profile header (live): profStatusActive
+  ///
+  /// In en, this message translates to:
+  /// **'Active account'**
+  String get profStatusActive;
+
+  /// Profile header (live): profStatusOnHold
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Movera’s approval'**
+  String get profStatusOnHold;
+
+  /// Profile header (live): profStatusPending
+  ///
+  /// In en, this message translates to:
+  /// **'Details not sent yet'**
+  String get profStatusPending;
+
+  /// Profile header (live): profStatusSuspended
+  ///
+  /// In en, this message translates to:
+  /// **'Account suspended'**
+  String get profStatusSuspended;
 }
 
 class _AppLocalizationsDelegate

@@ -36,6 +36,8 @@ class _DriverProfileState extends State<DriverProfile> {
   late Future<({String vehicle, String plate})?> _identity;
   bool _logoutBusy = false;
 
+  bool _liveRead = false;
+
   @override
   void initState() {
     super.initState();
@@ -43,10 +45,64 @@ class _DriverProfileState extends State<DriverProfile> {
     LocalVehicleStore.changes.addListener(_vehicleChanged);
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Round 4b (live): the picked fleet car, read through the server (the
+    // scope is only reachable here, not in initState).
+    if (!_liveRead && _liveSession != null) {
+      _liveRead = true;
+      _identity = _readIdentity();
+    }
+  }
+
+  Future<({String vehicle, String plate})?> _readIdentity() {
+    final live = _liveSession;
+    return live == null ? _vehicles.primaryIdentity() : _liveIdentity(live);
+  }
+
+  /// The car this account has picked (`Driver.vehicleId`) among the fleet's.
+  Future<({String vehicle, String plate})?> _liveIdentity(
+    DriverAccountSession live,
+  ) async {
+    final id = live.account?.vehicleId;
+    if (id == null) return null;
+    try {
+      for (final car in await live.repository.vehicles()) {
+        if (car.vehicleId == id) {
+          return (vehicle: '${car.make} ${car.model}'.trim(), plate: car.plate);
+        }
+      }
+    } catch (_) {
+      // Offline: the line stays blank rather than wrong.
+    }
+    return null;
+  }
+
+  /// Round 4b (live): the signed-in driver's name and account status instead
+  /// of the demo's sample profile.
+  String get _headerName {
+    final account = _liveAccount;
+    if (account == null) return tr.profSampleDriver;
+    final name = account.fullName.trim();
+    return name.isEmpty ? tr.profLiveNoNameYet : name;
+  }
+
+  String get _headerStatus {
+    final account = _liveAccount;
+    if (account == null) return tr.profDemoNoVerified;
+    return switch (account.accountStatus) {
+      'active' => tr.profStatusActive,
+      'on_hold' => tr.profStatusOnHold,
+      'suspended' => tr.profStatusSuspended,
+      _ => tr.profStatusPending,
+    };
+  }
+
   void _vehicleChanged() {
     if (mounted && !_logoutBusy) {
       setState(() {
-        _identity = _vehicles.primaryIdentity();
+        _identity = _readIdentity();
       });
     }
   }
@@ -68,7 +124,7 @@ class _DriverProfileState extends State<DriverProfile> {
     await pushSingle(context, RightToLeftTransition(page));
     if (mounted && refreshVehicle) {
       setState(() {
-        _identity = _vehicles.primaryIdentity();
+        _identity = _readIdentity();
       });
     }
   }
@@ -144,7 +200,8 @@ class _DriverProfileState extends State<DriverProfile> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          tr.profSampleDriver,
+                          _headerName,
+                          key: const ValueKey('profile-header-name'),
                           style: TextStyle(
                             color: _ink,
                             fontSize: 17,
@@ -153,7 +210,8 @@ class _DriverProfileState extends State<DriverProfile> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          tr.profDemoNoVerified,
+                          _headerStatus,
+                          key: const ValueKey('profile-header-status'),
                           style: TextStyle(
                             color: _muted,
                             fontSize: 12,

@@ -5777,4 +5777,20 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notifNone =>
       'Pas encore de notification. Les invitations de flotte et les réponses s’affichent ici.';
+
+  @override
+  String get profLiveNoNameYet =>
+      'Vos informations ne sont pas encore envoyées';
+
+  @override
+  String get profStatusActive => 'Compte actif';
+
+  @override
+  String get profStatusOnHold => 'En attente de la validation de Movera';
+
+  @override
+  String get profStatusPending => 'Informations pas encore envoyées';
+
+  @override
+  String get profStatusSuspended => 'Compte suspendu';
 }

@@ -5703,4 +5703,19 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get notifNone =>
       'Inga aviseringar än. Inbjudningar från åkerier och svar visas här.';
+
+  @override
+  String get profLiveNoNameYet => 'Dina uppgifter är inte skickade än';
+
+  @override
+  String get profStatusActive => 'Aktivt konto';
+
+  @override
+  String get profStatusOnHold => 'Väntar på Moveras godkännande';
+
+  @override
+  String get profStatusPending => 'Uppgifter inte skickade än';
+
+  @override
+  String get profStatusSuspended => 'Kontot är avstängt';
 }

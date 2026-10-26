@@ -1621,5 +1621,10 @@
   "fleetYourRequest": "Din förfrågan",
   "fleetRequestSent": "Förfrågan skickad till {name}. Ägaren svarar i appen.",
   "notifCouldNotLoad": "Det gick inte att läsa in dina aviseringar.",
-  "notifNone": "Inga aviseringar än. Inbjudningar från åkerier och svar visas här."
+  "notifNone": "Inga aviseringar än. Inbjudningar från åkerier och svar visas här.",
+  "profLiveNoNameYet": "Dina uppgifter är inte skickade än",
+  "profStatusActive": "Aktivt konto",
+  "profStatusOnHold": "Väntar på Moveras godkännande",
+  "profStatusPending": "Uppgifter inte skickade än",
+  "profStatusSuspended": "Kontot är avstängt"
 }

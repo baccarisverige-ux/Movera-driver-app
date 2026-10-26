@@ -1621,5 +1621,10 @@
   "fleetYourRequest": "Votre demande",
   "fleetRequestSent": "Demande envoyée à {name}. Le responsable répond dans l’application.",
   "notifCouldNotLoad": "Impossible de charger vos notifications.",
-  "notifNone": "Pas encore de notification. Les invitations de flotte et les réponses s’affichent ici."
+  "notifNone": "Pas encore de notification. Les invitations de flotte et les réponses s’affichent ici.",
+  "profLiveNoNameYet": "Vos informations ne sont pas encore envoyées",
+  "profStatusActive": "Compte actif",
+  "profStatusOnHold": "En attente de la validation de Movera",
+  "profStatusPending": "Informations pas encore envoyées",
+  "profStatusSuspended": "Compte suspendu"
 }

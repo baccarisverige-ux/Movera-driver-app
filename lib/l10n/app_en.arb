@@ -3694,5 +3694,15 @@
     }
   },
   "notifCouldNotLoad": "Couldn’t load your notifications.",
-  "notifNone": "No notifications yet. Fleet invitations and answers show here."
+  "notifNone": "No notifications yet. Fleet invitations and answers show here.",
+  "profLiveNoNameYet": "Your details are not sent yet",
+  "@profLiveNoNameYet": {"description": "Profile header (live): profLiveNoNameYet"},
+  "profStatusActive": "Active account",
+  "@profStatusActive": {"description": "Profile header (live): profStatusActive"},
+  "profStatusOnHold": "Waiting for Movera’s approval",
+  "@profStatusOnHold": {"description": "Profile header (live): profStatusOnHold"},
+  "profStatusPending": "Details not sent yet",
+  "@profStatusPending": {"description": "Profile header (live): profStatusPending"},
+  "profStatusSuspended": "Account suspended",
+  "@profStatusSuspended": {"description": "Profile header (live): profStatusSuspended"}
 }
