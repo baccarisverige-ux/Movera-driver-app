@@ -19,7 +19,7 @@ Toolchain used locally: Flutter 3.47.7 / Dart 3.13.5 (CI pins 3.47.6).
 - [x] 6. Screen inventory
 - [x] 7. Code quality
 - [x] 8. Known issues (N1, N5, N6, N8, N9, N11)
-- [ ] 9. Untested features and risks
+- [x] 9. Untested features and risks
 - [ ] 10. Summary
 
 ## 1. Structure and architecture
@@ -249,3 +249,27 @@ PR #380 is merged (main = 436bfb54), so "main" and "#380" are the same code. Its
 | N8 ride check from the driver side | **Open (driver side)** | driver card is local: `RideCheckDetector` (lib/core/safety/ride_check_detector.dart:119-121) fires when the drop is farther than `farDropMeters` = `defaultFinishFarFromDropoffKm = 3` km (lib/core/admin/ride_check_admin_config.dart:9) — **not 300 m** as in the owner's scenario; alerts go to `DemoSafetyAlertRepository` in every build (lib/main.dart:169) | verify the intended threshold with the owner/server; a live-rig run; Phase 3 scenario 7 |
 | N9 server's final money after early finish | **Fixed** | `LiveTripMoney.tryParse` (lib/core/live/live_trip_money.dart); test/core/live_trip_money_test.dart, test/widget/live_trip_finish_money_test.dart | today's earnings/history still sum locally and assume SEK (§7) |
 | N11 waybill identities | **Fixed except rider name** | live name/car from the account (accept_ride_trip.dart:301-312), reverse-geocoded pickup (`LiveAddressLookup`, live_driver_services.dart:109); test/audit/trip_waybill_fare_test.dart:131 | the rider's first name is not in the contract: "Passenger" stays until the server+contract change (Phase 0 item) |
+
+## 9. Untested features and risks
+
+"Test files" = files under test/ or integration_test/ that name the class (grep). Severity per AUDIT_PLAN scale.
+
+| # | Feature / risk | Evidence | Sev |
+|---|---|---|---|
+| R1 | Live drivers see **seeded demo scheduled rides** (Lars, Södermalm → Bromma 184 kr, `DemoReservations.*`) and Home reminders for them; no live check in `ScheduledRideStore` | scheduled_rides.dart:461-509; home_scheduled.dart:131-151, 291-307 | S2 |
+| R2 | **Ride-check alerts never leave the phone** in the live build (`DemoSafetyAlertRepository`) | lib/main.dart:169 | S2 (safety) |
+| R3 | **Today's earnings and ride history come from device storage only** and sum minor units as SEK regardless of currency: wrong for EUR (Paris), zero on a new device / after logout | today_earnings.dart:35-49, ride_history.dart:126-132, trip_history.dart:126-129; 0 TodayEarnings tests use EUR | S2 (money shown) |
+| R4 | Client fallback commission 25 % when the offer has no `driverEarnings`; client pickup-pay maths when no `pickupPay` | dispatch_repository.dart:154-159, waybill.dart:362, pickup_pay.dart:85-112 | S2 if the server omits them (contract requires? NOT VERIFIED) |
+| R5 | Google API key in git history | commits e6729267, 039b3b7d | S2 (security; Phase 4) |
+| R6 | N8 driver-side ride check threshold is 3 km by default, owner scenario says 300 m | ride_check_admin_config.dart:9 | S3 (confirm intent) |
+| R7 | Round-4b live screens without any test: `AddCarScreen`, `JoinFleetScreen`, `LiveVehiclesScreen`, `ServerNotificationsScreen`; `LiveAddressLookup` (N11 reverse geocode) 0 tests; `SecureTokenStore` 0 tests | grep counts in §6 | S3 |
+| R8 | Live transports have thin tests: `ApiDriverRealtime` 2 files, `LivePresence` 1, `LiveLocationReporter` 1; `test/live/live_server_e2e_test.dart` is **skipped unless `MOVERA_E2E_BASE`/`MOVERA_E2E_STATE` are set** — never runs in CI | test/live/live_server_e2e_test.dart:27-30 | S2 (sync between apps untested in CI; Phase 3) |
+| R9 | The live build (`MOVERA_AUTH_REQUIRED=true`) is only compiled after merge in deploy-pages | deploy-pages.yml "Build live Drider web" | S3 |
+| R10 | N6 pinch/camera on iPhone Safari, WebGL context loss, real Google Maps rendering: no CI coverage (no Maps key, no device) | §8 | S2, needs device |
+| R11 | Back/restore behaviour on 34 of 47 Scaffold screens is default pop with no dedicated test | §6 | S3 (Phase 5) |
+| R12 | Driver contract copy is v0.5.3 vs contract repo v0.5.5 | contracts/contract.json:3 | S3 |
+| R13 | Legacy onboarding (`auth/additional detail/`) is dead code with tests keeping it | §6 | S4 |
+| R14 | Wall-clock-dependent widget tests (`DateTime.now()` + real seconds) can fail on slow machines — see §4 | test/audit/r5_lows_test.dart:735-750 | S4 (CI flake risk) |
+| R15 | No format gate: 451 of 696 Dart files would be reformatted | §4 | S4 |
+| R16 | Web build warns `CupertinoIcons` font is referenced but not bundled (`cupertino_icons` not a dependency): such icons render as boxes | `flutter build web` output §4 | S4 |
+| Needs device | GPS while driving, background location, battery, iOS/Android native maps, Apple/Google sign-in, SMS code, audio recording in ride check, radar sound | – | – |
