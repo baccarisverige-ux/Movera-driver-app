@@ -136,12 +136,18 @@ class DriverDocuments extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Text(
-                      tr.docLeftCount(left),
-                      style: const TextStyle(
-                        color: _muted,
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w500,
+                    // Wraps instead of overflowing (fr, 320 px, text x2;
+                    // audit Phase 5).
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        tr.docLeftCount(left),
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          color: _muted,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
