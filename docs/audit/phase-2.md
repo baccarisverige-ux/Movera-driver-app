@@ -6,7 +6,7 @@ Branch `audit/phase-2`, from `main` @ 436bfb54. Plan: `movera-contracts` `docs/a
 
 | # | Item | Status |
 |---|---|---|
-| 1 | `drider-ci.yml` as the required gate | Done (CI result: see the PR) |
+| 1 | `drider-ci.yml` as the required gate | Done; CI green |
 | 2 | `dart format .` in its own commit + format check | Done |
 | 3 | Two wall-clock-flaky tests made deterministic | Done |
 | 4 | Contract copy synced to movera-contracts main (v0.5.5) | Done; product follow-ups listed for Phase 3 |
@@ -59,4 +59,6 @@ Branch `audit/phase-2`, from `main` @ 436bfb54. Plan: `movera-contracts` `docs/a
 `flutter build web` warns "Expected to find fonts for (MaterialIcons, packages/cupertino_icons/CupertinoIcons)". lib/ uses no `CupertinoIcons` and pubspec has no `cupertino_icons`; the reference comes from a dependency or the framework (not found). The fix is adding the `cupertino_icons` package (a new dependency and font asset in every build), so it is not a trivial change for this phase.
 
 ## Evidence
-(filled in below as runs finish)
+- Local (Flutter 3.47.7, branch @ 3575c5f8 + CI commit): `flutter test --coverage`: 2179 passed, 1 skipped, 0 failed; `tool/check_coverage.py`: lib/core 8107/8834 = 91.77 % (floor 91.50 %); `flutter analyze --fatal-infos`: no issues; `tool/tests` unittest: OK.
+- CI run 40354953665 (f2c7a0ec, push): all 5 jobs green (Secret scan ~12 s, live web ~1.5 min, verify ~15 min incl. coverage). The iOS job was first cancelled after 15 min without ever getting a macos-14 runner (runner_id 0); re-run of the failed job: success. Coverage artifact `driver-coverage-f2c7a0ec…` uploaded.
+- Format check passes on CI's Flutter 3.47.6 with the tree formatted by 3.47.7.
