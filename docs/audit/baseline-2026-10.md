@@ -12,7 +12,7 @@ Toolchain used locally: Flutter 3.47.7 / Dart 3.13.5 (CI pins 3.47.6).
 ## Progress
 
 - [x] 1. Structure and architecture
-- [ ] 2. Dependencies
+- [x] 2. Dependencies
 - [x] 3. CI
 - [ ] 4. Baseline run
 - [ ] 5. Coverage of critical logic
@@ -105,3 +105,31 @@ Workflows: `.github/workflows/drider-ci.yml`, `.github/workflows/deploy-pages.ym
 | Timeouts | present on every CI job; **none** on the deploy workflow jobs |
 | Branch protection | NOT VERIFIED (needs admin API; owner decision D1) |
 | The live build (`MOVERA_AUTH_REQUIRED=true`) is **only built in deploy-pages after merge**, never in CI on a PR — a live-only compile break would surface after merge. |
+
+## 2. Dependencies
+
+Constraints: Dart `^3.8.1`, Flutter `>=3.41.0` (pubspec.yaml:22-23). `pubspec.lock` holds 161 packages. `flutter pub get --enforce-lockfile`: OK in 21 s locally, "70 packages have newer versions incompatible with dependency constraints"; no advisory / discontinued / retracted notice printed.
+
+Direct dependencies (31 incl. SDK ones) and where they are imported (`package:<name>/` in lib / test files):
+
+| Package | Locked | Latest | lib files | Note |
+|---|---|---|---|---|
+| google_maps_flutter | 2.13.1 | 2.19.0 | 22 | maps core |
+| google_maps_flutter_platform_interface | 2.14.0 (pinned exact) | 2.17.0 | 2 | pinned for D-08 marker updates |
+| geolocator | 14.0.2 | 14.1.2 | 2 | |
+| http / http_parser | 1.5.0 / – | 1.6.0 | 8 / 1 | API |
+| flutter_secure_storage | 10.3.4 | 11.2.0 (major) | 1 | tokens |
+| shared_preferences | 2.5.3 | 2.5.6 | 10 | active ride, settings, vehicles (base64 photos) |
+| sign_in_with_apple / google_sign_in | 8.2.0 / 7.2.0 | – | 1 / 1 | buttons show "Coming soon" until keys exist |
+| file_picker | 10.3.2 | 13.3.0 (major) | 4 | |
+| image_picker | 1.2.0 | 1.2.4 | 5 | |
+| share_plus | 12.0.2 | 13.3.1 (major) | 1 | |
+| pinput | 5.0.1 | 7.0.0 (major) | 1 | code entry |
+| google_fonts | 8.2.1 | 9.0.0 (major) | 6 | fetches fonts at runtime unless bundled (NOT VERIFIED) |
+| flutter_screenutil, sliding_up_panel, flutter_svg, pointer_interceptor, url_launcher, record, audioplayers, path_provider, web, intl, circle_progress_bar, country_pickers, dotted_line, flutter_rating_bar, mobkit_dashed_border | – | – | 1–30 each | all imported at least once |
+| dev: crypto, shared_preferences_platform_interface, flutter_lints 5.0.0 (latest 6.0.0) | | | test only | |
+
+- **Unused direct dependencies: none found** (every direct dependency is imported from lib/ or, for dev deps, test/). `sliding_up_panel 2.0.0+1` is an old, unmaintained package (last release years ago, NOT VERIFIED on pub.dev from here) used in 5 lib files.
+- `flutter pub outdated --no-transitive`: **15 direct + 3 dev** outdated; 12 upgradable within constraints, 9 need a constraint change (majors: file_picker 13, flutter_secure_storage 11, google_fonts 9, pinput 7, share_plus 13, flutter_lints 6). Whole graph: 54 locked older than upgradable, 20 constrained below resolvable.
+- Security advisories: `pub` printed none; a dedicated advisory scan (osv-scanner) was **NOT VERIFIED** (tool not installed here).
+- Local Flutter is 3.47.7; CI and deploy pin 3.47.6 (drider-ci.yml, deploy-pages.yml).
