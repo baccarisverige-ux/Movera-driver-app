@@ -86,7 +86,7 @@ class MoveraApp extends StatefulWidget {
   final DriverLocationRepository? locationRepository;
 
   /// Round 4 sign-in: where the session's tokens live. Defaults to the
-  /// secure store (Keychain/Keystore, web sessionStorage); tests inject a
+  /// secure store (Keychain/Keystore, web localStorage); tests inject a
   /// memory store.
   final TokenStore? tokenStore;
 
