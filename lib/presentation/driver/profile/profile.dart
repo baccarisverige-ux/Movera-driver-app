@@ -10,6 +10,8 @@ import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/presentation/driver/account/driver_details_screen.dart';
+import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
@@ -187,11 +189,31 @@ class _DriverProfileState extends State<DriverProfile> {
             ),
             const SizedBox(height: 12),
             _group(context, [
+              // Round 4b: the details may be changed while Movera still
+              // checks the account (a resend replaces them).
+              if (_liveAccount?.canSendDetails == true)
+                _item(
+                  Icons.badge_outlined,
+                  tr.acctDetailsTitle,
+                  DriverDetailsScreen(
+                    key: const ValueKey('profile-details'),
+                    account: _liveSession!,
+                    editing: true,
+                    onBack: () => maybePopOwned(context),
+                    onDone: (context) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(tr.acctDetailsSaved)));
+                      maybePopOwned(context);
+                    },
+                  ),
+                ),
               if (_liveSession != null)
                 _item(
                   Icons.groups_outlined,
                   tr.myFleet,
                   MyFleetScreen(account: _liveSession!),
+                  badge: _liveAccount?.pendingFleetInvitations ?? 0,
                 ),
               _item(Icons.insights_outlined, tr.analytics, const Analytics()),
               _item(Icons.account_balance_outlined, tr.myBank, const MyBank()),
@@ -348,6 +370,11 @@ class _DriverProfileState extends State<DriverProfile> {
                         ),
                       ),
                     ),
+                    if (item.badge > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: InvitationBadge(item.badge, small: true),
+                      ),
                     const Icon(
                       Icons.chevron_right_rounded,
                       color: Color(0xFFB0B8BC),
@@ -362,8 +389,13 @@ class _DriverProfileState extends State<DriverProfile> {
     );
   }
 
-  _ProfileItem _item(IconData icon, String title, Widget page) {
-    return _ProfileItem(icon, title, page);
+  _ProfileItem _item(
+    IconData icon,
+    String title,
+    Widget page, {
+    int badge = 0,
+  }) {
+    return _ProfileItem(icon, title, page, badge: badge);
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
@@ -457,8 +489,11 @@ class _DriverProfileState extends State<DriverProfile> {
 }
 
 class _ProfileItem {
-  const _ProfileItem(this.icon, this.title, this.page);
+  const _ProfileItem(this.icon, this.title, this.page, {this.badge = 0});
   final IconData icon;
   final String title;
   final Widget page;
+
+  /// Round 4b: invitations waiting in My fleet.
+  final int badge;
 }

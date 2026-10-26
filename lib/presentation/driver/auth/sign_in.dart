@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_error_message.dart';
+import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/phone_country.dart';
 import 'package:movera/core/auth/phone_country_default.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -18,8 +19,8 @@ import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 
 /// Step 1 of the driver sign-in: one phone field for new and returning
-/// drivers, the consent tick and Continue. The rider app's sign-in with the
-/// owner's changes: "Driver" under the wordmark, no Apple or Google.
+/// drivers, the consent tick and Continue, then Apple and Google (round
+/// 4b). The rider app's sign-in with "Driver" under the wordmark.
 class DriverSignIn extends StatefulWidget {
   const DriverSignIn({super.key, this.controller});
 
@@ -56,6 +57,12 @@ class _DriverSignInState extends State<DriverSignIn>
 
   bool _busy = false;
   String? _phoneError;
+
+  /// Round 4b: which provider button is working, and which ones the
+  /// server or this platform said are not ready ("Coming soon").
+  String? _providerBusy;
+  final Set<String> _providerSoon = {};
+  String? _providerError;
 
   /// The terms box must be ticked before Continue works.
   bool _agreed = false;
@@ -117,6 +124,42 @@ class _DriverSignInState extends State<DriverSignIn>
     if (_phoneError != null) setState(() => _phoneError = null);
   }
 
+  /// Round 4b: Apple or Google. A linked identity signs in at once; a new
+  /// one goes on to the phone step with the link token, and the details
+  /// step is prefilled with what the provider gave.
+  Future<void> _provider(String provider) async {
+    if (_busy || _providerBusy != null) return;
+    final auth = _auth;
+    if (auth == null) {
+      setState(() => _providerError = tr.authErrProvider);
+      return;
+    }
+    setState(() {
+      _providerBusy = provider;
+      _providerError = null;
+      _phoneError = null;
+    });
+    try {
+      final result = await auth.signInWithProvider(provider);
+      if (!mounted || result == null) return;
+      switch (result) {
+        case ProviderSignedIn():
+          await enterDriverApp(context);
+        case ProviderPhoneRequired():
+          _phoneFocus.requestFocus();
+          setState(() {});
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        if (isProviderComingSoon(error)) _providerSoon.add(provider);
+        _providerError = authErrorMessage(error, AuthAction.providerSignIn);
+      });
+    } finally {
+      if (mounted) setState(() => _providerBusy = null);
+    }
+  }
+
   Future<void> _continue() async {
     if (_busy) return;
     final number = phoneNumberFromField(_phone.text, _country);
@@ -152,7 +195,8 @@ class _DriverSignInState extends State<DriverSignIn>
 
   @override
   Widget build(BuildContext context) {
-    final idle = !_busy && _agreed;
+    final idle = !_busy && _providerBusy == null && _agreed;
+    final link = _auth?.providerLink;
     return AuthScaffold(
       step: 1,
       headline: '',
@@ -170,7 +214,14 @@ class _DriverSignInState extends State<DriverSignIn>
         children: [
           Text(tr.authEnterPhone, style: AuthText.cardTitle()),
           const SizedBox(height: 2),
-          Text(tr.authTextFourDigitCode, style: AuthText.cardSub()),
+          Text(
+            // After Apple / Google: the phone is confirmed once.
+            link == null
+                ? tr.authTextFourDigitCode
+                : tr.authProviderPhoneOnce(link.providerLabel),
+            key: ValueKey(link == null ? 'auth-sub-phone' : 'auth-sub-link'),
+            style: AuthText.cardSub(),
+          ),
           const SizedBox(height: 14),
           AuthPhoneField(
             controller: _phone,
@@ -269,6 +320,70 @@ class _DriverSignInState extends State<DriverSignIn>
               onPressed: idle ? _continue : null,
             ),
           ),
+          if (link == null) ...[
+            const SizedBox(height: 14),
+            const AuthOrDivider(),
+            const SizedBox(height: 10),
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: _agreed ? null : _nudgeConsent,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: AuthProviderButton(
+                      key: const ValueKey('auth-apple'),
+                      label: 'Apple',
+                      leading: const Icon(
+                        Icons.apple,
+                        color: AuthColors.ink,
+                        size: 20,
+                      ),
+                      busy: _providerBusy == 'apple',
+                      comingSoon: _providerSoon.contains('apple'),
+                      onPressed: idle ? () => _provider('apple') : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AuthProviderButton(
+                      key: const ValueKey('auth-google'),
+                      label: 'Google',
+                      leading: Image.asset('assets/images/google.png'),
+                      busy: _providerBusy == 'google',
+                      comingSoon: _providerSoon.contains('google'),
+                      onPressed: idle ? () => _provider('google') : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_providerError != null) AuthErrorText(_providerError!),
+          ] else
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Semantics(
+                button: true,
+                label: tr.authUsePhoneInstead,
+                onTap: () => setState(_auth!.forgetProvider),
+                excludeSemantics: true,
+                child: TextButton(
+                  key: const ValueKey('auth-forget-provider'),
+                  onPressed: () => setState(_auth!.forgetProvider),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AuthColors.muted,
+                    minimumSize: const Size(0, 36),
+                  ),
+                  child: Text(
+                    tr.authUsePhoneInstead,
+                    style: AuthText.urbanist(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: AuthColors.muted,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

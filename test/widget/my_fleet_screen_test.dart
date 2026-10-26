@@ -12,9 +12,31 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 
-/// Round 4: My fleet for a driver without a fleet (join, with the one
-/// mismatch message and the hourly limit) and for an owner (the code,
-/// drivers and cars).
+Map<String, Object?> _invitation({
+  String id = 'inv_1',
+  String direction = 'owner_invite',
+  String? driverId = 'drv_5',
+  String? driverName = 'Nils Berg',
+  String? phone,
+  String status = 'pending',
+}) => {
+  'invitationId': id,
+  'fleetId': 'flt_1',
+  'fleetName': 'Nord AB',
+  'direction': direction,
+  if (driverId != null) 'driverId': driverId,
+  if (driverName != null) 'driverName': driverName,
+  if (phone != null) 'phone': phone,
+  'status': status,
+  'createdAt': '2026-10-25T10:00:00Z',
+  'expiresAt': '2026-11-01T10:00:00Z',
+  'version': 1,
+};
+
+/// Round 4: My fleet for a driver without a fleet (a request to join, with
+/// the one mismatch message and the hourly limit; the owners' invites)
+/// and for an owner (the code, the requests and invites, drivers and
+/// cars).
 http.Response _json(int status, Object map, {Map<String, String>? headers}) =>
     http.Response(
       jsonEncode(map),
@@ -43,7 +65,11 @@ const _owner = {
   'version': 2,
 };
 
-Map<String, Object?> _fleetView({String status = 'approved', String? code}) => {
+Map<String, Object?> _fleetView({
+  String status = 'approved',
+  String? code,
+  List<Map<String, Object?>> invitations = const [],
+}) => {
   'fleet': {
     'fleetId': 'flt_1',
     'name': 'Nord AB',
@@ -90,6 +116,7 @@ Map<String, Object?> _fleetView({String status = 'approved', String? code}) => {
       'requiredDocuments': ['vehicle_registration', 'insurance'],
     },
   ],
+  'invitations': invitations,
 };
 
 DriverAccountSession _session(
@@ -110,7 +137,7 @@ Future<void> _pump(
   DriverAccountSession session, {
   List<String>? shared,
 }) async {
-  tester.view.physicalSize = const Size(390, 1400);
+  tester.view.physicalSize = const Size(390, 1800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -143,130 +170,32 @@ void main() {
       'version': 2,
     };
 
-    testWidgets('the join form; one mismatch message covers the three fields', (
-      tester,
-    ) async {
-      final bodies = <Map<String, dynamic>>[];
-      final session = _session(
-        MockClient((request) async {
-          bodies.add(jsonDecode(request.body) as Map<String, dynamic>);
-          return _json(400, {
-            'code': 'invalid_request',
-            'message': 'x',
-            'reason': 'fleet_join_mismatch',
-          });
-        }),
-        profile: driver,
-      );
-      await _pump(tester, session);
-      expect(find.text(tr.fleetJoinTitle), findsOneWidget);
-      expect(find.text(tr.fleetJoinBody), findsOneWidget);
-      // Nothing to join with yet: the button waits.
-      expect(
-        tester
-            .widget<FilledButton>(
-              find.descendant(
-                of: find.byKey(const ValueKey('join-submit')),
-                matching: find.byType(FilledButton),
-              ),
-            )
-            .onPressed,
-        isNull,
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('join-code')),
-        'MV-7K3Q9',
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('join-owner')),
-        'Eva Nord',
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('join-email')),
-        'eva@nord.se',
-      );
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('join-submit')));
-      for (var i = 0; i < 4; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
+    /// Answers the reads My fleet does on open (the profile, the
+    /// invitations); [onJoin] answers the request.
+    http.Client server({
+      List<Map<String, Object?>> invitations = const [],
+      required http.Response Function(Map<String, dynamic> body) onJoin,
+      void Function(String path)? onAction,
+    }) => MockClient((request) async {
+      if (request.url.path == DriverAccountRepository.profilePath) {
+        return _json(200, driver);
       }
-      expect(bodies.single, {
-        'code': 'MV-7K3Q9',
-        'ownerName': 'Eva Nord',
-        'ownerEmail': 'eva@nord.se',
-      });
-      expect(find.text(tr.fleetJoinMismatch), findsOneWidget);
-      expect(session.account?.fleet, isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
+      if (request.url.path == DriverAccountRepository.fleetInvitationsPath) {
+        return _json(200, {'items': invitations});
+      }
+      if (request.url.path == DriverAccountRepository.fleetJoinPath) {
+        return onJoin(jsonDecode(request.body) as Map<String, dynamic>);
+      }
+      if (request.url.path.startsWith(
+        '${DriverAccountRepository.fleetInvitationsPath}/',
+      )) {
+        onAction?.call(request.url.path);
+        return _json(200, _invitation(status: 'accepted'));
+      }
+      return _json(404, {'code': 'not_found', 'message': 'x'});
     });
 
-    testWidgets('too many tries: the server\'s wait is said', (tester) async {
-      final session = _session(
-        MockClient(
-          (_) async => _json(
-            429,
-            {
-              'code': 'rate_limited',
-              'message': 'x',
-              'reason': 'fleet_join_limit',
-            },
-            headers: {'retry-after': '3600'},
-          ),
-        ),
-        profile: driver,
-      );
-      await _pump(tester, session);
-      await tester.enterText(
-        find.byKey(const ValueKey('join-code')),
-        'MV-7K3Q9',
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('join-owner')),
-        'Eva Nord',
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('join-email')),
-        'eva@nord.se',
-      );
-      await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('join-submit')));
-      for (var i = 0; i < 4; i++) {
-        await tester.pump(const Duration(milliseconds: 100));
-      }
-      expect(find.text(tr.acctTooManyTriesHour), findsOneWidget);
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
-
-    testWidgets('a matching code joins: the fleet shows', (tester) async {
-      var joined = false;
-      final session = _session(
-        MockClient((request) async {
-          if (request.url.path == DriverAccountRepository.fleetJoinPath) {
-            joined = true;
-            return _json(200, {
-              ...driver,
-              'fleet': {
-                'fleetId': 'flt_1',
-                'name': 'Nord AB',
-                'role': 'member',
-                'status': 'approved',
-              },
-              'version': 3,
-            });
-          }
-          if (request.url.path == DriverAccountRepository.fleetPath && joined) {
-            final view = _fleetView();
-            return _json(200, {...view, 'drivers': []});
-          }
-          return _json(404, {
-            'code': 'not_found',
-            'message': 'x',
-            'reason': 'no_fleet',
-          });
-        }),
-        profile: driver,
-      );
-      await _pump(tester, session);
+    Future<void> fillJoin(WidgetTester tester) async {
       await tester.enterText(
         find.byKey(const ValueKey('join-code')),
         'MV-7K3Q9',
@@ -284,13 +213,201 @@ void main() {
       for (var i = 0; i < 6; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
+    }
+
+    testWidgets('the join form; one mismatch message covers the three fields', (
+      tester,
+    ) async {
+      final bodies = <Map<String, dynamic>>[];
+      final session = _session(
+        server(
+          onJoin: (body) {
+            bodies.add(body);
+            return _json(400, {
+              'code': 'invalid_request',
+              'message': 'x',
+              'reason': 'fleet_join_mismatch',
+            });
+          },
+        ),
+        profile: driver,
+      );
+      await _pump(tester, session);
+      expect(find.text(tr.fleetJoinTitle), findsOneWidget);
+      expect(find.text(tr.fleetJoinBody), findsOneWidget);
+      // Nothing to join with yet: the button waits.
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.descendant(
+                of: find.byKey(const ValueKey('join-submit')),
+                matching: find.byType(FilledButton),
+              ),
+            )
+            .onPressed,
+        isNull,
+      );
+      await fillJoin(tester);
+      expect(bodies.single, {
+        'code': 'MV-7K3Q9',
+        'ownerName': 'Eva Nord',
+        'ownerEmail': 'eva@nord.se',
+      });
+      expect(find.text(tr.fleetJoinMismatch), findsOneWidget);
+      expect(session.account?.fleet, isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('too many tries: the server\'s wait is said', (tester) async {
+      final session = _session(
+        server(
+          onJoin: (_) => _json(
+            429,
+            {
+              'code': 'rate_limited',
+              'message': 'x',
+              'reason': 'fleet_join_limit',
+            },
+            headers: {'retry-after': '3600'},
+          ),
+        ),
+        profile: driver,
+      );
+      await _pump(tester, session);
+      await fillJoin(tester);
+      expect(find.text(tr.acctTooManyTriesHour), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('a matching code sends a request; it shows as pending with '
+        'Cancel, and a second request is refused (request_pending)', (
+      tester,
+    ) async {
+      var requested = false;
+      final actions = <String>[];
+      final session = _session(
+        MockClient((request) async {
+          if (request.url.path == DriverAccountRepository.profilePath) {
+            return _json(200, driver);
+          }
+          if (request.url.path ==
+              DriverAccountRepository.fleetInvitationsPath) {
+            return _json(200, {
+              'items': [
+                if (requested)
+                  _invitation(id: 'inv_7', direction: 'driver_request'),
+              ],
+            });
+          }
+          if (request.url.path == DriverAccountRepository.fleetJoinPath) {
+            if (requested) {
+              return _json(409, {
+                'code': 'conflict',
+                'message': 'x',
+                'reason': 'request_pending',
+              });
+            }
+            requested = true;
+            return _json(
+              201,
+              _invitation(id: 'inv_7', direction: 'driver_request'),
+            );
+          }
+          if (request.url.path.endsWith('/cancel')) {
+            actions.add(request.url.path);
+            requested = false;
+            return _json(200, _invitation(id: 'inv_7', status: 'cancelled'));
+          }
+          return _json(404, {'code': 'not_found', 'message': 'x'});
+        }),
+        profile: driver,
+      );
+      await _pump(tester, session);
+      await fillJoin(tester);
+      // Not linked: the owner answers first.
+      expect(session.account?.fleet, isNull);
+      expect(find.text(tr.fleetRequestSent('Nord AB')), findsOneWidget);
+      expect(find.byKey(const ValueKey('invitation-inv_7')), findsOneWidget);
+      expect(find.text(tr.fleetRequestWaitsOwner), findsOneWidget);
+      expect(find.byKey(const ValueKey('join-submit')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('invitation-cancel-inv_7')),
+        findsOneWidget,
+      );
+      // Cancel takes it back: the form is back.
+      await tester.tap(find.byKey(const ValueKey('invitation-cancel-inv_7')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('confirm-yes')));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(actions.single, endsWith('/inv_7/cancel'));
+      expect(find.byKey(const ValueKey('join-submit')), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('an owner\'s invite: Accept links the driver, the fleet '
+        'shows; Decline asks first', (tester) async {
+      var accepted = false;
+      final actions = <String>[];
+      final session = _session(
+        MockClient((request) async {
+          if (request.url.path == DriverAccountRepository.profilePath) {
+            return _json(200, {
+              ...driver,
+              if (accepted)
+                'fleet': {
+                  'fleetId': 'flt_1',
+                  'name': 'Nord AB',
+                  'role': 'member',
+                  'status': 'approved',
+                }
+              else
+                'pendingFleetInvitations': 1,
+            });
+          }
+          if (request.url.path ==
+              DriverAccountRepository.fleetInvitationsPath) {
+            return _json(200, {
+              'items': [if (!accepted) _invitation()],
+            });
+          }
+          if (request.url.path.endsWith('/inv_1/accept')) {
+            actions.add('accept');
+            accepted = true;
+            return _json(200, _invitation(status: 'accepted'));
+          }
+          if (request.url.path == DriverAccountRepository.fleetPath &&
+              accepted) {
+            return _json(200, {..._fleetView(), 'drivers': []});
+          }
+          return _json(404, {'code': 'not_found', 'message': 'x'});
+        }),
+        profile: driver,
+      );
+      await _pump(tester, session);
+      // The badge in the app bar and the invite with its two answers.
+      expect(find.byKey(const ValueKey('invitation-badge')), findsOneWidget);
+      expect(find.byKey(const ValueKey('invitation-inv_1')), findsOneWidget);
+      expect(find.text(tr.fleetInviteBodyDriver), findsOneWidget);
+      expect(find.byKey(const ValueKey('invitation-accept-inv_1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('invitation-decline-inv_1')), findsOneWidget);
+      // Decline asks first; Stay keeps it.
+      await tester.tap(find.byKey(const ValueKey('invitation-decline-inv_1')));
+      await tester.pump();
+      expect(find.text(tr.fleetDeclineInviteQ('Nord AB')), findsOneWidget);
+      await tester.tap(find.text(tr.cancel).last);
+      await tester.pump();
+      expect(actions, isEmpty);
+      await tester.tap(find.byKey(const ValueKey('invitation-accept-inv_1')));
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(actions, ['accept']);
       expect(session.account?.fleet?.name, 'Nord AB');
       expect(find.byKey(const ValueKey('fleet-card')), findsOneWidget);
-      expect(find.text('Nord AB'), findsWidgets);
-      // A member: no code, Leave fleet, and the car in use by Nils.
-      expect(find.byKey(const ValueKey('fleet-code')), findsNothing);
       expect(find.byKey(const ValueKey('fleet-leave')), findsOneWidget);
-      expect(find.byKey(const ValueKey('car-in-use-veh_1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('invitation-badge')), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
     });
   });
@@ -321,6 +438,92 @@ void main() {
       expect(find.byKey(const ValueKey('car-veh_1')), findsOneWidget);
       expect(find.byKey(const ValueKey('fleet-add-car')), findsOneWidget);
       expect(find.byKey(const ValueKey('fleet-leave')), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('sees the drivers\' requests with Accept / Decline, his own '
+        'invites with Cancel, and invites a number', (tester) async {
+      final calls = <String>[];
+      var invited = false;
+      final session = _session(
+        MockClient((request) async {
+          if (request.url.path == DriverAccountRepository.profilePath) {
+            return _json(200, {..._owner, 'pendingFleetInvitations': 1});
+          }
+          if (request.url.path == DriverAccountRepository.fleetPath) {
+            return _json(
+              200,
+              _fleetView(
+                code: 'MV-7K3Q9',
+                invitations: [
+                  _invitation(
+                    id: 'inv_r',
+                    direction: 'driver_request',
+                    driverId: 'drv_8',
+                    driverName: 'Omar Said',
+                  ),
+                  if (invited)
+                    _invitation(
+                      id: 'inv_p',
+                      driverId: null,
+                      driverName: null,
+                      phone: '+46701740608',
+                    ),
+                ],
+              ),
+            );
+          }
+          if (request.url.path == DriverAccountRepository.fleetInvitePath) {
+            calls.add('invite ${jsonDecode(request.body)['phone']}');
+            invited = true;
+            return _json(
+              201,
+              _invitation(
+                id: 'inv_p',
+                driverId: null,
+                driverName: null,
+                phone: '+46701740608',
+              ),
+            );
+          }
+          if (request.url.path.endsWith('/inv_r/accept')) {
+            calls.add('accept');
+            return _json(200, _invitation(id: 'inv_r', status: 'accepted'));
+          }
+          return _json(404, {'code': 'not_found', 'message': 'x'});
+        }),
+        profile: _owner,
+      );
+      await _pump(tester, session);
+      expect(find.byKey(const ValueKey('invitation-badge')), findsOneWidget);
+      expect(find.text('Omar Said'), findsOneWidget);
+      expect(find.byKey(const ValueKey('invitation-accept-inv_r')), findsOneWidget);
+      expect(find.byKey(const ValueKey('invitation-decline-inv_r')), findsOneWidget);
+      expect(find.text(tr.fleetNoInvites), findsOneWidget);
+      // Invite a number: +46 is there already, the national zero goes.
+      await tester.ensureVisible(find.byKey(const ValueKey('fleet-invite-driver')));
+      await tester.tap(find.byKey(const ValueKey('fleet-invite-driver')));
+      await tester.pump();
+      expect(find.text(tr.fleetInviteDriver), findsWidgets);
+      await tester.enterText(
+        find.byKey(const ValueKey('invite-phone')),
+        '+46 070 174 06 08',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('invite-send')));
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(calls, ['invite +46701740608']);
+      expect(find.byKey(const ValueKey('invitation-inv_p')), findsOneWidget);
+      expect(find.text(tr.fleetInviteWaitsSignUp), findsOneWidget);
+      expect(find.byKey(const ValueKey('invitation-cancel-inv_p')), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const ValueKey('invitation-accept-inv_r')));
+      await tester.tap(find.byKey(const ValueKey('invitation-accept-inv_r')));
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(calls, ['invite +46701740608', 'accept']);
       await tester.pumpWidget(const SizedBox.shrink());
     });
 

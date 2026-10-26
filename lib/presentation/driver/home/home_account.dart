@@ -52,6 +52,9 @@ class _HomeAccountState {
   }
 }
 
+/// The Home states whose badges were requested once (extensions carry no fields).
+final Set<int> _badgesRequested = <int>{};
+
 extension _HomeAccount on _DriverHomeState {
     DrivingTimeClock get _drivingClock => DrivingTimeClock.instance;
     DriverNotificationFeed get _feed => DriverNotificationFeed.instance;
@@ -266,6 +269,80 @@ extension _HomeAccount on _DriverHomeState {
           builder: (_) => DriverNotificationsScreen(dispatchRepository: _dispatch),
         ),
       );
+    }
+
+    // Round 4b (live): the server's notifications and the invitation badge.
+
+    /// The bell on the map: the unread count from `GET /notifications`.
+    Widget _buildNotificationsBell() {
+      final session = accountSessionOf(context);
+      if (session == null) { return const SizedBox.shrink(); }
+      return ValueListenableBuilder<int>(
+        valueListenable: session.unreadNotifications,
+        builder: (context, unread, _) => Stack(
+          clipBehavior: Clip.none,
+          children: [
+            MapControlButton(
+              key: const ValueKey<String>('home-notifications-bell'),
+              tooltip: unread > 0
+                  ? '${tr.notifications} · $unread'
+                  : tr.notifications,
+              size: _homeMapButtonSize,
+              onTap: () => _openServerNotifications(session),
+              child: const Icon(Icons.notifications_none_rounded,
+                  color: Color(0xFF172027), size: 24),
+            ),
+            if (unread > 0)
+              Positioned(
+                right: -4,
+                top: -4,
+                child: IgnorePointer(
+                  child: Container(
+                    key: const ValueKey<String>('home-notifications-count'),
+                    constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD03A2B),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(unread > 99 ? '99+' : '$unread',
+                      style: const TextStyle(color: Colors.white, fontSize: 11,
+                        fontWeight: FontWeight.w800, height: 1)),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    Future<void> _openServerNotifications(DriverAccountSession session) async {
+      if (!mounted) { return; }
+      await pushSingle(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => ServerNotificationsScreen(account: session),
+        ),
+      );
+      _refreshLiveBadges();
+    }
+
+    /// Home's first dependencies pass only (didChangeDependencies may run again).
+    void _refreshLiveBadgesOnce() {
+      if (_badgesRequested.add(hashCode)) { _refreshLiveBadges(); }
+    }
+
+    /// The profile (the invitation count) and the unread count, when Home
+    /// opens, comes back on top or the app returns; nothing in the demo.
+    void _refreshLiveBadges() {
+      if (!mounted || !DriverRuntimeConfig.current.authRequired) { return; }
+      final session = accountSessionOf(context);
+      if (session == null) { return; }
+      unawaited(session.refreshBadges().then((_) {
+        if (mounted) { _rebuild(() {}); }
+      }));
     }
 
     void _openDocuments() {

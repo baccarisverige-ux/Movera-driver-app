@@ -85,6 +85,9 @@ import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
+import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
+import 'package:movera/presentation/driver/account/fleet_invitations.dart';
+import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/presentation/driver/home/components/destination_set_panel.dart';
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
 import 'package:movera/presentation/driver/home/components/island_side_hit_slop.dart';
@@ -163,7 +166,6 @@ class DriverHome extends StatefulWidget {
   @override
   State<DriverHome> createState() => _DriverHomeState();
 }
-
 class _DriverHomeState extends State<DriverHome>
     with TickerProviderStateMixin, WidgetsBindingObserver, RouteAware {
   bool _routeVisible = true;
@@ -172,20 +174,19 @@ class _DriverHomeState extends State<DriverHome>
   bool get _liveVisible => _routeVisible && _foreground;
   @override
   void didChangeDependencies() {
-    super.didChangeDependencies();
+    super.didChangeDependencies(); _HomeAccount(this)._refreshLiveBadgesOnce(); // round 4b: the scope is read here, not in initState
     final route = ModalRoute.of(context);
-    if (route != null) { driverRouteObserver.subscribe(this, route); }
-    if (route != null) { driverRouteObserver.pages.subscribe(_pageCover, route); }
+    if (route != null) { driverRouteObserver.subscribe(this, route); driverRouteObserver.pages.subscribe(_pageCover, route); }
     if(MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.stop(); _radarSweepController.stop(); _radarMotionController.stop(); }
   }
   late final _pageCover = PageCover(covered: () => _HomeRoutes(this)._pageCovered(), uncovered: () => _HomeRoutes(this)._pageUncovered());
   @override
-  void didPopNext() => _HomeRoutes(this)._backOnTop();
+  void didPopNext() { _HomeRoutes(this)._backOnTop(); _HomeAccount(this)._refreshLiveBadges(); }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Inactive is still on screen: a call banner, a system dialog (driver-65).
     _foreground = state == AppLifecycleState.resumed || state == AppLifecycleState.inactive;
-    if (state == AppLifecycleState.resumed) { _HomeRecovery(this)._rearmWallClockTimers(); }
+    if (state == AppLifecycleState.resumed) { _HomeRecovery(this)._rearmWallClockTimers(); _HomeAccount(this)._refreshLiveBadges(); }
     if (_liveVisible) { _resumeHomeUpdates(); } else { _pauseHomeUpdates(); }
   }
   void _pauseHomeUpdates() {

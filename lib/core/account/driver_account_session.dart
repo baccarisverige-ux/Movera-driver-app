@@ -14,6 +14,10 @@ class DriverAccountSession extends ChangeNotifier {
   DriverAccount? _account;
   Future<DriverAccount>? _loading;
 
+  /// Round 4b: unread server notifications (the bell on Home). Read with
+  /// [refreshUnread]; a failed read keeps the last count.
+  final ValueNotifier<int> unreadNotifications = ValueNotifier<int>(0);
+
   DriverAccountRepository get repository => _repository;
 
   /// The last profile the server sent, or null before the first read.
@@ -27,8 +31,38 @@ class DriverAccountSession extends ChangeNotifier {
     final active = _loading;
     if (active != null) return active;
     final pending = _repository.profile().then(replace);
-    _loading = pending.whenComplete(() => _loading = null);
+    _loading = pending;
+    // The caller handles the error; this bookkeeping must not become a
+    // second, unhandled failure.
+    pending
+        .whenComplete(() {
+          if (identical(_loading, pending)) _loading = null;
+        })
+        .ignore();
     return pending;
+  }
+
+  /// Round 4b: `GET /notifications?unreadOnly=true`, counted; quiet on
+  /// failure (the bell keeps its last count).
+  Future<int> refreshUnread() async {
+    try {
+      final unread = await _repository.notifications(unreadOnly: true);
+      unreadNotifications.value = unread.length;
+    } catch (_) {
+      // Offline or a server fault: the count stays.
+    }
+    return unreadNotifications.value;
+  }
+
+  /// Round 4b: the profile (the invitation badge) and the unread count,
+  /// when a screen opens or the app comes back; failures are quiet.
+  Future<void> refreshBadges() async {
+    try {
+      await refresh();
+    } catch (_) {
+      // The screen shows what it has.
+    }
+    await refreshUnread();
   }
 
   /// Takes the account a command answered with.
@@ -41,6 +75,7 @@ class DriverAccountSession extends ChangeNotifier {
   /// Forgets the account (sign-out).
   void clear() {
     _account = null;
+    unreadNotifications.value = 0;
     notifyListeners();
   }
 }

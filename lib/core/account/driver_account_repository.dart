@@ -15,12 +15,22 @@ class DriverAccountRepository {
   static const onboardingPath = '/api/v1/driver/onboarding';
   static const fleetPath = '/api/v1/driver/fleet';
   static const fleetJoinPath = '/api/v1/driver/fleet/join';
+  static const fleetInvitePath = '/api/v1/driver/fleet/invite';
+  static const fleetInvitationsPath = '/api/v1/driver/fleet/invitations';
   static const fleetLeavePath = '/api/v1/driver/fleet/leave';
+  static const notificationsPath = '/api/v1/notifications';
   static const vehiclesPath = '/api/v1/driver/vehicles';
   static const documentsPath = '/api/v1/driver/documents';
 
   static String removeDriverPath(String driverId) =>
       '/api/v1/driver/fleet/drivers/${Uri.encodeComponent(driverId)}/remove';
+
+  /// `accept`, `decline` or `cancel` on one invitation.
+  static String invitationActionPath(String invitationId, String action) =>
+      '$fleetInvitationsPath/${Uri.encodeComponent(invitationId)}/$action';
+
+  static String notificationReadPath(String notificationId) =>
+      '$notificationsPath/${Uri.encodeComponent(notificationId)}/read';
 
   /// `GET /driver/profile`.
   Future<DriverAccount> profile() async =>
@@ -43,12 +53,15 @@ class DriverAccountRepository {
     }
   }
 
-  /// `POST /driver/fleet/join`.
-  Future<DriverAccount> joinFleet(
+  /// `POST /driver/fleet/join` (round 4b): a request the owner accepts
+  /// or declines, `201 FleetInvitation` (`driver_request`, `pending`). The
+  /// three fields must match one approved fleet (`fleet_join_mismatch`,
+  /// one message); one open request at a time (`409 request_pending`).
+  Future<FleetInvitation> joinFleet(
     String code,
     String ownerName,
     String ownerEmail,
-  ) async => DriverAccount.fromJson(
+  ) async => FleetInvitation.fromJson(
     await _api.post(
       fleetJoinPath,
       body: FleetJoinRequest(
@@ -58,6 +71,72 @@ class DriverAccountRepository {
       ).toJson(),
     ),
   );
+
+  /// `POST /driver/fleet/invite { phone }` (the owner; round 4b): an
+  /// invite the driver accepts, `201 FleetInvitation` (`owner_invite`).
+  Future<FleetInvitation> inviteDriver(String phone) async =>
+      FleetInvitation.fromJson(
+        await _api.post(
+          fleetInvitePath,
+          body: {'phone': phone.replaceAll(RegExp(r'[\s\-()]'), '')},
+        ),
+      );
+
+  /// `GET /driver/fleet/invitations`: a driver's incoming invites and own
+  /// request; an owner's fleet's open requests and invites.
+  Future<List<FleetInvitation>> invitations() async {
+    final page = await _api.get(fleetInvitationsPath);
+    final items = page['items'];
+    return [
+      if (items is List)
+        for (final item in items)
+          if (item is Map)
+            FleetInvitation.fromJson(Map<String, dynamic>.from(item)),
+    ];
+  }
+
+  /// `POST /driver/fleet/invitations/{id}/accept`: links the driver.
+  Future<FleetInvitation> acceptInvitation(String invitationId) =>
+      _invitationAction(invitationId, 'accept');
+
+  /// `POST /driver/fleet/invitations/{id}/decline`.
+  Future<FleetInvitation> declineInvitation(String invitationId) =>
+      _invitationAction(invitationId, 'decline');
+
+  /// `POST /driver/fleet/invitations/{id}/cancel`: one's own request or
+  /// invite, taken back.
+  Future<FleetInvitation> cancelInvitation(String invitationId) =>
+      _invitationAction(invitationId, 'cancel');
+
+  Future<FleetInvitation> _invitationAction(
+    String invitationId,
+    String action,
+  ) async => FleetInvitation.fromJson(
+    await _api.post(invitationActionPath(invitationId, action)),
+  );
+
+  /// `GET /notifications?limit&unreadOnly`: newest first.
+  Future<List<ServerNotification>> notifications({
+    int limit = 50,
+    bool unreadOnly = false,
+  }) async {
+    final page = await _api.get(
+      '$notificationsPath?limit=$limit${unreadOnly ? '&unreadOnly=true' : ''}',
+    );
+    final items = page['items'];
+    return [
+      if (items is List)
+        for (final item in items)
+          if (item is Map)
+            ServerNotification.fromJson(Map<String, dynamic>.from(item)),
+    ];
+  }
+
+  /// `POST /notifications/{id}/read`.
+  Future<ServerNotification> markNotificationRead(String notificationId) async =>
+      ServerNotification.fromJson(
+        await _api.post(notificationReadPath(notificationId)),
+      );
 
   /// `POST /driver/fleet/leave`.
   Future<DriverAccount> leaveFleet() async =>

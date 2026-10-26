@@ -45,11 +45,16 @@ Future<void> enterDriverApp(BuildContext context) async {
   }
   final pending = account?.account?.needsDetails ?? false;
   if (account != null && (isNew || pending)) {
+    final auth = scope?.auth;
     navigator.pushAndRemoveUntil(
       MaterialPageRoute<void>(
         settings: const RouteSettings(name: 'driver-details'),
+        // Step 3 of the sign-in: the phone just confirmed, and what Apple /
+        // Google gave (round 4b).
         builder: (_) => DriverDetailsScreen(
           account: account,
+          phone: auth?.signedInPhone,
+          prefill: auth?.providerLink,
           onDone: (context) => _openHome(context, home),
         ),
       ),

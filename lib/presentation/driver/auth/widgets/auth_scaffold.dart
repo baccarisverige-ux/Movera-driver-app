@@ -14,7 +14,7 @@ class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
     super.key,
     required this.step,
-    this.totalSteps = 2,
+    this.totalSteps = 3,
     this.onBack,
     required this.headline,
     required this.headlineAccent,
@@ -30,7 +30,7 @@ class AuthScaffold extends StatelessWidget {
 
   final int step;
 
-  /// The driver signs in in two steps: phone, code.
+  /// The driver signs in in three steps: phone, code, details (round 4b).
   final int totalSteps;
 
   /// Null hides the back button (the first screen of the flow).
@@ -83,62 +83,20 @@ class AuthScaffold extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 12, 0),
-          child: _TopBar(step: step, totalSteps: totalSteps, onBack: onBack),
+          child: AuthTopBar(step: step, totalSteps: totalSteps, onBack: onBack),
         ),
         if (hero != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
             child: hero!,
           )
-        else ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const MoveraWordmark(),
-                  const SizedBox(height: 3),
-                  Text(
-                    tr.authDriverWord.toUpperCase(),
-                    style: AuthText.urbanist(
-                      size: 10,
-                      height: 1.2,
-                      weight: FontWeight.w600,
-                      letterSpacing: 1.8,
-                      color: AuthColors.muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        else
+          AuthStepHeader(
+            headline: headline,
+            headlineAccent: headlineAccent,
+            headlineSize: headlineSize,
+            lede: lede,
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
-            child: Semantics(
-              header: true,
-              child: Text.rich(
-                TextSpan(
-                  text: headline,
-                  children: [
-                    TextSpan(
-                      text: headlineAccent,
-                      style: const TextStyle(color: AuthColors.green),
-                    ),
-                  ],
-                ),
-                style: AuthText.headline(headlineSize),
-              ),
-            ),
-          ),
-          if (lede != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 40, 0),
-              child: DefaultTextStyle(style: AuthText.lede(), child: lede!),
-            ),
-        ],
         // Takes whatever height the card leaves, never less than 96: on
         // short screens (landscape, keyboard up) the page scrolls instead
         // of squeezing the form.
@@ -203,16 +161,97 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-class _TopBar extends StatelessWidget {
-  const _TopBar({
+/// The wordmark with "Driver" under it, the headline (last word green)
+/// and the lede: the same head on steps 2 and 3.
+class AuthStepHeader extends StatelessWidget {
+  const AuthStepHeader({
+    super.key,
+    required this.headline,
+    required this.headlineAccent,
+    this.headlineSize = 40,
+    this.lede,
+  });
+
+  final String headline;
+  final String headlineAccent;
+  final double headlineSize;
+  final Widget? lede;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const MoveraWordmark(),
+                const SizedBox(height: 3),
+                Text(
+                  tr.authDriverWord.toUpperCase(),
+                  key: const ValueKey('auth-driver-word-head'),
+                  style: AuthText.urbanist(
+                    size: 10,
+                    height: 1.2,
+                    weight: FontWeight.w600,
+                    letterSpacing: 1.8,
+                    color: AuthColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
+          child: Semantics(
+            header: true,
+            child: Text.rich(
+              TextSpan(
+                text: headline,
+                children: [
+                  TextSpan(
+                    text: headlineAccent,
+                    style: const TextStyle(color: AuthColors.green),
+                  ),
+                ],
+              ),
+              style: AuthText.headline(headlineSize),
+            ),
+          ),
+        ),
+        if (lede != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 40, 0),
+            child: DefaultTextStyle(style: AuthText.lede(), child: lede!),
+          ),
+      ],
+    );
+  }
+}
+
+/// Back, the step dots with "n / 3", and the language switch.
+class AuthTopBar extends StatelessWidget {
+  const AuthTopBar({
+    super.key,
     required this.step,
     required this.totalSteps,
     required this.onBack,
+    this.showSteps = true,
   });
 
   final int step;
   final int totalSteps;
   final VoidCallback? onBack;
+
+  /// Off when the screen is opened outside the sign-in (Profile › Your
+  /// details): no dots, no "3 / 3".
+  final bool showSteps;
 
   @override
   Widget build(BuildContext context) {
@@ -243,6 +282,9 @@ class _TopBar extends StatelessWidget {
                     ),
                   ),
           ),
+          if (!showSteps)
+            const Spacer()
+          else ...[
           Expanded(
             child: Semantics(
               label: tr.authStepOf('$step', '$totalSteps'),
@@ -286,6 +328,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
+          ],
           // The language switch on every sign-in step.
           const AuthLanguageButton(),
         ],
