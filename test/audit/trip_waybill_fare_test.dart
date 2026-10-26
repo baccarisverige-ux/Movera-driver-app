@@ -112,9 +112,9 @@ void main() {
         _record(fare: '158,39 kr', driverBonus: '40 kr'),
       );
       expect(_row(tester, 'Movera fee'), isNull);
-      expect(_row(tester, 'Movera bonus'), '+40 kr');
+      expect(_row(tester, 'Paid by Movera'), '+40 kr');
       expect(_row(tester, 'Your earnings'), '158,39 kr');
-      expect(find.text('incl. +40 kr Movera bonus'), findsOneWidget);
+      expect(find.text('incl. +40 kr paid by Movera'), findsOneWidget);
     });
 
     testWidgets('a trip without waiting shows its earnings whole', (

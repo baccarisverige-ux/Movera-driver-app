@@ -1313,7 +1313,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get moveraFee => 'Moveras avgift';
 
   @override
-  String get moveraBonus => 'Movera-bonus';
+  String get moveraBonus => 'Betalt av Movera';
 
   @override
   String get yourEarnings => 'Din intäkt';
@@ -1861,7 +1861,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String inclBonusMoveraBonus(Object bonus) {
-    return 'inkl. +$bonus Movera-bonus';
+    return 'inkl. +$bonus betalt av Movera';
   }
 
   @override

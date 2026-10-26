@@ -2325,7 +2325,7 @@ abstract class AppLocalizations {
   /// No description provided for @moveraBonus.
   ///
   /// In en, this message translates to:
-  /// **'Movera bonus'**
+  /// **'Paid by Movera'**
   String get moveraBonus;
 
   /// No description provided for @yourEarnings.
@@ -3312,7 +3312,7 @@ abstract class AppLocalizations {
   /// No description provided for @inclBonusMoveraBonus.
   ///
   /// In en, this message translates to:
-  /// **'incl. +{bonus} Movera bonus'**
+  /// **'incl. +{bonus} paid by Movera'**
   String inclBonusMoveraBonus(Object bonus);
 
   /// Admin text key island.online (Content › Driver app texts).

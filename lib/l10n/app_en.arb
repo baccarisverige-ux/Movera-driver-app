@@ -814,7 +814,7 @@
     }
   },
   "moveraFee": "Movera fee",
-  "moveraBonus": "Movera bonus",
+  "moveraBonus": "Paid by Movera",
   "yourEarnings": "Your earnings",
   "riderPays": "Rider pays",
   "roundToNearestWholeKronaIn": "* Round to the nearest whole krona in the taximeter.",
@@ -1118,7 +1118,7 @@
     }
   },
   "assignedByMovera": "Assigned by Movera",
-  "inclBonusMoveraBonus": "incl. +{bonus} Movera bonus",
+  "inclBonusMoveraBonus": "incl. +{bonus} paid by Movera",
   "@inclBonusMoveraBonus": {
     "placeholders": {
       "bonus": {
