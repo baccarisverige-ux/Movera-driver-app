@@ -7,6 +7,7 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
+import 'package:movera/core/live/live_active_trip.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
@@ -43,6 +44,7 @@ class LiveDriverServices {
     trips = LiveTripCommands(api: api, lastFix: () => reporter.lastFix);
     chat = LiveTripChat(api: api);
     places = LiveAddressLookup(api: api);
+    activeTrip = LiveActiveTrip(api: api);
     dispatch = ApiDispatchRepository(
       client: client,
       baseUri: apiBase,
@@ -74,6 +76,9 @@ class LiveDriverServices {
 
   /// Addresses for points the offer came without (owner N11).
   late final LiveAddressLookup places;
+
+  /// The trip the server holds for this driver (D-3).
+  late final LiveActiveTrip activeTrip;
   late final ApiDispatchRepository dispatch;
   late final LivePresence presence;
 

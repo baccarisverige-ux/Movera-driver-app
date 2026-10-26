@@ -680,6 +680,12 @@ class _DriverHomeState extends State<DriverHome>
     if (!mounted) {
       return;
     }
+    // D-3: nothing on this device (a new browser, cleared site data), but
+    // the server may still hold this driver's trip (`activeTripId`).
+    snapshot ??= await _HomeLive(this)._serverActiveTrip();
+    if (!mounted) {
+      return;
+    }
     if (snapshot == null) {
       setState(() => _recoveryResolved = true);
       return;

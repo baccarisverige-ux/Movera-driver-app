@@ -12,6 +12,17 @@ extension _HomeLive on _DriverHomeState {
     unawaited(presence.settleAfterStart());
   }
 
+  /// D-3: the trip the server holds for this driver when the device has
+  /// none saved; null in the demo, with no trip, or no answer.
+  Future<PersistedActiveRide?> _serverActiveTrip() async {
+    final live = LiveDriverServices.instance;
+    if (live == null) return null;
+    final found = await live.activeTrip.fetch();
+    if (found == null) return null;
+    live.trips.observe(found.projection);
+    return found.ride.stamped();
+  }
+
   /// Asks the server to go online while the switch animates; null in the
   /// demo.
   Future<String?>? _askServerOnline() =>
