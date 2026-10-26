@@ -37,6 +37,10 @@ import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/live_trip_money.dart';
+import 'package:movera/core/account/driver_account.dart';
+import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
@@ -128,6 +132,7 @@ class AcceptRide extends StatefulWidget {
     this.fare = '—',
     this.paidByCash = false,
     this.cashToCollect,
+    this.riderFare,
     this.driverBonus,
     this.category = 'Movera',
     this.matchedVia = WaybillRecord.demoRadarSource,
@@ -216,6 +221,11 @@ class AcceptRide extends StatefulWidget {
   /// before [fare] became the driver's pay.
   final String? cashToCollect;
 
+  /// Owner N11 (live test 2026-10-26): what the rider pays, e.g.
+  /// "208,00 kr" (`RideOffer.fareLabel`), for the waybill only. Null when
+  /// the trip was made without it (a sample ride, an older save).
+  final String? riderFare;
+
   /// Q16/Q18: Movera's bonus already in [fare]; earnings say "incl. +X".
   final Money? driverBonus;
   final String category;
@@ -256,6 +266,7 @@ class AcceptRide extends StatefulWidget {
       tripId: record.tripId,
       riderName: record.riderName,
       fare: record.fare,
+      riderFare: record.riderFare,
       category: record.service,
       matchedVia: record.source,
       pickupAddress: pickup,
@@ -292,6 +303,7 @@ class AcceptRide extends StatefulWidget {
       fare: snapshot.fare ?? '—',
       paidByCash: snapshot.paidByCash,
       cashToCollect: snapshot.cashToCollect,
+      riderFare: snapshot.riderFare,
       driverBonus: snapshot.driverBonus,
       category: snapshot.category ?? 'Movera',
       matchedVia: snapshot.matchedVia ?? WaybillRecord.demoRadarSource,
@@ -557,6 +569,15 @@ class _AcceptRideState extends State<AcceptRide>
   Timer? _projectionRetry;
   String _vehicleLabel = WaybillRecord.vehicleUnavailable;
   String _vehiclePlate = WaybillRecord.plateUnavailable;
+
+  /// The driver on the waybill: the signed-in driver's name in a live
+  /// build (owner N11), the brand name in the demo.
+  String _driverName = WaybillRecord.moveraDriverName;
+
+  /// The pickup's address looked up from its coordinates when the offer
+  /// came with none (owner N11); null while the offer's own is shown.
+  String? _resolvedPickup;
+  String get _pickupAddress => _resolvedPickup ?? widget.pickupAddress;
   static const Duration _projectionRetryBase = Duration(seconds: 1);
   static const Duration _projectionRetryMax = Duration(seconds: 30);
   Duration _projectionRetryDelay = _projectionRetryBase;
@@ -649,6 +670,7 @@ class _AcceptRideState extends State<AcceptRide>
       }
       _rideLifecycle.persistNow();
       unawaited(_AcceptRideTrip(this)._loadVehicleIdentity());
+      unawaited(_AcceptRideLive(this)._resolvePickupAddress());
       // Right after "Leave now" opened the trip: the first ETA check.
       _AcceptRideLateEta(this)._syncLateEtaWatch(checkNow: true);
     });
@@ -848,7 +870,7 @@ class _AcceptRideState extends State<AcceptRide>
 
   String get _approachAddress {
     return switch (_approachKind) {
-      ArrivalPointKind.pickup => widget.pickupAddress,
+      ArrivalPointKind.pickup => _pickupAddress,
       ArrivalPointKind.stop => widget.stopAddresses[_stopCursor],
       ArrivalPointKind.destination => widget.dropoffAddress,
     };
@@ -1011,7 +1033,7 @@ class _AcceptRideState extends State<AcceptRide>
     category: widget.category,
     type: WaitingRules.typeOf(
       matchedVia: widget.matchedVia,
-      pickupAddress: widget.pickupAddress,
+      pickupAddress: _pickupAddress,
     ),
     pickupKm: widget.pickupKm,
   );
@@ -1100,7 +1122,7 @@ class _AcceptRideState extends State<AcceptRide>
   String get _nextStopAddress {
     switch (_stage) {
       case ActiveRideStage.headingToPickup:
-        return widget.pickupAddress;
+        return _pickupAddress;
       case ActiveRideStage.waitingForRider:
       case ActiveRideStage.onTrip:
         return _onwardAddress;
@@ -1243,7 +1265,7 @@ class _AcceptRideState extends State<AcceptRide>
                     stage: _stage,
                     pickupPosition: widget.pickupPosition,
                     dropoffPosition: widget.dropoffPosition,
-                    pickupAddress: widget.pickupAddress,
+                    pickupAddress: _pickupAddress,
                     dropoffAddress: widget.dropoffAddress,
                     stopPositions: widget.stopPositions,
                     stopCursor: _stopCursor,

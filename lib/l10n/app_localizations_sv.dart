@@ -1315,6 +1315,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get yourEarnings => 'Din intäkt';
 
   @override
+  String get riderPays => 'Passageraren betalar';
+
+  @override
   String get roundToNearestWholeKronaIn =>
       '* Avrunda till närmaste hela krona i taxametern.';
 

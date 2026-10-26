@@ -5,8 +5,9 @@ import 'package:movera/core/waybill/waybill.dart';
 
 /// The trip's waybill: one plain list, label on the left, value on the
 /// right. Shows the same facts as a taxi waybill plus what the driver
-/// earns. The rider's fare is not on it (owner decision 2026-10-26): the
-/// record's fare is the driver's own money, after Movera's commission.
+/// earns: the record's fare is the driver's own money, after Movera's
+/// commission, and (owner N11, live test 2026-10-26) what the rider pays
+/// is on it too, the one place the driver sees it.
 Future<void> showMoveraWaybillSheet(
   BuildContext context,
   WaybillRecord record, {
@@ -97,6 +98,7 @@ List<Widget> _rows(WaybillRecord record) {
     _Row(tr.passengerCapacity, '${record.passengerCapacity}'),
     const SizedBox(height: 14),
     _Row(tr.payment, record.paidByCash ? tr.cash : tr.inApp),
+    if (record.riderFare case final paid?) _Row(tr.riderPays, paid),
     if (base != null) ...[
       _Row(tr.earningsBaseService(record.service), base.formatted),
       // Q43: the waiting fee is all the driver's.

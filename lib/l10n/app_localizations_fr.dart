@@ -1325,6 +1325,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get yourEarnings => 'Vos gains';
 
   @override
+  String get riderPays => 'Le passager paie';
+
+  @override
   String get roundToNearestWholeKronaIn =>
       '* Arrondir à la couronne entière la plus proche au taximètre.';
 

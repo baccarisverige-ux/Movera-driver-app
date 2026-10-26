@@ -2328,6 +2328,12 @@ abstract class AppLocalizations {
   /// **'Your earnings'**
   String get yourEarnings;
 
+  /// No description provided for @riderPays.
+  ///
+  /// In en, this message translates to:
+  /// **'Rider pays'**
+  String get riderPays;
+
   /// No description provided for @roundToNearestWholeKronaIn.
   ///
   /// In en, this message translates to:

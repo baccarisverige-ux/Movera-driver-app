@@ -1169,6 +1169,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             paidByCash: offer.cash,
             cashToCollect: terms.cashToCollect,
             driverBonus: terms.driverBonus,
+            riderFare: offer.fare,
             category: offer.category,
             matchedVia: matchedVia,
             waybillRepository: _waybills,
