@@ -4,6 +4,14 @@ part of 'home.dart';
 /// availability (`POST /driver/availability`). The demo has no
 /// [LiveDriverServices]; nothing here runs there.
 extension _HomeLive on _DriverHomeState {
+  /// D11 on the server too: a driver the server still holds online from
+  /// before this start is set offline, as Home shows (once per start).
+  void _settleServerAfterStart() {
+    final presence = LiveDriverServices.instance?.presence;
+    if (presence == null || _driverSession.isOnline) return;
+    unawaited(presence.settleAfterStart());
+  }
+
   /// Asks the server to go online while the switch animates; null in the
   /// demo.
   Future<String?>? _askServerOnline() =>

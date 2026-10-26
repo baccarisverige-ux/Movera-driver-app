@@ -265,6 +265,50 @@ void main() {
       expect(await presence.goOffline(), tr.liveOfflineOnTrip);
     });
 
+    test('D11: after a restart the server\'s stale online is turned '
+        'offline, once', () async {
+      answers
+        ..add((_) => json(200, {'onlineStatus': 'online', 'version': 7}))
+        ..add((_) => json(200, {'onlineStatus': 'offline', 'version': 8}));
+      await presence.settleAfterStart();
+      expect(requests.map((r) => '${r.method} ${r.url.path}'), [
+        'GET /api/v1/driver/profile',
+        'POST /api/v1/driver/availability',
+      ]);
+      expect(body(requests[1]), {
+        'expectedVersion': 7,
+        'onlineStatus': 'offline',
+      });
+      requests.clear();
+      await presence.settleAfterStart();
+      expect(requests, isEmpty);
+      expect(dispatch.connects, 0);
+    });
+
+    test('D11: a trip under way, or a server already offline, is left '
+        'alone', () async {
+      answers.add((_) => json(200, {'onlineStatus': 'on_trip', 'version': 3}));
+      await presence.settleAfterStart();
+      expect(requests.map((r) => r.method), ['GET']);
+    });
+
+    test('D11: going online right after the start is not undone', () async {
+      answers
+        ..add((_) => json(200, {'onlineStatus': 'offline', 'version': 1}))
+        ..add((_) => json(200, {'onlineStatus': 'online', 'version': 2}))
+        ..add((_) => json(200, {'accepted': 1}));
+      final online = presence.goOnline();
+      await presence.settleAfterStart();
+      expect(await online, isNull);
+      await pumpEventQueue();
+      expect(
+        requests
+            .where((r) => r.method == 'POST')
+            .map((r) => body(r)['onlineStatus']),
+        isNot(contains('offline')),
+      );
+    });
+
     test('an offline the app decided (after a trip, a hold) reaches the '
         'server too', () async {
       final session = DriverSessionController();

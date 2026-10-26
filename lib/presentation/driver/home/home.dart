@@ -570,6 +570,7 @@ class _DriverHomeState extends State<DriverHome>
     if (widget.sessionController != null && widget.initialOnline) {
       _driverSession.setOnline(true);
     }
+    _settleServerAfterStart();
     _adminHomeConfig =
         (widget.homeConfigRepository ?? const LocalDriverHomeConfigRepository())
             .load();

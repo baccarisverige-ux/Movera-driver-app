@@ -627,23 +627,27 @@ extension _AcceptRidePanel on _AcceptRideState {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        IgnorePointer(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: math.max(0, MediaQuery.sizeOf(context).width - 28),
-            ),
-            child: Text(
-              _freshRadarLocation
-                  ? tr.demoOffers
-                  : tr.demoOffersLiveLocationUnavailableStale,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 10),
+        // The demo's own offers only: a live trip (a real rider, offers from
+        // movera-server) is never labelled "Demo offers".
+        if (!LiveDriverServices.active) ...[
+          IgnorePointer(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: math.max(0, MediaQuery.sizeOf(context).width - 28),
+              ),
+              child: Text(
+                _freshRadarLocation
+                    ? tr.demoOffers
+                    : tr.demoOffersLiveLocationUnavailableStale,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: const TextStyle(fontSize: 10),
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 4),
+          const SizedBox(height: 4),
+        ],
         _mapOverlay(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
