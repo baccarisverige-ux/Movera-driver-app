@@ -205,6 +205,8 @@ class _MyFleetScreenState extends State<MyFleetScreen>
   }
 
   Future<void> _pick(FleetVehicle vehicle) async {
+    // One pick at a time (audit Phase 5): two would race on the version.
+    if (_busyId != null) return;
     setState(() => _busyId = vehicle.vehicleId);
     try {
       if (await pickFleetCar(context, widget.account, vehicle)) await _load();

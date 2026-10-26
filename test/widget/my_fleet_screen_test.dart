@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -444,6 +445,49 @@ void main() {
       expect(find.byKey(const ValueKey('car-veh_1')), findsOneWidget);
       expect(find.byKey(const ValueKey('fleet-add-car')), findsOneWidget);
       expect(find.byKey(const ValueKey('fleet-leave')), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('choosing one car, then another at once: one request '
+        '(audit Phase 5)', (tester) async {
+      Map<String, Object?> free(String id) => {
+        ...(_fleetView()['vehicles'] as List).first as Map<String, Object?>,
+        'vehicleId': id,
+        'plate': 'P$id',
+        'driverId': null,
+        'inUse': false,
+      };
+      final gate = Completer<http.Response>();
+      var patches = 0;
+      final session = _session(
+        MockClient((request) async {
+          if (request.url.path == DriverAccountRepository.fleetPath) {
+            return _json(200, {
+              ..._fleetView(code: 'MV-7K3Q9'),
+              'vehicles': [free('veh_a'), free('veh_b')],
+            });
+          }
+          if (request.method == 'PATCH') {
+            patches++;
+            return gate.future;
+          }
+          return _json(404, {'code': 'not_found', 'message': 'x'});
+        }),
+        profile: _owner,
+      );
+      await _pump(tester, session);
+      await tester.tap(find.byKey(const ValueKey('car-pick-veh_a')));
+      await tester.pump();
+      await tester.tap(
+        find.byKey(const ValueKey('car-pick-veh_b')),
+        warnIfMissed: false,
+      );
+      await tester.pump();
+      gate.complete(_json(200, {..._owner, 'vehicleId': 'veh_a'}));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(patches, 1);
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
