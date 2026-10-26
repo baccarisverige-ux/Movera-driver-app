@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1475,7 +1476,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get month => 'Mois';
 
   @override
-  String get recordedFares => 'Tarifs enregistrés';
+  String get recordedFares => 'Gains enregistrés';
 
   @override
   String get tipsAndFees => 'Pourboires et frais';
@@ -1517,7 +1518,7 @@ class AppLocalizationsFr extends AppLocalizations {
     Object fareFormatted,
     Object cashCollectedFormatted,
   ) {
-    return 'Tarif $fareFormatted · Espèces $cashCollectedFormatted';
+    return 'Gains $fareFormatted · Espèces $cashCollectedFormatted';
   }
 
   @override
@@ -5488,6 +5489,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get liveTripChanged =>
       'Cette course a changé entre-temps. Vérifiez-la et réessayez.';
+
+  @override
+  String earningsBaseService(String service) {
+    return 'Base · $service';
+  }
 
   @override
   String get liveTripFailed =>

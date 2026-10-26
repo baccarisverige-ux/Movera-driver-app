@@ -17,7 +17,10 @@ RadarOfferView _offer(String fare) => RadarOfferView(
   payment: 'Cash',
   rating: '4.96',
   riderTrips: 128,
+  // The card shows the driver's money (owner decision 2026-10-26): the
+  // label under test is given as the server's earnings.
   fare: fare,
+  driverEarnings: fare,
   pickupMinutes: 2,
   pickupKm: 0.65,
   tripMinutes: 9,

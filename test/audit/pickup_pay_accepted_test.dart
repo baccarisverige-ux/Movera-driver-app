@@ -29,6 +29,10 @@ import '../../integration_test/headless_map_platform.dart';
 // driver accepts. The trip, its waybill and history get the total the card
 // showed; the pickup pay is Movera's, like a bonus: no fee on it, all of
 // it is the driver's, and a cash rider still pays only the fare.
+// Owner decision 2026-10-26: the card's amount is the driver's share of the
+// fare (the server's driverEarnings, or the demo's commission rule), so the
+// total is share + pickup pay; the rider's fare shows only as cash to
+// collect.
 
 /// A trip with a long drive to its pickup: it has pickup pay.
 RideOffer _far({String id = 'far', bool cash = false}) => RideOffer(
@@ -130,38 +134,36 @@ void main() {
       pay: Money.ore(380),
       leg: const PickupLeg(km: 1.6, minutes: 4),
     );
-    final card = quote.termsOf(fare: '128,40 kr', paidByCash: false);
-    expect(card.fare, '132,20 kr');
+    // The terms start from the driver's pay (RideOffer.driverPay): 128,40
+    // kr fare → 96,30 kr share, plus the pickup pay.
+    final share = WaybillPayment.shareOf(Money.ore(12840));
+    expect(share, Money.ore(9630));
+    final card = quote.termsOf(fare: share.formatted);
+    expect(card.fare, '100,10 kr');
     expect(card.driverBonus, Money.ore(380));
     expect(card.cashToCollect, isNull);
+    // A cash trip: the rider's cash (their fare without Movera's bonus,
+    // RideOffer.riderCash) is kept as given, never worked out from the
+    // driver's pay; the pickup pay is Movera's.
     final cash = quote.termsOf(
-      fare: '128,40 kr',
+      fare: share.formatted,
       driverBonus: Money.ore(4000),
-      paidByCash: true,
+      cashToCollect: '88,40 kr',
     );
-    expect(cash.fare, '132,20 kr');
+    expect(cash.fare, '100,10 kr');
     expect(cash.driverBonus, Money.ore(4380));
-    // The rider pays the fare without Movera's bonus (it is in the fare,
-    // driver-r5-14); the pickup pay is Movera's.
     expect(cash.cashToCollect, '88,40 kr');
     final none = PickupPayQuote(
       pay: Money.ore(0),
       leg: const PickupLeg(km: 0.5, minutes: 1),
-    ).termsOf(fare: '128,40 kr', paidByCash: true);
-    expect(none.fare, '128,40 kr');
+    ).termsOf(fare: share.formatted);
+    expect(none.fare, '96,30 kr');
     expect(none.driverBonus, isNull);
     expect(none.cashToCollect, isNull);
 
-    // The waybill: the rider's fare is unchanged, the driver gets all of
-    // the pickup pay.
-    final plain = WaybillPayment.fromFare('128,40 kr')!;
-    final paid = WaybillPayment.fromFare(
-      card.fare,
-      bonus: WaybillRecord.bonusLabel(card.driverBonus),
-    )!;
-    expect(paid.fare, plain.fare);
+    // The driver gets all of the pickup pay on top of the share.
     expect(
-      Money.parseSekLabel(paid.earnings)! - Money.parseSekLabel(plain.earnings)!,
+      Money.parseSekLabel(card.fare)! - share,
       Money.ore(380),
     );
   });
@@ -200,8 +202,12 @@ void main() {
       ),
     ));
     await tester.pump();
-    final total = (Money.ore(12000) + _radarPay()).formatted;
+    // The card: the driver's share of the 120 kr fare plus the pickup pay;
+    // the fare itself is nowhere on the list.
+    final total =
+        (WaybillPayment.shareOf(Money.ore(12000)) + _radarPay()).formatted;
     expect(find.text(total), findsWidgets);
+    expect(find.text('120,00 kr'), findsNothing);
     final match = find.byKey(const ValueKey<String>('radar-match-far'));
     await tester.ensureVisible(match);
     await tester.tap(match);
@@ -211,6 +217,7 @@ void main() {
     final trip = _trip(tester);
     expect(trip.fare, total);
     expect(trip.driverBonus, _radarPay());
+    // The cash to collect is the rider's own fare.
     expect(trip.cashToCollect, '120,00 kr');
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
@@ -253,10 +260,15 @@ void main() {
     );
     final card = find.byKey(const ValueKey<String>('radar-offer-card-far'));
     expect(card, findsOneWidget);
-    final total = (Money.ore(12000) + _radarPay()).formatted;
+    final total =
+        (WaybillPayment.shareOf(Money.ore(12000)) + _radarPay()).formatted;
     expect(
       find.descendant(of: card, matching: find.text(total)),
       findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.text('120,00 kr')),
+      findsNothing,
     );
     await tester.tap(find.byKey(const ValueKey<String>('radar-match-far')));
     await tester.pump();
@@ -305,19 +317,23 @@ void main() {
     );
     await settle(6);
     await tester.pump(const Duration(milliseconds: 2400));
-    // The demo next trip: 128,40 kr + 3,80 kr pickup pay (1.6 km, 4 min).
-    expect(find.text('132,20 kr'), findsWidgets);
+    // The demo next trip: the driver's 96,30 kr share of its 128,40 kr
+    // fare + 3,80 kr pickup pay (1.6 km, 4 min); the fare is not shown.
+    expect(find.text('100,10 kr'), findsWidgets);
+    expect(find.text('128,40 kr'), findsNothing);
+    expect(find.text('132,20 kr'), findsNothing);
     final match = find.byKey(const ValueKey('on-trip-radar-match-next'));
     await tester.ensureVisible(match);
     await tester.tap(match);
     await tester.pump(const Duration(milliseconds: 1600));
     final next = WaybillStore.next;
     expect(next, isNotNull);
-    expect(next!.fare, '132,20 kr');
+    expect(next!.fare, '100,10 kr');
     expect(next.driverBonus, WaybillRecord.bonusLabel(Money.ore(380)));
+    // The pay without the pickup pay is the share of the demo fare.
     expect(
-      WaybillPayment.fromFare(next.fare, bonus: next.driverBonus)!.fare,
-      '128,40 kr',
+      Money.parseSekLabel(next.fare)! - Money.ore(380),
+      WaybillPayment.shareOf(Money.ore(12840)),
     );
     expect(tester.takeException(), isNull);
   });

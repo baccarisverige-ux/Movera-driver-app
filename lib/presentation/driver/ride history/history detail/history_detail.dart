@@ -406,14 +406,15 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
   }
 
   Widget _buildSummaryRows(BuildContext context) {
-    // A trip that did not complete earned no fare and no bonus (as the
-    // list shows it); its record keeps only the quoted fare.
+    // A trip that did not complete earned nothing and no bonus (as the
+    // list shows it); its record keeps only the quoted pay.
     final completed = _ride.status == TripStatus.completed;
     return Column(
       children: [
-        // A cancel or no-show fee the driver earned (driver-r5-13).
-        _detailRow(tr.rideCost, completed ? _ride.fare : _ride.feeEarned ?? '—'),
-        // Q16/Q18: Movera's bonus is in the fare.
+        // The driver's own money (owner decision 2026-10-26), or a cancel
+        // or no-show fee the driver earned (driver-r5-13).
+        _detailRow(tr.yourEarnings, completed ? _ride.fare : _ride.feeEarned ?? '—'),
+        // Q16/Q18: Movera's bonus is in the earnings.
         if (_ride.driverBonus case final bonus? when completed) ...[
           6.height,
           Align(
@@ -439,9 +440,9 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
         ),
         16.height,
         _detailRow(tr.rideType, _ride.category),
-        // Q23 / R8-4: on a cash trip, the fare, the cash the driver
-        // collected, and the balance: fare − cash, owed by (−) or to (+)
-        // the driver, settled in the next payout.
+        // Q23 / R8-4: on a cash trip, the cash the driver collected and
+        // the balance: earnings − cash, owed by (−) or to (+) the driver,
+        // settled in the next payout.
         if (_ride.cashBalance case final cash?) ...[
           16.height,
           _detailRow(tr.cashCollected, cash.cashCollected.formatted),
@@ -454,13 +455,11 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              // driver-r5-34: with Movera's fee in the balance (driver-u19)
-              // a zero balance means the cash matched the earnings, not
-              // the fare, unless there was no fee.
+              // driver-r5-34: a zero balance means the cash matched the
+              // driver's earnings (the record's fare, owner decision
+              // 2026-10-26), never a rider's fare.
               cash.balance.minorUnits != 0
                   ? tr.settledInYourNextPayout
-                  : cash.cashCollected == cash.fare
-                  ? tr.cashMatchedYourFare
                   : tr.cashMatchedYourEarnings,
               key: const ValueKey<String>('history-owed-note'),
               style: const TextStyle(

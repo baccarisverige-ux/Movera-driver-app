@@ -893,7 +893,7 @@
   },
   "week": "Week",
   "month": "Month",
-  "recordedFares": "Recorded fares",
+  "recordedFares": "Recorded earnings",
   "tipsAndFees": "Tips and fees",
   "notAvailable": "Not available",
   "otherEarnings": "Other earnings",
@@ -911,7 +911,7 @@
   "totalMoveraOwesYou": "Total Movera owes you",
   "totalBalance": "Total balance",
   "settledInYourNextPayout2": "Settled in your next payout.",
-  "fareFareFormattedCashCashCollected": "Fare {fareFormatted} · Cash {cashCollectedFormatted}",
+  "fareFareFormattedCashCashCollected": "Earnings {fareFormatted} · Cash {cashCollectedFormatted}",
   "cashFareFeeLine": "Fare {fare} · Fee {fee} · Cash {cash}",
   "@cashFareFeeLine": {
     "placeholders": {
@@ -3534,5 +3534,10 @@
   "liveTripNotAtPickup": "Movera doesn't see you at the pickup yet. Drive closer and try again.",
   "liveTripNoShowTooEarly": "It's too early for a no-show. Wait a little longer.",
   "liveTripChanged": "This trip changed meanwhile. Check it and try again.",
+  "earningsBaseService": "Base · {service}",
+  "@earningsBaseService": {
+    "description": "Waybill: the trip's own part of the driver's earnings, without the waiting fee and the Movera bonus.",
+    "placeholders": {"service": {"type": "String"}}
+  },
   "liveTripFailed": "Movera could not record this step. Try again."
 }

@@ -467,8 +467,10 @@ void main() {
       expect(find.byKey(const ValueKey<String>('cash-collect-sheet')), findsOneWidget);
       expect(find.text('250 kr'), findsWidgets);
       expect(find.text('You owe Movera'), findsOneWidget);
-      // driver-u19: 200 − Movera's 50 fee − 250 cash.
-      expect(find.text('−100,00 kr'), findsOneWidget);
+      // The driver's 200 kr earnings (owner decision 2026-10-26: no fee
+      // off again) − 250 cash.
+      expect(find.text('−50,00 kr'), findsOneWidget);
+      expect(find.text('Movera fee'), findsNothing);
       expect(find.text('Finish Comfort'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
       await tester.pump(const Duration(milliseconds: 400));

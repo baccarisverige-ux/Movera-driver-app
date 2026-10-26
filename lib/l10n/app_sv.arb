@@ -418,7 +418,7 @@
   "periodRidesRidesInPeriodLabel": "{periodRides} resor · {periodLabel}",
   "week": "Vecka",
   "month": "Månad",
-  "recordedFares": "Registrerade priser",
+  "recordedFares": "Registrerade intäkter",
   "tipsAndFees": "Dricks och avgifter",
   "notAvailable": "Saknas",
   "otherEarnings": "Övriga intäkter",
@@ -429,7 +429,7 @@
   "totalMoveraOwesYou": "Totalt Movera är skyldig dig",
   "totalBalance": "Totalt saldo",
   "settledInYourNextPayout2": "Regleras i din nästa utbetalning.",
-  "fareFareFormattedCashCashCollected": "Pris {fareFormatted} · Kontant {cashCollectedFormatted}",
+  "fareFareFormattedCashCashCollected": "Intäkt {fareFormatted} · Kontant {cashCollectedFormatted}",
   "cashFareFeeLine": "Pris {fare} · Avgift {fee} · Kontant {cash}",
   "driver2": "FÖRARE",
   "profile": "Profil",
@@ -1544,5 +1544,10 @@
   "liveTripNotAtPickup": "Movera ser dig inte vid upphämtningen än. Kör närmare och försök igen.",
   "liveTripNoShowTooEarly": "Det är för tidigt för en utebliven resenär. Vänta lite till.",
   "liveTripChanged": "Resan har ändrats under tiden. Kontrollera den och försök igen.",
+  "earningsBaseService": "Grund · {service}",
+  "@earningsBaseService": {
+    "description": "Waybill: the trip's own part of the driver's earnings, without the waiting fee and the Movera bonus.",
+    "placeholders": {"service": {"type": "String"}}
+  },
   "liveTripFailed": "Movera kunde inte registrera det här steget. Försök igen."
 }

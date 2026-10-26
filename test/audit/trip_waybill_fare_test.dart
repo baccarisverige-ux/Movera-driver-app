@@ -90,42 +90,50 @@ void main() {
     });
   });
 
+  // Owner decision 2026-10-26: the record's fare is the driver's own money
+  // after Movera's commission, so the waybill shows no rider fare and no
+  // fee row; the waiting fee and the bonus are parts of the earnings.
   group('driver-u52: the waiting fee is all the driver\'s', () {
-    testWidgets('Movera takes no fee on the waiting fee', (tester) async {
+    testWidgets('no fee is taken off the earnings again', (tester) async {
       await _openWaybill(tester, _record());
-      expect(_row(tester, 'Movera fee'), '−25,00 kr');
-      expect(_row(tester, 'Your earnings'), '93,39 kr');
+      expect(_row(tester, 'Movera fee'), isNull);
+      expect(_row(tester, 'Fare'), isNull);
+      expect(_row(tester, 'Paid by the passenger'), isNull);
+      expect(_row(tester, 'Your earnings'), '118,39 kr');
+      expect(find.textContaining('*'), findsNothing);
     });
 
-    testWidgets('bonus and waiting fee both stay out of the fee',
+    testWidgets('the bonus is a part of the earnings, on its own row',
         (tester) async {
       await _openWaybill(
         tester,
         _record(fare: '158,39 kr', driverBonus: '40 kr'),
       );
-      expect(_row(tester, 'Movera fee'), '−25,00 kr');
-      expect(_row(tester, 'Your earnings'), '133,39 kr');
+      expect(_row(tester, 'Movera fee'), isNull);
+      expect(_row(tester, 'Movera bonus'), '+40 kr');
+      expect(_row(tester, 'Your earnings'), '158,39 kr');
+      expect(find.text('incl. +40 kr Movera bonus'), findsOneWidget);
     });
 
-    testWidgets('a trip without waiting keeps the old split', (tester) async {
+    testWidgets('a trip without waiting shows its earnings whole',
+        (tester) async {
       await _openWaybill(tester, _record(fare: '100,00 kr', waitingFee: null));
-      expect(_row(tester, 'Movera fee'), '−25,00 kr');
-      expect(_row(tester, 'Your earnings'), '75,00 kr');
+      expect(_row(tester, 'Movera fee'), isNull);
+      expect(_row(tester, 'Your earnings'), '100,00 kr');
     });
   });
 
-  group('driver-u50: the waiting fee is not in the base price', () {
-    testWidgets('base price without the wait, the wait on its own row',
+  group('driver-u50: the waiting fee is not in the base', () {
+    testWidgets('base without the wait, the wait on its own row',
         (tester) async {
       await _openWaybill(tester, _record());
-      expect(_row(tester, 'Paid by the passenger'), '118,39 kr');
-      expect(_row(tester, 'Base price · Movera'), '100,00 kr');
+      expect(_row(tester, 'Base · Movera'), '100,00 kr');
       expect(_row(tester, 'Waiting time'), '+18,39 kr');
     });
 
     testWidgets('no waiting row without a waiting fee', (tester) async {
       await _openWaybill(tester, _record(fare: '100,00 kr', waitingFee: null));
-      expect(_row(tester, 'Base price · Movera'), '100,00 kr');
+      expect(_row(tester, 'Base · Movera'), '100,00 kr');
       expect(_row(tester, 'Waiting time'), isNull);
     });
   });

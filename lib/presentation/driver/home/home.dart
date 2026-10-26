@@ -447,7 +447,8 @@ class _DriverHomeState extends State<DriverHome>
     pickupPosition: LatLng(59.3449, 18.0472),
     dropoffPosition: LatLng(59.3603, 18.0009),
     cash: true,
-    // A rider promotion: Movera owes the driver 26,20.
+    // A rider promotion: the rider pays 150 of the 176,20 kr fare; the
+    // driver's 132,15 kr share means they owe Movera 17,85.
     cashToCollect: '150,00 kr',
   );
 

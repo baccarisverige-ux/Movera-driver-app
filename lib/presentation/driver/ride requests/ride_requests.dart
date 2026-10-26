@@ -456,13 +456,14 @@ class _RideRequestsState extends State<RideRequests> {
         if (!mounted) { return; }
         final navigator = Navigator.of(context);
         final rider = trip.source;
-        // The total the card showed, pickup pay in it (driver-12).
+        // The driver's own money, as the card showed it, pickup pay in it
+        // (driver-12, owner decision 2026-10-26); a cash rider hands over
+        // their own fare.
         final paidByCash = RadarOfferView.isCash(trip.payment);
         final terms = _pickupPayOf(trip).termsOf(
-          fare: trip.fare,
+          fare: trip.driverPay,
           driverBonus: rider.driverBonus,
-          cashToCollect: rider.cashToCollectLabel,
-          paidByCash: paidByCash,
+          cashToCollect: paidByCash ? rider.riderCashLabel : null,
         );
         final ride = AcceptRide(
           // X9: the offer and the trip keep their own ids. Until a backend
@@ -969,6 +970,15 @@ class _RadarTrip {
   /// The dispatch offer: rider, stops and fare boost come from it.
   final RideOffer source;
 
+  /// The driver's own money for the trip, the number the card shows
+  /// ([OfferCardDetails.fare] of [fare] with the offer's bonus and server
+  /// earnings): never the rider's [fare] (owner decision 2026-10-26).
+  String get driverPay => DriverOfferRules.current.card.fare(
+        fare,
+        bonus: WaybillRecord.bonusLabel(source.driverBonus),
+        earnings: source.driverEarnings?.formatted,
+      );
+
   final int bags;
   final String payment;
 
@@ -977,6 +987,9 @@ class _RadarTrip {
 
   final String id;
   final String category;
+
+  /// The rider's fare label as dispatch sent it; the driver sees
+  /// [driverPay] instead.
   final String fare;
   final String rating;
   final int pickupMinutes;

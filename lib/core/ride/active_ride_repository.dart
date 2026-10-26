@@ -26,6 +26,9 @@ class PersistedQueuedTrip {
 
   final String tripId;
   final String riderName;
+
+  /// The driver's pay for the queued trip (owner decision 2026-10-26), as
+  /// [PersistedActiveRide.fare]; a restored trip shows it as saved.
   final String fare;
   final String category;
   final String pickup;
@@ -159,12 +162,17 @@ class PersistedActiveRide {
   final String? riderName;
   final double? riderRating;
   final int? riderTrips;
+
+  /// The driver's own money for the trip, after Movera's commission, the
+  /// pickup pay and bonus in it (owner decision 2026-10-26). Never the
+  /// rider's fare.
   final String? fare;
 
   /// The rider pays cash in the car; otherwise the card is charged.
   final bool paidByCash;
 
-  /// R8-4: the cash to take from the rider when it is not [fare].
+  /// R8-4: the cash to take from the rider, their own fare. Null only on
+  /// a trip saved before the fare became the driver's pay.
   final String? cashToCollect;
 
   /// Movera's bonus already in [fare] (contract `driverBonus`, Q16/Q18).

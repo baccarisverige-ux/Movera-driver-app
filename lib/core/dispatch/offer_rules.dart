@@ -103,7 +103,9 @@ class OfferCardDetails {
     this.badges = true,
   });
 
-  /// The driver's share instead of the full fare.
+  /// The "Your share" caption over the amount. The amount itself is the
+  /// driver's share whatever this says (owner decision 2026-10-26: the
+  /// driver never sees the rider's fare), so this only adds the caption.
   final bool netFare;
 
   /// Where the pickup is. Off: only "Pickup nearby".
@@ -147,20 +149,21 @@ class OfferCardDetails {
     badges: badges ?? this.badges,
   );
 
-  /// The fare as the card shows it: the full fare, or the driver's share
-  /// after Movera's commission. Movera's [bonus] in [full] (Q16) is never
-  /// charged commission: the share keeps all of it. The server's
-  /// [earnings] (`Offer.driverEarnings`), when sent, is the share
-  /// (driver-r5-1).
+  /// The amount an offer shows: the driver's own money, never the rider's
+  /// fare [full] (owner decision 2026-10-26, "price must be after
+  /// commission that show to driver"). The server's [earnings]
+  /// (`Offer.driverEarnings`, Movera's bonus in it, driver-r5-1) when it
+  /// sent them; else, for a demo offer, [full] after Movera's commission,
+  /// where Movera's [bonus] in [full] (Q16) is never charged commission:
+  /// the share keeps all of it ([WaybillPayment.shareOf]). [full] itself
+  /// when it is not an amount ("—"). Pickup pay comes on top
+  /// (`PickupPayQuote.totalOf`).
   String fare(
     String full, {
     double? commissionRate,
     String? bonus,
     String? earnings,
   }) {
-    if (!netFare) {
-      return full;
-    }
     if (earnings != null) {
       return earnings;
     }

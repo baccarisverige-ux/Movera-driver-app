@@ -45,17 +45,17 @@ class PickupPayQuote {
 
   /// The accepted trip's terms with this pickup pay in them, so the trip,
   /// its waybill and history keep the total the card showed (driver-12).
-  /// Movera pays it from its commission, like a bonus: it is added to
-  /// [driverBonus] (no fee on it, all of it the driver's), and a cash
-  /// rider still pays only [fare]. Unchanged without pickup pay.
-  /// driver-r5-14: [fare] already includes [driverBonus] (the contract),
-  /// so with no server [cashToCollect] a cash rider pays [fare] less the
-  /// bonus, as AcceptRide's own rider fare (driver-u61) would.
+  /// [fare] is the driver's own money for the trip (`RideOffer.driverPay`,
+  /// owner decision 2026-10-26), never the rider's fare. Movera pays the
+  /// pickup pay from its commission, like a bonus: it is added to
+  /// [driverBonus] (no fee on it, all of it the driver's). [cashToCollect],
+  /// the rider's cash on a cash trip (`RideOffer.riderCash`), is kept as
+  /// given: the rider pays their own fare, never this total. Unchanged
+  /// without pickup pay.
   ({String fare, Money? driverBonus, String? cashToCollect}) termsOf({
     required String fare,
     Money? driverBonus,
     String? cashToCollect,
-    required bool paidByCash,
   }) {
     final base = hasPay ? Money.parseSekLabel(fare) : null;
     if (base == null) {
@@ -68,22 +68,8 @@ class PickupPayQuote {
     return (
       fare: (base + pay).formatted,
       driverBonus: driverBonus == null ? pay : driverBonus + pay,
-      cashToCollect: paidByCash
-          ? cashToCollect ?? _riderFare(fare, base, driverBonus)
-          : cashToCollect,
+      cashToCollect: cashToCollect,
     );
-  }
-
-  /// [fare] without Movera's [bonus]; [fare] itself when there is no
-  /// bonus, it is another currency or larger than the fare.
-  static String _riderFare(String fare, Money base, Money? bonus) {
-    if (bonus == null ||
-        bonus.minorUnits <= 0 ||
-        bonus.currency != base.currency ||
-        bonus.minorUnits > base.minorUnits) {
-      return fare;
-    }
-    return (base - bonus).formatted;
   }
 
   /// "incl. 21,60 kr pickup · 4.2 km · 9 min", only when admin shows the

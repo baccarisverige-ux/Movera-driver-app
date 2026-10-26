@@ -168,7 +168,10 @@ void main() {
     ) async {
       await _card(tester, RadarOfferCard(offer: _offer(priority: true)));
       _expectRedBadge(tester, 'radar-offer-priority-p1');
-      expect(find.text('152,40 kr', findRichText: true), findsOneWidget);
+      // The driver's share of the 152,40 kr total (owner decision
+      // 2026-10-26; no bonus label given here, so the demo's 25 % on all).
+      expect(find.text('114,30 kr', findRichText: true), findsOneWidget);
+      expect(find.text('152,40 kr', findRichText: true), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
@@ -180,7 +183,8 @@ void main() {
         ExclusiveRequestSheet(offer: _offer(priority: true), secondsLeft: 12),
       );
       _expectRedBadge(tester, 'exclusive-offer-priority-p1');
-      expect(find.textContaining('152'), findsWidgets);
+      expect(find.textContaining('114'), findsWidgets);
+      expect(find.textContaining('152'), findsNothing);
       expect(tester.takeException(), isNull);
     });
 

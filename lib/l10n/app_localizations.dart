@@ -2619,7 +2619,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordedFares.
   ///
   /// In en, this message translates to:
-  /// **'Recorded fares'**
+  /// **'Recorded earnings'**
   String get recordedFares;
 
   /// No description provided for @tipsAndFees.
@@ -2685,7 +2685,7 @@ abstract class AppLocalizations {
   /// No description provided for @fareFareFormattedCashCashCollected.
   ///
   /// In en, this message translates to:
-  /// **'Fare {fareFormatted} · Cash {cashCollectedFormatted}'**
+  /// **'Earnings {fareFormatted} · Cash {cashCollectedFormatted}'**
   String fareFareFormattedCashCashCollected(
     Object fareFormatted,
     Object cashCollectedFormatted,
@@ -9384,6 +9384,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This trip changed meanwhile. Check it and try again.'**
   String get liveTripChanged;
+
+  /// Waybill: the trip's own part of the driver's earnings, without the waiting fee and the Movera bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Base · {service}'**
+  String earningsBaseService(String service);
 
   /// No description provided for @liveTripFailed.
   ///

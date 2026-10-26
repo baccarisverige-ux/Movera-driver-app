@@ -315,11 +315,21 @@ class _NextTripRadarOffer {
     required this.dropoffPosition,
     this.pickupKm = 1.6,
     this.securedPickupPay,
+    this.driverEarnings,
   });
 
   final String id;
   final String category;
+
+  /// The rider's fare label; the driver sees [driverPay] (owner decision
+  /// 2026-10-26). A restored secured trip carries its pay here and in
+  /// [driverEarnings] both, so it is not reduced twice.
   final String fare;
+
+  /// The driver's money when known as such (the server's earnings, or a
+  /// restored secured trip's pay); null for a demo offer, whose [fare]
+  /// is reduced by the demo's commission.
+  final String? driverEarnings;
   final double rating;
   final int pickupMinutes;
 
@@ -348,19 +358,25 @@ class _NextTripRadarOffer {
           );
   }
 
-  /// The fare plus the pickup pay: one total.
-  String get shownFare => pickupPay.totalOf(fare);
+  /// The driver's own money for the trip ([OfferCardDetails.fare]):
+  /// [driverEarnings], else the demo share of [fare].
+  String get driverPay =>
+      DriverOfferRules.current.card.fare(fare, earnings: driverEarnings);
+
+  /// The driver's pay plus the pickup pay: one total.
+  String get shownFare => pickupPay.totalOf(driverPay);
 
   /// The trip's terms once accepted: the total the card showed, with the
   /// pickup pay as Movera's bonus (driver-12).
   ({String fare, Money? driverBonus, String? cashToCollect}) get terms =>
-      pickupPay.termsOf(fare: fare, paidByCash: false);
+      pickupPay.termsOf(fare: driverPay);
 
   /// This offer, secured: its pickup pay no longer changes.
   _NextTripRadarOffer secured() => _NextTripRadarOffer(
     id: id,
     category: category,
     fare: fare,
+    driverEarnings: driverEarnings,
     rating: rating,
     pickupMinutes: pickupMinutes,
     tripMinutes: tripMinutes,

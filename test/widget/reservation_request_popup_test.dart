@@ -238,7 +238,8 @@ void main() {
     final fare = tester.widget<Text>(
       find.byKey(const ValueKey<String>('reservation-fare')),
     );
-    expect(fare.textSpan!.toPlainText(), '126,75 kr');
+    // The driver's share of the 126,75 kr fare (owner decision 2026-10-26).
+    expect(fare.textSpan!.toPlainText(), '95,06 kr');
     expect(find.text('19 min trip'), findsOneWidget);
     // Pickup with its clock time, drop-off with the trip distance.
     final pickup = find.byKey(const ValueKey<String>('reservation-pickup'));
@@ -435,10 +436,11 @@ void main() {
       pay: Money.ore(2160),
       leg: const PickupLeg(km: 4.2, minutes: 9),
     );
-    // An exclusive reservation: one total, fare + pickup pay.
-    expect(await priceWith(pay), '148,35 kr');
-    // A normal reservation (the Home popup, Scheduled rides): the fare.
-    expect(await priceWith(null), '126,75 kr');
+    // An exclusive reservation: one total, the driver's share of the fare
+    // + pickup pay.
+    expect(await priceWith(pay), '116,66 kr');
+    // A normal reservation (the Home popup, Scheduled rides): the share.
+    expect(await priceWith(null), '95,06 kr');
     expect(tester.takeException(), isNull);
   });
 

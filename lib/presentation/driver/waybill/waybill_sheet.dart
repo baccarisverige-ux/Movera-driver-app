@@ -1,9 +1,12 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
 
 /// The trip's waybill: one plain list, label on the left, value on the
-/// right. Shows the same facts as a taxi waybill plus what the driver keeps.
+/// right. Shows the same facts as a taxi waybill plus what the driver
+/// earns. The rider's fare is not on it (owner decision 2026-10-26): the
+/// record's fare is the driver's own money, after Movera's commission.
 Future<void> showMoveraWaybillSheet(
   BuildContext context,
   WaybillRecord record, {
@@ -67,19 +70,23 @@ const _ink = Color(0xFF303A3F);
 const _muted = Color(0xFF7D898F);
 
 List<Widget> _rows(WaybillRecord record) {
-  final payment = WaybillPayment.fromFare(
-    record.fare,
-    bonus: record.driverBonus,
-    waitingFee: record.waitingFee,
-  );
   final bonus = record.driverBonus;
+  final earnings = Money.parseLabel(record.fare);
+  final wait = record.waitingFee == null || earnings == null
+      ? null
+      : Money.parseLabel(record.waitingFee!, currency: earnings.currency);
+  final extra = bonus == null || earnings == null
+      ? null
+      : Money.parseLabel(bonus, currency: earnings.currency);
+  // The trip's own part of the earnings: without the waiting fee (Q43,
+  // driver-u50) and Movera's bonus (Q16/Q18), which have their own rows.
+  final base = earnings == null
+      ? null
+      : earnings - (wait ?? Money(minorUnits: 0, currency: earnings.currency))
+          - (extra ?? Money(minorUnits: 0, currency: earnings.currency));
   return [
     _Row(tr.trip, record.tripId),
     _Row(tr.time, formatWaybillTime(record.issuedAt)),
-    _Row(tr.fare, payment == null ? record.fare : '${record.fare}*'),
-    // Q16/Q18: the fare has Movera's bonus in it.
-    if (bonus != null)
-      _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
     _Row(tr.passenger, record.riderNameText),
     _Row(tr.via, record.sourceText),
     _Row(tr.from, record.pickup),
@@ -88,24 +95,19 @@ List<Widget> _rows(WaybillRecord record) {
     _Row(tr.driver, record.driverNameText),
     _Row(tr.licensePlate, record.licensePlateText),
     _Row(tr.passengerCapacity, '${record.passengerCapacity}'),
-    if (payment != null) ...[
-      const SizedBox(height: 14),
-      _Row(tr.paidByPassenger, payment.fare),
-      _Row(tr.payment, record.paidByCash ? tr.cash : tr.inApp),
-      _Row(tr.basePriceService(record.service), payment.basePrice),
-      // Q43: the waiting fee is all the driver's; Movera takes no fee on it.
-      if (payment.waitingFee case final wait?) _Row(tr.waitingTime, '+$wait'),
-      _Row(tr.moveraFee, '−${payment.serviceFee}'),
-      if (payment.bonus case final extra?) _Row(tr.moveraBonus, '+$extra'),
-      _Row(tr.yourEarnings, payment.earnings),
-      if (bonus != null)
-      _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
-      const SizedBox(height: 16),
-      Text(
-        tr.roundToNearestWholeKronaIn,
-        style: TextStyle(color: _muted, fontSize: 13),
-      ),
+    const SizedBox(height: 14),
+    _Row(tr.payment, record.paidByCash ? tr.cash : tr.inApp),
+    if (base != null) ...[
+      _Row(tr.earningsBaseService(record.service), base.formatted),
+      // Q43: the waiting fee is all the driver's.
+      if (wait case final fee? when !fee.isZero)
+        _Row(tr.waitingTime, '+${fee.formatted}'),
+      if (extra case final money? when !money.isZero)
+        _Row(tr.moveraBonus, '+${money.formattedShort}'),
     ],
+    _Row(tr.yourEarnings, record.fare),
+    if (bonus != null)
+      _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
   ];
 }
 

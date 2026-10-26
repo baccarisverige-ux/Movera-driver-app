@@ -479,32 +479,36 @@ class ScheduledRideStore {
   ];
 
   static final List<_ScheduledRide> _accepted = _seedAccepted();
-  static List<_ScheduledRide> _seedAccepted() => [
-    _ScheduledRide(
-      price: '184,00 kr',
-      time: tr.schedSeedTime(tr.tomorrow, '08:15'),
+  static List<_ScheduledRide> _seedAccepted() {
+    final route = ReservationRequestPreview(
       category: 'Comfort',
-      pickup: 'Södermalm, Stockholm',
-      destination: 'Bromma Airport',
-      accepted: true,
-      route: ReservationRequestPreview(
+      fare: '184,00 kr',
+      rating: '4.90',
+      riderName: 'Lars',
+      riderTrips: 47,
+      pickupLabel: tr.schedPickupTomorrowAt('08:15'),
+      pickupAddress: 'Södermalm, Stockholm',
+      dropoffAddress: 'Bromma Airport',
+      pickupTime: '08:15',
+      pickupDay: tr.tomorrow,
+      tripMinutes: 20,
+      tripKm: 9.4,
+      pickup: GeoPoint(59.3134, 18.0727),
+      dropoff: GeoPoint(59.3544, 17.9416),
+    ).scheduledFor(_tomorrowAt(8, 15));
+    return [
+      _ScheduledRide(
+        // The driver's share of the fare (owner decision 2026-10-26).
+        price: route.driverPayLabel,
+        time: tr.schedSeedTime(tr.tomorrow, '08:15'),
         category: 'Comfort',
-        fare: '184,00 kr',
-        rating: '4.90',
-        riderName: 'Lars',
-        riderTrips: 47,
-        pickupLabel: tr.schedPickupTomorrowAt('08:15'),
-        pickupAddress: 'Södermalm, Stockholm',
-        dropoffAddress: 'Bromma Airport',
-        pickupTime: '08:15',
-        pickupDay: tr.tomorrow,
-        tripMinutes: 20,
-        tripKm: 9.4,
-        pickup: GeoPoint(59.3134, 18.0727),
-        dropoff: GeoPoint(59.3544, 17.9416),
-      ).scheduledFor(_tomorrowAt(8, 15)),
-    ),
-  ];
+        pickup: 'Södermalm, Stockholm',
+        destination: 'Bromma Airport',
+        accepted: true,
+        route: route,
+      ),
+    ];
+  }
 
   /// [hour]:[minute] tomorrow, from now: the seed ride's date stays the
   /// same after midnight (driver-u142).
@@ -1475,12 +1479,13 @@ class _ScheduledRide {
     this.window,
   });
 
-  /// An accepted ride built from its route details.
+  /// An accepted ride built from its route details. Its price is the
+  /// driver's share of the fare (owner decision 2026-10-26).
   factory _ScheduledRide.fromRoute(
     ReservationRequestPreview route, {
     bool assigned = false,
   }) => _ScheduledRide(
-    price: route.fareLabel,
+    price: route.driverPayLabel,
     time: _timeOf(route, ReservationWhen.dayWord(route.pickupDay), null),
     category: route.category,
     pickup: route.pickupAddress,
@@ -1497,7 +1502,7 @@ class _ScheduledRide {
     String? distance,
   }) {
     return _ScheduledRide(
-      price: route.fareLabel,
+      price: route.driverPayLabel,
       time: _timeOf(route, ReservationWhen.dayWord(route.pickupDay), window),
       window: window,
       category: route.category,

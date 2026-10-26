@@ -63,16 +63,18 @@ void main() {
   ]) {
     testWidgets('$name: one total by default, no pickup line', (tester) async {
       await _pump(tester, card(PickupPayDisplay.totalOnly));
-      // 120,70 kr fare + 21,60 kr pickup pay.
-      expect(find.text('142,30 kr'), findsOneWidget);
+      // The driver's 90,52 kr share of the 120,70 kr fare + 21,60 kr
+      // pickup pay; the fare itself never shows (owner decision 2026-10-26).
+      expect(find.text('112,12 kr'), findsOneWidget);
       expect(find.text('120,70 kr'), findsNothing);
+      expect(find.text('142,30 kr'), findsNothing);
       expect(find.byKey(_lineKey), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
     testWidgets('$name: total and the grey pickup line', (tester) async {
       await _pump(tester, card(PickupPayDisplay.fareWithPickupLine));
-      expect(find.text('142,30 kr'), findsOneWidget);
+      expect(find.text('112,12 kr'), findsOneWidget);
       expect(find.byKey(_lineKey), findsOneWidget);
       expect(
         find.text('incl. 21,60 kr pickup · 4.2 km · 9 min'),

@@ -27,6 +27,10 @@ class _HomeDirectOffer {
 
   /// Why it is Exclusive, shown on its card (see [ExclusiveReasons]).
   final String reason;
+
+  /// The rider's fare as dispatch sent it, e.g. "104,80 kr". The driver
+  /// never sees it (owner decision 2026-10-26): the card shows and the
+  /// trip keeps [driverPay]; a cash trip collects [riderCash].
   final String fare;
   final String rating;
   final int pickupMinutes;
@@ -91,6 +95,28 @@ class _HomeDirectOffer {
 
   /// Accept is dispatch's claim (§3, §3.1).
   bool get claimedViaDispatch => adminAssigned || dispatchExclusive;
+
+  /// The driver's own money for the trip, the number its card shows
+  /// ([OfferCardDetails.fare]): the server's [driverEarnings], else the
+  /// demo share of [fare] after Movera's commission, the [driverBonus]
+  /// kept whole. The card's pickup pay is added at accept (driver-12).
+  String get driverPay => DriverOfferRules.current.card.fare(
+        fare,
+        bonus: WaybillRecord.bonusLabel(driverBonus),
+        earnings: driverEarnings,
+      );
+
+  /// On a cash trip, the cash the rider hands over: [cashToCollect] from
+  /// dispatch, else [fare] without Movera's [driverBonus] (driver-u61);
+  /// [fare] as it is when it is not an amount.
+  String get riderCash {
+    final cash = cashToCollect;
+    if (cash != null) return cash;
+    final money = Money.parseLabel(fare);
+    return money == null
+        ? fare
+        : RideOffer.riderCashOf(money, driverBonus).formatted;
+  }
 
   /// Accept and No go through dispatch's accept/decline (§3.1).
   bool get viaDispatchAnswer => claimedViaDispatch || groupId != null;
@@ -1097,10 +1123,14 @@ extension _HomeOfferRadar on _DriverHomeState {
       _offerSimulationTimer?.cancel();
       _radarOfferTwoTimer?.cancel();
       _radarOfferThreeTimer?.cancel();
-      // The total its card showed, pickup pay in it (driver-12). "Leave
-      // now" shows no card: its scheduled ride keeps its fare, plus the
+      // The trip's money is the driver's own (owner decision 2026-10-26):
+      // the share its card showed, with the card's pickup pay in it
+      // (driver-12); a cash rider still hands over their own fare. "Leave
+      // now" shows no card: its scheduled ride keeps its share, plus the
       // pickup pay an Exclusive card showed when it was saved for later
       // (driver-r5-12).
+      final pay = offer.driverPay;
+      final cash = offer.cash ? offer.riderCash : null;
       final quote = scheduledPickupAt == null && scheduledRideId == null
           ? _pickupPayOf(
               offer,
@@ -1114,16 +1144,11 @@ extension _HomeOfferRadar on _DriverHomeState {
               leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
             );
       final terms = quote?.termsOf(
-            fare: offer.fare,
+            fare: pay,
             driverBonus: offer.driverBonus,
-            cashToCollect: offer.cashToCollect,
-            paidByCash: offer.cash,
+            cashToCollect: cash,
           ) ??
-          (
-            fare: offer.fare,
-            driverBonus: offer.driverBonus,
-            cashToCollect: offer.cashToCollect,
-          );
+          (fare: pay, driverBonus: offer.driverBonus, cashToCollect: cash);
 
       pushSingle(
         context,

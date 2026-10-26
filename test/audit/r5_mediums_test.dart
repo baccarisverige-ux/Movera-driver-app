@@ -259,40 +259,56 @@ void main() {
         dropoff: offer.dropoff,
         driverEarnings: offer.driverEarnings?.formatted,
       );
-      // Net-fare card: 'Your share' is the server's 170 kr, not 75 % of 200.
+      // The card shows the server's 170 kr, not 75 % of 200 and never the
+      // 200 kr fare (owner decision 2026-10-26), with or without the
+      // "Your share" caption.
       expect(view.shownFare(const OfferCardDetails(netFare: true)),
           '170,00 kr');
-      expect(view.shownFare(const OfferCardDetails()), '200,00 kr');
+      expect(view.shownFare(const OfferCardDetails()), '170,00 kr');
+      expect(offer.driverPay, Money.ore(17000));
     });
   });
 
   group('driver-r5-14', () {
     test('a cash rider with pickup pay still pays the fare without the '
         'Movera bonus', () {
+      // 152,40 kr includes Movera's 40 kr bonus: the rider pays 112,40 kr
+      // (RideOffer.riderCash), whatever the driver's own pay is.
+      final offer = OfferWire.parse({
+        ..._wireOffer(),
+        'fare': {'amountMinor': 15240, 'currency': 'SEK'},
+        'driverBonus': {'amountMinor': 4000, 'currency': 'SEK'},
+        'paymentMethod': 'cash',
+      });
+      expect(offer.riderCashLabel, '112,40 kr');
+      // The accepted terms keep it beside the driver's pay plus the pickup
+      // pay; the pickup pay is Movera's.
       final quote = PickupPayQuote(
         pay: Money.ore(1300),
         leg: const PickupLeg(km: 4, minutes: 6),
       );
       final terms = quote.termsOf(
-        fare: '152,40 kr',
-        driverBonus: Money.ore(4000),
-        paidByCash: true,
+        fare: offer.driverPayLabel,
+        driverBonus: offer.driverBonus,
+        cashToCollect: offer.riderCashLabel,
       );
-      expect(terms.fare, '165,40 kr');
+      expect(terms.fare, '183,00 kr');
       expect(terms.driverBonus, Money.ore(5300));
-      // 152,40 kr includes Movera's 40 kr bonus: the rider pays 112,40 kr.
       expect(terms.cashToCollect, '112,40 kr');
-      // A server cash amount still wins.
+      // A server cash amount still wins, and none is invented.
       expect(
         quote
             .termsOf(
-              fare: '152,40 kr',
-              driverBonus: Money.ore(4000),
+              fare: offer.driverPayLabel,
+              driverBonus: offer.driverBonus,
               cashToCollect: '120,00 kr',
-              paidByCash: true,
             )
             .cashToCollect,
         '120,00 kr',
+      );
+      expect(
+        quote.termsOf(fare: offer.driverPayLabel).cashToCollect,
+        isNull,
       );
     });
   });
@@ -532,8 +548,10 @@ void main() {
 
     testWidgets('pickup pay accepted with a ride saved for later is paid '
         'when Leave now opens its trip', (tester) async {
+      // The ride's price is the driver's share of its fare (owner decision
+      // 2026-10-26); the pickup pay comes on top.
       final base = Money.parseSekLabel(
-          ScheduledRideStore.routeOf(demoReservationId)!.fare)!;
+          ScheduledRideStore.routeOf(demoReservationId)!.driverPayLabel)!;
       // An Exclusive reservation won before its Exclusive step: saved for
       // later with the pickup pay its card showed.
       ScheduledRideStore.take(demoReservationId,
