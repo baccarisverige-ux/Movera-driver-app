@@ -1,6 +1,6 @@
 import 'package:movera/core/contracts/trip_status.dart';
 
-/// Pure transition engine for `contracts/contract.json#transitions` (v0.5.3).
+/// Pure transition engine for `contracts/contract.json#transitions` (v0.5.5).
 ///
 /// The table below is a hand copy of the contract. `test/contract/` checks it
 /// row by row against `contracts/contract.json` and replays
@@ -47,6 +47,7 @@ enum TripCommand {
   quote('quote'),
   request('request'),
   startSearch('start_search'),
+  raisePrice('raise_price'),
   sendOffer('send_offer'),
   offerLapsed('offer_lapsed'),
   accept('accept'),
@@ -124,7 +125,7 @@ class InvalidTripTransition implements Exception {
 }
 
 abstract final class TripTransitions {
-  static const String contractVersion = '0.5.3';
+  static const String contractVersion = '0.5.5';
 
   static const List<TripTransition> table = [
     TripTransition(TripCommand.quote, TripActor.system, [
@@ -135,6 +136,11 @@ abstract final class TripTransitions {
     ], TripStatus.requested),
     TripTransition(TripCommand.startSearch, TripActor.system, [
       TripStatus.requested,
+    ], TripStatus.searching),
+    // v0.5.5 §3.6: the rider raises their offer; a new search starts.
+    TripTransition(TripCommand.raisePrice, TripActor.rider, [
+      TripStatus.searching,
+      TripStatus.offered,
     ], TripStatus.searching),
     TripTransition(TripCommand.sendOffer, TripActor.system, [
       TripStatus.searching,
