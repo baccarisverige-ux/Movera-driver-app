@@ -15,16 +15,21 @@ permissions:
   contents: read
 
 concurrency:
-  # One group per commit and event so a base-branch update cannot cancel
-  # the head run and leave a red cancelled check on the pull request.
-  group: drider-ci-${{ github.workflow }}-${{ github.sha }}-${{ github.event_name }}
-  cancel-in-progress: false
+  # One group per pull request (or per pushed branch): a newer push cancels
+  # the superseded run. Push and pull_request runs are in different groups,
+  # so a base-branch update never cancels a pull request's run.
+  group: drider-ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The one Flutter version CI, the deploy workflow and the format check use.
+  FLUTTER_VERSION: 3.47.6
 
 jobs:
   verify:
     name: Analyze, test and build web
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Checkout Drider
@@ -34,20 +39,42 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.47.6
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Flutter version
         run: flutter --version
 
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
+
       - name: Resolve dependencies
         run: flutter pub get --enforce-lockfile
+
+      - name: Format
+        run: dart format --output=none --set-exit-if-changed .
 
       - name: Analyze
         run: flutter analyze --fatal-infos
 
-      - name: Test
-        run: flutter test
+      - name: Test with coverage
+        run: flutter test --coverage
+
+      - name: Coverage floor for lib/core
+        # 91.8 % on main at the Phase 2 audit (baseline-2026-10.md section 5).
+        run: python3 tool/check_coverage.py coverage/lcov.info lib/core/ 91.5
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver-coverage-${{ github.sha }}
+          path: coverage/lcov.info
+          if-no-files-found: ignore
 
       - name: Frontend release evidence contracts
         run: |
@@ -73,6 +100,56 @@ jobs:
             test/failures/
           if-no-files-found: ignore
 
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Drider
+        uses: actions/checkout@v4
+
+      # The checked-out tree, not the history: the Maps key already in old
+      # commits is tracked as audit finding 4 (rotate or restrict).
+      - name: Gitleaks on the working tree
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.28.0 \
+            dir /repo --redact --no-banner --exit-code 1
+
+  live-web:
+    name: Build live web (MOVERA_AUTH_REQUIRED=true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Drider
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
+
+      - name: Resolve dependencies
+        run: flutter pub get --enforce-lockfile
+
+      # The same flags as the deploy workflow's live build, so a live-only
+      # compile break fails the pull request, not the deploy after merge.
+      - name: Build live web
+        env:
+          LIVE_API: ${{ vars.MOVERA_LIVE_API_URL || 'https://movera-server.onrender.com' }}
+        run: |
+          flutter build web --release --base-href "/Movera-driver-app/live/" \
+            --dart-define=MOVERA_AUTH_REQUIRED=true \
+            --dart-define=MOVERA_API_BASE_URL="$LIVE_API"
+
   android-release:
     name: Android release signing and preview
     runs-on: ubuntu-latest
@@ -91,8 +168,15 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.47.6
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
 
       - name: Resolve dependencies
         run: flutter pub get --enforce-lockfile
@@ -139,8 +223,15 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.47.6
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
 
       - name: Resolve dependencies
         run: flutter pub get --enforce-lockfile
