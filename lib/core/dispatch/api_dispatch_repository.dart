@@ -158,6 +158,7 @@ class ApiDispatchRepository implements DispatchRepository {
     required Future<String?> Function() accessToken,
     String Function()? idempotencyKey,
     Duration Function(int attempt)? reconnectDelay,
+    this.feedIdleTimeout = defaultFeedIdleTimeout,
     this.renewSession,
     this.onAccepted,
   }) : _client = client,
@@ -171,6 +172,15 @@ class ApiDispatchRepository implements DispatchRepository {
   final Future<String?> Function() _token;
   final String Function() _key;
   final Duration Function(int attempt) _reconnectDelay;
+
+  /// Owner, live test 2026-10-26 ("driver don't receive offers"): a feed
+  /// that goes silent without closing (an iPhone that locked or changed
+  /// network leaves the socket half open) is closed and opened again after
+  /// this long with nothing on it. The server sends `: heartbeat` every
+  /// 15 s, so a healthy feed is never this quiet.
+  final Duration feedIdleTimeout;
+
+  static const defaultFeedIdleTimeout = Duration(seconds: 45);
 
   /// Renews the access token after a `401` (the app's [ApiClient] refresh),
   /// so a command is sent once more and the feed reconnects with the new
@@ -191,6 +201,7 @@ class ApiDispatchRepository implements DispatchRepository {
       StreamController<OfferWithdrawal>.broadcast();
   int _lastSequence = 0;
   StreamSubscription<String>? _feed;
+  Timer? _feedIdle;
   final StreamController<bool> _live = StreamController<bool>.broadcast();
   bool _feedLive = false;
   int _reconnects = 0;
@@ -345,6 +356,7 @@ class ApiDispatchRepository implements DispatchRepository {
     _wanted = true;
     final generation = ++_generation;
     _reconnect?.cancel();
+    _feedIdle?.cancel();
     await _feed?.cancel();
     _feed = null;
     if (_disposed || generation != _generation) return;
@@ -389,10 +401,22 @@ class ApiDispatchRepository implements DispatchRepository {
     _reconnects = 0;
     _setLive(true);
     final data = StringBuffer();
+    void quiet() {
+      if (generation != _generation) return;
+      unawaited(_feed?.cancel());
+      _feed = null;
+      _feedLost();
+    }
+
+    _feedIdle?.cancel();
+    _feedIdle = Timer(feedIdleTimeout, quiet);
     _feed = response.stream
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen((line) {
+          // Any line, the heartbeat comment too, shows the feed is alive.
+          _feedIdle?.cancel();
+          _feedIdle = Timer(feedIdleTimeout, quiet);
           if (line.startsWith('data:')) {
             data.write(line.substring(5).trim());
           } else if (line.isEmpty && data.isNotEmpty) {
@@ -410,6 +434,8 @@ class ApiDispatchRepository implements DispatchRepository {
 
   /// The feed is gone: not live, and it tries again after a while.
   void _feedLost() {
+    _feedIdle?.cancel();
+    _feedIdle = null;
     _setLive(false);
     if (_disposed || !_wanted) return;
     _reconnect?.cancel();
@@ -423,6 +449,8 @@ class ApiDispatchRepository implements DispatchRepository {
     _generation++;
     _reconnect?.cancel();
     _reconnect = null;
+    _feedIdle?.cancel();
+    _feedIdle = null;
     final feed = _feed;
     _feed = null;
     _setLive(false);
@@ -590,6 +618,7 @@ class ApiDispatchRepository implements DispatchRepository {
   Future<void> dispose() async {
     _disposed = true;
     _reconnect?.cancel();
+    _feedIdle?.cancel();
     await _feed?.cancel();
     await _live.close();
     await _nearby.close();
