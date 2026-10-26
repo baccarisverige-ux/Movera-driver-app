@@ -251,6 +251,47 @@ class LivePresence {
     });
   }
 
+  bool _settled = false;
+
+  /// D11: the app starts offline after a restart (a reload of the web
+  /// build, a crash, a cold start), but the server may still hold the
+  /// driver `online` from before: it kept offering trips, and the admin
+  /// saw the driver online, while the app showed the radar off with no
+  /// feed and no location. Once per start, before the driver goes online,
+  /// such a server state is turned offline. A trip under way (`on_trip`)
+  /// is left alone.
+  Future<void> settleAfterStart() {
+    if (_settled) return Future<void>.value();
+    _settled = true;
+    return _serial(() async {
+      if (_wantOnline || serverOnline) return;
+      try {
+        var profile = await _api.get(profilePath);
+        for (var attempt = 0; attempt < 3; attempt++) {
+          if (_wantOnline || profile['onlineStatus'] != 'online') return;
+          try {
+            profile = await _api.post(
+              availabilityPath,
+              body: {
+                'expectedVersion': profile['version'],
+                'onlineStatus': 'offline',
+              },
+            );
+          } on ApiError catch (error) {
+            final current = error.projection;
+            if (error.code != 'version_mismatch' || current == null) rethrow;
+            profile = current;
+          }
+        }
+      } catch (error) {
+        DriverLog.warn(
+          'start offline refused: ${_detail(error)}',
+          name: 'live',
+        );
+      }
+    });
+  }
+
   /// Goes offline on the server; the feed and location stop at once.
   /// Null when done; else what to tell the driver.
   Future<String?> goOffline() {

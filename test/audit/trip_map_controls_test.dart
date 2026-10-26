@@ -6,7 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
@@ -131,6 +136,45 @@ void main() {
       await gesture.cancel();
       await tester.pump();
 
+      await tester.pumpWidget(const SizedBox.shrink());
+      await _frames(tester, 10, 100);
+      await location.updates.close();
+    });
+  });
+
+  group('p3x: a live trip is not labelled as demo offers', () {
+    testWidgets('no "Demo offers" label while LiveDriverServices runs', (
+      tester,
+    ) async {
+      final location = _NoGps();
+      final tokens = MemoryTokenStore();
+      final client = MockClient((_) async => http.Response('{}', 404));
+      final origin = Uri.parse('https://api.test.movera.se');
+      LiveDriverServices.instance = LiveDriverServices(
+        client: client,
+        origin: origin,
+        tokens: tokens,
+        api: ApiClient(client: client, baseUri: origin, tokens: tokens),
+        location: location,
+      );
+      addTearDown(() => LiveDriverServices.instance = null);
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, __) => MaterialApp(
+            home: AcceptRide(
+              locationRepository: location,
+              initialStage: ActiveRideStage.onTrip,
+            ),
+          ),
+        ),
+      );
+      await _frames(tester, 20);
+      expect(find.textContaining('Demo offers'), findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('active-ride-safety-button')),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       await _frames(tester, 10, 100);
       await location.updates.close();
