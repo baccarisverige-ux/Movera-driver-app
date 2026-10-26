@@ -345,11 +345,16 @@ void main() {
     await tester.pump(const Duration(milliseconds: 900));
     expect(find.byKey(const ValueKey<String>('radar-home-all-offers')),
         findsNothing);
+    // The island's face changes with its own short animation once the card
+    // is up; read it when the new face has settled.
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey<String>('island-radar-offers-face')),
+        findsOneWidget);
     final all = find.byKey(const ValueKey<String>('last-trip-launcher'));
     expect(tester.getSize(all).height, greaterThanOrEqualTo(44));
     final data = tester.getSemantics(all).getSemanticsData();
     expect(data.hasAction(SemanticsAction.tap), isTrue);
-    expect(data.label, contains('offer · radar'));
+    expect(data.label, matches(RegExp(r'^\d+ offers? · radar$')));
     await _unmount(tester);
     semantics.dispose();
   });

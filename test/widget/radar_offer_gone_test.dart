@@ -179,16 +179,16 @@ void main() {
     );
     expect(cards.evaluate().length, greaterThan(1));
     expect(_refreshIcon, findsNothing);
-    final badge = find.byKey(const ValueKey<String>('radar-home-all-offers'));
-    expect(badge, findsOneWidget);
-    expect(
-      find.descendant(of: badge, matching: find.text('ALL OFFERS')),
-      findsOneWidget,
-    );
+    // Owner N1: no "ALL OFFERS" pill; the island's middle counts the trips.
+    expect(find.byKey(const ValueKey<String>('radar-home-all-offers')),
+        findsNothing);
+    final face = find.byKey(const ValueKey<String>('island-radar-offers'));
+    expect(face, findsOneWidget);
     // Eleven, not twelve: the Electric trip is not a category the demo
     // car drives (Q27). The cash demo trips (R8-4, R9) and the two
     // RideCheck demo trips count too.
-    expect(find.descendant(of: badge, matching: find.text('11')), findsOneWidget);
+    expect(tester.widget<Text>(face).textSpan!.toPlainText(),
+        '11 offers · radar');
 
     // The radar reads Accept while the deck shows.
     expect(find.byKey(const ValueKey<String>('home-radar-accept')), findsOneWidget);

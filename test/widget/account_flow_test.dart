@@ -331,7 +331,8 @@ void main() {
         find.byKey(const ValueKey<String>('radar-home-deck')),
       );
       expect(deck.ids, ['premium-trip']);
-      await tester.tap(find.byKey(const ValueKey<String>('radar-home-all-offers')));
+      // Owner N1: the island's middle ("N offers · radar") opens the list.
+      await tester.tap(find.byKey(const ValueKey<String>('island-radar-offers')));
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.byType(RideRequests), findsOneWidget);
       expect(

@@ -229,7 +229,8 @@ void main() {
       );
 
       // The full-screen Live list shows it the same way.
-      await tester.tap(find.byKey(const ValueKey<String>('radar-home-all-offers')));
+      // Owner N1: the island's middle ("N offers · radar") opens the list.
+      await tester.tap(find.byKey(const ValueKey<String>('island-radar-offers')));
       await _frames(tester, const Duration(milliseconds: 800));
       final live = find.byType(RideRequests);
       expect(live, findsOneWidget);
