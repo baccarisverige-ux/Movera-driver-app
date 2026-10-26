@@ -25,9 +25,6 @@ import 'package:movera/presentation/driver/home/components/island_messages.dart'
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
-import 'package:movera/presentation/driver/settings/settings.dart';
-import 'package:movera/core/settings/map_traffic_setting.dart';
-import 'package:movera/core/settings/settings_repository.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:record/record.dart';
@@ -139,13 +136,6 @@ class _SlowRoutes implements RouteRepository {
       }
     }
   }
-}
-
-/// Settings storage that refuses every write (a full localStorage).
-class _FullStorage extends SettingsRepository {
-  @override
-  Future<void> save(String section, Map<String, dynamic> values) async =>
-      throw StateError('Settings save failed');
 }
 
 /// Rebuilds when the Ride check gate changes, as Home does.
@@ -520,22 +510,6 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Rating not sent (demo)'), findsNothing); // before: next one
-  });
-
-  testWidgets('driver-u168: a traffic switch that could not be saved goes '
-      'back and says so', (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    addTearDown(MapTrafficSetting.reset);
-    await _pumpScreen(tester, Settings(repository: _FullStorage()));
-    final traffic = find.byKey(const ValueKey<String>('settings-show-traffic'));
-    await tester.ensureVisible(traffic);
-    expect(tester.widget<Switch>(traffic).value, isTrue);
-    await tester.tap(traffic);
-    await _frames(tester, 4);
-    // Before: Off on screen, no message, an uncaught error; On again at
-    // the next start.
-    expect(tester.widget<Switch>(traffic).value, isTrue);
-    expect(find.text('Traffic setting not saved. Try again.'), findsOneWidget);
   });
 
   testWidgets('driver-99: a map whose script never loads says so',

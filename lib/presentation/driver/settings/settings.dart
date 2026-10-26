@@ -2,10 +2,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/l10n/driver_language.dart';
-import 'package:movera/core/settings/map_traffic_setting.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/presentation/driver/pin%20verification/pin_verification.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
@@ -32,7 +29,6 @@ class _SettingsState extends State<Settings> {
   @override
   void initState() {
     super.initState();
-    MapTrafficSetting.restore(_settings);
   }
 
   @override
@@ -78,8 +74,6 @@ class _SettingsState extends State<Settings> {
             ),
             _languageRow(),
           ]),
-          const SizedBox(height: 12),
-          _group([_trafficRow()]),
           const SizedBox(height: 12),
           _group([
             _row(
@@ -260,86 +254,5 @@ class _SettingsState extends State<Settings> {
         SnackBar(content: Text(tr.languageSaveFailed)),
       );
     }
-  }
-
-  /// "Show traffic on map": trip map only, ON by default (R13-17).
-  Widget _trafficRow() {
-    return ValueListenableBuilder<bool>(
-      valueListenable: MapTrafficSetting.enabled,
-      builder: (context, on, _) {
-        // driver-u168: a failed save puts the switch back and says so.
-        Future<void> toggle(bool value) async {
-          try {
-            await MapTrafficSetting.set(value, _settings);
-          } catch (_) {
-            MapTrafficSetting.enabled.value = !value;
-            if (!mounted) return;
-            ScaffoldMessenger.of(this.context).showSnackBar(
-              SnackBar(content: Text(tr.trafficSaveFailed)),
-            );
-          }
-        }
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF4F5F6),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: SvgPicture.asset(
-                  AppAssets.solarMapArrowSquare,
-                  width: 18,
-                  height: 18,
-                  colorFilter: const ColorFilter.mode(_ink, BlendMode.srcIn),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr.showTrafficOnMap,
-                      style: TextStyle(
-                        color: _ink,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      tr.trafficColoursOnTripMap,
-                      style: TextStyle(
-                        color: _muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Semantics(
-                label: tr.showTrafficOnMap,
-                toggled: on,
-                onTap: () => toggle(!on),
-                child: ExcludeSemantics(
-                  child: Switch.adaptive(
-                    key: const ValueKey<String>('settings-show-traffic'),
-                    value: on,
-                    activeTrackColor: _ink,
-                    onChanged: toggle,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 }

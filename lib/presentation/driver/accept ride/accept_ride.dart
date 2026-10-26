@@ -6,7 +6,6 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/presentation/driver/sheets/sheet_trace.dart';
 import 'package:movera/core/location/location_freshness.dart';
 import 'package:movera/core/ride/completion_journal.dart';
-import 'package:movera/core/settings/map_traffic_setting.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'dart:async';
 import 'package:movera/core/navigation/driver_camera_controller.dart';
@@ -1575,7 +1574,6 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
           webCameraControlEnabled: false,
         mapToolbarEnabled: false,
         compassEnabled: false,
-        trafficEnabled: MapTrafficSetting.enabled.value,
         buildingsEnabled: true,
         indoorViewEnabled: false,
         scrollGesturesEnabled: !widget.blockGestures,

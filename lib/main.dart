@@ -37,7 +37,6 @@ import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
-import 'package:movera/core/settings/map_traffic_setting.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
@@ -58,7 +57,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   validateDriverComposition(production: driverProductionRequested);
   installGlobalErrorHooks();
-  unawaited(MapTrafficSetting.restore());
   // Round 4: the zone's default language, then the driver's saved choice.
   // A slow or broken store never holds the first frame for long.
   DriverLanguage.applyZone(const DriverHomeAdminContentService().languages);
@@ -324,7 +322,6 @@ class _MoveraAppState extends State<MoveraApp> {
     await CompletionJournal.settle();
     await SettingsRepository.settle();
     await clearLocalUserData();
-    MapTrafficSetting.reset();
     // The language stays: a device setting (clearLocalUserData keeps it).
     // The saved category choice is gone with the settings (driver-82).
     DriverCategoryChoice.reset();
