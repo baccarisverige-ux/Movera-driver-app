@@ -164,6 +164,12 @@ class LiveTripCommands {
       LiveTripOutcome.failed(liveTripErrorMessage(null));
 
   /// The projection known, else `GET /trips/{tripId}`.
+  /// Reads the trip once when nothing is known yet (a screen restored
+  /// after a restart), so a replay of its history is told from news.
+  Future<void> ensureKnown(String tripId) async {
+    if (versionOf(tripId) == null) await _current(tripId);
+  }
+
   Future<Map<String, dynamic>?> _current(String tripId, {bool fresh = false}) async {
     final known = _trips[tripId];
     if (known != null && !fresh) return known;

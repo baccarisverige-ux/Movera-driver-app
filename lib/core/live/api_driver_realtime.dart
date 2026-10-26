@@ -107,6 +107,11 @@ class ApiDriverRealtime implements DriverRealtime {
     await _feed?.cancel();
     _feed = null;
     _open = false;
+    // The stream replays the trip from its first event. What this phone
+    // already knows (the accept answer, or the trip read here) tells the
+    // replay of history from news; see [ingest].
+    if (_last == 0) await _trips?.ensureKnown(tripId);
+    if (generation != _generation || _disposed) return;
     final http.StreamedResponse response;
     try {
       final token = await _token();
@@ -187,6 +192,11 @@ class ApiDriverRealtime implements DriverRealtime {
     final projection = json['projection'];
     final status = projection is Map ? projection['status'] as String? : null;
     final version = json['version'];
+    // The replay of the trip's history (requested, searching, offered…
+    // before this driver's accept): older than what this phone knows, so
+    // not news. Passing it on would read as the trip taken back.
+    final known = _trips?.versionOf(tripId);
+    if (version is num && known != null && version.toInt() < known) return;
     if (projection is Map && version is num) {
       _trips?.observe({
         ...Map<String, dynamic>.from(projection),
