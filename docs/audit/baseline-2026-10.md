@@ -18,7 +18,7 @@ Toolchain used locally: Flutter 3.47.7 / Dart 3.13.5 (CI pins 3.47.6).
 - [ ] 5. Coverage of critical logic
 - [x] 6. Screen inventory
 - [x] 7. Code quality
-- [ ] 8. Known issues (N1, N5, N6, N8, N9, N11)
+- [x] 8. Known issues (N1, N5, N6, N8, N9, N11)
 - [ ] 9. Untested features and risks
 - [ ] 10. Summary
 
@@ -236,3 +236,16 @@ Same-purpose files written twice, diverged (diff lines): `money.dart` driver 229
 
 ### Personal data in logs
 - `DriverLog` (core/logging/driver_log.dart) documents "no rider names, phone numbers" and scrubs `FormatException` sources; prints via `debugPrint` (also in release web console). 58 log/print call sites; the ones checked log trip ids, status codes and `error.detail` (live_trip_commands.dart:226 logs the server's `detail` text verbatim — content not controlled by the app, NOT VERIFIED free of PII). `sheets/sheet_trace.dart:11` prints sheet positions unconditionally when called.
+
+## 8. Known issues (owner notes) — status on main
+
+PR #380 is merged (main = 436bfb54), so "main" and "#380" are the same code. Its own "Still open" list: N6 device reproduction, N8 driver-side live run.
+
+| Note | Status on main | Evidence | Remaining |
+|---|---|---|---|
+| N1 radar offers on the island | **Fixed** | test/audit/home_notices_radar_sheet_test.dart:423 group "owner N1"; the formerly red `accessibility_d53a_test` driver-u136 was updated in #380 (result of this run in §4) | screenshots only from the demo build |
+| N5 traffic layer | **Fixed** | `trafficEnabled: false` lib/widgets/custom_google_map.dart:446 — every map in lib goes through `CustomGoogleMap` (6 call sites, no raw `GoogleMap(`); no `TrafficLayer` in web/driver_map_camera.js; test/widget/no_traffic_layer_test.dart | – |
+| N6 pinch zoom on the trip map | **Partly** (defence only) | `CustomGoogleMap._onCameraMove` drops web reports with zoom 0 / centre 0,0; lib/core/navigation/map_camera_report.dart; test/core/map_camera_report_test.dart | crash/fight/snap not reproduced; needs iPhone Safari (D3) and a Maps key in CI (D2). NOT VERIFIED |
+| N8 ride check from the driver side | **Open (driver side)** | driver card is local: `RideCheckDetector` (lib/core/safety/ride_check_detector.dart:119-121) fires when the drop is farther than `farDropMeters` = `defaultFinishFarFromDropoffKm = 3` km (lib/core/admin/ride_check_admin_config.dart:9) — **not 300 m** as in the owner's scenario; alerts go to `DemoSafetyAlertRepository` in every build (lib/main.dart:169) | verify the intended threshold with the owner/server; a live-rig run; Phase 3 scenario 7 |
+| N9 server's final money after early finish | **Fixed** | `LiveTripMoney.tryParse` (lib/core/live/live_trip_money.dart); test/core/live_trip_money_test.dart, test/widget/live_trip_finish_money_test.dart | today's earnings/history still sum locally and assume SEK (§7) |
+| N11 waybill identities | **Fixed except rider name** | live name/car from the account (accept_ride_trip.dart:301-312), reverse-geocoded pickup (`LiveAddressLookup`, live_driver_services.dart:109); test/audit/trip_waybill_fare_test.dart:131 | the rider's first name is not in the contract: "Passenger" stays until the server+contract change (Phase 0 item) |
