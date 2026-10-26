@@ -904,8 +904,15 @@ void main() {
       simulatedArrival: false,
       skipAccountActivation: false,
     );
+    // The app's clock is a manual one: it stands still while the card
+    // comes up (as real time barely moved there) and then moves 250 ms per
+    // frame, so a loaded machine cannot run the 8 s out early.
+    final real = ScheduledClock.realNow;
+    var wall = DateTime.now();
+    ScheduledClock.realNow = () => wall;
+    addTearDown(() => ScheduledClock.realNow = real);
     // The server lets it go in 8 s; the app's own window is 15 s.
-    final expires = DateTime.now().add(const Duration(seconds: 8));
+    final expires = wall.add(const Duration(seconds: 8));
     final dispatch = _RadarDispatch()
       ..offers = [
         OfferWire.parse({
@@ -925,7 +932,10 @@ void main() {
     final match = find.byKey(const ValueKey<String>('radar-match-o1'));
     await _until(tester, match, const Duration(seconds: 24));
     expect(tester.widget<FilledButton>(match).onPressed, isNotNull);
-    await _frames(tester, 36, 250);
+    for (var i = 0; i < 36; i++) {
+      wall = wall.add(const Duration(milliseconds: 250));
+      await tester.pump(const Duration(milliseconds: 250));
+    }
     expect(
       tester.widget<FilledButton>(match).onPressed,
       isNull,

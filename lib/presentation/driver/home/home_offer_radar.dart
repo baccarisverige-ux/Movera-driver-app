@@ -526,7 +526,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           .where((item) => item.id == offer.id)
           .firstOrNull
           ?.expiresAt
-          ?.difference(DateTime.now());
+          ?.difference(now);
       return now.add(server != null && server < window ? server : window);
     });
     final left = deadline.difference(now);

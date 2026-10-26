@@ -192,7 +192,13 @@ void main() {
       ),
     );
     await tester.pump();
-    final port = GoogleDriverCameraPort(controller!, initialPosition: start);
+    // The flight's clock is the test's fake clock: progress per frame is
+    // fixed (16 ms of fake time), not whatever a loaded machine takes.
+    final port = GoogleDriverCameraPort(
+      controller!,
+      initialPosition: start,
+      clock: () => tester.binding.clock.now(),
+    );
     final policy = DriverCameraPolicy()..locate();
     final pose = policy.resolve(location: _fix(_origin), immediate: true);
     var done = false;
