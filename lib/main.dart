@@ -119,6 +119,9 @@ class _MoveraAppState extends State<MoveraApp> {
   /// location and trip steps through movera-server. Null in the demo.
   LiveDriverServices? _live;
 
+  /// Live builds: tells [LiveDriverServices] when the app is back on screen.
+  AppLifecycleListener? _lifecycle;
+
   @override
   void initState() {
     super.initState();
@@ -158,6 +161,7 @@ class _MoveraAppState extends State<MoveraApp> {
       );
       LiveDriverServices.instance = live;
       live.attach(_session);
+      _lifecycle = AppLifecycleListener(onResume: live.resumed);
       _dispatch = live.dispatch;
     } else {
       _dispatch = DemoDispatchRepository();
@@ -199,6 +203,7 @@ class _MoveraAppState extends State<MoveraApp> {
     if (dispatch is DemoDispatchRepository) {
       dispatch.dispose();
     }
+    _lifecycle?.dispose();
     final live = _live;
     if (live != null) {
       unawaited(live.dispose());
