@@ -407,7 +407,6 @@ class _AcceptRideState extends State<AcceptRide>
       _reason(reason),
   ];
 
-  static const LatLng _fallbackDriverPosition = LatLng(59.3262, 18.0595);
 
   static const _NextTripRadarOffer _demoNextTripOffer =
       _NextTripRadarOffer(
@@ -531,7 +530,14 @@ class _AcceptRideState extends State<AcceptRide>
   /// for the answer from this moment, and drops once its time has passed.
   DateTime? _nextTripOfferHeldAt;
 
-  LatLng _driverPosition = _fallbackDriverPosition;
+  /// Where the car starts before this screen's first live fix: the last
+  /// position the app sent the server (the driver was online before the
+  /// offer), else the pickup the driver is heading to. Never a fixed point in
+  /// Stockholm, which showed wrong for a second everywhere else (owner,
+  /// 2026-10-26).
+  late LatLng _driverPosition =
+      LiveDriverServices.instance?.reporter.lastKnownPoint?.toLatLng() ??
+      widget.pickupPosition;
   List<GeoPoint> _roadGeoPoints = <GeoPoint>[];
   double? _routeDurationSeconds;
   /// The road route was asked from a live fix, not the fallback position.
@@ -656,8 +662,8 @@ class _AcceptRideState extends State<AcceptRide>
     _vehicle = LiveVehicleAnimator(
       reduceMotion: () => mounted && MediaQuery.disableAnimationsOf(context),
       vsync: this,
-      initial: const LiveVehiclePose(
-        position: _fallbackDriverPosition,
+      initial: LiveVehiclePose(
+        position: _driverPosition,
         headingDegrees: 0,
       ),
     );

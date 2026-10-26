@@ -406,7 +406,11 @@ class _DriverHomeState extends State<DriverHome>
 
   // Placeholder only: the map and car wait for a known position.
   static const LatLng _fallbackDriverPosition = LatLng(59.3293, 18.0686);
-  LatLng _driverPosition = _fallbackDriverPosition;
+  /// The last position the app sent the server, else the fallback, until
+  /// this screen's own GPS read lands.
+  late LatLng _driverPosition =
+      LiveDriverServices.instance?.reporter.lastKnownPoint?.toLatLng() ??
+      _fallbackDriverPosition;
   bool _startPositionKnown = false, _startLocationFailed = false;
   Timer? _startWait;
   // Opens on the area around the driver (~10 km across), nearly flat.
