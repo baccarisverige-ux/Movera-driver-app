@@ -7,7 +7,7 @@ import 'package:movera/core/auth/web_session_token_store.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
 /// The driver's session tokens: iOS Keychain / Android Keystore through
-/// flutter_secure_storage; on web this tab's sessionStorage (see
+/// flutter_secure_storage; on web localStorage, kept until sign-out (see
 /// [webSessionTokenStore]); memory anywhere else (tests, Linux CI).
 ///
 /// A store that fails (a missing plugin, a locked Keychain) falls back to
