@@ -9432,6 +9432,432 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Movera could not record this step. Try again.'**
   String get liveTripFailed;
+
+  /// No description provided for @authProviderComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in with Apple and Google is coming soon. Use your phone number.'**
+  String get authProviderComingSoon;
+
+  /// No description provided for @authErrProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t sign in that way. Try again, or use your phone number.'**
+  String get authErrProvider;
+
+  /// No description provided for @authLinkExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'That sign-in took too long. Start again with Apple or Google, or use your phone number.'**
+  String get authLinkExpired;
+
+  /// No description provided for @authContinueWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with {provider}'**
+  String authContinueWith(String provider);
+
+  /// No description provided for @authOr.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get authOr;
+
+  /// No description provided for @authProviderPhoneOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your phone number once to finish signing in with {provider}. We’ll text you a 4-digit code.'**
+  String authProviderPhoneOnce(String provider);
+
+  /// No description provided for @authUsePhoneInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with my phone number only'**
+  String get authUsePhoneInstead;
+
+  /// No description provided for @acctDetailsHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Your '**
+  String get acctDetailsHead;
+
+  /// No description provided for @acctDetailsAccent.
+  ///
+  /// In en, this message translates to:
+  /// **'details'**
+  String get acctDetailsAccent;
+
+  /// No description provided for @acctDetailsEditIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera is checking your account. You can still change these until it is approved.'**
+  String get acctDetailsEditIntro;
+
+  /// No description provided for @acctPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get acctPhone;
+
+  /// No description provided for @acctTapToChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change'**
+  String get acctTapToChange;
+
+  /// No description provided for @acctChooseCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your country'**
+  String get acctChooseCountry;
+
+  /// No description provided for @acctChooseCountryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Where you will drive.'**
+  String get acctChooseCountryBody;
+
+  /// No description provided for @acctChooseLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your language'**
+  String get acctChooseLanguage;
+
+  /// No description provided for @acctChooseLanguageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The app’s language. You can change it later.'**
+  String get acctChooseLanguageBody;
+
+  /// No description provided for @acctCityStockholmHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stockholm, Södertälje and the whole county'**
+  String get acctCityStockholmHint;
+
+  /// No description provided for @acctCityParisHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paris and the Île-de-France region'**
+  String get acctCityParisHint;
+
+  /// No description provided for @acctFromProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'from {provider}'**
+  String acctFromProvider(String provider);
+
+  /// No description provided for @acctOrgNumberSeRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 10 digits of your organisation number.'**
+  String get acctOrgNumberSeRule;
+
+  /// No description provided for @acctOrgNumberFrRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a SIREN (9 digits) or a SIRET (14 digits).'**
+  String get acctOrgNumberFrRule;
+
+  /// No description provided for @acctCompanyAddressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Street, postcode, town'**
+  String get acctCompanyAddressHint;
+
+  /// No description provided for @acctOwnerEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'name@company.com'**
+  String get acctOwnerEmailHint;
+
+  /// No description provided for @acctJoinNowShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fleet owner shares a Movera code with you.'**
+  String get acctJoinNowShort;
+
+  /// No description provided for @acctLeaveSignUpQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the sign-up?'**
+  String get acctLeaveSignUpQ;
+
+  /// No description provided for @acctLeaveSignUpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You will be signed out and back at the first step. What you typed stays on this phone until you sign in again.'**
+  String get acctLeaveSignUpBody;
+
+  /// No description provided for @acctSaveDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Save details'**
+  String get acctSaveDetails;
+
+  /// No description provided for @acctDetailsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details are saved. Movera checks them.'**
+  String get acctDetailsSaved;
+
+  /// No description provided for @fleetRequestPending.
+  ///
+  /// In en, this message translates to:
+  /// **'You already asked a fleet. Wait for its answer or cancel that request.'**
+  String get fleetRequestPending;
+
+  /// No description provided for @fleetInvitePending.
+  ///
+  /// In en, this message translates to:
+  /// **'That number already has an open invitation.'**
+  String get fleetInvitePending;
+
+  /// No description provided for @fleetOwnPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'That is your own number.'**
+  String get fleetOwnPhone;
+
+  /// No description provided for @fleetInvalidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the number in international form, e.g. +46 70 123 45 67.'**
+  String get fleetInvalidPhone;
+
+  /// No description provided for @fleetNotApprovedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera has not approved your fleet yet. You can invite drivers after that.'**
+  String get fleetNotApprovedYet;
+
+  /// No description provided for @fleetInvitationExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation has expired.'**
+  String get fleetInvitationExpired;
+
+  /// No description provided for @fleetInvitationGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This invitation is no longer open.'**
+  String get fleetInvitationGone;
+
+  /// No description provided for @fleetADriver.
+  ///
+  /// In en, this message translates to:
+  /// **'A driver'**
+  String get fleetADriver;
+
+  /// No description provided for @fleetRequestBodyOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Wants to join your fleet with your code.'**
+  String get fleetRequestBodyOwner;
+
+  /// No description provided for @fleetInviteWaitsSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited. Waiting for this number to sign up in Movera Driver.'**
+  String get fleetInviteWaitsSignUp;
+
+  /// No description provided for @fleetInviteWaitsAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited. Waiting for the driver’s answer.'**
+  String get fleetInviteWaitsAnswer;
+
+  /// No description provided for @fleetInviteBodyDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Invites you to its fleet. Accept to drive its cars; Movera then checks your documents.'**
+  String get fleetInviteBodyDriver;
+
+  /// No description provided for @fleetRequestWaitsOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request is sent. The fleet owner accepts it in the app.'**
+  String get fleetRequestWaitsOwner;
+
+  /// No description provided for @fleetInviteNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get fleetInviteNew;
+
+  /// No description provided for @fleetInviteExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until {date}'**
+  String fleetInviteExpires(String date);
+
+  /// No description provided for @fleetAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get fleetAccept;
+
+  /// No description provided for @fleetDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get fleetDecline;
+
+  /// No description provided for @fleetCancelling.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling…'**
+  String get fleetCancelling;
+
+  /// No description provided for @fleetPendingInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 invitation waiting for your answer} other{{count} invitations waiting for your answer}}'**
+  String fleetPendingInvitations(int count);
+
+  /// No description provided for @fleetInviteDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite driver'**
+  String get fleetInviteDriver;
+
+  /// No description provided for @fleetInviteDriverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The driver’s phone number, the one he signs in with. He accepts in his app; a number without an account gets an SMS with the app link.'**
+  String get fleetInviteDriverBody;
+
+  /// No description provided for @fleetInviteDriverHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The invitation is valid for 7 days.'**
+  String get fleetInviteDriverHint;
+
+  /// No description provided for @fleetSendInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Send invitation'**
+  String get fleetSendInvite;
+
+  /// No description provided for @fleetAskToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask to join'**
+  String get fleetAskToJoin;
+
+  /// No description provided for @fleetAskToJoinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The fleet owner accepts your request in his app.'**
+  String get fleetAskToJoinHint;
+
+  /// No description provided for @fleetCancelInviteQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Take back this invitation?'**
+  String get fleetCancelInviteQ;
+
+  /// No description provided for @fleetDeclineInviteQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline {name}?'**
+  String fleetDeclineInviteQ(String name);
+
+  /// No description provided for @fleetCancelInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Take back'**
+  String get fleetCancelInvite;
+
+  /// No description provided for @fleetDriverJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is now in your fleet.'**
+  String fleetDriverJoined(String name);
+
+  /// No description provided for @fleetInviteSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation sent to {who}.'**
+  String fleetInviteSent(String who);
+
+  /// No description provided for @fleetRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests to join'**
+  String get fleetRequests;
+
+  /// No description provided for @fleetInvitationCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 pending} other{{count} pending}}'**
+  String fleetInvitationCount(int count);
+
+  /// No description provided for @fleetInvites.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitations'**
+  String get fleetInvites;
+
+  /// No description provided for @fleetNoInvites.
+  ///
+  /// In en, this message translates to:
+  /// **'No open invitation. Invite a driver by phone number, or share your code.'**
+  String get fleetNoInvites;
+
+  /// No description provided for @fleetYourRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request'**
+  String get fleetYourRequest;
+
+  /// No description provided for @fleetRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent to {name}. The owner answers in the app.'**
+  String fleetRequestSent(String name);
+
+  /// No description provided for @notifCouldNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load your notifications.'**
+  String get notifCouldNotLoad;
+
+  /// No description provided for @notifNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications yet. Fleet invitations and answers show here.'**
+  String get notifNone;
+
+  /// Profile header (live): profLiveNoNameYet
+  ///
+  /// In en, this message translates to:
+  /// **'Your details are not sent yet'**
+  String get profLiveNoNameYet;
+
+  /// Profile header (live): profStatusActive
+  ///
+  /// In en, this message translates to:
+  /// **'Active account'**
+  String get profStatusActive;
+
+  /// Profile header (live): profStatusOnHold
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Movera’s approval'**
+  String get profStatusOnHold;
+
+  /// Profile header (live): profStatusPending
+  ///
+  /// In en, this message translates to:
+  /// **'Details not sent yet'**
+  String get profStatusPending;
+
+  /// Profile header (live): profStatusSuspended
+  ///
+  /// In en, this message translates to:
+  /// **'Account suspended'**
+  String get profStatusSuspended;
 }
 
 class _AppLocalizationsDelegate

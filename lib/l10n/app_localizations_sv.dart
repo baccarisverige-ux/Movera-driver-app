@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -5457,4 +5456,266 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get liveTripFailed =>
       'Movera kunde inte registrera det här steget. Försök igen.';
+
+  @override
+  String get authProviderComingSoon =>
+      'Inloggning med Apple och Google kommer snart. Använd ditt telefonnummer.';
+
+  @override
+  String get authErrProvider =>
+      'Det gick inte att logga in så. Försök igen eller använd ditt telefonnummer.';
+
+  @override
+  String get authLinkExpired =>
+      'Inloggningen tog för lång tid. Börja om med Apple eller Google, eller använd ditt telefonnummer.';
+
+  @override
+  String authContinueWith(String provider) {
+    return 'Fortsätt med $provider';
+  }
+
+  @override
+  String get authOr => 'eller';
+
+  @override
+  String authProviderPhoneOnce(String provider) {
+    return 'Bekräfta ditt telefonnummer en gång för att slutföra inloggningen med $provider. Vi skickar en fyrsiffrig kod via sms.';
+  }
+
+  @override
+  String get authUsePhoneInstead => 'Logga in bara med mitt telefonnummer';
+
+  @override
+  String get acctDetailsHead => 'Dina ';
+
+  @override
+  String get acctDetailsAccent => 'uppgifter';
+
+  @override
+  String get acctDetailsEditIntro =>
+      'Movera kontrollerar ditt konto. Du kan ändra uppgifterna tills det är godkänt.';
+
+  @override
+  String get acctPhone => 'Telefonnummer';
+
+  @override
+  String get acctTapToChange => 'Tryck för att ändra';
+
+  @override
+  String get acctChooseCountry => 'Välj land';
+
+  @override
+  String get acctChooseCountryBody => 'Där du kommer att köra.';
+
+  @override
+  String get acctChooseLanguage => 'Välj språk';
+
+  @override
+  String get acctChooseLanguageBody => 'Appens språk. Du kan byta senare.';
+
+  @override
+  String get acctCityStockholmHint => 'Stockholm, Södertälje och hela länet';
+
+  @override
+  String get acctCityParisHint => 'Paris och Île-de-France';
+
+  @override
+  String acctFromProvider(String provider) {
+    return 'från $provider';
+  }
+
+  @override
+  String get acctOrgNumberSeRule => 'Ange organisationsnumrets 10 siffror.';
+
+  @override
+  String get acctOrgNumberFrRule =>
+      'Ange ett SIREN (9 siffror) eller SIRET (14 siffror).';
+
+  @override
+  String get acctCompanyAddressHint => 'Gata, postnummer, ort';
+
+  @override
+  String get acctOwnerEmailHint => 'namn@företag.se';
+
+  @override
+  String get acctJoinNowShort => 'Ägaren delar en Movera-kod med dig.';
+
+  @override
+  String get acctLeaveSignUpQ => 'Avbryta registreringen?';
+
+  @override
+  String get acctLeaveSignUpBody =>
+      'Du loggas ut och kommer tillbaka till första steget. Det du skrivit finns kvar på den här telefonen tills du loggar in igen.';
+
+  @override
+  String get acctSaveDetails => 'Spara uppgifter';
+
+  @override
+  String get acctDetailsSaved =>
+      'Dina uppgifter är sparade. Movera kontrollerar dem.';
+
+  @override
+  String get fleetRequestPending =>
+      'Du har redan skickat en förfrågan till ett åkeri. Vänta på svaret eller återkalla den.';
+
+  @override
+  String get fleetInvitePending => 'Det numret har redan en öppen inbjudan.';
+
+  @override
+  String get fleetOwnPhone => 'Det är ditt eget nummer.';
+
+  @override
+  String get fleetInvalidPhone =>
+      'Ange numret i internationellt format, t.ex. +46 70 123 45 67.';
+
+  @override
+  String get fleetNotApprovedYet =>
+      'Movera har inte godkänt ditt åkeri än. Du kan bjuda in förare efter det.';
+
+  @override
+  String get fleetInvitationExpired => 'Inbjudan har gått ut.';
+
+  @override
+  String get fleetInvitationGone => 'Inbjudan är inte längre öppen.';
+
+  @override
+  String get fleetADriver => 'En förare';
+
+  @override
+  String get fleetRequestBodyOwner => 'Vill gå med i ditt åkeri med din kod.';
+
+  @override
+  String get fleetInviteWaitsSignUp =>
+      'Inbjuden. Väntar på att numret registrerar sig i Movera Förare.';
+
+  @override
+  String get fleetInviteWaitsAnswer => 'Inbjuden. Väntar på förarens svar.';
+
+  @override
+  String get fleetInviteBodyDriver =>
+      'Bjuder in dig till sitt åkeri. Tacka ja för att köra dess bilar; Movera kontrollerar sedan dina dokument.';
+
+  @override
+  String get fleetRequestWaitsOwner =>
+      'Din förfrågan är skickad. Åkeriets ägare godkänner den i appen.';
+
+  @override
+  String get fleetInviteNew => 'Svara';
+
+  @override
+  String fleetInviteExpires(String date) {
+    return 'Gäller till $date';
+  }
+
+  @override
+  String get fleetAccept => 'Tacka ja';
+
+  @override
+  String get fleetDecline => 'Tacka nej';
+
+  @override
+  String get fleetCancelling => 'Återkallar…';
+
+  @override
+  String fleetPendingInvitations(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count inbjudningar väntar på ditt svar',
+      one: '1 inbjudan väntar på ditt svar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fleetInviteDriver => 'Bjud in förare';
+
+  @override
+  String get fleetInviteDriverBody =>
+      'Förarens telefonnummer, det han loggar in med. Han tackar ja i sin app; ett nummer utan konto får ett sms med länk till appen.';
+
+  @override
+  String get fleetInviteDriverHint => 'Inbjudan gäller i 7 dagar.';
+
+  @override
+  String get fleetSendInvite => 'Skicka inbjudan';
+
+  @override
+  String get fleetAskToJoin => 'Be om att gå med';
+
+  @override
+  String get fleetAskToJoinHint =>
+      'Åkeriets ägare godkänner din förfrågan i sin app.';
+
+  @override
+  String get fleetCancelInviteQ => 'Återkalla inbjudan?';
+
+  @override
+  String fleetDeclineInviteQ(String name) {
+    return 'Tacka nej till $name?';
+  }
+
+  @override
+  String get fleetCancelInvite => 'Återkalla';
+
+  @override
+  String fleetDriverJoined(String name) {
+    return '$name är nu med i ditt åkeri.';
+  }
+
+  @override
+  String fleetInviteSent(String who) {
+    return 'Inbjudan skickad till $who.';
+  }
+
+  @override
+  String get fleetRequests => 'Förfrågningar';
+
+  @override
+  String fleetInvitationCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count väntar',
+      one: '1 väntar',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fleetInvites => 'Inbjudningar';
+
+  @override
+  String get fleetNoInvites =>
+      'Ingen öppen inbjudan. Bjud in en förare via telefonnummer eller dela din kod.';
+
+  @override
+  String get fleetYourRequest => 'Din förfrågan';
+
+  @override
+  String fleetRequestSent(String name) {
+    return 'Förfrågan skickad till $name. Ägaren svarar i appen.';
+  }
+
+  @override
+  String get notifCouldNotLoad => 'Det gick inte att läsa in dina aviseringar.';
+
+  @override
+  String get notifNone =>
+      'Inga aviseringar än. Inbjudningar från åkerier och svar visas här.';
+
+  @override
+  String get profLiveNoNameYet => 'Dina uppgifter är inte skickade än';
+
+  @override
+  String get profStatusActive => 'Aktivt konto';
+
+  @override
+  String get profStatusOnHold => 'Väntar på Moveras godkännande';
+
+  @override
+  String get profStatusPending => 'Uppgifter inte skickade än';
+
+  @override
+  String get profStatusSuspended => 'Kontot är avstängt';
 }

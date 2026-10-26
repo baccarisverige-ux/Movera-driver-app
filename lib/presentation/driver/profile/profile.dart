@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -10,6 +11,8 @@ import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/presentation/driver/account/driver_details_screen.dart';
+import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
@@ -34,6 +37,8 @@ class _DriverProfileState extends State<DriverProfile> {
   late Future<({String vehicle, String plate})?> _identity;
   bool _logoutBusy = false;
 
+  bool _liveRead = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,10 +46,75 @@ class _DriverProfileState extends State<DriverProfile> {
     LocalVehicleStore.changes.addListener(_vehicleChanged);
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Round 4b (live): the picked fleet car, read through the server (the
+    // scope is only reachable here, not in initState).
+    final live = _liveSession;
+    if (!_liveRead && live != null) {
+      _liveRead = true;
+      _identity = _readIdentity();
+      // The header follows the account; a session opened without a profile
+      // read yet (a restored token) reads it now.
+      live.addListener(_accountChanged);
+      if (live.account == null) {
+        unawaited(live.refresh().then((_) => _vehicleChanged(), onError: (_) {}));
+      }
+    }
+  }
+
+  void _accountChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<({String vehicle, String plate})?> _readIdentity() {
+    final live = _liveSession;
+    return live == null ? _vehicles.primaryIdentity() : _liveIdentity(live);
+  }
+
+  /// The car this account has picked (`Driver.vehicleId`) among the fleet's.
+  Future<({String vehicle, String plate})?> _liveIdentity(
+    DriverAccountSession live,
+  ) async {
+    final id = live.account?.vehicleId;
+    if (id == null) return null;
+    try {
+      for (final car in await live.repository.vehicles()) {
+        if (car.vehicleId == id) {
+          return (vehicle: '${car.make} ${car.model}'.trim(), plate: car.plate);
+        }
+      }
+    } catch (_) {
+      // Offline: the line stays blank rather than wrong.
+    }
+    return null;
+  }
+
+  /// Round 4b (live): the signed-in driver's name and account status instead
+  /// of the demo's sample profile.
+  String get _headerName {
+    final account = _liveAccount;
+    if (account == null) return tr.profSampleDriver;
+    final name = account.fullName.trim();
+    return name.isEmpty ? tr.profLiveNoNameYet : name;
+  }
+
+  String get _headerStatus {
+    final account = _liveAccount;
+    if (account == null) return tr.profDemoNoVerified;
+    return switch (account.accountStatus) {
+      'active' => tr.profStatusActive,
+      'on_hold' => tr.profStatusOnHold,
+      'suspended' => tr.profStatusSuspended,
+      _ => tr.profStatusPending,
+    };
+  }
+
   void _vehicleChanged() {
     if (mounted && !_logoutBusy) {
       setState(() {
-        _identity = _vehicles.primaryIdentity();
+        _identity = _readIdentity();
       });
     }
   }
@@ -52,6 +122,7 @@ class _DriverProfileState extends State<DriverProfile> {
   @override
   void dispose() {
     LocalVehicleStore.changes.removeListener(_vehicleChanged);
+    if (_liveRead) _liveSession?.removeListener(_accountChanged);
     super.dispose();
   }
 
@@ -66,7 +137,7 @@ class _DriverProfileState extends State<DriverProfile> {
     await pushSingle(context, RightToLeftTransition(page));
     if (mounted && refreshVehicle) {
       setState(() {
-        _identity = _vehicles.primaryIdentity();
+        _identity = _readIdentity();
       });
     }
   }
@@ -142,7 +213,8 @@ class _DriverProfileState extends State<DriverProfile> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          tr.profSampleDriver,
+                          _headerName,
+                          key: const ValueKey('profile-header-name'),
                           style: TextStyle(
                             color: _ink,
                             fontSize: 17,
@@ -151,7 +223,8 @@ class _DriverProfileState extends State<DriverProfile> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          tr.profDemoNoVerified,
+                          _headerStatus,
+                          key: const ValueKey('profile-header-status'),
                           style: TextStyle(
                             color: _muted,
                             fontSize: 12,
@@ -187,11 +260,31 @@ class _DriverProfileState extends State<DriverProfile> {
             ),
             const SizedBox(height: 12),
             _group(context, [
+              // Round 4b: the details may be changed while Movera still
+              // checks the account (a resend replaces them).
+              if (_liveAccount?.canSendDetails == true)
+                _item(
+                  Icons.badge_outlined,
+                  tr.acctDetailsTitle,
+                  DriverDetailsScreen(
+                    key: const ValueKey('profile-details'),
+                    account: _liveSession!,
+                    editing: true,
+                    onBack: () => maybePopOwned(context),
+                    onDone: (context) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(tr.acctDetailsSaved)));
+                      maybePopOwned(context);
+                    },
+                  ),
+                ),
               if (_liveSession != null)
                 _item(
                   Icons.groups_outlined,
                   tr.myFleet,
                   MyFleetScreen(account: _liveSession!),
+                  badge: _liveAccount?.pendingFleetInvitations ?? 0,
                 ),
               _item(Icons.insights_outlined, tr.analytics, const Analytics()),
               _item(Icons.account_balance_outlined, tr.myBank, const MyBank()),
@@ -348,6 +441,11 @@ class _DriverProfileState extends State<DriverProfile> {
                         ),
                       ),
                     ),
+                    if (item.badge > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: InvitationBadge(item.badge, small: true),
+                      ),
                     const Icon(
                       Icons.chevron_right_rounded,
                       color: Color(0xFFB0B8BC),
@@ -362,8 +460,13 @@ class _DriverProfileState extends State<DriverProfile> {
     );
   }
 
-  _ProfileItem _item(IconData icon, String title, Widget page) {
-    return _ProfileItem(icon, title, page);
+  _ProfileItem _item(
+    IconData icon,
+    String title,
+    Widget page, {
+    int badge = 0,
+  }) {
+    return _ProfileItem(icon, title, page, badge: badge);
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
@@ -457,8 +560,11 @@ class _DriverProfileState extends State<DriverProfile> {
 }
 
 class _ProfileItem {
-  const _ProfileItem(this.icon, this.title, this.page);
+  const _ProfileItem(this.icon, this.title, this.page, {this.badge = 0});
   final IconData icon;
   final String title;
   final Widget page;
+
+  /// Round 4b: invitations waiting in My fleet.
+  final int badge;
 }

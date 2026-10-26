@@ -915,9 +915,15 @@
   "cashFareFeeLine": "Fare {fare} · Fee {fee} · Cash {cash}",
   "@cashFareFeeLine": {
     "placeholders": {
-      "fare": {"type": "String"},
-      "fee": {"type": "String"},
-      "cash": {"type": "String"}
+      "fare": {
+        "type": "String"
+      },
+      "fee": {
+        "type": "String"
+      },
+      "cash": {
+        "type": "String"
+      }
     }
   },
   "@fareFareFormattedCashCashCollected": {
@@ -3552,5 +3558,151 @@
     "description": "Waybill: the trip's own part of the driver's earnings, without the waiting fee and the Movera bonus.",
     "placeholders": {"service": {"type": "String"}}
   },
-  "liveTripFailed": "Movera could not record this step. Try again."
+  "liveTripFailed": "Movera could not record this step. Try again.",
+  "authProviderComingSoon": "Sign-in with Apple and Google is coming soon. Use your phone number.",
+  "authErrProvider": "Couldn’t sign in that way. Try again, or use your phone number.",
+  "authLinkExpired": "That sign-in took too long. Start again with Apple or Google, or use your phone number.",
+  "authContinueWith": "Continue with {provider}",
+  "@authContinueWith": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authOr": "or",
+  "authProviderPhoneOnce": "Confirm your phone number once to finish signing in with {provider}. We’ll text you a 4-digit code.",
+  "@authProviderPhoneOnce": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "authUsePhoneInstead": "Sign in with my phone number only",
+  "acctDetailsHead": "Your ",
+  "acctDetailsAccent": "details",
+  "acctDetailsEditIntro": "Movera is checking your account. You can still change these until it is approved.",
+  "acctPhone": "Phone number",
+  "acctTapToChange": "Tap to change",
+  "acctChooseCountry": "Choose your country",
+  "acctChooseCountryBody": "Where you will drive.",
+  "acctChooseLanguage": "Choose your language",
+  "acctChooseLanguageBody": "The app’s language. You can change it later.",
+  "acctCityStockholmHint": "Stockholm, Södertälje and the whole county",
+  "acctCityParisHint": "Paris and the Île-de-France region",
+  "acctFromProvider": "from {provider}",
+  "@acctFromProvider": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "acctOrgNumberSeRule": "Enter the 10 digits of your organisation number.",
+  "acctOrgNumberFrRule": "Enter a SIREN (9 digits) or a SIRET (14 digits).",
+  "acctCompanyAddressHint": "Street, postcode, town",
+  "acctOwnerEmailHint": "name@company.com",
+  "acctJoinNowShort": "Your fleet owner shares a Movera code with you.",
+  "acctLeaveSignUpQ": "Leave the sign-up?",
+  "acctLeaveSignUpBody": "You will be signed out and back at the first step. What you typed stays on this phone until you sign in again.",
+  "acctSaveDetails": "Save details",
+  "acctDetailsSaved": "Your details are saved. Movera checks them.",
+  "fleetRequestPending": "You already asked a fleet. Wait for its answer or cancel that request.",
+  "fleetInvitePending": "That number already has an open invitation.",
+  "fleetOwnPhone": "That is your own number.",
+  "fleetInvalidPhone": "Enter the number in international form, e.g. +46 70 123 45 67.",
+  "fleetNotApprovedYet": "Movera has not approved your fleet yet. You can invite drivers after that.",
+  "fleetInvitationExpired": "This invitation has expired.",
+  "fleetInvitationGone": "This invitation is no longer open.",
+  "fleetADriver": "A driver",
+  "fleetRequestBodyOwner": "Wants to join your fleet with your code.",
+  "fleetInviteWaitsSignUp": "Invited. Waiting for this number to sign up in Movera Driver.",
+  "fleetInviteWaitsAnswer": "Invited. Waiting for the driver’s answer.",
+  "fleetInviteBodyDriver": "Invites you to its fleet. Accept to drive its cars; Movera then checks your documents.",
+  "fleetRequestWaitsOwner": "Your request is sent. The fleet owner accepts it in the app.",
+  "fleetInviteNew": "Answer",
+  "fleetInviteExpires": "Valid until {date}",
+  "@fleetInviteExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fleetAccept": "Accept",
+  "fleetDecline": "Decline",
+  "fleetCancelling": "Cancelling…",
+  "fleetPendingInvitations": "{count, plural, =1{1 invitation waiting for your answer} other{{count} invitations waiting for your answer}}",
+  "@fleetPendingInvitations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetInviteDriver": "Invite driver",
+  "fleetInviteDriverBody": "The driver’s phone number, the one he signs in with. He accepts in his app; a number without an account gets an SMS with the app link.",
+  "fleetInviteDriverHint": "The invitation is valid for 7 days.",
+  "fleetSendInvite": "Send invitation",
+  "fleetAskToJoin": "Ask to join",
+  "fleetAskToJoinHint": "The fleet owner accepts your request in his app.",
+  "fleetCancelInviteQ": "Take back this invitation?",
+  "fleetDeclineInviteQ": "Decline {name}?",
+  "@fleetDeclineInviteQ": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fleetCancelInvite": "Take back",
+  "fleetDriverJoined": "{name} is now in your fleet.",
+  "@fleetDriverJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fleetInviteSent": "Invitation sent to {who}.",
+  "@fleetInviteSent": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      }
+    }
+  },
+  "fleetRequests": "Requests to join",
+  "fleetInvitationCount": "{count, plural, =1{1 pending} other{{count} pending}}",
+  "@fleetInvitationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fleetInvites": "Invitations",
+  "fleetNoInvites": "No open invitation. Invite a driver by phone number, or share your code.",
+  "fleetYourRequest": "Your request",
+  "fleetRequestSent": "Request sent to {name}. The owner answers in the app.",
+  "@fleetRequestSent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifCouldNotLoad": "Couldn’t load your notifications.",
+  "notifNone": "No notifications yet. Fleet invitations and answers show here.",
+  "profLiveNoNameYet": "Your details are not sent yet",
+  "@profLiveNoNameYet": {"description": "Profile header (live): profLiveNoNameYet"},
+  "profStatusActive": "Active account",
+  "@profStatusActive": {"description": "Profile header (live): profStatusActive"},
+  "profStatusOnHold": "Waiting for Movera’s approval",
+  "@profStatusOnHold": {"description": "Profile header (live): profStatusOnHold"},
+  "profStatusPending": "Details not sent yet",
+  "@profStatusPending": {"description": "Profile header (live): profStatusPending"},
+  "profStatusSuspended": "Account suspended",
+  "@profStatusSuspended": {"description": "Profile header (live): profStatusSuspended"}
 }

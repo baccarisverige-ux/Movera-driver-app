@@ -144,6 +144,7 @@ class DriverAccount {
     this.vehicleId,
     this.fleet,
     this.payoutTo,
+    this.pendingFleetInvitations = 0,
     this.documents = const [],
     this.requiredDocuments = const [],
     this.requiredFleetDocuments = const [],
@@ -167,6 +168,7 @@ class DriverAccount {
       vehicleId: _text(json['vehicleId']),
       fleet: fleet is Map ? FleetSummary.fromJson(_map(fleet)) : null,
       payoutTo: _text(json['payoutTo']),
+      pendingFleetInvitations: _whole(json['pendingFleetInvitations']),
       documents: [
         if (json['documents'] is List)
           for (final item in json['documents'] as List)
@@ -200,6 +202,11 @@ class DriverAccount {
 
   /// `fleet` or `self`.
   final String? payoutTo;
+
+  /// Round 4b: invitations waiting for this account's answer (a driver's
+  /// owner invites, an owner's driver requests): the badge on Home and in
+  /// My fleet.
+  final int pendingFleetInvitations;
   final List<DocumentSummary> documents;
   final List<String> requiredDocuments;
   final List<String> requiredFleetDocuments;
@@ -379,12 +386,80 @@ class FleetDriver {
       [firstName, if (lastName != null) lastName!].join(' ').trim();
 }
 
+/// Round 4b: `FleetInvitation` (contract v0.5.3 §14, "Joining is an
+/// invitation"): a `driver_request` the owner answers, or an
+/// `owner_invite` the driver answers.
+class FleetInvitation {
+  const FleetInvitation({
+    required this.invitationId,
+    required this.fleetId,
+    required this.fleetName,
+    required this.direction,
+    required this.status,
+    required this.version,
+    this.driverId,
+    this.driverName,
+    this.phone,
+    this.createdAt,
+    this.expiresAt,
+    this.decidedAt,
+  });
+
+  factory FleetInvitation.fromJson(Map<String, dynamic> json) =>
+      FleetInvitation(
+        invitationId: _text(json['invitationId']) ?? '',
+        fleetId: _text(json['fleetId']) ?? '',
+        fleetName: _text(json['fleetName']) ?? '',
+        direction: _text(json['direction']) ?? 'driver_request',
+        status: _text(json['status']) ?? 'pending',
+        version: _whole(json['version'], 1),
+        driverId: _text(json['driverId']),
+        driverName: _text(json['driverName']),
+        phone: _text(json['phone']),
+        createdAt: _time(json['createdAt']),
+        expiresAt: _time(json['expiresAt']),
+        decidedAt: _time(json['decidedAt']),
+      );
+
+  final String invitationId;
+  final String fleetId;
+  final String fleetName;
+
+  /// `driver_request` or `owner_invite`.
+  final String direction;
+
+  /// The driver concerned; missing while an owner invite waits for a
+  /// number without an account.
+  final String? driverId;
+  final String? driverName;
+
+  /// The invited number (owner and admin views).
+  final String? phone;
+
+  /// `pending`, `accepted`, `declined`, `cancelled`, `expired`.
+  final String status;
+  final DateTime? createdAt;
+  final DateTime? expiresAt;
+  final DateTime? decidedAt;
+  final int version;
+
+  bool get isPending => status == 'pending';
+  bool get isDriverRequest => direction == 'driver_request';
+  bool get isOwnerInvite => direction == 'owner_invite';
+
+  /// Whether this account answers it: a driver answers owner invites, an
+  /// owner answers driver requests.
+  bool awaitsAnswerFrom({required bool owner}) =>
+      isPending && (owner ? isDriverRequest : isOwnerInvite);
+}
+
 /// `FleetView`.
 class FleetView {
   const FleetView({
     required this.fleet,
     required this.drivers,
     required this.vehicles,
+    this.invitations = const [],
   });
 
   factory FleetView.fromJson(Map<String, dynamic> json) => FleetView(
@@ -399,11 +474,72 @@ class FleetView {
         for (final item in json['vehicles'] as List)
           if (item is Map) FleetVehicle.fromJson(_map(item)),
     ],
+    invitations: [
+      if (json['invitations'] is List)
+        for (final item in json['invitations'] as List)
+          if (item is Map) FleetInvitation.fromJson(_map(item)),
+    ],
   );
 
   final Fleet fleet;
   final List<FleetDriver> drivers;
   final List<FleetVehicle> vehicles;
+
+  /// Round 4b: the fleet's pending invitations and requests (owner and
+  /// admins; a member gets none).
+  final List<FleetInvitation> invitations;
+}
+
+/// Round 4b: `Notification` (`GET /notifications`), as the server sends
+/// it: a fleet invitation, an answer to one, later more kinds.
+class ServerNotification {
+  const ServerNotification({
+    required this.notificationId,
+    required this.kind,
+    required this.title,
+    required this.body,
+    required this.at,
+    required this.read,
+    this.tripId,
+    this.deepLink,
+  });
+
+  factory ServerNotification.fromJson(Map<String, dynamic> json) =>
+      ServerNotification(
+        notificationId: _text(json['notificationId']) ?? '',
+        kind: _text(json['kind']) ?? '',
+        title: _text(json['title']) ?? '',
+        body: _text(json['body']) ?? '',
+        at: _time(json['at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
+        read: json['read'] == true,
+        tripId: _text(json['tripId']),
+        deepLink: _text(json['deepLink']),
+      );
+
+  final String notificationId;
+
+  /// `fleet_invitation`, …
+  final String kind;
+  final String title;
+  final String body;
+  final DateTime at;
+  final bool read;
+  final String? tripId;
+  final String? deepLink;
+
+  /// A tap opens My fleet (the invitations).
+  bool get opensFleet => kind == 'fleet_invitation';
+
+  ServerNotification asRead() => ServerNotification(
+    notificationId: notificationId,
+    kind: kind,
+    title: title,
+    body: body,
+    at: at,
+    read: true,
+    tripId: tripId,
+    deepLink: deepLink,
+  );
 }
 
 /// `DriverOnboardingRequest`.

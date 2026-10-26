@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/core/auth/phone_country.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/account/add_car_screen.dart';
 import 'package:movera/presentation/driver/account/fleet_actions.dart';
 import 'package:movera/presentation/driver/account/fleet_car_card.dart';
+import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/presentation/driver/account/join_fleet_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/navigation_transition.dart';
@@ -16,10 +18,14 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Profile › My fleet (live, contract v0.5.3 §14). A driver account
-/// without a fleet joins one here; a member sees the company, its
+/// without a fleet answers the owners' invites here, sees his own open
+/// request (Cancel) or asks to join one; a member sees the company, its
 /// approved cars (picks the one he drives) and can leave; the owner sees
-/// the company with its code to share, every driver (with Remove) and
-/// every car (with Add car).
+/// the company with its code to share, the pending requests (Accept /
+/// Decline) and his invites (Cancel, and Invite driver by phone), every
+/// driver (with Remove) and every car (with Add car). The profile and the
+/// invitations are read again when the screen opens or the app comes back
+/// (round 4b).
 class MyFleetScreen extends StatefulWidget {
   const MyFleetScreen({super.key, required this.account, this.share});
 
@@ -32,8 +38,12 @@ class MyFleetScreen extends StatefulWidget {
   State<MyFleetScreen> createState() => _MyFleetScreenState();
 }
 
-class _MyFleetScreenState extends State<MyFleetScreen> {
+class _MyFleetScreenState extends State<MyFleetScreen>
+    with WidgetsBindingObserver {
   FleetView? _view;
+
+  /// Round 4b: a driver account's incoming invites and own request.
+  List<FleetInvitation> _invitations = const [];
   bool _loading = true;
   String? _error;
   String? _busyId;
@@ -43,14 +53,23 @@ class _MyFleetScreenState extends State<MyFleetScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.account.addListener(_accountChanged);
-    _load();
+    _refreshAll();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.account.removeListener(_accountChanged);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Back from the background: an invitation may have come or been
+    // answered meanwhile.
+    if (state == AppLifecycleState.resumed) _refreshAll();
   }
 
   void _accountChanged() {
@@ -58,22 +77,26 @@ class _MyFleetScreenState extends State<MyFleetScreen> {
   }
 
   Future<void> _load() async {
-    if (_me?.awaitsFleet ?? false) {
-      setState(() {
-        _view = null;
-        _loading = false;
-        _error = null;
-      });
-      return;
-    }
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final view = await widget.account.repository.fleet();
-      if (!mounted) return;
-      setState(() => _view = view);
+      if (_me?.awaitsFleet ?? false) {
+        final invitations = await widget.account.repository.invitations();
+        if (!mounted) return;
+        setState(() {
+          _view = null;
+          _invitations = invitations;
+        });
+      } else {
+        final view = await widget.account.repository.fleet();
+        if (!mounted) return;
+        setState(() {
+          _view = view;
+          _invitations = const [];
+        });
+      }
     } catch (error) {
       if (!mounted) return;
       setState(
@@ -85,13 +108,76 @@ class _MyFleetScreenState extends State<MyFleetScreen> {
     }
   }
 
+  /// The profile first (the fleet, the badge), then the fleet view or
+  /// the invitations.
   Future<void> _refreshAll() async {
     try {
       await widget.account.refresh();
     } catch (_) {
       // The fleet view below says what failed.
     }
-    await _load();
+    if (mounted) await _load();
+  }
+
+  /// Round 4b: accept, decline or cancel one invitation, then read
+  /// everything again (an accept links the driver: the fleet shows).
+  Future<void> _decide(FleetInvitation invitation, String action) async {
+    if (action == 'decline' || action == 'cancel') {
+      final yes = await confirmAccountAction(
+        context,
+        question: action == 'cancel'
+            ? tr.fleetCancelInviteQ
+            : tr.fleetDeclineInviteQ(
+                _me?.fleet?.isOwner == true
+                    ? (invitation.driverName ?? tr.fleetADriver)
+                    : invitation.fleetName,
+              ),
+        yes: action == 'cancel' ? tr.fleetCancelInvite : tr.fleetDecline,
+      );
+      if (!yes || !mounted) return;
+    }
+    setState(() => _busyId = invitation.invitationId);
+    try {
+      final repository = widget.account.repository;
+      final result = await switch (action) {
+        'accept' => repository.acceptInvitation(invitation.invitationId),
+        'decline' => repository.declineInvitation(invitation.invitationId),
+        _ => repository.cancelInvitation(invitation.invitationId),
+      };
+      if (!mounted) return;
+      if (action == 'accept' && result.status == 'accepted') {
+        _snack(
+          _me?.fleet?.isOwner == true
+              ? tr.fleetDriverJoined(result.driverName ?? tr.fleetADriver)
+              : tr.fleetJoined(result.fleetName),
+        );
+      }
+      await _refreshAll();
+    } catch (error) {
+      if (mounted) {
+        _snack(accountErrorMessage(error, fallback: tr.acctTryAgain));
+        await _refreshAll();
+      }
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
+  Future<void> _invite(Fleet fleet) async {
+    final invitation = await showInviteDriverSheet(
+      context,
+      account: widget.account,
+      fleetCountry: fleet.country,
+    );
+    if (invitation == null || !mounted) return;
+    _snack(
+      tr.fleetInviteSent(
+        invitation.phone == null
+            ? invitation.driverName ?? ''
+            : displayPhoneNumber(invitation.phone!),
+      ),
+    );
+    await _refreshAll();
   }
 
   void _snack(String text) {
@@ -177,12 +263,20 @@ class _MyFleetScreenState extends State<MyFleetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final pending = _me?.pendingFleetInvitations ?? 0;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AccountStyle.appBar(
         context,
         tr.myFleet,
         onBack: () => maybePopOwned(context),
+        actions: [
+          if (pending > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(child: InvitationBadge(pending)),
+            ),
+        ],
       ),
       body: SafeArea(child: _body()),
     );
@@ -191,18 +285,7 @@ class _MyFleetScreenState extends State<MyFleetScreen> {
   Widget _body() {
     final me = _me;
     if (me != null && me.awaitsFleet) {
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-        children: [
-          JoinFleetForm(
-            account: widget.account,
-            onJoined: (context, account) {
-              _snack(tr.fleetJoined(account.fleet?.name ?? ''));
-              _load();
-            },
-          ),
-        ],
-      );
+      return _awaitingFleet(me);
     }
     if (_loading && _view == null) {
       return const Center(
@@ -221,6 +304,14 @@ class _MyFleetScreenState extends State<MyFleetScreen> {
       );
     }
     final owner = me?.fleet?.isOwner ?? false;
+    final requests = [
+      for (final i in view.invitations)
+        if (i.isPending && i.isDriverRequest) i,
+    ];
+    final invites = [
+      for (final i in view.invitations)
+        if (i.isPending && i.isOwnerInvite) i,
+    ];
     return RefreshIndicator(
       color: AccountStyle.ink,
       onRefresh: _refreshAll,
@@ -237,6 +328,50 @@ class _MyFleetScreenState extends State<MyFleetScreen> {
               onCopy: view.fleet.code == null
                   ? null
                   : () => _copy(view.fleet.code!),
+            ),
+            if (requests.isNotEmpty) ...[
+              const SizedBox(height: 22),
+              _section(
+                tr.fleetRequests,
+                tr.fleetInvitationCount(requests.length),
+              ),
+              for (final invitation in requests) ...[
+                FleetInvitationCard(
+                  invitation: invitation,
+                  owner: true,
+                  busy: _busyId == invitation.invitationId,
+                  onAccept: () => _decide(invitation, 'accept'),
+                  onDecline: () => _decide(invitation, 'decline'),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ],
+            const SizedBox(height: 22),
+            _section(
+              tr.fleetInvites,
+              tr.fleetInvitationCount(invites.length),
+            ),
+            if (invites.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(tr.fleetNoInvites, style: AccountStyle.hint()),
+              ),
+            for (final invitation in invites) ...[
+              FleetInvitationCard(
+                invitation: invitation,
+                owner: true,
+                busy: _busyId == invitation.invitationId,
+                onCancel: () => _decide(invitation, 'cancel'),
+              ),
+              const SizedBox(height: 10),
+            ],
+            AccountButton(
+              key: const ValueKey('fleet-invite-driver'),
+              label: tr.fleetInviteDriver,
+              outlined: true,
+              onPressed: view.fleet.isApproved
+                  ? () => _invite(view.fleet)
+                  : () => _snack(tr.fleetNotApprovedYet),
             ),
             const SizedBox(height: 22),
             _section(tr.fleetDrivers, tr.fleetMemberCount(view.drivers.length)),
@@ -292,6 +427,70 @@ class _MyFleetScreenState extends State<MyFleetScreen> {
               onPressed: () => _leave(view.fleet),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// Round 4b: a driver account without a fleet. The owners' invites
+  /// first (Accept / Decline), then his own open request (Cancel), else
+  /// the join form.
+  Widget _awaitingFleet(DriverAccount me) {
+    final incoming = [
+      for (final i in _invitations)
+        if (i.isPending && i.isOwnerInvite) i,
+    ];
+    final own = [
+      for (final i in _invitations)
+        if (i.isPending && i.isDriverRequest) i,
+    ];
+    return RefreshIndicator(
+      color: AccountStyle.ink,
+      onRefresh: _refreshAll,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+        children: [
+          if (_error != null) AccountErrorLine(_error!),
+          if (incoming.isNotEmpty) ...[
+            _section(tr.fleetInvites, tr.fleetInvitationCount(incoming.length)),
+            for (final invitation in incoming) ...[
+              FleetInvitationCard(
+                invitation: invitation,
+                owner: false,
+                busy: _busyId == invitation.invitationId,
+                onAccept: () => _decide(invitation, 'accept'),
+                onDecline: () => _decide(invitation, 'decline'),
+              ),
+              const SizedBox(height: 10),
+            ],
+            const SizedBox(height: 12),
+          ],
+          if (own.isNotEmpty) ...[
+            _section(tr.fleetYourRequest, ''),
+            for (final invitation in own) ...[
+              FleetInvitationCard(
+                invitation: invitation,
+                owner: false,
+                busy: _busyId == invitation.invitationId,
+                onCancel: () => _decide(invitation, 'cancel'),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ] else if (_loading && _invitations.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: CircularProgressIndicator(color: AccountStyle.ink),
+              ),
+            )
+          else
+            JoinFleetForm(
+              account: widget.account,
+              onRequested: (context, invitation) {
+                _snack(tr.fleetRequestSent(invitation.fleetName));
+                _refreshAll();
+              },
+            ),
         ],
       ),
     );

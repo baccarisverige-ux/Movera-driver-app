@@ -72,6 +72,8 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
           _Root.home => widget.homeBuilder(),
           _Root.details => DriverDetailsScreen(
             account: widget.account!,
+            phone: widget.auth.signedInPhone,
+            prefill: widget.auth.providerLink,
             onDone: (context) => Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute<void>(builder: (_) => widget.homeBuilder()),
               (_) => false,

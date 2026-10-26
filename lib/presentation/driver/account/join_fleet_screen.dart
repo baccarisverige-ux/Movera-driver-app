@@ -7,16 +7,18 @@ import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 
-/// A driver account without a fleet joins one (`POST /driver/fleet/join`):
-/// the owner's code, name and e-mail must all match; one message covers
-/// any mismatch, and after ten tries in an hour the server says to wait.
+/// A driver account without a fleet asks to join one (`POST
+/// /driver/fleet/join`, round 4b): the owner's code, name and e-mail must
+/// all match (one message covers any mismatch, ten tries an hour), and
+/// the owner then accepts or declines the request.
 class JoinFleetScreen extends StatelessWidget {
-  const JoinFleetScreen({super.key, required this.account, this.onJoined});
+  const JoinFleetScreen({super.key, required this.account, this.onRequested});
 
   final DriverAccountSession account;
 
-  /// After a successful join; the default pops the screen.
-  final void Function(BuildContext context, DriverAccount account)? onJoined;
+  /// After the request went out; the default pops the screen.
+  final void Function(BuildContext context, FleetInvitation invitation)?
+  onRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,8 @@ class JoinFleetScreen extends StatelessWidget {
           children: [
             JoinFleetForm(
               account: account,
-              onJoined: onJoined ?? (context, _) => maybePopOwned(context),
+              onRequested:
+                  onRequested ?? (context, _) => maybePopOwned(context),
             ),
           ],
         ),
@@ -43,16 +46,17 @@ class JoinFleetScreen extends StatelessWidget {
 }
 
 /// The join form itself; My fleet shows it in place for a driver without
-/// a fleet.
+/// a fleet and no open request.
 class JoinFleetForm extends StatefulWidget {
   const JoinFleetForm({
     super.key,
     required this.account,
-    required this.onJoined,
+    required this.onRequested,
   });
 
   final DriverAccountSession account;
-  final void Function(BuildContext context, DriverAccount account) onJoined;
+  final void Function(BuildContext context, FleetInvitation invitation)
+  onRequested;
 
   @override
   State<JoinFleetForm> createState() => _JoinFleetFormState();
@@ -97,14 +101,13 @@ class _JoinFleetFormState extends State<JoinFleetForm> {
       _error = null;
     });
     try {
-      final account = await widget.account.repository.joinFleet(
+      final invitation = await widget.account.repository.joinFleet(
         _code.text,
         _owner.text,
         _email.text,
       );
-      widget.account.replace(account);
       if (!mounted) return;
-      widget.onJoined(context, account);
+      widget.onRequested(context, invitation);
     } catch (error) {
       if (!mounted) return;
       setState(
@@ -149,10 +152,16 @@ class _JoinFleetFormState extends State<JoinFleetForm> {
           listenable: Listenable.merge([_code, _owner, _email]),
           builder: (context, _) => AccountButton(
             key: const ValueKey('join-submit'),
-            label: tr.fleetJoin,
+            label: tr.fleetAskToJoin,
             busy: _busy,
             onPressed: _complete ? _join : null,
           ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          tr.fleetAskToJoinHint,
+          textAlign: TextAlign.center,
+          style: AccountStyle.hint(),
         ),
       ],
     );

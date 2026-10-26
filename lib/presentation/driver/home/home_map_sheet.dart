@@ -678,9 +678,22 @@ extension _HomeMapSheet on _DriverHomeState {
                   TextButton(
                     key: const ValueKey('hold-fleet'),
                     onPressed: _openHoldFleet,
-                    child: Text(tr.myFleet,
-                      style: TextStyle(color: Colors.white, fontSize: 18,
-                        fontWeight: FontWeight.w800)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(tr.myFleet,
+                          style: TextStyle(color: Colors.white, fontSize: 18,
+                            fontWeight: FontWeight.w800)),
+                        // Round 4b: invitations waiting for an answer.
+                        if ((accountSessionOf(context)?.account
+                                ?.pendingFleetInvitations ?? 0) > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: InvitationBadge(accountSessionOf(context)!
+                                .account!.pendingFleetInvitations),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
                 TextButton(
@@ -1032,6 +1045,18 @@ extension _HomeMapSheet on _DriverHomeState {
                 right: 16,
                 bottom: 138,
                 child: _buildDriverLocationButton(),
+              ),
+            // Round 4b (live): the server's notifications, with the unread
+            // count; above the safety button, under the Radar deck.
+            if (!isDestinationPanel &&
+                _liveHold &&
+                _radarHomeOffers.isEmpty)
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOutCubic,
+                left: 16,
+                bottom: 138 + _homeMapButtonSize + 12,
+                child: _HomeAccount(this)._buildNotificationsBell(),
               ),
             if (!isDestinationPanel)
               AnimatedPositioned(

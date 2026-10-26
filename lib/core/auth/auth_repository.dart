@@ -15,20 +15,26 @@ class AuthRepository {
 
   static const requestPath = '/api/v1/auth/otp/request';
   static const verifyPath = '/api/v1/auth/otp/verify';
+  static const providerPath = '/api/v1/auth/provider';
   static const signOutPath = '/api/v1/auth/sign-out';
 
   /// A 4-digit code, as the server checks it.
   static bool isValidCode(String code) => RegExp(r'^\d{4}$').hasMatch(code);
 
-  /// Sends a 4-digit code to [phone] (E.164) for the driver app.
-  Future<OtpChallenge> requestCode(String phone) async {
+  /// Sends a 4-digit code to [phone] (E.164) for the driver app. With
+  /// [link] (round 4b) the phone confirms an Apple / Google identity.
+  Future<OtpChallenge> requestCode(String phone, {ProviderLink? link}) async {
     final normalized = phone.replaceAll(' ', '').trim();
     if (normalized.isEmpty) {
       throw ArgumentError.value(phone, 'phone', 'Phone number is required.');
     }
     final response = await _api.post(
       requestPath,
-      body: {'phone': normalized, 'app': 'driver'},
+      body: {
+        'phone': normalized,
+        'app': 'driver',
+        if (link != null) 'linkToken': link.linkToken,
+      },
       authenticated: false,
     );
     final sessionId = response['sessionId'];
@@ -46,6 +52,7 @@ class AuthRepository {
       sessionId: sessionId,
       expiresAt: expiresAt.toUtc(),
       retryAfter: Duration(seconds: retryAfterSeconds),
+      link: link,
     );
   }
 
@@ -54,17 +61,72 @@ class AuthRepository {
   Future<DriverSignInResult> verify(
     String phone,
     String sessionId,
-    String code,
-  ) async {
+    String code, {
+    ProviderLink? link,
+  }) async {
     final normalizedCode = code.trim();
     if (!isValidCode(normalizedCode)) {
       throw ArgumentError.value(code, 'code', 'A 4-digit code is required.');
     }
     final response = await _api.post(
       verifyPath,
-      body: {'phone': phone, 'sessionId': sessionId, 'code': normalizedCode},
+      body: {
+        'phone': phone,
+        'sessionId': sessionId,
+        'code': normalizedCode,
+        if (link != null) 'linkToken': link.linkToken,
+      },
       authenticated: false,
     );
+    return _saveSession(response);
+  }
+
+  /// Round 4b (contract §8): `POST /auth/provider { provider, idToken, app,
+  /// name? }`. An identity the server already knows signs in at once
+  /// ([ProviderSignedIn]); a new one answers `PHONE_REQUIRED` with the
+  /// link token and whatever names and e-mail the provider gave
+  /// ([ProviderPhoneRequired]); nothing is saved until the phone's code is
+  /// verified. A provider without keys on the server is `503 unavailable`
+  /// (`provider_not_configured`), thrown as an [ApiError].
+  Future<ProviderSignInResult> signInWithProvider({
+    required String provider,
+    required String idToken,
+    String? name,
+  }) async {
+    if (idToken.trim().isEmpty) {
+      throw ArgumentError.value(idToken, 'idToken', 'A token is required.');
+    }
+    final response = await _api.post(
+      providerPath,
+      body: {
+        'provider': provider,
+        'idToken': idToken,
+        'app': 'driver',
+        if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+      },
+      authenticated: false,
+    );
+    if (response['code'] == 'PHONE_REQUIRED') {
+      final linkToken = response['linkToken'];
+      if (linkToken is! String || linkToken.isEmpty) {
+        throw StateError('PHONE_REQUIRED answer had no link token.');
+      }
+      String? text(Object? value) =>
+          value is String && value.trim().isNotEmpty ? value.trim() : null;
+      return ProviderPhoneRequired(
+        ProviderLink(
+          provider: provider,
+          linkToken: linkToken,
+          firstName: text(response['firstName']),
+          lastName: text(response['lastName']),
+          email: text(response['email']),
+        ),
+      );
+    }
+    return ProviderSignedIn(await _saveSession(response));
+  }
+
+  Future<DriverSignInResult> _saveSession(Map<String, dynamic> response) async {
     final access = response['accessToken'];
     final refresh = response['refreshToken'];
     if (access is! String ||

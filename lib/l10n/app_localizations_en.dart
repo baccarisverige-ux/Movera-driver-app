@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -5435,4 +5434,272 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveTripFailed => 'Movera could not record this step. Try again.';
+
+  @override
+  String get authProviderComingSoon =>
+      'Sign-in with Apple and Google is coming soon. Use your phone number.';
+
+  @override
+  String get authErrProvider =>
+      'Couldn’t sign in that way. Try again, or use your phone number.';
+
+  @override
+  String get authLinkExpired =>
+      'That sign-in took too long. Start again with Apple or Google, or use your phone number.';
+
+  @override
+  String authContinueWith(String provider) {
+    return 'Continue with $provider';
+  }
+
+  @override
+  String get authOr => 'or';
+
+  @override
+  String authProviderPhoneOnce(String provider) {
+    return 'Confirm your phone number once to finish signing in with $provider. We’ll text you a 4-digit code.';
+  }
+
+  @override
+  String get authUsePhoneInstead => 'Sign in with my phone number only';
+
+  @override
+  String get acctDetailsHead => 'Your ';
+
+  @override
+  String get acctDetailsAccent => 'details';
+
+  @override
+  String get acctDetailsEditIntro =>
+      'Movera is checking your account. You can still change these until it is approved.';
+
+  @override
+  String get acctPhone => 'Phone number';
+
+  @override
+  String get acctTapToChange => 'Tap to change';
+
+  @override
+  String get acctChooseCountry => 'Choose your country';
+
+  @override
+  String get acctChooseCountryBody => 'Where you will drive.';
+
+  @override
+  String get acctChooseLanguage => 'Choose your language';
+
+  @override
+  String get acctChooseLanguageBody =>
+      'The app’s language. You can change it later.';
+
+  @override
+  String get acctCityStockholmHint =>
+      'Stockholm, Södertälje and the whole county';
+
+  @override
+  String get acctCityParisHint => 'Paris and the Île-de-France region';
+
+  @override
+  String acctFromProvider(String provider) {
+    return 'from $provider';
+  }
+
+  @override
+  String get acctOrgNumberSeRule =>
+      'Enter the 10 digits of your organisation number.';
+
+  @override
+  String get acctOrgNumberFrRule =>
+      'Enter a SIREN (9 digits) or a SIRET (14 digits).';
+
+  @override
+  String get acctCompanyAddressHint => 'Street, postcode, town';
+
+  @override
+  String get acctOwnerEmailHint => 'name@company.com';
+
+  @override
+  String get acctJoinNowShort =>
+      'Your fleet owner shares a Movera code with you.';
+
+  @override
+  String get acctLeaveSignUpQ => 'Leave the sign-up?';
+
+  @override
+  String get acctLeaveSignUpBody =>
+      'You will be signed out and back at the first step. What you typed stays on this phone until you sign in again.';
+
+  @override
+  String get acctSaveDetails => 'Save details';
+
+  @override
+  String get acctDetailsSaved => 'Your details are saved. Movera checks them.';
+
+  @override
+  String get fleetRequestPending =>
+      'You already asked a fleet. Wait for its answer or cancel that request.';
+
+  @override
+  String get fleetInvitePending =>
+      'That number already has an open invitation.';
+
+  @override
+  String get fleetOwnPhone => 'That is your own number.';
+
+  @override
+  String get fleetInvalidPhone =>
+      'Enter the number in international form, e.g. +46 70 123 45 67.';
+
+  @override
+  String get fleetNotApprovedYet =>
+      'Movera has not approved your fleet yet. You can invite drivers after that.';
+
+  @override
+  String get fleetInvitationExpired => 'This invitation has expired.';
+
+  @override
+  String get fleetInvitationGone => 'This invitation is no longer open.';
+
+  @override
+  String get fleetADriver => 'A driver';
+
+  @override
+  String get fleetRequestBodyOwner =>
+      'Wants to join your fleet with your code.';
+
+  @override
+  String get fleetInviteWaitsSignUp =>
+      'Invited. Waiting for this number to sign up in Movera Driver.';
+
+  @override
+  String get fleetInviteWaitsAnswer =>
+      'Invited. Waiting for the driver’s answer.';
+
+  @override
+  String get fleetInviteBodyDriver =>
+      'Invites you to its fleet. Accept to drive its cars; Movera then checks your documents.';
+
+  @override
+  String get fleetRequestWaitsOwner =>
+      'Your request is sent. The fleet owner accepts it in the app.';
+
+  @override
+  String get fleetInviteNew => 'Answer';
+
+  @override
+  String fleetInviteExpires(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String get fleetAccept => 'Accept';
+
+  @override
+  String get fleetDecline => 'Decline';
+
+  @override
+  String get fleetCancelling => 'Cancelling…';
+
+  @override
+  String fleetPendingInvitations(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count invitations waiting for your answer',
+      one: '1 invitation waiting for your answer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fleetInviteDriver => 'Invite driver';
+
+  @override
+  String get fleetInviteDriverBody =>
+      'The driver’s phone number, the one he signs in with. He accepts in his app; a number without an account gets an SMS with the app link.';
+
+  @override
+  String get fleetInviteDriverHint => 'The invitation is valid for 7 days.';
+
+  @override
+  String get fleetSendInvite => 'Send invitation';
+
+  @override
+  String get fleetAskToJoin => 'Ask to join';
+
+  @override
+  String get fleetAskToJoinHint =>
+      'The fleet owner accepts your request in his app.';
+
+  @override
+  String get fleetCancelInviteQ => 'Take back this invitation?';
+
+  @override
+  String fleetDeclineInviteQ(String name) {
+    return 'Decline $name?';
+  }
+
+  @override
+  String get fleetCancelInvite => 'Take back';
+
+  @override
+  String fleetDriverJoined(String name) {
+    return '$name is now in your fleet.';
+  }
+
+  @override
+  String fleetInviteSent(String who) {
+    return 'Invitation sent to $who.';
+  }
+
+  @override
+  String get fleetRequests => 'Requests to join';
+
+  @override
+  String fleetInvitationCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pending',
+      one: '1 pending',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get fleetInvites => 'Invitations';
+
+  @override
+  String get fleetNoInvites =>
+      'No open invitation. Invite a driver by phone number, or share your code.';
+
+  @override
+  String get fleetYourRequest => 'Your request';
+
+  @override
+  String fleetRequestSent(String name) {
+    return 'Request sent to $name. The owner answers in the app.';
+  }
+
+  @override
+  String get notifCouldNotLoad => 'Couldn’t load your notifications.';
+
+  @override
+  String get notifNone =>
+      'No notifications yet. Fleet invitations and answers show here.';
+
+  @override
+  String get profLiveNoNameYet => 'Your details are not sent yet';
+
+  @override
+  String get profStatusActive => 'Active account';
+
+  @override
+  String get profStatusOnHold => 'Waiting for Movera’s approval';
+
+  @override
+  String get profStatusPending => 'Details not sent yet';
+
+  @override
+  String get profStatusSuspended => 'Account suspended';
 }

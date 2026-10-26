@@ -106,6 +106,134 @@ class AuthPrimaryButton extends StatelessWidget {
   }
 }
 
+/// Round 4b: the white outlined Apple / Google button under the phone
+/// form. [comingSoon] is the state after the server (or this platform)
+/// said the provider is not ready: the button stays, quiet, with a
+/// "Coming soon" tag, and the phone keeps working.
+class AuthProviderButton extends StatelessWidget {
+  const AuthProviderButton({
+    super.key,
+    required this.label,
+    required this.leading,
+    required this.onPressed,
+    this.busy = false,
+    this.comingSoon = false,
+  });
+
+  final String label;
+  final Widget leading;
+  final VoidCallback? onPressed;
+  final bool busy;
+  final bool comingSoon;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null && !busy && !comingSoon;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: comingSoon
+          ? '${tr.authContinueWith(label)}, ${tr.acctComingSoon}'
+          : tr.authContinueWith(label),
+      onTap: enabled ? onPressed : null,
+      excludeSemantics: true,
+      child: SizedBox(
+        height: 52,
+        child: Material(
+          color: comingSoon ? AuthColors.noteGround : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: comingSoon ? const Color(0xFFEDEFEA) : AuthColors.line,
+            ),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: enabled ? onPressed : null,
+            child: Center(
+              child: busy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.2,
+                        color: AuthColors.ink,
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Opacity(
+                                opacity: comingSoon ? 0.45 : 1,
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: leading,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AuthText.urbanist(
+                                    size: 15,
+                                    weight: FontWeight.w600,
+                                    color: comingSoon
+                                        ? AuthColors.disabledText
+                                        : AuthColors.ink,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (comingSoon)
+                            Text(
+                              tr.acctComingSoon.toUpperCase(),
+                              key: ValueKey('auth-provider-soon-$label'),
+                              style: AuthText.urbanist(
+                                size: 9.5,
+                                weight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: const Color(0xFFB07A1A),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "or" between the phone form and the provider buttons.
+class AuthOrDivider extends StatelessWidget {
+  const AuthOrDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: Divider(color: Color(0xFFE4EAE5), height: 1)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(tr.authOr, style: AuthText.small()),
+        ),
+        const Expanded(child: Divider(color: Color(0xFFE4EAE5), height: 1)),
+      ],
+    );
+  }
+}
+
 /// Underlined input: a thin grey line that turns ink while focused and red
 /// on error. No box, no fill.
 class AuthInputShell extends StatefulWidget {
