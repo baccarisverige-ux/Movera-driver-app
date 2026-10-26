@@ -656,11 +656,11 @@ abstract class AppLocalizations {
   /// **'Cash'**
   String get cash;
 
-  /// No description provided for @allOffers.
+  /// No description provided for @islandRadarOffers.
   ///
   /// In en, this message translates to:
-  /// **'ALL OFFERS'**
-  String get allOffers;
+  /// **'{count, plural, =1{1 offer · radar} other{{count} offers · radar}}'**
+  String islandRadarOffers(int count);
 
   /// No description provided for @savedTripCouldNotBeOpened.
   ///
@@ -3039,18 +3039,6 @@ abstract class AppLocalizations {
   /// **'Safety'**
   String get safety;
 
-  /// No description provided for @showTrafficOnMap.
-  ///
-  /// In en, this message translates to:
-  /// **'Show traffic on map'**
-  String get showTrafficOnMap;
-
-  /// No description provided for @trafficColoursOnTripMap.
-  ///
-  /// In en, this message translates to:
-  /// **'Traffic colours on the trip map'**
-  String get trafficColoursOnTripMap;
-
   /// No description provided for @trustedContact.
   ///
   /// In en, this message translates to:
@@ -4226,12 +4214,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language not saved. Try again.'**
   String get languageSaveFailed;
-
-  /// No description provided for @trafficSaveFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Traffic setting not saved. Try again.'**
-  String get trafficSaveFailed;
 
   /// No description provided for @mapUnavailable.
   ///

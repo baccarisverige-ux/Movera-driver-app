@@ -485,7 +485,7 @@ void main() {
     await tester.tap(find.text('OFF'));
     const second = ValueKey<String>('radar-offer-card-second');
     await _until(tester, find.byKey(second), const Duration(seconds: 24));
-    await tester.tap(find.byKey(const ValueKey<String>('radar-home-all-offers')));
+    await tester.tap(find.byKey(const ValueKey<String>('island-radar-offers')));
     await _frames(tester, 12);
     await tester.tap(find.byKey(const ValueKey<String>('radar-match-first')));
     await tester.pump();

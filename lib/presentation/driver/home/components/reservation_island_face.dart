@@ -98,6 +98,54 @@ class DigitalExclusiveFace extends StatelessWidget {
   );
 }
 
+/// Radar offers open on Home, on the island (owner N1, live test
+/// 2026-10-26): a small target icon, a bold white "1 offer" and a grey
+/// "· radar". The whole middle opens the full-screen radar; the menu and
+/// the destination search beside it keep their own jobs. It stays while
+/// offers remain, also after the radar is closed, and goes on its own
+/// when none is left.
+class DigitalRadarOffersFace extends StatelessWidget {
+  const DigitalRadarOffersFace({super.key, required this.count});
+
+  /// Every Radar trip open right now (the deck and the rest).
+  final int count;
+
+  /// The words, in the driver's language ("1 offer · radar").
+  static String title(int count) => tr.islandRadarOffers(count);
+
+  static TextSpan _span(int count) {
+    final text = title(count);
+    final split = text.indexOf(' · ');
+    if (split < 0) return TextSpan(text: text, style: _whenStyle);
+    return TextSpan(children: [
+      TextSpan(text: text.substring(0, split), style: _whenStyle),
+      TextSpan(text: text.substring(split), style: _kindStyle),
+    ]);
+  }
+
+  /// Width the face needs: icon, gap and words.
+  static double widthFor(BuildContext context, int count) {
+    final painter = TextPainter(
+      text: _span(count),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    return DigitalReservationFace._icon +
+        DigitalReservationFace._gap +
+        painter.width +
+        4;
+  }
+
+  @override
+  Widget build(BuildContext context) => _IslandOfferFace(
+    icon: AppAssets.solarGps,
+    iconKey: const ValueKey<String>('island-radar-offers-icon'),
+    textKey: const ValueKey<String>('island-radar-offers'),
+    span: _span(count),
+  );
+}
+
 /// A white Solar icon, then one line of words.
 class _IslandOfferFace extends StatelessWidget {
   const _IslandOfferFace({

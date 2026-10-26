@@ -329,7 +329,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cash => 'Cash';
 
   @override
-  String get allOffers => 'ALL OFFERS';
+  String islandRadarOffers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offers · radar',
+      one: '1 offer · radar',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savedTripCouldNotBeOpened => 'The saved trip could not be opened.';
@@ -1692,12 +1700,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get safety => 'Safety';
 
   @override
-  String get showTrafficOnMap => 'Show traffic on map';
-
-  @override
-  String get trafficColoursOnTripMap => 'Traffic colours on the trip map';
-
-  @override
   String get trustedContact => 'Trusted contact';
 
   @override
@@ -2381,9 +2383,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageSaveFailed => 'Language not saved. Try again.';
-
-  @override
-  String get trafficSaveFailed => 'Traffic setting not saved. Try again.';
 
   @override
   String get mapUnavailable =>

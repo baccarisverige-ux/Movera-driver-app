@@ -329,7 +329,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cash => 'Espèces';
 
   @override
-  String get allOffers => 'TOUTES LES OFFRES';
+  String islandRadarOffers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count offres · radar',
+      one: '1 offre · radar',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get savedTripCouldNotBeOpened =>
@@ -1712,13 +1720,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get safety => 'Sécurité';
 
   @override
-  String get showTrafficOnMap => 'Afficher le trafic sur la carte';
-
-  @override
-  String get trafficColoursOnTripMap =>
-      'Couleurs du trafic sur la carte de course';
-
-  @override
   String get trustedContact => 'Contact de confiance';
 
   @override
@@ -2412,10 +2413,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get languageSaveFailed => 'Langue non enregistrée. Réessayez.';
-
-  @override
-  String get trafficSaveFailed =>
-      'Réglage du trafic non enregistré. Réessayez.';
 
   @override
   String get mapUnavailable =>

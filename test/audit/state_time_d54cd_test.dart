@@ -670,7 +670,7 @@ void main() {
     final dispatch = _RadarDispatch();
     final session = DriverSessionController();
     await _pumpDeck(tester, dispatch, session: session);
-    await tester.tap(find.byKey(const ValueKey<String>('radar-home-all-offers')));
+    await tester.tap(find.byKey(const ValueKey<String>('island-radar-offers')));
     await _settle(tester);
     await tester.tap(find.byKey(const ValueKey<String>('radar-match-first')));
     await tester.pump();

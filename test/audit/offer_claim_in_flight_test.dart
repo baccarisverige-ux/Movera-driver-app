@@ -227,7 +227,7 @@ void main() {
     final dispatch = _Dispatch();
     await _mount(tester, dispatch);
     await tester.tap(
-      find.byKey(const ValueKey<String>('radar-home-all-offers')),
+      find.byKey(const ValueKey<String>('island-radar-offers')),
     );
     await _frames(tester);
     expect(find.byType(RideRequests), findsOneWidget);

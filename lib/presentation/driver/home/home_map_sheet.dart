@@ -875,10 +875,6 @@ extension _HomeMapSheet on _DriverHomeState {
           webCameraControlEnabled: false,
           mapToolbarEnabled: false,
           compassEnabled: false,
-          // Idle overview: Google's traffic layer paints free-flow roads
-          // green and hides the Waze road palette. Traffic stays on the
-          // active-ride map only.
-          trafficEnabled: false,
           buildingsEnabled: true,
           indoorViewEnabled: false,
           scrollGesturesEnabled: true,
@@ -954,8 +950,6 @@ extension _HomeMapSheet on _DriverHomeState {
           webCameraControlEnabled: false,
               mapToolbarEnabled: false,
               compassEnabled: false,
-              // See _buildRadarMapBackdrop: no traffic layer on home.
-              trafficEnabled: false,
               onUserGesture: _camera.userGesture,
               onTouching: (down) => _camera.touching = down,
               onCameraIdle: () { _cameraPort?.onIdle(); _camera.browseSettled(); },
@@ -1172,16 +1166,25 @@ extension _HomeMapSheet on _DriverHomeState {
               _HomeExclusive(this)._exclusiveOnIsland
           ? _exclusive.shown!.pickupMinutes
           : null;
+      // Radar offers open (owner N1, live test 2026-10-26): the middle
+      // says "1 offer · radar" and opens the full-screen radar; the menu
+      // and the search keep their own jobs. It stays while offers remain
+      // and leaves on its own when none is left.
+      final radarOffers = message == null && reservation == null &&
+              exclusive == null && _isOnline && _radarHomeOffers.isNotEmpty
+          ? _HomeOfferRadar(this)._radarTripTotal()
+          : 0;
+      final radar = radarOffers > 0;
       // Destination mode: pin and "Centralplan 15 · 35 min", menu kept.
       final destination = message == null && reservation == null &&
-          exclusive == null && _destinationModeActive;
+          exclusive == null && !radar && _destinationModeActive;
       // R13-1: online on Home with no offer and no trip, the island says
       // "Finding trips" and now and then a short message. A message passing
       // (e.g. "Radar online") goes first.
       final waitingShown = _islandWaiting.sync(_waitingForTrips);
       final waitingTip = _islandWaiting.tip;
       final waiting = waitingShown && message == null && reservation == null &&
-          exclusive == null && !destination;
+          exclusive == null && !radar && !destination;
       final waitingTitle = waitingTip?.title ?? DigitalWaitingFace.findingTitle;
       // A message sizes the island to its words (never taller): the normal
       // size for short words, a little longer for longer ones. 14 + 14 for the
@@ -1204,6 +1207,11 @@ extension _HomeMapSheet on _DriverHomeState {
           : exclusive != null
               ? (DigitalExclusiveFace.widthFor(context, exclusive) +
                         14 + 14 + 2 + 36)
+                    .clamp(math.min(200.0, maxWidth), maxWidth)
+                    .toDouble()
+          : radar
+              ? (DigitalRadarOffersFace.widthFor(context, radarOffers) +
+                        54 + 54 + 2 + 28)
                     .clamp(math.min(200.0, maxWidth), maxWidth)
                     .toDouble()
           : waiting
@@ -1285,8 +1293,8 @@ extension _HomeMapSheet on _DriverHomeState {
                 // nothing: no unlabelled target for a screen reader (UI-12).
                 child: ExcludeSemantics(
                   excluding: message == null && reservation == null &&
-                      exclusive == null && !waiting && !destination &&
-                      _islandWake < 2,
+                      exclusive == null && !radar && !waiting &&
+                      !destination && _islandWake < 2,
                   child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onHorizontalDragEnd: (details) {
@@ -1303,6 +1311,8 @@ extension _HomeMapSheet on _DriverHomeState {
                         ? () => _onIslandMessageTap(message)
                         : reservation != null || exclusive != null
                         ? null
+                        : radar
+                        ? _openRideOffers
                         : destination
                         ? _openDestinationDetails
                         : _onIslandEarningsTap,
@@ -1342,6 +1352,13 @@ extension _HomeMapSheet on _DriverHomeState {
                                   'island-exclusive-face',
                                 ),
                                 pickupMinutes: exclusive,
+                              )
+                            : radar
+                            ? DigitalRadarOffersFace(
+                                key: const ValueKey<String>(
+                                  'island-radar-offers-face',
+                                ),
+                                count: radarOffers,
                               )
                             : waiting
                             ? (waitingTip == null

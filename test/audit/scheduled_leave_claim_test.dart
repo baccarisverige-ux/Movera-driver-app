@@ -218,7 +218,7 @@ void main() {
     Future<_Dispatch> matchInList(WidgetTester tester) async {
       final dispatch = await _pumpHome(tester);
       await tester.tap(
-        find.byKey(const ValueKey<String>('radar-home-all-offers')),
+        find.byKey(const ValueKey<String>('island-radar-offers')),
       );
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.byType(RideRequests), findsOneWidget);
@@ -365,7 +365,7 @@ void main() {
       );
       expect(deck.ids, ['toward']);
       await tester.tap(
-        find.byKey(const ValueKey<String>('radar-home-all-offers')),
+        find.byKey(const ValueKey<String>('island-radar-offers')),
       );
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.text('Trips toward your 07:40 pickup'), findsOneWidget);
