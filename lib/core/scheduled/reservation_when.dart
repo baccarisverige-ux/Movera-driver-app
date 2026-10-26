@@ -51,11 +51,12 @@ class ReservationWhen {
       return ReservationWhen._(label, time, soon: true);
     }
     // Rounded, as a day across a clock change is 23 or 25 hours.
-    final dayGap = (DateTime.utc(pickup.year, pickup.month, pickup.day)
-                .difference(DateTime.utc(now.year, now.month, now.day))
-                .inHours /
-            24)
-        .round();
+    final dayGap =
+        (DateTime.utc(pickup.year, pickup.month, pickup.day)
+                    .difference(DateTime.utc(now.year, now.month, now.day))
+                    .inHours /
+                24)
+            .round();
     final String label;
     if (dayGap <= 0) {
       label = tr.whenToday(time);
@@ -93,8 +94,18 @@ class ReservationWhen {
   };
 
   static const List<String> _months = [
-    'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-    'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'may',
+    'jun',
+    'jul',
+    'aug',
+    'sep',
+    'oct',
+    'nov',
+    'dec',
   ];
 
   /// When [request] is picked up: "Today" / "Tomorrow", a date such as

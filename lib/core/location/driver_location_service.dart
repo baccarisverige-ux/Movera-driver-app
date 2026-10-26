@@ -189,8 +189,9 @@ class DriverLocationService implements DriverLocationRepository {
       if (_declined) {
         throw const LocationPermissionDeniedException();
       }
-      final prompt = _prompt ??= Geolocator.requestPermission()
-          .whenComplete(() => _prompt = null);
+      final prompt = _prompt ??= Geolocator.requestPermission().whenComplete(
+        () => _prompt = null,
+      );
       permission = await prompt;
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {

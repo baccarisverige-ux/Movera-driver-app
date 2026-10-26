@@ -199,7 +199,11 @@ class RideCheckReason {
         (place != null && place is! String)) {
       return null;
     }
-    return RideCheckReason(kind, number: number as num?, place: place as String?);
+    return RideCheckReason(
+      kind,
+      number: number as num?,
+      place: place as String?,
+    );
   }
 }
 
@@ -382,6 +386,7 @@ class RideCheckRecord {
   final String id;
   final String tripId;
   final RideCheckTrigger trigger;
+
   /// In English, as the alert to Movera has it.
   final String reason;
 
@@ -435,8 +440,7 @@ class RideCheckRecord {
     // saved local time and read the same.
     'openedAt': openedAt.toUtc().toIso8601String(),
     'answers': [for (final answer in answers) answer.toJson()],
-    if (answeredAt != null)
-      'answeredAt': answeredAt!.toUtc().toIso8601String(),
+    if (answeredAt != null) 'answeredAt': answeredAt!.toUtc().toIso8601String(),
     'alertSent': alertSent,
     if (alertReachedMovera) 'alertReachedMovera': true,
     if (audioSeconds != null) 'audioSeconds': audioSeconds,

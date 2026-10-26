@@ -127,8 +127,10 @@ void main() {
 
       DriverLanguage.applyZone(AppLanguages.forCountry('SE'));
       expect(driverText(DriverTexts.offerAccept), 'Acceptera');
-      expect(driverText(DriverTexts.islandTakenByOther),
-          'Tagen av en annan förare');
+      expect(
+        driverText(DriverTexts.islandTakenByOther),
+        'Tagen av en annan förare',
+      );
     });
 
     test('the default cancel reasons follow the app language', () {
@@ -160,15 +162,21 @@ void main() {
     test('round 2/3 texts: Priority, Assigned by Movera, Go offline?', () {
       DriverLanguage.applyZone(AppLanguages.forCountry('FR'));
       expect(tr.priority, 'Prioritaire');
-      expect(ExclusiveReasons.text(ExclusiveReasons.assigned),
-          'Attribuée par Movera');
+      expect(
+        ExclusiveReasons.text(ExclusiveReasons.assigned),
+        'Attribuée par Movera',
+      );
       expect(tr.goOfflineQuestion, 'Passer hors ligne ?');
-      expect(tr.waitingFeePerMinuteFormattedMin('12,26 kr'),
-          'frais d’attente · 12,26 kr / min');
+      expect(
+        tr.waitingFeePerMinuteFormattedMin('12,26 kr'),
+        'frais d’attente · 12,26 kr / min',
+      );
       DriverLanguage.applyZone(AppLanguages.forCountry('SE'));
       expect(tr.priority, 'Prioriterad');
-      expect(ExclusiveReasons.text(ExclusiveReasons.nearby),
-          'Bara för dig · i närheten');
+      expect(
+        ExclusiveReasons.text(ExclusiveReasons.nearby),
+        'Bara för dig · i närheten',
+      );
     });
   });
 

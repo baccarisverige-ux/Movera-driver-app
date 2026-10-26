@@ -7,11 +7,7 @@ import 'package:movera/widgets/movera_radar_orb.dart';
 /// radar (as when the Home sheet is fully up), a third smaller. Holding it
 /// for a second stops next-trip offers; holding it again starts them.
 class TripRadarDock extends StatefulWidget {
-  const TripRadarDock({
-    super.key,
-    required this.on,
-    required this.onToggle,
-  });
+  const TripRadarDock({super.key, required this.on, required this.onToggle});
 
   /// Next-trip offers are on.
   final bool on;
@@ -43,8 +39,12 @@ class _TripRadarDockState extends State<TripRadarDock>
       _pulse.stop();
       _sweep.stop();
     } else {
-      if (!_pulse.isAnimating) { _pulse.repeat(reverse: true); }
-      if (!_sweep.isAnimating) { _sweep.repeat(); }
+      if (!_pulse.isAnimating) {
+        _pulse.repeat(reverse: true);
+      }
+      if (!_sweep.isAnimating) {
+        _sweep.repeat();
+      }
     }
   }
 
@@ -61,7 +61,9 @@ class _TripRadarDockState extends State<TripRadarDock>
     return Center(
       child: RadarHoldOff(
         // A new hold ring each time the state flips.
-        key: ValueKey<String>(on ? 'trip-radar-dock-on' : 'trip-radar-dock-off'),
+        key: ValueKey<String>(
+          on ? 'trip-radar-dock-on' : 'trip-radar-dock-off',
+        ),
         holdKey: const ValueKey<String>('trip-radar-hold'),
         semanticsLabel: on ? tr.holdToStopNextTrips : tr.holdToStartNextTrips,
         size: TripRadarDock.size,

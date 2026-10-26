@@ -20,8 +20,9 @@ class ScheduledClock {
 
   /// The real clock; the fast day only behind [fastDemo]. Tests set their
   /// own clock here.
-  static ScheduledClock instance =
-      fastDemo ? ScheduledClock.fastDay() : ScheduledClock();
+  static ScheduledClock instance = fastDemo
+      ? ScheduledClock.fastDay()
+      : ScheduledClock();
 
   /// Where real time comes from. Tests point it at their fake clock.
   static DateTime Function() realNow = DateTime.now;

@@ -52,11 +52,7 @@ void main() {
     const previous = GeoPoint(58.999, 18);
     const current = GeoPoint(59, 18);
     expect(
-      current.resolvedHeading(
-        gpsHeading: 0,
-        previous: previous,
-        fallback: 90,
-      ),
+      current.resolvedHeading(gpsHeading: 0, previous: previous, fallback: 90),
       closeTo(61.2, 0.01),
     );
   });
@@ -95,18 +91,21 @@ void main() {
     expect(session.availableForOffers, isFalse);
   });
 
-  test('successful next session write clears stale persistence error', () async {
-    final store = _FlakySessionRepository()..failNextWrite = true;
-    final session = DriverSessionController(repository: store);
-    addTearDown(session.dispose);
-    session.setOnline(true);
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-    expect(session.persistenceError, isNotNull);
-    session.setOnline(false);
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-    expect(session.persistenceError, isNull);
-    expect(await store.readOnline(), isFalse);
-  });
+  test(
+    'successful next session write clears stale persistence error',
+    () async {
+      final store = _FlakySessionRepository()..failNextWrite = true;
+      final session = DriverSessionController(repository: store);
+      addTearDown(session.dispose);
+      session.setOnline(true);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(session.persistenceError, isNotNull);
+      session.setOnline(false);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(session.persistenceError, isNull);
+      expect(await store.readOnline(), isFalse);
+    },
+  );
 
   test('failed session restore cannot preserve initial online state', () async {
     final store = _FlakySessionRepository()..failRead = true;

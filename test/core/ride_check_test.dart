@@ -170,15 +170,9 @@ void main() {
       )..startTrip(_t0);
       final car = _north(_dropoff, 1000);
       detector.observe(car, _t0);
-      detector.observe(
-        _north(car, 200),
-        _t0.add(const Duration(minutes: 3)),
-      );
+      detector.observe(_north(car, 200), _t0.add(const Duration(minutes: 3)));
       expect(
-        detector.observe(
-          _north(car, 200),
-          _t0.add(const Duration(minutes: 6)),
-        ),
+        detector.observe(_north(car, 200), _t0.add(const Duration(minutes: 6))),
         isNull,
       );
       expect(
@@ -189,10 +183,7 @@ void main() {
         ),
         isNull,
       );
-      expect(
-        detector.tick(_t0.add(const Duration(minutes: 25))),
-        isNull,
-      );
+      expect(detector.tick(_t0.add(const Duration(minutes: 25))), isNull);
       expect(
         detector.tick(_t0.add(const Duration(minutes: 26)))?.trigger,
         RideCheckTrigger.longStop,
@@ -217,7 +208,12 @@ void main() {
       final start = _north(_dropoff, -5000);
       detector.planLeg('0', [start, _dropoff], 600, wholeTrip: true);
       // A reroute is not the plan.
-      detector.planLeg('0', [start, const GeoPoint(59.4, 18.2)], 900, wholeTrip: true);
+      detector.planLeg(
+        '0',
+        [start, const GeoPoint(59.4, 18.2)],
+        900,
+        wholeTrip: true,
+      );
       final east1km = GeoPoint(start.latitude + .02, start.longitude + .0177);
       expect(detector.observe(east1km, _t0), isNull);
       final east3km = GeoPoint(start.latitude + .02, start.longitude + .053);
@@ -233,7 +229,12 @@ void main() {
 
     test('off route: the trip 50 % longer than expected', () {
       final detector = RideCheckDetector()..startTrip(_t0);
-      detector.planLeg('0', [_north(_dropoff, -5000), _dropoff], 600, wholeTrip: true);
+      detector.planLeg(
+        '0',
+        [_north(_dropoff, -5000), _dropoff],
+        600,
+        wholeTrip: true,
+      );
       expect(detector.tick(_t0.add(const Duration(seconds: 900))), isNull);
       final event = detector.tick(_t0.add(const Duration(seconds: 960)))!;
       expect(event.trigger, RideCheckTrigger.offRoute);
@@ -242,8 +243,16 @@ void main() {
 
     test('a trip with stops has no expected time from its first leg', () {
       final detector = RideCheckDetector()..startTrip(_t0);
-      detector.planLeg('0', [_north(_dropoff, -5000), _dropoff], 60, wholeTrip: false);
-      expect(detector.tick(_t0.add(const Duration(hours: 1)), gps: false), isNull);
+      detector.planLeg(
+        '0',
+        [_north(_dropoff, -5000), _dropoff],
+        60,
+        wholeTrip: false,
+      );
+      expect(
+        detector.tick(_t0.add(const Duration(hours: 1)), gps: false),
+        isNull,
+      );
     });
 
     test('possible crash: the hook opens it; demo always opens', () {
@@ -296,17 +305,26 @@ void main() {
 
       test('stop just over / under the admin minutes', () {
         final rules = RideCheckRules.fromAdmin(admin);
-        expect(stoppedFor(const Duration(minutes: 9, seconds: 50), rules), isNull);
+        expect(
+          stoppedFor(const Duration(minutes: 9, seconds: 50), rules),
+          isNull,
+        );
         expect(stoppedFor(const Duration(minutes: 10), rules), isNull);
         expect(
           stoppedFor(const Duration(minutes: 10, seconds: 10), rules)?.trigger,
           RideCheckTrigger.longStop,
         );
         final defaults = RideCheckRules.fromAdmin(const RideCheckAdminConfig());
-        expect(stoppedFor(const Duration(minutes: 1, seconds: 50), defaults), isNull);
+        expect(
+          stoppedFor(const Duration(minutes: 1, seconds: 50), defaults),
+          isNull,
+        );
         expect(stoppedFor(const Duration(minutes: 2), defaults), isNull);
         expect(
-          stoppedFor(const Duration(minutes: 2, seconds: 10), defaults)?.reason.bold,
+          stoppedFor(
+            const Duration(minutes: 2, seconds: 10),
+            defaults,
+          )?.reason.bold,
           '2 min',
         );
         // A quiet GPS: the trip clock finds it too.
@@ -336,8 +354,9 @@ void main() {
         );
         expect(services.rules.farDropMeters, 5000);
         expect(services.rules.longStopMinutes, 10);
-        final demo = RideCheckDetector(rules: services.rules)
-            .demo(RideCheckTrigger.longStop, _t0, destination: 'Solna');
+        final demo = RideCheckDetector(
+          rules: services.rules,
+        ).demo(RideCheckTrigger.longStop, _t0, destination: 'Solna');
         expect(demo.reason.bold, '10 min');
       });
     });
@@ -403,21 +422,24 @@ void main() {
       expect(alerts.alerts, isEmpty);
     });
 
-    test('a red row alerts admin and Dispatch at once with all details', () async {
-      controller.open(event(), instant: true);
-      controller.choose(RideCheckTopic.accident);
-      await controller.settleAlerts();
-      final alert = alerts.alerts.single;
-      expect(controller.alertSent, isTrue);
-      expect(alert.recipients, ['admin', 'dispatch']);
-      expect(alert.topic, 'Accident or collision');
-      expect(alert.trip.riderName, 'Angelica');
-      expect(alert.trip.driverName, 'Movera Driver');
-      expect(alert.trip.plate, 'ABC 123');
-      expect(alert.trip.tripId, 'trip-1');
-      expect(alert.trigger, RideCheckTrigger.longStop);
-      expect(log.rows.single.alertSent, isTrue);
-    });
+    test(
+      'a red row alerts admin and Dispatch at once with all details',
+      () async {
+        controller.open(event(), instant: true);
+        controller.choose(RideCheckTopic.accident);
+        await controller.settleAlerts();
+        final alert = alerts.alerts.single;
+        expect(controller.alertSent, isTrue);
+        expect(alert.recipients, ['admin', 'dispatch']);
+        expect(alert.topic, 'Accident or collision');
+        expect(alert.trip.riderName, 'Angelica');
+        expect(alert.trip.driverName, 'Movera Driver');
+        expect(alert.trip.plate, 'ABC 123');
+        expect(alert.trip.tripId, 'trip-1');
+        expect(alert.trigger, RideCheckTrigger.longStop);
+        expect(log.rows.single.alertSent, isTrue);
+      },
+    );
 
     test('Yes and Not sure update the alert; No does not', () async {
       controller.open(event(), instant: true);
@@ -492,37 +514,45 @@ void main() {
       expect(record.answers.last.answer, 'Rider left a bag');
     });
 
-    test('audio is saved only on the phone; the alert never carries it', () async {
-      final done = controller.open(event(), instant: true);
-      await controller.toggleRecording();
-      expect(controller.audio, RideCheckAudio.recording);
-      now = now.add(const Duration(seconds: 42));
-      expect(controller.audioSeconds, 42);
-      controller.choose(RideCheckTopic.unsafe);
-      await controller.done();
-      final record = await done;
-      expect(recorder.started, 1);
-      expect(recorder.stopped, 1);
-      expect(record.audioSeconds, 42);
-      expect(alerts.alerts.single.answers.map((a) => a.answer),
-          isNot(contains(contains('m4a'))));
-    });
+    test(
+      'audio is saved only on the phone; the alert never carries it',
+      () async {
+        final done = controller.open(event(), instant: true);
+        await controller.toggleRecording();
+        expect(controller.audio, RideCheckAudio.recording);
+        now = now.add(const Duration(seconds: 42));
+        expect(controller.audioSeconds, 42);
+        controller.choose(RideCheckTopic.unsafe);
+        await controller.done();
+        final record = await done;
+        expect(recorder.started, 1);
+        expect(recorder.stopped, 1);
+        expect(record.audioSeconds, 42);
+        expect(
+          alerts.alerts.single.answers.map((a) => a.answer),
+          isNot(contains(contains('m4a'))),
+        );
+      },
+    );
 
-    test('recording is unavailable without a recorder for this platform', () async {
-      final plain = RideCheckController(
-        services: RideCheckServices(
-          alerts: alerts,
-          log: log,
-          recorder: () => const UnsupportedRideCheckRecorder(),
-        ),
-        tripId: 'trip-3',
-        tripDetails: () => _trip,
-      );
-      plain.open(event(), instant: true);
-      await plain.toggleRecording();
-      expect(plain.audio, RideCheckAudio.unavailable);
-      plain.dispose();
-    });
+    test(
+      'recording is unavailable without a recorder for this platform',
+      () async {
+        final plain = RideCheckController(
+          services: RideCheckServices(
+            alerts: alerts,
+            log: log,
+            recorder: () => const UnsupportedRideCheckRecorder(),
+          ),
+          tripId: 'trip-3',
+          tripDetails: () => _trip,
+        );
+        plain.open(event(), instant: true);
+        await plain.toggleRecording();
+        expect(plain.audio, RideCheckAudio.unavailable);
+        plain.dispose();
+      },
+    );
 
     test('a double tap on Done while audio saves closes once', () async {
       final done = controller.open(event(), instant: true);
@@ -532,7 +562,9 @@ void main() {
       final second = controller.done();
       await Future.wait([first, second]);
       expect(recorder.stopped, 1);
-      expect((await done).answers.map((a) => a.answer), ['Traffic or road works']);
+      expect((await done).answers.map((a) => a.answer), [
+        'Traffic or road works',
+      ]);
     });
 
     test('a second check is not stacked on an open one', () async {

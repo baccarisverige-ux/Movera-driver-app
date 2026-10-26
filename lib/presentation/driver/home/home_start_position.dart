@@ -21,12 +21,18 @@ extension _HomeStartPosition on _DriverHomeState {
     // GPS that never answers (no permission answer, no provider) must not
     // keep the map hidden for good: open it without a car.
     _startWait = Timer(_startWaitLimit, () {
-      if (mounted && !_mapReady) { _rebuild(() => _startLocationFailed = true); }
+      if (mounted && !_mapReady) {
+        _rebuild(() => _startLocationFailed = true);
+      }
     });
-    unawaited(DriverStartPosition.load().then((point) {
-      if (point == null || !mounted || _startPositionKnown) { return; }
-      _rebuild(() => _useStartPosition(point));
-    }));
+    unawaited(
+      DriverStartPosition.load().then((point) {
+        if (point == null || !mounted || _startPositionKnown) {
+          return;
+        }
+        _rebuild(() => _useStartPosition(point));
+      }),
+    );
   }
 
   void _useStartPosition(GeoPoint point) {
@@ -36,53 +42,56 @@ extension _HomeStartPosition on _DriverHomeState {
   }
 
   Set<Marker> _driverMarkers() => {
-        Marker(
-          markerId: const MarkerId('driver_location'),
-          position: _driverPosition,
-          infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
-          icon: _driverVehicleIcon,
-          // Upright arrow; CustomGoogleMap turns it to the screen.
-          flat: false,
-          anchor: MoveraVehicleMarker.anchor,
-          rotation: _driverHeading,
-          zIndexInt: 12,
-        ),
-      };
+    Marker(
+      markerId: const MarkerId('driver_location'),
+      position: _driverPosition,
+      infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
+      icon: _driverVehicleIcon,
+      // Upright arrow; CustomGoogleMap turns it to the screen.
+      flat: false,
+      anchor: MoveraVehicleMarker.anchor,
+      rotation: _driverHeading,
+      zIndexInt: 12,
+    ),
+  };
 
   /// Soft neutral surface while the first position is found.
   Widget _locating() => ColoredBox(
-        key: ValueKey<String>('home-map-locating'),
-        color: Color(0xFFEEF0F2),
-        child: Align(
-          alignment: Alignment(0, -0.35),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Static on purpose: no endless animation on the map surface.
-              DecoratedBox(
+    key: ValueKey<String>('home-map-locating'),
+    color: Color(0xFFEEF0F2),
+    child: Align(
+      alignment: Alignment(0, -0.35),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Static on purpose: no endless animation on the map surface.
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: Color(0x1F2B3036),
+              shape: BoxShape.circle,
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(7),
+              child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Color(0x1F2B3036),
+                  color: Color(0xFF8A939B),
                   shape: BoxShape.circle,
                 ),
-                child: Padding(
-                  padding: EdgeInsets.all(7),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Color(0xFF8A939B),
-                      shape: BoxShape.circle,
-                    ),
-                    child: SizedBox.square(dimension: 10),
-                  ),
-                ),
+                child: SizedBox.square(dimension: 10),
               ),
-              SizedBox(height: 12),
-              Text(tr.findingYourLocation,
-                  style: TextStyle(
-                      color: Color(0xFF6B747C),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500)),
-            ],
+            ),
           ),
-        ),
-      );
+          SizedBox(height: 12),
+          Text(
+            tr.findingYourLocation,
+            style: TextStyle(
+              color: Color(0xFF6B747C),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

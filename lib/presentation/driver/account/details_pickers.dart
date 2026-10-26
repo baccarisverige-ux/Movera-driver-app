@@ -222,10 +222,7 @@ class _PickerTile<T> extends StatelessWidget {
             child: Row(
               children: [
                 if (row.leading != null) ...[
-                  SizedBox(
-                    width: 40,
-                    child: Center(child: row.leading),
-                  ),
+                  SizedBox(width: 40, child: Center(child: row.leading)),
                   const SizedBox(width: 14),
                 ],
                 Expanded(

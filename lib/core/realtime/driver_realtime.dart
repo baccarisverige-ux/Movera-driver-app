@@ -187,7 +187,9 @@ class DriverRealtimeEvent {
       sequence: (json['sequence'] as num?)?.toInt() ?? 0,
       version: (json['version'] as num?)?.toInt() ?? 0,
       kind: kind,
-      at: time('occurredAt') ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      at:
+          time('occurredAt') ??
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
       serverTime: time('serverTime'),
       status: rawStatus == null ? null : TripStatusWire.parse(rawStatus),
       location: location is Map
@@ -360,10 +362,13 @@ class MemoryDriverRealtime implements DriverRealtime {
       return;
     }
     if (event.sequence < 1 || event.tripId.trim().isEmpty) {
-      throw ArgumentError('Valid trip ID and positive per-trip sequence required');
+      throw ArgumentError(
+        'Valid trip ID and positive per-trip sequence required',
+      );
     }
     final projection = _projectionsByTrip[event.tripId];
-    final ended = projection?.status?.isTerminal == true ||
+    final ended =
+        projection?.status?.isTerminal == true ||
         projection?.kind == DriverRealtimeKind.riderCancelled;
     if (ended && !event.kind.passesAfterTerminal) {
       return;

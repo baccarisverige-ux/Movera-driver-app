@@ -170,41 +170,44 @@ Future<void> _pumpTrip(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: Center(
-            child: TextButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => AcceptRide(
-                    tripId: 'late-eta-trip',
-                    riderName: 'Angelica',
-                    pickupAddress: 'Gamla vägen, Stockholm',
-                    pickupPosition: _pickup.toLatLng(),
-                    locationRepository: gps,
-                    routeRepository: routes,
-                    activeRideRepository:
-                        repository ?? MemoryActiveRideRepository(),
-                    sessionController: DriverSessionController()
-                      ..setOnline(true),
-                    realtime: realtime,
-                    waybillRepository: InMemoryWaybillRepository.instance,
-                    scheduledPickupAt: scheduledPickupAt,
-                    scheduledRideId:
-                        scheduledPickupAt == null ? null : scheduledRideId,
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => AcceptRide(
+                      tripId: 'late-eta-trip',
+                      riderName: 'Angelica',
+                      pickupAddress: 'Gamla vägen, Stockholm',
+                      pickupPosition: _pickup.toLatLng(),
+                      locationRepository: gps,
+                      routeRepository: routes,
+                      activeRideRepository:
+                          repository ?? MemoryActiveRideRepository(),
+                      sessionController: DriverSessionController()
+                        ..setOnline(true),
+                      realtime: realtime,
+                      waybillRepository: InMemoryWaybillRepository.instance,
+                      scheduledPickupAt: scheduledPickupAt,
+                      scheduledRideId: scheduledPickupAt == null
+                          ? null
+                          : scheduledRideId,
+                    ),
                   ),
                 ),
+                child: const Text('Home'),
               ),
-              child: const Text('Home'),
             ),
           ),
         ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('Home'));
   await _frames(tester, const Duration(milliseconds: 600));
 }
@@ -288,7 +291,10 @@ void main() {
         expect(record.reassignTo, LateEtaReassignTo.exclusive);
         expect(record.lateMinutes, greaterThan(60));
         final late = record.lateMinutes;
-        expect(_saidTitles, contains('Given to another driver: $late min late'));
+        expect(
+          _saidTitles,
+          contains('Given to another driver: $late min late'),
+        );
         expect(
           ScheduledRideStore.backupNote.value,
           'Ride given to another driver — you would reach the 07:40 pickup '
@@ -304,8 +310,9 @@ void main() {
       },
     );
 
-    testWidgets('the road route\'s remaining time is the ETA when known',
-        (tester) async {
+    testWidgets('the road route\'s remaining time is the ETA when known', (
+      tester,
+    ) async {
       DriverRuntimeConfig.current = const DriverRuntimeConfig(
         simulatedArrival: true,
         externalRouting: true,
@@ -331,8 +338,7 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets(
-        'driver-fixrev-1: no GPS fix: a road route from the fallback '
+    testWidgets('driver-fixrev-1: no GPS fix: a road route from the fallback '
         'position never reassigns the ride', (tester) async {
       DriverRuntimeConfig.current = const DriverRuntimeConfig(
         simulatedArrival: true,
@@ -359,47 +365,52 @@ void main() {
     });
 
     testWidgets(
-        'driver-fixrev-4: a rider cancel during the exit after a late-ETA '
-        'reassign is not journalled', (tester) async {
-      final gps = _Gps(_far);
-      addTearDown(gps.close);
-      // The rider cancels just as the ride goes to another driver, while
-      // the trip screen is still leaving (realtime still subscribed).
-      var emitted = false;
-      void riderCancels() {
-        if (emitted) {
-          return;
+      'driver-fixrev-4: a rider cancel during the exit after a late-ETA '
+      'reassign is not journalled',
+      (tester) async {
+        final gps = _Gps(_far);
+        addTearDown(gps.close);
+        // The rider cancels just as the ride goes to another driver, while
+        // the trip screen is still leaving (realtime still subscribed).
+        var emitted = false;
+        void riderCancels() {
+          if (emitted) {
+            return;
+          }
+          emitted = true;
+          realtime.emit(
+            tripId: 'late-eta-trip',
+            kind: DriverRealtimeKind.riderCancelled,
+            status: TripStatus.cancelledByRider,
+          );
         }
-        emitted = true;
-        realtime.emit(
-          tripId: 'late-eta-trip',
-          kind: DriverRealtimeKind.riderCancelled,
-          status: TripStatus.cancelledByRider,
+
+        ScheduledRideStore.backupNote.addListener(riderCancels);
+        addTearDown(
+          () => ScheduledRideStore.backupNote.removeListener(riderCancels),
         );
-      }
+        await _pumpTrip(
+          tester,
+          gps: gps,
+          realtime: realtime,
+          scheduledPickupAt: _pickupAt,
+        );
+        expect(emitted, isTrue);
+        expect(ScheduledRideStore.reassigned, hasLength(1));
+        await _frames(tester, const Duration(seconds: 1));
+        expect(find.byType(AcceptRide), findsNothing);
+        final prefs = await SharedPreferences.getInstance();
+        expect(
+          prefs.getString('movera_driver_completed_trips') ?? '',
+          isNot(contains('cancelled_by_rider')),
+        );
+        await _end(tester);
+      },
+    );
 
-      ScheduledRideStore.backupNote.addListener(riderCancels);
-      addTearDown(() => ScheduledRideStore.backupNote.removeListener(riderCancels));
-      await _pumpTrip(
-        tester,
-        gps: gps,
-        realtime: realtime,
-        scheduledPickupAt: _pickupAt,
-      );
-      expect(emitted, isTrue);
-      expect(ScheduledRideStore.reassigned, hasLength(1));
-      await _frames(tester, const Duration(seconds: 1));
-      expect(find.byType(AcceptRide), findsNothing);
-      final prefs = await SharedPreferences.getInstance();
-      expect(
-        prefs.getString('movera_driver_completed_trips') ?? '',
-        isNot(contains('cancelled_by_rider')),
-      );
-      await _end(tester);
-    });
-
-    testWidgets('on time: the trip stays and the ride stays this driver\'s',
-        (tester) async {
+    testWidgets('on time: the trip stays and the ride stays this driver\'s', (
+      tester,
+    ) async {
       final gps = _Gps(_near);
       addTearDown(gps.close);
       await _pumpTrip(
@@ -416,8 +427,9 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('on time, then far away: a later check reassigns',
-        (tester) async {
+    testWidgets('on time, then far away: a later check reassigns', (
+      tester,
+    ) async {
       final gps = _Gps(_near);
       addTearDown(gps.close);
       await _pumpTrip(
@@ -436,8 +448,9 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('admin lateEta off: a late driver keeps the trip',
-        (tester) async {
+    testWidgets('admin lateEta off: a late driver keeps the trip', (
+      tester,
+    ) async {
       ScheduledRideRules.current = const ScheduledRideRules(
         lateEta: LateEtaRule(on: false),
       );
@@ -455,8 +468,9 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('a trip that is not a scheduled ride is never checked',
-        (tester) async {
+    testWidgets('a trip that is not a scheduled ride is never checked', (
+      tester,
+    ) async {
       final gps = _Gps(_far);
       addTearDown(gps.close);
       await _pumpTrip(tester, gps: gps, realtime: realtime);
@@ -466,8 +480,7 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('after arriving at the pickup the watch stops',
-        (tester) async {
+    testWidgets('after arriving at the pickup the watch stops', (tester) async {
       final gps = _Gps(_near);
       addTearDown(gps.close);
       final repository = MemoryActiveRideRepository();
@@ -485,10 +498,7 @@ void main() {
         status: TripStatus.arrived,
       );
       await _frames(tester, const Duration(seconds: 1));
-      expect(
-        (await repository.read())?.stage,
-        ActiveRideStage.waitingForRider,
-      );
+      expect((await repository.read())?.stage, ActiveRideStage.waitingForRider);
 
       // Far away now, but already at the pickup stage: no more checks.
       gps.moveTo(_far);
@@ -498,8 +508,9 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('the pickup time and reservation are kept in the snapshot',
-        (tester) async {
+    testWidgets('the pickup time and reservation are kept in the snapshot', (
+      tester,
+    ) async {
       final gps = _Gps(_near);
       addTearDown(gps.close);
       final repository = MemoryActiveRideRepository();
@@ -534,25 +545,29 @@ void main() {
     // driver-fixrev-5 / owner decision 1: there is no Leave now switch.
     // A config that still says leaveNow false opens the trip all the same,
     // so an online driver's accepted ride is never stuck in Accepted.
-    testWidgets('an old config with leaveNow false still opens the trip',
-        (tester) async {
-      ScheduledRideRules.current =
-          ScheduledRideRules.fromJson(const {'leaveNow': false});
+    testWidgets('an old config with leaveNow false still opens the trip', (
+      tester,
+    ) async {
+      ScheduledRideRules.current = ScheduledRideRules.fromJson(const {
+        'leaveNow': false,
+      });
       ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
       await _pumpHome(tester);
       await _frames(tester, const Duration(seconds: 50));
       expect(find.byType(AcceptRide), findsOneWidget);
       expect(_saidTitles, contains('Leave now for 07:40 pickup'));
-      expect(ScheduledRideStore.upcoming, isNot(contains(demoReservationRequest)));
+      expect(
+        ScheduledRideStore.upcoming,
+        isNot(contains(demoReservationRequest)),
+      );
       await _end(tester);
     });
 
-    testWidgets('admin lateWarn off: no "Head to your pickup" warning',
-        (tester) async {
+    testWidgets('admin lateWarn off: no "Head to your pickup" warning', (
+      tester,
+    ) async {
       // Offline at Leave now: the trip cannot open, the late path runs.
-      ScheduledRideRules.current = const ScheduledRideRules(
-        lateWarning: false,
-      );
+      ScheduledRideRules.current = const ScheduledRideRules(lateWarning: false);
       ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
       await _pumpHome(tester, online: false);
       await _frames(tester, const Duration(seconds: 50));

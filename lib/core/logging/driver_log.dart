@@ -33,8 +33,8 @@ class DriverLog {
   /// [error] without the stored text it may quote. A FormatException from
   /// `jsonDecode` carries the record around the bad character (rider names,
   /// addresses, phone numbers); only its message and offset are kept.
-  static Object scrub(Object error) => error is FormatException &&
-          error.source != null
+  static Object scrub(Object error) =>
+      error is FormatException && error.source != null
       ? FormatException(error.message, null, error.offset)
       : error;
 
@@ -48,15 +48,21 @@ class DriverLog {
         ? record.message
         : '${record.message}: ${record.error}';
     debugPrint('[${record.name}] $prefix$detail');
-    if (record.stack != null) { debugPrint('${record.stack}'); }
+    if (record.stack != null) {
+      debugPrint('${record.stack}');
+    }
   }
 
   static void info(String message, {String name = 'movera'}) {
-    sink(DriverLogRecord(level: DriverLogLevel.info, name: name, message: message));
+    sink(
+      DriverLogRecord(level: DriverLogLevel.info, name: name, message: message),
+    );
   }
 
   static void warn(String message, {String name = 'movera'}) {
-    sink(DriverLogRecord(level: DriverLogLevel.warn, name: name, message: message));
+    sink(
+      DriverLogRecord(level: DriverLogLevel.warn, name: name, message: message),
+    );
   }
 
   static void error(
@@ -65,12 +71,14 @@ class DriverLog {
     StackTrace? stack,
     String name = 'movera',
   ]) {
-    sink(DriverLogRecord(
-      level: DriverLogLevel.error,
-      name: name,
-      message: message,
-      error: error == null ? null : scrub(error),
-      stack: stack,
-    ));
+    sink(
+      DriverLogRecord(
+        level: DriverLogLevel.error,
+        name: name,
+        message: message,
+        error: error == null ? null : scrub(error),
+        stack: stack,
+      ),
+    );
   }
 }

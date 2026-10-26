@@ -180,10 +180,10 @@ class OsrmRouteParser {
     final int? parsedExit = exit is int
         ? exit
         : exit is String
-            ? int.tryParse(exit)
-            : exit is num && exit.isFinite && exit == exit.truncateToDouble()
-                ? exit.toInt()
-                : null;
+        ? int.tryParse(exit)
+        : exit is num && exit.isFinite && exit == exit.truncateToDouble()
+        ? exit.toInt()
+        : null;
     final exitNumber = parsedExit != null && parsedExit > 0
         ? parsedExit.toString()
         : null;

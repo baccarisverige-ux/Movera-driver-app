@@ -71,7 +71,9 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
   @override
   void didUpdateWidget(DigitalIslandShell oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.calm != widget.calm) { _syncSweep(); }
+    if (oldWidget.calm != widget.calm) {
+      _syncSweep();
+    }
   }
 
   void _syncSweep() {
@@ -170,9 +172,8 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
               child: IgnorePointer(
                 child: AnimatedBuilder(
                   animation: _sweep,
-                  builder: (context, _) => CustomPaint(
-                    painter: _SweepPainter(_sweep.value),
-                  ),
+                  builder: (context, _) =>
+                      CustomPaint(painter: _SweepPainter(_sweep.value)),
                 ),
               ),
             ),
@@ -267,7 +268,11 @@ class _DigitalFaceSwitcherState extends State<DigitalFaceSwitcher>
           final k = Curves.easeIn.transform(t / _split);
           face = Opacity(
             opacity: 1 - 0.6 * k,
-            child: Transform.scale(scaleX: 1 + 0.06 * k, scaleY: 1 - 0.94 * k, child: previous),
+            child: Transform.scale(
+              scaleX: 1 + 0.06 * k,
+              scaleY: 1 - 0.94 * k,
+              child: previous,
+            ),
           );
         } else {
           final k = previous == null
@@ -278,10 +283,10 @@ class _DigitalFaceSwitcherState extends State<DigitalFaceSwitcher>
           final flicker = k < 0.14
               ? 0.35
               : k < 0.24
-                  ? 0.95
-                  : k < 0.32
-                      ? 0.55
-                      : 1.0;
+              ? 0.95
+              : k < 0.32
+              ? 0.55
+              : 1.0;
           face = Opacity(
             opacity: flicker,
             child: Transform.scale(scaleY: 0.06 + 0.94 * open, child: _current),
@@ -344,7 +349,9 @@ class _SweepPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // The band crosses during the first part of each cycle, then rests.
     final pass = (t / 0.45).clamp(0.0, 1.0);
-    if (pass >= 1) { return; }
+    if (pass >= 1) {
+      return;
+    }
     const band = 70.0;
     final x = -band + (size.width + band * 2) * pass;
     final rect = Rect.fromLTWH(x - band / 2, 0, band, size.height);
@@ -361,8 +368,7 @@ class _SweepPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _SweepPainter oldDelegate) =>
-      oldDelegate.t != t;
+  bool shouldRepaint(covariant _SweepPainter oldDelegate) => oldDelegate.t != t;
 }
 
 /// "Updating" face: the four dots of the hidden total ripple while the
@@ -500,15 +506,20 @@ class DigitalMessageFace extends StatefulWidget {
   static const double _arrow = 18;
 
   /// Width the face needs in [context]: lamp, gap, text and arrow.
-  static double widthFor(BuildContext context, String title, {bool tappable = false}) {
+  static double widthFor(
+    BuildContext context,
+    String title, {
+    bool tappable = false,
+  }) {
     final painter = TextPainter(
       text: TextSpan(
         text: title,
         // The app's text style, as the words get it inside the island
         // (the caller may sit above the Scaffold that provides it).
-        style: (Theme.of(context).textTheme.bodyMedium ??
-                DefaultTextStyle.of(context).style)
-            .merge(messageStyle),
+        style:
+            (Theme.of(context).textTheme.bodyMedium ??
+                    DefaultTextStyle.of(context).style)
+                .merge(messageStyle),
       ),
       textDirection: TextDirection.ltr,
       textScaler: MediaQuery.textScalerOf(context),
@@ -558,21 +569,23 @@ class _DigitalMessageFaceState extends State<DigitalMessageFace>
   }
 
   Widget _written(Widget text) => AnimatedBuilder(
-        animation: _write,
-        child: text,
-        builder: (context, child) {
-          final v = Curves.easeOutCubic.transform(_write.value);
-          if (v >= 1) { return child!; }
-          return ShaderMask(
-            blendMode: BlendMode.dstIn,
-            shaderCallback: (rect) => LinearGradient(
-              colors: const [Colors.white, Colors.white, Color(0x00FFFFFF)],
-              stops: [0, v, math.min(1.0, v + 0.14)],
-            ).createShader(rect),
-            child: child,
-          );
-        },
+    animation: _write,
+    child: text,
+    builder: (context, child) {
+      final v = Curves.easeOutCubic.transform(_write.value);
+      if (v >= 1) {
+        return child!;
+      }
+      return ShaderMask(
+        blendMode: BlendMode.dstIn,
+        shaderCallback: (rect) => LinearGradient(
+          colors: const [Colors.white, Colors.white, Color(0x00FFFFFF)],
+          stops: [0, v, math.min(1.0, v + 0.14)],
+        ).createShader(rect),
+        child: child,
       );
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -626,12 +639,23 @@ class _DigitalMessageFaceState extends State<DigitalMessageFace>
           light,
           const SizedBox(width: DigitalMessageFace._gap),
           Flexible(
-            child: _written(_TickerLine(text: widget.title, style: messageStyle)),
+            child: _written(
+              _TickerLine(text: widget.title, style: messageStyle),
+            ),
           ),
-          SizedBox(width: DigitalMessageFace._lamp + DigitalMessageFace._gap,
-            child: widget.tappable ? const Align(alignment: Alignment.centerRight,
-              child: Icon(Icons.chevron_right_rounded, size: DigitalMessageFace._arrow,
-                color: Color(0xFF9AA4AA))) : null),
+          SizedBox(
+            width: DigitalMessageFace._lamp + DigitalMessageFace._gap,
+            child: widget.tappable
+                ? const Align(
+                    alignment: Alignment.centerRight,
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      size: DigitalMessageFace._arrow,
+                      color: Color(0xFF9AA4AA),
+                    ),
+                  )
+                : null,
+          ),
         ],
       ),
     );
@@ -640,7 +664,9 @@ class _DigitalMessageFaceState extends State<DigitalMessageFace>
     return LayoutBuilder(
       builder: (context, constraints) {
         const least = 2 * (DigitalMessageFace._lamp + DigitalMessageFace._gap);
-        if (constraints.maxWidth >= least) { return face; }
+        if (constraints.maxWidth >= least) {
+          return face;
+        }
         return ClipRect(
           child: OverflowBox(minWidth: 0, maxWidth: least, child: face),
         );
@@ -655,9 +681,16 @@ class _TickerLine extends StatelessWidget {
   final String text;
   final TextStyle style;
   @override
-  Widget build(BuildContext context) => Tooltip(message: text,
-    child: Text(text, textAlign: TextAlign.center, maxLines: 1,
-      overflow: TextOverflow.ellipsis, style: style));
+  Widget build(BuildContext context) => Tooltip(
+    message: text,
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    ),
+  );
 }
 
 /// Island pieces shared by Home and the trip screen, so both islands look
@@ -681,22 +714,25 @@ class DigitalIslandParts {
   /// TODAY: the trips completed today on this phone (driver-u125: it was
   /// a sample figure).
   static Widget todayFace() => ValueListenableBuilder<String?>(
-        key: const ValueKey<String>('island-today'),
-        valueListenable: TodayEarnings.label,
-        builder: (context, total, _) => amountFace('island-today-amount',
-            tr.todayCaps, total ?? TodayEarnings.unknown),
-      );
+    key: const ValueKey<String>('island-today'),
+    valueListenable: TodayEarnings.label,
+    builder: (context, total, _) => amountFace(
+      'island-today-amount',
+      tr.todayCaps,
+      total ?? TodayEarnings.unknown,
+    ),
+  );
 
   /// Menu icon; its arrow points right, the way the menu slides in.
   static Widget menuIcon() => Transform.flip(
-        flipX: true,
-        child: const Icon(
-          Icons.menu_open_rounded,
-          size: 24,
-          color: Colors.white,
-          shadows: DigitalIslandShell.glow,
-        ),
-      );
+    flipX: true,
+    child: const Icon(
+      Icons.menu_open_rounded,
+      size: 24,
+      color: Colors.white,
+      shadows: DigitalIslandShell.glow,
+    ),
+  );
 
   /// The blue arrow, with a small magnifier saying "search".
   static const Widget searchIcon = Stack(
@@ -712,7 +748,10 @@ class DigitalIslandParts {
         right: 9,
         bottom: 12,
         child: DecoratedBox(
-          decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+          ),
           child: SizedBox(
             width: 15,
             height: 15,
@@ -736,77 +775,85 @@ class DigitalIslandParts {
 
   /// The hidden total, "•••• kr".
   static Widget hiddenFace() => Center(
-        key: const ValueKey<String>('island-hidden'),
-        child: _fit(const Text(
-          '•••• kr',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.5,
-            shadows: DigitalIslandShell.glow,
-          ),
-        )),
-      );
+    key: const ValueKey<String>('island-hidden'),
+    child: _fit(
+      const Text(
+        '•••• kr',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.5,
+          shadows: DigitalIslandShell.glow,
+        ),
+      ),
+    ),
+  );
 
   /// A small label over an amount, e.g. "TODAY" / "183.25 kr".
   static Widget amountFace(String key, String label, String value) => Column(
-        key: ValueKey<String>(key),
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(label, style: _label),
-          const SizedBox(height: 2),
-          _fit(Text(
-            value,
-            maxLines: 1,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-              fontFeatures: [FontFeature.tabularFigures()],
-              shadows: DigitalIslandShell.glow,
-            ),
-          )),
-        ],
-      );
+    key: ValueKey<String>(key),
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Text(label, style: _label),
+      const SizedBox(height: 2),
+      _fit(
+        Text(
+          value,
+          maxLines: 1,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+            fontFeatures: [FontFeature.tabularFigures()],
+            shadows: DigitalIslandShell.glow,
+          ),
+        ),
+      ),
+    ],
+  );
 
   /// "SLIDE TO OPEN / Ride history".
   static Widget historyFace() => Column(
-        key: const ValueKey<String>('island-history'),
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(tr.slideToOpen, style: _label),
-          const SizedBox(height: 2),
-          _fit(Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                tr.rideHistory,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  shadows: DigitalIslandShell.glow,
-                ),
+    key: const ValueKey<String>('island-history'),
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Text(tr.slideToOpen, style: _label),
+      const SizedBox(height: 2),
+      _fit(
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              tr.rideHistory,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                shadows: DigitalIslandShell.glow,
               ),
-              SizedBox(width: 4),
-              Icon(
-                Icons.keyboard_double_arrow_right_rounded,
-                size: 18,
-                color: Color(0xFF3B8BFF),
-              ),
-            ],
-          )),
-        ],
-      );
+            ),
+            SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_double_arrow_right_rounded,
+              size: 18,
+              color: Color(0xFF3B8BFF),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
 
   /// Colour and icon of a message tone.
   static (Color, IconData) toneLook(IslandTone tone) => switch (tone) {
-        IslandTone.success => (const Color(0xFF2BD47D), Icons.check_rounded),
-        IslandTone.info => (const Color(0xFF4C97FF), Icons.info_outline_rounded),
-        IslandTone.warning =>
-          (const Color(0xFFFFB020), Icons.priority_high_rounded),
-        IslandTone.alert => (const Color(0xFFFF5A4E), Icons.close_rounded),
-      };
+    IslandTone.success => (const Color(0xFF2BD47D), Icons.check_rounded),
+    IslandTone.info => (const Color(0xFF4C97FF), Icons.info_outline_rounded),
+    IslandTone.warning => (
+      const Color(0xFFFFB020),
+      Icons.priority_high_rounded,
+    ),
+    IslandTone.alert => (const Color(0xFFFF5A4E), Icons.close_rounded),
+  };
 }

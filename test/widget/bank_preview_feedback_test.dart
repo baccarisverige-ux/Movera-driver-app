@@ -52,9 +52,9 @@ void main() {
       await tester.pump();
       final focused = FocusManager.instance.primaryFocus?.context
           ?.findAncestorWidgetOfExactType<TextButton>();
-        if (focused?.key == const ValueKey<String>('bank-tab-International')) {
+      if (focused?.key == const ValueKey<String>('bank-tab-International')) {
         break;
-        }
+      }
     }
     final focused = FocusManager.instance.primaryFocus?.context
         ?.findAncestorWidgetOfExactType<TextButton>();

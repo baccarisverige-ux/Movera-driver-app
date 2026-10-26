@@ -36,10 +36,12 @@ void main() {
     Duration(milliseconds: 450),
     Duration(milliseconds: 1400),
   ]) {
-    testWidgets('one command per fix with ${takes.inMilliseconds} ms animations',
-        (tester) async {
+    testWidgets(
+      'one command per fix with ${takes.inMilliseconds} ms animations',
+      (tester) async {
         final camera = DriverCameraController(
-            now: () => tester.binding.clock.now());
+          now: () => tester.binding.clock.now(),
+        );
         final port = _Port(takes);
         camera.attach(port);
         final route = RoadRoute(
@@ -71,6 +73,7 @@ void main() {
         expect(port.animates, greaterThan(0));
         camera.dispose();
         await tester.pump(const Duration(seconds: 2));
-    });
+      },
+    );
   }
 }

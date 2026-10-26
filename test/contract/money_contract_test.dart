@@ -35,26 +35,37 @@ void main() {
 
   test('rejects fixtures/money.json invalid cases on the wire', () {
     for (final raw in (fixtures['invalid'] as List).cast<Map>()) {
-      expect(() => Money.fromJson(Map<String, dynamic>.from(raw)),
-          throwsFormatException, reason: '$raw');
+      expect(
+        () => Money.fromJson(Map<String, dynamic>.from(raw)),
+        throwsFormatException,
+        reason: '$raw',
+      );
     }
   });
 
   test('local storage may still hold legacy minorUnits', () {
-    expect(Money.fromStoredJson({'minorUnits': 100, 'currency': 'SEK'}),
-        const Money(minorUnits: 100));
-    expect(Money.fromStoredJson({'amountMinor': 335, 'currency': 'EUR'}),
-        const Money(minorUnits: 335, currency: 'EUR'));
-    expect(() => Money.fromStoredJson({'minorUnits': 1.5, 'currency': 'SEK'}),
-        throwsFormatException);
+    expect(
+      Money.fromStoredJson({'minorUnits': 100, 'currency': 'SEK'}),
+      const Money(minorUnits: 100),
+    );
+    expect(
+      Money.fromStoredJson({'amountMinor': 335, 'currency': 'EUR'}),
+      const Money(minorUnits: 335, currency: 'EUR'),
+    );
+    expect(
+      () => Money.fromStoredJson({'minorUnits': 1.5, 'currency': 'SEK'}),
+      throwsFormatException,
+    );
   });
 
   test('local formatting per currency', () {
     expect(const Money(minorUnits: 12675).formatted, '126,75 kr');
     expect(const Money(minorUnits: 299480).formatted, '2 994,80 kr');
     expect(const Money(minorUnits: -2000).formatted, '−20,00 kr');
-    expect(const Money(minorUnits: 12500, currency: 'TND').formatted,
-        '12,500 DT');
+    expect(
+      const Money(minorUnits: 12500, currency: 'TND').formatted,
+      '12,500 DT',
+    );
     expect(const Money(minorUnits: 4000).formattedShort, '40 kr');
     expect(const Money(minorUnits: 4050).formattedShort, '40,50 kr');
   });

@@ -214,8 +214,14 @@ void main() {
     expect(picker.calls, ['gallery']);
     final upload = server.uploads.single;
     expect(upload.headers['content-type'], startsWith('multipart/form-data'));
-    expect(latin1.decode(upload.bodyBytes), contains('name="type"\r\n\r\nvehicle_registration'));
-    expect(latin1.decode(upload.bodyBytes), contains('name="ownerId"\r\n\r\nveh_1'));
+    expect(
+      latin1.decode(upload.bodyBytes),
+      contains('name="type"\r\n\r\nvehicle_registration'),
+    );
+    expect(
+      latin1.decode(upload.bodyBytes),
+      contains('name="ownerId"\r\n\r\nveh_1'),
+    );
     expect(latin1.decode(upload.bodyBytes), contains('filename="photo.jpg"'));
     expect(
       find.descendant(of: row, matching: find.text(tr.docStatusInReview)),

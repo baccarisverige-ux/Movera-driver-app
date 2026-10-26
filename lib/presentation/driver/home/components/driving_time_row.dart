@@ -37,14 +37,18 @@ class _DrivingTimeRowState extends State<DrivingTimeRow> {
   @override
   void didUpdateWidget(DrivingTimeRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.running != widget.running) { _syncTick(); }
+    if (oldWidget.running != widget.running) {
+      _syncTick();
+    }
   }
 
   void _syncTick() {
     _tick?.cancel();
     _tick = widget.running
         ? Timer.periodic(const Duration(seconds: 1), (_) {
-            if (mounted) { setState(() {}); }
+            if (mounted) {
+              setState(() {});
+            }
           })
         : null;
   }
@@ -79,7 +83,9 @@ class _DrivingTimeRowState extends State<DrivingTimeRow> {
                 child: Text(
                   switch (clock.restUntil) {
                     final until? => tr.restUntilTime(clockLabel(until)),
-                    null => tr.timeLeftToDrive(DrivingTimeClock.hoursMinutes(clock.left)),
+                    null => tr.timeLeftToDrive(
+                      DrivingTimeClock.hoursMinutes(clock.left),
+                    ),
                   },
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

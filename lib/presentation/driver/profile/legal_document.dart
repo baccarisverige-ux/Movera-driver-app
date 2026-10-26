@@ -18,15 +18,11 @@ class LegalDocumentScreen extends StatelessWidget {
 
   static LegalDocumentScreen get privacy => LegalDocumentScreen(
     title: tr.privacyPolicyTitle,
-    body:
-        tr.legalPrivacyBody,
+    body: tr.legalPrivacyBody,
   );
 
-  static LegalDocumentScreen get terms => LegalDocumentScreen(
-    title: tr.termsOfService,
-    body:
-        tr.legalTermsBody,
-  );
+  static LegalDocumentScreen get terms =>
+      LegalDocumentScreen(title: tr.termsOfService, body: tr.legalTermsBody);
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +33,8 @@ class LegalDocumentScreen extends StatelessWidget {
         backgroundColor: AppColor.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: tr.back, 
+        leading: IconButton(
+          tooltip: tr.back,
           onPressed: () => popOwned(context),
           icon: Icon(
             Icons.arrow_back_ios_rounded,

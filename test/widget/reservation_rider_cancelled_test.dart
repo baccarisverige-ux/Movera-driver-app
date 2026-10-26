@@ -16,8 +16,10 @@ void main() {
     ScheduledRideStore.take(ride.id, upcoming: true);
     expect(ScheduledRideStore.upcoming.any((r) => r.id == ride.id), isTrue);
 
-    expect(ScheduledRideStore.riderCancelled(ride.id, fee: Money.sek(105)),
-        isTrue);
+    expect(
+      ScheduledRideStore.riderCancelled(ride.id, fee: Money.sek(105)),
+      isTrue,
+    );
     expect(ScheduledRideStore.upcoming.any((r) => r.id == ride.id), isFalse);
     final message = IslandMessages.take();
     expect(message?.title, '${ride.pickupTime} cancelled · +105 kr');

@@ -42,12 +42,16 @@ class _ScreenObserver extends RouteObserver<ModalRoute<dynamic>> {
 
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    if (_opaque(route)) { super.didPush(route, previousRoute); }
+    if (_opaque(route)) {
+      super.didPush(route, previousRoute);
+    }
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    if (_opaque(route)) { super.didPop(route, previousRoute); }
+    if (_opaque(route)) {
+      super.didPop(route, previousRoute);
+    }
   }
 }
 

@@ -13,9 +13,8 @@ Future<void> showDriverSuspendedSheet(BuildContext context) {
     context: context,
     heightFactor: 0.48,
     barrierColor: const Color(0x730D1519),
-    builder: (sheetContext) => DriverSuspendedSheet(
-      onAcknowledge: () => popOwned(sheetContext),
-    ),
+    builder: (sheetContext) =>
+        DriverSuspendedSheet(onAcknowledge: () => popOwned(sheetContext)),
   );
 }
 
@@ -24,10 +23,7 @@ Future<void> showDriverSuspendedSheet(BuildContext context) {
 /// It deliberately does not invent a suspension reason, duration or appeal
 /// result. Those fields must come from the future backend contract.
 class DriverSuspendedSheet extends StatelessWidget {
-  const DriverSuspendedSheet({
-    super.key,
-    required this.onAcknowledge,
-  });
+  const DriverSuspendedSheet({super.key, required this.onAcknowledge});
 
   final VoidCallback onAcknowledge;
 
@@ -163,10 +159,7 @@ class DriverSuspendedSheet extends StatelessWidget {
                   ),
                   child: Text(
                     tr.gotIt,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
                   ),
                 ),
               ),

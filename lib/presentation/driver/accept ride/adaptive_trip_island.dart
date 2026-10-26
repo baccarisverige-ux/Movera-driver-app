@@ -195,8 +195,7 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
     super.dispose();
   }
 
-  bool get _raised =>
-      (widget.sheetPosition?.value ?? 0) > widget.sheetRaisedAt;
+  bool get _raised => (widget.sheetPosition?.value ?? 0) > widget.sheetRaisedAt;
 
   void _sheetMoved() {
     final raised = _raised;
@@ -388,8 +387,10 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
           // title ellipsizes beyond it.
           size = Size(
             desired
-                .clamp(home.width,
-                    math.min(available, TripIslandGeometry.maximumWidth))
+                .clamp(
+                  home.width,
+                  math.min(available, TripIslandGeometry.maximumWidth),
+                )
                 .toDouble(),
             home.height,
           );
@@ -475,7 +476,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
         // UI-12: menu and search (on the Home-like face) take touches in a
         // 48 x 48 box; the island paints exactly as before. So does the
         // status face's info button (driver-u94).
-        final sides = !widget.rideCheck &&
+        final sides =
+            !widget.rideCheck &&
             (_controller.defaultFace || (!route && !waiting));
         return Align(
           alignment: Alignment.topCenter,
@@ -490,23 +492,23 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
                   : 0,
             ),
             child: Listener(
-            onPointerDown: (_) => _controller.hold(),
-            onPointerUp: (_) => _controller.release(),
-            onPointerCancel: (_) => _controller.release(),
-            child: GestureDetector(
-              onLongPress: waiting || widget.rideCheck ? null : _showTools,
-              child: IslandMorph(
-                size: size,
-                radius: radius,
-                // The Home island draws its own shell: no double outline.
-                shell: widget.rideCheck || !_controller.defaultFace,
-                face: face,
-                followSize: route,
-                reducedMotion: MediaQuery.disableAnimationsOf(context),
-                child: content,
+              onPointerDown: (_) => _controller.hold(),
+              onPointerUp: (_) => _controller.release(),
+              onPointerCancel: (_) => _controller.release(),
+              child: GestureDetector(
+                onLongPress: waiting || widget.rideCheck ? null : _showTools,
+                child: IslandMorph(
+                  size: size,
+                  radius: radius,
+                  // The Home island draws its own shell: no double outline.
+                  shell: widget.rideCheck || !_controller.defaultFace,
+                  face: face,
+                  followSize: route,
+                  reducedMotion: MediaQuery.disableAnimationsOf(context),
+                  child: content,
+                ),
               ),
             ),
-          ),
           ),
         );
       },
@@ -697,7 +699,10 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
     // when nothing is signposted.
     final line2 = shields.isNotEmpty && towards.isNotEmpty
         ? tr.navTowards(towards)
-        : [...parts, if (towards.isNotEmpty) tr.navTowards(towards)].join(' · ');
+        : [
+            ...parts,
+            if (towards.isNotEmpty) tr.navTowards(towards),
+          ].join(' · ');
     final hasLine2 = line2.isNotEmpty || shields.isNotEmpty;
     return Semantics(
       label: [
@@ -736,7 +741,11 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
               ),
               maxLines: shields.isEmpty ? 2 : 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: _muted, fontSize: 12.5, height: 1.2),
+              style: const TextStyle(
+                color: _muted,
+                fontSize: 12.5,
+                height: 1.2,
+              ),
             ),
           ],
         ],
@@ -788,7 +797,11 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
               area,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: _muted, fontSize: 12.5, height: 1.2),
+              style: const TextStyle(
+                color: _muted,
+                fontSize: 12.5,
+                height: 1.2,
+              ),
             ),
         ],
       ),
@@ -995,10 +1008,12 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
         ).firstMatch(live?.primary ?? '')?.group(1);
     final symbol = live?.symbol;
     return Semantics(
-      label:
-          exit == null
-              ? symbol?.cueLabel() ?? tr.navToDestination
-              : tr.navExitSemantics(symbol?.cueLabel() ?? tr.navToDestination, exit),
+      label: exit == null
+          ? symbol?.cueLabel() ?? tr.navToDestination
+          : tr.navExitSemantics(
+              symbol?.cueLabel() ?? tr.navToDestination,
+              exit,
+            ),
       child: live == null || symbol == null
           ? const Icon(
               Icons.person_outline_rounded,
@@ -1009,7 +1024,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
           ? CustomPaint(
               size: const Size(24, 24),
               painter: RoundaboutCuePainter(
-                exitDegrees: symbol == NavigationBannerSymbol.roundaboutUTurn &&
+                exitDegrees:
+                    symbol == NavigationBannerSymbol.roundaboutUTurn &&
                         live.exitAngleDegrees == null
                     ? 250
                     : RoundaboutCuePainter.degreesFor(
@@ -1046,72 +1062,73 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
       builder: (context) => SafeArea(
         child: SingleChildScrollView(
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (menuHere)
-              ListTile(
-                leading: const Icon(Icons.menu_rounded),
-                title: Text(tr.menu),
-                onTap: () => popOwned(context, 'menu'),
-              ),
-            ListTile(
-              leading: const Icon(Icons.alt_route_rounded),
-              title: Text(tr.tripRouteAndOptions),
-              onTap: () => popOwned(context, 'route'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.shield_outlined),
-              title: Text(tr.safetyToolkit),
-              onTap: () => popOwned(context, 'safety'),
-            ),
-            if (widget.radarVisible)
-              ListTile(
-                leading: const Icon(Icons.radar_rounded),
-                title: Text(
-                  widget.radarOn
-                      ? tr.turnExclusiveOffersOff
-                      : tr.turnExclusiveOffersOn,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (menuHere)
+                ListTile(
+                  leading: const Icon(Icons.menu_rounded),
+                  title: Text(tr.menu),
+                  onTap: () => popOwned(context, 'menu'),
                 ),
-                onTap: () => popOwned(context, 'radar'),
+              ListTile(
+                leading: const Icon(Icons.alt_route_rounded),
+                title: Text(tr.tripRouteAndOptions),
+                onTap: () => popOwned(context, 'route'),
               ),
-            ListTile(
-              leading: Icon(
-                widget.paidByCash
-                    ? Icons.payments_rounded
-                    : Icons.credit_card_rounded,
+              ListTile(
+                leading: const Icon(Icons.shield_outlined),
+                title: Text(tr.safetyToolkit),
+                onTap: () => popOwned(context, 'safety'),
               ),
-              title: Text(
-                widget.paidByCash ? tr.cashCollectInCar : tr.paidByCard,
+              if (widget.radarVisible)
+                ListTile(
+                  leading: const Icon(Icons.radar_rounded),
+                  title: Text(
+                    widget.radarOn
+                        ? tr.turnExclusiveOffersOff
+                        : tr.turnExclusiveOffersOn,
+                  ),
+                  onTap: () => popOwned(context, 'radar'),
+                ),
+              ListTile(
+                leading: Icon(
+                  widget.paidByCash
+                      ? Icons.payments_rounded
+                      : Icons.credit_card_rounded,
+                ),
+                title: Text(
+                  widget.paidByCash ? tr.cashCollectInCar : tr.paidByCard,
+                ),
               ),
-            ),
-            if (widget.onRideCheckDemo != null) ...[
-              const Divider(height: 1),
-              Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 2),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    tr.rideCheckDemo,
-                    style: TextStyle(
-                      color: Color(0xFF7D898F),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+              if (widget.onRideCheckDemo != null) ...[
+                const Divider(height: 1),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 2),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      tr.rideCheckDemo,
+                      style: TextStyle(
+                        color: Color(0xFF7D898F),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              for (final (trigger, icon) in _rideCheckDemos)
-                ListTile(
-                  key: ValueKey('ride-check-demo-${trigger.name}'),
-                  leading: RideCheckStyle.icon(
-                    icon,
-                    color: const Color(0xFF45525A),
+                for (final (trigger, icon) in _rideCheckDemos)
+                  ListTile(
+                    key: ValueKey('ride-check-demo-${trigger.name}'),
+                    leading: RideCheckStyle.icon(
+                      icon,
+                      color: const Color(0xFF45525A),
+                    ),
+                    title: Text(tr.demoValue(trigger.text.toLowerCase())),
+                    onTap: () =>
+                        popOwned(context, 'ride-check-${trigger.name}'),
                   ),
-                  title: Text(tr.demoValue(trigger.text.toLowerCase())),
-                  onTap: () => popOwned(context, 'ride-check-${trigger.name}'),
-                ),
+              ],
             ],
-          ],
           ),
         ),
       ),

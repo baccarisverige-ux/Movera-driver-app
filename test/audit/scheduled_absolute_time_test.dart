@@ -65,12 +65,17 @@ void main() {
       final ride = ScheduledRideStore.upcoming.single;
       expect(ride.pickupTime, '08:15');
       final booked = ride.pickupAt(ScheduledClock.instance.now())!;
-      expect(booked.difference(ScheduledClock.instance.now()),
-          const Duration(hours: 9, minutes: 15));
+      expect(
+        booked.difference(ScheduledClock.instance.now()),
+        const Duration(hours: 9, minutes: 15),
+      );
       pass(const Duration(hours: 8, minutes: 30));
       final now = ScheduledClock.instance.now();
-      expect(ScheduledRideStore.upcoming.single.pickupAt(now), booked,
-          reason: 'the same morning, not +24 h');
+      expect(
+        ScheduledRideStore.upcoming.single.pickupAt(now),
+        booked,
+        reason: 'the same morning, not +24 h',
+      );
       // 45 min before pickup: a cancel now is late (the admin's 1 h).
       expect(ScheduledRideStore.isLateCancel(ride), isTrue);
     });

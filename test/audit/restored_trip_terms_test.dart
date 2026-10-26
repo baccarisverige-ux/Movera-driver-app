@@ -13,9 +13,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _PendingLocation implements DriverLocationRepository {
   @override
-  Future<DriverLocation> getCurrentPosition() => Completer<DriverLocation>().future;
+  Future<DriverLocation> getCurrentPosition() =>
+      Completer<DriverLocation>().future;
   @override
-  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) => const Stream.empty();
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream.empty();
 }
 
 Future<void> _mount(WidgetTester tester, Widget trip) async {
@@ -23,10 +25,12 @@ Future<void> _mount(WidgetTester tester, Widget trip) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(home: trip),
-  ));
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(home: trip),
+    ),
+  );
   for (var i = 0; i < 8; i++) {
     await tester.pump(const Duration(milliseconds: 50));
   }
@@ -57,45 +61,71 @@ void main() {
 
   // driver-u56: a far pickup (Q20) gives other waiting terms; a restored
   // trip must keep them, and the bags the rider brings.
-  testWidgets('the trip snapshot saves the pickup distance and bags', (tester) async {
+  testWidgets('the trip snapshot saves the pickup distance and bags', (
+    tester,
+  ) async {
     final repo = MemoryActiveRideRepository();
-    await _mount(tester, AcceptRide(
-      tripId: 'far-pickup-trip',
-      initialStage: ActiveRideStage.waitingForRider,
-      pickupKm: 7,
-      bags: 2,
-      locationRepository: _PendingLocation(),
-      activeRideRepository: repo,
-    ));
+    await _mount(
+      tester,
+      AcceptRide(
+        tripId: 'far-pickup-trip',
+        initialStage: ActiveRideStage.waitingForRider,
+        pickupKm: 7,
+        bags: 2,
+        locationRepository: _PendingLocation(),
+        activeRideRepository: repo,
+      ),
+    );
     final json = (await repo.read())!.toJson();
     expect(json['pickupKm'], 7);
     expect(json['bags'], 2);
     await _unmount(tester);
   });
 
-  testWidgets('a restored far-pickup trip keeps its waiting terms and bags', (tester) async {
+  testWidgets('a restored far-pickup trip keeps its waiting terms and bags', (
+    tester,
+  ) async {
     final far = WaitingRules.current.termsFor(category: 'Movera', pickupKm: 7);
-    expect(far.freeSeconds, isNot(WaitingRules.current.termsFor(category: 'Movera').freeSeconds));
+    expect(
+      far.freeSeconds,
+      isNot(WaitingRules.current.termsFor(category: 'Movera').freeSeconds),
+    );
     final snapshot = PersistedActiveRide.fromJson({
       'schemaVersion': 2,
       'tripId': 'far-pickup-trip',
       'stage': 'waitingForRider',
       'category': 'Movera',
-      'pickupLat': 59.33, 'pickupLng': 18.06, 'dropoffLat': 59.35, 'dropoffLng': 18.07,
+      'pickupLat': 59.33,
+      'pickupLng': 18.06,
+      'dropoffLat': 59.35,
+      'dropoffLng': 18.07,
       'pickupKm': 7.0,
       'bags': 2,
     })!;
-    await _mount(tester, AcceptRide.fromPersisted(snapshot,
-        locationRepository: _PendingLocation(), activeRideRepository: MemoryActiveRideRepository()));
+    await _mount(
+      tester,
+      AcceptRide.fromPersisted(
+        snapshot,
+        locationRepository: _PendingLocation(),
+        activeRideRepository: MemoryActiveRideRepository(),
+      ),
+    );
     expect(WaitingTerms.active.freeSeconds, far.freeSeconds);
     expect(WaitingTerms.active.noShowFee, far.noShowFee);
-    expect(tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).bags, 2);
+    expect(
+      tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).bags,
+      2,
+    );
     await _unmount(tester);
   });
 
   test('a bad pickup distance or bag count is ignored, not trusted', () {
     final ride = PersistedActiveRide.fromJson({
-      'schemaVersion': 2, 'tripId': 't', 'stage': 'onTrip', 'pickupKm': -3, 'bags': 'two',
+      'schemaVersion': 2,
+      'tripId': 't',
+      'stage': 'onTrip',
+      'pickupKm': -3,
+      'bags': 'two',
     })!;
     expect(ride.toJson().containsKey('pickupKm'), isFalse);
     expect(ride.toJson().containsKey('bags'), isFalse);

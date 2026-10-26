@@ -131,7 +131,9 @@ void main() {
         ),
         'Ride completed': const DriverRideCompleted(),
         'Radar card': Scaffold(
-          body: Center(child: RadarOfferCard(offer: _offer, onMatch: () {})),
+          body: Center(
+            child: RadarOfferCard(offer: _offer, onMatch: () {}),
+          ),
         ),
         'Exclusive sheet': const Scaffold(
           body: Align(
@@ -172,11 +174,8 @@ void main() {
 
       final sheets = <String, Future<void> Function(BuildContext)>{
         'Go offline?': (c) => showGoOfflineConfirm(c),
-        'Waiting fee and no-show': (c) => showWaitingTimeSheet(
-          c,
-          readSeconds: () => 420,
-          onNoShow: () {},
-        ),
+        'Waiting fee and no-show': (c) =>
+            showWaitingTimeSheet(c, readSeconds: () => 420, onNoShow: () {}),
         'Cash collect': (c) => showCashCollectSheet(
           c,
           fare: '104,80 kr',
@@ -221,8 +220,10 @@ void main() {
         await _settle(tester);
         expect(find.byType(DriverHome), findsOneWidget);
         // The app root runs in the zone's language.
-        expect(Localizations.localeOf(tester.element(find.byType(DriverHome))),
-            Locale(language));
+        expect(
+          Localizations.localeOf(tester.element(find.byType(DriverHome))),
+          Locale(language),
+        );
         expect(tester.takeException(), isNull);
       });
     });
@@ -242,8 +243,10 @@ void main() {
     await _settle(tester);
     // Same Home, now in French.
     expect(tester.state(find.byType(DriverHome)), same(home));
-    expect(Localizations.localeOf(tester.element(find.byType(DriverHome))),
-        const Locale('fr'));
+    expect(
+      Localizations.localeOf(tester.element(find.byType(DriverHome))),
+      const Locale('fr'),
+    );
     expect(tester.takeException(), isNull);
   });
 }

@@ -77,7 +77,10 @@ class _Dispatch implements DispatchRepository {
     for (final item in offers) {
       if (item.id == offerId) offer = item;
     }
-    publish([for (final o in offers) if (o.id != offerId) o]);
+    publish([
+      for (final o in offers)
+        if (o.id != offerId) o,
+    ]);
     return ClaimResult.success(
       offer ?? RideOffer.reservation(demoReservationRequest),
     );
@@ -177,7 +180,9 @@ const _assignedCard = ValueKey<String>(
 );
 
 /// While an Exclusive offer is live the blue radar is its Accept.
-final _exclusiveRadar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
+final _exclusiveRadar = find.byKey(
+  const ValueKey<String>('home-radar-exclusive'),
+);
 
 void main() {
   setUp(() {
@@ -191,17 +196,19 @@ void main() {
   // reservation never comes as an Exclusive offer, but a ride the driver
   // already accepted still opens at "Leave now".
   group('reservations off', () {
-    setUp(() => ScheduledRideRules.current =
-        const ScheduledRideRules(enabled: false));
+    setUp(
+      () =>
+          ScheduledRideRules.current = const ScheduledRideRules(enabled: false),
+    );
 
     testWidgets('no Exclusive reservation offer', (tester) async {
       await _pumpHome(tester, _Dispatch());
       await _goOnline(tester);
       await _frames(tester, const Duration(seconds: 40));
       expect(
-        find.byKey(const ValueKey<String>(
-          'exclusive-offer-card-$demoReservationId',
-        )),
+        find.byKey(
+          const ValueKey<String>('exclusive-offer-card-$demoReservationId'),
+        ),
         findsNothing,
       );
       await _end(tester);
@@ -258,7 +265,10 @@ void main() {
         expect(trip.riderRating, 4.94);
         expect(_said, contains('Leave now for 07:40 pickup'));
         // It is the current trip now, no longer waiting in Accepted.
-        expect(ScheduledRideStore.upcoming, isNot(contains(demoReservationRequest)));
+        expect(
+          ScheduledRideStore.upcoming,
+          isNot(contains(demoReservationRequest)),
+        );
         await _end(tester);
       },
     );
@@ -276,7 +286,10 @@ void main() {
       // 5 admin minutes later (10 s of the demo day) it goes to a backup.
       await _frames(tester, const Duration(seconds: 11));
       expect(_said, contains('Given to backup driver'));
-      expect(ScheduledRideStore.upcoming, isNot(contains(demoReservationRequest)));
+      expect(
+        ScheduledRideStore.upcoming,
+        isNot(contains(demoReservationRequest)),
+      );
       expect(ScheduledRideStore.backupNote.value, contains('07:40'));
       // No longer this driver's: the 08:05 ride no longer clashes and is
       // open to them again.
@@ -292,7 +305,10 @@ void main() {
       await _pumpHome(tester, _Dispatch());
       await _frames(tester, const Duration(seconds: 11));
       expect(_said, contains('08:05 pickup in 1 h'));
-      expect(ScheduledRideStore.reminder.value, startsWith('Pickup at 08:05 in 1 h'));
+      expect(
+        ScheduledRideStore.reminder.value,
+        startsWith('Pickup at 08:05 in 1 h'),
+      );
       await _frames(tester, const Duration(seconds: 30));
       expect(_said, contains('Go online for 08:05 pickup'));
       expect(
@@ -318,7 +334,9 @@ void main() {
       // The demo's own Exclusive offer (Hornstull) does not fit either.
       await _frames(tester, const Duration(seconds: 4));
       expect(
-        find.byKey(const ValueKey<String>('exclusive-offer-card-home-direct-close')),
+        find.byKey(
+          const ValueKey<String>('exclusive-offer-card-home-direct-close'),
+        ),
         findsNothing,
       );
       // The demo puts the first Radar trips on Home 3 s and 6 s after the
@@ -335,7 +353,9 @@ void main() {
 
       // The Live list follows the same rule and says so.
       // Owner N1: the island's middle ("N offers · radar") opens the list.
-      await tester.tap(find.byKey(const ValueKey<String>('island-radar-offers')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('island-radar-offers')),
+      );
       await _frames(tester, const Duration(milliseconds: 800));
       final live = find.byType(RideRequests);
       expect(live, findsOneWidget);
@@ -376,7 +396,10 @@ void main() {
       final card = find.byKey(_assignedCard);
       expect(card, findsOneWidget);
       expect(
-        find.descendant(of: card, matching: find.textContaining('Assigned by Movera')),
+        find.descendant(
+          of: card,
+          matching: find.textContaining('Assigned by Movera'),
+        ),
         findsOneWidget,
       );
       expect(
@@ -416,7 +439,10 @@ void main() {
       await _frames(tester, const Duration(seconds: 31));
       expect(find.byKey(_assignedCard), findsNothing);
       expect(_said, contains('Assignment not accepted'));
-      expect(ScheduledRideStore.upcoming, isNot(contains(demoAssignedReservation)));
+      expect(
+        ScheduledRideStore.upcoming,
+        isNot(contains(demoAssignedReservation)),
+      );
       await _end(tester);
     });
   });
@@ -461,9 +487,11 @@ void main() {
       expect(
         find.descendant(
           of: card,
-          matching: find.byKey(const ValueKey<String>(
-            'exclusive-offer-reservation-$demoReservationId',
-          )),
+          matching: find.byKey(
+            const ValueKey<String>(
+              'exclusive-offer-reservation-$demoReservationId',
+            ),
+          ),
         ),
         findsOneWidget,
       );

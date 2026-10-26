@@ -49,7 +49,8 @@ class _SelectDocumentTypeState extends State<SelectDocumentType> {
             46.height,
             Transform.translate(
               offset: Offset(ResSize.w * -10, 0),
-              child: IconButton(tooltip: tr.back, 
+              child: IconButton(
+                tooltip: tr.back,
                 onPressed: () {
                   popOwned(context);
                 },
@@ -69,8 +70,7 @@ class _SelectDocumentTypeState extends State<SelectDocumentType> {
             ),
             16.height,
             TextWidget(
-              text:
-                  tr.weNeedToDetermineDocument,
+              text: tr.weNeedToDetermineDocument,
               color: AppColor.subtitle,
               fontSize: 16,
               fontWeight: fwMedium,

@@ -22,8 +22,9 @@ Future<GlobalKey<NavigatorState>> _open(
       builder: (_, _) => MaterialApp(
         navigatorKey: navigator,
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(disableAnimations: reduceMotion),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(disableAnimations: reduceMotion),
           child: child!,
         ),
         home: const Scaffold(body: Text('Existing home')),

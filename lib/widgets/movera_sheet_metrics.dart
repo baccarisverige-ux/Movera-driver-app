@@ -7,6 +7,7 @@ class MoveraSheetMetrics {
   const MoveraSheetMetrics._();
 
   static const double collapsedHeight = 108;
+
   /// Content of the collapsed Active Ride bar.
   static const double activeCollapsedHeight = 77;
 
@@ -34,9 +35,12 @@ class MoveraSheetMetrics {
     required double expanded,
   }) {
     final span = expanded - collapsed;
-    if (span <= 0) { return 0.5; }
+    if (span <= 0) {
+      return 0.5;
+    }
     return ((middle - collapsed) / span).clamp(0.08, 0.92);
   }
+
   static const double middleFraction = 0.46;
   static const double expandedFraction = 0.90;
   static const double springMass = 1.0;
@@ -63,7 +67,9 @@ class MoveraSheetMetrics {
     final maxH = expandedHeight(viewportHeight);
     final midH = middleHeight(viewportHeight);
     final span = maxH - collapsed;
-    if (span <= 0) { return 0.5; }
+    if (span <= 0) {
+      return 0.5;
+    }
     return ((midH - collapsed) / span).clamp(0.08, 0.92);
   }
 
@@ -82,8 +88,12 @@ class MoveraSheetMetrics {
     final dCollapsed = position.abs();
     final dSnap = (position - snap).abs();
     final dExpanded = (1 - position).abs();
-    if (dCollapsed <= dSnap && dCollapsed <= dExpanded) { return 0; }
-    if (dSnap <= dExpanded) { return snap; }
+    if (dCollapsed <= dSnap && dCollapsed <= dExpanded) {
+      return 0;
+    }
+    if (dSnap <= dExpanded) {
+      return snap;
+    }
     return 1;
   }
 
@@ -127,10 +137,18 @@ class MoveraSheetMetrics {
     required double position,
     required double velocityPxPerSec,
   }) {
-    if (velocityPxPerSec < -flickVelocity) { return 1; }
-    if (velocityPxPerSec > flickVelocity) { return 0; }
-    if (position > start + 0.03) { return 1; }
-    if (position < start - 0.03) { return 0; }
+    if (velocityPxPerSec < -flickVelocity) {
+      return 1;
+    }
+    if (velocityPxPerSec > flickVelocity) {
+      return 0;
+    }
+    if (position > start + 0.03) {
+      return 1;
+    }
+    if (position < start - 0.03) {
+      return 0;
+    }
     return position >= 0.5 ? 1 : 0;
   }
 

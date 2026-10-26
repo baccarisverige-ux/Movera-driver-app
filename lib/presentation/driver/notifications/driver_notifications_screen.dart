@@ -118,22 +118,22 @@ class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
 
   Widget _filters() {
     Widget chip(String label, DriverNoticeGroup? group) => Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: ChoiceChip(
-            key: ValueKey<String>('notifications-filter-${group?.name ?? 'all'}'),
-            label: Text(label),
-            selected: _group == group,
-            showCheckmark: false,
-            onSelected: (_) => setState(() => _group = group),
-            selectedColor: _ink,
-            backgroundColor: const Color(0xFFF2F4F5),
-            side: BorderSide.none,
-            labelStyle: TextStyle(
-              color: _group == group ? Colors.white : _ink,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        );
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        key: ValueKey<String>('notifications-filter-${group?.name ?? 'all'}'),
+        label: Text(label),
+        selected: _group == group,
+        showCheckmark: false,
+        onSelected: (_) => setState(() => _group = group),
+        selectedColor: _ink,
+        backgroundColor: const Color(0xFFF2F4F5),
+        side: BorderSide.none,
+        labelStyle: TextStyle(
+          color: _group == group ? Colors.white : _ink,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 10),
@@ -160,8 +160,9 @@ class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
           ),
         );
       case DriverNoticeAction.uploadDocument:
-        final document =
-            DocumentExpiryStore.instance.byId(notice.documentId ?? '');
+        final document = DocumentExpiryStore.instance.byId(
+          notice.documentId ?? '',
+        );
         if (document != null && !document.inReview) {
           showDocumentUploadSheet(context, document);
         }
@@ -174,42 +175,58 @@ class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
 /// "Now", "12 min ago", "3 h ago", "Yesterday", "4 days ago".
 String noticeTimeLabel(DateTime at, DateTime now) {
   final ago = now.difference(at);
-  if (ago.inMinutes < 1) { return tr.now; }
-  if (ago.inMinutes < 60) { return tr.minutesAgo(ago.inMinutes); }
-  if (ago.inHours < 24) { return tr.hoursAgo(ago.inHours); }
+  if (ago.inMinutes < 1) {
+    return tr.now;
+  }
+  if (ago.inMinutes < 60) {
+    return tr.minutesAgo(ago.inMinutes);
+  }
+  if (ago.inHours < 24) {
+    return tr.hoursAgo(ago.inHours);
+  }
   // Calendar days, not 24 h spans: 26 h back at 01:00 is two days ago.
-  final days = DateTime.utc(now.year, now.month, now.day)
-      .difference(DateTime.utc(at.year, at.month, at.day))
-      .inDays;
-  if (days <= 1) { return tr.yesterday; }
+  final days = DateTime.utc(
+    now.year,
+    now.month,
+    now.day,
+  ).difference(DateTime.utc(at.year, at.month, at.day)).inDays;
+  if (days <= 1) {
+    return tr.yesterday;
+  }
   return tr.daysAgo(days);
 }
 
 /// The Solar icon of each kind.
 String noticeIcon(DriverNoticeKind kind) => switch (kind) {
-      DriverNoticeKind.newScheduledRide => AppAssets.solarCalendarMark,
-      DriverNoticeKind.exclusiveOffer => AppAssets.solarBolt,
-      DriverNoticeKind.scheduledReminder => AppAssets.solarAlarm,
-      DriverNoticeKind.leaveNow => AppAssets.solarRouting2,
-      DriverNoticeKind.highDemand => AppAssets.solarGraphUp,
-      DriverNoticeKind.event => AppAssets.solarMapPointWave,
-      DriverNoticeKind.documentExpiring => AppAssets.solarDocumentText,
-      DriverNoticeKind.documentApproved => AppAssets.solarCheckCircle,
-      DriverNoticeKind.restOver => AppAssets.solarClockCircle,
-      DriverNoticeKind.scheduledPaused => AppAssets.solarPauseCircle,
-      DriverNoticeKind.payoutSent => AppAssets.solarWallet,
-      DriverNoticeKind.bonusProgress => AppAssets.solarMedalRibbonStar,
-    };
+  DriverNoticeKind.newScheduledRide => AppAssets.solarCalendarMark,
+  DriverNoticeKind.exclusiveOffer => AppAssets.solarBolt,
+  DriverNoticeKind.scheduledReminder => AppAssets.solarAlarm,
+  DriverNoticeKind.leaveNow => AppAssets.solarRouting2,
+  DriverNoticeKind.highDemand => AppAssets.solarGraphUp,
+  DriverNoticeKind.event => AppAssets.solarMapPointWave,
+  DriverNoticeKind.documentExpiring => AppAssets.solarDocumentText,
+  DriverNoticeKind.documentApproved => AppAssets.solarCheckCircle,
+  DriverNoticeKind.restOver => AppAssets.solarClockCircle,
+  DriverNoticeKind.scheduledPaused => AppAssets.solarPauseCircle,
+  DriverNoticeKind.payoutSent => AppAssets.solarWallet,
+  DriverNoticeKind.bonusProgress => AppAssets.solarMedalRibbonStar,
+};
 
-({Color ink, Color tint}) _toneOf(DriverNoticeKind kind) => switch (kind.group) {
-      DriverNoticeGroup.rideAlerts =>
-        (ink: const Color(0xFF1F5FAE), tint: const Color(0xFFEAF2FC)),
-      DriverNoticeGroup.demand =>
-        (ink: const Color(0xFFB4441E), tint: const Color(0xFFFDF0EA)),
-      DriverNoticeGroup.account => kind == DriverNoticeKind.documentExpiring ||
-              kind == DriverNoticeKind.scheduledPaused
-          ? (ink: const Color(0xFF9B6B24), tint: const Color(0xFFFFF6E6))
-          : (ink: _green, tint: const Color(0xFFEAF5EF)),
+({Color ink, Color tint}) _toneOf(DriverNoticeKind kind) =>
+    switch (kind.group) {
+      DriverNoticeGroup.rideAlerts => (
+        ink: const Color(0xFF1F5FAE),
+        tint: const Color(0xFFEAF2FC),
+      ),
+      DriverNoticeGroup.demand => (
+        ink: const Color(0xFFB4441E),
+        tint: const Color(0xFFFDF0EA),
+      ),
+      DriverNoticeGroup.account =>
+        kind == DriverNoticeKind.documentExpiring ||
+                kind == DriverNoticeKind.scheduledPaused
+            ? (ink: const Color(0xFF9B6B24), tint: const Color(0xFFFFF6E6))
+            : (ink: _green, tint: const Color(0xFFEAF5EF)),
     };
 
 class _NoticeTile extends StatelessWidget {
@@ -282,12 +299,19 @@ class _NoticeTile extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   notice.body,
-                  style: const TextStyle(color: _muted, fontSize: 13.5, height: 1.35),
+                  style: const TextStyle(
+                    color: _muted,
+                    fontSize: 13.5,
+                    height: 1.35,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   noticeTimeLabel(notice.at, now),
-                  style: const TextStyle(color: Color(0xFF9AA3A8), fontSize: 12),
+                  style: const TextStyle(
+                    color: Color(0xFF9AA3A8),
+                    fontSize: 12,
+                  ),
                 ),
                 if (area != null) ...[
                   const SizedBox(height: 10),
@@ -334,12 +358,17 @@ class DemandAreaMap extends StatelessWidget {
           width: double.infinity,
           child: Stack(
             children: [
-              const Positioned.fill(child: CustomPaint(painter: _AreaMapPainter())),
+              const Positioned.fill(
+                child: CustomPaint(painter: _AreaMapPainter()),
+              ),
               Positioned(
                 left: 10,
                 bottom: 10,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(99),

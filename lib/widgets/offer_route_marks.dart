@@ -47,8 +47,10 @@ class OfferRouteMarks {
       RouteMarkPins.labelledAnchor(titleOf(kind), value);
 
   /// Logical size of the stop bitmap (the circle plus its shadow room).
-  static const Size stopBitmapSize =
-      Size(stopSize + _stopMargin * 2, stopSize + _stopMargin * 2);
+  static const Size stopBitmapSize = Size(
+    stopSize + _stopMargin * 2,
+    stopSize + _stopMargin * 2,
+  );
 
   /// The stop circle centred on [center].
   static void paintStop(Canvas canvas, Offset center) {

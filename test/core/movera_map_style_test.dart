@@ -211,8 +211,10 @@ void main() {
     expect(moveraMapStyle, moveraMapStyleNear);
     expect(moveraMapStyleNear, contains('#B6EFC2'));
     expect(moveraMapStyleFar, contains('#D8F5DF'));
-    expect(moveraMapStyleFar.replaceAll('#D8F5DF', '#B6EFC2'),
-        moveraMapStyleNear);
+    expect(
+      moveraMapStyleFar.replaceAll('#D8F5DF', '#B6EFC2'),
+      moveraMapStyleNear,
+    );
     for (final style in [moveraMapStyleFar, moveraMapStyleNear]) {
       expect(style, contains('#95DFFF'));
     }
@@ -236,8 +238,10 @@ void main() {
     expect(weight('road.arterial'), 2.5);
     expect(weight('road.highway'), 3);
     // Otherwise the near style: same palette, same park green.
-    expect(moveraMapStyleClose.replaceAll(moveraCloseRoads, ''),
-        moveraMapStyleNear);
+    expect(
+      moveraMapStyleClose.replaceAll(moveraCloseRoads, ''),
+      moveraMapStyleNear,
+    );
     // Zoomed out the SDK's own thin roads stay: no weights.
     for (final style in [moveraMapStyleFar, moveraMapStyleNear]) {
       expect(style, isNot(contains('"weight"')));
@@ -253,8 +257,20 @@ void main() {
     // Far stays far until 12.6; near stays near until 12.4.
     var band = MoveraMapStyleBand.far;
     final seen = <MoveraMapStyleBand>[];
-    for (final zoom in <double>[12.45, 12.55, 12.59, 12.6, 12.5, 12.45, 12.41, 12.4,
-        12.5, 12.55, double.nan, 16.0]) {
+    for (final zoom in <double>[
+      12.45,
+      12.55,
+      12.59,
+      12.6,
+      12.5,
+      12.45,
+      12.41,
+      12.4,
+      12.5,
+      12.55,
+      double.nan,
+      16.0,
+    ]) {
       band = band.at(zoom);
       seen.add(band);
     }
@@ -271,8 +287,19 @@ void main() {
     // never swaps the style; the locate view (15) stays near.
     var band = MoveraMapStyleBand.near;
     final seen = <MoveraMapStyleBand>[];
-    for (final zoom in <double>[15, 15.4, 15.5, 15.59, 15.6, 15.5, 15.41,
-        15.4, 15.5, 17, 12]) {
+    for (final zoom in <double>[
+      15,
+      15.4,
+      15.5,
+      15.59,
+      15.6,
+      15.5,
+      15.41,
+      15.4,
+      15.5,
+      17,
+      12,
+    ]) {
       band = band.at(zoom);
       seen.add(band);
     }

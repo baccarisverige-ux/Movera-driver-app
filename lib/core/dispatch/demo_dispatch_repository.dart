@@ -179,7 +179,8 @@ class DemoDispatchRepository implements DispatchRepository {
        _newOfferDelay = newOfferDelay,
        // Another driver takes a trip soon after Home shows Radar trips,
        // which follow the Exclusive offer's time to accept.
-       _externalClaimDelay = externalClaimDelay ??
+       _externalClaimDelay =
+           externalClaimDelay ??
            DriverOfferRules.current.exclusiveAcceptTime +
                const Duration(milliseconds: 4500),
        _reservationRadarDelay = reservationRadarDelay,
@@ -673,7 +674,8 @@ class DemoDispatchRepository implements DispatchRepository {
     final fixed = _reservationRadarDelay;
     final preview = _seedPreviews[id];
     final pickupAt = preview?.pickupAt(clock.now());
-    final wait = fixed ??
+    final wait =
+        fixed ??
         (pickupAt == null
             ? null
             : clock.realUntil(

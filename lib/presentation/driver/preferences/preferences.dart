@@ -77,10 +77,9 @@ class _PreferencesState extends State<Preferences> {
 
   /// Only the categories admin allows from the car (Q27), in grid order.
   List<int> get _visible => [
-        for (final index in _displayOrder)
-          if (DriverCategoryAccess.current.allows(_categories[index].title))
-            index,
-      ];
+    for (final index in _displayOrder)
+      if (DriverCategoryAccess.current.allows(_categories[index].title)) index,
+  ];
 
   late List<bool> _selected;
 
@@ -102,6 +101,7 @@ class _PreferencesState extends State<Preferences> {
   void _onClaimLock() {
     if (mounted) setState(() {});
   }
+
   Future<void> _restoreSettings() async {
     if (_restoring || !mounted) return;
     _restoring = true;
@@ -145,10 +145,9 @@ class _PreferencesState extends State<Preferences> {
     final revision = ++_saveRevision;
     var saved = false;
     try {
-      await _settings.save(
-        DriverCategoryChoice.section,
-        {'selected': _selected},
-      );
+      await _settings.save(DriverCategoryChoice.section, {
+        'selected': _selected,
+      });
       saved = true;
     } catch (_) {
       saved = false;
@@ -266,10 +265,9 @@ class _PreferencesState extends State<Preferences> {
                         final visible = _visible;
                         final rows = (visible.length / 2).ceil().clamp(1, 4);
                         final extent =
-                            ((constraints.maxHeight - 8 - (rows - 1) * 12) / rows).clamp(
-                              100.0,
-                              137.0,
-                            );
+                            ((constraints.maxHeight - 8 - (rows - 1) * 12) /
+                                    rows)
+                                .clamp(100.0, 137.0);
                         return GridView.builder(
                           padding: EdgeInsets.fromLTRB(side, 0, side, 8),
                           gridDelegate:
@@ -390,7 +388,7 @@ class _PreferencesState extends State<Preferences> {
     final scaler = MediaQuery.textScalerOf(context);
     final textBlock =
         (scaler.scale(compact ? 15 : 17) + scaler.scale(compact ? 11 : 12)) *
-            1.25;
+        1.25;
     final reserved = math.max(compact ? 58.0 : 69.0, textBlock + 25.5);
     final iconHeight = (extent - reserved).clamp(24.0, 68.0);
     final category = _categories[index];
@@ -403,76 +401,76 @@ class _PreferencesState extends State<Preferences> {
       selected: selected,
       // Greyed while a claim is with dispatch (Decision 4).
       child: Opacity(
-      opacity: ClaimLock.locked ? 0.45 : 1,
-      child: Material(
-        color: Colors.white,
-        borderRadius: radius,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: _canEdit ? () => _toggle(index) : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            decoration: BoxDecoration(
-              borderRadius: radius,
-              border: Border.all(
-                color: selected ? _border : _offBorder,
-                width: 1.1,
+        opacity: ClaimLock.locked ? 0.45 : 1,
+        child: Material(
+          color: Colors.white,
+          borderRadius: radius,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: _canEdit ? () => _toggle(index) : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                border: Border.all(
+                  color: selected ? _border : _offBorder,
+                  width: 1.1,
+                ),
               ),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  category.icon,
-                  width: iconHeight * 124 / 68,
-                  height: iconHeight,
-                  colorFilter: ColorFilter.mode(
-                    selected ? _ink : _offInk,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Text(
-                    category.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: selected ? _heading : _offInk,
-                      fontSize: compact ? 15 : 17,
-                      height: 1.25,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: -0.4,
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    category.icon,
+                    width: iconHeight * 124 / 68,
+                    height: iconHeight,
+                    colorFilter: ColorFilter.mode(
+                      selected ? _ink : _offInk,
+                      BlendMode.srcIn,
                     ),
                   ),
-                ),
-                const SizedBox(height: 3),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Text(
-                    category.subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: selected ? _text : _offInk,
-                      fontSize: compact ? 11 : 12,
-                      height: 1.25,
-                      fontWeight: FontWeight.w400,
-                      letterSpacing: -0.2,
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text(
+                      category.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: selected ? _heading : _offInk,
+                        fontSize: compact ? 15 : 17,
+                        height: 1.25,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: -0.4,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 2),
-              ],
+                  const SizedBox(height: 3),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text(
+                      category.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: selected ? _text : _offInk,
+                        fontSize: compact ? 11 : 12,
+                        height: 1.25,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

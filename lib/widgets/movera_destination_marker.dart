@@ -37,11 +37,10 @@ abstract final class MoveraDestinationMarker {
   /// The pin once it has been painted (see [pin]); null before that.
   static BitmapDescriptor? get cachedPin => _pinReady;
 
-  static Future<BitmapDescriptor> pin() => _pin ??= _bitmap(pinSize, paintPin)
-      .then((icon) => _pinReady = icon);
+  static Future<BitmapDescriptor> pin() =>
+      _pin ??= _bitmap(pinSize, paintPin).then((icon) => _pinReady = icon);
 
-  static Future<BitmapDescriptor> car() =>
-      _car ??= _bitmap(carSize, paintCar);
+  static Future<BitmapDescriptor> car() => _car ??= _bitmap(carSize, paintCar);
 
   static Future<BitmapDescriptor> chip(String label) {
     final text = chipText(label);
@@ -159,21 +158,30 @@ abstract final class MoveraDestinationMarker {
 /// curve bulging to the north side by a third of the distance. The first
 /// point is exactly [from] and the last exactly [to].
 List<LatLng> destinationArcPoints(LatLng from, LatLng to, {int count = 48}) {
-  if (from == to) { return [from, to]; }
+  if (from == to) {
+    return [from, to];
+  }
   // Work in a flat frame where one unit east equals one unit north.
   final k = math.cos((from.latitude + to.latitude) / 2 * math.pi / 180);
   final ax = from.longitude * k, ay = from.latitude;
   final bx = to.longitude * k, by = to.latitude;
   final dx = bx - ax, dy = by - ay;
   var nx = -dy, ny = dx;
-  if (ny < 0 || (ny == 0 && nx < 0)) { nx = -nx; ny = -ny; }
+  if (ny < 0 || (ny == 0 && nx < 0)) {
+    nx = -nx;
+    ny = -ny;
+  }
   final n = math.sqrt(nx * nx + ny * ny);
   final d = math.sqrt(dx * dx + dy * dy);
   final cx = (ax + bx) / 2 + nx / n * d * 0.32;
   final cy = (ay + by) / 2 + ny / n * d * 0.32;
   return List<LatLng>.generate(count, (i) {
-    if (i == 0) { return from; }
-    if (i == count - 1) { return to; }
+    if (i == 0) {
+      return from;
+    }
+    if (i == count - 1) {
+      return to;
+    }
     final t = i / (count - 1), u = 1 - t;
     final x = u * u * ax + 2 * u * t * cx + t * t * bx;
     final y = u * u * ay + 2 * u * t * cy + t * t * by;

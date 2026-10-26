@@ -76,7 +76,10 @@ class _Dispatch implements DispatchRepository {
     for (final item in offers) {
       if (item.id == offerId) offer = item;
     }
-    publish([for (final o in offers) if (o.id != offerId) o]);
+    publish([
+      for (final o in offers)
+        if (o.id != offerId) o,
+    ]);
     return ClaimResult.success(
       offer ?? RideOffer.reservation(demoReservationRequest),
     );
@@ -140,7 +143,9 @@ AcceptRide _trip0(WidgetTester tester) =>
     tester.widget<AcceptRide>(find.byType(AcceptRide));
 
 /// While an Exclusive offer is live the blue radar is its Accept.
-final _exclusiveRadar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
+final _exclusiveRadar = find.byKey(
+  const ValueKey<String>('home-radar-exclusive'),
+);
 
 WaitingRideType _typeOf(AcceptRide trip) => WaitingRules.typeOf(
   matchedVia: trip.matchedVia,
@@ -165,9 +170,9 @@ void main() {
         await _goOnline(tester);
         await _frames(tester, const Duration(seconds: 40));
         expect(
-          find.byKey(const ValueKey<String>(
-            'exclusive-offer-card-$demoReservationId',
-          )),
+          find.byKey(
+            const ValueKey<String>('exclusive-offer-card-$demoReservationId'),
+          ),
           findsOneWidget,
         );
         await tester.tap(_exclusiveRadar);
@@ -180,8 +185,9 @@ void main() {
         await _end(tester);
       });
 
-      testWidgets('"Leave now" opens the scheduled ride with its source key',
-          (tester) async {
+      testWidgets('"Leave now" opens the scheduled ride with its source key', (
+        tester,
+      ) async {
         ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
         await _pumpHome(tester, _Dispatch(), online: true);
         await _frames(tester, const Duration(seconds: 49));
@@ -209,7 +215,10 @@ void main() {
           licensePlate: 'p',
           passengerCapacity: 4,
         );
-        expect(record('Exclusive reservation').sourceText, tr.exclusiveReservation);
+        expect(
+          record('Exclusive reservation').sourceText,
+          tr.exclusiveReservation,
+        );
         expect(record('Scheduled ride').sourceText, tr.scheduledRide);
         expect(record('Assigned by Movera').sourceText, tr.assignedByMovera);
         expect(record('Exclusive offer').sourceText, tr.exclusiveOffer);

@@ -42,8 +42,7 @@ abstract final class WebMapBitmaps {
     required double height,
   }) {
     if (!enabled) return null;
-    final url = _urls[png] ??=
-        (debugCreateUrl ?? web.createBlobUrl)(png) ?? '';
+    final url = _urls[png] ??= (debugCreateUrl ?? web.createBlobUrl)(png) ?? '';
     if (url.isEmpty) {
       _urls.remove(png);
       return null;

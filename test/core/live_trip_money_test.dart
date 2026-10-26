@@ -8,7 +8,10 @@ import 'package:movera/core/money/money.dart';
 /// 5.8 km from the drop-off: the ride part raised to the minimum
 /// (`minimum_adjust`), the driver's earnings following it.
 void main() {
-  Map<String, dynamic> money(int minor) => {'amountMinor': minor, 'currency': 'SEK'};
+  Map<String, dynamic> money(int minor) => {
+    'amountMinor': minor,
+    'currency': 'SEK',
+  };
   final completed = <String, dynamic>{
     'tripId': 'trp_1',
     'status': 'completed',
@@ -39,7 +42,11 @@ void main() {
     expect(parsed.waitingFee, isNull);
     // Cash: the whole fare unless a wallet paid part of it.
     expect(parsed.cash, Money.ore(5400));
-    final wallet = {...completed, 'walletApplied': money(1000), 'cashToCollect': money(4400)};
+    final wallet = {
+      ...completed,
+      'walletApplied': money(1000),
+      'cashToCollect': money(4400),
+    };
     expect(LiveTripMoney.tryParse(wallet)!.cash, Money.ore(4400));
   });
 
@@ -56,7 +63,10 @@ void main() {
   });
 
   test('without the driver\'s money there is nothing to take', () {
-    expect(LiveTripMoney.tryParse({'status': 'completed', 'fare': money(5400)}), isNull);
+    expect(
+      LiveTripMoney.tryParse({'status': 'completed', 'fare': money(5400)}),
+      isNull,
+    );
     expect(LiveTripMoney.tryParse({'status': 'completed'}), isNull);
     final noPickupPay = {...completed}..remove('pickupPay');
     expect(LiveTripMoney.tryParse(noPickupPay)!.driverPay, Money.ore(3920));

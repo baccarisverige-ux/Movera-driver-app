@@ -22,16 +22,28 @@ class NextTripGate {
     double? secondsToDropoff,
     NextTripRules? rules,
   }) {
-    if (!onTrip) { return false; }
-    if (demo) { return true; }
-    if (!toFinalDropoff) { return false; }
+    if (!onTrip) {
+      return false;
+    }
+    if (demo) {
+      return true;
+    }
+    if (!toFinalDropoff) {
+      return false;
+    }
     final r = rules ?? NextTripRules.current;
-    if (r.offerTypes.isEmpty) { return false; }
-    if (r.wholeLastLeg) { return true; }
-    final byKm = r.withinKmOfDropoffOn &&
+    if (r.offerTypes.isEmpty) {
+      return false;
+    }
+    if (r.wholeLastLeg) {
+      return true;
+    }
+    final byKm =
+        r.withinKmOfDropoffOn &&
         metersToDropoff != null &&
         metersToDropoff <= r.withinKmOfDropoff * 1000;
-    final byTime = r.withinMinutesOfDropoffOn &&
+    final byTime =
+        r.withinMinutesOfDropoffOn &&
         secondsToDropoff != null &&
         secondsToDropoff <= r.withinMinutesOfDropoff * 60;
     return byKm || byTime;
@@ -51,7 +63,9 @@ class OnTripDestination {
   }) {
     final session = DestinationModeSession.instance;
     // The admin time limit ended it: no filter any more.
-    if (session.expired()) { return true; }
+    if (session.expired()) {
+      return true;
+    }
     return DestinationFilter.follows(
       driver: from,
       destination: destination,
@@ -63,10 +77,14 @@ class OnTripDestination {
   /// Short text when a destination cannot be set now, else null.
   static String? refusalText() {
     final refusal = DestinationModeSession.instance.refusal();
-    if (refusal == null) { return null; }
-    return driverText(refusal == DestinationRefusal.off
-        ? DriverTexts.islandDestinationOff
-        : DriverTexts.islandDestinationsUsed);
+    if (refusal == null) {
+      return null;
+    }
+    return driverText(
+      refusal == DestinationRefusal.off
+          ? DriverTexts.islandDestinationOff
+          : DriverTexts.islandDestinationsUsed,
+    );
   }
 
   /// A destination was set on the trip: it counts for today, and Home

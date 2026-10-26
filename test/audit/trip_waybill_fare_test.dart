@@ -76,14 +76,13 @@ void main() {
       expect(payment.earnings, '925,87 kr');
     });
 
-    test('the net-fare offer card shows the driver share of the whole fare',
-        () {
-      const details = OfferCardDetails(netFare: true);
-      expect(
-        details.fare('1 234,50 kr', commissionRate: 0.25),
-        '925,87 kr',
-      );
-    });
+    test(
+      'the net-fare offer card shows the driver share of the whole fare',
+      () {
+        const details = OfferCardDetails(netFare: true);
+        expect(details.fare('1 234,50 kr', commissionRate: 0.25), '925,87 kr');
+      },
+    );
 
     test('short fares keep their format', () {
       expect(WaybillPayment.fromFare('139,00 kr')!.earnings, '104,25 kr');
@@ -105,8 +104,9 @@ void main() {
       expect(find.textContaining('*'), findsNothing);
     });
 
-    testWidgets('the bonus is a part of the earnings, on its own row',
-        (tester) async {
+    testWidgets('the bonus is a part of the earnings, on its own row', (
+      tester,
+    ) async {
       await _openWaybill(
         tester,
         _record(fare: '158,39 kr', driverBonus: '40 kr'),
@@ -117,8 +117,9 @@ void main() {
       expect(find.text('incl. +40 kr Movera bonus'), findsOneWidget);
     });
 
-    testWidgets('a trip without waiting shows its earnings whole',
-        (tester) async {
+    testWidgets('a trip without waiting shows its earnings whole', (
+      tester,
+    ) async {
       await _openWaybill(tester, _record(fare: '100,00 kr', waitingFee: null));
       expect(_row(tester, 'Movera fee'), isNull);
       expect(_row(tester, 'Your earnings'), '100,00 kr');
@@ -145,8 +146,9 @@ void main() {
   });
 
   group('driver-u50: the waiting fee is not in the base', () {
-    testWidgets('base without the wait, the wait on its own row',
-        (tester) async {
+    testWidgets('base without the wait, the wait on its own row', (
+      tester,
+    ) async {
       await _openWaybill(tester, _record());
       expect(_row(tester, 'Base · Movera'), '100,00 kr');
       expect(_row(tester, 'Waiting time'), '+18,39 kr');

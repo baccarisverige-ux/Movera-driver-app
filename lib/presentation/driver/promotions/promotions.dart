@@ -132,7 +132,10 @@ class _PromotionsState extends State<Promotions> {
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [_tabChip(tr.preview, 0), _tabChip(tr.promoSavedTab, 1)],
+              children: [
+                _tabChip(tr.preview, 0),
+                _tabChip(tr.promoSavedTab, 1),
+              ],
             ),
           ),
           Expanded(

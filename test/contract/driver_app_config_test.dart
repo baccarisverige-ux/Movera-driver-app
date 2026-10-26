@@ -90,8 +90,10 @@ void main() {
       expect(waiting.categories.keys, unorderedEquals(['premium', 'xl']));
       expect(waiting.termsFor(category: 'Movera XL').freeMinutes, 3);
       expect(waiting.termsFor(category: 'Movera XL').noShowAfterMinutes, 3);
-      expect(waiting.termsFor(category: 'premium').perMinute.formatted,
-          '16,90 kr');
+      expect(
+        waiting.termsFor(category: 'premium').perMinute.formatted,
+        '16,90 kr',
+      );
       expect(waiting.termsFor(pickupKm: 7).noShowFee.formatted, '85,00 kr');
       expect(
         waiting.termsFor(type: WaitingRideType.airport).noShowAfterMinutes,
@@ -123,8 +125,10 @@ void main() {
       final premium = config.waiting.termsFor(category: 'Premium');
       expect(premium.perMinute.formatted, '5,100 DT');
       expect(premium.freeMinutes, 5);
-      expect(config.waiting.termsFor(pickupKm: 9).noShowFee.formatted,
-          '25,500 DT');
+      expect(
+        config.waiting.termsFor(pickupKm: 9).noShowFee.formatted,
+        '25,500 DT',
+      );
     });
 
     test('apply() puts the zone rules in use', () {
@@ -134,8 +138,9 @@ void main() {
     });
 
     test('Home reads destination mode from the document', () {
-      final json = _read('test/fixtures/config/driver_app_config.Z001.json')
-          as Map<String, dynamic>;
+      final json =
+          _read('test/fixtures/config/driver_app_config.Z001.json')
+              as Map<String, dynamic>;
       (json['destinationMode'] as Map)['destinationsPerDay'] = 7;
       final home = DriverHomeAdminContentService(
         appConfig: DriverAppConfig.fromJson(json),
@@ -145,7 +150,13 @@ void main() {
   });
 
   group('never crashes; missing or broken values are the seed', () {
-    for (final input in <Object?>[null, 'x', 3, <dynamic>[], <String, dynamic>{}]) {
+    for (final input in <Object?>[
+      null,
+      'x',
+      3,
+      <dynamic>[],
+      <String, dynamic>{},
+    ]) {
       test('input $input', () {
         final config = DriverAppConfig.fromJson(input);
         expect(config.zoneId, DriverZones.defaultId);
@@ -164,7 +175,11 @@ void main() {
         'currency': 'XYZ',
         'timeZone': false,
         'catalog': {
-          'categories': [1, {'id': 'Not An Id'}, {'id': 'xl', 'seats': 'six'}],
+          'categories': [
+            1,
+            {'id': 'Not An Id'},
+            {'id': 'xl', 'seats': 'six'},
+          ],
         },
         'features': {'performance': 'yes', 'scheduledRides': false},
         'waiting': {
@@ -173,12 +188,22 @@ void main() {
           'noShowFee': {'amountMinor': 1.5, 'currency': 'SEK'},
           'driverSharePct': 400,
           'farPickup': 'far',
-          'rideTypes': {'airport': {'on': false}, 'event': 7},
-          'byCategory': {'xl': 'three', 'BAD KEY': {}, 'pet': {'freeWaitMin': 4}},
+          'rideTypes': {
+            'airport': {'on': false},
+            'event': 7,
+          },
+          'byCategory': {
+            'xl': 'three',
+            'BAD KEY': {},
+            'pet': {'freeWaitMin': 4},
+          },
         },
         'destinationMode': 'on',
         'nextTrips': [],
-        'cancelReasons': {'noShow': 'rider_no_show', 'scheduled': [1, 'scheduled_other']},
+        'cancelReasons': {
+          'noShow': 'rider_no_show',
+          'scheduled': [1, 'scheduled_other'],
+        },
         'appUpdate': {'latestVersion': 2},
         'somethingNew': {'a': 1},
       });
@@ -214,13 +239,17 @@ void main() {
       expect(terms.noShowFee.currency, 'TND');
       expect(terms.driverNoShowFee.currency, 'TND');
       final none = DriverAppConfig.fromJson({'currency': 'TND'});
-      expect(none.waiting.termsFor(category: 'Premium').perMinute.currency,
-          'TND');
+      expect(
+        none.waiting.termsFor(category: 'Premium').perMinute.currency,
+        'TND',
+      );
     });
 
     test('the old zone id is read as Z001', () {
-      expect(DriverAppConfig.fromJson({'zoneId': 'svc-stockholm'}).zoneId,
-          'Z001');
+      expect(
+        DriverAppConfig.fromJson({'zoneId': 'svc-stockholm'}).zoneId,
+        'Z001',
+      );
     });
   });
 
@@ -228,25 +257,44 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.5.3');
-      expect(ZoneDefaults.paymentMethods, contract['zonePaymentMethods']['values']);
+      expect(contract['version'], '0.5.5');
+      expect(
+        ZoneDefaults.paymentMethods,
+        contract['zonePaymentMethods']['values'],
+      );
       expect(ZoneDefaults.languages, contract['languages']['values']);
       expect(ZoneDefaults.maxStops, defaults['maxStops']);
       expect(ZoneDefaults.maxPickupMoveMeters, defaults['maxPickupMoveMeters']);
-      expect(ZoneDefaults.missedExclusiveBeforeOffline,
-          defaults['missedExclusiveBeforeOffline']);
-      expect(ZoneDefaults.waitingDriverSharePct, defaults['waitingDriverSharePct']);
-      expect(ZoneDefaults.noShowDriverSharePct, defaults['noShowDriverSharePct']);
+      expect(
+        ZoneDefaults.missedExclusiveBeforeOffline,
+        defaults['missedExclusiveBeforeOffline'],
+      );
+      expect(
+        ZoneDefaults.waitingDriverSharePct,
+        defaults['waitingDriverSharePct'],
+      );
+      expect(
+        ZoneDefaults.noShowDriverSharePct,
+        defaults['noShowDriverSharePct'],
+      );
       for (final MapEntry(key: country, value: row)
           in (defaults['countries'] as Map<String, dynamic>).entries) {
         final currency = row['currency'] as String;
         expect(ZoneDefaults.countryOf(currency), country);
         expect(ZoneDefaults.languageOf(country), row['defaultLanguage']);
         final bonus = DriverBonusLimits.defaultsIn(currency);
-        expect(bonus.defaultLimit,
-            Money.fromJson(Map<String, dynamic>.from(row['driverBonus']['defaultLimit'])));
-        expect(bonus.hardMax,
-            Money.fromJson(Map<String, dynamic>.from(row['driverBonus']['hardMax'])));
+        expect(
+          bonus.defaultLimit,
+          Money.fromJson(
+            Map<String, dynamic>.from(row['driverBonus']['defaultLimit']),
+          ),
+        );
+        expect(
+          bonus.hardMax,
+          Money.fromJson(
+            Map<String, dynamic>.from(row['driverBonus']['hardMax']),
+          ),
+        );
       }
     });
 
@@ -259,9 +307,20 @@ void main() {
         final config = _admin(zone);
         expect(config.country, country);
         expect(config.languages.available, ['en', 'fr', 'sv']);
-        expect([config.languages.rider, config.languages.driver, config.languages.admin],
-            [lang, lang, lang]);
-        expect(config.paymentMethods, ['cash', 'card', 'apple_pay', 'google_pay']);
+        expect(
+          [
+            config.languages.rider,
+            config.languages.driver,
+            config.languages.admin,
+          ],
+          [lang, lang, lang],
+        );
+        expect(config.paymentMethods, [
+          'cash',
+          'card',
+          'apple_pay',
+          'google_pay',
+        ]);
         expect(config.maxStops, 3);
         expect(config.maxPickupMoveMeters, 500);
         expect(config.autoOffline, isTrue);
@@ -269,7 +328,10 @@ void main() {
         expect(config.driverBonus, isNotNull);
         expect(config.driverBonusLimits.defaultLimit.currency, config.currency);
         String digits(String text) => text.replaceAll(RegExp(r'\s'), '');
-        expect(digits(config.driverBonusLimits.defaultLimit.formatted), digits(limit));
+        expect(
+          digits(config.driverBonusLimits.defaultLimit.formatted),
+          digits(limit),
+        );
         expect(digits(config.driverBonusLimits.hardMax.formatted), digits(max));
         expect(config.waiting.base.driverShareWaitPercent, 100);
         expect(config.waiting.base.driverShareNoShowPercent, 80);
@@ -284,7 +346,10 @@ void main() {
       expect(config.missedExclusiveBeforeOffline, 3);
       expect(config.driverBonusLimits.defaultLimit, Money(minorUnits: 20000));
       expect(config.waiting.base.freeMinutes, 5);
-      expect(config.waiting.termsFor(category: 'comfort').noShowAfterMinutes, 5);
+      expect(
+        config.waiting.termsFor(category: 'comfort').noShowAfterMinutes,
+        5,
+      );
       expect(config.waiting.base.driverShareWaitPercent, 100);
     });
 
@@ -297,10 +362,14 @@ void main() {
       expect(config.maxPickupMoveMeters, 500);
       expect(config.missedExclusiveBeforeOffline, 3);
       expect(config.driverBonus, isNull);
-      expect(config.driverBonusLimits.defaultLimit,
-          Money(minorUnits: 2000, currency: 'EUR'));
-      expect(config.driverBonusLimits.hardMax,
-          Money(minorUnits: 9500, currency: 'EUR'));
+      expect(
+        config.driverBonusLimits.defaultLimit,
+        Money(minorUnits: 2000, currency: 'EUR'),
+      );
+      expect(
+        config.driverBonusLimits.hardMax,
+        Money(minorUnits: 9500, currency: 'EUR'),
+      );
     });
 
     test('invalid values never crash and fall back', () {
@@ -331,8 +400,10 @@ void main() {
       expect(config.autoOffline, isTrue);
       expect(config.missedExclusiveBeforeOffline, 3);
       expect(config.driverBonus, isNull, reason: 'limit above the hard max');
-      expect(config.driverBonusLimits.defaultLimit,
-          Money(minorUnits: 60000, currency: 'TND'));
+      expect(
+        config.driverBonusLimits.defaultLimit,
+        Money(minorUnits: 60000, currency: 'TND'),
+      );
       final other = DriverAppConfig.fromJson({
         'currency': 'SEK',
         'paymentMethods': 'card',
@@ -356,10 +427,7 @@ void main() {
       )..remove('note');
       expect(_reservations(const ScheduledRideRules()), defaults);
       // Read back from the contract's own defaults: the same rules.
-      expect(
-        _reservations(ScheduledRideRules.fromJson(defaults)),
-        defaults,
-      );
+      expect(_reservations(ScheduledRideRules.fromJson(defaults)), defaults);
     });
 
     // Owner decision 2: reservations on/off for the zone (either switch)
@@ -373,29 +441,51 @@ void main() {
         driverProfile: profile,
       ).load().scheduledRides;
       expect(rides().enabled, isTrue);
-      expect(rides(config: {'reservations': {'on': false}}).enabled, isFalse);
-      expect(rides(config: {'features': {'scheduledRides': false}}).enabled,
-          isFalse);
+      expect(
+        rides(
+          config: {
+            'reservations': {'on': false},
+          },
+        ).enabled,
+        isFalse,
+      );
+      expect(
+        rides(
+          config: {
+            'features': {'scheduledRides': false},
+          },
+        ).enabled,
+        isFalse,
+      );
       final now = DateTime.utc(2026, 10, 21, 12);
       expect(rides().driverAccess.offAt(now), isFalse);
       expect(
-        rides(profile: {'scheduledRides': {'on': false, 'until': null}})
-            .driverAccess
-            .offAt(now),
+        rides(
+          profile: {
+            'scheduledRides': {'on': false, 'until': null},
+          },
+        ).driverAccess.offAt(now),
         isTrue,
       );
-      final on = rides(profile: {
-        'scheduledRides': {'on': true, 'until': '2026-10-24T12:00:00.000Z'},
-      }).driverAccess;
-      expect([on.onAt(now), on.onAt(DateTime.utc(2026, 10, 25))],
-          [true, false]);
-      expect(rides(profile: {'scheduledRides': 'broken'}).driverAccess.onAt(now),
-          isFalse);
+      final on = rides(
+        profile: {
+          'scheduledRides': {'on': true, 'until': '2026-10-24T12:00:00.000Z'},
+        },
+      ).driverAccess;
+      expect(
+        [on.onAt(now), on.onAt(DateTime.utc(2026, 10, 25))],
+        [true, false],
+      );
+      expect(
+        rides(profile: {'scheduledRides': 'broken'}).driverAccess.onAt(now),
+        isFalse,
+      );
     });
 
     test('the contract fixture\'s reservations are read as sent', () {
-      final json = _read('contracts/fixtures/config/driver_app_config.json')
-          as Map<String, dynamic>;
+      final json =
+          _read('contracts/fixtures/config/driver_app_config.json')
+              as Map<String, dynamic>;
       final config = DriverAppConfig.fromJson(json);
       expect(_reservations(config.reservations), json['reservations']);
     });

@@ -12,7 +12,9 @@ void main() {
     final missing = <String>[];
     for (final file in _dart('lib')) {
       final source = file.readAsStringSync();
-      for (final match in RegExp(r'IconButton(\.filled|\.outlined)?\(').allMatches(source)) {
+      for (final match in RegExp(
+        r'IconButton(\.filled|\.outlined)?\(',
+      ).allMatches(source)) {
         var depth = 1, i = match.end;
         while (depth > 0 && i < source.length) {
           final c = source[i++];
@@ -20,7 +22,9 @@ void main() {
           if (c == ')') depth--;
         }
         if (!source.substring(match.start, i).contains('tooltip:')) {
-          missing.add('${file.path}:${source.substring(0, match.start).split('\n').length}');
+          missing.add(
+            '${file.path}:${source.substring(0, match.start).split('\n').length}',
+          );
         }
       }
     }
@@ -28,10 +32,12 @@ void main() {
   });
 
   test('every declared AppAssets constant is used and exists', () {
-    final declarations = RegExp(r"static const String (\w+)\s*=\s*'([^']+)'")
-        .allMatches(File('lib/constants/appassets.dart').readAsStringSync());
+    final declarations = RegExp(
+      r"static const String (\w+)\s*=\s*'([^']+)'",
+    ).allMatches(File('lib/constants/appassets.dart').readAsStringSync());
     final code = [
-      for (final dir in ['lib', 'test']) ..._dart(dir).map((f) => f.readAsStringSync()),
+      for (final dir in ['lib', 'test'])
+        ..._dart(dir).map((f) => f.readAsStringSync()),
     ].join('\n');
     final unused = <String>[], missingFiles = <String>[];
     for (final d in declarations) {

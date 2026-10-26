@@ -45,8 +45,16 @@ Map<String, dynamic> _wire({
   'fare': {'amountMinor': 8810, 'currency': 'SEK'},
   'source': source,
   if (reasonCode != null) 'reasonCode': reasonCode,
-  'pickup': {'address': 'Tegnérgatan, Stockholm', 'lat': 59.3335, 'lng': 18.0610},
-  'dropoff': {'address': 'Odengatan, Stockholm', 'lat': 59.3428, 'lng': 18.0475},
+  'pickup': {
+    'address': 'Tegnérgatan, Stockholm',
+    'lat': 59.3335,
+    'lng': 18.0610,
+  },
+  'dropoff': {
+    'address': 'Odengatan, Stockholm',
+    'lat': 59.3428,
+    'lng': 18.0475,
+  },
   'categoryId': 'comfort',
   'paymentMethod': paymentMethod,
   'pickupEtaSeconds': 180,
@@ -85,13 +93,16 @@ class _Api {
     requests.clear();
   }
 
-  List<String?> get keys =>
-      [for (final r in requests) r.headers['Idempotency-Key']];
+  List<String?> get keys => [
+    for (final r in requests) r.headers['Idempotency-Key'],
+  ];
 }
 
-http.Response _json(Object body, [int status = 200]) =>
-    http.Response(jsonEncode(body), status,
-        headers: {'content-type': 'application/json'});
+http.Response _json(Object body, [int status = 200]) => http.Response(
+  jsonEncode(body),
+  status,
+  headers: {'content-type': 'application/json'},
+);
 
 class _Dispatch implements DispatchRepository {
   _Dispatch(this.offers);
@@ -122,9 +133,11 @@ class _Dispatch implements DispatchRepository {
 }
 
 Future<void> _until(WidgetTester tester, Finder finder, Duration limit) async {
-  for (var t = Duration.zero;
-      t < limit && finder.evaluate().isEmpty;
-      t += const Duration(milliseconds: 100)) {
+  for (
+    var t = Duration.zero;
+    t < limit && finder.evaluate().isEmpty;
+    t += const Duration(milliseconds: 100)
+  ) {
     await tester.pump(const Duration(milliseconds: 100));
   }
 }
@@ -135,20 +148,22 @@ Future<void> _online(WidgetTester tester, List<RideOffer> offers) async {
   addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
   await tester.binding.setSurfaceSize(const Size(375, 812));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(LayoutViewport(
-    child: ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      useInheritedMediaQuery: true,
-      builder: (_, __) => MaterialApp(
-        home: DriverHome(
-          sessionController: DriverSessionController(),
-          dispatchRepository: _Dispatch(offers),
+  await tester.pumpWidget(
+    LayoutViewport(
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        useInheritedMediaQuery: true,
+        builder: (_, __) => MaterialApp(
+          home: DriverHome(
+            sessionController: DriverSessionController(),
+            dispatchRepository: _Dispatch(offers),
+          ),
         ),
       ),
     ),
-  ));
+  );
   await tester.pump(const Duration(milliseconds: 200));
   tester
       .widget<GestureDetector>(
@@ -169,11 +184,13 @@ void main() {
 
   group('driver-r4-4: Offer.kind, expiresAt and reasonCode', () {
     test('OfferWire keeps them', () {
-      final offer = OfferWire.parse(_wire(
-        kind: 'exclusive',
-        reasonCode: 'nearby',
-        expiresAt: '2026-10-20T12:00:15Z',
-      ));
+      final offer = OfferWire.parse(
+        _wire(
+          kind: 'exclusive',
+          reasonCode: 'nearby',
+          expiresAt: '2026-10-20T12:00:15Z',
+        ),
+      );
       expect(offer.kind, OfferKind.exclusive);
       expect(offer.reasonCode, 'nearby');
       expect(offer.expiresAt, DateTime.utc(2026, 10, 20, 12, 0, 15));
@@ -186,19 +203,27 @@ void main() {
       // The server lets it go in 8 s, not the app's 15 s.
       final expires = DateTime.now().add(const Duration(seconds: 8));
       await _online(tester, [
-        OfferWire.parse(_wire(
-          kind: 'exclusive',
-          reasonCode: 'favourite',
-          expiresAt: expires.toUtc().toIso8601String(),
-        )),
+        OfferWire.parse(
+          _wire(
+            kind: 'exclusive',
+            reasonCode: 'favourite',
+            expiresAt: expires.toUtc().toIso8601String(),
+          ),
+        ),
       ]);
-      final card = find.byKey(const ValueKey<String>('exclusive-offer-card-o1'));
+      final card = find.byKey(
+        const ValueKey<String>('exclusive-offer-card-o1'),
+      );
       await _until(tester, card, const Duration(seconds: 5));
       expect(card, findsOneWidget);
-      expect(find.byKey(const ValueKey<String>('radar-offer-card-o1')),
-          findsNothing);
-      expect(find.textContaining(RegExp(r"Rider's favourite · [0-8] s")),
-          findsWidgets);
+      expect(
+        find.byKey(const ValueKey<String>('radar-offer-card-o1')),
+        findsNothing,
+      );
+      expect(
+        find.textContaining(RegExp(r"Rider's favourite · [0-8] s")),
+        findsWidgets,
+      );
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     });
@@ -211,8 +236,10 @@ void main() {
       api.answers
         ..add((_) => http.ClientException('connection dropped'))
         ..add((_) => _json({'tripId': 'trip-o1', 'status': 'accepted'}));
-      expect((await api.repo.claimOffer('o1')).outcome,
-          ClaimOutcome.networkError);
+      expect(
+        (await api.repo.claimOffer('o1')).outcome,
+        ClaimOutcome.networkError,
+      );
       expect((await api.repo.claimOffer('o1')).isSuccess, isTrue);
       expect(api.keys, ['key-1', 'key-1']);
     });
@@ -221,10 +248,12 @@ void main() {
       final api = _Api();
       await api.open([_wire(), _wire(id: 'o2')]);
       api.answers
-        ..add((_) => _json({
-              'code': 'version_mismatch',
-              'projection': {..._wire(), 'version': 2},
-            }, 409))
+        ..add(
+          (_) => _json({
+            'code': 'version_mismatch',
+            'projection': {..._wire(), 'version': 2},
+          }, 409),
+        )
         ..add((_) => _json({'tripId': 'trip-o1', 'status': 'accepted'}))
         ..add((_) => _json({}, 503))
         ..add((_) => _json(_wire(id: 'o2')));
@@ -251,7 +280,9 @@ void main() {
           if (!next.isCompleted) next.complete();
           if (requests.length == 1) {
             return http.StreamedResponse(
-                Stream.value(utf8.encode('Service Unavailable')), 503);
+              Stream.value(utf8.encode('Service Unavailable')),
+              503,
+            );
           }
           final feed = StreamController<List<int>>();
           feeds.add(feed);
@@ -272,13 +303,11 @@ void main() {
       await pumpEventQueue();
     }
 
-    void send(StreamController<List<int>> feed, int sequence) =>
-        feed.add(utf8.encode('id: $sequence\ndata: ${jsonEncode({
-          'eventId': 'e$sequence',
-          'sequence': sequence,
-          'kind': 'offer_created',
-          'offer': _wire(id: 'o$sequence'),
-        })}\n\n'));
+    void send(StreamController<List<int>> feed, int sequence) => feed.add(
+      utf8.encode(
+        'id: $sequence\ndata: ${jsonEncode({'eventId': 'e$sequence', 'sequence': sequence, 'kind': 'offer_created', 'offer': _wire(id: 'o$sequence')})}\n\n',
+      ),
+    );
 
     test('an error answer, an ended or broken feed: it reconnects after the '
         'last sequence, and says when it is not live', () async {
@@ -315,9 +344,13 @@ void main() {
   });
 
   test('driver-r4-8: destinationMode.perDay and nextTrips.on are read', () {
-    final json = jsonDecode(
-      File('contracts/fixtures/config/driver_app_config.json').readAsStringSync(),
-    ) as Map<String, dynamic>;
+    final json =
+        jsonDecode(
+              File(
+                'contracts/fixtures/config/driver_app_config.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
     var config = DriverAppConfig.fromJson({
       ...json,
       'destinationMode': {'perDay': 1},
@@ -346,17 +379,36 @@ void main() {
       'offlineBackupAfterMin': 7.6,
     });
     expect(
-      [bad.exclusiveBeforeMinutes, bad.radarBeforeMinutes,
-        bad.homePopupAfterMinutes, bad.pauseDays, bad.assignAcceptTime,
-        bad.towardPickupBeforeMinutes, bad.longTripKm, bad.lateCancelLimit,
-        bad.lateCancelPeriodDays, bad.backupAfterMinutes],
-      [seed.exclusiveBeforeMinutes, seed.radarBeforeMinutes,
-        seed.homePopupAfterMinutes, seed.pauseDays, seed.assignAcceptTime,
-        seed.towardPickupBeforeMinutes, seed.longTripKm, seed.lateCancelLimit,
-        seed.lateCancelPeriodDays, seed.backupAfterMinutes],
+      [
+        bad.exclusiveBeforeMinutes,
+        bad.radarBeforeMinutes,
+        bad.homePopupAfterMinutes,
+        bad.pauseDays,
+        bad.assignAcceptTime,
+        bad.towardPickupBeforeMinutes,
+        bad.longTripKm,
+        bad.lateCancelLimit,
+        bad.lateCancelPeriodDays,
+        bad.backupAfterMinutes,
+      ],
+      [
+        seed.exclusiveBeforeMinutes,
+        seed.radarBeforeMinutes,
+        seed.homePopupAfterMinutes,
+        seed.pauseDays,
+        seed.assignAcceptTime,
+        seed.towardPickupBeforeMinutes,
+        seed.longTripKm,
+        seed.lateCancelLimit,
+        seed.lateCancelPeriodDays,
+        seed.backupAfterMinutes,
+      ],
     );
-    final good = ScheduledRideRules.fromJson(
-        {'exclusiveBeforeMin': 180, 'pauseDays': 1, 'assignAcceptSeconds': 10});
+    final good = ScheduledRideRules.fromJson({
+      'exclusiveBeforeMin': 180,
+      'pauseDays': 1,
+      'assignAcceptSeconds': 10,
+    });
     expect(good.exclusiveBeforeMinutes, 180);
     expect(good.pauseDays, 1);
     expect(good.assignAcceptTime, const Duration(seconds: 10));

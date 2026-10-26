@@ -184,7 +184,9 @@ Future<_Dispatch> _pumpHome(
       .onTap!
       .call();
   await _frames(tester, const Duration(milliseconds: 1500));
-  if (!deck) { return dispatch; }
+  if (!deck) {
+    return dispatch;
+  }
   await _frames(
     tester,
     DriverOfferRules.current.exclusiveAcceptTime +
@@ -222,7 +224,9 @@ void main() {
       );
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.byType(RideRequests), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey<String>('radar-match-toward')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('radar-match-toward')),
+      );
       await tester.pump();
       expect(dispatch.claims, hasLength(1));
       await _pastLeaveNow(tester);
@@ -269,7 +273,9 @@ void main() {
         tester,
       ) async {
         final dispatch = await _pumpHome(tester);
-        await tester.tap(find.byKey(const ValueKey<String>('radar-match-toward')));
+        await tester.tap(
+          find.byKey(const ValueKey<String>('radar-match-toward')),
+        );
         await tester.pump();
         expect(dispatch.claims, hasLength(1));
         await _pastLeaveNow(tester);
@@ -346,14 +352,14 @@ void main() {
   });
 
   group('driver-fixrev-8: the toward-pickup window', () {
-    testWidgets(
-        'is reservations.towardPickupBeforeMin, not the ride type\'s '
+    testWidgets('is reservations.towardPickupBeforeMin, not the ride type\'s '
         'online minutes', (tester) async {
       // Online 5 min before a normal ride, trips toward it from 60 min.
       ScheduledRideRules.current = const ScheduledRideRules(
         kinds: {
-          ScheduledRideKind.normal:
-              ScheduledRideKindRule(onlineBeforeMinutes: 5),
+          ScheduledRideKind.normal: ScheduledRideKindRule(
+            onlineBeforeMinutes: 5,
+          ),
         },
       );
       await _pumpHome(tester, offers: [_toward, _away]);

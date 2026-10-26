@@ -45,8 +45,10 @@ List<int> _event(int sequence) =>
 
 class _Gps implements DriverLocationRepository {
   @override
-  Future<DriverLocation> getCurrentPosition() async =>
-      const DriverLocation(point: GeoPoint(59.1955, 17.6253), accuracyMeters: 8);
+  Future<DriverLocation> getCurrentPosition() async => const DriverLocation(
+    point: GeoPoint(59.1955, 17.6253),
+    accuracyMeters: 8,
+  );
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       const Stream.empty();
@@ -83,10 +85,9 @@ void main() {
       expect(requests, hasLength(1));
       feeds.last.add(_event(1));
       await pumpEventQueue();
-      expect(
-        (await dispatch.watchNearbyOffers().first).map((o) => o.id),
-        ['o1'],
-      );
+      expect((await dispatch.watchNearbyOffers().first).map((o) => o.id), [
+        'o1',
+      ]);
 
       // The server's `: heartbeat` every 100 ms: nothing reconnects.
       for (var i = 0; i < 6; i++) {

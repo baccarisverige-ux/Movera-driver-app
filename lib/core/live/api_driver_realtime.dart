@@ -125,7 +125,8 @@ class ApiDriverRealtime implements DriverRealtime {
           'Accept': 'text/event-stream',
           'X-Api-Version': ApiClient.apiVersion,
           'X-Request-Id': ApiClient.randomKey(),
-          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
           if (_last > 0) 'Last-Event-ID': '$_last',
         });
       response = await _client.send(request).timeout(ApiClient.requestTimeout);
@@ -208,7 +209,10 @@ class ApiDriverRealtime implements DriverRealtime {
     // version of its time).
     final isMessage = json['kind'] == 'message';
     final known = _trips?.versionOf(tripId);
-    if (!isMessage && version is num && known != null && version.toInt() < known) {
+    if (!isMessage &&
+        version is num &&
+        known != null &&
+        version.toInt() < known) {
       return;
     }
     if (projection is Map && version is num) {
@@ -241,15 +245,17 @@ class ApiDriverRealtime implements DriverRealtime {
       return;
     }
     final now = DateTime.now().toUtc();
-    _out.add(DriverRealtimeEvent(
-      eventId: 'released-$tripId-${_last + 1}',
-      tripId: tripId,
-      kind: DriverRealtimeKind.tripProjection,
-      sequence: ++_last,
-      at: now,
-      serverTime: now,
-      status: TripStatus.searching,
-    ));
+    _out.add(
+      DriverRealtimeEvent(
+        eventId: 'released-$tripId-${_last + 1}',
+        tripId: tripId,
+        kind: DriverRealtimeKind.tripProjection,
+        sequence: ++_last,
+        at: now,
+        serverTime: now,
+        status: TripStatus.searching,
+      ),
+    );
   }
 
   void _lost() {

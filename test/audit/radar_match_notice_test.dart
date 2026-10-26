@@ -91,10 +91,7 @@ Future<void> _mount(
     ScreenUtilInit(
       designSize: const Size(375, 812),
       builder: (_, __) => MaterialApp(
-        home: RideRequests(
-          dispatchRepository: dispatch,
-          onCloseRides: onClose,
-        ),
+        home: RideRequests(dispatchRepository: dispatch, onCloseRides: onClose),
       ),
     ),
   );
@@ -143,10 +140,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Trip matched'), findsOneWidget);
 
-    dispatch.withdrawals.add(const OfferWithdrawal(
-      offerId: 'b',
-      reason: OfferGoneReason.claimedElsewhere,
-    ));
+    dispatch.withdrawals.add(
+      const OfferWithdrawal(
+        offerId: 'b',
+        reason: OfferGoneReason.claimedElsewhere,
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 100));
     // The won Match keeps its banner.
     expect(find.text('Trip matched'), findsOneWidget);
@@ -155,8 +154,10 @@ void main() {
     }
     tester.takeException();
     expect(find.byType(AcceptRide, skipOffstage: false), findsOneWidget);
-    expect(find.byType(AcceptRide, skipOffstage: false).evaluate().single
-        .widget, isA<AcceptRide>().having((t) => t.offerId, 'offerId', 'a'));
+    expect(
+      find.byType(AcceptRide, skipOffstage: false).evaluate().single.widget,
+      isA<AcceptRide>().having((t) => t.offerId, 'offerId', 'a'),
+    );
     tester.takeException();
     await tester.pumpWidget(const SizedBox.shrink());
     for (var i = 0; i < 10; i++) {

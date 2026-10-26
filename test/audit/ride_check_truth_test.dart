@@ -112,24 +112,29 @@ void main() {
     expect(answers.last, 'Did not open');
     final alert = kit.alerts.alerts.single;
     expect(alert.topic, isNot('Called 112'));
-    expect(alert.answers.last.answer, 'Did not open',
-        reason: 'Movera must learn that the dialer did not open');
+    expect(
+      alert.answers.last.answer,
+      'Did not open',
+      reason: 'Movera must learn that the dialer did not open',
+    );
   });
 
-  test('driver-u43: an opened dialer is recorded as opened, not as a call',
-      () async {
-    final kit = _Kit();
-    addTearDown(kit.dispose);
-    kit.controller.open(kit.event(), instant: true);
-    await kit.controller.callEmergency();
-    await kit.controller.settleAlerts();
-    final answers = kit.log.rows.single.answers;
-    expect(answers.first.answer, 'Call 112');
-    expect(answers.last.question, '112 dialer');
-    expect(answers.last.answer, 'Opened');
-    expect(kit.alerts.alerts.single.topic, 'Call 112');
-    expect(kit.alerts.alerts.single.answers.last.answer, 'Opened');
-  });
+  test(
+    'driver-u43: an opened dialer is recorded as opened, not as a call',
+    () async {
+      final kit = _Kit();
+      addTearDown(kit.dispose);
+      kit.controller.open(kit.event(), instant: true);
+      await kit.controller.callEmergency();
+      await kit.controller.settleAlerts();
+      final answers = kit.log.rows.single.answers;
+      expect(answers.first.answer, 'Call 112');
+      expect(answers.last.question, '112 dialer');
+      expect(answers.last.answer, 'Opened');
+      expect(kit.alerts.alerts.single.topic, 'Call 112');
+      expect(kit.alerts.alerts.single.answers.last.answer, 'Opened');
+    },
+  );
 
   test('driver-28: a recording still starting when the card closes does '
       'not keep the microphone on', () async {
@@ -143,8 +148,11 @@ void main() {
     await kit.controller.imOk();
     kit.recorder.holdStart!.complete();
     await starting;
-    expect(kit.recorder.recording, isFalse,
-        reason: 'no recording may run behind a closed card');
+    expect(
+      kit.recorder.recording,
+      isFalse,
+      reason: 'no recording may run behind a closed card',
+    );
     expect(kit.controller.audio, isNot(RideCheckAudio.recording));
   });
 
@@ -172,8 +180,11 @@ void main() {
     await kit.controller.toggleRecording();
     kit.now = kit.now.add(const Duration(seconds: 12));
     await kit.controller.appBackgrounded();
-    expect(kit.recorder.recording, isFalse,
-        reason: 'the phone does not capture in the background');
+    expect(
+      kit.recorder.recording,
+      isFalse,
+      reason: 'the phone does not capture in the background',
+    );
     expect(kit.controller.audio, RideCheckAudio.saved);
     expect(kit.controller.audioStoppedInBackground, isTrue);
     kit.now = kit.now.add(const Duration(minutes: 3));
@@ -208,21 +219,23 @@ void main() {
       recorder: () => recorder,
       launch: (_) async => true,
     );
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, _) => MaterialApp(
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(disableAnimations: true),
-          child: child!,
-        ),
-        home: AcceptRide(
-          tripId: 'audio-trip',
-          initialStage: ActiveRideStage.onTrip,
-          locationRepository: _Gps(),
-          rideCheck: services,
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, _) => MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: AcceptRide(
+            tripId: 'audio-trip',
+            initialStage: ActiveRideStage.onTrip,
+            locationRepository: _Gps(),
+            rideCheck: services,
+          ),
         ),
       ),
-    ));
+    );
     await _frames(tester);
     await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
     await _frames(tester);
@@ -245,8 +258,10 @@ void main() {
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await _frames(tester, 4);
     expect(
-      find.text('Audio saved · 0:09 · stopped when Movera left the screen',
-          findRichText: true),
+      find.text(
+        'Audio saved · 0:09 · stopped when Movera left the screen',
+        findRichText: true,
+      ),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
@@ -259,10 +274,10 @@ class _Gps implements DriverLocationRepository {
   final _fixes = StreamController<DriverLocation>.broadcast();
   @override
   Future<DriverLocation> getCurrentPosition() async => DriverLocation(
-        point: const GeoPoint(59.3416, 18.0649),
-        measuredAt: DateTime.now(),
-        accuracyMeters: 5,
-      );
+    point: const GeoPoint(59.3416, 18.0649),
+    measuredAt: DateTime.now(),
+    accuracyMeters: 5,
+  );
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       _fixes.stream;

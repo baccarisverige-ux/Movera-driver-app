@@ -90,8 +90,7 @@ class RadarOfferView {
   /// after Movera's commission) with the pickup pay added, one total:
   /// `driverEarnings + pickupPay`. Never the rider's [fare].
   String shownFare(OfferCardDetails show) {
-    final base =
-        show.fare(fare, bonus: driverBonus, earnings: driverEarnings);
+    final base = show.fare(fare, bonus: driverBonus, earnings: driverEarnings);
     return pickupPay?.totalOf(base) ?? base;
   }
 
@@ -118,8 +117,7 @@ class RadarOfferView {
   }
 
   /// "1 stop", "2 stops"; '' with none.
-  String get stopsLabel =>
-      stops <= 0 ? '' : tr.stopsCount(stops);
+  String get stopsLabel => stops <= 0 ? '' : tr.stopsCount(stops);
 
   /// "4.95" or, with the trips known, "4.95 · 86 trips".
   String get ratingLabel =>
@@ -166,6 +164,7 @@ class RadarOfferCard extends StatelessWidget {
   static const Color ink = Color(0xFF111518);
   static const Color muted = Color(0xFF7C868D);
   static const Color label = Color(0xFF8A9399);
+
   /// Offer cards are pure white; the header keeps only its hairline.
   static const Color headerTint = Colors.white;
 
@@ -229,7 +228,9 @@ class RadarOfferCard extends StatelessWidget {
                     ),
                     if (offer.priority)
                       OfferBadge.priority(
-                        key: ValueKey<String>('radar-offer-priority-${offer.id}'),
+                        key: ValueKey<String>(
+                          'radar-offer-priority-${offer.id}',
+                        ),
                       ),
                     if (show.badges && offer.reservationTime != null)
                       OfferBadge.reservation(
@@ -264,7 +265,11 @@ class RadarOfferCard extends StatelessWidget {
                         key: ValueKey<String>('radar-offer-bags-${offer.id}'),
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _icon(AppAssets.offerBags, 15, const Color(0xFF3A444B)),
+                          _icon(
+                            AppAssets.offerBags,
+                            15,
+                            const Color(0xFF3A444B),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${offer.bags}',
@@ -280,31 +285,34 @@ class RadarOfferCard extends StatelessWidget {
                 ),
               ),
               if (show.riderRating) ...[
-              const SizedBox(width: 8),
-              Container(
-                key: ValueKey<String>('radar-offer-rating-${offer.id}'),
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(99),
-                  border: Border.all(color: const Color(0xFFECEEF0)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _icon(AppAssets.offerStar, 12, ink),
-                    const SizedBox(width: 5),
-                    Text(
-                      offer.rating,
-                      style: const TextStyle(
-                        color: ink,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
+                const SizedBox(width: 8),
+                Container(
+                  key: ValueKey<String>('radar-offer-rating-${offer.id}'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(color: const Color(0xFFECEEF0)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _icon(AppAssets.offerStar, 12, ink),
+                      const SizedBox(width: 5),
+                      Text(
+                        offer.rating,
+                        style: const TextStyle(
+                          color: ink,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               ],
               // The × itself is laid over the header (below): its 30 px
               // circle sits here, its 48 px touch box around it.
@@ -461,18 +469,26 @@ class RadarOfferCard extends StatelessWidget {
                           ? RadarOfferView.street(offer.pickup)
                           : driverText(DriverTexts.offerPickupNearby),
                       show.pickupDistance
-                          ? _distanceText(DriverTexts.offerKmAway, offer.pickupKm)
+                          ? _distanceText(
+                              DriverTexts.offerKmAway,
+                              offer.pickupKm,
+                            )
                           : driverText(DriverTexts.offerPickup),
                     ),
                     const SizedBox(height: 14),
                     stop(
                       RadarOfferView.area(offer.dropoff),
                       [
-                        if (show.tripMinutesKm)
-                          _distanceText(DriverTexts.offerTripLength,
-                              offer.tripKm, {'minutes': offer.tripMinutes}),
-                        if (show.stops && offer.stops > 0) offer.stopsLabel,
-                      ].join(' · ').ifEmpty(driverText(DriverTexts.offerDropoff)),
+                            if (show.tripMinutesKm)
+                              _distanceText(
+                                DriverTexts.offerTripLength,
+                                offer.tripKm,
+                                {'minutes': offer.tripMinutes},
+                              ),
+                            if (show.stops && offer.stops > 0) offer.stopsLabel,
+                          ]
+                          .join(' · ')
+                          .ifEmpty(driverText(DriverTexts.offerDropoff)),
                     ),
                   ],
                 ),
@@ -645,7 +661,9 @@ class RadarOfferCard extends StatelessWidget {
       ),
     );
     final close = onClose;
-    if (close == null) { return card; }
+    if (close == null) {
+      return card;
+    }
     return Stack(
       children: [
         card,
@@ -682,8 +700,11 @@ extension on String {
 /// Q20: an offer text whose "{km} km" ("{km} km away") shows the distance
 /// as the app writes it: "650 m away", "4.2 km away". An admin text that
 /// uses {km} without the unit still gets the km number.
-String _distanceText(DriverTextKey key, double km,
-    [Map<String, Object> values = const {}]) {
+String _distanceText(
+  DriverTextKey key,
+  double km, [
+  Map<String, Object> values = const {},
+]) {
   const mark = '\u{E000}';
   return driverText(key, {...values, 'km': mark})
       .replaceAll('$mark km', driverDistanceKm(km))

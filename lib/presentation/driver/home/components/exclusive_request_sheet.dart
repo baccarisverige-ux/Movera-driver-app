@@ -94,7 +94,9 @@ class ExclusiveRequestSheet extends StatelessWidget {
       ],
       fareWhole: whole,
       fareRest: rest,
-      trip: show.tripMinutesKm ? tr.tripMinutesMinTrip(offer.tripMinutes) : null,
+      trip: show.tripMinutesKm
+          ? tr.tripMinutesMinTrip(offer.tripMinutes)
+          : null,
       // "incl. … pickup" under the total, when admin shows it.
       underFare: PickupPayLine(
         quote: offer.pickupPay,

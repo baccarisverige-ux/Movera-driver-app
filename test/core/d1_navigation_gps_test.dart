@@ -137,15 +137,22 @@ void main() {
   group('D-03 GPS clock a little ahead of the phone', () {
     test('a fix stamped 200 ms ahead is fresh, 6 s ahead is not', () {
       final now = DateTime.now();
-      final ahead = _fix(_origin, at: now.add(const Duration(milliseconds: 200)));
+      final ahead = _fix(
+        _origin,
+        at: now.add(const Duration(milliseconds: 200)),
+      );
       expect(ahead.isUsableAt(now), isTrue);
       expect(ahead.isDisplayableAt(now), isTrue);
-      expect(hasFreshLocation(_origin, now.add(const Duration(seconds: 1)), now),
-          isTrue);
+      expect(
+        hasFreshLocation(_origin, now.add(const Duration(seconds: 1)), now),
+        isTrue,
+      );
       final future = _fix(_origin, at: now.add(const Duration(seconds: 6)));
       expect(future.isUsableAt(now), isFalse);
-      expect(hasFreshLocation(_origin, now.add(const Duration(seconds: 6)), now),
-          isFalse);
+      expect(
+        hasFreshLocation(_origin, now.add(const Duration(seconds: 6)), now),
+        isFalse,
+      );
     });
 
     test('navigation and camera follow a fix stamped just ahead', () {
@@ -183,14 +190,17 @@ void main() {
       nav.setVehicle(_fix(_origin, at: t0));
       await nav.ensureRoute(origin: _origin, destination: _east(_origin, 2000));
       final onRoad = _east(_origin, 100);
-      expect(nav.setVehicle(_fix(onRoad, at: t0.add(const Duration(seconds: 7)))),
-          isTrue);
+      expect(
+        nav.setVehicle(_fix(onRoad, at: t0.add(const Duration(seconds: 7)))),
+        isTrue,
+      );
       final fraction = nav.routeFraction!;
       // 250 m to the side one second later, accuracy still 10 m.
       final outlier = _north(onRoad, 250);
       expect(
-        nav.setVehicle(_fix(outlier,
-            at: t0.add(const Duration(seconds: 8)), accuracy: 10)),
+        nav.setVehicle(
+          _fix(outlier, at: t0.add(const Duration(seconds: 8)), accuracy: 10),
+        ),
         isFalse,
       );
       expect(nav.snapshot.vehicle, onRoad);
@@ -203,8 +213,10 @@ void main() {
       expect(routes.calls, 1, reason: 'No reroute from the outlier');
       // The car reappears further along the road.
       final later = _east(_origin, 240);
-      expect(nav.setVehicle(_fix(later, at: t0.add(const Duration(seconds: 19)))),
-          isTrue);
+      expect(
+        nav.setVehicle(_fix(later, at: t0.add(const Duration(seconds: 19)))),
+        isTrue,
+      );
       expect(nav.routeFraction, greaterThan(fraction));
       await tester.pump(const Duration(seconds: 3));
       expect(routes.calls, 1);
@@ -217,12 +229,16 @@ void main() {
       final t0 = DateTime.now().subtract(const Duration(seconds: 3));
       nav.setVehicle(_fix(_origin, at: t0));
       final far = _east(_origin, 2000);
-      expect(nav.setVehicle(_fix(far, at: t0.add(const Duration(seconds: 1)))),
-          isFalse);
+      expect(
+        nav.setVehicle(_fix(far, at: t0.add(const Duration(seconds: 1)))),
+        isFalse,
+      );
       expect(nav.snapshot.vehicle, _origin);
       final next = _east(far, 10);
-      expect(nav.setVehicle(_fix(next, at: t0.add(const Duration(seconds: 2)))),
-          isTrue);
+      expect(
+        nav.setVehicle(_fix(next, at: t0.add(const Duration(seconds: 2)))),
+        isTrue,
+      );
       expect(nav.snapshot.vehicle, next);
     });
 
@@ -261,32 +277,46 @@ void main() {
       expect(pose.tilt, 0);
     });
 
-    test('guidance cruise tilts with its zoom; arrival eases to 60; waiting flat',
-        () {
-      final road = RoadRoute(
-        points: [for (var i = 0; i <= 20; i++) _east(_origin, i * 100.0)],
-        distanceMeters: 2000,
-        durationSeconds: 200,
-      );
-      final policy = DriverCameraPolicy();
-      final cruise = policy.resolve(
-          location: _fix(_origin), route: road, navigating: true,
-          immediate: true);
-      // About 14.4 at 43 km/h: wide, slim near roads, the horizon well up
-      // (the tilt that zoom has on the curve, about 46 deg).
-      expect(cruise.zoom, closeTo(14.4, .1));
-      expect(cruise.tilt, closeTo(DriverCameraPolicy.tiltForZoom(cruise.zoom), 1e-9));
-      expect(cruise.tilt, greaterThanOrEqualTo(45));
-      final arrival = DriverCameraPolicy().resolve(
-          location: _fix(_east(_origin, 2000)), route: road, navigating: true,
-          immediate: true);
-      expect(arrival.tilt, DriverCameraPolicy.arrivalTilt);
-      expect(DriverCameraPolicy.arrivalTilt, 60);
-      final waiting = DriverCameraPolicy().resolve(
-          location: _fix(_origin), navigating: true, waiting: true,
-          immediate: true);
-      expect(waiting.tilt, 0);
-    });
+    test(
+      'guidance cruise tilts with its zoom; arrival eases to 60; waiting flat',
+      () {
+        final road = RoadRoute(
+          points: [for (var i = 0; i <= 20; i++) _east(_origin, i * 100.0)],
+          distanceMeters: 2000,
+          durationSeconds: 200,
+        );
+        final policy = DriverCameraPolicy();
+        final cruise = policy.resolve(
+          location: _fix(_origin),
+          route: road,
+          navigating: true,
+          immediate: true,
+        );
+        // About 14.4 at 43 km/h: wide, slim near roads, the horizon well up
+        // (the tilt that zoom has on the curve, about 46 deg).
+        expect(cruise.zoom, closeTo(14.4, .1));
+        expect(
+          cruise.tilt,
+          closeTo(DriverCameraPolicy.tiltForZoom(cruise.zoom), 1e-9),
+        );
+        expect(cruise.tilt, greaterThanOrEqualTo(45));
+        final arrival = DriverCameraPolicy().resolve(
+          location: _fix(_east(_origin, 2000)),
+          route: road,
+          navigating: true,
+          immediate: true,
+        );
+        expect(arrival.tilt, DriverCameraPolicy.arrivalTilt);
+        expect(DriverCameraPolicy.arrivalTilt, 60);
+        final waiting = DriverCameraPolicy().resolve(
+          location: _fix(_origin),
+          navigating: true,
+          waiting: true,
+          immediate: true,
+        );
+        expect(waiting.tilt, 0);
+      },
+    );
 
     test('a pinch zoom on Home tilts once let go; zooming out flattens', () {
       final camera = DriverCameraController();

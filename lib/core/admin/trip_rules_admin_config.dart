@@ -21,14 +21,16 @@ enum DestinationFocus {
   /// Both switches off: nothing matches.
   none;
 
-  static DestinationFocus of({required bool finalOn, required bool onTheWayOn}) =>
-      finalOn && onTheWayOn
-          ? both
-          : finalOn
-          ? finalDestination
-          : onTheWayOn
-          ? onTheWay
-          : none;
+  static DestinationFocus of({
+    required bool finalOn,
+    required bool onTheWayOn,
+  }) => finalOn && onTheWayOn
+      ? both
+      : finalOn
+      ? finalDestination
+      : onTheWayOn
+      ? onTheWay
+      : none;
 }
 
 /// `driverApp.destinationMode[zoneId]`.
@@ -71,13 +73,14 @@ class DestinationModeRules {
     onTheWayOn: focusOnTheWayOn,
   );
 
-  Duration? get timeLimit => timeLimitOn
-      ? Duration(minutes: (timeLimitHours * 60).round())
-      : null;
+  Duration? get timeLimit =>
+      timeLimitOn ? Duration(minutes: (timeLimitHours * 60).round()) : null;
 
   factory DestinationModeRules.fromJson(Object? json) {
     const base = DestinationModeRules();
-    if (json is! Map) { return base; }
+    if (json is! Map) {
+      return base;
+    }
     // Older exports may carry only the focus word.
     final focus = json['focus'];
     final finalFromFocus = focus is String
@@ -89,8 +92,11 @@ class DestinationModeRules {
     // The contract's field (`DriverAppConfig.destinationMode.perDay`, a
     // whole number ≥ 0); admin's own key wins when an export has both.
     final perDay = json['perDay'];
-    final contractPerDay = perDay is num && perDay.isFinite &&
-            perDay >= 0 && perDay == perDay.roundToDouble()
+    final contractPerDay =
+        perDay is num &&
+            perDay.isFinite &&
+            perDay >= 0 &&
+            perDay == perDay.roundToDouble()
         ? perDay.toDouble()
         : 2.0;
     return DestinationModeRules(
@@ -98,12 +104,16 @@ class DestinationModeRules {
       timeLimitOn: _bool(json['timeLimitOn'], base.timeLimitOn),
       timeLimitHours: _positive(json['timeLimitHours'], base.timeLimitHours),
       dailyLimitOn: _bool(json['dailyLimitOn'], base.dailyLimitOn),
-      destinationsPerDay:
-          _positive(json['destinationsPerDay'], contractPerDay).round(),
+      destinationsPerDay: _positive(
+        json['destinationsPerDay'],
+        contractPerDay,
+      ).round(),
       corridorOn: _bool(json['corridorOn'], base.corridorOn),
       corridorKm: _positive(json['corridorKm'], base.corridorKm),
-      focusFinalDestinationOn:
-          _bool(json['focusFinalDestinationOn'], finalFromFocus),
+      focusFinalDestinationOn: _bool(
+        json['focusFinalDestinationOn'],
+        finalFromFocus,
+      ),
       focusOnTheWayOn: _bool(json['focusOnTheWayOn'], wayFromFocus),
     );
   }
@@ -143,7 +153,9 @@ class NextTripRules {
 
   factory NextTripRules.fromJson(Object? json) {
     const base = NextTripRules();
-    if (json is! Map) { return base; }
+    if (json is! Map) {
+      return base;
+    }
     final types = json['offerTypes'];
     return NextTripRules(
       // The contract's switch (`DriverAppConfig.nextTrips.on`): off, no
@@ -153,19 +165,26 @@ class NextTripRules {
           : types is List
           ? [
               for (final type in types)
-                if (type == 'exclusive' || type == 'exclusiveReservation') type as String,
+                if (type == 'exclusive' || type == 'exclusiveReservation')
+                  type as String,
             ]
           : base.offerTypes,
-      withinKmOfDropoffOn:
-          _bool(json['withinKmOfDropoffOn'], base.withinKmOfDropoffOn),
-      withinKmOfDropoff:
-          _positive(json['withinKmOfDropoff'], base.withinKmOfDropoff),
+      withinKmOfDropoffOn: _bool(
+        json['withinKmOfDropoffOn'],
+        base.withinKmOfDropoffOn,
+      ),
+      withinKmOfDropoff: _positive(
+        json['withinKmOfDropoff'],
+        base.withinKmOfDropoff,
+      ),
       withinMinutesOfDropoffOn: _bool(
         json['withinMinutesOfDropoffOn'],
         base.withinMinutesOfDropoffOn,
       ),
-      withinMinutesOfDropoff:
-          _positive(json['withinMinutesOfDropoff'], 10).round(),
+      withinMinutesOfDropoff: _positive(
+        json['withinMinutesOfDropoff'],
+        10,
+      ).round(),
     );
   }
 }
@@ -206,11 +225,14 @@ class DriverTripRulesExport {
     Map<String, dynamic> export,
     String zoneId,
   ) {
-    final app = export['driverApp'] is Map ? export['driverApp'] as Map : export;
+    final app = export['driverApp'] is Map
+        ? export['driverApp'] as Map
+        : export;
     Object? zone(String key) {
       final byZone = app[key];
       return byZone is Map ? DriverZones.read(byZone, zoneId) : null;
     }
+
     return (
       DestinationModeRules.fromJson(zone('destinationMode')),
       NextTripRules.fromJson(zone('nextTrips')),

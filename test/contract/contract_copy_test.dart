@@ -9,10 +9,9 @@ import 'package:movera/core/contracts/trip_transitions.dart';
 void main() {
   test('every contracts/ file matches contracts/CHECKSUMS', () {
     final dir = Directory('contracts');
-    final lines = File('contracts/CHECKSUMS')
-        .readAsLinesSync()
-        .where((line) => line.trim().isNotEmpty)
-        .toList();
+    final lines = File(
+      'contracts/CHECKSUMS',
+    ).readAsLinesSync().where((line) => line.trim().isNotEmpty).toList();
     expect(lines, isNotEmpty);
     final listed = <String, String>{};
     for (final line in lines) {
@@ -23,22 +22,31 @@ void main() {
     final onDisk = dir
         .listSync(recursive: true)
         .whereType<File>()
-        .map((file) => file.path.substring(dir.path.length + 1)
-            .replaceAll(Platform.pathSeparator, '/'))
+        .map(
+          (file) => file.path
+              .substring(dir.path.length + 1)
+              .replaceAll(Platform.pathSeparator, '/'),
+        )
         .where((path) => path != 'CHECKSUMS' && !path.contains('__pycache__'))
         .toSet();
-    expect(onDisk, listed.keys.toSet(),
-        reason: 'contracts/ has files missing from or extra to CHECKSUMS');
+    expect(
+      onDisk,
+      listed.keys.toSet(),
+      reason: 'contracts/ has files missing from or extra to CHECKSUMS',
+    );
     for (final entry in listed.entries) {
-      final digest =
-          sha256.convert(File('contracts/${entry.key}').readAsBytesSync());
+      final digest = sha256.convert(
+        File('contracts/${entry.key}').readAsBytesSync(),
+      );
       expect(digest.toString(), entry.value, reason: '${entry.key} drifted');
     }
   });
 
-  test('the copy is contract v0.5.3', () {
-    expect(File('contracts/contract.json').readAsStringSync(),
-        contains('"version": "0.5.3"'));
-    expect(TripTransitions.contractVersion, '0.5.3');
+  test('the copy is contract v0.5.5', () {
+    expect(
+      File('contracts/contract.json').readAsStringSync(),
+      contains('"version": "0.5.5"'),
+    );
+    expect(TripTransitions.contractVersion, '0.5.5');
   });
 }

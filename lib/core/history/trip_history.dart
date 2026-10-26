@@ -116,10 +116,7 @@ class TripHistoryRecord {
   /// Movera's commission (owner decision 2026-10-26), so no fee is taken
   /// off again. Null otherwise.
   CashBalance? get cashBalance => paidByCash && status == TripStatus.completed
-      ? CashBalance.fromLabels(
-          fare: fare,
-          cashCollected: cashCollected ?? fare,
-        )
+      ? CashBalance.fromLabels(fare: fare, cashCollected: cashCollected ?? fare)
       : null;
 
   Money? get fareMoney => status != TripStatus.completed

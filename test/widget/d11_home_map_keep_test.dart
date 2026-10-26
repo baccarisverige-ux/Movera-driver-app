@@ -24,8 +24,10 @@ class _Maps extends HeadlessMapPlatform {
   @override
   Future<void> init(int mapId) async => created++;
   @override
-  Future<void> moveCamera(CameraUpdate cameraUpdate, {required int mapId}) async =>
-      moves++;
+  Future<void> moveCamera(
+    CameraUpdate cameraUpdate, {
+    required int mapId,
+  }) async => moves++;
 }
 
 class _Dispatch implements DispatchRepository {
@@ -117,7 +119,10 @@ Future<DriverSessionController> _pumpHome(
         splitScreenMode: true,
         useInheritedMediaQuery: true,
         builder: (_, __) => MaterialApp(
-          home: DriverHome(sessionController: session, dispatchRepository: dispatch),
+          home: DriverHome(
+            sessionController: session,
+            dispatchRepository: dispatch,
+          ),
         ),
       ),
     ),
@@ -132,7 +137,6 @@ Future<DriverSessionController> _pumpHome(
   await _frames(tester, const Duration(milliseconds: 1500));
   return session;
 }
-
 
 // D-11: opening the Radar list (and closing it) keeps the one Home map and
 // its camera; before, the map was made again and the camera started over.
@@ -149,8 +153,10 @@ void main() {
     dispatch.publish([_trip('r1')]);
     // Home's demo Exclusive offer comes first; the Radar trip after it.
     await _frames(tester, const Duration(milliseconds: 2600));
-    await _frames(tester,
-        DriverOfferRules.current.exclusiveAcceptTime + const Duration(seconds: 2));
+    await _frames(
+      tester,
+      DriverOfferRules.current.exclusiveAcceptTime + const Duration(seconds: 2),
+    );
     final made = maps.created;
     expect(made, 1);
     // Owner N1: the island's middle opens the list.

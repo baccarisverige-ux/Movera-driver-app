@@ -110,11 +110,9 @@ class _AddVehicleState extends State<AddVehicle> {
       );
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr.vehCouldNotSaveDraft),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr.vehCouldNotSaveDraft)));
       }
     } finally {
       if (mounted) {
@@ -506,17 +504,16 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
       _draft = updated;
     } on VehiclePhotoBudgetExceeded catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
       }
       return;
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr.vehPhotoCouldNotSave),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr.vehPhotoCouldNotSave)));
       }
       return;
     }
@@ -637,11 +634,9 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
         await _store.remove(widget.vehicleId!);
       } catch (_) {
         if (mounted && ModalRoute.of(context)?.isCurrent == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(tr.vehCouldNotRemoveDraft),
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(tr.vehCouldNotRemoveDraft)));
         }
         return;
       }
@@ -694,10 +689,7 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
             Text(tr.vehCouldNotLoadDocuments),
             Align(
               alignment: Alignment.centerLeft,
-              child: FilledButton(
-                onPressed: _restore,
-                child: Text(tr.retry),
-              ),
+              child: FilledButton(onPressed: _restore, child: Text(tr.retry)),
             ),
           ],
           if (!_loading && !_restoreFailed && _draft == null)
@@ -714,10 +706,7 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
                 ? null
                 : () => _openPhoto(
                     title: tr.vehTakePhotoRegistration,
-                    checks: [
-                      tr.vehDocBlueBlackWhite,
-                      tr.vehAllFourCorners,
-                    ],
+                    checks: [tr.vehDocBlueBlackWhite, tr.vehAllFourCorners],
                     registration: true,
                   ),
           ),
@@ -747,9 +736,7 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => Padding(
                     padding: EdgeInsets.all(12),
-                    child: Text(
-                      tr.vehSavedPhotoCannotDisplay,
-                    ),
+                    child: Text(tr.vehSavedPhotoCannotDisplay),
                   ),
                 ),
               ),
@@ -870,9 +857,7 @@ class _VehiclePhotoPageState extends State<_VehiclePhotoPage> {
           return;
         }
         if (bytes.length > LocalVehicleStore.maxPhotoBytes) {
-          setState(
-            () => _captureError = tr.vehPhotoTooLarge,
-          );
+          setState(() => _captureError = tr.vehPhotoTooLarge);
           return;
         }
         popOwned(context, bytes);
@@ -882,9 +867,7 @@ class _VehiclePhotoPageState extends State<_VehiclePhotoPage> {
         return;
       }
       // Bottom snackbars cover this page's retry button on compact screens.
-      setState(
-        () => _captureError = tr.vehCameraNotAvailable,
-      );
+      setState(() => _captureError = tr.vehCameraNotAvailable);
     } finally {
       if (mounted) setState(() => _taking = false);
     }

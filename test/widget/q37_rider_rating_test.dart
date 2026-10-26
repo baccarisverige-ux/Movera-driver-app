@@ -6,19 +6,24 @@ import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart'
 Future<void> _open(WidgetTester tester) async {
   await tester.binding.setSurfaceSize(const Size(375, 812));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(MaterialApp(
-    home: Builder(
-      builder: (context) => Scaffold(
-        body: Center(
-          child: TextButton(
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                builder: (_) => const DriverRideCompleted())),
-            child: const Text('Home'),
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const DriverRideCompleted(),
+                ),
+              ),
+              child: const Text('Home'),
+            ),
           ),
         ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('Home'));
   await tester.pumpAndSettle();
 }

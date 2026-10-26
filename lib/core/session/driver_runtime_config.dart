@@ -80,12 +80,18 @@ class DriverRuntimeConfig {
     required bool productionBuild,
     bool? demoArrivalDefine,
   }) {
-    if (productionBuild) { return false; }
+    if (productionBuild) {
+      return false;
+    }
     return demoArrivalDefine ?? !releaseBuild;
   }
 
-  static const bool _demoArrivalDefined = bool.hasEnvironment('MOVERA_DEMO_ARRIVAL');
-  static const bool _demoArrivalValue = bool.fromEnvironment('MOVERA_DEMO_ARRIVAL');
+  static const bool _demoArrivalDefined = bool.hasEnvironment(
+    'MOVERA_DEMO_ARRIVAL',
+  );
+  static const bool _demoArrivalValue = bool.fromEnvironment(
+    'MOVERA_DEMO_ARRIVAL',
+  );
 
   /// Values compiled into this build.
   static final DriverRuntimeConfig build = DriverRuntimeConfig(

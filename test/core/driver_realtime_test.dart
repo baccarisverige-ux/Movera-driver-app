@@ -17,21 +17,36 @@ void main() {
     final at = DateTime(2026, 9, 30);
 
     expect(
-      gate.evaluate(DriverRealtimeEvent(
-        tripId:'trip-1',kind:DriverRealtimeKind.location,sequence:4,at:at,
-      )),
+      gate.evaluate(
+        DriverRealtimeEvent(
+          tripId: 'trip-1',
+          kind: DriverRealtimeKind.location,
+          sequence: 4,
+          at: at,
+        ),
+      ),
       DriverRealtimeDisposition.accepted,
     );
     expect(
-      gate.evaluate(DriverRealtimeEvent(
-        tripId:'trip-1',kind:DriverRealtimeKind.location,sequence:4,at:at,
-      )),
+      gate.evaluate(
+        DriverRealtimeEvent(
+          tripId: 'trip-1',
+          kind: DriverRealtimeKind.location,
+          sequence: 4,
+          at: at,
+        ),
+      ),
       DriverRealtimeDisposition.duplicate,
     );
     expect(
-      gate.evaluate(DriverRealtimeEvent(
-        tripId:'trip-1',kind:DriverRealtimeKind.location,sequence:3,at:at,
-      )),
+      gate.evaluate(
+        DriverRealtimeEvent(
+          tripId: 'trip-1',
+          kind: DriverRealtimeKind.location,
+          sequence: 3,
+          at: at,
+        ),
+      ),
       DriverRealtimeDisposition.duplicate,
     );
   });
@@ -41,37 +56,43 @@ void main() {
     final at = DateTime(2026, 10, 8);
     const trip = 'trip-1';
     expect(
-      gate.evaluate(DriverRealtimeEvent(
-        tripId: trip,
-        kind: DriverRealtimeKind.riderCancelled,
-        sequence: 0,
-        at: at,
-        status: TripStatus.cancelledByRider,
-      )),
+      gate.evaluate(
+        DriverRealtimeEvent(
+          tripId: trip,
+          kind: DriverRealtimeKind.riderCancelled,
+          sequence: 0,
+          at: at,
+          status: TripStatus.cancelledByRider,
+        ),
+      ),
       DriverRealtimeDisposition.invalid,
     );
     expect(gate.lastSequenceFor(trip), isNull);
     expect(gate.isTerminal(trip), isFalse);
     expect(
-      gate.evaluate(DriverRealtimeEvent(
-        tripId: '  ',
-        kind: DriverRealtimeKind.riderCancelled,
-        sequence: 1,
-        at: at,
-        status: TripStatus.cancelledByRider,
-      )),
+      gate.evaluate(
+        DriverRealtimeEvent(
+          tripId: '  ',
+          kind: DriverRealtimeKind.riderCancelled,
+          sequence: 1,
+          at: at,
+          status: TripStatus.cancelledByRider,
+        ),
+      ),
       DriverRealtimeDisposition.invalid,
     );
     expect(gate.lastSequenceFor('  '), isNull);
     expect(gate.isTerminal('  '), isFalse);
     expect(
-      gate.evaluate(DriverRealtimeEvent(
-        tripId: trip,
-        kind: DriverRealtimeKind.tripProjection,
-        sequence: 1,
-        at: at,
-        status: TripStatus.inTrip,
-      )),
+      gate.evaluate(
+        DriverRealtimeEvent(
+          tripId: trip,
+          kind: DriverRealtimeKind.tripProjection,
+          sequence: 1,
+          at: at,
+          status: TripStatus.inTrip,
+        ),
+      ),
       DriverRealtimeDisposition.accepted,
     );
     expect(gate.isTerminal(trip), isFalse);
@@ -80,17 +101,27 @@ void main() {
   test('sequence gate exposes gaps so the adapter can resync', () {
     final gate = DriverRealtimeSequenceGate();
     final at = DateTime(2026, 9, 30);
-    gate.evaluate(DriverRealtimeEvent(
-      tripId:'trip-1',kind:DriverRealtimeKind.location,sequence:1,at:at,
-    ));
+    gate.evaluate(
+      DriverRealtimeEvent(
+        tripId: 'trip-1',
+        kind: DriverRealtimeKind.location,
+        sequence: 1,
+        at: at,
+      ),
+    );
 
     expect(
-      gate.evaluate(DriverRealtimeEvent(
-        tripId:'trip-1',kind:DriverRealtimeKind.location,sequence:3,at:at,
-      )),
+      gate.evaluate(
+        DriverRealtimeEvent(
+          tripId: 'trip-1',
+          kind: DriverRealtimeKind.location,
+          sequence: 3,
+          at: at,
+        ),
+      ),
       DriverRealtimeDisposition.acceptedWithGap,
     );
-    expect(gate.lastSequenceFor('trip-1'),3);
+    expect(gate.lastSequenceFor('trip-1'), 3);
   });
 
   test('terminal realtime event dominates later non-terminal events', () {
@@ -98,23 +129,27 @@ void main() {
     final at = DateTime(2026, 9, 30);
 
     expect(
-      gate.evaluate(DriverRealtimeEvent(
-        tripId:'trip-1',
-        kind:DriverRealtimeKind.riderCancelled,
-        sequence:5,
-        at:at,
-        status:TripStatus.cancelledByRider,
-      )),
+      gate.evaluate(
+        DriverRealtimeEvent(
+          tripId: 'trip-1',
+          kind: DriverRealtimeKind.riderCancelled,
+          sequence: 5,
+          at: at,
+          status: TripStatus.cancelledByRider,
+        ),
+      ),
       DriverRealtimeDisposition.accepted,
     );
-    expect(gate.isTerminal('trip-1'),isTrue);
+    expect(gate.isTerminal('trip-1'), isTrue);
     expect(
-      gate.evaluate(DriverRealtimeEvent(
-        tripId:'trip-1',
-        kind:DriverRealtimeKind.riderOnTheWay,
-        sequence:6,
-        at:at,
-      )),
+      gate.evaluate(
+        DriverRealtimeEvent(
+          tripId: 'trip-1',
+          kind: DriverRealtimeKind.riderOnTheWay,
+          sequence: 6,
+          at: at,
+        ),
+      ),
       DriverRealtimeDisposition.blockedAfterTerminal,
     );
   });
@@ -122,23 +157,33 @@ void main() {
   test('reconnect replays newest event even after an older publish', () async {
     final bus = MemoryDriverRealtime();
     final at = DateTime(2026, 9, 30);
-    bus.publish(DriverRealtimeEvent(
-      tripId:'trip-1',kind:DriverRealtimeKind.location,sequence:10,at:at,
-      latitude:59.33,
-    ));
-    bus.publish(DriverRealtimeEvent(
-      tripId:'trip-1',kind:DriverRealtimeKind.location,sequence:8,at:at,
-      latitude:1,
-    ));
+    bus.publish(
+      DriverRealtimeEvent(
+        tripId: 'trip-1',
+        kind: DriverRealtimeKind.location,
+        sequence: 10,
+        at: at,
+        latitude: 59.33,
+      ),
+    );
+    bus.publish(
+      DriverRealtimeEvent(
+        tripId: 'trip-1',
+        kind: DriverRealtimeKind.location,
+        sequence: 8,
+        at: at,
+        latitude: 1,
+      ),
+    );
 
-    final seen=<DriverRealtimeEvent>[];
-    final sub=bus.subscribe('trip-1').listen(seen.add);
+    final seen = <DriverRealtimeEvent>[];
+    final sub = bus.subscribe('trip-1').listen(seen.add);
     await bus.reconnectAndResync('trip-1');
     await Future<void>.delayed(Duration.zero);
 
-    expect(seen,hasLength(1));
-    expect(seen.single.sequence,10);
-    expect(seen.single.latitude,59.33);
+    expect(seen, hasLength(1));
+    expect(seen.single.sequence, 10);
+    expect(seen.single.latitude, 59.33);
     await sub.cancel();
     bus.dispose();
   });
@@ -174,30 +219,33 @@ void main() {
     bus.dispose();
   });
 
-  test('pickup communication signals round-trip through realtime seam', () async {
-    final bus = MemoryDriverRealtime();
-    final seen = <DriverRealtimeEvent>[];
-    final sub = bus.subscribe('trip-1').listen(seen.add);
+  test(
+    'pickup communication signals round-trip through realtime seam',
+    () async {
+      final bus = MemoryDriverRealtime();
+      final seen = <DriverRealtimeEvent>[];
+      final sub = bus.subscribe('trip-1').listen(seen.add);
 
-    await bus.sendSignal(
-      tripId: 'trip-1',
-      kind: DriverRealtimeKind.driverArrived,
-      message: 'Your driver has arrived at the pickup point.',
-    );
-    await bus.sendSignal(
-      tripId: 'trip-1',
-      kind: DriverRealtimeKind.riderOnTheWay,
-      message: "I'm on the way",
-    );
-    await Future<void>.delayed(Duration.zero);
+      await bus.sendSignal(
+        tripId: 'trip-1',
+        kind: DriverRealtimeKind.driverArrived,
+        message: 'Your driver has arrived at the pickup point.',
+      );
+      await bus.sendSignal(
+        tripId: 'trip-1',
+        kind: DriverRealtimeKind.riderOnTheWay,
+        message: "I'm on the way",
+      );
+      await Future<void>.delayed(Duration.zero);
 
-    expect(seen, hasLength(2));
-    expect(seen.first.kind, DriverRealtimeKind.driverArrived);
-    expect(seen.last.kind, DriverRealtimeKind.riderOnTheWay);
-    expect(seen.last.message, "I'm on the way");
-    await sub.cancel();
-    bus.dispose();
-  });
+      expect(seen, hasLength(2));
+      expect(seen.first.kind, DriverRealtimeKind.driverArrived);
+      expect(seen.last.kind, DriverRealtimeKind.riderOnTheWay);
+      expect(seen.last.message, "I'm on the way");
+      await sub.cancel();
+      bus.dispose();
+    },
+  );
 
   test('arrival action remains wired in the expanded sheet', () {
     final rideSource = activeRideLibrary();
@@ -233,4 +281,3 @@ void main() {
     bus.dispose();
   });
 }
-

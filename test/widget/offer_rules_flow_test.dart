@@ -116,7 +116,10 @@ Future<DriverSessionController> _pumpHome(
         splitScreenMode: true,
         useInheritedMediaQuery: true,
         builder: (_, __) => MaterialApp(
-          home: DriverHome(sessionController: session, dispatchRepository: dispatch),
+          home: DriverHome(
+            sessionController: session,
+            dispatchRepository: dispatch,
+          ),
         ),
       ),
     ),
@@ -153,7 +156,9 @@ void main() {
       await _frames(tester, const Duration(milliseconds: 2600));
       expect(find.byKey(_closeOffer), findsOneWidget);
       // × is a "no", like letting it run out.
-      await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('direct-offer-dismiss')),
+      );
       // Its sheet goes down first.
       await _frames(tester, const Duration(milliseconds: 900));
       expect(_said, contains('Next missed offer: offline'));
@@ -196,7 +201,8 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
       await _frames(
         tester,
-        DriverOfferRules.current.exclusiveAcceptTime + const Duration(seconds: 2),
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(seconds: 2),
       );
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
@@ -215,7 +221,9 @@ void main() {
       await _pumpHome(tester, _Dispatch());
       await _frames(tester, const Duration(milliseconds: 2600));
       // The blue radar is the Accept.
-      await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('home-radar-exclusive')),
+      );
       await _frames(tester, const Duration(milliseconds: 600));
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       expect(tester.takeException(), isNull);
@@ -235,7 +243,9 @@ void main() {
       expect(cash, findsOneWidget);
       expect(find.text('Cash rides'), findsOneWidget);
       expect(DriverOfferPreferences.acceptsCash.value, isTrue);
-      await tester.tap(find.byKey(const ValueKey<String>('home-sheet-cash-switch')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('home-sheet-cash-switch')),
+      );
       await _frames(tester, const Duration(milliseconds: 300));
       expect(DriverOfferPreferences.acceptsCash.value, isFalse);
       expect(_said, contains('Cash rides off'));
@@ -262,7 +272,9 @@ void main() {
       );
       expect(deck.ids, ['card-trip']);
       // Owner N1: the island's middle ("N offers · radar") opens the list.
-      await tester.tap(find.byKey(const ValueKey<String>('island-radar-offers')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('island-radar-offers')),
+      );
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.byType(RideRequests), findsOneWidget);
       expect(
@@ -383,17 +395,28 @@ void main() {
       expect(
         find.descendant(
           of: card,
-          matching: find.byKey(const ValueKey<String>('on-trip-exclusive-mark')),
+          matching: find.byKey(
+            const ValueKey<String>('on-trip-exclusive-mark'),
+          ),
         ),
         findsOneWidget,
       );
-      expect(find.descendant(of: card, matching: find.text('Finishing nearby')),
-          findsOneWidget);
+      expect(
+        find.descendant(of: card, matching: find.text('Finishing nearby')),
+        findsOneWidget,
+      );
       expect(find.textContaining('Radar trip'), findsNothing);
-      expect(find.descendant(of: card, matching: find.textContaining('Exclusive · ')),
-          findsOneWidget);
+      expect(
+        find.descendant(
+          of: card,
+          matching: find.textContaining('Exclusive · '),
+        ),
+        findsOneWidget,
+      );
       // Deny is a "no" for the missed-offers row too.
-      await tester.tap(find.byKey(const ValueKey<String>('on-trip-radar-deny')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('on-trip-radar-deny')),
+      );
       await tester.pump(const Duration(milliseconds: 300));
       expect(ExclusiveAnswers.instance.missedInRow, 1);
       expect(tester.takeException(), isNull);
@@ -465,7 +488,10 @@ void main() {
       // The sheet slides up.
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.byKey(const ValueKey<String>('cash-collect-sheet')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('cash-collect-sheet')),
+        findsOneWidget,
+      );
       expect(find.text('250 kr'), findsWidgets);
       expect(find.text('You owe Movera'), findsOneWidget);
       // The driver's 200 kr earnings (owner decision 2026-10-26: no fee
@@ -473,15 +499,19 @@ void main() {
       expect(find.text('−50,00 kr'), findsOneWidget);
       expect(find.text('Movera fee'), findsNothing);
       expect(find.text('Finish Comfort'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('cash-complete-ride')),
+      );
       await tester.pump(const Duration(milliseconds: 400));
       final confirm = find.byKey(const ValueKey<String>('finish-soon-finish'));
       if (confirm.evaluate().isNotEmpty) {
         await tester.tap(confirm);
       }
-      for (var i = 0;
-          i < 60 && find.byType(DriverRideCompleted).evaluate().isEmpty;
-          i++) {
+      for (
+        var i = 0;
+        i < 60 && find.byType(DriverRideCompleted).evaluate().isEmpty;
+        i++
+      ) {
         await tester.pump(const Duration(milliseconds: 25));
       }
       expect(find.byType(DriverRideCompleted), findsOneWidget);

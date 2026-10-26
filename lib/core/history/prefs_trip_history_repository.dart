@@ -285,10 +285,7 @@ class PrefsTripHistoryRepository {
       LocalWriteSession.check(_generation);
       final success = await prefs.setString(
         key,
-        jsonEncode({
-          'schemaVersion': 1,
-          'rows': _retained(rows),
-        }),
+        jsonEncode({'schemaVersion': 1, 'rows': _retained(rows)}),
       );
       if (!success) {
         throw StateError('Could not archive completed trip');

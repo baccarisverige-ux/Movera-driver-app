@@ -347,10 +347,7 @@ class _MyFleetScreenState extends State<MyFleetScreen>
               ],
             ],
             const SizedBox(height: 22),
-            _section(
-              tr.fleetInvites,
-              tr.fleetInvitationCount(invites.length),
-            ),
+            _section(tr.fleetInvites, tr.fleetInvitationCount(invites.length)),
             if (invites.isEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),

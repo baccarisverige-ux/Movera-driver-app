@@ -75,21 +75,23 @@ void main() {
       launch: (_) async => true,
     );
     final gps = _QuietGps(() => now);
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, _) => MaterialApp(
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(disableAnimations: true),
-          child: child!,
-        ),
-        home: AcceptRide(
-          tripId: 'tunnel-trip',
-          initialStage: ActiveRideStage.onTrip,
-          locationRepository: gps,
-          rideCheck: services,
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, _) => MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: AcceptRide(
+            tripId: 'tunnel-trip',
+            initialStage: ActiveRideStage.onTrip,
+            locationRepository: gps,
+            rideCheck: services,
+          ),
         ),
       ),
-    ));
+    );
     await _frames(tester);
     // The tunnel: 3 minutes with no fix (the native stream sends one a
     // second, even when the car stands still).
@@ -98,8 +100,11 @@ void main() {
       await tester.pump(const Duration(seconds: 20));
     }
     await _frames(tester);
-    expect(find.byKey(const ValueKey('ride-check-card')), findsNothing,
-        reason: 'lost GPS is not a long stop');
+    expect(
+      find.byKey(const ValueKey('ride-check-card')),
+      findsNothing,
+      reason: 'lost GPS is not a long stop',
+    );
 
     // The driver asks for help: Movera gets no minutes-old position as
     // the car's current one.

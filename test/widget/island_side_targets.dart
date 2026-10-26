@@ -37,7 +37,11 @@ void expectSideTargets(
       box.bottomLeft + const Offset(.5, -.5),
       box.bottomRight + const Offset(-.5, -.5),
     ]) {
-      expect(hitsTarget(tester, finder, corner), isTrue, reason: '$corner of $box');
+      expect(
+        hitsTarget(tester, finder, corner),
+        isTrue,
+        reason: '$corner of $box',
+      );
     }
     expect(
       hitsTarget(tester, finder, box.bottomCenter + const Offset(0, 1.5)),

@@ -14,7 +14,8 @@ void main() {
         .where((file) => file.path.endsWith('.dart'))
         .where((file) => !file.path.endsWith('dependency_hygiene_test.dart'))
         .where(
-          (file) => file.readAsStringSync().contains('flutter_sliding_up_panel'),
+          (file) =>
+              file.readAsStringSync().contains('flutter_sliding_up_panel'),
         )
         .map((file) => file.path)
         .toList();
@@ -23,7 +24,9 @@ void main() {
 
   test('every direct dependency is imported somewhere in lib/', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
-    final block = pubspec.split('\ndependencies:\n')[1].split('\ndev_dependencies:')[0];
+    final block = pubspec
+        .split('\ndependencies:\n')[1]
+        .split('\ndev_dependencies:')[0];
     final packages = RegExp(r'^  ([a-z0-9_]+):', multiLine: true)
         .allMatches(block)
         .map((m) => m.group(1)!)
@@ -34,7 +37,9 @@ void main() {
         .where((file) => file.path.endsWith('.dart'))
         .map((file) => file.readAsStringSync())
         .join('\n');
-    final unused = packages.where((name) => !source.contains('package:$name/')).toList();
+    final unused = packages
+        .where((name) => !source.contains('package:$name/'))
+        .toList();
     expect(unused, isEmpty, reason: 'Remove unused dependencies');
   });
 

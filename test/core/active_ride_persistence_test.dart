@@ -56,7 +56,9 @@ void main() async {
     );
 
     final decoded = PersistedActiveRide.fromJson(
-      Map<String, dynamic>.from(jsonDecode(jsonEncode(original.toJson())) as Map),
+      Map<String, dynamic>.from(
+        jsonDecode(jsonEncode(original.toJson())) as Map,
+      ),
     );
 
     expect(decoded, isNotNull);
@@ -96,26 +98,29 @@ void main() async {
     expect(live.isFresh, isTrue);
   });
 
-  test('prefs repository restores a fresh ride and drops a stale one', () async {
-    SharedPreferences.setMockInitialValues({});
-    final store = PrefsActiveRideRepository();
+  test(
+    'prefs repository restores a fresh ride and drops a stale one',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = PrefsActiveRideRepository();
 
-    await store.save(
-      const PersistedActiveRide(
-        tripId: 'trip-live',
-        stage: ActiveRideStage.waitingForRider,
-        riderName: 'Angelica',
-        pickupAddress: 'Kungsgatan 42, Stockholm',
-        dropoffAddress: 'Hornstull, Stockholm',
-      ),
-    );
+      await store.save(
+        const PersistedActiveRide(
+          tripId: 'trip-live',
+          stage: ActiveRideStage.waitingForRider,
+          riderName: 'Angelica',
+          pickupAddress: 'Kungsgatan 42, Stockholm',
+          dropoffAddress: 'Hornstull, Stockholm',
+        ),
+      );
 
-    final restored = await store.read();
-    expect(restored, isNotNull);
-    expect(restored!.tripId, 'trip-live');
-    expect(restored.stage, ActiveRideStage.waitingForRider);
-    expect(restored.savedAt, isNotNull);
-  });
+      final restored = await store.read();
+      expect(restored, isNotNull);
+      expect(restored!.tripId, 'trip-live');
+      expect(restored.stage, ActiveRideStage.waitingForRider);
+      expect(restored.savedAt, isNotNull);
+    },
+  );
 
   test('prefs repository retains stale snapshot for recovery', () async {
     SharedPreferences.setMockInitialValues({
@@ -131,39 +136,49 @@ void main() async {
     expect((await staleStore.read())?.tripId, 'trip-stale');
   });
 
-  test('clear wins over an in-flight save so a cancelled trip cannot revive', () async {
-    SharedPreferences.setMockInitialValues({});
-    // Only the save's storage load waits, so the save is still in flight
-    // when clear() is called.
-    final saveGate = Completer<SharedPreferences>();
-    var loads = 0;
-    final store = PrefsActiveRideRepository(
-      load: () => loads++ == 0 ? saveGate.future : SharedPreferences.getInstance(),
-    );
-    final save = store.save(
-      const PersistedActiveRide(
-        tripId: 'trip-cancel',
-        stage: ActiveRideStage.headingToPickup,
-      ),
-    );
-    final clear = store.clear();
-    saveGate.complete(await SharedPreferences.getInstance());
-    await Future.wait([save, clear]);
-    expect(await store.read(), isNull);
-  });
+  test(
+    'clear wins over an in-flight save so a cancelled trip cannot revive',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      // Only the save's storage load waits, so the save is still in flight
+      // when clear() is called.
+      final saveGate = Completer<SharedPreferences>();
+      var loads = 0;
+      final store = PrefsActiveRideRepository(
+        load: () =>
+            loads++ == 0 ? saveGate.future : SharedPreferences.getInstance(),
+      );
+      final save = store.save(
+        const PersistedActiveRide(
+          tripId: 'trip-cancel',
+          stage: ActiveRideStage.headingToPickup,
+        ),
+      );
+      final clear = store.clear();
+      saveGate.complete(await SharedPreferences.getInstance());
+      await Future.wait([save, clear]);
+      expect(await store.read(), isNull);
+    },
+  );
 
   test('a previous trip clear cannot delete a newly accepted trip', () async {
     SharedPreferences.setMockInitialValues({});
     final loadGate = Completer<SharedPreferences>();
     final store = PrefsActiveRideRepository(load: () => loadGate.future);
 
-    final oldSave = store.save(const PersistedActiveRide(
-      tripId: 'trip-A', stage: ActiveRideStage.onTrip,
-    ));
+    final oldSave = store.save(
+      const PersistedActiveRide(
+        tripId: 'trip-A',
+        stage: ActiveRideStage.onTrip,
+      ),
+    );
     final oldClear = store.clear();
-    final newSave = store.save(const PersistedActiveRide(
-      tripId: 'trip-B', stage: ActiveRideStage.headingToPickup,
-    ));
+    final newSave = store.save(
+      const PersistedActiveRide(
+        tripId: 'trip-B',
+        stage: ActiveRideStage.headingToPickup,
+      ),
+    );
     loadGate.complete(await SharedPreferences.getInstance());
     await Future.wait([oldSave, oldClear, newSave]);
 
@@ -180,66 +195,72 @@ void main() async {
       ),
     );
 
-    final ride = ActiveRideController(
-      tripId: 'nearby-1',
-      repository: store,
-    );
+    final ride = ActiveRideController(tripId: 'nearby-1', repository: store);
     await ride.restore();
     expect(ride.stage, ActiveRideStage.headingToPickup);
   });
 
-  test('controller initialStage restores mid-trip without walking transitions', () async {
-    final ride = ActiveRideController(
-      tripId: 'nearby-1',
-      initialStage: ActiveRideStage.onTrip,
-    );
-    expect(ride.stage, ActiveRideStage.onTrip);
-    expect(await ride.complete(), isTrue);
-  });
+  test(
+    'controller initialStage restores mid-trip without walking transitions',
+    () async {
+      final ride = ActiveRideController(
+        tripId: 'nearby-1',
+        initialStage: ActiveRideStage.onTrip,
+      );
+      expect(ride.stage, ActiveRideStage.onTrip);
+      expect(await ride.complete(), isTrue);
+    },
+  );
 
-  test('fromPersisted reconstructs the same trip so Home can reopen it', () async {
-    final snapshot = PersistedActiveRide(
-      tripId: 'nearby-1',
-      stage: ActiveRideStage.waitingForRider,
-      riderName: 'Angelica',
-      riderRating: 4.96,
-      fare: '104,80 kr',
-      category: 'Comfort',
-      matchedVia: 'Movera direct match',
-      pickupAddress: 'Kungsgatan 42, Stockholm',
-      pickupArea: 'Stockholm',
-      dropoffAddress: 'Hornstull, Stockholm',
-      stopAddresses: const <String>['Vasagatan 10, Stockholm'],
-      stopPoints: const <GeoPoint>[GeoPoint(59.3300, 18.0580)],
-      pickupLat: 59.3343,
-      pickupLng: 18.0615,
-      dropoffLat: 59.3157,
-      dropoffLng: 18.0335,
-      waitSeconds: 42,
-    );
+  test(
+    'fromPersisted reconstructs the same trip so Home can reopen it',
+    () async {
+      final snapshot = PersistedActiveRide(
+        tripId: 'nearby-1',
+        stage: ActiveRideStage.waitingForRider,
+        riderName: 'Angelica',
+        riderRating: 4.96,
+        fare: '104,80 kr',
+        category: 'Comfort',
+        matchedVia: 'Movera direct match',
+        pickupAddress: 'Kungsgatan 42, Stockholm',
+        pickupArea: 'Stockholm',
+        dropoffAddress: 'Hornstull, Stockholm',
+        stopAddresses: const <String>['Vasagatan 10, Stockholm'],
+        stopPoints: const <GeoPoint>[GeoPoint(59.3300, 18.0580)],
+        pickupLat: 59.3343,
+        pickupLng: 18.0615,
+        dropoffLat: 59.3157,
+        dropoffLng: 18.0335,
+        waitSeconds: 42,
+      );
 
-    final ride = AcceptRide.fromPersisted(snapshot);
-    expect(ride.tripId, 'nearby-1');
-    expect(ride.offerId, isNull);
-    expect(ride.initialStage, ActiveRideStage.waitingForRider);
-    expect(ride.riderName, 'Angelica');
-    expect(ride.fare, '104,80 kr');
-    expect(ride.pickupAddress, 'Kungsgatan 42, Stockholm');
-    expect(ride.dropoffAddress, 'Hornstull, Stockholm');
-    expect(ride.stopAddresses, <String>['Vasagatan 10, Stockholm']);
-    expect(ride.stopPositions.single.latitude, 59.3300);
-    expect(ride.pickupPosition.latitude, 59.3343);
-    expect(ride.dropoffPosition.longitude, 18.0335);
-    expect(ride.initialWaitSeconds, 42);
-    expect(ride.matchedVia, 'Movera direct match');
-  });
+      final ride = AcceptRide.fromPersisted(snapshot);
+      expect(ride.tripId, 'nearby-1');
+      expect(ride.offerId, isNull);
+      expect(ride.initialStage, ActiveRideStage.waitingForRider);
+      expect(ride.riderName, 'Angelica');
+      expect(ride.fare, '104,80 kr');
+      expect(ride.pickupAddress, 'Kungsgatan 42, Stockholm');
+      expect(ride.dropoffAddress, 'Hornstull, Stockholm');
+      expect(ride.stopAddresses, <String>['Vasagatan 10, Stockholm']);
+      expect(ride.stopPositions.single.latitude, 59.3300);
+      expect(ride.pickupPosition.latitude, 59.3343);
+      expect(ride.dropoffPosition.longitude, 18.0335);
+      expect(ride.initialWaitSeconds, 42);
+      expect(ride.matchedVia, 'Movera direct match');
+    },
+  );
 
-  test('active ride map is not rebuilt from the live vehicle pose ticker', () async {
-    final source = File(
-      'lib/presentation/driver/accept ride/accept_ride.dart',
-    ).readAsStringSync();
-    expect(source.contains('valueListenable: _vehicle.pose'), isFalse);
-    expect(source.contains('_ThrottledVehicleMap'), isTrue);
-    expect(source.contains("ValueKey<String>('active-ride-map')"), isTrue);
-  });
+  test(
+    'active ride map is not rebuilt from the live vehicle pose ticker',
+    () async {
+      final source = File(
+        'lib/presentation/driver/accept ride/accept_ride.dart',
+      ).readAsStringSync();
+      expect(source.contains('valueListenable: _vehicle.pose'), isFalse);
+      expect(source.contains('_ThrottledVehicleMap'), isTrue);
+      expect(source.contains("ValueKey<String>('active-ride-map')"), isTrue);
+    },
+  );
 }

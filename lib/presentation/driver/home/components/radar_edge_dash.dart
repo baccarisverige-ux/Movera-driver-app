@@ -83,7 +83,9 @@ class _RadarSheetOutlinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (size.width <= 0 || size.height <= 0) { return; }
+    if (size.width <= 0 || size.height <= 0) {
+      return;
+    }
     final edge = radarSheetTopEdge(
       size,
       notchWidth: notchWidth,
@@ -143,10 +145,8 @@ class _RadarEdgeDashState extends State<RadarEdgeDash>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..repeat();
   }
 
   @override
@@ -196,7 +196,9 @@ class _RadarEdgeSweepPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (size.width <= 0 || size.height <= 0) { return; }
+    if (size.width <= 0 || size.height <= 0) {
+      return;
+    }
     final edge = radarSheetTopEdge(
       size,
       notchWidth: notchWidth,
@@ -205,10 +207,14 @@ class _RadarEdgeSweepPainter extends CustomPainter {
       includeCorners: true,
     );
     final metrics = edge.computeMetrics().toList();
-    if (metrics.isEmpty) { return; }
+    if (metrics.isEmpty) {
+      return;
+    }
     final metric = metrics.first;
     final total = metric.length;
-    if (total <= 0) { return; }
+    if (total <= 0) {
+      return;
+    }
 
     // Same half-pixel inset as [RadarSheetOutline].
     canvas.translate(0, 0.5);
@@ -221,14 +227,16 @@ class _RadarEdgeSweepPainter extends CustomPainter {
     );
 
     // The light enters before the left corner and leaves after the right.
-    final head = progress.clamp(0.0, 1.0) * (total + _lightLength) -
-        _lightLength / 2;
+    final head =
+        progress.clamp(0.0, 1.0) * (total + _lightLength) - _lightLength / 2;
     const step = _lightLength / _segments;
     final light = Color.lerp(color, Colors.white, 0.75)!;
     for (var i = 0; i < _segments; i++) {
       final from = head - _lightLength / 2 + i * step;
       final to = from + step + 0.6;
-      if (to < 0 || from > total) { continue; }
+      if (to < 0 || from > total) {
+        continue;
+      }
       // Brightest in the middle of the light, fading to both ends.
       final k = 1 - ((i + 0.5) - _segments / 2).abs() / (_segments / 2);
       canvas.drawPath(

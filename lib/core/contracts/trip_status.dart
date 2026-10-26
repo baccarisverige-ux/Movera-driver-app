@@ -96,8 +96,7 @@ extension TripStatusWire on TripStatus {
 
   /// Like [tryParse], but throws [FormatException] for an unknown value.
   static TripStatus parse(String value) =>
-      tryParse(value) ??
-      (throw FormatException('Unknown trip status', value));
+      tryParse(value) ?? (throw FormatException('Unknown trip status', value));
 }
 
 extension ActiveRideStageAsTripStatus on ActiveRideStage {

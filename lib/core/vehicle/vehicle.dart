@@ -36,7 +36,7 @@ abstract interface class VehicleRepository {
 
 class InMemoryVehicleRepository implements VehicleRepository {
   InMemoryVehicleRepository({List<DriverVehicle>? seed})
-      : _vehicles = List<DriverVehicle>.from(seed ?? const []);
+    : _vehicles = List<DriverVehicle>.from(seed ?? const []);
 
   final List<DriverVehicle> _vehicles;
 
@@ -46,7 +46,9 @@ class InMemoryVehicleRepository implements VehicleRepository {
   @override
   DriverVehicle? get active {
     for (final vehicle in _vehicles) {
-      if (vehicle.status == VehicleStatus.active) { return vehicle; }
+      if (vehicle.status == VehicleStatus.active) {
+        return vehicle;
+      }
     }
     return null;
   }
@@ -72,8 +74,9 @@ class InMemoryVehicleRepository implements VehicleRepository {
 
   @override
   Future<void> upsert(DriverVehicle vehicle) async {
-    final index =
-        _vehicles.indexWhere((item) => item.vehicleId == vehicle.vehicleId);
+    final index = _vehicles.indexWhere(
+      (item) => item.vehicleId == vehicle.vehicleId,
+    );
     if (index >= 0) {
       _vehicles[index] = vehicle;
     } else {

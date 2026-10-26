@@ -32,16 +32,12 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.text(
-            wasOnTrip ? 'Rider ended the trip' : 'Rider cancelled',
-          ),
+          find.text(wasOnTrip ? 'Rider ended the trip' : 'Rider cancelled'),
           findsOneWidget,
         );
 
         await tester.tap(
-          find.byKey(
-            const ValueKey<String>('rider-cancelled-acknowledge'),
-          ),
+          find.byKey(const ValueKey<String>('rider-cancelled-acknowledge')),
         );
         await tester.pump();
 
@@ -90,9 +86,7 @@ void main() {
     );
 
     await tester.tap(
-      find.byKey(
-        const ValueKey<String>('rider-cancelled-acknowledge'),
-      ),
+      find.byKey(const ValueKey<String>('rider-cancelled-acknowledge')),
     );
     await tester.pump();
 

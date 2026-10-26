@@ -63,9 +63,9 @@ class _AddNewAccountState extends State<AddNewAccount> {
     if (!_ownsRoute) return;
     setState(() => _tried = true);
     final problem = _problem;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(problem ?? tr.bankPreviewNotSaved)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(problem ?? tr.bankPreviewNotSaved)));
   }
 
   Widget _tabs() => Container(
@@ -315,9 +315,7 @@ class _AddNewAccountState extends State<AddNewAccount> {
             padding: const EdgeInsets.fromLTRB(4, 10, 4, 0),
             child: Text(
               problem ??
-                  (_international
-                      ? tr.bankUseIban
-                      : tr.bankFoundFromClearing),
+                  (_international ? tr.bankUseIban : tr.bankFoundFromClearing),
               key: const ValueKey<String>('bank-note'),
               style: TextStyle(
                 color: problem == null ? _muted : _red,

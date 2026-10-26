@@ -363,8 +363,7 @@ class _DecodedJournal {
       }
     }
     // UTC since driver-r4-14; older journals saved local time.
-    final completedAt =
-        DateTime.parse(data['completedAt'] as String).toLocal();
+    final completedAt = DateTime.parse(data['completedAt'] as String).toLocal();
     final nextData = data['next'];
     PersistedActiveRide? next;
     if (nextData != null) {

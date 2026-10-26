@@ -65,7 +65,9 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
   void initState() {
     super.initState();
     _tick = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) { setState(() {}); }
+      if (mounted) {
+        setState(() {});
+      }
     });
   }
 
@@ -126,15 +128,10 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   ),
                   child: Column(
                     children: [
-                      WaitingClock(
-                        seconds: seconds,
-                        diameter: 132,
-                      ),
+                      WaitingClock(seconds: seconds, diameter: 132),
                       const SizedBox(height: 14),
                       Text(
-                        widget.fullyPaid
-                            ? tr.everyMinuteIsPaid
-                            : phase.title,
+                        widget.fullyPaid ? tr.everyMinuteIsPaid : phase.title,
                         style: const TextStyle(
                           color: _ink,
                           fontSize: 18,
@@ -182,15 +179,15 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   const SizedBox(height: 10),
                 ],
                 if (!widget.fullyPaid) ...[
-                _PhaseCard(
-                  title: tr.includedTime,
-                  detail: tr.openingMinutesStayInsideFare,
-                  value: '${terms.freeMinutes} min',
-                  state: seconds < _graceSeconds
-                      ? _PhaseState.now
-                      : _PhaseState.done,
-                ),
-                const SizedBox(height: 8),
+                  _PhaseCard(
+                    title: tr.includedTime,
+                    detail: tr.openingMinutesStayInsideFare,
+                    value: '${terms.freeMinutes} min',
+                    state: seconds < _graceSeconds
+                        ? _PhaseState.now
+                        : _PhaseState.done,
+                  ),
+                  const SizedBox(height: 8),
                 ],
                 _PhaseCard(
                   title: tr.waitTime,
@@ -204,16 +201,18 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                       : _PhaseState.later,
                 ),
                 if (!widget.fullyPaid) ...[
-                const SizedBox(height: 8),
-                _PhaseCard(
-                  title: tr.noShow,
-                  detail: tr.canBeAppliedAfterNoShow(terms.noShowAfterMinutes),
-                  value: terms.noShowFee.formatted,
-                  tone: const Color(0xFF9E2B33),
-                  state: seconds < _noShowSeconds
-                      ? _PhaseState.later
-                      : _PhaseState.now,
-                ),
+                  const SizedBox(height: 8),
+                  _PhaseCard(
+                    title: tr.noShow,
+                    detail: tr.canBeAppliedAfterNoShow(
+                      terms.noShowAfterMinutes,
+                    ),
+                    value: terms.noShowFee.formatted,
+                    tone: const Color(0xFF9E2B33),
+                    state: seconds < _noShowSeconds
+                        ? _PhaseState.later
+                        : _PhaseState.now,
+                  ),
                 ],
                 if (!widget.fullyPaid &&
                     seconds >= _noShowSeconds &&
@@ -248,8 +247,14 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                 const SizedBox(height: 14),
                 Text(
                   widget.fullyPaid
-                      ? tr.youGetDriverShareWaitPercent(terms.driverShareWaitPercent)
-                      : tr.youGetDriverShareWaitPercent2(terms.driverShareWaitPercent, terms.driverShareNoShowPercent, terms.driverNoShowFee.formatted),
+                      ? tr.youGetDriverShareWaitPercent(
+                          terms.driverShareWaitPercent,
+                        )
+                      : tr.youGetDriverShareWaitPercent2(
+                          terms.driverShareWaitPercent,
+                          terms.driverShareNoShowPercent,
+                          terms.driverNoShowFee.formatted,
+                        ),
                   key: const ValueKey<String>('waiting-driver-share'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
@@ -475,7 +480,11 @@ class _CloseMark extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: const Color(0xFFE6E8EA)),
             ),
-            child: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF1C242C)),
+            child: const Icon(
+              Icons.close_rounded,
+              size: 18,
+              color: Color(0xFF1C242C),
+            ),
           ),
         ),
       ),
@@ -491,21 +500,12 @@ class _WaitPhase {
 
   static _WaitPhase of(int seconds) {
     if (seconds < _graceSeconds) {
-      return _WaitPhase(
-        tr.includedMinutes,
-        tr.theseFirstMinutesAreAlreadyPart,
-      );
+      return _WaitPhase(tr.includedMinutes, tr.theseFirstMinutesAreAlreadyPart);
     }
     if (seconds < _noShowSeconds) {
-      return _WaitPhase(
-        tr.waitTimeIsRunning,
-        tr.eachMinuteAfterIncludedTimeIs,
-      );
+      return _WaitPhase(tr.waitTimeIsRunning, tr.eachMinuteAfterIncludedTimeIs);
     }
-    return _WaitPhase(
-      tr.noShowCanBeApplied,
-      tr.riderIsStillNotHereNo,
-    );
+    return _WaitPhase(tr.noShowCanBeApplied, tr.riderIsStillNotHereNo);
   }
 }
 
@@ -552,7 +552,11 @@ class _WaitingClockState extends State<WaitingClock>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if(MediaQuery.disableAnimationsOf(context)) { _hand.stop(); } else { _hand.repeat(); }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _hand.stop();
+    } else {
+      _hand.repeat();
+    }
   }
 
   @override
@@ -591,7 +595,10 @@ class _WaitingClockState extends State<WaitingClock>
                   return FadeTransition(
                     opacity: animation,
                     child: ScaleTransition(
-                      scale: Tween<double>(begin: 0.92, end: 1).animate(animation),
+                      scale: Tween<double>(
+                        begin: 0.92,
+                        end: 1,
+                      ).animate(animation),
                       child: child,
                     ),
                   );
@@ -600,11 +607,12 @@ class _WaitingClockState extends State<WaitingClock>
                   label,
                   key: ValueKey<String>(label),
                   style: TextStyle(
-                    color: widget.onDark && !paid && widget.seconds < _graceSeconds
+                    color:
+                        widget.onDark && !paid && widget.seconds < _graceSeconds
                         ? Colors.white
                         : paid && widget.onDark
-                            ? const Color(0xFF3DDC97)
-                            : tone,
+                        ? const Color(0xFF3DDC97)
+                        : tone,
                     fontSize: widget.diameter * 0.24,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.4,
@@ -618,7 +626,9 @@ class _WaitingClockState extends State<WaitingClock>
       },
     );
 
-    if (widget.onTap == null) { return clock; }
+    if (widget.onTap == null) {
+      return clock;
+    }
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -664,8 +674,8 @@ class _ClockPainter extends CustomPainter {
         : seconds < _graceSeconds
         ? seconds / _graceSeconds
         : seconds < _noShowSeconds
-            ? (seconds - _graceSeconds) / (_noShowSeconds - _graceSeconds)
-            : 1.0;
+        ? (seconds - _graceSeconds) / (_noShowSeconds - _graceSeconds)
+        : 1.0;
     final arc = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = size.width < 70 ? 2.2 : 3.2
@@ -702,7 +712,11 @@ class _ClockPainter extends CustomPainter {
 }
 
 Color _waitTone(int seconds) {
-  if (seconds >= _noShowSeconds) { return const Color(0xFF9E2B33); }
-  if (seconds >= _graceSeconds) { return const Color(0xFF146B45); }
+  if (seconds >= _noShowSeconds) {
+    return const Color(0xFF9E2B33);
+  }
+  if (seconds >= _graceSeconds) {
+    return const Color(0xFF146B45);
+  }
   return const Color(0xFF1C242C);
 }

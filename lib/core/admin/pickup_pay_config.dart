@@ -66,13 +66,12 @@ class PickupPayRange {
     required this.krPerMinute,
   });
 
-  factory PickupPayRange.fromJson(Map<String, dynamic> json) =>
-      PickupPayRange(
-        fromKm: (json['fromKm'] as num?)?.toDouble() ?? 0,
-        toKm: (json['toKm'] as num?)?.toDouble(),
-        krPerKm: (json['krPerKm'] as num?)?.toDouble() ?? 0,
-        krPerMinute: (json['krPerMinute'] as num?)?.toDouble() ?? 0,
-      );
+  factory PickupPayRange.fromJson(Map<String, dynamic> json) => PickupPayRange(
+    fromKm: (json['fromKm'] as num?)?.toDouble() ?? 0,
+    toKm: (json['toKm'] as num?)?.toDouble(),
+    krPerKm: (json['krPerKm'] as num?)?.toDouble() ?? 0,
+    krPerMinute: (json['krPerMinute'] as num?)?.toDouble() ?? 0,
+  );
 
   final double fromKm;
 
@@ -156,8 +155,7 @@ class PickupPayRate {
   double krPerKmFor(double km) => rangeFor(km)?.krPerKm ?? krPerKm;
 
   /// kr/min for a pickup of [km].
-  double krPerMinuteFor(double km) =>
-      rangeFor(km)?.krPerMinute ?? krPerMinute;
+  double krPerMinuteFor(double km) => rangeFor(km)?.krPerMinute ?? krPerMinute;
 
   PickupPayRate copyWith({
     bool? enabled,

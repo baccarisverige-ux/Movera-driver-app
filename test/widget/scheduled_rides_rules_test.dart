@@ -103,45 +103,54 @@ void main() {
     expect(find.byKey(_clashNote), findsNothing);
   });
 
-  testWidgets('the cancel sheet says until when it is free; drivers never pay', (
-    tester,
-  ) async {
-    await _open(tester);
-    await tester.tap(find.text('Accepted'));
-    await tester.pumpAndSettle();
-    // The sample ride is tomorrow 08:15: free until 07:15 tomorrow.
-    await _openRide(tester, 'Södermalm, Stockholm');
-    expect(find.textContaining('Free cancel until tomorrow 07:15.'),
-        findsOneWidget);
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel reservation'));
-    await tester.pumpAndSettle();
-    final rules = find.byKey(const ValueKey<String>('scheduled-cancel-rules'));
-    expect(
-      find.descendant(
-        of: rules,
-        matching: find.text('Free cancel until tomorrow 07:15'),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: rules,
-        matching: find.textContaining('You never pay to cancel'),
-      ),
-      findsOneWidget,
-    );
-    await tester.tap(find.text('Vehicle issue'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Continue'));
-    await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
-    // Not late: no late-cancel warning, and no late cancel counted.
-    expect(find.byKey(const ValueKey<String>('scheduled-late-cancel')),
-        findsNothing);
-    await _confirmCancel(tester);
-    expect(ScheduledRideStore.lateCancelsInPeriod(), 0);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'the cancel sheet says until when it is free; drivers never pay',
+    (tester) async {
+      await _open(tester);
+      await tester.tap(find.text('Accepted'));
+      await tester.pumpAndSettle();
+      // The sample ride is tomorrow 08:15: free until 07:15 tomorrow.
+      await _openRide(tester, 'Södermalm, Stockholm');
+      expect(
+        find.textContaining('Free cancel until tomorrow 07:15.'),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, 'Cancel reservation'),
+      );
+      await tester.pumpAndSettle();
+      final rules = find.byKey(
+        const ValueKey<String>('scheduled-cancel-rules'),
+      );
+      expect(
+        find.descendant(
+          of: rules,
+          matching: find.text('Free cancel until tomorrow 07:15'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: rules,
+          matching: find.textContaining('You never pay to cancel'),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Vehicle issue'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Continue'));
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+      // Not late: no late-cancel warning, and no late cancel counted.
+      expect(
+        find.byKey(const ValueKey<String>('scheduled-late-cancel')),
+        findsNothing,
+      );
+      await _confirmCancel(tester);
+      expect(ScheduledRideStore.lateCancelsInPeriod(), 0);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('under 1 h to pickup a cancel is late and counts', (
     tester,
@@ -164,8 +173,10 @@ void main() {
     await tester.ensureVisible(find.text('Continue'));
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
-    expect(find.text('This is a late cancel and it counts. You never pay.'),
-        findsOneWidget);
+    expect(
+      find.text('This is a late cancel and it counts. You never pay.'),
+      findsOneWidget,
+    );
     await _confirmCancel(tester);
     expect(ScheduledRideStore.lateCancelsInPeriod(), 1);
     // One late cancel does not pause anything.
@@ -193,8 +204,10 @@ void main() {
       find.byKey(const ValueKey<String>('scheduled-cancel-not-counted')),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey<String>('scheduled-late-cancel')),
-        findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('scheduled-late-cancel')),
+      findsNothing,
+    );
     await _confirmCancel(tester);
     expect(ScheduledRideStore.lateCancelsInPeriod(), 0);
   });
@@ -212,8 +225,18 @@ void main() {
     await _toConfirmation(tester);
     final until = now.add(const Duration(days: 7));
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     final date = '${until.day} ${months[until.month - 1]}';
     expect(
@@ -286,8 +309,10 @@ void main() {
     expect(find.byKey(_blockNotice), findsOneWidget);
     expect(find.text('Scheduled rides are off'), findsOneWidget);
     expect(
-      find.text('Movera paused new scheduled rides in your area. '
-          'Rides you already accepted still go ahead.'),
+      find.text(
+        'Movera paused new scheduled rides in your area. '
+        'Rides you already accepted still go ahead.',
+      ),
       findsOneWidget,
     );
     expect(find.text('Gamla vägen, Stockholm'), findsNothing);
@@ -305,8 +330,10 @@ void main() {
       const ValueKey<String>('scheduled-boost-Högsätravägen, Lidingö'),
     );
     expect(badge, findsOneWidget);
-    expect(find.descendant(of: badge, matching: find.text('+40 kr')),
-        findsOneWidget);
+    expect(
+      find.descendant(of: badge, matching: find.text('+40 kr')),
+      findsOneWidget,
+    );
     // Only the driver's share of the new fare (owner decision 2026-10-26):
     // neither the 249,25 kr fare nor the old price next to it.
     expect(find.text('186,94 kr'), findsOneWidget);

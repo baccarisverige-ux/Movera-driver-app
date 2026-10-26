@@ -48,8 +48,10 @@ PersistedActiveRide _saved(Map<String, Object> extra) =>
       'tripId': 'restored-trip',
       'stage': 'onTrip',
       'category': 'Comfort',
-      'pickupLat': 59.33, 'pickupLng': 18.06,
-      'dropoffLat': 59.3326, 'dropoffLng': 18.0649,
+      'pickupLat': 59.33,
+      'pickupLng': 18.06,
+      'dropoffLat': 59.3326,
+      'dropoffLng': 18.0649,
       ...extra,
     })!;
 
@@ -87,23 +89,27 @@ void main() {
     );
     final gps = _StillGps(() => now);
     final repo = MemoryActiveRideRepository();
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, _) => MaterialApp(
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(disableAnimations: true),
-          child: child!,
-        ),
-        home: RideCheckScope(
-          services: services,
-          child: AcceptRide.fromPersisted(
-            _saved({'rideCheckFired': ['longStop']}),
-            locationRepository: gps,
-            activeRideRepository: repo,
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, _) => MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child!,
+          ),
+          home: RideCheckScope(
+            services: services,
+            child: AcceptRide.fromPersisted(
+              _saved({
+                'rideCheckFired': ['longStop'],
+              }),
+              locationRepository: gps,
+              activeRideRepository: repo,
+            ),
           ),
         ),
       ),
-    ));
+    );
     await _frames(tester);
     // Still stuck: 5 minutes without moving.
     for (var i = 0; i < 15; i++) {
@@ -112,22 +118,33 @@ void main() {
       await tester.pump(const Duration(seconds: 20));
     }
     await _frames(tester);
-    expect(find.byKey(const ValueKey('ride-check-card')), findsNothing,
-        reason: 'the long-stop check was answered before the reload');
+    expect(
+      find.byKey(const ValueKey('ride-check-card')),
+      findsNothing,
+      reason: 'the long-stop check was answered before the reload',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester);
     await gps.updates.close();
   });
 
-  test('driver-u44: the saved trip keeps the used checks; older saves have none', () {
-    final ride = _saved({'rideCheckFired': ['longStop', 'offRoute']});
-    expect(PersistedActiveRide.fromJson(ride.stamped().toJson())!.rideCheckFired,
-        ['longStop', 'offRoute']);
-    expect(_saved({}).rideCheckFired, isEmpty);
-  });
+  test(
+    'driver-u44: the saved trip keeps the used checks; older saves have none',
+    () {
+      final ride = _saved({
+        'rideCheckFired': ['longStop', 'offRoute'],
+      });
+      expect(
+        PersistedActiveRide.fromJson(ride.stamped().toJson())!.rideCheckFired,
+        ['longStop', 'offRoute'],
+      );
+      expect(_saved({}).rideCheckFired, isEmpty);
+    },
+  );
 
-  testWidgets('driver-u68: next-trip offers held off stay off after a reload',
-      (tester) async {
+  testWidgets('driver-u68: next-trip offers held off stay off after a reload', (
+    tester,
+  ) async {
     final maps = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
@@ -137,21 +154,29 @@ void main() {
     DriverOfferRules.current = const DriverOfferRules(autoOffline: false);
     final gps = _StillGps(DateTime.now);
     Future<void> mount(PersistedActiveRide ride, ActiveRideRepository repo) =>
-        tester.pumpWidget(ScreenUtilInit(
-          designSize: const Size(375, 812),
-          builder: (_, _) => MaterialApp(
-            home: AcceptRide.fromPersisted(ride,
-                locationRepository: gps, activeRideRepository: repo),
+        tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            builder: (_, _) => MaterialApp(
+              home: AcceptRide.fromPersisted(
+                ride,
+                locationRepository: gps,
+                activeRideRepository: repo,
+              ),
+            ),
           ),
-        ));
-    bool radarOn() =>
-        tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).radarOn;
+        );
+    bool radarOn() => tester
+        .widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland))
+        .radarOn;
     final repo = MemoryActiveRideRepository();
     await mount(_saved({}), repo);
     await _frames(tester);
     expect(radarOn(), isTrue);
     // The driver holds the radar: no next-trip offers.
-    tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).onRadar();
+    tester
+        .widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland))
+        .onRadar();
     await _frames(tester);
     expect(radarOn(), isFalse);
     final saved = (await repo.read())!;

@@ -18,7 +18,12 @@ class EarningStatsScreen extends StatefulWidget {
 }
 
 class _EarningStatsScreenState extends State<EarningStatsScreen> {
-  final List<String> tabs = [tr.earnTypeTab, tr.feature, tr.samplePeriod, tr.clear];
+  final List<String> tabs = [
+    tr.earnTypeTab,
+    tr.feature,
+    tr.samplePeriod,
+    tr.clear,
+  ];
   int selectedTab = 2;
   @override
   Widget build(BuildContext context) {
@@ -78,8 +83,9 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
                         },
                         child: Container(
                           height:
-                              MediaQuery.textScalerOf(context)
-                                  .scale(ResSize.setSp(16)) +
+                              MediaQuery.textScalerOf(
+                                context,
+                              ).scale(ResSize.setSp(16)) +
                               24,
                           padding: EdgeInsets.symmetric(
                             horizontal: ResSize.w * 16,

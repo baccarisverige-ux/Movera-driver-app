@@ -76,7 +76,9 @@ class RouteInstruction {
 
   /// Shields from the signposted destinations, else from the road number.
   List<RoadShield> get shields {
-    final signs = RoadShield.parse(RoadShield.splitDestinations(destinations).$1);
+    final signs = RoadShield.parse(
+      RoadShield.splitDestinations(destinations).$1,
+    );
     return signs.isNotEmpty ? signs : RoadShield.parse(roadRef);
   }
 
@@ -523,7 +525,9 @@ class RouteCue {
       RouteCueKind.roundaboutUTurn =>
         exit.isEmpty ? l.navRoundaboutUTurn : l.navRoundaboutUTurnExit(exit),
       RouteCueKind.signedExit =>
-        place.isEmpty ? l.navSignedExit(exit) : l.navSignedExitTowards(exit, place),
+        place.isEmpty
+            ? l.navSignedExit(exit)
+            : l.navSignedExitTowards(exit, place),
       RouteCueKind.exitLeft => l.navExitLeft,
       RouteCueKind.exitRight => l.navExitRight,
       RouteCueKind.takeExit => l.navTakeExit,
@@ -616,7 +620,8 @@ class RouteInstructionCopy {
   }) {
     final l = strings ?? tr;
     final road = (roadName ?? '').trim();
-    String onto(String action) => road.isEmpty ? action : l.navOnto(action, road);
+    String onto(String action) =>
+        road.isEmpty ? action : l.navOnto(action, road);
     final left = modifier.contains('left');
     final right = modifier.contains('right');
     switch (type) {

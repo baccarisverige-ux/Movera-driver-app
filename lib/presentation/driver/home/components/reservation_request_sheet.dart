@@ -31,8 +31,7 @@ class ReservationAccentMapper extends ColorMapper {
     String attributeName,
     Color color,
   ) {
-    if (color.toARGB32() | 0xFF000000 !=
-        reservationPictureAccent.toARGB32()) {
+    if (color.toARGB32() | 0xFF000000 != reservationPictureAccent.toARGB32()) {
       return color;
     }
     // Keeps the drawn opacity.
@@ -241,10 +240,7 @@ class ReservationRequestSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (whole, rest) = _fareParts();
-    final when = ReservationWhen.ofRequest(
-      request,
-      (clock ?? DateTime.now)(),
-    );
+    final when = ReservationWhen.ofRequest(request, (clock ?? DateTime.now)());
     final shownPicture =
         picture ?? ReservationPicture.forRequest(request, order: position - 1);
     return OfferSheetBody(
@@ -265,7 +261,9 @@ class ReservationRequestSheet extends StatelessWidget {
       count: count,
       fareWhole: whole,
       fareRest: rest,
-      trip: _show.tripMinutesKm ? tr.tripMinutesMinTrip(request.tripMinutes) : null,
+      trip: _show.tripMinutesKm
+          ? tr.tripMinutesMinTrip(request.tripMinutes)
+          : null,
       picture: _ReservationPictureView(picture: shownPicture),
       pictureSize: pictureSize,
       pickup: OfferSheetStop(
@@ -275,13 +273,15 @@ class ReservationRequestSheet extends StatelessWidget {
       ),
       stops: _show.stops && request.stops.isNotEmpty
           ? (request.stops.length == 1
-              ? tr.n1Stop
-              : '${request.stops.length} stops')
+                ? tr.n1Stop
+                : '${request.stops.length} stops')
           : null,
       dropoff: OfferSheetStop(
         place: _dropoffPlace,
         pickup: false,
-        trailing: _show.tripMinutesKm ? OfferSheetBody.km(request.tripKm) : null,
+        trailing: _show.tripMinutesKm
+            ? OfferSheetBody.km(request.tripKm)
+            : null,
       ),
       // When the ride is, in a light grey pill.
       pillIcon: AppAssets.solarCalendar,

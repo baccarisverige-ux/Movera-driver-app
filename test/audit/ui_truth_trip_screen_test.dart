@@ -34,11 +34,11 @@ class _NoGps implements DriverLocationRepository {
 class _OneFix implements DriverLocationRepository {
   @override
   Future<DriverLocation> getCurrentPosition() async => DriverLocation(
-        point: const GeoPoint(59.3189, 18.0615),
-        speedMetersPerSecond: 0,
-        measuredAt: DateTime.now(),
-        accuracyMeters: 5,
-      );
+    point: const GeoPoint(59.3189, 18.0615),
+    speedMetersPerSecond: 0,
+    measuredAt: DateTime.now(),
+    accuracyMeters: 5,
+  );
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       const Stream.empty();
@@ -51,17 +51,17 @@ class _Routes implements RouteRepository {
     required GeoPoint origin,
     required GeoPoint destination,
   }) async => RoadRoute(
-        points: [
-          for (var i = 0; i <= 20; i++)
-            GeoPoint(
-              origin.latitude + (destination.latitude - origin.latitude) * i / 20,
-              origin.longitude +
-                  (destination.longitude - origin.longitude) * i / 20,
-            ),
-        ],
-        distanceMeters: 1500,
-        durationSeconds: 300,
-      );
+    points: [
+      for (var i = 0; i <= 20; i++)
+        GeoPoint(
+          origin.latitude + (destination.latitude - origin.latitude) * i / 20,
+          origin.longitude +
+              (destination.longitude - origin.longitude) * i / 20,
+        ),
+    ],
+    distanceMeters: 1500,
+    durationSeconds: 300,
+  );
 }
 
 /// Location allowed only approximately (iOS Precise Location off).
@@ -96,10 +96,12 @@ Future<void> _trip(WidgetTester tester, AcceptRide ride) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(home: ride),
-  ));
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(home: ride),
+    ),
+  );
   await _frames(tester);
   tester
       .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
@@ -108,35 +110,35 @@ Future<void> _trip(WidgetTester tester, AcceptRide ride) async {
   await _frames(tester, 16);
 }
 
-void _clearSnackBars(WidgetTester tester) =>
-    ScaffoldMessenger.of(tester.element(find.byType(AcceptRide)))
-        .clearSnackBars();
+void _clearSnackBars(WidgetTester tester) => ScaffoldMessenger.of(
+  tester.element(find.byType(AcceptRide)),
+).clearSnackBars();
 
 Widget _island({String? status, double width = 390}) => MaterialApp(
-      home: Scaffold(
-        body: SizedBox(
-          width: width,
-          height: 220,
-          child: AdaptiveTripIsland(
-            status: 'To pickup',
-            address: 'Sveavägen 20',
-            detail: 'Picking up Angelica',
-            eta: '2 min',
-            progress: .4,
-            navigationStatus: status,
-            waitingMessage: 'Waiting for Angelica',
-            lastTripLabel: '120 kr',
-            onRadar: () {},
-            onMenu: () {},
-            onSearch: () {},
-            onHistory: () {},
-            onRoute: () {},
-            onSafety: () {},
-            onWait: () {},
-          ),
-        ),
+  home: Scaffold(
+    body: SizedBox(
+      width: width,
+      height: 220,
+      child: AdaptiveTripIsland(
+        status: 'To pickup',
+        address: 'Sveavägen 20',
+        detail: 'Picking up Angelica',
+        eta: '2 min',
+        progress: .4,
+        navigationStatus: status,
+        waitingMessage: 'Waiting for Angelica',
+        lastTripLabel: '120 kr',
+        onRadar: () {},
+        onMenu: () {},
+        onSearch: () {},
+        onHistory: () {},
+        onRoute: () {},
+        onSafety: () {},
+        onWait: () {},
       ),
-    );
+    ),
+  ),
+);
 
 void main() {
   final previous = DriverRuntimeConfig.current;
@@ -157,8 +159,13 @@ void main() {
       'maximum width', (tester) async {
     await tester.pumpWidget(_island(status: 'Mise à jour de la position…'));
     await tester.pump(const Duration(seconds: 1));
-    final shell = tester.getSize(find.byKey(const ValueKey('island-morph-shell')));
-    expect(shell.width, lessThanOrEqualTo(TripIslandGeometry.maximumWidth + .001));
+    final shell = tester.getSize(
+      find.byKey(const ValueKey('island-morph-shell')),
+    );
+    expect(
+      shell.width,
+      lessThanOrEqualTo(TripIslandGeometry.maximumWidth + .001),
+    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
@@ -172,7 +179,11 @@ void main() {
     final policy = DriverCameraPolicy()
       ..resolve(
         location: DriverLocation(point: old[4], measuredAt: DateTime.now()),
-        route: RoadRoute(points: old, distanceMeters: 1100, durationSeconds: 90),
+        route: RoadRoute(
+          points: old,
+          distanceMeters: 1100,
+          durationSeconds: 90,
+        ),
         navigating: true,
       );
     expect(policy.alongMetersOn(old), greaterThan(300));
@@ -182,8 +193,10 @@ void main() {
   test('driver-u72: a finished trip no longer reports an old background '
       'save failure', () async {
     final ride = ActiveRideController(
-        tripId: 'A', repository: _FailingSave(),
-        initialStage: ActiveRideStage.onTrip);
+      tripId: 'A',
+      repository: _FailingSave(),
+      initialStage: ActiveRideStage.onTrip,
+    );
     expect(await ride.persistNow(), isFalse);
     expect(ride.failures, 1);
     expect(await ride.complete(clearSnapshot: false), isTrue);
@@ -194,19 +207,31 @@ void main() {
   testWidgets('driver-u72: Retry after a failed Arrived save repeats the '
       'arrival', (tester) async {
     final store = _FailingSave();
-    await _trip(tester, AcceptRide(tripId: 'save-trip',
-        locationRepository: _NoGps(), activeRideRepository: store));
+    await _trip(
+      tester,
+      AcceptRide(
+        tripId: 'save-trip',
+        locationRepository: _NoGps(),
+        activeRideRepository: store,
+      ),
+    );
     _clearSnackBars(tester);
     await _frames(tester);
-    final arrive =
-        find.byKey(const ValueKey<String>('active-ride-arrived-button'));
+    final arrive = find.byKey(
+      const ValueKey<String>('active-ride-arrived-button'),
+    );
     await tester.ensureVisible(arrive);
     await tester.tap(arrive);
     await _frames(tester);
     const waiting = ValueKey<String>('active-ride-panel-waitingForRider');
     expect(find.byKey(waiting), findsNothing);
-    expect(find.text('Trip progress could not be saved. Keep this screen '
-        'open and retry.'), findsOneWidget);
+    expect(
+      find.text(
+        'Trip progress could not be saved. Keep this screen '
+        'open and retry.',
+      ),
+      findsOneWidget,
+    );
     store.fail = false;
     await tester.tap(find.widgetWithText(SnackBarAction, 'Retry'));
     await _frames(tester);
@@ -225,55 +250,80 @@ void main() {
       simulatedArrival: true,
       skipAccountActivation: false,
     );
-    await _trip(tester, AcceptRide(tripId: 'route-trip',
-        locationRepository: _OneFix(), routeRepository: _Routes()));
+    await _trip(
+      tester,
+      AcceptRide(
+        tripId: 'route-trip',
+        locationRepository: _OneFix(),
+        routeRepository: _Routes(),
+      ),
+    );
     _clearSnackBars(tester);
     await _frames(tester);
-    Set<Object> lines() => tester
-        .widget<CustomGoogleMap>(find.byKey(const ValueKey('active-ride-map')))
-        .polylines ?? const <Object>{};
+    Set<Object> lines() =>
+        tester
+            .widget<CustomGoogleMap>(
+              find.byKey(const ValueKey('active-ride-map')),
+            )
+            .polylines ??
+        const <Object>{};
     expect(lines(), isNotEmpty, reason: 'the pickup route is drawn');
-    final arrive =
-        find.byKey(const ValueKey<String>('active-ride-arrived-button'));
+    final arrive = find.byKey(
+      const ValueKey<String>('active-ride-arrived-button'),
+    );
     await tester.ensureVisible(arrive);
     await tester.tap(arrive);
     await _frames(tester);
-    expect(find.byKey(const ValueKey('active-ride-panel-waitingForRider')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('active-ride-panel-waitingForRider')),
+      findsOneWidget,
+    );
     expect(lines(), isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('driver-u79: with a next trip secured the island menu does '
       'not offer to turn Exclusive offers off', (tester) async {
-    await _trip(tester, AcceptRide(
-      tripId: 'secured-trip',
-      initialStage: ActiveRideStage.onTrip,
-      locationRepository: _NoGps(),
-      restoredSnapshot: const PersistedActiveRide(
+    await _trip(
+      tester,
+      AcceptRide(
         tripId: 'secured-trip',
-        stage: ActiveRideStage.onTrip,
-        next: PersistedQueuedTrip(
-          tripId: 'next-1', riderName: 'Sara', fare: '128,40 kr',
-          category: 'Comfort', pickup: 'Odengatan', dropoff: 'Kista',
-          pickupLat: 59.3428, pickupLng: 18.0475,
-          dropoffLat: 59.4032, dropoffLng: 17.9447,
+        initialStage: ActiveRideStage.onTrip,
+        locationRepository: _NoGps(),
+        restoredSnapshot: const PersistedActiveRide(
+          tripId: 'secured-trip',
+          stage: ActiveRideStage.onTrip,
+          next: PersistedQueuedTrip(
+            tripId: 'next-1',
+            riderName: 'Sara',
+            fare: '128,40 kr',
+            category: 'Comfort',
+            pickup: 'Odengatan',
+            dropoff: 'Kista',
+            pickupLat: 59.3428,
+            pickupLng: 18.0475,
+            dropoffLat: 59.4032,
+            dropoffLng: 17.9447,
+          ),
         ),
       ),
-    ));
-    final island =
-        tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland));
+    );
+    final island = tester.widget<AdaptiveTripIsland>(
+      find.byType(AdaptiveTripIsland),
+    );
     expect(island.nextTripFare, isNotNull, reason: 'the next trip is secured');
     expect(island.radarVisible, isFalse);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('driver-u23: approximate-only location says precise location '
-      'is off instead of a "Location updating…" that never ends',
-      (tester) async {
+      'is off instead of a "Location updating…" that never ends', (
+    tester,
+  ) async {
     await _trip(tester, AcceptRide(locationRepository: _ApproximateOnly()));
-    final island =
-        tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland));
+    final island = tester.widget<AdaptiveTripIsland>(
+      find.byType(AdaptiveTripIsland),
+    );
     expect(island.navigationStatus, 'Precise location off');
     expect(find.text('Location updating…'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -281,11 +331,18 @@ void main() {
 
   testWidgets('driver-u133: a rider without a usable rating is shown as New, '
       'not as an invented 4.9', (tester) async {
-    await _trip(tester, AcceptRide(
-        riderRating: null, riderTrips: 0, locationRepository: _NoGps()));
+    await _trip(
+      tester,
+      AcceptRide(
+        riderRating: null,
+        riderTrips: 0,
+        locationRepository: _NoGps(),
+      ),
+    );
     final rider = find.descendant(
-        of: find.byKey(const ValueKey('active-ride-rider-card')),
-        matching: find.byType(InkWell));
+      of: find.byKey(const ValueKey('active-ride-rider-card')),
+      matching: find.byType(InkWell),
+    );
     await tester.ensureVisible(rider.first);
     await tester.tap(rider.first);
     await _frames(tester, 16);

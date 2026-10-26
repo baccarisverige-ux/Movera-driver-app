@@ -334,7 +334,7 @@ class ClaimResult {
   const ClaimResult._(this.outcome, {this.offer});
 
   const ClaimResult.success(RideOffer offer)
-      : this._(ClaimOutcome.success, offer: offer);
+    : this._(ClaimOutcome.success, offer: offer);
 
   const ClaimResult.alreadyClaimed() : this._(ClaimOutcome.alreadyClaimed);
   const ClaimResult.expired() : this._(ClaimOutcome.expired);

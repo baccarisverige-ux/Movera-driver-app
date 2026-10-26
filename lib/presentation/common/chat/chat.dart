@@ -51,8 +51,9 @@ class _ChatState extends State<Chat> {
   late final List<String> _messages = LocalChatMessages.forTrip(widget.tripId);
 
   /// A live build: the trip's chat on the server; null in the demo.
-  late final LiveTripChat? _live =
-      widget.tripId == null ? null : LiveDriverServices.instance?.chat;
+  late final LiveTripChat? _live = widget.tripId == null
+      ? null
+      : LiveDriverServices.instance?.chat;
   TripChatThread? _thread;
   bool _historyFailed = false;
   final ScrollController _scroll = ScrollController();
@@ -149,13 +150,15 @@ class _ChatState extends State<Chat> {
   Future<void> _deliver(Future<LiveTripOutcome> sending) async {
     final outcome = await sending;
     if (outcome.ok || !mounted) return;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-      content: Text(outcome.message!),
-      backgroundColor: const Color(0xFF252E3A),
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 5),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-    ));
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(outcome.message!),
+        backgroundColor: const Color(0xFF252E3A),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
   }
 
   Widget _notice(String text, {VoidCallback? onRetry}) => Container(
@@ -170,10 +173,7 @@ class _ChatState extends State<Chat> {
         Icon(Icons.info_outline_rounded, size: 18),
         SizedBox(width: 8),
         Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 12.5, height: 1.3),
-          ),
+          child: Text(text, style: TextStyle(fontSize: 12.5, height: 1.3)),
         ),
         if (onRetry != null)
           TextButton(

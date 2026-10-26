@@ -149,15 +149,19 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
       return;
     }
     Navigator.of(context)
-        .push<DriverDestinationResult>(MaterialPageRoute(
-          builder: (_) => DestinationConfirmScreen(
-            origin: origin,
-            destination: picked,
-            routeRepository: widget.routeRepository,
+        .push<DriverDestinationResult>(
+          MaterialPageRoute(
+            builder: (_) => DestinationConfirmScreen(
+              origin: origin,
+              destination: picked,
+              routeRepository: widget.routeRepository,
+            ),
           ),
-        ))
+        )
         .then((confirmed) {
-          if (!mounted) { return; }
+          if (!mounted) {
+            return;
+          }
           if (confirmed == null) {
             _selectionReturned = false; // Back to the list: pick again.
             return;

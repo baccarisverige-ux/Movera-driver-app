@@ -17,7 +17,15 @@ enum RideCheckPhase { idle, pill, card, closing }
 /// Which screen of the card is shown.
 enum RideCheckStep { main, followUp, called }
 
-enum RideCheckAudio { idle, starting, recording, saved, unavailable, denied, failed }
+enum RideCheckAudio {
+  idle,
+  starting,
+  recording,
+  saved,
+  unavailable,
+  denied,
+  failed,
+}
 
 /// One open Ride check on the trip screen. It cannot close without an
 /// answer: only [imOk], a row and its Done, or Call 112 and its Done end it.
@@ -279,7 +287,9 @@ class RideCheckController extends ChangeNotifier {
         return;
       }
       if (_disposed || !_answerable) return;
-      await recorder.start('${_record!.id}-${services.now().millisecondsSinceEpoch}');
+      await recorder.start(
+        '${_record!.id}-${services.now().millisecondsSinceEpoch}',
+      );
     } catch (error) {
       DriverLog.warn('Ride check recording failed to start: $error');
       if (!_disposed) {
@@ -468,9 +478,7 @@ class RideCheckController extends ChangeNotifier {
   /// until the driver has answered.
   @override
   void notifyListeners() {
-    _syncGate(
-      _phase == RideCheckPhase.pill || _phase == RideCheckPhase.card,
-    );
+    _syncGate(_phase == RideCheckPhase.pill || _phase == RideCheckPhase.card);
     super.notifyListeners();
   }
 

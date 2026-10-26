@@ -84,6 +84,7 @@ class HomeOfferSheet extends StatefulWidget {
   /// Keys and words of the sheet and its down arrow.
   final Key sheetKey;
   final Key closeKey;
+
   /// The close arrow's label; "Hide request" by default.
   final String? closeLabel;
 
@@ -345,7 +346,10 @@ class _HomeOfferSheetState extends State<HomeOfferSheet>
     final layer = Stack(
       clipBehavior: Clip.none,
       children: [
-        Padding(padding: const EdgeInsets.only(top: half), child: sheet),
+        Padding(
+          padding: const EdgeInsets.only(top: half),
+          child: sheet,
+        ),
         if (orb != null)
           Positioned(
             top: 0,
@@ -380,11 +384,7 @@ class _HomeOfferSheetState extends State<HomeOfferSheet>
 /// (R15-2): back to Home.
 /// Null [onTap] while a claim is deciding.
 class ReservationCloseArrow extends StatelessWidget {
-  const ReservationCloseArrow({
-    super.key,
-    this.onTap,
-    this.label,
-  });
+  const ReservationCloseArrow({super.key, this.onTap, this.label});
 
   final VoidCallback? onTap;
 

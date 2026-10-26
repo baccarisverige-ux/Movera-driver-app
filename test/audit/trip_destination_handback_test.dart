@@ -60,8 +60,9 @@ bool _homeHasDestination(WidgetTester tester) => tester
     .any((marker) => marker.markerId.value == 'destination_mode_target');
 
 void main() {
-  testWidgets('Home shows the destination the driver set during the trip',
-      (tester) async {
+  testWidgets('Home shows the destination the driver set during the trip', (
+    tester,
+  ) async {
     final previous = DriverRuntimeConfig.current;
     DriverRuntimeConfig.current = const DriverRuntimeConfig(
       simulatedArrival: true,
@@ -90,31 +91,42 @@ void main() {
     final homeLocation = _Loc(), tripLocation = _Loc();
     final routes = _Routes();
     final navigator = GlobalKey<NavigatorState>();
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        navigatorKey: navigator,
-        navigatorObservers: [driverRouteObserver],
-        home: DriverHome(
-          locationRepository: homeLocation,
-          routeRepository: routes,
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          navigatorKey: navigator,
+          navigatorObservers: [driverRouteObserver],
+          home: DriverHome(
+            locationRepository: homeLocation,
+            routeRepository: routes,
+          ),
         ),
       ),
-    ));
+    );
     await _frames(tester, 20);
     expect(_homeHasDestination(tester), isFalse);
 
     // driver-r5-29: the route the app opens a won trip with.
-    unawaited(navigator.currentState!.push(ActiveRideTransition(AcceptRide(
-      initialStage: ActiveRideStage.onTrip,
-      locationRepository: tripLocation,
-      routeRepository: routes,
-    ))));
+    unawaited(
+      navigator.currentState!.push(
+        ActiveRideTransition(
+          AcceptRide(
+            initialStage: ActiveRideStage.onTrip,
+            locationRepository: tripLocation,
+            routeRepository: routes,
+          ),
+        ),
+      ),
+    );
     await _frames(tester, 20);
-    tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).onSearch();
+    tester
+        .widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland))
+        .onSearch();
     await _frames(tester, 12);
     await tester.tap(
-        find.byKey(const ValueKey<String>('destination-result-solna')));
+      find.byKey(const ValueKey<String>('destination-result-solna')),
+    );
     await _frames(tester, 10);
     await tester.tap(find.byKey(const ValueKey<String>('destination-confirm')));
     await _frames(tester, 10);
@@ -125,10 +137,16 @@ void main() {
     navigator.currentState!.pop();
     await _frames(tester, 20, 100);
     expect(find.byType(AcceptRide), findsNothing);
-    expect(_homeHasDestination(tester), isTrue,
-        reason: 'the destination counted today is the one Home follows');
-    expect(DestinationModeSession.instance.usedToday(), 1,
-        reason: 'taking it over is not a second use');
+    expect(
+      _homeHasDestination(tester),
+      isTrue,
+      reason: 'the destination counted today is the one Home follows',
+    );
+    expect(
+      DestinationModeSession.instance.usedToday(),
+      1,
+      reason: 'taking it over is not a second use',
+    );
 
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);

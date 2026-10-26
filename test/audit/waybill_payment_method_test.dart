@@ -15,9 +15,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// for a cash trip the driver was paid for in the car.
 class _PendingLocation implements DriverLocationRepository {
   @override
-  Future<DriverLocation> getCurrentPosition() => Completer<DriverLocation>().future;
+  Future<DriverLocation> getCurrentPosition() =>
+      Completer<DriverLocation>().future;
   @override
-  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) => const Stream.empty();
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      const Stream.empty();
 }
 
 /// The waybill AcceptRide begins for a trip, opened in the sheet.
@@ -27,33 +29,37 @@ Future<void> _waybillOf(WidgetTester tester, {required bool cash}) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(
-      home: AcceptRide(
-        tripId: cash ? 'cash-trip' : 'card-trip',
-        fare: '104,80 kr',
-        paidByCash: cash,
-        locationRepository: _PendingLocation(),
-        activeRideRepository: MemoryActiveRideRepository(),
-        waybillRepository: waybills,
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(
+        home: AcceptRide(
+          tripId: cash ? 'cash-trip' : 'card-trip',
+          fare: '104,80 kr',
+          paidByCash: cash,
+          locationRepository: _PendingLocation(),
+          activeRideRepository: MemoryActiveRideRepository(),
+          waybillRepository: waybills,
+        ),
       ),
     ),
-  ));
+  );
   for (var i = 0; i < 8; i++) {
     await tester.pump(const Duration(milliseconds: 50));
   }
   final record = waybills.current!;
   await tester.pumpWidget(const SizedBox.shrink());
   await tester.pump(const Duration(seconds: 1));
-  await tester.pumpWidget(MaterialApp(
-    home: Builder(
-      builder: (context) => TextButton(
-        onPressed: () => showMoveraWaybillSheet(context, record),
-        child: const Text('open'),
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => showMoveraWaybillSheet(context, record),
+          child: const Text('open'),
+        ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('open'));
   await tester.pumpAndSettle();
 }

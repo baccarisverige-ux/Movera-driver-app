@@ -22,12 +22,18 @@ void main() {
     });
 
     test('one terminal set and the assigned / onboard sets', () {
-      expect(wire(TripStatus.values.where((s) => s.isTerminal)),
-          statuses['terminal']);
-      expect(wire(TripStatus.values.where((s) => s.isDriverAssigned)),
-          statuses['driverAssigned']);
-      expect(wire(TripStatus.values.where((s) => s.isRiderOnboard)),
-          statuses['riderOnboard']);
+      expect(
+        wire(TripStatus.values.where((s) => s.isTerminal)),
+        statuses['terminal'],
+      );
+      expect(
+        wire(TripStatus.values.where((s) => s.isDriverAssigned)),
+        statuses['driverAssigned'],
+      );
+      expect(
+        wire(TripStatus.values.where((s) => s.isRiderOnboard)),
+        statuses['riderOnboard'],
+      );
     });
 
     test('parse reads wire names and legacy camelCase saves', () {
@@ -35,8 +41,10 @@ void main() {
         expect(TripStatusWire.parse(status.wireName), status);
         expect(TripStatusWire.parse(status.name), status);
       }
-      expect(TripStatusWire.parse('cancelled_by_system'),
-          TripStatus.cancelledBySystem);
+      expect(
+        TripStatusWire.parse('cancelled_by_system'),
+        TripStatus.cancelledBySystem,
+      );
       expect(TripStatusWire.tryParse('paymentProcessing'), isNull);
       expect(() => TripStatusWire.parse('done'), throwsFormatException);
     });
@@ -44,7 +52,8 @@ void main() {
 
   group('transition table = contract.json#transitions', () {
     test('row by row', () {
-      final rows = (contract['transitions'] as List).cast<Map<String, dynamic>>();
+      final rows = (contract['transitions'] as List)
+          .cast<Map<String, dynamic>>();
       expect(TripTransitions.table.length, rows.length);
       for (var i = 0; i < rows.length; i++) {
         final row = rows[i];
@@ -63,8 +72,10 @@ void main() {
           .map((row) => (row as Map)['command'])
           .toSet();
       expect(TripCommand.values.map((c) => c.wireName).toSet(), commands);
-      expect(TripActor.values.map((a) => a.wireName).toList(),
-          contract['actors']);
+      expect(
+        TripActor.values.map((a) => a.wireName).toList(),
+        contract['actors'],
+      );
     });
   });
 
@@ -86,9 +97,13 @@ void main() {
           .cast<Map<String, dynamic>>()
           .where((scenario) => scenario['rating'] != null)
           .toList();
-      expect(cases.map((s) => s['id']),
-          containsAll(['rider_rates_trip_ended_early',
-              'plain_rider_cancel_is_not_rated']));
+      expect(
+        cases.map((s) => s['id']),
+        containsAll([
+          'rider_rates_trip_ended_early',
+          'plain_rider_cancel_is_not_rated',
+        ]),
+      );
       for (final scenario in cases) {
         final kind = TripKind.tryParse(scenario['kind'] as String)!;
         var status = TripStatus.draft;
@@ -96,18 +111,27 @@ void main() {
         for (final step in (scenario['steps'] as List).cast<List>()) {
           final command = TripCommand.tryParse(step[0] as String)!;
           final next = TripTransitions.target(
-              status, command, TripActor.tryParse(step[1] as String)!,
-              kind: kind);
+            status,
+            command,
+            TripActor.tryParse(step[1] as String)!,
+            kind: kind,
+          );
           if (next != null) (status, endedBy) = (next, command);
         }
         for (final MapEntry(key: rater, value: expected)
             in (scenario['rating'] as Map).entries) {
-          final allowed = status.isTerminal &&
+          final allowed =
+              status.isTerminal &&
               TripRatingRules.allows(
-                  TripActor.tryParse(rater as String)!, status,
-                  endedBy: endedBy);
-          expect(allowed ? 'allowed' : 'invalid_transition', expected,
-              reason: '${scenario['id']}: $rater after ${status.wireName}');
+                TripActor.tryParse(rater as String)!,
+                status,
+                endedBy: endedBy,
+              );
+          expect(
+            allowed ? 'allowed' : 'invalid_transition',
+            expected,
+            reason: '${scenario['id']}: $rater after ${status.wireName}',
+          );
         }
       }
     });
@@ -125,14 +149,24 @@ void main() {
         final actor = TripActor.tryParse(step[1] as String);
         expect(command, isNotNull, reason: '${step[0]}');
         expect(actor, isNotNull, reason: '${step[1]}');
-        final next =
-            TripTransitions.target(status, command!, actor!, kind: kind);
-        expect(next?.wireName ?? 'invalid_transition', step[2],
-            reason: '${scenario['id']}: ${step[0]} by ${step[1]} '
-                'from ${status.wireName}');
+        final next = TripTransitions.target(
+          status,
+          command!,
+          actor!,
+          kind: kind,
+        );
+        expect(
+          next?.wireName ?? 'invalid_transition',
+          step[2],
+          reason:
+              '${scenario['id']}: ${step[0]} by ${step[1]} '
+              'from ${status.wireName}',
+        );
         if (next == null) {
-          expect(() => TripTransitions.apply(status, command, actor, kind: kind),
-              throwsA(isA<InvalidTripTransition>()));
+          expect(
+            () => TripTransitions.apply(status, command, actor, kind: kind),
+            throwsA(isA<InvalidTripTransition>()),
+          );
         } else {
           status = next;
         }

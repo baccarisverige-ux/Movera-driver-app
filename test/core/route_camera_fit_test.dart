@@ -41,7 +41,11 @@ List<GeoPoint> _road(GeoPoint from, GeoPoint to, {double bend = 0.01}) => [
     ),
 ];
 
-void expectInside(RouteCameraFit fit, Offset targetAt, List<RouteFitPoint> points) {
+void expectInside(
+  RouteCameraFit fit,
+  Offset targetAt,
+  List<RouteFitPoint> points,
+) {
   final free = _free();
   for (final p in points) {
     final at = routeFitProject(fit, targetAt, p.point);
@@ -74,20 +78,30 @@ void main() {
 
   test('a short and a long route both fit whole above the sheet and orb; '
       'the long one zooms out', () {
-    final short = _route(_road(
-      const GeoPoint(59.3343, 18.0615), // Kungsgatan
-      const GeoPoint(59.3157, 18.0335), // Hornstull
-      bend: 0.002,
-    ));
-    final arlanda = _route(_road(
-      const GeoPoint(59.3326, 18.0291), // Fridhemsplan
-      const GeoPoint(59.6497, 17.9237), // Arlanda T5
-      bend: 0.04,
-    ));
+    final short = _route(
+      _road(
+        const GeoPoint(59.3343, 18.0615), // Kungsgatan
+        const GeoPoint(59.3157, 18.0335), // Hornstull
+        bend: 0.002,
+      ),
+    );
+    final arlanda = _route(
+      _road(
+        const GeoPoint(59.3326, 18.0291), // Fridhemsplan
+        const GeoPoint(59.6497, 17.9237), // Arlanda T5
+        bend: 0.04,
+      ),
+    );
     final shortFit = fitRouteCamera(
-      points: short, free: _free(), targetAt: webTarget)!;
+      points: short,
+      free: _free(),
+      targetAt: webTarget,
+    )!;
     final longFit = fitRouteCamera(
-      points: arlanda, free: _free(), targetAt: webTarget)!;
+      points: arlanda,
+      free: _free(),
+      targetAt: webTarget,
+    )!;
     expectInside(shortFit, webTarget, short);
     expectInside(longFit, webTarget, arlanda);
     expect(longFit.zoom, lessThan(shortFit.zoom - 1));
@@ -114,7 +128,10 @@ void main() {
     // still gets the whole route above the sheet.
     final padded = Offset(36 + (375 - 36 - 72) / 2, 300);
     final nativeFit = fitRouteCamera(
-      points: arlanda, free: _free(), targetAt: padded)!;
+      points: arlanda,
+      free: _free(),
+      targetAt: padded,
+    )!;
     expectInside(nativeFit, padded, arlanda);
   });
 

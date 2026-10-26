@@ -11,10 +11,12 @@ Map<String, dynamic> _route({
   List<dynamic>? steps,
 }) => {
   'geometry': {
-    'coordinates': coordinates ?? [
-      [18.06, 59.33],
-      [18.07, 59.34],
-    ],
+    'coordinates':
+        coordinates ??
+        [
+          [18.06, 59.33],
+          [18.07, 59.34],
+        ],
   },
   'distance': distance,
   'duration': duration,
@@ -42,7 +44,10 @@ void main() {
 
   test('bad route coordinate fails closed instead of drawing shortcuts', () {
     final valid = parser.parseRoute(_route());
-    expect(valid.points, const [GeoPoint(59.33, 18.06), GeoPoint(59.34, 18.07)]);
+    expect(valid.points, const [
+      GeoPoint(59.33, 18.06),
+      GeoPoint(59.34, 18.07),
+    ]);
     for (final invalid in [
       [18.01, double.nan],
       [18.01, 92],
@@ -51,11 +56,15 @@ void main() {
       ['bad', 59.32],
     ]) {
       expect(
-        () => parser.parseRoute(_route(coordinates: [
-          [18.06, 59.33],
-          invalid,
-          [18.07, 59.34],
-        ])),
+        () => parser.parseRoute(
+          _route(
+            coordinates: [
+              [18.06, 59.33],
+              invalid,
+              [18.07, 59.34],
+            ],
+          ),
+        ),
         throwsFormatException,
       );
     }
@@ -63,43 +72,67 @@ void main() {
 
   test('negative and nonfinite route distances are rejected', () {
     for (final value in [-1, double.nan, double.infinity]) {
-      expect(() => parser.parseRoute(_route(distance: value)), throwsFormatException);
+      expect(
+        () => parser.parseRoute(_route(distance: value)),
+        throwsFormatException,
+      );
     }
   });
 
   test('negative and nonfinite route durations are rejected', () {
     for (final value in [-1, double.nan, double.infinity]) {
-      expect(() => parser.parseRoute(_route(duration: value)), throwsFormatException);
+      expect(
+        () => parser.parseRoute(_route(duration: value)),
+        throwsFormatException,
+      );
     }
   });
 
-  test('invalid maneuver positions cannot appear as navigation instructions', () {
-    final instructions = parser.parseInstructions(_route(steps: [
-      _step(location: [18, 91]),
-      _step(location: [double.nan, 59]),
-      _step(location: [18, 59]),
-    ]));
-    expect(instructions, hasLength(1));
-    expect(instructions.single.maneuverLocation, const GeoPoint(59, 18));
-  });
+  test(
+    'invalid maneuver positions cannot appear as navigation instructions',
+    () {
+      final instructions = parser.parseInstructions(
+        _route(
+          steps: [
+            _step(location: [18, 91]),
+            _step(location: [double.nan, 59]),
+            _step(location: [18, 59]),
+          ],
+        ),
+      );
+      expect(instructions, hasLength(1));
+      expect(instructions.single.maneuverLocation, const GeoPoint(59, 18));
+    },
+  );
 
   test('invalid maneuver distance is never a negative or NaN callout', () {
-    final instructions = parser.parseInstructions(_route(steps: [
-      _step(distance: -2),
-      _step(distance: double.nan),
-    ]));
+    final instructions = parser.parseInstructions(
+      _route(
+        steps: [
+          _step(distance: -2),
+          _step(distance: double.nan),
+        ],
+      ),
+    );
     expect(instructions.map((step) => step.distanceMeters), [0, 0]);
   });
 
-  test('only valid positive exit numbers appear on roundabout instructions', () {
-    final instructions = parser.parseInstructions(_route(steps: [
-      _step(exit: true),
-      _step(exit: -1),
-      _step(exit: 2.5),
-      _step(exit: 3),
-    ]));
-    expect(instructions.map((i) => i.exitNumber), [null, null, null, '3']);
-  });
+  test(
+    'only valid positive exit numbers appear on roundabout instructions',
+    () {
+      final instructions = parser.parseInstructions(
+        _route(
+          steps: [
+            _step(exit: true),
+            _step(exit: -1),
+            _step(exit: 2.5),
+            _step(exit: 3),
+          ],
+        ),
+      );
+      expect(instructions.map((i) => i.exitNumber), [null, null, null, '3']);
+    },
+  );
 
   test('realtime emit after disposal cannot report a fictitious send', () {
     final bus = MemoryDriverRealtime();

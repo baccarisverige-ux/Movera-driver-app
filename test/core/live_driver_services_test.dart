@@ -30,7 +30,11 @@ void main() {
     headers: {'content-type': 'application/json'},
   );
 
-  Map<String, dynamic> error(String code, {String? reason, Object? projection}) => {
+  Map<String, dynamic> error(
+    String code, {
+    String? reason,
+    Object? projection,
+  }) => {
     'code': code,
     'message': 'The server says no.',
     'requestId': 'r',
@@ -63,25 +67,31 @@ void main() {
   });
 
   group('location batches', () {
-    test('a fix goes out as the contract GeoFix and is kept for arrive', () async {
-      final reporter = LiveLocationReporter(
-        api: api(),
-        location: _FixedLocation(),
-      );
-      answers.add((_) => json(200, {'accepted': 1, 'serverTime': '2026-10-25T10:00:00Z'}));
-      expect(await reporter.sendNow(), isTrue);
-      expect(requests.single.url.path, '/api/v1/driver/location');
-      expect(requests.single.headers['Idempotency-Key'], isNotEmpty);
-      final fix = (body(requests.single)['fixes'] as List).single as Map;
-      expect(fix['lat'], 59.3326);
-      expect(fix['lng'], 18.0649);
-      expect(fix['accuracy'], 8.0);
-      expect(fix['heading'], 90.0);
-      expect(fix['speedMps'], 5.0);
-      expect(fix['moving'], isTrue);
-      expect(fix['measuredAt'], '2026-10-25T10:00:00.000Z');
-      expect(reporter.lastFix, fix);
-    });
+    test(
+      'a fix goes out as the contract GeoFix and is kept for arrive',
+      () async {
+        final reporter = LiveLocationReporter(
+          api: api(),
+          location: _FixedLocation(),
+        );
+        answers.add(
+          (_) =>
+              json(200, {'accepted': 1, 'serverTime': '2026-10-25T10:00:00Z'}),
+        );
+        expect(await reporter.sendNow(), isTrue);
+        expect(requests.single.url.path, '/api/v1/driver/location');
+        expect(requests.single.headers['Idempotency-Key'], isNotEmpty);
+        final fix = (body(requests.single)['fixes'] as List).single as Map;
+        expect(fix['lat'], 59.3326);
+        expect(fix['lng'], 18.0649);
+        expect(fix['accuracy'], 8.0);
+        expect(fix['heading'], 90.0);
+        expect(fix['speedMps'], 5.0);
+        expect(fix['moving'], isTrue);
+        expect(fix['measuredAt'], '2026-10-25T10:00:00.000Z');
+        expect(reporter.lastFix, fix);
+      },
+    );
 
     test('no fix (no permission, no signal): nothing is sent', () async {
       final reporter = LiveLocationReporter(
@@ -93,7 +103,13 @@ void main() {
     });
 
     test('start sends at once and then every interval; stop ends it', () async {
-      answers.addAll(List.generate(10, (_) => (_) => json(200, {'accepted': 1})));
+      answers.addAll(
+        List.generate(
+          10,
+          (_) =>
+              (_) => json(200, {'accepted': 1}),
+        ),
+      );
       final reporter = LiveLocationReporter(
         api: api(),
         location: _FixedLocation(),
@@ -124,7 +140,11 @@ void main() {
         location: _FixedLocation(),
         every: const Duration(hours: 1),
       );
-      presence = LivePresence(api: client, dispatch: dispatch, reporter: reporter);
+      presence = LivePresence(
+        api: client,
+        dispatch: dispatch,
+        reporter: reporter,
+      );
     });
 
     tearDown(() => reporter.stop());
@@ -132,8 +152,20 @@ void main() {
     test('going online sends the profile version and a fix; the feed and '
         'location start', () async {
       answers
-        ..add((_) => json(200, {'driverId': 'd1', 'onlineStatus': 'offline', 'version': 4}))
-        ..add((_) => json(200, {'driverId': 'd1', 'onlineStatus': 'online', 'version': 5}))
+        ..add(
+          (_) => json(200, {
+            'driverId': 'd1',
+            'onlineStatus': 'offline',
+            'version': 4,
+          }),
+        )
+        ..add(
+          (_) => json(200, {
+            'driverId': 'd1',
+            'onlineStatus': 'online',
+            'version': 5,
+          }),
+        )
         ..add((_) => json(200, {'accepted': 1}));
       expect(await presence.goOnline(), isNull);
       expect(requests[0].method, 'GET');
@@ -152,22 +184,39 @@ void main() {
     test('a stale version is sent again with the server\'s', () async {
       answers
         ..add((_) => json(200, {'onlineStatus': 'offline', 'version': 4}))
-        ..add((_) => json(409, error('version_mismatch',
-            projection: {'onlineStatus': 'offline', 'version': 6})))
+        ..add(
+          (_) => json(
+            409,
+            error(
+              'version_mismatch',
+              projection: {'onlineStatus': 'offline', 'version': 6},
+            ),
+          ),
+        )
         ..add((_) => json(200, {'onlineStatus': 'online', 'version': 7}))
         ..add((_) => json(200, {'accepted': 1}));
       expect(await presence.goOnline(), isNull);
       expect(body(requests[2])['expectedVersion'], 6);
       // A new body is a new command: a new key.
-      expect(requests[2].headers['Idempotency-Key'],
-          isNot(requests[1].headers['Idempotency-Key']));
+      expect(
+        requests[2].headers['Idempotency-Key'],
+        isNot(requests[1].headers['Idempotency-Key']),
+      );
     });
 
     test('a refusal is said plainly and nothing starts', () async {
       answers
         ..add((_) => json(200, {'onlineStatus': 'offline', 'version': 4}))
-        ..add((_) => json(409, error('invalid_transition', reason: 'no_vehicle',
-            projection: {'onlineStatus': 'offline', 'version': 4})));
+        ..add(
+          (_) => json(
+            409,
+            error(
+              'invalid_transition',
+              reason: 'no_vehicle',
+              projection: {'onlineStatus': 'offline', 'version': 4},
+            ),
+          ),
+        );
       expect(await presence.goOnline(), tr.liveOnlineNoVehicle);
       expect(presence.serverOnline, isFalse);
       expect(dispatch.connects, 0);
@@ -201,7 +250,10 @@ void main() {
       expect(await presence.goOffline(), isNull);
       expect(dispatch.disconnects, 1);
       expect(reporter.running, isFalse);
-      expect(body(requests[1]), {'expectedVersion': 2, 'onlineStatus': 'offline'});
+      expect(body(requests[1]), {
+        'expectedVersion': 2,
+        'onlineStatus': 'offline',
+      });
       expect(presence.serverOnline, isFalse);
     });
 
@@ -244,41 +296,60 @@ void main() {
   group('trip steps', () {
     late LiveTripCommands trips;
 
-    Map<String, dynamic> trip(String status, int version) =>
-        {'tripId': 't1', 'status': status, 'version': version};
+    Map<String, dynamic> trip(String status, int version) => {
+      'tripId': 't1',
+      'status': status,
+      'version': version,
+    };
 
     setUp(() {
       trips = LiveTripCommands(
         api: api(),
-        lastFix: () => {'lat': 59.33, 'lng': 18.06, 'accuracy': 5, 'measuredAt': '2026-10-25T10:00:00Z'},
+        lastFix: () => {
+          'lat': 59.33,
+          'lng': 18.06,
+          'accuracy': 5,
+          'measuredAt': '2026-10-25T10:00:00Z',
+        },
       );
       // The accept answer.
       trips.observe(trip('accepted', 3));
     });
 
-    test('arrive heads to the pickup first, each with the version it has', () async {
-      answers
-        ..add((_) => json(200, trip('driver_to_pickup', 4)))
-        ..add((_) => json(200, trip('arrived', 5)));
-      final outcome = await trips.arrive('t1');
-      expect(outcome.ok, isTrue);
-      expect(requests.map((r) => r.url.path), [
-        '/api/v1/trips/t1/head-to-pickup',
-        '/api/v1/trips/t1/arrive',
-      ]);
-      expect(body(requests[0]), {'expectedVersion': 3});
-      expect(body(requests[1])['expectedVersion'], 4);
-      expect((body(requests[1])['location'] as Map)['lat'], 59.33);
-      expect(trips.statusOf('t1'), 'arrived');
-      expect(trips.isOwnEcho('t1', 'arrived'), isTrue);
-      expect(trips.isOwnEcho('t1', 'cancelled_by_rider'), isFalse);
-    });
+    test(
+      'arrive heads to the pickup first, each with the version it has',
+      () async {
+        answers
+          ..add((_) => json(200, trip('driver_to_pickup', 4)))
+          ..add((_) => json(200, trip('arrived', 5)));
+        final outcome = await trips.arrive('t1');
+        expect(outcome.ok, isTrue);
+        expect(requests.map((r) => r.url.path), [
+          '/api/v1/trips/t1/head-to-pickup',
+          '/api/v1/trips/t1/arrive',
+        ]);
+        expect(body(requests[0]), {'expectedVersion': 3});
+        expect(body(requests[1])['expectedVersion'], 4);
+        expect((body(requests[1])['location'] as Map)['lat'], 59.33);
+        expect(trips.statusOf('t1'), 'arrived');
+        expect(trips.isOwnEcho('t1', 'arrived'), isTrue);
+        expect(trips.isOwnEcho('t1', 'cancelled_by_rider'), isFalse);
+      },
+    );
 
     test('not at the pickup: refused in plain words, the echo is not '
         'waited for', () async {
       trips.observe(trip('driver_to_pickup', 4));
-      answers.add((_) => json(409, error('invalid_transition',
-          reason: 'not_at_pickup', projection: trip('driver_to_pickup', 4))));
+      answers.add(
+        (_) => json(
+          409,
+          error(
+            'invalid_transition',
+            reason: 'not_at_pickup',
+            projection: trip('driver_to_pickup', 4),
+          ),
+        ),
+      );
       final outcome = await trips.arrive('t1');
       expect(outcome.ok, isFalse);
       expect(outcome.message, tr.liveTripNotAtPickup);
@@ -288,7 +359,12 @@ void main() {
     test('a stale version is retried once with the server\'s', () async {
       trips.observe(trip('arrived', 5));
       answers
-        ..add((_) => json(409, error('version_mismatch', projection: trip('arrived', 6))))
+        ..add(
+          (_) => json(
+            409,
+            error('version_mismatch', projection: trip('arrived', 6)),
+          ),
+        )
         ..add((_) => json(200, trip('rider_onboard', 7)))
         ..add((_) => json(200, trip('in_trip', 8)));
       expect((await trips.start('t1')).ok, isTrue);
@@ -312,8 +388,10 @@ void main() {
       // It may have reached the server: its echo still counts as ours.
       expect(trips.isOwnEcho('t1', 'completed'), isTrue);
       expect((await trips.complete('t1')).ok, isTrue);
-      expect(requests[1].headers['Idempotency-Key'],
-          requests[0].headers['Idempotency-Key']);
+      expect(
+        requests[1].headers['Idempotency-Key'],
+        requests[0].headers['Idempotency-Key'],
+      );
     });
 
     test('a step the trip already passed is not sent again', () async {
@@ -325,24 +403,54 @@ void main() {
     test('cancel and no-show carry the reason code', () async {
       trips.observe(trip('arrived', 5));
       answers.add((_) => json(200, trip('no_show', 6)));
-      expect((await trips.noShow('t1', reasonCode: 'rider_no_show')).ok, isTrue);
+      expect(
+        (await trips.noShow('t1', reasonCode: 'rider_no_show')).ok,
+        isTrue,
+      );
       expect(requests.single.url.path, '/api/v1/trips/t1/no-show');
-      expect(body(requests.single), {'reasonCode': 'rider_no_show', 'expectedVersion': 5});
+      expect(body(requests.single), {
+        'reasonCode': 'rider_no_show',
+        'expectedVersion': 5,
+      });
 
-      trips.observe({'tripId': 't2', 'status': 'driver_to_pickup', 'version': 2});
-      answers.add((_) => json(200, {'tripId': 't2', 'status': 'searching', 'version': 3}));
-      expect((await trips.cancel('t2', reasonCode: 'unsafe_pickup')).ok, isTrue);
+      trips.observe({
+        'tripId': 't2',
+        'status': 'driver_to_pickup',
+        'version': 2,
+      });
+      answers.add(
+        (_) => json(200, {'tripId': 't2', 'status': 'searching', 'version': 3}),
+      );
+      expect(
+        (await trips.cancel('t2', reasonCode: 'unsafe_pickup')).ok,
+        isTrue,
+      );
       expect(requests.last.url.path, '/api/v1/trips/t2/cancel');
-      expect(body(requests.last), {'reasonCode': 'unsafe_pickup', 'expectedVersion': 2});
+      expect(body(requests.last), {
+        'reasonCode': 'unsafe_pickup',
+        'expectedVersion': 2,
+      });
       expect(trips.isOwnEcho('t2', 'searching'), isTrue);
     });
 
     test('a trip not known yet is read first', () async {
       final fresh = LiveTripCommands(api: api());
       answers
-        ..add((_) => json(200, {'tripId': 't9', 'status': 'arrived', 'version': 11}))
-        ..add((_) => json(200, {'tripId': 't9', 'status': 'rider_onboard', 'version': 12}))
-        ..add((_) => json(200, {'tripId': 't9', 'status': 'in_trip', 'version': 13}));
+        ..add(
+          (_) =>
+              json(200, {'tripId': 't9', 'status': 'arrived', 'version': 11}),
+        )
+        ..add(
+          (_) => json(200, {
+            'tripId': 't9',
+            'status': 'rider_onboard',
+            'version': 12,
+          }),
+        )
+        ..add(
+          (_) =>
+              json(200, {'tripId': 't9', 'status': 'in_trip', 'version': 13}),
+        );
       expect((await fresh.start('t9')).ok, isTrue);
       expect(requests.first.method, 'GET');
       expect(requests.first.url.path, '/api/v1/trips/t9');
@@ -374,7 +482,10 @@ void main() {
           opened.add(request);
           final status = statuses.isEmpty ? 200 : statuses.removeAt(0);
           if (status != 200) {
-            return http.StreamedResponse(Stream.value(utf8.encode('{}')), status);
+            return http.StreamedResponse(
+              Stream.value(utf8.encode('{}')),
+              status,
+            );
           }
           final stream = StreamController<List<int>>();
           streams.add(stream);
@@ -410,22 +521,35 @@ void main() {
       expect(opened.single.headers['Accept'], 'text/event-stream');
       expect(opened.single.headers['Authorization'], 'Bearer a1');
       streams.single.add(utf8.encode(': stream open\n\n'));
-      streams.single.add(utf8.encode(sse(1, 'trip_projection', status: 'accepted', version: 3)));
-      streams.single.add(utf8.encode(sse(2, 'trip_projection', status: 'cancelled_by_rider', version: 4)));
+      streams.single.add(
+        utf8.encode(sse(1, 'trip_projection', status: 'accepted', version: 3)),
+      );
+      streams.single.add(
+        utf8.encode(
+          sse(2, 'trip_projection', status: 'cancelled_by_rider', version: 4),
+        ),
+      );
       await pumpEventQueue();
-      expect(events.map((e) => e.status), [TripStatus.accepted, TripStatus.cancelledByRider]);
+      expect(events.map((e) => e.status), [
+        TripStatus.accepted,
+        TripStatus.cancelledByRider,
+      ]);
       expect(trips.versionOf('t1'), 4);
       await sub.cancel();
     });
 
     test('the echo of this phone\'s own step is not passed on', () async {
       trips.observe({'tripId': 't1', 'status': 'in_trip', 'version': 8});
-      answers.add((_) => json(200, {'tripId': 't1', 'status': 'completed', 'version': 9}));
+      answers.add(
+        (_) => json(200, {'tripId': 't1', 'status': 'completed', 'version': 9}),
+      );
       await trips.complete('t1');
       final events = <DriverRealtimeEvent>[];
       final sub = realtime.subscribe('t1').listen(events.add);
       await pumpEventQueue();
-      streams.single.add(utf8.encode(sse(5, 'trip_projection', status: 'completed', version: 9)));
+      streams.single.add(
+        utf8.encode(sse(5, 'trip_projection', status: 'completed', version: 9)),
+      );
       streams.single.add(utf8.encode(sse(6, 'location', version: 9)));
       await pumpEventQueue();
       expect(events.map((e) => e.kind), [DriverRealtimeKind.location]);
@@ -435,7 +559,9 @@ void main() {
     test('a dropped stream resumes after the last sequence', () async {
       final sub = realtime.subscribe('t1').listen((_) {});
       await pumpEventQueue();
-      streams.single.add(utf8.encode(sse(3, 'trip_projection', status: 'arrived')));
+      streams.single.add(
+        utf8.encode(sse(3, 'trip_projection', status: 'arrived')),
+      );
       await pumpEventQueue();
       await streams.single.close();
       await pumpEventQueue();
@@ -453,13 +579,28 @@ void main() {
       final sub = realtime.subscribe('t1').listen(events.add);
       await pumpEventQueue();
       final s = streams.single;
-      s.add(utf8.encode(sse(1, 'trip_projection', status: 'requested', version: 1)));
-      s.add(utf8.encode(sse(2, 'trip_projection', status: 'searching', version: 2)));
-      s.add(utf8.encode(sse(3, 'trip_projection', status: 'offered', version: 3)));
-      s.add(utf8.encode(sse(4, 'trip_projection', status: 'accepted', version: 4)));
-      s.add(utf8.encode(sse(5, 'trip_projection', status: 'driver_to_pickup', version: 5)));
+      s.add(
+        utf8.encode(sse(1, 'trip_projection', status: 'requested', version: 1)),
+      );
+      s.add(
+        utf8.encode(sse(2, 'trip_projection', status: 'searching', version: 2)),
+      );
+      s.add(
+        utf8.encode(sse(3, 'trip_projection', status: 'offered', version: 3)),
+      );
+      s.add(
+        utf8.encode(sse(4, 'trip_projection', status: 'accepted', version: 4)),
+      );
+      s.add(
+        utf8.encode(
+          sse(5, 'trip_projection', status: 'driver_to_pickup', version: 5),
+        ),
+      );
       await pumpEventQueue();
-      expect(events.any((e) => e.status?.isReleasedToDispatch ?? false), isFalse);
+      expect(
+        events.any((e) => e.status?.isReleasedToDispatch ?? false),
+        isFalse,
+      );
       expect(events.last.status, TripStatus.driverToPickup);
       expect(realtime.lastSequence, 5);
       await sub.cancel();
@@ -467,14 +608,22 @@ void main() {
 
     test('nothing known yet (a restored screen): the trip is read before the '
         'stream, so its history is still told from news', () async {
-      answers.add((_) => json(200, {'tripId': 't1', 'status': 'arrived', 'version': 6}));
+      answers.add(
+        (_) => json(200, {'tripId': 't1', 'status': 'arrived', 'version': 6}),
+      );
       final events = <DriverRealtimeEvent>[];
       final sub = realtime.subscribe('t1').listen(events.add);
       await pumpEventQueue();
       expect(trips.versionOf('t1'), 6);
       final s = streams.single;
-      s.add(utf8.encode(sse(2, 'trip_projection', status: 'searching', version: 2)));
-      s.add(utf8.encode(sse(7, 'trip_projection', status: 'cancelled_by_rider', version: 7)));
+      s.add(
+        utf8.encode(sse(2, 'trip_projection', status: 'searching', version: 2)),
+      );
+      s.add(
+        utf8.encode(
+          sse(7, 'trip_projection', status: 'cancelled_by_rider', version: 7),
+        ),
+      );
       await pumpEventQueue();
       expect(events.map((e) => e.status), [TripStatus.cancelledByRider]);
       await sub.cancel();
@@ -499,9 +648,16 @@ void main() {
       final accepted = <Map<String, dynamic>>[];
       var renewed = 0;
       final steps = <http.Response Function()>[
-        () => json(200, {'items': [_offer()], 'nextCursor': null}),
+        () => json(200, {
+          'items': [_offer()],
+          'nextCursor': null,
+        }),
         () => json(401, error('unauthorized')),
-        () => json(200, {'tripId': 'trip-o1', 'status': 'accepted', 'version': 3}),
+        () => json(200, {
+          'tripId': 'trip-o1',
+          'status': 'accepted',
+          'version': 3,
+        }),
       ];
       final repo = ApiDispatchRepository(
         client: MockClient((request) async {
@@ -519,7 +675,10 @@ void main() {
       final result = await repo.claimOffer('o1');
       expect(result.isSuccess, isTrue);
       expect(renewed, 1);
-      expect(seen[1].headers['Idempotency-Key'], seen[2].headers['Idempotency-Key']);
+      expect(
+        seen[1].headers['Idempotency-Key'],
+        seen[2].headers['Idempotency-Key'],
+      );
       expect(accepted.single['version'], 3);
       await repo.dispose();
     });
@@ -538,11 +697,16 @@ void main() {
         reconnectDelay: (_) => Duration.zero,
       );
       await repo.connect();
-      feeds.single.add(utf8.encode(
-          'data: ${jsonEncode({'kind': 'offer_created', 'sequence': 1, 'offer': _offer()})}\n\n'));
+      feeds.single.add(
+        utf8.encode(
+          'data: ${jsonEncode({'kind': 'offer_created', 'sequence': 1, 'offer': _offer()})}\n\n',
+        ),
+      );
       await pumpEventQueue();
       final lists = <int>[];
-      final sub = repo.watchNearbyOffers().listen((offers) => lists.add(offers.length));
+      final sub = repo.watchNearbyOffers().listen(
+        (offers) => lists.add(offers.length),
+      );
       await repo.disconnect();
       await pumpEventQueue();
       expect(repo.feedLive, isFalse);

@@ -287,7 +287,10 @@ void main() {
         surface(radarVisible: true, radar: () => radar++),
       );
       await tester.pump(const Duration(seconds: 1));
-      expect(find.byKey(const ValueKey('trip-guidance-island')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('trip-guidance-island')),
+        findsOneWidget,
+      );
       // driver-u190: a radar button would draw the tools' radar icon.
       expect(find.byIcon(Icons.radar_rounded), findsNothing);
       expect(find.byTooltip('Turn Exclusive offers on'), findsNothing);
@@ -319,7 +322,10 @@ void main() {
         surface(banner: banner, arrival: arrival, arrived: arrived),
       );
       await tester.pump(const Duration(seconds: 1));
-      expect(find.byKey(const ValueKey('trip-guidance-island')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('trip-guidance-island')),
+        findsOneWidget,
+      );
     }
 
     // Arriving soon: the distance to the pickup itself.
@@ -415,12 +421,16 @@ void main() {
       closeTo(IslandMorph.contourWidth, 1e-9),
     );
     expect(
-      tester.widget<AnimatedContainer>(
-        find.descendant(
-          of: find.byType(DigitalIslandShell),
-          matching: find.byType(AnimatedContainer),
-        ).first,
-      ).decoration,
+      tester
+          .widget<AnimatedContainer>(
+            find
+                .descendant(
+                  of: find.byType(DigitalIslandShell),
+                  matching: find.byType(AnimatedContainer),
+                )
+                .first,
+          )
+          .decoration,
       isA<BoxDecoration>().having((d) => d.border, 'no second border', isNull),
     );
     await tester.pumpWidget(const SizedBox());
@@ -462,12 +472,14 @@ void main() {
         '$width wide, text 130 %', (tester) async {
       var menus = 0;
       var searches = 0;
-      await tester.pumpWidget(surface(
-        width: width,
-        textScale: 1.3,
-        menu: () => menus++,
-        search: () => searches++,
-      ));
+      await tester.pumpWidget(
+        surface(
+          width: width,
+          textScale: 1.3,
+          menu: () => menus++,
+          search: () => searches++,
+        ),
+      );
       // The route face it opens on overflows at 320 wide, text 130 %, on
       // main too (a separate finding); this test is about the default face.
       tester.takeException();
@@ -680,36 +692,40 @@ void main() {
   });
 }
 
-Widget _trip(NavigationBanner banner, {String? arrival, bool arrived = false, ValueNotifier<double>? sheet}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: SizedBox(
-          width: 400,
-          height: 220,
-          child: AdaptiveTripIsland(
-            banner: banner,
-            status: 'To pickup',
-            address: 'Kungsgatan 42, Stockholm',
-            detail: '',
-            eta: '1 min',
-            arrival: arrival,
-            arrived: arrived,
-            progress: .9,
-            waitingMessage: 'Waiting for Angelica',
-            lastTripLabel: '120 kr',
-            sheetPosition: sheet,
-            sheetRaisedAt: .5,
-            onRadar: () {},
-            onMenu: () {},
-            onSearch: () {},
-            onHistory: () {},
-            onRoute: () {},
-            onSafety: () {},
-            onWait: () {},
-          ),
-        ),
+Widget _trip(
+  NavigationBanner banner, {
+  String? arrival,
+  bool arrived = false,
+  ValueNotifier<double>? sheet,
+}) => MaterialApp(
+  home: Scaffold(
+    body: SizedBox(
+      width: 400,
+      height: 220,
+      child: AdaptiveTripIsland(
+        banner: banner,
+        status: 'To pickup',
+        address: 'Kungsgatan 42, Stockholm',
+        detail: '',
+        eta: '1 min',
+        arrival: arrival,
+        arrived: arrived,
+        progress: .9,
+        waitingMessage: 'Waiting for Angelica',
+        lastTripLabel: '120 kr',
+        sheetPosition: sheet,
+        sheetRaisedAt: .5,
+        onRadar: () {},
+        onMenu: () {},
+        onSearch: () {},
+        onHistory: () {},
+        onRoute: () {},
+        onSafety: () {},
+        onWait: () {},
       ),
-    );
+    ),
+  ),
+);
 
 void _islandFeatures() {
   testWidgets('arriving icon pin colour follows the point', (tester) async {

@@ -53,6 +53,7 @@ class PrefsActiveRideRepository
     if (_sharedAcrossTabs) await prefs.reload();
     return prefs;
   }
+
   final int _generation = LocalWriteSession.generation;
 
   // SharedPreferences operations are asynchronous. Keep them in invocation

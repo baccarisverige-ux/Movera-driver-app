@@ -236,7 +236,8 @@ void main() {
       testWidgets('demo tools on the trip island: ${trigger.label}', (
         tester,
       ) async {
-        SafetyAudioOption.debugEnabled = true; // owner decision 10: offered again
+        SafetyAudioOption.debugEnabled =
+            true; // owner decision 10: offered again
         addTearDown(() => SafetyAudioOption.debugEnabled = null);
         final kit = _Kit();
         await _mountRide(
@@ -248,7 +249,9 @@ void main() {
             rideCheck: kit.services,
           ),
         );
-        await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
+        await tester.longPress(
+          find.byKey(const ValueKey('island-morph-shell')),
+        );
         await _frames(tester);
         final demo = find.byKey(ValueKey('ride-check-demo-${trigger.name}'));
         await tester.ensureVisible(demo);
@@ -257,10 +260,16 @@ void main() {
 
         expect(_cardFinder, findsOneWidget);
         expect(
-          find.descendant(of: _cardFinder, matching: find.text('Is everything OK?')),
+          find.descendant(
+            of: _cardFinder,
+            matching: find.text('Is everything OK?'),
+          ),
           findsOneWidget,
         );
-        expect(find.text(reasons[trigger]!, findRichText: true), findsOneWidget);
+        expect(
+          find.text(reasons[trigger]!, findRichText: true),
+          findsOneWidget,
+        );
         for (final topic in RideCheckTopic.forDriver(trigger)) {
           expect(
             find.byKey(ValueKey('ride-check-row-${topic.name}')),
@@ -269,30 +278,42 @@ void main() {
           );
         }
         // Exactly these rows, top to bottom, red ones first.
-        final shown = RideCheckTopic.values
-            .where(
-              (topic) => find
-                  .byKey(ValueKey('ride-check-row-${topic.name}'))
-                  .evaluate()
-                  .isNotEmpty,
-            )
-            .toList()
-          ..sort(
-            (a, b) => tester
-                .getTopLeft(find.byKey(ValueKey('ride-check-row-${a.name}')))
-                .dy
-                .compareTo(
-                  tester
-                      .getTopLeft(
-                        find.byKey(ValueKey('ride-check-row-${b.name}')),
-                      )
-                      .dy,
-                ),
-          );
+        final shown =
+            RideCheckTopic.values
+                .where(
+                  (topic) => find
+                      .byKey(ValueKey('ride-check-row-${topic.name}'))
+                      .evaluate()
+                      .isNotEmpty,
+                )
+                .toList()
+              ..sort(
+                (a, b) => tester
+                    .getTopLeft(
+                      find.byKey(ValueKey('ride-check-row-${a.name}')),
+                    )
+                    .dy
+                    .compareTo(
+                      tester
+                          .getTopLeft(
+                            find.byKey(ValueKey('ride-check-row-${b.name}')),
+                          )
+                          .dy,
+                    ),
+              );
         expect(shown, RideCheckTopic.forDriver(trigger));
-        expect(find.byKey(const ValueKey('ride-check-call-112')), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('ride-check-call-112')),
+          findsOneWidget,
+        );
         expect(find.byKey(const ValueKey('ride-check-ok')), findsOneWidget);
-        expect(find.text('Record audio · saved only on this phone', findRichText: true), findsOneWidget);
+        expect(
+          find.text(
+            'Record audio · saved only on this phone',
+            findRichText: true,
+          ),
+          findsOneWidget,
+        );
         expect(find.text('Your answer is saved to this trip.'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
@@ -300,60 +321,64 @@ void main() {
       });
     }
 
-    testWidgets('finished far: tapping Finish 4.2 km from the drop-off asks first', (
-      tester,
-    ) async {
-      DriverRuntimeConfig.current = const DriverRuntimeConfig(
-        simulatedArrival: false,
-        externalRouting: false,
-        skipAccountActivation: true,
-        liveMapTicker: false,
-        reservationPopup: false,
-        islandHint: false,
-      );
-      final kit = _Kit();
-      await _mountRide(
-        tester,
-        AcceptRide(
-          tripId: 'far-trip',
-          initialStage: ActiveRideStage.onTrip,
-          locationRepository: _Gps(_north(_dropoff, 4200)),
-          activeRideRepository: MemoryActiveRideRepository(),
-          rideCheck: kit.services,
-        ),
-      );
-      await _denyOnTripOffer(tester);
-      tester
-          .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
-          .controller!
-          .animatePanelToSnapPoint();
-      await _frames(tester, 16);
-      final action = find.byKey(
-        const ValueKey<String>('active-ride-primary-action'),
-      );
-      await tester.ensureVisible(action);
-      await tester.drag(action, const Offset(320, 0));
-      await _frames(tester, 30);
+    testWidgets(
+      'finished far: tapping Finish 4.2 km from the drop-off asks first',
+      (tester) async {
+        DriverRuntimeConfig.current = const DriverRuntimeConfig(
+          simulatedArrival: false,
+          externalRouting: false,
+          skipAccountActivation: true,
+          liveMapTicker: false,
+          reservationPopup: false,
+          islandHint: false,
+        );
+        final kit = _Kit();
+        await _mountRide(
+          tester,
+          AcceptRide(
+            tripId: 'far-trip',
+            initialStage: ActiveRideStage.onTrip,
+            locationRepository: _Gps(_north(_dropoff, 4200)),
+            activeRideRepository: MemoryActiveRideRepository(),
+            rideCheck: kit.services,
+          ),
+        );
+        await _denyOnTripOffer(tester);
+        tester
+            .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+            .controller!
+            .animatePanelToSnapPoint();
+        await _frames(tester, 16);
+        final action = find.byKey(
+          const ValueKey<String>('active-ride-primary-action'),
+        );
+        await tester.ensureVisible(action);
+        await tester.drag(action, const Offset(320, 0));
+        await _frames(tester, 30);
 
-      expect(find.byType(DriverRideCompleted), findsNothing);
-      expect(
-        find.text('Your trip ended 4.2 km from T-Centralen', findRichText: true),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('ride-check-row-riderStopHere')),
-        findsOneWidget,
-      );
-      await tester.tap(find.byKey(const ValueKey('ride-check-ok')));
-      await _frames(tester, 40);
-      expect(find.byType(DriverRideCompleted), findsOneWidget);
-      final saved = await kit.log.forTrip('far-trip');
-      expect(saved.single.trigger, RideCheckTrigger.droppedFar);
-      expect(saved.single.answers.single.answer, "I'm OK");
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-      await _frames(tester);
-    });
+        expect(find.byType(DriverRideCompleted), findsNothing);
+        expect(
+          find.text(
+            'Your trip ended 4.2 km from T-Centralen',
+            findRichText: true,
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('ride-check-row-riderStopHere')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const ValueKey('ride-check-ok')));
+        await _frames(tester, 40);
+        expect(find.byType(DriverRideCompleted), findsOneWidget);
+        final saved = await kit.log.forTrip('far-trip');
+        expect(saved.single.trigger, RideCheckTrigger.droppedFar);
+        expect(saved.single.answers.single.answer, "I'm OK");
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await _frames(tester);
+      },
+    );
 
     testWidgets('demo arrival never asks about the drop-off distance', (
       tester,
@@ -475,7 +500,9 @@ void main() {
       await _frames(tester);
     });
 
-    testWidgets('long stop: no movement for more than 2 min mid-trip', (tester) async {
+    testWidgets('long stop: no movement for more than 2 min mid-trip', (
+      tester,
+    ) async {
       var now = DateTime(2026, 10, 15, 14, 30);
       final kit = _Kit(now: () => now);
       final gps = _Gps(_north(_dropoff, 1000));
@@ -499,43 +526,51 @@ void main() {
         find.text('Your car has stopped for 3 min', findRichText: true),
         findsOneWidget,
       );
-      expect(find.byKey(const ValueKey('ride-check-row-carProblem')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('ride-check-row-carProblem')),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       await _frames(tester);
     });
 
-    testWidgets('no new offer while the card is open; it comes after the answer', (
-      tester,
-    ) async {
-      final kit = _Kit();
-      await _mountRide(
-        tester,
-        AcceptRide(
-          tripId: 'gate-trip',
-          initialStage: ActiveRideStage.onTrip,
-          locationRepository: _Gps(_north(_dropoff, 1000)),
-          rideCheck: kit.services,
-        ),
-      );
-      final offer = find.byKey(const ValueKey<String>('on-trip-radar-deny'));
-      await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
-      await _frames(tester);
-      await tester.tap(find.byKey(const ValueKey('ride-check-demo-longStop')));
-      await _frames(tester, 10);
-      expect(_cardFinder, findsOneWidget);
-      expect(RideCheckGate.open, isTrue);
-      // The next-trip offer is due 2.2 s into the trip: it waits.
-      await tester.pump(const Duration(seconds: 3));
-      await _frames(tester);
-      expect(offer, findsNothing);
-      await tester.tap(find.byKey(const ValueKey('ride-check-ok')));
-      await _frames(tester, 20);
-      expect(_cardFinder, findsNothing);
-      expect(RideCheckGate.open, isFalse);
-      expect(offer, findsOneWidget);
-      await tester.pumpWidget(const SizedBox.shrink());
-      await _frames(tester);
-    });
+    testWidgets(
+      'no new offer while the card is open; it comes after the answer',
+      (tester) async {
+        final kit = _Kit();
+        await _mountRide(
+          tester,
+          AcceptRide(
+            tripId: 'gate-trip',
+            initialStage: ActiveRideStage.onTrip,
+            locationRepository: _Gps(_north(_dropoff, 1000)),
+            rideCheck: kit.services,
+          ),
+        );
+        final offer = find.byKey(const ValueKey<String>('on-trip-radar-deny'));
+        await tester.longPress(
+          find.byKey(const ValueKey('island-morph-shell')),
+        );
+        await _frames(tester);
+        await tester.tap(
+          find.byKey(const ValueKey('ride-check-demo-longStop')),
+        );
+        await _frames(tester, 10);
+        expect(_cardFinder, findsOneWidget);
+        expect(RideCheckGate.open, isTrue);
+        // The next-trip offer is due 2.2 s into the trip: it waits.
+        await tester.pump(const Duration(seconds: 3));
+        await _frames(tester);
+        expect(offer, findsNothing);
+        await tester.tap(find.byKey(const ValueKey('ride-check-ok')));
+        await _frames(tester, 20);
+        expect(_cardFinder, findsNothing);
+        expect(RideCheckGate.open, isFalse);
+        expect(offer, findsOneWidget);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await _frames(tester);
+      },
+    );
 
     // driver-u86: a parked car still gets fixes (the native stream sends
     // one a second); a GPS that goes quiet is lost, not a long stop
@@ -591,50 +626,67 @@ void main() {
         find.text('A very hard stop was detected', findRichText: true),
         findsOneWidget,
       );
-      final call = tester.getRect(find.byKey(const ValueKey('ride-check-call-112')));
-      final row = tester.getRect(find.byKey(const ValueKey('ride-check-row-accident')));
+      final call = tester.getRect(
+        find.byKey(const ValueKey('ride-check-call-112')),
+      );
+      final row = tester.getRect(
+        find.byKey(const ValueKey('ride-check-row-accident')),
+      );
       expect(call.top, lessThan(row.top));
       await tester.pumpWidget(const SizedBox.shrink());
       await _frames(tester);
     });
   });
 
-  testWidgets('the island turns into the pulsing pill, then grows into the card', (
-    tester,
-  ) async {
-    final kit = _Kit();
-    await _mountRide(
-      tester,
-      AcceptRide(
-        tripId: 'pill-trip',
-        initialStage: ActiveRideStage.onTrip,
-        locationRepository: _Gps(_north(_dropoff, 1000)),
-        rideCheck: kit.services,
-      ),
-      reduced: false,
-    );
-    tester
-        .widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland))
-        .onRideCheckDemo!(RideCheckTrigger.longStop);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 600));
-    expect(find.byKey(const ValueKey('ride-check-pill')), findsOneWidget);
-    expect(tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).rideCheck, isTrue);
-    expect(_cardFinder, findsNothing);
-    await tester.pump(const Duration(milliseconds: 600));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(_cardFinder, findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 600));
-    final card = tester.getRect(find.byKey(const ValueKey('ride-check-layer')));
-    expect(card.width, 390);
-    await tester.tap(find.byKey(const ValueKey('ride-check-ok')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(_cardFinder, findsNothing);
-    expect(tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).rideCheck, isFalse);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await _frames(tester);
-  });
+  testWidgets(
+    'the island turns into the pulsing pill, then grows into the card',
+    (tester) async {
+      final kit = _Kit();
+      await _mountRide(
+        tester,
+        AcceptRide(
+          tripId: 'pill-trip',
+          initialStage: ActiveRideStage.onTrip,
+          locationRepository: _Gps(_north(_dropoff, 1000)),
+          rideCheck: kit.services,
+        ),
+        reduced: false,
+      );
+      tester
+          .widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland))
+          .onRideCheckDemo!(RideCheckTrigger.longStop);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byKey(const ValueKey('ride-check-pill')), findsOneWidget);
+      expect(
+        tester
+            .widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland))
+            .rideCheck,
+        isTrue,
+      );
+      expect(_cardFinder, findsNothing);
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(_cardFinder, findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 600));
+      final card = tester.getRect(
+        find.byKey(const ValueKey('ride-check-layer')),
+      );
+      expect(card.width, 390);
+      await tester.tap(find.byKey(const ValueKey('ride-check-ok')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(_cardFinder, findsNothing);
+      expect(
+        tester
+            .widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland))
+            .rideCheck,
+        isFalse,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await _frames(tester);
+    },
+  );
 
   testWidgets('the card cannot be dismissed without an answer', (tester) async {
     final kit = _Kit();
@@ -657,9 +709,18 @@ void main() {
     expect(controller.active, isTrue);
     // No close button anywhere on it.
     final layer = find.byType(RideCheckLayer);
-    expect(find.descendant(of: layer, matching: find.byType(IconButton)), findsNothing);
-    expect(find.descendant(of: layer, matching: find.byTooltip('Close')), findsNothing);
-    expect(find.descendant(of: layer, matching: find.text('Close')), findsNothing);
+    expect(
+      find.descendant(of: layer, matching: find.byType(IconButton)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: layer, matching: find.byTooltip('Close')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: layer, matching: find.text('Close')),
+      findsNothing,
+    );
     await _end(tester, controller);
   });
 
@@ -717,13 +778,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('RIDE CHECK · ACCIDENT'), findsOneWidget);
     expect(kit.alerts.alerts.single.updates, 0);
-    await tester.tap(find.byKey(const ValueKey('ride-check-option-Is anyone hurt?-Yes')));
+    await tester.tap(
+      find.byKey(const ValueKey('ride-check-option-Is anyone hurt?-Yes')),
+    );
     await tester.pumpAndSettle();
     expect(kit.alerts.alerts.single.updates, 1);
-    await tester.tap(find.byKey(const ValueKey('ride-check-option-Is the car in a safe place?-No')));
+    await tester.tap(
+      find.byKey(
+        const ValueKey('ride-check-option-Is the car in a safe place?-No'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(kit.alerts.alerts.single.updates, 1);
-    final notSure = find.byKey(const ValueKey('ride-check-option-Is the other person OK?-Not sure'));
+    final notSure = find.byKey(
+      const ValueKey('ride-check-option-Is the other person OK?-Not sure'),
+    );
     await tester.ensureVisible(notSure);
     await tester.tap(notSure);
     await tester.pumpAndSettle();
@@ -743,7 +812,11 @@ void main() {
     tester,
   ) async {
     final kit = _Kit();
-    final controller = await _card(tester, kit, trigger: RideCheckTrigger.possibleCrash);
+    final controller = await _card(
+      tester,
+      kit,
+      trigger: RideCheckTrigger.possibleCrash,
+    );
     await tester.tap(find.byKey(const ValueKey('ride-check-call-112')));
     await tester.pumpAndSettle();
     expect(kit.dialed, [Uri.parse('tel:112')]);
@@ -766,7 +839,11 @@ void main() {
     tester,
   ) async {
     final kit = _Kit();
-    var controller = await _card(tester, kit, trigger: RideCheckTrigger.offRoute);
+    var controller = await _card(
+      tester,
+      kit,
+      trigger: RideCheckTrigger.offRoute,
+    );
     await tester.tap(find.byKey(const ValueKey('ride-check-row-carProblem')));
     await tester.pumpAndSettle();
     expect(find.text('Can you continue the trip?'), findsOneWidget);
@@ -788,7 +865,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Who needs help?'), findsOneWidget);
     expect(find.text('The rider'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('ride-check-option-Who needs help?-The rider')));
+    await tester.tap(
+      find.byKey(const ValueKey('ride-check-option-Who needs help?-The rider')),
+    );
     await tester.pumpAndSettle();
     expect(kit.alerts.alerts.last.updates, 1);
     await tester.tap(find.byKey(const ValueKey('ride-check-done')));
@@ -796,9 +875,14 @@ void main() {
     await _end(tester, controller);
 
     controller = await _card(tester, kit, trigger: RideCheckTrigger.longStop);
-    await tester.tap(find.byKey(const ValueKey('ride-check-row-somethingElse')));
+    await tester.tap(
+      find.byKey(const ValueKey('ride-check-row-somethingElse')),
+    );
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const ValueKey('ride-check-note')), 'Rider is sick');
+    await tester.enterText(
+      find.byKey(const ValueKey('ride-check-note')),
+      'Rider is sick',
+    );
     await tester.tap(find.byKey(const ValueKey('ride-check-done')));
     await tester.pumpAndSettle();
     expect(kit.log.rows.last.answers.last.answer, 'Rider is sick');
@@ -811,7 +895,10 @@ void main() {
     final controller = await _card(tester, kit);
     void solarOnly() {
       final layer = find.byType(RideCheckLayer);
-      expect(find.descendant(of: layer, matching: find.byType(Icon)), findsNothing);
+      expect(
+        find.descendant(of: layer, matching: find.byType(Icon)),
+        findsNothing,
+      );
       final svgs = tester.widgetList<SvgPicture>(
         find.descendant(of: layer, matching: find.byType(SvgPicture)),
       );
@@ -826,10 +913,12 @@ void main() {
     // Every row has its own Solar icon in a rounded square.
     for (final topic in RideCheckTopic.forDriver(RideCheckTrigger.longStop)) {
       final icon = tester.widget<SvgPicture>(
-        find.descendant(
-          of: find.byKey(ValueKey('ride-check-row-${topic.name}')),
-          matching: find.byType(SvgPicture),
-        ).first,
+        find
+            .descendant(
+              of: find.byKey(ValueKey('ride-check-row-${topic.name}')),
+              matching: find.byType(SvgPicture),
+            )
+            .first,
       );
       expect(
         (icon.bytesLoader as SvgAssetLoader).assetName,
@@ -872,8 +961,16 @@ void main() {
                 alertSent: true,
                 alertReachedMovera: true,
                 answers: [
-                  RideCheckAnswer(question: RideCheckAnswer.first, answer: 'Accident or collision', at: at),
-                  RideCheckAnswer(question: 'Is anyone hurt?', answer: 'No', at: at),
+                  RideCheckAnswer(
+                    question: RideCheckAnswer.first,
+                    answer: 'Accident or collision',
+                    at: at,
+                  ),
+                  RideCheckAnswer(
+                    question: 'Is anyone hurt?',
+                    answer: 'No',
+                    at: at,
+                  ),
                 ],
               ),
             ],
@@ -884,19 +981,47 @@ void main() {
     await tester.pumpAndSettle();
     final entry = find.byKey(const ValueKey('ride-check-history'));
     await tester.ensureVisible(entry);
-    expect(find.descendant(of: entry, matching: find.text('Ride check')), findsOneWidget);
-    expect(find.descendant(of: entry, matching: find.text('14:31')), findsOneWidget);
     expect(
-      find.descendant(of: entry, matching: find.text('Long stop · Your car has stopped for 4 min · Odenplan')),
+      find.descendant(of: entry, matching: find.text('Ride check')),
       findsOneWidget,
     );
-    expect(find.descendant(of: entry, matching: find.text('Answer: Accident or collision')), findsOneWidget);
-    expect(find.descendant(of: entry, matching: find.text('Is anyone hurt? No')), findsOneWidget);
-    expect(find.descendant(of: entry, matching: find.text('Movera safety team alerted')), findsOneWidget);
+    expect(
+      find.descendant(of: entry, matching: find.text('14:31')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: entry,
+        matching: find.text(
+          'Long stop · Your car has stopped for 4 min · Odenplan',
+        ),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: entry,
+        matching: find.text('Answer: Accident or collision'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: entry, matching: find.text('Is anyone hurt? No')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: entry,
+        matching: find.text('Movera safety team alerted'),
+      ),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('ride details without a Ride check show no entry', (tester) async {
+  testWidgets('ride details without a Ride check show no entry', (
+    tester,
+  ) async {
     _phone(tester);
     await tester.pumpWidget(
       ScreenUtilInit(
@@ -934,14 +1059,29 @@ void main() {
     await tester.pumpAndSettle();
     final info = find.byKey(const ValueKey('ride-check-info'));
     expect(info, findsOneWidget);
-    expect(find.descendant(of: info, matching: find.text('Ride check')), findsOneWidget);
-    expect(find.descendant(of: info, matching: find.text('On')), findsOneWidget);
+    expect(
+      find.descendant(of: info, matching: find.text('Ride check')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: info, matching: find.text('On')),
+      findsOneWidget,
+    );
     expect(find.textContaining('long stop'), findsOneWidget);
-    expect(find.textContaining('unavailable', findRichText: true), findsNothing);
+    expect(
+      find.textContaining('unavailable', findRichText: true),
+      findsNothing,
+    );
     await tester.tap(find.text('Safety preferences'));
     await tester.pumpAndSettle();
     final preference = find.byKey(const ValueKey('ride-check-preference'));
-    expect(find.descendant(of: preference, matching: find.text('On · set by Movera for every trip')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: preference,
+        matching: find.text('On · set by Movera for every trip'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('RideCheck alerts'), findsNothing);
     expect(find.text('Unavailable without route monitoring'), findsNothing);
   });
@@ -983,7 +1123,10 @@ void main() {
     await _frames(tester);
     expect(find.text('Ride check demo'), findsOneWidget);
     for (final trigger in RideCheckTrigger.values) {
-      expect(find.byKey(ValueKey('ride-check-demo-${trigger.name}')), findsOneWidget);
+      expect(
+        find.byKey(ValueKey('ride-check-demo-${trigger.name}')),
+        findsOneWidget,
+      );
     }
     expect(find.text('Demo: finished far from drop-off'), findsOneWidget);
     expect(find.text('Demo: long stop'), findsOneWidget);

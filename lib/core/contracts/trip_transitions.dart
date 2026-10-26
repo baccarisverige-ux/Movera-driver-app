@@ -1,6 +1,6 @@
 import 'package:movera/core/contracts/trip_status.dart';
 
-/// Pure transition engine for `contracts/contract.json#transitions` (v0.5.3).
+/// Pure transition engine for `contracts/contract.json#transitions` (v0.5.5).
 ///
 /// The table below is a hand copy of the contract. `test/contract/` checks it
 /// row by row against `contracts/contract.json` and replays
@@ -47,6 +47,7 @@ enum TripCommand {
   quote('quote'),
   request('request'),
   startSearch('start_search'),
+  raisePrice('raise_price'),
   sendOffer('send_offer'),
   offerLapsed('offer_lapsed'),
   accept('accept'),
@@ -124,39 +125,159 @@ class InvalidTripTransition implements Exception {
 }
 
 abstract final class TripTransitions {
-  static const String contractVersion = '0.5.3';
+  static const String contractVersion = '0.5.5';
 
   static const List<TripTransition> table = [
-    TripTransition(TripCommand.quote, TripActor.system, [TripStatus.draft], TripStatus.quoted),
-    TripTransition(TripCommand.request, TripActor.rider, [TripStatus.quoted], TripStatus.requested),
-    TripTransition(TripCommand.startSearch, TripActor.system, [TripStatus.requested], TripStatus.searching),
-    TripTransition(TripCommand.sendOffer, TripActor.system, [TripStatus.searching], TripStatus.offered),
-    TripTransition(TripCommand.offerLapsed, TripActor.system, [TripStatus.offered], TripStatus.searching),
-    TripTransition(TripCommand.accept, TripActor.driver, [TripStatus.offered], TripStatus.accepted),
+    TripTransition(TripCommand.quote, TripActor.system, [
+      TripStatus.draft,
+    ], TripStatus.quoted),
+    TripTransition(TripCommand.request, TripActor.rider, [
+      TripStatus.quoted,
+    ], TripStatus.requested),
+    TripTransition(TripCommand.startSearch, TripActor.system, [
+      TripStatus.requested,
+    ], TripStatus.searching),
+    // v0.5.5 §3.6: the rider raises their offer; a new search starts.
+    TripTransition(TripCommand.raisePrice, TripActor.rider, [
+      TripStatus.searching,
+      TripStatus.offered,
+    ], TripStatus.searching),
+    TripTransition(TripCommand.sendOffer, TripActor.system, [
+      TripStatus.searching,
+    ], TripStatus.offered),
+    TripTransition(TripCommand.offerLapsed, TripActor.system, [
+      TripStatus.offered,
+    ], TripStatus.searching),
+    TripTransition(TripCommand.accept, TripActor.driver, [
+      TripStatus.offered,
+    ], TripStatus.accepted),
     // v0.5.1: a live trip is accepted only from an offer; a scheduled one
     // straight from its request.
-    TripTransition(TripCommand.accept, TripActor.driver, [TripStatus.requested], TripStatus.accepted, when: TripKind.scheduled),
-    TripTransition(TripCommand.assign, TripActor.admin, [TripStatus.requested, TripStatus.searching, TripStatus.offered], TripStatus.offered),
-    TripTransition(TripCommand.headToPickup, TripActor.driver, [TripStatus.accepted], TripStatus.driverToPickup),
-    TripTransition(TripCommand.arrive, TripActor.driver, [TripStatus.driverToPickup], TripStatus.arrived),
-    TripTransition(TripCommand.board, TripActor.driver, [TripStatus.arrived], TripStatus.riderOnboard),
-    TripTransition(TripCommand.startTrip, TripActor.driver, [TripStatus.riderOnboard], TripStatus.inTrip),
-    TripTransition(TripCommand.nearDropoff, TripActor.system, [TripStatus.inTrip], TripStatus.approachingDropoff),
-    TripTransition(TripCommand.complete, TripActor.driver, [TripStatus.inTrip, TripStatus.approachingDropoff], TripStatus.completed),
-    TripTransition(TripCommand.complete, TripActor.admin, [TripStatus.riderOnboard, TripStatus.inTrip, TripStatus.approachingDropoff], TripStatus.completed),
-    TripTransition(TripCommand.cancel, TripActor.rider, [TripStatus.requested, TripStatus.searching, TripStatus.offered, TripStatus.accepted, TripStatus.driverToPickup, TripStatus.arrived], TripStatus.cancelledByRider),
-    TripTransition(TripCommand.endEarly, TripActor.rider, [TripStatus.riderOnboard, TripStatus.inTrip, TripStatus.approachingDropoff], TripStatus.cancelledByRider),
-    TripTransition(TripCommand.cancel, TripActor.driver, [TripStatus.accepted, TripStatus.driverToPickup, TripStatus.arrived], TripStatus.searching, when: TripKind.live),
-    TripTransition(TripCommand.cancel, TripActor.driver, [TripStatus.accepted], TripStatus.requested, when: TripKind.scheduled),
-    TripTransition(TripCommand.cancel, TripActor.driver, [TripStatus.driverToPickup, TripStatus.arrived], TripStatus.searching, when: TripKind.scheduled),
-    TripTransition(TripCommand.cancel, TripActor.driver, [TripStatus.riderOnboard, TripStatus.inTrip, TripStatus.approachingDropoff], TripStatus.cancelledByDriver),
-    TripTransition(TripCommand.noShow, TripActor.driver, [TripStatus.arrived], TripStatus.noShow),
-    TripTransition(TripCommand.noShow, TripActor.admin, [TripStatus.arrived, TripStatus.accepted, TripStatus.driverToPickup], TripStatus.noShow),
-    TripTransition(TripCommand.reassign, TripActor.admin, [TripStatus.offered, TripStatus.accepted, TripStatus.driverToPickup, TripStatus.arrived], TripStatus.searching),
-    TripTransition(TripCommand.cancel, TripActor.admin, [TripStatus.draft, TripStatus.quoted, TripStatus.requested, TripStatus.searching, TripStatus.offered, TripStatus.accepted, TripStatus.driverToPickup, TripStatus.arrived, TripStatus.riderOnboard, TripStatus.inTrip, TripStatus.approachingDropoff], TripStatus.cancelledByAdmin),
-    TripTransition(TripCommand.expire, TripActor.system, [TripStatus.quoted, TripStatus.requested, TripStatus.searching, TripStatus.offered], TripStatus.expired),
-    TripTransition(TripCommand.systemCancel, TripActor.system, [TripStatus.requested, TripStatus.searching, TripStatus.offered, TripStatus.accepted], TripStatus.cancelledBySystem),
-    TripTransition(TripCommand.fail, TripActor.system, [TripStatus.requested, TripStatus.searching, TripStatus.offered, TripStatus.accepted, TripStatus.driverToPickup, TripStatus.arrived, TripStatus.riderOnboard, TripStatus.inTrip, TripStatus.approachingDropoff], TripStatus.failed),
+    TripTransition(
+      TripCommand.accept,
+      TripActor.driver,
+      [TripStatus.requested],
+      TripStatus.accepted,
+      when: TripKind.scheduled,
+    ),
+    TripTransition(TripCommand.assign, TripActor.admin, [
+      TripStatus.requested,
+      TripStatus.searching,
+      TripStatus.offered,
+    ], TripStatus.offered),
+    TripTransition(TripCommand.headToPickup, TripActor.driver, [
+      TripStatus.accepted,
+    ], TripStatus.driverToPickup),
+    TripTransition(TripCommand.arrive, TripActor.driver, [
+      TripStatus.driverToPickup,
+    ], TripStatus.arrived),
+    TripTransition(TripCommand.board, TripActor.driver, [
+      TripStatus.arrived,
+    ], TripStatus.riderOnboard),
+    TripTransition(TripCommand.startTrip, TripActor.driver, [
+      TripStatus.riderOnboard,
+    ], TripStatus.inTrip),
+    TripTransition(TripCommand.nearDropoff, TripActor.system, [
+      TripStatus.inTrip,
+    ], TripStatus.approachingDropoff),
+    TripTransition(TripCommand.complete, TripActor.driver, [
+      TripStatus.inTrip,
+      TripStatus.approachingDropoff,
+    ], TripStatus.completed),
+    TripTransition(TripCommand.complete, TripActor.admin, [
+      TripStatus.riderOnboard,
+      TripStatus.inTrip,
+      TripStatus.approachingDropoff,
+    ], TripStatus.completed),
+    TripTransition(TripCommand.cancel, TripActor.rider, [
+      TripStatus.requested,
+      TripStatus.searching,
+      TripStatus.offered,
+      TripStatus.accepted,
+      TripStatus.driverToPickup,
+      TripStatus.arrived,
+    ], TripStatus.cancelledByRider),
+    TripTransition(TripCommand.endEarly, TripActor.rider, [
+      TripStatus.riderOnboard,
+      TripStatus.inTrip,
+      TripStatus.approachingDropoff,
+    ], TripStatus.cancelledByRider),
+    TripTransition(
+      TripCommand.cancel,
+      TripActor.driver,
+      [TripStatus.accepted, TripStatus.driverToPickup, TripStatus.arrived],
+      TripStatus.searching,
+      when: TripKind.live,
+    ),
+    TripTransition(
+      TripCommand.cancel,
+      TripActor.driver,
+      [TripStatus.accepted],
+      TripStatus.requested,
+      when: TripKind.scheduled,
+    ),
+    TripTransition(
+      TripCommand.cancel,
+      TripActor.driver,
+      [TripStatus.driverToPickup, TripStatus.arrived],
+      TripStatus.searching,
+      when: TripKind.scheduled,
+    ),
+    TripTransition(TripCommand.cancel, TripActor.driver, [
+      TripStatus.riderOnboard,
+      TripStatus.inTrip,
+      TripStatus.approachingDropoff,
+    ], TripStatus.cancelledByDriver),
+    TripTransition(TripCommand.noShow, TripActor.driver, [
+      TripStatus.arrived,
+    ], TripStatus.noShow),
+    TripTransition(TripCommand.noShow, TripActor.admin, [
+      TripStatus.arrived,
+      TripStatus.accepted,
+      TripStatus.driverToPickup,
+    ], TripStatus.noShow),
+    TripTransition(TripCommand.reassign, TripActor.admin, [
+      TripStatus.offered,
+      TripStatus.accepted,
+      TripStatus.driverToPickup,
+      TripStatus.arrived,
+    ], TripStatus.searching),
+    TripTransition(TripCommand.cancel, TripActor.admin, [
+      TripStatus.draft,
+      TripStatus.quoted,
+      TripStatus.requested,
+      TripStatus.searching,
+      TripStatus.offered,
+      TripStatus.accepted,
+      TripStatus.driverToPickup,
+      TripStatus.arrived,
+      TripStatus.riderOnboard,
+      TripStatus.inTrip,
+      TripStatus.approachingDropoff,
+    ], TripStatus.cancelledByAdmin),
+    TripTransition(TripCommand.expire, TripActor.system, [
+      TripStatus.quoted,
+      TripStatus.requested,
+      TripStatus.searching,
+      TripStatus.offered,
+    ], TripStatus.expired),
+    TripTransition(TripCommand.systemCancel, TripActor.system, [
+      TripStatus.requested,
+      TripStatus.searching,
+      TripStatus.offered,
+      TripStatus.accepted,
+    ], TripStatus.cancelledBySystem),
+    TripTransition(TripCommand.fail, TripActor.system, [
+      TripStatus.requested,
+      TripStatus.searching,
+      TripStatus.offered,
+      TripStatus.accepted,
+      TripStatus.driverToPickup,
+      TripStatus.arrived,
+      TripStatus.riderOnboard,
+      TripStatus.inTrip,
+      TripStatus.approachingDropoff,
+    ], TripStatus.failed),
   ];
 
   /// The status after [command] by [actor] from [from], or null when the
@@ -208,18 +329,25 @@ abstract final class TripRatingRules {
   static const List<TripRatingRule> rules = [
     TripRatingRule(TripActor.rider, TripStatus.completed),
     TripRatingRule(TripActor.driver, TripStatus.completed),
-    TripRatingRule(TripActor.rider, TripStatus.cancelledByRider,
-        command: TripCommand.endEarly),
+    TripRatingRule(
+      TripActor.rider,
+      TripStatus.cancelledByRider,
+      command: TripCommand.endEarly,
+    ),
   ];
 
   /// Whether [rater] may rate a trip in [status] that [endedBy] (the
   /// command that ended it, when known) brought there.
-  static bool allows(TripActor rater, TripStatus status,
-          {TripCommand? endedBy}) =>
-      rules.any((rule) =>
-          rule.rater == rater &&
-          rule.status == status &&
-          (rule.command == null || rule.command == endedBy));
+  static bool allows(
+    TripActor rater,
+    TripStatus status, {
+    TripCommand? endedBy,
+  }) => rules.any(
+    (rule) =>
+        rule.rater == rater &&
+        rule.status == status &&
+        (rule.command == null || rule.command == endedBy),
+  );
 }
 
 /// How a trip leaves this driver's phone.

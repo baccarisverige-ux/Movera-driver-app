@@ -29,7 +29,9 @@ class LedCountBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mint = tone == LedCountTone.mint;
-    final digitColor = mint ? MoveraRadarOrb.onlineGreen : const Color(0xFF3A444B);
+    final digitColor = mint
+        ? MoveraRadarOrb.onlineGreen
+        : const Color(0xFF3A444B);
     final digits = count.clamp(0, 99).toString().padLeft(2, '0');
     final digitStyle = TextStyle(
       fontFamily: 'DSEG7',
@@ -38,12 +40,7 @@ class LedCountBadge extends StatelessWidget {
       fontWeight: FontWeight.w700,
       color: digitColor,
       shadows: mint
-          ? [
-              Shadow(
-                color: digitColor.withValues(alpha: 0.55),
-                blurRadius: 6,
-              ),
-            ]
+          ? [Shadow(color: digitColor.withValues(alpha: 0.55), blurRadius: 6)]
           : null,
     );
     return Semantics(
@@ -85,10 +82,7 @@ class LedCountBadge extends StatelessWidget {
                 letterSpacing: 1.3,
               ),
             ),
-            if (trailing != null) ...[
-              const SizedBox(width: 4),
-              trailing!,
-            ],
+            if (trailing != null) ...[const SizedBox(width: 4), trailing!],
           ],
         ),
       ),

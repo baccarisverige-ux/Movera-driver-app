@@ -119,10 +119,7 @@ void main() {
     });
 
     testWidgets('the Radar card follows the same switches', (tester) async {
-      await _pump(
-        tester,
-        RadarOfferCard(offer: _offer, onMatch: () {}),
-      );
+      await _pump(tester, RadarOfferCard(offer: _offer, onMatch: () {}));
       expect(find.text('128 trips'), findsOneWidget);
       expect(find.text('19 min trip · 9.4 km · 1 stop'), findsOneWidget);
       expect(find.text('1.6 km away'), findsOneWidget);
@@ -189,7 +186,10 @@ void main() {
       // Every detail is on the sheet itself: badges, price, trip numbers
       // and stops.
       await show(sheet(const OfferCardDetails()));
-      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('reservation-cash')),
+        findsOneWidget,
+      );
       expect(find.text('1 stop'), findsOneWidget);
       expect(find.textContaining('19 min', findRichText: true), findsOneWidget);
       await show(const SizedBox());
@@ -204,7 +204,10 @@ void main() {
           ),
         ),
       );
-      expect(find.byKey(const ValueKey<String>('reservation-cash')), findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('reservation-cash')),
+        findsNothing,
+      );
       // Only the area of the drop-off.
       expect(find.text('Solna'), findsOneWidget);
       expect(find.text('95,06 kr', findRichText: true), findsOneWidget);
@@ -266,7 +269,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('cancel rate: the rule, never the limit number', (tester) async {
+    testWidgets('cancel rate: the rule, never the limit number', (
+      tester,
+    ) async {
       await screen(tester, const CancelationRate());
       expect(
         find.text('Keep your cancel rate low to keep full access to trips'),

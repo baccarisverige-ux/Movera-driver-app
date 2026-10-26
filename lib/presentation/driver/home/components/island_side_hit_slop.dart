@@ -96,12 +96,10 @@ class RenderIslandSideButton extends RenderProxyBox {
 }
 
 class RenderIslandSideHitSlop extends RenderShiftedBox {
-  RenderIslandSideHitSlop({
-    required double target,
-    required EdgeInsets growth,
-  }) : _target = target,
-       _growth = growth,
-       super(null);
+  RenderIslandSideHitSlop({required double target, required EdgeInsets growth})
+    : _target = target,
+      _growth = growth,
+      super(null);
 
   final Set<RenderIslandSideButton> _buttons = {};
 
@@ -110,7 +108,9 @@ class RenderIslandSideHitSlop extends RenderShiftedBox {
 
   EdgeInsets _growth;
   set growth(EdgeInsets value) {
-    if (value == _growth) { return; }
+    if (value == _growth) {
+      return;
+    }
     _growth = value;
     markNeedsLayout();
   }
@@ -124,7 +124,9 @@ class RenderIslandSideHitSlop extends RenderShiftedBox {
     }
     // The child keeps all the width it had before.
     child.layout(
-      constraints.deflate(EdgeInsets.only(top: _growth.top, bottom: _growth.bottom)),
+      constraints.deflate(
+        EdgeInsets.only(top: _growth.top, bottom: _growth.bottom),
+      ),
       parentUsesSize: true,
     );
     final spare = constraints.hasBoundedWidth
@@ -153,9 +155,13 @@ class RenderIslandSideHitSlop extends RenderShiftedBox {
 
   @override
   bool hitTest(BoxHitTestResult result, {required Offset position}) {
-    if (child == null) { return false; }
+    if (child == null) {
+      return false;
+    }
     for (final button in _buttons) {
-      if (!button.attached || !button.hasSize) { continue; }
+      if (!button.attached || !button.hasSize) {
+        continue;
+      }
       final rect = MatrixUtils.transformRect(
         button.getTransformTo(this),
         Offset.zero & button.size,
@@ -165,17 +171,24 @@ class RenderIslandSideHitSlop extends RenderShiftedBox {
       final box = button.outward == AxisDirection.left
           ? Rect.fromLTWH(rect.right - width, rect.top, width, height)
           : Rect.fromLTWH(rect.left, rect.top, width, height);
-      if (!box.contains(position)) { continue; }
+      if (!box.contains(position)) {
+        continue;
+      }
       bool reaches(Offset point) {
         final probe = BoxHitTestResult();
         return _hitChild(probe, position, point) &&
             probe.path.any((entry) => entry.target == button);
       }
+
       // On the button itself, as before.
-      if (rect.contains(position) && reaches(position)) { break; }
+      if (rect.contains(position) && reaches(position)) {
+        break;
+      }
       // Elsewhere in its box (past the rounded end, below the island): the
       // touch goes to the button's centre, if the button takes it there.
-      if (!reaches(rect.center)) { continue; }
+      if (!reaches(rect.center)) {
+        continue;
+      }
       _hitChild(result, position, rect.center);
       result.add(BoxHitTestEntry(this, position));
       return true;

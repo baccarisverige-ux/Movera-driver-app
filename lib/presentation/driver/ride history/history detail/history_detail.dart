@@ -136,8 +136,9 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
                                         BoxShadow(
                                           offset: const Offset(0, 4),
                                           // ignore: deprecated_member_use
-                                          color: Color(0xff606060)
-                                              .withValues(alpha: 0.12),
+                                          color: Color(
+                                            0xff606060,
+                                          ).withValues(alpha: 0.12),
                                           spreadRadius: 6,
                                           blurRadius: 40,
                                         ),
@@ -412,7 +413,10 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
       children: [
         // The driver's own money (owner decision 2026-10-26), or a cancel
         // or no-show fee the driver earned (driver-r5-13).
-        _detailRow(tr.yourEarnings, completed ? _ride.fare : _ride.feeEarned ?? '—'),
+        _detailRow(
+          tr.yourEarnings,
+          completed ? _ride.fare : _ride.feeEarned ?? '—',
+        ),
         // Q16/Q18: Movera's bonus is in the earnings.
         if (_ride.driverBonus case final bonus? when completed) ...[
           6.height,

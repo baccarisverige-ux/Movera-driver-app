@@ -44,11 +44,7 @@ class DriverAppConfig {
     this.minimumVersion = '1.0.0',
     this.latestVersion = '1.0.0',
     this.country = 'SE',
-    this.languages = const AppLanguages(
-      rider: 'sv',
-      driver: 'sv',
-      admin: 'sv',
-    ),
+    this.languages = const AppLanguages(rider: 'sv', driver: 'sv', admin: 'sv'),
     this.paymentMethods = ZoneDefaults.paymentMethods,
     this.maxStops = ZoneDefaults.maxStops,
     this.maxPickupMoveMeters = ZoneDefaults.maxPickupMoveMeters,
@@ -118,8 +114,8 @@ class DriverAppConfig {
     final currencyRaw = json['currency'];
     final currency =
         currencyRaw is String && Money.exponents.containsKey(currencyRaw)
-            ? currencyRaw
-            : seed.currency;
+        ? currencyRaw
+        : seed.currency;
     final zone = json['zoneId'];
     final time = json['timeZone'];
     final published = json['publishedAt'];
@@ -163,12 +159,14 @@ class DriverAppConfig {
       languages: AppLanguages.fromJson(json['languages'], country),
       paymentMethods: ZoneDefaults.readPaymentMethods(json['paymentMethods']),
       maxStops: _bounded(booking?['maxStops'], 10) ?? seed.maxStops,
-      maxPickupMoveMeters: _bounded(booking?['maxPickupMoveMeters'], 100000) ??
+      maxPickupMoveMeters:
+          _bounded(booking?['maxPickupMoveMeters'], 100000) ??
           seed.maxPickupMoveMeters,
       autoOffline: autoOffline?['on'] is bool
           ? autoOffline!['on'] as bool
           : seed.autoOffline,
-      missedExclusiveBeforeOffline: missed != null && missed >= 1 && missed <= 99
+      missedExclusiveBeforeOffline:
+          missed != null && missed >= 1 && missed <= 99
           ? missed
           : seed.missedExclusiveBeforeOffline,
       driverBonus: _bonus(_map(json['driverBonus']), currency),
@@ -221,7 +219,8 @@ List<DriverAppCategory> _categories(Object? json) {
           seen.add(CategoryCatalog.canonicalId(item['id'] as String)!))
         DriverAppCategory(
           id: CategoryCatalog.canonicalId(item['id'] as String)!,
-          label: _string(item['label']) ??
+          label:
+              _string(item['label']) ??
               CategoryCatalog.labelOf(item['id'] as String),
           seats: _int(item['seats']),
           sort: _int(item['sort']),
@@ -249,10 +248,12 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
   }
   final terms = WaitingTerms(
     freeMinutes: _int(json['freeWaitMin']) ?? base.freeMinutes,
-    perMinute: _money(json['perMin'], currency) ??
+    perMinute:
+        _money(json['perMin'], currency) ??
         _sameCurrency(base.perMinute, currency),
     noShowAfterMinutes: _int(json['noShowAfterMin']) ?? base.noShowAfterMinutes,
-    noShowFee: _money(json['noShowFee'], currency) ??
+    noShowFee:
+        _money(json['noShowFee'], currency) ??
         _sameCurrency(base.noShowFee, currency),
     driverShareWaitPercent:
         _percent(json['driverShareWaitPct']) ?? base.driverShareWaitPercent,
@@ -292,8 +293,9 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
       final rule = _rule(raw, CategoryCatalog.labelOf(id), currency);
       final changed = WaitingRule(
         label: rule.label,
-        freeMinutes:
-            rule.freeMinutes == terms.freeMinutes ? null : rule.freeMinutes,
+        freeMinutes: rule.freeMinutes == terms.freeMinutes
+            ? null
+            : rule.freeMinutes,
         perMinute: rule.perMinute == terms.perMinute ? null : rule.perMinute,
         noShowAfterMinutes: rule.noShowAfterMinutes == terms.noShowAfterMinutes
             ? null
@@ -314,8 +316,8 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
     farPickupKm: !farOn
         ? double.infinity
         : farKm is num && farKm.isFinite && farKm > 0
-            ? farKm.toDouble()
-            : seed.farPickupKm,
+        ? farKm.toDouble()
+        : seed.farPickupKm,
     farPickup: far == null
         ? _rebase(seed.farPickup, currency)
         : _rule(far, seed.farPickup.label, currency),

@@ -180,10 +180,7 @@ void main() {
       // Each reminder once, the earliest first.
       expect(airport.reminderMinutes, [120, 15]);
       expect(rules.ruleFor(ScheduledRideKind.longTrip).spareMinutes, 30);
-      expect(
-        rules.ruleFor(ScheduledRideKind.longTrip).onlineBeforeMinutes,
-        60,
-      );
+      expect(rules.ruleFor(ScheduledRideKind.longTrip).onlineBeforeMinutes, 60);
       expect(
         rules.ruleFor(ScheduledRideKind.comfortPremium).reminderMinutes,
         isEmpty,
@@ -244,10 +241,7 @@ void main() {
       expect(rules.lateEta.reassignTo, LateEtaReassignTo.exclusive);
       expect(rules.lateEta.toleranceMinutes, 3);
       for (final to in LateEtaReassignTo.values) {
-        expect(
-          LateEtaRule.fromJson({'reassignTo': to.name}).reassignTo,
-          to,
-        );
+        expect(LateEtaRule.fromJson({'reassignTo': to.name}).reassignTo, to);
       }
     });
   });
@@ -301,8 +295,10 @@ void main() {
         stage: ActiveRideStage.headingToPickup,
       );
       expect(ride.toJson().containsKey('scheduledPickupAt'), isFalse);
-      expect(PersistedActiveRide.fromJson(ride.toJson())!.scheduledPickupAt,
-          isNull);
+      expect(
+        PersistedActiveRide.fromJson(ride.toJson())!.scheduledPickupAt,
+        isNull,
+      );
       expect(
         PersistedActiveRide.fromJson({
           ...ride.toJson(),

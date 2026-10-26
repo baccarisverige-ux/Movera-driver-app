@@ -42,15 +42,17 @@ Future<void> _frames(WidgetTester tester, [int count = 10]) async {
 /// The trip screen at [stage], its sheet at the middle snap point.
 Future<void> _trip(WidgetTester tester, ActiveRideStage stage) async {
   SharedPreferences.setMockInitialValues({});
-  await tester.pumpWidget(MaterialApp(
-    home: MediaQuery(
-      data: const MediaQueryData(disableAnimations: true),
-      child: AcceptRide(
-        initialStage: stage,
-        activeRideRepository: MemoryActiveRideRepository(),
+  await tester.pumpWidget(
+    MaterialApp(
+      home: MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: AcceptRide(
+          initialStage: stage,
+          activeRideRepository: MemoryActiveRideRepository(),
+        ),
       ),
     ),
-  ));
+  );
   await _frames(tester);
   tester
       .widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last)
@@ -69,33 +71,32 @@ Widget _island({
   double progress = .42,
   VoidCallback? onRoute,
   String? navigationStatus,
-}) =>
-    MaterialApp(
-      home: Scaffold(
-        body: SizedBox(
-          width: 320,
-          height: 220,
-          child: AdaptiveTripIsland(
-            banner: banner,
-            status: 'To pickup',
-            address: 'Sveavägen 20',
-            detail: 'Picking up Angelica',
-            eta: '2 min',
-            progress: progress,
-            navigationStatus: navigationStatus,
-            waitingMessage: 'Waiting for Angelica',
-            lastTripLabel: '120 kr',
-            onRadar: () {},
-            onMenu: () {},
-            onSearch: () {},
-            onHistory: () {},
-            onRoute: onRoute ?? () {},
-            onSafety: () {},
-            onWait: () {},
-          ),
-        ),
+}) => MaterialApp(
+  home: Scaffold(
+    body: SizedBox(
+      width: 320,
+      height: 220,
+      child: AdaptiveTripIsland(
+        banner: banner,
+        status: 'To pickup',
+        address: 'Sveavägen 20',
+        detail: 'Picking up Angelica',
+        eta: '2 min',
+        progress: progress,
+        navigationStatus: navigationStatus,
+        waitingMessage: 'Waiting for Angelica',
+        lastTripLabel: '120 kr',
+        onRadar: () {},
+        onMenu: () {},
+        onSearch: () {},
+        onHistory: () {},
+        onRoute: onRoute ?? () {},
+        onSafety: () {},
+        onWait: () {},
       ),
-    );
+    ),
+  ),
+);
 
 /// The island's one button node (it reads the ETA among the rest).
 SemanticsNode _islandNode(WidgetTester tester) =>
@@ -105,7 +106,9 @@ void main() {
   testWidgets('driver-u63: the trip slide is read once', (tester) async {
     final semantics = tester.ensureSemantics();
     await _trip(tester, ActiveRideStage.waitingForRider);
-    final slide = find.bySemanticsLabel(RegExp('start trip', caseSensitive: false));
+    final slide = find.bySemanticsLabel(
+      RegExp('start trip', caseSensitive: false),
+    );
     expect(slide, findsOneWidget);
     final node = tester.getSemantics(slide);
     // One label, not the action merged with the slide's own text.
@@ -132,14 +135,19 @@ void main() {
     );
     addTearDown(() => DriverRuntimeConfig.current = previous);
     await _trip(tester, ActiveRideStage.headingToPickup);
-    final button =
-        find.byKey(const ValueKey<String>('active-ride-arrived-button'));
+    final button = find.byKey(
+      const ValueKey<String>('active-ride-arrived-button'),
+    );
     final style = tester.widget<FilledButton>(button).style!;
     // 5F6B72 on EEEFF1 is about 5:1 (8E979B was 2.6:1).
-    expect(style.foregroundColor!.resolve(<WidgetState>{}),
-        const Color(0xFF5F6B72));
-    expect(tester.getSemantics(button).hint,
-        'Move within 100 m of the pickup to arrive.');
+    expect(
+      style.foregroundColor!.resolve(<WidgetState>{}),
+      const Color(0xFF5F6B72),
+    );
+    expect(
+      tester.getSemantics(button).hint,
+      'Move within 100 m of the pickup to arrive.',
+    );
     await _unmount(tester);
     semantics.dispose();
   });
@@ -150,16 +158,19 @@ void main() {
       await DriverLanguage.choose('fr');
     });
 
-    testWidgets('driver-u90: the turn cue reads the turn, not its Dart name',
-        (tester) async {
+    testWidgets('driver-u90: the turn cue reads the turn, not its Dart name', (
+      tester,
+    ) async {
       final semantics = tester.ensureSemantics();
-      await tester.pumpWidget(_island(
-        banner: const NavigationBanner(
-          primary: 'Sveavägen',
-          distanceLabel: '150 m',
-          symbol: NavigationBannerSymbol.slightLeft,
+      await tester.pumpWidget(
+        _island(
+          banner: const NavigationBanner(
+            primary: 'Sveavägen',
+            distanceLabel: '150 m',
+            symbol: NavigationBannerSymbol.slightLeft,
+          ),
         ),
-      ));
+      );
       await _frames(tester, 40);
       // The island is one button; the cue is the first thing it reads.
       final label = _islandNode(tester).label;
@@ -169,16 +180,17 @@ void main() {
       semantics.dispose();
     });
 
-    testWidgets('driver-48: route progress is read in French',
-        (tester) async {
+    testWidgets('driver-48: route progress is read in French', (tester) async {
       final semantics = tester.ensureSemantics();
-      await tester.pumpWidget(_island(
-        banner: const NavigationBanner(
-          primary: 'Continuez tout droit',
-          distanceLabel: '1,2 km',
-          symbol: NavigationBannerSymbol.straight,
+      await tester.pumpWidget(
+        _island(
+          banner: const NavigationBanner(
+            primary: 'Continuez tout droit',
+            distanceLabel: '1,2 km',
+            symbol: NavigationBannerSymbol.straight,
+          ),
         ),
-      ));
+      );
       await _frames(tester, 40);
       final island = _islandNode(tester);
       expect(island.label, contains('Progression de l’itinéraire'));
@@ -191,33 +203,39 @@ void main() {
   group('driver-u94: trip options open from a 48 px touch box', () {
     testWidgets('the trip card ••• is 48 x 48', (tester) async {
       const more = ValueKey<String>('more');
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: TripCard(
-            title: 'Your trip',
-            fare: '111,02 kr',
-            points: const [],
-            footer: 'Comfort · Nils',
-            onMore: () {},
-            moreKey: more,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TripCard(
+              title: 'Your trip',
+              fare: '111,02 kr',
+              points: const [],
+              footer: 'Comfort · Nils',
+              onMore: () {},
+              moreKey: more,
+            ),
           ),
         ),
-      ));
+      );
       expect(tester.getSize(find.byKey(more)), const Size(48, 48));
     });
 
-    testWidgets('the island info button takes touches around it',
-        (tester) async {
+    testWidgets('the island info button takes touches around it', (
+      tester,
+    ) async {
       var opened = 0;
-      await tester.pumpWidget(_island(
-        onRoute: () => opened++,
-        navigationStatus: 'Route unavailable — retry',
-      ));
+      await tester.pumpWidget(
+        _island(
+          onRoute: () => opened++,
+          navigationStatus: 'Route unavailable — retry',
+        ),
+      );
       await _frames(tester, 40);
       expect(find.byKey(const ValueKey('trip-status-island')), findsOneWidget);
       final info = tester.getRect(find.byIcon(Icons.info_outline_rounded));
-      final island =
-          tester.getRect(find.byKey(const ValueKey('trip-status-island')));
+      final island = tester.getRect(
+        find.byKey(const ValueKey('trip-status-island')),
+      );
       // 44 px down from the icon's top, 48 px across from its left edge:
       // beside the 24 px slot and below the island both open the options.
       await tester.tapAt(Offset(info.left + 46, info.center.dy));
@@ -245,22 +263,29 @@ void main() {
       () => tr.authNeverAskCode,
     ),
   ]) {
-    testWidgets('driver-u102: $name follows the system text size',
-        (tester) async {
-      await tester.pumpWidget(ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (_, _) => MaterialApp(
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: const TextScaler.linear(1.5)),
-            child: child!,
+    testWidgets('driver-u102: $name follows the system text size', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, _) => MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.5)),
+              child: child!,
+            ),
+            home: screen,
           ),
-          home: screen,
         ),
-      ));
+      );
       await tester.pump();
-      final text = tester.widget<RichText>(find.byWidgetPredicate((w) =>
-          w is RichText && w.text.toPlainText().contains(words())));
+      final text = tester.widget<RichText>(
+        find.byWidgetPredicate(
+          (w) => w is RichText && w.text.toPlainText().contains(words()),
+        ),
+      );
       expect(text.textScaler, const TextScaler.linear(1.5));
     });
   }
@@ -268,19 +293,22 @@ void main() {
   group('driver-u108: the × buttons have a name', () {
     testWidgets('destination confirm', (tester) async {
       final semantics = tester.ensureSemantics();
-      await tester.pumpWidget(const MaterialApp(
-        home: DestinationConfirmScreen(
-          origin: LatLng(59.3617, 17.9714),
-          destination: DriverDestinationResult(
-            position: LatLng(59.4032, 17.9448),
-            address: 'Kista Galleria, Stockholm',
-            name: 'Kista centrum',
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: DestinationConfirmScreen(
+            origin: LatLng(59.3617, 17.9714),
+            destination: DriverDestinationResult(
+              position: LatLng(59.4032, 17.9448),
+              address: 'Kista Galleria, Stockholm',
+              name: 'Kista centrum',
+            ),
           ),
         ),
-      ));
+      );
       await tester.pump(const Duration(milliseconds: 800));
       final close = tester.getSemantics(
-          find.byKey(const ValueKey<String>('destination-confirm-close')));
+        find.byKey(const ValueKey<String>('destination-confirm-close')),
+      );
       expect(close.tooltip, 'Close');
       expect(close.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
       await _unmount(tester);
@@ -288,9 +316,11 @@ void main() {
     });
 
     testWidgets('waiting time sheet', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(body: WaitingTimeSheet(readSeconds: () => 30)),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: WaitingTimeSheet(readSeconds: () => 30)),
+        ),
+      );
       await tester.pump();
       expect(
         find.ancestor(
@@ -303,19 +333,22 @@ void main() {
     });
   });
 
-  testWidgets('driver-u111: the offer sheet × is a 48 px target',
-      (tester) async {
+  testWidgets('driver-u111: the offer sheet × is a 48 px target', (
+    tester,
+  ) async {
     var hidden = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: ReservationCloseArrow(
-            key: const ValueKey<String>('hide'),
-            onTap: () => hidden++,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: ReservationCloseArrow(
+              key: const ValueKey<String>('hide'),
+              onTap: () => hidden++,
+            ),
           ),
         ),
       ),
-    ));
+    );
     final hide = find.byKey(const ValueKey<String>('hide'));
     expect(tester.getSize(hide), const Size(48, 48));
     // A corner of the box, outside the 34 px mark, still hides it.
@@ -325,15 +358,18 @@ void main() {
 
   // Owner N1 (live test 2026-10-26): the way to all offers is the island's
   // middle, "1 offer · radar", a tappable target as tall as the island.
-  testWidgets('driver-u136: the island\'s radar offers are a 44 px target',
-      (tester) async {
+  testWidgets('driver-u136: the island\'s radar offers are a 44 px target', (
+    tester,
+  ) async {
     final semantics = tester.ensureSemantics();
     SharedPreferences.setMockInitialValues({});
     IslandMessages.reset();
     ScheduledRideStore.reset();
     DriverStartPosition.clearMemory();
-    await (await SharedPreferences.getInstance())
-        .setString(DriverStartPosition.key, '{"lat":59.3326,"lng":18.0649}');
+    await (await SharedPreferences.getInstance()).setString(
+      DriverStartPosition.key,
+      '{"lat":59.3326,"lng":18.0649}',
+    );
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MoveraApp());
@@ -343,13 +379,17 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2300));
     await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
     await tester.pump(const Duration(milliseconds: 900));
-    expect(find.byKey(const ValueKey<String>('radar-home-all-offers')),
-        findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('radar-home-all-offers')),
+      findsNothing,
+    );
     // The island's face changes with its own short animation once the card
     // is up; read it when the new face has settled.
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byKey(const ValueKey<String>('island-radar-offers-face')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('island-radar-offers-face')),
+      findsOneWidget,
+    );
     final all = find.byKey(const ValueKey<String>('last-trip-launcher'));
     expect(tester.getSize(all).height, greaterThanOrEqualTo(44));
     final data = tester.getSemantics(all).getSemanticsData();
@@ -365,30 +405,37 @@ void main() {
     final maps = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, _) => MaterialApp(
-        home: DriverRideHistoryDetail(
-          record: const TripHistoryRecord(
-            tripId: 'detail-1',
-            riderName: 'Karin',
-            whenLabel: '15/10/2026, 07:59',
-            pickup: 'Gamla vägen',
-            dropoff: 'Solna centrum',
-            fare: '126,75 kr',
-            category: 'Comfort',
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, _) => MaterialApp(
+          home: DriverRideHistoryDetail(
+            record: const TripHistoryRecord(
+              tripId: 'detail-1',
+              riderName: 'Karin',
+              whenLabel: '15/10/2026, 07:59',
+              pickup: 'Gamla vägen',
+              dropoff: 'Solna centrum',
+              fare: '126,75 kr',
+              category: 'Comfort',
+            ),
+            loadRideChecks: (_) async => const [],
           ),
-          loadRideChecks: (_) async => const [],
         ),
       ),
-    ));
+    );
     await tester.pump(const Duration(milliseconds: 300));
     final back = find.byTooltip('Back');
     expect(back, findsOneWidget);
     final box = find.descendant(of: back, matching: find.byType(InkWell));
     expect(tester.getSize(box), const Size(48, 48));
-    expect(tester.getSemantics(box).getSemanticsData().hasAction(
-        SemanticsAction.tap), isTrue);
+    expect(
+      tester
+          .getSemantics(box)
+          .getSemanticsData()
+          .hasAction(SemanticsAction.tap),
+      isTrue,
+    );
     await _unmount(tester);
     semantics.dispose();
   });

@@ -29,22 +29,27 @@ void main() {
       'Södertälje': GeoPoint(59.1955, 17.6253),
       'Nacka': GeoPoint(59.3105, 18.1637),
     };
-    bool follows(String place, {DestinationModeRules rules = const DestinationModeRules()}) =>
-        DestinationFilter.follows(
-          driver: stockholm,
-          destination: arlanda,
-          dropoff: places[place]!,
-          route: e4,
-          rules: rules,
-        );
+    bool follows(
+      String place, {
+      DestinationModeRules rules = const DestinationModeRules(),
+    }) => DestinationFilter.follows(
+      driver: stockholm,
+      destination: arlanda,
+      dropoff: places[place]!,
+      route: e4,
+      rules: rules,
+    );
 
-    test('Stockholm → Arlanda: Arlanda, Väsby, Sollentuna yes; Södertälje, Nacka no', () {
-      expect(follows('Arlanda'), isTrue);
-      expect(follows('Upplands Väsby'), isTrue);
-      expect(follows('Sollentuna'), isTrue);
-      expect(follows('Södertälje'), isFalse);
-      expect(follows('Nacka'), isFalse);
-    });
+    test(
+      'Stockholm → Arlanda: Arlanda, Väsby, Sollentuna yes; Södertälje, Nacka no',
+      () {
+        expect(follows('Arlanda'), isTrue);
+        expect(follows('Upplands Väsby'), isTrue);
+        expect(follows('Sollentuna'), isTrue);
+        expect(follows('Södertälje'), isFalse);
+        expect(follows('Nacka'), isFalse);
+      },
+    );
 
     test('focus: final only near Arlanda, on the way only along the route', () {
       const finalOnly = DestinationModeRules(focusOnTheWayOn: false);
@@ -55,29 +60,48 @@ void main() {
       expect(follows('Arlanda', rules: wayOnly), isFalse);
     });
 
-    test('demo: trips along the route pass the filter, the outside ones do not', () async {
-      final trips = DemoDestinationTrips.along(
-        driver: stockholm, destination: arlanda, route: e4, destinationLabel: 'Arlanda');
-      for (final trip in trips) {
-        expect(
-          DestinationFilter.follows(driver: stockholm, destination: arlanda,
-              dropoff: trip.dropoffPosition, route: e4),
-          trip.followsDestination,
-          reason: trip.id,
+    test(
+      'demo: trips along the route pass the filter, the outside ones do not',
+      () async {
+        final trips = DemoDestinationTrips.along(
+          driver: stockholm,
+          destination: arlanda,
+          route: e4,
+          destinationLabel: 'Arlanda',
         );
-      }
-      expect(trips.where((t) => t.followsDestination), hasLength(3));
-      final repo = DemoDispatchRepository();
-      addTearDown(repo.dispose);
-      final seen = <List<String>>[];
-      final sub = repo.watchNearbyOffers().listen((o) => seen.add([for (final t in o) t.id]));
-      repo.showDestinationTrips(trips);
-      repo.clearDestinationTrips();
-      await Future<void>.delayed(Duration.zero);
-      await sub.cancel();
-      expect(seen.any((ids) => ids.first == 'demo-destination-final'), isTrue);
-      expect(seen.last.any((id) => id.startsWith(DemoDestinationTrips.idPrefix)), isFalse);
-    });
+        for (final trip in trips) {
+          expect(
+            DestinationFilter.follows(
+              driver: stockholm,
+              destination: arlanda,
+              dropoff: trip.dropoffPosition,
+              route: e4,
+            ),
+            trip.followsDestination,
+            reason: trip.id,
+          );
+        }
+        expect(trips.where((t) => t.followsDestination), hasLength(3));
+        final repo = DemoDispatchRepository();
+        addTearDown(repo.dispose);
+        final seen = <List<String>>[];
+        final sub = repo.watchNearbyOffers().listen(
+          (o) => seen.add([for (final t in o) t.id]),
+        );
+        repo.showDestinationTrips(trips);
+        repo.clearDestinationTrips();
+        await Future<void>.delayed(Duration.zero);
+        await sub.cancel();
+        expect(
+          seen.any((ids) => ids.first == 'demo-destination-final'),
+          isTrue,
+        );
+        expect(
+          seen.last.any((id) => id.startsWith(DemoDestinationTrips.idPrefix)),
+          isFalse,
+        );
+      },
+    );
 
     test('daily limit and time limit', () {
       var now = DateTime(2026, 10, 18, 8);
@@ -107,7 +131,10 @@ void main() {
           },
         },
         'nextTrips': {
-          'svc-stockholm': {'withinKmOfDropoffOn': false, 'withinMinutesOfDropoff': 15},
+          'svc-stockholm': {
+            'withinKmOfDropoffOn': false,
+            'withinMinutesOfDropoff': 15,
+          },
         },
       },
     };
@@ -124,46 +151,55 @@ void main() {
     expect(next.withinMinutesOfDropoff, 15);
     expect(next.radarOffers, isFalse);
 
-    final (other, otherNext) = DriverTripRulesExport.forZone(export, 'svc-goteborg');
+    final (other, otherNext) = DriverTripRulesExport.forZone(
+      export,
+      'svc-goteborg',
+    );
     expect(other.timeLimitHours, 2);
     expect(other.corridorKm, 5);
     expect(other.focus, DestinationFocus.both);
     expect(otherNext.withinKmOfDropoff, 5);
     expect(otherNext.withinMinutesOfDropoff, 10);
-    expect(const DriverHomeAdminContentService().load().destinationMode, isNull);
+    expect(
+      const DriverHomeAdminContentService().load().destinationMode,
+      isNull,
+    );
   });
 
-  test('R13-18: next trips only on the final leg, within km or min; demo unchanged', () {
-    bool allows({
-      bool demo = false,
-      bool onTrip = true,
-      bool toFinal = true,
-      double? meters,
-      double? seconds,
-      NextTripRules rules = const NextTripRules(),
-    }) => NextTripGate.allows(
-      demo: demo,
-      onTrip: onTrip,
-      toFinalDropoff: toFinal,
-      metersToDropoff: meters,
-      secondsToDropoff: seconds,
-      rules: rules,
-    );
+  test(
+    'R13-18: next trips only on the final leg, within km or min; demo unchanged',
+    () {
+      bool allows({
+        bool demo = false,
+        bool onTrip = true,
+        bool toFinal = true,
+        double? meters,
+        double? seconds,
+        NextTripRules rules = const NextTripRules(),
+      }) => NextTripGate.allows(
+        demo: demo,
+        onTrip: onTrip,
+        toFinalDropoff: toFinal,
+        metersToDropoff: meters,
+        secondsToDropoff: seconds,
+        rules: rules,
+      );
 
-    expect(allows(onTrip: false, meters: 100), isFalse);
-    expect(allows(toFinal: false, meters: 100), isFalse);
-    expect(allows(meters: 4000, seconds: 1200), isTrue);
-    expect(allows(meters: 9000, seconds: 500), isTrue);
-    expect(allows(meters: 9000, seconds: 1200), isFalse);
-    const kmOnly = NextTripRules(withinMinutesOfDropoffOn: false);
-    expect(allows(meters: 9000, seconds: 500, rules: kmOnly), isFalse);
-    const wholeLeg = NextTripRules(
-      withinKmOfDropoffOn: false,
-      withinMinutesOfDropoffOn: false,
-    );
-    expect(allows(meters: 40000, seconds: 3600, rules: wholeLeg), isTrue);
-    // Demo: as before, no limits (also on the way to a stop).
-    expect(allows(demo: true, toFinal: false, meters: 25000), isTrue);
-    expect(allows(demo: true, onTrip: false), isFalse);
-  });
+      expect(allows(onTrip: false, meters: 100), isFalse);
+      expect(allows(toFinal: false, meters: 100), isFalse);
+      expect(allows(meters: 4000, seconds: 1200), isTrue);
+      expect(allows(meters: 9000, seconds: 500), isTrue);
+      expect(allows(meters: 9000, seconds: 1200), isFalse);
+      const kmOnly = NextTripRules(withinMinutesOfDropoffOn: false);
+      expect(allows(meters: 9000, seconds: 500, rules: kmOnly), isFalse);
+      const wholeLeg = NextTripRules(
+        withinKmOfDropoffOn: false,
+        withinMinutesOfDropoffOn: false,
+      );
+      expect(allows(meters: 40000, seconds: 3600, rules: wholeLeg), isTrue);
+      // Demo: as before, no limits (also on the way to a stop).
+      expect(allows(demo: true, toFinal: false, meters: 25000), isTrue);
+      expect(allows(demo: true, onTrip: false), isFalse);
+    },
+  );
 }

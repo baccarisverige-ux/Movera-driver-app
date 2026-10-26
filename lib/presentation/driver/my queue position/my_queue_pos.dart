@@ -59,252 +59,261 @@ class MyQueuePosition extends StatelessWidget {
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            31.height,
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    tooltip: tr.queueClose,
-                    onPressed: () => popOwned(context),
-                    icon: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: ResSize.h * 24,
-                      color: AppColor.title,
-                    ),
-                  ),
-                  Expanded(
-                    child: TextWidget(
-                      text: tr.queueMyPosition,
-                      textAlign: TextAlign.center,
-                      color: AppColor.title,
-                      fontSize: 16,
-                      fontWeight: fwSemiBold,
-                    ),
-                  ),
-                  const SizedBox(width: 48),
-                ],
-              ),
-            ),
-            24.height,
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColor.border, width: 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResSize.w * 8,
-                        vertical: ResSize.h * 20,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Image.asset(
-                                AppAssets.hourGlass,
-                                height: ResSize.h * 30,
-                              ),
-                              12.width,
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    TextWidget(
-                                      text: tr.queueMediumWait,
-                                      color: AppColor.black,
-                                      fontSize: 16,
-                                      fontWeight: fwSemiBold,
-                                    ),
-                                    2.height,
-                                    TextWidget(
-                                      text: tr.queueEstimatedWait,
-                                      color: AppColor.subtitle,
-                                      fontSize: 14,
-                                      fontWeight: fwNormal,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                width: ResSize.w * 64,
-                                child: Image.asset(
-                                  AppAssets.queue,
-                                  height: ResSize.h * 60,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ],
-                          ),
-                          20.height,
-                          Wrap(
-                            alignment: WrapAlignment.spaceEvenly,
-                            spacing: 12,
-                            runSpacing: 8,
-                            children: [
-                              Wrap(
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 4,
-                                runSpacing: 4,
-                                children: [
-                                  Icon(
-                                    Icons.star_outline_rounded,
-                                    size: ResSize.h * 28,
-                                    color: AppColor.title,
-                                  ),
-                                  TextWidget(
-                                    text: tr.queueSampleRank,
-                                    color: AppColor.title,
-                                    fontSize: 14,
-                                    fontWeight: fwMedium,
-                                  ),
-                                ],
-                              ),
-                              Wrap(
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 4,
-                                runSpacing: 4,
-                                children: [
-                                  Image.asset(
-                                    AppAssets.taxiAhead,
-                                    height: ResSize.h * 20,
-                                    color: AppColor.title,
-                                  ),
-                                  TextWidget(
-                                    text: tr.queueDriversAhead,
-                                    color: AppColor.title,
-                                    fontSize: 14,
-                                    fontWeight: fwMedium,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          Wrap(
-                            alignment: WrapAlignment.spaceEvenly,
-                            spacing: 12,
-                            runSpacing: 8,
-                            children: [
-                              Row(
-                                children: [
-                                  Image.asset(
-                                    AppAssets.medal,
-                                    height: ResSize.h * 20,
-                                  ),
-                                  TextWidget(
-                                    text: '${_sampleAhead + 1}',
-                                    color: AppColor.title,
-                                    fontSize: 20,
-                                    fontWeight: fwSemiBold,
-                                  ),
-                                  20.width,
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  20.width,
-                                  TextWidget(
-                                    text: '$_sampleAhead',
-                                    color: AppColor.title,
-                                    fontSize: 20,
-                                    fontWeight: fwSemiBold,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  16.height,
-                  CustomButton(centerContent: tr.queueUnavailablePreview, onPressed: null),
-                  24.height,
-                  Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                31.height,
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SizedBox(
-                        width: ResSize.w * 100,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Center(
-                              child: TextWidget(
-                                text: tr.queueRanks,
-                                color: AppColor.subtitle,
-                                fontSize: 16,
-                                fontWeight: fwMedium,
-                              ),
-                            ),
-                            19.height,
-                            ...List.generate(
-                              categories.length,
-                              (index) => Padding(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: ResSize.h * 6,
-                                ),
-                                child: index > 2
-                                    ? TextWidget(
-                                        text: "#${index + 1}",
-                                        color: AppColor.title,
-                                        fontSize: 16,
-                                        fontWeight: fwMedium,
-                                      )
-                                    : Image.asset(
-                                        index == 0
-                                            ? AppAssets.yellowMedal
-                                            : AppAssets.medal,
-                                        height: ResSize.h * 25,
-                                      ),
-                              ),
-                            ),
-                          ],
+                      IconButton(
+                        tooltip: tr.queueClose,
+                        onPressed: () => popOwned(context),
+                        icon: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: ResSize.h * 24,
+                          color: AppColor.title,
                         ),
                       ),
-                      20.width,
                       Expanded(
-                        child: SizedBox(
+                        child: TextWidget(
+                          text: tr.queueMyPosition,
+                          textAlign: TextAlign.center,
+                          color: AppColor.title,
+                          fontSize: 16,
+                          fontWeight: fwSemiBold,
+                        ),
+                      ),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
+                ),
+                24.height,
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: screenHorizPadding),
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppColor.border,
+                            width: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: ResSize.w * 8,
+                            vertical: ResSize.h * 20,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              TextWidget(
-                                text: tr.category,
-                                color: AppColor.subtitle,
-                                fontSize: 16,
-                                fontWeight: fwMedium,
-                              ),
-                              19.height,
-                              ...List.generate(
-                                categories.length,
-                                (index) => Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: ResSize.h * 6,
+                              Row(
+                                children: [
+                                  Image.asset(
+                                    AppAssets.hourGlass,
+                                    height: ResSize.h * 30,
                                   ),
+                                  12.width,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        TextWidget(
+                                          text: tr.queueMediumWait,
+                                          color: AppColor.black,
+                                          fontSize: 16,
+                                          fontWeight: fwSemiBold,
+                                        ),
+                                        2.height,
+                                        TextWidget(
+                                          text: tr.queueEstimatedWait,
+                                          color: AppColor.subtitle,
+                                          fontSize: 14,
+                                          fontWeight: fwNormal,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: ResSize.w * 64,
+                                    child: Image.asset(
+                                      AppAssets.queue,
+                                      height: ResSize.h * 60,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              20.height,
+                              Wrap(
+                                alignment: WrapAlignment.spaceEvenly,
+                                spacing: 12,
+                                runSpacing: 8,
+                                children: [
+                                  Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 4,
+                                    runSpacing: 4,
+                                    children: [
+                                      Icon(
+                                        Icons.star_outline_rounded,
+                                        size: ResSize.h * 28,
+                                        color: AppColor.title,
+                                      ),
+                                      TextWidget(
+                                        text: tr.queueSampleRank,
+                                        color: AppColor.title,
+                                        fontSize: 14,
+                                        fontWeight: fwMedium,
+                                      ),
+                                    ],
+                                  ),
+                                  Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 4,
+                                    runSpacing: 4,
+                                    children: [
+                                      Image.asset(
+                                        AppAssets.taxiAhead,
+                                        height: ResSize.h * 20,
+                                        color: AppColor.title,
+                                      ),
+                                      TextWidget(
+                                        text: tr.queueDriversAhead,
+                                        color: AppColor.title,
+                                        fontSize: 14,
+                                        fontWeight: fwMedium,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Wrap(
+                                alignment: WrapAlignment.spaceEvenly,
+                                spacing: 12,
+                                runSpacing: 8,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Image.asset(
+                                        AppAssets.medal,
+                                        height: ResSize.h * 20,
+                                      ),
+                                      TextWidget(
+                                        text: '${_sampleAhead + 1}',
+                                        color: AppColor.title,
+                                        fontSize: 20,
+                                        fontWeight: fwSemiBold,
+                                      ),
+                                      20.width,
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      20.width,
+                                      TextWidget(
+                                        text: '$_sampleAhead',
+                                        color: AppColor.title,
+                                        fontSize: 20,
+                                        fontWeight: fwSemiBold,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      16.height,
+                      CustomButton(
+                        centerContent: tr.queueUnavailablePreview,
+                        onPressed: null,
+                      ),
+                      24.height,
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: ResSize.w * 100,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Center(
                                   child: TextWidget(
-                                    text: categories[index],
-                                    color: AppColor.title,
+                                    text: tr.queueRanks,
+                                    color: AppColor.subtitle,
                                     fontSize: 16,
                                     fontWeight: fwMedium,
                                   ),
                                 ),
-                              ),
-                            ],
+                                19.height,
+                                ...List.generate(
+                                  categories.length,
+                                  (index) => Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: ResSize.h * 6,
+                                    ),
+                                    child: index > 2
+                                        ? TextWidget(
+                                            text: "#${index + 1}",
+                                            color: AppColor.title,
+                                            fontSize: 16,
+                                            fontWeight: fwMedium,
+                                          )
+                                        : Image.asset(
+                                            index == 0
+                                                ? AppAssets.yellowMedal
+                                                : AppAssets.medal,
+                                            height: ResSize.h * 25,
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                          20.width,
+                          Expanded(
+                            child: SizedBox(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TextWidget(
+                                    text: tr.category,
+                                    color: AppColor.subtitle,
+                                    fontSize: 16,
+                                    fontWeight: fwMedium,
+                                  ),
+                                  19.height,
+                                  ...List.generate(
+                                    categories.length,
+                                    (index) => Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: ResSize.h * 6,
+                                      ),
+                                      child: TextWidget(
+                                        text: categories[index],
+                                        color: AppColor.title,
+                                        fontSize: 16,
+                                        fontWeight: fwMedium,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            60.height,
+                ),
+                60.height,
               ],
             ),
           ),

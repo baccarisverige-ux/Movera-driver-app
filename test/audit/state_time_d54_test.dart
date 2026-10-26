@@ -53,42 +53,49 @@ class _RemoveFails extends SharedPreferencesStorePlatform {
 }
 
 void main() {
-  group('driver-8: a demo reservation after midnight on a clock-change day', () {
-    final previousNow = ScheduledClock.realNow;
-    final previousPlan = DemoReservations.plan;
-    tearDown(() {
-      ScheduledClock.realNow = previousNow;
-      ScheduledClock.instance = ScheduledClock.fastDay();
-      DemoReservations.plan = previousPlan;
-      DemoReservations.reset();
-    });
-
-    // Spring forward: 29 Mar 2026 in Europe, 8 Mar 2026 in the US. Booked
-    // at 22:30 on that day, a ride 2 h later is the next day.
-    for (final day in [DateTime(2026, 3, 29, 22, 30), DateTime(2026, 3, 8, 22, 30)]) {
-      test('booked ${day.month}/${day.day} 22:30, +2 h is "Tomorrow"', () {
-        ScheduledClock.realNow = () => day;
-        ScheduledClock.instance = ScheduledClock();
-        DemoReservations.plan = const DemoReservationPlan(
-          main: Duration(hours: 2),
-          clashing: Duration(hours: 2, minutes: 25),
-          assigned: Duration(hours: 8),
-        );
+  group(
+    'driver-8: a demo reservation after midnight on a clock-change day',
+    () {
+      final previousNow = ScheduledClock.realNow;
+      final previousPlan = DemoReservations.plan;
+      tearDown(() {
+        ScheduledClock.realNow = previousNow;
+        ScheduledClock.instance = ScheduledClock.fastDay();
+        DemoReservations.plan = previousPlan;
         DemoReservations.reset();
-        final main = DemoReservations.main;
-        final at = day.add(const Duration(hours: 2));
-        expect(main.pickupTime, '${at.hour.toString().padLeft(2, '0')}:30');
-        expect(main.pickupDay, 'Tomorrow');
-        expect(main.pickupDayAt(day), 'Tomorrow');
       });
-    }
-  });
+
+      // Spring forward: 29 Mar 2026 in Europe, 8 Mar 2026 in the US. Booked
+      // at 22:30 on that day, a ride 2 h later is the next day.
+      for (final day in [
+        DateTime(2026, 3, 29, 22, 30),
+        DateTime(2026, 3, 8, 22, 30),
+      ]) {
+        test('booked ${day.month}/${day.day} 22:30, +2 h is "Tomorrow"', () {
+          ScheduledClock.realNow = () => day;
+          ScheduledClock.instance = ScheduledClock();
+          DemoReservations.plan = const DemoReservationPlan(
+            main: Duration(hours: 2),
+            clashing: Duration(hours: 2, minutes: 25),
+            assigned: Duration(hours: 8),
+          );
+          DemoReservations.reset();
+          final main = DemoReservations.main;
+          final at = day.add(const Duration(hours: 2));
+          expect(main.pickupTime, '${at.hour.toString().padLeft(2, '0')}:30');
+          expect(main.pickupDay, 'Tomorrow');
+          expect(main.pickupDayAt(day), 'Tomorrow');
+        });
+      }
+    },
+  );
 
   test('driver-u9: every text admin can change is shown by a screen', () {
     const source = 'lib/core/content/driver_app_texts.dart';
     final names = {
-      for (final m in RegExp(r"static const (\w+) =\s*DriverTextKey\(\s*'([^']+)'")
-          .allMatches(File(source).readAsStringSync()))
+      for (final m in RegExp(
+        r"static const (\w+) =\s*DriverTextKey\(\s*'([^']+)'",
+      ).allMatches(File(source).readAsStringSync()))
         m.group(2)!: m.group(1)!,
     };
     final used = Directory('lib')
@@ -104,96 +111,134 @@ void main() {
     expect(dead, isEmpty);
   });
 
-  test('driver-u18: history keeps every row the Month and Week views count', () async {
-    final now = DateTime(2026, 10, 22, 12);
-    Map<String, Object> row(String id, DateTime at) => {
-      'tripId': id, 'riderName': 'R', 'whenLabel': 'x', 'pickup': 'P',
-      'dropoff': 'D', 'fare': '10 kr', 'category': 'Comfort',
-      'status': 'completed', 'completedAt': at.toUtc().toIso8601String(),
-    };
-    // 600 October trips (every 30 min back from now) and 50 September ones.
-    SharedPreferences.setMockInitialValues({
-      PrefsTripHistoryRepository.key: jsonEncode({
-        'schemaVersion': 1,
-        'rows': [
-          for (var i = 0; i < 600; i++)
-            row('oct-$i', now.subtract(Duration(minutes: 30 * i))),
-          for (var i = 0; i < 50; i++)
-            row('sep-$i', DateTime(2026, 9, 20).add(Duration(hours: i))),
-        ],
-      }),
-    });
-    final repo = PrefsTripHistoryRepository(now: () => now);
-    var rows = await repo.list();
-    expect(rows.where((r) => r.tripId.startsWith('oct-')), hasLength(600));
-    expect(rows.where((r) => r.tripId.startsWith('sep-')), isEmpty);
-    await repo.archive(
-      WaybillRecord(tripId: 'new', statusLabel: 'Completed', issuedAt: now,
-        fare: '10 kr', service: 'Comfort', riderName: 'R', pickup: 'P',
-        dropoff: 'D', source: 'Demo', driverName: 'D', vehicle: 'V',
-        licensePlate: 'L', passengerCapacity: 4),
-      completedAt: now,
-    );
-    rows = await repo.list();
-    expect(rows, hasLength(601));
-    expect(rows.last.tripId, 'oct-599');
-  });
+  test(
+    'driver-u18: history keeps every row the Month and Week views count',
+    () async {
+      final now = DateTime(2026, 10, 22, 12);
+      Map<String, Object> row(String id, DateTime at) => {
+        'tripId': id,
+        'riderName': 'R',
+        'whenLabel': 'x',
+        'pickup': 'P',
+        'dropoff': 'D',
+        'fare': '10 kr',
+        'category': 'Comfort',
+        'status': 'completed',
+        'completedAt': at.toUtc().toIso8601String(),
+      };
+      // 600 October trips (every 30 min back from now) and 50 September ones.
+      SharedPreferences.setMockInitialValues({
+        PrefsTripHistoryRepository.key: jsonEncode({
+          'schemaVersion': 1,
+          'rows': [
+            for (var i = 0; i < 600; i++)
+              row('oct-$i', now.subtract(Duration(minutes: 30 * i))),
+            for (var i = 0; i < 50; i++)
+              row('sep-$i', DateTime(2026, 9, 20).add(Duration(hours: i))),
+          ],
+        }),
+      });
+      final repo = PrefsTripHistoryRepository(now: () => now);
+      var rows = await repo.list();
+      expect(rows.where((r) => r.tripId.startsWith('oct-')), hasLength(600));
+      expect(rows.where((r) => r.tripId.startsWith('sep-')), isEmpty);
+      await repo.archive(
+        WaybillRecord(
+          tripId: 'new',
+          statusLabel: 'Completed',
+          issuedAt: now,
+          fare: '10 kr',
+          service: 'Comfort',
+          riderName: 'R',
+          pickup: 'P',
+          dropoff: 'D',
+          source: 'Demo',
+          driverName: 'D',
+          vehicle: 'V',
+          licensePlate: 'L',
+          passengerCapacity: 4,
+        ),
+        completedAt: now,
+      );
+      rows = await repo.list();
+      expect(rows, hasLength(601));
+      expect(rows.last.tripId, 'oct-599');
+    },
+  );
 
-  testWidgets('driver-u21: the side menu opens from the tools during a GPS fault',
-      (tester) async {
-    var menu = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SizedBox(
-          width: 320,
-          height: 220,
-          child: AdaptiveTripIsland(
-            status: 'To pickup', address: 'Sveavägen 20',
-            detail: 'Picking up Angelica', eta: '2 min', progress: .4,
-            navigationStatus: 'Location updating…',
-            waitingMessage: 'Waiting', lastTripLabel: '120 kr',
-            onRadar: () {}, onMenu: () => menu++, onSearch: () {},
-            onHistory: () {}, onRoute: () {}, onSafety: () {}, onWait: () {},
+  testWidgets(
+    'driver-u21: the side menu opens from the tools during a GPS fault',
+    (tester) async {
+      var menu = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 320,
+              height: 220,
+              child: AdaptiveTripIsland(
+                status: 'To pickup',
+                address: 'Sveavägen 20',
+                detail: 'Picking up Angelica',
+                eta: '2 min',
+                progress: .4,
+                navigationStatus: 'Location updating…',
+                waitingMessage: 'Waiting',
+                lastTripLabel: '120 kr',
+                onRadar: () {},
+                onMenu: () => menu++,
+                onSearch: () {},
+                onHistory: () {},
+                onRoute: () {},
+                onSafety: () {},
+                onWait: () {},
+              ),
+            ),
           ),
         ),
-      ),
-    ));
-    await tester.pump(const Duration(seconds: 1));
-    // The fault stays on the island (S03); a tap does not reveal the menu.
-    expect(find.text('Location updating…'), findsOneWidget);
-    await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Menu'));
-    await tester.pumpAndSettle();
-    expect(menu, 1);
-    await tester.pumpWidget(const SizedBox());
-  });
+      );
+      await tester.pump(const Duration(seconds: 1));
+      // The fault stays on the island (S03); a tap does not reveal the menu.
+      expect(find.text('Location updating…'), findsOneWidget);
+      await tester.longPress(find.byKey(const ValueKey('island-morph-shell')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Menu'));
+      await tester.pumpAndSettle();
+      expect(menu, 1);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
-  test('driver-u32/u33: a save asked for during a background save still runs',
-      () async {
-    final repo = _SlowRides();
-    var stop = 0;
-    final ride = ActiveRideController(
-      tripId: 'trip-u33',
-      repository: repo,
-      initialStage: ActiveRideStage.onTrip,
-      snapshotBuilder: (stage) => PersistedActiveRide(
-          tripId: 'trip-u33', stage: stage, stopIndex: stop),
-    );
-    addTearDown(ride.dispose);
-    final gps = ride.persistNow(); // the 2-minute GPS snapshot
-    await pumpEventQueue();
-    stop = 1; // the driver leaves stop 1
-    final departure = ride.persistNow();
-    repo.held.first.complete();
-    expect(await gps, isTrue);
-    await pumpEventQueue();
-    expect(repo.held, hasLength(2), reason: 'the departure is saved too');
-    repo.held.last.complete();
-    expect(await departure, isTrue);
-    expect(repo.saved, [0, 1]);
-    expect((await repo.read())!.stopIndex, 1);
-  });
+  test(
+    'driver-u32/u33: a save asked for during a background save still runs',
+    () async {
+      final repo = _SlowRides();
+      var stop = 0;
+      final ride = ActiveRideController(
+        tripId: 'trip-u33',
+        repository: repo,
+        initialStage: ActiveRideStage.onTrip,
+        snapshotBuilder: (stage) => PersistedActiveRide(
+          tripId: 'trip-u33',
+          stage: stage,
+          stopIndex: stop,
+        ),
+      );
+      addTearDown(ride.dispose);
+      final gps = ride.persistNow(); // the 2-minute GPS snapshot
+      await pumpEventQueue();
+      stop = 1; // the driver leaves stop 1
+      final departure = ride.persistNow();
+      repo.held.first.complete();
+      expect(await gps, isTrue);
+      await pumpEventQueue();
+      expect(repo.held, hasLength(2), reason: 'the departure is saved too');
+      repo.held.last.complete();
+      expect(await departure, isTrue);
+      expect(repo.saved, [0, 1]);
+      expect((await repo.read())!.stopIndex, 1);
+    },
+  );
 
   test('driver-u34: snapshot times survive the repeated autumn hour', () {
     // The second 02:20 in Stockholm (25 Oct) and 01:20 in New York (1 Nov).
@@ -203,59 +248,89 @@ void main() {
     ]) {
       final at = instant.toLocal();
       final json = PersistedActiveRide(
-        tripId: 'trip-u34', stage: ActiveRideStage.onTrip, savedAt: at,
-        arrivedAt: at, acceptedAt: at, startedAt: at, scheduledPickupAt: at,
+        tripId: 'trip-u34',
+        stage: ActiveRideStage.onTrip,
+        savedAt: at,
+        arrivedAt: at,
+        acceptedAt: at,
+        startedAt: at,
+        scheduledPickupAt: at,
       ).toJson();
       final back = PersistedActiveRide.fromJson(json)!;
-      for (final t in [back.savedAt, back.arrivedAt, back.acceptedAt,
-          back.startedAt, back.scheduledPickupAt]) {
+      for (final t in [
+        back.savedAt,
+        back.arrivedAt,
+        back.acceptedAt,
+        back.startedAt,
+        back.scheduledPickupAt,
+      ]) {
         expect(t!.toUtc(), instant, reason: '$json');
         expect(t.isUtc, isFalse);
       }
     }
     // An older save in local time reads as before.
     final old = PersistedActiveRide.fromJson({
-      ...PersistedActiveRide(tripId: 'old', stage: ActiveRideStage.onTrip)
-          .toJson(),
+      ...PersistedActiveRide(
+        tripId: 'old',
+        stage: ActiveRideStage.onTrip,
+      ).toJson(),
       'savedAt': '2026-10-21T10:00:00.000',
     })!;
     expect(old.savedAt, DateTime(2026, 10, 21, 10));
   });
 
-  test('driver-u37: a journal replayed days later keeps the queued trip stale',
-      () async {
-    SharedPreferences.setMockInitialValues({});
-    CompletionJournal.resetForTesting();
-    final active = PrefsActiveRideRepository();
-    await active.save(
-        const PersistedActiveRide(tripId: 'A', stage: ActiveRideStage.onTrip));
-    final journal = CompletionJournal(active: active, afterWrite: (step) {
-      if (step == 'journal') throw StateError('app killed');
-    });
-    await expectLater(
-      journal.finish(
-        WaybillRecord(tripId: 'A', statusLabel: 'Completed',
-          issuedAt: DateTime(2026), fare: '10 kr', service: 'Comfort',
-          riderName: 'R', pickup: 'P', dropoff: 'D', source: 'Demo',
-          driverName: 'D', vehicle: 'V', licensePlate: 'L',
-          passengerCapacity: 4),
-        next: const PersistedActiveRide(
-            tripId: 'B', stage: ActiveRideStage.headingToPickup),
-      ),
-      throwsStateError,
-    );
-    // The app opens again two days later.
-    final prefs = await SharedPreferences.getInstance();
-    final entry = jsonDecode(prefs.getString(CompletionJournal.key)!) as Map;
-    final completed = DateTime.now().subtract(const Duration(days: 2));
-    entry['completedAt'] = completed.toUtc().toIso8601String();
-    await prefs.setString(CompletionJournal.key, jsonEncode(entry));
-    await CompletionJournal(active: PrefsActiveRideRepository()).reconcile();
-    final b = (await PrefsActiveRideRepository().read())!;
-    expect(b.tripId, 'B');
-    expect(b.isFresh, isFalse, reason: 'Home asks before restoring it');
-    expect(b.savedAt!.toUtc(), completed.toUtc());
-  });
+  test(
+    'driver-u37: a journal replayed days later keeps the queued trip stale',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      CompletionJournal.resetForTesting();
+      final active = PrefsActiveRideRepository();
+      await active.save(
+        const PersistedActiveRide(tripId: 'A', stage: ActiveRideStage.onTrip),
+      );
+      final journal = CompletionJournal(
+        active: active,
+        afterWrite: (step) {
+          if (step == 'journal') throw StateError('app killed');
+        },
+      );
+      await expectLater(
+        journal.finish(
+          WaybillRecord(
+            tripId: 'A',
+            statusLabel: 'Completed',
+            issuedAt: DateTime(2026),
+            fare: '10 kr',
+            service: 'Comfort',
+            riderName: 'R',
+            pickup: 'P',
+            dropoff: 'D',
+            source: 'Demo',
+            driverName: 'D',
+            vehicle: 'V',
+            licensePlate: 'L',
+            passengerCapacity: 4,
+          ),
+          next: const PersistedActiveRide(
+            tripId: 'B',
+            stage: ActiveRideStage.headingToPickup,
+          ),
+        ),
+        throwsStateError,
+      );
+      // The app opens again two days later.
+      final prefs = await SharedPreferences.getInstance();
+      final entry = jsonDecode(prefs.getString(CompletionJournal.key)!) as Map;
+      final completed = DateTime.now().subtract(const Duration(days: 2));
+      entry['completedAt'] = completed.toUtc().toIso8601String();
+      await prefs.setString(CompletionJournal.key, jsonEncode(entry));
+      await CompletionJournal(active: PrefsActiveRideRepository()).reconcile();
+      final b = (await PrefsActiveRideRepository().read())!;
+      expect(b.tripId, 'B');
+      expect(b.isFresh, isFalse, reason: 'Home asks before restoring it');
+      expect(b.savedAt!.toUtc(), completed.toUtc());
+    },
+  );
 
   group('driver-u45: Ride check after a pause', () {
     const car = GeoPoint(59.33, 18.06);
@@ -287,16 +362,27 @@ void main() {
     });
   });
 
-  test('driver-r3-4: driverLateCancelHours keeps the fraction the contract allows', () {
-    // contracts/openapi.yaml: number, minimum 0.5, maximum 72.
-    final half = ScheduledRideRules.fromJson({'driverLateCancelHours': 1.5});
-    expect(half.driverLateCancelHours, 1.5);
-    expect(half.driverLateCancel, const Duration(minutes: 90));
-    expect(ScheduledRideRules.fromJson({'driverLateCancelHours': 0.5})
-        .driverLateCancel, const Duration(minutes: 30));
-    expect(ScheduledRideRules.fromJson({'driverLateCancelHours': 2})
-        .driverLateCancel, const Duration(hours: 2));
-  });
+  test(
+    'driver-r3-4: driverLateCancelHours keeps the fraction the contract allows',
+    () {
+      // contracts/openapi.yaml: number, minimum 0.5, maximum 72.
+      final half = ScheduledRideRules.fromJson({'driverLateCancelHours': 1.5});
+      expect(half.driverLateCancelHours, 1.5);
+      expect(half.driverLateCancel, const Duration(minutes: 90));
+      expect(
+        ScheduledRideRules.fromJson({
+          'driverLateCancelHours': 0.5,
+        }).driverLateCancel,
+        const Duration(minutes: 30),
+      );
+      expect(
+        ScheduledRideRules.fromJson({
+          'driverLateCancelHours': 2,
+        }).driverLateCancel,
+        const Duration(hours: 2),
+      );
+    },
+  );
 
   test('driver-34: a failed logout cleanup leaves saving working', () async {
     SharedPreferences.setMockInitialValues({});
@@ -306,8 +392,12 @@ void main() {
     await expectLater(clearLocalUserData(), throwsStateError);
     SharedPreferencesStorePlatform.instance = original;
     // Still signed in ("Could not clear local data"): the next trip saves.
-    await rides.save(const PersistedActiveRide(
-        tripId: 'after-failed-logout', stage: ActiveRideStage.headingToPickup));
+    await rides.save(
+      const PersistedActiveRide(
+        tripId: 'after-failed-logout',
+        stage: ActiveRideStage.headingToPickup,
+      ),
+    );
     expect((await rides.read())?.tripId, 'after-failed-logout');
   });
 }

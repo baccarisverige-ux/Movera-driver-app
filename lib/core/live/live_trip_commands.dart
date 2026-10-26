@@ -54,7 +54,8 @@ class LiveTripCommands {
   String? statusOf(String tripId) => _trips[tripId]?['status'] as String?;
 
   /// The trip's last known version, or null when not known.
-  int? versionOf(String tripId) => (_trips[tripId]?['version'] as num?)?.toInt();
+  int? versionOf(String tripId) =>
+      (_trips[tripId]?['version'] as num?)?.toInt();
 
   /// The trip's newest known projection (the whole answer), or null.
   Map<String, dynamic>? projectionOf(String tripId) {
@@ -176,7 +177,10 @@ class LiveTripCommands {
     if (versionOf(tripId) == null) await _current(tripId);
   }
 
-  Future<Map<String, dynamic>?> _current(String tripId, {bool fresh = false}) async {
+  Future<Map<String, dynamic>?> _current(
+    String tripId, {
+    bool fresh = false,
+  }) async {
     final known = _trips[tripId];
     if (known != null && !fresh) return known;
     try {
@@ -208,7 +212,11 @@ class LiveTripCommands {
       final added = leadsTo.difference(own);
       own.addAll(added);
       try {
-        final answer = await _api.post(path, body: payload, idempotencyKey: key);
+        final answer = await _api.post(
+          path,
+          body: payload,
+          idempotencyKey: key,
+        );
         _keys.remove(signature);
         observe(answer);
         return const LiveTripOutcome.ok();
@@ -220,11 +228,16 @@ class LiveTripCommands {
           // Refused: its echo will not come.
           own.removeAll(added);
         }
-        if (error.code == 'version_mismatch' && projection != null && attempt == 0) {
+        if (error.code == 'version_mismatch' &&
+            projection != null &&
+            attempt == 0) {
           continue;
         }
         DriverLog.warn('trip $command refused: ${error.detail}', name: 'live');
-        return LiveTripOutcome.failed(liveTripErrorMessage(error), error: error);
+        return LiveTripOutcome.failed(
+          liveTripErrorMessage(error),
+          error: error,
+        );
       }
     }
     return _unknown;

@@ -72,7 +72,9 @@ class _RadarHoldOffState extends State<RadarHoldOff>
   bool _fired = false;
 
   void _onStatus(AnimationStatus status) {
-    if (status != AnimationStatus.completed || _fired) { return; }
+    if (status != AnimationStatus.completed || _fired) {
+      return;
+    }
     _fired = true;
     HapticFeedback.heavyImpact();
     widget.onConfirmed();

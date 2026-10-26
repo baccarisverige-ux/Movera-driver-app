@@ -9,8 +9,8 @@ import 'package:movera/core/scheduled/scheduled_clock.dart';
 /// keeps it in memory; a backend would own the real count.
 class DrivingTimeClock {
   DrivingTimeClock({DateTime Function()? now, DrivingRestRule? rule})
-      : _now = now ?? (() => ScheduledClock.realNow()),
-        _rule = rule;
+    : _now = now ?? (() => ScheduledClock.realNow()),
+      _rule = rule;
 
   static final DrivingTimeClock instance = DrivingTimeClock();
 
@@ -37,7 +37,9 @@ class DrivingTimeClock {
   }
 
   void start() {
-    if (_since != null) { return; }
+    if (_since != null) {
+      return;
+    }
     final now = _now();
     _settleRest(now);
     _offSince = null;
@@ -46,7 +48,9 @@ class DrivingTimeClock {
 
   void stop() {
     final since = _since;
-    if (since == null) { return; }
+    if (since == null) {
+      return;
+    }
     final now = _now();
     _banked += now.difference(since);
     _since = null;
@@ -75,7 +79,9 @@ class DrivingTimeClock {
   Duration get worked {
     final now = _now();
     final since = _since;
-    if (since != null) { return _banked + now.difference(since); }
+    if (since != null) {
+      return _banked + now.difference(since);
+    }
     _settleRest(now);
     return _banked;
   }
@@ -90,7 +96,9 @@ class DrivingTimeClock {
   /// at the limit (finishing a trip), the rest starts when they stop.
   DateTime? get restUntil {
     final rule = this.rule;
-    if (!rule.on || !rule.blockAtLimit || worked < workLimit) { return null; }
+    if (!rule.on || !rule.blockAtLimit || worked < workLimit) {
+      return null;
+    }
     final now = _now();
     final until = (_since == null ? _offSince ?? now : now).add(restLength);
     return now.isBefore(until) ? until : null;
@@ -99,7 +107,9 @@ class DrivingTimeClock {
   /// 0..1 of the work limit already used.
   double get usedFraction {
     final limit = workLimit.inSeconds;
-    if (limit <= 0) { return 1; }
+    if (limit <= 0) {
+      return 1;
+    }
     return (worked.inSeconds / limit).clamp(0.0, 1.0);
   }
 

@@ -57,7 +57,10 @@ class _Dispatch implements DispatchRepository {
   /// Contract `offer_withdrawn`: first the reason, then the list without it.
   void withdraw(String id, OfferGoneReason reason) {
     _withdrawals.add(OfferWithdrawal(offerId: id, reason: reason));
-    publish([for (final offer in offers) if (offer.id != id) offer]);
+    publish([
+      for (final offer in offers)
+        if (offer.id != id) offer,
+    ]);
   }
 
   @override
@@ -105,8 +108,10 @@ Future<void> _frames(WidgetTester tester, Duration total) async {
 /// The Home radar orb (not an Exclusive or reservation orb).
 MoveraRadarOrb _orb(WidgetTester tester) => tester
     .widgetList<MoveraRadarOrb>(find.byType(MoveraRadarOrb))
-    .where((orb) =>
-        orb.touchKey == const ValueKey<String>('trip-radar-touch-target'))
+    .where(
+      (orb) =>
+          orb.touchKey == const ValueKey<String>('trip-radar-touch-target'),
+    )
     .single;
 
 const _card = ValueKey<String>('radar-offer-card-waiting');
@@ -179,7 +184,9 @@ void main() {
     // unless Home thinks Radar trips are waiting.
     await _frames(tester, const Duration(seconds: 32));
     expect(
-      find.byKey(const ValueKey<String>('exclusive-offer-card-home-direct-expanded')),
+      find.byKey(
+        const ValueKey<String>('exclusive-offer-card-home-direct-expanded'),
+      ),
       findsOneWidget,
     );
     await tester.pumpWidget(const SizedBox());

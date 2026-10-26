@@ -100,46 +100,52 @@ void main() {
       expect(saved, contains('"completedAt":"2026-10-25T00:30:00.000Z"'));
     });
 
-    test('a journal saved in UTC replays at local time; old ones still do',
-        () async {
-      String journal(String id, String at) => jsonEncode({
-        'schemaVersion': 2,
-        'tripId': id,
-        'status': 'completed',
-        'authoritative': false,
-        'completedAt': at,
-        'record': {
+    test(
+      'a journal saved in UTC replays at local time; old ones still do',
+      () async {
+        String journal(String id, String at) => jsonEncode({
+          'schemaVersion': 2,
           'tripId': id,
-          'riderName': 'R',
-          'fare': '10 kr',
-          'service': 's',
-          'pickup': 'p',
-          'dropoff': 'd',
-        },
-      });
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        CompletionJournal.key,
-        journal('new', '2026-10-25T00:30:00.000Z'),
-      );
-      await CompletionJournal(active: PrefsActiveRideRepository()).reconcile();
-      await prefs.setString(
-        CompletionJournal.key,
-        journal('old', '2026-10-01T10:00:00.000'),
-      );
-      await CompletionJournal(active: PrefsActiveRideRepository()).reconcile();
-      final rows = {
-        for (final row in await PrefsTripHistoryRepository().list())
-          row.tripId: row,
-      };
-      expect(rows['new']!.completedAt!.isAtSameMomentAs(cest), isTrue);
-      expect(rows['new']!.completedAt!.isUtc, isFalse);
-      expect(
-        rows['new']!.whenLabel,
-        '${cest.day}/${cest.month}/${cest.year}, ${clockLabel(cest)}',
-      );
-      expect(rows['old']!.completedAt, DateTime(2026, 10, 1, 10));
-    });
+          'status': 'completed',
+          'authoritative': false,
+          'completedAt': at,
+          'record': {
+            'tripId': id,
+            'riderName': 'R',
+            'fare': '10 kr',
+            'service': 's',
+            'pickup': 'p',
+            'dropoff': 'd',
+          },
+        });
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          CompletionJournal.key,
+          journal('new', '2026-10-25T00:30:00.000Z'),
+        );
+        await CompletionJournal(
+          active: PrefsActiveRideRepository(),
+        ).reconcile();
+        await prefs.setString(
+          CompletionJournal.key,
+          journal('old', '2026-10-01T10:00:00.000'),
+        );
+        await CompletionJournal(
+          active: PrefsActiveRideRepository(),
+        ).reconcile();
+        final rows = {
+          for (final row in await PrefsTripHistoryRepository().list())
+            row.tripId: row,
+        };
+        expect(rows['new']!.completedAt!.isAtSameMomentAs(cest), isTrue);
+        expect(rows['new']!.completedAt!.isUtc, isFalse);
+        expect(
+          rows['new']!.whenLabel,
+          '${cest.day}/${cest.month}/${cest.year}, ${clockLabel(cest)}',
+        );
+        expect(rows['old']!.completedAt, DateTime(2026, 10, 1, 10));
+      },
+    );
 
     test('Ride check', () {
       final record = RideCheckRecord(
@@ -149,14 +155,22 @@ void main() {
         reason: 'Long stop',
         openedAt: cest,
         answers: [
-          RideCheckAnswer(question: RideCheckAnswer.first, answer: 'OK', at: cest),
+          RideCheckAnswer(
+            question: RideCheckAnswer.first,
+            answer: 'OK',
+            at: cest,
+          ),
         ],
         answeredAt: cest,
       );
       final json = jsonDecode(jsonEncode(record.toJson())) as Map;
       expect(json['openedAt'], '2026-10-25T00:30:00.000Z');
       final back = RideCheckRecord.fromJson(json)!;
-      for (final at in [back.openedAt, back.answeredAt!, back.answers.single.at]) {
+      for (final at in [
+        back.openedAt,
+        back.answeredAt!,
+        back.answers.single.at,
+      ]) {
         expect(at.isAtSameMomentAs(cest) && !at.isUtc, isTrue);
       }
       // A record saved by an older app (local time, no offset).

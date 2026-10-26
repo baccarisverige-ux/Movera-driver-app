@@ -31,7 +31,8 @@ class _PinVerificationState extends State<PinVerification> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: tr.back, 
+        leading: IconButton(
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
@@ -71,9 +72,7 @@ class _PinVerificationState extends State<PinVerification> {
                 final messenger = ScaffoldMessenger.of(context);
                 if (!popOwned(context)) return;
                 messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(tr.pinNotConnected),
-                  ),
+                  SnackBar(content: Text(tr.pinNotConnected)),
                 );
               },
               style: FilledButton.styleFrom(

@@ -95,9 +95,9 @@ Future<void> _pumpHome(WidgetTester tester, {bool reduceMotion = false}) async {
         useInheritedMediaQuery: true,
         builder: (_, __) => MaterialApp(
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              disableAnimations: reduceMotion,
-            ),
+            data: MediaQuery.of(
+              context,
+            ).copyWith(disableAnimations: reduceMotion),
             child: child!,
           ),
           home: DriverHome(
@@ -171,9 +171,10 @@ Iterable<Color> _colours(WidgetTester tester, Finder root) sync* {
     yield* d.gradient?.colors ?? const <Color>[];
   }
 
-  for (final e in find
-      .descendant(of: root, matching: find.byWidgetPredicate((_) => true))
-      .evaluate()) {
+  for (final e
+      in find
+          .descendant(of: root, matching: find.byWidgetPredicate((_) => true))
+          .evaluate()) {
     final w = e.widget;
     if (w is Container) yield* ofDecoration(w.decoration);
     if (w is DecoratedBox) yield* ofDecoration(w.decoration);
@@ -185,7 +186,8 @@ Iterable<Color> _colours(WidgetTester tester, Finder root) sync* {
   }
 }
 
-bool _isBlue(Color c) => (c.toARGB32() & 0xFFFFFF) == (_blue.toARGB32() & 0xFFFFFF);
+bool _isBlue(Color c) =>
+    (c.toARGB32() & 0xFFFFFF) == (_blue.toARGB32() & 0xFFFFFF);
 
 Future<void> _end(WidgetTester tester) async {
   tester.takeException();
@@ -207,9 +209,10 @@ void main() {
     Set<String> pins() => find.byType(CustomGoogleMap).evaluate().isEmpty
         ? const <String>{}
         : {
-            for (final m in tester
-                .widget<CustomGoogleMap>(find.byType(CustomGoogleMap))
-                .markers!)
+            for (final m
+                in tester
+                    .widget<CustomGoogleMap>(find.byType(CustomGoogleMap))
+                    .markers!)
               if (m.markerId.value.startsWith('radar_')) m.markerId.value,
           };
     // Rising: no route yet.
@@ -222,10 +225,8 @@ void main() {
     }
     await tester.pump(const Duration(milliseconds: 400));
     final map = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
-    String? chip(String id) => map.markers!
-        .firstWhere((m) => m.markerId.value == id)
-        .infoWindow
-        .title;
+    String? chip(String id) =>
+        map.markers!.firstWhere((m) => m.markerId.value == id).infoWindow.title;
     expect(chip('radar_pickup'), '3 min');
     expect(chip('radar_dropoff'), '14 min');
     await _end(tester);
@@ -266,10 +267,12 @@ void main() {
 
     // The details: fare, trip minutes, pickup minutes, trip distance.
     final fare = tester
-        .widget<RichText>(find.descendant(
-          of: find.byKey(const ValueKey<String>('exclusive-fare')),
-          matching: find.byType(RichText),
-        ))
+        .widget<RichText>(
+          find.descendant(
+            of: find.byKey(const ValueKey<String>('exclusive-fare')),
+            matching: find.byType(RichText),
+          ),
+        )
         .text
         .toPlainText();
     // 104,80 kr and its pickup pay: one total.
@@ -313,8 +316,10 @@ void main() {
     expect(text('MATCH').style!.color, MoveraRadarOrb.offerInk);
     expect(find.text('Tap here'), findsOneWidget);
     // No icon inside.
-    expect(find.byKey(const ValueKey<String>('radar-exclusive-icon')),
-        findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('radar-exclusive-icon')),
+      findsNothing,
+    );
 
     // The thin dark hairline empties over the offer's lifetime.
     ExclusiveTimeRingPainter ring() =>
@@ -349,8 +354,10 @@ void main() {
     expect(parts.first.style!.color, Colors.white);
     expect(parts.first.style!.fontWeight, FontWeight.w700);
     expect(parts.last.style!.color, const Color(0xFF9FB0BD));
-    expect(find.byKey(const ValueKey<String>('island-exclusive-icon')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('island-exclusive-icon')),
+      findsOneWidget,
+    );
     await _end(tester);
   });
 

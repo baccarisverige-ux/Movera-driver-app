@@ -19,8 +19,14 @@ void main() {
 
   test('IBAN uses mod 97 and Swedish length; BIC is 8 or 11', () {
     expect(BankAccountRules.validIban('SE45 5000 0000 0583 9825 7466'), isTrue);
-    expect(BankAccountRules.bankForIban('SE45 5000 0000 0583 9825 7466'), 'SEB');
-    expect(BankAccountRules.validIban('SE46 5000 0000 0583 9825 7466'), isFalse);
+    expect(
+      BankAccountRules.bankForIban('SE45 5000 0000 0583 9825 7466'),
+      'SEB',
+    );
+    expect(
+      BankAccountRules.validIban('SE46 5000 0000 0583 9825 7466'),
+      isFalse,
+    );
     expect(BankAccountRules.validIban('SE45 5000 0000 0583 9825'), isFalse);
     expect(BankAccountRules.validIban('DE89 3704 0044 0532 0130 00'), isTrue);
     expect(BankAccountRules.validBic('ESSESESS'), isTrue);

@@ -455,9 +455,15 @@ class PersistedActiveRide {
       tripId: tripId,
       stage: stage.first,
       nextTripId: json['nextTripId'] as String?,
-      arrivedAt: DateTime.tryParse(json['arrivedAt'] as String? ?? '')?.toLocal(),
-      acceptedAt: DateTime.tryParse(json['acceptedAt'] as String? ?? '')?.toLocal(),
-      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? '')?.toLocal(),
+      arrivedAt: DateTime.tryParse(
+        json['arrivedAt'] as String? ?? '',
+      )?.toLocal(),
+      acceptedAt: DateTime.tryParse(
+        json['acceptedAt'] as String? ?? '',
+      )?.toLocal(),
+      startedAt: DateTime.tryParse(
+        json['startedAt'] as String? ?? '',
+      )?.toLocal(),
       savedAt: DateTime.tryParse(json['savedAt'] as String? ?? '')?.toLocal(),
       riderName: json['riderName'] as String?,
       riderRating: (json['riderRating'] as num?)?.toDouble(),
@@ -467,7 +473,9 @@ class PersistedActiveRide {
       cashToCollect: json['cashToCollect'] is String
           ? json['cashToCollect'] as String
           : null,
-      riderFare: json['riderFare'] is String ? json['riderFare'] as String : null,
+      riderFare: json['riderFare'] is String
+          ? json['riderFare'] as String
+          : null,
       driverBonus: _money(json['driverBonus']),
       category: json['category'] as String?,
       matchedVia: json['matchedVia'] as String?,
@@ -507,9 +515,9 @@ class PersistedActiveRide {
               (destination['longitude'] as num).toDouble(),
             )
           : null,
-      scheduledPickupAt:
-          DateTime.tryParse(json['scheduledPickupAt'] as String? ?? '')
-              ?.toLocal(),
+      scheduledPickupAt: DateTime.tryParse(
+        json['scheduledPickupAt'] as String? ?? '',
+      )?.toLocal(),
       scheduledRideId: json['scheduledRideId'] is String
           ? json['scheduledRideId'] as String
           : null,

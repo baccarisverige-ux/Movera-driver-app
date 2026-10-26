@@ -43,25 +43,29 @@ Future<void> _unmount(WidgetTester tester) async {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('driver-31 the saved choice is restored into the offer filter',
-      () async {
-    await SettingsRepository().save('categories', {'selected': _saved});
-    expect(DriverCategoryChoice.off.value, isEmpty);
+  test(
+    'driver-31 the saved choice is restored into the offer filter',
+    () async {
+      await SettingsRepository().save('categories', {'selected': _saved});
+      expect(DriverCategoryChoice.off.value, isEmpty);
 
-    await DriverCategoryChoice.restore();
+      await DriverCategoryChoice.restore();
 
-    expect(DriverCategoryChoice.off.value, {'Comfort', 'Movera Pet'});
-    expect(DriverCategoryChoice.takes('Comfort'), isFalse);
-    expect(DriverCategoryChoice.takes('Movera Pet'), isFalse);
-    expect(DriverCategoryChoice.takes('Premium'), isTrue);
-  });
+      expect(DriverCategoryChoice.off.value, {'Comfort', 'Movera Pet'});
+      expect(DriverCategoryChoice.takes('Comfort'), isFalse);
+      expect(DriverCategoryChoice.takes('Movera Pet'), isFalse);
+      expect(DriverCategoryChoice.takes('Premium'), isTrue);
+    },
+  );
 
-  test('driver-31 a missing or unreadable choice keeps every category on',
-      () async {
-    await SettingsRepository().save('categories', {'selected': 'bad'});
-    await DriverCategoryChoice.restore();
-    expect(DriverCategoryChoice.off.value, isEmpty);
-  });
+  test(
+    'driver-31 a missing or unreadable choice keeps every category on',
+    () async {
+      await SettingsRepository().save('categories', {'selected': 'bad'});
+      await DriverCategoryChoice.restore();
+      expect(DriverCategoryChoice.off.value, isEmpty);
+    },
+  );
 
   testWidgets('driver-78 a cold start applies the saved choice to offers', (
     tester,
@@ -76,8 +80,9 @@ void main() {
     await _unmount(tester);
   });
 
-  testWidgets('driver-78 Ride preferences shows the same choice it restored',
-      (tester) async {
+  testWidgets('driver-78 Ride preferences shows the same choice it restored', (
+    tester,
+  ) async {
     await tester.runAsync(
       () => SettingsRepository().save('categories', {'selected': _saved}),
     );

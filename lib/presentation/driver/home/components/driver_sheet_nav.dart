@@ -67,78 +67,78 @@ class DriverSheetNav {
             child: Stack(
               children: [
                 Padding(
-              padding: EdgeInsets.fromLTRB(
-                10,
-                15,
-                10,
-                safeBottom > 0 ? safeBottom + 4 : 9,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        _dockAction(
-                          asset: AppAssets.navMenuBranch,
-                          tooltip: tr.ridePreferences,
-                          onTap: () => _openRidePreferences(context),
-                          iconColor: iconTint,
-                        ),
-                        _dockAction(
-                          asset: AppAssets.navCreditCard,
-                          tooltip: tr.wallet,
-                          onTap: () {
-                            pushSingle(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const WalletScreen(),
-                              ),
-                            );
-                          },
-                          iconColor: iconTint,
-                        ),
-                      ],
-                    ),
+                  padding: EdgeInsets.fromLTRB(
+                    10,
+                    15,
+                    10,
+                    safeBottom > 0 ? safeBottom + 4 : 9,
                   ),
-                  const SizedBox(width: 126),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        _dockAction(
-                          asset: AppAssets.navMessagesSquare,
-                          tooltip: tr.inbox,
-                          onTap: () {
-                            pushSingle(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const SupportInboxScreen(),
-                              ),
-                            );
-                          },
-                          iconColor: iconTint,
-                        ),
-                        AnimatedBuilder(
-                          animation: goOnlinePulseController,
-                          builder: (context, child) {
-                            return _dockAction(
-                              customIcon: _ScheduledRideIcon(
-                                pulse: goOnlinePulseController.value,
-                                animateClock: hasScheduledRideOffers,
-                                tint: iconTint,
-                              ),
-                              tooltip: tr.scheduled,
-                              onTap: onOpenScheduledRides,
-                              pulse: goOnlinePulseController.value,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _dockAction(
+                              asset: AppAssets.navMenuBranch,
+                              tooltip: tr.ridePreferences,
+                              onTap: () => _openRidePreferences(context),
                               iconColor: iconTint,
-                              animateAlertIndicator: false,
-                            );
-                          },
+                            ),
+                            _dockAction(
+                              asset: AppAssets.navCreditCard,
+                              tooltip: tr.wallet,
+                              onTap: () {
+                                pushSingle(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const WalletScreen(),
+                                  ),
+                                );
+                              },
+                              iconColor: iconTint,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 126),
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _dockAction(
+                              asset: AppAssets.navMessagesSquare,
+                              tooltip: tr.inbox,
+                              onTap: () {
+                                pushSingle(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const SupportInboxScreen(),
+                                  ),
+                                );
+                              },
+                              iconColor: iconTint,
+                            ),
+                            AnimatedBuilder(
+                              animation: goOnlinePulseController,
+                              builder: (context, child) {
+                                return _dockAction(
+                                  customIcon: _ScheduledRideIcon(
+                                    pulse: goOnlinePulseController.value,
+                                    animateClock: hasScheduledRideOffers,
+                                    tint: iconTint,
+                                  ),
+                                  tooltip: tr.scheduled,
+                                  onTap: onOpenScheduledRides,
+                                  pulse: goOnlinePulseController.value,
+                                  iconColor: iconTint,
+                                  animateAlertIndicator: false,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
                 ),
               ],
             ),
@@ -152,8 +152,9 @@ class DriverSheetNav {
             child: IgnorePointer(
               child: Container(
                 height: 1,
-                color: const Color(0xFFEEF0F2)
-                    .withValues(alpha: topRuleOpacity.clamp(0.0, 1.0)),
+                color: const Color(
+                  0xFFEEF0F2,
+                ).withValues(alpha: topRuleOpacity.clamp(0.0, 1.0)),
               ),
             ),
           ),
@@ -177,14 +178,14 @@ class DriverSheetNav {
           Positioned.fill(
             child: IgnorePointer(
               child: Opacity(
-              opacity: edgeOpacity.clamp(0.0, 1.0),
-              child: RadarEdgeDash(
-                notchWidth: 126,
-                notchDepth: notchDepth,
-                cornerRadius: 24,
-                // R15: grey with or without offers.
-                color: MoveraRadarOrb.offerAccent,
-              ),
+                opacity: edgeOpacity.clamp(0.0, 1.0),
+                child: RadarEdgeDash(
+                  notchWidth: 126,
+                  notchDepth: notchDepth,
+                  cornerRadius: 24,
+                  // R15: grey with or without offers.
+                  color: MoveraRadarOrb.offerAccent,
+                ),
               ),
             ),
           ),
@@ -207,9 +208,7 @@ class DriverSheetNav {
         18,
         MediaQuery.paddingOf(context).bottom + 5,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-      ),
+      decoration: const BoxDecoration(color: Colors.white),
       child: Row(
         children: [
           _sheetQuickAction(
@@ -300,7 +299,8 @@ class DriverSheetNav {
     bool animateAlertIndicator = true,
   }) {
     final resolvedIcon =
-        iconColor ?? (hasAlert ? const Color(0xFF19865C) : const Color(0xFF303A3F));
+        iconColor ??
+        (hasAlert ? const Color(0xFF19865C) : const Color(0xFF303A3F));
     return Expanded(
       child: Tooltip(
         message: tooltip,
@@ -383,8 +383,9 @@ class DriverSheetNav {
     final alertStrength = hasAlert
         ? (animateAlertIndicator ? (0.55 + (pulse * 0.45)) : 1.0)
         : 0.0;
-    final iconColor =
-        hasAlert ? const Color(0xFF16895B) : const Color(0xFF354047);
+    final iconColor = hasAlert
+        ? const Color(0xFF16895B)
+        : const Color(0xFF354047);
 
     return Expanded(
       child: Tooltip(
@@ -394,8 +395,8 @@ class DriverSheetNav {
             color: customIcon != null
                 ? Colors.transparent
                 : hasAlert
-                    ? const Color(0xFFE9F7F1)
-                    : const Color(0xFFF1F3F4),
+                ? const Color(0xFFE9F7F1)
+                : const Color(0xFFF1F3F4),
             shape: const CircleBorder(),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
@@ -521,14 +522,7 @@ class RadarSheetClipper extends CustomClipper<Path> {
       centerX,
       notchDepth,
     );
-    path.cubicTo(
-      centerX + 54,
-      notchDepth,
-      notchRight - 9,
-      0,
-      notchRight,
-      0,
-    );
+    path.cubicTo(centerX + 54, notchDepth, notchRight - 9, 0, notchRight, 0);
     path.lineTo(size.width - radius, 0);
     path.quadraticBezierTo(size.width, 0, size.width, radius);
     path.lineTo(size.width, size.height);

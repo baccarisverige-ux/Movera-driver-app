@@ -25,9 +25,8 @@ String _truncated(String head) =>
 List<String> _capture() {
   final lines = <String>[];
   final previous = DriverLog.sink;
-  DriverLog.sink = (record) => lines.add(
-    '${record.message} ${record.error ?? ''}',
-  );
+  DriverLog.sink = (record) =>
+      lines.add('${record.message} ${record.error ?? ''}');
   addTearDown(() => DriverLog.sink = previous);
   return lines;
 }
@@ -53,64 +52,74 @@ void main() {
     CompletionJournal.resetForTesting();
   });
 
-  test('driver-25 corrupt active-trip snapshot is logged without its text',
-      () async {
-    final lines = _capture();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      PrefsActiveRideRepository.key,
-      _truncated('"tripId":"T-1","stage":"onTrip",'),
-    );
-    final repo = PrefsActiveRideRepository();
-    await expectLater(repo.read(), throwsA(anything));
-    await PrefsActiveRideRepository.settle();
-    await repo.quarantineUnreadable();
-    expect(LocalQuarantine.keys(prefs), hasLength(1));
-    _expectClean(lines);
-  });
+  test(
+    'driver-25 corrupt active-trip snapshot is logged without its text',
+    () async {
+      final lines = _capture();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        PrefsActiveRideRepository.key,
+        _truncated('"tripId":"T-1","stage":"onTrip",'),
+      );
+      final repo = PrefsActiveRideRepository();
+      await expectLater(repo.read(), throwsA(anything));
+      await PrefsActiveRideRepository.settle();
+      await repo.quarantineUnreadable();
+      expect(LocalQuarantine.keys(prefs), hasLength(1));
+      _expectClean(lines);
+    },
+  );
 
-  test('driver-25 corrupt settings section is logged without its text',
-      () async {
-    final lines = _capture();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      '${SettingsRepository.sectionPrefix}contacts',
-      _truncated('"schemaVersion":1,"values":{'),
-    );
-    expect(await SettingsRepository().read('contacts'), isEmpty);
-    expect(LocalQuarantine.keys(prefs), hasLength(1));
-    _expectClean(lines);
-  });
+  test(
+    'driver-25 corrupt settings section is logged without its text',
+    () async {
+      final lines = _capture();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        '${SettingsRepository.sectionPrefix}contacts',
+        _truncated('"schemaVersion":1,"values":{'),
+      );
+      expect(await SettingsRepository().read('contacts'), isEmpty);
+      expect(LocalQuarantine.keys(prefs), hasLength(1));
+      _expectClean(lines);
+    },
+  );
 
-  test('driver-25 corrupt completion journal is logged without its text',
-      () async {
-    final lines = _capture();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      CompletionJournal.key,
-      _truncated('"schemaVersion":2,"tripId":"T-1",'),
-    );
-    expect(
-      await CompletionJournal(active: PrefsActiveRideRepository()).reconcile(),
-      JournalReplayOutcome.quarantinedCorrupt,
-    );
-    _expectClean(lines);
-  });
+  test(
+    'driver-25 corrupt completion journal is logged without its text',
+    () async {
+      final lines = _capture();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        CompletionJournal.key,
+        _truncated('"schemaVersion":2,"tripId":"T-1",'),
+      );
+      expect(
+        await CompletionJournal(
+          active: PrefsActiveRideRepository(),
+        ).reconcile(),
+        JournalReplayOutcome.quarantinedCorrupt,
+      );
+      _expectClean(lines);
+    },
+  );
 
-  test('driver-25 corrupt history and Ride check log are logged without text',
-      () async {
-    final lines = _capture();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      PrefsTripHistoryRepository.key,
-      _truncated('"schemaVersion":1,"rows":[{'),
-    );
-    await prefs.setString(
-      PrefsRideCheckLog.key,
-      _truncated('"schemaVersion":1,"rows":[{'),
-    );
-    expect(await PrefsTripHistoryRepository().list(), isEmpty);
-    expect(await PrefsRideCheckLog().forTrip('T-1'), isEmpty);
-    _expectClean(lines);
-  });
+  test(
+    'driver-25 corrupt history and Ride check log are logged without text',
+    () async {
+      final lines = _capture();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        PrefsTripHistoryRepository.key,
+        _truncated('"schemaVersion":1,"rows":[{'),
+      );
+      await prefs.setString(
+        PrefsRideCheckLog.key,
+        _truncated('"schemaVersion":1,"rows":[{'),
+      );
+      expect(await PrefsTripHistoryRepository().list(), isEmpty);
+      expect(await PrefsRideCheckLog().forTrip('T-1'), isEmpty);
+      _expectClean(lines);
+    },
+  );
 }

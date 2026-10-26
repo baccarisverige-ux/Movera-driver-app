@@ -33,9 +33,10 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
   static const Color _tile = Color(0xFFF4F5F6);
   static const Color _red = Color(0xFFC2453A);
 
-  late final Future<List<RideCheckRecord>> _checks = (widget.load ??
-          PrefsRideCheckLog().forTrip)(widget.tripId)
-      .catchError((Object _) => const <RideCheckRecord>[]);
+  late final Future<List<RideCheckRecord>> _checks =
+      (widget.load ?? PrefsRideCheckLog().forTrip)(
+        widget.tripId,
+      ).catchError((Object _) => const <RideCheckRecord>[]);
 
   static String _time(DateTime at) =>
       '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
@@ -49,9 +50,7 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
       return Column(
         key: const ValueKey('ride-check-history'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final check in checks) _entry(check),
-        ],
+        children: [for (final check in checks) _entry(check)],
       );
     },
   );
@@ -175,7 +174,8 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                       Expanded(
                         child: Text(
                           tr.audioSavedOnlyOnThisPhone(
-                              '${check.audioSeconds! ~/ 60}:${(check.audioSeconds! % 60).toString().padLeft(2, '0')}'),
+                            '${check.audioSeconds! ~/ 60}:${(check.audioSeconds! % 60).toString().padLeft(2, '0')}',
+                          ),
                           style: const TextStyle(color: _muted, fontSize: 12.5),
                         ),
                       ),

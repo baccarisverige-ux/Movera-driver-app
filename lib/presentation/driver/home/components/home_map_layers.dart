@@ -9,7 +9,8 @@ Marker destinationModeMarker(LatLng position, String address) => Marker(
   markerId: const MarkerId(destinationModeMarkerId),
   position: position,
   infoWindow: InfoWindow(title: address),
-  icon: MoveraDestinationMarker.cachedPin ??
+  icon:
+      MoveraDestinationMarker.cachedPin ??
       BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
   anchor: MoveraDestinationMarker.pinAnchor,
   zIndexInt: 6,

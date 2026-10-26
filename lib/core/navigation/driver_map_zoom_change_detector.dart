@@ -4,8 +4,7 @@
 /// only when the viewport already belongs to the driver. Native Google Maps
 /// +/- controls do not generate a pinch or mouse-wheel event in Flutter.
 class DriverMapZoomChangeDetector {
-  DriverMapZoomChangeDetector({double? initialZoom})
-      : _lastZoom = initialZoom;
+  DriverMapZoomChangeDetector({double? initialZoom}) : _lastZoom = initialZoom;
 
   // Baseline of the last *significant* manual zoom, not the last SDK frame.
   // Maps can emit many tiny zoom steps (<0.075) during a slow pinch; replacing

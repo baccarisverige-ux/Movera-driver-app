@@ -210,12 +210,15 @@ class InMemoryWaybillRepository implements WaybillRepository {
   static final InMemoryWaybillRepository instance =
       InMemoryWaybillRepository._();
 
-  final ValueNotifier<WaybillRecord?> _current =
-      ValueNotifier<WaybillRecord?>(null);
-  final ValueNotifier<WaybillRecord?> _next =
-      ValueNotifier<WaybillRecord?>(null);
-  final ValueNotifier<WaybillRecord?> _last =
-      ValueNotifier<WaybillRecord?>(null);
+  final ValueNotifier<WaybillRecord?> _current = ValueNotifier<WaybillRecord?>(
+    null,
+  );
+  final ValueNotifier<WaybillRecord?> _next = ValueNotifier<WaybillRecord?>(
+    null,
+  );
+  final ValueNotifier<WaybillRecord?> _last = ValueNotifier<WaybillRecord?>(
+    null,
+  );
 
   @override
   WaybillRecord? get current => _current.value;
@@ -252,7 +255,9 @@ class InMemoryWaybillRepository implements WaybillRepository {
   @override
   void completeCurrent() {
     final active = current;
-    if (active == null) { return; }
+    if (active == null) {
+      return;
+    }
 
     _last.value = active.copyWith(
       statusLabel: WaybillRecord.completed,
@@ -399,10 +404,11 @@ class WaybillPayment {
     if (money == null) return null;
     final fareOre = money.minorUnits;
     final currency = money.currency;
-    final bonusOre = (bonus == null
-            ? 0
-            : Money.parseLabel(bonus, currency: currency)?.minorUnits ?? 0)
-        .clamp(0, fareOre);
+    final bonusOre =
+        (bonus == null
+                ? 0
+                : Money.parseLabel(bonus, currency: currency)?.minorUnits ?? 0)
+            .clamp(0, fareOre);
     final wait = waitingFee == null ? null : _money(waitingFee);
     final waitOre = wait?.currency == currency ? wait!.minorUnits : 0;
     return WaybillPayment._(

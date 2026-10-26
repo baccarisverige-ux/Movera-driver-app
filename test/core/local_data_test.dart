@@ -12,11 +12,15 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'movera_driver_settings_section_language':
           '{"schemaVersion":1,"values":{"code":"en"}}',
-      'movera_driver_settings_section_contacts': '{"schemaVersion":1,"values":{}}',
+      'movera_driver_settings_section_contacts':
+          '{"schemaVersion":1,"values":{}}',
     });
     await clearLocalUserData();
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('movera_driver_settings_section_language'), isNotNull);
+    expect(
+      prefs.getString('movera_driver_settings_section_language'),
+      isNotNull,
+    );
     expect(prefs.getString('movera_driver_settings_section_contacts'), isNull);
   });
 

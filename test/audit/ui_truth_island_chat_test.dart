@@ -10,15 +10,20 @@ import 'package:movera/presentation/common/chat/chat.dart';
 /// Opens Chat for [tripId] on its own route; returns the navigator.
 Future<NavigatorState> _openChat(WidgetTester tester, String tripId) async {
   final navigator = GlobalKey<NavigatorState>();
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(
-      navigatorKey: navigator,
-      home: const Scaffold(body: Text('Trip')),
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(
+        navigatorKey: navigator,
+        home: const Scaffold(body: Text('Trip')),
+      ),
     ),
-  ));
-  navigator.currentState!.push(MaterialPageRoute<void>(
-      builder: (_) => Chat(riderDisplayName: 'Maya', tripId: tripId)));
+  );
+  navigator.currentState!.push(
+    MaterialPageRoute<void>(
+      builder: (_) => Chat(riderDisplayName: 'Maya', tripId: tripId),
+    ),
+  );
   await tester.pumpAndSettle();
   return navigator.currentState!;
 }
@@ -49,14 +54,20 @@ void main() {
     await _save(tester, 'At the north entrance');
     navigator.pop();
     await tester.pumpAndSettle();
-    navigator.push(MaterialPageRoute<void>(
-        builder: (_) => const Chat(riderDisplayName: 'Maya', tripId: 'trip-1')));
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Chat(riderDisplayName: 'Maya', tripId: 'trip-1'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('At the north entrance'), findsOneWidget);
     navigator.pop();
     await tester.pumpAndSettle();
-    navigator.push(MaterialPageRoute<void>(
-        builder: (_) => const Chat(riderDisplayName: 'Sara', tripId: 'trip-2')));
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Chat(riderDisplayName: 'Sara', tripId: 'trip-2'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('At the north entrance'), findsNothing);
   });
@@ -65,16 +76,24 @@ void main() {
       "no rider-style avatar", (tester) async {
     await _openChat(tester, 'trip-3');
     await _save(tester, "I'm outside");
-    final bubble = tester.getRect(find.ancestor(
-        of: find.text("I'm outside"), matching: find.byType(Container)).first);
+    final bubble = tester.getRect(
+      find
+          .ancestor(
+            of: find.text("I'm outside"),
+            matching: find.byType(Container),
+          )
+          .first,
+    );
     expect(bubble.center.dx, greaterThan(375 / 2), reason: 'right-aligned');
     expect(
       find.descendant(
         of: find.byType(SenderMessage),
-        matching: find.byWidgetPredicate((w) =>
-            w is Container &&
-            w.decoration is BoxDecoration &&
-            (w.decoration! as BoxDecoration).image != null),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).image != null,
+        ),
       ),
       findsNothing,
       reason: 'no stock avatar next to the driver\'s message',

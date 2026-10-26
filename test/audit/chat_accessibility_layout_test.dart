@@ -22,8 +22,9 @@ Future<void> _chat(
       designSize: const Size(375, 812),
       builder: (_, __) => MaterialApp(
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(scale)),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scale)),
           child: child!,
         ),
         home: const Chat(riderDisplayName: 'Maya'),

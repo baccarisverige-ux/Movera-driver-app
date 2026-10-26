@@ -5,14 +5,14 @@ import 'package:movera/core/realtime/driver_realtime.dart';
 // crash of the stream that reads it.
 void main() {
   Map<String, dynamic> envelope(String kind, {int sequence = 1}) => {
-        'eventId': 'e$sequence',
-        'tripId': 'T1',
-        'sequence': sequence,
-        'version': sequence,
-        'kind': kind,
-        'occurredAt': '2026-10-19T08:30:00Z',
-        'serverTime': '2026-10-19T08:30:00Z',
-      };
+    'eventId': 'e$sequence',
+    'tripId': 'T1',
+    'sequence': sequence,
+    'version': sequence,
+    'kind': kind,
+    'occurredAt': '2026-10-19T08:30:00Z',
+    'serverTime': '2026-10-19T08:30:00Z',
+  };
 
   test('an unknown kind is skipped, not thrown', () {
     expect(DriverRealtimeEvent.tryParse(envelope('tip_added')), isNull);
@@ -24,8 +24,10 @@ void main() {
     expect(DriverRealtimeEvent.tryParse(null), isNull);
     expect(DriverRealtimeEvent.tryParse('trip_projection'), isNull);
     expect(
-      DriverRealtimeEvent.tryParse(
-          {...envelope('trip_projection'), 'occurredAt': 'yesterday'}),
+      DriverRealtimeEvent.tryParse({
+        ...envelope('trip_projection'),
+        'occurredAt': 'yesterday',
+      }),
       isNull,
     );
     expect(
@@ -40,10 +42,13 @@ void main() {
     expect(first, isNotNull);
     expect(gate.evaluate(first!), DriverRealtimeDisposition.accepted);
     // An unknown kind in between is dropped; the next known one goes on.
-    expect(DriverRealtimeEvent.tryParse(envelope('surge_changed', sequence: 2)),
-        isNull);
-    final third =
-        DriverRealtimeEvent.tryParse(envelope('driver_arrived', sequence: 3));
+    expect(
+      DriverRealtimeEvent.tryParse(envelope('surge_changed', sequence: 2)),
+      isNull,
+    );
+    final third = DriverRealtimeEvent.tryParse(
+      envelope('driver_arrived', sequence: 3),
+    );
     expect(gate.evaluate(third!), DriverRealtimeDisposition.acceptedWithGap);
   });
 }

@@ -31,112 +31,124 @@ void main() {
       ? 'Set MOVERA_E2E_BASE and MOVERA_E2E_STATE to run against a server'
       : null;
 
-  test('a driver takes real rides through the server', () async {
-    final client = http.Client();
-    final tokens = MemoryTokenStore();
-    final api = ApiClient(client: client, baseUri: Uri.parse(base!), tokens: tokens);
-    final auth = AuthRepository(api: api, tokens: tokens);
-    final challenge = await auth.requestCode(phone);
-    await auth.verify(challenge.phone, challenge.sessionId, '1234');
+  test(
+    'a driver takes real rides through the server',
+    () async {
+      final client = http.Client();
+      final tokens = MemoryTokenStore();
+      final api = ApiClient(
+        client: client,
+        baseUri: Uri.parse(base!),
+        tokens: tokens,
+      );
+      final auth = AuthRepository(api: api, tokens: tokens);
+      final challenge = await auth.requestCode(phone);
+      await auth.verify(challenge.phone, challenge.sessionId, '1234');
 
-    // Norrmalm (zone Z001), near where the rider script books.
-    final gps = _MovableLocation(const GeoPoint(59.3326, 18.0649));
-    final live = LiveDriverServices(
-      client: client,
-      origin: Uri.parse(base),
-      tokens: tokens,
-      api: api,
-      location: gps,
-      locationEvery: const Duration(seconds: 5),
-    );
-    void mark(String name, [String text = '']) =>
-        File('$state/$name').writeAsStringSync(text);
+      // Norrmalm (zone Z001), near where the rider script books.
+      final gps = _MovableLocation(const GeoPoint(59.3326, 18.0649));
+      final live = LiveDriverServices(
+        client: client,
+        origin: Uri.parse(base),
+        tokens: tokens,
+        api: api,
+        location: gps,
+        locationEvery: const Duration(seconds: 5),
+      );
+      void mark(String name, [String text = '']) =>
+          File('$state/$name').writeAsStringSync(text);
 
-    expect(await live.presence.goOnline(), isNull, reason: 'online');
-    expect(live.presence.serverOnline, isTrue);
-    await _until(() => live.dispatch.feedLive, 'offer feed open');
-    mark('online');
+      expect(await live.presence.goOnline(), isNull, reason: 'online');
+      expect(live.presence.serverOnline, isTrue);
+      await _until(() => live.dispatch.feedLive, 'offer feed open');
+      mark('online');
 
-    Future<RideOffer> nextOffer() async {
-      final offers = live.dispatch.watchNearbyOffers();
-      final found = await offers
-          .firstWhere((list) => list.isNotEmpty)
-          .timeout(const Duration(seconds: 120));
-      return found.first;
-    }
+      Future<RideOffer> nextOffer() async {
+        final offers = live.dispatch.watchNearbyOffers();
+        final found = await offers
+            .firstWhere((list) => list.isNotEmpty)
+            .timeout(const Duration(seconds: 120));
+        return found.first;
+      }
 
-    // ---- Ride 1: pickup to drop-off.
-    var offer = await nextOffer();
-    var tripId = offer.tripId!;
-    expect((await live.dispatch.claimOffer(offer.id)).isSuccess, isTrue);
-    expect(live.trips.statusOf(tripId), 'accepted');
-    mark('accepted-1', tripId);
-    var realtime = live.realtime();
-    var events = <DriverRealtimeEvent>[];
-    var sub = realtime.subscribe(tripId).listen(events.add);
+      // ---- Ride 1: pickup to drop-off.
+      var offer = await nextOffer();
+      var tripId = offer.tripId!;
+      expect((await live.dispatch.claimOffer(offer.id)).isSuccess, isTrue);
+      expect(live.trips.statusOf(tripId), 'accepted');
+      mark('accepted-1', tripId);
+      var realtime = live.realtime();
+      var events = <DriverRealtimeEvent>[];
+      var sub = realtime.subscribe(tripId).listen(events.add);
 
-    expect((await live.trips.begin(tripId)).ok, isTrue);
-    expect(live.trips.statusOf(tripId), 'driver_to_pickup');
-    // Far from the pickup: the server says so.
-    gps.point = const GeoPoint(59.2000, 17.9000);
-    await live.reporter.sendNow();
-    final early = await live.trips.arrive(tripId);
-    expect(early.ok, isFalse);
-    expect((early.error! as ApiError).detail, 'not_at_pickup');
-    // At the pickup.
-    gps.point = offer.pickupPosition;
-    expect(await live.reporter.sendNow(), isTrue);
-    expect((await live.trips.arrive(tripId)).ok, isTrue);
-    expect((await live.trips.start(tripId)).ok, isTrue);
-    expect(live.trips.statusOf(tripId), 'in_trip');
-    gps.point = offer.dropoffPosition;
-    await live.reporter.sendNow();
-    expect((await live.trips.complete(tripId)).ok, isTrue);
-    expect(live.trips.statusOf(tripId), 'completed');
-    await Future<void>.delayed(const Duration(seconds: 2));
-    // The stream replayed the trip and its own steps were not echoed.
-    expect(events.where((e) => e.status == TripStatus.completed), isEmpty);
-    expect(events.any((e) => e.status == TripStatus.accepted), isTrue);
-    await sub.cancel();
-    realtime.dispose();
-    mark('done-1', tripId);
+      expect((await live.trips.begin(tripId)).ok, isTrue);
+      expect(live.trips.statusOf(tripId), 'driver_to_pickup');
+      // Far from the pickup: the server says so.
+      gps.point = const GeoPoint(59.2000, 17.9000);
+      await live.reporter.sendNow();
+      final early = await live.trips.arrive(tripId);
+      expect(early.ok, isFalse);
+      expect((early.error! as ApiError).detail, 'not_at_pickup');
+      // At the pickup.
+      gps.point = offer.pickupPosition;
+      expect(await live.reporter.sendNow(), isTrue);
+      expect((await live.trips.arrive(tripId)).ok, isTrue);
+      expect((await live.trips.start(tripId)).ok, isTrue);
+      expect(live.trips.statusOf(tripId), 'in_trip');
+      gps.point = offer.dropoffPosition;
+      await live.reporter.sendNow();
+      expect((await live.trips.complete(tripId)).ok, isTrue);
+      expect(live.trips.statusOf(tripId), 'completed');
+      await Future<void>.delayed(const Duration(seconds: 2));
+      // The stream replayed the trip and its own steps were not echoed.
+      expect(events.where((e) => e.status == TripStatus.completed), isEmpty);
+      expect(events.any((e) => e.status == TripStatus.accepted), isTrue);
+      await sub.cancel();
+      realtime.dispose();
+      mark('done-1', tripId);
 
-    // ---- Ride 2: the rider cancels; the trip events say so.
-    gps.point = const GeoPoint(59.3326, 18.0649);
-    await live.reporter.sendNow();
-    offer = await nextOffer();
-    tripId = offer.tripId!;
-    expect((await live.dispatch.claimOffer(offer.id)).isSuccess, isTrue);
-    realtime = live.realtime();
-    events = <DriverRealtimeEvent>[];
-    sub = realtime.subscribe(tripId).listen(events.add);
-    expect((await live.trips.begin(tripId)).ok, isTrue);
-    mark('accepted-2', tripId);
-    await _until(
-      () => events.any((e) => e.status == TripStatus.cancelledByRider),
-      'rider cancel on the trip events',
-      timeout: const Duration(seconds: 60),
-    );
-    await sub.cancel();
-    realtime.dispose();
-    mark('done-2', tripId);
+      // ---- Ride 2: the rider cancels; the trip events say so.
+      gps.point = const GeoPoint(59.3326, 18.0649);
+      await live.reporter.sendNow();
+      offer = await nextOffer();
+      tripId = offer.tripId!;
+      expect((await live.dispatch.claimOffer(offer.id)).isSuccess, isTrue);
+      realtime = live.realtime();
+      events = <DriverRealtimeEvent>[];
+      sub = realtime.subscribe(tripId).listen(events.add);
+      expect((await live.trips.begin(tripId)).ok, isTrue);
+      mark('accepted-2', tripId);
+      await _until(
+        () => events.any((e) => e.status == TripStatus.cancelledByRider),
+        'rider cancel on the trip events',
+        timeout: const Duration(seconds: 60),
+      );
+      await sub.cancel();
+      realtime.dispose();
+      mark('done-2', tripId);
 
-    // ---- Ride 3: the driver cancels before pickup (back to dispatch).
-    offer = await nextOffer();
-    tripId = offer.tripId!;
-    expect((await live.dispatch.claimOffer(offer.id)).isSuccess, isTrue);
-    mark('accepted-3', tripId);
-    final cancelled = await live.trips.cancel(tripId, reasonCode: 'unsafe_pickup');
-    expect(cancelled.ok, isTrue, reason: cancelled.message);
-    expect(live.trips.statusOf(tripId), 'searching');
-    mark('done-3', tripId);
+      // ---- Ride 3: the driver cancels before pickup (back to dispatch).
+      offer = await nextOffer();
+      tripId = offer.tripId!;
+      expect((await live.dispatch.claimOffer(offer.id)).isSuccess, isTrue);
+      mark('accepted-3', tripId);
+      final cancelled = await live.trips.cancel(
+        tripId,
+        reasonCode: 'unsafe_pickup',
+      );
+      expect(cancelled.ok, isTrue, reason: cancelled.message);
+      expect(live.trips.statusOf(tripId), 'searching');
+      mark('done-3', tripId);
 
-    // Offline again.
-    expect(await live.presence.goOffline(), isNull, reason: 'offline');
-    expect(live.presence.serverOnline, isFalse);
-    await live.dispose();
-    client.close();
-  }, skip: skip, timeout: const Timeout(Duration(minutes: 8)));
+      // Offline again.
+      expect(await live.presence.goOffline(), isNull, reason: 'offline');
+      expect(live.presence.serverOnline, isFalse);
+      await live.dispose();
+      client.close();
+    },
+    skip: skip,
+    timeout: const Timeout(Duration(minutes: 8)),
+  );
 }
 
 Future<void> _until(

@@ -151,8 +151,10 @@ void main() {
       expect(find.byKey(_cashKey), findsNothing);
       expect(find.textContaining('Reservation'), findsNothing);
       // Only one waits: no "1 of 1".
-      expect(find.byKey(const ValueKey<String>('exclusive-count')),
-          findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-count')),
+        findsNothing,
+      );
 
       // Big whole kronor with grey decimals, the trip minutes under it:
       // the driver's share of the 104,80 kr fare (owner decision
@@ -175,10 +177,14 @@ void main() {
 
       // The grey pill counts down; no picture, no Accept, no blue.
       expect(find.text('Exclusive for you · 12 s'), findsOneWidget);
-      expect(find.byKey(const ValueKey<String>('exclusive-timer-icon')),
-          findsOneWidget);
-      expect(find.byKey(const ValueKey<String>('reservation-picture')),
-          findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-timer-icon')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('reservation-picture')),
+        findsNothing,
+      );
       expect(find.text('Accept'), findsNothing);
       expect(find.byType(FilledButton), findsNothing);
       final pill = tester.widget<Container>(
@@ -257,18 +263,26 @@ void main() {
       await _pump(tester, RadarOfferCard(offer: boosted(), onMatch: () {}));
       final badge = find.byKey(const ValueKey<String>('radar-offer-boost-o1'));
       expect(badge, findsOneWidget);
-      expect(find.descendant(of: badge, matching: find.text('+40 kr')),
-          findsOneWidget);
+      expect(
+        find.descendant(of: badge, matching: find.text('+40 kr')),
+        findsOneWidget,
+      );
       // The driver's share of the new 249,25 kr fare.
       expect(find.text('186,94 kr', findRichText: true), findsOneWidget);
       expect(find.text('249,25 kr', findRichText: true), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('the Exclusive sheet shows it too, at 320 wide', (tester) async {
+    testWidgets('the Exclusive sheet shows it too, at 320 wide', (
+      tester,
+    ) async {
       await _pump(
         tester,
-        _exclusive(offer: boosted(), reservation: true, reservationTime: '08:05'),
+        _exclusive(
+          offer: boosted(),
+          reservation: true,
+          reservationTime: '08:05',
+        ),
         width: 320,
       );
       expect(
@@ -289,10 +303,7 @@ void main() {
         ExclusiveReasons.defaultFor(reservation: false),
         'Only for you · nearby',
       );
-      expect(
-        ExclusiveReasons.defaultFor(reservation: true),
-        'Pickup soon',
-      );
+      expect(ExclusiveReasons.defaultFor(reservation: true), 'Pickup soon');
     });
   });
 

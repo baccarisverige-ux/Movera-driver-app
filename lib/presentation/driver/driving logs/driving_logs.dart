@@ -18,7 +18,8 @@ class DrivingLogs extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: tr.back, 
+        leading: IconButton(
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
@@ -97,9 +98,21 @@ class DrivingLogs extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _shift(tr.monday, '5 h 10 min', tr.logsOnlineFromTo('07:12', '12:22')),
-          _shift(tr.tuesday, '6 h 40 min', tr.logsOnlineFromTo('06:48', '13:28')),
-          _shift(tr.wednesday, '4 h 05 min', tr.logsOnlineFromTo('15:10', '19:15')),
+          _shift(
+            tr.monday,
+            '5 h 10 min',
+            tr.logsOnlineFromTo('07:12', '12:22'),
+          ),
+          _shift(
+            tr.tuesday,
+            '6 h 40 min',
+            tr.logsOnlineFromTo('06:48', '13:28'),
+          ),
+          _shift(
+            tr.wednesday,
+            '4 h 05 min',
+            tr.logsOnlineFromTo('15:10', '19:15'),
+          ),
           _shift(tr.thursday, '6 h 26 min', tr.logsSampleOnlineState),
           const SizedBox(height: 8),
           Container(
@@ -168,14 +181,16 @@ class DrivingLogs extends StatelessWidget {
               ],
             ),
           ),
-          Flexible(child: Text(
-            hours,
-            style: const TextStyle(
-              color: _ink,
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
+          Flexible(
+            child: Text(
+              hours,
+              style: const TextStyle(
+                color: _ink,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          )),
+          ),
         ],
       ),
     );

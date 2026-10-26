@@ -59,7 +59,9 @@ class _DriverProfileState extends State<DriverProfile> {
       // read yet (a restored token) reads it now.
       live.addListener(_accountChanged);
       if (live.account == null) {
-        unawaited(live.refresh().then((_) => _vehicleChanged(), onError: (_) {}));
+        unawaited(
+          live.refresh().then((_) => _vehicleChanged(), onError: (_) {}),
+        );
       }
     }
   }
@@ -148,7 +150,9 @@ class _DriverProfileState extends State<DriverProfile> {
 
   /// Round 4: the live account session, when the build requires one.
   DriverAccountSession? get _liveSession =>
-      DriverRuntimeConfig.current.authRequired ? accountSessionOf(context) : null;
+      DriverRuntimeConfig.current.authRequired
+      ? accountSessionOf(context)
+      : null;
 
   DriverAccount? get _liveAccount => _liveSession?.account;
 
@@ -165,9 +169,7 @@ class _DriverProfileState extends State<DriverProfile> {
           elevation: 0,
           leading: IconButton(
             tooltip: tr.back,
-            onPressed: _logoutBusy
-                ? null
-                : () => maybePopOwned(context),
+            onPressed: _logoutBusy ? null : () => maybePopOwned(context),
             icon: const Icon(Icons.arrow_back_rounded, color: _ink),
           ),
           titleSpacing: 0,
@@ -251,9 +253,9 @@ class _DriverProfileState extends State<DriverProfile> {
                 detail: _liveAccount?.awaitsFleet == true
                     ? tr.holdWaitingFleetVehicle
                     : snapshot.data?.vehicle ??
-                    (snapshot.connectionState == ConnectionState.done
-                        ? tr.vehicleDataUnavailable
-                        : ''),
+                          (snapshot.connectionState == ConnectionState.done
+                              ? tr.vehicleDataUnavailable
+                              : ''),
                 page: const DriverVehicles(),
                 refreshVehicle: true,
               ),
@@ -272,9 +274,9 @@ class _DriverProfileState extends State<DriverProfile> {
                     editing: true,
                     onBack: () => maybePopOwned(context),
                     onDone: (context) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(tr.acctDetailsSaved)));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(tr.acctDetailsSaved)),
+                      );
                       maybePopOwned(context);
                     },
                   ),
@@ -496,14 +498,9 @@ class _DriverProfileState extends State<DriverProfile> {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: Text(tr.logOutQ),
-          content: Text(
-            tr.profLogOutClears,
-          ),
+          content: Text(tr.profLogOutClears),
           actions: [
-            TextButton(
-              onPressed: () => close(false),
-              child: Text(tr.stay),
-            ),
+            TextButton(onPressed: () => close(false), child: Text(tr.stay)),
             FilledButton(
               onPressed: () => close(true),
               style: FilledButton.styleFrom(
@@ -530,13 +527,9 @@ class _DriverProfileState extends State<DriverProfile> {
         }
       } catch (_) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                tr.profCouldNotClear,
-              ),
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(tr.profCouldNotClear)));
         }
         return;
       }

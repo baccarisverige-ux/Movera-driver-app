@@ -56,7 +56,9 @@ class _TripTopRevealState extends State<TripTopReveal> {
   }
 
   void _setOpen(bool open) {
-    if (_open == open) { return; }
+    if (_open == open) {
+      return;
+    }
     setState(() => _open = open);
     _syncRoute();
   }
@@ -64,13 +66,17 @@ class _TripTopRevealState extends State<TripTopReveal> {
   void _syncRoute() => _open ? _route() : _unroute();
 
   void _route() {
-    if (_routed) { return; }
+    if (_routed) {
+      return;
+    }
     _routed = true;
     GestureBinding.instance.pointerRouter.addGlobalRoute(_onAnyPointer);
   }
 
   void _unroute() {
-    if (!_routed) { return; }
+    if (!_routed) {
+      return;
+    }
     _routed = false;
     GestureBinding.instance.pointerRouter.removeGlobalRoute(_onAnyPointer);
   }
@@ -78,7 +84,9 @@ class _TripTopRevealState extends State<TripTopReveal> {
   /// Any touch while revealed closes it, except on the island's middle
   /// (its money and messages); buttons still get their tap.
   void _onAnyPointer(PointerEvent event) {
-    if (event is! PointerDownEvent || !_open || !mounted) { return; }
+    if (event is! PointerDownEvent || !_open || !mounted) {
+      return;
+    }
     final box = _middleKey.currentContext?.findRenderObject();
     if (box is RenderBox && box.attached) {
       final local = box.globalToLocal(event.position);

@@ -45,7 +45,9 @@ abstract final class OfferWire {
 
     Money? money(String key) {
       final value = json[key];
-      return value is Map ? Money.fromJson(Map<String, dynamic>.from(value)) : null;
+      return value is Map
+          ? Money.fromJson(Map<String, dynamic>.from(value))
+          : null;
     }
 
     Map<String, dynamic> place(Object? value) {
@@ -63,14 +65,17 @@ abstract final class OfferWire {
     final stops = json['stops'];
     final rating = json['riderRating'];
     final scheduled = json['scheduledAt'];
-    final at = scheduled is String ? DateTime.tryParse(scheduled)?.toLocal() : null;
+    final at = scheduled is String
+        ? DateTime.tryParse(scheduled)?.toLocal()
+        : null;
     String two(int n) => n.toString().padLeft(2, '0');
     return RideOffer(
       id: text('offerId'),
       tripId: text('tripId'),
       version: whole('version'),
       category: CategoryCatalog.labelOf(text('categoryId')),
-      fare: money('fare') ?? (throw const FormatException('Offer.fare missing')),
+      fare:
+          money('fare') ?? (throw const FormatException('Offer.fare missing')),
       driverBonus: money('driverBonus'),
       driverEarnings: money('driverEarnings'),
       pickupPay: money('pickupPay'),
@@ -277,14 +282,22 @@ class ApiDispatchRepository implements DispatchRepository {
     final command = '$path $text';
     final key = _commandKeys.putIfAbsent(command, _key);
     var response = await _client
-        .post(_uri(path), headers: await _headers(idempotencyKey: key), body: text)
+        .post(
+          _uri(path),
+          headers: await _headers(idempotencyKey: key),
+          body: text,
+        )
         .timeout(requestTimeout);
     final renew = renewSession;
     if (response.statusCode == 401 && renew != null) {
       // An expired access token: renewed once, then the same command.
       await renew();
       response = await _client
-          .post(_uri(path), headers: await _headers(idempotencyKey: key), body: text)
+          .post(
+            _uri(path),
+            headers: await _headers(idempotencyKey: key),
+            body: text,
+          )
           .timeout(requestTimeout);
     }
     if (response.statusCode < 500) _commandKeys.remove(command);
@@ -362,16 +375,18 @@ class ApiDispatchRepository implements DispatchRepository {
     if (_disposed || generation != _generation) return;
     final http.StreamedResponse response;
     try {
-      final request = http.Request(
-        'GET',
-        _uri('/driver/offers/stream', {
-          if (_lastSequence > 0) 'after': '$_lastSequence',
-        }),
-      )..headers.addAll({
-          ...await _headers(),
-          'Accept': 'text/event-stream',
-          if (_lastSequence > 0) 'Last-Event-ID': '$_lastSequence',
-        });
+      final request =
+          http.Request(
+              'GET',
+              _uri('/driver/offers/stream', {
+                if (_lastSequence > 0) 'after': '$_lastSequence',
+              }),
+            )
+            ..headers.addAll({
+              ...await _headers(),
+              'Accept': 'text/event-stream',
+              if (_lastSequence > 0) 'Last-Event-ID': '$_lastSequence',
+            });
       response = await _client.send(request).timeout(requestTimeout);
     } catch (_) {
       if (generation == _generation) _feedLost();
@@ -413,23 +428,28 @@ class ApiDispatchRepository implements DispatchRepository {
     _feed = response.stream
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((line) {
-          // Any line, the heartbeat comment too, shows the feed is alive.
-          _feedIdle?.cancel();
-          _feedIdle = Timer(feedIdleTimeout, quiet);
-          if (line.startsWith('data:')) {
-            data.write(line.substring(5).trim());
-          } else if (line.isEmpty && data.isNotEmpty) {
-            final raw = data.toString();
-            data.clear();
-            try {
-              final event = jsonDecode(raw);
-              if (event is Map) ingest(Map<String, dynamic>.from(event));
-            } on FormatException {
-              // A broken event is skipped; the next resync fixes the list.
+        .listen(
+          (line) {
+            // Any line, the heartbeat comment too, shows the feed is alive.
+            _feedIdle?.cancel();
+            _feedIdle = Timer(feedIdleTimeout, quiet);
+            if (line.startsWith('data:')) {
+              data.write(line.substring(5).trim());
+            } else if (line.isEmpty && data.isNotEmpty) {
+              final raw = data.toString();
+              data.clear();
+              try {
+                final event = jsonDecode(raw);
+                if (event is Map) ingest(Map<String, dynamic>.from(event));
+              } on FormatException {
+                // A broken event is skipped; the next resync fixes the list.
+              }
             }
-          }
-        }, onError: (_) => _feedLost(), onDone: _feedLost, cancelOnError: true);
+          },
+          onError: (_) => _feedLost(),
+          onDone: _feedLost,
+          cancelOnError: true,
+        );
   }
 
   /// The feed is gone: not live, and it tries again after a while.
@@ -439,7 +459,10 @@ class ApiDispatchRepository implements DispatchRepository {
     _setLive(false);
     if (_disposed || !_wanted) return;
     _reconnect?.cancel();
-    _reconnect = Timer(_reconnectDelay(_reconnects++), () => unawaited(connect()));
+    _reconnect = Timer(
+      _reconnectDelay(_reconnects++),
+      () => unawaited(connect()),
+    );
   }
 
   /// Closes the feed and forgets the offers (the driver went offline: the
@@ -475,13 +498,18 @@ class ApiDispatchRepository implements DispatchRepository {
         if (offer['status'] == null || offer['status'] == 'open') {
           _upsert(offer);
         } else {
-          _withdraw(offer['offerId'], OfferGoneReason.fromWire(offer['status']));
+          _withdraw(
+            offer['offerId'],
+            OfferGoneReason.fromWire(offer['status']),
+          );
         }
       case 'offer_withdrawn' when offer != null:
         _withdraw(offer['offerId'], OfferGoneReason.fromWire(offer['status']));
       case 'assignment_locked' when event.tripId != null:
-        for (final gone in [..._offers.values, ..._nextTrips.values]
-            .where((item) => item.tripId == event.tripId)) {
+        for (final gone in [
+          ..._offers.values,
+          ..._nextTrips.values,
+        ].where((item) => item.tripId == event.tripId)) {
           _withdraw(gone.id, OfferGoneReason.claimedElsewhere, emit: false);
         }
       default:
@@ -505,11 +533,9 @@ class ApiDispatchRepository implements DispatchRepository {
     final gone = _offers.remove(offerId) ?? _nextTrips.remove(offerId);
     if (gone == null) return;
     if (!_withdrawals.isClosed) {
-      _withdrawals.add(OfferWithdrawal(
-        offerId: offerId,
-        tripId: gone.tripId,
-        reason: reason,
-      ));
+      _withdrawals.add(
+        OfferWithdrawal(offerId: offerId, tripId: gone.tripId, reason: reason),
+      );
     }
     if (emit) _emit();
   }
@@ -587,13 +613,11 @@ class ApiDispatchRepository implements DispatchRepository {
     final offer = _find(offerId);
     if (offer == null) return false;
     try {
-      final response = await _command(
-        '/offers/${Uri.encodeComponent(offerId)}/decline',
-        {
-          'expectedVersion': offer.version,
-          if (reasonCode != null) 'reasonCode': reasonCode,
-        },
-      );
+      final response =
+          await _command('/offers/${Uri.encodeComponent(offerId)}/decline', {
+            'expectedVersion': offer.version,
+            if (reasonCode != null) 'reasonCode': reasonCode,
+          });
       if (response.statusCode != 200 && response.statusCode != 409) {
         return false;
       }

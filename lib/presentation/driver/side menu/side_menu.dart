@@ -71,11 +71,7 @@ class DriverSideMenu extends StatelessWidget {
           children: [
             SafeArea(
               bottom: false,
-              child: Column(
-                children: [
-                  _buildHeader(context),
-                ],
-              ),
+              child: Column(children: [_buildHeader(context)]),
             ),
             Expanded(
               child: ListView(
@@ -165,8 +161,7 @@ class DriverSideMenu extends StatelessWidget {
                         asset: AppAssets.menuSupport,
                         title: tr.support,
                         subtitle: tr.messagesAndSupportTickets,
-                        onTap: () =>
-                            _open(context, const SupportInboxScreen()),
+                        onTap: () => _open(context, const SupportInboxScreen()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuSettings,
@@ -233,8 +228,9 @@ class DriverSideMenu extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF172027)
-                            .withValues(alpha: accountActive ? 0.18 : 0.10),
+                        color: const Color(
+                          0xFF172027,
+                        ).withValues(alpha: accountActive ? 0.18 : 0.10),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -290,7 +286,8 @@ class DriverSideMenu extends StatelessWidget {
                             // The demo's sample rating, as on Home (UI-10).
                             Semantics(
                               label: tr.sampleRating(
-                                  DriverPerformanceConfig.sample.ratingLabel),
+                                DriverPerformanceConfig.sample.ratingLabel,
+                              ),
                               excludeSemantics: true,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -327,7 +324,9 @@ class DriverSideMenu extends StatelessWidget {
                                 Flexible(
                                   child: Text(
                                     accountActive ? tr.active : tr.pending,
-                                    key: const ValueKey<String>('menu-account-state'),
+                                    key: const ValueKey<String>(
+                                      'menu-account-state',
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -367,9 +366,7 @@ class DriverSideMenu extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    compact
-                        ? (isOnline ? tr.orbOn : tr.orbOff)
-                        : statusText,
+                    compact ? (isOnline ? tr.orbOn : tr.orbOff) : statusText,
                     maxLines: 1,
                     style: TextStyle(
                       color: statusInk,
@@ -443,14 +440,14 @@ class DriverSideMenu extends StatelessWidget {
                                   color: Colors.white,
                                 )
                               : SvgPicture.asset(
-                                action.asset,
-                                width: 19,
-                                height: 19,
-                                colorFilter: const ColorFilter.mode(
-                                  Colors.white,
-                                  BlendMode.srcIn,
+                                  action.asset,
+                                  width: 19,
+                                  height: 19,
+                                  colorFilter: const ColorFilter.mode(
+                                    Colors.white,
+                                    BlendMode.srcIn,
+                                  ),
                                 ),
-                          ),
                         ),
                       )
                     : Center(
@@ -496,7 +493,10 @@ class DriverSideMenu extends StatelessWidget {
               if (action.badge != null) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE0474C),
                     borderRadius: BorderRadius.circular(99),
@@ -614,8 +614,7 @@ class _DriverMenuRoute extends ModalRoute<void> {
   Duration get transitionDuration => const Duration(milliseconds: 280);
 
   @override
-  Duration get reverseTransitionDuration =>
-      const Duration(milliseconds: 220);
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 220);
 
   @override
   Widget buildPage(

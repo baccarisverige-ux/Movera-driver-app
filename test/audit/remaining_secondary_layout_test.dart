@@ -64,8 +64,9 @@ void main() {
             builder: (_, __) => MaterialApp(
               navigatorKey: nav,
               builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(context)
-                    .copyWith(textScaler: TextScaler.linear(2)),
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(2)),
                 child: LayoutViewport(child: child!),
               ),
               home: const Scaffold(body: Text('Route root')),

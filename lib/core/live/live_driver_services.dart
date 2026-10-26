@@ -117,8 +117,9 @@ class LiveAddressLookup {
   static const path = '/api/v1/locations/reverse-geocode';
 
   /// A bare coordinate pair ("59.195885, 17.597423", "59.2,17.6").
-  static final RegExp _coordinates =
-      RegExp(r'^-?\d{1,3}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$');
+  static final RegExp _coordinates = RegExp(
+    r'^-?\d{1,3}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$',
+  );
 
   /// True when [address] names no place: empty, or only coordinates.
   static bool unnamed(String address) {
@@ -130,12 +131,14 @@ class LiveAddressLookup {
   /// could not be asked); the caller keeps what it had.
   Future<String?> reverseGeocode(double latitude, double longitude) async {
     try {
-      final found = await _api.post(path, body: {
-        'latitude': latitude,
-        'longitude': longitude,
-      });
+      final found = await _api.post(
+        path,
+        body: {'latitude': latitude, 'longitude': longitude},
+      );
       final address = found['address'];
-      return address is String && address.trim().isNotEmpty ? address.trim() : null;
+      return address is String && address.trim().isNotEmpty
+          ? address.trim()
+          : null;
     } catch (error) {
       DriverLog.warn('reverse geocode failed: $error', name: 'live');
       return null;
@@ -218,11 +221,14 @@ class LivePresence {
           final status = profile['onlineStatus'];
           if (status == 'online' || status == 'on_trip') break;
           try {
-            profile = await _api.post(availabilityPath, body: {
-              'expectedVersion': profile['version'],
-              'onlineStatus': 'online',
-              if (fix != null) 'location': fix,
-            });
+            profile = await _api.post(
+              availabilityPath,
+              body: {
+                'expectedVersion': profile['version'],
+                'onlineStatus': 'online',
+                if (fix != null) 'location': fix,
+              },
+            );
           } on ApiError catch (error) {
             final current = error.projection;
             if (error.code != 'version_mismatch' || current == null) rethrow;
@@ -257,10 +263,13 @@ class LivePresence {
         for (var attempt = 0; attempt < 3; attempt++) {
           if (profile['onlineStatus'] == 'offline') break;
           try {
-            profile = await _api.post(availabilityPath, body: {
-              'expectedVersion': profile['version'],
-              'onlineStatus': 'offline',
-            });
+            profile = await _api.post(
+              availabilityPath,
+              body: {
+                'expectedVersion': profile['version'],
+                'onlineStatus': 'offline',
+              },
+            );
           } on ApiError catch (error) {
             final current = error.projection;
             if (error.code != 'version_mismatch' || current == null) rethrow;
@@ -382,9 +391,12 @@ class LiveLocationReporter {
     try {
       final fix = await freshFix();
       if (fix == null) return false;
-      await _api.post(locationPath, body: {
-        'fixes': [fix],
-      });
+      await _api.post(
+        locationPath,
+        body: {
+          'fixes': [fix],
+        },
+      );
       lastFix = fix;
       return true;
     } catch (error) {

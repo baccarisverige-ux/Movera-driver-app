@@ -109,16 +109,18 @@ void main() {
     expect(await reopen().readAccess(), isNull);
   });
 
-  test('sign-out still clears localStorage when sessionStorage throws',
-      () async {
-    final broken = _ThrowingStorage();
-    final store = BrowserTokenStore(persistent: local, legacy: broken);
-    local.values
-      ..[_access] = 'a'
-      ..[_refresh] = 'r';
-    await expectLater(store.clear(), throwsA(isA<StateError>()));
-    expect(local.values, isEmpty);
-  });
+  test(
+    'sign-out still clears localStorage when sessionStorage throws',
+    () async {
+      final broken = _ThrowingStorage();
+      final store = BrowserTokenStore(persistent: local, legacy: broken);
+      local.values
+        ..[_access] = 'a'
+        ..[_refresh] = 'r';
+      await expectLater(store.clear(), throwsA(isA<StateError>()));
+      expect(local.values, isEmpty);
+    },
+  );
 
   test('when localStorage refuses writes the tab keeps the session', () async {
     local.refuseWrites = true;
@@ -133,8 +135,7 @@ void main() {
     expect(session.values, isEmpty);
   });
 
-  test('a refused move keeps reading the tab copy, never half of it',
-      () async {
+  test('a refused move keeps reading the tab copy, never half of it', () async {
     session.values
       ..[_access] = 'old-a'
       ..[_refresh] = 'old-r';

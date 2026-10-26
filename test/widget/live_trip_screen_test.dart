@@ -42,9 +42,14 @@ void main() {
         return http.Response('', 503);
       }
       if (request.method == 'GET' && path == '/api/v1/trips/live-trip') {
-        return json(200, {'tripId': 'live-trip', 'status': 'driver_to_pickup', 'version': 4});
+        return json(200, {
+          'tripId': 'live-trip',
+          'status': 'driver_to_pickup',
+          'version': 4,
+        });
       }
-      if (request.method == 'POST' && path == '/api/v1/trips/live-trip/arrive') {
+      if (request.method == 'POST' &&
+          path == '/api/v1/trips/live-trip/arrive') {
         commands.add(request);
         return arriveAnswers.removeAt(0)();
       }
@@ -82,34 +87,46 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        home: AcceptRide(
-          tripId: 'live-trip',
-          locationRepository: _NoGps(),
-          activeRideRepository: MemoryActiveRideRepository(),
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: AcceptRide(
+            tripId: 'live-trip',
+            locationRepository: _NoGps(),
+            activeRideRepository: MemoryActiveRideRepository(),
+          ),
         ),
       ),
-    ));
+    );
     await frames(tester);
     tester
         .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
         .controller!
         .animatePanelToSnapPoint();
     await frames(tester, 16);
-    ScaffoldMessenger.of(tester.element(find.byType(AcceptRide))).clearSnackBars();
+    ScaffoldMessenger.of(
+      tester.element(find.byType(AcceptRide)),
+    ).clearSnackBars();
     await frames(tester);
 
     const waiting = ValueKey<String>('active-ride-panel-waitingForRider');
-    final arrive = find.byKey(const ValueKey<String>('active-ride-arrived-button'));
+    final arrive = find.byKey(
+      const ValueKey<String>('active-ride-arrived-button'),
+    );
 
-    arriveAnswers.add(() => json(409, {
-      'code': 'invalid_transition',
-      'reason': 'not_at_pickup',
-      'message': 'You are not at the pickup yet.',
-      'projection': {'tripId': 'live-trip', 'status': 'driver_to_pickup', 'version': 4},
-    }));
+    arriveAnswers.add(
+      () => json(409, {
+        'code': 'invalid_transition',
+        'reason': 'not_at_pickup',
+        'message': 'You are not at the pickup yet.',
+        'projection': {
+          'tripId': 'live-trip',
+          'status': 'driver_to_pickup',
+          'version': 4,
+        },
+      }),
+    );
     await tester.ensureVisible(arrive);
     await tester.tap(arrive);
     await frames(tester);
@@ -118,9 +135,14 @@ void main() {
     expect(find.text(tr.liveTripNotAtPickup), findsOneWidget);
     expect(find.byKey(waiting), findsNothing);
 
-    ScaffoldMessenger.of(tester.element(find.byType(AcceptRide))).clearSnackBars();
+    ScaffoldMessenger.of(
+      tester.element(find.byType(AcceptRide)),
+    ).clearSnackBars();
     await frames(tester);
-    arriveAnswers.add(() => json(200, {'tripId': 'live-trip', 'status': 'arrived', 'version': 5}));
+    arriveAnswers.add(
+      () =>
+          json(200, {'tripId': 'live-trip', 'status': 'arrived', 'version': 5}),
+    );
     await tester.ensureVisible(arrive);
     await tester.tap(arrive);
     await frames(tester);

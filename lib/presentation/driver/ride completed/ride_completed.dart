@@ -181,7 +181,9 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           tr.includesFeeWaitingFee(fee),
-                          key: const ValueKey<String>('ride-completed-waiting-fee'),
+                          key: const ValueKey<String>(
+                            'ride-completed-waiting-fee',
+                          ),
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: _muted, fontSize: 13.5),
                         ),
@@ -192,7 +194,9 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           WaybillRecord.bonusNote(bonus),
-                          key: const ValueKey<String>('ride-completed-driver-bonus'),
+                          key: const ValueKey<String>(
+                            'ride-completed-driver-bonus',
+                          ),
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: _muted, fontSize: 13.5),
                         ),
@@ -217,14 +221,13 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                     const Divider(height: 1, thickness: 1, color: _line),
                     const SizedBox(height: 16),
                     _row(
-                        tr.payment,
-                        Text(
-                            switch (widget.paidByCash) {
-                              true => tr.cash,
-                              false => tr.inApp,
-                              null => '—',
-                            },
-                            style: _value)),
+                      tr.payment,
+                      Text(switch (widget.paidByCash) {
+                        true => tr.cash,
+                        false => tr.inApp,
+                        null => '—',
+                      }, style: _value),
+                    ),
                     _row(
                       tr.waybill,
                       record == null
@@ -411,9 +414,9 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
             setState(() => _rating = rating);
             if (_ratingNoticeShown) return;
             _ratingNoticeShown = true;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(tr.ratingNotSentDemo)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(tr.ratingNotSentDemo)));
           },
           updateOnDrag: true,
         ),
@@ -477,7 +480,9 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
             ),
           ),
           const SizedBox(width: 12),
-          Flexible(child: Align(alignment: Alignment.centerRight, child: value)),
+          Flexible(
+            child: Align(alignment: Alignment.centerRight, child: value),
+          ),
         ],
       ),
     );

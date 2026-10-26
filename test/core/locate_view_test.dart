@@ -101,8 +101,11 @@ void main() {
     // The last fix was too old: the locate is applied by the next GPS fix.
     final located = policy.resolve(location: _fix(_east(_origin, 5)));
     expect(located.zoom, 15);
-    expect(located.duration.inMilliseconds, greaterThan(600),
-        reason: 'the one-second flight, not the 450 ms follow glide');
+    expect(
+      located.duration.inMilliseconds,
+      greaterThan(600),
+      reason: 'the one-second flight, not the 450 ms follow glide',
+    );
     final next = policy.resolve(location: _fix(_east(_origin, 25)));
     expect(next.duration.inMilliseconds, 450);
   });
@@ -112,8 +115,12 @@ void main() {
     var at = _origin;
     DriverCameraPose fix({bool immediate = false}) {
       at = _east(at, 30);
-      return policy.resolve(location: _fix(at, speed: 30), route: _road,
-          navigating: true, immediate: immediate);
+      return policy.resolve(
+        location: _fix(at, speed: 30),
+        route: _road,
+        navigating: true,
+        immediate: immediate,
+      );
     }
 
     for (var i = 0; i < 10; i++) {
@@ -127,9 +134,11 @@ void main() {
     var previous = located.zoom;
     for (var i = 0; i < 12; i++) {
       final zoom = fix().zoom;
-      expect(previous - zoom,
-          lessThanOrEqualTo(DriverCameraPolicy.maxZoomOutPerFix + 1e-9),
-          reason: 'smooth return, no jump');
+      expect(
+        previous - zoom,
+        lessThanOrEqualTo(DriverCameraPolicy.maxZoomOutPerFix + 1e-9),
+        reason: 'smooth return, no jump',
+      );
       expect(zoom, lessThanOrEqualTo(previous));
       previous = zoom;
     }
@@ -139,8 +148,11 @@ void main() {
   test('waiting at a stop keeps its own flat view', () {
     final policy = DriverCameraPolicy()..locate();
     final pose = policy.resolve(
-        location: _fix(_origin), navigating: true, waiting: true,
-        immediate: true);
+      location: _fix(_origin),
+      navigating: true,
+      waiting: true,
+      immediate: true,
+    );
     expect(pose.zoom, DriverCameraPolicy.waitingZoom);
     expect(pose.tilt, 0);
   });
@@ -171,14 +183,22 @@ void main() {
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
     GoogleMapController? controller;
     const start = CameraPosition(target: LatLng(59.33, 18.06), zoom: 11.7);
-    await tester.pumpWidget(MaterialApp(
-      home: GoogleMap(
-        initialCameraPosition: start,
-        onMapCreated: (value) => controller = value,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GoogleMap(
+          initialCameraPosition: start,
+          onMapCreated: (value) => controller = value,
+        ),
       ),
-    ));
+    );
     await tester.pump();
-    final port = GoogleDriverCameraPort(controller!, initialPosition: start);
+    // The flight's clock is the test's fake clock: progress per frame is
+    // fixed (16 ms of fake time), not whatever a loaded machine takes.
+    final port = GoogleDriverCameraPort(
+      controller!,
+      initialPosition: start,
+      clock: () => tester.binding.clock.now(),
+    );
     final policy = DriverCameraPolicy()..locate();
     final pose = policy.resolve(location: _fix(_origin), immediate: true);
     var done = false;
@@ -193,7 +213,9 @@ void main() {
     expect(zooms.last, closeTo(15, .03));
     expect(tilts.last, closeTo(DriverCameraPolicy.tiltForZoom(15), .6));
     // Eased start: the first frames move far less than the fastest ones.
-    final steps = [for (var i = 1; i < zooms.length; i++) zooms[i] - zooms[i - 1]];
+    final steps = [
+      for (var i = 1; i < zooms.length; i++) zooms[i] - zooms[i - 1],
+    ];
     final fastest = steps.reduce((a, b) => a > b ? a : b);
     expect(steps.first, lessThan(fastest * .3));
     expect(fastest, lessThan(.12), reason: 'no zoom jump between frames');

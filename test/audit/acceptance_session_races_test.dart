@@ -71,7 +71,9 @@ Future<void> _mount(WidgetTester tester, _ControlledDispatch dispatch) async {
 }
 
 Future<void> _tapMatch(WidgetTester tester) async {
-  final match = find.byKey(const ValueKey<String>('radar-match-controlled-offer'));
+  final match = find.byKey(
+    const ValueKey<String>('radar-match-controlled-offer'),
+  );
   await tester.ensureVisible(match);
   await tester.tap(match);
   await tester.pump();

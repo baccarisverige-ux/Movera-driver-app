@@ -6,9 +6,10 @@ import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
 
 void main() {
-  final categories = (jsonDecode(File('contracts/contract.json')
-          .readAsStringSync()) as Map<String, dynamic>)['categories']
-      as Map<String, dynamic>;
+  final categories =
+      (jsonDecode(File('contracts/contract.json').readAsStringSync())
+              as Map<String, dynamic>)['categories']
+          as Map<String, dynamic>;
 
   test('seed ids, alias and pattern = contract.json#categories', () {
     expect(CategoryCatalog.seed, categories['seed']);

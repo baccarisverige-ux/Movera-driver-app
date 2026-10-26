@@ -13,12 +13,14 @@ void main() {
     (330, '5:30', const Color(0xFF9E2B33)),
   ]) {
     testWidgets('dark banner clock at ${seconds}s', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          backgroundColor: Colors.black,
-          body: Center(child: WaitingClock(seconds: seconds, onDark: true)),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            backgroundColor: Colors.black,
+            body: Center(child: WaitingClock(seconds: seconds, onDark: true)),
+          ),
         ),
-      ));
+      );
       await tester.pump(const Duration(milliseconds: 300));
       expect(_labelColor(tester, label), expected);
     });
@@ -31,12 +33,14 @@ void main() {
     WaitingTerms.active = WaitingRules.current.termsFor(
       type: WaitingRideType.airport,
     );
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: WaitingClock(seconds: 16 * 60, onDark: true)),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(child: WaitingClock(seconds: 16 * 60, onDark: true)),
+        ),
       ),
-    ));
+    );
     await tester.pump(const Duration(milliseconds: 300));
     expect(_labelColor(tester, '16:00'), const Color(0xFF146B45));
   });
@@ -44,9 +48,11 @@ void main() {
   testWidgets('light sheet clock keeps ink in the included minutes', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(body: Center(child: WaitingClock(seconds: 30))),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: Center(child: WaitingClock(seconds: 30))),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 300));
     expect(_labelColor(tester, '0:30'), const Color(0xFF1C242C));
   });

@@ -56,7 +56,8 @@ class RiderCancelledSheet extends StatelessWidget {
     final body = wasOnTrip
         ? tr.riderNameCancelledWhileTripWas(riderName)
         : tr.riderNameCancelledThisRequestCurrent(riderName);
-    final status = (wasOnTrip
+    final status =
+        (wasOnTrip
             ? tr.activeTripCancelledByRider
             : tr.pickupCancelledByRider) +
         HomeIslandNotices.feeSuffix(fee);
@@ -224,9 +225,7 @@ class RiderCancelledSheet extends StatelessWidget {
                 width: double.infinity,
                 height: 54,
                 child: FilledButton(
-                  key: const ValueKey<String>(
-                    'rider-cancelled-acknowledge',
-                  ),
+                  key: const ValueKey<String>('rider-cancelled-acknowledge'),
                   onPressed: onAcknowledge,
                   style: FilledButton.styleFrom(
                     elevation: 0,

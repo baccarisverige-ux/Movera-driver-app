@@ -28,12 +28,15 @@ Map<String, dynamic> _queued() => <String, dynamic>{
 };
 
 void main() {
-  test('restoration rejects mixed-type stop labels rather than dropping stops', () {
-    final invalid = _snapshot()..['stopAddresses'] = ['One', 123, 'Three'];
-    expect(PersistedActiveRide.fromJson(invalid), isNull);
-    final good = PersistedActiveRide.fromJson(_snapshot());
-    expect(good?.stopAddresses, ['Vasagatan 4', 'Kungsgatan 8']);
-  });
+  test(
+    'restoration rejects mixed-type stop labels rather than dropping stops',
+    () {
+      final invalid = _snapshot()..['stopAddresses'] = ['One', 123, 'Three'];
+      expect(PersistedActiveRide.fromJson(invalid), isNull);
+      final good = PersistedActiveRide.fromJson(_snapshot());
+      expect(good?.stopAddresses, ['Vasagatan 4', 'Kungsgatan 8']);
+    },
+  );
 
   test('restoration rejects negative or malformed waiting clock', () {
     for (final value in [-1, '5', 2.5]) {

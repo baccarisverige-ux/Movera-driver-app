@@ -19,11 +19,14 @@ class _Maps extends HeadlessMapPlatform {
   int moves = 0, animates = 0, markerUpdates = 0, polylineUpdates = 0;
   int polylineChanges = 0;
   @override
-  Future<void> moveCamera(CameraUpdate u, {required int mapId}) async => moves++;
+  Future<void> moveCamera(CameraUpdate u, {required int mapId}) async =>
+      moves++;
   @override
-  Future<void> animateCamera(CameraUpdate u,
-          {required int mapId, Duration? duration}) async =>
-      animates++;
+  Future<void> animateCamera(
+    CameraUpdate u, {
+    required int mapId,
+    Duration? duration,
+  }) async => animates++;
   @override
   Future<void> updateMarkers(MarkerUpdates u, {required int mapId}) async =>
       markerUpdates++;
@@ -109,12 +112,12 @@ Future<_Run> _drive(WidgetTester tester, {required bool ticker}) async {
 
   const pickup = GeoPoint(59.3279, 18.0615);
   DriverLocation fix(int i) => DriverLocation(
-        point: _south(pickup, 1500 - i * 12.0),
-        headingDegrees: 0,
-        speedMetersPerSecond: 12,
-        measuredAt: DateTime.now(),
-        accuracyMeters: 5,
-      );
+    point: _south(pickup, 1500 - i * 12.0),
+    headingDegrees: 0,
+    speedMetersPerSecond: 12,
+    measuredAt: DateTime.now(),
+    accuracyMeters: 5,
+  );
   final location = _Loc(fix(0));
   final routes = _Routes();
   await tester.pumpWidget(
@@ -167,8 +170,9 @@ void main() {
     debugOnRebuildDirtyWidget = null;
   });
 
-  testWidgets('D-07: a GPS fix does not rebuild the whole trip screen',
-      (tester) async {
+  testWidgets('D-07: a GPS fix does not rebuild the whole trip screen', (
+    tester,
+  ) async {
     final run = await _drive(tester, ticker: false);
     // ignore: avoid_print
     print('D-07 ticker off, $_fixes fixes @1 Hz: ${run.label(_fixes)}');
@@ -178,8 +182,9 @@ void main() {
     expect(run.polylineChanges, greaterThanOrEqualTo(_fixes - 2));
   });
 
-  testWidgets('D-08: the moving car does not resend the route lines',
-      (tester) async {
+  testWidgets('D-08: the moving car does not resend the route lines', (
+    tester,
+  ) async {
     final run = await _drive(tester, ticker: true);
     // ignore: avoid_print
     print('D-08 ticker on, $_fixes fixes @1 Hz: ${run.label(_fixes)}');

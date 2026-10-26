@@ -33,10 +33,9 @@ void _expectFresh() {
   expect(ScheduledRideStore.reminder.value, isNull);
   expect(ScheduledRideStore.backupNote.value, isNull);
   expect(ScheduledRideStore.openRequests.value, 2);
-  expect(
-    ScheduledRideStore.upcoming.map((ride) => ride.pickupAddress),
-    ['Södermalm, Stockholm'],
-  );
+  expect(ScheduledRideStore.upcoming.map((ride) => ride.pickupAddress), [
+    'Södermalm, Stockholm',
+  ]);
 }
 
 void main() {
@@ -49,8 +48,10 @@ void main() {
 
   testWidgets('the app logout resets Scheduled rides', (tester) async {
     DriverStartPosition.clearMemory();
-    await (await SharedPreferences.getInstance())
-        .setString(DriverStartPosition.key, '{"lat":59.3326,"lng":18.0649}');
+    await (await SharedPreferences.getInstance()).setString(
+      DriverStartPosition.key,
+      '{"lat":59.3326,"lng":18.0649}',
+    );
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MoveraApp());

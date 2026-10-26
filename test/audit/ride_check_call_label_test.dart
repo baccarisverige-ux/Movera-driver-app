@@ -33,17 +33,17 @@ const _trip = SafetyAlertTrip(
 
 /// The label of the button with [key], as laid out.
 RenderParagraph _label(WidgetTester tester, Key key, String text) =>
-    tester.renderObject<RenderParagraph>(find.descendant(
-      of: find.byKey(key),
-      matching: find.text(text),
-    ));
+    tester.renderObject<RenderParagraph>(
+      find.descendant(of: find.byKey(key), matching: find.text(text)),
+    );
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   for (final width in [320.0, 375.0]) {
-    testWidgets('French, text x1.3, $width px: "Appeler le 112" is whole',
-        (tester) async {
+    testWidgets('French, text x1.3, $width px: "Appeler le 112" is whole', (
+      tester,
+    ) async {
       DriverLanguage.applyZone(AppLanguages.forCountry('FR'));
       tester.view.physicalSize = Size(width, 700);
       tester.view.devicePixelRatio = 1;
@@ -61,40 +61,54 @@ void main() {
         tripId: 'trip-1',
         tripDetails: () => _trip,
       );
-      await tester.pumpWidget(MaterialApp(
-        locale: const Locale('fr'),
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: Scaffold(
-          body: ListenableBuilder(
-            listenable: controller,
-            builder: (_, _) => controller.active
-                ? RideCheckLayer(controller: controller, top: 10, maxHeight: 680)
-                : const SizedBox.shrink(),
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('fr'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: Scaffold(
+            body: ListenableBuilder(
+              listenable: controller,
+              builder: (_, _) => controller.active
+                  ? RideCheckLayer(
+                      controller: controller,
+                      top: 10,
+                      maxHeight: 680,
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ),
         ),
-      ));
-      unawaited(controller.open(
-        RideCheckDetector().demo(
-          RideCheckTrigger.longStop,
-          DateTime.now(),
-          destination: 'T-Centralen, Stockholm',
+      );
+      unawaited(
+        controller.open(
+          RideCheckDetector().demo(
+            RideCheckTrigger.longStop,
+            DateTime.now(),
+            destination: 'T-Centralen, Stockholm',
+          ),
+          instant: true,
         ),
-        instant: true,
-      ));
+      );
       for (var i = 0; i < 20; i++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
       expect(tr.call112, 'Appeler le 112');
       final call = _label(
-          tester, const ValueKey('ride-check-call-112'), 'Appeler le 112');
-      expect(call.didExceedMaxLines, isFalse,
-          reason: 'the emergency number is never cut off');
+        tester,
+        const ValueKey('ride-check-call-112'),
+        'Appeler le 112',
+      );
+      expect(
+        call.didExceedMaxLines,
+        isFalse,
+        reason: 'the emergency number is never cut off',
+      );
       final ok = _label(tester, const ValueKey('ride-check-ok'), tr.iMOk);
       expect(ok.didExceedMaxLines, isFalse);
       expect(tester.takeException(), isNull);

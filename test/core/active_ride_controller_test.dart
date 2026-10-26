@@ -27,19 +27,13 @@ void main() async {
 
     expect(await ride.cancel(), isTrue);
     expect(ride.cancelled, isTrue);
-    expect(
-      await ride.transitionTo(ActiveRideStage.waitingForRider),
-      isFalse,
-    );
+    expect(await ride.transitionTo(ActiveRideStage.waitingForRider), isFalse);
   });
 
   test('rider cancellation preserves the canonical actor', () async {
     final ride = ActiveRideController();
 
-    expect(
-      await ride.cancel(status: TripStatus.cancelledByRider),
-      isTrue,
-    );
+    expect(await ride.cancel(status: TripStatus.cancelledByRider), isTrue);
     expect(ride.cancelled, isTrue);
     expect(ride.terminal, isTrue);
     expect(ride.terminalStatus, TripStatus.cancelledByRider);
@@ -68,21 +62,24 @@ void main() async {
 
   test('completion preserves a pre-saved queued trip snapshot', () async {
     final store = MemoryActiveRideRepository();
-    final ride = ActiveRideController(tripId: 'A', repository: store,
-        initialStage: ActiveRideStage.onTrip);
-    await store.save(const PersistedActiveRide(
-      tripId: 'B', stage: ActiveRideStage.headingToPickup,
-    ));
+    final ride = ActiveRideController(
+      tripId: 'A',
+      repository: store,
+      initialStage: ActiveRideStage.onTrip,
+    );
+    await store.save(
+      const PersistedActiveRide(
+        tripId: 'B',
+        stage: ActiveRideStage.headingToPickup,
+      ),
+    );
     expect(await ride.complete(clearSnapshot: false), isTrue);
     expect((await store.read())?.tripId, 'B');
   });
 
   test('active ride persists stage through the repository', () async {
     final store = MemoryActiveRideRepository();
-    final ride = ActiveRideController(
-      tripId: 'nearby-1',
-      repository: store,
-    );
+    final ride = ActiveRideController(tripId: 'nearby-1', repository: store);
 
     expect(await ride.transitionTo(ActiveRideStage.waitingForRider), isTrue);
     await Future<void>.delayed(Duration.zero);

@@ -181,8 +181,11 @@ void main() {
     );
     await tester.pump();
     // Reduced motion lands in one move: the pose a flight ends at.
-    final port = GoogleDriverCameraPort(controller!,
-        initialPosition: start, reducedMotion: true);
+    final port = GoogleDriverCameraPort(
+      controller!,
+      initialPosition: start,
+      reducedMotion: true,
+    );
     await port.frame(const GeoPoint(59.01, 18.01), 13.4);
     final pose =
         (platform.moves.last.toJson() as List<dynamic>)[1]
@@ -200,23 +203,22 @@ void main() {
     GoogleMapsFlutterPlatform.instance = platform;
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
     GoogleMapController? controller;
-    await tester.pumpWidget(MaterialApp(
-      home: GoogleMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(59, 18),
-          zoom: 16,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GoogleMap(
+          initialCameraPosition: const CameraPosition(
+            target: LatLng(59, 18),
+            zoom: 16,
+          ),
+          onMapCreated: (value) => controller = value,
         ),
-        onMapCreated: (value) => controller = value,
       ),
-    ));
+    );
     await tester.pump();
     expect(controller, isNotNull);
     final statuses = <String?>[];
     // No initial logical camera: preview goes directly to fit bounds.
-    final port = GoogleDriverCameraPort(
-      controller!,
-      onStatus: statuses.add,
-    );
+    final port = GoogleDriverCameraPort(controller!, onStatus: statuses.add);
     const bounds = [GeoPoint(59.32, 18.04), GeoPoint(59.36, 18.10)];
     platform.fail = true;
     await expectLater(port.overview(bounds, 80), throwsStateError);
@@ -238,22 +240,21 @@ void main() {
     GoogleMapsFlutterPlatform.instance = platform;
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
     GoogleMapController? controller;
-    await tester.pumpWidget(MaterialApp(
-      home: GoogleMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(59, 18),
-          zoom: 16,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GoogleMap(
+          initialCameraPosition: const CameraPosition(
+            target: LatLng(59, 18),
+            zoom: 16,
+          ),
+          onMapCreated: (value) => controller = value,
         ),
-        onMapCreated: (value) => controller = value,
       ),
-    ));
+    );
     await tester.pump();
     expect(controller, isNotNull);
     final statuses = <String?>[];
-    final port = GoogleDriverCameraPort(
-      controller!,
-      onStatus: statuses.add,
-    );
+    final port = GoogleDriverCameraPort(controller!, onStatus: statuses.add);
     const points = [GeoPoint(59.32, 18.04), GeoPoint(59.36, 18.10)];
     final pending = port.overview(points, 80);
     await tester.pump();
@@ -262,8 +263,11 @@ void main() {
     platform.ack.complete();
     await tester.pump();
     await pending;
-    expect(statuses, isEmpty,
-        reason: 'Old route-fit success must not clear newer camera status');
+    expect(
+      statuses,
+      isEmpty,
+      reason: 'Old route-fit success must not clear newer camera status',
+    );
     port.dispose();
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -276,15 +280,17 @@ void main() {
     GoogleMapsFlutterPlatform.instance = platform;
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
     GoogleMapController? controller;
-    await tester.pumpWidget(MaterialApp(
-      home: GoogleMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(59, 18),
-          zoom: 16,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GoogleMap(
+          initialCameraPosition: const CameraPosition(
+            target: LatLng(59, 18),
+            zoom: 16,
+          ),
+          onMapCreated: (value) => controller = value,
         ),
-        onMapCreated: (value) => controller = value,
       ),
-    ));
+    );
     await tester.pump();
     expect(controller, isNotNull);
     final statuses = <String?>[];
@@ -305,10 +311,16 @@ void main() {
     platform.ack.complete();
     await tester.pump();
     await pending;
-    expect(frames, isEmpty,
-        reason: 'An obsolete SDK response cannot reposition the vehicle');
-    expect(statuses, isEmpty,
-        reason: 'An obsolete SDK response cannot clear a new camera error');
+    expect(
+      frames,
+      isEmpty,
+      reason: 'An obsolete SDK response cannot reposition the vehicle',
+    );
+    expect(
+      statuses,
+      isEmpty,
+      reason: 'An obsolete SDK response cannot clear a new camera error',
+    );
     port.dispose();
     await tester.pumpWidget(const SizedBox.shrink());
   });

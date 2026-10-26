@@ -285,49 +285,49 @@ class AuthTopBar extends StatelessWidget {
           if (!showSteps)
             const Spacer()
           else ...[
-          Expanded(
-            child: Semantics(
-              label: tr.authStepOf('$step', '$totalSteps'),
-              excludeSemantics: true,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (var i = 1; i <= totalSteps; i++) ...[
-                    if (i > 1) const SizedBox(width: 6),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      width: i == step ? 32 : 20,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: i == step
-                            ? AuthColors.ink
-                            : i < step
-                            ? AuthColors.stepDone
-                            : AuthColors.stepIdle,
+            Expanded(
+              child: Semantics(
+                label: tr.authStepOf('$step', '$totalSteps'),
+                excludeSemantics: true,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 1; i <= totalSteps; i++) ...[
+                      if (i > 1) const SizedBox(width: 6),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        width: i == step ? 32 : 20,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: i == step
+                              ? AuthColors.ink
+                              : i < step
+                              ? AuthColors.stepDone
+                              : AuthColors.stepIdle,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 40,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: Text(
-                '$step / $totalSteps',
-                textAlign: TextAlign.right,
-                style: AuthText.urbanist(
-                  size: 13,
-                  color: const Color(0xFF647069),
-                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ),
-          ),
+            SizedBox(
+              width: 40,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '$step / $totalSteps',
+                  textAlign: TextAlign.right,
+                  style: AuthText.urbanist(
+                    size: 13,
+                    color: const Color(0xFF647069),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ),
           ],
           // The language switch on every sign-in step.
           const AuthLanguageButton(),

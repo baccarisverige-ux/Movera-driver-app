@@ -30,22 +30,25 @@ void main() {
     },
   );
 
-  test('S01 each nearby listener gets one initial snapshot without replay to others', () async {
-    final repo = DemoDispatchRepository();
-    addTearDown(repo.dispose);
-    final stream = repo.watchNearbyOffers();
-    final first = <List<RideOffer>>[];
-    final firstSub = stream.listen(first.add);
-    addTearDown(firstSub.cancel);
-    await Future<void>.delayed(Duration.zero);
-    final second = await stream.first.timeout(const Duration(seconds: 1));
-    await Future<void>.delayed(Duration.zero);
-    expect(second, hasLength(3));
-    expect(first, hasLength(1));
-    repo.refreshOffers();
-    await Future<void>.delayed(Duration.zero);
-    expect(first, hasLength(2));
-  });
+  test(
+    'S01 each nearby listener gets one initial snapshot without replay to others',
+    () async {
+      final repo = DemoDispatchRepository();
+      addTearDown(repo.dispose);
+      final stream = repo.watchNearbyOffers();
+      final first = <List<RideOffer>>[];
+      final firstSub = stream.listen(first.add);
+      addTearDown(firstSub.cancel);
+      await Future<void>.delayed(Duration.zero);
+      final second = await stream.first.timeout(const Duration(seconds: 1));
+      await Future<void>.delayed(Duration.zero);
+      expect(second, hasLength(3));
+      expect(first, hasLength(1));
+      repo.refreshOffers();
+      await Future<void>.delayed(Duration.zero);
+      expect(first, hasLength(2));
+    },
+  );
 
   test(
     'S01 delayed and repeated next-trip listeners receive empty snapshot',

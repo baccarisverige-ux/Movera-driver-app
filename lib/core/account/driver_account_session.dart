@@ -34,11 +34,9 @@ class DriverAccountSession extends ChangeNotifier {
     _loading = pending;
     // The caller handles the error; this bookkeeping must not become a
     // second, unhandled failure.
-    pending
-        .whenComplete(() {
-          if (identical(_loading, pending)) _loading = null;
-        })
-        .ignore();
+    pending.whenComplete(() {
+      if (identical(_loading, pending)) _loading = null;
+    }).ignore();
     return pending;
   }
 

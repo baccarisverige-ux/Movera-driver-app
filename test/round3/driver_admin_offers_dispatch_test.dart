@@ -44,8 +44,8 @@ Map<String, dynamic> _offer({
 
 class _Server {
   final List<http.Request> requests = <http.Request>[];
-  http.Response Function(http.Request request) answer =
-      (_) => http.Response('{}', 200);
+  http.Response Function(http.Request request) answer = (_) =>
+      http.Response('{}', 200);
 
   late final MockClient client = MockClient((request) async {
     requests.add(request);
@@ -100,30 +100,32 @@ void main() {
       );
     });
 
-    test('another driver of the group accepts first: withdrawn, then gone',
-        () async {
-      final demo = DemoDispatchRepository(
-        adminOffers: true,
-        groupRaceDelay: const Duration(milliseconds: 10),
-      );
-      addTearDown(demo.dispose);
-      final order = <String>[];
-      final gone = demo.watchWithdrawals().listen(
-        (w) => order.add('withdrawn ${w.offerId} ${w.reason.name}'),
-      );
-      final lists = demo.watchNearbyOffers().listen((offers) {
-        if (!offers.any((o) => o.id == DemoAdminOffers.radarGroupTaken.id)) {
-          order.add('list without it');
-        }
-      });
-      await Future<void>.delayed(const Duration(milliseconds: 60));
-      await gone.cancel();
-      await lists.cancel();
-      expect(order.take(2), [
-        'withdrawn admin-group-2 claimedElsewhere',
-        'list without it',
-      ]);
-    });
+    test(
+      'another driver of the group accepts first: withdrawn, then gone',
+      () async {
+        final demo = DemoDispatchRepository(
+          adminOffers: true,
+          groupRaceDelay: const Duration(milliseconds: 10),
+        );
+        addTearDown(demo.dispose);
+        final order = <String>[];
+        final gone = demo.watchWithdrawals().listen(
+          (w) => order.add('withdrawn ${w.offerId} ${w.reason.name}'),
+        );
+        final lists = demo.watchNearbyOffers().listen((offers) {
+          if (!offers.any((o) => o.id == DemoAdminOffers.radarGroupTaken.id)) {
+            order.add('list without it');
+          }
+        });
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+        await gone.cancel();
+        await lists.cancel();
+        expect(order.take(2), [
+          'withdrawn admin-group-2 claimedElsewhere',
+          'list without it',
+        ]);
+      },
+    );
   });
 
   group('API dispatch (contract endpoints)', () {
@@ -149,11 +151,8 @@ void main() {
     test('Accept is POST /offers/{id}/accept with the offer version', () async {
       final server = _Server();
       final repo = await _withOffers(server, [_offer()]);
-      server.answer = (_) => _json({
-        'tripId': 'trip-1',
-        'status': 'accepted',
-        'version': 4,
-      }, 200);
+      server.answer = (_) =>
+          _json({'tripId': 'trip-1', 'status': 'accepted', 'version': 4}, 200);
       final result = await repo.claimOffer('off-1');
       expect(result.isSuccess, isTrue);
       expect(result.offer?.tripId, 'trip-1');
@@ -167,24 +166,30 @@ void main() {
       expect(await repo.watchNearbyOffers().first, isEmpty);
     });
 
-    test('another driver won: 409 claimed_elsewhere is "already claimed"',
-        () async {
-      final server = _Server();
-      final repo = await _withOffers(server, [
-        _offer(kind: 'radar', groupId: 'g-1'),
-      ]);
-      final withdrawn = repo.watchWithdrawals().first;
-      server.answer = (_) => _json({
-        'code': 'conflict',
-        'message': 'Taken',
-        'requestId': 'r',
-        'retryable': false,
-        'projection': _offer(kind: 'radar', groupId: 'g-1', status: 'claimed_elsewhere'),
-      }, 409);
-      final result = await repo.claimOffer('off-1');
-      expect(result.outcome, ClaimOutcome.alreadyClaimed);
-      expect((await withdrawn).reason, OfferGoneReason.claimedElsewhere);
-    });
+    test(
+      'another driver won: 409 claimed_elsewhere is "already claimed"',
+      () async {
+        final server = _Server();
+        final repo = await _withOffers(server, [
+          _offer(kind: 'radar', groupId: 'g-1'),
+        ]);
+        final withdrawn = repo.watchWithdrawals().first;
+        server.answer = (_) => _json({
+          'code': 'conflict',
+          'message': 'Taken',
+          'requestId': 'r',
+          'retryable': false,
+          'projection': _offer(
+            kind: 'radar',
+            groupId: 'g-1',
+            status: 'claimed_elsewhere',
+          ),
+        }, 409);
+        final result = await repo.claimOffer('off-1');
+        expect(result.outcome, ClaimOutcome.alreadyClaimed);
+        expect((await withdrawn).reason, OfferGoneReason.claimedElsewhere);
+      },
+    );
 
     test('a stale version is retried once with the server version', () async {
       final server = _Server();
@@ -198,7 +203,11 @@ void main() {
               'retryable': false,
               'projection': _offer(version: 5),
             }, 409)
-          : _json({'tripId': 'trip-1', 'status': 'accepted', 'version': 6}, 200);
+          : _json({
+              'tripId': 'trip-1',
+              'status': 'accepted',
+              'version': 6,
+            }, 200);
       expect((await repo.claimOffer('off-1')).isSuccess, isTrue);
       expect(
         server.requests.map((r) => jsonDecode(r.body)['expectedVersion']),
@@ -234,7 +243,11 @@ void main() {
         'kind': 'offer_withdrawn',
         'occurredAt': '2026-10-20T12:00:00Z',
         'serverTime': '2026-10-20T12:00:00Z',
-        'offer': _offer(kind: 'radar', groupId: 'g-1', status: 'claimed_elsewhere'),
+        'offer': _offer(
+          kind: 'radar',
+          groupId: 'g-1',
+          status: 'claimed_elsewhere',
+        ),
       });
       // A replay of the same sequence changes nothing.
       repo.ingest({
@@ -262,8 +275,10 @@ void main() {
   });
 
   test('offer reasons read from the wire', () {
-    expect(OfferGoneReason.fromWire('claimed_elsewhere'),
-        OfferGoneReason.claimedElsewhere);
+    expect(
+      OfferGoneReason.fromWire('claimed_elsewhere'),
+      OfferGoneReason.claimedElsewhere,
+    );
     expect(OfferGoneReason.fromWire('expired'), OfferGoneReason.expired);
     expect(OfferGoneReason.fromWire('withdrawn'), OfferGoneReason.withdrawn);
   });

@@ -105,10 +105,9 @@ class WaitingTerms {
 
   /// An admin default label still as shipped, in the app's language.
   static String _shown(String label) => switch (label) {
-    _ when label.startsWith(_farPickup) =>
-      tr.pickupOverKmKm(label
-          .substring(_farPickup.length)
-          .replaceAll('.', tr.navDecimalMark)),
+    _ when label.startsWith(_farPickup) => tr.pickupOverKmKm(
+      label.substring(_farPickup.length).replaceAll('.', tr.navDecimalMark),
+    ),
     'Pickup far away' => tr.waitingRulePickupFarAway,
     'Scheduled ride' => tr.waitingRuleScheduledRide,
     'Airport pickup' => tr.waitingRuleAirportPickup,
@@ -165,10 +164,7 @@ class WaitingRules {
         freeMinutes: 15,
         noShowAfterMinutes: 20,
       ),
-      WaitingRideType.event: WaitingRule(
-        label: 'Event pickup',
-        freeMinutes: 3,
-      ),
+      WaitingRideType.event: WaitingRule(label: 'Event pickup', freeMinutes: 3),
     },
     this.categories = const {
       'premium': WaitingRule(
@@ -199,7 +195,9 @@ class WaitingRules {
   /// display name (`Movera XL`, `XL`); null when none is set.
   WaitingRule? ruleForCategory(String category) {
     final raw = category.trim();
-    final id = CategoryCatalog.canonicalId(CategoryCatalog.idForLabel(raw) ?? raw);
+    final id = CategoryCatalog.canonicalId(
+      CategoryCatalog.idForLabel(raw) ?? raw,
+    );
     return id == null ? null : categories[id];
   }
 
@@ -214,28 +212,31 @@ class WaitingRules {
     final byCategory = ruleForCategory(category);
     if (byCategory != null) {
       // Q41: a category's no-show comes with the end of its free wait.
-      terms = terms._with(byCategory.noShowAfterMinutes == null &&
-              byCategory.freeMinutes != null
-          ? WaitingRule(
-              label: byCategory.label,
-              freeMinutes: byCategory.freeMinutes,
-              perMinute: byCategory.perMinute,
-              noShowAfterMinutes: byCategory.freeMinutes,
-              noShowFee: byCategory.noShowFee,
-            )
-          : byCategory);
+      terms = terms._with(
+        byCategory.noShowAfterMinutes == null && byCategory.freeMinutes != null
+            ? WaitingRule(
+                label: byCategory.label,
+                freeMinutes: byCategory.freeMinutes,
+                perMinute: byCategory.perMinute,
+                noShowAfterMinutes: byCategory.freeMinutes,
+                noShowFee: byCategory.noShowFee,
+              )
+            : byCategory,
+      );
     }
     final byType = rideTypes[type];
     if (byType != null) {
-      terms = terms._with(type == WaitingRideType.scheduled
-          ? WaitingRule(
-              label: byType.label,
-              freeMinutes: ScheduledRideRules.current.includedWaitingMinutes,
-              perMinute: byType.perMinute,
-              noShowAfterMinutes: byType.noShowAfterMinutes,
-              noShowFee: byType.noShowFee,
-            )
-          : byType);
+      terms = terms._with(
+        type == WaitingRideType.scheduled
+            ? WaitingRule(
+                label: byType.label,
+                freeMinutes: ScheduledRideRules.current.includedWaitingMinutes,
+                perMinute: byType.perMinute,
+                noShowAfterMinutes: byType.noShowAfterMinutes,
+                noShowFee: byType.noShowFee,
+              )
+            : byType,
+      );
     }
     if (pickupKm != null && pickupKm > farPickupKm) {
       final km = farPickupKm == farPickupKm.roundToDouble()
@@ -246,10 +247,10 @@ class WaitingRules {
     // Never a no-show before the free wait is over (Q41).
     return terms.noShowAfterMinutes >= terms.freeMinutes
         ? terms
-        : terms._with(WaitingRule(
+        : terms._with(
+            WaitingRule(label: '', noShowAfterMinutes: terms.freeMinutes),
             label: '',
-            noShowAfterMinutes: terms.freeMinutes,
-          ), label: '');
+          );
   }
 
   /// The kind of trip, from how it was matched and where it starts.
@@ -257,8 +258,10 @@ class WaitingRules {
     required String matchedVia,
     required String pickupAddress,
   }) {
-    if (RegExp(r'airport|arlanda|terminal', caseSensitive: false)
-        .hasMatch(pickupAddress)) {
+    if (RegExp(
+      r'airport|arlanda|terminal',
+      caseSensitive: false,
+    ).hasMatch(pickupAddress)) {
       return WaitingRideType.airport;
     }
     final via = matchedVia.toLowerCase();

@@ -8,7 +8,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('every fromEnvironment/hasEnvironment read in lib/ is const', () {
     final offenders = <String>[];
-    final read = RegExp(r'\b(bool|int|String)\.(fromEnvironment|hasEnvironment)\(');
+    final read = RegExp(
+      r'\b(bool|int|String)\.(fromEnvironment|hasEnvironment)\(',
+    );
     for (final entity in Directory('lib').listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       final lines = entity.readAsLinesSync();
@@ -16,12 +18,16 @@ void main() {
         if (!read.hasMatch(lines[i])) continue;
         final here = lines[i];
         final before = i > 0 ? lines[i - 1] : '';
-        final isConst = here.contains('const ') ||
+        final isConst =
+            here.contains('const ') ||
             (before.contains('const ') && before.trimRight().endsWith('='));
         if (!isConst) offenders.add('${entity.path}:${i + 1}: ${here.trim()}');
       }
     }
-    expect(offenders, isEmpty,
-        reason: 'Non-const environment reads crash the web build');
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'Non-const environment reads crash the web build',
+    );
   });
 }

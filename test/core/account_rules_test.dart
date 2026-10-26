@@ -162,7 +162,10 @@ void main() {
     });
 
     test('N1–N3 kinds are in their groups', () {
-      expect(DriverNoticeKind.newScheduledRide.group, DriverNoticeGroup.rideAlerts);
+      expect(
+        DriverNoticeKind.newScheduledRide.group,
+        DriverNoticeGroup.rideAlerts,
+      );
       expect(DriverNoticeKind.leaveNow.group, DriverNoticeGroup.rideAlerts);
       expect(DriverNoticeKind.event.group, DriverNoticeGroup.demand);
       expect(DriverNoticeKind.payoutSent.group, DriverNoticeGroup.account);

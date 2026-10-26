@@ -34,9 +34,18 @@ Future<void> _settle(WidgetTester tester, [int frames = 12]) async {
 }
 
 Future<void> _middle(WidgetTester tester) async {
-  if (find.byKey(const ValueKey('active-ride-arrived-button')).evaluate().isNotEmpty ||
-      find.byKey(const ValueKey('active-ride-primary-action')).evaluate().isNotEmpty ||
-      find.byKey(const ValueKey('active-ride-collect-cash')).evaluate().isNotEmpty) {
+  if (find
+          .byKey(const ValueKey('active-ride-arrived-button'))
+          .evaluate()
+          .isNotEmpty ||
+      find
+          .byKey(const ValueKey('active-ride-primary-action'))
+          .evaluate()
+          .isNotEmpty ||
+      find
+          .byKey(const ValueKey('active-ride-collect-cash'))
+          .evaluate()
+          .isNotEmpty) {
     return;
   }
   tester
@@ -50,10 +59,12 @@ Future<String> _cashShown(WidgetTester tester, AcceptRide ride) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(home: ride),
-  ));
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(home: ride),
+    ),
+  );
   await _settle(tester, 10);
   await _middle(tester);
   await tester.tap(find.byKey(const ValueKey('active-ride-arrived-button')));
@@ -63,7 +74,9 @@ Future<String> _cashShown(WidgetTester tester, AcceptRide ride) async {
   await tester.drag(slide, const Offset(320, 0));
   await _settle(tester, 6);
   await _middle(tester);
-  final collect = find.byKey(const ValueKey<String>('active-ride-collect-cash'));
+  final collect = find.byKey(
+    const ValueKey<String>('active-ride-collect-cash'),
+  );
   expect(collect, findsOneWidget);
   await tester.ensureVisible(collect);
   await tester.tap(collect);
@@ -92,8 +105,9 @@ void main() {
     DriverOfferRules.current = const DriverOfferRules();
   });
 
-  testWidgets('cash + Movera bonus: the rider pays the fare without it',
-      (tester) async {
+  testWidgets('cash + Movera bonus: the rider pays the fare without it', (
+    tester,
+  ) async {
     final location = _Loc();
     final amount = await _cashShown(
       tester,

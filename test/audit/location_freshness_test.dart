@@ -62,10 +62,7 @@ void main() {
       isNull,
     );
     expect(
-      DriverLocationService.vetCachedFix(
-        sample(accuracy: double.nan),
-        now,
-      ),
+      DriverLocationService.vetCachedFix(sample(accuracy: double.nan), now),
       isNull,
     );
   });

@@ -146,7 +146,9 @@ Future<void> _pumpHome(
     ),
   );
   await tester.pump(const Duration(milliseconds: 200));
-  if (!online) { return; }
+  if (!online) {
+    return;
+  }
   tester
       .widget<GestureDetector>(
         find.byKey(const ValueKey<String>('trip-radar-touch-target')),
@@ -189,12 +191,16 @@ void main() {
         DriverOfferRules.current.exclusiveAcceptTime +
             const Duration(milliseconds: 3500),
       );
-      expect(find.byKey(const ValueKey<String>('radar-offer-card-near')),
-          findsOneWidget,
-          reason: 'trips are no longer held back for a past pickup');
-      expect(ScheduledRideStore.upcoming.map((r) => r.pickupTime),
-          isNot(contains('08:05')),
-          reason: 'its pickup passed before anything could be planned');
+      expect(
+        find.byKey(const ValueKey<String>('radar-offer-card-near')),
+        findsOneWidget,
+        reason: 'trips are no longer held back for a past pickup',
+      );
+      expect(
+        ScheduledRideStore.upcoming.map((r) => r.pickupTime),
+        isNot(contains('08:05')),
+        reason: 'its pickup passed before anything could be planned',
+      );
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     });
@@ -211,8 +217,11 @@ void main() {
       final drive = SmartGap.driveMinutes(_placeholder, pickup);
       final leave = DateTime(now.year, now.month, now.day, 7, 30);
       final at = leave.add(Duration(minutes: drive + rule.spareMinutes));
-      expect(drive + rule.spareMinutes, greaterThan(rule.onlineBeforeMinutes),
-          reason: 'leaving comes before the "be online" time');
+      expect(
+        drive + rule.spareMinutes,
+        greaterThan(rule.onlineBeforeMinutes),
+        reason: 'leaving comes before the "be online" time',
+      );
       return ReservationRequestPreview(
         id: 'far-ride',
         kind: ScheduledRideKind.normal,
@@ -247,8 +256,11 @@ void main() {
       expect(find.byType(AcceptRide, skipOffstage: false), findsNothing);
       // 07:32: on the way, not at the "be online" time (pickup - 30 min).
       await _frames(tester, demo(3));
-      expect(find.byType(AcceptRide, skipOffstage: false), findsOneWidget,
-          reason: 'Leave now at 07:30');
+      expect(
+        find.byType(AcceptRide, skipOffstage: false),
+        findsOneWidget,
+        reason: 'Leave now at 07:30',
+      );
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     });
@@ -261,8 +273,10 @@ void main() {
       ScheduledRideStore.acceptAssigned(ride);
       await _pumpHome(tester, _Dispatch(), online: false);
       await _frames(tester, demo(31));
-      expect(IslandMessages.posted.map((m) => m.title),
-          contains(HomeIslandNotices.goOnlineFor(ride.pickupTime).title));
+      expect(
+        IslandMessages.posted.map((m) => m.title),
+        contains(HomeIslandNotices.goOnlineFor(ride.pickupTime).title),
+      );
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     });
