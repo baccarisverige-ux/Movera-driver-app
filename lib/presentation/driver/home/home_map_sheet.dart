@@ -1209,8 +1209,9 @@ extension _HomeMapSheet on _DriverHomeState {
                   onCameraMove: (position) {
                     _cameraPort?.onMove(position);
                     final step = DriverRouteStyle.stepZoom(position.zoom);
-                    if (step != _routeZoomStep)
+                    if (step != _routeZoomStep) {
                       _rebuild(() => _routeZoomStep = step);
+                    }
                   },
                   buildingsEnabled: true,
                   indoorViewEnabled: false,

@@ -12,8 +12,9 @@ void main() {
       addTearDown(strip.dispose);
       final seen = <String>[];
       strip.addListener(() {
-        if (strip.current.kind == TripStripKind.message)
+        if (strip.current.kind == TripStripKind.message) {
           seen.add(strip.current.text);
+        }
       });
 
       strip.update(

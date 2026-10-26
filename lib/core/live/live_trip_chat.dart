@@ -273,8 +273,9 @@ class LiveTripChat {
   /// Sends a message that was not sent again, with the same key.
   Future<LiveTripOutcome> retry(String tripId, TripChatMessage message) {
     final copy = thread(tripId)._find(message.messageId);
-    if (copy == null || !copy.local)
+    if (copy == null || !copy.local) {
       return Future.value(const LiveTripOutcome.ok());
+    }
     thread(tripId)._put(copy._with(TripChatSendState.sending));
     return _post(tripId, copy.messageId);
   }

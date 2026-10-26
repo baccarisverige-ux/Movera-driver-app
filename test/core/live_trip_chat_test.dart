@@ -52,8 +52,9 @@ void main() {
   ApiClient api() => ApiClient(
     client: MockClient((request) async {
       requests.add(request);
-      if (answers.isEmpty)
+      if (answers.isEmpty) {
         return json(500, {'code': 'internal', 'message': 'No.'});
+      }
       return answers.removeAt(0)(request);
     }),
     baseUri: origin,

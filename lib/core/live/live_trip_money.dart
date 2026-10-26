@@ -38,8 +38,9 @@ class LiveTripMoney {
     if (lines is List) {
       for (final line in lines) {
         if (line is! Map) continue;
-        if (line['code'] != 'waiting' && line['code'] != 'stop_waiting')
+        if (line['code'] != 'waiting' && line['code'] != 'stop_waiting') {
           continue;
+        }
         final amount = money(line['amount']);
         if (amount == null || amount.currency != fare.currency) continue;
         waiting = waiting == null ? amount : waiting + amount;

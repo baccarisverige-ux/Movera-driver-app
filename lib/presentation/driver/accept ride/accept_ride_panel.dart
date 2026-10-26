@@ -1223,8 +1223,9 @@ extension _AcceptRidePanel on _AcceptRideState {
                       title: tr.retryRoute,
                       subtitle: tr.routeUnavailableYourTripRemainsActive,
                       onTap: () {
-                        if (popOwned(sheetContext))
+                        if (popOwned(sheetContext)) {
                           unawaited(_navigation.retryRoute());
+                        }
                       },
                     ),
                   _CleanRow(
