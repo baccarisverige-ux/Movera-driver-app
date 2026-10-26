@@ -157,12 +157,20 @@ void main() {
       expect(answers.missed(), isTrue);
     });
 
-    test('the local default (3) stays the fallback', () {
+    test('the local default (10) stays the fallback', () {
       DriverAppConfig.fromJson({'offers': {'autoOffline': {'missedExclusive': 0}}})
           .apply();
       expect(DriverOfferRules.current.autoOfflineAfter,
           DriverOfferRules.defaultAutoOfflineAfter);
-      expect(DriverOfferRules.defaultAutoOfflineAfter, 3);
+      expect(DriverOfferRules.defaultAutoOfflineAfter, 10);
+      // Owner decision 35: the 3rd miss no longer takes the driver offline;
+      // the 9th warns, the 10th does.
+      final answers = ExclusiveAnswers.instance;
+      for (var i = 0; i < 9; i++) {
+        expect(answers.missed(), isFalse, reason: 'miss ${i + 1}');
+      }
+      expect(answers.lastBeforeOffline(), isTrue);
+      expect(answers.missed(), isTrue);
     });
 
     test('admin can switch it off', () {

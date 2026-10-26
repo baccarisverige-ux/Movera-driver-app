@@ -20,9 +20,10 @@ void main() {
 
     test('defaults mirror the admin', () {
       expect(rules.autoOffline, isTrue);
-      // Q46: three in a row, until admin sends its own number.
-      expect(rules.autoOfflineAfter, 3);
-      expect(DriverOfferRules.defaultAutoOfflineAfter, 3);
+      // Owner decision 35 (contract v0.5.6): ten in a row, until admin
+      // sends its own number.
+      expect(rules.autoOfflineAfter, 10);
+      expect(DriverOfferRules.defaultAutoOfflineAfter, 10);
       expect(rules.hiddenComesBackAfter, const Duration(minutes: 2));
       expect(rules.exclusiveWhileDriving, isTrue);
       expect(rules.exclusiveWhileDrivingCount, 1);
@@ -68,22 +69,25 @@ void main() {
       expect(card.fare('200,00 kr', earnings: '170,00 kr'), '170,00 kr');
     });
 
-    test('Q46: 3 Exclusive offers in a row without Accept go offline', () {
+    test('owner decision 35: 10 Exclusive offers in a row without Accept '
+        'go offline', () {
       final answers = ExclusiveAnswers.instance..reset();
-      expect(answers.missed(rules), isFalse);
-      expect(answers.lastBeforeOffline(rules), isFalse);
+      for (var i = 0; i < 8; i++) {
+        expect(answers.missed(rules), isFalse, reason: 'miss ${i + 1}');
+        expect(answers.lastBeforeOffline(rules), isFalse);
+      }
       expect(answers.missed(rules), isFalse);
       expect(answers.lastBeforeOffline(rules), isTrue);
       // Accept starts the row again.
       answers.accepted();
       expect(answers.missedInRow, 0);
-      for (var i = 0; i < 2; i++) {
+      for (var i = 0; i < 9; i++) {
         answers.missed(rules);
       }
       expect(answers.missed(rules), isTrue);
       expect(answers.missedInRow, 0);
       // Off in admin: never offline.
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < 20; i++) {
         expect(
           answers.missed(const DriverOfferRules(autoOffline: false)),
           isFalse,

@@ -6,10 +6,12 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/settings/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -170,6 +172,22 @@ void main() {
       expect(ExclusiveReasons.text(ExclusiveReasons.nearby),
           'Bara för dig · i närheten');
     });
+  });
+
+  test('the offline notice says 10 missed offers in every language '
+      '(owner decision 35)', () {
+    DriverLanguage.resetForTest();
+    DriverAppTexts.overrides = const DriverAppTextOverrides();
+    String notice() => HomeIslandNotices.offlineAfterMissed(
+      DriverOfferRules.defaultAutoOfflineAfter,
+    ).title;
+    expect(notice(), 'Offline: 10 offers missed');
+    DriverLanguage.applyZone(AppLanguages.forCountry('SE'));
+    expect(notice(), 'Offline: 10 missade erbjudanden');
+    expect(HomeIslandNotices.lastMissedBeforeOffline.title,
+        'Nästa missade erbjudande: offline');
+    DriverLanguage.applyZone(AppLanguages.forCountry('FR'));
+    expect(notice(), 'Hors ligne\u00a0: 10 offres manquées');
   });
 
   test('dates and times follow the language', () {

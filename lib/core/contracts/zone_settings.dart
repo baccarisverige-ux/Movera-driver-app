@@ -96,7 +96,7 @@ abstract final class ZoneDefaults {
 
   static const maxStops = 3;
   static const maxPickupMoveMeters = 500;
-  static const missedExclusiveBeforeOffline = 3;
+  static const missedExclusiveBeforeOffline = 10;
   static const waitingDriverSharePct = 100;
   static const noShowDriverSharePct = 80;
 

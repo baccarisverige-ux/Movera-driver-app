@@ -23,11 +23,12 @@ class DriverOfferRules {
   /// The rules in use. Mirrors the admin defaults until a backend sets it.
   static DriverOfferRules current = const DriverOfferRules();
 
-  /// Q46: Exclusive offers missed or declined in a row before the driver
-  /// goes offline. The fallback: the zone's `DriverAppConfig` sets its own
-  /// number (`offers.autoOffline.missedExclusive`) through
-  /// [withAutoOffline] when it is applied.
-  static const int defaultAutoOfflineAfter = 3;
+  /// Exclusive offers missed or declined in a row before the driver goes
+  /// offline: 10 (owner decision 35, contract v0.5.6; Q46 had 3). The
+  /// fallback: the zone's `DriverAppConfig` sets its own number
+  /// (`offers.autoOffline.missedExclusive`) through [withAutoOffline] when
+  /// it is applied.
+  static const int defaultAutoOfflineAfter = 10;
 
   /// Q14: what the offer cards show.
   final OfferCardDetails card;

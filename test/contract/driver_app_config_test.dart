@@ -228,7 +228,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.5.3');
+      expect(contract['version'], '0.5.6');
       expect(ZoneDefaults.paymentMethods, contract['zonePaymentMethods']['values']);
       expect(ZoneDefaults.languages, contract['languages']['values']);
       expect(ZoneDefaults.maxStops, defaults['maxStops']);
@@ -265,7 +265,7 @@ void main() {
         expect(config.maxStops, 3);
         expect(config.maxPickupMoveMeters, 500);
         expect(config.autoOffline, isTrue);
-        expect(config.missedExclusiveBeforeOffline, 3);
+        expect(config.missedExclusiveBeforeOffline, 10);
         expect(config.driverBonus, isNotNull);
         expect(config.driverBonusLimits.defaultLimit.currency, config.currency);
         String digits(String text) => text.replaceAll(RegExp(r'\s'), '');
@@ -281,7 +281,7 @@ void main() {
         _read('contracts/fixtures/config/driver_app_config.json'),
       );
       expect(config.country, 'SE');
-      expect(config.missedExclusiveBeforeOffline, 3);
+      expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonusLimits.defaultLimit, Money(minorUnits: 20000));
       expect(config.waiting.base.freeMinutes, 5);
       expect(config.waiting.termsFor(category: 'comfort').noShowAfterMinutes, 5);
@@ -295,7 +295,7 @@ void main() {
       expect(config.paymentMethods, ZoneDefaults.paymentMethods);
       expect(config.maxStops, 3);
       expect(config.maxPickupMoveMeters, 500);
-      expect(config.missedExclusiveBeforeOffline, 3);
+      expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonus, isNull);
       expect(config.driverBonusLimits.defaultLimit,
           Money(minorUnits: 2000, currency: 'EUR'));
@@ -329,7 +329,7 @@ void main() {
       expect(config.maxStops, 3);
       expect(config.maxPickupMoveMeters, 500);
       expect(config.autoOffline, isTrue);
-      expect(config.missedExclusiveBeforeOffline, 3);
+      expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonus, isNull, reason: 'limit above the hard max');
       expect(config.driverBonusLimits.defaultLimit,
           Money(minorUnits: 60000, currency: 'TND'));
