@@ -14,13 +14,13 @@ Toolchain used locally: Flutter 3.47.7 / Dart 3.13.5 (CI pins 3.47.6).
 - [x] 1. Structure and architecture
 - [x] 2. Dependencies
 - [x] 3. CI
-- [ ] 4. Baseline run
-- [ ] 5. Coverage of critical logic
+- [x] 4. Baseline run
+- [x] 5. Coverage of critical logic
 - [x] 6. Screen inventory
 - [x] 7. Code quality
 - [x] 8. Known issues (N1, N5, N6, N8, N9, N11)
 - [x] 9. Untested features and risks
-- [ ] 10. Summary
+- [x] 10. Summary
 
 ## 1. Structure and architecture
 
@@ -273,3 +273,72 @@ PR #380 is merged (main = 436bfb54), so "main" and "#380" are the same code. Its
 | R15 | No format gate: 451 of 696 Dart files would be reformatted | §4 | S4 |
 | R16 | Web build warns `CupertinoIcons` font is referenced but not bundled (`cupertino_icons` not a dependency): such icons render as boxes | `flutter build web` output §4 | S4 |
 | Needs device | GPS while driving, background location, battery, iOS/Android native maps, Apple/Google sign-in, SMS code, audio recording in ride check, radar sound | – | – |
+
+## 4. Baseline run (local, 4 CPUs, main @ 436bfb54)
+
+| Check | Result | Time |
+|---|---|---|
+| `flutter pub get --enforce-lockfile` | pass | 21 s |
+| `dart format --output=none --set-exit-if-changed .` | **exit 1: 451 of 696 files would change** (test/audit 122, lib/presentation 97, lib/core 77, test/widget 59, test/core 50, lib/widgets 16, …). Not applied. | 11 s |
+| `flutter analyze --fatal-infos` | pass, "No issues found!" | 58 s |
+| `flutter test --coverage` (full suite) | **2178 passed, 2 failed, 1 skipped** (exit 1) | 38 m 20 s wall (coverage on, and a web build ran in parallel for ~9 min; CI's plain run: 8 m 55 s) |
+| `python3 -m unittest discover -s tool/tests -p 'test_*.py'` | pass, 14 tests | 0.4 s |
+| `python3 tool/check_frontend_release.py docs/frontend-completion/09-release-candidate.json` | pass (exit 0): "Manifest valid; release NOT complete: accessibility, automated, deployment-smoke, device-lifecycle, layout, performance, real-maps, secondary-screens, trip-journeys" | <1 s |
+| `node tool/verify_driver_map_web.cjs` | pass: "PASS: vector palette, tap-safe release, gesture lock, drag, pan, pinch/twist, tilt, live tilt-with-zoom, wheel glide, taps, anchor, look-ahead, sheet glide, native vehicle marker with ring and locate view" (static/vm check of web/driver_map_camera.js, no browser) | 0.3 s |
+| `flutter build web --release` | pass; build/web 49 MB, main.dart.js 5.6 MB; warning: "Expected to find fonts for (MaterialIcons, packages/cupertino_icons/CupertinoIcons), but found (MaterialIcons)" | 9 m 26 s (compile 560 s, under test load) |
+| integration_test/driver_lifecycle_test.dart | NOT RUN locally (CI runs it: 42 s, green on 436bfb54) | – |
+
+Failures, verbatim:
+1. `test/audit/r5_lows_test.dart`: "driver-r5-3: a Radar card's Match ends at the server's expiresAt" — `Expected: not null / Actual: <null>` at r5_lows_test.dart:750. The test sets `expiresAt = DateTime.now() + 8 s` (real clock) while pumping fake time; under load the real 8 s ran out first.
+2. `test/core/locate_view_test.dart`: "the locate flight is smooth: eased start, continuous zoom and tilt, tilt on the curve, no cut" — `Expected: a value less than <0.4036353465298852> / Actual: <1.3454511550996173>` at locate_view_test.dart:198.
+
+Rerun once (`flutter test test/audit/r5_lows_test.dart test/core/locate_view_test.dart`): **All tests passed (27)** → both are **flaky under CPU load**, not deterministic failures. Skipped test: 1 (pre-existing, as #380 reports).
+The brief's red test `test/widget/accessibility_d53a_test.dart` "driver-u136": **passes** on main (full run and `--plain-name driver-u136` rerun).
+
+## 5. Coverage of critical logic
+
+From the same full run (`coverage/lcov.info`, line coverage, generated l10n excluded):
+- All of lib/: **30617 / 34356 = 89.1 %**; lib/core: **8035 / 8752 = 91.8 %**; lib/presentation: 20434 / 23184 = 88.1 %.
+
+| lib/core area | Hit / lines | % |
+|---|---|---|
+| dispatch (offers, claim, pickup pay) | 768 / 819 | 93.8 |
+| ride (active ride, completion journal) | 865 / 886 | 97.6 |
+| session | 235 / 240 | 97.9 |
+| realtime | 170 / 177 | 96.0 |
+| navigation (camera) | 950 / 988 | 96.2 |
+| routing | 516 / 552 | 93.5 |
+| live (server services) | 505 / 537 | 94.0 |
+| api | 145 / 160 | 90.6 |
+| money / earnings / history | 130/142 (91.5), 35/37 (94.6), 199/211 (94.3) |
+| **waybill** | 134 / 168 | **79.8** |
+| account | 370 / 438 | 84.5 |
+| **auth** | 209 / 376 | **55.6** |
+| safety / scheduled / vehicle / location | 91.5 / 97.3 / 89.9 / 86.6 |
+
+Weak files (<60 %, ≥40 lines): `lib/core/auth/secure_token_store.dart` **4 %** (2/50), `provider_token_source.dart` 32 %, `phone_country.dart` 50 %, `auth_error_message.dart` 55 %.
+Caveat: high line coverage comes largely from widget tests driving the demo dispatch; it does not show the live paths are correct (e.g. EUR totals in R3 are executed but never asserted).
+
+## 10. Summary — top findings
+
+| # | Sev | Finding | Action | Phase |
+|---|---|---|---|---|
+| 1 | S2 | Live build shows seeded **demo scheduled rides** and reminders (scheduled_rides.dart:461-509) | Empty/hide the store when `LiveDriverServices.active`; test in live config | 0/3 |
+| 2 | S2 | **Ride-check alerts never reach the server** in live (main.dart:169 `DemoSafetyAlertRepository`) | Server alert endpoint or explicit "not sent" UI; owner decision | 3/4 |
+| 3 | S2 | **Today's earnings / history are device-local and summed as SEK** (today_earnings.dart:35-49, ride_history.dart:126-132) | Sum per currency; read server earnings; EUR tests | 3 |
+| 4 | S2 | **Google API key in git history** (e6729267, 039b3b7d) | Verify restrictions or rotate | 4 |
+| 5 | S2 | Client-side 25 % commission / pickup-pay fallbacks can differ from server (dispatch_repository.dart:154-159) | Require `driverEarnings` in live; show "—" otherwise | 3 |
+| 6 | S2 | Cross-app live sync untested in CI (`test/live` skipped without env); N6 needs device | Phase 3 harness; D2/D3 | 3/6 |
+| 7 | S3 | Round-4b live screens (AddCar, JoinFleet, LiveVehicles, ServerNotifications) and `SecureTokenStore` (4 %) untested | Widget/unit tests | 5 |
+| 8 | S3 | N8: driver ride-check far-drop threshold 3 km vs 300 m scenario | Confirm with owner, align | 3 |
+| 9 | S3 | CI lacks format, coverage, advisory/secret scan; live build compiled only post-merge | Add gates (format in its own PR) | 2 |
+| 10 | S4 | Two flaky wall-clock tests (r5_lows driver-r5-3, locate_view smooth flight); 451 unformatted files; huge widget files with logic (scheduled_rides 2706, home_map_sheet 2396) | Fake clock in tests; format PR; extract stores | 2/5 |
+
+Also: PR #380 is merged (N1, N5, N9, N11 done; N6 defence only; N8 open). Contract copy v0.5.3 vs v0.5.5.
+
+### Not verified (and why)
+- Behaviour on the live site / real devices (no browser session against Render, no iPhone, no Maps key in the container).
+- Branch protection settings (needs repo admin API).
+- Dependency advisories (osv-scanner not installed); sliding_up_panel maintenance status (pub.dev not checked).
+- Integration test locally (CI result used).
+- Whether the server always sends `driverEarnings`/`pickupPay`, and its ride-check threshold.
