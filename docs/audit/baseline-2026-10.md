@@ -16,8 +16,8 @@ Toolchain used locally: Flutter 3.47.7 / Dart 3.13.5 (CI pins 3.47.6).
 - [x] 3. CI
 - [ ] 4. Baseline run
 - [ ] 5. Coverage of critical logic
-- [ ] 6. Screen inventory
-- [ ] 7. Code quality
+- [x] 6. Screen inventory
+- [x] 7. Code quality
 - [ ] 8. Known issues (N1, N5, N6, N8, N9, N11)
 - [ ] 9. Untested features and risks
 - [ ] 10. Summary
@@ -133,3 +133,106 @@ Direct dependencies (31 incl. SDK ones) and where they are imported (`package:<n
 - `flutter pub outdated --no-transitive`: **15 direct + 3 dev** outdated; 12 upgradable within constraints, 9 need a constraint change (majors: file_picker 13, flutter_secure_storage 11, google_fonts 9, pinput 7, share_plus 13, flutter_lints 6). Whole graph: 54 locked older than upgradable, 20 constrained below resolvable.
 - Security advisories: `pub` printed none; a dedicated advisory scan (osv-scanner) was **NOT VERIFIED** (tool not installed here).
 - Local Flutter is 3.47.7; CI and deploy pin 3.47.6 (drider-ci.yml, deploy-pages.yml).
+
+## 6. Screen inventory
+
+Method: every lib file with a `Scaffold(` (plus sheets opened as screens), its callers (`grep -rlE "\bClass\("` in lib), the number of test files naming the class, and whether the file itself has `PopScope`/`WillPopScope`. "Back" = custom Back handling in that file; screens without it use the default Navigator pop (no custom guard). Live column: whether the screen reads the server (L), only device/demo data (D), or both by mode (L/D).
+
+| Screen (class) | File (lib/presentation/driver/…) | Entry points | Test files | PopScope | Data |
+|---|---|---|---|---|---|
+| DriverSessionGate | auth/session_gate.dart | main.dart (live root) | 1 | no | L |
+| DriverSignIn (3 steps) | auth/sign_in.dart | main.dart, session expiry | 5 | no | L |
+| DriverPhoneVerification | auth/phone_verify.dart | sign_in.dart | 4 | yes | L |
+| DriverDetailsScreen (step 3 / Your details) | account/driver_details_screen.dart | session_gate, auth_navigation, profile | 1 | yes | L |
+| DriverHome | home/home.dart (+ 35 part/component files) | main.dart, ride_completed | 51 | no (sheet-level) | L/D |
+| RideRequests | ride requests/ride_requests.dart | home.dart | 17 | no | L/D (falls back to `DemoDispatchRepository()` :230) |
+| AcceptRide (trip) | accept ride/accept_ride.dart | home_offer_radar, ride_requests, accept_ride_trip (next trip) | 72 | yes | L/D |
+| Chat | common/chat/chat.dart | accept_ride_panel, accept_ride_sheet | 15 | no | L/D |
+| Waybill sheet | waybill/waybill_sheet.dart (`showMoveraWaybillSheet`) | accept_ride_panel:1100/1115, accept_ride_sheet:110 | yes (waybill tests) | n/a (sheet) | in-memory record |
+| DriverRideCompleted | ride completed/ride_completed.dart | accept_ride_trip | 18 | yes | L/D |
+| DriverRideHistory / Detail | ride history/… | side menu, home sheet, accept_ride | 8 / 7 | yes / no | **device only** (PrefsTripHistoryRepository) |
+| ScheduledRidesScreen | scheduled rides/scheduled_rides.dart | side menu, notifications, home | 16 | no | **D: seeded demo reservations** (see §7) |
+| ReservationRouteMapPage | home/components/reservation_route_map.dart | same file :82 | 2 | no | D |
+| DriverDestinationPicker / DestinationConfirmScreen | destination mode/… | home sheet, accept_ride_panel | 8 / 2 | no | L/D |
+| MyQueuePosition sheet (+ InAirportQueue card) | my queue position/… | home_map_sheet:1028 (destination panel) | 2 | no | **D: sample ranks, not live-gated** |
+| DriverProfile | profile/profile.dart | side menu | 6 | yes | L/D |
+| DriverVehicles → LiveVehiclesScreen | vehicles/… | profile:257 | 5 / **0** | no | D / L |
+| AddVehicle / VehicleDocuments | add vehicle/add_vehicle.dart | vehicles.dart (demo branch) | 5 / 9 | no | D (LocalVehicleStore) |
+| AddCarScreen | account/add_car_screen.dart | my_fleet, live_vehicles | **0** | no | L |
+| JoinFleetScreen | account/join_fleet_screen.dart | live_vehicles | **0** | no | L |
+| MyFleetScreen | account/my_fleet_screen.dart | profile, server notifications, home | 1 | no | L |
+| DriverDocuments / LiveDocumentsScreen / DocumentPreview | documents/… | profile, home | 8 / 1 / 2 | no | D / L / D |
+| DriverNotificationsScreen | notifications/driver_notifications_screen.dart | side menu, home_account | 4 | no | D (in-memory feed) |
+| ServerNotificationsScreen | notifications/server_notifications_screen.dart | home_account | **0** | no | L |
+| Analytics / AcceptanceRate / CancelationRate | analytics/… | profile | 6 / 5 / 6 | no | **D: labelled sample numbers** |
+| EarningStatsScreen | earning stats/earning_stats.dart | analytics | 2 | no | **D: sample** |
+| WalletScreen / MyBank / AddNewAccount | my wallet, my bank | side menu, sheet nav, profile | 6 / 4 / 5 | no | D |
+| Promotions | promotions/promotions.dart | side menu | 5 | no | D |
+| DrivingLogs | driving logs/driving_logs.dart | side menu | 4 | no | D |
+| Preferences | preferences/preferences.dart | side menu, sheet nav, accept_ride_panel | 12 | no | device |
+| Settings / Accessibility / SoundAndVoice / EmergencyContacts / PinVerification | settings/… | profile, side menu | 6 / 5 / 6 / 7 / 4 | EmergencyContacts yes | device |
+| SafetyToolKits sheet | safety toolkits/safety_toolkits.dart | home, accept_ride, settings | yes | no | D alerts (DemoSafetyAlertRepository) |
+| SupportInboxScreen | support/support_inbox.dart | profile, side menu, home | 15 | yes | D |
+| LegalDocumentScreen | profile/legal_document.dart | sign_in:54/56, profile:302 | 3 | no | static |
+| DriverSideMenu | side menu/side_menu.dart | home, accept_ride | 5 | n/a | – |
+| **AdditionalInfoNavigation** (+ SelectDocumentType, TakeIdPhoto, vehicle_*) | auth/additional detail/… | **no caller in lib** (legacy onboarding) | 2 / 0 / 2 | yes | dead code kept alive by tests (e.g. test/widget/frontend_legacy_boundary_test.dart) |
+
+Screens with **no test file naming them**: AddCarScreen, JoinFleetScreen, LiveVehiclesScreen, ServerNotificationsScreen, SelectDocumentType — all but the last are **live-only fleet/notification screens from round 4b**.
+Back handling: only 13 lib files use `PopScope`/`WillPopScope`; Back behaviour on the rest is default pop and is **not** systematically tested (Phase 5).
+
+## 7. Code quality
+
+### Huge files (lines, `wc -l`)
+| File | Lines |
+|---|---|
+| lib/presentation/driver/scheduled rides/scheduled_rides.dart | 2706 (contains a 600-line static `ScheduledRideStore` at :461-1066 — state in a screen file) |
+| lib/presentation/driver/home/home_map_sheet.dart | 2396 (26 `Timer` mentions, 29 setState/_rebuild) |
+| lib/presentation/driver/accept ride/accept_ride_trip.dart | 1846 (45 `Timer` mentions; builds waybills, money) |
+| lib/presentation/driver/accept ride/accept_ride.dart | 1798 (`_AcceptRideState` ~200 private fields) |
+| lib/presentation/driver/home/home_offer_radar.dart | 1482 |
+| lib/presentation/driver/accept ride/accept_ride_panel.dart | 1354 |
+| lib/presentation/driver/account/driver_details_screen.dart | 1320 |
+| accept ride/navigation_instruction_banner.dart, ride_check_card.dart | 1272, 1260 |
+| lib/presentation/driver/home/home.dart | 1198 (66 `Timer` mentions) |
+`home.dart` and `accept_ride.dart` are split with `part`/extensions (18 `part` lines) — the state is still one object; extensions only spread it over files.
+
+### Business logic in widgets
+- Trip money and waybill building inside the trip widget: `_paidWaybill`, `_buildCurrentWaybill`, `_buildNextWaybill` (accept ride/accept_ride_trip.dart:116, :278, :370).
+- Scheduled-ride store, seeding and claim logic inside the screen file (scheduled_rides.dart:461-1066).
+- Ride-history period totals computed in the widget (ride history/ride_history.dart:126-132).
+
+### Demo code paths reachable in the live build (`MOVERA_AUTH_REQUIRED=true`)
+Verified from source on main (not clicked on the live site):
+| Path | Evidence | Risk |
+|---|---|---|
+| Scheduled rides seeded with demo reservations (rider "Lars", Södermalm → Bromma, 184 kr, plus `DemoReservations.main/clashing/airport`) | scheduled_rides.dart:464-509; the file has no live/auth check; reachable from side menu, notifications, home | S2: a live driver sees and can act on fake reservations |
+| Airport queue card + "10 drivers ahead" sample ranks | home_map_sheet.dart:1025-1028 (destination panel), my_queue_pos.dart:29-38 | S3 |
+| Analytics / earning stats sample numbers (labelled "Sample") | analytics/analytics.dart:19-20, earning stats/earning_stats.dart:67-362 | S3 (labelled) |
+| Ride-check alerts go to `DemoSafetyAlertRepository` (never reach Movera) | lib/main.dart:169; ride_check_controller.dart:401 shows "not reached Movera" only by type check | S2 safety: in live the driver's alert is not sent to a server |
+| Driver session in memory only | lib/main.dart:143 `MemoryDriverSessionRepository` | S3 (server presence is the truth) |
+| Waybills in memory only (`InMemoryWaybillRepository.instance`) | lib/main.dart:145, waybill.dart:207-211 | S3: waybill gone after reload |
+| Trip history and **today's earnings** from device storage only | core/history/today_earnings.dart:20-30 (`PrefsTripHistoryRepository`) | S2: new device / cleared storage / logout shows 0 earnings; not the server's numbers |
+| Local vehicle store default `MVR 418` demo car | core/vehicle/local_vehicle_store.dart:71-83 | mitigated on main: Profile (profile.dart:44), Vehicles (vehicles.dart:58-59) and waybill (accept_ride_trip.dart:301-312) use the account in live — fixed by #380 / round 4b |
+| `RideRequests` / `DriverHome` fall back to `DemoDispatchRepository()` when not injected | ride_requests.dart:230, home.dart:479 | S4 (root injects the live one) |
+| `adminDemoOffers: !driverProductionRequested` is **true in the live build** | driver_runtime_config.dart:94 | S4 — only read by the demo dispatch (NOT VERIFIED that nothing else reads it) |
+
+### Client-side money vs server numbers
+- **Currency assumed SEK when summing**: `TodayEarnings.totalOf` sums `minorUnits` of every record regardless of currency and formats with `Money.ore(total)` = SEK (core/history/today_earnings.dart:35-49; `Money.ore` defaults `currency='SEK'`, core/money/money.dart:6-8). Same in ride history totals (ride_history.dart:126-132) and `TripHistoryRecord.fareMoney` (trip_history.dart:126-129, `Money.parseSekLabel` / `Money.ore`). A Paris (EUR) driver's island would show "kr". **S2**, untested for EUR.
+- `RideOffer.driverPay` falls back to a **client 25 % commission** (`WaybillPayment.serviceFeeRate = 0.25`, waybill.dart:362) when the server sent no `driverEarnings` (dispatch_repository.dart:154-159). Waybill fee lines computed locally: `_feeOre = ((rider - wait) * feeRate).round()` (waybill.dart:427-445); label parse fallback "in kronor" (waybill.dart:451-459).
+- Pickup pay computed client-side (`PickupPayCalculator`, core/dispatch/pickup_pay.dart:85-112) when the offer has no `pickupPay`.
+- On main the live trip end uses the server projection (`LiveTripMoney.tryParse`, core/live/live_trip_money.dart) — this is the N9 fix from #380.
+
+### Timers / streams / listeners
+- 12 `Timer.periodic` in lib. Heuristic (creates vs `.cancel()` per file) flagged only home_start_position.dart, whose `_startWait` is cancelled in home.dart:1145 — no leak found. Files with more `addListener` than `removeListener` were checked by hand for the big ones (accept_ride.dart:614-749, home.dart:470-1187, adaptive_trip_island.dart:170-191): the unmatched ones listen to objects the same State owns and disposes. No leak proven; **no automated leak test** exists.
+- `LiveDriverServices.instance` is a mutable static singleton (live_driver_services.dart:56): tests must reset it; screens reach it globally.
+
+### Duplication with the rider app (/home/user/movera-rider-app, origin/main c1063fb8)
+Same-purpose files written twice, diverged (diff lines): `money.dart` driver 229 / rider 134 (287), `api_client.dart` 406 / 371 (407), `secure_token_store.dart` 161 / 187 (132), `trip_status.dart` 109 / 234 (275), `geo_point.dart` 88 / 12, `token_store.dart` 33 / 30 (5). No shared package. Contract copy: driver **0.5.3**, rider 0.5.0, contract repo 0.5.5 (contracts/contract.json:3).
+
+### Secrets and keys
+- Working tree: no key literal found (`git grep` for `AIza…`, private keys, tokens). Maps key injected at deploy (web/index.html:42 placeholder) and from env on Android/iOS (android/app/build.gradle.kts:29, ios/Runner/Info.plist:6).
+- **History: a Google API key (`AIzaSyB2…`, redacted here) is in git history** in commits e6729267 / 039b3b7d (android/app/src/main/AndroidManifest.xml) and removed in f3c6cb69. **S2**: confirm it is restricted (Android package + SHA-1) or rotate it (NOT VERIFIED which restrictions apply — needs the owner's Google Cloud console).
+- android/local.properties is not tracked; android/gradle.properties is tracked (JVM flags only).
+
+### Personal data in logs
+- `DriverLog` (core/logging/driver_log.dart) documents "no rider names, phone numbers" and scrubs `FormatException` sources; prints via `debugPrint` (also in release web console). 58 log/print call sites; the ones checked log trip ids, status codes and `error.detail` (live_trip_commands.dart:226 logs the server's `detail` text verbatim — content not controlled by the app, NOT VERIFIED free of PII). `sheets/sheet_trace.dart:11` prints sheet positions unconditionally when called.
