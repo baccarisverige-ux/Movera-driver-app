@@ -445,6 +445,41 @@ void main() {
       await sub.cancel();
     });
 
+    test('the replay of the trip\'s history before the accept is not passed '
+        'on (it read as the trip taken back)', () async {
+      // The accept answer made version 4 known.
+      trips.observe({'tripId': 't1', 'status': 'accepted', 'version': 4});
+      final events = <DriverRealtimeEvent>[];
+      final sub = realtime.subscribe('t1').listen(events.add);
+      await pumpEventQueue();
+      final s = streams.single;
+      s.add(utf8.encode(sse(1, 'trip_projection', status: 'requested', version: 1)));
+      s.add(utf8.encode(sse(2, 'trip_projection', status: 'searching', version: 2)));
+      s.add(utf8.encode(sse(3, 'trip_projection', status: 'offered', version: 3)));
+      s.add(utf8.encode(sse(4, 'trip_projection', status: 'accepted', version: 4)));
+      s.add(utf8.encode(sse(5, 'trip_projection', status: 'driver_to_pickup', version: 5)));
+      await pumpEventQueue();
+      expect(events.any((e) => e.status?.isReleasedToDispatch ?? false), isFalse);
+      expect(events.last.status, TripStatus.driverToPickup);
+      expect(realtime.lastSequence, 5);
+      await sub.cancel();
+    });
+
+    test('nothing known yet (a restored screen): the trip is read before the '
+        'stream, so its history is still told from news', () async {
+      answers.add((_) => json(200, {'tripId': 't1', 'status': 'arrived', 'version': 6}));
+      final events = <DriverRealtimeEvent>[];
+      final sub = realtime.subscribe('t1').listen(events.add);
+      await pumpEventQueue();
+      expect(trips.versionOf('t1'), 6);
+      final s = streams.single;
+      s.add(utf8.encode(sse(2, 'trip_projection', status: 'searching', version: 2)));
+      s.add(utf8.encode(sse(7, 'trip_projection', status: 'cancelled_by_rider', version: 7)));
+      await pumpEventQueue();
+      expect(events.map((e) => e.status), [TripStatus.cancelledByRider]);
+      await sub.cancel();
+    });
+
     test('a trip that is not this driver\'s any more ends here as handed '
         'back', () async {
       statuses.add(404);
