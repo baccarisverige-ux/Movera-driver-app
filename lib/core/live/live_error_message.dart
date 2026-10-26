@@ -42,3 +42,9 @@ String liveTripErrorMessage(Object? error) {
         _ => tr.liveTripFailed,
       };
 }
+
+/// Why a chat message to the rider was not sent, in the driver's words.
+String liveChatErrorMessage(Object? error) {
+  if (error is! ApiError) return tr.chatSendFailed;
+  return _transportMessage(error) ?? tr.chatSendFailed;
+}

@@ -130,8 +130,16 @@ class ApiClient {
       ),
   );
 
-  Uri uriFor(String path) =>
-      _base.replace(path: '${_base.path.replaceFirst(RegExp(r'/$'), '')}$path');
+  /// [path] under the base; a `?query` on it stays a query (a path's `?`
+  /// would be escaped).
+  Uri uriFor(String path) {
+    final split = path.indexOf('?');
+    final plain = split < 0 ? path : path.substring(0, split);
+    return _base.replace(
+      path: '${_base.path.replaceFirst(RegExp(r'/$'), '')}$plain',
+      query: split < 0 ? null : path.substring(split + 1),
+    );
+  }
 
   Future<Map<String, dynamic>> _send(
     String method,

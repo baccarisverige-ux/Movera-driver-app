@@ -7,6 +7,7 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_error_message.dart';
+import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -37,6 +38,7 @@ class LiveDriverServices {
       every: locationEvery,
     );
     trips = LiveTripCommands(api: api, lastFix: () => reporter.lastFix);
+    chat = LiveTripChat(api: api);
     dispatch = ApiDispatchRepository(
       client: client,
       baseUri: apiBase,
@@ -62,6 +64,9 @@ class LiveDriverServices {
 
   late final LiveLocationReporter reporter;
   late final LiveTripCommands trips;
+
+  /// The trip's chat with the rider (messages and unread count per trip).
+  late final LiveTripChat chat;
   late final ApiDispatchRepository dispatch;
   late final LivePresence presence;
 
@@ -76,6 +81,7 @@ class LiveDriverServices {
     accessToken: _tokens.readAccess,
     renewSession: _api.renewAccess,
     trips: trips,
+    chat: chat,
   );
 
   /// Follows the app's availability: the feed and location run while the

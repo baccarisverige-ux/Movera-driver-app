@@ -4221,6 +4221,34 @@ class AppLocalizationsSv extends AppLocalizations {
   String get chatLocalNotSent => 'Lokal förhandsvisning · inte skickat';
 
   @override
+  String get chatSend => 'Skicka meddelande';
+
+  @override
+  String get chatSending => 'Skickar…';
+
+  @override
+  String get chatNotSentTapToRetry =>
+      'Inte skickat · Tryck för att försöka igen';
+
+  @override
+  String get chatSendFailed =>
+      'Movera kunde inte skicka ditt meddelande. Försök igen.';
+
+  @override
+  String get chatHistoryFailed => 'Tidigare meddelanden kunde inte läsas in.';
+
+  @override
+  String chatNewMessages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nya meddelanden från passageraren',
+      one: '1 nytt meddelande från passageraren',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get queueAirportPreview => 'Förhandsvisning av flygplatskön';
 
   @override

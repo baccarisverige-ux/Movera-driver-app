@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
@@ -19,7 +20,8 @@ import 'package:movera/core/realtime/driver_realtime.dart';
 /// command (arrived after Arrive, completed after Finish…) is not passed
 /// on: the screen already moved, and a terminal echo would otherwise end
 /// the trip a second time. A rider cancel, an admin's change or anything
-/// else comes through to the screen as before.
+/// else comes through to the screen as before. A chat message
+/// (`kind: message`) goes to [LiveTripChat] as well.
 class ApiDriverRealtime implements DriverRealtime {
   ApiDriverRealtime({
     required http.Client client,
@@ -27,17 +29,20 @@ class ApiDriverRealtime implements DriverRealtime {
     required Future<String?> Function() accessToken,
     this.renewSession,
     LiveTripCommands? trips,
+    LiveTripChat? chat,
     Duration Function(int attempt)? reconnectDelay,
   }) : _client = client,
        _base = apiBase,
        _token = accessToken,
        _trips = trips,
+       _chat = chat,
        _delay = reconnectDelay ?? _backoff;
 
   final http.Client _client;
   final Uri _base;
   final Future<String?> Function() _token;
   final LiveTripCommands? _trips;
+  final LiveTripChat? _chat;
   final Duration Function(int attempt) _delay;
   final Future<void> Function()? renewSession;
 
@@ -152,6 +157,9 @@ class ApiDriverRealtime implements DriverRealtime {
       return;
     }
     _open = true;
+    // Back after a drop: a message may have passed while the stream was
+    // down, so the chat reads its history again.
+    if (_attempts > 0) unawaited(_chat?.reconcile(tripId));
     _attempts = 0;
     final data = StringBuffer();
     _feed = response.stream
@@ -194,9 +202,15 @@ class ApiDriverRealtime implements DriverRealtime {
     final version = json['version'];
     // The replay of the trip's history (requested, searching, offered…
     // before this driver's accept): older than what this phone knows, so
-    // not news. Passing it on would read as the trip taken back.
+    // not news. Passing it on would read as the trip taken back. A chat
+    // message never changes the trip, so its version says nothing about
+    // that: it always comes through (a replay after a drop carries the
+    // version of its time).
+    final isMessage = json['kind'] == 'message';
     final known = _trips?.versionOf(tripId);
-    if (version is num && known != null && version.toInt() < known) return;
+    if (!isMessage && version is num && known != null && version.toInt() < known) {
+      return;
+    }
     if (projection is Map && version is num) {
       _trips?.observe({
         ...Map<String, dynamic>.from(projection),
@@ -209,7 +223,11 @@ class ApiDriverRealtime implements DriverRealtime {
       return;
     }
     final event = DriverRealtimeEvent.tryParse(json);
-    if (event != null && !_out.isClosed) _out.add(event);
+    if (event == null) return;
+    // The screen still hears it (its sequence gate counts every event);
+    // the chat shows it and counts it as unread.
+    if (event.chat case final message?) _chat?.receive(tripId, message);
+    if (!_out.isClosed) _out.add(event);
   }
 
   /// The trip left this driver without an event they could read: the
