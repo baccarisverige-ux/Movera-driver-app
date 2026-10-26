@@ -567,8 +567,7 @@ class _AcceptRideState extends State<AcceptRide>
   String _vehiclePlate = WaybillRecord.plateUnavailable;
   /// Owner N11: the signed-in driver (live), the brand name in the demo.
   String _driverName = WaybillRecord.moveraDriverName;
-  /// Owner N11: the pickup's address looked up from its coordinates.
-  String? _resolvedPickup;
+  String? _resolvedPickup; // Owner N11: looked up from the coordinates.
   String get _pickupAddress => _resolvedPickup ?? widget.pickupAddress;
   static const Duration _projectionRetryBase = Duration(seconds: 1);
   static const Duration _projectionRetryMax = Duration(seconds: 30);
