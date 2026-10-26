@@ -51,7 +51,9 @@ void main() {
     });
 
     test('never a no-show before the free wait ends', () {
-      addTearDown(() => ScheduledRideRules.current = const ScheduledRideRules());
+      addTearDown(
+        () => ScheduledRideRules.current = const ScheduledRideRules(),
+      );
       ScheduledRideRules.current = const ScheduledRideRules(
         includedWaitingMinutes: 7,
       );
@@ -105,8 +107,10 @@ void main() {
     test('added to a fare label in the same form', () {
       const fee = Money(minorUnits: 1839);
       expect(WaitingTerms.addFee('100,00 kr', fee), '118,39 kr');
-      expect(WaitingTerms.addFee('104,80 kr', const Money(minorUnits: 0)),
-          '104,80 kr');
+      expect(
+        WaitingTerms.addFee('104,80 kr', const Money(minorUnits: 0)),
+        '104,80 kr',
+      );
       // Not readable as SEK: left as it is, never a wrong total.
       expect(WaitingTerms.addFee('—', fee), '—');
       expect(
@@ -121,9 +125,7 @@ void main() {
 
   group('Q44: no-show fee share per country', () {
     test('default 80%', () {
-      final terms = DriverAppConfig.fromJson({'currency': 'SEK'})
-          .waiting
-          .base;
+      final terms = DriverAppConfig.fromJson({'currency': 'SEK'}).waiting.base;
       expect(terms.driverShareNoShowPercent, 80);
     });
 
@@ -158,16 +160,23 @@ void main() {
     });
 
     test('the local default (3) stays the fallback', () {
-      DriverAppConfig.fromJson({'offers': {'autoOffline': {'missedExclusive': 0}}})
-          .apply();
-      expect(DriverOfferRules.current.autoOfflineAfter,
-          DriverOfferRules.defaultAutoOfflineAfter);
+      DriverAppConfig.fromJson({
+        'offers': {
+          'autoOffline': {'missedExclusive': 0},
+        },
+      }).apply();
+      expect(
+        DriverOfferRules.current.autoOfflineAfter,
+        DriverOfferRules.defaultAutoOfflineAfter,
+      );
       expect(DriverOfferRules.defaultAutoOfflineAfter, 3);
     });
 
     test('admin can switch it off', () {
       DriverAppConfig.fromJson({
-        'offers': {'autoOffline': {'on': false, 'missedExclusive': 2}},
+        'offers': {
+          'autoOffline': {'on': false, 'missedExclusive': 2},
+        },
       }).apply();
       for (var i = 0; i < 5; i++) {
         expect(ExclusiveAnswers.instance.missed(), isFalse);
@@ -223,13 +232,16 @@ void main() {
       // Tests run with it off by default.
       final byDefault = DemoDispatchRepository();
       addTearDown(byDefault.dispose);
-      expect(
-        (await byDefault.watchNearbyOffers().first).map((o) => o.id),
-        ['nearby-1', 'nearby-2', 'nearby-3'],
-      );
+      expect((await byDefault.watchNearbyOffers().first).map((o) => o.id), [
+        'nearby-1',
+        'nearby-2',
+        'nearby-3',
+      ]);
       on.reset();
-      expect((await on.watchNearbyOffers().first).first.id,
-          DemoAdminOffers.radarGroup.id);
+      expect(
+        (await on.watchNearbyOffers().first).first.id,
+        DemoAdminOffers.radarGroup.id,
+      );
     });
   });
 

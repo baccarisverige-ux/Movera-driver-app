@@ -70,30 +70,39 @@ void main() {
     ScheduledRideStore.reset();
     await tester.binding.setSurfaceSize(const Size(375, 812));
     const start = GeoPoint(59.3326, 18.0649);
-    final location = _Loc(DriverLocation(
-      point: start,
-      measuredAt: DateTime.now(),
-      accuracyMeters: 5,
-    ));
-    final routes = _Routes();
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        home: DriverHome(locationRepository: location, routeRepository: routes),
+    final location = _Loc(
+      DriverLocation(
+        point: start,
+        measuredAt: DateTime.now(),
+        accuracyMeters: 5,
       ),
-    ));
+    );
+    final routes = _Routes();
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: DriverHome(
+            locationRepository: location,
+            routeRepository: routes,
+          ),
+        ),
+      ),
+    );
     for (var i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 50));
     }
     tester
         .widget<InkWell>(
-            find.byKey(const ValueKey<String>('destination-mode-open')))
+          find.byKey(const ValueKey<String>('destination-mode-open')),
+        )
         .onTap!
         .call();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 520));
     await tester.tap(
-        find.byKey(const ValueKey<String>('destination-result-solna')));
+      find.byKey(const ValueKey<String>('destination-result-solna')),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 420));
     await tester.tap(find.byKey(const ValueKey<String>('destination-confirm')));
@@ -104,9 +113,9 @@ void main() {
     final from = routes.from!, to = routes.to!;
     final length = from.distanceMetersTo(to);
     GeoPoint along(double m) => GeoPoint(
-          from.latitude + (to.latitude - from.latitude) * m / length,
-          from.longitude + (to.longitude - from.longitude) * m / length,
-        );
+      from.latitude + (to.latitude - from.latitude) * m / length,
+      from.longitude + (to.longitude - from.longitude) * m / length,
+    );
     final before = routes.calls;
     var mapBuilds = 0;
     debugOnRebuildDirtyWidget = (e, _) {
@@ -115,13 +124,15 @@ void main() {
     addTearDown(() => debugOnRebuildDirtyWidget = null);
     const fixes = 60;
     for (var i = 1; i <= fixes; i++) {
-      location.updates.add(DriverLocation(
-        point: along(i * 10.0),
-        headingDegrees: 0,
-        speedMetersPerSecond: 10,
-        measuredAt: DateTime.now(),
-        accuracyMeters: 5,
-      ));
+      location.updates.add(
+        DriverLocation(
+          point: along(i * 10.0),
+          headingDegrees: 0,
+          speedMetersPerSecond: 10,
+          measuredAt: DateTime.now(),
+          accuracyMeters: 5,
+        ),
+      );
       for (var f = 0; f < 10; f++) {
         await tester.pump(const Duration(milliseconds: 100));
       }

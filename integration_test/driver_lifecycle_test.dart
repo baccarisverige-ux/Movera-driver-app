@@ -67,9 +67,14 @@ Future<void> _goOnlineFromHome(WidgetTester tester) async {
 }
 
 Future<void> _tapArrived(WidgetTester tester) async {
-  tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last).controller!.animatePanelToSnapPoint();
+  tester
+      .widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last)
+      .controller!
+      .animatePanelToSnapPoint();
   await _elapse(tester, const Duration(milliseconds: 700));
-  final button = find.byKey(const ValueKey<String>('active-ride-arrived-button'));
+  final button = find.byKey(
+    const ValueKey<String>('active-ride-arrived-button'),
+  );
   expect(button, findsOneWidget);
   await tester.ensureVisible(button);
   await tester.tap(button);
@@ -77,9 +82,14 @@ Future<void> _tapArrived(WidgetTester tester) async {
 }
 
 Future<void> _slide(WidgetTester tester) async {
-  final action = find.byKey(const ValueKey<String>('active-ride-primary-action'));
+  final action = find.byKey(
+    const ValueKey<String>('active-ride-primary-action'),
+  );
   if (action.evaluate().isEmpty) {
-    tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last).controller!.animatePanelToSnapPoint();
+    tester
+        .widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last)
+        .controller!
+        .animatePanelToSnapPoint();
     await _elapse(tester, const Duration(milliseconds: 700));
   }
   expect(action, findsOneWidget);
@@ -94,7 +104,11 @@ Future<void> _confirmShortTripIfAsked(WidgetTester tester) async {
   if (confirm.evaluate().isNotEmpty) {
     await tester.tap(confirm);
   }
-  for (var i = 0; i < 40 && find.byType(DriverRideCompleted).evaluate().isEmpty; i++) {
+  for (
+    var i = 0;
+    i < 40 && find.byType(DriverRideCompleted).evaluate().isEmpty;
+    i++
+  ) {
     await _elapse(tester, const Duration(milliseconds: 50));
   }
   await _elapse(tester, const Duration(milliseconds: 400));
@@ -125,7 +139,9 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
     await tester.binding.setSurfaceSize(const Size(375, 812));
-    await tester.pumpWidget(const MoveraApp(locationRepository: _ScriptedLocation()));
+    await tester.pumpWidget(
+      const MoveraApp(locationRepository: _ScriptedLocation()),
+    );
     await tester.pump();
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await _elapse(tester, const Duration(milliseconds: 200));
@@ -146,7 +162,9 @@ void main() {
       reason: 'The demo offer did not appear after going online.',
     );
     // The Exclusive offer's Accept is the blue radar in the dock.
-    await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home-radar-exclusive')),
+    );
     await _elapse(tester, const Duration(milliseconds: 520));
     expect(find.byType(AcceptRide), findsOneWidget);
 
@@ -178,16 +196,20 @@ void main() {
     // checks below held whether or not Keep trip ended the trip.
     final active = MemoryActiveRideRepository();
     final navigator = GlobalKey<NavigatorState>();
-    await tester.pumpWidget(MaterialApp(
-      navigatorKey: navigator,
-      home: const Scaffold(body: Text('Home stand-in')),
-    ));
-    navigator.currentState!.push(MaterialPageRoute<void>(
-      builder: (_) => AcceptRide(
-        locationRepository: const _ScriptedLocation(),
-        activeRideRepository: active,
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigator,
+        home: const Scaffold(body: Text('Home stand-in')),
       ),
-    ));
+    );
+    navigator.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => AcceptRide(
+          locationRepository: const _ScriptedLocation(),
+          activeRideRepository: active,
+        ),
+      ),
+    );
     await tester.pump();
     await _elapse(tester, const Duration(milliseconds: 400));
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
@@ -195,13 +217,18 @@ void main() {
 
     await _tapArrived(tester);
     await _slide(tester);
-    expect(find.byKey(const ValueKey<String>('active-ride-panel-onTrip')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('active-ride-panel-onTrip')),
+      findsOneWidget,
+    );
 
     // The island keeps trip options reachable even while Radar covers the sheet.
     await _elapse(tester, const Duration(milliseconds: 700));
     await tester.tap(find.byTooltip('Trip route and options').hitTestable());
     await _elapse(tester, const Duration(milliseconds: 250));
-    await tester.tap(find.byKey(const ValueKey<String>('active-ride-cancel-option')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('active-ride-cancel-option')),
+    );
     await _elapse(tester, const Duration(milliseconds: 300));
     expect(
       find.byKey(const ValueKey<String>('trip-cancellation-reasons-sheet')),
@@ -220,11 +247,18 @@ void main() {
     // and nothing of a cancel happened: no pop back to Home, no history
     // row, the trip snapshot kept, no "Trip ended early".
     expect(find.byType(AcceptRide), findsOneWidget);
-    expect(ModalRoute.of(tester.element(find.byType(AcceptRide)))!.isCurrent, isTrue);
+    expect(
+      ModalRoute.of(tester.element(find.byType(AcceptRide)))!.isCurrent,
+      isTrue,
+    );
     expect(find.text('Home stand-in'), findsNothing);
     expect(find.textContaining('Trip ended early'), findsNothing);
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString(PrefsTripHistoryRepository.key), isNull, reason: 'no trip was archived');
+    expect(
+      prefs.getString(PrefsTripHistoryRepository.key),
+      isNull,
+      reason: 'no trip was archived',
+    );
     expect(await active.read(), isNotNull, reason: 'the trip snapshot is kept');
     expect(tester.takeException(), isNull);
   });

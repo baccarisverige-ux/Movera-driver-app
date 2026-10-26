@@ -10,10 +10,10 @@ enum ArrivalPointKind { pickup, stop, destination }
 
 extension ArrivalPointKindVisuals on ArrivalPointKind {
   Color get color => switch (this) {
-        ArrivalPointKind.pickup => const Color(0xFF17A673),
-        ArrivalPointKind.stop => const Color(0xFF2F80ED),
-        ArrivalPointKind.destination => const Color(0xFFE13B2D),
-      };
+    ArrivalPointKind.pickup => const Color(0xFF17A673),
+    ArrivalPointKind.stop => const Color(0xFF2F80ED),
+    ArrivalPointKind.destination => const Color(0xFFE13B2D),
+  };
 }
 
 /// Top ride tab. Maneuver on the first line, the next stop scrolling beneath it.
@@ -72,7 +72,9 @@ class NavigationInstructionBanner extends StatelessWidget {
         kind: arrivalKind,
         distanceMeters: arrivalDistanceMeters,
         label: arrivalLabel,
-        address: arrivalAddress.trim().isEmpty ? address.trim() : arrivalAddress.trim(),
+        address: arrivalAddress.trim().isEmpty
+            ? address.trim()
+            : arrivalAddress.trim(),
         arrived: arrivalArrived,
         waitSeconds: waitSeconds,
         waitPaid: waitPaid,
@@ -124,7 +126,10 @@ class NavigationInstructionBanner extends StatelessWidget {
                     child: Center(
                       child: CustomPaint(
                         size: const Size(50, 54),
-                        painter: NavigationCuePainter(symbol: symbol, icon: icon),
+                        painter: NavigationCuePainter(
+                          symbol: symbol,
+                          icon: icon,
+                        ),
                       ),
                     ),
                   ),
@@ -190,7 +195,10 @@ class NavigationInstructionBanner extends StatelessWidget {
                   ] else if (eta.isNotEmpty) ...[
                     const SizedBox(width: 10),
                     Container(
-                      constraints: const BoxConstraints(minWidth: 58, maxWidth: 78),
+                      constraints: const BoxConstraints(
+                        minWidth: 58,
+                        maxWidth: 78,
+                      ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 10,
@@ -230,10 +238,7 @@ class NavigationInstructionBanner extends StatelessWidget {
                     if (address.trim().isNotEmpty && radarSwitch)
                       const SizedBox(width: 8),
                     if (radarSwitch)
-                      _RadarOnOff(
-                        on: radarOn,
-                        onTap: onRadarToggle,
-                      ),
+                      _RadarOnOff(on: radarOn, onTap: onRadarToggle),
                   ],
                 ),
               ],
@@ -244,7 +249,6 @@ class NavigationInstructionBanner extends StatelessWidget {
     );
   }
 }
-
 
 class _ArrivalApproachBanner extends StatefulWidget {
   const _ArrivalApproachBanner({
@@ -298,8 +302,12 @@ class _ArrivalApproachBannerState extends State<_ArrivalApproachBanner>
       _pulse.stop();
       _pulse.value = 0.5;
     } else {
-      if (!_entry.isCompleted) { _entry.forward(); }
-      if (!_pulse.isAnimating) { _pulse.repeat(); }
+      if (!_entry.isCompleted) {
+        _entry.forward();
+      }
+      if (!_pulse.isAnimating) {
+        _pulse.repeat();
+      }
     }
   }
 
@@ -325,11 +333,19 @@ class _ArrivalApproachBannerState extends State<_ArrivalApproachBanner>
   }
 
   String get _distanceLabel {
-    if (widget.arrived) { return tr.navArrived; }
+    if (widget.arrived) {
+      return tr.navArrived;
+    }
     final meters = widget.distanceMeters;
-    if (meters == null || !meters.isFinite) { return tr.navNear; }
-    if (meters < 25) { return tr.navNow; }
-    if (meters < 1000) { return '${meters.round()} m'; }
+    if (meters == null || !meters.isFinite) {
+      return tr.navNear;
+    }
+    if (meters < 25) {
+      return tr.navNow;
+    }
+    if (meters < 1000) {
+      return '${meters.round()} m';
+    }
     final km = meters / 1000;
     return '${driverDecimal(km, km < 10 ? 1 : 0)} km';
   }
@@ -352,9 +368,7 @@ class _ArrivalApproachBannerState extends State<_ArrivalApproachBanner>
         position: Tween<Offset>(
           begin: const Offset(-0.045, -0.02),
           end: Offset.zero,
-        ).animate(
-          CurvedAnimation(parent: _entry, curve: Curves.easeOutCubic),
-        ),
+        ).animate(CurvedAnimation(parent: _entry, curve: Curves.easeOutCubic)),
         child: Material(
           key: const ValueKey<String>('active-ride-navigation-card'),
           color: Colors.transparent,
@@ -495,10 +509,7 @@ class _ArrivalPointGraphic extends StatelessWidget {
             bottom: 1,
             height: 40,
             child: CustomPaint(
-              painter: _ArrivalRoadPainter(
-                color: color,
-                glow: wave,
-              ),
+              painter: _ArrivalRoadPainter(color: color, glow: wave),
             ),
           ),
           Positioned(
@@ -566,8 +577,7 @@ class _ArrivalRoadPainter extends CustomPainter {
     canvas.drawCircle(
       Offset(size.width * 0.5, size.height * 0.22),
       3.2 + (glow * 1.4),
-      Paint()
-        ..color = color.withValues(alpha: 0.65 + (glow * 0.35)),
+      Paint()..color = color.withValues(alpha: 0.65 + (glow * 0.35)),
     );
   }
 
@@ -578,7 +588,14 @@ class _ArrivalRoadPainter extends CustomPainter {
 
 /// Thin navigation cue. Drawn, not a stock flag or turn glyph.
 class NavigationCuePainter extends CustomPainter {
-  NavigationCuePainter({required this.symbol, required this.icon, this.color = Colors.white, this.exitNumber, this.exitAngleDegrees, this.fontFamily});
+  NavigationCuePainter({
+    required this.symbol,
+    required this.icon,
+    this.color = Colors.white,
+    this.exitNumber,
+    this.exitAngleDegrees,
+    this.fontFamily,
+  });
 
   final Color color;
   final String? exitNumber;
@@ -635,10 +652,7 @@ class NavigationCuePainter extends CustomPainter {
         )
         ..lineTo(p(11 + 6.0 * side, 7).dx, p(7, 7).dy);
       canvas.drawPath(path, stroke);
-      arrowHead(
-        p(11 + 8.1 * side, 7),
-        left ? math.pi : 0,
-      );
+      arrowHead(p(11 + 8.1 * side, 7), left ? math.pi : 0);
     }
 
     void slightTurn({required bool left}) {
@@ -652,15 +666,9 @@ class NavigationCuePainter extends CustomPainter {
           p(11 + 2.2 * side, 8.2).dx,
           p(8.2, 8.2).dy,
         )
-        ..lineTo(
-          p(11 + 5.1 * side, 4.9).dx,
-          p(4.9, 4.9).dy,
-        );
+        ..lineTo(p(11 + 5.1 * side, 4.9).dx, p(4.9, 4.9).dy);
       canvas.drawPath(path, stroke);
-      arrowHead(
-        p(11 + 6.25 * side, 3.55),
-        left ? -2.3 : -0.84,
-      );
+      arrowHead(p(11 + 6.25 * side, 3.55), left ? -2.3 : -0.84);
     }
 
     final kind = symbol;
@@ -1019,7 +1027,12 @@ class NavigationCuePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant NavigationCuePainter oldDelegate) =>
-      oldDelegate.symbol != symbol || oldDelegate.icon != icon || oldDelegate.color != color || oldDelegate.exitNumber != exitNumber || oldDelegate.exitAngleDegrees != exitAngleDegrees || oldDelegate.fontFamily != fontFamily;
+      oldDelegate.symbol != symbol ||
+      oldDelegate.icon != icon ||
+      oldDelegate.color != color ||
+      oldDelegate.exitNumber != exitNumber ||
+      oldDelegate.exitAngleDegrees != exitAngleDegrees ||
+      oldDelegate.fontFamily != fontFamily;
 }
 
 class _NextStopLine extends StatefulWidget {
@@ -1131,8 +1144,12 @@ class _NextStopLineState extends State<_NextStopLine>
 }
 
 double _scrollPhase(double t) {
-  if (t < 0.16) { return 0; }
-  if (t > 0.84) { return 1; }
+  if (t < 0.16) {
+    return 0;
+  }
+  if (t > 0.84) {
+    return 1;
+  }
   return Curves.easeInOut.transform((t - 0.16) / 0.68);
 }
 
@@ -1157,7 +1174,9 @@ class _RadarOnOffState extends State<_RadarOnOff>
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     );
-    if (widget.on) { _pulse.repeat(); }
+    if (widget.on) {
+      _pulse.repeat();
+    }
   }
 
   @override

@@ -26,8 +26,14 @@ class DemoDestinationTrips {
     final path = route.length >= 2 ? route : <GeoPoint>[driver, destination];
     final corridor = corridorKm * 1000;
     final pickup = _offset(driver, _bearing(driver, destination) + 90, 600);
-    RideOffer trip(String id, String rider, String dropoff, GeoPoint at,
-        Money fare, {required bool follows}) {
+    RideOffer trip(
+      String id,
+      String rider,
+      String dropoff,
+      GeoPoint at,
+      Money fare, {
+      required bool follows,
+    }) {
       final km = pickup.distanceMetersTo(at) / 1000 * 1.25;
       return RideOffer(
         id: '$idPrefix$id',
@@ -54,21 +60,46 @@ class DemoDestinationTrips {
     final (way2, way2Bearing) = _pointAt(path, 0.60);
     final (mid, midBearing) = _pointAt(path, 0.50);
     return <RideOffer>[
-      trip('final', 'Sofia', 'Near $destinationLabel',
-          _offset(nearEnd, endBearing + 90, math.min(800, corridor * 0.2)), Money.ore(24800),
-          follows: true),
-      trip('way-1', 'Adam', 'On your way · 35 %',
-          _offset(way1, way1Bearing + 90, corridor * 0.4), Money.ore(16450),
-          follows: true),
-      trip('way-2', 'Ella', 'On your way · 60 %',
-          _offset(way2, way2Bearing - 90, corridor * 0.5), Money.ore(19830),
-          follows: true),
-      trip('off-route', 'Karl', 'Away from your route',
-          _offset(mid, midBearing + 90, corridor * 3), Money.ore(15200),
-          follows: false),
-      trip('behind', 'Noor', 'Behind you',
-          _offset(driver, _bearing(destination, driver), corridor * 1.5), Money.ore(12140),
-          follows: false),
+      trip(
+        'final',
+        'Sofia',
+        'Near $destinationLabel',
+        _offset(nearEnd, endBearing + 90, math.min(800, corridor * 0.2)),
+        Money.ore(24800),
+        follows: true,
+      ),
+      trip(
+        'way-1',
+        'Adam',
+        'On your way · 35 %',
+        _offset(way1, way1Bearing + 90, corridor * 0.4),
+        Money.ore(16450),
+        follows: true,
+      ),
+      trip(
+        'way-2',
+        'Ella',
+        'On your way · 60 %',
+        _offset(way2, way2Bearing - 90, corridor * 0.5),
+        Money.ore(19830),
+        follows: true,
+      ),
+      trip(
+        'off-route',
+        'Karl',
+        'Away from your route',
+        _offset(mid, midBearing + 90, corridor * 3),
+        Money.ore(15200),
+        follows: false,
+      ),
+      trip(
+        'behind',
+        'Noor',
+        'Behind you',
+        _offset(driver, _bearing(destination, driver), corridor * 1.5),
+        Money.ore(12140),
+        follows: false,
+      ),
     ];
   }
 
@@ -86,8 +117,10 @@ class DemoDestinationTrips {
       if (step > 0 && left <= step) {
         final t = left / step;
         return (
-          GeoPoint(a.latitude + (b.latitude - a.latitude) * t,
-              a.longitude + (b.longitude - a.longitude) * t),
+          GeoPoint(
+            a.latitude + (b.latitude - a.latitude) * t,
+            a.longitude + (b.longitude - a.longitude) * t,
+          ),
           _bearing(a, b),
         );
       }
@@ -106,7 +139,9 @@ class DemoDestinationTrips {
     return GeoPoint(
       point.latitude + meters * math.cos(r) / perDegree,
       point.longitude +
-          meters * math.sin(r) / (perDegree * math.cos(point.latitude * math.pi / 180)),
+          meters *
+              math.sin(r) /
+              (perDegree * math.cos(point.latitude * math.pi / 180)),
     );
   }
 }

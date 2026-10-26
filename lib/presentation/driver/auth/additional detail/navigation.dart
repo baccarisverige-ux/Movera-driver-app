@@ -278,7 +278,10 @@ class _ProgressWidgetState extends State<ProgressWidget>
         value: _progress.value,
         child: Center(
           child: TextWidget(
-            text: tr.stepOfTotal('${widget.currentPageIndex + 1}', '${widget.totalPages}'),
+            text: tr.stepOfTotal(
+              '${widget.currentPageIndex + 1}',
+              '${widget.totalPages}',
+            ),
             fontSize: 12,
             fontWeight: fwSemiBold,
             color: AppColor.title,

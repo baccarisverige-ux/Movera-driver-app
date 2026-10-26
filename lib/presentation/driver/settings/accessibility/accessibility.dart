@@ -143,9 +143,7 @@ class _AccessibilityState extends State<Accessibility> {
               onPressed: _restoreSettings,
               child: Text(tr.couldNotLoadSavedPreferencesRetry),
             ),
-          Text(
-            tr.localDemoPreferencesSavedOnThis,
-          ),
+          Text(tr.localDemoPreferencesSavedOnThis),
           _tile(
             title: tr.hearing,
             detail: tr.tellRidersIfYouAreDeaf,
@@ -161,9 +159,7 @@ class _AccessibilityState extends State<Accessibility> {
                   return AlertDialog(
                     backgroundColor: Colors.white,
                     title: Text(tr.hearing),
-                    content: Text(
-                      tr.demoPreviewNoInformationIsShared,
-                    ),
+                    content: Text(tr.demoPreviewNoInformationIsShared),
                     actions: [
                       TextButton(
                         onPressed: () => popOwned(dialogContext),

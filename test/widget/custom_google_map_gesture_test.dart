@@ -14,25 +14,34 @@ void main() {
   test('tap proximity and time threshold reject stale/distant taps', () {
     const at = Duration(seconds: 1);
     const position = Offset(100, 200);
-    bool second(Duration next, Offset point) =>
-        MapDoubleTapPolicy.isSecondTap(
-          previousAt: at,
-          previousPosition: position,
-          currentAt: next,
-          currentPosition: point,
-        );
+    bool second(Duration next, Offset point) => MapDoubleTapPolicy.isSecondTap(
+      previousAt: at,
+      previousPosition: position,
+      currentAt: next,
+      currentPosition: point,
+    );
     expect(second(const Duration(milliseconds: 1150), position), isTrue);
     expect(second(const Duration(milliseconds: 1300), position), isTrue);
-    expect(second(const Duration(milliseconds: 1301), position), isFalse,
-        reason: 'Two taps more than 300 ms apart are unrelated');
+    expect(
+      second(const Duration(milliseconds: 1301), position),
+      isFalse,
+      reason: 'Two taps more than 300 ms apart are unrelated',
+    );
     expect(second(const Duration(milliseconds: 999), position), isFalse);
-    expect(second(const Duration(milliseconds: 1080), const Offset(200, 200)),
-        isFalse, reason: 'Taps at separate marker positions are unrelated');
-    expect(MapDoubleTapPolicy.isSecondTap(
-      previousAt: null, previousPosition: null,
-      currentAt: const Duration(milliseconds: 1200),
-      currentPosition: position,
-    ), isFalse);
+    expect(
+      second(const Duration(milliseconds: 1080), const Offset(200, 200)),
+      isFalse,
+      reason: 'Taps at separate marker positions are unrelated',
+    );
+    expect(
+      MapDoubleTapPolicy.isSecondTap(
+        previousAt: null,
+        previousPosition: null,
+        currentAt: const Duration(milliseconds: 1200),
+        currentPosition: position,
+      ),
+      isFalse,
+    );
   });
 
   testWidgets('clean map: Movera style, no "3D unavailable" chip', (
@@ -41,16 +50,23 @@ void main() {
     final original = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(body: CustomGoogleMap(myLocationEnabled: false)),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: CustomGoogleMap(myLocationEnabled: false)),
+      ),
+    );
     await tester.pump();
-    expect(tester.widget<GoogleMap>(find.byType(GoogleMap)).style,
-        moveraMapStyle);
-    expect(find.descendant(
-      of: find.byType(CustomGoogleMap),
-      matching: find.byType(Text),
-    ), findsNothing);
+    expect(
+      tester.widget<GoogleMap>(find.byType(GoogleMap)).style,
+      moveraMapStyle,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(CustomGoogleMap),
+        matching: find.byType(Text),
+      ),
+      findsNothing,
+    );
     for (final file in Directory('lib').listSync(recursive: true)) {
       if (file is! File || !file.path.endsWith('.dart')) continue;
       final source = file.readAsStringSync();
@@ -68,13 +84,20 @@ void main() {
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
     final zooms = <double>[];
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(body: CustomGoogleMap(
-        myLocationEnabled: false,
-        initialPosition: const CameraPosition(target: LatLng(59.3, 18), zoom: 11),
-        onCameraMove: (p) => zooms.add(p.zoom),
-      )),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CustomGoogleMap(
+            myLocationEnabled: false,
+            initialPosition: const CameraPosition(
+              target: LatLng(59.3, 18),
+              zoom: 11,
+            ),
+            onCameraMove: (p) => zooms.add(p.zoom),
+          ),
+        ),
+      ),
+    );
     await tester.pump();
     String style() => tester.widget<GoogleMap>(find.byType(GoogleMap)).style!;
     Future<void> move(double zoom) async {
@@ -83,6 +106,7 @@ void main() {
       );
       await tester.pump();
     }
+
     expect(style(), moveraMapStyleFar);
     await move(12.55);
     expect(style(), moveraMapStyleFar, reason: 'hysteresis: not yet near');
@@ -97,21 +121,32 @@ void main() {
     expect(style(), moveraMapStyleClose);
     await move(15);
     expect(style(), moveraMapStyleNear);
-    expect(zooms, [12.55, 15, 12.45, 11, 16.5, 15],
-        reason: 'caller still gets moves');
+    expect(zooms, [
+      12.55,
+      15,
+      12.45,
+      11,
+      16.5,
+      15,
+    ], reason: 'caller still gets moves');
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('no native web zoom buttons while pinch and pan stay enabled',
-      (tester) async {
+  testWidgets('no native web zoom buttons while pinch and pan stay enabled', (
+    tester,
+  ) async {
     final original = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(body: CustomGoogleMap(myLocationEnabled: false)),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: CustomGoogleMap(myLocationEnabled: false)),
+      ),
+    );
     await tester.pump();
-    final wrapper = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
+    final wrapper = tester.widget<CustomGoogleMap>(
+      find.byType(CustomGoogleMap),
+    );
     final sdk = tester.widget<GoogleMap>(find.byType(GoogleMap));
     expect(wrapper.webCameraControlEnabled, isFalse);
     expect(sdk.webCameraControlEnabled, isFalse);
@@ -122,8 +157,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('gesture-locked map ignores pan and pinch then restores input',
-      (tester) async {
+  testWidgets('gesture-locked map ignores pan and pinch then restores input', (
+    tester,
+  ) async {
     final original = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
@@ -150,9 +186,13 @@ void main() {
     await tester.pump();
     await drag.up();
     final first = await tester.startGesture(
-      center + const Offset(-20, 0), pointer: 21);
+      center + const Offset(-20, 0),
+      pointer: 21,
+    );
     final second = await tester.startGesture(
-      center + const Offset(20, 0), pointer: 22);
+      center + const Offset(20, 0),
+      pointer: 22,
+    );
     await tester.pump();
     await second.up();
     await first.up();
@@ -169,21 +209,23 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-
-  testWidgets('native stationary double-tap yields camera ownership once',
-      (tester) async {
+  testWidgets('native stationary double-tap yields camera ownership once', (
+    tester,
+  ) async {
     final original = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
     var claims = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: CustomGoogleMap(
-          myLocationEnabled: false,
-          onUserGesture: () => claims++,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CustomGoogleMap(
+            myLocationEnabled: false,
+            onUserGesture: () => claims++,
+          ),
         ),
       ),
-    ));
+    );
     await tester.pump();
     final center = tester.getCenter(find.byType(CustomGoogleMap));
 
@@ -191,32 +233,41 @@ void main() {
     expect(claims, 0, reason: 'One tap must not pause follow');
     await tester.pump(const Duration(milliseconds: 120));
     await tester.tapAt(center);
-    expect(claims, 1,
-        reason: 'Native two-tap zoom must stop automatic camera reset');
+    expect(
+      claims,
+      1,
+      reason: 'Native two-tap zoom must stop automatic camera reset',
+    );
     await tester.pump(const Duration(milliseconds: 120));
     await tester.tapAt(center);
-    expect(claims, 1,
-        reason: 'Third tap alone cannot report another zoom gesture');
+    expect(
+      claims,
+      1,
+      reason: 'Third tap alone cannot report another zoom gesture',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('two unrelated taps stay quiet and locked zoom stays disabled',
-      (tester) async {
+  testWidgets('two unrelated taps stay quiet and locked zoom stays disabled', (
+    tester,
+  ) async {
     final original = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
     var claims = 0;
-    Future<void> show({required bool zoom}) => tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: CustomGoogleMap(
-          key: const ValueKey('native-double-tap-map'),
-          myLocationEnabled: false,
-          zoomGesturesEnabled: zoom,
-          onUserGesture: () => claims++,
+    Future<void> show({required bool zoom}) => tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CustomGoogleMap(
+            key: const ValueKey('native-double-tap-map'),
+            myLocationEnabled: false,
+            zoomGesturesEnabled: zoom,
+            onUserGesture: () => claims++,
+          ),
         ),
       ),
-    ));
+    );
     await show(zoom: true);
     final center = tester.getCenter(find.byType(CustomGoogleMap));
     await tester.tapAt(center);
@@ -232,25 +283,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sheet gesture lock clears stale taps and pointer ownership',
-      (tester) async {
+  testWidgets('sheet gesture lock clears stale taps and pointer ownership', (
+    tester,
+  ) async {
     final original = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
     var claims = 0;
-    Future<void> show(bool enabled) => tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: CustomGoogleMap(
-          key: const ValueKey('lock-interruption-map'),
-          myLocationEnabled: false,
-          scrollGesturesEnabled: enabled,
-          zoomGesturesEnabled: enabled,
-          rotateGesturesEnabled: enabled,
-          tiltGesturesEnabled: enabled,
-          onUserGesture: () => claims++,
+    Future<void> show(bool enabled) => tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CustomGoogleMap(
+            key: const ValueKey('lock-interruption-map'),
+            myLocationEnabled: false,
+            scrollGesturesEnabled: enabled,
+            zoomGesturesEnabled: enabled,
+            rotateGesturesEnabled: enabled,
+            tiltGesturesEnabled: enabled,
+            onUserGesture: () => claims++,
+          ),
         ),
       ),
-    ));
+    );
 
     await show(true);
     final center = tester.getCenter(find.byType(CustomGoogleMap));
@@ -258,66 +312,96 @@ void main() {
     await show(false);
     await show(true);
     await tester.tapAt(center);
-    expect(claims, 0,
-        reason: 'A tap before the sheet locks cannot complete a new double-tap');
+    expect(
+      claims,
+      0,
+      reason: 'A tap before the sheet locks cannot complete a new double-tap',
+    );
 
     final interrupted = await tester.startGesture(center, pointer: 31);
     await show(false);
     await show(true);
     final fresh = await tester.startGesture(
-      center + const Offset(24, 0), pointer: 32);
-    expect(claims, 0,
-        reason: 'Held pointer before a sheet lock must not become phantom pinch');
+      center + const Offset(24, 0),
+      pointer: 32,
+    );
+    expect(
+      claims,
+      0,
+      reason: 'Held pointer before a sheet lock must not become phantom pinch',
+    );
     await fresh.up();
     await interrupted.up();
 
     final a = await tester.startGesture(
-      center + const Offset(-20, 0), pointer: 41);
+      center + const Offset(-20, 0),
+      pointer: 41,
+    );
     final b = await tester.startGesture(
-      center + const Offset(20, 0), pointer: 42);
-    expect(claims, 1,
-        reason: 'A fresh pinch after unlocking must still claim the camera');
+      center + const Offset(20, 0),
+      pointer: 42,
+    );
+    expect(
+      claims,
+      1,
+      reason: 'A fresh pinch after unlocking must still claim the camera',
+    );
     await b.up();
     await a.up();
     await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('map tap preserves following while drag and pinch claim camera',
-      (tester) async {
+  testWidgets('map tap preserves following while drag and pinch claim camera', (
+    tester,
+  ) async {
     final original = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
     var gestureClaims = 0;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: CustomGoogleMap(
-          myLocationEnabled: false,
-          onUserGesture: () => gestureClaims++,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CustomGoogleMap(
+            myLocationEnabled: false,
+            onUserGesture: () => gestureClaims++,
+          ),
         ),
       ),
-    ));
+    );
     await tester.pump();
     final center = tester.getCenter(find.byType(CustomGoogleMap));
 
     await tester.tapAt(center);
     await tester.pump();
-    expect(gestureClaims, 0,
-        reason: 'A tap must not disable navigation follow camera');
+    expect(
+      gestureClaims,
+      0,
+      reason: 'A tap must not disable navigation follow camera',
+    );
 
     final drag = await tester.startGesture(center);
     await drag.moveBy(const Offset(4, 0));
     await tester.pump();
-    expect(gestureClaims, 0,
-        reason: 'Finger jitter must not interrupt camera following');
+    expect(
+      gestureClaims,
+      0,
+      reason: 'Finger jitter must not interrupt camera following',
+    );
     await drag.moveBy(const Offset(12, 0));
     await tester.pump();
-    expect(gestureClaims, 1,
-        reason: 'Physical drag releases camera follow ownership');
+    expect(
+      gestureClaims,
+      1,
+      reason: 'Physical drag releases camera follow ownership',
+    );
     await drag.moveBy(const Offset(20, 0));
     await tester.pump();
-    expect(gestureClaims, 1,
-        reason: 'One drag reports exactly one ownership transition');
+    expect(
+      gestureClaims,
+      1,
+      reason: 'One drag reports exactly one ownership transition',
+    );
     await drag.up();
 
     final first = await tester.startGesture(
@@ -331,8 +415,11 @@ void main() {
       pointer: 12,
     );
     await tester.pump();
-    expect(gestureClaims, 2,
-        reason: 'Two-finger pinch/rotation immediately claims camera');
+    expect(
+      gestureClaims,
+      2,
+      reason: 'Two-finger pinch/rotation immediately claims camera',
+    );
     await second.up();
     await first.up();
 

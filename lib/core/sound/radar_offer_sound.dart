@@ -24,13 +24,14 @@ abstract class RadarSoundPlayer {
 /// the screen ([silence]). A new offer after that starts it again.
 class RadarOfferSound {
   RadarOfferSound({RadarSoundPlayer? player})
-      : _ownsPlayer = player == null && debugPlayer == null,
-        _player = player ??
-            debugPlayer ??
-            debugCreate?.call() ??
-            (DriverRuntimeConfig.current.radarSound
-                ? AudioRadarSound()
-                : _SilentSound());
+    : _ownsPlayer = player == null && debugPlayer == null,
+      _player =
+          player ??
+          debugPlayer ??
+          debugCreate?.call() ??
+          (DriverRuntimeConfig.current.radarSound
+              ? AudioRadarSound()
+              : _SilentSound());
 
   /// Tests put a fake player here.
   @visibleForTesting
@@ -114,7 +115,7 @@ class _SilentSound implements RadarSoundPlayer {
 /// [dispose] releases the native player once the calls before it ran.
 class AudioRadarSound implements RadarSoundPlayer {
   AudioRadarSound({@visibleForTesting AudioPlayer Function()? create})
-      : _create = create ?? AudioPlayer.new;
+    : _create = create ?? AudioPlayer.new;
 
   final AudioPlayer Function() _create;
   AudioPlayer? _audio;
@@ -122,8 +123,10 @@ class AudioRadarSound implements RadarSoundPlayer {
   Future<void> _queue = Future<void>.value();
 
   /// Runs [op] after every call before it; skipped once disposed.
-  Future<void> _then(Future<void> Function(AudioPlayer audio) op,
-      {bool create = true}) {
+  Future<void> _then(
+    Future<void> Function(AudioPlayer audio) op, {
+    bool create = true,
+  }) {
     final next = _queue.then((_) async {
       if (_closed) return;
       final audio = create ? (_audio ??= _create()) : _audio;
@@ -137,24 +140,24 @@ class AudioRadarSound implements RadarSoundPlayer {
 
   @override
   Future<void> startLoop() => _then((audio) async {
-        await audio.setReleaseMode(ReleaseMode.loop);
-        await audio.play(_sound);
-      });
+    await audio.setReleaseMode(ReleaseMode.loop);
+    await audio.play(_sound);
+  });
 
   @override
   Future<void> stop() => _then((audio) => audio.stop(), create: false);
 
   @override
   Future<void> prime() => _then((audio) async {
-        await audio.setVolume(0);
-        try {
-          await audio.play(_sound);
-          await audio.stop();
-        } finally {
-          // driver-u49: a refused play must not leave the player muted.
-          await audio.setVolume(1);
-        }
-      });
+    await audio.setVolume(0);
+    try {
+      await audio.play(_sound);
+      await audio.stop();
+    } finally {
+      // driver-u49: a refused play must not leave the player muted.
+      await audio.setVolume(1);
+    }
+  });
 
   @override
   Future<void> dispose() {

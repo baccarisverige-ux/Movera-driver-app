@@ -81,10 +81,10 @@ class _Gps implements DriverLocationRepository {
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       updates.stream;
   DriverLocation fix() => DriverLocation(
-        point: const GeoPoint(59.3300, 18.0600),
-        measuredAt: DateTime.now(),
-        accuracyMeters: 5,
-      );
+    point: const GeoPoint(59.3300, 18.0600),
+    measuredAt: DateTime.now(),
+    accuracyMeters: 5,
+  );
 }
 
 /// Road routing that answers once (10 km, 10 min), then fails.
@@ -97,27 +97,29 @@ class _OnceRoutes implements RouteRepository {
   }) async {
     if (calls++ > 0) throw StateError('routing offline');
     return RoadRoute(
-        points: [origin, destination], distanceMeters: 10000,
-        durationSeconds: 600);
+      points: [origin, destination],
+      distanceMeters: 10000,
+      durationSeconds: 600,
+    );
   }
 }
 
 RideOffer _radarTrip(String id) => RideOffer(
-      id: id,
-      category: 'Comfort',
-      fare: Money(minorUnits: 10000),
-      rating: '4.9',
-      pickupMinutes: 2,
-      pickupKm: 1,
-      tripMinutes: 10,
-      tripKm: 5,
-      pickup: 'Pickup, Stockholm',
-      dropoff: 'Dropoff, Stockholm',
-      pickupPosition: const GeoPoint(59.3279, 18.0615),
-      dropoffPosition: const GeoPoint(59.3326, 18.0649),
-      isNearby: true,
-      followsDestination: true,
-    );
+  id: id,
+  category: 'Comfort',
+  fare: Money(minorUnits: 10000),
+  rating: '4.9',
+  pickupMinutes: 2,
+  pickupKm: 1,
+  tripMinutes: 10,
+  tripKm: 5,
+  pickup: 'Pickup, Stockholm',
+  dropoff: 'Dropoff, Stockholm',
+  pickupPosition: const GeoPoint(59.3279, 18.0615),
+  dropoffPosition: const GeoPoint(59.3326, 18.0649),
+  isNearby: true,
+  followsDestination: true,
+);
 
 /// Dispatch with two Radar trips; each Match waits for the test's answer.
 class _RadarDispatch implements DispatchRepository {
@@ -133,12 +135,11 @@ class _RadarDispatch implements DispatchRepository {
   @override
   Stream<List<RideOffer>> watchNearbyOffers({
     bool destinationModeActive = false,
-  }) =>
-      Stream.multi((sink) {
-        sink.addSync(offers);
-        final sub = updates.stream.listen(sink.addSync);
-        sink.onCancel = sub.cancel;
-      }, isBroadcast: true);
+  }) => Stream.multi((sink) {
+    sink.addSync(offers);
+    final sub = updates.stream.listen(sink.addSync);
+    sink.onCancel = sub.cancel;
+  }, isBroadcast: true);
   @override
   Stream<List<RideOffer>> watchNextTripOffers() => const Stream.empty();
   @override
@@ -155,10 +156,16 @@ class _RadarDispatch implements DispatchRepository {
 }
 
 /// Waits (in test time) until [finder] shows, up to [limit].
-Future<void> _until(WidgetTester tester, Finder finder,
-    [Duration limit = const Duration(seconds: 10)]) async {
-  for (var t = Duration.zero; t < limit && finder.evaluate().isEmpty;
-      t += const Duration(milliseconds: 100)) {
+Future<void> _until(
+  WidgetTester tester,
+  Finder finder, [
+  Duration limit = const Duration(seconds: 10),
+]) async {
+  for (
+    var t = Duration.zero;
+    t < limit && finder.evaluate().isEmpty;
+    t += const Duration(milliseconds: 100)
+  ) {
     await tester.pump(const Duration(milliseconds: 100));
   }
 }
@@ -215,16 +222,20 @@ void _homeSetUp(WidgetTester tester) {
 }
 
 Future<GlobalKey<NavigatorState>> _pumpHome(
-    WidgetTester tester, Widget home) async {
+  WidgetTester tester,
+  Widget home,
+) async {
   final navigator = GlobalKey<NavigatorState>();
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, _) => MaterialApp(
-      navigatorKey: navigator,
-      navigatorObservers: [driverRouteObserver],
-      home: home,
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, _) => MaterialApp(
+        navigatorKey: navigator,
+        navigatorObservers: [driverRouteObserver],
+        home: home,
+      ),
     ),
-  ));
+  );
   await _frames(tester, 20);
   return navigator;
 }
@@ -233,8 +244,11 @@ Future<GlobalKey<NavigatorState>> _pumpHome(
 Future<void> _slide(WidgetTester tester) async {
   final action = find.byKey(const ValueKey('active-ride-primary-action'));
   if (action.evaluate().isEmpty) {
-    tester.widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel)).last
-        .controller!.animatePanelToSnapPoint();
+    tester
+        .widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel))
+        .last
+        .controller!
+        .animatePanelToSnapPoint();
     await _frames(tester, 20);
   }
   await tester.ensureVisible(action);
@@ -254,22 +268,38 @@ class _Saves extends MemoryActiveRideRepository {
 
 void main() {
   test('driver-r5-8: admin\'s scheduled-rides "until" is a local time', () {
-    final access = ScheduledRidesDriverAccess.fromJson(
-        {'on': false, 'until': '2026-10-23T22:30:00Z'});
-    expect(access.until!.isUtc, isFalse,
-        reason: 'the notice formats its date: a UTC date can be a day early');
-    expect(access.until!.isAtSameMomentAs(DateTime.utc(2026, 10, 23, 22, 30)),
-        isTrue);
+    final access = ScheduledRidesDriverAccess.fromJson({
+      'on': false,
+      'until': '2026-10-23T22:30:00Z',
+    });
+    expect(
+      access.until!.isUtc,
+      isFalse,
+      reason: 'the notice formats its date: a UTC date can be a day early',
+    );
+    expect(
+      access.until!.isAtSameMomentAs(DateTime.utc(2026, 10, 23, 22, 30)),
+      isTrue,
+    );
   });
 
-  testWidgets('driver-r5-21: a stalled accept ends as a network error',
-      (tester) async {
+  testWidgets('driver-r5-21: a stalled accept ends as a network error', (
+    tester,
+  ) async {
     final stalled = Completer<http.Response>();
     final repo = ApiDispatchRepository(
-      client: MockClient((request) async => request.method == 'GET'
-          ? http.Response(jsonEncode({'items': [_wireOffer], 'nextCursor': null}),
-              200, headers: {'content-type': 'application/json'})
-          : stalled.future),
+      client: MockClient(
+        (request) async => request.method == 'GET'
+            ? http.Response(
+                jsonEncode({
+                  'items': [_wireOffer],
+                  'nextCursor': null,
+                }),
+                200,
+                headers: {'content-type': 'application/json'},
+              )
+            : stalled.future,
+      ),
       baseUri: Uri.parse('https://api.dev.movera.invalid/api/v1'),
       accessToken: () async => 'token',
     );
@@ -280,12 +310,14 @@ void main() {
     unawaited(repo.claimOffer('o1').then((r) => result = r));
     await tester.pump(const Duration(seconds: 30));
     await tester.pump();
-    expect(result?.outcome, ClaimOutcome.networkError,
-        reason: 'before: the claim waited for the socket forever');
+    expect(
+      result?.outcome,
+      ClaimOutcome.networkError,
+      reason: 'before: the claim waited for the socket forever',
+    );
   });
 
-  test('driver-r5-40: a GPS fix during logout cleanup is not saved',
-      () async {
+  test('driver-r5-40: a GPS fix during logout cleanup is not saved', () async {
     SharedPreferences.setMockInitialValues({});
     DriverStartPosition.clearMemory();
     // Logout has begun and cleared the position; a Home fix lands now.
@@ -295,58 +327,83 @@ void main() {
     LocalWriteSession.endCleanup();
     expect(DriverStartPosition.cached, isNull);
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString(DriverStartPosition.key), isNull,
-        reason: 'before: the departing driver\'s position was written back');
+    expect(
+      prefs.getString(DriverStartPosition.key),
+      isNull,
+      reason: 'before: the departing driver\'s position was written back',
+    );
   });
 
-  test('driver-r5-18: logout removes a settings section another tab wrote',
-      () async {
-    SharedPreferences.setMockInitialValues({});
-    await SharedPreferences.getInstance();
-    // Another tab writes to the shared store; this tab's cache never sees it.
-    const key = '${SettingsRepository.sectionPrefix}contacts';
-    await SharedPreferencesStorePlatform.instance
-        .setValue('String', 'flutter.$key', '{"phones":["+46700000000"]}');
-    await clearLocalUserData();
-    final stored = await SharedPreferencesStorePlatform.instance.getAll();
-    expect(stored.keys, isNot(contains('flutter.$key')),
-        reason: 'before: only keys in this tab\'s cache were removed');
-  });
+  test(
+    'driver-r5-18: logout removes a settings section another tab wrote',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      await SharedPreferences.getInstance();
+      // Another tab writes to the shared store; this tab's cache never sees it.
+      const key = '${SettingsRepository.sectionPrefix}contacts';
+      await SharedPreferencesStorePlatform.instance.setValue(
+        'String',
+        'flutter.$key',
+        '{"phones":["+46700000000"]}',
+      );
+      await clearLocalUserData();
+      final stored = await SharedPreferencesStorePlatform.instance.getAll();
+      expect(
+        stored.keys,
+        isNot(contains('flutter.$key')),
+        reason: 'before: only keys in this tab\'s cache were removed',
+      );
+    },
+  );
 
-  test('driver-r5-17: each trip reuses the route pins and their web URLs',
-      () async {
-    var urls = 0;
-    WebMapBitmaps.debugCreateUrl = (_) => 'blob:test/${urls++}';
-    addTearDown(() => WebMapBitmaps.debugCreateUrl = null);
-    // Two trips ask for the same three pins, as AcceptRide does on mount.
-    for (var trip = 0; trip < 2; trip++) {
-      for (final kind in RouteMarkKind.values) {
-        await RouteMarkPins.pin(kind);
+  test(
+    'driver-r5-17: each trip reuses the route pins and their web URLs',
+    () async {
+      var urls = 0;
+      WebMapBitmaps.debugCreateUrl = (_) => 'blob:test/${urls++}';
+      addTearDown(() => WebMapBitmaps.debugCreateUrl = null);
+      // Two trips ask for the same three pins, as AcceptRide does on mount.
+      for (var trip = 0; trip < 2; trip++) {
+        for (final kind in RouteMarkKind.values) {
+          await RouteMarkPins.pin(kind);
+        }
       }
-    }
-    expect(urls, RouteMarkKind.values.length,
-        reason: 'before: a new PNG and Blob URL per pin per trip');
-  });
+      expect(
+        urls,
+        RouteMarkKind.values.length,
+        reason: 'before: a new PNG and Blob URL per pin per trip',
+      );
+    },
+  );
 
   testWidgets('driver-r5-39: the Start-trip save holds the pickup\'s paid '
       'wait and the start time', (tester) async {
     _phone(tester);
     SharedPreferences.setMockInitialValues({});
     final saves = _Saves();
-    await tester.pumpWidget(_app(AcceptRide(
-      tripId: 'start-save',
-      initialStage: ActiveRideStage.waitingForRider,
-      initialWaitSeconds: 6 * 60 + 30,
-      waitNow: () => DateTime(2026, 10, 20, 12),
-      activeRideRepository: saves,
-    )));
+    await tester.pumpWidget(
+      _app(
+        AcceptRide(
+          tripId: 'start-save',
+          initialStage: ActiveRideStage.waitingForRider,
+          initialWaitSeconds: 6 * 60 + 30,
+          waitNow: () => DateTime(2026, 10, 20, 12),
+          activeRideRepository: saves,
+        ),
+      ),
+    );
     await _frames(tester, 8);
     await _slide(tester);
-    final first = saves.saved
-        .firstWhere((ride) => ride.stage == ActiveRideStage.onTrip);
-    expect([first.paidWaitSeconds, first.startedAt != null], [90, true],
-        reason: 'before: the first onTrip save had 0 paid seconds and no '
-            'start, and a kill then lost the waiting fee');
+    final first = saves.saved.firstWhere(
+      (ride) => ride.stage == ActiveRideStage.onTrip,
+    );
+    expect(
+      [first.paidWaitSeconds, first.startedAt != null],
+      [90, true],
+      reason:
+          'before: the first onTrip save had 0 paid seconds and no '
+          'start, and a kill then lost the waiting fee',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
@@ -358,22 +415,33 @@ void main() {
     ExclusiveAnswers.instance.reset();
     DriverOfferRules.current = const DriverOfferRules(autoOffline: false);
     addTearDown(() => DriverOfferRules.current = const DriverOfferRules());
-    await tester.pumpWidget(_app(AcceptRide(
-      initialStage: ActiveRideStage.onTrip,
-      waitNow: () => tester.binding.clock.now(),
-    )));
+    await tester.pumpWidget(
+      _app(
+        AcceptRide(
+          initialStage: ActiveRideStage.onTrip,
+          waitNow: () => tester.binding.clock.now(),
+        ),
+      ),
+    );
     await _frames(tester, 10);
     await tester.pump(const Duration(milliseconds: 2600));
     const card = ValueKey<String>('on-trip-radar-offer-button');
     expect(find.byKey(card), findsOneWidget);
     // The island's menu opens the drawer over the offer.
-    tester.state<ScaffoldState>(find.byWidgetPredicate(
-        (w) => w is Scaffold && w.drawer != null)).openDrawer();
-    final limit = DriverOfferRules.current.exclusiveAcceptTime +
+    tester
+        .state<ScaffoldState>(
+          find.byWidgetPredicate((w) => w is Scaffold && w.drawer != null),
+        )
+        .openDrawer();
+    final limit =
+        DriverOfferRules.current.exclusiveAcceptTime +
         const Duration(seconds: 4);
     await _frames(tester, limit.inMilliseconds ~/ 250, 250);
-    expect(ExclusiveAnswers.instance.missedInRow, 0,
-        reason: 'before: it ran out under the menu and counted as missed');
+    expect(
+      ExclusiveAnswers.instance.missedInRow,
+      0,
+      reason: 'before: it ran out under the menu and counted as missed',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
@@ -388,16 +456,26 @@ void main() {
     await tester.pump(const Duration(milliseconds: 120));
     // Profile covers Home; a notice posted now waits in the queue.
     final home = tester.element(find.byType(DriverHome));
-    unawaited(Navigator.of(home).push(MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: Text('Profile')))));
+    unawaited(
+      Navigator.of(home).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('Profile')),
+        ),
+      ),
+    );
     await _frames(tester, 10);
     IslandMessages.show(
-        const IslandMessage(title: 'Insurance expires in 7 days'));
+      const IslandMessage(title: 'Insurance expires in 7 days'),
+    );
     final runtime = DriverRuntimeScope.maybeOf(home)!;
     await tester.runAsync(() => runtime.logout!());
-    expect(IslandMessages.hasPending, isFalse,
-        reason: 'before: the next driver\'s Home showed it, with a tap '
-            'bound to the old Home');
+    expect(
+      IslandMessages.hasPending,
+      isFalse,
+      reason:
+          'before: the next driver\'s Home showed it, with a tap '
+          'bound to the old Home',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });
@@ -409,13 +487,23 @@ void main() {
     final before = DestinationModeSession.instance;
     DestinationModeSession.instance = DestinationModeSession(now: () => wall);
     addTearDown(() => DestinationModeSession.instance = before);
-    final navigator = await _pumpHome(tester, DriverHome(locationRepository: _NoGps()));
+    final navigator = await _pumpHome(
+      tester,
+      DriverHome(locationRepository: _NoGps()),
+    );
     // A destination set on the trip (2 h limit) is Home's once it closes.
-    unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: Text('trip')))));
+    unawaited(
+      navigator.currentState!.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('trip')),
+        ),
+      ),
+    );
     await _frames(tester, 10);
     DestinationModeSession.instance.started(
-        address: 'Solna', position: const GeoPoint(59.36, 18.00));
+      address: 'Solna',
+      position: const GeoPoint(59.36, 18.00),
+    );
     navigator.currentState!.pop();
     await _frames(tester, 10);
     expect(DestinationModeSession.instance.activeAddress, 'Solna');
@@ -424,8 +512,11 @@ void main() {
     wall = wall.add(const Duration(hours: 3));
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await _frames(tester, 4);
-    expect(DestinationModeSession.instance.activeAddress, isNull,
-        reason: 'before: it kept filtering offers until the late Timer');
+    expect(
+      DestinationModeSession.instance.activeAddress,
+      isNull,
+      reason: 'before: it kept filtering offers until the late Timer',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
@@ -438,13 +529,22 @@ void main() {
     addTearDown(() => DestinationModeSession.instance = before);
     final gps = _Gps(), routes = _OnceRoutes();
     addTearDown(gps.updates.close);
-    final navigator = await _pumpHome(tester,
-        DriverHome(locationRepository: gps, routeRepository: routes));
-    unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: Text('trip')))));
+    final navigator = await _pumpHome(
+      tester,
+      DriverHome(locationRepository: gps, routeRepository: routes),
+    );
+    unawaited(
+      navigator.currentState!.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('trip')),
+        ),
+      ),
+    );
     await _frames(tester, 10);
     DestinationModeSession.instance.started(
-        address: 'Solna', position: const GeoPoint(59.36, 18.00));
+      address: 'Solna',
+      position: const GeoPoint(59.36, 18.00),
+    );
     navigator.currentState!.pop();
     await _frames(tester, 10);
     gps.updates.add(gps.fix());
@@ -458,8 +558,11 @@ void main() {
     // route as when GPS is lost.
     gps.updates.add(const DriverLocation(point: GeoPoint(59.3301, 18.0600)));
     await _frames(tester, 10);
-    expect(tester.widget<DigitalDestinationFace>(face).eta, '10 min',
-        reason: 'before: it fell back to the confirm-time figures');
+    expect(
+      tester.widget<DigitalDestinationFace>(face).eta,
+      '10 min',
+      reason: 'before: it fell back to the confirm-time figures',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
@@ -477,11 +580,14 @@ void main() {
       skipAccountActivation: false,
     );
     final dispatch = _RadarDispatch();
-    await _pumpHome(tester, DriverHome(
-      locationRepository: _NoGps(),
-      dispatchRepository: dispatch,
-      sessionController: DriverSessionController(),
-    ));
+    await _pumpHome(
+      tester,
+      DriverHome(
+        locationRepository: _NoGps(),
+        dispatchRepository: dispatch,
+        sessionController: DriverSessionController(),
+      ),
+    );
     await tester.tap(find.text('OFF'));
     const second = ValueKey<String>('radar-offer-card-second');
     await _until(tester, find.byKey(second), const Duration(seconds: 24));
@@ -498,10 +604,11 @@ void main() {
     await _frames(tester, 4);
     final match = find.byKey(const ValueKey<String>('radar-match-second'));
     expect(
-        match.evaluate().isEmpty ||
-            tester.widget<FilledButton>(match).onPressed == null,
-        isTrue,
-        reason: 'before: it stayed on the deck with Match enabled');
+      match.evaluate().isEmpty ||
+          tester.widget<FilledButton>(match).onPressed == null,
+      isTrue,
+      reason: 'before: it stayed on the deck with Match enabled',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
@@ -524,19 +631,27 @@ void main() {
           ..._wireOffer,
           'kind': 'assigned',
           'expiresAt': DateTime.now()
-              .subtract(const Duration(seconds: 2)).toUtc().toIso8601String(),
+              .subtract(const Duration(seconds: 2))
+              .toUtc()
+              .toIso8601String(),
         }),
       ];
-    await _pumpHome(tester, DriverHome(
-      locationRepository: _NoGps(),
-      dispatchRepository: dispatch,
-      sessionController: DriverSessionController(),
-    ));
+    await _pumpHome(
+      tester,
+      DriverHome(
+        locationRepository: _NoGps(),
+        dispatchRepository: dispatch,
+        sessionController: DriverSessionController(),
+      ),
+    );
     await tester.tap(find.text('OFF'));
     const card = ValueKey<String>('exclusive-offer-card-o1');
     await _until(tester, find.byKey(card), const Duration(seconds: 6));
-    expect(find.byKey(card), findsNothing,
-        reason: 'before: it got a fresh full countdown');
+    expect(
+      find.byKey(card),
+      findsNothing,
+      reason: 'before: it got a fresh full countdown',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
@@ -546,18 +661,30 @@ void main() {
     _homeSetUp(tester);
     final storage = _BlockedStorage();
     final session = DriverSessionController();
-    await _pumpHome(tester, DriverHome(locationRepository: _NoGps(),
-        activeRideRepository: storage, sessionController: session));
+    await _pumpHome(
+      tester,
+      DriverHome(
+        locationRepository: _NoGps(),
+        activeRideRepository: storage,
+        sessionController: session,
+      ),
+    );
     final bar = find.byType(SnackBar);
     expect(bar, findsOneWidget);
-    expect(tester.widget<SnackBar>(bar).persist, isFalse,
-        reason: 'before: with its action it stayed until swiped away');
+    expect(
+      tester.widget<SnackBar>(bar).persist,
+      isFalse,
+      reason: 'before: with its action it stayed until swiped away',
+    );
     session.beginTrip('live-trip');
     final reads = storage.reads;
     await tester.tap(find.text('Retry'));
     await _frames(tester, 4);
-    expect(storage.reads, reads,
-        reason: 'before: Retry re-ran the restore over the live trip');
+    expect(
+      storage.reads,
+      reads,
+      reason: 'before: Retry re-ran the restore over the live trip',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
@@ -566,21 +693,37 @@ void main() {
       'a live trip does', (tester) async {
     _homeSetUp(tester);
     final saved = MemoryActiveRideRepository();
-    await tester.pumpWidget(_app(AcceptRide(tripId: 'restored-trip',
-        initialStage: ActiveRideStage.onTrip, locationRepository: _NoGps(),
-        activeRideRepository: saved)));
+    await tester.pumpWidget(
+      _app(
+        AcceptRide(
+          tripId: 'restored-trip',
+          initialStage: ActiveRideStage.onTrip,
+          locationRepository: _NoGps(),
+          activeRideRepository: saved,
+        ),
+      ),
+    );
     await _frames(tester, 8);
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
     // The app was killed; Home restores the trip.
     final waybills = InMemoryWaybillRepository.instance..reset();
     addTearDown(waybills.reset);
-    await _pumpHome(tester, DriverHome(locationRepository: _NoGps(),
-        activeRideRepository: saved, waybillRepository: waybills));
+    await _pumpHome(
+      tester,
+      DriverHome(
+        locationRepository: _NoGps(),
+        activeRideRepository: saved,
+        waybillRepository: waybills,
+      ),
+    );
     await _until(tester, find.byType(AcceptRide));
     expect(waybills.current?.tripId, 'restored-trip');
-    expect(waybills.current?.driverName, WaybillRecord.moveraDriverName,
-        reason: 'before: "Demo driver — identity unavailable"');
+    expect(
+      waybills.current?.driverName,
+      WaybillRecord.moveraDriverName,
+      reason: 'before: "Demo driver — identity unavailable"',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
@@ -591,32 +734,39 @@ void main() {
     // Owner decision 2026-10-26: the record's fare is the driver's
     // earnings after Movera's commission; the rider's 150 kr cash matched
     // them exactly.
-    await tester.pumpWidget(_app(DriverRideHistoryDetail(
-      record: const TripHistoryRecord(
-        tripId: 'cash-trip',
-        riderName: 'Karin',
-        whenLabel: '15/10/2026, 07:59',
-        pickup: 'Gamla vägen',
-        dropoff: 'Solna centrum',
-        fare: '150,00 kr',
-        category: 'Comfort',
-        paymentMethod: 'Cash',
-        cashCollected: '150,00 kr',
+    await tester.pumpWidget(
+      _app(
+        DriverRideHistoryDetail(
+          record: const TripHistoryRecord(
+            tripId: 'cash-trip',
+            riderName: 'Karin',
+            whenLabel: '15/10/2026, 07:59',
+            pickup: 'Gamla vägen',
+            dropoff: 'Solna centrum',
+            fare: '150,00 kr',
+            category: 'Comfort',
+            paymentMethod: 'Cash',
+            cashCollected: '150,00 kr',
+          ),
+          loadRideChecks: (_) async => const [],
+        ),
       ),
-      loadRideChecks: (_) async => const [],
-    )));
+    );
     await _frames(tester, 10);
     final note = find.byKey(const ValueKey<String>('history-owed-note'));
     await tester.ensureVisible(note);
-    expect(tester.widget<Text>(note).data,
-        'Cash matched your earnings: nothing to settle',
-        reason: 'before: "Cash matched your fare"');
+    expect(
+      tester.widget<Text>(note).data,
+      'Cash matched your earnings: nothing to settle',
+      reason: 'before: "Cash matched your fare"',
+    );
     expect(find.text('Your earnings'), findsOneWidget);
     expect(find.text('Ride Cost'), findsNothing);
   });
 
-  testWidgets('driver-r5-49: the Accepted tab lists rides by pickup time',
-      (tester) async {
+  testWidgets('driver-r5-49: the Accepted tab lists rides by pickup time', (
+    tester,
+  ) async {
     _phone(tester);
     SharedPreferences.setMockInitialValues({});
     ScheduledRideStore.reset();
@@ -629,8 +779,11 @@ void main() {
     await _frames(tester, 6);
     final early = tester.getTopLeft(find.textContaining('08:15').first).dy;
     final late = tester.getTopLeft(find.textContaining('18:00').first).dy;
-    expect(early, lessThan(late),
-        reason: 'before: the newest acceptance was on top');
+    expect(
+      early,
+      lessThan(late),
+      reason: 'before: the newest acceptance was on top',
+    );
   });
 
   test('driver-r5-47: the backup-driver note does not stay for days', () {
@@ -645,8 +798,11 @@ void main() {
     ScheduledRideStore.giveToBackup(ride);
     expect(ScheduledRideStore.backupNote.value, contains('18:00'));
     wall = wall.add(const Duration(days: 2));
-    expect(ScheduledRideStore.backupNote.value, isNull,
-        reason: 'before: it stayed above later 18:00 rides until logout');
+    expect(
+      ScheduledRideStore.backupNote.value,
+      isNull,
+      reason: 'before: it stayed above later 18:00 rides until logout',
+    );
   });
 
   testWidgets('driver-r5-46: the cancel confirmation turns late when the '
@@ -662,8 +818,14 @@ void main() {
     ScheduledRideStore.reset();
     addTearDown(ScheduledRideStore.reset);
     // Free cancel ends 30 s from now (1 h before pickup).
-    ScheduledRideStore.acceptAssigned(_reservation(0, at: tester.binding.clock
-        .now().add(const Duration(hours: 1, seconds: 30))));
+    ScheduledRideStore.acceptAssigned(
+      _reservation(
+        0,
+        at: tester.binding.clock.now().add(
+          const Duration(hours: 1, seconds: 30),
+        ),
+      ),
+    );
     await tester.pumpWidget(_app(const ScheduledRidesScreen()));
     await _frames(tester, 6);
     await tester.tap(find.text('Accepted'));
@@ -682,8 +844,11 @@ void main() {
     expect(find.byKey(warning), findsNothing);
     await tester.pump(const Duration(seconds: 31));
     await tester.pump();
-    expect(find.byKey(warning), findsOneWidget,
-        reason: 'before: it still read as free, and Confirm counted late');
+    expect(
+      find.byKey(warning),
+      findsOneWidget,
+      reason: 'before: it still read as free, and Confirm counted late',
+    );
   });
 
   testWidgets('driver-r5-45: a reservation claim out from Scheduled rides '
@@ -696,8 +861,13 @@ void main() {
     final navigator = GlobalKey<NavigatorState>();
     await tester.pumpWidget(_app(const SizedBox(), navigator: navigator));
     Future<void> open() async {
-      unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
-          builder: (_) => ScheduledRidesScreen(dispatchRepository: dispatch))));
+      unawaited(
+        navigator.currentState!.push(
+          MaterialPageRoute<void>(
+            builder: (_) => ScheduledRidesScreen(dispatchRepository: dispatch),
+          ),
+        ),
+      );
       await _frames(tester, 12);
     }
 
@@ -713,9 +883,11 @@ void main() {
     navigator.currentState!.pop();
     await _frames(tester, 12);
     await open();
-    expect(find.byKey(const ValueKey<String>('scheduled-ride-matching')),
-        findsOneWidget,
-        reason: 'before: it showed as open, and Accept claimed it again');
+    expect(
+      find.byKey(const ValueKey<String>('scheduled-ride-matching')),
+      findsOneWidget,
+      reason: 'before: it showed as open, and Accept claimed it again',
+    );
     dispatch.claims.single.complete(const ClaimResult.unavailable());
     await _frames(tester, 6);
   });
@@ -736,21 +908,29 @@ void main() {
     final expires = DateTime.now().add(const Duration(seconds: 8));
     final dispatch = _RadarDispatch()
       ..offers = [
-        OfferWire.parse(
-            {..._wireOffer, 'expiresAt': expires.toUtc().toIso8601String()}),
+        OfferWire.parse({
+          ..._wireOffer,
+          'expiresAt': expires.toUtc().toIso8601String(),
+        }),
       ];
-    await _pumpHome(tester, DriverHome(
-      locationRepository: _NoGps(),
-      dispatchRepository: dispatch,
-      sessionController: DriverSessionController(),
-    ));
+    await _pumpHome(
+      tester,
+      DriverHome(
+        locationRepository: _NoGps(),
+        dispatchRepository: dispatch,
+        sessionController: DriverSessionController(),
+      ),
+    );
     await tester.tap(find.text('OFF'));
     final match = find.byKey(const ValueKey<String>('radar-match-o1'));
     await _until(tester, match, const Duration(seconds: 24));
     expect(tester.widget<FilledButton>(match).onPressed, isNotNull);
     await _frames(tester, 36, 250);
-    expect(tester.widget<FilledButton>(match).onPressed, isNull,
-        reason: 'before: Match stayed on for the app\'s full 15 s');
+    expect(
+      tester.widget<FilledButton>(match).onPressed,
+      isNull,
+      reason: 'before: Match stayed on for the app\'s full 15 s',
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester, 10, 100);
   });
@@ -766,8 +946,16 @@ const _wireOffer = {
   'expiresAt': '2026-10-20T12:00:15Z',
   'fare': {'amountMinor': 8810, 'currency': 'SEK'},
   'source': 'system',
-  'pickup': {'address': 'Tegnérgatan, Stockholm', 'lat': 59.3335, 'lng': 18.0610},
-  'dropoff': {'address': 'Odengatan, Stockholm', 'lat': 59.3428, 'lng': 18.0475},
+  'pickup': {
+    'address': 'Tegnérgatan, Stockholm',
+    'lat': 59.3335,
+    'lng': 18.0610,
+  },
+  'dropoff': {
+    'address': 'Odengatan, Stockholm',
+    'lat': 59.3428,
+    'lng': 18.0475,
+  },
   'categoryId': 'comfort',
   'paymentMethod': 'card',
   'pickupEtaSeconds': 180,

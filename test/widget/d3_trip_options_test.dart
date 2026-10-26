@@ -26,9 +26,9 @@ Future<void> _pumpTrip(WidgetTester tester, Size size) async {
     LayoutViewport(
       child: MaterialApp(
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: const TextScaler.linear(_scale),
-          ),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(_scale)),
           child: child!,
         ),
         home: const AcceptRide(),
@@ -80,47 +80,56 @@ void main() {
     final at = '${size.width.toInt()}x${size.height.toInt()} @$_scale';
     for (final onTrip in [false, true]) {
       testWidgets(
-          'UI-05 ${onTrip ? 'End trip early' : 'Cancel trip'} is reachable '
-          'in the trip options at $at', (tester) async {
-        await _pumpTrip(tester, size);
-        if (onTrip) {
-          await _startTrip(tester);
-          expect(
-            find.byKey(const ValueKey<String>('active-ride-panel-onTrip')),
-            findsWidgets,
+        'UI-05 ${onTrip ? 'End trip early' : 'Cancel trip'} is reachable '
+        'in the trip options at $at',
+        (tester) async {
+          await _pumpTrip(tester, size);
+          if (onTrip) {
+            await _startTrip(tester);
+            expect(
+              find.byKey(const ValueKey<String>('active-ride-panel-onTrip')),
+              findsWidgets,
+            );
+            tester
+                .widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel))
+                .last
+                .controller!
+                .close();
+            await tester.pump();
+            await tester.pump(const Duration(milliseconds: 600));
+          }
+          // Layout of the trip screen itself is not what this test covers.
+          tester.takeException();
+          await tester.tap(
+            find.byTooltip('Trip route and options').hitTestable(),
           );
-          tester
-              .widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel))
-              .last
-              .controller!
-              .close();
-          await tester.pump();
-          await tester.pump(const Duration(milliseconds: 600));
-        }
-        // Layout of the trip screen itself is not what this test covers.
-        tester.takeException();
-        await tester.tap(find.byTooltip('Trip route and options').hitTestable());
-        await tester.pump(const Duration(milliseconds: 260));
-        expect(tester.takeException(), isNull,
-            reason: 'the options sheet overflows');
-        final cancel = find.byKey(
-          const ValueKey<String>('active-ride-cancel-option'),
-        );
-        expect(cancel, findsOneWidget);
-        await tester.ensureVisible(cancel);
-        await tester.pump(const Duration(milliseconds: 100));
-        final rect = tester.getRect(cancel);
-        expect(rect.bottom, lessThanOrEqualTo(size.height));
-        await tester.tap(cancel);
-        await tester.pump(const Duration(milliseconds: 260));
-        // The reasons sheet follows.
-        expect(
-          find.byKey(const ValueKey<String>('trip-cancellation-reasons-sheet')),
-          findsOneWidget,
-        );
-        tester.takeException();
-        await tester.pumpWidget(const SizedBox());
-      });
+          await tester.pump(const Duration(milliseconds: 260));
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: 'the options sheet overflows',
+          );
+          final cancel = find.byKey(
+            const ValueKey<String>('active-ride-cancel-option'),
+          );
+          expect(cancel, findsOneWidget);
+          await tester.ensureVisible(cancel);
+          await tester.pump(const Duration(milliseconds: 100));
+          final rect = tester.getRect(cancel);
+          expect(rect.bottom, lessThanOrEqualTo(size.height));
+          await tester.tap(cancel);
+          await tester.pump(const Duration(milliseconds: 260));
+          // The reasons sheet follows.
+          expect(
+            find.byKey(
+              const ValueKey<String>('trip-cancellation-reasons-sheet'),
+            ),
+            findsOneWidget,
+          );
+          tester.takeException();
+          await tester.pumpWidget(const SizedBox());
+        },
+      );
     }
   }
 }

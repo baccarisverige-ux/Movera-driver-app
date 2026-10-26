@@ -4,7 +4,8 @@ import 'package:movera/core/navigation/moving_route_refresh.dart';
 import 'package:movera/core/routing/route_repository.dart';
 
 const _from = GeoPoint(59.33, 18.06);
-GeoPoint _north(double m) => GeoPoint(_from.latitude + m / 111320, _from.longitude);
+GeoPoint _north(double m) =>
+    GeoPoint(_from.latitude + m / 111320, _from.longitude);
 GeoPoint _east(GeoPoint p, double m) =>
     GeoPoint(p.latitude, p.longitude + m / (111320 * 0.51));
 
@@ -31,8 +32,10 @@ void main() {
     expect(asks, 0);
     expect(
       refresh.due(
-          position: _north(700), route: route,
-          now: t0.add(const Duration(seconds: 90))),
+        position: _north(700),
+        route: route,
+        now: t0.add(const Duration(seconds: 90)),
+      ),
       isTrue,
     );
   });
@@ -46,8 +49,11 @@ void main() {
     // Parked off the road: the same spot never asks again before 90 s.
     for (var s = 11; s < 99; s++) {
       expect(
-        refresh.due(position: off, route: route,
-            now: t0.add(Duration(seconds: s))),
+        refresh.due(
+          position: off,
+          route: route,
+          now: t0.add(Duration(seconds: s)),
+        ),
         isFalse,
       );
     }
@@ -55,10 +61,22 @@ void main() {
 
   test('without a route it retries every few seconds, not every fix', () {
     final refresh = MovingRouteRefresh()..asked(_from, t0);
-    expect(refresh.due(position: _from, route: null,
-        now: t0.add(const Duration(seconds: 3))), isFalse);
-    expect(refresh.due(position: _from, route: null,
-        now: t0.add(const Duration(seconds: 8))), isTrue);
+    expect(
+      refresh.due(
+        position: _from,
+        route: null,
+        now: t0.add(const Duration(seconds: 3)),
+      ),
+      isFalse,
+    );
+    expect(
+      refresh.due(
+        position: _from,
+        route: null,
+        now: t0.add(const Duration(seconds: 8)),
+      ),
+      isTrue,
+    );
     refresh.reset();
     expect(refresh.due(position: _from, route: route, now: t0), isTrue);
   });

@@ -49,10 +49,7 @@ const Color _muted = Color(0xFF6D797F);
         title: tr.tripRemovedByMovera,
         body: tr.moveraGaveThisTripBackTo,
       ),
-      _ => (
-        title: tr.tripEnded,
-        body: tr.thisTripIsNoLongerActive,
-      ),
+      _ => (title: tr.tripEnded, body: tr.thisTripIsNoLongerActive),
     };
 
 Future<void> showTripOutcomeSheet(
@@ -128,8 +125,14 @@ class TripOutcomeSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        hasNext ? tr.bodyYourNextTripStartsNow(copy.body) : copy.body,
-                        style: const TextStyle(color: _muted, fontSize: 15, height: 1.4),
+                        hasNext
+                            ? tr.bodyYourNextTripStartsNow(copy.body)
+                            : copy.body,
+                        style: const TextStyle(
+                          color: _muted,
+                          fontSize: 15,
+                          height: 1.4,
+                        ),
                       ),
                     ],
                   ),

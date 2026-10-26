@@ -78,7 +78,11 @@ class _LinePainter extends CustomPainter {
           Path()
             ..moveTo(12, 21.5)
             ..cubicTo(12, 21.5, 5, 15.2, 5, 10)
-            ..arcToPoint(const Offset(19, 10), radius: const Radius.circular(7), clockwise: true)
+            ..arcToPoint(
+              const Offset(19, 10),
+              radius: const Radius.circular(7),
+              clockwise: true,
+            )
             ..cubicTo(19, 15.2, 12, 21.5, 12, 21.5),
           paint,
         );
@@ -146,7 +150,11 @@ class _LinePainter extends CustomPainter {
           paint,
         );
         canvas.drawLine(const Offset(4, 10), const Offset(20, 10), paint);
-        canvas.drawCircle(const Offset(15.5, 13.5), 0.8, paint..style = PaintingStyle.fill);
+        canvas.drawCircle(
+          const Offset(15.5, 13.5),
+          0.8,
+          paint..style = PaintingStyle.fill,
+        );
         paint.style = PaintingStyle.stroke;
       case MoveraMark.insights:
         canvas.drawLine(const Offset(5, 19), const Offset(19, 19), paint);
@@ -263,7 +271,11 @@ class _LinePainter extends CustomPainter {
         );
         canvas.drawLine(const Offset(12, 10), const Offset(12, 14), paint);
       case MoveraMark.more:
-        canvas.drawCircle(const Offset(6, 12), 1.1, paint..style = PaintingStyle.fill);
+        canvas.drawCircle(
+          const Offset(6, 12),
+          1.1,
+          paint..style = PaintingStyle.fill,
+        );
         canvas.drawCircle(const Offset(12, 12), 1.1, paint);
         canvas.drawCircle(const Offset(18, 12), 1.1, paint);
         paint.style = PaintingStyle.stroke;

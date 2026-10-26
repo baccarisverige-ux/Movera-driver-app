@@ -18,70 +18,72 @@ void main() {
     // driver-j2-4: a rider_cancelled event without a projection status.
     (null, 'Rider cancelled', null),
   ]) {
-  testWidgets('rider cancellation goes back home and tells the island: '
-      '$title${status == null ? ' (no status)' : ''}', (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    CompletionJournal.resetForTesting();
-    IslandMessages.reset();
-    tester.view.physicalSize = const Size(375, 812);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final realtime = MemoryDriverRealtime();
-    addTearDown(realtime.dispose);
+    testWidgets('rider cancellation goes back home and tells the island: '
+        '$title${status == null ? ' (no status)' : ''}', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      CompletionJournal.resetForTesting();
+      IslandMessages.reset();
+      tester.view.physicalSize = const Size(375, 812);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
 
-    // A stand-in Home underneath the trip screen.
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: Center(
-              child: TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => AcceptRide(
-                      tripId: 'cancel-home-trip',
-                      riderName: 'Angelica',
-                      initialStage: ActiveRideStage.waitingForRider,
-                      activeRideRepository: MemoryActiveRideRepository(),
-                      realtime: realtime,
+      // A stand-in Home underneath the trip screen.
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, __) => MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => AcceptRide(
+                          tripId: 'cancel-home-trip',
+                          riderName: 'Angelica',
+                          initialStage: ActiveRideStage.waitingForRider,
+                          activeRideRepository: MemoryActiveRideRepository(),
+                          realtime: realtime,
+                        ),
+                      ),
                     ),
+                    child: const Text('Home'),
                   ),
                 ),
-                child: const Text('Home'),
               ),
             ),
           ),
         ),
-      ),
-    ));
-    await tester.tap(find.text('Home'));
-    for (var i = 0; i < 12; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
-    expect(find.byType(AcceptRide), findsOneWidget);
+      );
+      await tester.tap(find.text('Home'));
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(find.byType(AcceptRide), findsOneWidget);
 
-    realtime.emit(
-      tripId: 'cancel-home-trip',
-      kind: DriverRealtimeKind.riderCancelled,
-      status: status,
-      cancelFee: fee,
-    );
-    for (var i = 0; i < 30; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
+      realtime.emit(
+        tripId: 'cancel-home-trip',
+        kind: DriverRealtimeKind.riderCancelled,
+        status: status,
+        cancelFee: fee,
+      );
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
 
-    // Straight back home, no sheet; the island has the news.
-    expect(find.byType(AcceptRide), findsNothing);
-    expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Rider cancelled'), findsNothing);
-    final message = IslandMessages.take();
-    expect(message?.title, title);
-    expect(message?.priority, IslandPriority.high);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
-  });
+      // Straight back home, no sheet; the island has the news.
+      expect(find.byType(AcceptRide), findsNothing);
+      expect(find.text('Home'), findsOneWidget);
+      expect(find.text('Rider cancelled'), findsNothing);
+      final message = IslandMessages.take();
+      expect(message?.title, title);
+      expect(message?.priority, IslandPriority.high);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    });
   }
 }

@@ -21,8 +21,9 @@ Future<void> _open(
       designSize: const Size(375, 812),
       builder: (_, _) => MaterialApp(
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(scale)),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scale)),
           child: child!,
         ),
         home: Scaffold(body: Center(child: child)),

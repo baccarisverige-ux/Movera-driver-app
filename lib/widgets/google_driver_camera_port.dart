@@ -34,6 +34,7 @@ class GoogleDriverCameraPort
   final bool reducedMotion;
   final void Function(CameraPosition)? onFrame;
   final void Function(String?)? onStatus;
+
   /// The camera's clock (a test's fake clock); [DateTime.now] by default.
   final DateTime Function() _clock;
   CameraPosition? _logical;
@@ -94,10 +95,13 @@ class GoogleDriverCameraPort
   /// Screen pixels the camera would slide across: beyond about three
   /// screens a glide only smears the city, so the camera cuts instead.
   static bool _far(CameraPosition a, CameraPosition b) {
-    final meters = GeoPoint(a.target.latitude, a.target.longitude)
-        .distanceMetersTo(GeoPoint(b.target.latitude, b.target.longitude));
+    final meters = GeoPoint(
+      a.target.latitude,
+      a.target.longitude,
+    ).distanceMetersTo(GeoPoint(b.target.latitude, b.target.longitude));
     final zoom = math.min(a.zoom, b.zoom);
-    final metersPerPixel = 156543.03392 *
+    final metersPerPixel =
+        156543.03392 *
         math.cos(b.target.latitude * math.pi / 180).abs() /
         math.pow(2, zoom);
     return metersPerPixel > 0 && meters / metersPerPixel > 2400;
@@ -215,26 +219,26 @@ class GoogleDriverCameraPort
       anchored: anchored,
       lead: anchored ? logical.bearing : null,
     );
-    await controller.moveCamera(
-      CameraUpdate.newCameraPosition(_sdk(logical)),
-    );
+    await controller.moveCamera(CameraUpdate.newCameraPosition(_sdk(logical)));
     // A physical pan, app suspension, replaced map, or disposal can interrupt
     // this command while the Maps SDK still awaits acknowledgement. Never
     // publish an old camera frame or clear a newer error after that point.
     if (_disposed || generation != _generation) return;
     onStatus?.call(null);
     if (trackVehicle) {
-      onFrame?.call(coastLat == 0 && coastLng == 0
-          ? logical
-          : CameraPosition(
-              target: LatLng(
-                logical.target.latitude - coastLat,
-                logical.target.longitude - coastLng,
+      onFrame?.call(
+        coastLat == 0 && coastLng == 0
+            ? logical
+            : CameraPosition(
+                target: LatLng(
+                  logical.target.latitude - coastLat,
+                  logical.target.longitude - coastLng,
+                ),
+                zoom: logical.zoom,
+                bearing: logical.bearing,
+                tilt: logical.tilt,
               ),
-              zoom: logical.zoom,
-              bearing: logical.bearing,
-              tilt: logical.tilt,
-            ));
+      );
     }
   }
 
@@ -283,8 +287,11 @@ class GoogleDriverCameraPort
           final goal = _goal;
           if (goal == null || identical(goal, sent)) break;
           sent = goal;
-          await _move(_at(goal, goal.target),
-            trackVehicle: true, generation: generation);
+          await _move(
+            _at(goal, goal.target),
+            trackVehicle: true,
+            generation: generation,
+          );
         }
         return;
       }
@@ -312,8 +319,13 @@ class GoogleDriverCameraPort
         final from = _logical ?? destination;
         if (_far(from, destination)) {
           _flightPending = false;
-          await _move(destination, trackVehicle: true, generation: generation,
-            coastLat: coastLat, coastLng: coastLng);
+          await _move(
+            destination,
+            trackVehicle: true,
+            generation: generation,
+            coastLat: coastLat,
+            coastLng: coastLng,
+          );
           // A goal retargeted during the cut is followed from here (u100).
           if (identical(_goal, goal)) break;
           continue;
@@ -336,9 +348,13 @@ class GoogleDriverCameraPort
           // driver-u177: the frame's time includes the moveCamera await,
           // so the flight lasts [flightDuration] whatever the SDK latency.
           final stamp = _clock();
-          await _move(next,
-            trackVehicle: _trackCar(next, goal), generation: generation,
-            coastLat: coastLat, coastLng: coastLng);
+          await _move(
+            next,
+            trackVehicle: _trackCar(next, goal),
+            generation: generation,
+            coastLat: coastLat,
+            coastLng: coastLng,
+          );
           if (_disposed || generation != _generation) {
             break;
           }
@@ -355,9 +371,13 @@ class GoogleDriverCameraPort
           final next = settled
               ? destination
               : _approach(from, destination, dt, goal.duration);
-          await _move(next,
-            trackVehicle: _trackCar(next, goal), generation: generation,
-            coastLat: coastLat, coastLng: coastLng);
+          await _move(
+            next,
+            trackVehicle: _trackCar(next, goal),
+            generation: generation,
+            coastLat: coastLat,
+            coastLng: coastLng,
+          );
         }
         if (_disposed || generation != _generation || settled) {
           break;
@@ -468,18 +488,27 @@ class GoogleDriverCameraPort
     final from = _logical;
     try {
       if (reducedMotion || from == null || _far(from, position)) {
-        await _move(position,
-            trackVehicle: false, generation: generation, anchored: false);
+        await _move(
+          position,
+          trackVehicle: false,
+          generation: generation,
+          anchored: false,
+        );
       } else {
         _producingFrames = true;
         final started = _clock();
         while (true) {
-          final t = (_clock().difference(started).inMicroseconds /
-                  previewFlight.inMicroseconds)
-              .clamp(0.0, 1.0);
+          final t =
+              (_clock().difference(started).inMicroseconds /
+                      previewFlight.inMicroseconds)
+                  .clamp(0.0, 1.0);
           final e = t < .5 ? 4 * t * t * t : 1 - math.pow(2 - 2 * t, 3) / 2;
-          await _move(_blend(from, position, e),
-              trackVehicle: false, generation: generation, anchored: false);
+          await _move(
+            _blend(from, position, e),
+            trackVehicle: false,
+            generation: generation,
+            anchored: false,
+          );
           if (_disposed || generation != _generation || t >= 1) break;
           await _sleep(const Duration(milliseconds: 16));
         }
@@ -521,7 +550,8 @@ class GoogleDriverCameraPort
     final from = _logical;
     if (_disposed || from == null) return;
     final easing = _tiltEase;
-    if (easing != null && (easing.target - tilt).abs() < .5 &&
+    if (easing != null &&
+        (easing.target - tilt).abs() < .5 &&
         easing.generation == _generation) {
       return easing.done.future;
     }
@@ -535,14 +565,21 @@ class GoogleDriverCameraPort
     );
     if (!_threeD || reducedMotion) {
       if (_threeD) {
-        await _move(at(from, tilt),
-            trackVehicle: false, generation: generation, anchored: false);
+        await _move(
+          at(from, tilt),
+          trackVehicle: false,
+          generation: generation,
+          anchored: false,
+        );
       }
       if (!_disposed && generation == _generation) _logical = at(from, tilt);
       return;
     }
-    final ease = _tiltEase = (target: tilt, generation: generation,
-        done: Completer<void>());
+    final ease = _tiltEase = (
+      target: tilt,
+      generation: generation,
+      done: Completer<void>(),
+    );
     _producingFrames = true;
     try {
       final started = _clock();
@@ -552,14 +589,19 @@ class GoogleDriverCameraPort
         // Real time, but never slower than one 16 ms step per frame, so the
         // ease ends even where the clock barely moves (tests, fast frames).
         final micros = math.max(
-            _clock().difference(started).inMicroseconds,
-            frames * 16000);
+          _clock().difference(started).inMicroseconds,
+          frames * 16000,
+        );
         final t = (micros / tiltFlight.inMicroseconds).clamp(0.0, 1.0);
         frames++;
         final e = t * t * (3 - 2 * t);
         final base = _logical ?? from;
-        await _move(at(base, fromTilt + (tilt - fromTilt) * e),
-            trackVehicle: false, generation: generation, anchored: false);
+        await _move(
+          at(base, fromTilt + (tilt - fromTilt) * e),
+          trackVehicle: false,
+          generation: generation,
+          anchored: false,
+        );
         if (_disposed || generation != _generation || t >= 1) break;
         await _sleep(const Duration(milliseconds: 16));
       }

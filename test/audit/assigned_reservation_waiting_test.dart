@@ -108,20 +108,22 @@ Future<AcceptRide> _acceptAssign(WidgetTester tester, RideOffer offer) async {
   addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
   await tester.binding.setSurfaceSize(const Size(375, 812));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(LayoutViewport(
-    child: ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      useInheritedMediaQuery: true,
-      builder: (_, __) => MaterialApp(
-        home: DriverHome(
-          sessionController: DriverSessionController(),
-          dispatchRepository: dispatch,
+  await tester.pumpWidget(
+    LayoutViewport(
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        useInheritedMediaQuery: true,
+        builder: (_, __) => MaterialApp(
+          home: DriverHome(
+            sessionController: DriverSessionController(),
+            dispatchRepository: dispatch,
+          ),
         ),
       ),
     ),
-  ));
+  );
   await tester.pump(const Duration(milliseconds: 200));
   tester
       .widget<GestureDetector>(

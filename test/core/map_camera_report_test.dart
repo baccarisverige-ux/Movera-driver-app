@@ -9,15 +9,46 @@ void main() {
   const stockholm = LatLng(59.3326, 18.0649);
 
   test('a report with a zoom and a centre is a frame', () {
-    expect(MapCameraReport.isFrame(const CameraPosition(target: stockholm, zoom: 16.4)), isTrue);
-    expect(MapCameraReport.isFrame(const CameraPosition(target: stockholm, zoom: 3)), isTrue);
-    expect(MapCameraReport.isFrame(const CameraPosition(target: LatLng(-33.9, 151.2), zoom: 12, bearing: 90, tilt: 45)), isTrue);
+    expect(
+      MapCameraReport.isFrame(
+        const CameraPosition(target: stockholm, zoom: 16.4),
+      ),
+      isTrue,
+    );
+    expect(
+      MapCameraReport.isFrame(const CameraPosition(target: stockholm, zoom: 3)),
+      isTrue,
+    );
+    expect(
+      MapCameraReport.isFrame(
+        const CameraPosition(
+          target: LatLng(-33.9, 151.2),
+          zoom: 12,
+          bearing: 90,
+          tilt: 45,
+        ),
+      ),
+      isTrue,
+    );
   });
 
   test('the plugin\'s zoom 0 and (0, 0) stand-ins are not', () {
-    expect(MapCameraReport.isFrame(const CameraPosition(target: stockholm, zoom: 0)), isFalse);
-    expect(MapCameraReport.isFrame(const CameraPosition(target: LatLng(0, 0), zoom: 16)), isFalse);
-    expect(MapCameraReport.isFrame(const CameraPosition(target: stockholm, zoom: double.nan)), isFalse);
+    expect(
+      MapCameraReport.isFrame(const CameraPosition(target: stockholm, zoom: 0)),
+      isFalse,
+    );
+    expect(
+      MapCameraReport.isFrame(
+        const CameraPosition(target: LatLng(0, 0), zoom: 16),
+      ),
+      isFalse,
+    );
+    expect(
+      MapCameraReport.isFrame(
+        const CameraPosition(target: stockholm, zoom: double.nan),
+      ),
+      isFalse,
+    );
   });
 
   test('taken for a frame, zoom 0 would draw the thinnest route line', () {

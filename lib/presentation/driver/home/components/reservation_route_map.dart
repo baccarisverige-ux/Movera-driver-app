@@ -426,12 +426,14 @@ class ReservationRouteMapPage extends StatelessWidget {
               children: [
                 Text(
                   // The day as seen now, not as booked (driver-u142).
-                  '${ReservationWhen.dayWord(request.pickupDayAt(
-                      ScheduledClock.instance.now()))} · ${request.category}',
+                  '${ReservationWhen.dayWord(request.pickupDayAt(ScheduledClock.instance.now()))} · ${request.category}',
                   style: const TextStyle(color: _muted, fontSize: 13),
                 ),
                 Text(
-                  tr.tripMinutesMinDistance(request.tripMinutes, driverDistanceKm(request.tripKm)),
+                  tr.tripMinutesMinDistance(
+                    request.tripMinutes,
+                    driverDistanceKm(request.tripKm),
+                  ),
                   style: const TextStyle(
                     color: _ink,
                     fontSize: 13,

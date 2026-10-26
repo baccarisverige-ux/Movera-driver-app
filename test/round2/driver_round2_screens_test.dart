@@ -81,10 +81,7 @@ void _expectRedBadge(WidgetTester tester, String key) {
   final box = tester.widget<Container>(
     find.descendant(of: badge, matching: find.byType(Container)).first,
   );
-  expect(
-    (box.decoration! as BoxDecoration).color,
-    OfferBadge.priorityRed,
-  );
+  expect((box.decoration! as BoxDecoration).color, OfferBadge.priorityRed);
   final label = tester.widget<Text>(
     find.descendant(of: badge, matching: find.text('Priority')),
   );
@@ -117,9 +114,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('XL: 3 min free, then the fee and the no-show', (
-      tester,
-    ) async {
+    testWidgets('XL: 3 min free, then the fee and the no-show', (tester) async {
       final xl = const WaitingRules().termsFor(category: 'Movera XL');
       var seconds = 2 * 60 + 59;
       await _sheet(tester, () => seconds, xl);
@@ -143,9 +138,14 @@ void main() {
       );
       await _sheet(tester, () => 7 * 60, terms);
       expect(_amount(tester), '+0,600 DT');
-      expect(find.byKey(const ValueKey('waiting-driver-share')), findsOneWidget);
       expect(
-        tester.widget<Text>(find.byKey(const ValueKey('waiting-driver-share'))).data,
+        find.byKey(const ValueKey('waiting-driver-share')),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('waiting-driver-share')))
+            .data,
         contains('80% of the no-show fee (4,000 DT)'),
       );
     });

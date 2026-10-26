@@ -44,8 +44,16 @@ Map<String, dynamic> _wire({String id = 'api', String payment = 'card'}) => {
   'driverEarnings': {'amountMinor': 17000, 'currency': 'SEK'},
   'pickupPay': {'amountMinor': 900, 'currency': 'SEK'},
   'source': 'system',
-  'pickup': {'address': 'Tegnérgatan, Stockholm', 'lat': 59.3335, 'lng': 18.0610},
-  'dropoff': {'address': 'Odengatan, Stockholm', 'lat': 59.3428, 'lng': 18.0475},
+  'pickup': {
+    'address': 'Tegnérgatan, Stockholm',
+    'lat': 59.3335,
+    'lng': 18.0610,
+  },
+  'dropoff': {
+    'address': 'Odengatan, Stockholm',
+    'lat': 59.3428,
+    'lng': 18.0475,
+  },
   'categoryId': 'comfort',
   'paymentMethod': payment,
   'pickupEtaSeconds': 180,
@@ -268,12 +276,13 @@ void main() {
     final dispatch = _Dispatch([offer]);
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        home: RideRequests(dispatchRepository: dispatch),
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) =>
+            MaterialApp(home: RideRequests(dispatchRepository: dispatch)),
       ),
-    ));
+    );
     await tester.pump();
     // The card: 170 kr earnings + 9 kr pickup pay. No 200 kr anywhere.
     expect(find.text('179,00 kr', findRichText: true), findsWidgets);
@@ -312,12 +321,14 @@ void main() {
     final session = DriverSessionController(initialOnline: true);
     addTearDown(session.dispose);
     session.beginTrip(trip.tripId);
-    await tester.pumpWidget(MaterialApp(
-      home: DriverRideCompleted(
-        sessionController: session,
-        waybillRepository: InMemoryWaybillRepository.instance,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DriverRideCompleted(
+          sessionController: session,
+          waybillRepository: InMemoryWaybillRepository.instance,
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
     final summary = tester.widget<Text>(
       find.byKey(const ValueKey<String>('ride-completed-fare')),

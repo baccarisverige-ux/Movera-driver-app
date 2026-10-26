@@ -16,7 +16,8 @@
 /// Maps JavaScript (web) silently drops ALL styling when the serialised
 /// style exceeds 1000 characters. Keep every minified style under 1000
 /// characters; test/core/movera_map_style_test.dart guards the budget.
-String _style(String park, [String roads = '']) => '['
+String _style(String park, [String roads = '']) =>
+    '['
     '{"elementType":"geometry","stylers":[{"color":"#F8FAF8"}]},'
     '{"elementType":"labels.text.fill","stylers":[{"color":"#4D4F51"}]},'
     '{"elementType":"labels.text.stroke","stylers":[{"color":"#FFFFFF"}]},'

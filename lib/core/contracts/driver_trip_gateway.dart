@@ -82,7 +82,10 @@ abstract interface class DriverTripGateway {
     required String idempotencyKey,
   });
 
-  Future<DriverTripProjection> headToPickup(String tripId, DriverCommand command);
+  Future<DriverTripProjection> headToPickup(
+    String tripId,
+    DriverCommand command,
+  );
 
   Future<DriverTripProjection> arrive(String tripId, DriverCommand command);
 

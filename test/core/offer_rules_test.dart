@@ -27,14 +27,17 @@ void main() {
       expect(rules.exclusiveWhileDriving, isTrue);
       expect(rules.exclusiveWhileDrivingCount, 1);
       expect(rules.commissionRate, WaybillPayment.serviceFeeRate);
-      expect([for (final reason in rules.exclusiveReasons) reason.text], [
-        'Best match',
-        "Rider's favourite",
-        'Finishing nearby',
-        'Airport queue',
-        'Pickup soon',
-        'Only for you · nearby',
-      ]);
+      expect(
+        [for (final reason in rules.exclusiveReasons) reason.text],
+        [
+          'Best match',
+          "Rider's favourite",
+          'Finishing nearby',
+          'Airport queue',
+          'Pickup soon',
+          'Only for you · nearby',
+        ],
+      );
       const card = OfferCardDetails();
       expect(card.netFare, isFalse);
       expect(card.pickupAddress && card.stops && card.riderRating, isTrue);
@@ -43,9 +46,15 @@ void main() {
     });
 
     test('Exclusive reasons come from the list; switched off, no text', () {
-      expect(ExclusiveReasons.text(ExclusiveReasons.finishingNearby), 'Finishing nearby');
+      expect(
+        ExclusiveReasons.text(ExclusiveReasons.finishingNearby),
+        'Finishing nearby',
+      );
       expect(ExclusiveReasons.defaultFor(reservation: true), 'Pickup soon');
-      expect(ExclusiveReasons.text(ExclusiveReasons.assigned), 'Assigned by Movera');
+      expect(
+        ExclusiveReasons.text(ExclusiveReasons.assigned),
+        'Assigned by Movera',
+      );
       const edited = DriverOfferRules(
         exclusiveReasons: [
           ExclusiveReasonRule(id: 'best-match', text: 'Top pick'),
@@ -129,7 +138,9 @@ void main() {
     });
 
     test('a scheduled ride waits the reservation policy\'s included time', () {
-      addTearDown(() => ScheduledRideRules.current = const ScheduledRideRules());
+      addTearDown(
+        () => ScheduledRideRules.current = const ScheduledRideRules(),
+      );
       expect(const ScheduledRideRules().includedWaitingMinutes, 5);
       ScheduledRideRules.current = const ScheduledRideRules(
         includedWaitingMinutes: 7,
@@ -167,7 +178,10 @@ void main() {
         WaitingRideType.airport,
       );
       expect(
-        WaitingRules.typeOf(matchedVia: 'Movera Radar', pickupAddress: 'Kungsgatan'),
+        WaitingRules.typeOf(
+          matchedVia: 'Movera Radar',
+          pickupAddress: 'Kungsgatan',
+        ),
         WaitingRideType.normal,
       );
     });

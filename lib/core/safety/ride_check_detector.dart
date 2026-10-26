@@ -37,8 +37,7 @@ class RideCheckDetector {
   bool fired(RideCheckTrigger trigger) => _fired.contains(trigger);
 
   /// The triggers that opened on this trip, for the saved trip.
-  List<String> get firedNames =>
-      [for (final trigger in _fired) trigger.name];
+  List<String> get firedNames => [for (final trigger in _fired) trigger.name];
 
   /// A restored trip: the triggers that already opened before (by name;
   /// unknown names are skipped) stay used (driver-u44).
@@ -87,7 +86,8 @@ class RideCheckDetector {
       _stillSince = at;
     }
     if (atPlannedStop) return _longer(at);
-    return _longStop(at, place) ?? _offRoute(point, at, destination) ??
+    return _longStop(at, place) ??
+        _offRoute(point, at, destination) ??
         _longer(at);
   }
 
@@ -122,11 +122,8 @@ class RideCheckDetector {
   }
 
   /// Hook for a motion sensor: a very hard stop or impact.
-  RideCheckEvent? hardStop(DateTime at, {String? place}) => _fire(
-    RideCheckTrigger.possibleCrash,
-    at,
-    crashReason(place),
-  );
+  RideCheckEvent? hardStop(DateTime at, {String? place}) =>
+      _fire(RideCheckTrigger.possibleCrash, at, crashReason(place));
 
   /// Demo tools: always opens, whatever the rules and earlier checks.
   RideCheckEvent demo(

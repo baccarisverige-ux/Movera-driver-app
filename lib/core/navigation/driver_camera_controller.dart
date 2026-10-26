@@ -327,16 +327,18 @@ class DriverCameraPolicy {
           final targetZoom = turnZoom - .5 + .5 * approach;
           final t = (approach * 2).clamp(0.0, 1.0);
           final eased = t * t * (3 - 2 * t);
-          zoom += math.min(maxTurnZoomIn, math.max(0.0, targetZoom - zoom)) *
-              eased;
+          zoom +=
+              math.min(maxTurnZoomIn, math.max(0.0, targetZoom - zoom)) * eased;
         }
         // The former 35 m arrival threshold snapped a fast-road camera
         // from highway zoom straight to a close-up view. Start easing well
         // before arrival, finishing near and still tilted (60°) at the
         // actual endpoint, never flat.
         if (progress.remainingMeters < arrivalMeters) {
-          final fraction = (1 - progress.remainingMeters / arrivalMeters)
-              .clamp(0.0, 1.0);
+          final fraction = (1 - progress.remainingMeters / arrivalMeters).clamp(
+            0.0,
+            1.0,
+          );
           arrival = fraction * fraction * (3 - 2 * fraction);
           zoom += math.max(0.0, arrivalZoom - zoom) * arrival;
         }
@@ -456,6 +458,7 @@ class DriverCameraController {
   double get alongMeters => _policy.alongMeters;
   double alongMetersOn(List<GeoPoint> points) => _policy.alongMetersOn(points);
   bool get isGuidance => _navigating && !_waiting;
+
   /// Trip guidance: how long the map may stay moved by the driver before
   /// the camera returns to the car. Null keeps the map until Recenter.
   Duration? autoResumeAfter;
@@ -506,13 +509,19 @@ class DriverCameraController {
     _resumeTimer?.cancel();
     _resumeTimer = null;
     final after = autoResumeAfter;
-    if (after == null || _disposed || _touching || !isGuidance ||
+    if (after == null ||
+        _disposed ||
+        _touching ||
+        !isGuidance ||
         mode != DriverCameraMode.browsing) {
       return;
     }
     _resumeTimer = Timer(after, () {
       _resumeTimer = null;
-      if (_disposed || _touching || _suspended || !isGuidance ||
+      if (_disposed ||
+          _touching ||
+          _suspended ||
+          !isGuidance ||
           mode != DriverCameraMode.browsing) {
         return;
       }

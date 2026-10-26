@@ -77,8 +77,9 @@ void main() {
   });
   test('R02 vehicle captures edit before waiting for storage', () async {
     final gate = Completer<SharedPreferences>();
-    final blocker = SettingsRepository(load: () => gate.future)
-        .save('blocker', {});
+    final blocker = SettingsRepository(
+      load: () => gate.future,
+    ).save('blocker', {});
     final data = vehicle('new');
     final pending = LocalVehicleStore().upsert(data);
     data['plate'] = 'CHANGED';
@@ -160,22 +161,25 @@ void main() {
     },
   );
 
-  test('R29 legacy duplicate receipts restore the newest version regardless of order', () async {
-    final prefs = await SharedPreferences.getInstance();
-    final old = {...historyRow('same', DateTime(2020)), 'fare': '10 kr'};
-    final recent = {...historyRow('same', DateTime(2026)), 'fare': '20 kr'};
-    for (final rows in [
-      [old, recent],
-      [recent, old],
-    ]) {
-      await prefs.setString(
-        PrefsTripHistoryRepository.key,
-        jsonEncode({'schemaVersion': 1, 'rows': rows}),
-      );
-      final restored = await PrefsTripHistoryRepository().list();
-      expect(restored, hasLength(1));
-      expect(restored.single.fare, '20 kr');
-      expect(restored.single.completedAt, DateTime(2026));
-    }
-  });
+  test(
+    'R29 legacy duplicate receipts restore the newest version regardless of order',
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      final old = {...historyRow('same', DateTime(2020)), 'fare': '10 kr'};
+      final recent = {...historyRow('same', DateTime(2026)), 'fare': '20 kr'};
+      for (final rows in [
+        [old, recent],
+        [recent, old],
+      ]) {
+        await prefs.setString(
+          PrefsTripHistoryRepository.key,
+          jsonEncode({'schemaVersion': 1, 'rows': rows}),
+        );
+        final restored = await PrefsTripHistoryRepository().list();
+        expect(restored, hasLength(1));
+        expect(restored.single.fare, '20 kr');
+        expect(restored.single.completedAt, DateTime(2026));
+      }
+    },
+  );
 }

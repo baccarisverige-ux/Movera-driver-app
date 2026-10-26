@@ -232,8 +232,10 @@ void main() {
     await _pumpSheet(tester, _request);
     // Only one request waits: no "1 of 1", and no "New reservation".
     expect(find.text('New reservation'), findsNothing);
-    expect(find.byKey(const ValueKey<String>('reservation-count')),
-        findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('reservation-count')),
+      findsNothing,
+    );
     expect(find.text('Comfort'), findsOneWidget);
     final fare = tester.widget<Text>(
       find.byKey(const ValueKey<String>('reservation-fare')),
@@ -244,20 +246,30 @@ void main() {
     // Pickup with its clock time, drop-off with the trip distance.
     final pickup = find.byKey(const ValueKey<String>('reservation-pickup'));
     final dropoff = find.byKey(const ValueKey<String>('reservation-dropoff'));
-    expect(find.descendant(of: pickup, matching: find.text('Gamla vägen')),
-        findsOneWidget);
-    expect(find.descendant(of: pickup, matching: find.text('07:40')),
-        findsOneWidget);
-    expect(find.descendant(of: dropoff, matching: find.text('Solna centrum')),
-        findsOneWidget);
-    expect(find.descendant(of: dropoff, matching: find.text('9.4 km')),
-        findsOneWidget);
+    expect(
+      find.descendant(of: pickup, matching: find.text('Gamla vägen')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: pickup, matching: find.text('07:40')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: dropoff, matching: find.text('Solna centrum')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: dropoff, matching: find.text('9.4 km')),
+      findsOneWidget,
+    );
     expect(find.text('1 stop'), findsOneWidget);
     // A booked-calendar picture right of the fare, about 98 x 75.
     final picture = find.byKey(const ValueKey<String>('reservation-picture'));
     expect(picture, findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('reservation-picture-booked')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('reservation-picture-booked')),
+      findsOneWidget,
+    );
     expect(tester.getSize(picture), const Size(98, 75));
     expect(
       tester.getRect(picture).left,
@@ -274,10 +286,14 @@ void main() {
     expect(tester.getSize(when).width, closeTo(375 - 44, 1));
     final box = tester.widget<Container>(when).decoration! as BoxDecoration;
     expect(box.color, const Color(0xFFF1F2F4));
-    expect(find.descendant(of: when, matching: find.text('In 2 h')),
-        findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('reservation-when-icon')),
-        findsOneWidget);
+    expect(
+      find.descendant(of: when, matching: find.text('In 2 h')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('reservation-when-icon')),
+      findsOneWidget,
+    );
     expect(
       find.ancestor(of: when, matching: find.byType(InkWell)),
       findsNothing,
@@ -333,8 +349,10 @@ void main() {
     expect(rising, greaterThan(up));
     expect(settled, 1);
     // The airport ride: plane and traveller; "Today 07:40".
-    expect(find.byKey(const ValueKey<String>('reservation-picture-airport')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('reservation-picture-airport')),
+      findsOneWidget,
+    );
     expect(find.text('40.8 km'), findsNothing);
     expect(find.text('41 km'), findsOneWidget);
     expect(find.text('In 2 h'), findsOneWidget);
@@ -366,9 +384,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the count shows only while more requests wait', (
-    tester,
-  ) async {
+  testWidgets('the count shows only while more requests wait', (tester) async {
     await _pumpSheet(tester, _request, count: 1);
     expect(find.textContaining('of 1'), findsNothing);
     await _pumpSheet(tester, _airportRequest, position: 2, count: 2);
@@ -462,8 +478,14 @@ void main() {
     await _pumpSheet(tester, cash);
     final badge = find.byKey(const ValueKey<String>('reservation-cash'));
     expect(badge, findsOneWidget);
-    expect(find.descendant(of: badge, matching: find.text('Cash')), findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('reservation-boost')), findsNothing);
+    expect(
+      find.descendant(of: badge, matching: find.text('Cash')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('reservation-boost')),
+      findsNothing,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -487,9 +509,15 @@ void main() {
     await _pumpSheet(tester, boosted);
     final badge = find.byKey(const ValueKey<String>('reservation-boost'));
     expect(badge, findsOneWidget);
-    expect(find.descendant(of: badge, matching: find.text('+40 kr')), findsOneWidget);
+    expect(
+      find.descendant(of: badge, matching: find.text('+40 kr')),
+      findsOneWidget,
+    );
     // The driver sees only the new fare.
-    expect(find.byKey(const ValueKey<String>('reservation-fare')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('reservation-fare')),
+      findsOneWidget,
+    );
     expect(find.textContaining('126'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -505,10 +533,7 @@ void main() {
     expect(find.byKey(_reserveRadar), findsNothing);
     expect(ScheduledRideStore.isOpen(demoReservationId), isTrue);
 
-    tester
-        .widget<GestureDetector>(find.byKey(_radarTouch))
-        .onTap!
-        .call();
+    tester.widget<GestureDetector>(find.byKey(_radarTouch)).onTap!.call();
     await _frames(tester, const Duration(milliseconds: 1500));
     // Radar goes live first, then the sheet rises from under the dock.
     expect(_popup.hitTestable(), findsNothing);
@@ -519,156 +544,184 @@ void main() {
     await _end(tester, dispatch);
   });
 
-  testWidgets('the sheet rises to 40 %, the orb on its edge, route on the map', (
-    tester,
-  ) async {
-    final dispatch = await _pumpHome(tester);
-    await _frames(
-      tester,
-      ReservationDemoTimings.homePopupAfter + HomeReservationSheet.riseDelay,
-    );
-    final sheet = find.byKey(const ValueKey<String>('home-reservation-sheet'));
-    expect(sheet, findsOneWidget);
-    final rising = tester.getRect(sheet).top;
-    await _frames(tester, const Duration(milliseconds: 1200));
-    final settled = tester.getRect(sheet);
-    // It came up from below and settled about 40 % of the screen high,
-    // over the dock, edge to edge.
-    expect(rising, greaterThan(settled.top));
-    expect(settled.height, inInclusiveRange(812 * 0.38, 812 * 0.5));
-    expect(settled.left, lessThanOrEqualTo(0));
-    expect(settled.right, greaterThanOrEqualTo(375));
-    expect(settled.bottom, closeTo(812, 1));
-    final box = tester.widget<DecoratedBox>(sheet);
-    final decoration = box.decoration as BoxDecoration;
-    expect(decoration.color, Colors.white);
-    expect(
-      decoration.borderRadius,
-      const BorderRadius.vertical(top: Radius.circular(28)),
-    );
-    // Every detail is in the sheet, with the down arrow; no map is dimmed.
-    for (final key in [
-      'reservation-fare',
-      'reservation-when',
-      'reservation-pickup',
-      'reservation-dropoff',
-      'reservation-picture',
-      'reservation-hide',
-    ]) {
+  testWidgets(
+    'the sheet rises to 40 %, the orb on its edge, route on the map',
+    (tester) async {
+      final dispatch = await _pumpHome(tester);
+      await _frames(
+        tester,
+        ReservationDemoTimings.homePopupAfter + HomeReservationSheet.riseDelay,
+      );
+      final sheet = find.byKey(
+        const ValueKey<String>('home-reservation-sheet'),
+      );
+      expect(sheet, findsOneWidget);
+      final rising = tester.getRect(sheet).top;
+      await _frames(tester, const Duration(milliseconds: 1200));
+      final settled = tester.getRect(sheet);
+      // It came up from below and settled about 40 % of the screen high,
+      // over the dock, edge to edge.
+      expect(rising, greaterThan(settled.top));
+      expect(settled.height, inInclusiveRange(812 * 0.38, 812 * 0.5));
+      expect(settled.left, lessThanOrEqualTo(0));
+      expect(settled.right, greaterThanOrEqualTo(375));
+      expect(settled.bottom, closeTo(812, 1));
+      final box = tester.widget<DecoratedBox>(sheet);
+      final decoration = box.decoration as BoxDecoration;
+      expect(decoration.color, Colors.white);
       expect(
-        find.descendant(of: sheet, matching: find.byKey(ValueKey<String>(key))),
+        decoration.borderRadius,
+        const BorderRadius.vertical(top: Radius.circular(28)),
+      );
+      // Every detail is in the sheet, with the down arrow; no map is dimmed.
+      for (final key in [
+        'reservation-fare',
+        'reservation-when',
+        'reservation-pickup',
+        'reservation-dropoff',
+        'reservation-picture',
+        'reservation-hide',
+      ]) {
+        expect(
+          find.descendant(
+            of: sheet,
+            matching: find.byKey(ValueKey<String>(key)),
+          ),
+          findsOneWidget,
+        );
+      }
+      // driver-u190: no tinted barrier over Home (any route's own barrier
+      // is see-through).
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is ModalBarrier && w.color != null && w.color!.a > 0,
+        ),
+        findsNothing,
+      );
+
+      // The radar orb sits centred on the sheet's top edge: the normal
+      // Radar-offer orb with grey waves and MATCH in light black, no icon.
+      final radar = find.byKey(_reserveRadar);
+      final orb = tester.getRect(radar);
+      expect(orb.center.dy, closeTo(settled.top, 2));
+      expect(orb.center.dx, closeTo(375 / 2, 1));
+      for (final text in ['Accept', 'MATCH', 'Tap here']) {
+        expect(
+          find.descendant(of: radar, matching: find.text(text)),
+          findsOneWidget,
+        );
+      }
+      final match = tester.widget<Text>(
+        find.descendant(of: radar, matching: find.text('MATCH')),
+      );
+      expect(match.style!.color, MoveraRadarOrb.offerInk);
+      expect(
+        tester
+            .widget<MoveraRadarOrb>(
+              find.descendant(of: radar, matching: find.byType(MoveraRadarOrb)),
+            )
+            .reserve,
+        isTrue,
+      );
+      // driver-u190: the orb draws no icon (the Exclusive check carries
+      // this key).
+      expect(
+        find.descendant(
+          of: radar,
+          matching: find.byKey(const ValueKey<String>('radar-exclusive-icon')),
+        ),
+        findsNothing,
+      );
+
+      // The Home map shows the route with clock times on the pins.
+      // The pins draw in real time and then fade in; a slow machine gets
+      // a little longer.
+      // (The map itself waits for the start position, also in real time.)
+      bool pinsShown() =>
+          find.byType(CustomGoogleMap).evaluate().isNotEmpty &&
+          tester
+              .widget<CustomGoogleMap>(find.byType(CustomGoogleMap))
+              .markers!
+              .any((m) => m.markerId.value == 'radar_dropoff');
+      for (var i = 0; i < 30 && !pinsShown(); i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await tester.pump(const Duration(milliseconds: 400));
+      final map = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
+      String? chip(String id) => map.markers!
+          .firstWhere((m) => m.markerId.value == id)
+          .infoWindow
+          .title;
+      final ride = demoReservationRequest;
+      expect(chip('radar_pickup'), ride.pickupTime);
+      expect(chip('radar_dropoff'), ride.arrivalTime);
+
+      // Once "New reservation" has passed, the island says when.
+      await _frames(tester, const Duration(seconds: 4));
+      // Under 3 hours away: "In 36 min · 07:40 · Reservation".
+      final said = tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('island-reservation')),
+          )
+          .textSpan!
+          .toPlainText();
+      expect(said, startsWith('In '));
+      expect(said, endsWith(' · ${ride.pickupTime} · Reservation'));
+      expect(
+        find.byKey(const ValueKey<String>('island-reservation-icon')),
         findsOneWidget,
       );
-    }
-    // driver-u190: no tinted barrier over Home (any route's own barrier
-    // is see-through).
-    expect(
-      find.byWidgetPredicate((w) =>
-          w is ModalBarrier && w.color != null && w.color!.a > 0),
-      findsNothing,
-    );
 
-    // The radar orb sits centred on the sheet's top edge: the normal
-    // Radar-offer orb with grey waves and MATCH in light black, no icon.
-    final radar = find.byKey(_reserveRadar);
-    final orb = tester.getRect(radar);
-    expect(orb.center.dy, closeTo(settled.top, 2));
-    expect(orb.center.dx, closeTo(375 / 2, 1));
-    for (final text in ['Accept', 'MATCH', 'Tap here']) {
-      expect(find.descendant(of: radar, matching: find.text(text)), findsOneWidget);
-    }
-    final match = tester.widget<Text>(
-      find.descendant(of: radar, matching: find.text('MATCH')),
-    );
-    expect(match.style!.color, MoveraRadarOrb.offerInk);
-    expect(tester.widget<MoveraRadarOrb>(find.descendant(
-      of: radar, matching: find.byType(MoveraRadarOrb))).reserve, isTrue);
-    // driver-u190: the orb draws no icon (the Exclusive check carries
-    // this key).
-    expect(
-      find.descendant(
-        of: radar,
-        matching: find.byKey(const ValueKey<String>('radar-exclusive-icon')),
-      ),
-      findsNothing,
-    );
-
-    // The Home map shows the route with clock times on the pins.
-    // The pins draw in real time and then fade in; a slow machine gets
-    // a little longer.
-    // (The map itself waits for the start position, also in real time.)
-    bool pinsShown() =>
-        find.byType(CustomGoogleMap).evaluate().isNotEmpty &&
-        tester
-            .widget<CustomGoogleMap>(find.byType(CustomGoogleMap))
-            .markers!
-            .any((m) => m.markerId.value == 'radar_dropoff');
-    for (var i = 0; i < 30 && !pinsShown(); i++) {
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      // The down arrow: the route fades, the sheet goes down, and the map
+      // is normal Home again.
+      await tester.tap(find.byKey(_hide));
+      await _frames(tester, const Duration(milliseconds: 800));
+      expect(sheet, findsNothing);
+      final after = tester.widget<CustomGoogleMap>(
+        find.byType(CustomGoogleMap),
       );
-      await tester.pump(const Duration(milliseconds: 50));
-    }
-    await tester.pump(const Duration(milliseconds: 400));
-    final map = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
-    String? chip(String id) => map.markers!
-        .firstWhere((m) => m.markerId.value == id)
-        .infoWindow
-        .title;
-    final ride = demoReservationRequest;
-    expect(chip('radar_pickup'), ride.pickupTime);
-    expect(chip('radar_dropoff'), ride.arrivalTime);
+      expect(
+        after.markers!.where((m) => m.markerId.value.startsWith('radar_')),
+        isEmpty,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('island-reservation-face')),
+        findsNothing,
+      );
+      await _end(tester, dispatch);
+    },
+  );
 
-    // Once "New reservation" has passed, the island says when.
-    await _frames(tester, const Duration(seconds: 4));
-    // Under 3 hours away: "In 36 min · 07:40 · Reservation".
-    final said = tester
-        .widget<Text>(find.byKey(const ValueKey<String>('island-reservation')))
-        .textSpan!
-        .toPlainText();
-    expect(said, startsWith('In '));
-    expect(said, endsWith(' · ${ride.pickupTime} · Reservation'));
-    expect(find.byKey(const ValueKey<String>('island-reservation-icon')),
-        findsOneWidget);
+  testWidgets(
+    'the down arrow only hides the popup: it stays in Scheduled rides',
+    (tester) async {
+      final dispatch = await _pumpHome(tester);
+      await _waitForPopup(tester);
+      expect(_popup, findsOneWidget);
 
-    // The down arrow: the route fades, the sheet goes down, and the map
-    // is normal Home again.
-    await tester.tap(find.byKey(_hide));
-    await _frames(tester, const Duration(milliseconds: 800));
-    expect(sheet, findsNothing);
-    final after = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
-    expect(
-      after.markers!.where((m) => m.markerId.value.startsWith('radar_')),
-      isEmpty,
-    );
-    expect(find.byKey(const ValueKey<String>('island-reservation-face')),
-        findsNothing);
-    await _end(tester, dispatch);
-  });
+      await tester.tap(find.byKey(_hide));
+      await _frames(tester, const Duration(milliseconds: 800));
+      expect(_popup, findsNothing);
+      // Not declined: still open to take, and the radar is Radar again.
+      expect(ScheduledRideStore.isOpen(demoReservationId), isTrue);
+      expect(ScheduledRideStore.openRequests.value, 2);
+      expect(find.byKey(_reserveRadar), findsNothing);
+      expect(find.text('LIVE'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('dock-contour-custom')),
+        findsNothing,
+      );
+      expect(_said, isNot(contains('Reservation declined')));
 
-  testWidgets('the down arrow only hides the popup: it stays in Scheduled rides', (
-    tester,
-  ) async {
-    final dispatch = await _pumpHome(tester);
-    await _waitForPopup(tester);
-    expect(_popup, findsOneWidget);
-
-    await tester.tap(find.byKey(_hide));
-    await _frames(tester, const Duration(milliseconds: 800));
-    expect(_popup, findsNothing);
-    // Not declined: still open to take, and the radar is Radar again.
-    expect(ScheduledRideStore.isOpen(demoReservationId), isTrue);
-    expect(ScheduledRideStore.openRequests.value, 2);
-    expect(find.byKey(_reserveRadar), findsNothing);
-    expect(find.text('LIVE'), findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('dock-contour-custom')), findsNothing);
-    expect(_said, isNot(contains('Reservation declined')));
-
-    // It does not come back by itself.
-    await _frames(tester, const Duration(seconds: 5));
-    expect(_popup, findsNothing);
-    await _end(tester, dispatch);
-  });
+      // It does not come back by itself.
+      await _frames(tester, const Duration(seconds: 5));
+      expect(_popup, findsNothing);
+      await _end(tester, dispatch);
+    },
+  );
 
   testWidgets('the radar Accept takes the reservation for this driver', (
     tester,
@@ -678,8 +731,13 @@ void main() {
     await tester.tap(find.byKey(_reserveRadar));
     await tester.pump(const Duration(milliseconds: 100));
     // The server decides; the radar says so meanwhile and × waits.
-    expect(find.descendant(of: find.byKey(_reserveRadar), matching: find.text('Matching')),
-        findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(_reserveRadar),
+        matching: find.text('Matching'),
+      ),
+      findsOneWidget,
+    );
     expect(_said, contains('Matching…'));
     await _frames(tester, const Duration(milliseconds: 1400));
 
@@ -794,36 +852,37 @@ void main() {
       ScheduledRideStore.reset();
     });
 
-    testWidgets('one at a time: after the down arrow the next one rises, "2 of 2"', (
-      tester,
-    ) async {
-      final dispatch = await _pumpHome(tester);
-      await _waitForPopup(tester);
-      expect(_popup, findsOneWidget);
-      expect(find.text('1 of 2'), findsOneWidget);
-      expect(find.text('Gamla vägen'), findsOneWidget);
+    testWidgets(
+      'one at a time: after the down arrow the next one rises, "2 of 2"',
+      (tester) async {
+        final dispatch = await _pumpHome(tester);
+        await _waitForPopup(tester);
+        expect(_popup, findsOneWidget);
+        expect(find.text('1 of 2'), findsOneWidget);
+        expect(find.text('Gamla vägen'), findsOneWidget);
 
-      await tester.tap(find.byKey(_hide));
-      await _frames(
-        tester,
-        HomeReservationSheet.riseDelay + const Duration(milliseconds: 1600),
-      );
-      expect(_popup, findsOneWidget);
-      expect(find.text('2 of 2'), findsOneWidget);
-      expect(find.text('Arlanda Terminal 5'), findsOneWidget);
-      expect(find.byKey(_reserveRadar), findsOneWidget);
+        await tester.tap(find.byKey(_hide));
+        await _frames(
+          tester,
+          HomeReservationSheet.riseDelay + const Duration(milliseconds: 1600),
+        );
+        expect(_popup, findsOneWidget);
+        expect(find.text('2 of 2'), findsOneWidget);
+        expect(find.text('Arlanda Terminal 5'), findsOneWidget);
+        expect(find.byKey(_reserveRadar), findsOneWidget);
 
-      // Accept takes the airport ride for later; nothing else waits.
-      await tester.tap(find.byKey(_reserveRadar));
-      await _frames(tester, const Duration(milliseconds: 1500));
-      expect(_said, contains('Accepted · pickup 12:00'));
-      expect(ScheduledRideStore.isOpen(demoAirportReservationId), isFalse);
-      expect(ScheduledRideStore.isOpen(demoReservationId), isTrue);
-      await _frames(tester, const Duration(seconds: 3));
-      expect(_popup, findsNothing);
-      expect(find.byKey(_reserveRadar), findsNothing);
-      await _end(tester, dispatch);
-    });
+        // Accept takes the airport ride for later; nothing else waits.
+        await tester.tap(find.byKey(_reserveRadar));
+        await _frames(tester, const Duration(milliseconds: 1500));
+        expect(_said, contains('Accepted · pickup 12:00'));
+        expect(ScheduledRideStore.isOpen(demoAirportReservationId), isFalse);
+        expect(ScheduledRideStore.isOpen(demoReservationId), isTrue);
+        await _frames(tester, const Duration(seconds: 3));
+        expect(_popup, findsNothing);
+        expect(find.byKey(_reserveRadar), findsNothing);
+        await _end(tester, dispatch);
+      },
+    );
   });
 
   group('on the real clock', () {

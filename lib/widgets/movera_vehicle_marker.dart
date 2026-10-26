@@ -42,8 +42,7 @@ class MoveraVehicleMarker {
 
   /// Where the marker touches the ground: the arrow's base notch, the
   /// ring's centre, so it turns about its own middle.
-  static const Offset anchor =
-      Offset(0.5, (_inset + _arrowBase * size) / box);
+  static const Offset anchor = Offset(0.5, (_inset + _arrowBase * size) / box);
 
   /// Arrow colours: top face, its lighter tip, the edge under it.
   static const Color face = Color(0xFF3FB6D3);
@@ -70,7 +69,8 @@ class MoveraVehicleMarker {
     }
     // Web: one URL for the picture, not a new Blob URL per push
     // (driver-u174).
-    return _icon ??= WebMapBitmaps.of(png, width: box, height: box) ??
+    return _icon ??=
+        WebMapBitmaps.of(png, width: box, height: box) ??
         BitmapDescriptor.bytes(png, width: box, height: box);
   }
 

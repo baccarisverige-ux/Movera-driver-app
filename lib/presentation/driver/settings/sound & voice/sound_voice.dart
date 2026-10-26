@@ -156,9 +156,7 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
               onPressed: _restoreSettings,
               child: Text(tr.couldNotLoadSavedPreferencesRetry),
             ),
-          Text(
-            tr.localDemoPreferencesSavedOnThis,
-          ),
+          Text(tr.localDemoPreferencesSavedOnThis),
           _card(
             children: [
               Text(

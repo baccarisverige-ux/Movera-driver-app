@@ -85,8 +85,8 @@ class DocumentWarning {
 /// them here.
 class DocumentExpiryStore {
   DocumentExpiryStore({DateTime Function()? now, List<TrackedDocument>? seed})
-      : _now = now ?? (() => ScheduledClock.realNow()),
-        _seed = seed;
+    : _now = now ?? (() => ScheduledClock.realNow()),
+      _seed = seed;
 
   static final DocumentExpiryStore instance = DocumentExpiryStore();
 
@@ -141,7 +141,9 @@ class DocumentExpiryStore {
 
   TrackedDocument? byId(String id) {
     for (final document in documents) {
-      if (document.id == id) { return document; }
+      if (document.id == id) {
+        return document;
+      }
     }
     return null;
   }
@@ -149,10 +151,14 @@ class DocumentExpiryStore {
   /// The first expired document; the driver can't go online while it is
   /// there, even with a new one in review.
   TrackedDocument? get blocking {
-    if (!rule.blockOnExpiry) { return null; }
+    if (!rule.blockOnExpiry) {
+      return null;
+    }
     final now = _now();
     for (final document in documents) {
-      if (document.expiredAt(now)) { return document; }
+      if (document.expiredAt(now)) {
+        return document;
+      }
     }
     return null;
   }
@@ -161,8 +167,9 @@ class DocumentExpiryStore {
   List<TrackedDocument> get needingNew {
     final now = _now();
     return documents
-        .where((d) =>
-            d.expiredAt(now) || rule.warningFor(d.daysLeft(now)) != null)
+        .where(
+          (d) => d.expiredAt(now) || rule.warningFor(d.daysLeft(now)) != null,
+        )
         .toList();
   }
 
@@ -172,20 +179,22 @@ class DocumentExpiryStore {
     final now = _now();
     final due = <DocumentWarning>[];
     for (final document in documents) {
-      if (document.inReview) { continue; }
+      if (document.inReview) {
+        continue;
+      }
       final days = document.daysLeft(now);
       final step = rule.warningFor(days);
-      if (step == null || !_warned.add('${document.id}:$step')) { continue; }
+      if (step == null || !_warned.add('${document.id}:$step')) {
+        continue;
+      }
       due.add(DocumentWarning(document, step, days));
     }
     return due;
   }
 
   /// The driver sent a new document; admin checks it.
-  void uploadNew(String id) => _replace(
-        id,
-        (d) => d.copyWith(renewal: DocumentRenewal.inReview),
-      );
+  void uploadNew(String id) =>
+      _replace(id, (d) => d.copyWith(renewal: DocumentRenewal.inReview));
 
   /// Demo of the admin's approval: the new document runs for a year.
   void approve(String id) {
@@ -203,7 +212,9 @@ class DocumentExpiryStore {
   void _replace(String id, TrackedDocument Function(TrackedDocument) change) {
     final list = List<TrackedDocument>.of(documents);
     final at = list.indexWhere((d) => d.id == id);
-    if (at < 0) { return; }
+    if (at < 0) {
+      return;
+    }
     list[at] = change(list[at]);
     _documents = list;
     _changes.value++;
@@ -219,7 +230,7 @@ class DocumentExpiryStore {
 
 /// "in 7 days", "tomorrow", "today".
 String expiresInLabel(int daysLeft) => switch (daysLeft) {
-      <= 0 => tr.todayLower,
-      1 => tr.tomorrowLower,
-      _ => tr.inDaysCount(daysLeft),
-    };
+  <= 0 => tr.todayLower,
+  1 => tr.tomorrowLower,
+  _ => tr.inDaysCount(daysLeft),
+};

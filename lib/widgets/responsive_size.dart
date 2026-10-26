@@ -8,5 +8,6 @@ class ResSize {
   static double setWidth(double size) => ScreenUtil().setWidth(size);
   static double setHeight(double size) => ScreenUtil().setHeight(size);
 
-  static double setSp(double fontSize) => ScreenUtil().setSp(fontSize).clamp(fontSize * .85, fontSize * 1.2);
+  static double setSp(double fontSize) =>
+      ScreenUtil().setSp(fontSize).clamp(fontSize * .85, fontSize * 1.2);
 }

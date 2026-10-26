@@ -63,10 +63,8 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
     } catch (error) {
       if (!mounted) return;
       setState(
-        () => _error = accountErrorMessage(
-          error,
-          fallback: tr.notifCouldNotLoad,
-        ),
+        () =>
+            _error = accountErrorMessage(error, fallback: tr.notifCouldNotLoad),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -78,9 +76,7 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
       setState(() {
         _items = [
           for (final item in _items)
-            item.notificationId == notice.notificationId
-                ? item.asRead()
-                : item,
+            item.notificationId == notice.notificationId ? item.asRead() : item,
         ];
       });
       widget.account.unreadNotifications.value = _items
@@ -162,10 +158,7 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
         itemBuilder: (context, i) {
           if (_error != null && i == 0) return AccountErrorLine(_error!);
           final notice = _items[_error == null ? i : i - 1];
-          return _NotificationRow(
-            notice: notice,
-            onTap: () => _open(notice),
-          );
+          return _NotificationRow(notice: notice, onTap: () => _open(notice));
         },
       ),
     );
@@ -181,8 +174,7 @@ class _NotificationRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final at = notice.at.toLocal();
-    final when =
-        '${DriverDates.weekdayDayMonth(at)} · ${DriverDates.time(at)}';
+    final when = '${DriverDates.weekdayDayMonth(at)} · ${DriverDates.time(at)}';
     return Semantics(
       button: true,
       label: '${notice.title}. ${notice.body}. $when',

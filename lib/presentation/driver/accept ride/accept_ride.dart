@@ -196,10 +196,12 @@ class AcceptRide extends StatefulWidget {
   /// UI-04: the in-trip menu claims and releases reservations through the
   /// same dispatch as Home.
   final DispatchRepository? dispatchRepository;
+
   /// Clock for elapsed waiting time and the next-trip offer's time to
   /// accept; injectable for lifecycle verification.
   final DateTime Function()? waitNow;
   final String riderName;
+
   /// Null when dispatch sent no usable rating (driver-u133).
   final double? riderRating;
   final int riderTrips;
@@ -288,7 +290,11 @@ class AcceptRide extends StatefulWidget {
     DispatchRepository? dispatchRepository,
     DriverRealtime? realtime,
   }) {
-    if (!snapshot.hasVerifiedEndpoints) { throw StateError('Saved trip requires verified pickup and drop-off coordinates'); }
+    if (!snapshot.hasVerifiedEndpoints) {
+      throw StateError(
+        'Saved trip requires verified pickup and drop-off coordinates',
+      );
+    }
     final pickup = snapshot.pickupAddress ?? tr.addressUnavailable;
     return AcceptRide(
       key: key,
@@ -307,15 +313,11 @@ class AcceptRide extends StatefulWidget {
       pickupArea: snapshot.pickupArea ?? pickup.split(',').last.trim(),
       dropoffAddress: snapshot.dropoffAddress ?? 'Stockholm',
       stopAddresses: snapshot.stopAddresses,
-      stopPositions: snapshot.stopPoints.map((point) => point.toLatLng()).toList(),
-      pickupPosition: LatLng(
-        snapshot.pickupLat!,
-        snapshot.pickupLng!,
-      ),
-      dropoffPosition: LatLng(
-        snapshot.dropoffLat!,
-        snapshot.dropoffLng!,
-      ),
+      stopPositions: snapshot.stopPoints
+          .map((point) => point.toLatLng())
+          .toList(),
+      pickupPosition: LatLng(snapshot.pickupLat!, snapshot.pickupLng!),
+      dropoffPosition: LatLng(snapshot.dropoffLat!, snapshot.dropoffLng!),
       locationRepository: locationRepository,
       routeRepository: routeRepository,
       waybillRepository: waybillRepository,
@@ -330,7 +332,9 @@ class AcceptRide extends StatefulWidget {
       destinationAddress: snapshot.destinationAddress,
       destinationPosition: snapshot.destinationPoint?.toLatLng(),
       scheduledPickupAt: snapshot.scheduledPickupAt,
-      scheduledRideId: snapshot.scheduledRideId, pickupKm: snapshot.pickupKm, bags: snapshot.bags,
+      scheduledRideId: snapshot.scheduledRideId,
+      pickupKm: snapshot.pickupKm,
+      bags: snapshot.bags,
     );
   }
 
@@ -338,7 +342,14 @@ class AcceptRide extends StatefulWidget {
   State<AcceptRide> createState() => _AcceptRideState();
 }
 
-enum _OnTripRadarState { off, scanning, offerAvailable, matching, secured, stopped }
+enum _OnTripRadarState {
+  off,
+  scanning,
+  offerAvailable,
+  matching,
+  secured,
+  stopped,
+}
 
 class _TripCancellationReason {
   const _TripCancellationReason({
@@ -400,8 +411,9 @@ class _AcceptRideState extends State<AcceptRide>
       );
 
   static List<_TripCancellationReason> get _preTripCancellationReasons => [
-    for (final reason
-        in CancelReasons.current.of(CancelReasonGroup.driverBeforeTrip))
+    for (final reason in CancelReasons.current.of(
+      CancelReasonGroup.driverBeforeTrip,
+    ))
       _reason(reason),
   ];
 
@@ -409,21 +421,21 @@ class _AcceptRideState extends State<AcceptRide>
       _reason(CancelReasons.current.shown(CancelReasons.current.noShow));
 
   static List<_TripCancellationReason> get _onTripCancellationReasons => [
-    for (final reason
-        in CancelReasons.current.of(CancelReasonGroup.driverDuringTrip))
+    for (final reason in CancelReasons.current.of(
+      CancelReasonGroup.driverDuringTrip,
+    ))
       _reason(reason),
   ];
 
   /// R13: cancelling the secured next trip during a trip.
   static List<_TripCancellationReason> get _nextTripCancellationReasons => [
-    for (final reason
-        in CancelReasons.current.of(CancelReasonGroup.driverNextTrip))
+    for (final reason in CancelReasons.current.of(
+      CancelReasonGroup.driverNextTrip,
+    ))
       _reason(reason),
   ];
 
-
-  static const _NextTripRadarOffer _demoNextTripOffer =
-      _NextTripRadarOffer(
+  static const _NextTripRadarOffer _demoNextTripOffer = _NextTripRadarOffer(
     id: 'on-trip-radar-demo-1',
     category: 'Comfort',
     fare: '128,40 kr',
@@ -438,15 +450,14 @@ class _AcceptRideState extends State<AcceptRide>
     dropoffPosition: LatLng(59.3142, 18.0735),
   );
 
-
-
   late final DriverLocationRepository _locationService;
   late final RouteRepository _routeService;
   late final WaybillRepository _waybills;
   late final NavigationController _navigation;
   late final LiveVehicleAnimator _vehicle;
-  BitmapDescriptor _driverVehicleIcon =
-      BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+  BitmapDescriptor _driverVehicleIcon = BitmapDescriptor.defaultMarkerWithHue(
+    BitmapDescriptor.hueAzure,
+  );
   Map<RouteMarkKind, BitmapDescriptor> _pinIcons = const {};
   final GlobalKey<ScaffoldState> _rideScaffoldKey = GlobalKey<ScaffoldState>();
   // Manual browsing keeps the collapsed dock visible; recenter pulses.
@@ -459,10 +470,15 @@ class _AcceptRideState extends State<AcceptRide>
   final MapZoomSheetSettle _mapZoomSettle = MapZoomSheetSettle();
   double _browseReturnPos = 0;
   void _finishBrowseSheetCollapse() {
-    if (!mounted || !_browsing || !_ridePanelController.isAttached ||
-        _browseReturnPos <= 0.001) { return; }
+    if (!mounted ||
+        !_browsing ||
+        !_ridePanelController.isAttached ||
+        _browseReturnPos <= 0.001) {
+      return;
+    }
     unawaited(_snapSheet.springTo(0));
   }
+
   late final AnimationController _browsePulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2000),
@@ -474,7 +490,9 @@ class _AcceptRideState extends State<AcceptRide>
   final PanelController _ridePanelController = PanelController();
   final ValueNotifier<double> _ridePanelPosition = ValueNotifier<double>(0);
   late final MoveraSnapSheetController _snapSheet;
-  late final TripSheetMotion _tripMotion = _AcceptRidePanel(this)._newTripMotion();
+  late final TripSheetMotion _tripMotion = _AcceptRidePanel(
+    this,
+  )._newTripMotion();
   // Measured middle sheet: down to the stage's main action.
   final GlobalKey _middleActionKey = GlobalKey();
   final GlobalKey _ridePanelKey = GlobalKey();
@@ -485,7 +503,8 @@ class _AcceptRideState extends State<AcceptRide>
   bool _ridePointerActive = false;
   Timer? _rideSheetPositionGuardTimer;
 
-  final DriverCameraController _camera = DriverCameraController()..autoResumeAfter = DriverCameraController.tripAutoResume;
+  final DriverCameraController _camera = DriverCameraController()
+    ..autoResumeAfter = DriverCameraController.tripAutoResume;
   final TripCameraSheetInset _cameraSheet = TripCameraSheetInset();
   GoogleDriverCameraPort? _cameraPort;
   StreamSubscription<DriverLocation>? _positionSubscription;
@@ -496,18 +515,26 @@ class _AcceptRideState extends State<AcceptRide>
   );
   ActiveRideStage get _stage => _rideLifecycle.stage;
   // Trip orchestration lives in an extension, which cannot call setState.
-  void _rebuild(VoidCallback update) { setState(update); _AcceptRideTrip(this)._syncRouteLines(); }
+  void _rebuild(VoidCallback update) {
+    setState(update);
+    _AcceptRideTrip(this)._syncRouteLines();
+  }
+
   double _routeZoomStep = DriverRouteStyle.defaultZoom;
+
   /// D-07/D-08: the map's route lines; a GPS fix redraws only the map.
   final TripRouteLines _routeLines = TripRouteLines();
   Timer? _waitTimer;
   StreamSubscription<DriverRealtimeEvent>? _realtimeSubscription;
-  late final VoidCallback _onNavigationChangedListener =
-      _AcceptRideTrip(this)._onNavigationChanged;
-  late final VoidCallback _onRideCheckGateListener =
-      _AcceptRideTrip(this)._onRideCheckGate;
-  late final VoidCallback _syncNavigationStageListener =
-      _AcceptRideTrip(this)._syncNavigationStage;
+  late final VoidCallback _onNavigationChangedListener = _AcceptRideTrip(
+    this,
+  )._onNavigationChanged;
+  late final VoidCallback _onRideCheckGateListener = _AcceptRideTrip(
+    this,
+  )._onRideCheckGate;
+  late final VoidCallback _syncNavigationStageListener = _AcceptRideTrip(
+    this,
+  )._syncNavigationStage;
   late final void Function(CameraPosition) _onCameraMoveListener =
       _AcceptRideTrip(this)._onCameraMove;
   late final DriverRealtime _realtime;
@@ -519,7 +546,8 @@ class _AcceptRideState extends State<AcceptRide>
   Timer? _nextTripOfferExpiry;
   DateTime? _nextTripOfferDeadline; // D-05: kept across a pause.
   /// An Exclusive offer while driving a rider: Dispatch's time to accept.
-  static Duration get _onTripOfferLifetime => DriverOfferRules.current.exclusiveAcceptTime;
+  static Duration get _onTripOfferLifetime =>
+      DriverOfferRules.current.exclusiveAcceptTime;
   DateTime? _lastGpsAppliedAt;
   DateTime? _lastSnapshotAt;
   int _shownSaveFailures = 0; // driver-u72
@@ -528,6 +556,7 @@ class _AcceptRideState extends State<AcceptRide>
   bool _menuOpen = false; // driver-r5-33: so does the side menu.
   bool _tripHidden = false; // driver-r5-31: a full screen does (not a sheet).
   int _waitSeconds = 0;
+
   /// Paid seconds of waits already over (Q42); [_acceptedAt]: contract
   /// `acceptedAt`, kept across restores (Q12).
   int _paidWaitSeconds = 0;
@@ -540,6 +569,7 @@ class _AcceptRideState extends State<AcceptRide>
   _OnTripRadarState _onTripRadarState = _OnTripRadarState.off;
   _NextTripRadarOffer? _nextTripRadarOffer;
   bool _onTripRadarDeclined = false;
+
   /// R10-2: a next-trip offer came while a Ride check was open; it waits
   /// for the answer from this moment, and drops once its time has passed.
   DateTime? _nextTripOfferHeldAt;
@@ -554,6 +584,7 @@ class _AcceptRideState extends State<AcceptRide>
       widget.pickupPosition;
   List<GeoPoint> _roadGeoPoints = <GeoPoint>[];
   double? _routeDurationSeconds;
+
   /// The road route was asked from a live fix, not the fallback position.
   bool _routeFromLiveFix = false;
   bool _hasLiveLocation = false, _preciseLocationOff = false;
@@ -565,6 +596,7 @@ class _AcceptRideState extends State<AcceptRide>
   Timer? _projectionRetry;
   String _vehicleLabel = WaybillRecord.vehicleUnavailable;
   String _vehiclePlate = WaybillRecord.plateUnavailable;
+
   /// Owner N11: the signed-in driver (live), the brand name in the demo.
   String _driverName = WaybillRecord.moveraDriverName;
   String? _resolvedPickup; // Owner N11: looked up from the coordinates.
@@ -584,45 +616,71 @@ class _AcceptRideState extends State<AcceptRide>
   late final RideCheckController _rideCheck;
   late final RideCheckDetector _rideCheckDetector;
   Timer? _rideCheckTicker;
+
   /// Island demo: the next Finish opens "Finished far from drop-off".
   bool _rideCheckFinishDemo = false;
   StreamSubscription<DateTime>? _hardStops;
+
   /// Late ETA: the next check of a scheduled trip's ETA to its pickup.
   Timer? _lateEtaTimer;
+
   /// Late ETA: the ride is being given to another driver.
   bool _lateEtaReassigning = false;
+
   /// Late ETA: an ETA was known at least once on this trip.
   bool _lateEtaMeasured = false;
-  late final VoidCallback _syncLateEtaListener =
-      _AcceptRideLateEta(this)._syncLateEtaWatch;
+  late final VoidCallback _syncLateEtaListener = _AcceptRideLateEta(
+    this,
+  )._syncLateEtaWatch;
 
-  late final SheetTrace _sheetTrace = SheetTrace('active', () => _ridePanelController.isAttached ? _ridePanelController.panelPosition : 0);
+  late final SheetTrace _sheetTrace = SheetTrace(
+    'active',
+    () => _ridePanelController.isAttached
+        ? _ridePanelController.panelPosition
+        : 0,
+  );
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // A RideCheck demo trip drives its own scripted GPS (DemoTripDrive).
-    _locationService = DemoTripDrive.forTrip(widget.tripId,
-            pickup: GeoPointMaps.fromLatLng(widget.pickupPosition),
-            dropoff: GeoPointMaps.fromLatLng(widget.dropoffPosition)) ??
-        widget.locationRepository ?? const DriverLocationService();
+    _locationService =
+        DemoTripDrive.forTrip(
+          widget.tripId,
+          pickup: GeoPointMaps.fromLatLng(widget.pickupPosition),
+          dropoff: GeoPointMaps.fromLatLng(widget.dropoffPosition),
+        ) ??
+        widget.locationRepository ??
+        const DriverLocationService();
     _routeService = widget.routeRepository ?? RoadRouteService();
-    _waybills =
-        widget.waybillRepository ?? InMemoryWaybillRepository.instance;
+    _waybills = widget.waybillRepository ?? InMemoryWaybillRepository.instance;
     _navigation = NavigationController(routeRepository: _routeService);
     _navigation.addListener(_onNavigationChangedListener);
     RideCheckGate.listenable.addListener(_onRideCheckGateListener);
     _ownsRealtime = widget.realtime == null;
     // A live build follows the server's trip events; the demo its own bus.
-    _realtime = widget.realtime ??
+    _realtime =
+        widget.realtime ??
         LiveDriverServices.instance?.realtime() ??
         MemoryDriverRealtime();
     _AcceptRideLive(this)._beginLiveTrip();
-    _realtimeSubscription =
-        _realtime.subscribe(widget.tripId).listen(_AcceptRideTrip(this)._onRealtimeEvent, onError: (Object error) {
-          if (mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripUpdatesDisconnectedReconnectingIsRequired))); }
-        });
+    _realtimeSubscription = _realtime
+        .subscribe(widget.tripId)
+        .listen(
+          _AcceptRideTrip(this)._onRealtimeEvent,
+          onError: (Object error) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    tr.tripUpdatesDisconnectedReconnectingIsRequired,
+                  ),
+                ),
+              );
+            }
+          },
+        );
     unawaited(_AcceptRideTrip(this)._resyncTrip());
     _rideLifecycle.snapshotBuilder = _AcceptRideTrip(this)._buildSnapshot;
     _AcceptRideTrip(this)._setUpTripCamera();
@@ -633,7 +691,10 @@ class _AcceptRideState extends State<AcceptRide>
     _AcceptRideTrip(this)._restoreQueuedNextFromSnapshot();
     _AcceptRideTrip(this)._restoreDestinationFromSnapshot();
     final restored = widget.restoredSnapshot;
-    _stopCursor = math.min(math.max(0, restored?.stopIndex ?? 0), widget.stopAddresses.length);
+    _stopCursor = math.min(
+      math.max(0, restored?.stopIndex ?? 0),
+      widget.stopAddresses.length,
+    );
     _paidStopWait = restored?.paidStopWait == true;
     _onTripStartedAt = restored?.startedAt;
     _waitSeconds = widget.initialWaitSeconds;
@@ -642,17 +703,26 @@ class _AcceptRideState extends State<AcceptRide>
     // The waiting clocks on this trip follow its terms.
     WaitingTerms.active = _waitTerms;
     // driver-u58: past the freshness window the app was dead, not waiting.
-    if (restored?.savedAt != null && restored!.isFresh &&
-        (widget.initialStage == ActiveRideStage.waitingForRider || _paidStopWait)) {
+    if (restored?.savedAt != null &&
+        restored!.isFresh &&
+        (widget.initialStage == ActiveRideStage.waitingForRider ||
+            _paidStopWait)) {
       final elapsed = DateTime.now().difference(restored.savedAt!).inSeconds;
       _waitSeconds += math.max(0, elapsed);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) { return; }
+      if (!mounted) {
+        return;
+      }
       widget.sessionController?.beginTrip(widget.tripId);
-      if(_waybills.current?.tripId != widget.tripId) { _waybills.beginCurrent(_AcceptRideTrip(this)._buildCurrentWaybill()); }
-      if (widget.restoredSnapshot?.next != null && _nextTripRadarOffer != null) {
-        _waybills.secureNext(_AcceptRideTrip(this)._buildNextWaybill(_nextTripRadarOffer!));
+      if (_waybills.current?.tripId != widget.tripId) {
+        _waybills.beginCurrent(_AcceptRideTrip(this)._buildCurrentWaybill());
+      }
+      if (widget.restoredSnapshot?.next != null &&
+          _nextTripRadarOffer != null) {
+        _waybills.secureNext(
+          _AcceptRideTrip(this)._buildNextWaybill(_nextTripRadarOffer!),
+        );
       }
       _AcceptRideTrip(this)._resumeStageSideEffects();
       // Keep the trip dock visible at its lowest resting position.
@@ -681,10 +751,7 @@ class _AcceptRideState extends State<AcceptRide>
     _vehicle = LiveVehicleAnimator(
       reduceMotion: () => mounted && MediaQuery.disableAnimationsOf(context),
       vsync: this,
-      initial: LiveVehiclePose(
-        position: _driverPosition,
-        headingDegrees: 0,
-      ),
+      initial: LiveVehiclePose(position: _driverPosition, headingDegrees: 0),
     );
     unawaited(_AcceptRideTrip(this)._prepareDriverVehicleMarker());
     _AcceptRideTrip(this)._startLiveLocation();
@@ -694,27 +761,58 @@ class _AcceptRideState extends State<AcceptRide>
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_rideCheckServices == null) {
-      final services = widget.rideCheck ?? RideCheckScope.read(context) ?? RideCheckServices.fallback;
+      final services =
+          widget.rideCheck ??
+          RideCheckScope.read(context) ??
+          RideCheckServices.fallback;
       _rideCheckServices = services;
-      _rideCheckDetector = RideCheckDetector(rules: services.rules) // u44: once per trip, also restored
-        ..restoreFired(widget.restoredSnapshot?.rideCheckFired ?? const <String>[]);
-      _rideCheck = RideCheckController(services: services, tripId: widget.tripId,
-        tripDetails: _AcceptRideTrip(this)._safetyAlertTrip);
-      _rideCheckTicker = Timer.periodic(const Duration(seconds: 20), (_) => _AcceptRideTrip(this)._rideCheckTick());
-      _hardStops = services.hardStops?.listen(_AcceptRideTrip(this)._rideCheckHardStop);
+      _rideCheckDetector =
+          RideCheckDetector(
+              rules: services.rules,
+            ) // u44: once per trip, also restored
+            ..restoreFired(
+              widget.restoredSnapshot?.rideCheckFired ?? const <String>[],
+            );
+      _rideCheck = RideCheckController(
+        services: services,
+        tripId: widget.tripId,
+        tripDetails: _AcceptRideTrip(this)._safetyAlertTrip,
+      );
+      _rideCheckTicker = Timer.periodic(
+        const Duration(seconds: 20),
+        (_) => _AcceptRideTrip(this)._rideCheckTick(),
+      );
+      _hardStops = services.hardStops?.listen(
+        _AcceptRideTrip(this)._rideCheckHardStop,
+      );
     }
-    if(MediaQuery.disableAnimationsOf(context)) { _radarPulseController.stop(); _radarSweepController.stop(); }
-    else if(!_liveUpdatesPaused) { _radarPulseController.repeat(reverse:true); _radarSweepController.repeat(); }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _radarPulseController.stop();
+      _radarSweepController.stop();
+    } else if (!_liveUpdatesPaused) {
+      _radarPulseController.repeat(reverse: true);
+      _radarSweepController.repeat();
+    }
     final route = ModalRoute.of(context);
-    if (route != null) { driverRouteObserver.subscribe(this, route); driverRouteObserver.pages.subscribe(_screenCover, route); }
+    if (route != null) {
+      driverRouteObserver.subscribe(this, route);
+      driverRouteObserver.pages.subscribe(_screenCover, route);
+    }
   }
-  late final _screenCover = PageCover(covered: () => _AcceptRideTrip(this)._hideTrip(), uncovered: () => _AcceptRideTrip(this)._showTrip());
-  @override void didPushNext() => _AcceptRideTrip(this)._coverTrip(); // driver-u80
-  @override void didPopNext() => _AcceptRideTrip(this)._uncoverTrip();
+
+  late final _screenCover = PageCover(
+    covered: () => _AcceptRideTrip(this)._hideTrip(),
+    uncovered: () => _AcceptRideTrip(this)._showTrip(),
+  );
+  @override
+  void didPushNext() => _AcceptRideTrip(this)._coverTrip(); // driver-u80
+  @override
+  void didPopNext() => _AcceptRideTrip(this)._uncoverTrip();
 
   @override
   void dispose() {
-    driverRouteObserver.unsubscribe(this); driverRouteObserver.pages.unsubscribe(_screenCover);
+    driverRouteObserver.unsubscribe(this);
+    driverRouteObserver.pages.unsubscribe(_screenCover);
     RideCheckGate.listenable.removeListener(_onRideCheckGateListener);
     _rideCheckTicker?.cancel();
     _hardStops?.cancel();
@@ -722,7 +820,9 @@ class _AcceptRideState extends State<AcceptRide>
     _camera.dispose();
     _cameraSheet.dispose();
     final ownedRouting = _routeService;
-    if (widget.routeRepository == null && ownedRouting is RoadRouteService) { ownedRouting.dispose(); }
+    if (widget.routeRepository == null && ownedRouting is RoadRouteService) {
+      ownedRouting.dispose();
+    }
     _browsePulse.dispose();
     _locationEpoch++;
     _projectionRetry?.cancel();
@@ -776,20 +876,16 @@ class _AcceptRideState extends State<AcceptRide>
     }
   }
 
-
-
-
-
-
   LatLng? get _routeTarget {
     if (_stage == ActiveRideStage.onTrip &&
         _stopCursor < widget.stopAddresses.length) {
       return _AcceptRideTrip(this)._stopPoint(_stopCursor);
     }
-    if (_stage == ActiveRideStage.onTrip) { return widget.dropoffPosition; }
+    if (_stage == ActiveRideStage.onTrip) {
+      return widget.dropoffPosition;
+    }
     return widget.pickupPosition;
   }
-
 
   bool get _arrivalDemo => DriverRuntimeConfig.current.simulatedArrival;
 
@@ -800,7 +896,9 @@ class _AcceptRideState extends State<AcceptRide>
   }
 
   LatLng? get _arrivalTarget {
-    if (_stage == ActiveRideStage.headingToPickup) { return widget.pickupPosition; }
+    if (_stage == ActiveRideStage.headingToPickup) {
+      return widget.pickupPosition;
+    }
     if (_stage == ActiveRideStage.onTrip &&
         !_paidStopWait &&
         _stopCursor < widget.stopAddresses.length) {
@@ -811,12 +909,19 @@ class _AcceptRideState extends State<AcceptRide>
 
   bool get _nearArrivalTarget {
     final target = _arrivalTarget;
-    if (target == null) { return false; }
-    if (_arrivalDemo) { return true; }
-    if (!_hasLiveLocation || _lastLocation?.isUsableAt(DateTime.now()) != true) { return false; }
-    return GeoPointMaps.fromLatLng(_driverPosition).distanceMetersTo(
-          GeoPointMaps.fromLatLng(target),
-        ) <=
+    if (target == null) {
+      return false;
+    }
+    if (_arrivalDemo) {
+      return true;
+    }
+    if (!_hasLiveLocation ||
+        _lastLocation?.isUsableAt(DateTime.now()) != true) {
+      return false;
+    }
+    return GeoPointMaps.fromLatLng(
+          _driverPosition,
+        ).distanceMetersTo(GeoPointMaps.fromLatLng(target)) <=
         100;
   }
 
@@ -877,9 +982,9 @@ class _AcceptRideState extends State<AcceptRide>
         _lastLocation?.isUsableAt(DateTime.now()) != true) {
       return null;
     }
-    return GeoPointMaps.fromLatLng(_driverPosition).distanceMetersTo(
-      GeoPointMaps.fromLatLng(target),
-    );
+    return GeoPointMaps.fromLatLng(
+      _driverPosition,
+    ).distanceMetersTo(GeoPointMaps.fromLatLng(target));
   }
 
   bool get _showArrivalApproach {
@@ -900,9 +1005,6 @@ class _AcceptRideState extends State<AcceptRide>
 
   bool get _allowExternalRouting => DriverRuntimeConfig.current.externalRouting;
 
-
-
-
   /// One line under the time and distance in the collapsed trip bar.
   String get _tripBarStatus {
     switch (_stage) {
@@ -913,7 +1015,9 @@ class _AcceptRideState extends State<AcceptRide>
             ? tr.riderNameIsOnWay(widget.riderName)
             : tr.waitingForRiderName(widget.riderName);
       case ActiveRideStage.onTrip:
-        if (_paidStopWait) { return tr.waitingAtStopNumber(_stopCursor + 1); }
+        if (_paidStopWait) {
+          return tr.waitingAtStopNumber(_stopCursor + 1);
+        }
         if (_stopCursor < widget.stopAddresses.length) {
           return tr.headingToStopNumber(_stopCursor + 1);
         }
@@ -931,7 +1035,9 @@ class _AcceptRideState extends State<AcceptRide>
             ? tr.riderNameIsOnWay(widget.riderName)
             : tr.waitingForRiderName(widget.riderName);
       case ActiveRideStage.onTrip:
-        if (_paidStopWait) { return tr.waitingAtStopNumber(_stopCursor + 1); }
+        if (_paidStopWait) {
+          return tr.waitingAtStopNumber(_stopCursor + 1);
+        }
         if (_stopCursor < widget.stopAddresses.length) {
           return tr.driveToStopNumber(_stopCursor + 1);
         }
@@ -945,9 +1051,13 @@ class _AcceptRideState extends State<AcceptRide>
   /// Share of the way to the next point already driven; null while
   /// waiting or before a road route exists.
   double? get _legFraction {
-    if (_countingWait || _routeDurationSeconds == null) { return null; }
+    if (_countingWait || _routeDurationSeconds == null) {
+      return null;
+    }
     final remaining = _remainingMeters;
-    if (remaining == null) { return null; }
+    if (remaining == null) {
+      return null;
+    }
     // Measured against the longest distance seen on this step, so a
     // reroute from the driver's new position does not reset the line.
     final key = '${_stage.name}-$_stopCursor';
@@ -955,23 +1065,30 @@ class _AcceptRideState extends State<AcceptRide>
       _legKey = key;
       _legTotalMeters = remaining;
     }
-    if (_legTotalMeters <= 0) { return null; }
+    if (_legTotalMeters <= 0) {
+      return null;
+    }
     return (1 - remaining / _legTotalMeters).clamp(0.0, 1.0);
   }
+
   String? _legKey;
   double _legTotalMeters = 0;
 
   /// Road distance still to drive to the next point.
   double? get _remainingMeters {
     final total = _navigation.route?.distanceMeters;
-    if (total == null || total <= 0) { return null; }
+    if (total == null || total <= 0) {
+      return null;
+    }
     return total * (1 - (_navigation.routeFraction ?? 0));
   }
 
   String get _routeEtaText {
     final seconds = _routeDurationSeconds;
     // Until a road route arrives, a calm word instead of a placeholder.
-    if (seconds == null) { return tr.enRoute; }
+    if (seconds == null) {
+      return tr.enRoute;
+    }
     final left = seconds * (1 - (_navigation.routeFraction ?? 0));
     final minutes = math.max(1, (left / 60).ceil());
     return '$minutes min';
@@ -979,12 +1096,15 @@ class _AcceptRideState extends State<AcceptRide>
 
   bool get _tripEndedTooQuickly {
     final started = _onTripStartedAt;
-    if (started == null) { return false; }
+    if (started == null) {
+      return false;
+    }
     return DateTime.now().difference(started) < const Duration(seconds: 90);
   }
 
-
-  bool get _pendingTerminal => _pendingProjection?.kind==DriverRealtimeKind.riderCancelled || _pendingProjection?.status?.isTerminal==true;
+  bool get _pendingTerminal =>
+      _pendingProjection?.kind == DriverRealtimeKind.riderCancelled ||
+      _pendingProjection?.status?.isTerminal == true;
 
   bool get _onTripRadarOn =>
       _onTripRadarState == _OnTripRadarState.scanning ||
@@ -995,27 +1115,24 @@ class _AcceptRideState extends State<AcceptRide>
   /// driver-u60: one trip id per offer, so a cancelled next trip and a
   /// later one never share a history row or terminal marker.
   _NextTripRadarOffer get _uniqueDemoNext => _NextTripRadarOffer(
-    id:tripOccurrenceId('${widget.tripId}-next'),category:_demoNextTripOffer.category,fare:_demoNextTripOffer.fare,rating:_demoNextTripOffer.rating,
-    pickupMinutes:_demoNextTripOffer.pickupMinutes,pickupKm:_demoNextTripOffer.pickupKm,tripMinutes:_demoNextTripOffer.tripMinutes,riderName:_demoNextTripOffer.riderName,
-    pickup:_demoNextTripOffer.pickup,dropoff:_demoNextTripOffer.dropoff,pickupPosition:_demoNextTripOffer.pickupPosition,dropoffPosition:_demoNextTripOffer.dropoffPosition);
-
-
-
-
-
+    id: tripOccurrenceId('${widget.tripId}-next'),
+    category: _demoNextTripOffer.category,
+    fare: _demoNextTripOffer.fare,
+    rating: _demoNextTripOffer.rating,
+    pickupMinutes: _demoNextTripOffer.pickupMinutes,
+    pickupKm: _demoNextTripOffer.pickupKm,
+    tripMinutes: _demoNextTripOffer.tripMinutes,
+    riderName: _demoNextTripOffer.riderName,
+    pickup: _demoNextTripOffer.pickup,
+    dropoff: _demoNextTripOffer.dropoff,
+    pickupPosition: _demoNextTripOffer.pickupPosition,
+    dropoffPosition: _demoNextTripOffer.dropoffPosition,
+  );
 
   bool get _incomingOfferOpen =>
       _stage == ActiveRideStage.onTrip &&
       _onTripRadarState == _OnTripRadarState.offerAvailable &&
       _nextTripRadarOffer != null;
-
-
-
-
-
-
-
-
 
   /// Q19/Q20: free wait, price per minute, no-show time and fee, and the
   /// driver's share, from the waiting rules for this pickup (distance,
@@ -1028,6 +1145,7 @@ class _AcceptRideState extends State<AcceptRide>
     ),
     pickupKm: widget.pickupKm,
   );
+
   /// Q24: the last leg of a cash trip, cash not collected yet: the main
   /// button is "Collect cash" instead of the slide.
   bool get _collectsCashNow =>
@@ -1039,8 +1157,9 @@ class _AcceptRideState extends State<AcceptRide>
   /// R8-4: the cash taken from the rider; the fare unless a promotion
   /// changed it.
   String get _cashToCollect => WaitingTerms.addFee(
-      widget.cashToCollect ?? _AcceptRideTrip(this)._riderFare,
-      _waitTerms.waitingFee(_AcceptRideTrip(this)._paidWaitTotal));
+    widget.cashToCollect ?? _AcceptRideTrip(this)._riderFare,
+    _waitTerms.waitingFee(_AcceptRideTrip(this)._paidWaitTotal),
+  );
   int get _includedWaitSeconds => _waitTerms.freeSeconds;
   int get _noShowWaitSeconds => _waitTerms.noShowSeconds;
 
@@ -1048,22 +1167,29 @@ class _AcceptRideState extends State<AcceptRide>
       !_paidStopWait && _waitSeconds < _includedWaitSeconds;
 
   String get _waitBarStatus {
-    if (_paidStopWait) { return tr.paidWaitAtStopNumber(_stopCursor + 1); }
-    if (_inIncludedWait) { return tr.includedWaitThenPaid; }
-    if (_waitSeconds < _noShowWaitSeconds) { return tr.paidWaitRunning; }
+    if (_paidStopWait) {
+      return tr.paidWaitAtStopNumber(_stopCursor + 1);
+    }
+    if (_inIncludedWait) {
+      return tr.includedWaitThenPaid;
+    }
+    if (_waitSeconds < _noShowWaitSeconds) {
+      return tr.paidWaitRunning;
+    }
     return tr.paidWaitNoShowAvailable;
   }
 
   /// Share of the pickup wait window used (free minutes, then paid up to
   /// the no-show point); null at a stop, where waiting is paid throughout.
   Color get _waitBarColor {
-    if (_inIncludedWait) { return _ink; }
+    if (_inIncludedWait) {
+      return _ink;
+    }
     if (!_paidStopWait && _waitSeconds >= _noShowWaitSeconds) {
       return const Color(0xFF9E2B33);
     }
     return const Color(0xFF146B45);
   }
-
 
   String get _slideLabel {
     // Q30: the main trip buttons read admin's Driver app texts.
@@ -1078,12 +1204,14 @@ class _AcceptRideState extends State<AcceptRide>
     }
     return driverText(switch (_stage) {
       ActiveRideStage.headingToPickup => DriverTexts.tripArrived,
-      ActiveRideStage.waitingForRider => widget.stopAddresses.isEmpty
-          ? DriverTexts.tripStart
-          : DriverTexts.tripStartFirstStop,
-      ActiveRideStage.onTrip => _stopCursor < widget.stopAddresses.length
-          ? DriverTexts.tripArriveAtStop
-          : DriverTexts.tripComplete,
+      ActiveRideStage.waitingForRider =>
+        widget.stopAddresses.isEmpty
+            ? DriverTexts.tripStart
+            : DriverTexts.tripStartFirstStop,
+      ActiveRideStage.onTrip =>
+        _stopCursor < widget.stopAddresses.length
+            ? DriverTexts.tripArriveAtStop
+            : DriverTexts.tripComplete,
     });
   }
 
@@ -1099,7 +1227,6 @@ class _AcceptRideState extends State<AcceptRide>
       ActiveRideStage.onTrip => tr.tripCompleted,
     };
   }
-
 
   String get _onwardAddress {
     if (_stopCursor < widget.stopAddresses.length &&
@@ -1129,8 +1256,12 @@ class _AcceptRideState extends State<AcceptRide>
             ? tr.riderNameIsOnWay(widget.riderName)
             : tr.holdForRiderName(widget.riderName);
       case ActiveRideStage.onTrip:
-        if (widget.stopAddresses.isEmpty) { return widget.riderName; }
-        if (widget.stopAddresses.length == 1) { return tr.thenDropOff; }
+        if (widget.stopAddresses.isEmpty) {
+          return widget.riderName;
+        }
+        if (widget.stopAddresses.length == 1) {
+          return tr.thenDropOff;
+        }
         return tr.stop1OfStopAddressesLength(widget.stopAddresses.length);
     }
   }
@@ -1141,293 +1272,430 @@ class _AcceptRideState extends State<AcceptRide>
       child: PopScope(
         canPop: false,
         child: Scaffold(
-      key: _rideScaffoldKey,
-      // The menu opens from the island, not by swiping over the map.
-      // UI-04: the same dispatch and the real status as Home's menu.
-      onDrawerChanged: (open) => _AcceptRideTrip(this)._menuChanged(open),
-      drawer: ListenableBuilder(
-        listenable: widget.sessionController ?? const AlwaysStoppedAnimation<double>(0),
-        builder: (_, __) => DriverSideMenu(
-          isOnline: widget.sessionController?.availableAfterTrip ?? true,
-          dispatchRepository: widget.dispatchRepository,
-        ),
-      ),
-      drawerEnableOpenDragGesture: false,
-      backgroundColor: _canvas,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final viewport = constraints.maxHeight;
-          final collapsed = MoveraSheetMetrics.activeCollapsedTotal(
-            MediaQuery.paddingOf(context).bottom,
-          );
-          final safeTop = MediaQuery.paddingOf(context).top;
-          final bannerReserve = safeTop + 210;
-          final expanded = _AcceptRideSheet(this)._fitRideExpanded(math.min(
-            MoveraSheetMetrics.expandedHeight(viewport),
-            math.max(collapsed + 160, viewport - bannerReserve),
-          ));
-          final snap = MoveraSheetMetrics.activeSnapPoint(
-            collapsed: collapsed,
-            middle: _AcceptRidePanel(this)._rideMiddleTotal(context),
-            expanded: expanded,
-          );
-          _tripMotion.keep(rangePx: expanded - collapsed, snap: snap);
-
-          final offerOpen = _incomingOfferOpen;
-          // Browsing keeps the collapsed sheet visible.
-          final sheetFloor = collapsed;
-          return Stack(
-            children: [
-              SlidingUpPanel(
-            controller: _ridePanelController,
-            minHeight: offerOpen ? 0 : sheetFloor,
-            maxHeight: offerOpen ? 1 : expanded,
-            snapPoint: snap,
-            panelSnapping: false,
-            defaultPanelState: PanelState.CLOSED,
-            // The sheet's own pointer drag moves it (see TripSheetMotion).
-            isDraggable: false,
-            color: Colors.transparent,
-            boxShadow: const [],
-            backdropEnabled: false,
-            padding: EdgeInsets.zero,
-            margin: EdgeInsets.zero,
-            onPanelSlide: (pos) {
-              _ridePanelPosition.value = pos;
-              _cameraSheet.sheetMoved(collapsed + pos * (expanded - collapsed), maxInset: viewport - bannerReserve - TripCameraSheetInset.minFreeMap);
-              if (!_ridePointerActive) {
-                _AcceptRidePanel(this)._scheduleRideSheetPositionGuard();
-              }
-            },
-            onPanelOpened: () {
-              _rideSheetPositionGuardTimer?.cancel();
-              _ridePanelPosition.value = 1;
-            },
-            onPanelClosed: () {
-              _rideSheetPositionGuardTimer?.cancel();
-              _ridePanelPosition.value = 0;
-            },
-            panel: offerOpen
-                ? const SizedBox.shrink()
-                : _AcceptRidePanel(this)._mapOverlay(
-              child: Listener(
-                behavior: HitTestBehavior.translucent,
-                onPointerDown: _AcceptRidePanel(this)._onRideSheetPointerDown,
-                onPointerMove: _AcceptRidePanel(this)._onRideSheetPointerMove,
-                onPointerUp: _AcceptRidePanel(this)._onRideSheetPointerEnd,
-                onPointerCancel: _AcceptRidePanel(this)._onRideSheetPointerEnd,
-                child: KeyedSubtree(
-                  key: _ridePanelKey,
-                  child: _AcceptRidePanel(this)._buildRidePanel(),
-                ),
-              ),
+          key: _rideScaffoldKey,
+          // The menu opens from the island, not by swiping over the map.
+          // UI-04: the same dispatch and the real status as Home's menu.
+          onDrawerChanged: (open) => _AcceptRideTrip(this)._menuChanged(open),
+          drawer: ListenableBuilder(
+            listenable:
+                widget.sessionController ??
+                const AlwaysStoppedAnimation<double>(0),
+            builder: (_, __) => DriverSideMenu(
+              isOnline: widget.sessionController?.availableAfterTrip ?? true,
+              dispatchRepository: widget.dispatchRepository,
             ),
-            body: Stack(
-              fit: StackFit.expand,
-              children: [
-                AbsorbPointer(
-                  absorbing: _blockMapGestures,
-                  child: Listener(
-                  onPointerDown: (event) {
-                    _mapZoomSettle.pointerDown(event.pointer);
-                    _mapPointers = _mapZoomSettle.activePointers; _camera.touching = _mapPointers > 0;
-                    if (_mapPointers >= 2) { _lastMapZoom = DateTime.now(); }
-                  },
-                  onPointerMove: (_) {
-                    if (_mapPointers >= 2) { _lastMapZoom = DateTime.now(); }
-                  },
-                  onPointerUp: (event) {
-                    if (_mapZoomSettle.pointerEnded(event.pointer)) {
-                      _finishBrowseSheetCollapse();
-                    }
-                    _mapPointers = _mapZoomSettle.activePointers; _camera.touching = _mapPointers > 0;
-                  },
-                  onPointerCancel: (event) {
-                    if (_mapZoomSettle.pointerEnded(event.pointer)) {
-                      _finishBrowseSheetCollapse();
-                    }
-                    _mapPointers = _mapZoomSettle.activePointers; _camera.touching = _mapPointers > 0;
-                  },
-                  onPointerSignal: (_) => _lastMapZoom = DateTime.now(),
-                  child: _ThrottledVehicleMap(
-                    key: const ValueKey<String>('active-ride-throttled-map'),
-                    vehicle: _vehicle,
-                    vehicleIcon: _driverVehicleIcon,
-                    stage: _stage,
-                    pickupPosition: widget.pickupPosition,
-                    dropoffPosition: widget.dropoffPosition,
-                    pickupAddress: _pickupAddress,
-                    dropoffAddress: widget.dropoffAddress,
-                    stopPositions: widget.stopPositions,
-                    stopCursor: _stopCursor,
-                    pinIcons: _pinIcons,
-                    routeLines: _routeLines,
-                    padding: MapOverlayInsets.forActiveRide(
-                      safeTop: safeTop,
-                      collapsedSheet: _cameraSheet.resolve(collapsed),
-                    // driver-77: browsing keeps the anchor; a flip moves the map.
-                    ).drivingInsets(MediaQuery.sizeOf(context).height, following:
-                      _camera.isGuidance && _camera.mode != DriverCameraMode.overview),
-                    cameraAnchor: _camera.isGuidance &&
-                        _camera.mode == DriverCameraMode.following ? .75 : .5,
-                    blockGestures: _blockMapGestures,
-                    initialTarget: _driverPosition,
-                    onCameraMove: _onCameraMoveListener,
-                    onCameraIdle: () { _cameraPort?.onIdle(); _camera.browseSettled(); },
-                    onUserGesture: () {
-                      _rebuild(_camera.userGesture);
-                      if (!MediaQuery.disableAnimationsOf(context)) {
-                        _browsePulse.repeat();
-                      }
-                      _navigation.pauseFollow();
-                    },
-                    onMapCreated: (controller) {
-                      _cameraPort = GoogleDriverCameraPort(controller,
-                        onStatus: (status) {
-                          if (status != null && mounted && ModalRoute.of(context)?.isCurrent == true) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status),
-                              action: SnackBarAction(label: tr.retry, onPressed: _camera.recenter)));
-                          }
-                        },
-                        onFrame: (position) {
-                          if (_camera.mode == DriverCameraMode.following &&
-                              _camera.isGuidance) {
-                            _vehicle.snapTo(position.target, _camera.vehicleCourse);
-                          }
-                        },
-                        initialPosition: CameraPosition(target: _driverPosition,
-                          zoom: DriverCameraPolicy.guidanceStartZoom,
-                          tilt: DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.guidanceStartZoom)),
-                        reducedMotion: MediaQuery.disableAnimationsOf(context));
-                      _camera.attach(_cameraPort!);
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) { unawaited(_AcceptRideTrip(this)._fitRoute()); }
-                      });
-                    },
-                  ),
-                  ),
+          ),
+          drawerEnableOpenDragGesture: false,
+          backgroundColor: _canvas,
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final viewport = constraints.maxHeight;
+              final collapsed = MoveraSheetMetrics.activeCollapsedTotal(
+                MediaQuery.paddingOf(context).bottom,
+              );
+              final safeTop = MediaQuery.paddingOf(context).top;
+              final bannerReserve = safeTop + 210;
+              final expanded = _AcceptRideSheet(this)._fitRideExpanded(
+                math.min(
+                  MoveraSheetMetrics.expandedHeight(viewport),
+                  math.max(collapsed + 160, viewport - bannerReserve),
                 ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  child: _AcceptRidePanel(this)._mapOverlay(
-                    child: ListenableBuilder(
-                      listenable: Listenable.merge([_navigation, _rideCheck]),
-                      // The Ride check card grows out of the island and covers it.
-                      builder: (context, _) => IgnorePointer(ignoring: _rideCheck.covering, child: Opacity(
-                        opacity: _rideCheck.covering ? 0 : 1, child: AdaptiveTripIsland(
-                        banner: _navigation.snapshot.banner,
-                        status: _navigation.snapshot.status ?? _islandStatus,
-                        address: _showArrivalApproach ? _approachAddress : _nextStopAddress,
-                        detail: _nextStopDetail,
-                        eta: _routeEtaText,
-                        arrival: _showArrivalApproach ? _approachLabel : null,
-                        arrived: _arrivalApproachArrived,
-                        progress: _legFraction ?? 0,
-                        waitingSeconds: _countingWait ? _waitSeconds : null,
-                        paidSeconds: _countingWait ? _AcceptRideTrip(this)._paidWaitNow : null,
-                        waitingAtStop: _paidStopWait,
-                        navigationStatus: _navigation.locationLost ? _navigation.status : _locationStatus ?? _navigation.snapshot.status,
-                        reroutes: _navigation.reroutes,
-                        waitingMessage: _tripBarStatus,
-                        paidWait: _paidStopWait || (_countingWait && !_inIncludedWait),
-                        paidByCash: widget.paidByCash,
-                        lastTripLabel: _waybills.last?.fare ?? DigitalIslandParts.noAmount,
-                        // driver-u79: a secured next trip cannot be turned off here.
-                        radarVisible: _stage == ActiveRideStage.onTrip && _onTripRadarState != _OnTripRadarState.secured,
-                        radarOn: _onTripRadarOn,
-                        onRadar: _AcceptRideTrip(this)._toggleOnTripRadar,
-                        onMenu: () => _rideScaffoldKey.currentState?.openDrawer(),
-                        onSearch: _openDestinationPicker,
-                        onHistory: () => pushSingle(context,
-                          MaterialPageRoute<void>(builder: (_) => const DriverRideHistory())),
-                        onRoute: _AcceptRidePanel(this)._showTripOptions,
-                        onSafety: () => showSafetyToolKitSheet(context),
-                        onWait: _AcceptRidePanel(this)._openWaitingTime,
-                        rideCheck: _rideCheck.active,
-                        onRideCheckDemo: driverProductionRequested ? null : _AcceptRideTrip(this)._openRideCheckDemo,
-                        pointKind: _approachKind, pointLabel: _approachLabel, bags: widget.bags,
-                        nextTripFare: _onTripRadarState == _OnTripRadarState.secured ? _nextTripRadarOffer?.shownFare : null,
-                        sheetPosition: _ridePanelPosition, sheetRaisedAt: snap + 0.04,
-                      ))),
+              );
+              final snap = MoveraSheetMetrics.activeSnapPoint(
+                collapsed: collapsed,
+                middle: _AcceptRidePanel(this)._rideMiddleTotal(context),
+                expanded: expanded,
+              );
+              _tripMotion.keep(rangePx: expanded - collapsed, snap: snap);
+
+              final offerOpen = _incomingOfferOpen;
+              // Browsing keeps the collapsed sheet visible.
+              final sheetFloor = collapsed;
+              return Stack(
+                children: [
+                  SlidingUpPanel(
+                    controller: _ridePanelController,
+                    minHeight: offerOpen ? 0 : sheetFloor,
+                    maxHeight: offerOpen ? 1 : expanded,
+                    snapPoint: snap,
+                    panelSnapping: false,
+                    defaultPanelState: PanelState.CLOSED,
+                    // The sheet's own pointer drag moves it (see TripSheetMotion).
+                    isDraggable: false,
+                    color: Colors.transparent,
+                    boxShadow: const [],
+                    backdropEnabled: false,
+                    padding: EdgeInsets.zero,
+                    margin: EdgeInsets.zero,
+                    onPanelSlide: (pos) {
+                      _ridePanelPosition.value = pos;
+                      _cameraSheet.sheetMoved(
+                        collapsed + pos * (expanded - collapsed),
+                        maxInset:
+                            viewport -
+                            bannerReserve -
+                            TripCameraSheetInset.minFreeMap,
+                      );
+                      if (!_ridePointerActive) {
+                        _AcceptRidePanel(
+                          this,
+                        )._scheduleRideSheetPositionGuard();
+                      }
+                    },
+                    onPanelOpened: () {
+                      _rideSheetPositionGuardTimer?.cancel();
+                      _ridePanelPosition.value = 1;
+                    },
+                    onPanelClosed: () {
+                      _rideSheetPositionGuardTimer?.cancel();
+                      _ridePanelPosition.value = 0;
+                    },
+                    panel: offerOpen
+                        ? const SizedBox.shrink()
+                        : _AcceptRidePanel(this)._mapOverlay(
+                            child: Listener(
+                              behavior: HitTestBehavior.translucent,
+                              onPointerDown: _AcceptRidePanel(
+                                this,
+                              )._onRideSheetPointerDown,
+                              onPointerMove: _AcceptRidePanel(
+                                this,
+                              )._onRideSheetPointerMove,
+                              onPointerUp: _AcceptRidePanel(
+                                this,
+                              )._onRideSheetPointerEnd,
+                              onPointerCancel: _AcceptRidePanel(
+                                this,
+                              )._onRideSheetPointerEnd,
+                              child: KeyedSubtree(
+                                key: _ridePanelKey,
+                                child: _AcceptRidePanel(this)._buildRidePanel(),
+                              ),
+                            ),
+                          ),
+                    body: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AbsorbPointer(
+                          absorbing: _blockMapGestures,
+                          child: Listener(
+                            onPointerDown: (event) {
+                              _mapZoomSettle.pointerDown(event.pointer);
+                              _mapPointers = _mapZoomSettle.activePointers;
+                              _camera.touching = _mapPointers > 0;
+                              if (_mapPointers >= 2) {
+                                _lastMapZoom = DateTime.now();
+                              }
+                            },
+                            onPointerMove: (_) {
+                              if (_mapPointers >= 2) {
+                                _lastMapZoom = DateTime.now();
+                              }
+                            },
+                            onPointerUp: (event) {
+                              if (_mapZoomSettle.pointerEnded(event.pointer)) {
+                                _finishBrowseSheetCollapse();
+                              }
+                              _mapPointers = _mapZoomSettle.activePointers;
+                              _camera.touching = _mapPointers > 0;
+                            },
+                            onPointerCancel: (event) {
+                              if (_mapZoomSettle.pointerEnded(event.pointer)) {
+                                _finishBrowseSheetCollapse();
+                              }
+                              _mapPointers = _mapZoomSettle.activePointers;
+                              _camera.touching = _mapPointers > 0;
+                            },
+                            onPointerSignal: (_) =>
+                                _lastMapZoom = DateTime.now(),
+                            child: _ThrottledVehicleMap(
+                              key: const ValueKey<String>(
+                                'active-ride-throttled-map',
+                              ),
+                              vehicle: _vehicle,
+                              vehicleIcon: _driverVehicleIcon,
+                              stage: _stage,
+                              pickupPosition: widget.pickupPosition,
+                              dropoffPosition: widget.dropoffPosition,
+                              pickupAddress: _pickupAddress,
+                              dropoffAddress: widget.dropoffAddress,
+                              stopPositions: widget.stopPositions,
+                              stopCursor: _stopCursor,
+                              pinIcons: _pinIcons,
+                              routeLines: _routeLines,
+                              padding:
+                                  MapOverlayInsets.forActiveRide(
+                                    safeTop: safeTop,
+                                    collapsedSheet: _cameraSheet.resolve(
+                                      collapsed,
+                                    ),
+                                    // driver-77: browsing keeps the anchor; a flip moves the map.
+                                  ).drivingInsets(
+                                    MediaQuery.sizeOf(context).height,
+                                    following:
+                                        _camera.isGuidance &&
+                                        _camera.mode !=
+                                            DriverCameraMode.overview,
+                                  ),
+                              cameraAnchor:
+                                  _camera.isGuidance &&
+                                      _camera.mode == DriverCameraMode.following
+                                  ? .75
+                                  : .5,
+                              blockGestures: _blockMapGestures,
+                              initialTarget: _driverPosition,
+                              onCameraMove: _onCameraMoveListener,
+                              onCameraIdle: () {
+                                _cameraPort?.onIdle();
+                                _camera.browseSettled();
+                              },
+                              onUserGesture: () {
+                                _rebuild(_camera.userGesture);
+                                if (!MediaQuery.disableAnimationsOf(context)) {
+                                  _browsePulse.repeat();
+                                }
+                                _navigation.pauseFollow();
+                              },
+                              onMapCreated: (controller) {
+                                _cameraPort = GoogleDriverCameraPort(
+                                  controller,
+                                  onStatus: (status) {
+                                    if (status != null &&
+                                        mounted &&
+                                        ModalRoute.of(context)?.isCurrent ==
+                                            true) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(status),
+                                          action: SnackBarAction(
+                                            label: tr.retry,
+                                            onPressed: _camera.recenter,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  onFrame: (position) {
+                                    if (_camera.mode ==
+                                            DriverCameraMode.following &&
+                                        _camera.isGuidance) {
+                                      _vehicle.snapTo(
+                                        position.target,
+                                        _camera.vehicleCourse,
+                                      );
+                                    }
+                                  },
+                                  initialPosition: CameraPosition(
+                                    target: _driverPosition,
+                                    zoom: DriverCameraPolicy.guidanceStartZoom,
+                                    tilt: DriverCameraPolicy.tiltForZoom(
+                                      DriverCameraPolicy.guidanceStartZoom,
+                                    ),
+                                  ),
+                                  reducedMotion: MediaQuery.disableAnimationsOf(
+                                    context,
+                                  ),
+                                );
+                                _camera.attach(_cameraPort!);
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  if (mounted) {
+                                    unawaited(
+                                      _AcceptRideTrip(this)._fitRoute(),
+                                    );
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          child: _AcceptRidePanel(this)._mapOverlay(
+                            child: ListenableBuilder(
+                              listenable: Listenable.merge([
+                                _navigation,
+                                _rideCheck,
+                              ]),
+                              // The Ride check card grows out of the island and covers it.
+                              builder: (context, _) => IgnorePointer(
+                                ignoring: _rideCheck.covering,
+                                child: Opacity(
+                                  opacity: _rideCheck.covering ? 0 : 1,
+                                  child: AdaptiveTripIsland(
+                                    banner: _navigation.snapshot.banner,
+                                    status:
+                                        _navigation.snapshot.status ??
+                                        _islandStatus,
+                                    address: _showArrivalApproach
+                                        ? _approachAddress
+                                        : _nextStopAddress,
+                                    detail: _nextStopDetail,
+                                    eta: _routeEtaText,
+                                    arrival: _showArrivalApproach
+                                        ? _approachLabel
+                                        : null,
+                                    arrived: _arrivalApproachArrived,
+                                    progress: _legFraction ?? 0,
+                                    waitingSeconds: _countingWait
+                                        ? _waitSeconds
+                                        : null,
+                                    paidSeconds: _countingWait
+                                        ? _AcceptRideTrip(this)._paidWaitNow
+                                        : null,
+                                    waitingAtStop: _paidStopWait,
+                                    navigationStatus: _navigation.locationLost
+                                        ? _navigation.status
+                                        : _locationStatus ??
+                                              _navigation.snapshot.status,
+                                    reroutes: _navigation.reroutes,
+                                    waitingMessage: _tripBarStatus,
+                                    paidWait:
+                                        _paidStopWait ||
+                                        (_countingWait && !_inIncludedWait),
+                                    paidByCash: widget.paidByCash,
+                                    lastTripLabel:
+                                        _waybills.last?.fare ??
+                                        DigitalIslandParts.noAmount,
+                                    // driver-u79: a secured next trip cannot be turned off here.
+                                    radarVisible:
+                                        _stage == ActiveRideStage.onTrip &&
+                                        _onTripRadarState !=
+                                            _OnTripRadarState.secured,
+                                    radarOn: _onTripRadarOn,
+                                    onRadar: _AcceptRideTrip(
+                                      this,
+                                    )._toggleOnTripRadar,
+                                    onMenu: () => _rideScaffoldKey.currentState
+                                        ?.openDrawer(),
+                                    onSearch: _openDestinationPicker,
+                                    onHistory: () => pushSingle(
+                                      context,
+                                      MaterialPageRoute<void>(
+                                        builder: (_) =>
+                                            const DriverRideHistory(),
+                                      ),
+                                    ),
+                                    onRoute: _AcceptRidePanel(
+                                      this,
+                                    )._showTripOptions,
+                                    onSafety: () =>
+                                        showSafetyToolKitSheet(context),
+                                    onWait: _AcceptRidePanel(
+                                      this,
+                                    )._openWaitingTime,
+                                    rideCheck: _rideCheck.active,
+                                    onRideCheckDemo: driverProductionRequested
+                                        ? null
+                                        : _AcceptRideTrip(
+                                            this,
+                                          )._openRideCheckDemo,
+                                    pointKind: _approachKind,
+                                    pointLabel: _approachLabel,
+                                    bags: widget.bags,
+                                    nextTripFare:
+                                        _onTripRadarState ==
+                                            _OnTripRadarState.secured
+                                        ? _nextTripRadarOffer?.shownFare
+                                        : null,
+                                    sheetPosition: _ridePanelPosition,
+                                    sheetRaisedAt: snap + 0.04,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // The map buttons ride on top of the sheet and leave once
+                        // it opens past the middle.
+                        ValueListenableBuilder<double>(
+                          valueListenable: _ridePanelPosition,
+                          builder: (context, pos, controls) {
+                            final lift =
+                                math.min(pos, snap) * (expanded - collapsed);
+                            final hidden = pos > snap + 0.04;
+                            return Positioned(
+                              key: const ValueKey<String>(
+                                'active-ride-map-controls',
+                              ),
+                              right: 14,
+                              bottom:
+                                  math.max(
+                                    sheetFloor,
+                                    MediaQuery.paddingOf(context).bottom,
+                                  ) +
+                                  lift +
+                                  16,
+                              child: IgnorePointer(
+                                ignoring: hidden,
+                                child: AnimatedOpacity(
+                                  opacity: hidden ? 0 : 1,
+                                  duration: const Duration(milliseconds: 160),
+                                  child: controls,
+                                ),
+                              ),
+                            );
+                          },
+                          child: _AcceptRidePanel(this)._buildMapControls(),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                // The map buttons ride on top of the sheet and leave once
-                // it opens past the middle.
-                ValueListenableBuilder<double>(
-                  valueListenable: _ridePanelPosition,
-                  builder: (context, pos, controls) {
-                    final lift = math.min(pos, snap) * (expanded - collapsed);
-                    final hidden = pos > snap + 0.04;
-                    return Positioned(
-                      key: const ValueKey<String>('active-ride-map-controls'),
-                      right: 14,
-                      bottom: math.max(sheetFloor, MediaQuery.paddingOf(context).bottom) + lift + 16,
-                      child: IgnorePointer(
-                        ignoring: hidden,
-                        child: AnimatedOpacity(
-                          opacity: hidden ? 0 : 1,
-                          duration: const Duration(milliseconds: 160),
-                          child: controls,
-                        ),
+                  if (offerOpen)
+                    Positioned(
+                      key: const ValueKey<String>('on-trip-radar-layer'),
+                      left: 12,
+                      right: 12,
+                      bottom: MediaQuery.paddingOf(context).bottom + 12,
+                      child: _AcceptRidePanel(this)._mapOverlay(
+                        child: _AcceptRidePanel(this)._buildIncomingRideCard(),
                       ),
-                    );
-                  },
-                  child: _AcceptRidePanel(this)._buildMapControls(),
-                ),
-              ],
-            ),
-              ),
-              if (offerOpen)
-                Positioned(
-                  key: const ValueKey<String>('on-trip-radar-layer'),
-                  left: 12,
-                  right: 12,
-                  bottom: MediaQuery.paddingOf(context).bottom + 12,
-                  child: _AcceptRidePanel(this)._mapOverlay(child: _AcceptRidePanel(this)._buildIncomingRideCard()),
-                ),
-              // Above the sheet and offers; nothing under it works until
-              // the driver answers.
-              Positioned.fill(child: ListenableBuilder(listenable: _rideCheck,
-                builder: (context, _) => !_rideCheck.active ? const SizedBox.shrink()
-                    : _AcceptRidePanel(this)._mapOverlay(child: RideCheckLayer(
-                        key: const ValueKey<String>('ride-check-layer'),
-                        controller: _rideCheck,
-                        top: AdaptiveTripIsland.islandTop(context),
-                        maxHeight: viewport - AdaptiveTripIsland.islandTop(context) -
-                            math.max(12.0, MediaQuery.paddingOf(context).bottom + 8),
-                      )))),
-            ],
-          );
-        },
+                    ),
+                  // Above the sheet and offers; nothing under it works until
+                  // the driver answers.
+                  Positioned.fill(
+                    child: ListenableBuilder(
+                      listenable: _rideCheck,
+                      builder: (context, _) => !_rideCheck.active
+                          ? const SizedBox.shrink()
+                          : _AcceptRidePanel(this)._mapOverlay(
+                              child: RideCheckLayer(
+                                key: const ValueKey<String>('ride-check-layer'),
+                                controller: _rideCheck,
+                                top: AdaptiveTripIsland.islandTop(context),
+                                maxHeight:
+                                    viewport -
+                                    AdaptiveTripIsland.islandTop(context) -
+                                    math.max(
+                                      12.0,
+                                      MediaQuery.paddingOf(context).bottom + 8,
+                                    ),
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
       ),
-    ),
-    ),
     );
   }
 
-
-  bool get _freshRadarLocation => _hasLiveLocation && _lastLocation?.isUsableAt(DateTime.now()) == true && hasFreshLocation(
-    GeoPointMaps.fromLatLng(_driverPosition), _lastGpsAppliedAt, DateTime.now());
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  bool get _freshRadarLocation =>
+      _hasLiveLocation &&
+      _lastLocation?.isUsableAt(DateTime.now()) == true &&
+      hasFreshLocation(
+        GeoPointMaps.fromLatLng(_driverPosition),
+        _lastGpsAppliedAt,
+        DateTime.now(),
+      );
 }
 
 class _ThrottledVehicleMap extends StatefulWidget {
@@ -1481,6 +1749,7 @@ class _ThrottledVehicleMap extends StatefulWidget {
 class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
   Timer? _ticker;
   late LiveVehiclePose _pose;
+
   /// D-08: the moving car goes to the map on its own; the map widget (and
   /// with it every line and pin) is not rebuilt for it.
   late final ValueNotifier<Marker?> _car;
@@ -1490,10 +1759,14 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     super.initState();
     _pose = widget.vehicle.current;
     _car = ValueNotifier<Marker?>(_carMarker);
-    if (!DriverRuntimeConfig.current.liveMapTicker) { return; }
+    if (!DriverRuntimeConfig.current.liveMapTicker) {
+      return;
+    }
     _ticker = Timer.periodic(const Duration(milliseconds: 33), (_) {
       // driver-u59: a route covering the trip turns tickers off here.
-      if (!mounted || !TickerMode.valuesOf(context).enabled) { return; }
+      if (!mounted || !TickerMode.valuesOf(context).enabled) {
+        return;
+      }
       final next = widget.vehicle.current;
       if (next.position.latitude == _pose.position.latitude &&
           next.position.longitude == _pose.position.longitude &&
@@ -1525,30 +1798,30 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
   }
 
   Marker get _carMarker => Marker(
-        markerId: const MarkerId('driver'),
-        position: _pose.position,
-        // Compass heading of an upright arrow; CustomGoogleMap turns it.
-        rotation: _pose.headingDegrees,
-        flat: false,
-        anchor: MoveraVehicleMarker.anchor,
-        zIndexInt: 12,
-        icon: widget.vehicleIcon,
-        // No default map bubble on the car.
-        consumeTapEvents: true,
-        infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
-      );
+    markerId: const MarkerId('driver'),
+    position: _pose.position,
+    // Compass heading of an upright arrow; CustomGoogleMap turns it.
+    rotation: _pose.headingDegrees,
+    flat: false,
+    anchor: MoveraVehicleMarker.anchor,
+    zIndexInt: 12,
+    icon: widget.vehicleIcon,
+    // No default map bubble on the car.
+    consumeTapEvents: true,
+    infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
+  );
 
   /// The pins; they change only with the trip's step.
   Set<Marker> get _pins {
     final markers = <Marker>{};
     Marker pin(String id, LatLng at, RouteMarkKind kind) => Marker(
-          markerId: MarkerId(id),
-          position: at,
-          icon: widget.pinIcons[kind] ?? BitmapDescriptor.defaultMarker,
-          anchor: RouteMarkPins.pinAnchor,
-          zIndexInt: 8,
-          consumeTapEvents: true,
-        );
+      markerId: MarkerId(id),
+      position: at,
+      icon: widget.pinIcons[kind] ?? BitmapDescriptor.defaultMarker,
+      anchor: RouteMarkPins.pinAnchor,
+      zIndexInt: 8,
+      consumeTapEvents: true,
+    );
 
     // Pins in the colour of what they mark: green pickup, orange stops,
     // black drop-off.
@@ -1556,9 +1829,13 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
       markers.add(pin('pickup', widget.pickupPosition, RouteMarkKind.pickup));
     } else {
       for (var i = widget.stopCursor; i < widget.stopPositions.length; i++) {
-        markers.add(pin('stop-$i', widget.stopPositions[i], RouteMarkKind.stop));
+        markers.add(
+          pin('stop-$i', widget.stopPositions[i], RouteMarkKind.stop),
+        );
       }
-      markers.add(pin('dropoff', widget.dropoffPosition, RouteMarkKind.dropoff));
+      markers.add(
+        pin('dropoff', widget.dropoffPosition, RouteMarkKind.dropoff),
+      );
     }
 
     return markers;
@@ -1569,37 +1846,39 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     return ValueListenableBuilder<Set<Polyline>>(
       valueListenable: widget.routeLines,
       builder: (context, lines, _) => RepaintBoundary(
-      child: CustomGoogleMap(
-        key: const ValueKey<String>('active-ride-map'),
-        initialPosition: CameraPosition(
-          target: widget.initialTarget,
-          zoom: DriverCameraPolicy.guidanceStartZoom,
-          // Opens already tilted: no tilt-up flight when the trip starts.
-          tilt: DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.guidanceStartZoom),
-        ),
-        markers: _pins,
-        liveMarker: _car,
-        polylines: lines,
-        cameraAnchor: widget.cameraAnchor,
-        myLocationEnabled: false,
-        myLocationButtonEnabled: false,
-        zoomControlsEnabled: false,
+        child: CustomGoogleMap(
+          key: const ValueKey<String>('active-ride-map'),
+          initialPosition: CameraPosition(
+            target: widget.initialTarget,
+            zoom: DriverCameraPolicy.guidanceStartZoom,
+            // Opens already tilted: no tilt-up flight when the trip starts.
+            tilt: DriverCameraPolicy.tiltForZoom(
+              DriverCameraPolicy.guidanceStartZoom,
+            ),
+          ),
+          markers: _pins,
+          liveMarker: _car,
+          polylines: lines,
+          cameraAnchor: widget.cameraAnchor,
+          myLocationEnabled: false,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
           webCameraControlEnabled: false,
-        mapToolbarEnabled: false,
-        compassEnabled: false,
-        buildingsEnabled: true,
-        indoorViewEnabled: false,
-        scrollGesturesEnabled: !widget.blockGestures,
-        zoomGesturesEnabled: !widget.blockGestures,
-        rotateGesturesEnabled: !widget.blockGestures,
-        tiltGesturesEnabled: !widget.blockGestures,
-        mapType: MapType.normal,
-        padding: widget.padding,
-        onCameraMove: widget.onCameraMove,
-        onCameraIdle: widget.onCameraIdle,
-        onUserGesture: widget.onUserGesture,
-        onMapCreated: widget.onMapCreated,
-      ),
+          mapToolbarEnabled: false,
+          compassEnabled: false,
+          buildingsEnabled: true,
+          indoorViewEnabled: false,
+          scrollGesturesEnabled: !widget.blockGestures,
+          zoomGesturesEnabled: !widget.blockGestures,
+          rotateGesturesEnabled: !widget.blockGestures,
+          tiltGesturesEnabled: !widget.blockGestures,
+          mapType: MapType.normal,
+          padding: widget.padding,
+          onCameraMove: widget.onCameraMove,
+          onCameraIdle: widget.onCameraIdle,
+          onUserGesture: widget.onUserGesture,
+          onMapCreated: widget.onMapCreated,
+        ),
       ),
     );
   }
@@ -1640,21 +1919,24 @@ class _SlideRideActionState extends State<_SlideRideAction> {
   @override
   void didUpdateWidget(covariant _SlideRideAction oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.label == widget.label &&
-        oldWidget.accent == widget.accent) {
+    if (oldWidget.label == widget.label && oldWidget.accent == widget.accent) {
       return;
     }
     _fraction = 0;
     _dragging = true;
     _confirmed = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _confirmed || _fraction != 0) { return; }
+      if (!mounted || _confirmed || _fraction != 0) {
+        return;
+      }
       setState(() => _dragging = false);
     });
   }
 
   void _update(double delta, double maxTravel) {
-    if (_confirmed || _confirming || maxTravel <= 0) { return; }
+    if (_confirmed || _confirming || maxTravel <= 0) {
+      return;
+    }
     final next = (_fraction + (delta / maxTravel)).clamp(0.0, 1.0);
     setState(() {
       _dragging = true;
@@ -1663,34 +1945,76 @@ class _SlideRideActionState extends State<_SlideRideAction> {
   }
 
   void _cancelDrag() {
-    if (_confirming || !mounted) { return; }
-    setState(() { _dragging = false; _fraction = 0; _confirmed = false; });
+    if (_confirming || !mounted) {
+      return;
+    }
+    setState(() {
+      _dragging = false;
+      _fraction = 0;
+      _confirmed = false;
+    });
   }
 
   Future<void> _finish() async {
-    if (_confirming) { return; }
-    if (_fraction < _trigger) { _cancelDrag(); return; }
-    setState(() { _confirmed = true; _confirming = true; _dragging = false; _fraction = 1; });
+    if (_confirming) {
+      return;
+    }
+    if (_fraction < _trigger) {
+      _cancelDrag();
+      return;
+    }
+    setState(() {
+      _confirmed = true;
+      _confirming = true;
+      _dragging = false;
+      _fraction = 1;
+    });
     HapticFeedback.mediumImpact();
     try {
       await widget.onConfirmed();
     } catch (_) {
-      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr.actionCouldNotBeCompletedPlease))); }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr.actionCouldNotBeCompletedPlease)),
+        );
+      }
     } finally {
-      if (mounted) { setState(() { _confirmed = false; _confirming = false; _fraction = 0; _dragging = false; }); }
+      if (mounted) {
+        setState(() {
+          _confirmed = false;
+          _confirming = false;
+          _fraction = 0;
+          _dragging = false;
+        });
+      }
     }
   }
 
   Future<void> _accessibleConfirm() async {
-    if(_confirming) { return; }
-    final confirmed=await showDialog<bool>(context:context,builder:(context)=>AlertDialog(
-      title:Text(widget.label.replaceFirst('Slide to ','')),
-      content:Text(tr.confirmThisTripActionQuestion),
-      actions:[TextButton(onPressed:()=>popOwned(context,false),child:Text(tr.cancel)),
-        FilledButton(onPressed:()=>popOwned(context,true),child:Text(tr.confirm))]));
-    if(!mounted || confirmed!=true || _confirming) { return; }
-    _fraction=1;
+    if (_confirming) {
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(widget.label.replaceFirst('Slide to ', '')),
+        content: Text(tr.confirmThisTripActionQuestion),
+        actions: [
+          TextButton(
+            onPressed: () => popOwned(context, false),
+            child: Text(tr.cancel),
+          ),
+          FilledButton(
+            onPressed: () => popOwned(context, true),
+            child: Text(tr.confirm),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true || _confirming) {
+      return;
+    }
+    _fraction = 1;
     await _finish();
   }
 
@@ -1704,93 +2028,117 @@ class _SlideRideActionState extends State<_SlideRideAction> {
           final maxTravel = math.max(0.0, constraints.maxWidth - _thumb);
 
           return Semantics(
-            button:true, enabled:!_confirming, excludeSemantics:true, // u63: read once
-            label:_confirmed ? widget.confirmedLabel : widget.label.replaceFirst('Slide to ',''),
-            onTap:_confirming ? null : _accessibleConfirm,
-            child:FocusableActionDetector(
-              shortcuts:const <ShortcutActivator,Intent>{SingleActivator(LogicalKeyboardKey.enter):ActivateIntent(),SingleActivator(LogicalKeyboardKey.space):ActivateIntent()},
-              actions:<Type,Action<Intent>>{ActivateIntent:CallbackAction<ActivateIntent>(onInvoke:(_) { _accessibleConfirm();return null; })},
-              child:GestureDetector(
-            behavior: HitTestBehavior.opaque, excludeFromSemantics: true, // u64: a11y uses the tap above, which asks
-            onHorizontalDragUpdate: (details) =>
-                _update(details.delta.dx, maxTravel),
-            onHorizontalDragEnd: (_) => _finish(),
-            onHorizontalDragCancel: _cancelDrag,
-            // Light track with a black square thumb carrying an arrow.
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _confirmed ? widget.accent : const Color(0xFFEEEFF1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: AnimatedContainer(
-                          duration: _dragging
+            button: true,
+            enabled: !_confirming,
+            excludeSemantics: true, // u63: read once
+            label: _confirmed
+                ? widget.confirmedLabel
+                : widget.label.replaceFirst('Slide to ', ''),
+            onTap: _confirming ? null : _accessibleConfirm,
+            child: FocusableActionDetector(
+              shortcuts: const <ShortcutActivator, Intent>{
+                SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+                SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+              },
+              actions: <Type, Action<Intent>>{
+                ActivateIntent: CallbackAction<ActivateIntent>(
+                  onInvoke: (_) {
+                    _accessibleConfirm();
+                    return null;
+                  },
+                ),
+              },
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                excludeFromSemantics:
+                    true, // u64: a11y uses the tap above, which asks
+                onHorizontalDragUpdate: (details) =>
+                    _update(details.delta.dx, maxTravel),
+                onHorizontalDragEnd: (_) => _finish(),
+                onHorizontalDragCancel: _cancelDrag,
+                // Light track with a black square thumb carrying an arrow.
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: _confirmed ? widget.accent : const Color(0xFFEEEFF1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: AnimatedContainer(
+                              duration: _dragging
+                                  ? Duration.zero
+                                  : const Duration(milliseconds: 240),
+                              curve: Curves.easeOutCubic,
+                              width: _thumb + maxTravel * _fraction,
+                              color: const Color(
+                                0xFF111614,
+                              ).withValues(alpha: 0.08),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: _thumb + 8,
+                        right: 12,
+                        child: AnimatedSwitcher(
+                          duration: MediaQuery.disableAnimationsOf(context)
                               ? Duration.zero
-                              : const Duration(milliseconds: 240),
-                          curve: Curves.easeOutCubic,
-                          width: _thumb + maxTravel * _fraction,
-                          color: const Color(0xFF111614).withValues(alpha: 0.08),
+                              : const Duration(milliseconds: 180),
+                          child: Text(
+                            _confirmed ? widget.confirmedLabel : widget.label,
+                            key: ValueKey<String>(
+                              _confirmed ? widget.confirmedLabel : widget.label,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _confirmed
+                                  ? Colors.white
+                                  : const Color(0xFF111614),
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    left: _thumb + 8,
-                    right: 12,
-                    child: AnimatedSwitcher(
-                      duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds:180),
-                      child: Text(
-                        _confirmed ? widget.confirmedLabel : widget.label,
-                        key: ValueKey<String>(
-                          _confirmed ? widget.confirmedLabel : widget.label,
+                      AnimatedPositioned(
+                        duration: _dragging
+                            ? Duration.zero
+                            : const Duration(milliseconds: 240),
+                        curve: Curves.easeOutCubic,
+                        left: maxTravel * _fraction,
+                        top: 0,
+                        child: Container(
+                          width: _thumb,
+                          height: _thumb,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF111614),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            _confirmed
+                                ? Icons.check_rounded
+                                : Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 26,
+                          ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: _confirmed ? Colors.white : const Color(0xFF111614),
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.2,
-                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  AnimatedPositioned(
-                    duration: _dragging
-                        ? Duration.zero
-                        : const Duration(milliseconds: 240),
-                    curve: Curves.easeOutCubic,
-                    left: maxTravel * _fraction,
-                    top: 0,
-                    child: Container(
-                      width: _thumb,
-                      height: _thumb,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF111614),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        _confirmed
-                            ? Icons.check_rounded
-                            : Icons.arrow_forward_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          )));
+          );
         },
       ),
     );

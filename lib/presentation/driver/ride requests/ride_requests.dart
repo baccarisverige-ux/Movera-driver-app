@@ -175,15 +175,22 @@ class _RideRequestsState extends State<RideRequests> {
 
   List<_RadarTrip> get _visibleOffers {
     final nearby = _offers.where((offer) {
-      if (!offer.isNearby || _dismissed.contains(offer.id)) { return false; }
+      if (!offer.isNearby || _dismissed.contains(offer.id)) {
+        return false;
+      }
       // An admin direct assign or dispatch's Exclusive offer is an
       // Exclusive offer, not a Radar trip.
-      if (offer.source.isExclusive) { return false; }
-      if (!(widget.offerFilter?.call(offer.source) ?? true)) { return false; }
-      if (!widget.destinationModeActive) { return true; }
+      if (offer.source.isExclusive) {
+        return false;
+      }
+      if (!(widget.offerFilter?.call(offer.source) ?? true)) {
+        return false;
+      }
+      if (!widget.destinationModeActive) {
+        return true;
+      }
       return offer.followsDestination;
-    }).toList()
-      ..sort((a, b) => a.pickupKm.compareTo(b.pickupKm));
+    }).toList()..sort((a, b) => a.pickupKm.compareTo(b.pickupKm));
     // Every Radar trip, each with its full details.
     return List<_RadarTrip>.unmodifiable(nearby);
   }
@@ -234,15 +241,20 @@ class _RideRequestsState extends State<RideRequests> {
       _comeBackAfter(hidden.key, hidden.value);
     }
     _withdrawalSubscription = _dispatch.watchWithdrawals().listen(_onWithdrawn);
-    _nearbySubscription = _dispatch.watchNearbyOffers().listen(_onDispatchOffers);
+    _nearbySubscription = _dispatch.watchNearbyOffers().listen(
+      _onDispatchOffers,
+    );
   }
 
   /// Dispatch withdrew a trip: when another driver took it (a radar
   /// group's first Accept), it leaves with tr.islandTakenByOther.
   void _onWithdrawn(OfferWithdrawal gone) {
-    if (!mounted || gone.reason != OfferGoneReason.claimedElsewhere) { return; }
+    if (!mounted || gone.reason != OfferGoneReason.claimedElsewhere) {
+      return;
+    }
     for (final trip in _offers.toList()) {
-      if (trip.id == gone.offerId && _stateFor(trip.id) == _RadarOfferState.available) {
+      if (trip.id == gone.offerId &&
+          _stateFor(trip.id) == _RadarOfferState.available) {
         final shown = _visibleOffers.any((offer) => offer.id == trip.id);
         _resolveMatchLost(trip, _RadarGone.lostOwnMatch, notice: shown);
       }
@@ -272,7 +284,9 @@ class _RideRequestsState extends State<RideRequests> {
   }
 
   void _onDispatchOffers(List<RideOffer> offers) {
-    if (!mounted) { return; }
+    if (!mounted) {
+      return;
+    }
     _latestDispatchOffers = offers;
 
     // First emission is the stable snapshot. Later additions wait for Refresh.
@@ -306,7 +320,9 @@ class _RideRequestsState extends State<RideRequests> {
   }
 
   void _refreshFromRadarSignal() {
-    if (!_hasNewTripSignal) { return; }
+    if (!_hasNewTripSignal) {
+      return;
+    }
 
     setState(() {
       final lingering = _offers.where((trip) {
@@ -330,7 +346,9 @@ class _RideRequestsState extends State<RideRequests> {
 
   void _closeRides() {
     // A Match already sent is answered first (its banner covers Back too).
-    if (_matchingOfferId != null) { return; }
+    if (_matchingOfferId != null) {
+      return;
+    }
     final onClose = widget.onCloseRides;
     if (onClose != null) {
       onClose(_visibleOffers.isNotEmpty);
@@ -349,8 +367,12 @@ class _RideRequestsState extends State<RideRequests> {
 
   bool _isOfferStillVisible(_RadarTrip trip) {
     return _offers.any((offer) {
-      if (offer.id != trip.id || !offer.isNearby) { return false; }
-      if (!widget.destinationModeActive) { return true; }
+      if (offer.id != trip.id || !offer.isNearby) {
+        return false;
+      }
+      if (!widget.destinationModeActive) {
+        return true;
+      }
       return offer.followsDestination;
     });
   }
@@ -388,7 +410,9 @@ class _RideRequestsState extends State<RideRequests> {
     } catch (_) {
       result = const ClaimResult.networkError();
     }
-    if (!mounted || _matchingOfferId != trip.id) { return; }
+    if (!mounted || _matchingOfferId != trip.id) {
+      return;
+    }
     // A reservation taken from Radar, won or lost, leaves Scheduled rides.
     if (trip.reservationTime != null &&
         result.outcome != ClaimOutcome.networkError) {
@@ -418,7 +442,9 @@ class _RideRequestsState extends State<RideRequests> {
         // It covers Back and Refresh: it clears like the other banners
         // (driver-u161).
         _matchNoticeTimer = Timer(const Duration(milliseconds: 2800), () {
-          if (mounted) { setState(() => _matchNotice = null); }
+          if (mounted) {
+            setState(() => _matchNotice = null);
+          }
         });
     }
   }
@@ -450,68 +476,69 @@ class _RideRequestsState extends State<RideRequests> {
     });
 
     _matchOpenTimer?.cancel();
-    _matchOpenTimer = Timer(
-      const Duration(milliseconds: 500),
-      () {
-        if (!mounted) { return; }
-        final navigator = Navigator.of(context);
-        final rider = trip.source;
-        // The driver's own money, as the card showed it, pickup pay in it
-        // (driver-12, owner decision 2026-10-26); a cash rider hands over
-        // their own fare.
-        final paidByCash = RadarOfferView.isCash(trip.payment);
-        final terms = _pickupPayOf(trip).termsOf(
-          fare: trip.driverPay,
-          driverBonus: rider.driverBonus,
-          cashToCollect: paidByCash ? rider.riderCashLabel : null,
-        );
-        final ride = AcceptRide(
-          // X9: the offer and the trip keep their own ids. Until a backend
-          // sends the trip id, the demo makes one per accepted occurrence.
-          offerId: trip.id,
-          tripId: rider.tripId ?? tripOccurrenceId(trip.id),
-          dispatchRepository: _dispatch,
-          riderName: rider.riderName.isEmpty ? tr.rider : rider.riderName,
-          riderRating: double.tryParse(rider.rating) ?? 4.9,
-          riderTrips: rider.riderTrips,
-          fare: terms.fare,
-          paidByCash: paidByCash,
-          cashToCollect: terms.cashToCollect,
-          driverBonus: terms.driverBonus,
-          riderFare: rider.fareLabel,
-          category: trip.category,
-          matchedVia: 'Movera Radar',
-          sessionController: widget.sessionController,
-          waybillRepository: widget.waybillRepository,
-          locationRepository: widget.locationRepository,
-          routeRepository: widget.routeRepository,
-          activeRideRepository: widget.activeRideRepository,
-          pickupAddress: trip.pickup,
-          pickupArea: trip.pickup.split(',').last.trim(),
-          dropoffAddress: trip.dropoff,
-          stopAddresses: [for (final stop in rider.stops) stop.address],
-          stopPositions: [for (final stop in rider.stops) stop.point.toLatLng()],
-          pickupPosition: trip.pickupPosition,
-          dropoffPosition: trip.dropoffPosition,
-          pickupKm: trip.pickupKm,
-          destinationModeActive: widget.destinationModeActive,
-          destinationAddress: widget.destinationAddress,
-          destinationPosition: widget.destinationPosition,
-        );
+    _matchOpenTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) {
+        return;
+      }
+      final navigator = Navigator.of(context);
+      final rider = trip.source;
+      // The driver's own money, as the card showed it, pickup pay in it
+      // (driver-12, owner decision 2026-10-26); a cash rider hands over
+      // their own fare.
+      final paidByCash = RadarOfferView.isCash(trip.payment);
+      final terms = _pickupPayOf(trip).termsOf(
+        fare: trip.driverPay,
+        driverBonus: rider.driverBonus,
+        cashToCollect: paidByCash ? rider.riderCashLabel : null,
+      );
+      final ride = AcceptRide(
+        // X9: the offer and the trip keep their own ids. Until a backend
+        // sends the trip id, the demo makes one per accepted occurrence.
+        offerId: trip.id,
+        tripId: rider.tripId ?? tripOccurrenceId(trip.id),
+        dispatchRepository: _dispatch,
+        riderName: rider.riderName.isEmpty ? tr.rider : rider.riderName,
+        riderRating: double.tryParse(rider.rating) ?? 4.9,
+        riderTrips: rider.riderTrips,
+        fare: terms.fare,
+        paidByCash: paidByCash,
+        cashToCollect: terms.cashToCollect,
+        driverBonus: terms.driverBonus,
+        riderFare: rider.fareLabel,
+        category: trip.category,
+        matchedVia: 'Movera Radar',
+        sessionController: widget.sessionController,
+        waybillRepository: widget.waybillRepository,
+        locationRepository: widget.locationRepository,
+        routeRepository: widget.routeRepository,
+        activeRideRepository: widget.activeRideRepository,
+        pickupAddress: trip.pickup,
+        pickupArea: trip.pickup.split(',').last.trim(),
+        dropoffAddress: trip.dropoff,
+        stopAddresses: [for (final stop in rider.stops) stop.address],
+        stopPositions: [for (final stop in rider.stops) stop.point.toLatLng()],
+        pickupPosition: trip.pickupPosition,
+        dropoffPosition: trip.dropoffPosition,
+        pickupKm: trip.pickupKm,
+        destinationModeActive: widget.destinationModeActive,
+        destinationAddress: widget.destinationAddress,
+        destinationPosition: widget.destinationPosition,
+      );
 
-        navigator.push(ActiveRideTransition(ride));
+      navigator.push(ActiveRideTransition(ride));
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) { return; }
-          setState(() {
-            _matchingOfferId = null;
-            _offers.removeWhere((offer) => offer.id == trip.id);
-            _offerStates.remove(trip.id);
-            _matchNotice = null;
-          });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _matchingOfferId = null;
+          _offers.removeWhere((offer) => offer.id == trip.id);
+          _offerStates.remove(trip.id);
+          _matchNotice = null;
         });
-      },
-    );
+      });
+    });
   }
 
   void _resolveMatchLost(
@@ -534,7 +561,9 @@ class _RideRequestsState extends State<RideRequests> {
     }
     _matchNoticeTimer?.cancel();
     setState(() {
-      if (_matchingOfferId == trip.id) { _matchingOfferId = null; }
+      if (_matchingOfferId == trip.id) {
+        _matchingOfferId = null;
+      }
       _offerStates[trip.id] = _RadarOfferState.claimedElsewhere;
       _goneReasons[trip.id] = reason;
       _matchNotice = reason == _RadarGone.lostOwnMatch
@@ -550,7 +579,9 @@ class _RideRequestsState extends State<RideRequests> {
             );
     });
     _matchNoticeTimer = Timer(const Duration(milliseconds: 2800), () {
-      if (mounted) { setState(() => _matchNotice = null); }
+      if (mounted) {
+        setState(() => _matchNotice = null);
+      }
     });
 
     _scheduleClaimedRemoval(trip.id);
@@ -574,70 +605,71 @@ class _RideRequestsState extends State<RideRequests> {
 
   void _scheduleClaimedRemoval(String id) {
     _claimedRemovalTimers.remove(id)?.cancel();
-    _claimedRemovalTimers[id] = Timer(
-      const Duration(milliseconds: 2800),
-      () {
-        if (!mounted) { return; }
-        setState(() {
-          _offers.removeWhere((offer) => offer.id == id);
-          _offerStates.remove(id);
-          _goneReasons.remove(id);
-        });
-        _claimedRemovalTimers.remove(id);
-      },
-    );
+    _claimedRemovalTimers[id] = Timer(const Duration(milliseconds: 2800), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _offers.removeWhere((offer) => offer.id == id);
+        _offerStates.remove(id);
+        _goneReasons.remove(id);
+      });
+      _claimedRemovalTimers.remove(id);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final offers = _visibleOffers;
     final openCount = offers
-        .where((offer) => _stateFor(offer.id) != _RadarOfferState.claimedElsewhere)
+        .where(
+          (offer) => _stateFor(offer.id) != _RadarOfferState.claimedElsewhere,
+        )
         .length;
 
     return LayoutViewport(
       child: Material(
-      color: _page,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                _header(openCount),
-                if (widget.destinationModeActive) _destinationModeBanner(),
-                if (widget.towardPickupTime case final time?)
-                  _onYourWayBanner(
-                    tr.rrTripsTowardPickup(time),
-                    key: const ValueKey<String>('radar-schedule-filter'),
+        color: _page,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            SafeArea(
+              child: Column(
+                children: [
+                  _header(openCount),
+                  if (widget.destinationModeActive) _destinationModeBanner(),
+                  if (widget.towardPickupTime case final time?)
+                    _onYourWayBanner(
+                      tr.rrTripsTowardPickup(time),
+                      key: const ValueKey<String>('radar-schedule-filter'),
+                    ),
+                  Expanded(
+                    child: offers.isEmpty
+                        ? _emptyState()
+                        : ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: offers.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              return _tripCard(offers[index]);
+                            },
+                          ),
                   ),
-                Expanded(
-                  child: offers.isEmpty
-                      ? _emptyState()
-                      : ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: offers.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            return _tripCard(offers[index]);
-                          },
-                        ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (_matchNotice != null)
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              child: _buildMatchNotice(_matchNotice!),
-            ),
-        ],
+            if (_matchNotice != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 0,
+                child: _buildMatchNotice(_matchNotice!),
+              ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -658,7 +690,9 @@ class _RideRequestsState extends State<RideRequests> {
         children: [
           Material(
             color: Colors.white,
-            shape: const CircleBorder(side: BorderSide(color: Color(0xFFECEEF0))),
+            shape: const CircleBorder(
+              side: BorderSide(color: Color(0xFFECEEF0)),
+            ),
             child: IconButton(
               tooltip: tr.back,
               onPressed: _closeRides,
@@ -711,8 +745,10 @@ class _RideRequestsState extends State<RideRequests> {
                                   AppAssets.offerRefresh,
                                   width: 17,
                                   height: 17,
-                                  colorFilter:
-                                      const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                                  colorFilter: const ColorFilter.mode(
+                                    Colors.white,
+                                    BlendMode.srcIn,
+                                  ),
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
@@ -870,8 +906,8 @@ class _RideRequestsState extends State<RideRequests> {
     final accent = isSuccess
         ? const Color(0xFF2FBE7B)
         : isMatching
-            ? const Color(0xFFD99B24)
-            : const Color(0xFFC75B62);
+        ? const Color(0xFFD99B24)
+        : const Color(0xFFC75B62);
 
     return TripStatusBanner(
       key: const ValueKey<String>('radar-match-notice'),
@@ -882,9 +918,7 @@ class _RideRequestsState extends State<RideRequests> {
       leading: isMatching
           ? null
           : Icon(
-              isSuccess
-                  ? Icons.check_rounded
-                  : Icons.person_off_outlined,
+              isSuccess ? Icons.check_rounded : Icons.person_off_outlined,
               color: accent,
               size: 22,
             ),
@@ -975,10 +1009,10 @@ class _RadarTrip {
   /// ([OfferCardDetails.fare] of [fare] with the offer's bonus and server
   /// earnings): never the rider's [fare] (owner decision 2026-10-26).
   String get driverPay => DriverOfferRules.current.card.fare(
-        fare,
-        bonus: WaybillRecord.bonusLabel(source.driverBonus),
-        earnings: source.driverEarnings?.formatted,
-      );
+    fare,
+    bonus: WaybillRecord.bonusLabel(source.driverBonus),
+    earnings: source.driverEarnings?.formatted,
+  );
 
   final int bags;
   final String payment;
@@ -1045,7 +1079,9 @@ class _LivePulseState extends State<_LivePulse>
                 height: 7 + 12 * e,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _RideRequestsState._green.withValues(alpha: 0.32 * (1 - k)),
+                  color: _RideRequestsState._green.withValues(
+                    alpha: 0.32 * (1 - k),
+                  ),
                 ),
               ),
               Container(

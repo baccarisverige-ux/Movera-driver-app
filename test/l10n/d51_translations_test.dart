@@ -55,20 +55,22 @@ Future<void> show(WidgetTester tester, String code, Widget home) async {
   tester.view.physicalSize = const Size(430, 1200);
   addTearDown(tester.view.resetDevicePixelRatio);
   addTearDown(tester.view.resetPhysicalSize);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(
-      locale: Locale(code),
-      supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: home,
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(
+        locale: Locale(code),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: home,
+      ),
     ),
-  ));
+  );
   await tester.pump();
 }
 
@@ -145,10 +147,12 @@ class RideCheckKit {
   late final RideCheckController controller;
 
   void open([RideCheckTrigger trigger = RideCheckTrigger.longStop]) =>
-      unawaited(controller.open(
-        RideCheckDetector().demo(trigger, now, destination: 'T-Centralen'),
-        instant: true,
-      ));
+      unawaited(
+        controller.open(
+          RideCheckDetector().demo(trigger, now, destination: 'T-Centralen'),
+          instant: true,
+        ),
+      );
 
   void dispose() {
     controller.dispose();
@@ -197,7 +201,10 @@ void main() {
       speak(code);
       String photo(int bytes) => base64Encode(Uint8List(bytes));
       Map<String, dynamic> vehicle(String id, List<int> photos) => {
-        'id': id, 'make': 'Volvo', 'model': 'XC60', 'year': '2024',
+        'id': id,
+        'make': 'Volvo',
+        'model': 'XC60',
+        'year': '2024',
         'plate': 'ABC 123',
         for (final (i, bytes) in photos.indexed)
           ['registrationPhoto', 'insurancePhoto'][i]: photo(bytes),
@@ -241,10 +248,17 @@ void main() {
 
   for (final code in languages) {
     testWidgets('driver-14: cash direction in $code', (tester) async {
-      await show(tester, code, const Scaffold(
-        body: CashCollectSheet(
-          fare: '248,40 kr', cash: '300,00 kr', riderName: 'Nils'),
-      ));
+      await show(
+        tester,
+        code,
+        const Scaffold(
+          body: CashCollectSheet(
+            fare: '248,40 kr',
+            cash: '300,00 kr',
+            riderName: 'Nils',
+          ),
+        ),
+      );
       expect(words(tr.cashYouOweMovera), findsWidgets);
       expect(words('You owe Movera'), findsNothing);
     });
@@ -260,7 +274,10 @@ void main() {
     });
   }
 
-  for (final (code, said) in [('fr', 'Ensuite : Arrêt 1'), ('sv', 'Härnäst: Stopp 1')]) {
+  for (final (code, said) in [
+    ('fr', 'Ensuite : Arrêt 1'),
+    ('sv', 'Härnäst: Stopp 1'),
+  ]) {
     testWidgets('driver-17: the next stop in $code', (tester) async {
       speak(code);
       final seen = await stripSays(tester, [
@@ -284,8 +301,9 @@ void main() {
   }
 
   for (final code in languages) {
-    testWidgets('driver-41: arriving too far from the pickup in $code',
-        (tester) async {
+    testWidgets('driver-41: arriving too far from the pickup in $code', (
+      tester,
+    ) async {
       final previous = DriverRuntimeConfig.current;
       addTearDown(() => DriverRuntimeConfig.current = previous);
       DriverRuntimeConfig.current = const DriverRuntimeConfig(
@@ -296,8 +314,10 @@ void main() {
       );
       await show(tester, code, AcceptRide(locationRepository: FarAway()));
       await frames(tester, 10);
-      tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
-          .controller!.animatePanelToSnapPoint();
+      tester
+          .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+          .controller!
+          .animatePanelToSnapPoint();
       await frames(tester, 14);
       final button = find.byKey(const ValueKey('active-ride-arrived-button'));
       await tester.ensureVisible(button);
@@ -310,8 +330,9 @@ void main() {
   }
 
   for (final code in languages) {
-    testWidgets('driver-u48: rider phone not connected in $code',
-        (tester) async {
+    testWidgets('driver-u48: rider phone not connected in $code', (
+      tester,
+    ) async {
       await show(tester, code, const Chat(riderDisplayName: 'Maya'));
       await tester.tap(find.byTooltip(tr.riderPhoneNotConnected));
       await tester.pump();
@@ -321,8 +342,7 @@ void main() {
   }
 
   for (final code in languages) {
-    testWidgets('driver-u93: the microphone starting in $code',
-        (tester) async {
+    testWidgets('driver-u93: the microphone starting in $code', (tester) async {
       speak(code);
       final kit = RideCheckKit();
       addTearDown(kit.dispose);
@@ -332,18 +352,23 @@ void main() {
       expect(kit.controller.audio, RideCheckAudio.starting);
       final note = TextEditingController();
       addTearDown(note.dispose);
-      await show(tester, code, Scaffold(
-        backgroundColor: Colors.black,
-        body: RideCheckCard(controller: kit.controller, note: note),
-      ));
+      await show(
+        tester,
+        code,
+        Scaffold(
+          backgroundColor: Colors.black,
+          body: RideCheckCard(controller: kit.controller, note: note),
+        ),
+      );
       expect(words(tr.recordAudioStarting), findsOneWidget);
       expect(words('starting…'), findsNothing);
     });
   }
 
   for (final code in languages) {
-    testWidgets('driver-52: demo badges and the zone header in $code',
-        (tester) async {
+    testWidgets('driver-52: demo badges and the zone header in $code', (
+      tester,
+    ) async {
       await show(tester, code, const Analytics());
       expect(words(tr.demoDataBadge), findsOneWidget);
       expect(words(tr.anaSampleTripRoute), findsOneWidget);
@@ -365,24 +390,37 @@ void main() {
       expect(words('Around Stockholm'), findsNothing);
       // Admin's own words in the zone's language still set the level.
       const area = StockholmAreaConfig(
-        name: 'Solna', demandPercent: 86, demandLabel: 'Hög');
+        name: 'Solna',
+        demandPercent: 86,
+        demandLabel: 'Hög',
+      );
       expect(area.demand, AreaDemand.busy);
       expect(area.demandText, 'Hög');
     });
   }
 
   for (final code in languages) {
-    testWidgets('driver-u99: onboarding vehicle starts empty in $code',
-        (tester) async {
-      await show(tester, code, Scaffold(
-        body: AdditionDetailAddVehicle(circleProgress: (_, _) => const SizedBox()),
-      ));
+    testWidgets('driver-u99: onboarding vehicle starts empty in $code', (
+      tester,
+    ) async {
+      await show(
+        tester,
+        code,
+        Scaffold(
+          body: AdditionDetailAddVehicle(
+            circleProgress: (_, _) => const SizedBox(),
+          ),
+        ),
+      );
       expect(words(tr.selectEllipsis), findsOneWidget);
       expect(find.text('Luxury'), findsNothing);
       final fields = tester.widgetList<EditableText>(find.byType(EditableText));
       expect(fields, isNotEmpty);
-      expect([for (final f in fields) f.controller.text].where((t) => t.isNotEmpty),
-          isEmpty, reason: 'sample values are hints, not answers');
+      expect(
+        [for (final f in fields) f.controller.text].where((t) => t.isNotEmpty),
+        isEmpty,
+        reason: 'sample values are hints, not answers',
+      );
     });
   }
 
@@ -399,21 +437,23 @@ void main() {
     expect(terms.rule, isNot(contains('Upphämtning')));
   });
 
-  test('driver-u46: the record and the alert keep the reason in English',
-      () async {
-    speak('sv');
-    final kit = RideCheckKit();
-    addTearDown(kit.dispose);
-    kit.open();
-    await kit.controller.callEmergency();
-    await kit.controller.settleAlerts();
-    final english = RegExp(r'^Your car has stopped for \d+ min$');
-    expect(kit.log.rows.single.reason, matches(english));
-    expect(kit.alerts.alerts.single.reason, matches(english));
-    // The card itself is in the driver's language.
-    expect(kit.controller.event!.reason.text, startsWith(tr.rcStoppedLead));
-    expect(tr.rcStoppedLead, isNot(startsWith('Your car')));
-  });
+  test(
+    'driver-u46: the record and the alert keep the reason in English',
+    () async {
+      speak('sv');
+      final kit = RideCheckKit();
+      addTearDown(kit.dispose);
+      kit.open();
+      await kit.controller.callEmergency();
+      await kit.controller.settleAlerts();
+      final english = RegExp(r'^Your car has stopped for \d+ min$');
+      expect(kit.log.rows.single.reason, matches(english));
+      expect(kit.alerts.alerts.single.reason, matches(english));
+      // The card itself is in the driver's language.
+      expect(kit.controller.event!.reason.text, startsWith(tr.rcStoppedLead));
+      expect(tr.rcStoppedLead, isNot(startsWith('Your car')));
+    },
+  );
 
   testWidgets('driver-u42: trip details write the reason in the language '
       'shown, not the one the check fired in', (tester) async {
@@ -424,10 +464,11 @@ void main() {
     await tester.pump();
     // Saved and read back, as the phone keeps it.
     final saved = RideCheckRecord.fromJson(kit.log.rows.single.toJson())!;
-    await show(tester, 'fr', RideCheckHistoryEntry(
-      tripId: 'trip-1',
-      load: (_) async => [saved],
-    ));
+    await show(
+      tester,
+      'fr',
+      RideCheckHistoryEntry(tripId: 'trip-1', load: (_) async => [saved]),
+    );
     await tester.pump();
     expect(words(tr.rcStoppedLead.trim()), findsOneWidget);
     expect(words('Bilen'), findsNothing);
@@ -467,8 +508,9 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('driver-13: demo documents follow a language switch',
-      (tester) async {
+  testWidgets('driver-13: demo documents follow a language switch', (
+    tester,
+  ) async {
     speak('sv');
     final store = DocumentExpiryStore.instance..reset();
     expect(store.documents.first.title, tr.docInsuranceLetter);
@@ -478,18 +520,21 @@ void main() {
     expect(words('Försäkringsbrev'), findsNothing);
   });
 
-  testWidgets('driver-u30: notifications made in Swedish read in French',
-      (tester) async {
+  testWidgets('driver-u30: notifications made in Swedish read in French', (
+    tester,
+  ) async {
     speak('sv');
     final feed = DriverNotificationFeed.instance;
     feed
       ..add(DriverNotices.exclusiveOffer(at: feed.now, seconds: 8))
-      ..add(DriverNotices.scheduledReminder(
-        at: feed.now,
-        title: () => tr.leaveNowForPickupTimePickup('14:00'),
-        body: () => 'Odlarvägen 22',
-        leaveNow: true,
-      ));
+      ..add(
+        DriverNotices.scheduledReminder(
+          at: feed.now,
+          title: () => tr.leaveNowForPickupTimePickup('14:00'),
+          body: () => 'Odlarvägen 22',
+          leaveNow: true,
+        ),
+      );
     final swedish = tr.exclusiveOffer;
     speak('fr');
     await show(tester, 'fr', const DriverNotificationsScreen());
@@ -507,8 +552,10 @@ void main() {
       await show(tester, code, const DriverNotificationsScreen());
       expect(words(tr.noticeBonusProgressTitle), findsOneWidget);
       expect(words(tr.noticePayoutSentTitle), findsOneWidget);
-      expect(words(tr.noticeScheduledBody(tr.tomorrow, '07:40', '126 kr')),
-          findsOneWidget);
+      expect(
+        words(tr.noticeScheduledBody(tr.tomorrow, '07:40', '126 kr')),
+        findsOneWidget,
+      );
       for (final english in ['Bonus progress', 'Payout sent', 'Tap to view']) {
         expect(words(english), findsNothing, reason: english);
       }
@@ -516,8 +563,9 @@ void main() {
   }
 
   for (final code in languages) {
-    testWidgets('driver-u69: the waybill names follow the language in $code',
-        (tester) async {
+    testWidgets('driver-u69: the waybill names follow the language in $code', (
+      tester,
+    ) async {
       final record = WaybillRecord(
         tripId: 'trip-1',
         statusLabel: WaybillRecord.currentTrip,
@@ -534,12 +582,18 @@ void main() {
         passengerCapacity: 4,
         riderFare: '184,00 kr',
       );
-      await show(tester, code, Builder(
-        builder: (context) => Scaffold(body: TextButton(
-          onPressed: () => showMoveraWaybillSheet(context, record),
-          child: const Text('open'),
-        )),
-      ));
+      await show(
+        tester,
+        code,
+        Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showMoveraWaybillSheet(context, record),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
       await tester.tap(find.text('open'));
       await frames(tester, 10);
       expect(words(tr.moveraDriver), findsOneWidget);

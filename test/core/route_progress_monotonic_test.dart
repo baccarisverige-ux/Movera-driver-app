@@ -57,7 +57,15 @@ void main() {
     addTearDown(navigation.dispose);
     navigation.setVehicle(_at(59.33, 18.0610));
     await navigation.ensureRoute(origin: _start, destination: _start);
-    for (final lng in [18.0640, 18.0670, 18.0695, 18.0700, 18.0690, 18.0670, 18.0650]) {
+    for (final lng in [
+      18.0640,
+      18.0670,
+      18.0695,
+      18.0700,
+      18.0690,
+      18.0670,
+      18.0650,
+    ]) {
       navigation.setVehicle(_at(59.33, lng));
     }
     final before = navigation.routeFraction!;
@@ -66,15 +74,24 @@ void main() {
     navigation.setVehicle(_at(59.33, 18.0648));
     navigation.setVehicle(_at(59.33, 18.0636));
     expect(navigation.routeFraction, greaterThanOrEqualTo(before));
-    expect(navigation.snapshot.banner?.symbol, isNot(NavigationBannerSymbol.uTurn));
+    expect(
+      navigation.snapshot.banner?.symbol,
+      isNot(NavigationBannerSymbol.uTurn),
+    );
   });
 
-  test('arrival at the route start is resolved after the U-turn, not at 0 m', () {
-    final route = _outAndBack();
-    final first = calculator.measure(route: route, position: const GeoPoint(59.3300, 18.0610));
-    expect(first.nextInstruction?.type, RouteManeuverType.turn);
-    expect(first.remainingMeters, greaterThan(1000));
-  });
+  test(
+    'arrival at the route start is resolved after the U-turn, not at 0 m',
+    () {
+      final route = _outAndBack();
+      final first = calculator.measure(
+        route: route,
+        position: const GeoPoint(59.3300, 18.0610),
+      );
+      expect(first.nextInstruction?.type, RouteManeuverType.turn);
+      expect(first.remainingMeters, greaterThan(1000));
+    },
+  );
 
   test('progress on the return leg stays on the return leg', () {
     final route = _outAndBack();
@@ -83,13 +100,27 @@ void main() {
     var hint = 0;
     RouteProgress? progress;
     for (final lng in [18.0610, 18.0640, 18.0670, 18.0695, 18.0700]) {
-      progress = calculator.measure(route: route, position: GeoPoint(59.3300, lng), instructionHint: hint, previousAlongMeters: along);
+      progress = calculator.measure(
+        route: route,
+        position: GeoPoint(59.3300, lng),
+        instructionHint: hint,
+        previousAlongMeters: along,
+      );
       along = progress.alongMeters;
       hint = progress.instructionIndex;
     }
     for (final lng in [18.0690, 18.0670, 18.0650]) {
-      progress = calculator.measure(route: route, position: GeoPoint(59.3300, lng), instructionHint: hint, previousAlongMeters: along);
-      expect(progress.alongMeters, greaterThanOrEqualTo(along!), reason: 'progress must not jump back to the outbound leg');
+      progress = calculator.measure(
+        route: route,
+        position: GeoPoint(59.3300, lng),
+        instructionHint: hint,
+        previousAlongMeters: along,
+      );
+      expect(
+        progress.alongMeters,
+        greaterThanOrEqualTo(along!),
+        reason: 'progress must not jump back to the outbound leg',
+      );
       along = progress.alongMeters;
       hint = progress.instructionIndex;
     }
@@ -110,16 +141,34 @@ void main() {
   });
 
   test('2,000-point route measures quickly with cached geometry', () {
-    final points = [for (var i = 0; i < 2000; i++) GeoPoint(59.30 + i * 0.0001, 18.05)];
-    final route = RoadRoute(points: points, distanceMeters: 22000, durationSeconds: 1800, instructions: [
-      for (var i = 100; i < 2000; i += 100)
-        RouteInstruction(type: RouteManeuverType.turn, modifier: 'left', text: 'Turn left', distanceMeters: 0, maneuverLocation: points[i]),
-    ]);
+    final points = [
+      for (var i = 0; i < 2000; i++) GeoPoint(59.30 + i * 0.0001, 18.05),
+    ];
+    final route = RoadRoute(
+      points: points,
+      distanceMeters: 22000,
+      durationSeconds: 1800,
+      instructions: [
+        for (var i = 100; i < 2000; i += 100)
+          RouteInstruction(
+            type: RouteManeuverType.turn,
+            modifier: 'left',
+            text: 'Turn left',
+            distanceMeters: 0,
+            maneuverLocation: points[i],
+          ),
+      ],
+    );
     final watch = Stopwatch()..start();
     double? along;
     var hint = 0;
     for (var i = 0; i < 2000; i += 4) {
-      final p = calculator.measure(route: route, position: points[i], instructionHint: hint, previousAlongMeters: along);
+      final p = calculator.measure(
+        route: route,
+        position: points[i],
+        instructionHint: hint,
+        previousAlongMeters: along,
+      );
       along = p.alongMeters;
       hint = p.instructionIndex;
     }
@@ -129,7 +178,10 @@ void main() {
 
   test('routing host is configurable and the demo host is flagged', () {
     final demo = RoadRouteService();
-    expect(demo.usesPublicDemoServer, RoadRouteService.defaultHost == RoadRouteService.publicDemoHost);
+    expect(
+      demo.usesPublicDemoServer,
+      RoadRouteService.defaultHost == RoadRouteService.publicDemoHost,
+    );
     final contracted = RoadRouteService(host: 'routing.example.test');
     expect(contracted.usesPublicDemoServer, isFalse);
     demo.dispose();

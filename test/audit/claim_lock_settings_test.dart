@@ -181,11 +181,17 @@ void main() {
     await tester.tap(find.byKey(const ValueKey<String>('radar-match-first')));
     await tester.pump();
     expect(dispatch.claims, hasLength(1));
-    expect(_search(tester).onTap, isNull,
-        reason: 'Destination mode waits for the Match');
+    expect(
+      _search(tester).onTap,
+      isNull,
+      reason: 'Destination mode waits for the Match',
+    );
     await _openPreferences(tester);
-    expect(_tile(tester, 'Comfort').onTap, isNull,
-        reason: 'the categories wait for the Match');
+    expect(
+      _tile(tester, 'Comfort').onTap,
+      isNull,
+      reason: 'the categories wait for the Match',
+    );
     await _closePreferences(tester);
 
     dispatch.claims.single.complete(const ClaimResult.alreadyClaimed());

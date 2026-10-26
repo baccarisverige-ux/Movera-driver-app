@@ -28,7 +28,7 @@ abstract interface class EarningsRepository {
 
 class InMemoryEarningsRepository implements EarningsRepository {
   InMemoryEarningsRepository({List<EarningsPeriod>? seed})
-      : _periods = List<EarningsPeriod>.from(seed ?? const []);
+    : _periods = List<EarningsPeriod>.from(seed ?? const []);
 
   final List<EarningsPeriod> _periods;
 

@@ -91,10 +91,7 @@ void main() {
     });
 
     test('no pickup pay when the category is off or unknown', () {
-      expect(
-        _pay(_config(rate: _comfort.copyWith(enabled: false))),
-        '0,00 kr',
-      );
+      expect(_pay(_config(rate: _comfort.copyWith(enabled: false))), '0,00 kr');
       expect(_pay(_config(), category: 'Premium'), '0,00 kr');
       // "XL" is the short name of "Movera XL".
       expect(_pay(_config(), category: 'XL'), '21,60 kr');
@@ -166,17 +163,19 @@ void main() {
           config: rules ?? config,
         );
 
-    test('the same offer shown again after the driver moved is recalculated',
-        () {
-      const fare = '126,75 kr';
-      final first = quote(4.2, 9);
-      expect(first.pay.formatted, '16,60 kr');
-      expect(first.totalOf(fare), '143,35 kr');
-      // Closer now: 2.0 km / 5 min → 1 × 3 + 3 × 1.
-      final later = quote(2.0, 5);
-      expect(later.pay.formatted, '6,00 kr');
-      expect(later.totalOf(fare), '132,75 kr');
-    });
+    test(
+      'the same offer shown again after the driver moved is recalculated',
+      () {
+        const fare = '126,75 kr';
+        final first = quote(4.2, 9);
+        expect(first.pay.formatted, '16,60 kr');
+        expect(first.totalOf(fare), '143,35 kr');
+        // Closer now: 2.0 km / 5 min → 1 × 3 + 3 × 1.
+        final later = quote(2.0, 5);
+        expect(later.pay.formatted, '6,00 kr');
+        expect(later.totalOf(fare), '132,75 kr');
+      },
+    );
 
     test('total only by default; the pickup line when admin shows it', () {
       expect(quote(4.2, 9).line, isNull);

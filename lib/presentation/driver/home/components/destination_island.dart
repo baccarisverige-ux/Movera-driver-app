@@ -37,10 +37,12 @@ class DigitalDestinationFace extends StatelessWidget {
   /// Width the face needs: icon, gap and words.
   static double widthFor(BuildContext context, String place, String? eta) {
     final painter = TextPainter(
-      text: TextSpan(children: [
-        TextSpan(text: place, style: _placeStyle),
-        if (eta != null) TextSpan(text: ' · $eta', style: _etaStyle),
-      ]),
+      text: TextSpan(
+        children: [
+          TextSpan(text: place, style: _placeStyle),
+          if (eta != null) TextSpan(text: ' · $eta', style: _etaStyle),
+        ],
+      ),
       textDirection: TextDirection.ltr,
       textScaler: MediaQuery.textScalerOf(context),
       maxLines: 1,
@@ -63,10 +65,12 @@ class DigitalDestinationFace extends StatelessWidget {
           const SizedBox(width: _gap),
           Flexible(
             child: Text.rich(
-              TextSpan(children: [
-                TextSpan(text: place, style: _placeStyle),
-                if (eta != null) TextSpan(text: ' · $eta', style: _etaStyle),
-              ]),
+              TextSpan(
+                children: [
+                  TextSpan(text: place, style: _placeStyle),
+                  if (eta != null) TextSpan(text: ' · $eta', style: _etaStyle),
+                ],
+              ),
               key: const ValueKey<String>('island-destination'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -117,29 +121,35 @@ Future<void> showDestinationDetailsSheet(
                       color: const Color(0xFFF1F3F5),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: SvgPicture.asset(AppAssets.solarMapPoint,
-                        width: 22, height: 22,
-                        colorFilter:
-                            const ColorFilter.mode(ink, BlendMode.srcIn)),
+                    child: SvgPicture.asset(
+                      AppAssets.solarMapPoint,
+                      width: 22,
+                      height: 22,
+                      colorFilter: const ColorFilter.mode(ink, BlendMode.srcIn),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(place,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: ink,
-                                fontSize: 19,
-                                fontWeight: FontWeight.w800)),
+                        Text(
+                          place,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: ink,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                         const SizedBox(height: 2),
-                        Text(address,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style:
-                                const TextStyle(color: muted, fontSize: 13)),
+                        Text(
+                          address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: muted, fontSize: 13),
+                        ),
                       ],
                     ),
                   ),
@@ -153,7 +163,10 @@ Future<void> showDestinationDetailsSheet(
                     if (until != null) tr.destinationModeUntilUntil(until),
                   ].join(' · '),
                   style: const TextStyle(
-                      color: ink, fontSize: 13.5, fontWeight: FontWeight.w600),
+                    color: ink,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
               const SizedBox(height: 18),
@@ -170,11 +183,13 @@ Future<void> showDestinationDetailsSheet(
                     foregroundColor: ink,
                     side: const BorderSide(color: Color(0xFFDADEE1)),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  child: Text(tr.showRoute,
-                      style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w700)),
+                  child: Text(
+                    tr.showRoute,
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -194,11 +209,13 @@ Future<void> showDestinationDetailsSheet(
                     backgroundColor: ink,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  child: Text(tr.turnOffDestination,
-                      style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w800)),
+                  child: Text(
+                    tr.turnOffDestination,
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                  ),
                 ),
               ),
             ],

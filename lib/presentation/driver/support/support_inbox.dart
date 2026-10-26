@@ -63,11 +63,9 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
       if (mounted) {
         setState(() => _restoreFailed = true);
         if (recover && ModalRoute.of(context)?.isCurrent == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(tr.supportCouldNotRecover),
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(tr.supportCouldNotRecover)));
         }
       }
     } finally {
@@ -89,9 +87,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr.supportCouldNotSaveConversation),
-          ),
+          SnackBar(content: Text(tr.supportCouldNotSaveConversation)),
         );
       }
       rethrow;
@@ -336,8 +332,9 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                                 : () async {
                                     if (saving ||
                                         !sheetContext.mounted ||
-                                        ModalRoute.of(sheetContext)
-                                                ?.isCurrent !=
+                                        ModalRoute.of(
+                                              sheetContext,
+                                            )?.isCurrent !=
                                             true) {
                                       return;
                                     }
@@ -369,14 +366,16 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                                       if (sheetContext.mounted) {
                                         setSheetState(() {
                                           saving = false;
-                                          saveError = tr.supportCouldNotSaveTicket;
+                                          saveError =
+                                              tr.supportCouldNotSaveTicket;
                                         });
                                       }
                                       return;
                                     }
                                     if (!sheetContext.mounted ||
-                                        ModalRoute.of(sheetContext)
-                                                ?.isCurrent !=
+                                        ModalRoute.of(
+                                              sheetContext,
+                                            )?.isCurrent !=
                                             true) {
                                       return;
                                     }
@@ -414,11 +413,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                tr.supportTicketSavedDraftNotCleared,
-              ),
-            ),
+            SnackBar(content: Text(tr.supportTicketSavedDraftNotCleared)),
           );
         }
       }
@@ -520,9 +515,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
           ),
           TextButton(
             onPressed: _loading ? null : _recover,
-            child: Text(
-              tr.supportRecoverPreserve,
-            ),
+            child: Text(tr.supportRecoverPreserve),
           ),
         ],
         Text(
@@ -851,6 +844,7 @@ class _Ticket {
   final String status;
   bool unread;
   final List<_Message> messages;
+
   /// The category picked in the draft; null on tickets saved before it
   /// was kept (driver-u171).
   final String? category;

@@ -44,20 +44,26 @@ class HomeIslandNotices {
 
   /// R15-7: "Rider cancelled · +45 kr" or "· no fee". Without a [fee]
   /// decision (null) only "Rider cancelled".
-  static IslandMessage riderCancelledWithFee(Money? fee, {bool onTrip = false}) =>
-      IslandMessage(
-        title: driverText(onTrip
-                ? DriverTexts.islandRiderEndedTrip
-                : DriverTexts.islandRiderCancelled) +
-            feeSuffix(fee),
-        tone: IslandTone.alert,
-        priority: IslandPriority.high,
-      );
+  static IslandMessage riderCancelledWithFee(
+    Money? fee, {
+    bool onTrip = false,
+  }) => IslandMessage(
+    title:
+        driverText(
+          onTrip
+              ? DriverTexts.islandRiderEndedTrip
+              : DriverTexts.islandRiderCancelled,
+        ) +
+        feeSuffix(fee),
+    tone: IslandTone.alert,
+    priority: IslandPriority.high,
+  );
 
   /// R15-7: an accepted reservation, "14:00 cancelled · +105 kr".
   static IslandMessage reservationCancelled(String time, Money? fee) =>
       IslandMessage(
-        title: driverText(DriverTexts.islandReservationCancelled, {'time': time}) +
+        title:
+            driverText(DriverTexts.islandReservationCancelled, {'time': time}) +
             feeSuffix(fee),
         tone: IslandTone.alert,
         priority: IslandPriority.high,
@@ -66,7 +72,9 @@ class HomeIslandNotices {
   /// " · +45 kr", " · +5 €", " · no fee", or nothing when no fee was
   /// decided.
   static String feeSuffix(Money? fee) {
-    if (fee == null) { return ''; }
+    if (fee == null) {
+      return '';
+    }
     if (fee.minorUnits <= 0) {
       return ' · ${driverText(DriverTexts.islandCancelNoFee)}';
     }
@@ -114,14 +122,13 @@ class HomeIslandNotices {
 
   /// R10-7: why going online waits, kept on the island (red) until it is
   /// fixed. A tap opens what fixes it.
-  static IslandMessage _hold(String title, VoidCallback onTap) =>
-      IslandMessage(
-        title: title,
-        tone: IslandTone.alert,
-        priority: IslandPriority.high,
-        onTap: onTap,
-        group: 'hold',
-      );
+  static IslandMessage _hold(String title, VoidCallback onTap) => IslandMessage(
+    title: title,
+    tone: IslandTone.alert,
+    priority: IslandPriority.high,
+    onTap: onTap,
+    group: 'hold',
+  );
 
   static IslandMessage holdSuspended(VoidCallback onTap) =>
       _hold(driverText(DriverTexts.islandAccountOnHold), onTap);
@@ -136,13 +143,12 @@ class HomeIslandNotices {
     String document, {
     required bool inReview,
     required VoidCallback onTap,
-  }) =>
-      _hold(
-        inReview
-            ? driverText(DriverTexts.islandDocumentInReview)
-            : driverText(DriverTexts.islandDocumentExpired, {'document': document}),
-        onTap,
-      );
+  }) => _hold(
+    inReview
+        ? driverText(DriverTexts.islandDocumentInReview)
+        : driverText(DriverTexts.islandDocumentExpired, {'document': document}),
+    onTap,
+  );
 
   /// R13-9: no destination now, or the time limit ended it.
   static IslandMessage get destinationsUsed => IslandMessage(
@@ -240,10 +246,10 @@ class HomeIslandNotices {
   /// min".
   static IslandMessage scheduledReminder(String time, String left) =>
       IslandMessage(
-        title: driverText(
-          DriverTexts.islandPickupIn,
-          {'time': time, 'left': left},
-        ),
+        title: driverText(DriverTexts.islandPickupIn, {
+          'time': time,
+          'left': left,
+        }),
         group: 'scheduled',
       );
 
@@ -318,36 +324,38 @@ class HomeIslandNotices {
 
   /// Q25: [minutes] left before the rest (the admin's 30 and 10).
   static IslandMessage drivingLeft(int minutes) => IslandMessage(
-        title: driverText(DriverTexts.islandDrivingLeft, {'minutes': minutes}),
-        tone: IslandTone.warning,
-        priority: minutes <= 10 ? IslandPriority.high : IslandPriority.normal,
-        group: 'driving-limit',
-      );
+    title: driverText(DriverTexts.islandDrivingLeft, {'minutes': minutes}),
+    tone: IslandTone.warning,
+    priority: minutes <= 10 ? IslandPriority.high : IslandPriority.normal,
+    group: 'driving-limit',
+  );
 
   /// Q25: the limit is reached, or the driver tried to go online before
   /// the rest is over.
   static IslandMessage restUntil(String time) => IslandMessage(
-        title: driverText(DriverTexts.islandRestUntil, {'time': time}),
-        tone: IslandTone.alert,
-        priority: IslandPriority.high,
-        group: 'driving-limit',
-      );
+    title: driverText(DriverTexts.islandRestUntil, {'time': time}),
+    tone: IslandTone.alert,
+    priority: IslandPriority.high,
+    group: 'driving-limit',
+  );
 
   /// Q26: a document expired; going online waits for the new one.
   static IslandMessage documentExpired(String document) => IslandMessage(
-        title: driverText(DriverTexts.islandDocumentExpired, {'document': document}),
-        tone: IslandTone.alert,
-        priority: IslandPriority.high,
-        group: 'documents',
-      );
+    title: driverText(DriverTexts.islandDocumentExpired, {
+      'document': document,
+    }),
+    tone: IslandTone.alert,
+    priority: IslandPriority.high,
+    group: 'documents',
+  );
 
   /// Q26: the new document is with Movera; going online waits for it.
   static IslandMessage get documentInReview => IslandMessage(
-        title: driverText(DriverTexts.islandDocumentInReview),
-        tone: IslandTone.warning,
-        priority: IslandPriority.high,
-        group: 'documents',
-      );
+    title: driverText(DriverTexts.islandDocumentInReview),
+    tone: IslandTone.warning,
+    priority: IslandPriority.high,
+    group: 'documents',
+  );
 
   /// Q31: a notification popup, in its own few words. Tapping it opens
   /// what it is about.
@@ -355,8 +363,7 @@ class HomeIslandNotices {
     String title, {
     IslandTone tone = IslandTone.info,
     VoidCallback? onTap,
-  }) =>
-      IslandMessage(title: title, tone: tone, onTap: onTap);
+  }) => IslandMessage(title: title, tone: tone, onTap: onTap);
 
   static IslandMessage get recoveryPending => IslandMessage(
     title: driverText(DriverTexts.islandSavedTripOpen),
@@ -402,8 +409,8 @@ class HomeIslandNotices {
   /// First launch only. The one message whose tap does more than close
   /// it: it shows the earnings, as its words say.
   static IslandMessage earningsHint(VoidCallback show) => IslandMessage(
-        title: driverText(DriverTexts.islandSeeEarnings),
-        priority: IslandPriority.high,
-        onTap: show,
-      );
+    title: driverText(DriverTexts.islandSeeEarnings),
+    priority: IslandPriority.high,
+    onTap: show,
+  );
 }

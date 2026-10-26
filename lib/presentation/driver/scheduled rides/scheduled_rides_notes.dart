@@ -12,9 +12,11 @@ String scheduledTimeFrom(DateTime time, DateTime now) => _timeFrom(time, now);
 
 String _timeFrom(DateTime time, DateTime now) {
   // Calendar days, counted in UTC: a local day can be 23 h (spring DST).
-  final days = DateTime.utc(time.year, time.month, time.day)
-      .difference(DateTime.utc(now.year, now.month, now.day))
-      .inDays;
+  final days = DateTime.utc(
+    time.year,
+    time.month,
+    time.day,
+  ).difference(DateTime.utc(now.year, now.month, now.day)).inDays;
   final clock = clockLabel(time);
   return days == 0
       ? clock
@@ -126,7 +128,10 @@ class _BlockNotice extends StatelessWidget {
         ? tr.schedOffInYourArea
         : block.byAdmin
         ? tr.schedTurnedOffByMovera
-        : tr.schedLateCancelsInDays('${rules.lateCancelLimit}', '${rules.lateCancelPeriodDays}');
+        : tr.schedLateCancelsInDays(
+            '${rules.lateCancelLimit}',
+            '${rules.lateCancelPeriodDays}',
+          );
     return _ScheduledNote(
       key: const ValueKey<String>('scheduled-block-notice'),
       icon: block.byAdmin
@@ -253,13 +258,18 @@ class _LateCancelWarning extends StatelessWidget {
     final rules = ScheduledRideRules.current;
     final count = ScheduledRideStore.lateCancelsInPeriod() + 1;
     // Admin's "on" for this driver skips the pause (driver-r5-41).
-    final pauses = count >= rules.lateCancelLimit &&
+    final pauses =
+        count >= rules.lateCancelLimit &&
         !ScheduledRideStore._driverAccess.onAt(ScheduledRideStore._now) &&
         ScheduledRideStore.pausedUntil(ScheduledRideStore._now) == null;
     final until = ScheduledRideStore._now.add(Duration(days: rules.pauseDays));
     return Text(
       pauses
-          ? tr.schedLateCancelPauses('$count', '${rules.lateCancelPeriodDays}', _dayMonth(until))
+          ? tr.schedLateCancelPauses(
+              '$count',
+              '${rules.lateCancelPeriodDays}',
+              _dayMonth(until),
+            )
           : tr.schedLateCancelCounts,
       key: const ValueKey<String>('scheduled-late-cancel'),
       style: const TextStyle(

@@ -95,8 +95,10 @@ Future<void> _toRadarOffer(WidgetTester tester) async {
   IslandMessages.reset();
   ScheduledRideStore.reset();
   DriverStartPosition.clearMemory();
-  await (await SharedPreferences.getInstance())
-      .setString(DriverStartPosition.key, '{"lat":59.3326,"lng":18.0649}');
+  await (await SharedPreferences.getInstance()).setString(
+    DriverStartPosition.key,
+    '{"lat":59.3326,"lng":18.0649}',
+  );
   await tester.binding.setSurfaceSize(const Size(375, 812));
   await tester.pumpWidget(const MoveraApp());
   await tester.pump(const Duration(milliseconds: 120));
@@ -105,8 +107,10 @@ Future<void> _toRadarOffer(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 2300));
   await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
   await tester.pump(const Duration(milliseconds: 900));
-  expect(find.byKey(const ValueKey<String>('radar-offer-card-nearby-1')),
-      findsOneWidget);
+  expect(
+    find.byKey(const ValueKey<String>('radar-offer-card-nearby-1')),
+    findsOneWidget,
+  );
 }
 
 Future<void> _pumpTrip(WidgetTester tester, Widget ride) async {
@@ -114,10 +118,12 @@ Future<void> _pumpTrip(WidgetTester tester, Widget ride) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(home: ride),
-  ));
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(home: ride),
+    ),
+  );
   for (var i = 0; i < 10; i++) {
     await tester.pump(const Duration(milliseconds: 50));
   }
@@ -137,8 +143,9 @@ void main() {
   tearDown(() => RadarOfferSound.debugPlayer = null);
 
   group('D-04: Radar pick window across pause/resume', () {
-    testWidgets('an expired Radar offer stays expired after a resume',
-        (tester) async {
+    testWidgets('an expired Radar offer stays expired after a resume', (
+      tester,
+    ) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       RadarOfferSound.debugPlayer = _SilentSound();
       await _toRadarOffer(tester);
@@ -156,8 +163,9 @@ void main() {
       expect(enabled(), isFalse, reason: 'resume must not revive it');
     });
 
-    testWidgets('a pause before the end keeps the window, then it ends',
-        (tester) async {
+    testWidgets('a pause before the end keeps the window, then it ends', (
+      tester,
+    ) async {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       final realNow = ScheduledClock.realNow;
       ScheduledClock.realNow = () => tester.binding.clock.now();
@@ -176,8 +184,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(enabled(), isTrue);
       await tester.pump(window - pause);
-      expect(enabled(), isFalse,
-          reason: 'the window ends on its first deadline, not resume + window');
+      expect(
+        enabled(),
+        isFalse,
+        reason: 'the window ends on its first deadline, not resume + window',
+      );
     });
   });
 
@@ -187,38 +198,52 @@ void main() {
       ExclusiveAnswers.instance.reset();
     });
 
-    testWidgets('no offer arrives or counts as missed while hidden',
-        (tester) async {
+    testWidgets('no offer arrives or counts as missed while hidden', (
+      tester,
+    ) async {
       final location = _Loc();
-      await _pumpTrip(tester, AcceptRide(
-        locationRepository: location,
-        initialStage: ActiveRideStage.onTrip,
-        waitNow: () => tester.binding.clock.now(),
-      ));
+      await _pumpTrip(
+        tester,
+        AcceptRide(
+          locationRepository: location,
+          initialStage: ActiveRideStage.onTrip,
+          waitNow: () => tester.binding.clock.now(),
+        ),
+      );
       _hide(tester);
       await _pumpFor(tester, const Duration(seconds: 25));
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       _show(tester);
       await tester.pump(const Duration(milliseconds: 2600));
-      expect(find.byKey(_offerCard), findsOneWidget,
-          reason: 'Radar looks again once the trip is visible');
+      expect(
+        find.byKey(_offerCard),
+        findsOneWidget,
+        reason: 'Radar looks again once the trip is visible',
+      );
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       await _unmount(tester, location);
     });
 
-    testWidgets('an offer that ran out while hidden leaves without a miss',
-        (tester) async {
+    testWidgets('an offer that ran out while hidden leaves without a miss', (
+      tester,
+    ) async {
       final location = _Loc();
-      await _pumpTrip(tester, AcceptRide(
-        locationRepository: location,
-        initialStage: ActiveRideStage.onTrip,
-        waitNow: () => tester.binding.clock.now(),
-      ));
+      await _pumpTrip(
+        tester,
+        AcceptRide(
+          locationRepository: location,
+          initialStage: ActiveRideStage.onTrip,
+          waitNow: () => tester.binding.clock.now(),
+        ),
+      );
       await tester.pump(const Duration(milliseconds: 2600));
       expect(find.byKey(_offerCard), findsOneWidget);
       _hide(tester);
-      await _pumpFor(tester,
-          DriverOfferRules.current.exclusiveAcceptTime + const Duration(seconds: 2));
+      await _pumpFor(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(seconds: 2),
+      );
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       _show(tester);
       await tester.pump(const Duration(milliseconds: 300));
@@ -227,14 +252,18 @@ void main() {
       await _unmount(tester, location);
     });
 
-    testWidgets('an offer with time left counts down the rest after resume',
-        (tester) async {
+    testWidgets('an offer with time left counts down the rest after resume', (
+      tester,
+    ) async {
       final location = _Loc();
-      await _pumpTrip(tester, AcceptRide(
-        locationRepository: location,
-        initialStage: ActiveRideStage.onTrip,
-        waitNow: () => tester.binding.clock.now(),
-      ));
+      await _pumpTrip(
+        tester,
+        AcceptRide(
+          locationRepository: location,
+          initialStage: ActiveRideStage.onTrip,
+          waitNow: () => tester.binding.clock.now(),
+        ),
+      );
       await tester.pump(const Duration(milliseconds: 2600));
       expect(find.byKey(_offerCard), findsOneWidget);
       _hide(tester);
@@ -245,9 +274,10 @@ void main() {
       // Seen and left unanswered on screen: that is a miss. Only the time
       // left runs after resume; a fresh lifetime would still show it here.
       await _pumpFor(
-          tester,
-          DriverOfferRules.current.exclusiveAcceptTime -
-              const Duration(milliseconds: 1750));
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime -
+            const Duration(milliseconds: 1750),
+      );
       expect(find.byKey(_offerCard), findsNothing);
       expect(ExclusiveAnswers.instance.missedInRow, 1);
       await _unmount(tester, location);
@@ -287,49 +317,54 @@ void main() {
       expect(ride.completed, isTrue);
     });
 
-    test('a second command while the first is saving is still refused',
-        () async {
-      final repo = _SlowSaveRepo()..gate = Completer<void>();
-      final ride = ActiveRideController(tripId: 't1', repository: repo);
-      final first = ride.transitionTo(ActiveRideStage.waitingForRider);
-      final second = ride.cancel();
-      expect(await second, isFalse);
-      repo.gate!.complete();
-      expect(await first, isTrue);
-      expect(ride.terminal, isFalse);
-    });
+    test(
+      'a second command while the first is saving is still refused',
+      () async {
+        final repo = _SlowSaveRepo()..gate = Completer<void>();
+        final ride = ActiveRideController(tripId: 't1', repository: repo);
+        final first = ride.transitionTo(ActiveRideStage.waitingForRider);
+        final second = ride.cancel();
+        expect(await second, isFalse);
+        repo.gate!.complete();
+        expect(await first, isTrue);
+        expect(ride.terminal, isFalse);
+      },
+    );
   });
 
   group('X5: searching / requested projections', () {
     for (final stage in ActiveRideStage.values) {
       for (final status in [TripStatus.searching, TripStatus.requested]) {
-        test('${status.wireName} at ${stage.name} ends the trip here', () async {
-          final repo = MemoryActiveRideRepository();
-          final ride = ActiveRideController(
-            tripId: 'T1',
-            repository: repo,
-            initialStage: stage,
-          );
-          await ride.persistNow();
-          expect(await ride.applyProjection(status), isTrue);
-          expect(ride.terminal, isTrue);
-          expect(ride.releasedToDispatch, isTrue);
-          expect(await repo.read(), isNull);
-          expect(await ride.transitionTo(ActiveRideStage.onTrip), isFalse);
-        });
+        test(
+          '${status.wireName} at ${stage.name} ends the trip here',
+          () async {
+            final repo = MemoryActiveRideRepository();
+            final ride = ActiveRideController(
+              tripId: 'T1',
+              repository: repo,
+              initialStage: stage,
+            );
+            await ride.persistNow();
+            expect(await ride.applyProjection(status), isTrue);
+            expect(ride.terminal, isTrue);
+            expect(ride.releasedToDispatch, isTrue);
+            expect(await repo.read(), isNull);
+            expect(await ride.transitionTo(ActiveRideStage.onTrip), isFalse);
+          },
+        );
       }
     }
 
-    test('the echo of the driver\'s own cancel is not applied twice',
-        () async {
+    test('the echo of the driver\'s own cancel is not applied twice', () async {
       final ride = ActiveRideController(tripId: 'T1');
       expect(await ride.cancel(), isTrue);
       expect(ride.terminalStatus, TripStatus.searching);
       expect(await ride.applyProjection(TripStatus.searching), isFalse);
     });
 
-    testWidgets('admin reassign: the trip leaves with an island notice',
-        (tester) async {
+    testWidgets('admin reassign: the trip leaves with an island notice', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({});
       IslandMessages.reset();
       final realtime = _RecordingRealtime();
@@ -342,22 +377,28 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (_, __) => MaterialApp(
-          navigatorKey: navigator,
-          home: const Scaffold(body: Text('home-under-trip')),
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, __) => MaterialApp(
+            navigatorKey: navigator,
+            home: const Scaffold(body: Text('home-under-trip')),
+          ),
         ),
-      ));
-      unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
-        builder: (_) => AcceptRide(
-          offerId: 'offer-7',
-          tripId: 'trip-7',
-          realtime: realtime,
-          sessionController: session,
-          locationRepository: location,
+      );
+      unawaited(
+        navigator.currentState!.push(
+          MaterialPageRoute<void>(
+            builder: (_) => AcceptRide(
+              offerId: 'offer-7',
+              tripId: 'trip-7',
+              realtime: realtime,
+              sessionController: session,
+              locationRepository: location,
+            ),
+          ),
         ),
-      )));
+      );
       for (var i = 0; i < 20; i++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
@@ -376,8 +417,10 @@ void main() {
       }
       expect(find.byType(AcceptRide), findsNothing);
       expect(find.text('home-under-trip'), findsOneWidget);
-      expect(IslandMessages.posted.map((m) => m.title),
-          contains('Trip removed by Movera'));
+      expect(
+        IslandMessages.posted.map((m) => m.title),
+        contains('Trip removed by Movera'),
+      );
       expect(session.activeTripId, isNull);
       expect(session.availableForOffers, isTrue);
       await _unmount(tester, location);
@@ -385,20 +428,24 @@ void main() {
   });
 
   group('X9: offer id and trip id stay apart', () {
-    testWidgets('trip events are matched by trip id, not offer id',
-        (tester) async {
+    testWidgets('trip events are matched by trip id, not offer id', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({});
       final realtime = _RecordingRealtime();
       addTearDown(realtime.dispose);
       final repo = MemoryActiveRideRepository();
       final location = _Loc();
-      await _pumpTrip(tester, AcceptRide(
-        offerId: 'offer-9',
-        tripId: 'trip-9',
-        realtime: realtime,
-        activeRideRepository: repo,
-        locationRepository: location,
-      ));
+      await _pumpTrip(
+        tester,
+        AcceptRide(
+          offerId: 'offer-9',
+          tripId: 'trip-9',
+          realtime: realtime,
+          activeRideRepository: repo,
+          locationRepository: location,
+        ),
+      );
       expect(realtime.subscribed, ['trip-9']);
       realtime.emit(
         tripId: 'trip-9',
@@ -416,19 +463,23 @@ void main() {
   });
 
   group('UI-04/07/08: trip screen entries', () {
-    testWidgets('the in-trip menu gets the dispatch and the real status',
-        (tester) async {
+    testWidgets('the in-trip menu gets the dispatch and the real status', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({});
       final dispatch = DemoDispatchRepository();
       addTearDown(dispatch.dispose);
       final session = DriverSessionController(initialOnline: true);
       addTearDown(session.dispose);
       final location = _Loc();
-      await _pumpTrip(tester, AcceptRide(
-        dispatchRepository: dispatch,
-        sessionController: session,
-        locationRepository: location,
-      ));
+      await _pumpTrip(
+        tester,
+        AcceptRide(
+          dispatchRepository: dispatch,
+          sessionController: session,
+          locationRepository: location,
+        ),
+      );
       final scaffold = tester.state<ScaffoldState>(find.byType(Scaffold).first);
       scaffold.openDrawer();
       await tester.pump(const Duration(milliseconds: 400));
@@ -451,34 +502,44 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final location = _Loc();
       await _pumpTrip(tester, AcceptRide(locationRepository: location));
-      final island =
-          tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland));
+      final island = tester.widget<AdaptiveTripIsland>(
+        find.byType(AdaptiveTripIsland),
+      );
       island.onSearch();
       island.onSearch();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
-      expect(find.byType(DriverDestinationPicker, skipOffstage: false),
-          findsOneWidget);
-      final picker = tester
-          .widget<DriverDestinationPicker>(find.byType(DriverDestinationPicker));
-      expect(picker.origin, isNotNull,
-          reason: 'with the car, a place needs "Confirm destination"');
+      expect(
+        find.byType(DriverDestinationPicker, skipOffstage: false),
+        findsOneWidget,
+      );
+      final picker = tester.widget<DriverDestinationPicker>(
+        find.byType(DriverDestinationPicker),
+      );
+      expect(
+        picker.origin,
+        isNotNull,
+        reason: 'with the car, a place needs "Confirm destination"',
+      );
       expect(picker.routeRepository, isNotNull);
       await _unmount(tester, location);
     });
 
-    testWidgets('two quick taps on Home search open one picker',
-        (tester) async {
+    testWidgets('two quick taps on Home search open one picker', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({});
       DriverStartPosition.clearMemory();
       IslandMessages.reset();
       ScheduledRideStore.reset();
       await tester.binding.setSurfaceSize(const Size(375, 812));
       addTearDown(() => tester.binding.setSurfaceSize(null));
-      await tester.pumpWidget(ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (_, __) => const MaterialApp(home: DriverHome()),
-      ));
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, __) => const MaterialApp(home: DriverHome()),
+        ),
+      );
       for (var i = 0; i < 20; i++) {
         await tester.pump(const Duration(milliseconds: 50));
       }
@@ -488,8 +549,10 @@ void main() {
       onTap();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
-      expect(find.byType(DriverDestinationPicker, skipOffstage: false),
-          findsOneWidget);
+      expect(
+        find.byType(DriverDestinationPicker, skipOffstage: false),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       for (var i = 0; i < 10; i++) {
         await tester.pump(const Duration(milliseconds: 100));

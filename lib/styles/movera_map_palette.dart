@@ -9,6 +9,7 @@ abstract final class MoveraMapPalette {
   static const Color land = Color(0xFFF8FAF8);
   static const Color building = Color(0xFFDDDEE0);
   static const Color park = Color(0xFFB6EFC2);
+
   /// Parks zoomed out (zoom < 12.5), the far map style's green.
   static const Color parkFar = Color(0xFFD8F5DF);
   static const Color parkLabel = Color(0xFF14793A);

@@ -26,7 +26,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.enterText(find.byType(TextFormField), 'Retain this draft');
         await tester.pump();
-      final field = tester.widget<TextField>(find.byType(TextField));
+        final field = tester.widget<TextField>(find.byType(TextField));
         final send = tester
             .widget<IconButton>(
               find.byWidgetPredicate(
@@ -56,7 +56,7 @@ void main() {
           await tester.pumpAndSettle();
         }
         send();
-      field.onSubmitted!('Retain this draft');
+        field.onSubmitted!('Retain this draft');
         call();
         await tester.pumpAndSettle();
         expect(find.byType(SnackBar), findsNothing);

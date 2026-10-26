@@ -19,7 +19,8 @@ import '../../integration_test/headless_map_platform.dart';
 // 50 m gate. The driver is told to turn on precise location, on Home and
 // when Arrived is refused, instead of "Enable location".
 
-const _precise = 'Precise location is off. Turn it on in Settings to show '
+const _precise =
+    'Precise location is off. Turn it on in Settings to show '
     'your position and confirm arrival.';
 
 class _ApproximateOnly implements DriverLocationRepository {
@@ -67,22 +68,26 @@ void main() {
       'for precise location', (tester) async {
     final location = _ApproximateOnly();
     _phone(tester);
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) =>
-          MaterialApp(home: AcceptRide(locationRepository: location)),
-    ));
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) =>
+            MaterialApp(home: AcceptRide(locationRepository: location)),
+      ),
+    );
     await _frames(tester);
-    ScaffoldMessenger.of(tester.element(find.byType(AcceptRide)))
-        .clearSnackBars();
+    ScaffoldMessenger.of(
+      tester.element(find.byType(AcceptRide)),
+    ).clearSnackBars();
     await _frames(tester, 4);
     tester
         .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
         .controller!
         .animatePanelToSnapPoint();
     await _frames(tester, 16);
-    final arrive =
-        find.byKey(const ValueKey<String>('active-ride-arrived-button'));
+    final arrive = find.byKey(
+      const ValueKey<String>('active-ride-arrived-button'),
+    );
     await tester.ensureVisible(arrive);
     await tester.tap(arrive);
     await _frames(tester);
@@ -107,11 +112,13 @@ void main() {
     addTearDown(() => GoogleMapsFlutterPlatform.instance = originalMaps);
     final location = _ApproximateOnly();
     _phone(tester);
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) =>
-          MaterialApp(home: DriverHome(locationRepository: location)),
-    ));
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) =>
+            MaterialApp(home: DriverHome(locationRepository: location)),
+      ),
+    );
     await _frames(tester);
     expect(find.text(_precise), findsOneWidget);
     expect(find.text('Settings'), findsOneWidget);

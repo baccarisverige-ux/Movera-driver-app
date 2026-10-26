@@ -49,8 +49,16 @@ Map<String, dynamic> _wireOffer() => {
   'driverEarnings': {'amountMinor': 17000, 'currency': 'SEK'},
   'pickupPay': {'amountMinor': 900, 'currency': 'SEK'},
   'source': 'system',
-  'pickup': {'address': 'Tegnérgatan, Stockholm', 'lat': 59.3335, 'lng': 18.0610},
-  'dropoff': {'address': 'Odengatan, Stockholm', 'lat': 59.3428, 'lng': 18.0475},
+  'pickup': {
+    'address': 'Tegnérgatan, Stockholm',
+    'lat': 59.3335,
+    'lng': 18.0610,
+  },
+  'dropoff': {
+    'address': 'Odengatan, Stockholm',
+    'lat': 59.3428,
+    'lng': 18.0475,
+  },
   'categoryId': 'comfort',
   'paymentMethod': 'card',
   'pickupEtaSeconds': 180,
@@ -196,7 +204,11 @@ Future<void> _end(WidgetTester tester) async {
 
 /// The phone sleeps for [asleep]: the wall clock moves on, the app's
 /// timers (monotonic time) do not.
-void _sleep(WidgetTester tester, Duration asleep, void Function(Duration) jump) {
+void _sleep(
+  WidgetTester tester,
+  Duration asleep,
+  void Function(Duration) jump,
+) {
   for (final state in [
     AppLifecycleState.inactive,
     AppLifecycleState.hidden,
@@ -262,8 +274,10 @@ void main() {
       // The card shows the server's 170 kr, not 75 % of 200 and never the
       // 200 kr fare (owner decision 2026-10-26), with or without the
       // "Your share" caption.
-      expect(view.shownFare(const OfferCardDetails(netFare: true)),
-          '170,00 kr');
+      expect(
+        view.shownFare(const OfferCardDetails(netFare: true)),
+        '170,00 kr',
+      );
       expect(view.shownFare(const OfferCardDetails()), '170,00 kr');
       expect(offer.driverPay, Money.ore(17000));
     });
@@ -306,10 +320,7 @@ void main() {
             .cashToCollect,
         '120,00 kr',
       );
-      expect(
-        quote.termsOf(fare: offer.driverPayLabel).cashToCollect,
-        isNull,
-      );
+      expect(quote.termsOf(fare: offer.driverPayLabel).cashToCollect, isNull);
     });
   });
 
@@ -339,8 +350,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Gamla vägen, Stockholm').first);
       await tester.pumpAndSettle();
-      await tester
-          .tap(find.widgetWithText(OutlinedButton, 'Cancel reservation'));
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, 'Cancel reservation'),
+      );
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Personal emergency'));
       await tester.tap(find.text('Personal emergency'));
@@ -349,7 +361,8 @@ void main() {
       await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
       final warning = tester.widget<Text>(
-          find.byKey(const ValueKey<String>('scheduled-late-cancel')));
+        find.byKey(const ValueKey<String>('scheduled-late-cancel')),
+      );
       expect(warning.data, isNot(contains('pause')));
       final confirm = find.widgetWithText(FilledButton, 'Cancel reservation');
       await tester.ensureVisible(confirm);
@@ -374,7 +387,8 @@ void main() {
       ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
       expect(ScheduledRideStore.openRequests.value, 0);
       final ride = ScheduledRideStore.upcoming.firstWhere(
-          (r) => r.pickupAddress == 'Gamla vägen, Stockholm');
+        (r) => r.pickupAddress == 'Gamla vägen, Stockholm',
+      );
       expect(ScheduledRideStore.start(ride), isTrue);
       // The Lidingö request clashes with the 07:40 trip now on the road.
       expect(ScheduledRideStore.openRequests.value, 0);
@@ -389,28 +403,30 @@ void main() {
         'trip off and asks about it', (tester) async {
       final rides = MemoryActiveRideRepository();
       final savedAt = DateTime.now().subtract(const Duration(hours: 7));
-      await rides.save(PersistedActiveRide(
-        tripId: 'stale-a',
-        stage: ActiveRideStage.onTrip,
-        savedAt: savedAt,
-        fare: '120,00 kr',
-        pickupLat: 59.3335,
-        pickupLng: 18.0610,
-        dropoffLat: 59.3380,
-        dropoffLng: 18.0700,
-        next: const PersistedQueuedTrip(
-          tripId: 'next-b',
-          riderName: 'Omar',
-          fare: '90,00 kr',
-          category: 'Comfort',
-          pickup: 'Odengatan, Stockholm',
-          dropoff: 'Sveavägen, Stockholm',
-          pickupLat: 59.3428,
-          pickupLng: 18.0475,
-          dropoffLat: 59.3400,
-          dropoffLng: 18.0590,
+      await rides.save(
+        PersistedActiveRide(
+          tripId: 'stale-a',
+          stage: ActiveRideStage.onTrip,
+          savedAt: savedAt,
+          fare: '120,00 kr',
+          pickupLat: 59.3335,
+          pickupLng: 18.0610,
+          dropoffLat: 59.3380,
+          dropoffLng: 18.0700,
+          next: const PersistedQueuedTrip(
+            tripId: 'next-b',
+            riderName: 'Omar',
+            fare: '90,00 kr',
+            category: 'Comfort',
+            pickup: 'Odengatan, Stockholm',
+            dropoff: 'Sveavägen, Stockholm',
+            pickupLat: 59.3428,
+            pickupLng: 18.0475,
+            dropoffLat: 59.3400,
+            dropoffLng: 18.0590,
+          ),
         ),
-      ));
+      );
       await _pumpHome(tester, online: false, activeRides: rides);
       await _frames(tester, const Duration(milliseconds: 500));
       expect(find.text('Unresolved trip'), findsOneWidget);
@@ -450,8 +466,10 @@ void main() {
       _sleep(tester, const Duration(hours: 2), jump);
       await _frames(tester, const Duration(seconds: 1));
       expect(DrivingTimeClock.instance.left, Duration.zero);
-      expect(IslandMessages.posted.map((m) => m.title),
-          contains(startsWith('Rest until')));
+      expect(
+        IslandMessages.posted.map((m) => m.title),
+        contains(startsWith('Rest until')),
+      );
       expect(home.session.availableForOffers, isFalse);
       await _end(tester);
     });
@@ -474,13 +492,17 @@ void main() {
       _sleep(tester, const Duration(seconds: 45), jump);
       await _frames(tester, const Duration(seconds: 1));
       expect(said(), contains('Go online for 08:05 pickup'));
-      expect(ScheduledRideStore.reminder.value,
-          'Go online now for your 08:05 pickup.');
+      expect(
+        ScheduledRideStore.reminder.value,
+        'Go online now for your 08:05 pickup.',
+      );
       // A second lock and unlock does not say it again.
       _sleep(tester, Duration.zero, jump);
       await _frames(tester, const Duration(seconds: 1));
-      expect(said().where((t) => t == 'Go online for 08:05 pickup'),
-          hasLength(1));
+      expect(
+        said().where((t) => t == 'Go online for 08:05 pickup'),
+        hasLength(1),
+      );
       await _end(tester);
     });
   });
@@ -492,12 +514,17 @@ void main() {
     });
     tearDown(() => DriverOfferRules.current = const DriverOfferRules());
 
-    final card = find.byKey(ValueKey<String>(
-        'exclusive-offer-card-${DemoAdminOffers.directAssign.id}'));
+    final card = find.byKey(
+      ValueKey<String>(
+        'exclusive-offer-card-${DemoAdminOffers.directAssign.id}',
+      ),
+    );
 
     Future<_Home> assignUp(WidgetTester tester) async {
-      final home = await _pumpHome(tester,
-          dispatch: _Dispatch()..offers = [DemoAdminOffers.directAssign]);
+      final home = await _pumpHome(
+        tester,
+        dispatch: _Dispatch()..offers = [DemoAdminOffers.directAssign],
+      );
       for (var i = 0; i < 50 && card.evaluate().isEmpty; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
@@ -509,7 +536,8 @@ void main() {
         'does not run the offer out as a miss', (tester) async {
       await assignUp(tester);
       final scaffold = tester.state<ScaffoldState>(
-          find.byWidgetPredicate((w) => w is Scaffold && w.drawer != null));
+        find.byWidgetPredicate((w) => w is Scaffold && w.drawer != null),
+      );
       scaffold.openDrawer();
       await _frames(tester, const Duration(seconds: 1));
       _sleep(tester, Duration.zero, (_) {});
@@ -527,8 +555,9 @@ void main() {
         'the offer had left, not a fresh window', (tester) async {
       final home = await assignUp(tester);
       await _frames(tester, const Duration(seconds: 10));
-      await tester
-          .tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('home-radar-exclusive')),
+      );
       await tester.pump();
       expect(home.dispatch.claims, hasLength(1));
       await _frames(tester, const Duration(milliseconds: 500));
@@ -551,14 +580,20 @@ void main() {
       // The ride's price is the driver's share of its fare (owner decision
       // 2026-10-26); the pickup pay comes on top.
       final base = Money.parseSekLabel(
-          ScheduledRideStore.routeOf(demoReservationId)!.driverPayLabel)!;
+        ScheduledRideStore.routeOf(demoReservationId)!.driverPayLabel,
+      )!;
       // An Exclusive reservation won before its Exclusive step: saved for
       // later with the pickup pay its card showed.
-      ScheduledRideStore.take(demoReservationId,
-          upcoming: true, pickupPay: Money.ore(1395));
+      ScheduledRideStore.take(
+        demoReservationId,
+        upcoming: true,
+        pickupPay: Money.ore(1395),
+      );
       final total = (base + Money.ore(1395)).formatted;
-      expect(ScheduledRideStore.acceptedPickupPay(demoReservationId),
-          Money.ore(1395));
+      expect(
+        ScheduledRideStore.acceptedPickupPay(demoReservationId),
+        Money.ore(1395),
+      );
       await _pumpHome(tester);
       await _frames(tester, const Duration(seconds: 50));
       final trip = tester.widget<AcceptRide>(find.byType(AcceptRide));
@@ -581,32 +616,42 @@ void main() {
       DriverLocationService.resetForTesting();
     });
 
-    test("one prompt at a time, and none again after \"Don't allow\"",
-        () async {
-      const service = DriverLocationService();
-      // Home's one-shot and a resume while the prompt is up: one prompt.
-      final first = service.getCurrentPosition();
-      final second = service.getCurrentPosition();
-      await Future<void>.delayed(Duration.zero);
-      expect(gps.prompts, 1);
-      gps.decline();
-      await expectLater(first,
-          throwsA(isA<LocationPermissionDeniedException>()));
-      await expectLater(second,
-          throwsA(isA<LocationPermissionDeniedException>()));
-      // Home then starts the stream: no second system prompt.
-      await expectLater(service.watchPosition().first,
-          throwsA(isA<LocationPermissionDeniedException>()));
-      expect(gps.prompts, 1);
-      // Only the driver's own "Allow" asks again.
-      DriverLocationService.allowPrompt();
-      final again = service.getCurrentPosition();
-      await Future<void>.delayed(Duration.zero);
-      expect(gps.prompts, 2);
-      gps.decline();
-      await expectLater(again,
-          throwsA(isA<LocationPermissionDeniedException>()));
-    });
+    test(
+      "one prompt at a time, and none again after \"Don't allow\"",
+      () async {
+        const service = DriverLocationService();
+        // Home's one-shot and a resume while the prompt is up: one prompt.
+        final first = service.getCurrentPosition();
+        final second = service.getCurrentPosition();
+        await Future<void>.delayed(Duration.zero);
+        expect(gps.prompts, 1);
+        gps.decline();
+        await expectLater(
+          first,
+          throwsA(isA<LocationPermissionDeniedException>()),
+        );
+        await expectLater(
+          second,
+          throwsA(isA<LocationPermissionDeniedException>()),
+        );
+        // Home then starts the stream: no second system prompt.
+        await expectLater(
+          service.watchPosition().first,
+          throwsA(isA<LocationPermissionDeniedException>()),
+        );
+        expect(gps.prompts, 1);
+        // Only the driver's own "Allow" asks again.
+        DriverLocationService.allowPrompt();
+        final again = service.getCurrentPosition();
+        await Future<void>.delayed(Duration.zero);
+        expect(gps.prompts, 2);
+        gps.decline();
+        await expectLater(
+          again,
+          throwsA(isA<LocationPermissionDeniedException>()),
+        );
+      },
+    );
   });
 
   group('driver-r5-13', () {
@@ -654,7 +699,8 @@ void main() {
 
     test('rows saved before it was kept still read, with no fee', () async {
       SharedPreferences.setMockInitialValues({
-        PrefsTripHistoryRepository.key: '[{"tripId":"old","riderName":"Sara",'
+        PrefsTripHistoryRepository.key:
+            '[{"tripId":"old","riderName":"Sara",'
             '"whenLabel":"1/1/2026, 10:00","pickup":"A","dropoff":"B",'
             '"fare":"120,00 kr","category":"Comfort",'
             '"status":"cancelled_by_rider","cancellationActor":"rider",'

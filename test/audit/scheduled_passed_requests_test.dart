@@ -97,9 +97,7 @@ void main() {
           splitScreenMode: true,
           useInheritedMediaQuery: true,
           builder: (_, __) => MaterialApp(
-            home: DriverHome(
-              sessionController: DriverSessionController(),
-            ),
+            home: DriverHome(sessionController: DriverSessionController()),
           ),
         ),
       ),

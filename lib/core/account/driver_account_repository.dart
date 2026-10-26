@@ -133,10 +133,11 @@ class DriverAccountRepository {
   }
 
   /// `POST /notifications/{id}/read`.
-  Future<ServerNotification> markNotificationRead(String notificationId) async =>
-      ServerNotification.fromJson(
-        await _api.post(notificationReadPath(notificationId)),
-      );
+  Future<ServerNotification> markNotificationRead(
+    String notificationId,
+  ) async => ServerNotification.fromJson(
+    await _api.post(notificationReadPath(notificationId)),
+  );
 
   /// `POST /driver/fleet/leave`.
   Future<DriverAccount> leaveFleet() async =>

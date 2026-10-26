@@ -109,37 +109,63 @@ void main() {
       );
     });
 
-    test('a ride clashes when the trip, the drive and the spare do not fit', () {
-      final first = _ride(time: '07:40', tripMinutes: 19);
-      // Solna centrum → Lidingö is about 23 min: 07:40 + 19 + 23 + 15.
-      final lidingo = _ride(
-        time: '08:05',
-        pickup: const GeoPoint(59.3584, 18.1567),
-      );
-      expect(SmartGap.clash(first, lidingo, now: _seven, rules: _rules), isTrue);
-      expect(SmartGap.clash(lidingo, first, now: _seven, rules: _rules), isTrue);
-      final later = _ride(time: '08:40', pickup: const GeoPoint(59.3584, 18.1567));
-      expect(SmartGap.clash(first, later, now: _seven, rules: _rules), isFalse);
-      // Same time is always a clash; another day never is.
-      expect(
-        SmartGap.clash(first, _ride(time: '07:40'), now: _seven, rules: _rules),
-        isTrue,
-      );
-      expect(
-        SmartGap.clash(
-          first,
-          _ride(time: '07:40', day: 'Tomorrow'),
-          now: _seven,
-          rules: _rules,
-        ),
-        isFalse,
-      );
-    });
+    test(
+      'a ride clashes when the trip, the drive and the spare do not fit',
+      () {
+        final first = _ride(time: '07:40', tripMinutes: 19);
+        // Solna centrum → Lidingö is about 23 min: 07:40 + 19 + 23 + 15.
+        final lidingo = _ride(
+          time: '08:05',
+          pickup: const GeoPoint(59.3584, 18.1567),
+        );
+        expect(
+          SmartGap.clash(first, lidingo, now: _seven, rules: _rules),
+          isTrue,
+        );
+        expect(
+          SmartGap.clash(lidingo, first, now: _seven, rules: _rules),
+          isTrue,
+        );
+        final later = _ride(
+          time: '08:40',
+          pickup: const GeoPoint(59.3584, 18.1567),
+        );
+        expect(
+          SmartGap.clash(first, later, now: _seven, rules: _rules),
+          isFalse,
+        );
+        // Same time is always a clash; another day never is.
+        expect(
+          SmartGap.clash(
+            first,
+            _ride(time: '07:40'),
+            now: _seven,
+            rules: _rules,
+          ),
+          isTrue,
+        );
+        expect(
+          SmartGap.clash(
+            first,
+            _ride(time: '07:40', day: 'Tomorrow'),
+            now: _seven,
+            rules: _rules,
+          ),
+          isFalse,
+        );
+      },
+    );
 
     test('the spare minutes are the second ride\'s, set by admin', () {
       final first = _ride(time: '07:40', tripMinutes: 19);
-      final next = _ride(time: '08:30', pickup: const GeoPoint(59.3584, 18.1567));
-      expect(SmartGap.fitsBefore(first, next, now: _seven, rules: _rules), isFalse);
+      final next = _ride(
+        time: '08:30',
+        pickup: const GeoPoint(59.3584, 18.1567),
+      );
+      expect(
+        SmartGap.fitsBefore(first, next, now: _seven, rules: _rules),
+        isFalse,
+      );
       const relaxed = ScheduledRideRules(
         kinds: {
           ScheduledRideKind.normal: ScheduledRideKindRule(
@@ -216,7 +242,10 @@ void main() {
       final previous = ScheduledClock.realNow;
       ScheduledClock.realNow = () => real;
       addTearDown(() => ScheduledClock.realNow = previous);
-      final clock = ScheduledClock(startTime: const Duration(hours: 7), speed: 30);
+      final clock = ScheduledClock(
+        startTime: const Duration(hours: 7),
+        speed: 30,
+      );
       expect(clockLabel(clock.now()), '07:00');
       real = real.add(const Duration(seconds: 40));
       expect(clockLabel(clock.now()), '07:20');
@@ -224,8 +253,10 @@ void main() {
         clock.realUntil(clock.now().add(const Duration(minutes: 5))),
         const Duration(seconds: 10),
       );
-      expect(clock.realUntil(clock.now().subtract(const Duration(minutes: 1))),
-          Duration.zero);
+      expect(
+        clock.realUntil(clock.now().subtract(const Duration(minutes: 1))),
+        Duration.zero,
+      );
       clock.reset();
       expect(clockLabel(clock.now()), '07:00');
     });
@@ -234,8 +265,11 @@ void main() {
       final clock = ScheduledClock.instance;
       // The demo books its rides for a date (driver-u141): its first day.
       final booked = demoReservationRequest.scheduledAt!;
-      final start = DateTime(booked.year, booked.month, booked.day)
-          .add(clock.startTime!);
+      final start = DateTime(
+        booked.year,
+        booked.month,
+        booked.day,
+      ).add(clock.startTime!);
       final exclusiveAt = demoReservationRequest
           .pickupAt(start)!
           .subtract(Duration(minutes: _rules.exclusiveBeforeMinutes));

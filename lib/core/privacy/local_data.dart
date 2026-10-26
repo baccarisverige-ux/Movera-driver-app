@@ -69,7 +69,8 @@ const localDataInventory = <LocalDataRecord>[
     key: PrefsRideCheckLog.key,
     dataClass: LocalDataClass.personal,
     purpose: 'Ride checks for the trip details: time, trigger and answers.',
-    retention: 'Newest ${PrefsRideCheckLog.maxRows} checks, until logout. '
+    retention:
+        'Newest ${PrefsRideCheckLog.maxRows} checks, until logout. '
         'Audio recordings are separate files on the phone, deleted at '
         'logout too.',
   ),
@@ -101,7 +102,8 @@ const localDataInventory = <LocalDataRecord>[
   LocalDataRecord(
     key: '${LocalQuarantine.prefix}*',
     dataClass: LocalDataClass.personal,
-    purpose: 'Unreadable or conflicting trip/settings records set aside so the driver is not blocked.',
+    purpose:
+        'Unreadable or conflicting trip/settings records set aside so the driver is not blocked.',
     retention: 'Newest ${LocalQuarantine.maxEntries} entries, until logout.',
   ),
 ];

@@ -103,8 +103,8 @@ class NavigationController extends ChangeNotifier {
   bool _preciseLocationOff = false;
   String? get _displayStatus => _locationLost
       ? (_preciseLocationOff
-          ? tr.preciseLocationOffShort
-          : tr.locationUpdatingEllipsis)
+            ? tr.preciseLocationOffShort
+            : tr.locationUpdatingEllipsis)
       : _status?.text;
 
   /// GPS went quiet and the last known position is kept.
@@ -250,8 +250,7 @@ class NavigationController extends ChangeNotifier {
     // A valid fix may arrive at exactly the same coordinates as the last
     // point, especially after a brief stream interruption. Clear only the
     // transient GPS warning; a failed road route still needs explicit retry.
-    final restoredGps =
-        _locationLost && location.isUsableAt(DateTime.now());
+    final restoredGps = _locationLost && location.isUsableAt(DateTime.now());
     if (restoredGps) {
       _locationLost = false;
     }
@@ -546,7 +545,9 @@ class NavigationController extends ChangeNotifier {
             (progress == null
                 ? NavigationRouteStatus.updating.text
                 : RouteInstructionCopy.toPoint(progress.remainingMeters)),
-        distanceMeters: _displayStatus == null ? progress?.remainingMeters : null,
+        distanceMeters: _displayStatus == null
+            ? progress?.remainingMeters
+            : null,
         symbol: arrivingToPickup
             ? NavigationBannerSymbol.straight
             : NavigationBannerSymbol.arrive,
@@ -593,7 +594,8 @@ class NavigationController extends ChangeNotifier {
     final shields = instruction.shields;
     final exitRef = instruction.exitRef;
     // "Exit 165 · Liljeholmen" names the first place; the rest go under it.
-    final named = exitRef != null &&
+    final named =
+        exitRef != null &&
         (instruction.type == RouteManeuverType.offRamp ||
             instruction.type == RouteManeuverType.ramp);
     final cue = RouteInstructionCopy.cue(
@@ -635,8 +637,7 @@ class NavigationController extends ChangeNotifier {
   static bool _samePoints(List<GeoPoint> a, List<GeoPoint> b) {
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) {
-      if (a[i].latitude != b[i].latitude ||
-          a[i].longitude != b[i].longitude) {
+      if (a[i].latitude != b[i].latitude || a[i].longitude != b[i].longitude) {
         return false;
       }
     }
@@ -663,22 +664,24 @@ class NavigationController extends ChangeNotifier {
         ? _rerouteDelay * math.pow(2, math.min(_stuckReroutes + 1, 5))
         : _rerouteDelay;
     _rerouteDebounce = Timer(
-        delay > _maxRerouteDelay ? _maxRerouteDelay : delay, () {
-      _rerouteDebounce = null;
-      if (_disposed) {
-        return;
-      }
-      _stuckReroutes = stuck ? _stuckReroutes + 1 : 0;
-      _rerouteOrigin = _snapshot.vehicle;
-      unawaited(
-        ensureRoute(
-          origin: _snapshot.vehicle,
-          destination: destination,
-          force: true,
-          targetLabel: _targetLabel,
-        ),
-      );
-    });
+      delay > _maxRerouteDelay ? _maxRerouteDelay : delay,
+      () {
+        _rerouteDebounce = null;
+        if (_disposed) {
+          return;
+        }
+        _stuckReroutes = stuck ? _stuckReroutes + 1 : 0;
+        _rerouteOrigin = _snapshot.vehicle;
+        unawaited(
+          ensureRoute(
+            origin: _snapshot.vehicle,
+            destination: destination,
+            force: true,
+            targetLabel: _targetLabel,
+          ),
+        );
+      },
+    );
   }
 
   @override

@@ -110,8 +110,10 @@ class CashBalanceSheet extends StatelessWidget {
                       : ListView.separated(
                           shrinkWrap: true,
                           itemCount: rows.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
-                          itemBuilder: (_, i) => _tripCard(rows[i].$1, rows[i].$2),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (_, i) =>
+                              _tripCard(rows[i].$1, rows[i].$2),
                         ),
                 ),
                 const SizedBox(height: 12),
@@ -212,10 +214,15 @@ class CashBalanceSheet extends StatelessWidget {
                 Text(
                   switch (balance.serviceFee) {
                     // driver-u19: Movera's fee is part of the balance.
-                    final fee? => tr.cashFareFeeLine(balance.fare.formatted,
-                        fee.formatted, balance.cashCollected.formatted),
+                    final fee? => tr.cashFareFeeLine(
+                      balance.fare.formatted,
+                      fee.formatted,
+                      balance.cashCollected.formatted,
+                    ),
                     null => tr.fareFareFormattedCashCashCollected(
-                        balance.fare.formatted, balance.cashCollected.formatted),
+                      balance.fare.formatted,
+                      balance.cashCollected.formatted,
+                    ),
                   },
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

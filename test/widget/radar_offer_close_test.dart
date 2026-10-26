@@ -50,7 +50,9 @@ void main() {
     await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
     await tester.pump(const Duration(milliseconds: 900));
 
-    final card = find.byKey(const ValueKey<String>('radar-offer-card-nearby-1'));
+    final card = find.byKey(
+      const ValueKey<String>('radar-offer-card-nearby-1'),
+    );
     expect(card, findsOneWidget);
     // The radar's orange contour (R8-5).
     final box = tester.widget<Container>(card).decoration! as BoxDecoration;
@@ -58,7 +60,10 @@ void main() {
 
     // The front card's × is the one on top.
     final close = find.byKey(const ValueKey<String>('radar-offer-close'));
-    expect(tester.getSize(close.hitTestable().first).width, greaterThanOrEqualTo(40));
+    expect(
+      tester.getSize(close.hitTestable().first).width,
+      greaterThanOrEqualTo(40),
+    );
     await tester.tap(close.hitTestable().first);
     await tester.pump(const Duration(milliseconds: 400));
     expect(card, findsNothing);

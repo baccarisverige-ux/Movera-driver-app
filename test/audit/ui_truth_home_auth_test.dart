@@ -36,14 +36,16 @@ Future<void> _app(WidgetTester tester, Widget first, [Widget? push]) async {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   final navigator = GlobalKey<NavigatorState>();
-  await tester.pumpWidget(DriverRuntimeScope(
-    session: DriverSessionController(),
-    homeBuilder: () => const Scaffold(body: Text('Driver home')),
-    child: ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(navigatorKey: navigator, home: first),
+  await tester.pumpWidget(
+    DriverRuntimeScope(
+      session: DriverSessionController(),
+      homeBuilder: () => const Scaffold(body: Text('Driver home')),
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(navigatorKey: navigator, home: first),
+      ),
     ),
-  ));
+  );
   if (push != null) {
     navigator.currentState!.push(MaterialPageRoute<void>(builder: (_) => push));
   }
@@ -77,8 +79,10 @@ class _Dispatch implements DispatchRepository {
   @override
   Stream<List<RideOffer>> watchNearbyOffers({
     bool destinationModeActive = false,
-  }) => Stream<List<RideOffer>>.multi((sink) => sink.addSync(offers),
-      isBroadcast: true);
+  }) => Stream<List<RideOffer>>.multi(
+    (sink) => sink.addSync(offers),
+    isBroadcast: true,
+  );
   @override
   Stream<List<RideOffer>> watchNextTripOffers() =>
       Stream.value(const <RideOffer>[]);
@@ -106,29 +110,35 @@ Future<void> _frames(WidgetTester tester, [int count = 12]) async {
 }
 
 /// Home on a phone with [activeRides] as its saved-trip storage.
-Future<void> _home(WidgetTester tester, ActiveRideRepository? activeRides,
-    {WaybillRepository? waybills, DispatchRepository? dispatch}) async {
+Future<void> _home(
+  WidgetTester tester,
+  ActiveRideRepository? activeRides, {
+  WaybillRepository? waybills,
+  DispatchRepository? dispatch,
+}) async {
   final maps = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
   addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
   await tester.binding.setSurfaceSize(const Size(375, 812));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(LayoutViewport(
-    child: ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      useInheritedMediaQuery: true,
-      builder: (_, __) => MaterialApp(
-        home: DriverHome(
-          sessionController: DriverSessionController(),
-          activeRideRepository: activeRides,
-          waybillRepository: waybills,
-          dispatchRepository: dispatch,
+  await tester.pumpWidget(
+    LayoutViewport(
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        useInheritedMediaQuery: true,
+        builder: (_, __) => MaterialApp(
+          home: DriverHome(
+            sessionController: DriverSessionController(),
+            activeRideRepository: activeRides,
+            waybillRepository: waybills,
+            dispatchRepository: dispatch,
+          ),
         ),
       ),
     ),
-  ));
+  );
   await _frames(tester);
 }
 
@@ -137,8 +147,11 @@ void main() {
 
   testWidgets('driver-r3-10: "Return to home" at the end of onboarding opens '
       'Home, not the Sign-in screen it started from', (tester) async {
-    await _app(tester, const Scaffold(body: Text('Sign in')),
-        const TakeIdPhoto());
+    await _app(
+      tester,
+      const Scaffold(body: Text('Sign in')),
+      const TakeIdPhoto(),
+    );
     await tester.tap(find.byKey(const ValueKey('id-preview-return')));
     await tester.pumpAndSettle();
     expect(find.text('Driver home'), findsOneWidget);
@@ -157,19 +170,28 @@ void main() {
 
   testWidgets('driver-u112: blocked storage does not report a saved trip and '
       'the driver can still go online', (tester) async {
-    await _home(tester, PrefsActiveRideRepository(
-        load: () => Future.error(StateError('SecurityError: storage blocked'))));
+    await _home(
+      tester,
+      PrefsActiveRideRepository(
+        load: () => Future.error(StateError('SecurityError: storage blocked')),
+      ),
+    );
     expect(find.text('The saved trip could not be opened.'), findsNothing);
-    expect(find.textContaining('could not be opened, so no saved trip'),
-        findsOneWidget);
+    expect(
+      find.textContaining('could not be opened, so no saved trip'),
+      findsOneWidget,
+    );
     tester
         .widget<GestureDetector>(
-            find.byKey(const ValueKey<String>('trip-radar-touch-target')))
+          find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+        )
         .onTap!
         .call();
     await _frames(tester);
-    expect(find.text('Finish or close the saved trip before going online.'),
-        findsNothing);
+    expect(
+      find.text('Finish or close the saved trip before going online.'),
+      findsNothing,
+    );
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -180,15 +202,19 @@ void main() {
     final waybills = InMemoryWaybillRepository.instance..reset();
     addTearDown(waybills.reset);
     final store = MemoryActiveRideRepository();
-    await store.save(PersistedActiveRide(
-      tripId: 'restored-1',
-      stage: ActiveRideStage.headingToPickup,
-      riderName: 'Angelica',
-      pickupLat: 59.3326, pickupLng: 18.0649,
-      dropoffLat: 59.3428, dropoffLng: 18.0475,
-      acceptedAt: accepted,
-      savedAt: now.subtract(const Duration(minutes: 2)),
-    ));
+    await store.save(
+      PersistedActiveRide(
+        tripId: 'restored-1',
+        stage: ActiveRideStage.headingToPickup,
+        riderName: 'Angelica',
+        pickupLat: 59.3326,
+        pickupLng: 18.0649,
+        dropoffLat: 59.3428,
+        dropoffLng: 18.0475,
+        acceptedAt: accepted,
+        savedAt: now.subtract(const Duration(minutes: 2)),
+      ),
+    );
     await _home(tester, store, waybills: waybills);
     expect(waybills.current?.tripId, 'restored-1');
     expect(waybills.current?.issuedAt, accepted);
@@ -203,12 +229,13 @@ void main() {
       ..started(address: 'Kista centrum');
     expect(session.endsAt(), DateTime(2026, 10, 21, 12));
     expect(
-        session.endsAt(
-            rules: const DestinationModeRules(timeLimitHours: .25)),
-        DateTime(2026, 10, 21, 10, 15));
+      session.endsAt(rules: const DestinationModeRules(timeLimitHours: .25)),
+      DateTime(2026, 10, 21, 10, 15),
+    );
     expect(
-        session.endsAt(rules: const DestinationModeRules(timeLimitOn: false)),
-        isNull);
+      session.endsAt(rules: const DestinationModeRules(timeLimitOn: false)),
+      isNull,
+    );
   });
 
   testWidgets("driver-u134: the deck's 'All offers' count leaves out the "
@@ -217,14 +244,19 @@ void main() {
     ScheduledRideStore.reset();
     // The demo reservation's own Exclusive offer stays out of it.
     ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: false);
-    await _home(tester, null, dispatch: _Dispatch([
-      _offer('radar-a'),
-      _offer('radar-b'),
-      _offer('admin-assign', source: OfferSource.admin),
-    ]));
+    await _home(
+      tester,
+      null,
+      dispatch: _Dispatch([
+        _offer('radar-a'),
+        _offer('radar-b'),
+        _offer('admin-assign', source: OfferSource.admin),
+      ]),
+    );
     tester
         .widget<GestureDetector>(
-            find.byKey(const ValueKey<String>('trip-radar-touch-target')))
+          find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+        )
         .onTap!
         .call();
     // Radar trips are dealt 3 s + the Exclusive accept time after Radar

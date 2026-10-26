@@ -25,12 +25,18 @@ void main() {
   test('X12: category waiting rules apply by id and by driver label', () {
     const rules = WaitingRules();
     for (final category in ['xl', CategoryCatalog.labelOf('xl'), 'XL']) {
-      expect(rules.termsFor(category: category).freeMinutes, 3,
-          reason: category);
+      expect(
+        rules.termsFor(category: category).freeMinutes,
+        3,
+        reason: category,
+      );
     }
     for (final category in ['premium', 'Premium']) {
-      expect(rules.termsFor(category: category).perMinute.formatted,
-          '16,90 kr', reason: category);
+      expect(
+        rules.termsFor(category: category).perMinute.formatted,
+        '16,90 kr',
+        reason: category,
+      );
     }
     expect(rules.termsFor(category: 'economy').rule, '');
     expect(rules.termsFor(category: 'Booster Seat').rule, '');
@@ -64,10 +70,9 @@ void main() {
         },
       };
       expect(
-        DriverHomeAdminContentService(rulesExport: legacy)
-            .load()
-            .destinationMode!
-            .destinationsPerDay,
+        DriverHomeAdminContentService(
+          rulesExport: legacy,
+        ).load().destinationMode!.destinationsPerDay,
         5,
       );
       final current = <String, dynamic>{
@@ -76,8 +81,13 @@ void main() {
           'svc-stockholm': {'destinationsPerDay': 5},
         },
       };
-      expect(DriverTripRulesExport.forZone(current, 'svc-stockholm').$1
-          .destinationsPerDay, 6);
+      expect(
+        DriverTripRulesExport.forZone(
+          current,
+          'svc-stockholm',
+        ).$1.destinationsPerDay,
+        6,
+      );
     });
   });
 }

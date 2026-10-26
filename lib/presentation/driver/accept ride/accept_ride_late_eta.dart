@@ -94,7 +94,8 @@ extension _AcceptRideLateEta on _AcceptRideState {
       return;
     }
     // Hidden (stale position) or another trip change in flight: next tick.
-    final busy = _liveUpdatesPaused ||
+    final busy =
+        _liveUpdatesPaused ||
         _stageTransitioning ||
         _completionInFlight ||
         _cancellationInFlight ||

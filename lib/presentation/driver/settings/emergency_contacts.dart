@@ -107,8 +107,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
   }
 
   bool _validPhone(String phone) =>
-      RegExp(r'^\+?[0-9]{7,15}$')
-          .hasMatch(phone.replaceAll(RegExp(r'[\s()-]'), '')) ||
+      RegExp(
+        r'^\+?[0-9]{7,15}$',
+      ).hasMatch(phone.replaceAll(RegExp(r'[\s()-]'), '')) ||
       phone == '112';
   Future<void> _addContact() async {
     if (!mounted ||
@@ -138,9 +139,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
               (existing) =>
                   existing.phone.replaceAll(RegExp(r'[\s()-]'), '') == number,
             )) {
-              throw FormatException(
-                tr.emAlreadyInContacts,
-              );
+              throw FormatException(tr.emAlreadyInContacts);
             }
             final updated = [..._contacts, contact];
             await _settings.save('contacts', {
@@ -378,7 +377,9 @@ class _ContactComposerState extends State<_ContactComposer> {
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF19865C),
                     ),
-                    child: Text(_saving ? tr.savingContactEllipsis : tr.saveContact),
+                    child: Text(
+                      _saving ? tr.savingContactEllipsis : tr.saveContact,
+                    ),
                   ),
                 ],
               ),

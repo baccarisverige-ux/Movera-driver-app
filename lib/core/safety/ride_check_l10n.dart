@@ -56,17 +56,17 @@ extension RideCheckQuestionText on RideCheckQuestion {
 
 /// A saved question ([RideCheckQuestion.text]) in the driver's language.
 String rideCheckQuestionWords(String text) => switch (text) {
-    'Is anyone hurt?' => tr.rcQuestionAnyoneHurt,
-    'Is the car in a safe place?' => tr.rcQuestionCarSafe,
-    'Is the other person OK?' => tr.rcQuestionOtherPersonOk,
-    'Who needs help?' => tr.rcQuestionWhoNeedsHelp,
-    'Are you in danger right now?' => tr.rcQuestionInDanger,
-    'Can you continue the trip?' => tr.rcQuestionCanContinue,
-    'Call 112' => tr.call112,
-    '112 dialer' => tr.rcDialer112,
-    'What happened' => tr.rcWhatHappened,
-    _ => text,
-  };
+  'Is anyone hurt?' => tr.rcQuestionAnyoneHurt,
+  'Is the car in a safe place?' => tr.rcQuestionCarSafe,
+  'Is the other person OK?' => tr.rcQuestionOtherPersonOk,
+  'Who needs help?' => tr.rcQuestionWhoNeedsHelp,
+  'Are you in danger right now?' => tr.rcQuestionInDanger,
+  'Can you continue the trip?' => tr.rcQuestionCanContinue,
+  'Call 112' => tr.call112,
+  '112 dialer' => tr.rcDialer112,
+  'What happened' => tr.rcWhatHappened,
+  _ => text,
+};
 
 /// A saved answer (an option or a topic row) in the driver's language.
 String rideCheckAnswerWords(String answer) {

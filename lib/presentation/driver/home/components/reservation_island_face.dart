@@ -36,10 +36,12 @@ class DigitalReservationFace extends StatelessWidget {
   static String whenOf(ReservationRequestPreview request, DateTime now) =>
       ReservationWhen.ofRequest(request, now).island;
 
-  static TextSpan _span(String when) => TextSpan(children: [
-    TextSpan(text: when, style: _whenStyle),
-    TextSpan(text: ' · $kind', style: _kindStyle),
-  ]);
+  static TextSpan _span(String when) => TextSpan(
+    children: [
+      TextSpan(text: when, style: _whenStyle),
+      TextSpan(text: ' · $kind', style: _kindStyle),
+    ],
+  );
 
   /// Width the face needs: icon, gap and words.
   static double widthFor(BuildContext context, String when) {
@@ -70,10 +72,12 @@ class DigitalExclusiveFace extends StatelessWidget {
 
   static String get title => tr.exclusive;
 
-  static TextSpan _span(int minutes) => TextSpan(children: [
-    TextSpan(text: title, style: _whenStyle),
-    TextSpan(text: tr.pickupMinutesMin(minutes), style: _kindStyle),
-  ]);
+  static TextSpan _span(int minutes) => TextSpan(
+    children: [
+      TextSpan(text: title, style: _whenStyle),
+      TextSpan(text: tr.pickupMinutesMin(minutes), style: _kindStyle),
+    ],
+  );
 
   /// Width the face needs: icon, gap and words.
   static double widthFor(BuildContext context, int pickupMinutes) {
@@ -117,10 +121,12 @@ class DigitalRadarOffersFace extends StatelessWidget {
     final text = title(count);
     final split = text.indexOf(' · ');
     if (split < 0) return TextSpan(text: text, style: _whenStyle);
-    return TextSpan(children: [
-      TextSpan(text: text.substring(0, split), style: _whenStyle),
-      TextSpan(text: text.substring(split), style: _kindStyle),
-    ]);
+    return TextSpan(
+      children: [
+        TextSpan(text: text.substring(0, split), style: _whenStyle),
+        TextSpan(text: text.substring(split), style: _kindStyle),
+      ],
+    );
   }
 
   /// Width the face needs: icon, gap and words.

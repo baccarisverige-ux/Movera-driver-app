@@ -44,6 +44,7 @@ class TripCard extends StatelessWidget {
   final String footer;
   final VoidCallback onMore;
   final Key moreKey;
+
   /// "Trip options" by default.
   final String? moreTooltip;
 

@@ -5,11 +5,15 @@ extension _HomeOfferSound on _DriverHomeState {
   /// After each Home frame: the Radar offers the driver can take now.
   /// Exclusive, a reservation request, or Home hidden keep it quiet.
   void _syncOfferSound() {
-    if (_offerSoundQueued) { return; }
+    if (_offerSoundQueued) {
+      return;
+    }
     _offerSoundQueued = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _offerSoundQueued = false;
-      if (!mounted) { return; }
+      if (!mounted) {
+        return;
+      }
       if (!_liveVisible ||
           !_isOnline ||
           _outsideRadarOffer != null ||

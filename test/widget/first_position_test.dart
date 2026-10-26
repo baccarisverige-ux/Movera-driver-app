@@ -36,7 +36,11 @@ void main() {
     final client = MockClient((request) async {
       if (request.url.path.endsWith('/events')) return http.Response('', 503);
       if (request.method == 'GET' && request.url.path == '/api/v1/trips/t1') {
-        return json(200, {'tripId': 't1', 'status': 'driver_to_pickup', 'version': 2});
+        return json(200, {
+          'tripId': 't1',
+          'status': 'driver_to_pickup',
+          'version': 2,
+        });
       }
       return json(404, {'code': 'not_found', 'message': 'No.'});
     });
@@ -64,31 +68,36 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        home: AcceptRide(
-          tripId: 't1',
-          pickupPosition: sodertalje,
-          locationRepository: _NoGps(),
-          activeRideRepository: MemoryActiveRideRepository(),
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: AcceptRide(
+            tripId: 't1',
+            pickupPosition: sodertalje,
+            locationRepository: _NoGps(),
+            activeRideRepository: MemoryActiveRideRepository(),
+          ),
         ),
       ),
-    ));
+    );
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 50));
     }
     return tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap).first);
   }
 
-  test('the last fix sent to the server is a point; a bad or missing one is not', () {
-    expect(live.reporter.lastKnownPoint, isNull);
-    live.reporter.lastFix = {'lat': 59.2, 'lng': 17.6, 'accuracy': 5};
-    expect(live.reporter.lastKnownPoint?.latitude, 59.2);
-    expect(live.reporter.lastKnownPoint?.longitude, 17.6);
-    live.reporter.lastFix = {'lat': 'x', 'lng': 17.6};
-    expect(live.reporter.lastKnownPoint, isNull);
-  });
+  test(
+    'the last fix sent to the server is a point; a bad or missing one is not',
+    () {
+      expect(live.reporter.lastKnownPoint, isNull);
+      live.reporter.lastFix = {'lat': 59.2, 'lng': 17.6, 'accuracy': 5};
+      expect(live.reporter.lastKnownPoint?.latitude, 59.2);
+      expect(live.reporter.lastKnownPoint?.longitude, 17.6);
+      live.reporter.lastFix = {'lat': 'x', 'lng': 17.6};
+      expect(live.reporter.lastKnownPoint, isNull);
+    },
+  );
 
   testWidgets('before the first GPS read the trip screen starts at the last '
       'position sent to the server', (tester) async {

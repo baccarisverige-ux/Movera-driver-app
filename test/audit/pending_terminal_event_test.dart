@@ -52,51 +52,58 @@ Future<void> _mount(
 }
 
 void main() {
-  testWidgets('rider cancellation received during stage persistence is retained', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final repo = _PendingSave();
-    final realtime = MemoryDriverRealtime();
-    addTearDown(realtime.dispose);
-    await _mount(tester, repo, realtime);
+  testWidgets(
+    'rider cancellation received during stage persistence is retained',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final repo = _PendingSave();
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      await _mount(tester, repo, realtime);
 
-    PersistedActiveRide? snapshot = await repo.read();
-    for (var i = 0; i < 20 && snapshot == null; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-      snapshot = await repo.read();
-    }
-    expect(snapshot, isNotNull);
-    expect(snapshot!.stage, ActiveRideStage.waitingForRider);
+      PersistedActiveRide? snapshot = await repo.read();
+      for (var i = 0; i < 20 && snapshot == null; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+        snapshot = await repo.read();
+      }
+      expect(snapshot, isNotNull);
+      expect(snapshot!.stage, ActiveRideStage.waitingForRider);
 
+      tester
+          .widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last)
+          .controller!
+          .animatePanelToSnapPoint();
+      for (var i = 0; i < 14; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      repo.hold = Completer<void>();
+      final action = find.byKey(
+        const ValueKey<String>('active-ride-primary-action'),
+      );
+      await tester.ensureVisible(action);
+      await tester.drag(action, const Offset(320, 0));
+      await tester.pump();
+      realtime.emit(
+        tripId: 'pending-trip',
+        kind: DriverRealtimeKind.riderCancelled,
+        status: TripStatus.cancelledByRider,
+      );
+      await tester.pump(const Duration(milliseconds: 150));
+      expect((await repo.read())?.stage, ActiveRideStage.waitingForRider);
 
-  tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last).controller!.animatePanelToSnapPoint();
-  for (var i=0;i<14;i++) { await tester.pump(const Duration(milliseconds:50)); }
-    repo.hold = Completer<void>();
-    final action = find.byKey(const ValueKey<String>('active-ride-primary-action'));
-    await tester.ensureVisible(action);
-    await tester.drag(action, const Offset(320, 0));
-    await tester.pump();
-    realtime.emit(
-      tripId: 'pending-trip',
-      kind: DriverRealtimeKind.riderCancelled,
-      status: TripStatus.cancelledByRider,
-    );
-    await tester.pump(const Duration(milliseconds: 150));
-    expect((await repo.read())?.stage, ActiveRideStage.waitingForRider);
-
-    final pending = repo.hold;
-    repo.hold = null;
-    pending?.complete();
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
-    expect(await repo.read(), isNull);
-    expect(
-      (await PrefsTripHistoryRepository().list()).single.status,
-      TripStatus.cancelledByRider,
-    );
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
+      final pending = repo.hold;
+      repo.hold = null;
+      pending?.complete();
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      expect(await repo.read(), isNull);
+      expect(
+        (await PrefsTripHistoryRepository().list()).single.status,
+        TripStatus.cancelledByRider,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

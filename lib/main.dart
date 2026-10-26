@@ -137,9 +137,7 @@ class _MoveraAppState extends State<MoveraApp> {
     _auth = AuthController(
       repository: AuthRepository(api: _api, tokens: _tokens),
     );
-    _account = DriverAccountSession(
-      repository: DriverAccountRepository(_api),
-    );
+    _account = DriverAccountSession(repository: DriverAccountRepository(_api));
     _sessionStore = MemoryDriverSessionRepository();
     _session = DriverSessionController(repository: _sessionStore);
     _waybills = InMemoryWaybillRepository.instance;
@@ -243,8 +241,9 @@ class _MoveraAppState extends State<MoveraApp> {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            theme: ThemeData.light(useMaterial3: true)
-                .copyWith(scaffoldBackgroundColor: AppColor.bg),
+            theme: ThemeData.light(
+              useMaterial3: true,
+            ).copyWith(scaffoldBackgroundColor: AppColor.bg),
             builder: (context, child) {
               return RideCheckScope(
                 services: _rideCheck,
@@ -263,7 +262,10 @@ class _MoveraAppState extends State<MoveraApp> {
                         // A live build (round 4) has an account: no demo
                         // banner, only the status-bar inset it would take.
                         if (DriverRuntimeConfig.current.authRequired)
-                          const SafeArea(bottom: false, child: SizedBox.shrink())
+                          const SafeArea(
+                            bottom: false,
+                            child: SizedBox.shrink(),
+                          )
                         else
                           const DemoModeBanner(),
                         // The banner took the status-bar inset: the
@@ -351,7 +353,8 @@ class _MoveraAppState extends State<MoveraApp> {
   // Round 4 (live): the hold is the server's account state; the demo
   // keeps its hold with "Skip demo".
   Widget _home() => DriverHome(
-    accountPending: !DriverRuntimeConfig.current.authRequired || _account.onHold,
+    accountPending:
+        !DriverRuntimeConfig.current.authRequired || _account.onHold,
     sessionController: _session,
     waybillRepository: _waybills,
     locationRepository: _location,

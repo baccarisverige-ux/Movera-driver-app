@@ -29,7 +29,8 @@ class DemoSafetyAlertRepository implements SafetyAlertRepository {
   bool _disposed = false;
 
   /// Alerts as admin and Dispatch see them, oldest first.
-  List<SafetyAlert> get alerts => List<SafetyAlert>.unmodifiable(_alerts.values);
+  List<SafetyAlert> get alerts =>
+      List<SafetyAlert>.unmodifiable(_alerts.values);
 
   /// Every send and update, in order.
   List<SafetyAlertJournalEntry> get journal =>

@@ -45,7 +45,8 @@ class FleetInvitationCard extends StatelessWidget {
         title = invitation.driverName ?? tr.fleetADriver;
         body = tr.fleetRequestBodyOwner;
       } else {
-        title = invitation.driverName ??
+        title =
+            invitation.driverName ??
             (invitation.phone == null
                 ? tr.fleetADriver
                 : displayPhoneNumber(invitation.phone!));
@@ -104,7 +105,9 @@ class FleetInvitationCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: AccountButton(
-                    key: ValueKey('invitation-accept-${invitation.invitationId}'),
+                    key: ValueKey(
+                      'invitation-accept-${invitation.invitationId}',
+                    ),
                     label: tr.fleetAccept,
                     busy: busy,
                     onPressed: busy ? null : onAccept,
@@ -331,19 +334,20 @@ class _InviteDriverFormState extends State<_InviteDriverForm> {
             ),
             cursorColor: AccountStyle.ink,
             onSubmitted: (_) => _send(),
-            decoration: AccountStyle.decoration(
-              hint: '${_country.dialLabel} ${phoneHintOf(_country)}',
-              error: _error,
-            ).copyWith(
-              prefixIcon: Padding(
-                padding: const EdgeInsets.only(left: 14, right: 8),
-                child: Text(
-                  _country.flag,
-                  style: const TextStyle(fontSize: 22),
+            decoration:
+                AccountStyle.decoration(
+                  hint: '${_country.dialLabel} ${phoneHintOf(_country)}',
+                  error: _error,
+                ).copyWith(
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 14, right: 8),
+                    child: Text(
+                      _country.flag,
+                      style: const TextStyle(fontSize: 22),
+                    ),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 0),
                 ),
-              ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 0),
-            ),
           ),
           const SizedBox(height: 8),
           Text(tr.fleetInviteDriverHint, style: AccountStyle.hint()),

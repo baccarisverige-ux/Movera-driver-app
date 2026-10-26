@@ -74,10 +74,16 @@ void main() {
     test('statuses no contract row reaches are rejected', () async {
       final heading = await _at(ActiveRideStage.headingToPickup);
       // A driver cancel at pickup is never cancelled_by_driver.
-      expect(await heading.cancel(status: TripStatus.cancelledByDriver), isFalse);
+      expect(
+        await heading.cancel(status: TripStatus.cancelledByDriver),
+        isFalse,
+      );
       // A rider cannot "cancel" once on board (that is end_early, allowed).
       final onTrip = await _at(ActiveRideStage.onTrip);
-      expect(await onTrip.cancel(status: TripStatus.cancelledBySystem), isFalse);
+      expect(
+        await onTrip.cancel(status: TripStatus.cancelledBySystem),
+        isFalse,
+      );
       expect(await onTrip.cancel(status: TripStatus.cancelledByRider), isTrue);
     });
   });
@@ -87,10 +93,12 @@ void main() {
 
     test('a driver release is journaled, archived and marked', () async {
       final active = PrefsActiveRideRepository();
-      await active.save(const PersistedActiveRide(
-        tripId: 'T1',
-        stage: ActiveRideStage.headingToPickup,
-      ));
+      await active.save(
+        const PersistedActiveRide(
+          tripId: 'T1',
+          stage: ActiveRideStage.headingToPickup,
+        ),
+      );
       await CompletionJournal(active: active).finish(
         _record('T1'),
         status: TripStatus.searching,
@@ -98,14 +106,16 @@ void main() {
         cancellationActor: 'driver',
       );
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getStringList(PrefsActiveRideRepository.terminalKey)!.single,
-          startsWith('T1|searching|vehicle_issue_before_start|driver|'));
+      expect(
+        prefs.getStringList(PrefsActiveRideRepository.terminalKey)!.single,
+        startsWith('T1|searching|vehicle_issue_before_start|driver|'),
+      );
       final history = await PrefsTripHistoryRepository().list();
       expect(history.single.status, TripStatus.searching);
       expect(history.single.cancellationActor, 'driver');
       expect(await active.read(), isNull);
-      final stored = jsonDecode(
-          prefs.getString(PrefsTripHistoryRepository.key)!) as Map;
+      final stored =
+          jsonDecode(prefs.getString(PrefsTripHistoryRepository.key)!) as Map;
       expect((stored['rows'] as List).single['status'], 'searching');
     });
 
@@ -118,8 +128,8 @@ void main() {
         cancellationActor: 'driver',
       );
       final prefs = await SharedPreferences.getInstance();
-      final stored = jsonDecode(
-          prefs.getString(PrefsTripHistoryRepository.key)!) as Map;
+      final stored =
+          jsonDecode(prefs.getString(PrefsTripHistoryRepository.key)!) as Map;
       expect((stored['rows'] as List).single['status'], 'no_show');
     });
 
@@ -157,15 +167,16 @@ void main() {
         }),
       });
       expect(
-        await CompletionJournal(active: MemoryActiveRideRepository())
-            .reconcile(),
+        await CompletionJournal(
+          active: MemoryActiveRideRepository(),
+        ).reconcile(),
         JournalReplayOutcome.applied,
       );
       final rows = await PrefsTripHistoryRepository().list();
-      expect({for (final r in rows) r.tripId: r.status}, {
-        'old': TripStatus.cancelledByRider,
-        'J': TripStatus.cancelledByAdmin,
-      });
+      expect(
+        {for (final r in rows) r.tripId: r.status},
+        {'old': TripStatus.cancelledByRider, 'J': TripStatus.cancelledByAdmin},
+      );
     });
 
     test('a non-driver release status is not a valid record', () async {

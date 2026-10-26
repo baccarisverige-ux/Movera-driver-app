@@ -27,9 +27,9 @@ Future<void> _open(WidgetTester tester, Widget page) async {
       home: Scaffold(
         body: Builder(
           builder: (context) => TextButton(
-            onPressed: () =>
-                Navigator.of(context)
-                    .push(MaterialPageRoute<void>(builder: (_) => page)),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => page)),
             child: const Text('Open vehicle page'),
           ),
         ),

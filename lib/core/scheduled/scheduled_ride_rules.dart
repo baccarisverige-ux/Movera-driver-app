@@ -88,9 +88,10 @@ class LateEtaRule {
       on: _bool(json['on']) ?? seed.on,
       toleranceMinutes:
           _intIn(json['toleranceMin'], 0, 30) ?? seed.toleranceMinutes,
-      checkEverySeconds: _intIn(json['checkEverySeconds'], 15, 600) ??
-          seed.checkEverySeconds,
-      reassignTo: _enum(json['reassignTo'], LateEtaReassignTo.values) ??
+      checkEverySeconds:
+          _intIn(json['checkEverySeconds'], 15, 600) ?? seed.checkEverySeconds,
+      reassignTo:
+          _enum(json['reassignTo'], LateEtaReassignTo.values) ??
           seed.reassignTo,
     );
   }
@@ -122,16 +123,15 @@ class ScheduledRideKindRule {
     if (json is! Map) return seed;
     final reminders = json['reminderMin'];
     return ScheduledRideKindRule(
-      onlineBeforeMinutes: _intIn(json['onlineBeforeMin'], 5, 240) ??
-          seed.onlineBeforeMinutes,
+      onlineBeforeMinutes:
+          _intIn(json['onlineBeforeMin'], 5, 240) ?? seed.onlineBeforeMinutes,
       spareMinutes: _intIn(json['spareMin'], 0, 60) ?? seed.spareMinutes,
       reminderMinutes: reminders is List
           ? List<int>.unmodifiable(
               {
                 for (final minutes in reminders)
                   if (_intIn(minutes, 1, 1440) case final value?) value,
-              }.toList()
-                ..sort((a, b) => b.compareTo(a)),
+              }.toList()..sort((a, b) => b.compareTo(a)),
             )
           : seed.reminderMinutes,
     );
@@ -210,15 +210,17 @@ class ScheduledRideRules {
     return ScheduledRideRules(
       enabled: _bool(json['on']) ?? seed.enabled,
       lateWarning: _bool(json['lateWarn']) ?? seed.lateWarning,
-      backupAfterMinutes: _intIn(json['offlineBackupAfterMin'], 1, 60) ??
+      backupAfterMinutes:
+          _intIn(json['offlineBackupAfterMin'], 1, 60) ??
           seed.backupAfterMinutes,
-      homePopupAfterMinutes: _intIn(json['homePopupAfterMin'], 1, 1440) ??
+      homePopupAfterMinutes:
+          _intIn(json['homePopupAfterMin'], 1, 1440) ??
           seed.homePopupAfterMinutes,
       exclusiveBeforeMinutes:
           _intIn(json['exclusiveBeforeMin'], 1, 180) ??
           seed.exclusiveBeforeMinutes,
-      radarBeforeMinutes: _intIn(json['radarBeforeMin'], 1, 180) ??
-          seed.radarBeforeMinutes,
+      radarBeforeMinutes:
+          _intIn(json['radarBeforeMin'], 1, 180) ?? seed.radarBeforeMinutes,
       onDriverCancel:
           _enum(json['onDriverCancel'], ReservationCancelReturn.values) ??
           seed.onDriverCancel,
@@ -232,15 +234,18 @@ class ScheduledRideRules {
       kinds: kinds,
       // A number in the contract (0.5 to 72): 1.5 is 90 minutes, not 2 h
       // (driver-r3-4).
-      driverLateCancelHours: _numIn(json['driverLateCancelHours'], 0.5, 72) ??
+      driverLateCancelHours:
+          _numIn(json['driverLateCancelHours'], 0.5, 72) ??
           seed.driverLateCancelHours,
       lateCancelLimit:
           _intIn(json['lateCancelLimit'], 1, 20) ?? seed.lateCancelLimit,
-      lateCancelPeriodDays: _intIn(json['lateCancelPeriodDays'], 1, 90) ??
+      lateCancelPeriodDays:
+          _intIn(json['lateCancelPeriodDays'], 1, 90) ??
           seed.lateCancelPeriodDays,
       pauseDays: _intIn(json['pauseDays'], 1, 365) ?? seed.pauseDays,
-      assignAcceptTime:
-          assign == null ? seed.assignAcceptTime : Duration(seconds: assign),
+      assignAcceptTime: assign == null
+          ? seed.assignAcceptTime
+          : Duration(seconds: assign),
       lateEta: LateEtaRule.fromJson(json['lateEta']),
     );
   }
@@ -347,8 +352,11 @@ bool? _bool(Object? json) => json is bool ? json : null;
 /// A whole number in [min]..[max] (the schema's `integer` range); null
 /// otherwise, so the field keeps its default.
 int? _intIn(Object? json, int min, int max) =>
-    json is num && json.isFinite && json == json.roundToDouble() &&
-        json >= min && json <= max
+    json is num &&
+        json.isFinite &&
+        json == json.roundToDouble() &&
+        json >= min &&
+        json <= max
     ? json.toInt()
     : null;
 

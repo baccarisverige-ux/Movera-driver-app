@@ -36,7 +36,10 @@ void main() {
   late List<http.Request> requests;
   late LiveDriverServices live;
   late DriverAccountSession account;
-  Map<String, dynamic> money(int minor) => {'amountMinor': minor, 'currency': 'SEK'};
+  Map<String, dynamic> money(int minor) => {
+    'amountMinor': minor,
+    'currency': 'SEK',
+  };
   http.Response json(int status, Object body) => http.Response(
     jsonEncode(body),
     status,
@@ -72,31 +75,62 @@ void main() {
       requests.add(request);
       if (path.endsWith('/events')) return http.Response('', 503);
       if (request.method == 'GET' && path == '/api/v1/trips/live-trip') {
-        return json(200, {'tripId': 'live-trip', 'status': 'in_trip', 'version': 8});
+        return json(200, {
+          'tripId': 'live-trip',
+          'status': 'in_trip',
+          'version': 8,
+        });
       }
-      if (request.method == 'POST' && path == '/api/v1/trips/live-trip/complete') {
+      if (request.method == 'POST' &&
+          path == '/api/v1/trips/live-trip/complete') {
         return json(200, completed);
       }
       if (request.method == 'GET' && path == '/api/v1/driver/profile') {
         return json(200, {
-          'driverId': 'drv_1', 'accountStatus': 'active', 'version': 4,
-          'firstName': 'Test', 'lastName': 'Åkare', 'vehicleId': 'veh_1',
+          'driverId': 'drv_1',
+          'accountStatus': 'active',
+          'version': 4,
+          'firstName': 'Test',
+          'lastName': 'Åkare',
+          'vehicleId': 'veh_1',
         });
       }
       if (request.method == 'GET' && path == '/api/v1/driver/vehicles') {
-        return json(200, {'items': [
-          {'vehicleId': 'veh_0', 'make': 'Toyota', 'model': 'Corolla', 'year': 2022,
-            'color': 'White', 'plate': 'TST 002', 'seats': 4, 'status': 'approved'},
-          {'vehicleId': 'veh_1', 'make': 'Volvo', 'model': 'V60', 'year': 2021,
-            'color': 'Black', 'plate': 'TST 001', 'seats': 4, 'status': 'approved'},
-        ]});
+        return json(200, {
+          'items': [
+            {
+              'vehicleId': 'veh_0',
+              'make': 'Toyota',
+              'model': 'Corolla',
+              'year': 2022,
+              'color': 'White',
+              'plate': 'TST 002',
+              'seats': 4,
+              'status': 'approved',
+            },
+            {
+              'vehicleId': 'veh_1',
+              'make': 'Volvo',
+              'model': 'V60',
+              'year': 2021,
+              'color': 'Black',
+              'plate': 'TST 001',
+              'seats': 4,
+              'status': 'approved',
+            },
+          ],
+        });
       }
-      if (request.method == 'POST' && path == '/api/v1/locations/reverse-geocode') {
+      if (request.method == 'POST' &&
+          path == '/api/v1/locations/reverse-geocode') {
         final body = jsonDecode(request.body) as Map;
         expect(body['latitude'], 59.195885);
         expect(body['longitude'], 17.597423);
-        return json(200, {'address': 'Klockarvägen 37, 151 62 Södertälje',
-          'latitude': 59.195885, 'longitude': 17.597423});
+        return json(200, {
+          'address': 'Klockarvägen 37, 151 62 Södertälje',
+          'latitude': 59.195885,
+          'longitude': 17.597423,
+        });
       }
       return json(404, {'code': 'not_found', 'message': 'No.'});
     });
@@ -126,8 +160,9 @@ void main() {
   }
 
   testWidgets('an early finish shows the server\'s final money; the waybill '
-      'names the driver, the car, the pickup and the rider\'s fare',
-      (tester) async {
+      'names the driver, the car, the pickup and the rider\'s fare', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -135,37 +170,39 @@ void main() {
     final session = DriverSessionController(initialOnline: true);
     addTearDown(session.dispose);
     final rides = MemoryActiveRideRepository();
-    await tester.pumpWidget(DriverRuntimeScope(
-      session: session,
-      homeBuilder: () => const SizedBox(),
-      account: account,
-      child: ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (_, __) => MaterialApp(
-          home: AcceptRide(
-            tripId: 'live-trip',
-            initialStage: ActiveRideStage.onTrip,
-            riderName: 'Passenger',
-            fare: '151,36 kr',
-            riderFare: '208,00 kr',
-            paidByCash: true,
-            cashToCollect: '208,00 kr',
-            category: 'Economy',
-            matchedVia: WaybillRecord.moveraRadarSource,
-            // The rider app named the pickup by its coordinates only.
-            pickupAddress: '59.195885, 17.597423',
-            pickupArea: '',
-            pickupPosition: const LatLng(59.195885, 17.597423),
-            dropoffAddress: 'Klockarvägen 37, Södertälje',
-            dropoffPosition: const LatLng(59.2411, 17.6031),
-            locationRepository: _NoGps(),
-            activeRideRepository: rides,
-            sessionController: session,
-            waybillRepository: InMemoryWaybillRepository.instance,
+    await tester.pumpWidget(
+      DriverRuntimeScope(
+        session: session,
+        homeBuilder: () => const SizedBox(),
+        account: account,
+        child: ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, __) => MaterialApp(
+            home: AcceptRide(
+              tripId: 'live-trip',
+              initialStage: ActiveRideStage.onTrip,
+              riderName: 'Passenger',
+              fare: '151,36 kr',
+              riderFare: '208,00 kr',
+              paidByCash: true,
+              cashToCollect: '208,00 kr',
+              category: 'Economy',
+              matchedVia: WaybillRecord.moveraRadarSource,
+              // The rider app named the pickup by its coordinates only.
+              pickupAddress: '59.195885, 17.597423',
+              pickupArea: '',
+              pickupPosition: const LatLng(59.195885, 17.597423),
+              dropoffAddress: 'Klockarvägen 37, Södertälje',
+              dropoffPosition: const LatLng(59.2411, 17.6031),
+              locationRepository: _NoGps(),
+              activeRideRepository: rides,
+              sessionController: session,
+              waybillRepository: InMemoryWaybillRepository.instance,
+            ),
           ),
         ),
       ),
-    ));
+    );
     await frames(tester, 20);
 
     // N11: the waybill as the server knows the driver and the car.
@@ -177,7 +214,10 @@ void main() {
     expect(current.riderFare, '208,00 kr');
     expect(current.fare, '151,36 kr');
     // The save keeps the looked-up address for a restart.
-    expect((await rides.read())!.pickupAddress, 'Klockarvägen 37, 151 62 Södertälje');
+    expect(
+      (await rides.read())!.pickupAddress,
+      'Klockarvägen 37, 151 62 Södertälje',
+    );
     expect((await rides.read())!.riderFare, '208,00 kr');
 
     // The driver collects the cash and finishes, 5.8 km from the drop-off.
@@ -186,20 +226,29 @@ void main() {
         .controller!
         .animatePanelToSnapPoint();
     await frames(tester, 16);
-    final collect = find.byKey(const ValueKey<String>('active-ride-collect-cash'));
+    final collect = find.byKey(
+      const ValueKey<String>('active-ride-collect-cash'),
+    );
     await tester.ensureVisible(collect);
     await tester.tap(collect);
     await frames(tester, 10);
     await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
-    for (var i = 0; i < 80 && find.byType(DriverRideCompleted).evaluate().isEmpty; i++) {
+    for (
+      var i = 0;
+      i < 80 && find.byType(DriverRideCompleted).evaluate().isEmpty;
+      i++
+    ) {
       await tester.pump(const Duration(milliseconds: 25));
     }
     expect(find.byType(DriverRideCompleted), findsOneWidget);
     // The trip screen slides out under the finish screen.
     await tester.pump(const Duration(milliseconds: 1200));
-    final complete = requests.where((r) => r.url.path.endsWith('/complete')).single;
-    expect(jsonDecode(complete.body), {'expectedVersion': 8},
-        reason: 'no fare of its own: the server prices the finish');
+    final complete = requests
+        .where((r) => r.url.path.endsWith('/complete'))
+        .single;
+    expect(jsonDecode(complete.body), {
+      'expectedVersion': 8,
+    }, reason: 'no fare of its own: the server prices the finish');
 
     // N9: the server's final money everywhere after the finish.
     final summary = tester.widget<Text>(

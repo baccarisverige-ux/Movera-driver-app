@@ -271,6 +271,7 @@ class ActiveRideController extends ChangeNotifier {
   PersistedActiveRide _snapshot(ActiveRideStage stage) =>
       snapshotBuilder?.call(stage) ??
       PersistedActiveRide(tripId: tripId ?? 'demo', stage: stage);
+
   /// D-09: a driver command (Arrive, Start, Finish, cancel) that lands
   /// while a background save is in flight waits for it and then runs,
   /// instead of being dropped. A command in flight still rejects a
@@ -357,7 +358,10 @@ class ActiveRideController extends ChangeNotifier {
           await _writeDone!.future;
         }
         _queuedSave = null;
-        if (!_disposed && !_writing && !terminal && _lastSaved != null &&
+        if (!_disposed &&
+            !_writing &&
+            !terminal &&
+            _lastSaved != null &&
             jsonEncode(_snapshot(_stage).toJson()) == _lastSaved) {
           return true;
         }

@@ -55,8 +55,9 @@ void main() {
   });
 
   // On the test clock: the Radar delay passes only when the test says so.
-  testWidgets('close to pickup an untaken reservation joins the Radar trips',
-      (tester) async {
+  testWidgets('close to pickup an untaken reservation joins the Radar trips', (
+    tester,
+  ) async {
     final dispatch = _dispatch(
       reservationRadarDelay: const Duration(minutes: 1),
     );
@@ -66,7 +67,9 @@ void main() {
     expect(events.last.any((offer) => offer.isReservation), isFalse);
 
     await tester.pump(const Duration(seconds: 1));
-    final reservation = events.last.singleWhere((o) => o.id == demoReservationId);
+    final reservation = events.last.singleWhere(
+      (o) => o.id == demoReservationId,
+    );
     expect(reservation.isReservation, isTrue);
     expect(reservation.reservationTime, '07:40');
     expect(reservation.isNearby, isTrue);

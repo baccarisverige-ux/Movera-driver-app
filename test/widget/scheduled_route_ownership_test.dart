@@ -61,8 +61,9 @@ void main() {
   });
 
   testWidgets('prices read "95,06 kr" as on every other screen '
-      '(driver-r4-20), the driver\'s share of the 126.75 kr fare',
-      (tester) async {
+      '(driver-r4-20), the driver\'s share of the 126.75 kr fare', (
+    tester,
+  ) async {
     await openScheduled(tester);
     expect(find.text('95,06 kr'), findsOneWidget);
     expect(find.textContaining('126.75'), findsNothing);

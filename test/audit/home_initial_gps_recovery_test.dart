@@ -69,8 +69,9 @@ void main() {
   });
   tearDown(() => DriverRuntimeConfig.current = previous);
 
-  testWidgets('stale initial fix cannot consume first live camera center',
-      (tester) async {
+  testWidgets('stale initial fix cannot consume first live camera center', (
+    tester,
+  ) async {
     final originalMaps = GoogleMapsFlutterPlatform.instance;
     final maps = _CameraRecordingMaps();
     GoogleMapsFlutterPlatform.instance = maps;
@@ -80,44 +81,68 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        home: DriverHome(locationRepository: location),
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) =>
+            MaterialApp(home: DriverHome(locationRepository: location)),
       ),
-    ));
+    );
     for (var i = 0; i < 12; i++) {
       await tester.pump(const Duration(milliseconds: 50));
     }
     expect(location.updates.hasListener, isTrue);
     // Nothing usable known yet: the map waits instead of opening on a
     // fallback city or on the stale point.
-    expect(tester.widgetList<GoogleMap>(find.byType(GoogleMap)).any((map) =>
-        map.markers.any((marker) =>
-            marker.position == const LatLng(59.35, 18.08))), isFalse,
-        reason: 'A two-minute-old location may not move the map or marker');
-    expect(maps.moves, isEmpty,
-        reason: 'Stale GPS cannot claim first live camera framing');
+    expect(
+      tester
+          .widgetList<GoogleMap>(find.byType(GoogleMap))
+          .any(
+            (map) => map.markers.any(
+              (marker) => marker.position == const LatLng(59.35, 18.08),
+            ),
+          ),
+      isFalse,
+      reason: 'A two-minute-old location may not move the map or marker',
+    );
+    expect(
+      maps.moves,
+      isEmpty,
+      reason: 'Stale GPS cannot claim first live camera framing',
+    );
 
     const live = LatLng(59.34, 18.07);
-    location.updates.add(DriverLocation(
-      point: const GeoPoint(59.34, 18.07),
-      measuredAt: DateTime.now(),
-      accuracyMeters: 4,
-      speedMetersPerSecond: 2,
-    ));
+    location.updates.add(
+      DriverLocation(
+        point: const GeoPoint(59.34, 18.07),
+        measuredAt: DateTime.now(),
+        accuracyMeters: 4,
+        speedMetersPerSecond: 2,
+      ),
+    );
     for (var i = 0; i < 12; i++) {
       await tester.pump(const Duration(milliseconds: 50));
     }
     final updated = tester.widget<GoogleMap>(find.byType(GoogleMap).first);
-    expect(updated.markers.any((marker) =>
-        marker.markerId.value == 'driver_location' &&
-        marker.position == live), isTrue,
-        reason: 'The first valid stream fix must reclaim the map marker');
-    expect(updated.initialCameraPosition.target, live,
-        reason: 'The map opens on the first valid fix, not a fallback');
-    expect(maps.moves, isNotEmpty,
-        reason: 'Only the valid fix is allowed to center the camera');
+    expect(
+      updated.markers.any(
+        (marker) =>
+            marker.markerId.value == 'driver_location' &&
+            marker.position == live,
+      ),
+      isTrue,
+      reason: 'The first valid stream fix must reclaim the map marker',
+    );
+    expect(
+      updated.initialCameraPosition.target,
+      live,
+      reason: 'The map opens on the first valid fix, not a fallback',
+    );
+    expect(
+      maps.moves,
+      isNotEmpty,
+      reason: 'Only the valid fix is allowed to center the camera',
+    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 100));
@@ -138,39 +163,55 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        home: DriverHome(locationRepository: location),
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) =>
+            MaterialApp(home: DriverHome(locationRepository: location)),
       ),
-    ));
+    );
     for (var i = 0; i < 12; i++) {
       await tester.pump(const Duration(milliseconds: 50));
     }
 
     expect(location.currentRequests, greaterThanOrEqualTo(1));
-    expect(location.updates.hasListener, isTrue,
-        reason: 'Stream must recover from a one-shot GPS request failure');
+    expect(
+      location.updates.hasListener,
+      isTrue,
+      reason: 'Stream must recover from a one-shot GPS request failure',
+    );
 
     const live = LatLng(59.34, 18.07);
-    location.updates.add(DriverLocation(
-      point: const GeoPoint(59.34, 18.07),
-      measuredAt: DateTime.now(),
-      accuracyMeters: 5,
-      speedMetersPerSecond: 4,
-    ));
+    location.updates.add(
+      DriverLocation(
+        point: const GeoPoint(59.34, 18.07),
+        measuredAt: DateTime.now(),
+        accuracyMeters: 5,
+        speedMetersPerSecond: 4,
+      ),
+    );
     for (var i = 0; i < 12; i++) {
       await tester.pump(const Duration(milliseconds: 50));
     }
 
     final mapsOnScreen = tester.widgetList<GoogleMap>(find.byType(GoogleMap));
     expect(mapsOnScreen, isNotEmpty);
-    expect(mapsOnScreen.any((map) => map.markers.any((marker) =>
-      marker.markerId.value == 'driver_location' &&
-      marker.position == live)), isTrue,
-      reason: 'Recovered live GPS must replace the fallback driver marker');
-    expect(maps.moves, isNotEmpty,
-        reason: 'Recovered GPS must also issue a camera move');
+    expect(
+      mapsOnScreen.any(
+        (map) => map.markers.any(
+          (marker) =>
+              marker.markerId.value == 'driver_location' &&
+              marker.position == live,
+        ),
+      ),
+      isTrue,
+      reason: 'Recovered live GPS must replace the fallback driver marker',
+    );
+    expect(
+      maps.moves,
+      isNotEmpty,
+      reason: 'Recovered GPS must also issue a camera move',
+    );
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());

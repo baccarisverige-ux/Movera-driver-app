@@ -108,16 +108,19 @@ void main() {
       expect(nav.routeState, RouteLoadState.ready);
     },
   );
-  test('R12 progress fraction uses polyline length rather than provider road distance', () async {
-    final nav = NavigationController(routeRepository: Routes(road()));
-    addTearDown(nav.dispose);
-    nav.setVehicle(const DriverLocation(point: origin));
-    await nav.ensureRoute(origin: origin, destination: destination);
-    nav.setVehicle(const DriverLocation(point: GeoPoint(59, 18.005)));
-    expect(nav.routeFraction, closeTo(.5, .001));
-    nav.setVehicle(const DriverLocation(point: destination));
-    expect(nav.routeFraction, closeTo(1, .001));
-  });
+  test(
+    'R12 progress fraction uses polyline length rather than provider road distance',
+    () async {
+      final nav = NavigationController(routeRepository: Routes(road()));
+      addTearDown(nav.dispose);
+      nav.setVehicle(const DriverLocation(point: origin));
+      await nav.ensureRoute(origin: origin, destination: destination);
+      nav.setVehicle(const DriverLocation(point: GeoPoint(59, 18.005)));
+      expect(nav.routeFraction, closeTo(.5, .001));
+      nav.setVehicle(const DriverLocation(point: destination));
+      expect(nav.routeFraction, closeTo(1, .001));
+    },
+  );
   test(
     'R13 custom adapter with invalid geometry fails before guidance projection',
     () async {

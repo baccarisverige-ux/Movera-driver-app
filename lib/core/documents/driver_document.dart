@@ -1,10 +1,6 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
-enum DriverDocumentType {
-  license,
-  insurance,
-  vehicleVerification,
-  nationalId,
-}
+
+enum DriverDocumentType { license, insurance, vehicleVerification, nationalId }
 
 enum DriverDocumentStatus { valid, expiring, expired, rejected }
 
@@ -22,11 +18,11 @@ class DriverDocument {
   final DriverDocumentStatus status;
 
   String get label => switch (type) {
-        DriverDocumentType.license => tr.docDriversLicense,
-        DriverDocumentType.insurance => tr.insurance,
-        DriverDocumentType.vehicleVerification => tr.docVehicleVerification,
-        DriverDocumentType.nationalId => tr.docDriversId,
-      };
+    DriverDocumentType.license => tr.docDriversLicense,
+    DriverDocumentType.insurance => tr.insurance,
+    DriverDocumentType.vehicleVerification => tr.docVehicleVerification,
+    DriverDocumentType.nationalId => tr.docDriversId,
+  };
 }
 
 abstract interface class DriverDocumentRepository {
@@ -39,7 +35,7 @@ abstract interface class DriverDocumentRepository {
 
 class InMemoryDriverDocumentRepository implements DriverDocumentRepository {
   InMemoryDriverDocumentRepository({List<DriverDocument>? seed})
-      : _documents = List<DriverDocument>.from(seed ?? const []);
+    : _documents = List<DriverDocument>.from(seed ?? const []);
 
   final List<DriverDocument> _documents;
 
@@ -81,8 +77,9 @@ class InMemoryDriverDocumentRepository implements DriverDocumentRepository {
 
   @override
   Future<void> upsert(DriverDocument document) async {
-    final index = _documents
-        .indexWhere((item) => item.documentId == document.documentId);
+    final index = _documents.indexWhere(
+      (item) => item.documentId == document.documentId,
+    );
     if (index >= 0) {
       _documents[index] = document;
     } else {

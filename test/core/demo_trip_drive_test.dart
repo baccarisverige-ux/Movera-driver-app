@@ -24,17 +24,19 @@ void main() {
   /// Plays [ticks] seconds of the trip into a detector with admin's
   /// rules; returns the first event and its tick.
   (RideCheckEvent, int)? play(DemoTripDrive car, int ticks) {
-    final detector = RideCheckDetector(
-      rules: RideCheckRules.fromAdmin(RideCheckAdminConfig.current),
-    )
-      ..startTrip(t0)
-      ..planLeg('0', [car.pickup, car.dropoff], 1200, wholeTrip: true);
+    final detector =
+        RideCheckDetector(
+            rules: RideCheckRules.fromAdmin(RideCheckAdminConfig.current),
+          )
+          ..startTrip(t0)
+          ..planLeg('0', [car.pickup, car.dropoff], 1200, wholeTrip: true);
     for (var i = 0; i <= ticks; i++) {
       final at = car.positionAt(i);
       final event = detector.observe(
         at,
         t0.add(Duration(seconds: i)),
-        atPlannedStop: at.distanceMetersTo(car.dropoff) <=
+        atPlannedStop:
+            at.distanceMetersTo(car.dropoff) <=
             RideCheckRules.plannedStopRadiusMeters,
       );
       if (event != null) return (event, i);
@@ -46,20 +48,27 @@ void main() {
     const pickup = DemoTripDrive.farDropoffOfferId;
     final a = DemoRideCheckTrips.farDropoff;
     expect(
-      DemoTripDrive.forTrip('$pickup-1700000000000000',
-              pickup: a.pickupPosition, dropoff: a.dropoffPosition)
-          ?.script,
+      DemoTripDrive.forTrip(
+        '$pickup-1700000000000000',
+        pickup: a.pickupPosition,
+        dropoff: a.dropoffPosition,
+      )?.script,
       DemoDriveScript.farDropoff,
     );
     expect(
-      DemoTripDrive.forTrip(DemoTripDrive.longStopOfferId,
-              pickup: a.pickupPosition, dropoff: a.dropoffPosition)
-          ?.script,
+      DemoTripDrive.forTrip(
+        DemoTripDrive.longStopOfferId,
+        pickup: a.pickupPosition,
+        dropoff: a.dropoffPosition,
+      )?.script,
       DemoDriveScript.longStop,
     );
     expect(
-      DemoTripDrive.forTrip('nearby-1-1700000000000000',
-          pickup: a.pickupPosition, dropoff: a.dropoffPosition),
+      DemoTripDrive.forTrip(
+        'nearby-1-1700000000000000',
+        pickup: a.pickupPosition,
+        dropoff: a.dropoffPosition,
+      ),
       isNull,
     );
   });

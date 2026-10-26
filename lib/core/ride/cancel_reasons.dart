@@ -69,8 +69,7 @@ class CancelReasons {
 
   /// The reasons of [group], in the driver's language ([shown]).
   List<CancelReason> of(CancelReasonGroup group) => [
-    for (final reason in groups[group] ?? const <CancelReason>[])
-      shown(reason),
+    for (final reason in groups[group] ?? const <CancelReason>[]) shown(reason),
   ];
 
   /// The reason with [code] in any group, or null.
@@ -247,7 +246,10 @@ class CancelReasons {
     ],
     // The rider app's own reasons and codes (CancellationReason there).
     CancelReasonGroup.rider: [
-      CancelReason(code: 'pickup_incorrect', title: 'Pickup point is incorrect'),
+      CancelReason(
+        code: 'pickup_incorrect',
+        title: 'Pickup point is incorrect',
+      ),
       CancelReason(
         code: 'wrong_ride_option',
         title: 'I chose the wrong ride option',

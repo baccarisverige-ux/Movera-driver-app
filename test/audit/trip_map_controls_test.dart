@@ -51,19 +51,21 @@ Future<void> _frames(WidgetTester tester, int count, [int ms = 50]) async {
 }
 
 bool _mapBlocked(WidgetTester tester) => tester
-    .widgetList<AbsorbPointer>(find.byWidgetPredicate(
-      (widget) =>
-          widget is AbsorbPointer &&
-          find
-              .descendant(
-                of: find.byWidget(widget),
-                matching: find.byKey(
-                  const ValueKey<String>('active-ride-throttled-map'),
-                ),
-              )
-              .evaluate()
-              .isNotEmpty,
-    ))
+    .widgetList<AbsorbPointer>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is AbsorbPointer &&
+            find
+                .descendant(
+                  of: find.byWidget(widget),
+                  matching: find.byKey(
+                    const ValueKey<String>('active-ride-throttled-map'),
+                  ),
+                )
+                .evaluate()
+                .isNotEmpty,
+      ),
+    )
     .last
     .absorbing;
 
@@ -83,24 +85,26 @@ void main() {
   });
 
   group('driver-u66: the stale-location label over the map buttons', () {
-    testWidgets('stays on screen and leaves the map beside the buttons free',
-        (tester) async {
+    testWidgets('stays on screen and leaves the map beside the buttons free', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final location = _NoGps();
-      await tester.pumpWidget(ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (_, __) => MaterialApp(
-          home: AcceptRide(
-            locationRepository: location,
-            initialStage: ActiveRideStage.onTrip,
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, __) => MaterialApp(
+            home: AcceptRide(
+              locationRepository: location,
+              initialStage: ActiveRideStage.onTrip,
+            ),
           ),
         ),
-      ));
+      );
       await _frames(tester, 20);
-      final label =
-          find.text('Demo offers — live location unavailable/stale');
+      final label = find.text('Demo offers — live location unavailable/stale');
       expect(label, findsOneWidget);
       final rect = tester.getRect(label);
       expect(rect.left, greaterThanOrEqualTo(0), reason: 'not cut at the left');
@@ -134,8 +138,9 @@ void main() {
   });
 
   group('driver-u75: no GPS fix, no route from a made-up position', () {
-    testWidgets('the trip asks for no road route without a real fix',
-        (tester) async {
+    testWidgets('the trip asks for no road route without a real fix', (
+      tester,
+    ) async {
       final previous = DriverRuntimeConfig.current;
       DriverRuntimeConfig.current = const DriverRuntimeConfig(
         simulatedArrival: true,
@@ -152,21 +157,26 @@ void main() {
       addTearDown(tester.view.reset);
       final location = _NoGps();
       final routes = _Routes();
-      await tester.pumpWidget(ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (_, __) => MaterialApp(
-          home: AcceptRide(
-            locationRepository: location,
-            routeRepository: routes,
-            // Gothenburg: hundreds of km from the Stockholm placeholder.
-            pickupPosition: const LatLng(57.7089, 11.9746),
-            dropoffPosition: const LatLng(57.6900, 11.9700),
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, __) => MaterialApp(
+            home: AcceptRide(
+              locationRepository: location,
+              routeRepository: routes,
+              // Gothenburg: hundreds of km from the Stockholm placeholder.
+              pickupPosition: const LatLng(57.7089, 11.9746),
+              dropoffPosition: const LatLng(57.6900, 11.9700),
+            ),
           ),
         ),
-      ));
+      );
       await _frames(tester, 30);
-      expect(routes.origins, isEmpty,
-          reason: 'no route from the placeholder in Stockholm');
+      expect(
+        routes.origins,
+        isEmpty,
+        reason: 'no route from the placeholder in Stockholm',
+      );
 
       await tester.pumpWidget(const SizedBox.shrink());
       await _frames(tester, 10, 100);

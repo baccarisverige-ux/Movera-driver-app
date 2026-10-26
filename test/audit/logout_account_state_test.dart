@@ -22,8 +22,10 @@ void main() {
     IslandMessages.reset();
     ScheduledRideStore.reset();
     DriverStartPosition.clearMemory();
-    await (await SharedPreferences.getInstance())
-        .setString(DriverStartPosition.key, '{"lat":59.3326,"lng":18.0649}');
+    await (await SharedPreferences.getInstance()).setString(
+      DriverStartPosition.key,
+      '{"lat":59.3326,"lng":18.0649}',
+    );
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MoveraApp());
@@ -51,7 +53,9 @@ void main() {
     // driver-r4-11: today's destinations are the driver's too.
     DestinationModeSession.instance.started(address: 'Solna');
 
-    final runtime = DriverRuntimeScope.maybeOf(tester.element(find.byType(DriverHome)))!;
+    final runtime = DriverRuntimeScope.maybeOf(
+      tester.element(find.byType(DriverHome)),
+    )!;
     await tester.runAsync(() => runtime.logout!());
     await tester.pump(const Duration(milliseconds: 120));
 

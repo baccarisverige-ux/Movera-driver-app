@@ -30,7 +30,21 @@ const _modifiers = [
   'uturn left',
   'uturn right',
 ];
-const _distances = <double>[0, 10, 24.9, 25, 80, 150, 300, 999, 1000, 1200, 9949, 9950, 12400];
+const _distances = <double>[
+  0,
+  10,
+  24.9,
+  25,
+  80,
+  150,
+  300,
+  999,
+  1000,
+  1200,
+  9949,
+  9950,
+  12400,
+];
 
 RouteLane _lane(bool valid) =>
     RouteLane(indications: const ['straight'], valid: valid);
@@ -93,7 +107,10 @@ void main() {
                   expect(cue.label(_en), legacy);
                   for (final meters in _distances) {
                     expect(
-                      RouteInstructionCopy.livePrimary(cue: cue, meters: meters),
+                      RouteInstructionCopy.livePrimary(
+                        cue: cue,
+                        meters: meters,
+                      ),
                       _Legacy.livePrimary(action: legacy, meters: meters),
                       reason: '$cue $meters',
                     );
@@ -221,10 +238,16 @@ void main() {
   });
 
   group('French and Swedish', () {
-    String fr(RouteCue cue, double meters) =>
-        RouteInstructionCopy.livePrimary(cue: cue, meters: meters, strings: _fr);
-    String sv(RouteCue cue, double meters) =>
-        RouteInstructionCopy.livePrimary(cue: cue, meters: meters, strings: _sv);
+    String fr(RouteCue cue, double meters) => RouteInstructionCopy.livePrimary(
+      cue: cue,
+      meters: meters,
+      strings: _fr,
+    );
+    String sv(RouteCue cue, double meters) => RouteInstructionCopy.livePrimary(
+      cue: cue,
+      meters: meters,
+      strings: _sv,
+    );
 
     test('live banner lines', () {
       const left = RouteCue(RouteCueKind.turnLeft);
@@ -249,10 +272,7 @@ void main() {
       expect(sv(on, 1200), 'Fortsätt rakt fram i 1,2 km');
       expect(sv(round, 80), 'Rondell, avfart 2');
       expect(sv(exit, 700), 'Avfart 165 · Liljeholmen om 700 m');
-      expect(
-        sv(const RouteCue(RouteCueKind.uTurn), 150),
-        'U-sväng om 150 m',
-      );
+      expect(sv(const RouteCue(RouteCueKind.uTurn), 150), 'U-sväng om 150 m');
     });
 
     test('whole steps, distances and lanes', () {
@@ -346,19 +366,19 @@ class _ExitRoute implements RouteRepository {
 }
 
 String _legacyHint(List<RouteLane> lanes) {
-    final used = [
-      for (var i = 0; i < lanes.length; i++)
-        if (lanes[i].valid) i,
-    ];
-    if (used.isEmpty) return '';
-    final n = used.length;
-    final side = used.first == 0
-        ? 'left'
-        : used.last == lanes.length - 1
-        ? 'right'
-        : 'middle';
-    return n == 1 ? 'Use the $side lane' : 'Use the $n $side lanes';
-  }
+  final used = [
+    for (var i = 0; i < lanes.length; i++)
+      if (lanes[i].valid) i,
+  ];
+  if (used.isEmpty) return '';
+  final n = used.length;
+  final side = used.first == 0
+      ? 'left'
+      : used.last == lanes.length - 1
+      ? 'right'
+      : 'middle';
+  return n == 1 ? 'Use the $side lane' : 'Use the $n $side lanes';
+}
 
 /// The English-only copy as it was before the change (reference only).
 class _Legacy {
@@ -477,7 +497,9 @@ class _Legacy {
       case RouteManeuverType.exitRotary:
         final exit = (exitNumber ?? '').trim();
         if (modifier.startsWith('uturn')) {
-          return exit.isEmpty ? 'Roundabout, U-turn' : 'Roundabout, U-turn · exit $exit';
+          return exit.isEmpty
+              ? 'Roundabout, U-turn'
+              : 'Roundabout, U-turn · exit $exit';
         }
         return exit.isEmpty ? 'Roundabout' : 'Roundabout, exit $exit';
       case RouteManeuverType.offRamp:
@@ -594,5 +616,4 @@ class _Legacy {
         return onto.isEmpty ? 'Continue' : 'Continue$onto';
     }
   }
-
 }

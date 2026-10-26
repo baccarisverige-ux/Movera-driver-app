@@ -34,8 +34,9 @@ class DriverStartPosition {
     final memory = _memory;
     if (memory != null) return memory;
     try {
-      final raw = (await (prefs ?? SharedPreferences.getInstance)())
-          .getString(key);
+      final raw = (await (prefs ?? SharedPreferences.getInstance)()).getString(
+        key,
+      );
       final saved = _decode(raw);
       if (saved != null) return _memory = saved;
     } catch (_) {

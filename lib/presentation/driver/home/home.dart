@@ -165,6 +165,7 @@ class DriverHome extends StatefulWidget {
   @override
   State<DriverHome> createState() => _DriverHomeState();
 }
+
 class _DriverHomeState extends State<DriverHome>
     with TickerProviderStateMixin, WidgetsBindingObserver, RouteAware {
   bool _routeVisible = true;
@@ -173,64 +174,115 @@ class _DriverHomeState extends State<DriverHome>
   bool get _liveVisible => _routeVisible && _foreground;
   @override
   void didChangeDependencies() {
-    super.didChangeDependencies(); _HomeAccount(this)._refreshLiveBadgesOnce(); // round 4b: the scope is read here, not in initState
+    super.didChangeDependencies();
+    _HomeAccount(
+      this,
+    )._refreshLiveBadgesOnce(); // round 4b: the scope is read here, not in initState
     final route = ModalRoute.of(context);
-    if (route != null) { driverRouteObserver.subscribe(this, route); driverRouteObserver.pages.subscribe(_pageCover, route); }
-    if(MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.stop(); _radarSweepController.stop(); _radarMotionController.stop(); }
+    if (route != null) {
+      driverRouteObserver.subscribe(this, route);
+      driverRouteObserver.pages.subscribe(_pageCover, route);
+    }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _goOnlinePulseController.stop();
+      _radarSweepController.stop();
+      _radarMotionController.stop();
+    }
   }
-  late final _pageCover = PageCover(covered: () => _HomeRoutes(this)._pageCovered(), uncovered: () => _HomeRoutes(this)._pageUncovered());
+
+  late final _pageCover = PageCover(
+    covered: () => _HomeRoutes(this)._pageCovered(),
+    uncovered: () => _HomeRoutes(this)._pageUncovered(),
+  );
   @override
-  void didPopNext() { _HomeRoutes(this)._backOnTop(); _HomeAccount(this)._refreshLiveBadges(); }
+  void didPopNext() {
+    _HomeRoutes(this)._backOnTop();
+    _HomeAccount(this)._refreshLiveBadges();
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Inactive is still on screen: a call banner, a system dialog (driver-65).
-    _foreground = state == AppLifecycleState.resumed || state == AppLifecycleState.inactive;
-    if (state == AppLifecycleState.resumed) { _HomeRecovery(this)._rearmWallClockTimers(); _HomeAccount(this)._refreshLiveBadges(); }
-    if (_liveVisible) { _resumeHomeUpdates(); } else { _pauseHomeUpdates(); }
+    _foreground =
+        state == AppLifecycleState.resumed ||
+        state == AppLifecycleState.inactive;
+    if (state == AppLifecycleState.resumed) {
+      _HomeRecovery(this)._rearmWallClockTimers();
+      _HomeAccount(this)._refreshLiveBadges();
+    }
+    if (_liveVisible) {
+      _resumeHomeUpdates();
+    } else {
+      _pauseHomeUpdates();
+    }
   }
+
   void _pauseHomeUpdates() {
     _camera.suspend();
     _locationEpoch++;
     _driverLocationSubscription?.cancel();
     _driverLocationSubscription = null;
-    _radarSubscription?.cancel();_radarSubscription=null; _withdrawalSubscription?.cancel();
+    _radarSubscription?.cancel();
+    _radarSubscription = null;
+    _withdrawalSubscription?.cancel();
     _HomeOfferRadar(this)._cancelAllOfferTimers(preserveClaim: true);
-    _offerSimulationTimer?.cancel(); _directOfferTimer?.cancel();
-    _expandedDirectOfferTimer?.cancel(); _radarOfferTwoTimer?.cancel(); _radarOfferThreeTimer?.cancel();
-    _goOnlinePulseController.stop(); _radarSweepController.stop(); _radarMotionController.stop();
+    _offerSimulationTimer?.cancel();
+    _directOfferTimer?.cancel();
+    _expandedDirectOfferTimer?.cancel();
+    _radarOfferTwoTimer?.cancel();
+    _radarOfferThreeTimer?.cancel();
+    _goOnlinePulseController.stop();
+    _radarSweepController.stop();
+    _radarMotionController.stop();
     _offerRouteFrame.stopLine();
   }
+
   void _resumeHomeUpdates() {
-    if (!mounted || !_liveVisible) { return; }
+    if (!mounted || !_liveVisible) {
+      return;
+    }
     _camera.resume();
-    unawaited(_HomeMapSheet(this)._startDriverLocation()); _HomeMapSheet(this)._recheckDestinationLimit();
+    unawaited(_HomeMapSheet(this)._startDriverLocation());
+    _HomeMapSheet(this)._recheckDestinationLimit();
     _HomeOfferRadar(this)._scheduleVisibleOffers();
     _HomeOfferRadar(this)._resumeOfferTimers();
     _HomeOfferRules(this)._releaseHeldOffline();
     _HomeOfferRoute(this)._resumeRouteLine();
     _HomeMapSheet(this)._showNextIslandMessage();
-    if(!MediaQuery.disableAnimationsOf(context)) { _goOnlinePulseController.repeat(reverse: true); _radarSweepController.repeat(); _radarMotionController.repeat(); }
+    if (!MediaQuery.disableAnimationsOf(context)) {
+      _goOnlinePulseController.repeat(reverse: true);
+      _radarSweepController.repeat();
+      _radarMotionController.repeat();
+    }
     setState(() {});
   }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   /// D-11: one Home map (and camera) for the sheet, the Radar list and the destination panel.
   final GlobalKey _homeMapKey = GlobalKey(debugLabel: 'home-map');
   final PanelController _panelController = PanelController();
   final PanelController _destinationPanelController = PanelController();
   late final AnimationController _goOnlinePulseController;
   late final AnimationController _radarSweepController;
+
   /// R15-4: one 10 s loop for the Radar's soft sweep (5 turns with trips
   /// found, 3 while scanning) and the black MATCH pulse (4 per loop).
   late final AnimationController _radarMotionController;
   final RadarOfferSound _offerSound = RadarOfferSound();
   bool _offerSoundQueued = false;
-  double _radarWedge({required bool found}) => (_radarMotionController.value * (found ? 5 : 3)) % 1;
+  double _radarWedge({required bool found}) =>
+      (_radarMotionController.value * (found ? 5 : 3)) % 1;
   double get _matchPulse {
     final t = (_radarMotionController.value * 4) % 1;
-    final x = t < 0.35 ? t / 0.35 : t < 0.7 ? 1 - (t - 0.35) / 0.35 : 0.0;
+    final x = t < 0.35
+        ? t / 0.35
+        : t < 0.7
+        ? 1 - (t - 0.35) / 0.35
+        : 0.0;
     return 0.5 - 0.5 * math.cos(math.pi * x);
   }
+
   Timer? _onlineTransitionTimer;
 
   /// Puts the top island back on the hidden total after 5 s untouched.
@@ -252,10 +304,17 @@ class _DriverHomeState extends State<DriverHome>
   IslandMessage? _islandMessage;
   int _islandMessageSeq = 0;
   Timer? _islandMessageTimer;
+
   /// R13-1: "Finding trips" and short messages while waiting online.
   late final IslandWaitingController _islandWaiting = IslandWaitingController(
-      tips: () => _HomeMapSheet(this)._waitingTips())..addListener(_islandWaitingListener);
-  void _islandWaitingListener() { if (mounted) { setState(() {}); } }
+    tips: () => _HomeMapSheet(this)._waitingTips(),
+  )..addListener(_islandWaitingListener);
+  void _islandWaitingListener() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   void _islandMessagesListener() =>
       _HomeMapSheet(this)._onIslandMessagesChanged();
   void _lastTripListener() => _HomeMapSheet(this)._onLastTripChanged();
@@ -267,8 +326,10 @@ class _DriverHomeState extends State<DriverHome>
   Timer? _expandedDirectOfferTimer;
   Timer? _reservationOfferTimer;
   Timer? _reservationPopupTimer;
+
   /// The reservation sent to Home: it rises from the dock while online.
   final _HomeReservationState _reservation = _HomeReservationState();
+
   /// The smart gap before accepted rides, and rides Movera assigns.
   final _HomeScheduledState _scheduled = _HomeScheduledState();
   final _HomeAccountState _account = _HomeAccountState();
@@ -284,11 +345,14 @@ class _DriverHomeState extends State<DriverHome>
   final Map<String, _HomeRadarMatchState> _homeRadarMatchStates =
       <String, _HomeRadarMatchState>{};
   String? _homeRadarMatchingOfferId;
+
   /// A won offer whose trip opens as soon as Home is on top: a Radar
   /// Match, or an Exclusive Accept won while a screen covered Home.
   _HomeDirectOffer? _claimedHomeOffer;
+
   /// How [_claimedHomeOffer]'s trip was matched; null for a Radar Match.
   String? _claimedHomeSource;
+
   /// Decision 3: a rule took the driver offline while a claim was with
   /// dispatch; it applies once the claim is answered.
   bool _offlineHeld = false;
@@ -312,8 +376,9 @@ class _DriverHomeState extends State<DriverHome>
   StreamSubscription<DriverLocation>? _driverLocationSubscription;
   bool _hasLiveDriverLocation = false;
   bool _didCenterOnLiveLocation = false;
-  BitmapDescriptor _driverVehicleIcon =
-      BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+  BitmapDescriptor _driverVehicleIcon = BitmapDescriptor.defaultMarkerWithHue(
+    BitmapDescriptor.hueGreen,
+  );
   double _driverHeading = 0;
   bool isPanelOpen = false;
   bool _blockMapGestures = false;
@@ -322,17 +387,21 @@ class _DriverHomeState extends State<DriverHome>
   final ValueNotifier<double> _panelSlidePosition = ValueNotifier<double>(0);
 
   /// Dispatch's time to accept an Exclusive offer (15 s by default).
-  static Duration get _outsideOfferLifetime => DriverOfferRules.current.exclusiveAcceptTime;
+  static Duration get _outsideOfferLifetime =>
+      DriverOfferRules.current.exclusiveAcceptTime;
 
   /// How long a Radar trip can be picked once it shows in the Home list:
   /// Dispatch's time on the radar (15 s by default).
-  static Duration get _radarOfferPickWindow => DriverOfferRules.current.radarTime;
+  static Duration get _radarOfferPickWindow =>
+      DriverOfferRules.current.radarTime;
   static const int _maxHomeRadarOffers = 4;
   double _sheetPointerVelocity = 0;
   double _sheetPointerTravel = 0;
   double _sheetPointerStartPos = 0;
   double _sheetPointerLastY = 0;
-  VelocityTracker _sheetVelocity = VelocityTracker.withKind(PointerDeviceKind.touch);
+  VelocityTracker _sheetVelocity = VelocityTracker.withKind(
+    PointerDeviceKind.touch,
+  );
   double _lastSnapHapticAt = -1;
   late final MoveraSnapSheetController _snapSheet;
   bool showRideRequests = false;
@@ -342,27 +411,37 @@ class _DriverHomeState extends State<DriverHome>
   final ValueNotifier<bool> _radarListClaiming = ValueNotifier<bool>(false);
   final RadarHiddenTrips _radarHidden = RadarHiddenTrips(); // u159
   /// Decision 4: the offer settings are locked while a claim is out.
-  void _syncClaimLock() => ClaimLock.set(mounted && _HomeOfferRules(this)._claimInFlight);
+  void _syncClaimLock() =>
+      ClaimLock.set(mounted && _HomeOfferRules(this)._claimInFlight);
   bool isAccountActivated = true;
   bool _activationHold = false;
   late final DriverSessionController _driverSession;
   late final bool _ownsDriverSession;
-  bool get _isOnline => _liveVisible && _recoveryResolved && _driverSession.availableForOffers;
+  bool get _isOnline =>
+      _liveVisible && _recoveryResolved && _driverSession.availableForOffers;
   bool get _isGoingOnline => _driverSession.isGoingOnline;
   // Offer orchestration lives in an extension, which cannot call setState.
-  void _rebuild(VoidCallback update) { setState(update); _syncClaimLock(); }
+  void _rebuild(VoidCallback update) {
+    setState(update);
+    _syncClaimLock();
+  }
+
   void openDestinationPanel() => _HomeMapSheet(this).openDestinationPanel();
   bool _hasRideOffers = false;
+
   /// Green dot on the scheduled icon: on while any reservation request is
   /// still unanswered.
   bool get _hasScheduledRideOffers =>
       _adminHomeConfig.scheduledRides.hasOpenRequests &&
       ScheduledRideStore.openRequests.value > 0;
+
   /// What the top island's screen shows; a tap moves to the next face.
   _IslandFace _islandFace = _IslandFace.hidden;
   _HomeDirectOffer? _outsideRadarOffer;
+
   /// Demo: once an Exclusive offer was accepted, the next one is the cash one.
   bool _exclusiveDemoTaken = false;
+
   /// Q16: admin direct assigns already shown as Exclusive offers.
   final Set<String> _adminAssignsShown = <String>{};
   final List<_HomeDirectOffer> _radarHomeOffers = <_HomeDirectOffer>[];
@@ -378,6 +457,7 @@ class _DriverHomeState extends State<DriverHome>
 
   /// Radar trips whose pick window ran out: still listed, Match faded.
   final Set<String> _radarOfferExpired = <String>{};
+
   /// D-04: when each listed Radar trip's pick window ends; a pause keeps it.
   final Map<String, DateTime> _radarOfferDeadlines = <String, DateTime>{};
   bool _destinationModeActive = false;
@@ -401,11 +481,13 @@ class _DriverHomeState extends State<DriverHome>
   // Separate ownership for frequently refreshed GPS-to-destination roads.
   // An old routing response must never replace a route from a newer fix.
   final MapPreviewGeneration _destinationRoadRequests = MapPreviewGeneration();
-  final CoalescingMapRouteRefresh _destinationRoadRefresh = CoalescingMapRouteRefresh();
+  final CoalescingMapRouteRefresh _destinationRoadRefresh =
+      CoalescingMapRouteRefresh();
   final MovingRouteRefresh _destinationRouteRefetch = MovingRouteRefresh();
 
   // Placeholder only: the map and car wait for a known position.
   static const LatLng _fallbackDriverPosition = LatLng(59.3293, 18.0686);
+
   /// The last position the app sent the server, else the fallback, until
   /// this screen's own GPS read lands.
   late LatLng _driverPosition =
@@ -414,7 +496,11 @@ class _DriverHomeState extends State<DriverHome>
   bool _startPositionKnown = false, _startLocationFailed = false;
   Timer? _startWait;
   // Opens on the area around the driver (~10 km across), nearly flat.
-  CameraPosition get _initialPosition => CameraPosition(target: _driverPosition, zoom: DriverCameraPolicy.exploreZoom, tilt: DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.exploreZoom));
+  CameraPosition get _initialPosition => CameraPosition(
+    target: _driverPosition,
+    zoom: DriverCameraPolicy.exploreZoom,
+    tilt: DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.exploreZoom),
+  );
 
   static const _HomeDirectOffer _veryCloseDirectOffer = _HomeDirectOffer(
     id: 'home-direct-close',
@@ -456,16 +542,21 @@ class _DriverHomeState extends State<DriverHome>
     cashToCollect: '150,00 kr',
   );
 
-  late final SheetTrace _sheetTrace = SheetTrace('home', () => _panelController.isAttached ? _panelController.panelPosition : 0);
+  late final SheetTrace _sheetTrace = SheetTrace(
+    'home',
+    () => _panelController.isAttached ? _panelController.panelPosition : 0,
+  );
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    isAccountActivated = DriverRuntimeConfig.current.skipAccountActivation ||
+    isAccountActivated =
+        DriverRuntimeConfig.current.skipAccountActivation ||
         !widget.accountPending;
     _ownsDriverSession = widget.sessionController == null;
-    _driverSession = widget.sessionController ??
+    _driverSession =
+        widget.sessionController ??
         DriverSessionController(initialOnline: widget.initialOnline);
     _driverSession.addListener(_onDriverSessionChanged);
     _radarListClaiming.addListener(_syncClaimLock);
@@ -473,18 +564,21 @@ class _DriverHomeState extends State<DriverHome>
     _driverLocationService =
         widget.locationRepository ?? const DriverLocationService();
     _roadRouteService = widget.routeRepository ?? RoadRouteService();
-    _waybills =
-        widget.waybillRepository ?? InMemoryWaybillRepository.instance;
+    _waybills = widget.waybillRepository ?? InMemoryWaybillRepository.instance;
     _ownsDispatch = widget.dispatchRepository == null;
     _dispatch = widget.dispatchRepository ?? DemoDispatchRepository();
     if (widget.sessionController != null && widget.initialOnline) {
       _driverSession.setOnline(true);
     }
-    _adminHomeConfig = (widget.homeConfigRepository ??
-            const LocalDriverHomeConfigRepository())
-        .load();
-    if (_adminHomeConfig.destinationMode case final rules?) { DestinationModeRules.current = rules; }
-    if (_adminHomeConfig.nextTrips case final rules?) { NextTripRules.current = rules; }
+    _adminHomeConfig =
+        (widget.homeConfigRepository ?? const LocalDriverHomeConfigRepository())
+            .load();
+    if (_adminHomeConfig.destinationMode case final rules?) {
+      DestinationModeRules.current = rules;
+    }
+    if (_adminHomeConfig.nextTrips case final rules?) {
+      NextTripRules.current = rules;
+    }
     ScheduledRideStore.applyAdmin(_adminHomeConfig.scheduledRides);
     ScheduledRideStore.openRequests.addListener(_onScheduledRequests);
     _HomeAccount(this)._startAccount();
@@ -496,8 +590,15 @@ class _DriverHomeState extends State<DriverHome>
       vsync: this,
       duration: const Duration(milliseconds: 1600),
     )..repeat();
-    _radarMotionController = AnimationController(vsync: this, duration: const Duration(seconds: 10))..repeat();
-    _snapSheet = MoveraSnapSheetController(panel: _panelController, vsync: this, reduceMotion: () => mounted && MediaQuery.disableAnimationsOf(context));
+    _radarMotionController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat();
+    _snapSheet = MoveraSnapSheetController(
+      panel: _panelController,
+      vsync: this,
+      reduceMotion: () => mounted && MediaQuery.disableAnimationsOf(context),
+    );
     _HomeStartPosition(this)._restoreStartPosition();
     _HomeMapSheet(this)._prepareDriverVehicleMarker();
     _HomeMapSheet(this)._startDriverLocation();
@@ -518,16 +619,24 @@ class _DriverHomeState extends State<DriverHome>
   bool _recoveryResolved = false;
 
   Future<void> _restoreActiveRideIfNeeded() async {
-    if (_didAttemptActiveRideRestore) { return; }
+    if (_didAttemptActiveRideRestore) {
+      return;
+    }
     _didAttemptActiveRideRestore = true;
     final repo = widget.activeRideRepository;
-    if (repo == null) { if (mounted) { setState(() => _recoveryResolved = true); } return; }
+    if (repo == null) {
+      if (mounted) {
+        setState(() => _recoveryResolved = true);
+      }
+      return;
+    }
     PersistedActiveRide? snapshot;
     try {
       final journal = await CompletionJournal(active: repo).reconcile();
       if (mounted && journal == JournalReplayOutcome.quarantinedConflict) {
         IslandMessages.show(HomeIslandNotices.newerTripKept);
-      } else if (mounted && journal == JournalReplayOutcome.quarantinedCorrupt) {
+      } else if (mounted &&
+          journal == JournalReplayOutcome.quarantinedCorrupt) {
         IslandMessages.show(HomeIslandNotices.recordSetAside);
       }
       snapshot = await repo.read();
@@ -535,30 +644,54 @@ class _DriverHomeState extends State<DriverHome>
       // driver-u112: blocked storage holds no trip to recover; going online
       // stays possible, and Retry reads again.
       _didAttemptActiveRideRestore = false;
-      if (!mounted) { return; }
+      if (!mounted) {
+        return;
+      }
       setState(() => _recoveryResolved = true);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr.tripStorageUnavailable), persist: false, duration: _HomeRoutes.storageRetryShown,
-          action: SnackBarAction(label: tr.retry, onPressed: () => _HomeRoutes(this)._retryActiveRideRestore()))); // driver-r5-37
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(tr.tripStorageUnavailable),
+          persist: false,
+          duration: _HomeRoutes.storageRetryShown,
+          action: SnackBarAction(
+            label: tr.retry,
+            onPressed: () => _HomeRoutes(this)._retryActiveRideRestore(),
+          ),
+        ),
+      ); // driver-r5-37
       return;
     } on ActiveRideUnreadable {
       _didAttemptActiveRideRestore = false;
-      if (mounted) { await _offerUnreadableTripClosure(repo); }
+      if (mounted) {
+        await _offerUnreadableTripClosure(repo);
+      }
       return;
     } catch (_) {
       _didAttemptActiveRideRestore = false;
-      if(mounted) {
-        _HomeMapSheet(this)._tripProblem(HomeIslandNotices.recoveryFailed,
-            tr.savedTripCouldNotBeOpened);
+      if (mounted) {
+        _HomeMapSheet(this)._tripProblem(
+          HomeIslandNotices.recoveryFailed,
+          tr.savedTripCouldNotBeOpened,
+        );
       }
       return;
     }
-    if (!mounted) { return; }
-    if (snapshot == null) { setState(() => _recoveryResolved = true); return; }
+    if (!mounted) {
+      return;
+    }
+    if (snapshot == null) {
+      setState(() => _recoveryResolved = true);
+      return;
+    }
 
     if (!snapshot.isFresh || !snapshot.hasVerifiedEndpoints) {
       final resume = await _HomeBack(this)._askUnresolvedTrip(snapshot);
-      if (!mounted) { return; }
-      if (resume != true) { return _HomeRecovery(this)._closeSavedTrip(repo, snapshot); }
+      if (!mounted) {
+        return;
+      }
+      if (resume != true) {
+        return _HomeRecovery(this)._closeSavedTrip(repo, snapshot);
+      }
     }
 
     setState(() => _recoveryResolved = true);
@@ -571,8 +704,11 @@ class _DriverHomeState extends State<DriverHome>
       _waybills.secureNext(_waybillFromQueued(next));
     }
 
-    if (!mounted) { return; }
-    pushSingle(context,
+    if (!mounted) {
+      return;
+    }
+    pushSingle(
+      context,
       BottomToTopTransition(
         AcceptRide.fromPersisted(
           snapshot,
@@ -595,9 +731,7 @@ class _DriverHomeState extends State<DriverHome>
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: Text(tr.savedTripCannotBeRead),
-        content: Text(
-          tr.tripSavedOnThisDeviceIs,
-        ),
+        content: Text(tr.tripSavedOnThisDeviceIs),
         actions: [
           TextButton(
             onPressed: () => popOwned(context, false),
@@ -610,11 +744,15 @@ class _DriverHomeState extends State<DriverHome>
         ],
       ),
     );
-    if (!mounted) { return; }
+    if (!mounted) {
+      return;
+    }
     if (close != true || repo is! UnreadableRideRecovery) {
-      _HomeMapSheet(this)._tripProblem(HomeIslandNotices.unreadableTripOpen,
-          tr.savedTripCouldNotBeRead,
-          action: tr.review);
+      _HomeMapSheet(this)._tripProblem(
+        HomeIslandNotices.unreadableTripOpen,
+        tr.savedTripCouldNotBeRead,
+        action: tr.review,
+      );
       return;
     }
     try {
@@ -622,8 +760,9 @@ class _DriverHomeState extends State<DriverHome>
     } catch (_) {
       if (mounted) {
         _HomeMapSheet(this)._tripProblem(
-            HomeIslandNotices.unreadableTripNotClosed,
-            tr.unreadableTripCouldNotBeClosed);
+          HomeIslandNotices.unreadableTripNotClosed,
+          tr.unreadableTripCouldNotBeClosed,
+        );
       }
       return;
     }
@@ -634,7 +773,10 @@ class _DriverHomeState extends State<DriverHome>
     return WaybillRecord(
       tripId: snapshot.tripId,
       statusLabel: WaybillRecord.currentTrip,
-      issuedAt: snapshot.acceptedAt ?? snapshot.savedAt ?? DateTime.now(), // driver-u114
+      issuedAt:
+          snapshot.acceptedAt ??
+          snapshot.savedAt ??
+          DateTime.now(), // driver-u114
       fare: snapshot.fare ?? '—',
       riderFare: snapshot.riderFare,
       driverBonus: WaybillRecord.bonusLabel(snapshot.driverBonus),
@@ -643,7 +785,8 @@ class _DriverHomeState extends State<DriverHome>
       pickup: snapshot.pickupAddress ?? '',
       dropoff: snapshot.dropoffAddress ?? '',
       source: snapshot.matchedVia ?? WaybillRecord.moveraRadarSource,
-      driverName: WaybillRecord.moveraDriverName, // driver-r5-38: as a live trip
+      driverName:
+          WaybillRecord.moveraDriverName, // driver-r5-38: as a live trip
       vehicle: WaybillRecord.vehicleUnavailable,
       licensePlate: WaybillRecord.plateUnavailable,
       passengerCapacity: 4,
@@ -672,10 +815,17 @@ class _DriverHomeState extends State<DriverHome>
   void _onDriverSessionChanged() {
     DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
     _HomeAccount(this)._syncDrivingLimit();
-    if (!mounted) { return; }
-    _HomeOfferRules(this)._releaseHeldOffline(); // Decision 3: a won trip began.
+    if (!mounted) {
+      return;
+    }
+    _HomeOfferRules(
+      this,
+    )._releaseHeldOffline(); // Decision 3: a won trip began.
     _HomeScheduled(this)._recheckLateScheduled();
-    if (_driverSession.activeTripId != null && _radarHomeOffers.isNotEmpty) { _HomeOfferRadar(this)._cancelAllOfferTimers(); _HomeOfferRadar(this)._clearHomeOffersAfterFrame(); } // u116
+    if (_driverSession.activeTripId != null && _radarHomeOffers.isNotEmpty) {
+      _HomeOfferRadar(this)._cancelAllOfferTimers();
+      _HomeOfferRadar(this)._clearHomeOffersAfterFrame();
+    } // u116
     if (_driverSession.consumeResumeHomeAfterTrip()) {
       setState(() {
         showRideRequests = false;
@@ -687,9 +837,13 @@ class _DriverHomeState extends State<DriverHome>
 
   String get _destinationShortLabel {
     final address = _destinationAddress?.trim();
-    if (address == null || address.isEmpty) { return tr.destination; }
+    if (address == null || address.isEmpty) {
+      return tr.destination;
+    }
     final firstPart = address.split(',').first.trim();
-    if (firstPart.length <= 24) { return firstPart; }
+    if (firstPart.length <= 24) {
+      return firstPart;
+    }
     return '${firstPart.substring(0, 21)}…';
   }
 
@@ -721,180 +875,210 @@ class _DriverHomeState extends State<DriverHome>
       behavior: HitTestBehavior.translucent,
       onPointerDown: (_) => _offerSound.tap(),
       child: LayoutViewport(
-      // UI-03: Back closes the overlay on top before it leaves Home.
-      child: _HomeBack(this)._backScope(Scaffold(
-      key: _scaffoldKey,
-      onDrawerChanged: (open) => _HomeExclusive(this)._drawerChanged(open),
-      drawer: DriverSideMenu(
-        isOnline: _isOnline,
-        accountActive: isAccountActivated,
-        dispatchRepository: _dispatch,
-      ),
-      body: showRideRequests
-          ? Stack(
-              fit: StackFit.expand,
-              children: [
-                AbsorbPointer(
-                  child: _HomeMapSheet(this)._buildRadarMapBackdrop(),
-                ),
-                ClipRect(
-                  child: BackdropFilter(
-                    filter: ui.ImageFilter.blur(sigmaX: 9.5, sigmaY: 9.5),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            const Color(0xFF172027).withValues(alpha: 0.46),
-                            const Color(0xFF6F7D80).withValues(alpha: 0.16),
-                            const Color(0xFFF4F7F8).withValues(alpha: 0.24),
-                          ],
-                          stops: const [0.0, 0.45, 1.0],
+        // UI-03: Back closes the overlay on top before it leaves Home.
+        child: _HomeBack(this)._backScope(
+          Scaffold(
+            key: _scaffoldKey,
+            onDrawerChanged: (open) =>
+                _HomeExclusive(this)._drawerChanged(open),
+            drawer: DriverSideMenu(
+              isOnline: _isOnline,
+              accountActive: isAccountActivated,
+              dispatchRepository: _dispatch,
+            ),
+            body: showRideRequests
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      AbsorbPointer(
+                        child: _HomeMapSheet(this)._buildRadarMapBackdrop(),
+                      ),
+                      ClipRect(
+                        child: BackdropFilter(
+                          filter: ui.ImageFilter.blur(sigmaX: 9.5, sigmaY: 9.5),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  const Color(
+                                    0xFF172027,
+                                  ).withValues(alpha: 0.46),
+                                  const Color(
+                                    0xFF6F7D80,
+                                  ).withValues(alpha: 0.16),
+                                  const Color(
+                                    0xFFF4F7F8,
+                                  ).withValues(alpha: 0.24),
+                                ],
+                                stops: const [0.0, 0.45, 1.0],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                PointerInterceptor(
-                  child: const SizedBox.expand(),
-                ),
-                RideRequests(
-                  destinationModeActive: _destinationModeActive,
-                  destinationAddress: _destinationAddress,
-                  destinationPosition: _destinationPosition,
-                  sessionController: _driverSession,
-                  waybillRepository: _waybills,
-                  locationRepository: _driverLocationService,
-                  routeRepository: _roadRouteService,
-                  dispatchRepository: _dispatch,
-                  activeRideRepository: widget.activeRideRepository,
-                  offerFilter: _HomeOfferRules(this)._rideAllowed,
-                  followsDestination: (o) => _HomeOfferRadar(this)._followsDestination(o.dropoffPosition.toLatLng()),
-                  towardPickupTime: _HomeScheduled(this)._towardPickupTime,
-                  claimPending: _radarListClaiming,
-                  hiddenTrips: _radarHidden,
-                  onCloseRides: (hasOffers) {
-                    setState(() {
-                      showRideRequests = false;
-                      _hasRideOffers =
-                          hasOffers || _radarHomeOffers.isNotEmpty;
-                    });
-                  },
-                ),
-              ],
-            )
-          : hideMainPanel
-          ? DestinationSetPanel(
-              controller: _destinationPanelController,
-              onClose: () {
-                setState(() {
-                  hideMainPanel = false;
-                });
-              },
-              body: _HomeMapSheet(this).body(isDestinationPanel: true),
-            )
-          : Stack(
-              fit: StackFit.expand,
-              children: [
-          SlidingUpPanel(
-              color: Colors.transparent,
-              backdropColor: Colors.transparent,
-              backdropOpacity: 0,
-              backdropEnabled: false,
-              backdropTapClosesPanel: false,
-              controller: _panelController,
-              margin: EdgeInsets.all(0),
-              minHeight: MoveraSheetMetrics.collapsedHeight,
-              padding: EdgeInsets.zero,
-              boxShadow: [],
-              isDraggable: _outsideRadarOffer == null,
-              // Our spring settles the sheet (see _snapHomeSheet): closed or
-              // open, never in between.
-              panelSnapping: false,
-              defaultPanelState: PanelState.CLOSED,
-              maxHeight: _HomeMapSheet(this)._homeExpandedHeight(context),
-              // The map rises with the sheet, about a third as far, on the
-              // same spring.
-              parallaxEnabled: true,
-              parallaxOffset: 0.3,
-              onPanelSlide: (double pos) {
-                _mainPanelPosition = pos;
-                _panelSlidePosition.value = pos;
-                if (!_sheetPointerActive) {
-                  _HomeMapSheet(this)._scheduleHomeSheetPositionGuard();
-                }
-                if (pos > 0.04) {
-                  _HomeMapSheet(this)._closeHomeFloatingPopupsForSheet();
-                }
-                final nextPanelOpen = pos > 0.3;
-                // A settled sheet covers only its own region. The exposed map
-                // remains pinchable; block input only during a sheet drag.
-                final nextBlockMap = _sheetPointerActive;
-                if (isPanelOpen != nextPanelOpen ||
-                    _blockMapGestures != nextBlockMap) {
-                  setState(() {
-                    isPanelOpen = nextPanelOpen;
-                    _blockMapGestures = nextBlockMap;
-                  });
-                }
-              },
-              onPanelOpened: () {
-                _homeSheetPositionGuardTimer?.cancel();
-                _mainPanelPosition = 1;
-                _panelSlidePosition.value = 1;
-                _HomeMapSheet(this)._closeHomeFloatingPopupsForSheet();
-                _HomeMapSheet(this)._setMapGesturesBlocked(_sheetPointerActive);
-              },
-              onPanelClosed: () {
-                _homeSheetPositionGuardTimer?.cancel();
-                _mainPanelPosition = 0;
-                _panelSlidePosition.value = 0;
-                _sheetPointerActive = false;
-                if (isPanelOpen) {
-                  setState(() {
-                    isPanelOpen = false;
-                  });
-                }
-                _HomeMapSheet(this)._setMapGesturesBlocked(false);
-              },
-              // Account on hold keeps its red dock face.
-              collapsed: _HomeMapSheet(this)._inactiveDock(),
-              // The dock is the sheet's own bottom: it never moves or fades,
-              // so the sheet keeps one shape from closed to open.
-              footer: _HomeMapSheet(this)._homeDockFooter(),
+                      PointerInterceptor(child: const SizedBox.expand()),
+                      RideRequests(
+                        destinationModeActive: _destinationModeActive,
+                        destinationAddress: _destinationAddress,
+                        destinationPosition: _destinationPosition,
+                        sessionController: _driverSession,
+                        waybillRepository: _waybills,
+                        locationRepository: _driverLocationService,
+                        routeRepository: _roadRouteService,
+                        dispatchRepository: _dispatch,
+                        activeRideRepository: widget.activeRideRepository,
+                        offerFilter: _HomeOfferRules(this)._rideAllowed,
+                        followsDestination: (o) => _HomeOfferRadar(
+                          this,
+                        )._followsDestination(o.dropoffPosition.toLatLng()),
+                        towardPickupTime: _HomeScheduled(
+                          this,
+                        )._towardPickupTime,
+                        claimPending: _radarListClaiming,
+                        hiddenTrips: _radarHidden,
+                        onCloseRides: (hasOffers) {
+                          setState(() {
+                            showRideRequests = false;
+                            _hasRideOffers =
+                                hasOffers || _radarHomeOffers.isNotEmpty;
+                          });
+                        },
+                      ),
+                    ],
+                  )
+                : hideMainPanel
+                ? DestinationSetPanel(
+                    controller: _destinationPanelController,
+                    onClose: () {
+                      setState(() {
+                        hideMainPanel = false;
+                      });
+                    },
+                    body: _HomeMapSheet(this).body(isDestinationPanel: true),
+                  )
+                : Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      SlidingUpPanel(
+                        color: Colors.transparent,
+                        backdropColor: Colors.transparent,
+                        backdropOpacity: 0,
+                        backdropEnabled: false,
+                        backdropTapClosesPanel: false,
+                        controller: _panelController,
+                        margin: EdgeInsets.all(0),
+                        minHeight: MoveraSheetMetrics.collapsedHeight,
+                        padding: EdgeInsets.zero,
+                        boxShadow: [],
+                        isDraggable: _outsideRadarOffer == null,
+                        // Our spring settles the sheet (see _snapHomeSheet): closed or
+                        // open, never in between.
+                        panelSnapping: false,
+                        defaultPanelState: PanelState.CLOSED,
+                        maxHeight: _HomeMapSheet(
+                          this,
+                        )._homeExpandedHeight(context),
+                        // The map rises with the sheet, about a third as far, on the
+                        // same spring.
+                        parallaxEnabled: true,
+                        parallaxOffset: 0.3,
+                        onPanelSlide: (double pos) {
+                          _mainPanelPosition = pos;
+                          _panelSlidePosition.value = pos;
+                          if (!_sheetPointerActive) {
+                            _HomeMapSheet(
+                              this,
+                            )._scheduleHomeSheetPositionGuard();
+                          }
+                          if (pos > 0.04) {
+                            _HomeMapSheet(
+                              this,
+                            )._closeHomeFloatingPopupsForSheet();
+                          }
+                          final nextPanelOpen = pos > 0.3;
+                          // A settled sheet covers only its own region. The exposed map
+                          // remains pinchable; block input only during a sheet drag.
+                          final nextBlockMap = _sheetPointerActive;
+                          if (isPanelOpen != nextPanelOpen ||
+                              _blockMapGestures != nextBlockMap) {
+                            setState(() {
+                              isPanelOpen = nextPanelOpen;
+                              _blockMapGestures = nextBlockMap;
+                            });
+                          }
+                        },
+                        onPanelOpened: () {
+                          _homeSheetPositionGuardTimer?.cancel();
+                          _mainPanelPosition = 1;
+                          _panelSlidePosition.value = 1;
+                          _HomeMapSheet(
+                            this,
+                          )._closeHomeFloatingPopupsForSheet();
+                          _HomeMapSheet(
+                            this,
+                          )._setMapGesturesBlocked(_sheetPointerActive);
+                        },
+                        onPanelClosed: () {
+                          _homeSheetPositionGuardTimer?.cancel();
+                          _mainPanelPosition = 0;
+                          _panelSlidePosition.value = 0;
+                          _sheetPointerActive = false;
+                          if (isPanelOpen) {
+                            setState(() {
+                              isPanelOpen = false;
+                            });
+                          }
+                          _HomeMapSheet(this)._setMapGesturesBlocked(false);
+                        },
+                        // Account on hold keeps its red dock face.
+                        collapsed: _HomeMapSheet(this)._inactiveDock(),
+                        // The dock is the sheet's own bottom: it never moves or fades,
+                        // so the sheet keeps one shape from closed to open.
+                        footer: _HomeMapSheet(this)._homeDockFooter(),
 
-              panelBuilder: (ScrollController sc) => PointerInterceptor(
-                  child: Listener(
-                    behavior: HitTestBehavior.opaque,
-                    onPointerDown: _HomeMapSheet(this)._onSheetPointerDown,
-                    onPointerMove: _HomeMapSheet(this)._onSheetPointerMove,
-                    onPointerUp: _HomeMapSheet(this)._onSheetPointerEnd,
-                    onPointerCancel: _HomeMapSheet(this)._onSheetPointerEnd,
-                    child: _activationHold && !isAccountActivated
-                        ? _HomeMapSheet(this)._inactiveSheetFace()
-                        : _HomeMapSheet(this).panelColumn(sc),
+                        panelBuilder: (ScrollController sc) =>
+                            PointerInterceptor(
+                              child: Listener(
+                                behavior: HitTestBehavior.opaque,
+                                onPointerDown: _HomeMapSheet(
+                                  this,
+                                )._onSheetPointerDown,
+                                onPointerMove: _HomeMapSheet(
+                                  this,
+                                )._onSheetPointerMove,
+                                onPointerUp: _HomeMapSheet(
+                                  this,
+                                )._onSheetPointerEnd,
+                                onPointerCancel: _HomeMapSheet(
+                                  this,
+                                )._onSheetPointerEnd,
+                                child: _activationHold && !isAccountActivated
+                                    ? _HomeMapSheet(this)._inactiveSheetFace()
+                                    : _HomeMapSheet(this).panelColumn(sc),
+                              ),
+                            ),
+                        body: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            AbsorbPointer(
+                              absorbing: _blockMapGestures,
+                              child: _HomeMapSheet(this).body(),
+                            ),
+                            _HomeMapSheet(this)._homeMapDim(),
+                          ],
+                        ),
+                      ),
+                      _HomeMapSheet(this)._homeRadarLayer(),
+                      // A reservation request: its sheet over the dock, its orb on top.
+                      _HomeReservation(this)._reservationLayer(),
+                      // An Exclusive offer: the same sheet, its grey orb on top.
+                      _HomeExclusive(this)._exclusiveLayer(),
+                    ],
                   ),
-                ),
-              body: Stack(
-                fit: StackFit.expand,
-                children: [
-                  AbsorbPointer(
-                    absorbing: _blockMapGestures,
-                    child: _HomeMapSheet(this).body(),
-                  ),
-                  _HomeMapSheet(this)._homeMapDim(),
-                ],
-              ),
-            ),
-          _HomeMapSheet(this)._homeRadarLayer(),
-          // A reservation request: its sheet over the dock, its orb on top.
-          _HomeReservation(this)._reservationLayer(),
-          // An Exclusive offer: the same sheet, its grey orb on top.
-          _HomeExclusive(this)._exclusiveLayer(),
-              ],
-            ),
-      )),
+          ),
+        ),
       ),
     );
   }
@@ -905,21 +1089,27 @@ class _DriverHomeState extends State<DriverHome>
       unawaited(showDriverSuspendedSheet(context));
       return;
     }
-    if(!_recoveryResolved) {
-      _HomeMapSheet(this)._tripProblem(HomeIslandNotices.recoveryPending,
-          tr.finishOrCloseSavedTripBefore,
-          action: tr.openSavedTrip);
+    if (!_recoveryResolved) {
+      _HomeMapSheet(this)._tripProblem(
+        HomeIslandNotices.recoveryPending,
+        tr.finishOrCloseSavedTripBefore,
+        action: tr.openSavedTrip,
+      );
       return;
     }
     if (!isAccountActivated) {
       setState(() => _activationHold = true);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !_panelController.isAttached) { return; }
+        if (!mounted || !_panelController.isAttached) {
+          return;
+        }
         unawaited(_snapSheet.springTo(0.28));
       });
       return;
     }
-    if (_HomeAccount(this)._blocksGoingOnline()) { return; }
+    if (_HomeAccount(this)._blocksGoingOnline()) {
+      return;
+    }
 
     _onlineTransitionTimer?.cancel();
     _offerSimulationTimer?.cancel();
@@ -947,8 +1137,13 @@ class _DriverHomeState extends State<DriverHome>
     _onlineTransitionTimer = Timer(
       const Duration(milliseconds: 1400),
       () async {
-        if (!mounted) { return; }
-        if (serverAnswer != null && !await _HomeLive(this)._serverAgreed(serverAnswer)) { return; }
+        if (!mounted) {
+          return;
+        }
+        if (serverAnswer != null &&
+            !await _HomeLive(this)._serverAgreed(serverAnswer)) {
+          return;
+        }
         setState(() {
           _driverSession.completeGoingOnline();
         });
@@ -960,11 +1155,14 @@ class _DriverHomeState extends State<DriverHome>
   Future<void> _goOffline({bool notice = true}) async {
     final radarListOpen = showRideRequests; // driver-u118: it closes too.
     _destinationOpenTimer?.cancel();
-    if (notice) { IslandMessages.show(HomeIslandNotices.offline); }
+    if (notice) {
+      IslandMessages.show(HomeIslandNotices.offline);
+    }
     _HomeLive(this)._tellServerOffline();
     hideMainPanel = false;
     unawaited(_radarSubscription?.cancel() ?? Future<void>.value());
-    _radarSubscription = null; unawaited(_withdrawalSubscription?.cancel());
+    _radarSubscription = null;
+    unawaited(_withdrawalSubscription?.cancel());
     _latestDispatchOffers = const <RideOffer>[];
     _onlineTransitionTimer?.cancel();
     _offerSimulationTimer?.cancel();
@@ -986,12 +1184,16 @@ class _DriverHomeState extends State<DriverHome>
       _destinationPosition = null;
       _destinationRouteMarkers = {};
       _destinationRoutePolylines = {};
-      _soonReservationReady = false; showRideRequests = false;
+      _soonReservationReady = false;
+      showRideRequests = false;
     });
-    _destinationLimitTimer?.cancel(); DestinationModeSession.instance.ended();
+    _destinationLimitTimer?.cancel();
+    DestinationModeSession.instance.ended();
     _HomeMapSheet(this)._clearDemoDestinationTrips();
     _HomeOfferRadar(this)._clearDirectOfferRoute();
-    if (!radarListOpen) { await _HomeMapSheet(this)._closeDriverSheet(); } // Its sheet is not mounted.
+    if (!radarListOpen) {
+      await _HomeMapSheet(this)._closeDriverSheet();
+    } // Its sheet is not mounted.
   }
 
   void _openRideOffers() {
@@ -1005,7 +1207,9 @@ class _DriverHomeState extends State<DriverHome>
   }
 
   void _onScheduledRequests() {
-    if (mounted) { _HomeReservation(this)._onScheduledRequestsChanged(); }
+    if (mounted) {
+      _HomeReservation(this)._onScheduledRequestsChanged();
+    }
   }
 
   void _openScheduledRides() {
@@ -1028,14 +1232,11 @@ class _DriverHomeState extends State<DriverHome>
           title: suspended ? tr.account : tr.radar,
           status: suspended
               ? tr.orbPaused
-              : hold?.status ?? (_activationHold
-                  ? tr.statusHold
-                  : tr.orbOff),
+              : hold?.status ?? (_activationHold ? tr.statusHold : tr.orbOff),
           subtitle: suspended
               ? tr.tapForDetails
-              : hold?.subtitle ?? (_activationHold
-                  ? tr.notActive
-                  : tr.tapToScan),
+              : hold?.subtitle ??
+                    (_activationHold ? tr.notActive : tr.tapToScan),
           onTap: _goOnline,
           blocked: (_activationHold || hold != null) && !suspended,
           pulse: suspended ? 0 : _goOnlinePulseController.value,
@@ -1070,9 +1271,11 @@ class _DriverHomeState extends State<DriverHome>
     // on every animation frame (D-16).
     final radarTrips = _HomeOfferRadar(this)._radarTripsOpen;
     final openListed = _radarHomeOffers
-        .where((offer) =>
-            _homeRadarMatchStates[offer.id] !=
-            _HomeRadarMatchState.claimedElsewhere)
+        .where(
+          (offer) =>
+              _homeRadarMatchStates[offer.id] !=
+              _HomeRadarMatchState.claimedElsewhere,
+        )
         .length;
     final homeTrips = openListed + _pendingRadarHomeOffers.length;
     // Until a Radar trip reaches Home the button keeps scanning.
@@ -1139,19 +1342,26 @@ class _DriverHomeState extends State<DriverHome>
   void dispose() {
     _camera.dispose();
     final ownedRouting = _roadRouteService;
-    if (widget.routeRepository == null && ownedRouting is RoadRouteService) { ownedRouting.dispose(); }
+    if (widget.routeRepository == null && ownedRouting is RoadRouteService) {
+      ownedRouting.dispose();
+    }
     ScheduledRideStore.openRequests.removeListener(_onScheduledRequests);
     _locationEpoch++;
-    _reservationPopupTimer?.cancel(); _offerRouteFrame.dispose(); _startWait?.cancel(); _destinationLimitTimer?.cancel();
+    _reservationPopupTimer?.cancel();
+    _offerRouteFrame.dispose();
+    _startWait?.cancel();
+    _destinationLimitTimer?.cancel();
     _reservation.release?.cancel();
     _reservation.fade.cancel();
     _scheduled.dispose();
     _HomeAccount(this)._stopAccount();
     WidgetsBinding.instance.removeObserver(this);
-    driverRouteObserver.unsubscribe(this); driverRouteObserver.pages.unsubscribe(_pageCover);
+    driverRouteObserver.unsubscribe(this);
+    driverRouteObserver.pages.unsubscribe(_pageCover);
     _sheetTrace.dispose();
     _destinationOpenTimer?.cancel();
-    _radarSubscription?.cancel(); _withdrawalSubscription?.cancel();
+    _radarSubscription?.cancel();
+    _withdrawalSubscription?.cancel();
     _homeSheetPositionGuardTimer?.cancel();
     _goOnlinePulseController.dispose();
     _onlineTransitionTimer?.cancel();
@@ -1194,5 +1404,4 @@ class _DriverHomeState extends State<DriverHome>
     }
     super.dispose();
   }
-
 }

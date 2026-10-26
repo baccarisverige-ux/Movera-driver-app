@@ -42,7 +42,10 @@ class TripRouteLines extends ValueNotifier<Set<Polyline>> {
       if (alongMeters > 0)
         Polyline(
           polylineId: const PolylineId('traveled-road-route'),
-          points: geometry.traveled(alongMeters).map((p) => p.toLatLng()).toList(),
+          points: geometry
+              .traveled(alongMeters)
+              .map((p) => p.toLatLng())
+              .toList(),
           width: 3,
           color: RouteMarkPins.ink.withValues(alpha: .18),
           startCap: Cap.roundCap,
@@ -50,7 +53,10 @@ class TripRouteLines extends ValueNotifier<Set<Polyline>> {
         ),
       ...DriverRouteStyle.polylines(
         id: 'active-road-route',
-        points: geometry.remaining(alongMeters).map((p) => p.toLatLng()).toList(),
+        points: geometry
+            .remaining(alongMeters)
+            .map((p) => p.toLatLng())
+            .toList(),
         zoom: zoom,
       ),
     };

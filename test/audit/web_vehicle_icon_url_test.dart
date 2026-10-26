@@ -83,18 +83,15 @@ void main() {
     }
     expect(pluginBlobs, before);
     expect(urls, hasLength(3), reason: 'pickup, drop-off and the stop');
-    final pickup = markers
-        .firstWhere((m) => m.markerId.value == 'radar_pickup')
-        .icon as AssetMapBitmap;
+    final pickup =
+        markers.firstWhere((m) => m.markerId.value == 'radar_pickup').icon
+            as AssetMapBitmap;
     expect(pickup.width, RouteMarkPins.labelledSize('Pickup', '3 min').width);
   });
 
   test('off web (no URL factory) the icon stays bytes', () {
     WebMapBitmaps.debugCreateUrl = null;
     expect(WebMapBitmaps.enabled, isFalse);
-    expect(
-      WebMapBitmaps.of(Uint8List(4), width: 10, height: 10),
-      isNull,
-    );
+    expect(WebMapBitmaps.of(Uint8List(4), width: 10, height: 10), isNull);
   });
 }

@@ -57,16 +57,21 @@ Future<void> _settle(WidgetTester tester) async {
 Future<void> _acceptThenLeave(WidgetTester tester, _Dispatch dispatch) async {
   await tester.binding.setSurfaceSize(const Size(390, 844));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(MaterialApp(
-    home: Builder(
-      builder: (context) => TextButton(
-        onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-          builder: (_) => ScheduledRidesScreen(dispatchRepository: dispatch),
-        )),
-        child: const Text('Open'),
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  ScheduledRidesScreen(dispatchRepository: dispatch),
+            ),
+          ),
+          child: const Text('Open'),
+        ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('Open'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Gamla vägen, Stockholm').first);

@@ -40,9 +40,9 @@ Future<void> _pumpAt(WidgetTester tester, Size size, Widget home) async {
         useInheritedMediaQuery: true,
         builder: (_, __) => MaterialApp(
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: const TextScaler.linear(_scale),
-            ),
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(_scale)),
             child: child!,
           ),
           home: home,
@@ -55,27 +55,34 @@ Future<void> _pumpAt(WidgetTester tester, Size size, Widget home) async {
 
 /// A page with one button that opens [open].
 Widget _opener(void Function(BuildContext) open) => Builder(
-      builder: (context) => Scaffold(
-        body: Center(
-          child: TextButton(
-            onPressed: () => open(context),
-            child: const Text('Open'),
-          ),
-        ),
+  builder: (context) => Scaffold(
+    body: Center(
+      child: TextButton(
+        onPressed: () => open(context),
+        child: const Text('Open'),
       ),
-    );
+    ),
+  ),
+);
 
 /// [target] is on screen and a tap at its centre reaches it.
 void _expectTappable(WidgetTester tester, Finder target, Size size) {
   expect(target, findsOneWidget);
   final rect = tester.getRect(target);
   final screen = Offset.zero & size;
-  expect(screen.contains(rect.topLeft) && screen.contains(rect.bottomRight - const Offset(1, 1)),
-      isTrue, reason: '$rect is not inside $screen');
+  expect(
+    screen.contains(rect.topLeft) &&
+        screen.contains(rect.bottomRight - const Offset(1, 1)),
+    isTrue,
+    reason: '$rect is not inside $screen',
+  );
   final hits = tester.hitTestOnBinding(rect.center);
   final box = tester.renderObject(target);
-  expect(hits.path.any((entry) => entry.target == box), isTrue,
-      reason: 'something covers the centre of $target');
+  expect(
+    hits.path.any((entry) => entry.target == box),
+    isTrue,
+    reason: 'something covers the centre of $target',
+  );
 }
 
 void main() {
@@ -88,27 +95,31 @@ void main() {
     // screen; the text above it scrolls.
     for (final wasOnTrip in [true, false]) {
       testWidgets(
-          'UI-01 rider cancelled (${wasOnTrip ? 'on trip' : 'pickup'}, fee) '
-          'can be acknowledged at $at', (tester) async {
-        await _pumpAt(
-          tester,
-          size,
-          _opener((context) => showRiderCancelledSheet(
+        'UI-01 rider cancelled (${wasOnTrip ? 'on trip' : 'pickup'}, fee) '
+        'can be acknowledged at $at',
+        (tester) async {
+          await _pumpAt(
+            tester,
+            size,
+            _opener(
+              (context) => showRiderCancelledSheet(
                 context,
                 riderName: 'Alexandra Lindqvist',
                 wasOnTrip: wasOnTrip,
                 fee: Money.sek(4500),
-              )),
-        );
-        await tester.tap(find.text('Open'));
-        await tester.pump();
-        expect(tester.takeException(), isNull);
-        const ok = ValueKey<String>('rider-cancelled-acknowledge');
-        _expectTappable(tester, find.byKey(ok), size);
-        await tester.tap(find.byKey(ok));
-        await tester.pump();
-        expect(find.byType(RiderCancelledSheet), findsNothing);
-      });
+              ),
+            ),
+          );
+          await tester.tap(find.text('Open'));
+          await tester.pump();
+          expect(tester.takeException(), isNull);
+          const ok = ValueKey<String>('rider-cancelled-acknowledge');
+          _expectTappable(tester, find.byKey(ok), size);
+          await tester.tap(find.byKey(ok));
+          await tester.pump();
+          expect(find.byType(RiderCancelledSheet), findsNothing);
+        },
+      );
     }
 
     for (final status in [
@@ -116,16 +127,16 @@ void main() {
       TripStatus.cancelledByAdmin,
       TripStatus.failed,
     ]) {
-      testWidgets('UI-01 outcome ${status.name} can be acknowledged at $at',
-          (tester) async {
+      testWidgets('UI-01 outcome ${status.name} can be acknowledged at $at', (
+        tester,
+      ) async {
         await _pumpAt(
           tester,
           size,
-          _opener((context) => showTripOutcomeSheet(
-                context,
-                status: status,
-                hasNext: true,
-              )),
+          _opener(
+            (context) =>
+                showTripOutcomeSheet(context, status: status, hasNext: true),
+          ),
         );
         await tester.tap(find.text('Open'));
         await tester.pump();
@@ -149,11 +160,13 @@ void main() {
       await _pumpAt(
         tester,
         size,
-        _opener((context) => showDocumentUploadSheet(
-              context,
-              document,
-              store: DocumentExpiryStore(),
-            )),
+        _opener(
+          (context) => showDocumentUploadSheet(
+            context,
+            document,
+            store: DocumentExpiryStore(),
+          ),
+        ),
       );
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
@@ -165,8 +178,9 @@ void main() {
     });
 
     // UI-06: the Exclusive pill shrinks; the seconds are never cut off.
-    testWidgets('UI-06 Exclusive pill keeps its seconds at $at',
-        (tester) async {
+    testWidgets('UI-06 Exclusive pill keeps its seconds at $at', (
+      tester,
+    ) async {
       await _pumpAt(
         tester,
         size,
@@ -201,22 +215,26 @@ void main() {
       final text = find.text(ExclusiveRequestSheet.pillLabel(13));
       expect(text, findsOneWidget);
       final paragraph = tester.renderObject<RenderParagraph>(text);
-      expect(paragraph.didExceedMaxLines, isFalse,
-          reason: 'the pill label is ellipsized');
+      expect(
+        paragraph.didExceedMaxLines,
+        isFalse,
+        reason: 'the pill label is ellipsized',
+      );
     });
 
     // UI-09: the ride option tiles keep their description.
-    testWidgets('UI-09 ride preferences tiles do not clip at $at',
-        (tester) async {
+    testWidgets('UI-09 ride preferences tiles do not clip at $at', (
+      tester,
+    ) async {
       await _pumpAt(tester, size, const Preferences());
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
 
-
     // UI-02: Documents says it is a sample, not a real checklist.
-    testWidgets('UI-02 Documents is labelled as a sample at $at',
-        (tester) async {
+    testWidgets('UI-02 Documents is labelled as a sample at $at', (
+      tester,
+    ) async {
       await _pumpAt(tester, size, const DriverDocuments());
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -239,8 +257,11 @@ void main() {
       await _pumpAt(tester, size, const Analytics());
       await tester.pumpAndSettle();
       final scrollable = find.byType(Scrollable).first;
-      await tester.scrollUntilVisible(find.text(sample.acceptanceLabel), 120,
-          scrollable: scrollable);
+      await tester.scrollUntilVisible(
+        find.text(sample.acceptanceLabel),
+        120,
+        scrollable: scrollable,
+      );
       expect(find.text(sample.cancellationLabel), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Sample · ${sample.acceptanceLabel} of offers accepted'),
@@ -254,15 +275,19 @@ void main() {
 
       await _pumpAt(tester, size, const AcceptanceRate());
       await tester.pumpAndSettle();
-      expect(find.text(sample.acceptanceLabel, skipOffstage: false),
-          findsWidgets);
+      expect(
+        find.text(sample.acceptanceLabel, skipOffstage: false),
+        findsWidgets,
+      );
       expect(find.text('%90'), findsNothing);
       expect(find.text('Sample'), findsOneWidget);
 
       await _pumpAt(tester, size, const CancelationRate());
       await tester.pumpAndSettle();
-      expect(find.text(sample.cancellationLabel, skipOffstage: false),
-          findsWidgets);
+      expect(
+        find.text(sample.cancellationLabel, skipOffstage: false),
+        findsWidgets,
+      );
       expect(find.text('%5.0'), findsNothing);
       expect(find.text('Sample'), findsOneWidget);
       expect(tester.takeException(), isNull);

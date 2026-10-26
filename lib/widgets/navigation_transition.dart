@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
-Duration _motionDuration(int milliseconds) => WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations ? Duration.zero : Duration(milliseconds: milliseconds);
+
+Duration _motionDuration(int milliseconds) =>
+    WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations
+    ? Duration.zero
+    : Duration(milliseconds: milliseconds);
 
 /// Full-screen slide-up route that is *not* a [PageRoute].
 ///
@@ -49,7 +57,9 @@ class BottomToTopTransition extends ModalRoute<void> {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    if (MediaQuery.disableAnimationsOf(context)) { return child; }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return child;
+    }
     final curved = CurvedAnimation(
       parent: animation,
       curve: Curves.fastLinearToSlowEaseIn,
@@ -64,7 +74,6 @@ class BottomToTopTransition extends ModalRoute<void> {
     );
   }
 }
-
 
 /// Active-ride handoff route.
 ///
@@ -97,8 +106,7 @@ class ActiveRideTransition extends ModalRoute<void> {
   Duration get transitionDuration => Duration.zero;
 
   @override
-  Duration get reverseTransitionDuration =>
-      _motionDuration(160);
+  Duration get reverseTransitionDuration => _motionDuration(160);
 
   @override
   Widget buildPage(
@@ -124,105 +132,117 @@ class TopToBottomTransition extends PageRouteBuilder {
   final Widget page;
 
   TopToBottomTransition(this.page)
-      : super(
-          pageBuilder: (context, animation, anotherAnimation) => page,
-          transitionDuration: _motionDuration(280),
-          reverseTransitionDuration: _motionDuration(200),
-          transitionsBuilder: (context, animation, anotherAnimation, child) {
-            if (MediaQuery.disableAnimationsOf(context)) { return child; }
-            animation = CurvedAnimation(
-                curve: Curves.fastLinearToSlowEaseIn,
-                parent: animation,
-                reverseCurve: Curves.fastOutSlowIn);
-            return Align(
-              alignment: Alignment.topCenter,
-              child: SizeTransition(
-                sizeFactor: animation,
-                alignment: Alignment.center,
-                child: child,
-              ),
-            );
-          },
-        );
+    : super(
+        pageBuilder: (context, animation, anotherAnimation) => page,
+        transitionDuration: _motionDuration(280),
+        reverseTransitionDuration: _motionDuration(200),
+        transitionsBuilder: (context, animation, anotherAnimation, child) {
+          if (MediaQuery.disableAnimationsOf(context)) {
+            return child;
+          }
+          animation = CurvedAnimation(
+            curve: Curves.fastLinearToSlowEaseIn,
+            parent: animation,
+            reverseCurve: Curves.fastOutSlowIn,
+          );
+          return Align(
+            alignment: Alignment.topCenter,
+            child: SizeTransition(
+              sizeFactor: animation,
+              alignment: Alignment.center,
+              child: child,
+            ),
+          );
+        },
+      );
 }
 
 class SwitchTransition extends PageRouteBuilder {
   final Widget page;
 
   SwitchTransition(this.page)
-      : super(
-          pageBuilder: (context, animation, anotherAnimation) => page,
-          transitionDuration: _motionDuration(280),
-          reverseTransitionDuration: _motionDuration(200),
-          transitionsBuilder: (context, animation, anotherAnimation, child) {
-            if (MediaQuery.disableAnimationsOf(context)) { return child; }
-            animation = CurvedAnimation(
-                curve: Curves.fastLinearToSlowEaseIn,
-                parent: animation,
-                reverseCurve: Curves.fastOutSlowIn);
-            return Align(
+    : super(
+        pageBuilder: (context, animation, anotherAnimation) => page,
+        transitionDuration: _motionDuration(280),
+        reverseTransitionDuration: _motionDuration(200),
+        transitionsBuilder: (context, animation, anotherAnimation, child) {
+          if (MediaQuery.disableAnimationsOf(context)) {
+            return child;
+          }
+          animation = CurvedAnimation(
+            curve: Curves.fastLinearToSlowEaseIn,
+            parent: animation,
+            reverseCurve: Curves.fastOutSlowIn,
+          );
+          return Align(
+            alignment: Alignment.center,
+            child: SizeTransition(
+              axis: Axis.horizontal,
+              sizeFactor: animation,
               alignment: Alignment.center,
-              child: SizeTransition(
-                axis: Axis.horizontal,
-                sizeFactor: animation,
-                alignment: Alignment.center,
-                child: child,
-              ),
-            );
-          },
-        );
+              child: child,
+            ),
+          );
+        },
+      );
 }
 
 class LeftToRightTransition extends PageRouteBuilder {
   final Widget page;
 
   LeftToRightTransition(this.page)
-      : super(
-          pageBuilder: (context, animation, anotherAnimation) => page,
-          transitionDuration: _motionDuration(280),
-          reverseTransitionDuration: _motionDuration(200),
-          transitionsBuilder: (context, animation, anotherAnimation, child) {
-            if (MediaQuery.disableAnimationsOf(context)) { return child; }
-            animation = CurvedAnimation(
-                curve: Curves.fastLinearToSlowEaseIn,
-                parent: animation,
-                reverseCurve: Curves.fastOutSlowIn);
-            return Align(
-              alignment: Alignment.centerLeft,
-              child: SizeTransition(
-                axis: Axis.horizontal,
-                sizeFactor: animation,
-                alignment: Alignment.center,
-                child: child,
-              ),
-            );
-          },
-        );
+    : super(
+        pageBuilder: (context, animation, anotherAnimation) => page,
+        transitionDuration: _motionDuration(280),
+        reverseTransitionDuration: _motionDuration(200),
+        transitionsBuilder: (context, animation, anotherAnimation, child) {
+          if (MediaQuery.disableAnimationsOf(context)) {
+            return child;
+          }
+          animation = CurvedAnimation(
+            curve: Curves.fastLinearToSlowEaseIn,
+            parent: animation,
+            reverseCurve: Curves.fastOutSlowIn,
+          );
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: SizeTransition(
+              axis: Axis.horizontal,
+              sizeFactor: animation,
+              alignment: Alignment.center,
+              child: child,
+            ),
+          );
+        },
+      );
 }
 
 class RightToLeftTransition extends PageRouteBuilder {
   final Widget page;
 
   RightToLeftTransition(this.page)
-      : super(
-          pageBuilder: (context, animation, anotherAnimation) => page,
-          transitionDuration: _motionDuration(280),
-          reverseTransitionDuration: _motionDuration(200),
-          transitionsBuilder: (context, animation, anotherAnimation, child) {
-            if (MediaQuery.disableAnimationsOf(context)) { return child; }
-            animation = CurvedAnimation(
-                curve: Curves.fastLinearToSlowEaseIn,
-                parent: animation,
-                reverseCurve: Curves.fastOutSlowIn);
-            return Align(
-              alignment: Alignment.centerRight,
-              child: SizeTransition(
-                axis: Axis.horizontal,
-                sizeFactor: animation,
-                alignment: Alignment.center,
-                child: child,
-              ),
-            );
-          },
-        );
+    : super(
+        pageBuilder: (context, animation, anotherAnimation) => page,
+        transitionDuration: _motionDuration(280),
+        reverseTransitionDuration: _motionDuration(200),
+        transitionsBuilder: (context, animation, anotherAnimation, child) {
+          if (MediaQuery.disableAnimationsOf(context)) {
+            return child;
+          }
+          animation = CurvedAnimation(
+            curve: Curves.fastLinearToSlowEaseIn,
+            parent: animation,
+            reverseCurve: Curves.fastOutSlowIn,
+          );
+          return Align(
+            alignment: Alignment.centerRight,
+            child: SizeTransition(
+              axis: Axis.horizontal,
+              sizeFactor: animation,
+              alignment: Alignment.center,
+              child: child,
+            ),
+          );
+        },
+      );
 }

@@ -51,18 +51,20 @@ Future<void> _pumpTrip(
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(
-      navigatorKey: navigator,
-      navigatorObservers: [driverRouteObserver],
-      home: AcceptRide(
-        locationRepository: location,
-        initialStage: ActiveRideStage.onTrip,
-        waitNow: () => tester.binding.clock.now(),
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(
+        navigatorKey: navigator,
+        navigatorObservers: [driverRouteObserver],
+        home: AcceptRide(
+          locationRepository: location,
+          initialStage: ActiveRideStage.onTrip,
+          waitNow: () => tester.binding.clock.now(),
+        ),
       ),
     ),
-  ));
+  );
   await _settle(tester, 10);
 }
 
@@ -98,8 +100,9 @@ void main() {
   });
 
   group('driver-u60: each next-trip offer has its own trip id', () {
-    testWidgets('a re-offered next trip after a cancel is a new trip',
-        (tester) async {
+    testWidgets('a re-offered next trip after a cancel is a new trip', (
+      tester,
+    ) async {
       final location = _Loc();
       await _pumpTrip(tester, location);
       await tester.pump(const Duration(milliseconds: 2600));
@@ -137,15 +140,19 @@ void main() {
       expect(find.byKey(_offerCard), findsOneWidget);
       final second = _offerId(tester);
       expect(second, isNotNull);
-      expect(second, isNot(first),
-          reason: 'a cancelled and a later next trip never share an id');
+      expect(
+        second,
+        isNot(first),
+        reason: 'a cancelled and a later next trip never share an id',
+      );
       await _unmount(tester, location);
     });
   });
 
   group('driver-u62: the on-trip offer card is a map overlay', () {
-    testWidgets('it sits in a PointerInterceptor and blocks map gestures',
-        (tester) async {
+    testWidgets('it sits in a PointerInterceptor and blocks map gestures', (
+      tester,
+    ) async {
       final location = _Loc();
       await _pumpTrip(tester, location);
       await tester.pump(const Duration(milliseconds: 2600));
@@ -169,7 +176,8 @@ void main() {
                 .evaluate()
                 .isNotEmpty,
       );
-      bool blocked() => tester.widgetList<AbsorbPointer>(mapBlock).last.absorbing;
+      bool blocked() =>
+          tester.widgetList<AbsorbPointer>(mapBlock).last.absorbing;
       expect(blocked(), isFalse);
       final gesture = await tester.startGesture(tester.getCenter(card));
       await tester.pump();
@@ -194,20 +202,33 @@ void main() {
         expect(find.byKey(_offerCard), findsOneWidget);
       }
       // History, Chat and the other screens open over the trip.
-      unawaited(navigator.currentState!.push(MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: Text('covering')),
-      )));
+      unawaited(
+        navigator.currentState!.push(
+          MaterialPageRoute<void>(
+            builder: (_) => const Scaffold(body: Text('covering')),
+          ),
+        ),
+      );
       await tester.pump(const Duration(milliseconds: 400));
       location.updates.add(_fix());
-      await _pumpFor(tester,
-          DriverOfferRules.current.exclusiveAcceptTime + const Duration(seconds: 4));
-      expect(ExclusiveAnswers.instance.missedInRow, 0,
-          reason: 'an offer the driver cannot see is not a miss');
+      await _pumpFor(
+        tester,
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(seconds: 4),
+      );
+      expect(
+        ExclusiveAnswers.instance.missedInRow,
+        0,
+        reason: 'an offer the driver cannot see is not a miss',
+      );
       navigator.currentState!.pop();
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 2600));
-      expect(find.byKey(_offerCard), findsOneWidget,
-          reason: 'back on the trip, Radar offers again');
+      expect(
+        find.byKey(_offerCard),
+        findsOneWidget,
+        reason: 'back on the trip, Radar offers again',
+      );
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       await _unmount(tester, location);
     }
@@ -216,8 +237,9 @@ void main() {
       await covered(tester, offerFirst: false);
     });
 
-    testWidgets('one already up waits behind the route, then counts down',
-        (tester) async {
+    testWidgets('one already up waits behind the route, then counts down', (
+      tester,
+    ) async {
       await covered(tester, offerFirst: true);
     });
   });

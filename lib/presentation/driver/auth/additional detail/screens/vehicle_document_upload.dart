@@ -292,9 +292,7 @@ class _VehicleDocumentUploadState extends State<VehicleDocumentUpload> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorMessage(
-          tr.couldNotReadCapturedPhoto,
-        );
+        _showErrorMessage(tr.couldNotReadCapturedPhoto);
       }
     } finally {
       if (mounted) {

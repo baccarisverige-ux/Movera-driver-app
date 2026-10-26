@@ -9,7 +9,11 @@ enum RouteMarkKind { pickup, stop, dropoff }
 
 /// One route mark as a widget, e.g. in the trip bar or the top card.
 class RouteMarkIcon extends StatelessWidget {
-  const RouteMarkIcon(this.kind, {super.key, this.size = RouteMarkPins.markSize});
+  const RouteMarkIcon(
+    this.kind, {
+    super.key,
+    this.size = RouteMarkPins.markSize,
+  });
 
   final RouteMarkKind kind;
   final double size;
@@ -109,10 +113,10 @@ class RouteMarkPins {
 
   /// Colour of each kind: green pickup, orange stop, black drop-off.
   static Color colorOf(RouteMarkKind kind) => switch (kind) {
-        RouteMarkKind.pickup => pickupGreen,
-        RouteMarkKind.stop => stopOrange,
-        RouteMarkKind.dropoff => ink,
-      };
+    RouteMarkKind.pickup => pickupGreen,
+    RouteMarkKind.stop => stopOrange,
+    RouteMarkKind.dropoff => ink,
+  };
 
   static const Color pickupGreen = Color(0xFF1FA463);
   static const Color stopOrange = Color(0xFFE08A1E);
@@ -135,7 +139,10 @@ class RouteMarkPins {
         ..lineTo(center.dx, center.dy + half)
         ..lineTo(center.dx - half, center.dy)
         ..close();
-      canvas.drawPath(diamond(outer / 2 + 2.5).shift(const Offset(0, 0.8)), shadow);
+      canvas.drawPath(
+        diamond(outer / 2 + 2.5).shift(const Offset(0, 0.8)),
+        shadow,
+      );
       canvas.drawPath(diamond(outer / 2 + 2.5), white);
       canvas.drawPath(diamond(outer / 2), fill);
       canvas.drawPath(diamond(inner / 2 + 0.6), white);
@@ -164,12 +171,23 @@ class RouteMarkPins {
     final tip = Offset(cx, size.height - 1.5);
     Path drop(double grow) => Path()
       ..moveTo(tip.dx, tip.dy + grow)
-      ..cubicTo(cx - 5 - grow, cy + r * 0.95, cx - r - grow, cy + r * 0.45,
-          cx - r - grow, cy)
-      ..arcToPoint(Offset(cx + r + grow, cy),
-          radius: Radius.circular(r + grow))
-      ..cubicTo(cx + r + grow, cy + r * 0.45, cx + 5 + grow, cy + r * 0.95,
-          tip.dx, tip.dy + grow)
+      ..cubicTo(
+        cx - 5 - grow,
+        cy + r * 0.95,
+        cx - r - grow,
+        cy + r * 0.45,
+        cx - r - grow,
+        cy,
+      )
+      ..arcToPoint(Offset(cx + r + grow, cy), radius: Radius.circular(r + grow))
+      ..cubicTo(
+        cx + r + grow,
+        cy + r * 0.45,
+        cx + 5 + grow,
+        cy + r * 0.95,
+        tip.dx,
+        tip.dy + grow,
+      )
       ..close();
     canvas.drawPath(
       drop(0).shift(const Offset(0, 1)),

@@ -28,8 +28,18 @@ void main() {
     headers: {'content-type': 'application/json'},
   );
 
-  Map<String, dynamic> message(String id, String from, String text, String at) =>
-      {'messageId': id, 'tripId': 'live-trip', 'from': from, 'text': text, 'at': at};
+  Map<String, dynamic> message(
+    String id,
+    String from,
+    String text,
+    String at,
+  ) => {
+    'messageId': id,
+    'tripId': 'live-trip',
+    'from': from,
+    'text': text,
+    'at': at,
+  };
 
   setUp(() {
     posts = [];
@@ -40,7 +50,9 @@ void main() {
       if (path == '/api/v1/trips/live-trip/messages') {
         if (request.method == 'GET') {
           return json(200, {
-            'items': [message('m1', 'rider', 'Where are you?', '2026-10-25T10:00:00Z')],
+            'items': [
+              message('m1', 'rider', 'Where are you?', '2026-10-25T10:00:00Z'),
+            ],
             'nextCursor': null,
           });
         }
@@ -74,12 +86,14 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => const MaterialApp(
-        home: Chat(riderDisplayName: 'Maya', tripId: 'live-trip'),
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => const MaterialApp(
+          home: Chat(riderDisplayName: 'Maya', tripId: 'live-trip'),
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
   }
 
@@ -93,7 +107,9 @@ void main() {
       'the left and the demo notice is gone', (tester) async {
     await show(tester);
     expect(find.text('Where are you?'), findsOneWidget);
-    final bubble = tester.getRect(find.byKey(const ValueKey<String>('chat-rider-message')));
+    final bubble = tester.getRect(
+      find.byKey(const ValueKey<String>('chat-rider-message')),
+    );
     expect(bubble.center.dx, lessThan(375 / 2), reason: 'left-aligned');
     expect(find.text(tr.chatLocalDemo), findsNothing);
     expect(find.text(tr.chatLocalNotSent), findsNothing);
@@ -104,23 +120,32 @@ void main() {
   testWidgets('a message is sent to the server and shown once with its time; '
       'one the rider sends meanwhile appears at once', (tester) async {
     await show(tester);
-    postAnswers.add(() => json(201,
-        message('m2', 'driver', 'Coming now', '2026-10-25T10:01:00Z')));
+    postAnswers.add(
+      () => json(
+        201,
+        message('m2', 'driver', 'Coming now', '2026-10-25T10:01:00Z'),
+      ),
+    );
     await send(tester, 'Coming now');
     expect(posts.single.url.path, '/api/v1/trips/live-trip/messages');
     expect(jsonDecode(posts.single.body), {'text': 'Coming now'});
     expect(find.text('Coming now'), findsOneWidget);
     expect(find.text(tr.chatSending), findsNothing);
     expect(find.text(tr.chatLocalNotSent), findsNothing);
-    final own = tester.getRect(find.byKey(const ValueKey<String>('chat-own-message')));
+    final own = tester.getRect(
+      find.byKey(const ValueKey<String>('chat-own-message')),
+    );
     expect(own.center.dx, greaterThan(375 / 2), reason: 'right-aligned');
 
-    live.chat.receive('live-trip', RealtimeMessage(
-      messageId: 'm3',
-      from: 'rider',
-      text: 'Thanks',
-      at: DateTime.utc(2026, 10, 25, 10, 2),
-    ));
+    live.chat.receive(
+      'live-trip',
+      RealtimeMessage(
+        messageId: 'm3',
+        from: 'rider',
+        text: 'Thanks',
+        at: DateTime.utc(2026, 10, 25, 10, 2),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Thanks'), findsOneWidget);
     // Chat is open: read as it arrives.
@@ -132,16 +157,28 @@ void main() {
     await show(tester);
     postAnswers
       ..add(() => throw http.ClientException('lost'))
-      ..add(() => json(201, message('m4', 'driver', 'Outside', '2026-10-25T10:03:00Z')));
+      ..add(
+        () => json(
+          201,
+          message('m4', 'driver', 'Outside', '2026-10-25T10:03:00Z'),
+        ),
+      );
     await send(tester, 'Outside');
     expect(find.text('Outside'), findsOneWidget);
     expect(find.text(tr.chatNotSentTapToRetry), findsOneWidget);
-    expect(find.text(tr.authErrOffline), findsOneWidget, reason: 'the usual snack bar');
+    expect(
+      find.text(tr.authErrOffline),
+      findsOneWidget,
+      reason: 'the usual snack bar',
+    );
 
     await tester.tap(find.text('Outside'));
     await tester.pumpAndSettle();
     expect(posts, hasLength(2));
-    expect(posts[1].headers['Idempotency-Key'], posts[0].headers['Idempotency-Key']);
+    expect(
+      posts[1].headers['Idempotency-Key'],
+      posts[0].headers['Idempotency-Key'],
+    );
     expect(find.text('Outside'), findsOneWidget);
     expect(find.text(tr.chatNotSentTapToRetry), findsNothing);
   });

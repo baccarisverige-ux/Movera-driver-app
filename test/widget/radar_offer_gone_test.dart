@@ -12,10 +12,12 @@ import 'package:movera/widgets/layout_viewport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The refresh icon a Radar refresh pill draws (driver-u190: Home has none).
-final _refreshIcon = find.byWidgetPredicate((w) =>
-    w is SvgPicture &&
-    w.bytesLoader is SvgAssetLoader &&
-    (w.bytesLoader as SvgAssetLoader).assetName == AppAssets.offerRefresh);
+final _refreshIcon = find.byWidgetPredicate(
+  (w) =>
+      w is SvgPicture &&
+      w.bytesLoader is SvgAssetLoader &&
+      (w.bytesLoader as SvgAssetLoader).assetName == AppAssets.offerRefresh,
+);
 
 void main() {
   setUp(() {
@@ -23,119 +25,124 @@ void main() {
     IslandMessages.reset();
   });
 
-  testWidgets('a front Radar trip that disappears blurs out with an island note', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(375, 812));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    // nearby-1 is the first Radar trip on Home; here it vanishes from the
-    // feed (rider cancelled, expired…) shortly after it appears.
-    final dispatch = DemoDispatchRepository(
-      externalClaimOfferId: 'nearby-1',
-      externalClaimDelay: DriverOfferRules.current.exclusiveAcceptTime +
-          const Duration(milliseconds: 4000),
-    );
-    await tester.pumpWidget(
-      LayoutViewport(
-        child: ScreenUtilInit(
-          designSize: const Size(375, 812),
-          minTextAdapt: true,
-          splitScreenMode: true,
-          useInheritedMediaQuery: true,
-          builder: (_, __) => MaterialApp(
-            home: DriverHome(
-              sessionController: DriverSessionController(),
-              dispatchRepository: dispatch,
+  testWidgets(
+    'a front Radar trip that disappears blurs out with an island note',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(375, 812));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      // nearby-1 is the first Radar trip on Home; here it vanishes from the
+      // feed (rider cancelled, expired…) shortly after it appears.
+      final dispatch = DemoDispatchRepository(
+        externalClaimOfferId: 'nearby-1',
+        externalClaimDelay:
+            DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(milliseconds: 4000),
+      );
+      await tester.pumpWidget(
+        LayoutViewport(
+          child: ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            splitScreenMode: true,
+            useInheritedMediaQuery: true,
+            builder: (_, __) => MaterialApp(
+              home: DriverHome(
+                sessionController: DriverSessionController(),
+                dispatchRepository: dispatch,
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 200));
-    tester
-        .widget<GestureDetector>(
-          find.byKey(const ValueKey<String>('trip-radar-touch-target')),
-        )
-        .onTap!
-        .call();
-    await tester.pump(const Duration(milliseconds: 1550));
-    await tester.pump(const Duration(milliseconds: 2300));
-    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
-    await tester.pump(const Duration(milliseconds: 900));
-    final card = find.byKey(const ValueKey<String>('radar-offer-card-nearby-1'));
-    expect(card, findsOneWidget);
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      tester
+          .widget<GestureDetector>(
+            find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+          )
+          .onTap!
+          .call();
+      await tester.pump(const Duration(milliseconds: 1550));
+      await tester.pump(const Duration(milliseconds: 2300));
+      await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
+      await tester.pump(const Duration(milliseconds: 900));
+      final card = find.byKey(
+        const ValueKey<String>('radar-offer-card-nearby-1'),
+      );
+      expect(card, findsOneWidget);
 
-    // It was the front card: the island says why, the card blurs out.
-    await tester.pump(const Duration(milliseconds: 1500));
-    await tester.pump(const Duration(milliseconds: 100));
-    final said = IslandMessages.posted.map((m) => m.title);
-    expect(said, contains('Trip unavailable'));
-    expect(said, isNot(contains('Taken by another driver')));
-    expect(find.byType(ImageFiltered), findsWidgets);
+      // It was the front card: the island says why, the card blurs out.
+      await tester.pump(const Duration(milliseconds: 1500));
+      await tester.pump(const Duration(milliseconds: 100));
+      final said = IslandMessages.posted.map((m) => m.title);
+      expect(said, contains('Trip unavailable'));
+      expect(said, isNot(contains('Taken by another driver')));
+      expect(find.byType(ImageFiltered), findsWidgets);
 
-    await tester.pump(const Duration(milliseconds: 3000));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(card, findsNothing);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox());
-    dispatch.dispose();
-  });
+      await tester.pump(const Duration(milliseconds: 3000));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(card, findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      dispatch.dispose();
+    },
+  );
 
-  testWidgets('a Radar trip not picked in time keeps its card but Match fades', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(375, 812));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    final dispatch = DemoDispatchRepository(
-      externalClaimDelay: const Duration(minutes: 5),
-    );
-    await tester.pumpWidget(
-      LayoutViewport(
-        child: ScreenUtilInit(
-          designSize: const Size(375, 812),
-          minTextAdapt: true,
-          splitScreenMode: true,
-          useInheritedMediaQuery: true,
-          builder: (_, __) => MaterialApp(
-            home: DriverHome(
-              sessionController: DriverSessionController(),
-              dispatchRepository: dispatch,
+  testWidgets(
+    'a Radar trip not picked in time keeps its card but Match fades',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(375, 812));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final dispatch = DemoDispatchRepository(
+        externalClaimDelay: const Duration(minutes: 5),
+      );
+      await tester.pumpWidget(
+        LayoutViewport(
+          child: ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            splitScreenMode: true,
+            useInheritedMediaQuery: true,
+            builder: (_, __) => MaterialApp(
+              home: DriverHome(
+                sessionController: DriverSessionController(),
+                dispatchRepository: dispatch,
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 200));
-    tester
-        .widget<GestureDetector>(
-          find.byKey(const ValueKey<String>('trip-radar-touch-target')),
-        )
-        .onTap!
-        .call();
-    await tester.pump(const Duration(milliseconds: 1550));
-    await tester.pump(const Duration(milliseconds: 2300));
-    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
-    await tester.pump(const Duration(milliseconds: 900));
-    final match = find.byKey(const ValueKey<String>('radar-match-nearby-1'));
-    expect(tester.widget<FilledButton>(match).onPressed, isNotNull);
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      tester
+          .widget<GestureDetector>(
+            find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+          )
+          .onTap!
+          .call();
+      await tester.pump(const Duration(milliseconds: 1550));
+      await tester.pump(const Duration(milliseconds: 2300));
+      await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
+      await tester.pump(const Duration(milliseconds: 900));
+      final match = find.byKey(const ValueKey<String>('radar-match-nearby-1'));
+      expect(tester.widget<FilledButton>(match).onPressed, isNotNull);
 
-    // Past Dispatch's time on the radar (15 s).
-    await tester.pump(DriverOfferRules.current.radarTime + const Duration(seconds: 1));
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(match, findsOneWidget);
-    expect(tester.widget<FilledButton>(match).onPressed, isNull);
-    expect(
-      find.byKey(const ValueKey<String>('radar-offer-card-nearby-1')),
-      findsOneWidget,
-    );
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox());
-    dispatch.dispose();
-  });
+      // Past Dispatch's time on the radar (15 s).
+      await tester.pump(
+        DriverOfferRules.current.radarTime + const Duration(seconds: 1),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(match, findsOneWidget);
+      expect(tester.widget<FilledButton>(match).onPressed, isNull);
+      expect(
+        find.byKey(const ValueKey<String>('radar-offer-card-nearby-1')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      dispatch.dispose();
+    },
+  );
 
-  testWidgets('new Radar trips join the deck by themselves', (
-    tester,
-  ) async {
+  testWidgets('new Radar trips join the deck by themselves', (tester) async {
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final dispatch = DemoDispatchRepository(
@@ -180,18 +187,25 @@ void main() {
     expect(cards.evaluate().length, greaterThan(1));
     expect(_refreshIcon, findsNothing);
     // Owner N1: no "ALL OFFERS" pill; the island's middle counts the trips.
-    expect(find.byKey(const ValueKey<String>('radar-home-all-offers')),
-        findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('radar-home-all-offers')),
+      findsNothing,
+    );
     final face = find.byKey(const ValueKey<String>('island-radar-offers'));
     expect(face, findsOneWidget);
     // Eleven, not twelve: the Electric trip is not a category the demo
     // car drives (Q27). The cash demo trips (R8-4, R9) and the two
     // RideCheck demo trips count too.
-    expect(tester.widget<Text>(face).textSpan!.toPlainText(),
-        '11 offers · radar');
+    expect(
+      tester.widget<Text>(face).textSpan!.toPlainText(),
+      '11 offers · radar',
+    );
 
     // The radar reads Accept while the deck shows.
-    expect(find.byKey(const ValueKey<String>('home-radar-accept')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('home-radar-accept')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     dispatch.dispose();

@@ -40,7 +40,8 @@ class _SettingsState extends State<Settings> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: tr.back, 
+        leading: IconButton(
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
@@ -156,17 +157,19 @@ class _SettingsState extends State<Settings> {
               ),
             ),
             if (detail != null)
-              Flexible(child: Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: Text(
-                  detail,
-                  style: const TextStyle(
-                    color: _muted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Text(
+                    detail,
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              )),
+              ),
             trailing ??
                 const Icon(
                   Icons.chevron_right_rounded,
@@ -250,9 +253,9 @@ class _SettingsState extends State<Settings> {
       await DriverLanguage.choose(picked, _settings);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr.languageSaveFailed)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(tr.languageSaveFailed)));
     }
   }
 }

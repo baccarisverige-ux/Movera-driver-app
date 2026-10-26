@@ -123,7 +123,8 @@ abstract final class PickupPayCalculator {
   }) {
     final rules = config ?? PickupPayConfig.current;
     return PickupPayQuote(
-      pay: serverPay ??
+      pay:
+          serverPay ??
           pay(category: category, kind: kind, leg: leg, config: rules),
       leg: leg,
       display: rules.display,

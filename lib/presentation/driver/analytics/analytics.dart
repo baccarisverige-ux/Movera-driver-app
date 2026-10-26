@@ -28,7 +28,8 @@ class Analytics extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: tr.back, 
+        leading: IconButton(
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
@@ -239,7 +240,10 @@ class Analytics extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEBF7F1),
                   borderRadius: BorderRadius.circular(14),
@@ -289,14 +293,16 @@ class Analytics extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(
-                    stats.surroundingTitleText,
-                    style: const TextStyle(
-                      color: Color(0xFF22312D),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
+                  Expanded(
+                    child: Text(
+                      stats.surroundingTitleText,
+                      style: const TextStyle(
+                        color: Color(0xFF22312D),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
-                  )),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -331,7 +337,10 @@ class Analytics extends StatelessWidget {
               Container(
                 height: 8,
                 width: 8,
-                decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: accent,
+                  shape: BoxShape.circle,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -344,30 +353,41 @@ class Analytics extends StatelessWidget {
                   ),
                 ),
               ),
-              Flexible(child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: busy ? const Color(0xFFE8F5EF) : const Color(0xFFF3F5F4),
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Text(
-                  area.demandText,
-                  style: TextStyle(
-                    color: busy ? const Color(0xFF155F47) : const Color(0xFF737F7A),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: busy
+                        ? const Color(0xFFE8F5EF)
+                        : const Color(0xFFF3F5F4),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    area.demandText,
+                    style: TextStyle(
+                      color: busy
+                          ? const Color(0xFF155F47)
+                          : const Color(0xFF737F7A),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-              )),
+              ),
               const SizedBox(width: 8),
-              Flexible(child: Text(
-                '${area.demandPercent}%',
-                style: const TextStyle(
-                  color: _ink,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
+              Flexible(
+                child: Text(
+                  '${area.demandPercent}%',
+                  style: const TextStyle(
+                    color: _ink,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              )),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -391,8 +411,8 @@ class Analytics extends StatelessWidget {
     final accent = isBusy
         ? const Color(0xFF167653)
         : isQuiet
-            ? const Color(0xFF98A49F)
-            : const Color(0xFF65A98B);
+        ? const Color(0xFF98A49F)
+        : const Color(0xFF65A98B);
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
       decoration: BoxDecoration(

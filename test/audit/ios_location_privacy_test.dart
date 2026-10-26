@@ -10,7 +10,10 @@ void main() {
     expect(plist, contains('Background location is not used'));
     expect(plist, contains('NSCameraUsageDescription'));
     expect(plist, isNot(contains('NSLocationAlwaysUsageDescription')));
-    expect(plist, isNot(contains('NSLocationAlwaysAndWhenInUseUsageDescription')));
+    expect(
+      plist,
+      isNot(contains('NSLocationAlwaysAndWhenInUseUsageDescription')),
+    );
     expect(plist, isNot(contains('UIBackgroundModes')));
   });
 }

@@ -203,9 +203,7 @@ void main() {
   });
 
   // driver-70: two Radar offers gone from dispatch in one update.
-  testWidgets('every Radar offer lost at once leaves the deck', (
-    tester,
-  ) async {
+  testWidgets('every Radar offer lost at once leaves the deck', (tester) async {
     final dispatch = _Dispatch();
     await _mount(tester, dispatch);
     dispatch.updates.add(const <RideOffer>[]);
@@ -226,9 +224,7 @@ void main() {
   ) async {
     final dispatch = _Dispatch();
     await _mount(tester, dispatch);
-    await tester.tap(
-      find.byKey(const ValueKey<String>('island-radar-offers')),
-    );
+    await tester.tap(find.byKey(const ValueKey<String>('island-radar-offers')));
     await _frames(tester);
     expect(find.byType(RideRequests), findsOneWidget);
     await _match(tester, 'first');

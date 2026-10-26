@@ -117,9 +117,8 @@ void _headless() {
   addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
 }
 
-AcceptRide _trip(WidgetTester tester) => tester.widget<AcceptRide>(
-  find.byType(AcceptRide, skipOffstage: false),
-);
+AcceptRide _trip(WidgetTester tester) =>
+    tester.widget<AcceptRide>(find.byType(AcceptRide, skipOffstage: false));
 
 void main() {
   setUp(() {
@@ -162,14 +161,10 @@ void main() {
     expect(none.cashToCollect, isNull);
 
     // The driver gets all of the pickup pay on top of the share.
-    expect(
-      Money.parseSekLabel(card.fare)! - share,
-      Money.ore(380),
-    );
+    expect(Money.parseSekLabel(card.fare)! - share, Money.ore(380));
   });
 
-  test('a secured next trip saved with the live ride keeps its pickup pay',
-      () {
+  test('a secured next trip saved with the live ride keeps its pickup pay', () {
     final next = PersistedQueuedTrip(
       tripId: 'next',
       riderName: 'Omar',
@@ -183,8 +178,10 @@ void main() {
       dropoffLng: 18.07,
       pickupPay: Money.ore(380),
     );
-    expect(PersistedQueuedTrip.fromJson(next.toJson())!.pickupPay,
-        Money.ore(380));
+    expect(
+      PersistedQueuedTrip.fromJson(next.toJson())!.pickupPay,
+      Money.ore(380),
+    );
   });
 
   testWidgets('Radar list: the won trip has the fare the card showed', (
@@ -195,12 +192,13 @@ void main() {
     final dispatch = _Dispatch([_far(cash: true)]);
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        home: RideRequests(dispatchRepository: dispatch),
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) =>
+            MaterialApp(home: RideRequests(dispatchRepository: dispatch)),
       ),
-    ));
+    );
     await tester.pump();
     // The card: the driver's share of the 120 kr fare plus the pickup pay;
     // the fare itself is nowhere on the list.
@@ -232,20 +230,22 @@ void main() {
     final dispatch = _Dispatch([_far()]);
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(LayoutViewport(
-      child: ScreenUtilInit(
-        designSize: const Size(375, 812),
-        minTextAdapt: true,
-        splitScreenMode: true,
-        useInheritedMediaQuery: true,
-        builder: (_, __) => MaterialApp(
-          home: DriverHome(
-            sessionController: DriverSessionController(),
-            dispatchRepository: dispatch,
+    await tester.pumpWidget(
+      LayoutViewport(
+        child: ScreenUtilInit(
+          designSize: const Size(375, 812),
+          minTextAdapt: true,
+          splitScreenMode: true,
+          useInheritedMediaQuery: true,
+          builder: (_, __) => MaterialApp(
+            home: DriverHome(
+              sessionController: DriverSessionController(),
+              dispatchRepository: dispatch,
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.pump(const Duration(milliseconds: 200));
     tester
         .widget<GestureDetector>(
@@ -290,7 +290,9 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      const MaterialApp(home: AcceptRide(fare: '111,02 kr', category: 'Comfort')),
+      const MaterialApp(
+        home: AcceptRide(fare: '111,02 kr', category: 'Comfort'),
+      ),
     );
     await tester.pump(const Duration(milliseconds: 160));
     Future<void> settle([int frames = 12]) async {
@@ -298,15 +300,23 @@ void main() {
         await tester.pump(const Duration(milliseconds: 50));
       }
     }
+
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
     Future<void> middle() async {
-      if (find.byKey(const ValueKey('active-ride-arrived-button')).evaluate().isNotEmpty ||
-          find.byKey(const ValueKey('active-ride-primary-action')).evaluate().isNotEmpty) {
+      if (find
+              .byKey(const ValueKey('active-ride-arrived-button'))
+              .evaluate()
+              .isNotEmpty ||
+          find
+              .byKey(const ValueKey('active-ride-primary-action'))
+              .evaluate()
+              .isNotEmpty) {
         return;
       }
       panel.controller!.animatePanelToSnapPoint();
       await settle(17);
     }
+
     await middle();
     await tester.tap(find.byKey(const ValueKey('active-ride-arrived-button')));
     await settle(6);

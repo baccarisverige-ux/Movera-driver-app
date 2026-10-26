@@ -81,17 +81,16 @@ class IslandWaitingSignals {
   }) {
     String? peak;
     for (final event in config.events) {
-      if (!event.enabled || !_isToday(event.dateLabel, now)) { continue; }
+      if (!event.enabled || !_isToday(event.dateLabel, now)) {
+        continue;
+      }
       final start = _start(event.timeLabel);
       if (start != null && _minutes(start) > now.hour * 60 + now.minute) {
         peak = start;
         break;
       }
     }
-    return IslandWaitingSignals(
-      peakStart: peak,
-      streak: streak,
-    );
+    return IslandWaitingSignals(peakStart: peak, streak: streak);
   }
 
   /// The demo: every kind of message has its fact, so all of them show.
@@ -123,61 +122,75 @@ class IslandWaitingSignals {
 
   /// The messages these facts allow, in the order they rotate.
   List<IslandWaitingTip> tips() => [
-        if (boostKr case final kr?)
-          IslandWaitingTip(
-            'boost',
-            boostZone == null
-                ? tr.tipHighBoostNearby
-                : tr.tipHighBoostIn('$kr', boostZone!),
-            IslandTipLook.boost,
-          ),
-        if (expectTripSoon)
-          IslandWaitingTip(
-            'expect', tr.tipExpectTrip, IslandTipLook.info),
-        if (promotionRides case final rides?)
-          if (promotionKr case final kr?)
-            IslandWaitingTip(
-              'promotion',
-              tr.tipPromotionRides('$rides', '$kr'),
-              IslandTipLook.promotion,
-            ),
-        if (busyArea)
-          IslandWaitingTip(
-            'busy', tr.tipBusyArea, IslandTipLook.demand),
-        if (airportQueue case final queue?)
-          IslandWaitingTip(
-            'airport', tr.tipAirportQueue('$queue'), IslandTipLook.info),
-        if (streak >= 2)
-          IslandWaitingTip(
-            'streak', tr.tipGoodStreak('$streak'), IslandTipLook.good),
-        if (demandRising)
-          IslandWaitingTip(
-            'demand', tr.tipDemandRising, IslandTipLook.demand),
-        if (peakStart case final start?)
-          IslandWaitingTip(
-            'peak', tr.tipPeakStart(start), IslandTipLook.info),
-        if (topZone)
-          IslandWaitingTip(
-            'top-zone', tr.tipTopZone, IslandTipLook.good),
-      ];
+    if (boostKr case final kr?)
+      IslandWaitingTip(
+        'boost',
+        boostZone == null
+            ? tr.tipHighBoostNearby
+            : tr.tipHighBoostIn('$kr', boostZone!),
+        IslandTipLook.boost,
+      ),
+    if (expectTripSoon)
+      IslandWaitingTip('expect', tr.tipExpectTrip, IslandTipLook.info),
+    if (promotionRides case final rides?)
+      if (promotionKr case final kr?)
+        IslandWaitingTip(
+          'promotion',
+          tr.tipPromotionRides('$rides', '$kr'),
+          IslandTipLook.promotion,
+        ),
+    if (busyArea)
+      IslandWaitingTip('busy', tr.tipBusyArea, IslandTipLook.demand),
+    if (airportQueue case final queue?)
+      IslandWaitingTip(
+        'airport',
+        tr.tipAirportQueue('$queue'),
+        IslandTipLook.info,
+      ),
+    if (streak >= 2)
+      IslandWaitingTip(
+        'streak',
+        tr.tipGoodStreak('$streak'),
+        IslandTipLook.good,
+      ),
+    if (demandRising)
+      IslandWaitingTip('demand', tr.tipDemandRising, IslandTipLook.demand),
+    if (peakStart case final start?)
+      IslandWaitingTip('peak', tr.tipPeakStart(start), IslandTipLook.info),
+    if (topZone)
+      IslandWaitingTip('top-zone', tr.tipTopZone, IslandTipLook.good),
+  ];
 
   static const List<String> _months = [
-    'jan', 'feb', 'mar', 'apr', 'may', 'jun',
-    'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'may',
+    'jun',
+    'jul',
+    'aug',
+    'sep',
+    'oct',
+    'nov',
+    'dec',
   ];
 
   /// "Fri 25 Sep" is today.
   static bool _isToday(String label, DateTime now) {
     final parts = label.trim().toLowerCase().split(RegExp(r'\s+'));
-    if (parts.length < 3 || parts[2].length < 3) { return false; }
+    if (parts.length < 3 || parts[2].length < 3) {
+      return false;
+    }
     final day = int.tryParse(parts[1]);
     final month = _months.indexOf(parts[2].substring(0, 3)) + 1;
     return day == now.day && month == now.month;
   }
 
   /// "18:00–22:30" → "18:00".
-  static String? _start(String label) =>
-      RegExp(r'\b(\d{1,2}):(\d{2})').firstMatch(label)?.group(0)?.padLeft(5, '0');
+  static String? _start(String label) => RegExp(
+    r'\b(\d{1,2}):(\d{2})',
+  ).firstMatch(label)?.group(0)?.padLeft(5, '0');
 
   static int _minutes(String hhmm) {
     final parts = hhmm.split(':');

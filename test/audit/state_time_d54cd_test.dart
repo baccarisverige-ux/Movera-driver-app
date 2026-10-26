@@ -83,26 +83,30 @@ Future<_Loc> _pumpTrip(
   addTearDown(tester.view.reset);
   final location = _Loc();
   addTearDown(location.updates.close);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, _) => MaterialApp(
-      home: AcceptRide(
-        tripId: 'cd-trip',
-        fare: '250,00 kr',
-        paidByCash: paidByCash,
-        initialStage: stage,
-        locationRepository: location,
-        realtime: realtime,
-        waitNow: () => tester.binding.clock.now(),
-        activeRideRepository: MemoryActiveRideRepository(),
-        waybillRepository: InMemoryWaybillRepository.instance,
-        sessionController: DriverSessionController()..setOnline(true),
-        destinationModeActive: destination,
-        destinationAddress: destination ? 'Arlanda, Sigtuna' : null,
-        destinationPosition: destination ? const LatLng(59.6519, 17.9186) : null,
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, _) => MaterialApp(
+        home: AcceptRide(
+          tripId: 'cd-trip',
+          fare: '250,00 kr',
+          paidByCash: paidByCash,
+          initialStage: stage,
+          locationRepository: location,
+          realtime: realtime,
+          waitNow: () => tester.binding.clock.now(),
+          activeRideRepository: MemoryActiveRideRepository(),
+          waybillRepository: InMemoryWaybillRepository.instance,
+          sessionController: DriverSessionController()..setOnline(true),
+          destinationModeActive: destination,
+          destinationAddress: destination ? 'Arlanda, Sigtuna' : null,
+          destinationPosition: destination
+              ? const LatLng(59.6519, 17.9186)
+              : null,
+        ),
       ),
     ),
-  ));
+  );
   await _settle(tester, 10);
   return location;
 }
@@ -129,10 +133,16 @@ Future<void> _slide(WidgetTester tester) async {
 }
 
 /// Waits (in test time) until [finder] shows, up to [limit].
-Future<void> _until(WidgetTester tester, Finder finder,
-    [Duration limit = const Duration(seconds: 10)]) async {
-  for (var t = Duration.zero; t < limit && finder.evaluate().isEmpty;
-      t += const Duration(milliseconds: 100)) {
+Future<void> _until(
+  WidgetTester tester,
+  Finder finder, [
+  Duration limit = const Duration(seconds: 10),
+]) async {
+  for (
+    var t = Duration.zero;
+    t < limit && finder.evaluate().isEmpty;
+    t += const Duration(milliseconds: 100)
+  ) {
     await tester.pump(const Duration(milliseconds: 100));
   }
 }
@@ -143,16 +153,18 @@ Future<void> _pumpOnboarding(WidgetTester tester) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final navigator = GlobalKey<NavigatorState>();
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, _) => MaterialApp(
-      navigatorKey: navigator,
-      home: const Scaffold(body: Text('Existing home')),
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, _) => MaterialApp(
+        navigatorKey: navigator,
+        home: const Scaffold(body: Text('Existing home')),
+      ),
     ),
-  ));
-  navigator.currentState!.push(MaterialPageRoute<void>(
-    builder: (_) => const AdditionalInfoNavigation(),
-  ));
+  );
+  navigator.currentState!.push(
+    MaterialPageRoute<void>(builder: (_) => const AdditionalInfoNavigation()),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -165,11 +177,8 @@ Future<void> _onboardingStep(WidgetTester tester, {bool back = false}) async {
   await tester.pumpAndSettle();
 }
 
-int _onboardingPage(WidgetTester tester) => tester
-    .widget<PageView>(find.byType(PageView))
-    .controller!
-    .page!
-    .round();
+int _onboardingPage(WidgetTester tester) =>
+    tester.widget<PageView>(find.byType(PageView)).controller!.page!.round();
 
 /// A map whose camera moves are recorded; each waits [ack] when set, or
 /// takes [latency] of test time.
@@ -192,17 +201,22 @@ class _Camera extends HeadlessMapPlatform {
 const _cameraStart = CameraPosition(target: LatLng(59, 18), zoom: 16);
 
 /// A Google map on [_Camera]; returns its controller.
-Future<GoogleMapController> _pumpMap(WidgetTester tester, _Camera camera) async {
+Future<GoogleMapController> _pumpMap(
+  WidgetTester tester,
+  _Camera camera,
+) async {
   final original = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = camera;
   addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
   GoogleMapController? controller;
-  await tester.pumpWidget(MaterialApp(
-    home: GoogleMap(
-      initialCameraPosition: _cameraStart,
-      onMapCreated: (value) => controller = value,
+  await tester.pumpWidget(
+    MaterialApp(
+      home: GoogleMap(
+        initialCameraPosition: _cameraStart,
+        onMapCreated: (value) => controller = value,
+      ),
     ),
-  ));
+  );
   await tester.pump();
   return controller!;
 }
@@ -213,8 +227,9 @@ class _HomeGps implements DriverLocationRepository {
   final updates = StreamController<DriverLocation>.broadcast();
   int oneShots = 0;
   @override
-  Future<DriverLocation> getCurrentPosition() =>
-      oneShots++ == 0 ? Future.value(at(59.34, 18.07)) : Completer<DriverLocation>().future;
+  Future<DriverLocation> getCurrentPosition() => oneShots++ == 0
+      ? Future.value(at(59.34, 18.07))
+      : Completer<DriverLocation>().future;
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       updates.stream;
@@ -226,7 +241,8 @@ class _HomeGps implements DriverLocationRepository {
 }
 
 /// DriverHome on a headless map, with the demo extras off.
-Future<void> _pumpHome(WidgetTester tester, {
+Future<void> _pumpHome(
+  WidgetTester tester, {
   DriverLocationRepository? location,
   DispatchRepository? dispatch,
   DriverSessionController? session,
@@ -247,18 +263,20 @@ Future<void> _pumpHome(WidgetTester tester, {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, _) => MaterialApp(
-      // As in the app: Home hears routes covering it and leaving.
-      navigatorObservers: [driverRouteObserver],
-      home: DriverHome(
-        locationRepository: location,
-        dispatchRepository: dispatch,
-        sessionController: session,
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, _) => MaterialApp(
+        // As in the app: Home hears routes covering it and leaving.
+        navigatorObservers: [driverRouteObserver],
+        home: DriverHome(
+          locationRepository: location,
+          dispatchRepository: dispatch,
+          sessionController: session,
+        ),
       ),
     ),
-  ));
+  );
   await _settle(tester);
 }
 
@@ -326,28 +344,39 @@ class _RadarDispatch implements DispatchRepository {
 /// No GPS fix ever (Home stays on its start position).
 class _NoGps implements DriverLocationRepository {
   @override
-  Future<DriverLocation> getCurrentPosition() => Completer<DriverLocation>().future;
+  Future<DriverLocation> getCurrentPosition() =>
+      Completer<DriverLocation>().future;
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       const Stream.empty();
 }
 
 /// Home online with both [_RadarDispatch] trips on its deck.
-Future<void> _pumpDeck(WidgetTester tester, DispatchRepository dispatch, {
+Future<void> _pumpDeck(
+  WidgetTester tester,
+  DispatchRepository dispatch, {
   DriverSessionController? session,
 }) async {
-  await _pumpHome(tester, location: _NoGps(), dispatch: dispatch,
-      session: session);
+  await _pumpHome(
+    tester,
+    location: _NoGps(),
+    dispatch: dispatch,
+    session: session,
+  );
   await tester.tap(find.text('OFF'));
   await _pumpFor(tester, const Duration(seconds: 24));
-  expect(find.byKey(const ValueKey<String>('radar-offer-card-first')),
-      findsOneWidget);
+  expect(
+    find.byKey(const ValueKey<String>('radar-offer-card-first')),
+    findsOneWidget,
+  );
 }
 
 /// The Exclusive offer card on Home, if one is up.
-final _exclusiveCard = find.byWidgetPredicate((w) =>
-    w.key is ValueKey<String> &&
-    (w.key! as ValueKey<String>).value.startsWith('exclusive-offer-card-'));
+final _exclusiveCard = find.byWidgetPredicate(
+  (w) =>
+      w.key is ValueKey<String> &&
+      (w.key! as ValueKey<String>).value.startsWith('exclusive-offer-card-'),
+);
 
 const _offerCard = ValueKey<String>('on-trip-radar-offer-button');
 const _matchNext = ValueKey<String>('on-trip-radar-match-next');
@@ -379,8 +408,10 @@ void main() {
       kind: DriverRealtimeKind.tripProjection,
       status: TripStatus.cancelledByAdmin,
     );
-    await _until(tester,
-        find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
+    await _until(
+      tester,
+      find.byKey(const ValueKey<String>('trip-outcome-acknowledge')),
+    );
     // The driver leaves the app and comes back; the sheet is still up.
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
     await tester.pump();
@@ -393,8 +424,9 @@ void main() {
     await _unmount(tester);
   });
 
-  testWidgets('driver-u77: a card trip is archived as paid by Card',
-      (tester) async {
+  testWidgets('driver-u77: a card trip is archived as paid by Card', (
+    tester,
+  ) async {
     await _pumpTrip(tester, stage: ActiveRideStage.waitingForRider);
     await _slide(tester); // Start the trip.
     await _slide(tester); // Complete.
@@ -436,15 +468,19 @@ void main() {
     expect(WaybillStore.next, isNotNull);
     await tester.tap(find.byTooltip('Trip route and options').hitTestable());
     await _settle(tester, 6);
-    await tester
-        .tap(find.byKey(const ValueKey<String>('active-ride-cancel-option')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('active-ride-cancel-option')),
+    );
     await _settle(tester, 6);
-    await tester.tap(find.byKey(
-      const ValueKey<String>('trip-cancel-reason-rider_requested_early_end'),
-    ));
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('trip-cancel-reason-rider_requested_early_end'),
+      ),
+    );
     await _settle(tester, 6);
-    await tester
-        .tap(find.byKey(const ValueKey<String>('confirm-trip-cancellation')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('confirm-trip-cancellation')),
+    );
     await _settle(tester, 24);
     final next = tester.widget<AcceptRide>(find.byType(AcceptRide));
     expect(next.tripId, isNot('cd-trip'));
@@ -458,7 +494,9 @@ void main() {
     SharedPreferences.setMockInitialValues({
       LocalSupportRepository.key: jsonEncode({
         'schemaVersion': 1,
-        'tickets': [{'subject': 'Old ticket', 'preview': 'Saved before'}],
+        'tickets': [
+          {'subject': 'Old ticket', 'preview': 'Saved before'},
+        ],
         'draft': {
           'subject': 'Payout',
           'message': 'Missing',
@@ -468,11 +506,14 @@ void main() {
     });
     Future<void> open() async {
       await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pumpWidget(MaterialApp(
-        home: SupportInboxScreen(repository: LocalSupportRepository()),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SupportInboxScreen(repository: LocalSupportRepository()),
+        ),
+      );
       await tester.pumpAndSettle();
     }
+
     await open();
     await tester.tap(find.text('Draft local ticket'));
     await tester.pumpAndSettle();
@@ -498,20 +539,25 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 120));
     }
+
     await open();
     expect(find.byKey(card), findsOneWidget);
     await tester.tap(
-        find.byKey(const ValueKey<String>('radar-offer-dismiss-nearby-1')));
+      find.byKey(const ValueKey<String>('radar-offer-dismiss-nearby-1')),
+    );
     await tester.pump(const Duration(milliseconds: 120));
     await open(); // closed and opened again
     expect(find.byKey(card), findsNothing);
-    expect(find.byKey(const ValueKey<String>('radar-offer-card-nearby-2')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('radar-offer-card-nearby-2')),
+      findsOneWidget,
+    );
     await _unmount(tester);
   });
 
-  testWidgets('driver-u98: system back goes to the previous onboarding step',
-      (tester) async {
+  testWidgets('driver-u98: system back goes to the previous onboarding step', (
+    tester,
+  ) async {
     await _pumpOnboarding(tester);
     await _onboardingStep(tester);
     await _onboardingStep(tester);
@@ -522,28 +568,36 @@ void main() {
     expect(_onboardingPage(tester), 1);
   });
 
-  testWidgets('driver-r3-8: Back to an onboarding step keeps what was entered',
-      (tester) async {
-    await _pumpOnboarding(tester);
-    await tester.enterText(
-      find.byWidgetPredicate((w) =>
-          w is TextField && w.decoration?.hintText == 'Enter model year'),
-      '2019',
-    );
-    FocusManager.instance.primaryFocus?.unfocus();
-    await tester.pumpAndSettle();
-    await _onboardingStep(tester);
-    await _onboardingStep(tester, back: true);
-    expect(_onboardingPage(tester), 0);
-    expect(find.text('2019'), findsOneWidget);
-  });
+  testWidgets(
+    'driver-r3-8: Back to an onboarding step keeps what was entered',
+    (tester) async {
+      await _pumpOnboarding(tester);
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (w) => w is TextField && w.decoration?.hintText == 'Enter model year',
+        ),
+        '2019',
+      );
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await _onboardingStep(tester);
+      await _onboardingStep(tester, back: true);
+      expect(_onboardingPage(tester), 0);
+      expect(find.text('2019'), findsOneWidget);
+    },
+  );
 
   testWidgets('driver-100: with reduced motion a fix that lands during the '
       'camera move is still sent', (tester) async {
     final camera = _Camera()..ack = Completer<void>();
-    final port = GoogleDriverCameraPort(await _pumpMap(tester, camera),
-        reducedMotion: true, initialPosition: _cameraStart);
-    final done = port.animate(const DriverCameraPose(GeoPoint(59.001, 18), 16, 0, 0));
+    final port = GoogleDriverCameraPort(
+      await _pumpMap(tester, camera),
+      reducedMotion: true,
+      initialPosition: _cameraStart,
+    );
+    final done = port.animate(
+      const DriverCameraPose(GeoPoint(59.001, 18), 16, 0, 0),
+    );
     await tester.pump();
     port.retarget(const DriverCameraPose(GeoPoint(59.002, 18), 16, 0, 0));
     camera.ack!.complete();
@@ -557,16 +611,29 @@ void main() {
   testWidgets('driver-u177: a recenter flight lands in about 1 s even when '
       'each camera move takes 16 ms', (tester) async {
     final camera = _Camera()..latency = const Duration(milliseconds: 16);
-    final port = GoogleDriverCameraPort(await _pumpMap(tester, camera),
-        initialPosition: _cameraStart, clock: tester.binding.clock.now);
+    final port = GoogleDriverCameraPort(
+      await _pumpMap(tester, camera),
+      initialPosition: _cameraStart,
+      clock: tester.binding.clock.now,
+    );
     var landed = false;
     final started = tester.binding.clock.now();
-    unawaited(port.animate(const DriverCameraPose(
-      GeoPoint(59.004, 18.004), 17, 0, 0,
-      duration: Duration(milliseconds: 1000),
-    )).then((_) => landed = true));
+    unawaited(
+      port
+          .animate(
+            const DriverCameraPose(
+              GeoPoint(59.004, 18.004),
+              17,
+              0,
+              0,
+              duration: Duration(milliseconds: 1000),
+            ),
+          )
+          .then((_) => landed = true),
+    );
     while (!landed &&
-        tester.binding.clock.now().difference(started) < const Duration(seconds: 4)) {
+        tester.binding.clock.now().difference(started) <
+            const Duration(seconds: 4)) {
       await tester.pump(const Duration(milliseconds: 4));
     }
     final flight = tester.binding.clock.now().difference(started);
@@ -581,7 +648,9 @@ void main() {
     addTearDown(gps.updates.close);
     await _pumpHome(tester, location: gps);
     expect(_carOnHome(tester), const LatLng(59.34, 18.07));
-    await tester.tap(find.byKey(const ValueKey<String>('driver-location-zoom')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('driver-location-zoom')),
+    );
     await _settle(tester);
     gps.updates.add(gps.at(59.341, 18.071)); // the car moved on
     await _settle(tester);
@@ -617,15 +686,24 @@ void main() {
     dispatch.claims.single.complete(const ClaimResult.alreadyClaimed());
     dispatch.publish(const []); // both trips leave Radar
     await _pumpFor(tester, const Duration(seconds: 5));
-    expect(find.byKey(const ValueKey<String>('radar-offer-card-second')),
-        findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('radar-offer-card-second')),
+      findsNothing,
+    );
     // The demo reservation's Exclusive step is about 50 s into the day.
-    await _until(tester,
-        find.byKey(const ValueKey<String>('exclusive-offer-card-$demoReservationId')),
-        const Duration(seconds: 40));
-    expect(find.byKey(
-        const ValueKey<String>('exclusive-offer-card-$demoReservationId')),
-        findsOneWidget);
+    await _until(
+      tester,
+      find.byKey(
+        const ValueKey<String>('exclusive-offer-card-$demoReservationId'),
+      ),
+      const Duration(seconds: 40),
+    );
+    expect(
+      find.byKey(
+        const ValueKey<String>('exclusive-offer-card-$demoReservationId'),
+      ),
+      findsOneWidget,
+    );
     await _unmount(tester);
   });
 
@@ -637,8 +715,11 @@ void main() {
     await _pumpFor(tester, const Duration(seconds: 5));
     // Ride history (any route) covers Home and closes again.
     final navigator = tester.state<NavigatorState>(find.byType(Navigator));
-    navigator.push(MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: Text('covering'))));
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('covering')),
+      ),
+    );
     await _settle(tester);
     navigator.pop();
     await _settle(tester);
@@ -655,7 +736,8 @@ void main() {
     await tester.tap(find.text('OFF'));
     await _until(tester, _exclusiveCard);
     final home = tester.state<ScaffoldState>(
-        find.byWidgetPredicate((w) => w is Scaffold && w.drawer != null));
+      find.byWidgetPredicate((w) => w is Scaffold && w.drawer != null),
+    );
     home.openDrawer();
     await _pumpFor(tester, const Duration(seconds: 20)); // reads the menu
     home.closeDrawer();
@@ -678,8 +760,10 @@ void main() {
     dispatch.claims.single.complete(ClaimResult.success(_radarTrip('first')));
     await _until(tester, find.byType(AcceptRide));
     await _settle(tester);
-    expect(IslandMessages.posted.map((m) => m.title),
-        isNot(contains('Trip unavailable')));
+    expect(
+      IslandMessages.posted.map((m) => m.title),
+      isNot(contains('Trip unavailable')),
+    );
     // The trip ends; Home is on top again, without the pre-trip cards.
     session.endTrip();
     tester.state<NavigatorState>(find.byType(Navigator)).pop();
@@ -691,8 +775,13 @@ void main() {
   test('driver-u148: "Yesterday" only for the day before, by the calendar', () {
     final now = DateTime(2026, 10, 21, 1);
     expect(noticeTimeLabel(DateTime(2026, 10, 19, 23), now), '2 days ago');
-    expect(noticeTimeLabel(DateTime(2026, 10, 19, 23, 30),
-        DateTime(2026, 10, 20, 23, 45)), 'Yesterday');
+    expect(
+      noticeTimeLabel(
+        DateTime(2026, 10, 19, 23, 30),
+        DateTime(2026, 10, 20, 23, 45),
+      ),
+      'Yesterday',
+    );
   });
 
   test('driver-97: a time tomorrow says "tomorrow" on the spring DST day', () {

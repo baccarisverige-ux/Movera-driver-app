@@ -157,9 +157,7 @@ class LocalVehicleStore {
         throw const FormatException('Invalid vehicle photo payload');
       }
       if (!unchanged && _encodedPhotoBytes(value) > maxPhotoBytes) {
-        throw const VehiclePhotoBudgetExceeded(
-          VehiclePhotoLimit.photoTooLarge,
-        );
+        throw const VehiclePhotoBudgetExceeded(VehiclePhotoLimit.photoTooLarge);
       }
       // Size alone is not proof of valid base64. Refuse a poisoned draft now
       // instead of breaking all future calls to list().

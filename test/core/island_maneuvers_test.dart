@@ -88,10 +88,22 @@ void main() {
         {
           'classes': ['motorway', 'toll'],
           'lanes': [
-            {'valid': false, 'indications': ['straight']},
-            {'valid': false, 'indications': ['straight']},
-            {'valid': true, 'indications': ['slight right']},
-            {'valid': true, 'indications': ['slight right']},
+            {
+              'valid': false,
+              'indications': ['straight'],
+            },
+            {
+              'valid': false,
+              'indications': ['straight'],
+            },
+            {
+              'valid': true,
+              'indications': ['slight right'],
+            },
+            {
+              'valid': true,
+              'indications': ['slight right'],
+            },
           ],
         },
       ],

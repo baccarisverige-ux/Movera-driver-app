@@ -92,7 +92,10 @@ class _Radar implements DispatchRepository {
   Future<ClaimResult> claimOffer(String offerId) async {
     claims.add(offerId);
     await Future<void>.delayed(const Duration(milliseconds: 300));
-    publish([for (final o in offers) if (o.id != offerId) o]);
+    publish([
+      for (final o in offers)
+        if (o.id != offerId) o,
+    ]);
     return lose
         ? const ClaimResult.alreadyClaimed()
         : const ClaimResult.success(_reservationTrip);
@@ -177,7 +180,10 @@ void main() {
       final radar = _Radar();
       await _pumpHome(tester, radar);
       await _frames(tester, const Duration(seconds: 3));
-      expect(find.byKey(const ValueKey<String>('reservation-popup')).hitTestable(), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('reservation-popup')).hitTestable(),
+        findsOneWidget,
+      );
 
       // Dispatch lists it among the Radar trips close to pickup …
       await _frames(tester, const Duration(seconds: 33));
@@ -192,7 +198,9 @@ void main() {
       final card = find.byKey(_exclusiveCard);
       expect(card, findsOneWidget);
       final badge = find.byKey(
-        const ValueKey<String>('exclusive-offer-reservation-$demoReservationId'),
+        const ValueKey<String>(
+          'exclusive-offer-reservation-$demoReservationId',
+        ),
       );
       expect(badge, findsOneWidget);
       expect(
@@ -201,7 +209,10 @@ void main() {
       );
       expect(_said, contains('Exclusive reservation'));
       // The popup gave it its place; it is still in Scheduled rides.
-      expect(find.byKey(const ValueKey<String>('reservation-popup')), findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('reservation-popup')),
+        findsNothing,
+      );
       expect(ScheduledRideStore.isOpen(demoReservationId), isTrue);
 
       // Untaken, the Exclusive offer goes after Dispatch's time to accept
@@ -215,7 +226,10 @@ void main() {
       final deckCard = find.byKey(_radarCard);
       expect(deckCard, findsOneWidget);
       expect(
-        find.descendant(of: find.byKey(_radarBadge), matching: find.text('Reservation · 07:40')),
+        find.descendant(
+          of: find.byKey(_radarBadge),
+          matching: find.text('Reservation · 07:40'),
+        ),
         findsOneWidget,
       );
       final deck = find.byKey(const ValueKey<String>('radar-home-deck'));
@@ -230,7 +244,9 @@ void main() {
 
       // The full-screen Live list shows it the same way.
       // Owner N1: the island's middle ("N offers · radar") opens the list.
-      await tester.tap(find.byKey(const ValueKey<String>('island-radar-offers')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('island-radar-offers')),
+      );
       await _frames(tester, const Duration(milliseconds: 800));
       final live = find.byType(RideRequests);
       expect(live, findsOneWidget);
@@ -247,48 +263,53 @@ void main() {
     },
   );
 
-  testWidgets(
-    'demo flow: Radar trips wait behind the popup, the near-pickup '
-    'Exclusive still comes first, then all of them are on the deck',
-    (tester) async {
-      final dispatch = DemoDispatchRepository(
-        newOfferDelay: const Duration(days: 1),
-        externalClaimDelay: const Duration(days: 1),
-      );
-      await _pumpHome(tester, dispatch);
-      await _frames(tester, const Duration(seconds: 15));
-      // The popup holds the dock; the demo's first Radar trips wait.
-      expect(find.byKey(const ValueKey<String>('reservation-popup')).hitTestable(), findsOneWidget);
-      expect(find.byKey(const ValueKey<String>('radar-home-deck')), findsNothing);
+  testWidgets('demo flow: Radar trips wait behind the popup, the near-pickup '
+      'Exclusive still comes first, then all of them are on the deck', (
+    tester,
+  ) async {
+    final dispatch = DemoDispatchRepository(
+      newOfferDelay: const Duration(days: 1),
+      externalClaimDelay: const Duration(days: 1),
+    );
+    await _pumpHome(tester, dispatch);
+    await _frames(tester, const Duration(seconds: 15));
+    // The popup holds the dock; the demo's first Radar trips wait.
+    expect(
+      find.byKey(const ValueKey<String>('reservation-popup')).hitTestable(),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey<String>('radar-home-deck')), findsNothing);
 
-      await _frames(
-        tester,
-        ReservationDemoTimings.nearPickupAfter -
-            const Duration(seconds: 15) +
-            const Duration(milliseconds: 600),
-      );
-      expect(find.byKey(_exclusiveCard), findsOneWidget);
-      expect(find.byKey(const ValueKey<String>('reservation-popup')), findsNothing);
+    await _frames(
+      tester,
+      ReservationDemoTimings.nearPickupAfter -
+          const Duration(seconds: 15) +
+          const Duration(milliseconds: 600),
+    );
+    expect(find.byKey(_exclusiveCard), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('reservation-popup')),
+      findsNothing,
+    );
 
-      // Untaken: the waiting Radar trips come in, the reservation with them.
-      await _frames(
-        tester,
-        DriverOfferRules.current.exclusiveAcceptTime +
-            const Duration(milliseconds: 500),
-      );
-      expect(find.byKey(_exclusiveCard), findsNothing);
-      final deck = tester.widget<RadarOfferDeck>(
-        find.byKey(const ValueKey<String>('radar-home-deck')),
-      );
-      // New trips join the back of the deck, the reservation too.
-      expect(deck.ids, contains(demoReservationId));
-      expect(deck.ids.last, demoReservationId);
-      expect(find.textContaining('Exclusive'), findsNothing);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox());
-      dispatch.dispose();
-    },
-  );
+    // Untaken: the waiting Radar trips come in, the reservation with them.
+    await _frames(
+      tester,
+      DriverOfferRules.current.exclusiveAcceptTime +
+          const Duration(milliseconds: 500),
+    );
+    expect(find.byKey(_exclusiveCard), findsNothing);
+    final deck = tester.widget<RadarOfferDeck>(
+      find.byKey(const ValueKey<String>('radar-home-deck')),
+    );
+    // New trips join the back of the deck, the reservation too.
+    expect(deck.ids, contains(demoReservationId));
+    expect(deck.ids.last, demoReservationId);
+    expect(find.textContaining('Exclusive'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    dispatch.dispose();
+  });
 
   testWidgets('taken by another driver from the Exclusive offer: gone', (
     tester,
@@ -297,11 +318,14 @@ void main() {
     await _pumpHome(tester, radar, popup: false);
     await _frames(
       tester,
-      ReservationDemoTimings.nearPickupAfter + const Duration(milliseconds: 300),
+      ReservationDemoTimings.nearPickupAfter +
+          const Duration(milliseconds: 300),
     );
     final card = find.byKey(_exclusiveCard);
     expect(card, findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home-radar-exclusive')),
+    );
     await _frames(tester, const Duration(milliseconds: 900));
 
     expect(radar.claims, [demoReservationId]);
@@ -373,7 +397,9 @@ void main() {
       GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
       addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
       await openDetails(tester);
-      await tester.tap(find.byKey(const ValueKey<String>('scheduled-route-open')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('scheduled-route-open')),
+      );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
       final page = tester.widget<ReservationRouteMapPage>(
@@ -381,7 +407,9 @@ void main() {
       );
       expect(page.request.id, demoReservationId);
       expect(tester.takeException(), isNull);
-      await tester.tap(find.byKey(const ValueKey<String>('reservation-map-close')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('reservation-map-close')),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(ReservationRouteMapPage), findsNothing);
       expect(find.text('Reservation details'), findsOneWidget);
@@ -391,7 +419,7 @@ void main() {
     for (final won in [true, false]) {
       testWidgets(
         'Accept asks dispatch first: ${won ? 'won → Accepted' : 'lost → '
-            '"No longer available" and gone'}',
+                  '"No longer available" and gone'}',
         (tester) async {
           final dispatch = DemoDispatchRepository(
             claimDelay: const Duration(milliseconds: 400),

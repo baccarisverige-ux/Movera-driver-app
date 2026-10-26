@@ -84,31 +84,33 @@ void main() {
     expect(nav.reroutes, 0);
   });
 
-  test('a slow silent refresh keeps the route and instructions on screen',
-      () async {
-    await firstRoute();
-    final route = nav.route;
-    final banner = nav.snapshot.banner;
-    now = now.add(NavigationController.silentRefreshInterval);
-    final point = _along(100);
-    nav.setVehicle(DriverLocation(point: point));
-    final refresh = nav.ensureRoute(origin: point, destination: _destination);
-    expect(routes.responses, hasLength(2));
-    // Loading in the background: same route, same instruction, no status.
-    expect(nav.route, same(route));
-    expect(nav.routeState, RouteLoadState.ready);
-    expect(nav.status, isNull);
-    expect(nav.snapshot.banner?.primary, banner?.primary);
-    expect(nav.snapshot.banner?.status, isNull);
-    // Fixes during the refresh never start another one.
-    await nav.ensureRoute(origin: point, destination: _destination);
-    expect(routes.responses, hasLength(2));
-    routes.responses.last.complete(_road(from: point));
-    await refresh;
-    expect(nav.route, isNot(same(route)));
-    expect(nav.status, isNull);
-    expect(nav.reroutes, 0, reason: 'A silent refresh is not a reroute.');
-  });
+  test(
+    'a slow silent refresh keeps the route and instructions on screen',
+    () async {
+      await firstRoute();
+      final route = nav.route;
+      final banner = nav.snapshot.banner;
+      now = now.add(NavigationController.silentRefreshInterval);
+      final point = _along(100);
+      nav.setVehicle(DriverLocation(point: point));
+      final refresh = nav.ensureRoute(origin: point, destination: _destination);
+      expect(routes.responses, hasLength(2));
+      // Loading in the background: same route, same instruction, no status.
+      expect(nav.route, same(route));
+      expect(nav.routeState, RouteLoadState.ready);
+      expect(nav.status, isNull);
+      expect(nav.snapshot.banner?.primary, banner?.primary);
+      expect(nav.snapshot.banner?.status, isNull);
+      // Fixes during the refresh never start another one.
+      await nav.ensureRoute(origin: point, destination: _destination);
+      expect(routes.responses, hasLength(2));
+      routes.responses.last.complete(_road(from: point));
+      await refresh;
+      expect(nav.route, isNot(same(route)));
+      expect(nav.status, isNull);
+      expect(nav.reroutes, 0, reason: 'A silent refresh is not a reroute.');
+    },
+  );
 
   test('a failed silent refresh keeps following the current route', () async {
     await firstRoute();

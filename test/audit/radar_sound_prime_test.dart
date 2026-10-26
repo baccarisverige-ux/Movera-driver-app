@@ -12,8 +12,14 @@ class _Audio implements AudioPlayer {
   @override
   Future<void> setVolume(double volume) async => level = volume;
   @override
-  Future<void> play(Source source, {double? volume, double? balance,
-      AudioContext? ctx, Duration? position, PlayerMode? mode}) async {
+  Future<void> play(
+    Source source, {
+    double? volume,
+    double? balance,
+    AudioContext? ctx,
+    Duration? position,
+    PlayerMode? mode,
+  }) async {
     if (refuse) throw StateError('NotAllowedError');
   }
 
@@ -46,8 +52,7 @@ void main() {
     expect(audio.level, 1, reason: 'later offer alerts must be audible');
   });
 
-  test('driver-u49: after a refused prime the next tap primes again',
-      () async {
+  test('driver-u49: after a refused prime the next tap primes again', () async {
     final player = _Player();
     final sound = RadarOfferSound(player: player);
     sound.tap();

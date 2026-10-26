@@ -102,7 +102,9 @@ void main() {
     Future<void> capture(String name) async {
       // Dismiss the independent demo radar offer through its real button so
       // the screenshot shows the trip sheet rather than an unrelated offer.
-      final deny = find.byKey(const ValueKey('on-trip-radar-deny')).hitTestable();
+      final deny = find
+          .byKey(const ValueKey('on-trip-radar-deny'))
+          .hitTestable();
       if (deny.evaluate().isNotEmpty) {
         await tester.tap(deny);
         await tester.pump(const Duration(milliseconds: 300));

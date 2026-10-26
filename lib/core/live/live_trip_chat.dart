@@ -204,14 +204,19 @@ class LiveTripChat {
       if (items is List) {
         for (final item in items) {
           if (item is Map) {
-            thread._add(TripChatMessage.fromJson(Map<String, dynamic>.from(item)));
+            thread._add(
+              TripChatMessage.fromJson(Map<String, dynamic>.from(item)),
+            );
           }
         }
       }
       thread._markLoaded();
       return true;
     } on ApiError catch (error) {
-      DriverLog.warn('trip $tripId messages not read: ${error.code}', name: 'live');
+      DriverLog.warn(
+        'trip $tripId messages not read: ${error.code}',
+        name: 'live',
+      );
       return false;
     } on TypeError {
       DriverLog.warn('trip $tripId messages unreadable', name: 'live');
@@ -253,20 +258,23 @@ class LiveTripChat {
     // The copy's id is the request's Idempotency-Key: a retry is the
     // same message to the server.
     final key = ApiClient.randomKey();
-    thread(tripId)._put(TripChatMessage(
-      messageId: key,
-      from: 'driver',
-      text: trimmed,
-      at: DateTime.now().toUtc(),
-      state: TripChatSendState.sending,
-    ));
+    thread(tripId)._put(
+      TripChatMessage(
+        messageId: key,
+        from: 'driver',
+        text: trimmed,
+        at: DateTime.now().toUtc(),
+        state: TripChatSendState.sending,
+      ),
+    );
     return _post(tripId, key);
   }
 
   /// Sends a message that was not sent again, with the same key.
   Future<LiveTripOutcome> retry(String tripId, TripChatMessage message) {
     final copy = thread(tripId)._find(message.messageId);
-    if (copy == null || !copy.local) return Future.value(const LiveTripOutcome.ok());
+    if (copy == null || !copy.local)
+      return Future.value(const LiveTripOutcome.ok());
     thread(tripId)._put(copy._with(TripChatSendState.sending));
     return _post(tripId, copy.messageId);
   }

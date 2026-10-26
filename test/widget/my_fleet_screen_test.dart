@@ -390,8 +390,14 @@ void main() {
       expect(find.byKey(const ValueKey('invitation-badge')), findsOneWidget);
       expect(find.byKey(const ValueKey('invitation-inv_1')), findsOneWidget);
       expect(find.text(tr.fleetInviteBodyDriver), findsOneWidget);
-      expect(find.byKey(const ValueKey('invitation-accept-inv_1')), findsOneWidget);
-      expect(find.byKey(const ValueKey('invitation-decline-inv_1')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('invitation-accept-inv_1')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('invitation-decline-inv_1')),
+        findsOneWidget,
+      );
       // Decline asks first; Stay keeps it.
       await tester.tap(find.byKey(const ValueKey('invitation-decline-inv_1')));
       await tester.pump();
@@ -497,11 +503,19 @@ void main() {
       await _pump(tester, session);
       expect(find.byKey(const ValueKey('invitation-badge')), findsOneWidget);
       expect(find.text('Omar Said'), findsOneWidget);
-      expect(find.byKey(const ValueKey('invitation-accept-inv_r')), findsOneWidget);
-      expect(find.byKey(const ValueKey('invitation-decline-inv_r')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('invitation-accept-inv_r')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('invitation-decline-inv_r')),
+        findsOneWidget,
+      );
       expect(find.text(tr.fleetNoInvites), findsOneWidget);
       // Invite a number: +46 is there already, the national zero goes.
-      await tester.ensureVisible(find.byKey(const ValueKey('fleet-invite-driver')));
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('fleet-invite-driver')),
+      );
       await tester.tap(find.byKey(const ValueKey('fleet-invite-driver')));
       await tester.pump();
       expect(find.text(tr.fleetInviteDriver), findsWidgets);
@@ -517,8 +531,13 @@ void main() {
       expect(calls, ['invite +46701740608']);
       expect(find.byKey(const ValueKey('invitation-inv_p')), findsOneWidget);
       expect(find.text(tr.fleetInviteWaitsSignUp), findsOneWidget);
-      expect(find.byKey(const ValueKey('invitation-cancel-inv_p')), findsOneWidget);
-      await tester.ensureVisible(find.byKey(const ValueKey('invitation-accept-inv_r')));
+      expect(
+        find.byKey(const ValueKey('invitation-cancel-inv_p')),
+        findsOneWidget,
+      );
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('invitation-accept-inv_r')),
+      );
       await tester.tap(find.byKey(const ValueKey('invitation-accept-inv_r')));
       for (var i = 0; i < 8; i++) {
         await tester.pump(const Duration(milliseconds: 100));

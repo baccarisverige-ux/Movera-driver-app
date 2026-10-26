@@ -17,7 +17,9 @@ void main() {
     for (final file in sources) {
       final text = file.readAsStringSync();
       if (text.contains('MapTrafficSetting')) enabling.add(file.path);
-      for (final match in RegExp(r'trafficEnabled:\s*([^,\n]+)').allMatches(text)) {
+      for (final match in RegExp(
+        r'trafficEnabled:\s*([^,\n]+)',
+      ).allMatches(text)) {
         if (match.group(1)!.trim() == 'false') {
           fixedOff++;
         } else {
@@ -28,6 +30,9 @@ void main() {
     expect(enabling, isEmpty);
     // The one map widget every driver map is built on keeps it off.
     expect(fixedOff, 1);
-    expect(File('lib/core/settings/map_traffic_setting.dart').existsSync(), isFalse);
+    expect(
+      File('lib/core/settings/map_traffic_setting.dart').existsSync(),
+      isFalse,
+    );
   });
 }

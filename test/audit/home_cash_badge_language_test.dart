@@ -87,9 +87,11 @@ Future<void> _frames(WidgetTester tester, Duration total) async {
 }
 
 Future<void> _until(WidgetTester tester, Finder finder, Duration limit) async {
-  for (var t = Duration.zero;
-      t < limit && finder.evaluate().isEmpty;
-      t += const Duration(milliseconds: 100)) {
+  for (
+    var t = Duration.zero;
+    t < limit && finder.evaluate().isEmpty;
+    t += const Duration(milliseconds: 100)
+  ) {
     await tester.pump(const Duration(milliseconds: 100));
   }
   expect(finder, findsOneWidget);
@@ -163,7 +165,9 @@ void main() {
       expect(find.text(word), findsWidgets);
       // The down arrow skips it; the Radar trip is dealt onto the deck.
       await _frames(tester, const Duration(milliseconds: 1500));
-      await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('direct-offer-dismiss')),
+      );
       await _until(
         tester,
         find.byKey(const ValueKey<String>('radar-offer-card-cash-trip')),

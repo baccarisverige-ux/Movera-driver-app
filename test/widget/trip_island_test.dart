@@ -71,33 +71,41 @@ void main() {
   testWidgets('Revealed island goes back up on a touch anywhere else', (
     tester,
   ) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: Stack(
-          children: [
-            const Positioned.fill(child: ColoredBox(color: Colors.blueGrey)),
-            Align(
-              alignment: Alignment.topCenter,
-              child: TripTopReveal(
-                status: 'To pickup',
-                child: Container(height: 120, color: Colors.black),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Stack(
+            children: [
+              const Positioned.fill(child: ColoredBox(color: Colors.blueGrey)),
+              Align(
+                alignment: Alignment.topCenter,
+                child: TripTopReveal(
+                  status: 'To pickup',
+                  child: Container(height: 120, color: Colors.black),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ));
+    );
     await tester.drag(
       find.byKey(const ValueKey<String>('trip-top-reveal')),
       const Offset(0, 60),
     );
     await _settle(tester);
-    expect(find.byKey(const ValueKey<String>('trip-top-island')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('trip-top-island')),
+      findsOneWidget,
+    );
 
     // A touch on the island's middle keeps it open (it closes the message).
     await tester.tap(find.byKey(const ValueKey<String>('trip-island-middle')));
     await _settle(tester);
-    expect(find.byKey(const ValueKey<String>('trip-top-island')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('trip-top-island')),
+      findsOneWidget,
+    );
 
     // A touch on the map puts the card back.
     await tester.tapAt(const Offset(200, 600));

@@ -65,9 +65,7 @@ class ChatAppBar extends StatelessWidget {
               return;
             }
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(RiderContactPolicy.unavailableMessage),
-              ),
+              SnackBar(content: Text(RiderContactPolicy.unavailableMessage)),
             );
           },
           icon: Image.asset(AppAssets.phoneOutl, height: ResSize.h * 23),

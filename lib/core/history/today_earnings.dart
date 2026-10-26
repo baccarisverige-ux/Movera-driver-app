@@ -36,14 +36,19 @@ class TodayEarnings {
     var total = 0;
     for (final record in records) {
       final at = record.completedAt;
-      if (at == null) { continue; }
+      if (at == null) {
+        continue;
+      }
       final local = at.toLocal();
-      if (local.year != now.year || local.month != now.month ||
+      if (local.year != now.year ||
+          local.month != now.month ||
           local.day != now.day) {
         continue;
       }
       final fare = record.earnedMoney;
-      if (fare == null) { return null; }
+      if (fare == null) {
+        return null;
+      }
       total += fare.minorUnits;
     }
     return Money.ore(total).formatted;

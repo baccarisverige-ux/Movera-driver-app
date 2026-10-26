@@ -57,7 +57,7 @@ class TripStatusBanner extends StatelessWidget {
                         ),
                       )
                     : leading ??
-                        Icon(Icons.check_rounded, color: accent, size: 22),
+                          Icon(Icons.check_rounded, color: accent, size: 22),
               ),
             ),
             const SizedBox(width: 12),
@@ -91,10 +91,7 @@ class TripStatusBanner extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) ...[
-              const SizedBox(width: 8),
-              trailing!,
-            ],
+            if (trailing != null) ...[const SizedBox(width: 8), trailing!],
           ],
         ),
       ),

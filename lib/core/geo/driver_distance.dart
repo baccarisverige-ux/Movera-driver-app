@@ -16,7 +16,9 @@ String driverDistanceMeters(double meters, [AppLocalizations? language]) {
 /// in English, "4,2" in French and Swedish (driver-15). [language]
 /// defaults to the driver's.
 String driverDecimal(double value, int digits, [AppLocalizations? language]) =>
-    value.toStringAsFixed(digits).replaceAll('.', (language ?? tr).navDecimalMark);
+    value
+        .toStringAsFixed(digits)
+        .replaceAll('.', (language ?? tr).navDecimalMark);
 
 /// [driverDistanceMeters] for a distance kept in km.
 String driverDistanceKm(double km) => driverDistanceMeters(km * 1000);

@@ -35,38 +35,55 @@ DriverLocation _fix(double lat, {double speed = 10, double heading = 0}) =>
 void main() {
   test('a turn through north takes the short way (355° → 5°)', () {
     final policy = DriverCameraPolicy();
-    policy.resolve(location: _fix(59, heading: 355), navigating: true,
-        immediate: true);
-    final pose = policy.resolve(location: _fix(59.0001, heading: 5),
-        navigating: true);
+    policy.resolve(
+      location: _fix(59, heading: 355),
+      navigating: true,
+      immediate: true,
+    );
+    final pose = policy.resolve(
+      location: _fix(59.0001, heading: 5),
+      navigating: true,
+    );
     // Short way: just past north, never swinging through south.
-    expect(pose.bearing < 10 || pose.bearing > 350, isTrue,
-        reason: 'bearing ${pose.bearing}');
+    expect(
+      pose.bearing < 10 || pose.bearing > 350,
+      isTrue,
+      reason: 'bearing ${pose.bearing}',
+    );
   });
 
   test('zoom follows speed but does not breathe with GPS speed noise', () {
     final policy = DriverCameraPolicy();
     final zooms = <double>[];
     for (var i = 0; i < 20; i++) {
-      zooms.add(policy.resolve(
-        location: _fix(59 + i * .0001, speed: i.isEven ? 8 : 12),
-        navigating: true,
-        immediate: i == 0,
-      ).zoom);
+      zooms.add(
+        policy
+            .resolve(
+              location: _fix(59 + i * .0001, speed: i.isEven ? 8 : 12),
+              navigating: true,
+              immediate: i == 0,
+            )
+            .zoom,
+      );
     }
     final settled = zooms.skip(5);
-    final swing = settled.reduce((a, b) => a > b ? a : b) -
+    final swing =
+        settled.reduce((a, b) => a > b ? a : b) -
         settled.reduce((a, b) => a < b ? a : b);
     expect(swing, lessThan(0.1), reason: 'city stop-and-go must not pump');
 
     final highway = DriverCameraPolicy();
     var zoom = 0.0;
     for (var i = 0; i < 30; i++) {
-      zoom = highway.resolve(location: _fix(59 + i * .001, speed: 30),
-          navigating: true).zoom;
+      zoom = highway
+          .resolve(location: _fix(59 + i * .001, speed: 30), navigating: true)
+          .zoom;
     }
-    expect(zoom, lessThan(settled.first - .75),
-        reason: 'fast roads show more road ahead');
+    expect(
+      zoom,
+      lessThan(settled.first - .75),
+      reason: 'fast roads show more road ahead',
+    );
   });
 
   testWidgets('no camera move while the driver holds or moves the map; '
@@ -110,7 +127,9 @@ void main() {
     camera.dispose();
   });
 
-  testWidgets('the camera follows the sheet only once it rests', (tester) async {
+  testWidgets('the camera follows the sheet only once it rests', (
+    tester,
+  ) async {
     final inset = TripCameraSheetInset();
     addTearDown(inset.dispose);
     expect(inset.resolve(111), 111);

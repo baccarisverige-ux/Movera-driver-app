@@ -114,8 +114,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
           key: const ValueKey<String>('scheduled-clash-note'),
           icon: AppAssets.solarCalendarMinimalistic,
           title: tr.schedRidesHidden(clashing.length),
-          body:
-              tr.schedClashBody(clashing.first.$2.route?.pickupTime ?? ''),
+          body: tr.schedClashBody(clashing.first.$2.route?.pickupTime ?? ''),
         ),
       if (_selectedTab == 1 && reminder != null)
         _ScheduledNote(
@@ -190,8 +189,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                   );
                 }
                 final ride = rides[index - 1];
-                final claiming =
-                    ScheduledRideStore.claimPending(ride.id);
+                final claiming = ScheduledRideStore.claimPending(ride.id);
                 return _ScheduledRideCard(
                   ride: ride,
                   claiming: claiming,
@@ -257,9 +255,11 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       }
       if (!mounted) return;
       setState(() => _selectedTab = 1);
-      _notice(time == null
-          ? tr.islandReservationAccepted
-          : tr.schedAcceptedPickupAt(time));
+      _notice(
+        time == null
+            ? tr.islandReservationAccepted
+            : tr.schedAcceptedPickupAt(time),
+      );
     } else if (action == _ScheduledRideAction.cancelled ||
         action == _ScheduledRideAction.cancelledNotCounted) {
       if (!_accepted.contains(ride)) return;
@@ -271,10 +271,12 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       if (paused) {
         final until = ScheduledRideStore.pausedUntil(ScheduledRideStore._now);
         final feed = DriverNotificationFeed.instance;
-        feed.add(DriverNotices.scheduledPaused(
-          feed.now,
-          until: () => until == null ? tr.laterLower : _dayMonth(until),
-        ));
+        feed.add(
+          DriverNotices.scheduledPaused(
+            feed.now,
+            until: () => until == null ? tr.laterLower : _dayMonth(until),
+          ),
+        );
       }
       // An open reservation goes back out to drivers (notes R24): where it
       // goes follows the admin rule, Radar trips too close to pickup.
@@ -317,10 +319,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
 
   void _notice(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -388,7 +387,10 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
-          children: [_tabButton(0, tr.schedRequestsTab), _tabButton(1, tr.schedAcceptedTab)],
+          children: [
+            _tabButton(0, tr.schedRequestsTab),
+            _tabButton(1, tr.schedAcceptedTab),
+          ],
         ),
       ),
     );
@@ -583,10 +585,7 @@ class ScheduledRideStore {
       return const ScheduledRidesBlock(byAdmin: true, zoneOff: true);
     }
     if (_driverAccess.offAt(now)) {
-      return ScheduledRidesBlock(
-        byAdmin: true,
-        until: _driverAccess.until,
-      );
+      return ScheduledRidesBlock(byAdmin: true, until: _driverAccess.until);
     }
     if (_driverAccess.onAt(now)) return null;
     final until = pausedUntil(now);
@@ -629,9 +628,7 @@ class ScheduledRideStore {
 
   /// Until when cancelling [ride] is free; null when its time is unknown.
   static DateTime? freeCancelUntil(ReservationRequestPreview? ride) =>
-      ride
-          ?.pickupAt(_now)
-          ?.subtract(_rules.driverLateCancel);
+      ride?.pickupAt(_now)?.subtract(_rules.driverLateCancel);
 
   /// [ride] clashes with an accepted ride: the accepted one, else null.
   static _ScheduledRide? _clashWith(_ScheduledRide ride) {
@@ -656,11 +653,13 @@ class ScheduledRideStore {
   static List<_ScheduledRide> get _visibleRequests => block() != null
       ? const <_ScheduledRide>[]
       : _requests
-          .where((ride) =>
-              !_pickupPassed(ride) &&
-              DriverCategoryChoice.takes(ride.category) &&
-              _clashWith(ride) == null)
-          .toList();
+            .where(
+              (ride) =>
+                  !_pickupPassed(ride) &&
+                  DriverCategoryChoice.takes(ride.category) &&
+                  _clashWith(ride) == null,
+            )
+            .toList();
 
   /// [ride]'s pickup time has passed: nobody can take it any more
   /// (driver-u164). False when its time is unknown.
@@ -677,7 +676,9 @@ class ScheduledRideStore {
     DateTime? next;
     for (final ride in _requests) {
       final at = ride.route?.pickupAt(now);
-      if (at != null && at.isAfter(now) && (next == null || at.isBefore(next))) {
+      if (at != null &&
+          at.isAfter(now) &&
+          (next == null || at.isBefore(next))) {
         next = at;
       }
     }
@@ -802,8 +803,10 @@ class ScheduledRideStore {
   /// [price] with [pay] in it, as the card showed one total.
   static String _withPay(String price, Money? pay) => pay == null
       ? price
-      : PickupPayQuote(pay: pay, leg: const PickupLeg(km: 0, minutes: 0))
-          .totalOf(price);
+      : PickupPayQuote(
+          pay: pay,
+          leg: const PickupLeg(km: 0, minutes: 0),
+        ).totalOf(price);
 
   /// A request answered outside this screen, found by its pickup. Taken
   /// by this driver ([accepted]) it moves to Accepted; otherwise it only
@@ -838,17 +841,16 @@ class ScheduledRideStore {
   }
 
   /// Q29: the driver accepted a ride Movera assigned to them.
-  static void acceptAssigned(ReservationRequestPreview ride,
-      {Money? pickupPay}) {
+  static void acceptAssigned(
+    ReservationRequestPreview ride, {
+    Money? pickupPay,
+  }) {
     if (_accepted.any((item) => identical(item.route, ride))) {
       return;
     }
     _keepPickupPay(ride.id, pickupPay);
     final kept = _ScheduledRide.fromRoute(ride, assigned: true);
-    _accepted.insert(
-      0,
-      kept.copyWith(price: _withPay(kept.price, pickupPay)),
-    );
+    _accepted.insert(0, kept.copyWith(price: _withPay(kept.price, pickupPay)));
     _changed();
   }
 
@@ -890,8 +892,9 @@ class ScheduledRideStore {
     // Its pickup fixed to the time it had: a "Today" ride must not move
     // to the next day.
     final at = ride.pickupAt(_now);
-    _driving =
-        _ScheduledRide.fromRoute(at == null ? ride : ride.scheduledFor(at));
+    _driving = _ScheduledRide.fromRoute(
+      at == null ? ride : ride.scheduledFor(at),
+    );
     return _removeAccepted(ride) != null;
   }
 
@@ -907,8 +910,10 @@ class ScheduledRideStore {
       return;
     }
     _backupLate = false;
-    backupNote.say(() => tr.schedBackupNote(ride.pickupTime),
-        until: _backupNoteEnds(ride.pickupAt(_now)));
+    backupNote.say(
+      () => tr.schedBackupNote(ride.pickupTime),
+      until: _backupNoteEnds(ride.pickupAt(_now)),
+    );
     _changed();
   }
 
@@ -931,21 +936,25 @@ class ScheduledRideStore {
     if (id.isNotEmpty) {
       _accepted.removeWhere((ride) => ride.id == id);
     }
-    reassigned.add(ScheduledReassignment(
-      id: id,
-      pickupTime: pickupTime,
-      lateMinutes: lateMinutes,
-      reassignTo: reassignTo,
-      at: _now,
-    ));
+    reassigned.add(
+      ScheduledReassignment(
+        id: id,
+        pickupTime: pickupTime,
+        lateMinutes: lateMinutes,
+        reassignTo: reassignTo,
+        at: _now,
+      ),
+    );
     DriverLog.info(
       'Scheduled ride ${id.isEmpty ? pickupTime : id} reassigned '
       '(late ETA, $lateMinutes min late) to ${reassignTo.name}',
       name: 'movera.scheduled',
     );
     _backupLate = true;
-    backupNote.say(() => tr.lateEtaReassignedNote(pickupTime, lateMinutes),
-        until: _backupNoteEnds(pickupAt));
+    backupNote.say(
+      () => tr.lateEtaReassignedNote(pickupTime, lateMinutes),
+      until: _backupNoteEnds(pickupAt),
+    );
     _changed();
   }
 
@@ -998,13 +1007,19 @@ class ScheduledRideStore {
   /// driver's cancel [fee] from the backend ("+105 kr", "no fee"; nothing
   /// while not decided). False when no accepted ride has that id.
   static bool riderCancelled(String id, {Money? fee}) {
-    final index = _accepted.indexWhere((ride) => ride.id == id && id.isNotEmpty);
-    if (index < 0) { return false; }
+    final index = _accepted.indexWhere(
+      (ride) => ride.id == id && id.isNotEmpty,
+    );
+    if (index < 0) {
+      return false;
+    }
     final ride = _accepted.removeAt(index);
-    IslandMessages.show(HomeIslandNotices.reservationCancelled(
-      ride.route?.pickupTime ?? ride.time,
-      fee,
-    ));
+    IslandMessages.show(
+      HomeIslandNotices.reservationCancelled(
+        ride.route?.pickupTime ?? ride.time,
+        fee,
+      ),
+    );
     _changed();
     return true;
   }
@@ -1453,7 +1468,14 @@ class _RoutePreviewPainter extends CustomPainter {
       canvas,
       Path()
         ..moveTo(pickup.dx, pickup.dy)
-        ..cubicTo(w * 0.30, h * 0.22, w * 0.64, h * 0.82, dropoff.dx, dropoff.dy),
+        ..cubicTo(
+          w * 0.30,
+          h * 0.22,
+          w * 0.64,
+          h * 0.82,
+          dropoff.dx,
+          dropoff.dy,
+        ),
     );
     RouteMarkPins.paintMark(canvas, pickup, RouteMarkKind.pickup);
     RouteMarkPins.paintMark(canvas, dropoff, RouteMarkKind.dropoff);
@@ -1522,7 +1544,9 @@ class _ScheduledRide {
   ) {
     final start = route.minuteOfDay;
     final time = tr.schedSeedTime(day, route.pickupTime);
-    if (start == null || window == null) { return time; }
+    if (start == null || window == null) {
+      return time;
+    }
     final end = (start + window.inMinutes) % (24 * 60);
     String two(int v) => v.toString().padLeft(2, '0');
     return '$time–${two(end ~/ 60)}:${two(end % 60)}';
@@ -1544,12 +1568,15 @@ class _ScheduledRide {
   /// "Tomorrow" has come (driver-u142).
   String get when {
     final route = this.route;
-    if (route == null) { return time; }
+    if (route == null) {
+      return time;
+    }
     final day = route.scheduledAt == null
         ? route.pickupDay
         : route.pickupDayAt(ScheduledRideStore._now);
     return _timeOf(route, ReservationWhen.dayWord(day), window);
   }
+
   final String category;
 
   /// A distance given as text ("12 km"); null: the route's.
@@ -1557,8 +1584,7 @@ class _ScheduledRide {
 
   /// "9.4 km" ("9,4 km" in French and Swedish), written when shown.
   String get distance =>
-      fixedDistance ??
-      (route == null ? '' : driverDistanceKm(route!.tripKm));
+      fixedDistance ?? (route == null ? '' : driverDistanceKm(route!.tripKm));
   final String pickup;
   final String destination;
   final bool accepted;

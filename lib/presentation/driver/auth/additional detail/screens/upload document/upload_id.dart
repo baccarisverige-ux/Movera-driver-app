@@ -58,8 +58,7 @@ class _AdditionDetailUploadIdState extends State<AdditionDetailUploadId> {
           Center(
             child: TextWidget(
               textAlign: TextAlign.center,
-              text:
-                  tr.approveAccountIdentityReason,
+              text: tr.approveAccountIdentityReason,
               color: AppColor.subtitle,
               fontSize: 14,
               fontWeight: fwNormal,

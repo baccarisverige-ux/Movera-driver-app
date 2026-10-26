@@ -34,31 +34,46 @@ GeoPoint _at(double northMeters, double eastMeters) =>
 /// Around the block: 300 m north, 80 m east, 300 m back south, with a turn
 /// at both corners. The return leg runs 80 m from the outbound one.
 RoadRoute _aroundTheBlock() => RoadRoute(
-      points: [_at(0, 0), _at(300, 0), _at(300, 80), _at(0, 80)],
-      distanceMeters: 680,
-      durationSeconds: 120,
-      instructions: [
-        RouteInstruction(type: RouteManeuverType.turn, modifier: 'right',
-            text: 'Turn right', distanceMeters: 300,
-            maneuverLocation: _at(300, 0)),
-        RouteInstruction(type: RouteManeuverType.turn, modifier: 'right',
-            text: 'Turn right', distanceMeters: 80,
-            maneuverLocation: _at(300, 80)),
-        RouteInstruction(type: RouteManeuverType.arrive, modifier: '',
-            text: 'Arrive', distanceMeters: 300,
-            maneuverLocation: _at(0, 80)),
-      ],
-    );
+  points: [_at(0, 0), _at(300, 0), _at(300, 80), _at(0, 80)],
+  distanceMeters: 680,
+  durationSeconds: 120,
+  instructions: [
+    RouteInstruction(
+      type: RouteManeuverType.turn,
+      modifier: 'right',
+      text: 'Turn right',
+      distanceMeters: 300,
+      maneuverLocation: _at(300, 0),
+    ),
+    RouteInstruction(
+      type: RouteManeuverType.turn,
+      modifier: 'right',
+      text: 'Turn right',
+      distanceMeters: 80,
+      maneuverLocation: _at(300, 80),
+    ),
+    RouteInstruction(
+      type: RouteManeuverType.arrive,
+      modifier: '',
+      text: 'Arrive',
+      distanceMeters: 300,
+      maneuverLocation: _at(0, 80),
+    ),
+  ],
+);
 
 void main() {
   testWidgets('driver-u26 / driver-u28: an off-route fix keeps the driven '
-      'share instead of resetting ETA and leg progress to the full route',
-      (tester) async {
-    final routes = _Routes(RoadRoute(
-      points: const [_origin, _destination],
-      distanceMeters: 600,
-      durationSeconds: 1080,
-    ));
+      'share instead of resetting ETA and leg progress to the full route', (
+    tester,
+  ) async {
+    final routes = _Routes(
+      RoadRoute(
+        points: const [_origin, _destination],
+        distanceMeters: 600,
+        durationSeconds: 1080,
+      ),
+    );
     final nav = NavigationController(routeRepository: routes);
     addTearDown(nav.dispose);
     nav.setVehicle(const DriverLocation(point: _origin));
@@ -69,9 +84,13 @@ void main() {
     // About 110 m north of the road: off route, reroute pending.
     nav.setVehicle(const DriverLocation(point: GeoPoint(59.001, 18.009)));
     expect(nav.snapshot.offRoute, isTrue);
-    expect(nav.routeFraction, closeTo(.9, .01),
-        reason: 'the island ETA and leg progress must not jump back to the '
-            'whole route while the reroute is on its way');
+    expect(
+      nav.routeFraction,
+      closeTo(.9, .01),
+      reason:
+          'the island ETA and leg progress must not jump back to the '
+          'whole route while the reroute is on its way',
+    );
 
     // Back on the road: progress continues from the road again.
     nav.setVehicle(const DriverLocation(point: GeoPoint(59, 18.0095)));
@@ -79,13 +98,16 @@ void main() {
     expect(nav.routeFraction, closeTo(.95, .01));
   });
 
-  testWidgets('driver-u26: a new route starts its driven share from zero',
-      (tester) async {
-    final routes = _Routes(RoadRoute(
-      points: const [_origin, _destination],
-      distanceMeters: 600,
-      durationSeconds: 1080,
-    ));
+  testWidgets('driver-u26: a new route starts its driven share from zero', (
+    tester,
+  ) async {
+    final routes = _Routes(
+      RoadRoute(
+        points: const [_origin, _destination],
+        distanceMeters: 600,
+        durationSeconds: 1080,
+      ),
+    );
     final nav = NavigationController(routeRepository: routes);
     addTearDown(nav.dispose);
     nav.setVehicle(const DriverLocation(point: _origin));
@@ -111,8 +133,12 @@ void main() {
     var hint = 0;
     double? along;
     RouteProgress fix(GeoPoint point) {
-      final progress = calc.measure(route: route, position: point,
-          instructionHint: hint, previousAlongMeters: along);
+      final progress = calc.measure(
+        route: route,
+        position: point,
+        instructionHint: hint,
+        previousAlongMeters: along,
+      );
       hint = progress.instructionIndex;
       along = progress.offRoute ? null : progress.alongMeters;
       return progress;
@@ -125,8 +151,11 @@ void main() {
     // 48 m east of the outbound leg, 32 m from the return leg.
     final drift = fix(_at(190, 48));
     expect(drift.offRoute, isFalse);
-    expect(drift.alongMeters, closeTo(190, 5),
-        reason: 'the car must not snap onto the other street');
+    expect(
+      drift.alongMeters,
+      closeTo(190, 5),
+      reason: 'the car must not snap onto the other street',
+    );
     expect(drift.instructionIndex, 0);
     final back = fix(_at(205, 0));
     expect(back.instructionIndex, 0);
@@ -159,7 +188,10 @@ void main() {
     nav.setVehicle(DriverLocation(point: _at(190, 48)));
     nav.setVehicle(DriverLocation(point: _at(205, 0)));
     nav.setVehicle(DriverLocation(point: _at(220, 0)));
-    expect(nav.snapshot.banner?.primary, startsWith('Turn right'),
-        reason: 'the banner must still show the coming turn, not Pickup');
+    expect(
+      nav.snapshot.banner?.primary,
+      startsWith('Turn right'),
+      reason: 'the banner must still show the coming turn, not Pickup',
+    );
   });
 }

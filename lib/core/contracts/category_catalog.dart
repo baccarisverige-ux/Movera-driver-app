@@ -34,9 +34,7 @@ abstract final class CategoryCatalog {
   };
 
   /// Short names some offers use.
-  static const Map<String, String> _shortLabels = <String, String>{
-    'XL': 'xl',
-  };
+  static const Map<String, String> _shortLabels = <String, String>{'XL': 'xl'};
 
   /// A wire id, with aliases resolved. Null when it is not a valid id
   /// (unknown but well-formed ids pass: the admin catalog may add them).

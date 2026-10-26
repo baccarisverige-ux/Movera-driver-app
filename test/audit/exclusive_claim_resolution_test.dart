@@ -114,10 +114,12 @@ extension on _Kind {
   /// Dispatch's answer when the claim wins.
   ClaimResult get won => switch (this) {
     _Kind.assign => ClaimResult.success(DemoAdminOffers.directAssign),
-    _Kind.reservation =>
-      ClaimResult.success(RideOffer.reservation(DemoReservations.main)),
-    _Kind.assigned =>
-      ClaimResult.success(RideOffer.reservation(DemoReservations.assigned)),
+    _Kind.reservation => ClaimResult.success(
+      RideOffer.reservation(DemoReservations.main),
+    ),
+    _Kind.assigned => ClaimResult.success(
+      RideOffer.reservation(DemoReservations.assigned),
+    ),
   };
 
   String get matchedVia => switch (this) {
@@ -147,9 +149,11 @@ Future<void> _until(
   Finder finder, {
   Duration limit = const Duration(seconds: 5),
 }) async {
-  for (var t = Duration.zero;
-      t < limit && finder.evaluate().isEmpty;
-      t += const Duration(milliseconds: 100)) {
+  for (
+    var t = Duration.zero;
+    t < limit && finder.evaluate().isEmpty;
+    t += const Duration(milliseconds: 100)
+  ) {
     await tester.pump(const Duration(milliseconds: 100));
   }
   expect(finder, findsOneWidget);
@@ -248,7 +252,9 @@ void main() {
       // "Matching…" is on the island, where a long press asks "Go
       // offline?"; the driver confirms.
       tester
-          .widget<InkWell>(find.byKey(const ValueKey<String>('last-trip-launcher')))
+          .widget<InkWell>(
+            find.byKey(const ValueKey<String>('last-trip-launcher')),
+          )
           .onLongPress
           ?.call();
       await _frames(tester, const Duration(milliseconds: 600));
@@ -291,10 +297,16 @@ void main() {
         expect(home.session.availableForOffers, isTrue);
         _resume(tester);
         await _frames(tester, const Duration(seconds: 1));
-        expect(find.byKey(kind.card), findsNothing,
-            reason: 'ran out unseen: it leaves on resume');
-        expect(ExclusiveAnswers.instance.missedInRow, 0,
-            reason: 'not a miss (D-05)');
+        expect(
+          find.byKey(kind.card),
+          findsNothing,
+          reason: 'ran out unseen: it leaves on resume',
+        );
+        expect(
+          ExclusiveAnswers.instance.missedInRow,
+          0,
+          reason: 'not a miss (D-05)',
+        );
         expect(home.session.availableForOffers, isTrue);
         await _end(tester);
       });
@@ -330,15 +342,22 @@ void main() {
         await _accept(tester, home);
         // A drawer item (Ride history, Wallet…) pushes its screen.
         final navigator = Navigator.of(tester.element(find.byType(DriverHome)));
-        unawaited(navigator.push(MaterialPageRoute<void>(
-          builder: (_) => const Scaffold(body: Text('cover')),
-        )));
+        unawaited(
+          navigator.push(
+            MaterialPageRoute<void>(
+              builder: (_) => const Scaffold(body: Text('cover')),
+            ),
+          ),
+        );
         await _frames(tester, const Duration(milliseconds: 600));
         expect(find.text('cover'), findsOneWidget);
         home.dispatch.claims.single.complete(kind.won);
         await _frames(tester, const Duration(seconds: 2));
-        expect(find.byType(AcceptRide, skipOffstage: false), findsNothing,
-            reason: 'the trip waits for Home');
+        expect(
+          find.byType(AcceptRide, skipOffstage: false),
+          findsNothing,
+          reason: 'the trip waits for Home',
+        );
         navigator.pop();
         await _frames(tester, const Duration(seconds: 2));
         expect(
@@ -364,7 +383,11 @@ void main() {
     }
 
     Future<void> untilRest(WidgetTester tester, _Home home) async {
-      for (var i = 0; i < 200 && !_said.any((t) => t.startsWith('Rest until')); i++) {
+      for (
+        var i = 0;
+        i < 200 && !_said.any((t) => t.startsWith('Rest until'));
+        i++
+      ) {
         await tester.pump(const Duration(milliseconds: 100));
       }
       expect(_said.any((t) => t.startsWith('Rest until')), isTrue);
@@ -379,17 +402,26 @@ void main() {
         final home = await _pumpHome(tester, kind);
         await _accept(tester, home);
         await untilRest(tester, home);
-        expect(home.session.availableForOffers, isTrue,
-            reason: 'the app waits for dispatch\'s answer');
+        expect(
+          home.session.availableForOffers,
+          isTrue,
+          reason: 'the app waits for dispatch\'s answer',
+        );
         expect(_said, isNot(contains('Radar offline')));
         home.dispatch.claims.single.complete(kind.won);
         await _frames(tester, const Duration(seconds: 2));
-        expect(find.byType(AcceptRide, skipOffstage: false), findsOneWidget,
-            reason: 'the accept wins');
+        expect(
+          find.byType(AcceptRide, skipOffstage: false),
+          findsOneWidget,
+          reason: 'the accept wins',
+        );
         expect(_trip(tester).offerId, kind.id);
         expect(home.session.activeTripId, isNotNull);
-        expect(home.session.availableAfterTrip, isFalse,
-            reason: 'offline once the trip ends');
+        expect(
+          home.session.availableAfterTrip,
+          isFalse,
+          reason: 'offline once the trip ends',
+        );
         await _end(tester);
       });
     }

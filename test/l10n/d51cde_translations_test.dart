@@ -76,16 +76,18 @@ TripHistoryRecord historyTrip(
 /// Wave 5 D5.1 (parts c, d and e): texts that stayed in English, or in
 /// the language they were made in, now follow the driver's language.
 void main() {
-  testWidgets('driver-u105: the sign-in phone field starts on Sweden, +46',
-      (tester) async {
+  testWidgets('driver-u105: the sign-in phone field starts on Sweden, +46', (
+    tester,
+  ) async {
     await show(tester, 'sv', const DriverSignIn());
     expect(find.text('+46'), findsOneWidget);
     expect(find.text('+1'), findsNothing);
     expect(words(tr.authEnterPhone), findsOneWidget);
   });
 
-  testWidgets('driver-58: the sign-in consent line is translated',
-      (tester) async {
+  testWidgets('driver-58: the sign-in consent line is translated', (
+    tester,
+  ) async {
     for (final (code, word) in [('fr', 'En continuant'), ('sv', 'fortsätta')]) {
       await show(tester, code, const DriverSignIn());
       expect(words(word), findsOneWidget, reason: code);
@@ -102,8 +104,9 @@ void main() {
     expect(destinationDistanceTimeLabel(38100, 2040), '38.1 km · 34 min');
   });
 
-  testWidgets('driver-60: the destination search count is translated',
-      (tester) async {
+  testWidgets('driver-60: the destination search count is translated', (
+    tester,
+  ) async {
     for (final (code, query, count) in [
       ('fr', 'airport', '2 trouvés'),
       ('sv', 'kista', '1 träff'),
@@ -119,7 +122,8 @@ void main() {
   test('driver-62: a cancel fee keeps its own currency', () {
     speak('fr');
     String fee(int minor, String currency) => HomeIslandNotices.feeSuffix(
-        Money(minorUnits: minor, currency: currency));
+      Money(minorUnits: minor, currency: currency),
+    );
     expect(fee(500, 'EUR'), ' · +5 €');
     expect(fee(5000, 'TND'), ' · +5 DT');
     expect(fee(4500, 'SEK'), ' · +45 kr');
@@ -132,9 +136,14 @@ void main() {
       ..reset()
       ..arrivals = const [];
     // As Home adds it: the reservation's stored English day.
-    feed.add(DriverNotices.newScheduledRide(
-      at: feed.now, day: 'Today', time: '09:30', fare: '126,75 kr',
-    ));
+    feed.add(
+      DriverNotices.newScheduledRide(
+        at: feed.now,
+        day: 'Today',
+        time: '09:30',
+        fare: '126,75 kr',
+      ),
+    );
     for (final (code, today) in [('sv', 'Idag'), ('fr', 'Aujourd’hui')]) {
       await show(tester, code, const DriverNotificationsScreen());
       expect(words('$today 09:30'), findsOneWidget, reason: code);
@@ -145,7 +154,10 @@ void main() {
   testWidgets('driver-96: scheduled ride cards say Today in the driver\'s '
       'language', (tester) async {
     addTearDown(ScheduledRideStore.reset);
-    for (final (code, today) in [('sv', 'Idag 07:40'), ('fr', 'Aujourd’hui, 07:40')]) {
+    for (final (code, today) in [
+      ('sv', 'Idag 07:40'),
+      ('fr', 'Aujourd’hui, 07:40'),
+    ]) {
       speak(code);
       ScheduledRideStore.reset();
       // As Home hands it over: the stored English day.
@@ -163,17 +175,25 @@ void main() {
     ScheduledRideStore.reset();
     final kept = assignedRide('Today');
     final given = ReservationRequestPreview(
-      category: 'Comfort', fare: '99,00 kr', pickupLabel: '',
-      pickupAddress: 'Solna', dropoffAddress: 'Kista', pickupTime: '09:10',
-      pickupDay: 'Today', tripMinutes: 12, tripKm: 6.2,
-      pickup: const GeoPoint(59.36, 18.0), dropoff: const GeoPoint(59.40, 17.94),
+      category: 'Comfort',
+      fare: '99,00 kr',
+      pickupLabel: '',
+      pickupAddress: 'Solna',
+      dropoffAddress: 'Kista',
+      pickupTime: '09:10',
+      pickupDay: 'Today',
+      tripMinutes: 12,
+      tripKm: 6.2,
+      pickup: const GeoPoint(59.36, 18.0),
+      dropoff: const GeoPoint(59.40, 17.94),
     );
     ScheduledRideStore.acceptAssigned(kept);
     ScheduledRideStore.acceptAssigned(given);
     ScheduledRideStore.giveToBackup(given);
     // As Home's 1 h reminder sets it.
     ScheduledRideStore.reminder.say(
-        () => tr.pickupAtPickupTimeInLeft('07:40', '1 h', 'Odlarvägen 22'));
+      () => tr.pickupAtPickupTimeInLeft('07:40', '1 h', 'Odlarvägen 22'),
+    );
     final english = [
       tr.pickupAtPickupTimeInLeft('07:40', '1 h', 'Odlarvägen 22'),
       tr.schedBackupNote('09:10'),
@@ -181,8 +201,10 @@ void main() {
       '9.4 km',
     ];
     await showAccepted(tester, 'sv');
-    expect(words(tr.pickupAtPickupTimeInLeft('07:40', '1 h', 'Odlarvägen 22')),
-        findsOneWidget);
+    expect(
+      words(tr.pickupAtPickupTimeInLeft('07:40', '1 h', 'Odlarvägen 22')),
+      findsOneWidget,
+    );
     expect(words(tr.schedBackupNote('09:10')), findsOneWidget);
     expect(find.text('Idag 07:40'), findsOneWidget);
     expect(find.text('9,4 km'), findsWidgets);
@@ -210,8 +232,10 @@ void main() {
   test('driver-80: the saved-categories message is pluralized', () {
     final said = {
       'en': ('1 ride category saved', '6 ride categories saved'),
-      'fr': ('1 catégorie de course enregistrée',
-          '6 catégories de course enregistrées'),
+      'fr': (
+        '1 catégorie de course enregistrée',
+        '6 catégories de course enregistrées',
+      ),
       'sv': ('1 resekategori sparad', '6 resekategorier sparade'),
     };
     for (final MapEntry(key: code, value: (one, six)) in said.entries) {
@@ -228,10 +252,14 @@ void main() {
       ('fr', 'Espèces', 'Carte'),
     ]) {
       for (final (stored, shown) in [('Cash', cash), ('Card', card)]) {
-        await show(tester, code, DriverRideHistoryDetail(
-          record: historyTrip(stored),
-          loadRideChecks: (_) async => const [],
-        ));
+        await show(
+          tester,
+          code,
+          DriverRideHistoryDetail(
+            record: historyTrip(stored),
+            loadRideChecks: (_) async => const [],
+          ),
+        );
         expect(find.text(shown), findsOneWidget, reason: '$code $stored');
         expect(find.text(stored), findsNothing);
       }
@@ -249,17 +277,27 @@ void main() {
         TripStatus.searching: tr.cancelledByDriver,
         TripStatus.noShow: tr.riderDidNotArrive,
       };
-      await show(tester, code, DriverRideHistory(loadHistory: () async => [
-        for (final status in outcomes.keys)
-          historyTrip('Cash', status: status),
-      ]));
+      await show(
+        tester,
+        code,
+        DriverRideHistory(
+          loadHistory: () async => [
+            for (final status in outcomes.keys)
+              historyTrip('Cash', status: status),
+          ],
+        ),
+      );
       await tester.pump();
       await tester.tap(find.text(tr.allRides).last);
       await tester.pump(const Duration(milliseconds: 400));
       for (final said in outcomes.values) {
         expect(words(said), findsWidgets, reason: '$code $said');
       }
-      for (final wire in ['cancelled_by_rider', 'cancelled_by_driver', 'no_show']) {
+      for (final wire in [
+        'cancelled_by_rider',
+        'cancelled_by_driver',
+        'no_show',
+      ]) {
         expect(words(wire), findsNothing, reason: wire);
       }
     }
@@ -271,15 +309,19 @@ void main() {
       await show(tester, code, const RideRequests());
       await tester.pump(const Duration(milliseconds: 120));
       final count = find.byKey(const ValueKey<String>('radar-live-count'));
-      expect(find.descendant(of: count, matching: find.text(offers)),
-          findsOneWidget, reason: code);
+      expect(
+        find.descendant(of: count, matching: find.text(offers)),
+        findsOneWidget,
+        reason: code,
+      );
       expect(find.text('OFFERS'), findsNothing);
     }
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('driver-r3-2: the bank form section header is translated',
-      (tester) async {
+  testWidgets('driver-r3-2: the bank form section header is translated', (
+    tester,
+  ) async {
     for (final (code, header) in [('fr', 'COMPTE'), ('sv', 'KONTO')]) {
       await show(tester, code, const AddNewAccount());
       expect(find.text(header), findsOneWidget, reason: code);
@@ -287,8 +329,9 @@ void main() {
     }
   });
 
-  testWidgets('driver-92: the PIN tile in Safety preferences is translated',
-      (tester) async {
+  testWidgets('driver-92: the PIN tile in Safety preferences is translated', (
+    tester,
+  ) async {
     for (final (code, pin) in [
       ('fr', 'Vérification par code'),
       ('sv', 'PIN-verifiering'),
@@ -313,17 +356,25 @@ void main() {
     }
   });
 
-  test('driver-u181: offer pins are painted again after a language switch',
-      () async {
-    OfferRouteMarks.debugClearCache();
-    speak('en');
-    final english = await OfferRouteMarks.pin(RouteMarkKind.pickup, '4 min');
-    expect(await OfferRouteMarks.pin(RouteMarkKind.pickup, '4 min'),
-        same(english), reason: 'still cached in one language');
-    for (final code in languages) {
-      speak(code);
-      expect(await OfferRouteMarks.pin(RouteMarkKind.pickup, '4 min'),
-          isNot(same(english)), reason: code);
-    }
-  });
+  test(
+    'driver-u181: offer pins are painted again after a language switch',
+    () async {
+      OfferRouteMarks.debugClearCache();
+      speak('en');
+      final english = await OfferRouteMarks.pin(RouteMarkKind.pickup, '4 min');
+      expect(
+        await OfferRouteMarks.pin(RouteMarkKind.pickup, '4 min'),
+        same(english),
+        reason: 'still cached in one language',
+      );
+      for (final code in languages) {
+        speak(code);
+        expect(
+          await OfferRouteMarks.pin(RouteMarkKind.pickup, '4 min'),
+          isNot(same(english)),
+          reason: code,
+        );
+      }
+    },
+  );
 }

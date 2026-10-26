@@ -36,11 +36,13 @@ Future<void> _pumpHome(WidgetTester tester) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) =>
-        MaterialApp(home: DriverHome(locationRepository: _WaitingGps())),
-  ));
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) =>
+          MaterialApp(home: DriverHome(locationRepository: _WaitingGps())),
+    ),
+  );
   for (var i = 0; i < 6; i++) {
     await tester.pump(const Duration(milliseconds: 50));
   }
@@ -49,12 +51,15 @@ Future<void> _pumpHome(WidgetTester tester) async {
 void main() {
   setUp(DriverStartPosition.clearMemory);
 
-  testWidgets('saved last position is the first camera target and car',
-      (tester) async {
+  testWidgets('saved last position is the first camera target and car', (
+    tester,
+  ) async {
     const saved = LatLng(59.6519, 17.9186);
     SharedPreferences.setMockInitialValues({
-      DriverStartPosition.key:
-          jsonEncode({'lat': saved.latitude, 'lng': saved.longitude}),
+      DriverStartPosition.key: jsonEncode({
+        'lat': saved.latitude,
+        'lng': saved.longitude,
+      }),
     });
     await _pumpHome(tester);
 
@@ -64,25 +69,30 @@ void main() {
       expect(map.initialCameraPosition.target, saved);
       expect(map.initialCameraPosition.target, isNot(_stockholm));
       expect(
-          map.markers.singleWhere((m) => m.markerId.value == 'driver_location')
-              .position,
-          saved);
+        map.markers
+            .singleWhere((m) => m.markerId.value == 'driver_location')
+            .position,
+        saved,
+      );
     }
     expect(find.byKey(const ValueKey('home-map-locating')), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('nothing known: no Stockholm map or car, a neutral placeholder',
-      (tester) async {
+  testWidgets('nothing known: no Stockholm map or car, a neutral placeholder', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     await _pumpHome(tester);
 
     expect(find.byKey(const ValueKey('home-map-locating')), findsWidgets);
     expect(find.byType(GoogleMap), findsNothing);
     expect(
-        tester.widgetList<GoogleMap>(find.byType(GoogleMap)).any((map) =>
-            map.markers.any((m) => m.position == _stockholm)),
-        isFalse);
+      tester
+          .widgetList<GoogleMap>(find.byType(GoogleMap))
+          .any((map) => map.markers.any((m) => m.position == _stockholm)),
+      isFalse,
+    );
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }

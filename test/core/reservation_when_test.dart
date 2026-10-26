@@ -29,8 +29,10 @@ void main() {
     expect(when(DateTime(2026, 10, 25, 11, 44)), '25-10 11:44');
     expect(when(DateTime(2026, 11, 3, 9, 5)), '03-11 09:05');
     // Not soon: the island says the same.
-    expect(ReservationWhen.of(DateTime(2026, 10, 19, 6), now).island,
-        'Tomorrow 06:00');
+    expect(
+      ReservationWhen.of(DateTime(2026, 10, 19, 6), now).island,
+      'Tomorrow 06:00',
+    );
   });
 
   test('reads the request\'s day', () {

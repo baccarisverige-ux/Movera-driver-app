@@ -296,10 +296,16 @@ class ReservationRequestPreview {
   /// day is not "Today" / "Tomorrow" or the time is not "HH:mm". A ride
   /// with [scheduledAt] is picked up then, whatever [now] is.
   DateTime? pickupAt(DateTime now) {
-    if (scheduledAt case final at?) { return at; }
+    if (scheduledAt case final at?) {
+      return at;
+    }
     final minute = minuteOfDay;
     final day = pickupDay.trim().toLowerCase();
-    final offset = day == 'today' ? 0 : day == 'tomorrow' ? 1 : null;
+    final offset = day == 'today'
+        ? 0
+        : day == 'tomorrow'
+        ? 1
+        : null;
     if (minute == null || offset == null) {
       return null;
     }
@@ -319,14 +325,21 @@ class ReservationRequestPreview {
   /// only, else [pickupDay].
   String pickupDayAt(DateTime now) {
     final at = scheduledAt;
-    if (at == null) { return pickupDay; }
+    if (at == null) {
+      return pickupDay;
+    }
     // Rounded, as a day across a clock change is 23 or 25 hours.
-    final days = (DateTime.utc(at.year, at.month, at.day)
-                .difference(DateTime.utc(now.year, now.month, now.day))
-                .inHours /
-            24)
-        .round();
-    return days == 0 ? 'Today' : days == 1 ? 'Tomorrow' : pickupDay;
+    final days =
+        (DateTime.utc(at.year, at.month, at.day)
+                    .difference(DateTime.utc(now.year, now.month, now.day))
+                    .inHours /
+                24)
+            .round();
+    return days == 0
+        ? 'Today'
+        : days == 1
+        ? 'Tomorrow'
+        : pickupDay;
   }
 
   /// This ride, picked up at [at].
@@ -602,11 +615,15 @@ class _DemoReservationSet {
     final at = anchor.add(lead);
     // Calendar days in UTC: a local spring-forward day is 23 hours, so
     // its next day would be 0 whole days away (driver-8).
-    final days = DateTime.utc(at.year, at.month, at.day)
-        .difference(DateTime.utc(anchor.year, anchor.month, anchor.day))
-        .inDays;
-    return build(clockLabel(at), days == 0 ? 'Today' : 'Tomorrow')
-        .scheduledFor(at);
+    final days = DateTime.utc(
+      at.year,
+      at.month,
+      at.day,
+    ).difference(DateTime.utc(anchor.year, anchor.month, anchor.day)).inDays;
+    return build(
+      clockLabel(at),
+      days == 0 ? 'Today' : 'Tomorrow',
+    ).scheduledFor(at);
   }
 }
 
@@ -707,11 +724,12 @@ class StockholmAreaConfig {
     'busy' => AreaDemand.busy,
     'steady' => AreaDemand.steady,
     'quiet' => AreaDemand.quiet,
-    _ => demandPercent >= 70
-        ? AreaDemand.busy
-        : demandPercent < 50
-        ? AreaDemand.quiet
-        : AreaDemand.steady,
+    _ =>
+      demandPercent >= 70
+          ? AreaDemand.busy
+          : demandPercent < 50
+          ? AreaDemand.quiet
+          : AreaDemand.steady,
   };
 
   /// [demandLabel] as the driver reads it.
@@ -740,8 +758,9 @@ class StockholmWorkStatsConfig {
 
   /// [surroundingTitle] as the driver reads it: the shipped English one
   /// in the driver's language, admin's own as written.
-  String get surroundingTitleText =>
-      surroundingTitle == 'Around Stockholm' ? tr.aroundStockholm : surroundingTitle;
+  String get surroundingTitleText => surroundingTitle == 'Around Stockholm'
+      ? tr.aroundStockholm
+      : surroundingTitle;
 }
 
 /// Driver-side contract for content controlled by the Movera admin system.
@@ -786,8 +805,8 @@ class DriverHomeAdminContentService {
     final tripRules = config != null
         ? (config.destinationMode, config.nextTrips)
         : export == null
-            ? null
-            : DriverTripRulesExport.forZone(export, zoneId);
+        ? null
+        : DriverTripRulesExport.forZone(export, zoneId);
     return DriverHomeAdminConfig(
       destinationMode: tripRules?.$1,
       nextTrips: tripRules?.$2,
@@ -810,7 +829,8 @@ class DriverHomeAdminContentService {
         latestVersion: '1.0.0',
         minimumVersion: '1.0.0',
         title: 'Movera Driver update available',
-        message: 'A newer version is ready with stability and trip-flow improvements.',
+        message:
+            'A newer version is ready with stability and trip-flow improvements.',
         actionLabel: 'Update app',
         dismissLabel: 'Later',
         mandatory: false,
@@ -825,11 +845,14 @@ class DriverHomeAdminContentService {
           dateLabel: 'Fri 25 Sep',
           timeLabel: '18:00–22:30',
           location: 'Central Stockholm',
-          description: 'Expect concentrated pickup activity around the city centre and waterfront after evening events finish.',
+          description:
+              'Expect concentrated pickup activity around the city centre and waterfront after evening events finish.',
           recommendedWindow: '18:30–22:00',
           demandLabel: 'Higher demand expected',
-          driverNote: 'Be online before the main departure window and stay close to legal pickup zones.',
-          imageUrl: 'https://images.unsplash.com/photo-1670257876831-7e97238da208?auto=format&fit=crop&q=82&w=1400',
+          driverNote:
+              'Be online before the main departure window and stay close to legal pickup zones.',
+          imageUrl:
+              'https://images.unsplash.com/photo-1670257876831-7e97238da208?auto=format&fit=crop&q=82&w=1400',
           imageCredit: 'Håkon Grimstad · Unsplash',
           enabled: true,
         ),
@@ -840,11 +863,14 @@ class DriverHomeAdminContentService {
           dateLabel: 'Sat 26 Sep',
           timeLabel: '16:30–20:00',
           location: 'Stockholm waterfront',
-          description: 'Large visitor movements can create temporary traffic pressure and higher ride demand around waterfront routes.',
+          description:
+              'Large visitor movements can create temporary traffic pressure and higher ride demand around waterfront routes.',
           recommendedWindow: '17:00–19:30',
           demandLabel: 'Busy pickup window',
-          driverNote: 'Go online before the crowd leaves and use live routing to avoid blocked curb areas.',
-          imageUrl: 'https://images.unsplash.com/photo-1781040761543-fc71fcc17eb2?auto=format&fit=crop&q=82&w=1400',
+          driverNote:
+              'Go online before the crowd leaves and use live routing to avoid blocked curb areas.',
+          imageUrl:
+              'https://images.unsplash.com/photo-1781040761543-fc71fcc17eb2?auto=format&fit=crop&q=82&w=1400',
           imageCredit: 'Rafael Peier · Unsplash',
           enabled: true,
         ),
@@ -855,11 +881,14 @@ class DriverHomeAdminContentService {
           dateLabel: 'Sat 26 Sep',
           timeLabel: '22:00–02:00',
           location: 'Greater Stockholm',
-          description: 'Night-time road conditions and event departures can shift demand quickly between central and outer zones.',
+          description:
+              'Night-time road conditions and event departures can shift demand quickly between central and outer zones.',
           recommendedWindow: '22:30–01:30',
           demandLabel: 'Late-night demand',
-          driverNote: 'Stay online through the busiest window and check destination direction before matching longer trips.',
-          imageUrl: 'https://images.unsplash.com/photo-1511443259588-05878425294f?auto=format&fit=crop&q=82&w=1400',
+          driverNote:
+              'Stay online through the busiest window and check destination direction before matching longer trips.',
+          imageUrl:
+              'https://images.unsplash.com/photo-1511443259588-05878425294f?auto=format&fit=crop&q=82&w=1400',
           imageCredit: 'Federico Enni · Unsplash',
           enabled: true,
         ),

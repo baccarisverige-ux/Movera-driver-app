@@ -36,8 +36,9 @@ class _OfferRouteFrame {
   OfferLinePhase? linePhase;
 
   /// The bright band moving along the line; only the map listens to it.
-  final ValueNotifier<Set<Polyline>> flowLine =
-      ValueNotifier<Set<Polyline>>(const <Polyline>{});
+  final ValueNotifier<Set<Polyline>> flowLine = ValueNotifier<Set<Polyline>>(
+    const <Polyline>{},
+  );
 
   /// Stops the motion (offer gone, app hidden); the line stays dark.
   void stopLine() {
@@ -47,7 +48,9 @@ class _OfferRouteFrame {
       ..stop()
       ..reset();
     linePhase = null;
-    if (flowLine.value.isNotEmpty) { flowLine.value = const <Polyline>{}; }
+    if (flowLine.value.isNotEmpty) {
+      flowLine.value = const <Polyline>{};
+    }
   }
 
   void dispose() {
@@ -63,14 +66,13 @@ const Duration _lineTick = Duration(milliseconds: 33);
 extension _HomeOfferRoute on _DriverHomeState {
   /// R14-1: the pins with their minutes, pickup = the drive there,
   /// drop-off = the trip's own length, and a circle on each stop.
-  Future<Set<Marker>> _offerRouteMarkers(_HomeDirectOffer offer) =>
-      _routePins(
-        offer.pickupPosition,
-        offer.dropoffPosition,
-        OfferRouteMarks.minutes(offer.pickupMinutes),
-        OfferRouteMarks.minutes(offer.tripMinutes),
-        stops: [for (final stop in offer.stops) stop.point.toLatLng()],
-      );
+  Future<Set<Marker>> _offerRouteMarkers(_HomeDirectOffer offer) => _routePins(
+    offer.pickupPosition,
+    offer.dropoffPosition,
+    OfferRouteMarks.minutes(offer.pickupMinutes),
+    OfferRouteMarks.minutes(offer.tripMinutes),
+    stops: [for (final stop in offer.stops) stop.point.toLatLng()],
+  );
 
   /// "Pickup" and "Drop-off" pins with [pickupValue] and [dropoffValue]
   /// (clock times or minutes) and a small circle on each of [stops].
@@ -121,7 +123,9 @@ extension _HomeOfferRoute on _DriverHomeState {
     LatLng dropoff,
     List<LatLng> road,
   ) {
-    if (road.isEmpty) { return const <LatLng>[]; }
+    if (road.isEmpty) {
+      return const <LatLng>[];
+    }
     return <LatLng>[
       if (road.first != pickup) pickup,
       ...road,
@@ -139,11 +143,12 @@ extension _HomeOfferRoute on _DriverHomeState {
     }
     if (_outsideRadarOffer != null) {
       return _offerRouteFrame.exclusiveHeight ??
-          MediaQuery.sizeOf(context).height * 0.4 +
-              HomeOfferSheet.orbSize / 2;
+          MediaQuery.sizeOf(context).height * 0.4 + HomeOfferSheet.orbSize / 2;
     }
     final deck = _offerRouteFrame.deckHeight;
-    if (deck == null || _radarHomeOffers.isEmpty) { return null; }
+    if (deck == null || _radarHomeOffers.isEmpty) {
+      return null;
+    }
     // The deck sits above the map buttons (see the deck's slot).
     return 138 + _homeMapButtonSize + 12 + deck;
   }
@@ -153,7 +158,8 @@ extension _HomeOfferRoute on _DriverHomeState {
       MapOverlayInsets.forHome(
         safeTop: MediaQuery.paddingOf(context).top,
         obscuredBottom: _HomeMapSheet(this)._homeMapObscuredBottom(context),
-        hasTopBanner: _isDirectOfferRoutePreview ||
+        hasTopBanner:
+            _isDirectOfferRoutePreview ||
             _radarHomeOffers.isNotEmpty ||
             _outsideRadarOffer != null,
       );
@@ -167,11 +173,11 @@ extension _HomeOfferRoute on _DriverHomeState {
 
   /// The map between the island and the top of the card, sheet or orb.
   Rect _offerFreeArea(Size size, MapOverlayInsets insets) => Rect.fromLTRB(
-        16,
-        insets.top + 12,
-        size.width - 16,
-        size.height - insets.bottom - 6,
-      );
+    16,
+    insets.top + 12,
+    size.width - 16,
+    size.height - insets.bottom - 6,
+  );
 
   /// Everything of the route the camera must show: the road, the stops'
   /// circles and both pins with their bubbles.
@@ -229,7 +235,9 @@ extension _HomeOfferRoute on _DriverHomeState {
           ? size.center(Offset.zero)
           : insets.edgeInsets.deflateRect(Offset.zero & size).center,
     );
-    if (fit == null) { return; }
+    if (fit == null) {
+      return;
+    }
     final last = frame.fitted;
     if (last != null &&
         (fit.closeTo(last) || _camera.mode == DriverCameraMode.browsing)) {
@@ -281,8 +289,7 @@ extension _HomeOfferRoute on _DriverHomeState {
       final phase = OfferRouteLine.phaseAt(frame.lineClock.elapsed);
       final last = frame.linePhase;
       // Resting (or unchanged): nothing to send to the map.
-      if (last != null &&
-          (phase == last || (phase.resting && last.resting))) {
+      if (last != null && (phase == last || (phase.resting && last.resting))) {
         return;
       }
       frame
@@ -305,7 +312,9 @@ extension _HomeOfferRoute on _DriverHomeState {
     double? exclusive,
     double? reservation,
   }) {
-    if (!mounted) { return; }
+    if (!mounted) {
+      return;
+    }
     final frame = _offerRouteFrame;
     final old = deck != null
         ? frame.deckHeight
@@ -315,7 +324,9 @@ extension _HomeOfferRoute on _DriverHomeState {
     final next = deck ?? exclusive ?? reservation!;
     // No real change, or a request sheet is down (nothing laid out).
     if ((old != null && (old - next).abs() < 2) ||
-        (deck == null && next <= 0)) { return; }
+        (deck == null && next <= 0)) {
+      return;
+    }
     if (deck != null) {
       frame.deckHeight = deck;
     } else if (exclusive != null) {
@@ -323,10 +334,14 @@ extension _HomeOfferRoute on _DriverHomeState {
     } else {
       frame.reservationHeight = reservation;
     }
-    if (!_isDirectOfferRoutePreview) { return; }
+    if (!_isDirectOfferRoutePreview) {
+      return;
+    }
     frame.refit?.cancel();
     frame.refit = Timer(const Duration(milliseconds: 220), () {
-      if (!mounted || !_isDirectOfferRoutePreview) { return; }
+      if (!mounted || !_isDirectOfferRoutePreview) {
+        return;
+      }
       // The map's padding follows the new height first.
       _rebuild(() {});
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -366,7 +381,9 @@ class _RenderOfferCardSize extends RenderProxyBox {
   void performLayout() {
     super.performLayout();
     final height = size.height;
-    if (height == _reported) { return; }
+    if (height == _reported) {
+      return;
+    }
     _reported = height;
     final report = onHeight;
     WidgetsBinding.instance.addPostFrameCallback((_) => report(height));

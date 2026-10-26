@@ -4,10 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/geo/geo_point.dart';
 
 class LiveVehiclePose {
-  const LiveVehiclePose({
-    required this.position,
-    required this.headingDegrees,
-  });
+  const LiveVehiclePose({required this.position, required this.headingDegrees});
 
   final LatLng position;
   final double headingDegrees;
@@ -20,16 +17,16 @@ class LiveVehicleAnimator {
     LiveVehiclePose? initial,
     this.reduceMotion,
   }) : pose = ValueNotifier<LiveVehiclePose>(
-          initial ??
-              const LiveVehiclePose(
-                position: LatLng(59.3262, 18.0595),
-                headingDegrees: 0,
-              ),
-        ),
-        _controller = AnimationController(
-          vsync: vsync,
-          duration: const Duration(milliseconds: 320),
-        ) {
+         initial ??
+             const LiveVehiclePose(
+               position: LatLng(59.3262, 18.0595),
+               headingDegrees: 0,
+             ),
+       ),
+       _controller = AnimationController(
+         vsync: vsync,
+         duration: const Duration(milliseconds: 320),
+       ) {
     _from = pose.value;
     _to = pose.value;
     _controller.addListener(_handleTick);
@@ -57,15 +54,12 @@ class LiveVehicleAnimator {
   }
 
   void moveTo(LatLng target, double headingDegrees) {
-    if (!_hasPose || reduceMotion?.call()==true) {
+    if (!_hasPose || reduceMotion?.call() == true) {
       snapTo(target, headingDegrees);
       return;
     }
     _from = pose.value;
-    _to = LiveVehiclePose(
-      position: target,
-      headingDegrees: headingDegrees,
-    );
+    _to = LiveVehiclePose(position: target, headingDegrees: headingDegrees);
     _controller.forward(from: 0);
   }
 

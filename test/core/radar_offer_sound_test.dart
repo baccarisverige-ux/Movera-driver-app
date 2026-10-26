@@ -54,7 +54,8 @@ class _FakeAudio implements AudioPlayer {
   bool released = false;
   @override
   dynamic noSuchMethod(Invocation invocation) {
-    final name = invocation.memberName.toString()
+    final name = invocation.memberName
+        .toString()
         .replaceAll('Symbol("', '')
         .replaceAll('")', '');
     calls.add(name);
@@ -70,17 +71,23 @@ void d17() {
       'released', () async {
     final audio = _FakeAudio();
     var made = 0;
-    final player = AudioRadarSound(create: () {
-      made++;
-      return audio;
-    });
+    final player = AudioRadarSound(
+      create: () {
+        made++;
+        return audio;
+      },
+    );
     // A tap primes while an offer starts the loop: no interleaving.
     final prime = player.prime();
     final start = player.startLoop();
     await Future.wait([prime, start]);
     expect(audio.calls, [
-      'setVolume', 'play', 'stop', 'setVolume',
-      'setReleaseMode', 'play',
+      'setVolume',
+      'play',
+      'stop',
+      'setVolume',
+      'setReleaseMode',
+      'play',
     ]);
     await player.stop();
     await player.dispose();
@@ -106,9 +113,7 @@ void d17() {
 
   test('D-17: an injected player is not released', () async {
     final audio = _FakeAudio();
-    final sound = RadarOfferSound(
-      player: AudioRadarSound(create: () => audio),
-    );
+    final sound = RadarOfferSound(player: AudioRadarSound(create: () => audio));
     sound.sync(['a']);
     sound.dispose();
     await Future<void>.delayed(const Duration(milliseconds: 20));

@@ -113,8 +113,7 @@ class DemoTripDrive implements DriverLocationRepository {
         final after = ticks - driveTicks - stopTicks;
         if (after <= 0) return _along(longStopAt);
         return _along(
-          longStopAt +
-              (1 - longStopAt) * math.min(1, after / driveTicks),
+          longStopAt + (1 - longStopAt) * math.min(1, after / driveTicks),
         );
     }
   }
@@ -182,7 +181,8 @@ class DemoTripDrive implements DriverLocationRepository {
     final lat2 = to.latitude * math.pi / 180;
     final dLng = (to.longitude - from.longitude) * math.pi / 180;
     final y = math.sin(dLng) * math.cos(lat2);
-    final x = math.cos(lat1) * math.sin(lat2) -
+    final x =
+        math.cos(lat1) * math.sin(lat2) -
         math.sin(lat1) * math.cos(lat2) * math.cos(dLng);
     return (math.atan2(y, x) * 180 / math.pi + 360) % 360;
   }

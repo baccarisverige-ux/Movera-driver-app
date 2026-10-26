@@ -91,9 +91,9 @@ class DriverSessionController extends ChangeNotifier {
   bool get availableAfterTrip => _activeTripId == null
       ? availableForOffers
       : !_offlineAfterTrip &&
-          !_suspendAfterTrip &&
-          _status != DriverOnlineStatus.suspended &&
-          _statusBeforeTrip == DriverOnlineStatus.online;
+            !_suspendAfterTrip &&
+            _status != DriverOnlineStatus.suspended &&
+            _statusBeforeTrip == DriverOnlineStatus.online;
 
   bool get isGoingOnline => _status == DriverOnlineStatus.goingOnline;
 

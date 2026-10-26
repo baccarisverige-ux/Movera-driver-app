@@ -15,7 +15,6 @@ import 'package:movera/presentation/driver/home/components/exclusive_request_she
 
 import '../../integration_test/headless_map_platform.dart';
 
-
 class _Dispatch implements DispatchRepository {
   @override
   Future<bool> declineOffer(String offerId, {String? reasonCode}) async =>
@@ -60,7 +59,6 @@ class _Dispatch implements DispatchRepository {
   Future<ClaimResult> claimOffer(String offerId) async =>
       const ClaimResult.unavailable();
 }
-
 
 Future<void> _frames(WidgetTester tester, Duration total) async {
   const step = Duration(milliseconds: 100);
@@ -135,7 +133,8 @@ void main() {
     expect(find.textContaining('Assigned by Movera'), findsOneWidget);
     // The total with the 30 kr bonus.
     expect(
-      tester.widget<ExclusiveRequestSheet>(find.byType(ExclusiveRequestSheet))
+      tester
+          .widget<ExclusiveRequestSheet>(find.byType(ExclusiveRequestSheet))
           .offer
           .fare,
       '128,60 kr',
@@ -169,7 +168,9 @@ void main() {
       tester,
       find.byKey(const ValueKey('radar-offer-priority-admin-group-1')),
     );
-    final card = tester.widget<RadarOfferCard>(find.byType(RadarOfferCard).first);
+    final card = tester.widget<RadarOfferCard>(
+      find.byType(RadarOfferCard).first,
+    );
     expect(card.offer.fare, '152,40 kr');
     expect(card.offer.priority, isTrue);
     await _leave(tester);

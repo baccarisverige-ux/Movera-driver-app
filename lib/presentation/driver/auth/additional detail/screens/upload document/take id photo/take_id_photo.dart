@@ -21,10 +21,7 @@ class TakeIdPhoto extends StatelessWidget {
     body: ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text(
-          tr.idPhotoSampleOnly,
-          style: TextStyle(fontSize: 16, height: 1.4),
-        ),
+        Text(tr.idPhotoSampleOnly, style: TextStyle(fontSize: 16, height: 1.4)),
         const SizedBox(height: 24),
         Image.asset(AppAssets.id, height: 226, fit: BoxFit.contain),
         const SizedBox(height: 24),
@@ -48,10 +45,7 @@ class TakeIdPhoto extends StatelessWidget {
           },
           child: Text(tr.returnToHome),
         ),
-        TextButton(
-          onPressed: null,
-          child: Text(tr.retakeUnavailablePreview),
-        ),
+        TextButton(onPressed: null, child: Text(tr.retakeUnavailablePreview)),
       ],
     ),
   );

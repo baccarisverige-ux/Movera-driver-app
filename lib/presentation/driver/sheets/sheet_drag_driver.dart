@@ -37,7 +37,9 @@ class SheetDragDriver {
   bool get dragging => _vertical == true;
 
   void down(PointerDownEvent event) {
-    if (_pointer != null) { return; }
+    if (_pointer != null) {
+      return;
+    }
     _pointer = event.pointer;
     _down = event.position;
     _vertical = null;
@@ -46,17 +48,24 @@ class SheetDragDriver {
   }
 
   void move(PointerMoveEvent event) {
-    if (event.pointer != _pointer) { return; }
+    if (event.pointer != _pointer) {
+      return;
+    }
     _tracker?.addPosition(event.timeStamp, event.position);
     if (_vertical == null) {
       final travel = event.position - _down;
-      if (travel.distance < slop) { return; }
-      final vertical = travel.dy.abs() > travel.dx.abs() &&
+      if (travel.distance < slop) {
+        return;
+      }
+      final vertical =
+          travel.dy.abs() > travel.dx.abs() &&
           sheet.isAttached &&
           (canDrag?.call() ?? true) &&
           scrollOwns?.call(_down, travel.dy) != true;
       _vertical = vertical;
-      if (!vertical) { return; }
+      if (!vertical) {
+        return;
+      }
       // The finger owns the sheet now: no spring or panel fling under it.
       sheet.stopSpring();
       sheet.stopPanelAnimation();
@@ -64,11 +73,15 @@ class SheetDragDriver {
       _apply(travel.dy);
       return;
     }
-    if (_vertical == true) { _apply(event.delta.dy); }
+    if (_vertical == true) {
+      _apply(event.delta.dy);
+    }
   }
 
   void end(PointerEvent event) {
-    if (event.pointer != _pointer) { return; }
+    if (event.pointer != _pointer) {
+      return;
+    }
     if (event is PointerUpEvent) {
       _tracker?.addPosition(event.timeStamp, event.position);
     }
@@ -79,12 +92,18 @@ class SheetDragDriver {
     _pointer = null;
     _tracker = null;
     _vertical = null;
-    if (wasDrag) { onRelease(velocity, _start); }
+    if (wasDrag) {
+      onRelease(velocity, _start);
+    }
   }
 
   void _apply(double dy) {
-    if (!sheet.isAttached || sheet.rangePx <= 1) { return; }
-    sheet.panel.panelPosition =
-        (sheet.position - dy / sheet.rangePx).clamp(0.0, 1.0);
+    if (!sheet.isAttached || sheet.rangePx <= 1) {
+      return;
+    }
+    sheet.panel.panelPosition = (sheet.position - dy / sheet.rangePx).clamp(
+      0.0,
+      1.0,
+    );
   }
 }

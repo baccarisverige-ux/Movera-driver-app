@@ -33,33 +33,35 @@ Future<void> _pumpHomeWithTrip(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: Center(
-            child: TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => AcceptRide(
-                    tripId: 'exit-trip',
-                    riderName: 'Angelica',
-                    initialStage: stage,
-                    activeRideRepository: MemoryActiveRideRepository(),
-                    sessionController: session,
-                    realtime: realtime,
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => AcceptRide(
+                      tripId: 'exit-trip',
+                      riderName: 'Angelica',
+                      initialStage: stage,
+                      activeRideRepository: MemoryActiveRideRepository(),
+                      sessionController: session,
+                      realtime: realtime,
+                    ),
                   ),
                 ),
+                child: const Text('Home'),
               ),
-              child: const Text('Home'),
             ),
           ),
         ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.text('Home'));
   await _settle(tester, 12);
   expect(find.byType(AcceptRide), findsOneWidget);
@@ -84,128 +86,168 @@ Future<void> _openTripDrawer(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('rider cancel while a page is open on the trip goes back to Home', (tester) async {
-    final realtime = MemoryDriverRealtime();
-    addTearDown(realtime.dispose);
-    final session = DriverSessionController()..setOnline(true);
-    await _pumpHomeWithTrip(tester, session: session, realtime: realtime);
+  testWidgets(
+    'rider cancel while a page is open on the trip goes back to Home',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      final session = DriverSessionController()..setOnline(true);
+      await _pumpHomeWithTrip(tester, session: session, realtime: realtime);
 
-    _openChildPage(tester);
-    await _settle(tester, 12);
-    expect(find.text('child page'), findsOneWidget);
+      _openChildPage(tester);
+      await _settle(tester, 12);
+      expect(find.text('child page'), findsOneWidget);
 
-    realtime.emit(
-      tripId: 'exit-trip',
-      kind: DriverRealtimeKind.riderCancelled,
-      status: TripStatus.cancelledByRider,
-    );
-    await _settle(tester);
+      realtime.emit(
+        tripId: 'exit-trip',
+        kind: DriverRealtimeKind.riderCancelled,
+        status: TripStatus.cancelledByRider,
+      );
+      await _settle(tester);
 
-    expect(find.text('child page'), findsNothing);
-    expect(find.byType(AcceptRide), findsNothing);
-    expect(find.text('Home'), findsOneWidget);
-    expect(session.activeTripId, isNull);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
-  });
+      expect(find.text('child page'), findsNothing);
+      expect(find.byType(AcceptRide), findsNothing);
+      expect(find.text('Home'), findsOneWidget);
+      expect(session.activeTripId, isNull);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
 
-  testWidgets('authoritative outcome while a page is open on the trip goes back to Home', (tester) async {
-    final realtime = MemoryDriverRealtime();
-    addTearDown(realtime.dispose);
-    final session = DriverSessionController()..setOnline(true);
-    await _pumpHomeWithTrip(tester, session: session, realtime: realtime, stage: ActiveRideStage.onTrip);
+  testWidgets(
+    'authoritative outcome while a page is open on the trip goes back to Home',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      final session = DriverSessionController()..setOnline(true);
+      await _pumpHomeWithTrip(
+        tester,
+        session: session,
+        realtime: realtime,
+        stage: ActiveRideStage.onTrip,
+      );
 
-    _openChildPage(tester);
-    await _settle(tester, 12);
+      _openChildPage(tester);
+      await _settle(tester, 12);
 
-    realtime.emit(
-      tripId: 'exit-trip',
-      kind: DriverRealtimeKind.tripProjection,
-      status: TripStatus.cancelledByAdmin,
-    );
-    await _settle(tester);
-    await tester.tap(find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
-    await _settle(tester);
+      realtime.emit(
+        tripId: 'exit-trip',
+        kind: DriverRealtimeKind.tripProjection,
+        status: TripStatus.cancelledByAdmin,
+      );
+      await _settle(tester);
+      await tester.tap(
+        find.byKey(const ValueKey<String>('trip-outcome-acknowledge')),
+      );
+      await _settle(tester);
 
-    expect(find.text('child page'), findsNothing);
-    expect(find.byType(AcceptRide), findsNothing);
-    expect(find.text('Home'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
-  });
+      expect(find.text('child page'), findsNothing);
+      expect(find.byType(AcceptRide), findsNothing);
+      expect(find.text('Home'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
 
-  testWidgets('driver cancel frees the session so the driver is available again', (tester) async {
-    final realtime = MemoryDriverRealtime();
-    addTearDown(realtime.dispose);
-    final session = DriverSessionController()..setOnline(true);
-    await _pumpHomeWithTrip(tester, session: session, realtime: realtime, stage: ActiveRideStage.onTrip);
-    expect(session.activeTripId, 'exit-trip');
-    expect(session.availableForOffers, isFalse);
+  testWidgets(
+    'driver cancel frees the session so the driver is available again',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      final session = DriverSessionController()..setOnline(true);
+      await _pumpHomeWithTrip(
+        tester,
+        session: session,
+        realtime: realtime,
+        stage: ActiveRideStage.onTrip,
+      );
+      expect(session.activeTripId, 'exit-trip');
+      expect(session.availableForOffers, isFalse);
 
-    await tester.tap(find.byTooltip('Trip route and options').hitTestable());
-    await _settle(tester, 6);
-    await tester.tap(find.byKey(const ValueKey<String>('active-ride-cancel-option')));
-    await _settle(tester, 6);
-    await tester.tap(find.byKey(
-      const ValueKey<String>('trip-cancel-reason-rider_requested_early_end'),
-    ));
-    await _settle(tester, 6);
-    await tester.tap(find.byKey(const ValueKey<String>('confirm-trip-cancellation')));
-    await _settle(tester);
+      await tester.tap(find.byTooltip('Trip route and options').hitTestable());
+      await _settle(tester, 6);
+      await tester.tap(
+        find.byKey(const ValueKey<String>('active-ride-cancel-option')),
+      );
+      await _settle(tester, 6);
+      await tester.tap(
+        find.byKey(
+          const ValueKey<String>(
+            'trip-cancel-reason-rider_requested_early_end',
+          ),
+        ),
+      );
+      await _settle(tester, 6);
+      await tester.tap(
+        find.byKey(const ValueKey<String>('confirm-trip-cancellation')),
+      );
+      await _settle(tester);
 
-    expect(find.byType(AcceptRide), findsNothing);
-    expect(find.text('Home'), findsOneWidget);
-    expect(session.activeTripId, isNull);
-    expect(session.availableForOffers, isTrue);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
-  });
+      expect(find.byType(AcceptRide), findsNothing);
+      expect(find.text('Home'), findsOneWidget);
+      expect(session.activeTripId, isNull);
+      expect(session.availableForOffers, isTrue);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
 
   // driver-fixrev-2: the open drawer is local history on the trip route, so
   // a plain pop only closed the menu and left a dead trip screen.
-  testWidgets('driver-fixrev-2: admin reassign with the side menu open goes back to Home', (tester) async {
-    final realtime = MemoryDriverRealtime();
-    addTearDown(realtime.dispose);
-    final session = DriverSessionController()..setOnline(true);
-    await _pumpHomeWithTrip(tester, session: session, realtime: realtime, stage: ActiveRideStage.headingToPickup);
-    await _openTripDrawer(tester);
+  testWidgets(
+    'driver-fixrev-2: admin reassign with the side menu open goes back to Home',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      final session = DriverSessionController()..setOnline(true);
+      await _pumpHomeWithTrip(
+        tester,
+        session: session,
+        realtime: realtime,
+        stage: ActiveRideStage.headingToPickup,
+      );
+      await _openTripDrawer(tester);
 
-    realtime.emit(
-      tripId: 'exit-trip',
-      kind: DriverRealtimeKind.tripProjection,
-      status: TripStatus.searching,
-    );
-    await _settle(tester);
+      realtime.emit(
+        tripId: 'exit-trip',
+        kind: DriverRealtimeKind.tripProjection,
+        status: TripStatus.searching,
+      );
+      await _settle(tester);
 
-    expect(find.byType(AcceptRide), findsNothing);
-    expect(find.text('Home'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
-  });
+      expect(find.byType(AcceptRide), findsNothing);
+      expect(find.text('Home'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
 
-  testWidgets('driver-fixrev-2: rider cancel with the side menu open goes back to Home', (tester) async {
-    final realtime = MemoryDriverRealtime();
-    addTearDown(realtime.dispose);
-    final session = DriverSessionController()..setOnline(true);
-    await _pumpHomeWithTrip(tester, session: session, realtime: realtime);
-    await _openTripDrawer(tester);
+  testWidgets(
+    'driver-fixrev-2: rider cancel with the side menu open goes back to Home',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      final session = DriverSessionController()..setOnline(true);
+      await _pumpHomeWithTrip(tester, session: session, realtime: realtime);
+      await _openTripDrawer(tester);
 
-    realtime.emit(
-      tripId: 'exit-trip',
-      kind: DriverRealtimeKind.riderCancelled,
-      status: TripStatus.cancelledByRider,
-    );
-    await _settle(tester);
+      realtime.emit(
+        tripId: 'exit-trip',
+        kind: DriverRealtimeKind.riderCancelled,
+        status: TripStatus.cancelledByRider,
+      );
+      await _settle(tester);
 
-    expect(find.byType(AcceptRide), findsNothing);
-    expect(find.text('Home'), findsOneWidget);
-    expect(session.activeTripId, isNull);
-    expect(tester.takeException(), isNull);
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 1));
-  });
+      expect(find.byType(AcceptRide), findsNothing);
+      expect(find.text('Home'), findsOneWidget);
+      expect(session.activeTripId, isNull);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
 }

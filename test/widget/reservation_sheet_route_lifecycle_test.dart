@@ -57,8 +57,9 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(textScaler: TextScaler.linear(2)),
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(2)),
             child: child!,
           ),
           home: ReservationRouteMapPage(
@@ -83,11 +84,14 @@ void main() {
     },
   );
 
-  test('arrival calculation does not normalize malformed times or negative durations', () {
-    for (final time in ['24:00', '07:90', '-1:20', '07:-1']) {
-      expect(_request(59.3, time: time).arrivalTime, time);
-    }
-    expect(_request(59.3, minutes: -1).arrivalTime, '07:40');
-    expect(_request(59.3, time: '23:50', minutes: 25).arrivalTime, '00:15');
-  });
+  test(
+    'arrival calculation does not normalize malformed times or negative durations',
+    () {
+      for (final time in ['24:00', '07:90', '-1:20', '07:-1']) {
+        expect(_request(59.3, time: time).arrivalTime, time);
+      }
+      expect(_request(59.3, minutes: -1).arrivalTime, '07:40');
+      expect(_request(59.3, time: '23:50', minutes: 25).arrivalTime, '00:15');
+    },
+  );
 }

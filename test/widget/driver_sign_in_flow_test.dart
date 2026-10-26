@@ -18,7 +18,10 @@ import 'package:movera/presentation/driver/auth/sign_in.dart';
 /// Round 4: the driver sign-in against a fake server, from the phone to
 /// Home.
 class _FakeAuthServer {
-  _FakeAuthServer({this.retryAfterSeconds = 30, this.provider = _Provider.linked});
+  _FakeAuthServer({
+    this.retryAfterSeconds = 30,
+    this.provider = _Provider.linked,
+  });
 
   /// The one code the server accepts.
   static const acceptedCode = '1234';
@@ -156,7 +159,10 @@ Future<void> _settle(WidgetTester tester, [int frames = 6]) async {
 }
 
 /// Phone typed, consent ticked (unless already), Continue: on the code screen.
-Future<void> _toCodeScreen(WidgetTester tester, {bool tickConsent = true}) async {
+Future<void> _toCodeScreen(
+  WidgetTester tester, {
+  bool tickConsent = true,
+}) async {
   await tester.enterText(
     find.byKey(const ValueKey('auth-phone-field')),
     '070 123 45 67',
@@ -262,12 +268,20 @@ void main() {
       find.byKey(const ValueKey('auth-provider-soon-Google')),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('auth-provider-soon-Apple')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('auth-provider-soon-Apple')),
+      findsNothing,
+    );
     expect(find.text(tr.authProviderComingSoon), findsOneWidget);
     // Not tappable any more; no crash.
     await tester.tap(find.byKey(const ValueKey('auth-google')));
     await _settle(tester);
-    expect(server.requests.where((r) => r.url.path == AuthRepository.providerPath).length, 1);
+    expect(
+      server.requests
+          .where((r) => r.url.path == AuthRepository.providerPath)
+          .length,
+      1,
+    );
     // The consent box is already ticked: the phone still works.
     await _toCodeScreen(tester, tickConsent: false);
     await tester.pumpWidget(const SizedBox.shrink());

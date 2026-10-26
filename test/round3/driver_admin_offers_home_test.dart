@@ -26,8 +26,8 @@ class _Dispatch implements DispatchRepository {
   List<RideOffer> offers = const [];
   final List<String> claims = <String>[];
   final List<String> declines = <String>[];
-  ClaimResult Function(String id) answer =
-      (_) => const ClaimResult.unavailable();
+  ClaimResult Function(String id) answer = (_) =>
+      const ClaimResult.unavailable();
 
   void publish(List<RideOffer> next) {
     offers = List<RideOffer>.unmodifiable(next);
@@ -37,7 +37,10 @@ class _Dispatch implements DispatchRepository {
   /// Contract `offer_withdrawn`: first the reason, then the list without it.
   void withdraw(String id, OfferGoneReason reason) {
     _withdrawals.add(OfferWithdrawal(offerId: id, reason: reason));
-    publish([for (final offer in offers) if (offer.id != id) offer]);
+    publish([
+      for (final offer in offers)
+        if (offer.id != id) offer,
+    ]);
   }
 
   @override
@@ -68,7 +71,10 @@ class _Dispatch implements DispatchRepository {
     claims.add(offerId);
     final result = answer(offerId);
     if (result.isSuccess) {
-      publish([for (final offer in offers) if (offer.id != offerId) offer]);
+      publish([
+        for (final offer in offers)
+          if (offer.id != offerId) offer,
+      ]);
     }
     return result;
   }
@@ -76,7 +82,10 @@ class _Dispatch implements DispatchRepository {
   @override
   Future<bool> declineOffer(String offerId, {String? reasonCode}) async {
     declines.add(offerId);
-    publish([for (final offer in offers) if (offer.id != offerId) offer]);
+    publish([
+      for (final offer in offers)
+        if (offer.id != offerId) offer,
+    ]);
     return true;
   }
 
@@ -162,7 +171,8 @@ void main() {
     testWidgets('Accept claims it through dispatch; won, the trip opens with '
         'the bonus', (tester) async {
       final dispatch = await _online(tester, [DemoAdminOffers.directAssign]);
-      dispatch.answer = (id) => ClaimResult.success(DemoAdminOffers.directAssign);
+      dispatch.answer = (id) =>
+          ClaimResult.success(DemoAdminOffers.directAssign);
       await _until(tester, find.byKey(_assignCard));
       expect(find.byType(AcceptRide), findsNothing);
       await _accept(tester);
@@ -218,7 +228,8 @@ void main() {
       await _until(tester, find.byKey(_assignCard));
       await _frames(
         tester,
-        DriverOfferRules.current.exclusiveAcceptTime + const Duration(seconds: 1),
+        DriverOfferRules.current.exclusiveAcceptTime +
+            const Duration(seconds: 1),
       );
       expect(find.byKey(_assignCard), findsNothing);
       expect(ExclusiveAnswers.instance.missedInRow, 1);

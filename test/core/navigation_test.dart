@@ -60,10 +60,7 @@ void main() {
     expect(route.instructions, hasLength(2));
     expect(route.instructions.first.text, 'Turn left onto Sveavägen');
     expect(route.instructions.first.type, RouteManeuverType.turn);
-    expect(
-      route.instructions.last.text,
-      'At roundabout, take exit 2',
-    );
+    expect(route.instructions.last.text, 'At roundabout, take exit 2');
   });
 
   test('route progress advances to the next maneuver after it is passed', () {
@@ -140,11 +137,9 @@ void main() {
     final now = DateTime.now();
     const good = GeoPoint(59.3279, 18.0615);
     const wrong = GeoPoint(59.50, 18.3);
-    navigation.setVehicle(DriverLocation(
-      point: good,
-      measuredAt: now,
-      accuracyMeters: 5,
-    ));
+    navigation.setVehicle(
+      DriverLocation(point: good, measuredAt: now, accuracyMeters: 5),
+    );
     expect(navigation.snapshot.vehicle, good);
 
     navigation.keepLastKnown();
@@ -175,11 +170,13 @@ void main() {
 
     // 25 km away a moment later is a GPS jump until a second fix agrees.
     for (var i = 0; i < 2; i++) {
-      navigation.setVehicle(DriverLocation(
-        point: wrong,
-        measuredAt: DateTime.now(),
-        accuracyMeters: 5,
-      ));
+      navigation.setVehicle(
+        DriverLocation(
+          point: wrong,
+          measuredAt: DateTime.now(),
+          accuracyMeters: 5,
+        ),
+      );
     }
     expect(navigation.snapshot.vehicle, wrong);
     expect(navigation.status, isNull);
@@ -193,9 +190,7 @@ void main() {
     const demo = GeoPoint(59.33, 18.06);
     navigation.setVehicle(const DriverLocation(point: demo));
     expect(navigation.snapshot.vehicle, demo);
-    navigation.setVehicle(const DriverLocation(
-      point: GeoPoint(91, 18),
-    ));
+    navigation.setVehicle(const DriverLocation(point: GeoPoint(91, 18)));
     expect(navigation.snapshot.vehicle, demo);
   });
 
@@ -223,17 +218,21 @@ void main() {
     );
     addTearDown(navigation.dispose);
     final point = const GeoPoint(59.3279, 18.0615);
-    navigation.setVehicle(DriverLocation(
-      point: point,
-      measuredAt: DateTime.now(),
-      accuracyMeters: 5,
-    ));
+    navigation.setVehicle(
+      DriverLocation(
+        point: point,
+        measuredAt: DateTime.now(),
+        accuracyMeters: 5,
+      ),
+    );
     navigation.keepLastKnown();
-    navigation.setVehicle(DriverLocation(
-      point: point,
-      measuredAt: DateTime.now().subtract(const Duration(minutes: 2)),
-      accuracyMeters: 5,
-    ));
+    navigation.setVehicle(
+      DriverLocation(
+        point: point,
+        measuredAt: DateTime.now().subtract(const Duration(minutes: 2)),
+        accuracyMeters: 5,
+      ),
+    );
     expect(navigation.snapshot.status, 'Location updating…');
   });
 

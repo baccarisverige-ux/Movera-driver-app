@@ -52,76 +52,100 @@ void main() {
     TripStatus.failed,
     TripStatus.completed,
   ]) {
-    testWidgets('$status with a secured next trip hands off instead of orphaning it', (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      CompletionJournal.resetForTesting();
-      tester.view.physicalSize = const Size(375, 812);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final repo = PrefsActiveRideRepository();
-      await repo.save(_a);
-      final realtime = MemoryDriverRealtime();
-      addTearDown(realtime.dispose);
-      final session = DriverSessionController()..setOnline(true);
-      InMemoryWaybillRepository.instance.reset();
+    testWidgets(
+      '$status with a secured next trip hands off instead of orphaning it',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        CompletionJournal.resetForTesting();
+        tester.view.physicalSize = const Size(375, 812);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final repo = PrefsActiveRideRepository();
+        await repo.save(_a);
+        final realtime = MemoryDriverRealtime();
+        addTearDown(realtime.dispose);
+        final session = DriverSessionController()..setOnline(true);
+        InMemoryWaybillRepository.instance.reset();
 
-      await tester.pumpWidget(ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (_, __) => MaterialApp(
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: Center(
-                child: TextButton(
-                  key: const ValueKey<String>('open-ride'),
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                    builder: (_) => AcceptRide.fromPersisted(
-                      _a,
-                      activeRideRepository: repo,
-                      sessionController: session,
-                      realtime: realtime,
-                      waybillRepository: InMemoryWaybillRepository.instance,
+        await tester.pumpWidget(
+          ScreenUtilInit(
+            designSize: const Size(375, 812),
+            builder: (_, __) => MaterialApp(
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: Center(
+                    child: TextButton(
+                      key: const ValueKey<String>('open-ride'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => AcceptRide.fromPersisted(
+                            _a,
+                            activeRideRepository: repo,
+                            sessionController: session,
+                            realtime: realtime,
+                            waybillRepository:
+                                InMemoryWaybillRepository.instance,
+                          ),
+                        ),
+                      ),
+                      child: const Text('home'),
                     ),
-                  )),
-                  child: const Text('home'),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ));
-      await tester.tap(find.byKey(const ValueKey<String>('open-ride')));
-      await _settle(tester);
-      expect(session.activeTripId, 'trip-a');
+        );
+        await tester.tap(find.byKey(const ValueKey<String>('open-ride')));
+        await _settle(tester);
+        expect(session.activeTripId, 'trip-a');
 
-      realtime.emit(tripId: 'trip-a', kind: DriverRealtimeKind.tripProjection, status: status);
-      await _settle(tester);
+        realtime.emit(
+          tripId: 'trip-a',
+          kind: DriverRealtimeKind.tripProjection,
+          status: status,
+        );
+        await _settle(tester);
 
-      expect(find.byKey(const ValueKey<String>('trip-outcome-sheet')), findsOneWidget);
-      expect(find.text(tripOutcomeCopy(status).title), findsOneWidget);
-      expect(find.textContaining('trip ended:', findRichText: true), findsNothing);
-      expect((await repo.read())?.tripId, 'trip-b');
+        expect(
+          find.byKey(const ValueKey<String>('trip-outcome-sheet')),
+          findsOneWidget,
+        );
+        expect(find.text(tripOutcomeCopy(status).title), findsOneWidget);
+        expect(
+          find.textContaining('trip ended:', findRichText: true),
+          findsNothing,
+        );
+        expect((await repo.read())?.tripId, 'trip-b');
 
-      await tester.tap(find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
-      await _settle(tester, 30);
+        await tester.tap(
+          find.byKey(const ValueKey<String>('trip-outcome-acknowledge')),
+        );
+        await _settle(tester, 30);
 
-      final ride = tester.widget<AcceptRide>(find.byType(AcceptRide));
-      expect(ride.tripId, 'trip-b');
-      expect(session.activeTripId, 'trip-b');
-      expect(InMemoryWaybillRepository.instance.current?.tripId, 'trip-b');
-      final history = await PrefsTripHistoryRepository().list();
-      expect(history.single.tripId, 'trip-a');
-      expect(history.single.status, status);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump(const Duration(seconds: 1));
-    });
+        final ride = tester.widget<AcceptRide>(find.byType(AcceptRide));
+        expect(ride.tripId, 'trip-b');
+        expect(session.activeTripId, 'trip-b');
+        expect(InMemoryWaybillRepository.instance.current?.tripId, 'trip-b');
+        final history = await PrefsTripHistoryRepository().list();
+        expect(history.single.tripId, 'trip-a');
+        expect(history.single.status, status);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump(const Duration(seconds: 1));
+      },
+    );
   }
 
   test('outcome copy is human readable for every terminal status', () {
     for (final status in TripStatus.values.where((s) => s.isTerminal)) {
       final copy = tripOutcomeCopy(status);
-      expect(copy.title, isNot(matches(RegExp(r'[a-z][A-Z]'))), reason: 'no raw camelCase wire names');
+      expect(
+        copy.title,
+        isNot(matches(RegExp(r'[a-z][A-Z]'))),
+        reason: 'no raw camelCase wire names',
+      );
       expect(copy.body, isNotEmpty);
     }
   });

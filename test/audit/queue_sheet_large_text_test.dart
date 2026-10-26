@@ -9,8 +9,9 @@ void main() {
     const Size(568, 320),
     const Size(375, 812),
   ]) {
-    testWidgets('queue preview remains reachable at 200% text in $size',
-        (tester) async {
+    testWidgets('queue preview remains reachable at 200% text in $size', (
+      tester,
+    ) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = size;
       addTearDown(tester.view.resetPhysicalSize);
@@ -21,8 +22,9 @@ void main() {
           designSize: const Size(375, 812),
           builder: (_, __) => MaterialApp(
             builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(context)
-                  .copyWith(textScaler: TextScaler.linear(2)),
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(2)),
               child: child!,
             ),
             home: Builder(

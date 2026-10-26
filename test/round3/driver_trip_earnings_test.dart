@@ -72,9 +72,11 @@ Future<void> _trip(
   await tester.pump(const Duration(milliseconds: 220));
   final confirm = find.byKey(const ValueKey('finish-soon-finish'));
   if (confirm.evaluate().isNotEmpty) await tester.tap(confirm);
-  for (var i = 0;
-      i < 60 && find.byType(DriverRideCompleted).evaluate().isEmpty;
-      i++) {
+  for (
+    var i = 0;
+    i < 60 && find.byType(DriverRideCompleted).evaluate().isEmpty;
+    i++
+  ) {
     await tester.pump(const Duration(milliseconds: 25));
   }
   await tester.pump(const Duration(milliseconds: 1100));

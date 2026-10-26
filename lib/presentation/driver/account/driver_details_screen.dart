@@ -151,8 +151,9 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     }
     // A sign-up that was interrupted: what was typed comes back. An
     // account that already has details (editing) starts from them.
-    if (!widget.editing && !(account?.canSendDetails == true &&
-        account?.accountStatus == 'on_hold')) {
+    if (!widget.editing &&
+        !(account?.canSendDetails == true &&
+            account?.accountStatus == 'on_hold')) {
       unawaited(_restoreDraft());
     } else {
       _restored = true;
@@ -504,8 +505,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
           bottom: false,
           child: CustomScrollView(
             key: const ValueKey('details-scroll'),
-            keyboardDismissBehavior:
-                ScrollViewKeyboardDismissBehavior.onDrag,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             slivers: [
               SliverToBoxAdapter(
                 child: Column(
@@ -663,7 +663,8 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
         _label(tr.acctCity),
         _PickBox(
           key: const ValueKey('details-city'),
-          title: _citiesOf(_country)
+          title:
+              _citiesOf(_country)
                   .where((c) => c.cityId == _cityId)
                   .map((c) => c.name)
                   .firstOrNull ??
@@ -808,9 +809,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     padding: const EdgeInsets.only(bottom: 8),
     child: Row(
       children: [
-        Flexible(
-          child: Text(text.toUpperCase(), style: DetailsStyle.label()),
-        ),
+        Flexible(child: Text(text.toUpperCase(), style: DetailsStyle.label())),
         if (chip != null) ...[const SizedBox(width: 8), chip],
       ],
     ),
@@ -1205,10 +1204,7 @@ class _JoinBox extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     open ? tr.now : tr.later,
-                    style: AuthText.urbanist(
-                      size: 14,
-                      weight: FontWeight.w800,
-                    ),
+                    style: AuthText.urbanist(size: 14, weight: FontWeight.w800),
                   ),
                   Icon(
                     open

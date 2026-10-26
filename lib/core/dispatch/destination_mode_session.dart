@@ -34,14 +34,18 @@ class DestinationModeSession {
   int usedToday([DateTime? at]) {
     final day = at ?? _now();
     return _started
-        .where((t) => t.year == day.year && t.month == day.month && t.day == day.day)
+        .where(
+          (t) => t.year == day.year && t.month == day.month && t.day == day.day,
+        )
         .length;
   }
 
   /// Why a new destination cannot be set now, or null when it can.
   DestinationRefusal? refusal({DestinationModeRules? rules}) {
     final r = rules ?? DestinationModeRules.current;
-    if (!r.enabled) { return DestinationRefusal.off; }
+    if (!r.enabled) {
+      return DestinationRefusal.off;
+    }
     if (r.dailyLimitOn && usedToday() >= r.destinationsPerDay) {
       return DestinationRefusal.usedToday;
     }
@@ -69,7 +73,9 @@ class DestinationModeSession {
     String? address,
     GeoPoint? position,
   }) {
-    if (_activeSince != null) { return; }
+    if (_activeSince != null) {
+      return;
+    }
     _activeSince = since;
     _address = address;
     _position = position;
@@ -91,7 +97,9 @@ class DestinationModeSession {
   Duration? timeLeft({DestinationModeRules? rules}) {
     final since = _activeSince;
     final limit = (rules ?? DestinationModeRules.current).timeLimit;
-    if (since == null || limit == null) { return null; }
+    if (since == null || limit == null) {
+      return null;
+    }
     final left = since.add(limit).difference(_now());
     return left.isNegative ? Duration.zero : left;
   }
@@ -136,7 +144,9 @@ class DestinationModeSession {
   /// are recent; null without a route or once older than [figuresLast].
   (double, double)? figuresTo(GeoPoint destination) {
     final f = _figures;
-    if (f == null || routeTo(destination).isEmpty) { return null; }
+    if (f == null || routeTo(destination).isEmpty) {
+      return null;
+    }
     return _now().difference(f.at) > figuresLast ? null : (f.meters, f.seconds);
   }
 
@@ -146,8 +156,8 @@ class DestinationModeSession {
   /// The road route to [destination], or empty when there is none.
   List<GeoPoint> routeTo(GeoPoint destination) =>
       _routeTo != null && _routeTo!.distanceMetersTo(destination) < 50
-          ? _route
-          : const <GeoPoint>[];
+      ? _route
+      : const <GeoPoint>[];
 }
 
 enum DestinationRefusal {

@@ -44,15 +44,24 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.utc(2026, 10, 9);
     final first = await LocalQuarantine.store(
-      prefs, source: 'history', raw: 'first', reason: 'bad', now: now,
+      prefs,
+      source: 'history',
+      raw: 'first',
+      reason: 'bad',
+      now: now,
     );
     final second = await LocalQuarantine.store(
-      prefs, source: 'history', raw: 'second', reason: 'bad', now: now,
+      prefs,
+      source: 'history',
+      raw: 'second',
+      reason: 'bad',
+      now: now,
     );
     expect(first, isNot(second));
-    final raws = [first, second]
-        .map((key) => (jsonDecode(prefs.getString(key)!) as Map)['raw'])
-        .toSet();
+    final raws = [
+      first,
+      second,
+    ].map((key) => (jsonDecode(prefs.getString(key)!) as Map)['raw']).toSet();
     expect(raws, {'first', 'second'});
   });
 
@@ -78,14 +87,17 @@ void main() {
     expect((await store.list()).last['registrationPhoto'], 'AQID');
   });
 
-  test('removing an unknown vehicle does not persist the demo fallback', () async {
-    final store = LocalVehicleStore();
-    final prefs = await SharedPreferences.getInstance();
-    final before = LocalVehicleStore.changes.value;
-    await store.remove('not-present');
-    expect(LocalVehicleStore.changes.value, before);
-    expect(prefs.getKeys().where((k) => k.contains('vehicles')), isEmpty);
-  });
+  test(
+    'removing an unknown vehicle does not persist the demo fallback',
+    () async {
+      final store = LocalVehicleStore();
+      final prefs = await SharedPreferences.getInstance();
+      final before = LocalVehicleStore.changes.value;
+      await store.remove('not-present');
+      expect(LocalVehicleStore.changes.value, before);
+      expect(prefs.getKeys().where((k) => k.contains('vehicles')), isEmpty);
+    },
+  );
 
   test('stale current waybill cannot overwrite a different active trip', () {
     final repo = InMemoryWaybillRepository.instance;
@@ -98,13 +110,16 @@ void main() {
     expect(repo.current?.tripId, 'B');
   });
 
-  test('secured next waybill requires an explicit clear before replacement', () {
-    final repo = InMemoryWaybillRepository.instance;
-    repo.secureNext(_waybill('next-A'));
-    repo.secureNext(_waybill('next-B'));
-    expect(repo.next?.tripId, 'next-A');
-    repo.clearNext();
-    repo.secureNext(_waybill('next-B'));
-    expect(repo.next?.tripId, 'next-B');
-  });
+  test(
+    'secured next waybill requires an explicit clear before replacement',
+    () {
+      final repo = InMemoryWaybillRepository.instance;
+      repo.secureNext(_waybill('next-A'));
+      repo.secureNext(_waybill('next-B'));
+      expect(repo.next?.tripId, 'next-A');
+      repo.clearNext();
+      repo.secureNext(_waybill('next-B'));
+      expect(repo.next?.tripId, 'next-B');
+    },
+  );
 }

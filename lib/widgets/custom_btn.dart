@@ -47,9 +47,7 @@ class CustomButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final disabled = onPressed == null && !isLoading;
     final fill = !disabled || btncolor.a == 0 ? btncolor : disabledFill;
-    final border = !disabled || borderColor.a == 0
-        ? borderColor
-        : disabledText;
+    final border = !disabled || borderColor.a == 0 ? borderColor : disabledText;
     final text = disabled ? disabledText : textColor;
     return MaterialButton(
       clipBehavior: Clip.none,

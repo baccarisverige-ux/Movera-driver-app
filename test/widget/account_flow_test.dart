@@ -281,15 +281,21 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.byKey(const ValueKey<String>('document-blocked-upload')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('document-blocked-upload')),
+      );
       await _frames(tester, const Duration(milliseconds: 600));
-      await tester.tap(find.byKey(const ValueKey<String>('document-upload-send')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('document-upload-send')),
+      );
       await _frames(tester, const Duration(milliseconds: 600));
       expect(DocumentExpiryStore.instance.blocking?.inReview, isTrue);
       expect(find.text('Sent for review'), findsOneWidget);
 
       // In review it still blocks; the demo approves it.
-      await tester.tap(find.byKey(const ValueKey<String>('document-blocked-approve')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('document-blocked-approve')),
+      );
       await _frames(tester, const Duration(milliseconds: 300));
       expect(DocumentExpiryStore.instance.blocking, isNull);
       expect(find.text('You can go online now.'), findsOneWidget);
@@ -332,7 +338,9 @@ void main() {
       );
       expect(deck.ids, ['premium-trip']);
       // Owner N1: the island's middle ("N offers · radar") opens the list.
-      await tester.tap(find.byKey(const ValueKey<String>('island-radar-offers')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('island-radar-offers')),
+      );
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.byType(RideRequests), findsOneWidget);
       expect(
@@ -368,21 +376,25 @@ void main() {
     ) async {
       await _pumpHome(
         tester,
-        config: const _Config(DriverAppTextOverrides({
-          'en': {
-            'island.online': 'Radar is on',
-            'offer.accept': 'Take ride',
-            'offer.viewRoute': '  ',
-          },
-        })),
+        config: const _Config(
+          DriverAppTextOverrides({
+            'en': {
+              'island.online': 'Radar is on',
+              'offer.accept': 'Take ride',
+              'offer.viewRoute': '  ',
+            },
+          }),
+        ),
       );
       expect(_said, contains('Radar is on'));
       await _frames(tester, const Duration(milliseconds: 2600));
       final card = find.byKey(_closeOffer);
       // Accept is the grey orb on the Exclusive sheet.
       final radar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
-      expect(find.descendant(of: radar, matching: find.text('Take ride')),
-          findsOneWidget);
+      expect(
+        find.descendant(of: radar, matching: find.text('Take ride')),
+        findsOneWidget,
+      );
       expect(card, findsOneWidget);
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
@@ -461,12 +473,14 @@ void main() {
       final deck = find.byKey(const ValueKey<String>('radar-home-deck'));
       expect(deck, findsOneWidget);
       // The map's own pointer listener (its pan, pinch and gesture report).
-      final mapTarget = tester.renderObject(find
-          .descendant(
-            of: find.byType(CustomGoogleMap),
-            matching: find.byType(Listener),
-          )
-          .first);
+      final mapTarget = tester.renderObject(
+        find
+            .descendant(
+              of: find.byType(CustomGoogleMap),
+              matching: find.byType(Listener),
+            )
+            .first,
+      );
       bool reachesMap(Offset at) => tester
           .hitTestOnBinding(at)
           .path

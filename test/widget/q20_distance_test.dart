@@ -24,9 +24,11 @@ RadarOfferView _offer({double pickupKm = 0.65, double tripKm = 4.2}) =>
 Future<void> _pump(WidgetTester tester, Widget card) async {
   await tester.binding.setSurfaceSize(const Size(375, 812));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(MaterialApp(
-    home: Scaffold(body: Center(child: card)),
-  ));
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(body: Center(child: card)),
+    ),
+  );
 }
 
 // Q20: under 1 km in metres ("650 m · 2 min"), above in km ("4.2 km · 9 min").
@@ -64,8 +66,10 @@ void main() {
       'en': {'offer.kmAway': 'Pickup {km}'},
     });
     addTearDown(DriverAppTexts.reset);
-    await _pump(tester,
-        RadarOfferCard(offer: _offer(pickupKm: 2.3), onMatch: () {}));
+    await _pump(
+      tester,
+      RadarOfferCard(offer: _offer(pickupKm: 2.3), onMatch: () {}),
+    );
     expect(find.text('Pickup 2.3'), findsOneWidget);
   });
 }

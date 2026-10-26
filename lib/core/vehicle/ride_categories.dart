@@ -5,10 +5,7 @@ import 'package:movera/core/settings/settings_repository.dart';
 /// car (Vehicles in admin); the driver can switch some off in Ride
 /// preferences, and offers follow that choice.
 class DriverCategoryAccess {
-  const DriverCategoryAccess({
-    required this.vehicleId,
-    required this.allowed,
-  });
+  const DriverCategoryAccess({required this.vehicleId, required this.allowed});
 
   /// Every category in the app, by the name offers use. This is also the
   /// stored order of the Ride-preferences choice: append only.
@@ -58,8 +55,9 @@ class DriverCategoryChoice {
   /// The settings section Ride preferences saves to.
   static const String section = 'categories';
 
-  static final ValueNotifier<Set<String>> off =
-      ValueNotifier<Set<String>>(const <String>{});
+  static final ValueNotifier<Set<String>> off = ValueNotifier<Set<String>>(
+    const <String>{},
+  );
 
   /// Applies the saved choice, so offers follow it after a restart and not
   /// only once Ride preferences is opened (driver-31, driver-78). A missing

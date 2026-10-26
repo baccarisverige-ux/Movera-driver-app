@@ -280,7 +280,11 @@ class _RideCheckLayerState extends State<RideCheckLayer>
         final progress = resizing
             ? Curves.easeOutCubic.transform(_resize.value)
             : t;
-        final radius = ui.lerpDouble(pill.height / 2, RideCheckStyle.radius, t)!;
+        final radius = ui.lerpDouble(
+          pill.height / 2,
+          RideCheckStyle.radius,
+          t,
+        )!;
         final cardOpacity = ((t - .15) / .85).clamp(0.0, 1.0);
         final pillOpacity = (1 - t / .35).clamp(0.0, 1.0);
         final shape = BorderRadius.circular(radius);
@@ -325,7 +329,8 @@ class _RideCheckLayerState extends State<RideCheckLayer>
                       child: Stack(
                         children: [
                           IgnorePointer(
-                            ignoring: cardOpacity < .5 ||
+                            ignoring:
+                                cardOpacity < .5 ||
                                 _c.phase != RideCheckPhase.card,
                             child: Opacity(
                               opacity: cardOpacity,
@@ -372,7 +377,11 @@ class _RideCheckLayerState extends State<RideCheckLayer>
 
 /// All the card's content, top to bottom, for the current screen.
 class RideCheckCard extends StatelessWidget {
-  const RideCheckCard({super.key, required this.controller, required this.note});
+  const RideCheckCard({
+    super.key,
+    required this.controller,
+    required this.note,
+  });
 
   final RideCheckController controller;
   final TextEditingController note;
@@ -507,7 +516,8 @@ class RideCheckCard extends StatelessWidget {
             );
             final room = (constraints.maxWidth - 9) / 2 - _buttonIconRoom;
             final scaler = MediaQuery.textScalerOf(context);
-            if (_labelFits(tr.call112, room, scaler) && _labelFits(tr.iMOk, room, scaler)) {
+            if (_labelFits(tr.call112, room, scaler) &&
+                _labelFits(tr.iMOk, room, scaler)) {
               return Row(
                 children: [
                   Expanded(child: call),
@@ -702,9 +712,12 @@ class RideCheckCard extends StatelessWidget {
     final failed = controller.alertFailed;
     // driver-49: the demo outbox keeps the alert in memory; nothing reached
     // Movera, so the card must not say the safety team was alerted.
-    final demo = !failed && controller.services.alerts is DemoSafetyAlertRepository;
+    final demo =
+        !failed && controller.services.alerts is DemoSafetyAlertRepository;
     return Container(
-      key: ValueKey(failed ? 'ride-check-alert-failed' : 'ride-check-alert-sent'),
+      key: ValueKey(
+        failed ? 'ride-check-alert-failed' : 'ride-check-alert-sent',
+      ),
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -818,17 +831,17 @@ class RideCheckCard extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              color: RideCheckStyle.white(.45),
-              fontSize: 11.5,
-            ),
+            style: TextStyle(color: RideCheckStyle.white(.45), fontSize: 11.5),
           ),
         ),
       ],
     ),
   );
 
-  static const TextStyle _buttonLabel = TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700);
+  static const TextStyle _buttonLabel = TextStyle(
+    fontSize: 16.5,
+    fontWeight: FontWeight.w700,
+  );
 
   /// The icon and its gap before a button label.
   static const double _buttonIconRoom = 19 + 8;

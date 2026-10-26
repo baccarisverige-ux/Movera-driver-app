@@ -95,15 +95,22 @@ void main() {
       for (var z = 12.0; z < 15.49; z += .05) {
         final step = t(z + .05) - t(z);
         expect(step, closeTo(67.5 / 3.5 * .05, 1e-6), reason: 'at $z');
-        expect(t(z), lessThan(DriverCameraPolicy.sdkMaxTilt(z)),
-            reason: 'never clamped by the SDK at $z');
+        expect(
+          t(z),
+          lessThan(DriverCameraPolicy.sdkMaxTilt(z)),
+          reason: 'never clamped by the SDK at $z',
+        );
       }
     });
 
     test('the web gesture layer uses the same curve', () {
       final js = File('web/driver_map_camera.js').readAsStringSync();
-      expect(js,
-          contains('const MAX_TILT = 67.5, FLAT_ZOOM = 12, FULL_TILT_ZOOM = 15.5;'));
+      expect(
+        js,
+        contains(
+          'const MAX_TILT = 67.5, FLAT_ZOOM = 12, FULL_TILT_ZOOM = 15.5;',
+        ),
+      );
       expect(js, contains('MAX_TILT * clamp((zoom - FLAT_ZOOM) /'));
       expect(DriverCameraPolicy.flatZoom, 12);
       expect(DriverCameraPolicy.fullTiltZoom, 15.5);
@@ -140,13 +147,19 @@ void main() {
         durationSeconds: 200,
       );
       final cruise = DriverCameraPolicy().resolve(
-          location: _fix(_origin), route: road, navigating: true,
-          immediate: true);
+        location: _fix(_origin),
+        route: road,
+        navigating: true,
+        immediate: true,
+      );
       expect(cruise.zoom, 15);
       expect(cruise.tilt, closeTo(67.5 * 3 / 3.5, 1e-9));
       final arrival = DriverCameraPolicy().resolve(
-          location: _fix(_east(_origin, 2000)), route: road,
-          navigating: true, immediate: true);
+        location: _fix(_east(_origin, 2000)),
+        route: road,
+        navigating: true,
+        immediate: true,
+      );
       expect(arrival.zoom, closeTo(15.5, 1e-9));
       expect(arrival.tilt, 60);
     });
@@ -199,13 +212,15 @@ void main() {
       GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
       addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
       final events = <bool>[];
-      await tester.pumpWidget(MaterialApp(
-        home: CustomGoogleMap(onTouching: events.add),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(home: CustomGoogleMap(onTouching: events.add)),
+      );
       final center = tester.getCenter(find.byType(CustomGoogleMap));
       final a = await tester.startGesture(center, pointer: 1);
-      final b = await tester.startGesture(center + const Offset(40, 0),
-          pointer: 2);
+      final b = await tester.startGesture(
+        center + const Offset(40, 0),
+        pointer: 2,
+      );
       await b.moveBy(const Offset(60, 0));
       expect(events, [true]);
       await b.up();
@@ -216,29 +231,34 @@ void main() {
     });
 
     test('both Home maps tell the camera about fingers on the map', () {
-      final src = File('lib/presentation/driver/home/home_map_sheet.dart')
-          .readAsStringSync();
+      final src = File(
+        'lib/presentation/driver/home/home_map_sheet.dart',
+      ).readAsStringSync();
       expect(
-          'onTouching: (down) => _camera.touching = down'.allMatches(src).length,
-          2);
+        'onTouching: (down) => _camera.touching = down'.allMatches(src).length,
+        2,
+      );
     });
   });
 
   group('tilt ease after a zoom', () {
-    testWidgets('a repeated idle keeps the ease going (no restart stutter)',
-        (tester) async {
+    testWidgets('a repeated idle keeps the ease going (no restart stutter)', (
+      tester,
+    ) async {
       final original = GoogleMapsFlutterPlatform.instance;
       final platform = _Moves();
       GoogleMapsFlutterPlatform.instance = platform;
       addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
       GoogleMapController? controller;
       const start = CameraPosition(target: LatLng(59, 18), zoom: 14.2);
-      await tester.pumpWidget(MaterialApp(
-        home: GoogleMap(
-          initialCameraPosition: start,
-          onMapCreated: (value) => controller = value,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GoogleMap(
+            initialCameraPosition: start,
+            onMapCreated: (value) => controller = value,
+          ),
         ),
-      ));
+      );
       await tester.pump();
       final port = GoogleDriverCameraPort(controller!, initialPosition: start);
       var done = false;
@@ -252,8 +272,11 @@ void main() {
       final tilts = [for (final p in platform.poses) p['tilt'] as double];
       expect(tilts.last, 40);
       for (var i = 1; i < tilts.length; i++) {
-        expect(tilts[i], greaterThan(tilts[i - 1]),
-            reason: 'frame $i restarted the ease');
+        expect(
+          tilts[i],
+          greaterThan(tilts[i - 1]),
+          reason: 'frame $i restarted the ease',
+        );
       }
       for (final p in platform.poses) {
         expect(p['zoom'], 14.2, reason: 'the ease never changes the zoom');
@@ -262,20 +285,23 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('a pinch during a running tilt ease is never undone',
-        (tester) async {
+    testWidgets('a pinch during a running tilt ease is never undone', (
+      tester,
+    ) async {
       final original = GoogleMapsFlutterPlatform.instance;
       final platform = _Moves();
       GoogleMapsFlutterPlatform.instance = platform;
       addTearDown(() => GoogleMapsFlutterPlatform.instance = original);
       GoogleMapController? controller;
       const start = CameraPosition(target: LatLng(59, 18), zoom: 14);
-      await tester.pumpWidget(MaterialApp(
-        home: GoogleMap(
-          initialCameraPosition: start,
-          onMapCreated: (value) => controller = value,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GoogleMap(
+            initialCameraPosition: start,
+            onMapCreated: (value) => controller = value,
+          ),
         ),
-      ));
+      );
       await tester.pump();
       final camera = DriverCameraController();
       final port = GoogleDriverCameraPort(controller!, initialPosition: start);
@@ -288,8 +314,11 @@ void main() {
       port.onMove(const CameraPosition(target: LatLng(59, 18), zoom: 14));
       camera.browseSettled(); // ... let go: the tilt eases toward 33.75.
       // The ease runs on the wall clock: wait until it is under way.
-      for (var i = 0; i < 20000 && (platform.poses.last['tilt'] as double) < 1;
-          i++) {
+      for (
+        var i = 0;
+        i < 20000 && (platform.poses.last['tilt'] as double) < 1;
+        i++
+      ) {
         await tester.pump(const Duration(milliseconds: 16));
       }
       expect(platform.poses.last['tilt'], inExclusiveRange(1, 33.75));
@@ -297,14 +326,18 @@ void main() {
       // gesture layer moves the camera; Flutter sees the moves).
       camera.touching = true;
       final count = platform.poses.length;
-      port.onMove(const CameraPosition(
-          target: LatLng(59, 18), zoom: 15.6, tilt: 60.75));
+      port.onMove(
+        const CameraPosition(target: LatLng(59, 18), zoom: 15.6, tilt: 60.75),
+      );
       camera.browseSettled(); // Maps idle under the resting fingers.
       for (var i = 0; i < 60; i++) {
         await tester.pump(const Duration(milliseconds: 16));
       }
-      expect(platform.poses.length, count,
-          reason: 'nothing moves the camera under the finger');
+      expect(
+        platform.poses.length,
+        count,
+        reason: 'nothing moves the camera under the finger',
+      );
       camera.touching = false; // On curve already: nothing left to ease.
       for (var i = 0; i < 60; i++) {
         await tester.pump(const Duration(milliseconds: 16));

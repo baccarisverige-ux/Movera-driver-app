@@ -23,16 +23,17 @@ class _Port implements DriverCameraPort {
 final _now = DateTime.utc(2026, 10, 18, 9);
 
 DriverLocation _fix(double lat) => DriverLocation(
-      point: GeoPoint(lat, 18),
-      speedMetersPerSecond: 10,
-      headingDegrees: 0,
-      measuredAt: _now,
-      accuracyMeters: 5,
-    );
+  point: GeoPoint(lat, 18),
+  speedMetersPerSecond: 10,
+  headingDegrees: 0,
+  measuredAt: _now,
+  accuracyMeters: 5,
+);
 
 void main() {
-  testWidgets('driver-r4-39: a finger held on the map stops follow frames',
-      (tester) async {
+  testWidgets('driver-r4-39: a finger held on the map stops follow frames', (
+    tester,
+  ) async {
     final camera = DriverCameraController(now: () => _now);
     addTearDown(camera.dispose);
     final port = _Port();

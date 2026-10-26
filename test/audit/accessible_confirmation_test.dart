@@ -29,8 +29,13 @@ void main() {
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 30));
     }
-    tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last).controller!.animatePanelToSnapPoint();
-    for (var i=0;i<14;i++) { await tester.pump(const Duration(milliseconds: 50)); }
+    tester
+        .widget<SlidingUpPanel>(find.byType(SlidingUpPanel).last)
+        .controller!
+        .animatePanelToSnapPoint();
+    for (var i = 0; i < 14; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
     final node = tester.getSemantics(
       find.bySemanticsLabel(RegExp('start trip', caseSensitive: false)).first,
     );

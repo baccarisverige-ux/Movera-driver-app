@@ -5,15 +5,16 @@ void main() {
   setUp(IslandMessages.reset);
 
   test('important messages go ahead of quick ones still waiting', () {
-    IslandMessages.show(const IslandMessage(
-      title: 'Radar online',
-      priority: IslandPriority.low,
-    ));
+    IslandMessages.show(
+      const IslandMessage(title: 'Radar online', priority: IslandPriority.low),
+    );
     IslandMessages.show(const IslandMessage(title: 'New reservation'));
-    IslandMessages.show(const IslandMessage(
-      title: 'Rider cancelled',
-      priority: IslandPriority.high,
-    ));
+    IslandMessages.show(
+      const IslandMessage(
+        title: 'Rider cancelled',
+        priority: IslandPriority.high,
+      ),
+    );
 
     expect(IslandMessages.take()?.title, 'Rider cancelled');
     expect(IslandMessages.take()?.title, 'Radar online');

@@ -8,7 +8,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart'
     show GoogleMapsFlutterPlatform, MarkerUpdates;
 
-
 import '../core/l10n/driver_l10n.dart';
 import '../core/navigation/map_camera_report.dart';
 import '../core/navigation/map_double_tap_policy.dart';
@@ -172,10 +171,14 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     if (kIsWeb || !mounted) return;
     for (final marker in _allMarkers) {
       if (!_isOwnVehicle(marker) || marker.flat) continue;
-      final shown =
-          MoveraVehicleMarker.screenRotation(marker.rotation, _vehicleBearing);
-      final wanted =
-          MoveraVehicleMarker.screenRotation(marker.rotation, camera.bearing);
+      final shown = MoveraVehicleMarker.screenRotation(
+        marker.rotation,
+        _vehicleBearing,
+      );
+      final wanted = MoveraVehicleMarker.screenRotation(
+        marker.rotation,
+        camera.bearing,
+      );
       final change = ((wanted - shown + 540) % 360 - 180).abs();
       if (change > 1.5) setState(() => _vehicleBearing = camera.bearing);
       return;
@@ -233,8 +236,12 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
         updates.markerIdsToRemove.isEmpty) {
       return;
     }
-    unawaited(GoogleMapsFlutterPlatform.instance
-        .updateMarkers(updates, mapId: controller.mapId));
+    unawaited(
+      GoogleMapsFlutterPlatform.instance.updateMarkers(
+        updates,
+        mapId: controller.mapId,
+      ),
+    );
     _updateWebVehicle(controller.mapId);
   }
 
@@ -248,7 +255,9 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
         if (_isOwnVehicle(marker) && !marker.flat)
           marker.copyWith(
             rotationParam: MoveraVehicleMarker.screenRotation(
-                marker.rotation, _vehicleBearing),
+              marker.rotation,
+              _vehicleBearing,
+            ),
           )
         else
           marker,
@@ -350,7 +359,8 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
           _gestureReported = false;
           final at = _lastTapAt;
           final point = _lastTapPosition;
-          _doubleTapCandidate = widget.zoomGesturesEnabled &&
+          _doubleTapCandidate =
+              widget.zoomGesturesEnabled &&
               MapDoubleTapPolicy.isSecondTap(
                 previousAt: at,
                 previousPosition: point,

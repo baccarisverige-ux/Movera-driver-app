@@ -17,14 +17,17 @@ const Color _red = Color(0xFFB3261E);
 String documentDateLabel(DateTime day) => DriverDates.dayMonth(day);
 
 Widget _solar(String asset, Color color, double size) => SvgPicture.asset(
-      asset,
-      width: size,
-      height: size,
-      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-    );
+  asset,
+  width: size,
+  height: size,
+  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+);
 
 /// What the driver reads about [document] now.
-({String text, Color color}) documentStatus(TrackedDocument document, DateTime now) {
+({String text, Color color}) documentStatus(
+  TrackedDocument document,
+  DateTime now,
+) {
   if (document.inReview) {
     return (text: tr.islandDocumentInReview, color: _amber);
   }
@@ -33,7 +36,10 @@ Widget _solar(String asset, Color color, double size) => SvgPicture.asset(
     return (text: tr.docExpiredCantGoOnline, color: _red);
   }
   return (
-    text: tr.docExpiresWhenDate(expiresInLabel(days), documentDateLabel(document.expiresOn)),
+    text: tr.docExpiresWhenDate(
+      expiresInLabel(days),
+      documentDateLabel(document.expiresOn),
+    ),
     color: _amber,
   );
 }
@@ -81,7 +87,11 @@ Future<void> showDocumentUploadSheet(
                 child: FilledButton.icon(
                   key: const ValueKey<String>('document-upload-send'),
                   onPressed: () => Navigator.of(sheetContext).pop(true),
-                  icon: _solar(AppAssets.solarUploadMinimalistic, Colors.white, 20),
+                  icon: _solar(
+                    AppAssets.solarUploadMinimalistic,
+                    Colors.white,
+                    20,
+                  ),
                   label: Text(
                     tr.docSendNew,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -106,7 +116,9 @@ Future<void> showDocumentUploadSheet(
       ),
     ),
   );
-  if (sent != true || !context.mounted) { return; }
+  if (sent != true || !context.mounted) {
+    return;
+  }
   (store ?? DocumentExpiryStore.instance).uploadNew(document.id);
   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
     SnackBar(
@@ -118,11 +130,16 @@ Future<void> showDocumentUploadSheet(
 
 /// Demo of admin's approval. In the real app admin approves in
 /// Onboarding and the driver gets a notification.
-void approveDocumentDemo(TrackedDocument document, {DocumentExpiryStore? store}) {
+void approveDocumentDemo(
+  TrackedDocument document, {
+  DocumentExpiryStore? store,
+}) {
   final documents = store ?? DocumentExpiryStore.instance;
   documents.approve(document.id);
   final feed = DriverNotificationFeed.instance;
-  feed.add(DriverNotices.documentApproved(feed.now, title: () => document.title));
+  feed.add(
+    DriverNotices.documentApproved(feed.now, title: () => document.title),
+  );
 }
 
 /// Going online was blocked by an expired [document]: what to do next.
@@ -149,77 +166,86 @@ Future<void> showDocumentBlockedSheet(
             key: const ValueKey<String>('document-blocked-sheet'),
             padding: const EdgeInsets.fromLTRB(22, 0, 22, 18),
             // Scrolls when large text makes it taller than the sheet.
-            child: SingleChildScrollView(child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    _solar(
-                      cleared ? AppAssets.solarCheckCircle : AppAssets.solarDocumentText,
-                      cleared ? const Color(0xFF1C6B45) : _red,
-                      24,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      _solar(
                         cleared
-                            ? tr.islandDocumentApproved
-                            : tr.docTitleExpired(current.title),
-                        style: const TextStyle(
-                          color: _ink,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.3,
+                            ? AppAssets.solarCheckCircle
+                            : AppAssets.solarDocumentText,
+                        cleared ? const Color(0xFF1C6B45) : _red,
+                        24,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          cleared
+                              ? tr.islandDocumentApproved
+                              : tr.docTitleExpired(current.title),
+                          style: const TextStyle(
+                            color: _ink,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  cleared
-                      ? tr.youCanGoOnlineNow
-                      : current.inReview
-                          ? tr.docNewInReviewGoOnlineWhenApproved
-                          : tr.docUploadNewGoOnlineWhenApproved,
-                  style: const TextStyle(color: _muted, fontSize: 14, height: 1.35),
-                ),
-                const SizedBox(height: 18),
-                if (cleared)
-                  SizedBox(
-                    height: 50,
-                    child: FilledButton(
-                      onPressed: () => Navigator.of(sheetContext).pop(),
-                      style: FilledButton.styleFrom(backgroundColor: _ink),
-                      child: Text(tr.done),
-                    ),
-                  )
-                else if (current.inReview)
-                  SizedBox(
-                    height: 50,
-                    child: OutlinedButton(
-                      key: const ValueKey<String>('document-blocked-approve'),
-                      onPressed: () => approveDocumentDemo(current, store: documents),
-                      child: Text(tr.approveDemo),
-                    ),
-                  )
-                else
-                  SizedBox(
-                    height: 50,
-                    child: FilledButton(
-                      key: const ValueKey<String>('document-blocked-upload'),
-                      onPressed: () => showDocumentUploadSheet(
-                        sheetContext,
-                        current,
-                        store: documents,
-                      ),
-                      style: FilledButton.styleFrom(backgroundColor: _ink),
-                      child: Text(tr.uploadNew),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    cleared
+                        ? tr.youCanGoOnlineNow
+                        : current.inReview
+                        ? tr.docNewInReviewGoOnlineWhenApproved
+                        : tr.docUploadNewGoOnlineWhenApproved,
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 14,
+                      height: 1.35,
                     ),
                   ),
-              ],
-            )),
+                  const SizedBox(height: 18),
+                  if (cleared)
+                    SizedBox(
+                      height: 50,
+                      child: FilledButton(
+                        onPressed: () => Navigator.of(sheetContext).pop(),
+                        style: FilledButton.styleFrom(backgroundColor: _ink),
+                        child: Text(tr.done),
+                      ),
+                    )
+                  else if (current.inReview)
+                    SizedBox(
+                      height: 50,
+                      child: OutlinedButton(
+                        key: const ValueKey<String>('document-blocked-approve'),
+                        onPressed: () =>
+                            approveDocumentDemo(current, store: documents),
+                        child: Text(tr.approveDemo),
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      height: 50,
+                      child: FilledButton(
+                        key: const ValueKey<String>('document-blocked-upload'),
+                        onPressed: () => showDocumentUploadSheet(
+                          sheetContext,
+                          current,
+                          store: documents,
+                        ),
+                        style: FilledButton.styleFrom(backgroundColor: _ink),
+                        child: Text(tr.uploadNew),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           );
         },
       ),
@@ -241,7 +267,9 @@ class DocumentExpiryList extends StatelessWidget {
       builder: (context, _, _) {
         final now = documents.now;
         final due = documents.needingNew;
-        if (due.isEmpty) { return const SizedBox.shrink(); }
+        if (due.isEmpty) {
+          return const SizedBox.shrink();
+        }
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
           child: Column(
@@ -328,7 +356,8 @@ class _ExpiryCard extends StatelessWidget {
             child: document.inReview
                 ? TextButton(
                     key: ValueKey<String>('document-approve-${document.id}'),
-                    onPressed: () => approveDocumentDemo(document, store: store),
+                    onPressed: () =>
+                        approveDocumentDemo(document, store: store),
                     child: Text(tr.approveDemo),
                   )
                 : OutlinedButton.icon(

@@ -29,10 +29,14 @@ class DestinationFilter {
   }) {
     final r = rules ?? DestinationModeRules.current;
     final focus = r.focus;
-    if (focus == DestinationFocus.none) { return false; }
+    if (focus == DestinationFocus.none) {
+      return false;
+    }
 
     final left = dropoff.distanceMetersTo(destination);
-    if (left >= driver.distanceMetersTo(destination)) { return false; }
+    if (left >= driver.distanceMetersTo(destination)) {
+      return false;
+    }
 
     final km = r.corridorOn ? r.corridorKm : defaultNearKm;
     final nearFinal = left <= km * 1000;
@@ -50,8 +54,12 @@ class DestinationFilter {
 
   /// Shortest distance from [point] to the polyline [path], in metres.
   static double distanceToPathMeters(GeoPoint point, List<GeoPoint> path) {
-    if (path.isEmpty) { return double.infinity; }
-    if (path.length == 1) { return point.distanceMetersTo(path.first); }
+    if (path.isEmpty) {
+      return double.infinity;
+    }
+    if (path.length == 1) {
+      return point.distanceMetersTo(path.first);
+    }
     // Flat metres around [point]: fine at corridor scale (a few km).
     const metresPerDegree = 111320.0;
     final scale = math.cos(point.latitude * math.pi / 180);

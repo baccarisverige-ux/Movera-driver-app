@@ -44,10 +44,12 @@ import 'package:pointer_interceptor/pointer_interceptor.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 /// The refresh icon a Radar refresh pill draws (driver-u190: Home has none).
-final _refreshIcon = find.byWidgetPredicate((w) =>
-    w is SvgPicture &&
-    w.bytesLoader is SvgAssetLoader &&
-    (w.bytesLoader as SvgAssetLoader).assetName == AppAssets.offerRefresh);
+final _refreshIcon = find.byWidgetPredicate(
+  (w) =>
+      w is SvgPicture &&
+      w.bytesLoader is SvgAssetLoader &&
+      (w.bytesLoader as SvgAssetLoader).assetName == AppAssets.offerRefresh,
+);
 
 Future<void> _pumpHome(WidgetTester tester, Size size) async {
   IslandMessages.reset();
@@ -55,8 +57,10 @@ Future<void> _pumpHome(WidgetTester tester, Size size) async {
   // A returning driver: the last position saved by an earlier session is
   // where Home's map opens (tests have no live GPS provider).
   DriverStartPosition.clearMemory();
-  await (await SharedPreferences.getInstance())
-      .setString(DriverStartPosition.key, '{"lat":59.3326,"lng":18.0649}');
+  await (await SharedPreferences.getInstance()).setString(
+    DriverStartPosition.key,
+    '{"lat":59.3326,"lng":18.0649}',
+  );
   await tester.binding.setSurfaceSize(size);
   await tester.pumpWidget(const MoveraApp());
 
@@ -93,14 +97,16 @@ Future<double> _wedgeTurnsPerSecond(
   Finder? within,
 ]) async {
   final wedge = find.byKey(const ValueKey<String>('radar-sweep-wedge'));
-  double turn() => (tester
-          .widget<CustomPaint>(
-            within == null
-                ? wedge
-                : find.descendant(of: within, matching: wedge),
-          )
-          .painter! as RadarWedgePainter)
-      .turn;
+  double turn() =>
+      (tester
+                  .widget<CustomPaint>(
+                    within == null
+                        ? wedge
+                        : find.descendant(of: within, matching: wedge),
+                  )
+                  .painter!
+              as RadarWedgePainter)
+          .turn;
   final start = turn();
   await tester.pump(const Duration(milliseconds: 200));
   return ((turn() - start) % 1) * 5;
@@ -354,8 +360,11 @@ void main() {
       var latestPanel = tester.widget<SlidingUpPanel>(
         find.byType(SlidingUpPanel),
       );
-      expect(_homeMapAbsorber(latestPanel).absorbing, isFalse,
-          reason: 'Map remains zoomable after interrupted sheet open/close/open');
+      expect(
+        _homeMapAbsorber(latestPanel).absorbing,
+        isFalse,
+        reason: 'Map remains zoomable after interrupted sheet open/close/open',
+      );
       expect(
         find.byKey(const ValueKey<String>('home-sheet-today')).hitTestable(),
         findsOneWidget,
@@ -512,20 +521,29 @@ void main() {
 
     await _openPanel(tester);
     panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    expect(_homeMapAbsorber(panel).absorbing, isFalse,
-        reason: 'A settled sheet must not block zoom on exposed map');
+    expect(
+      _homeMapAbsorber(panel).absorbing,
+      isFalse,
+      reason: 'A settled sheet must not block zoom on exposed map',
+    );
     final drag = await tester.startGesture(
       tester.getCenter(find.byKey(const ValueKey<String>('home-sheet-today'))),
     );
     await tester.pump();
     panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    expect(_homeMapAbsorber(panel).absorbing, isTrue,
-        reason: 'An active sheet pointer cannot simultaneously pan the map');
+    expect(
+      _homeMapAbsorber(panel).absorbing,
+      isTrue,
+      reason: 'An active sheet pointer cannot simultaneously pan the map',
+    );
     await drag.up();
     await tester.pump();
     panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    expect(_homeMapAbsorber(panel).absorbing, isFalse,
-        reason: 'Releasing a sheet touch restores map zoom even while open');
+    expect(
+      _homeMapAbsorber(panel).absorbing,
+      isFalse,
+      reason: 'Releasing a sheet touch restores map zoom even while open',
+    );
     _expectNoException(tester);
 
     await _closePanel(tester);
@@ -596,7 +614,7 @@ void main() {
 
       // Let the outside offer expire, then allow the first Radar offer to arrive.
       // The Exclusive offer's time to accept (Dispatch, 15 s).
-    await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
+      await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
       await tester.pump(const Duration(milliseconds: 900));
 
       final card = find.byKey(
@@ -618,10 +636,7 @@ void main() {
           matching: find.byKey(const ValueKey<String>('radar-status-found')),
         ),
       );
-      expect(
-        match.style!.color!.withValues(alpha: 1),
-        MoveraRadarOrb.offerInk,
-      );
+      expect(match.style!.color!.withValues(alpha: 1), MoveraRadarOrb.offerInk);
       expect(await _wedgeTurnsPerSecond(tester, accept), closeTo(0.5, 0.01));
       // R15-5: the radar sound loops while Radar offers show; a tap
       // anywhere stops it.
@@ -640,8 +655,10 @@ void main() {
       final allOffers = find.byKey(
         const ValueKey<String>('island-radar-offers'),
       );
-      expect(tester.widget<Text>(allOffers).textSpan!.toPlainText(),
-          '11 offers · radar');
+      expect(
+        tester.widget<Text>(allOffers).textSpan!.toPlainText(),
+        '11 offers · radar',
+      );
       await tester.tap(allOffers);
       await tester.pump(const Duration(milliseconds: 160));
       expect(find.byType(RideRequests), findsOneWidget);
@@ -737,8 +754,7 @@ void main() {
     ].where((id) => card(id).evaluate().isNotEmpty).toList();
     expect(ids.length, 3);
     String front() => ids.reduce(
-      (a, b) =>
-          tester.getTopLeft(card(a)).dy >= tester.getTopLeft(card(b)).dy
+      (a, b) => tester.getTopLeft(card(a)).dy >= tester.getTopLeft(card(b)).dy
           ? a
           : b,
     );
@@ -852,10 +868,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1500));
     // A short banner says why; the card fades out of the list.
     expect(find.text('Taken by another driver'), findsOneWidget);
-    expect(
-      tester.widget<FilledButton>(match).onPressed,
-      isNull,
-    );
+    expect(tester.widget<FilledButton>(match).onPressed, isNull);
     expect(find.byType(AcceptRide), findsNothing);
     _expectNoException(tester);
   });
@@ -870,7 +883,10 @@ void main() {
 
     // Header: back, small live dot, "Live" and the OFFERS count.
     expect(find.text('Live'), findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('radar-live-dot')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('radar-live-dot')),
+      findsOneWidget,
+    );
     expect(
       find.descendant(
         of: find.byKey(const ValueKey<String>('radar-live-count')),
@@ -898,10 +914,7 @@ void main() {
         find.descendant(of: card, matching: find.textContaining('min trip')),
         findsOneWidget,
       );
-      expect(
-        find.byKey(ValueKey<String>('radar-match-$id')),
-        findsOneWidget,
-      );
+      expect(find.byKey(ValueKey<String>('radar-match-$id')), findsOneWidget);
       expect(
         find.byKey(ValueKey<String>('radar-offer-dismiss-$id')),
         findsOneWidget,
@@ -910,7 +923,9 @@ void main() {
     _expectNoException(tester);
 
     // × removes a card from the list.
-    final dismiss = find.byKey(ValueKey<String>('radar-offer-dismiss-${ids.first}'));
+    final dismiss = find.byKey(
+      ValueKey<String>('radar-offer-dismiss-${ids.first}'),
+    );
     await tester.tap(dismiss);
     await tester.pump(const Duration(milliseconds: 120));
     expect(
@@ -1057,7 +1072,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 420));
     expect(find.text('Turn off destination'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey<String>('destination-mode-end')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('destination-mode-end')),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 420));
 
@@ -1176,8 +1193,11 @@ void main() {
     // Holding the radar still goes offline; the sheet stays white.
     _expectSheetNotTinted(tester);
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-    expect(panel.controller!.panelPosition, closeTo(0, 0.02),
-        reason: 'Going offline brings the sheet down by itself');
+    expect(
+      panel.controller!.panelPosition,
+      closeTo(0, 0.02),
+      reason: 'Going offline brings the sheet down by itself',
+    );
     _expectNoException(tester);
   });
 
@@ -1203,7 +1223,9 @@ void main() {
     expect(find.text('Events'), findsNothing);
     _expectNoException(tester);
 
-    await tester.tap(find.byKey(const ValueKey<String>('home-sheet-performance')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home-sheet-performance')),
+    );
     await _advanceAnimation(tester, const Duration(milliseconds: 420));
     expect(find.text('Rating'), findsOneWidget);
     expect(find.text('4.88'), findsWidgets);
@@ -1221,7 +1243,9 @@ void main() {
     await _pumpHome(tester, const Size(375, 812));
     await _openPanel(tester);
 
-    await tester.tap(find.byKey(const ValueKey<String>('home-sheet-driving-time')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home-sheet-driving-time')),
+    );
     await _advanceAnimation(tester, const Duration(milliseconds: 420));
     expect(find.text('Driving time'), findsOneWidget);
     expect(find.text('Worked'), findsOneWidget);
@@ -1244,8 +1268,11 @@ void main() {
 
     await _openPanel(tester);
     expect(find.byKey(const ValueKey<String>('home-map-dim')), findsOneWidget);
-    expect(tester.getCenter(find.byTooltip('Wallet')), wallet,
-        reason: 'Dock icons do not move with the sheet');
+    expect(
+      tester.getCenter(find.byTooltip('Wallet')),
+      wallet,
+      reason: 'Dock icons do not move with the sheet',
+    );
     _expectNoException(tester);
   });
 
@@ -1418,7 +1445,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1550));
     // Let "Radar online" pass: the island says "Finding trips", the top
     // of the radar.
-    for (var i = 0; i < 20 && find.text('Finding trips').evaluate().isEmpty; i++) {
+    for (
+      var i = 0;
+      i < 20 && find.text('Finding trips').evaluate().isEmpty;
+      i++
+    ) {
       await tester.pump(const Duration(milliseconds: 500));
     }
     expect(find.text('Finding trips'), findsOneWidget);
@@ -1467,8 +1498,10 @@ void main() {
 
     expect(find.text('79,60 kr'), findsOneWidget);
     // The grey Exclusive orb is up on its sheet.
-    expect(find.byKey(const ValueKey<String>('home-radar-exclusive')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('home-radar-exclusive')),
+      findsOneWidget,
+    );
 
     // Advance in small frames so the async route-preview continuation can
     // install and then fire the 15 s timeout timer.
@@ -1481,8 +1514,10 @@ void main() {
     expect(find.text('Kungsgatan 42'), findsNothing);
     // The radar is itself again (the demo's Radar trips may follow at
     // once, their sheet having gone down first).
-    expect(find.byKey(const ValueKey<String>('home-radar-exclusive')),
-        findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('home-radar-exclusive')),
+      findsNothing,
+    );
     expect(find.byKey(const ValueKey<String>('radar-online')), findsOneWidget);
     _expectNoException(tester);
   });
@@ -1625,10 +1660,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1600));
     await _advanceAnimation(tester, const Duration(milliseconds: 520));
     expect(find.text('Radar online'), findsNothing);
-    expect(find.byKey(const ValueKey<String>('island-finding')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('island-finding')),
+      findsOneWidget,
+    );
     expect(find.text('Finding trips'), findsOneWidget);
-    expect(find.byKey(const ValueKey<String>('island-finding-dots')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('island-finding-dots')),
+      findsOneWidget,
+    );
     _expectNoException(tester);
   });
 
@@ -1851,29 +1891,28 @@ void main() {
     _expectNoException(tester);
   });
 
-  testWidgets(
-    'Exclusive sheet rises over the dock, its grey orb on top',
-    (WidgetTester tester) async {
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      await _pumpHome(tester, const Size(375, 812));
+  testWidgets('Exclusive sheet rises over the dock, its grey orb on top', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await _pumpHome(tester, const Size(375, 812));
 
-      await tester.tap(find.text('OFF'));
-      await tester.pump(const Duration(milliseconds: 3800));
+    await tester.tap(find.text('OFF'));
+    await tester.pump(const Duration(milliseconds: 3800));
 
-      expect(find.text('Kungsgatan 42'), findsOneWidget);
-      // The grey orb on the Exclusive sheet is its Accept.
-      expect(
-        find.byKey(const ValueKey<String>('home-radar-exclusive')),
-        findsOneWidget,
-      );
+    expect(find.text('Kungsgatan 42'), findsOneWidget);
+    // The grey orb on the Exclusive sheet is its Accept.
+    expect(
+      find.byKey(const ValueKey<String>('home-radar-exclusive')),
+      findsOneWidget,
+    );
 
-      final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
-      expect(panel.minHeight, 108);
-      expect(panel.isDraggable, isFalse);
-      expect(panel.panelSnapping, isFalse);
-      _expectNoException(tester);
-    },
-  );
+    final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
+    expect(panel.minHeight, 108);
+    expect(panel.isDraggable, isFalse);
+    expect(panel.panelSnapping, isFalse);
+    _expectNoException(tester);
+  });
 
   testWidgets('History exposes overview and full rides list on narrow phone', (
     WidgetTester tester,
@@ -2242,7 +2281,9 @@ void main() {
     // The grey orb on the Exclusive sheet is its Accept, once it is up.
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.byKey(const ValueKey<String>('home-radar-exclusive')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('home-radar-exclusive')),
+    );
     await _advanceAnimation(tester, const Duration(milliseconds: 520));
 
     expect(find.byType(AcceptRide), findsOneWidget);
@@ -2510,7 +2551,10 @@ void main() {
       );
       // The compact header now names the journey stage, not the passenger.
       // Verify the actual handoff identity before opening its rider details.
-      expect(tester.widget<AcceptRide>(find.byType(AcceptRide)).riderName, 'Maya');
+      expect(
+        tester.widget<AcceptRide>(find.byType(AcceptRide)).riderName,
+        'Maya',
+      );
       await _middleActiveRideSheet(tester);
       expect(find.textContaining('Maya'), findsWidgets);
       await _expandActiveRideSheet(tester);
@@ -2620,7 +2664,9 @@ void main() {
         find.text('Your earnings'),
         200,
         scrollable: find.descendant(
-          of: find.byKey(const ValueKey<String>('waybill-waybill-current-test')),
+          of: find.byKey(
+            const ValueKey<String>('waybill-waybill-current-test'),
+          ),
           matching: find.byType(Scrollable),
         ),
       );
@@ -2642,13 +2688,17 @@ void main() {
     // the Keep trip checks could not fail.
     final active = MemoryActiveRideRepository();
     final navigator = GlobalKey<NavigatorState>();
-    await tester.pumpWidget(MaterialApp(
-      navigatorKey: navigator,
-      home: const Scaffold(body: Text('Home stand-in')),
-    ));
-    navigator.currentState!.push(MaterialPageRoute<void>(
-      builder: (_) => AcceptRide(activeRideRepository: active),
-    ));
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigator,
+        home: const Scaffold(body: Text('Home stand-in')),
+      ),
+    );
+    navigator.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => AcceptRide(activeRideRepository: active),
+      ),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 160));
 
@@ -2710,7 +2760,10 @@ void main() {
       findsOneWidget,
     );
     // Nothing of a cancel happened.
-    expect(ModalRoute.of(tester.element(find.byType(AcceptRide)))!.isCurrent, isTrue);
+    expect(
+      ModalRoute.of(tester.element(find.byType(AcceptRide)))!.isCurrent,
+      isTrue,
+    );
     expect(find.text('Home stand-in'), findsNothing);
     expect(find.textContaining('Trip ended early'), findsNothing);
     final prefs = await SharedPreferences.getInstance();
@@ -2732,7 +2785,10 @@ void main() {
     // The time left runs on the radar's hairline blue ring; the orb
     // itself reads MATCH (R11-8).
     final radar = find.byKey(const ValueKey<String>('home-radar-exclusive'));
-    expect(find.descendant(of: radar, matching: find.text('MATCH')), findsOneWidget);
+    expect(
+      find.descendant(of: radar, matching: find.text('MATCH')),
+      findsOneWidget,
+    );
     final ring = find.descendant(
       of: radar,
       matching: find.byKey(const ValueKey<String>('radar-exclusive-ring')),
@@ -2777,14 +2833,15 @@ void main() {
       const ValueKey<String>('exclusive-offer-card-home-direct-close'),
     );
     expect(card, findsOneWidget);
-    Finder inCard(Finder finder) =>
-        find.descendant(of: card, matching: finder);
+    Finder inCard(Finder finder) => find.descendant(of: card, matching: finder);
     expect(inCard(find.textContaining('Exclusive for you · ')), findsOneWidget);
     expect(inCard(find.text('Comfort')), findsOneWidget);
     expect(inCard(find.text('Cash')), findsNothing);
     expect(inCard(find.textContaining('Reservation')), findsNothing);
-    expect(find.byKey(const ValueKey<String>('direct-offer-dismiss')),
-        findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('direct-offer-dismiss')),
+      findsOneWidget,
+    );
 
     // The island says it too: info blue, with a bolt instead of the "i".
     expect(
@@ -2792,8 +2849,10 @@ void main() {
       contains('Exclusive ride'),
     );
     final face = find.byType(DigitalMessageFace);
-    expect(find.descendant(of: face, matching: find.text('Exclusive ride')),
-        findsOneWidget);
+    expect(
+      find.descendant(of: face, matching: find.text('Exclusive ride')),
+      findsOneWidget,
+    );
     expect(
       find.descendant(of: face, matching: find.byIcon(Icons.bolt_rounded)),
       findsOneWidget,
@@ -2810,7 +2869,9 @@ void main() {
     // The down arrow skips it: the sheet slides down, then Home is
     // normal again.
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.byKey(const ValueKey<String>('direct-offer-dismiss')));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('direct-offer-dismiss')),
+    );
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Kungsgatan 42'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 200));
@@ -2829,10 +2890,16 @@ void main() {
 
     final panel = tester.widget<SlidingUpPanel>(find.byType(SlidingUpPanel));
     expect(panel.minHeight, 108);
-    expect(panel.maxHeight, closeTo(812, 0.5),
-        reason: "Open, the sheet reaches the status bar");
-    expect(panel.parallaxEnabled, isTrue,
-        reason: "The map rises with the sheet");
+    expect(
+      panel.maxHeight,
+      closeTo(812, 0.5),
+      reason: "Open, the sheet reaches the status bar",
+    );
+    expect(
+      panel.parallaxEnabled,
+      isTrue,
+      reason: "The map rises with the sheet",
+    );
     expect(panel.snapPoint, isNull, reason: 'No middle stop');
     // The sheet's own spring settles it (immediately, in the finger's
     // direction), not the panel's built-in snap.

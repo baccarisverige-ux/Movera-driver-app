@@ -39,9 +39,14 @@ void main() {
         return http.Response('', 503);
       }
       if (request.method == 'GET' && path == '/api/v1/trips/live-trip') {
-        return json(200, {'tripId': 'live-trip', 'status': 'driver_to_pickup', 'version': 4});
+        return json(200, {
+          'tripId': 'live-trip',
+          'status': 'driver_to_pickup',
+          'version': 4,
+        });
       }
-      if (request.method == 'GET' && path == '/api/v1/trips/live-trip/messages') {
+      if (request.method == 'GET' &&
+          path == '/api/v1/trips/live-trip/messages') {
         return json(200, {'items': <Object>[], 'nextCursor': null});
       }
       return json(404, {'code': 'not_found', 'message': 'No.'});
@@ -78,16 +83,18 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, __) => MaterialApp(
-        home: AcceptRide(
-          tripId: 'live-trip',
-          locationRepository: _NoGps(),
-          activeRideRepository: MemoryActiveRideRepository(),
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: AcceptRide(
+            tripId: 'live-trip',
+            locationRepository: _NoGps(),
+            activeRideRepository: MemoryActiveRideRepository(),
+          ),
         ),
       ),
-    ));
+    );
     await frames(tester);
     tester
         .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
@@ -95,24 +102,32 @@ void main() {
         .animatePanelToSnapPoint();
     await frames(tester, 16);
 
-    final button = find.byKey(const ValueKey<String>('active-ride-message-rider'));
+    final button = find.byKey(
+      const ValueKey<String>('active-ride-message-rider'),
+    );
     expect(button, findsOneWidget);
     expect(find.byTooltip(tr.messageRider), findsOneWidget);
     Badge badge() => tester.widget<Badge>(
-        find.byKey(const ValueKey<String>('active-ride-chat-unread')));
+      find.byKey(const ValueKey<String>('active-ride-chat-unread')),
+    );
     expect(badge().isLabelVisible, isFalse);
 
     // As the trip's stream delivers it.
-    live.chat.receive('live-trip', RealtimeMessage(
-      messageId: 'm1',
-      from: 'rider',
-      text: 'Where are you?',
-      at: DateTime.utc(2026, 10, 25, 10),
-    ));
+    live.chat.receive(
+      'live-trip',
+      RealtimeMessage(
+        messageId: 'm1',
+        from: 'rider',
+        text: 'Where are you?',
+        at: DateTime.utc(2026, 10, 25, 10),
+      ),
+    );
     await frames(tester, 2);
     expect(badge().isLabelVisible, isTrue);
-    expect(find.descendant(of: find.byType(Badge), matching: find.text('1')),
-        findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(Badge), matching: find.text('1')),
+      findsOneWidget,
+    );
     expect(find.byTooltip(tr.chatNewMessages(1)), findsOneWidget);
 
     await tester.ensureVisible(button);

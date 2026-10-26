@@ -22,21 +22,24 @@ void main() {
     passengerCapacity: 4,
   );
 
-  test('a completed trip survives a repository restart and archives once', () async {
-    SharedPreferences.setMockInitialValues({});
-    final first = PrefsTripHistoryRepository();
-    await first.archive(waybill, completedAt: DateTime(2026, 9, 29, 10));
-    await first.archive(waybill, completedAt: DateTime(2026, 9, 29, 11));
+  test(
+    'a completed trip survives a repository restart and archives once',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final first = PrefsTripHistoryRepository();
+      await first.archive(waybill, completedAt: DateTime(2026, 9, 29, 10));
+      await first.archive(waybill, completedAt: DateTime(2026, 9, 29, 11));
 
-    final restarted = PrefsTripHistoryRepository();
-    final rows = await restarted.list();
-    expect(rows, hasLength(1));
-    expect(rows.single.tripId, 'trip-42');
-    expect(rows.single.pickup, 'Pickup');
-    expect(rows.single.completedAt, DateTime(2026, 9, 29, 10));
-    expect(rows.single.tip, '—');
-    expect(rows.single.paymentMethod, '—');
-  });
+      final restarted = PrefsTripHistoryRepository();
+      final rows = await restarted.list();
+      expect(rows, hasLength(1));
+      expect(rows.single.tripId, 'trip-42');
+      expect(rows.single.pickup, 'Pickup');
+      expect(rows.single.completedAt, DateTime(2026, 9, 29, 10));
+      expect(rows.single.tip, '—');
+      expect(rows.single.paymentMethod, '—');
+    },
+  );
   test('known optional trip metadata round-trips without defaults', () async {
     SharedPreferences.setMockInitialValues({});
     final repo = PrefsTripHistoryRepository();

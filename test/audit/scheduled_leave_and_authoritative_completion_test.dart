@@ -116,33 +116,38 @@ Future<void> _pumpTrip(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ScreenUtilInit(
-    designSize: const Size(375, 812),
-    builder: (_, __) => MaterialApp(
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: Center(
-            child: TextButton(
-              key: const ValueKey<String>('open-ride'),
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                builder: (_) => AcceptRide(
-                  tripId: 'trip-c',
-                  fare: '250,00 kr',
-                  paidByCash: paidByCash,
-                  initialStage: ActiveRideStage.onTrip,
-                  activeRideRepository: MemoryActiveRideRepository(),
-                  sessionController: DriverSessionController()..setOnline(true),
-                  realtime: realtime,
-                  waybillRepository: InMemoryWaybillRepository.instance,
+  await tester.pumpWidget(
+    ScreenUtilInit(
+      designSize: const Size(375, 812),
+      builder: (_, __) => MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                key: const ValueKey<String>('open-ride'),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => AcceptRide(
+                      tripId: 'trip-c',
+                      fare: '250,00 kr',
+                      paidByCash: paidByCash,
+                      initialStage: ActiveRideStage.onTrip,
+                      activeRideRepository: MemoryActiveRideRepository(),
+                      sessionController: DriverSessionController()
+                        ..setOnline(true),
+                      realtime: realtime,
+                      waybillRepository: InMemoryWaybillRepository.instance,
+                    ),
+                  ),
                 ),
-              )),
-              child: const Text('home'),
+                child: const Text('home'),
+              ),
             ),
           ),
         ),
       ),
     ),
-  ));
+  );
   await tester.tap(find.byKey(const ValueKey<String>('open-ride')));
   await _settle(tester);
 }
@@ -171,13 +176,16 @@ void main() {
 
         final navigator = tester.state<NavigatorState>(find.byType(Navigator));
         if (cover == 'screen') {
-          navigator.push(MaterialPageRoute<void>(
-            builder: (_) => const Scaffold(body: Text('covering')),
-          ));
+          navigator.push(
+            MaterialPageRoute<void>(
+              builder: (_) => const Scaffold(body: Text('covering')),
+            ),
+          );
         } else {
           showModalBottomSheet<void>(
             context: navigator.context,
-            builder: (_) => const SizedBox(height: 200, child: Text('covering')),
+            builder: (_) =>
+                const SizedBox(height: 200, child: Text('covering')),
           );
         }
         // "Leave now" (about 46 s into the demo day) passes while covered.
@@ -194,7 +202,10 @@ void main() {
           'Gamla vägen, Stockholm',
         );
         expect(_saidTitles, contains('Leave now for 07:40 pickup'));
-        expect(ScheduledRideStore.upcoming, isNot(contains(demoReservationRequest)));
+        expect(
+          ScheduledRideStore.upcoming,
+          isNot(contains(demoReservationRequest)),
+        );
         expect(ScheduledRideStore.backupNote.value, isNull);
         tester.takeException();
         await tester.pumpWidget(const SizedBox());
@@ -204,30 +215,29 @@ void main() {
 
   // Owner rule: a scheduled ride belongs to the driver who accepted it.
   // Only an offline driver loses it to a backup driver.
-  testWidgets(
-    'scheduled rule: an online driver kept off Home past the backup '
-    'minutes keeps the ride',
-    (tester) async {
-      ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
-      await _pumpHome(tester);
-      await _frames(tester, const Duration(seconds: 40));
-      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
-      navigator.push(MaterialPageRoute<void>(
+  testWidgets('scheduled rule: an online driver kept off Home past the backup '
+      'minutes keeps the ride', (tester) async {
+    ScheduledRideStore.answer('Gamla vägen, Stockholm', accepted: true);
+    await _pumpHome(tester);
+    await _frames(tester, const Duration(seconds: 40));
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.push(
+      MaterialPageRoute<void>(
         builder: (_) => const Scaffold(body: Text('covering')),
-      ));
-      // "Leave now" passes, then the 5 admin minutes (10 s of demo day).
-      await _frames(tester, const Duration(seconds: 25));
-      expect(_saidTitles, isNot(contains('Given to backup driver')));
-      expect(ScheduledRideStore.upcoming, contains(demoReservationRequest));
-      expect(ScheduledRideStore.backupNote.value, isNull);
+      ),
+    );
+    // "Leave now" passes, then the 5 admin minutes (10 s of demo day).
+    await _frames(tester, const Duration(seconds: 25));
+    expect(_saidTitles, isNot(contains('Given to backup driver')));
+    expect(ScheduledRideStore.upcoming, contains(demoReservationRequest));
+    expect(ScheduledRideStore.backupNote.value, isNull);
 
-      navigator.pop();
-      await _frames(tester, const Duration(seconds: 2));
-      expect(find.byType(AcceptRide), findsOneWidget);
-      tester.takeException();
-      await tester.pumpWidget(const SizedBox());
-    },
-  );
+    navigator.pop();
+    await _frames(tester, const Duration(seconds: 2));
+    expect(find.byType(AcceptRide), findsOneWidget);
+    tester.takeException();
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'scheduled rule: a late driver who goes offline loses the ride to a '
@@ -238,16 +248,21 @@ void main() {
       await _pumpHome(tester, session: session);
       await _frames(tester, const Duration(seconds: 40));
       final navigator = tester.state<NavigatorState>(find.byType(Navigator));
-      navigator.push(MaterialPageRoute<void>(
-        builder: (_) => const Scaffold(body: Text('covering')),
-      ));
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('covering')),
+        ),
+      );
       await _frames(tester, const Duration(seconds: 25));
       expect(_saidTitles, isNot(contains('Given to backup driver')));
 
       session.setOnline(false);
       await _frames(tester, const Duration(seconds: 1));
       expect(_saidTitles, contains('Given to backup driver'));
-      expect(ScheduledRideStore.upcoming, isNot(contains(demoReservationRequest)));
+      expect(
+        ScheduledRideStore.upcoming,
+        isNot(contains(demoReservationRequest)),
+      );
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     },
@@ -267,7 +282,9 @@ void main() {
         status: TripStatus.completed,
       );
       await _settle(tester);
-      await tester.tap(find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('trip-outcome-acknowledge')),
+      );
       await _settle(tester, 30);
 
       final row = (await PrefsTripHistoryRepository().list()).single;
@@ -295,7 +312,9 @@ void main() {
         status: TripStatus.completed,
       );
       await _settle(tester);
-      await tester.tap(find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('trip-outcome-acknowledge')),
+      );
       await _settle(tester, 30);
 
       final waybills = InMemoryWaybillRepository.instance;
@@ -330,7 +349,10 @@ void main() {
       await _settle(tester, 32);
 
       expect(InMemoryWaybillRepository.instance.next, isNotNull);
-      expect(find.byKey(const ValueKey('on-trip-radar-match-next')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('on-trip-radar-match-next')),
+        findsNothing,
+      );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(seconds: 1));
@@ -354,7 +376,9 @@ void main() {
         status: TripStatus.completed,
       );
       await _settle(tester);
-      await tester.tap(find.byKey(const ValueKey<String>('trip-outcome-acknowledge')));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('trip-outcome-acknowledge')),
+      );
       await _settle(tester, 30);
 
       final trip = tester.widget<AcceptRide>(find.byType(AcceptRide));

@@ -33,38 +33,50 @@ void main() {
   for (final (language, country) in [('fr', 'FR'), ('sv', 'SE')]) {
     for (final width in [320.0, 360.0]) {
       for (final fare in ['104,80 kr', '1 234,50 kr']) {
-        testWidgets('$language $width px ×1.3: "$fare" is shown whole', (tester) async {
+        testWidgets('$language $width px ×1.3: "$fare" is shown whole', (
+          tester,
+        ) async {
           DriverLanguage.applyZone(AppLanguages.forCountry(country));
           tester.view.devicePixelRatio = 1;
           tester.view.physicalSize = Size(width, 800);
           tester.platformDispatcher.textScaleFactorTestValue = 1.3;
           addTearDown(tester.view.reset);
           addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-          await tester.pumpWidget(MaterialApp(
-            locale: Locale(language),
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            home: Scaffold(
-              body: Center(
-                child: SizedBox(
-                  width: width - 28,
-                  child: RadarOfferCard(offer: _offer(fare), onMatch: () {}, onClose: () {}),
+          await tester.pumpWidget(
+            MaterialApp(
+              locale: Locale(language),
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              home: Scaffold(
+                body: Center(
+                  child: SizedBox(
+                    width: width - 28,
+                    child: RadarOfferCard(
+                      offer: _offer(fare),
+                      onMatch: () {},
+                      onClose: () {},
+                    ),
+                  ),
                 ),
               ),
             ),
-          ));
+          );
           await tester.pump();
           final price = find.byWidgetPredicate(
             (w) => w is RichText && w.text.toPlainText() == fare,
           );
           expect(price, findsOneWidget);
           final paragraph = tester.renderObject<RenderParagraph>(price);
-          expect(paragraph.didExceedMaxLines, isFalse, reason: 'the fare was cut');
+          expect(
+            paragraph.didExceedMaxLines,
+            isFalse,
+            reason: 'the fare was cut',
+          );
           expect(tester.takeException(), isNull);
         });
       }

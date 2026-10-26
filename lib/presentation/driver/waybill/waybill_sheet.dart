@@ -83,8 +83,9 @@ List<Widget> _rows(WaybillRecord record) {
   // driver-u50) and Movera's bonus (Q16/Q18), which have their own rows.
   final base = earnings == null
       ? null
-      : earnings - (wait ?? Money(minorUnits: 0, currency: earnings.currency))
-          - (extra ?? Money(minorUnits: 0, currency: earnings.currency));
+      : earnings -
+            (wait ?? Money(minorUnits: 0, currency: earnings.currency)) -
+            (extra ?? Money(minorUnits: 0, currency: earnings.currency));
   return [
     _Row(tr.trip, record.tripId),
     _Row(tr.time, formatWaybillTime(record.issuedAt)),

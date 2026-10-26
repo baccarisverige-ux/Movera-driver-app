@@ -119,7 +119,10 @@ void main() {
           () => const ScheduledRidesScreen(),
           () => tr.schedPlanAhead,
         ),
-        'Support': (() => const SupportInboxScreen(), () => tr.supportYourConversations),
+        'Support': (
+          () => const SupportInboxScreen(),
+          () => tr.supportYourConversations,
+        ),
         'Promotions': (() => const Promotions(), () => tr.promoWeekdayPeak),
         'Vehicles': (() => const DriverVehicles(), () => tr.vehManageVehicles),
         'Add vehicle': (() => const AddVehicle(), () => tr.vehRequirements),
@@ -132,7 +135,10 @@ void main() {
           ),
           () => tr.vehRegistrationCertFront,
         ),
-        'Preferences': (() => const Preferences(), () => tr.prefChooseRideOptions),
+        'Preferences': (
+          () => const Preferences(),
+          () => tr.prefChooseRideOptions,
+        ),
         'Profile': (() => const DriverProfile(), () => tr.profDemoNoVerified),
         'Notifications': (
           () => const DriverNotificationsScreen(),
@@ -144,7 +150,10 @@ void main() {
           () => tr.destTripsInYourDirection,
         ),
         'Analytics': (() => const Analytics(), () => tr.anaPreview),
-        'Acceptance rate': (() => const AcceptanceRate(), () => tr.acceptRateTitle),
+        'Acceptance rate': (
+          () => const AcceptanceRate(),
+          () => tr.acceptRateTitle,
+        ),
         'Cancellation rate': (
           () => const CancelationRate(),
           () => tr.cancelRateTitle,
@@ -156,10 +165,14 @@ void main() {
           () => tr.pinVerifyAll,
         ),
         'Driving log': (() => const DrivingLogs(), () => tr.logsSampleWeek),
-        'Privacy': (() => LegalDocumentScreen.privacy, () => tr.privacyPolicyTitle),
+        'Privacy': (
+          () => LegalDocumentScreen.privacy,
+          () => tr.privacyPolicyTitle,
+        ),
         'Terms': (() => LegalDocumentScreen.terms, () => tr.termsOfService),
       };
-      for (final MapEntry(key: name, value: (screen, text)) in screens.entries) {
+      for (final MapEntry(key: name, value: (screen, text))
+          in screens.entries) {
         testWidgets(name, (tester) async {
           _phone(tester);
           await tester.pumpWidget(_app(language, screen()));

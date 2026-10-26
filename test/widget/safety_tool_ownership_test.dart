@@ -92,7 +92,8 @@ void main() {
     testWidgets(
       'late dial result is ignored when owner is ${disposed ? 'disposed' : 'covered'}',
       (tester) async {
-        SafetyAudioOption.debugEnabled = true; // owner decision 10: offered again
+        SafetyAudioOption.debugEnabled =
+            true; // owner decision 10: offered again
         addTearDown(() => SafetyAudioOption.debugEnabled = null);
         final dial = Completer<bool>();
         final navigator = await _open(tester, () => dial.future);

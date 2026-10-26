@@ -34,7 +34,10 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 20));
 
-    expect(find.byKey(const ValueKey<String>('arrival-approach-banner')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('arrival-approach-banner')),
+      findsOneWidget,
+    );
     expect(find.text('PICKUP'), findsOneWidget);
     expect(find.text('180 m'), findsOneWidget);
     final pin = tester.widget<Icon>(

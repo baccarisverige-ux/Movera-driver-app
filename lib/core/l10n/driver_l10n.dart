@@ -31,8 +31,8 @@ abstract final class DriverL10n {
 
   static String _supported(String code) =>
       AppLocalizations.supportedLocales.any((l) => l.languageCode == code)
-          ? code
-          : 'en';
+      ? code
+      : 'en';
 }
 
 /// Dates and times in the driver's language. Times are 24-hour in every

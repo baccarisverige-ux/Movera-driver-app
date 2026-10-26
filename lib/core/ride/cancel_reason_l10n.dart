@@ -46,7 +46,8 @@ String? cancelReasonDetail(AppLocalizations l, String code) => switch (code) {
   'rider_not_at_pickup' => l.cancelReasonRiderNotAtPickupDetail,
   'unsafe_pickup' => l.cancelReasonUnsafePickupDetail,
   'vehicle_issue_before_start' => l.cancelReasonVehicleIssueBeforeStartDetail,
-  'driver_emergency_before_start' => l.cancelReasonDriverEmergencyBeforeStartDetail,
+  'driver_emergency_before_start' =>
+    l.cancelReasonDriverEmergencyBeforeStartDetail,
   'other_before_start' => l.cancelReasonOtherBeforeStartDetail,
   'rider_requested_early_end' => l.cancelReasonRiderRequestedEarlyEndDetail,
   'safety_concern_on_trip' => l.cancelReasonSafetyConcernOnTripDetail,
@@ -55,7 +56,8 @@ String? cancelReasonDetail(AppLocalizations l, String code) => switch (code) {
   'rider_behavior' => l.cancelReasonRiderBehaviorDetail,
   'trip_or_destination_issue' => l.cancelReasonTripOrDestinationIssueDetail,
   'other_on_trip' => l.cancelReasonOtherOnTripDetail,
-  'next_trip_current_running_late' => l.cancelReasonNextTripCurrentRunningLateDetail,
+  'next_trip_current_running_late' =>
+    l.cancelReasonNextTripCurrentRunningLateDetail,
   'next_trip_pickup_too_far' => l.cancelReasonNextTripPickupTooFarDetail,
   'next_trip_rider_requested' => l.cancelReasonNextTripRiderRequestedDetail,
   'next_trip_vehicle_issue' => l.cancelReasonNextTripVehicleIssueDetail,

@@ -14,8 +14,12 @@ extension _HomeLive on _DriverHomeState {
   /// offline.
   Future<bool> _serverAgreed(Future<String?> answer) async {
     final refused = await answer;
-    if (!mounted || !_driverSession.isGoingOnline) { return false; }
-    if (refused == null) { return true; }
+    if (!mounted || !_driverSession.isGoingOnline) {
+      return false;
+    }
+    if (refused == null) {
+      return true;
+    }
     await _goOffline(notice: false);
     _showLiveProblem(refused);
     return false;
@@ -25,18 +29,28 @@ extension _HomeLive on _DriverHomeState {
   /// closes at once), and a refusal is shown.
   void _tellServerOffline() {
     final answer = LiveDriverServices.instance?.presence.goOffline();
-    if (answer == null) { return; }
-    unawaited(answer.then((refused) {
-      if (refused != null) { _showLiveProblem(refused); }
-    }));
+    if (answer == null) {
+      return;
+    }
+    unawaited(
+      answer.then((refused) {
+        if (refused != null) {
+          _showLiveProblem(refused);
+        }
+      }),
+    );
   }
 
   void _showLiveProblem(String message) {
-    if (!mounted) { return; }
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
-      content: Text(message),
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 6),
-    ));
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 6),
+      ),
+    );
   }
 }

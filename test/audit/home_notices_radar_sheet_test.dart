@@ -136,8 +136,13 @@ class _HeldRoads implements RouteRepository {
   void release() {
     for (final (from, to, road) in held) {
       if (!road.isCompleted) {
-        road.complete(RoadRoute(
-            points: [from, to], distanceMeters: 900, durationSeconds: 120));
+        road.complete(
+          RoadRoute(
+            points: [from, to],
+            distanceMeters: 900,
+            durationSeconds: 120,
+          ),
+        );
       }
     }
   }
@@ -223,9 +228,13 @@ Future<_Home> _pumpHome(
 /// Pushes a screen over Home, as a trip or a menu item does.
 Future<NavigatorState> _cover(WidgetTester tester) async {
   final navigator = Navigator.of(tester.element(find.byType(DriverHome)));
-  unawaited(navigator.push(MaterialPageRoute<void>(
-    builder: (_) => const Scaffold(body: Text('cover')),
-  )));
+  unawaited(
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('cover')),
+      ),
+    ),
+  );
   await _frames(tester, const Duration(milliseconds: 600));
   expect(find.text('cover'), findsOneWidget);
   return navigator;
@@ -261,8 +270,11 @@ void main() {
       IslandMessages.show(missed);
       // Longer than the message's own time on the island.
       await _frames(tester, const Duration(seconds: 6));
-      expect(IslandMessages.hasPending, isTrue,
-          reason: 'Home is covered: nobody has seen it yet');
+      expect(
+        IslandMessages.hasPending,
+        isTrue,
+        reason: 'Home is covered: nobody has seen it yet',
+      );
       navigator.pop();
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.text(missed.title), findsOneWidget);
@@ -283,8 +295,10 @@ void main() {
       final navigator = await _cover(tester);
       await _frames(tester, const Duration(seconds: 8));
       final warning = HomeIslandNotices.drivingLeft(30);
-      expect(IslandMessages.posted.map((m) => m.title),
-          contains(warning.title));
+      expect(
+        IslandMessages.posted.map((m) => m.title),
+        contains(warning.title),
+      );
       navigator.pop();
       await _frames(tester, const Duration(milliseconds: 800));
       expect(find.text(warning.title), findsOneWidget);
@@ -302,8 +316,11 @@ void main() {
       // An incoming call banner: the app stays visible behind it.
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
       await _frames(tester, const Duration(seconds: 2));
-      expect(find.text('Tap to scan'), findsNothing,
-          reason: 'the driver is still online');
+      expect(
+        find.text('Tap to scan'),
+        findsNothing,
+        reason: 'the driver is still online',
+      );
       expect(find.text('Scanning'), findsOneWidget);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await _frames(tester, const Duration(milliseconds: 300));
@@ -318,8 +335,10 @@ void main() {
       await _frames(tester, const Duration(milliseconds: 300));
       home.dispatch.publish([_trip('call')]);
       await _frames(tester, const Duration(seconds: 20));
-      expect(find.byKey(const ValueKey<String>('radar-offer-card-call')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('radar-offer-card-call')),
+        findsOneWidget,
+      );
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await _frames(tester, const Duration(milliseconds: 300));
       await _end(tester);
@@ -330,20 +349,28 @@ void main() {
     testWidgets('leaves Home online; only a screen covers it', (tester) async {
       await _pumpHome(tester);
       final context = tester.element(find.byType(DriverHome));
-      unawaited(showModalBottomSheet<void>(
-        context: context,
-        builder: (_) => const SizedBox(height: 200, child: Text('sheet')),
-      ));
+      unawaited(
+        showModalBottomSheet<void>(
+          context: context,
+          builder: (_) => const SizedBox(height: 200, child: Text('sheet')),
+        ),
+      );
       await _frames(tester, const Duration(seconds: 1));
       expect(find.text('sheet'), findsOneWidget);
-      expect(find.text('Tap to scan'), findsNothing,
-          reason: 'Home is still visible and the driver online');
+      expect(
+        find.text('Tap to scan'),
+        findsNothing,
+        reason: 'Home is still visible and the driver online',
+      );
       expect(find.text('Scanning'), findsOneWidget);
       Navigator.of(context).pop();
       await _frames(tester, const Duration(seconds: 1));
       await _cover(tester);
-      expect(find.text('Tap to scan', skipOffstage: false), findsOneWidget,
-          reason: 'a full screen still pauses Home');
+      expect(
+        find.text('Tap to scan', skipOffstage: false),
+        findsOneWidget,
+        reason: 'a full screen still pauses Home',
+      );
       await _end(tester);
     });
   });
@@ -352,25 +379,29 @@ void main() {
     testWidgets('keeps the dialog and the saved trip', (tester) async {
       final rides = MemoryActiveRideRepository();
       // A trip saved 7 h ago: older than the 6 h window, still resumable.
-      await rides.save(PersistedActiveRide(
-        tripId: 'stale-trip',
-        stage: ActiveRideStage.onTrip,
-        savedAt: DateTime.now().subtract(const Duration(hours: 7)),
-        pickupLat: 59.3335,
-        pickupLng: 18.0610,
-        dropoffLat: 59.3380,
-        dropoffLng: 18.0700,
-      ));
+      await rides.save(
+        PersistedActiveRide(
+          tripId: 'stale-trip',
+          stage: ActiveRideStage.onTrip,
+          savedAt: DateTime.now().subtract(const Duration(hours: 7)),
+          pickupLat: 59.3335,
+          pickupLng: 18.0610,
+          dropoffLat: 59.3380,
+          dropoffLng: 18.0700,
+        ),
+      );
       await _pumpHome(tester, online: false, activeRides: rides);
       await _frames(tester, const Duration(milliseconds: 500));
       expect(find.text('Unresolved trip'), findsOneWidget);
       // Android Back.
       await tester.binding.handlePopRoute();
       await _frames(tester, const Duration(milliseconds: 500));
-      expect(find.text('Unresolved trip'), findsOneWidget,
-          reason: 'Back is not "Close trip"');
-      expect(await rides.read(), isNotNull,
-          reason: 'the saved trip is kept');
+      expect(
+        find.text('Unresolved trip'),
+        findsOneWidget,
+        reason: 'Back is not "Close trip"',
+      );
+      expect(await rides.read(), isNotNull, reason: 'the saved trip is kept');
       await tester.tap(find.text('Close trip'));
       await _frames(tester, const Duration(milliseconds: 500));
       expect(find.text('Unresolved trip'), findsNothing);
@@ -387,8 +418,10 @@ void main() {
       home.dispatch.publish([_trip('a')]);
       // The demo Exclusive passes, then "a" comes onto the Home deck.
       await _frames(tester, const Duration(seconds: 26));
-      expect(find.byKey(const ValueKey<String>('radar-offer-card-a')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('radar-offer-card-a')),
+        findsOneWidget,
+      );
       // "b" is on Radar only; the driver opens the full list.
       home.dispatch.publish([_trip('a'), _trip('b')]);
       await _frames(tester, const Duration(milliseconds: 300));
@@ -405,7 +438,9 @@ void main() {
       home.dispatch.publish([_trip('b')]);
       await _frames(tester, const Duration(seconds: 4));
       // The driver closes the list with "b" still in it.
-      tester.widget<RideRequests>(find.byType(RideRequests)).onCloseRides!(true);
+      tester.widget<RideRequests>(find.byType(RideRequests)).onCloseRides!(
+        true,
+      );
       await _frames(tester, const Duration(seconds: 1));
       expect(find.text('Tap for all'), findsOneWidget);
       // "b" leaves dispatch too: nothing is left to take.
@@ -414,8 +449,10 @@ void main() {
       expect(find.text('Trip found'), findsNothing);
       expect(find.text('Tap for all'), findsNothing);
       expect(find.text('Scanning'), findsOneWidget);
-      expect(find.byKey(const ValueKey<String>('island-finding')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('island-finding')),
+        findsOneWidget,
+      );
       await _end(tester);
     });
   });
@@ -426,33 +463,44 @@ void main() {
       final home = await _pumpHome(tester);
       home.dispatch.publish([_trip('a')]);
       await _frames(tester, const Duration(seconds: 26));
-      expect(find.byKey(const ValueKey<String>('radar-offer-card-a')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('radar-offer-card-a')),
+        findsOneWidget,
+      );
       // The "01 ALL OFFERS >" pill is gone; the island says "1 offer".
-      expect(find.byKey(const ValueKey<String>('radar-home-all-offers')),
-          findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('radar-home-all-offers')),
+        findsNothing,
+      );
       final face = find.byKey(const ValueKey<String>('island-radar-offers'));
       expect(face, findsOneWidget);
-      expect(tester.widget<Text>(face).textSpan!.toPlainText(),
-          '1 offer · radar');
+      expect(
+        tester.widget<Text>(face).textSpan!.toPlainText(),
+        '1 offer · radar',
+      );
       // The menu and the destination search stay beside it, with their
       // own actions (not tucked away as for a passing message).
       expect(find.byTooltip('Menu'), findsOneWidget);
       final search = tester.widget<InkWell>(
-          find.byKey(const ValueKey<String>('destination-mode-open')));
+        find.byKey(const ValueKey<String>('destination-mode-open')),
+      );
       expect(search.onTap, isNotNull);
       // A second trip on Radar only: the count follows.
       home.dispatch.publish([_trip('a'), _trip('b')]);
       await _frames(tester, const Duration(milliseconds: 300));
-      expect(tester.widget<Text>(face).textSpan!.toPlainText(),
-          '2 offers · radar');
+      expect(
+        tester.widget<Text>(face).textSpan!.toPlainText(),
+        '2 offers · radar',
+      );
       // Tapping the middle opens the full-screen radar.
       await tester.tap(face);
       await _frames(tester, const Duration(seconds: 1));
       expect(find.byType(RideRequests), findsOneWidget);
       expect(home.dispatch.claims, isEmpty);
       // Closed with offers left: the island stays in offers mode.
-      tester.widget<RideRequests>(find.byType(RideRequests)).onCloseRides!(true);
+      tester.widget<RideRequests>(find.byType(RideRequests)).onCloseRides!(
+        true,
+      );
       await _frames(tester, const Duration(seconds: 1));
       expect(find.byType(RideRequests), findsNothing);
       expect(face, findsOneWidget);
@@ -460,8 +508,10 @@ void main() {
       home.dispatch.publish(const []);
       await _frames(tester, const Duration(seconds: 4));
       expect(face, findsNothing);
-      expect(find.byKey(const ValueKey<String>('island-finding')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('island-finding')),
+        findsOneWidget,
+      );
       await _end(tester);
     });
   });
@@ -486,11 +536,16 @@ void main() {
       await _frames(tester, const Duration(seconds: 1));
       expect(find.byType(RideRequests), findsOneWidget);
       await _frames(tester, const Duration(seconds: 13));
-      expect(IslandMessages.posted.map((m) => m.title),
-          contains(startsWith('Rest until')));
+      expect(
+        IslandMessages.posted.map((m) => m.title),
+        contains(startsWith('Rest until')),
+      );
       expect(home.session.availableForOffers, isFalse);
-      expect(find.byType(RideRequests), findsNothing,
-          reason: 'no Match buttons left for a driver who must rest');
+      expect(
+        find.byType(RideRequests),
+        findsNothing,
+        reason: 'no Match buttons left for a driver who must rest',
+      );
       expect(home.dispatch.claims, isEmpty);
       await _end(tester);
     });
@@ -503,13 +558,15 @@ void main() {
       expect(session.availableForOffers, isFalse);
       await tester.binding.setSurfaceSize(const Size(375, 812));
       addTearDown(() => tester.binding.setSurfaceSize(null));
-      await tester.pumpWidget(MaterialApp(
-        home: RideRequests(
-          dispatchRepository: dispatch,
-          sessionController: session,
-          onCloseRides: (_) {},
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RideRequests(
+            dispatchRepository: dispatch,
+            sessionController: session,
+            onCloseRides: (_) {},
+          ),
         ),
-      ));
+      );
       await _frames(tester, const Duration(seconds: 1));
       final match = find.byKey(const ValueKey<String>('radar-match-a'));
       await tester.ensureVisible(match);
@@ -535,8 +592,11 @@ void main() {
       final picker = tester.widget<DriverDestinationPicker>(
         find.byType(DriverDestinationPicker),
       );
-      expect(picker.origin, isNull,
-          reason: 'no figures from the Stockholm placeholder');
+      expect(
+        picker.origin,
+        isNull,
+        reason: 'no figures from the Stockholm placeholder',
+      );
       await _end(tester);
     });
   });
@@ -546,7 +606,11 @@ void main() {
       var now = DateTime(2026, 10, 21, 10);
       DestinationModeSession.instance = DestinationModeSession(now: () => now);
       Future<void> pass(Duration total) async {
-        for (var t = Duration.zero; t < total; t += const Duration(seconds: 1)) {
+        for (
+          var t = Duration.zero;
+          t < total;
+          t += const Duration(seconds: 1)
+        ) {
           now = now.add(const Duration(seconds: 1));
           await tester.pump(const Duration(seconds: 1));
         }
@@ -555,8 +619,9 @@ void main() {
       await _pumpHome(tester, online: false, location: _NoGps());
       await _frames(tester, const Duration(seconds: 9));
       // The admin's time limit: 1 min here (2 h in the app).
-      DestinationModeRules.current =
-          const DestinationModeRules(timeLimitHours: 1 / 60);
+      DestinationModeRules.current = const DestinationModeRules(
+        timeLimitHours: 1 / 60,
+      );
       // 10:00: a destination on Home.
       tester
           .widget<InkWell>(
@@ -566,7 +631,8 @@ void main() {
           .call();
       await _frames(tester, const Duration(seconds: 1));
       await tester.tap(
-          find.byKey(const ValueKey<String>('destination-result-solna')));
+        find.byKey(const ValueKey<String>('destination-result-solna')),
+      );
       await _frames(tester, const Duration(seconds: 1));
       expect(DestinationModeSession.instance.timeLeft(), isNotNull);
       // A trip covers Home; 40 s later the driver sets a new destination
@@ -577,8 +643,11 @@ void main() {
       // Past Home's first minute.
       await pass(const Duration(seconds: 25));
       final session = DestinationModeSession.instance;
-      expect(session.expired(), isFalse,
-          reason: 'the trip\'s destination has about 35 s left');
+      expect(
+        session.expired(),
+        isFalse,
+        reason: 'the trip\'s destination has about 35 s left',
+      );
       expect(session.timeLeft()!.inSeconds, inInclusiveRange(30, 40));
       // Its own minute ends it.
       await pass(const Duration(seconds: 40));
@@ -589,8 +658,9 @@ void main() {
 
   group('driver-r4-38: Destination mode ends under an Exclusive offer', () {
     testWidgets('the offer keeps its route preview', (tester) async {
-      DestinationModeRules.current =
-          const DestinationModeRules(timeLimitHours: 8 / 3600);
+      DestinationModeRules.current = const DestinationModeRules(
+        timeLimitHours: 8 / 3600,
+      );
       final roads = _HeldRoads();
       await _pumpHome(tester, online: false, routes: roads);
       await _frames(tester, const Duration(seconds: 9));
@@ -602,14 +672,17 @@ void main() {
           .call();
       await _frames(tester, const Duration(seconds: 1));
       await tester.tap(
-          find.byKey(const ValueKey<String>('destination-result-solna')));
+        find.byKey(const ValueKey<String>('destination-result-solna')),
+      );
       roads.release();
       // The limit counts whole minutes, so 8 s is none: Destination mode
       // ends at once, before its road comes. Since driver-66 that no
       // longer puts the offline driver online; the driver goes online.
       await _frames(tester, const Duration(seconds: 1));
-      expect(IslandMessages.posted.map((m) => m.title),
-          contains(HomeIslandNotices.destinationEnded.title));
+      expect(
+        IslandMessages.posted.map((m) => m.title),
+        contains(HomeIslandNotices.destinationEnded.title),
+      );
       tester
           .widget<GestureDetector>(
             find.byKey(const ValueKey<String>('trip-radar-touch-target')),
@@ -618,15 +691,21 @@ void main() {
           .call();
       // An Exclusive rises, its road still coming; then the road comes in.
       await _frames(tester, const Duration(seconds: 6));
-      expect(find.byKey(const ValueKey<String>('exclusive-radar-touch-target')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-radar-touch-target')),
+        findsOneWidget,
+      );
       roads.release();
       await _frames(tester, const Duration(seconds: 1));
       final map = tester.widget<CustomGoogleMap>(find.byType(CustomGoogleMap));
-      expect(map.polylines!.map((l) => l.polylineId.value),
-          contains(OfferRouteLine.coreId));
-      expect(find.byKey(const ValueKey<String>('exclusive-radar-touch-target')),
-          findsOneWidget);
+      expect(
+        map.polylines!.map((l) => l.polylineId.value),
+        contains(OfferRouteLine.coreId),
+      );
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-radar-touch-target')),
+        findsOneWidget,
+      );
       await _end(tester);
     });
   });
@@ -657,10 +736,15 @@ void main() {
           node.tooltip == 'Menu' || node.tooltip == 'Search destination';
       // The demo Exclusive offer passes first.
       await _frames(tester, const Duration(seconds: 20));
-      expect(find.byKey(const ValueKey<String>('island-finding')),
-          findsOneWidget);
-      expect(find.semantics.byPredicate(side), findsNothing,
-          reason: 'tucked behind "Finding trips"');
+      expect(
+        find.byKey(const ValueKey<String>('island-finding')),
+        findsOneWidget,
+      );
+      expect(
+        find.semantics.byPredicate(side),
+        findsNothing,
+        reason: 'tucked behind "Finding trips"',
+      );
       tester.semantics.tap(find.semantics.byLabel(RegExp('Finding')));
       await _frames(tester, const Duration(milliseconds: 600));
       expect(find.semantics.byPredicate(side), findsExactly(2));
@@ -691,8 +775,10 @@ void main() {
       final history = PrefsTripHistoryRepository();
       await history.archive(receipt('t1', '104,80 kr'));
       await history.archive(receipt('t2', '156,20 kr'));
-      await history.archive(receipt('y1', '99,00 kr'),
-          completedAt: DateTime.now().subtract(const Duration(days: 1)));
+      await history.archive(
+        receipt('y1', '99,00 kr'),
+        completedAt: DateTime.now().subtract(const Duration(days: 1)),
+      );
     }
 
     testWidgets('Home: TODAY is today\'s recorded total', (tester) async {
@@ -716,14 +802,16 @@ void main() {
       tester,
     ) async {
       await record();
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: Align(
-            alignment: Alignment.topCenter,
-            child: TripIsland(lastTripLabel: '104,80 kr'),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.topCenter,
+              child: TripIsland(lastTripLabel: '104,80 kr'),
+            ),
           ),
         ),
-      ));
+      );
       final middle = find.byKey(const ValueKey<String>('trip-island-middle'));
       await tester.tap(middle);
       await _frames(tester, const Duration(milliseconds: 600));

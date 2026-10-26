@@ -13,13 +13,16 @@ import 'package:movera/core/earnings/cash_balance.dart';
 import 'package:movera/presentation/driver/ride%20history/cash_balance_sheet.dart';
 import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 
-Widget _solarIcon(String asset, {double size = 18, Color color = const Color(0xFF1F2933)}) =>
-    SvgPicture.asset(
-      asset,
-      width: size,
-      height: size,
-      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-    );
+Widget _solarIcon(
+  String asset, {
+  double size = 18,
+  Color color = const Color(0xFF1F2933),
+}) => SvgPicture.asset(
+  asset,
+  width: size,
+  height: size,
+  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+);
 
 class DriverRideHistory extends StatefulWidget {
   const DriverRideHistory({super.key, this.loadHistory});
@@ -31,6 +34,7 @@ class DriverRideHistory extends StatefulWidget {
 }
 
 enum _HistoryView { overview, rides }
+
 enum _HistoryPeriod { today, week, month }
 
 class _DriverRideHistoryState extends State<DriverRideHistory> {
@@ -65,28 +69,34 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
     });
     try {
       final records = await _readHistory();
-      if (!mounted) { return; }
-      setState(() => _rides = records.map((record) {
-        final at = record.completedAt;
-        return _HistoryRide(
-          record: record,
-          id: record.tripId,
-          day: at == null ? tr.previous : DriverDates.numericDate(at),
-          time: at == null ? '' : '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}',
-          category: record.category,
-          pickup: record.pickup,
-          dropoff: record.dropoff,
-          distance: record.distance,
-          duration: record.duration,
-          earnings: record.status == TripStatus.completed
-              ? record.fare
-              : record.feeEarned ?? '—',
-          status:record.status,
-          // The fare, or a cancel / no-show fee earned (driver-r5-13).
-          fareMoney:record.earnedMoney,
-          completedAt: at,
-        );
-      }).toList());
+      if (!mounted) {
+        return;
+      }
+      setState(
+        () => _rides = records.map((record) {
+          final at = record.completedAt;
+          return _HistoryRide(
+            record: record,
+            id: record.tripId,
+            day: at == null ? tr.previous : DriverDates.numericDate(at),
+            time: at == null
+                ? ''
+                : '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}',
+            category: record.category,
+            pickup: record.pickup,
+            dropoff: record.dropoff,
+            distance: record.distance,
+            duration: record.duration,
+            earnings: record.status == TripStatus.completed
+                ? record.fare
+                : record.feeEarned ?? '—',
+            status: record.status,
+            // The fare, or a cancel / no-show fee earned (driver-r5-13).
+            fareMoney: record.earnedMoney,
+            completedAt: at,
+          );
+        }).toList(),
+      );
     } catch (_) {
       if (mounted) {
         setState(() => _loadFailed = true);
@@ -103,10 +113,14 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
     final now = DateTime.now();
     return _rides.where((ride) {
       final at = ride.completedAt;
-      if (at == null) { return false; }
+      if (at == null) {
+        return false;
+      }
       return switch (_period) {
-        _HistoryPeriod.today => at.year == now.year && at.month == now.month && at.day == now.day,
-        _HistoryPeriod.week => now.difference(at).inDays < 7 && !at.isAfter(now),
+        _HistoryPeriod.today =>
+          at.year == now.year && at.month == now.month && at.day == now.day,
+        _HistoryPeriod.week =>
+          now.difference(at).inDays < 7 && !at.isAfter(now),
         _HistoryPeriod.month => at.year == now.year && at.month == now.month,
       };
     }).toList();
@@ -124,10 +138,12 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   }
 
   String get _periodEarnings {
-    var total=0;
-    for(final ride in _periodRidesList) {
-      if(ride.fareMoney==null) { return tr.unavailable; }
-      total+=ride.fareMoney!.minorUnits;
+    var total = 0;
+    for (final ride in _periodRidesList) {
+      if (ride.fareMoney == null) {
+        return tr.unavailable;
+      }
+      total += ride.fareMoney!.minorUnits;
     }
     return Money.ore(total).formatted;
   }
@@ -140,31 +156,40 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
 
   /// Fare − cash over the period's cash trips: owed to (+) or by (−) the
   /// driver.
-  Money get _periodCashBalance => CashBalance.total(
-    _periodCashTrips.map((trip) => trip.cashBalance!),
-  );
+  Money get _periodCashBalance =>
+      CashBalance.total(_periodCashTrips.map((trip) => trip.cashBalance!));
 
-  String get _periodRides => _periodRidesList.where((ride)=>ride.status==TripStatus.completed).length.toString();
+  String get _periodRides => _periodRidesList
+      .where((ride) => ride.status == TripStatus.completed)
+      .length
+      .toString();
 
   String get _periodHours => '—';
 
   void _showOverview() {
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
-    if (_view == _HistoryView.overview) { return; }
+    if (_view == _HistoryView.overview) {
+      return;
+    }
     setState(() => _view = _HistoryView.overview);
   }
 
   void _showAllRides() {
-    if (!mounted || _loading || _loadFailed ||
+    if (!mounted ||
+        _loading ||
+        _loadFailed ||
         ModalRoute.of(context)?.isCurrent != true) {
       return;
     }
-    if (_view == _HistoryView.rides) { return; }
+    if (_view == _HistoryView.rides) {
+      return;
+    }
     setState(() => _view = _HistoryView.rides);
   }
 
   void _closeHistory() {
-    if (!mounted || _view != _HistoryView.overview ||
+    if (!mounted ||
+        _view != _HistoryView.overview ||
         ModalRoute.of(context)?.isCurrent != true) {
       return;
     }
@@ -203,8 +228,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
                   child: _loading || _loadFailed
                       ? _buildLoadState()
                       : _view == _HistoryView.overview
-                          ? _buildOverview()
-                          : _buildAllRides(),
+                      ? _buildOverview()
+                      : _buildAllRides(),
                 ),
               ),
             ],
@@ -247,7 +272,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
           Material(
             color: Colors.white,
             shape: const CircleBorder(side: BorderSide(color: _line)),
-            child: IconButton(tooltip: tr.back, 
+            child: IconButton(
+              tooltip: tr.back,
               onPressed: _view == _HistoryView.rides
                   ? _showOverview
                   : _closeHistory,
@@ -366,10 +392,7 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               onPressed: _showAllRides,
               style: TextButton.styleFrom(
                 foregroundColor: _ink,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -393,7 +416,10 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
         // trips; the cards and the counts next to them count every
         // finished trip listed, cancelled ones included.
         if (_periodRides == '0')
-          Padding(padding: EdgeInsets.all(18), child: Text(tr.noCompletedRidesInThisPeriod)),
+          Padding(
+            padding: EdgeInsets.all(18),
+            child: Text(tr.noCompletedRidesInThisPeriod),
+          ),
         for (final ride in _periodRidesList.take(2)) ...[
           _HistoryRideCard(ride: ride, compact: true),
           const SizedBox(height: 8),
@@ -451,7 +477,9 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               Expanded(
                 child: Text(
                   tr.periodRidesRidesInPeriodLabel(
-                      '${_periodRidesList.length}', _periodLabel),
+                    '${_periodRidesList.length}',
+                    _periodLabel,
+                  ),
                   style: const TextStyle(
                     color: _ink,
                     fontSize: 11.5,
@@ -614,7 +642,11 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
       ),
       child: Column(
         children: [
-          _BreakdownRow(label: tr.recordedFares, value: _periodEarnings, strong: true),
+          _BreakdownRow(
+            label: tr.recordedFares,
+            value: _periodEarnings,
+            strong: true,
+          ),
           const SizedBox(height: 10),
           _buildOtherEarningsRow(),
           const SizedBox(height: 10),
@@ -787,9 +819,7 @@ class _BreakdownRow extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: strong
-                  ? const Color(0xFF1F2933)
-                  : const Color(0xFF7C868D),
+              color: strong ? const Color(0xFF1F2933) : const Color(0xFF7C868D),
               fontSize: strong ? 12.5 : 11.5,
               fontWeight: strong ? FontWeight.w900 : FontWeight.w600,
             ),
@@ -809,10 +839,7 @@ class _BreakdownRow extends StatelessWidget {
 }
 
 class _HistoryRideCard extends StatelessWidget {
-  const _HistoryRideCard({
-    required this.ride,
-    this.compact = false,
-  });
+  const _HistoryRideCard({required this.ride, this.compact = false});
 
   final _HistoryRide ride;
   final bool compact;
@@ -823,138 +850,137 @@ class _HistoryRideCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          pushSingle(context,
+          pushSingle(
+            context,
             MaterialPageRoute<void>(
-              builder: (_) => DriverRideHistoryDetail(
-                record: ride.record,
-              ),
+              builder: (_) => DriverRideHistoryDetail(record: ride.record),
             ),
           );
         },
         borderRadius: BorderRadius.circular(17),
         child: Container(
-      key: ValueKey<String>(ride.id),
-      padding: EdgeInsets.fromLTRB(
-        12,
-        compact ? 10 : 12,
-        12,
-        compact ? 10 : 12,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: const Color(0xFFECEEF0)),
-      ),
-      child: Column(
-        children: [
-          Row(
+          key: ValueKey<String>(ride.id),
+          padding: EdgeInsets.fromLTRB(
+            12,
+            compact ? 10 : 12,
+            12,
+            compact ? 10 : 12,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(17),
+            border: Border.all(color: const Color(0xFFECEEF0)),
+          ),
+          child: Column(
             children: [
-              Container(
-                height: compact ? 34 : 38,
-                width: compact ? 34 : 38,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF4F5F6),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: _solarIcon(AppAssets.solarCar),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${ride.pickup} → ${ride.dropoff}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF1F2933),
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${ride.category} · ${ride.duration} · ${ride.distance}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF7C868D),
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              Row(
                 children: [
-                  Text(
-                    ride.earnings,
-                    style: const TextStyle(
-                      color: Color(0xFF1F2933),
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w900,
+                  Container(
+                    height: compact ? 34 : 38,
+                    width: compact ? 34 : 38,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4F5F6),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _solarIcon(AppAssets.solarCar),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${ride.pickup} → ${ride.dropoff}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF1F2933),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${ride.category} · ${ride.duration} · ${ride.distance}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF7C868D),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  // Q16/Q18: the earnings have Movera's bonus in them.
-                  if (ride.status == TripStatus.completed &&
-                      ride.record.driverBonus != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      WaybillRecord.bonusNote(ride.record.driverBonus!),
-                      key: ValueKey<String>('history-row-bonus-${ride.id}'),
-                      style: const TextStyle(
-                        color: Color(0xFF7C868D),
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w600,
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        ride.earnings,
+                        style: const TextStyle(
+                          color: Color(0xFF1F2933),
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 3),
-                  Text(
-                    ride.time,
-                    style: const TextStyle(
-                      color: Color(0xFF7C868D),
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w600,
-                    ),
+                      // Q16/Q18: the earnings have Movera's bonus in them.
+                      if (ride.status == TripStatus.completed &&
+                          ride.record.driverBonus != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          WaybillRecord.bonusNote(ride.record.driverBonus!),
+                          key: ValueKey<String>('history-row-bonus-${ride.id}'),
+                          style: const TextStyle(
+                            color: Color(0xFF7C868D),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 3),
+                      Text(
+                        ride.time,
+                        style: const TextStyle(
+                          color: Color(0xFF7C868D),
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-          if (!compact) ...[
-            const SizedBox(height: 9),
-            Row(
-              children: [
-                const SizedBox(
-                  height: 6,
-                  width: 6,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Color(0xFF9AA3A8),
-                      shape: BoxShape.circle,
+              if (!compact) ...[
+                const SizedBox(height: 9),
+                Row(
+                  children: [
+                    const SizedBox(
+                      height: 6,
+                      width: 6,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF9AA3A8),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                SizedBox(width: 6),
-                Text(
-                  tripOutcomeText(ride.status),
-                  style: TextStyle(
-                    color: Color(0xFF5F6B72),
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                  ),
+                    SizedBox(width: 6),
+                    Text(
+                      tripOutcomeText(ride.status),
+                      style: TextStyle(
+                        color: Color(0xFF5F6B72),
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ],
-      ),
+            ],
+          ),
         ),
       ),
     );
@@ -974,7 +1000,7 @@ class _HistoryRide {
     required this.duration,
     required this.earnings,
     this.completedAt,
-    this.status=TripStatus.completed,
+    this.status = TripStatus.completed,
     this.fareMoney,
   });
 

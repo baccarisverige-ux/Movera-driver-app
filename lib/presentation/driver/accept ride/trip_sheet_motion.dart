@@ -49,7 +49,9 @@ class TripSheetMotion {
   /// it opens is the same as one taken after.
   double gripMissing() {
     final grip = gripKey.currentContext?.findRenderObject();
-    if (grip is! RenderBox || !grip.hasSize) { return 0; }
+    if (grip is! RenderBox || !grip.hasSize) {
+      return 0;
+    }
     return (gripHeight - grip.size.height).clamp(0.0, gripHeight);
   }
 
@@ -61,8 +63,12 @@ class TripSheetMotion {
 
   TripSheetFace faceAt(double pos) {
     final s = snap();
-    if (pos < s * 0.5) { return TripSheetFace.compact; }
-    if (pos > fullAt(s)) { return TripSheetFace.full; }
+    if (pos < s * 0.5) {
+      return TripSheetFace.compact;
+    }
+    if (pos > fullAt(s)) {
+      return TripSheetFace.full;
+    }
     return TripSheetFace.middle;
   }
 
@@ -78,7 +84,9 @@ class TripSheetMotion {
 
   void _onPosition() {
     final next = faceAt(position.value);
-    if (next == face.value) { return; }
+    if (next == face.value) {
+      return;
+    }
     previousFace = face.value;
     face.value = next;
   }
@@ -91,8 +99,12 @@ class TripSheetMotion {
       rangePx,
       settle: !drag.dragging,
       mapStop: (stop) {
-        if (stop < 0.004) { return 0; }
-        if (stop > 0.996) { return 1; }
+        if (stop < 0.004) {
+          return 0;
+        }
+        if (stop > 0.996) {
+          return 1;
+        }
         return snap;
       },
     );
@@ -101,13 +113,21 @@ class TripSheetMotion {
   /// The full sheet's content scrolls (rather than the sheet moving) when
   /// it is scrolled down already, or when the open sheet is pushed up.
   bool _scrollOwns(Offset down, double dy) {
-    if (!fullScroll.hasClients) { return false; }
+    if (!fullScroll.hasClients) {
+      return false;
+    }
     final scroll = fullScroll.position;
-    if (scroll.maxScrollExtent <= 0) { return false; }
+    if (scroll.maxScrollExtent <= 0) {
+      return false;
+    }
     final area = _scrollArea();
-    if (area is! RenderBox || !area.attached) { return false; }
+    if (area is! RenderBox || !area.attached) {
+      return false;
+    }
     final origin = area.localToGlobal(Offset.zero);
-    if (!(origin & area.size).contains(down)) { return false; }
+    if (!(origin & area.size).contains(down)) {
+      return false;
+    }
     return scroll.pixels > 0 || (dy < 0 && sheet.position > 0.996);
   }
 
@@ -150,7 +170,9 @@ class TripSheetFadeIn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.disableAnimationsOf(context)) { return child; }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return child;
+    }
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
       duration: const Duration(milliseconds: 180),

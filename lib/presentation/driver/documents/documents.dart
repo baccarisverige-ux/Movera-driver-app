@@ -25,10 +25,7 @@ class DriverDocuments extends StatelessWidget {
     _Doc(tr.docVirtualInfoSession),
     _Doc(tr.docDriversLicenseLower),
     _Doc(tr.docProfilePhoto),
-    _Doc(
-      tr.docCompanyRegistration,
-      note: tr.docCompanyRegistrationNote,
-    ),
+    _Doc(tr.docCompanyRegistration, note: tr.docCompanyRegistrationNote),
     _Doc(tr.docTaxiDriverLicense),
     _Doc(tr.docTaxiTrafficPermit),
     _Doc(tr.docTaxSettings),
@@ -57,7 +54,8 @@ class DriverDocuments extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(tooltip: tr.back,
+        leading: IconButton(
+          tooltip: tr.back,
           onPressed: () => maybePopOwned(context),
           icon: const Icon(Icons.arrow_back_rounded, color: _ink),
         ),
@@ -127,15 +125,17 @@ class DriverDocuments extends StatelessWidget {
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    Expanded(child: Text(
-                      tr.docApprovedOfTotal(approved, all.length),
-                      key: const ValueKey<String>('documents-progress'),
-                      style: const TextStyle(
-                        color: _ink,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        tr.docApprovedOfTotal(approved, all.length),
+                        key: const ValueKey<String>('documents-progress'),
+                        style: const TextStyle(
+                          color: _ink,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    )),
+                    ),
                     Text(
                       tr.docLeftCount(left),
                       style: const TextStyle(
@@ -169,17 +169,17 @@ class DriverDocuments extends StatelessWidget {
   }
 
   Widget _section(String title) => Padding(
-        padding: const EdgeInsets.fromLTRB(22, 26, 22, 4),
-        child: Text(
-          title,
-          style: const TextStyle(
-            color: _ink,
-            fontSize: 19,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(22, 26, 22, 4),
+    child: Text(
+      title,
+      style: const TextStyle(
+        color: _ink,
+        fontSize: 19,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
+      ),
+    ),
+  );
 
   Widget _status(DocStatus status) {
     final (color, label) = switch (status) {

@@ -120,13 +120,16 @@ void main() {
     expect(SafetyAudioOption.enabled, isFalse);
   });
 
-  testWidgets('Ride check hides Record audio; a running recording keeps Stop',
-      (tester) async {
+  testWidgets('Ride check hides Record audio; a running recording keeps Stop', (
+    tester,
+  ) async {
     final semantics = tester.ensureSemantics();
     final c = await _rideCheck(tester);
     expect(_record, findsNothing);
-    expect(find.textContaining('Record audio', findRichText: true),
-        findsNothing);
+    expect(
+      find.textContaining('Record audio', findRichText: true),
+      findsNothing,
+    );
     expect(find.bySemanticsLabel(RegExp('Record audio')), findsNothing);
     // No gap: the 112 / I'm OK buttons sit 24 px above the prompt.
     final buttons = tester.getBottomLeft(
@@ -181,8 +184,10 @@ void main() {
     testWidgets('Ride check offers Record audio', (tester) async {
       final c = await _rideCheck(tester);
       expect(
-        find.text('Record audio · saved only on this phone',
-            findRichText: true),
+        find.text(
+          'Record audio · saved only on this phone',
+          findRichText: true,
+        ),
         findsOneWidget,
       );
       await _end(tester, c);
@@ -192,8 +197,10 @@ void main() {
       await _toolkit(tester);
       await tester.tap(find.text('Record audio'));
       await tester.pump();
-      expect(find.text('Audio recording is unavailable in this demo.'),
-          findsOneWidget);
+      expect(
+        find.text('Audio recording is unavailable in this demo.'),
+        findsOneWidget,
+      );
     });
 
     test('the subtitle names audio again', () {

@@ -7,15 +7,16 @@ import 'package:movera/core/safety/rider_contact.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
 
 void main() {
-  testWidgets('chat clearly identifies local demo delivery state', (tester) async {
+  testWidgets('chat clearly identifies local demo delivery state', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ScreenUtilInit(
         designSize: const Size(375, 812),
         minTextAdapt: true,
         splitScreenMode: true,
-        builder: (_, __) => const MaterialApp(
-          home: Chat(riderDisplayName: 'Maya'),
-        ),
+        builder: (_, __) =>
+            const MaterialApp(home: Chat(riderDisplayName: 'Maya')),
       ),
     );
 
@@ -27,7 +28,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('chat shows the rider identity and does not dial', (tester) async {
+  testWidgets('chat shows the rider identity and does not dial', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ScreenUtilInit(
         designSize: const Size(375, 812),
@@ -79,18 +82,29 @@ void main() {
   });
 
   test('reachable chat source has no hard-coded tel target', () {
-    final appBar = File('lib/presentation/common/chat/components/appbar.dart')
-        .readAsStringSync();
-    final chat = File('lib/presentation/common/chat/chat.dart').readAsStringSync();
-    final ride = File('lib/presentation/driver/accept ride/accept_ride.dart')
-            .readAsStringSync() +
-        File('lib/presentation/driver/accept ride/accept_ride_panel.dart')
-            .readAsStringSync();
+    final appBar = File(
+      'lib/presentation/common/chat/components/appbar.dart',
+    ).readAsStringSync();
+    final chat = File(
+      'lib/presentation/common/chat/chat.dart',
+    ).readAsStringSync();
+    final ride =
+        File(
+          'lib/presentation/driver/accept ride/accept_ride.dart',
+        ).readAsStringSync() +
+        File(
+          'lib/presentation/driver/accept ride/accept_ride_panel.dart',
+        ).readAsStringSync();
     expect(appBar, isNot(contains('tel:')));
     expect(appBar, isNot(contains('46701234567')));
     expect(appBar, isNot(contains('url_launcher')));
     expect(chat, isNot(contains('tel:')));
-    expect(ride, contains('Chat(riderDisplayName: widget.riderName, tripId: widget.tripId)'));
+    expect(
+      ride,
+      contains(
+        'Chat(riderDisplayName: widget.riderName, tripId: widget.tripId)',
+      ),
+    );
     expect(RiderContactPolicy.available, isFalse);
     expect(
       RiderContactPolicy.unavailableMessage,

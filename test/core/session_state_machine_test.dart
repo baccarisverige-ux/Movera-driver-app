@@ -8,13 +8,54 @@ typedef _Setup = void Function(DriverSessionController session);
 void main() {
   // (description, before trip, during trip, expected after trip)
   final cases = <(String, _Setup, _Setup, DriverOnlineStatus)>[
-    ('online driver returns online', (s) => s.setOnline(true), (_) {}, DriverOnlineStatus.online),
-    ('offline restored trip returns offline', (_) {}, (_) {}, DriverOnlineStatus.offline),
-    ('suspension during trip survives the trip end', (s) => s.setOnline(true), (s) => s.suspend(), DriverOnlineStatus.suspended),
-    ('suspended before restored trip stays suspended', (s) => s.suspend(), (_) {}, DriverOnlineStatus.suspended),
-    ('go offline during trip applies after the trip', (s) => s.setOnline(true), (s) => s.setOnline(false), DriverOnlineStatus.offline),
-    ('offline intent can be withdrawn during trip', (s) => s.setOnline(true), (s) { s.setOnline(false); s.setOnline(true); }, DriverOnlineStatus.online),
-    ('suspension wins over online intent', (s) => s.setOnline(true), (s) { s.suspend(); s.setOnline(true); }, DriverOnlineStatus.suspended),
+    (
+      'online driver returns online',
+      (s) => s.setOnline(true),
+      (_) {},
+      DriverOnlineStatus.online,
+    ),
+    (
+      'offline restored trip returns offline',
+      (_) {},
+      (_) {},
+      DriverOnlineStatus.offline,
+    ),
+    (
+      'suspension during trip survives the trip end',
+      (s) => s.setOnline(true),
+      (s) => s.suspend(),
+      DriverOnlineStatus.suspended,
+    ),
+    (
+      'suspended before restored trip stays suspended',
+      (s) => s.suspend(),
+      (_) {},
+      DriverOnlineStatus.suspended,
+    ),
+    (
+      'go offline during trip applies after the trip',
+      (s) => s.setOnline(true),
+      (s) => s.setOnline(false),
+      DriverOnlineStatus.offline,
+    ),
+    (
+      'offline intent can be withdrawn during trip',
+      (s) => s.setOnline(true),
+      (s) {
+        s.setOnline(false);
+        s.setOnline(true);
+      },
+      DriverOnlineStatus.online,
+    ),
+    (
+      'suspension wins over online intent',
+      (s) => s.setOnline(true),
+      (s) {
+        s.suspend();
+        s.setOnline(true);
+      },
+      DriverOnlineStatus.suspended,
+    ),
   ];
 
   for (final (name, before, during, expected) in cases) {
@@ -79,34 +120,40 @@ void main() {
     expect(session.consumeResumeHomeAfterTrip(), isFalse);
   });
 
-  test('duplicate current-trip start preserves a pending Home return state', () {
-    final session = DriverSessionController()..setOnline(true);
-    addTearDown(session.dispose);
-    session.beginTrip('trip-A');
-    session.endTrip();
-    // The new trip owns the session; duplicate mount stays a no-op.
-    session.beginTrip('trip-B');
-    session.beginTrip('trip-B');
-    expect(session.consumeResumeHomeAfterTrip(), isFalse);
-    session.endTrip();
-    expect(session.consumeResumeHomeAfterTrip(), isTrue);
-  });
+  test(
+    'duplicate current-trip start preserves a pending Home return state',
+    () {
+      final session = DriverSessionController()..setOnline(true);
+      addTearDown(session.dispose);
+      session.beginTrip('trip-A');
+      session.endTrip();
+      // The new trip owns the session; duplicate mount stays a no-op.
+      session.beginTrip('trip-B');
+      session.beginTrip('trip-B');
+      expect(session.consumeResumeHomeAfterTrip(), isFalse);
+      session.endTrip();
+      expect(session.consumeResumeHomeAfterTrip(), isTrue);
+    },
+  );
 
-  test('duplicate trip end cannot reactivate a deliberately offline driver', () async {
-    final store = MemoryDriverSessionRepository();
-    final session = DriverSessionController(repository: store);
-    session.setOnline(true);
-    session.beginTrip('trip-a');
-    session.setOnline(false);
-    session.endTrip();
-    expect(session.status, DriverOnlineStatus.offline);
-    session.endTrip(); // A duplicate terminal event must remain a no-op.
-    expect(session.status, DriverOnlineStatus.offline);
-    expect(session.activeTripId, isNull);
-    await Future<void>.delayed(Duration.zero);
-    expect(await store.readOnline(), isFalse);
-    session.dispose();
-  });
+  test(
+    'duplicate trip end cannot reactivate a deliberately offline driver',
+    () async {
+      final store = MemoryDriverSessionRepository();
+      final session = DriverSessionController(repository: store);
+      session.setOnline(true);
+      session.beginTrip('trip-a');
+      session.setOnline(false);
+      session.endTrip();
+      expect(session.status, DriverOnlineStatus.offline);
+      session.endTrip(); // A duplicate terminal event must remain a no-op.
+      expect(session.status, DriverOnlineStatus.offline);
+      expect(session.activeTripId, isNull);
+      await Future<void>.delayed(Duration.zero);
+      expect(await store.readOnline(), isFalse);
+      session.dispose();
+    },
+  );
 
   test('stale trip end cannot bypass suspension or going-online gate', () {
     final session = DriverSessionController();
@@ -158,7 +205,9 @@ void main() {
       externalClaimDelay: const Duration(hours: 1),
     );
     final seen = <List<String>>[];
-    final sub = dispatch.watchNearbyOffers().listen((offers) => seen.add(offers.map((o) => o.id).toList()));
+    final sub = dispatch.watchNearbyOffers().listen(
+      (offers) => seen.add(offers.map((o) => o.id).toList()),
+    );
     await Future<void>.delayed(Duration.zero);
     await dispatch.claimOffer('nearby-1');
     dispatch.reset();

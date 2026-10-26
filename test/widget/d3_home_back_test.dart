@@ -102,9 +102,9 @@ Future<void> _pumpHome(
         useInheritedMediaQuery: true,
         builder: (_, __) => MaterialApp(
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: const TextScaler.linear(_scale),
-            ),
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(_scale)),
             child: child!,
           ),
           home: DriverHome(
@@ -152,18 +152,25 @@ void main() {
   for (final size in _sizes) {
     final at = '${size.width.toInt()}x${size.height.toInt()} @$_scale';
 
-    testWidgets('UI-03 Back closes the open Home sheet, then leaves at $at',
-        (tester) async {
+    testWidgets('UI-03 Back closes the open Home sheet, then leaves at $at', (
+      tester,
+    ) async {
       var exits = 0;
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
         (call) async {
-          if (call.method == 'SystemNavigator.pop') { exits++; }
+          if (call.method == 'SystemNavigator.pop') {
+            exits++;
+          }
           return null;
         },
       );
-      addTearDown(() => tester.binding.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, null));
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
       await _pumpHome(tester, size);
       _panel(tester).open();
       await _frames(tester, const Duration(milliseconds: 700));
@@ -184,12 +191,18 @@ void main() {
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
         (call) async {
-          if (call.method == 'SystemNavigator.pop') { exits++; }
+          if (call.method == 'SystemNavigator.pop') {
+            exits++;
+          }
           return null;
         },
       );
-      addTearDown(() => tester.binding.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, null));
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
       await _pumpHome(tester, size);
       await _tapRadar(tester);
       const card = ValueKey<String>('exclusive-offer-card-home-direct-close');
@@ -211,12 +224,18 @@ void main() {
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
         (call) async {
-          if (call.method == 'SystemNavigator.pop') { exits++; }
+          if (call.method == 'SystemNavigator.pop') {
+            exits++;
+          }
           return null;
         },
       );
-      addTearDown(() => tester.binding.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, null));
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
       await _pumpHome(tester, size, pending: true);
       await _tapRadar(tester);
       await _frames(tester, const Duration(milliseconds: 900));
@@ -243,8 +262,9 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('UI-12 the Cash rides switch is read with its label at $at',
-        (tester) async {
+    testWidgets('UI-12 the Cash rides switch is read with its label at $at', (
+      tester,
+    ) async {
       final semantics = tester.ensureSemantics();
       await _pumpHome(tester, size);
       _panel(tester).open();
@@ -257,8 +277,9 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('UI-12 island Menu and Search take touches in 48x48 at $at',
-        (tester) async {
+    testWidgets('UI-12 island Menu and Search take touches in 48x48 at $at', (
+      tester,
+    ) async {
       await _pumpHome(tester, size);
       // Asleep (small island) first, then awake.
       for (final wait in const [Duration.zero, Duration(seconds: 2)]) {
@@ -267,8 +288,9 @@ void main() {
           of: find.byTooltip('Menu'),
           matching: find.byType(InkWell),
         );
-        final searchFinder =
-            find.byKey(const ValueKey<String>('destination-mode-open'));
+        final searchFinder = find.byKey(
+          const ValueKey<String>('destination-mode-open'),
+        );
         final menu = tester.getRect(menuFinder);
         final search = tester.getRect(searchFinder);
         // The island paints exactly as on main: 54 x 50.4 at 80 %.
@@ -276,10 +298,12 @@ void main() {
           expect(visible.width, closeTo(54 * 0.8, .01));
           expect(visible.height, closeTo(50.4 * 0.8, .01));
         }
-        final shell = tester.getRect(find.ancestor(
-          of: menuFinder,
-          matching: find.byType(DigitalIslandShell),
-        ));
+        final shell = tester.getRect(
+          find.ancestor(
+            of: menuFinder,
+            matching: find.byType(DigitalIslandShell),
+          ),
+        );
         expect(shell.height, closeTo(50.4 * 0.8, .01));
         expectSideTargets(
           tester,
@@ -292,8 +316,9 @@ void main() {
       await _end(tester);
     });
 
-    testWidgets('UI-12 Home offline has no unlabelled tap targets at $at',
-        (tester) async {
+    testWidgets('UI-12 Home offline has no unlabelled tap targets at $at', (
+      tester,
+    ) async {
       final semantics = tester.ensureSemantics();
       await _pumpHome(tester, size);
       await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));

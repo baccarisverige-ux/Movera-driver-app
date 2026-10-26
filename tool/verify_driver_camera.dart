@@ -130,10 +130,15 @@ Future<void> runCameraContractTests() async {
       immediate: true,
     );
     check(preview.zoom > cruise.zoom, '$type tightens inside 180m');
-    check(preview.tilt >= cruise.tilt, '$type never flatter approaching junction');
+    check(
+      preview.tilt >= cruise.tilt,
+      '$type never flatter approaching junction',
+    );
     check(close.tilt >= preview.tilt, '$type never flattens near maneuver');
-    check(close.zoom - cruise.zoom <= DriverCameraPolicy.maxTurnZoomIn + 1e-9,
-        '$type zooms in only a little at the junction');
+    check(
+      close.zoom - cruise.zoom <= DriverCameraPolicy.maxTurnZoomIn + 1e-9,
+      '$type zooms in only a little at the junction',
+    );
     check(close.zoom > cruise.zoom, '$type closes in near maneuver');
     final after = policy.resolve(
       location: fix(const GeoPoint(59.334, 18.061)),
@@ -143,8 +148,7 @@ Future<void> runCameraContractTests() async {
     );
     check((after.bearing - 90).abs() < 1, 'Follow route direction after turn');
     check(
-      after.zoom == 14.5 &&
-          after.tilt == DriverCameraPolicy.tiltForZoom(14.5),
+      after.zoom == 14.5 && after.tilt == DriverCameraPolicy.tiltForZoom(14.5),
       'Recover speed zoom and driving tilt',
     );
   }
@@ -165,29 +169,39 @@ Future<void> runCameraContractTests() async {
   check(DriverCameraPolicy.zoomForSpeed(10) == 14.5, 'Urban-speed zoom');
   check(DriverCameraPolicy.zoomForSpeed(20) == 14, 'Fast urban zoom');
   check(DriverCameraPolicy.zoomForSpeed(30) == 13.625, 'Highway zoom');
-  check(DriverCameraPolicy.zoomForSpeed(double.nan) == 15,
-      'Missing speed stays at slow-speed framing');
+  check(
+    DriverCameraPolicy.zoomForSpeed(double.nan) == 15,
+    'Missing speed stays at slow-speed framing',
+  );
   // Former 20/50/80 km/h hard thresholds jumped a full zoom level when
   // sensor speed oscillated by a fraction of a metre per second.
   for (final threshold in [20 / 3.6, 50 / 3.6, 80 / 3.6]) {
     final before = DriverCameraPolicy.zoomForSpeed(threshold - 0.03);
     final after = DriverCameraPolicy.zoomForSpeed(threshold + 0.03);
-    check((before - after).abs() < .03,
-        'Speed fluctuation near $threshold m/s must not snap camera zoom');
+    check(
+      (before - after).abs() < .03,
+      'Speed fluctuation near $threshold m/s must not snap camera zoom',
+    );
   }
   var previousZoom = DriverCameraPolicy.zoomForSpeed(0);
   for (var speed = .5; speed <= 36; speed += .5) {
     final zoom = DriverCameraPolicy.zoomForSpeed(speed);
-    check(zoom.isFinite && zoom >= 13.625 && zoom <= 15,
-        'Autozoom must stay within approved road framing');
-    check(zoom <= previousZoom,
-        'Zoom decreases smoothly as driving speed rises');
+    check(
+      zoom.isFinite && zoom >= 13.625 && zoom <= 15,
+      'Autozoom must stay within approved road framing',
+    );
+    check(
+      zoom <= previousZoom,
+      'Zoom decreases smoothly as driving speed rises',
+    );
     previousZoom = zoom;
   }
-  check(wrapped.zoom == DriverCameraPolicy.exploreZoom &&
-          wrapped.tilt == DriverCameraPolicy.tiltForZoom(wrapped.zoom) &&
-          wrapped.tilt < 6,
-      'Outside trip the area view tilts with its zoom (nearly flat)');
+  check(
+    wrapped.zoom == DriverCameraPolicy.exploreZoom &&
+        wrapped.tilt == DriverCameraPolicy.tiltForZoom(wrapped.zoom) &&
+        wrapped.tilt < 6,
+    'Outside trip the area view tilts with its zoom (nearly flat)',
+  );
   final waiting = policy.resolve(
     location: fix(origin),
     waiting: true,
@@ -227,6 +241,7 @@ Future<void> runCameraContractTests() async {
       immediate: true,
     );
   }
+
   final outsidePreview = nearTurn(184);
   final insidePreview = nearTurn(176);
   check(
@@ -281,8 +296,10 @@ Future<void> runCameraContractTests() async {
     navigating: true,
     immediate: true,
   );
-  check(arrival.tilt == DriverCameraPolicy.arrivalTilt,
-      'Arrival stays tilted at 60 degrees, never flat');
+  check(
+    arrival.tilt == DriverCameraPolicy.arrivalTilt,
+    'Arrival stays tilted at 60 degrees, never flat',
+  );
   DriverCameraPose approachDestination(double meters) {
     final arrivingCamera = DriverCameraPolicy();
     return arrivingCamera.resolve(
@@ -295,6 +312,7 @@ Future<void> runCameraContractTests() async {
       immediate: true,
     );
   }
+
   check(
     (approachDestination(138).zoom - approachDestination(142).zoom).abs() < .05,
     'Arrival framing must not jump at the 140 metre ease-in threshold',
@@ -334,25 +352,35 @@ Future<void> runCameraContractTests() async {
   // Tilt follows zoom: flat up to zoom 12, then proportional to zoom
   // (linear) up to the SDK maximum (67.5 degrees) at zoom 15.5, never above
   // what the SDK allows, so every pinch step changes the tilt.
-  check(DriverCameraPolicy.tiltForZoom(12) == 0 &&
-          DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.exploreZoom) == 0,
-      'Region overview zoom is flat');
-  check(DriverCameraPolicy.tiltForZoom(15.5) == 67.5 &&
-          DriverCameraPolicy.tiltForZoom(16) == 67.5 &&
-          DriverCameraPolicy.tiltForZoom(20) == 67.5,
-      'Street zoom tilts 67.5 degrees toward the horizon');
-  check((DriverCameraPolicy.tiltForZoom(13.75) - 33.75).abs() < 1e-9,
-      'Halfway up the zoom range is halfway up the tilt');
+  check(
+    DriverCameraPolicy.tiltForZoom(12) == 0 &&
+        DriverCameraPolicy.tiltForZoom(DriverCameraPolicy.exploreZoom) == 0,
+    'Region overview zoom is flat',
+  );
+  check(
+    DriverCameraPolicy.tiltForZoom(15.5) == 67.5 &&
+        DriverCameraPolicy.tiltForZoom(16) == 67.5 &&
+        DriverCameraPolicy.tiltForZoom(20) == 67.5,
+    'Street zoom tilts 67.5 degrees toward the horizon',
+  );
+  check(
+    (DriverCameraPolicy.tiltForZoom(13.75) - 33.75).abs() < 1e-9,
+    'Halfway up the zoom range is halfway up the tilt',
+  );
   for (var zoom = 0.0; zoom <= 21; zoom += .1) {
-    check(DriverCameraPolicy.tiltForZoom(zoom) <=
-            DriverCameraPolicy.sdkMaxTilt(zoom),
-        'Tilt never exceeds what the SDK allows at $zoom');
+    check(
+      DriverCameraPolicy.tiltForZoom(zoom) <=
+          DriverCameraPolicy.sdkMaxTilt(zoom),
+      'Tilt never exceeds what the SDK allows at $zoom',
+    );
   }
   var previousTilt = 0.0;
   for (var zoom = 12.02; zoom <= 15.5; zoom += .02) {
     final tilt = DriverCameraPolicy.tiltForZoom(zoom);
-    check(tilt > previousTilt && tilt - previousTilt < 1,
-        'Tilt rises with every zoom step (no plateau, no step at $zoom)');
+    check(
+      tilt > previousTilt && tilt - previousTilt < 1,
+      'Tilt rises with every zoom step (no plateau, no step at $zoom)',
+    );
     previousTilt = tilt;
   }
   final arrivalFrames = [
@@ -360,8 +388,10 @@ Future<void> runCameraContractTests() async {
       approachDestination(meters),
   ];
   for (var i = 1; i < arrivalFrames.length; i++) {
-    check((arrivalFrames[i].tilt - arrivalFrames[i - 1].tilt).abs() < 6,
-        'Arrival tilt eases to 60 degrees without a jump');
+    check(
+      (arrivalFrames[i].tilt - arrivalFrames[i - 1].tilt).abs() < 6,
+      'Arrival tilt eases to 60 degrees without a jump',
+    );
     check(arrivalFrames[i].tilt >= 15, 'Arrival never goes flat');
   }
 
@@ -471,7 +501,11 @@ Future<void> runCameraContractTests() async {
   final pinchCamera = DriverCameraController(now: () => now);
   final pinchPort = TiltingCamera();
   pinchCamera.attach(pinchPort);
-  pinchCamera.update(location: fix(origin), route: curvedRoute, navigating: true);
+  pinchCamera.update(
+    location: fix(origin),
+    route: curvedRoute,
+    navigating: true,
+  );
   pinchCamera.userGesture();
   pinchCamera.touching = true;
   pinchPort
@@ -480,18 +514,24 @@ Future<void> runCameraContractTests() async {
   pinchCamera.browseSettled();
   check(pinchPort.tilts.isEmpty, 'No tilt while a finger is on the map');
   pinchCamera.touching = false;
-  check(pinchPort.tilts.single == DriverCameraPolicy.tiltForZoom(13.2),
-      'Zooming out by hand flattens the tilt once let go');
+  check(
+    pinchPort.tilts.single == DriverCameraPolicy.tiltForZoom(13.2),
+    'Zooming out by hand flattens the tilt once let go',
+  );
   pinchPort.currentZoom = 18.4;
   pinchCamera.browseSettled();
-  check(pinchPort.tilts.last == DriverCameraPolicy.maxTilt,
-      'Zooming in by hand tilts toward the horizon');
+  check(
+    pinchPort.tilts.last == DriverCameraPolicy.maxTilt,
+    'Zooming in by hand tilts toward the horizon',
+  );
   pinchCamera.browseSettled();
   check(pinchPort.tilts.length == 2, 'A matching tilt is left alone');
   pinchCamera.recenter();
   final back = pinchPort.commands.last;
-  check(back.tilt == DriverCameraPolicy.tiltForZoom(back.zoom),
-      'Recenter returns to guidance zoom with its matching tilt');
+  check(
+    back.tilt == DriverCameraPolicy.tiltForZoom(back.zoom),
+    'Recenter returns to guidance zoom with its matching tilt',
+  );
   pinchPort.currentZoom = 14;
   pinchCamera.browseSettled();
   check(pinchPort.tilts.length == 2, 'Following ignores settle requests');
