@@ -62,3 +62,7 @@ Branch `audit/phase-2`, from `main` @ 436bfb54. Plan: `movera-contracts` `docs/a
 - Local (Flutter 3.47.7, branch @ 3575c5f8 + CI commit): `flutter test --coverage`: 2179 passed, 1 skipped, 0 failed; `tool/check_coverage.py`: lib/core 8107/8834 = 91.77 % (floor 91.50 %); `flutter analyze --fatal-infos`: no issues; `tool/tests` unittest: OK.
 - CI run 40354953665 (f2c7a0ec, push): all 5 jobs green (Secret scan ~12 s, live web ~1.5 min, verify ~15 min incl. coverage). The iOS job was first cancelled after 15 min without ever getting a macos-14 runner (runner_id 0); re-run of the failed job: success. Coverage artifact `driver-coverage-f2c7a0ec…` uploaded.
 - Format check passes on CI's Flutter 3.47.6 with the tree formatted by 3.47.7.
+
+## Merge of main (#381–#384)
+- `git merge origin/main` (no rebase): one conflict, lib/core/dispatch/api_dispatch_repository.dart, where this branch had only the formatting commit → main's version taken, then `dart format` re-applied to the Dart files #381–#383 touched (4 changed).
+- After the merge (local): format check 0 of 700 files changed; `flutter analyze --fatal-infos` no issues; full `flutter test --coverage` 2194 passed, 1 skipped, 0 failed (includes the line-limit tests; home.dart 1407, accept_ride.dart 2146 lines); lib/core 8163/8890 = 91.82 % (floor 91.50 %).
