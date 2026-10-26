@@ -323,7 +323,10 @@ void main() {
     expect(hidden, 1);
   });
 
-  testWidgets('driver-u136: "All offers" is a 44 px button', (tester) async {
+  // Owner N1 (live test 2026-10-26): the way to all offers is the island's
+  // middle, "1 offer · radar", a tappable target as tall as the island.
+  testWidgets('driver-u136: the island\'s radar offers are a 44 px target',
+      (tester) async {
     final semantics = tester.ensureSemantics();
     SharedPreferences.setMockInitialValues({});
     IslandMessages.reset();
@@ -340,12 +343,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2300));
     await tester.pump(DriverOfferRules.current.exclusiveAcceptTime);
     await tester.pump(const Duration(milliseconds: 900));
-    final all = find.byKey(const ValueKey<String>('radar-home-all-offers'));
+    expect(find.byKey(const ValueKey<String>('radar-home-all-offers')),
+        findsNothing);
+    // The island's face changes with its own short animation once the card
+    // is up; read it when the new face has settled.
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const ValueKey<String>('island-radar-offers-face')),
+        findsOneWidget);
+    final all = find.byKey(const ValueKey<String>('last-trip-launcher'));
     expect(tester.getSize(all).height, greaterThanOrEqualTo(44));
     final data = tester.getSemantics(all).getSemanticsData();
-    expect(data.flagsCollection.isButton, isTrue);
     expect(data.hasAction(SemanticsAction.tap), isTrue);
-    expect(data.label, contains('all offers'));
+    expect(data.label, matches(RegExp(r'^\d+ offers? · radar$')));
     await _unmount(tester);
     semantics.dispose();
   });

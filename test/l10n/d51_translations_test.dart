@@ -532,6 +532,7 @@ void main() {
         vehicle: WaybillRecord.vehicleUnavailable,
         licensePlate: WaybillRecord.plateUnavailable,
         passengerCapacity: 4,
+        riderFare: '184,00 kr',
       );
       await show(tester, code, Builder(
         builder: (context) => Scaffold(body: TextButton(
@@ -545,6 +546,13 @@ void main() {
       expect(words(tr.plateUnavailable), findsOneWidget);
       expect(words(tr.riderDataUnavailable), findsOneWidget);
       expect(words('Plate unavailable'), findsNothing);
+      // Owner N11: what the rider pays, in the driver's language.
+      expect(words(tr.riderPays), findsOneWidget);
+      expect(tr.riderPays, switch (code) {
+        'fr' => 'Le passager paie',
+        'sv' => 'Passageraren betalar',
+        _ => 'Rider pays',
+      });
     });
   }
 }

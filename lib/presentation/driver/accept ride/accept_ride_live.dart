@@ -35,6 +35,34 @@ extension _AcceptRideLive on _AcceptRideState {
     return false;
   }
 
+  /// The server's final money for this trip once it is completed (the
+  /// answer to `complete`, or the completed event), else null: the demo,
+  /// a projection without the money, or a trip not completed.
+  LiveTripMoney? _settledMoney() {
+    final projection = _liveTrips?.projectionOf(widget.tripId);
+    if (projection == null || projection['status'] != 'completed') { return null; }
+    return LiveTripMoney.tryParse(projection);
+  }
+
+  /// Owner N11 (live test 2026-10-26): a rider app that could not name its
+  /// pickup sends the coordinates as the address ("59.195885, 17.597423").
+  /// The trip then asks the server for the address at that point
+  /// (`POST /locations/reverse-geocode`); the waybill, the trip and its
+  /// save show it. A named address is never looked up; the demo has none.
+  Future<void> _resolvePickupAddress() async {
+    final places = LiveDriverServices.instance?.places;
+    if (places == null || !LiveAddressLookup.unnamed(widget.pickupAddress)) { return; }
+    final found = await places.reverseGeocode(
+      widget.pickupPosition.latitude, widget.pickupPosition.longitude);
+    if (!mounted || found == null) { return; }
+    _rebuild(() => _resolvedPickup = found);
+    final current = _waybills.current;
+    if (current != null && current.tripId == widget.tripId) {
+      _waybills.beginCurrent(current.copyWith(pickup: found));
+    }
+    await _rideLifecycle.persistNow();
+  }
+
   void _showServerRefusal(String message) {
     if (!mounted) { return; }
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(

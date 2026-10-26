@@ -56,6 +56,12 @@ class LiveTripCommands {
   /// The trip's last known version, or null when not known.
   int? versionOf(String tripId) => (_trips[tripId]?['version'] as num?)?.toInt();
 
+  /// The trip's newest known projection (the whole answer), or null.
+  Map<String, dynamic>? projectionOf(String tripId) {
+    final known = _trips[tripId];
+    return known == null ? null : Map<String, dynamic>.unmodifiable(known);
+  }
+
   /// Folds a projection in: kept when it is not older than the one known.
   void observe(Map<String, dynamic> projection) {
     final id = projection['tripId'];

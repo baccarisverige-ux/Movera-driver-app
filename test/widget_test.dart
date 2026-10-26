@@ -631,14 +631,17 @@ void main() {
       expect(sound.calls, ['start', 'stop']);
       _expectNoException(tester);
 
-      // The ALL OFFERS badge opens the full Radar list.
-      final allOffers = find.byKey(
-        const ValueKey<String>('radar-home-all-offers'),
-      );
+      // Owner N1: no "ALL OFFERS" pill above the deck; the island's
+      // middle says "1 offer · radar" and opens the full Radar list.
       expect(
-        find.descendant(of: allOffers, matching: find.text('ALL OFFERS')),
-        findsOneWidget,
+        find.byKey(const ValueKey<String>('radar-home-all-offers')),
+        findsNothing,
       );
+      final allOffers = find.byKey(
+        const ValueKey<String>('island-radar-offers'),
+      );
+      expect(tester.widget<Text>(allOffers).textSpan!.toPlainText(),
+          '11 offers · radar');
       await tester.tap(allOffers);
       await tester.pump(const Duration(milliseconds: 160));
       expect(find.byType(RideRequests), findsOneWidget);

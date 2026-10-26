@@ -9,6 +9,7 @@ WaybillRecord _record({
   String fare = '118,39 kr',
   String? waitingFee = '18,39 kr',
   String? driverBonus,
+  String? riderFare,
 }) {
   return WaybillRecord(
     tripId: 'trip-wait',
@@ -26,6 +27,7 @@ WaybillRecord _record({
     passengerCapacity: 4,
     waitingFee: waitingFee,
     driverBonus: driverBonus,
+    riderFare: riderFare,
   );
 }
 
@@ -120,6 +122,25 @@ void main() {
       await _openWaybill(tester, _record(fare: '100,00 kr', waitingFee: null));
       expect(_row(tester, 'Movera fee'), isNull);
       expect(_row(tester, 'Your earnings'), '100,00 kr');
+    });
+  });
+
+  // Owner N11 (live test 2026-10-26): the waybill shows both what the
+  // rider pays and what the driver gets; without the rider's fare (an
+  // older save) the row is simply not there.
+  group('owner N11: the rider\'s fare on the waybill', () {
+    testWidgets('"Rider pays" next to "Your earnings"', (tester) async {
+      await _openWaybill(
+        tester,
+        _record(fare: '152,80 kr', waitingFee: null, riderFare: '184,00 kr'),
+      );
+      expect(_row(tester, 'Rider pays'), '184,00 kr');
+      expect(_row(tester, 'Your earnings'), '152,80 kr');
+    });
+
+    testWidgets('no row without it', (tester) async {
+      await _openWaybill(tester, _record());
+      expect(_row(tester, 'Rider pays'), isNull);
     });
   });
 

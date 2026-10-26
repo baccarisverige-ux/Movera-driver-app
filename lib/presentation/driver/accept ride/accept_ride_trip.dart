@@ -49,10 +49,11 @@ extension _AcceptRideTrip on _AcceptRideState {
         fare: widget.fare,
         paidByCash: widget.paidByCash,
         cashToCollect: widget.cashToCollect,
+        riderFare: widget.riderFare,
         driverBonus: widget.driverBonus,
         category: widget.category,
         matchedVia: widget.matchedVia,
-        pickupAddress: widget.pickupAddress,
+        pickupAddress: _pickupAddress,
         pickupArea: widget.pickupArea,
         dropoffAddress: widget.dropoffAddress,
         stopAddresses: widget.stopAddresses,
@@ -283,32 +284,88 @@ extension _AcceptRideTrip on _AcceptRideState {
         driverBonus: WaybillRecord.bonusLabel(widget.driverBonus),
         service: widget.category,
         riderName: widget.riderName,
-        pickup: widget.pickupAddress,
+        pickup: _pickupAddress,
         dropoff: widget.dropoffAddress,
         source: widget.matchedVia,
-        driverName: WaybillRecord.moveraDriverName,
+        driverName: _driverName,
+        riderFare: widget.riderFare,
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
         passengerCapacity: 4,
         paidByCash: widget.paidByCash,
       );
     }
-    /// Waybills show the same vehicle as Profile and Vehicles.
+    /// Waybills show the driver and the car as the server knows them
+    /// (owner N11, live test 2026-10-26): the signed-in driver's name and
+    /// the car on the profile (`vehicleId`, else the first car), never
+    /// the demo's "Movera Driver" / "MVR 418". The demo keeps the local
+    /// vehicle store, the same vehicle as Profile and Vehicles.
     Future<void> _loadVehicleIdentity() async {
-      final identity = await LocalVehicleStore().primaryIdentity();
-      if (!mounted || identity == null) { return; }
-      _vehicleLabel = identity.vehicle;
-      _vehiclePlate = identity.plate;
+      final live = DriverRuntimeScope.maybeOf(context)?.account;
+      if (live != null) {
+        await _loadLiveIdentity(live);
+      } else {
+        final identity = await LocalVehicleStore().primaryIdentity();
+        if (!mounted || identity == null) { return; }
+        _vehicleLabel = identity.vehicle;
+        _vehiclePlate = identity.plate;
+      }
+      if (!mounted) { return; }
       for (final (record, apply) in [
         (_waybills.current, _waybills.beginCurrent),
         (_waybills.next, _waybills.secureNext),
       ]) {
         if (record != null &&
-            record.vehicle != _vehicleLabel &&
+            (record.vehicle != _vehicleLabel ||
+                record.licensePlate != _vehiclePlate ||
+                record.driverName != _driverName) &&
             (record.tripId == widget.tripId || record.tripId == _nextTripRadarOffer?.id)) {
-          apply(record.copyWith(vehicle: _vehicleLabel, licensePlate: _vehiclePlate));
+          apply(record.copyWith(
+              vehicle: _vehicleLabel, licensePlate: _vehiclePlate, driverName: _driverName));
         }
       }
+    }
+    Future<void> _loadLiveIdentity(DriverAccountSession live) async {
+      var account = live.account;
+      if (account == null) {
+        try { account = await live.refresh(); } catch (_) { /* offline: the name stays */ }
+      }
+      if (!mounted) { return; }
+      final name = account?.fullName ?? '';
+      if (name.isNotEmpty) { _driverName = name; }
+      try {
+        final cars = await live.repository.vehicles();
+        if (!mounted || cars.isEmpty) { return; }
+        final car = cars.firstWhere(
+          (c) => c.vehicleId == account?.vehicleId,
+          orElse: () => cars.first,
+        );
+        _vehicleLabel = car.title;
+        _vehiclePlate = car.plate;
+      } catch (error) {
+        DriverLog.warn('waybill car not read: $error', name: 'live');
+      }
+    }
+    /// The completed trip's waybill and, for cash, what was collected:
+    /// the server's final money when the live trip's completed projection
+    /// carries it (owner N9: a finish away from the drop-off is priced by
+    /// what was driven, never below the minimum, never above the booked
+    /// fare, and the driver's earnings follow it), else the booked pay
+    /// with the waiting fee.
+    ({WaybillRecord paid, String? cash}) _settledPaid() {
+      var paid = _paidWaybill();
+      var cash = widget.paidByCash ? _cashToCollect : null;
+      final money = _AcceptRideLive(this)._settledMoney();
+      if (money != null) {
+        paid = paid.copyWith(
+          fare: money.driverPay.formatted,
+          riderFare: money.riderFare.formatted,
+          waitingFee: money.waitingFee?.formatted,
+          clearWaitingFee: money.waitingFee == null,
+        );
+        if (widget.paidByCash) { cash = money.cash.formatted; }
+      }
+      return (paid: paid, cash: cash);
     }
     WaybillRecord _buildNextWaybill(_NextTripRadarOffer offer) {
       return WaybillRecord(
@@ -323,7 +380,9 @@ extension _AcceptRideTrip on _AcceptRideState {
         pickup: offer.pickup,
         dropoff: offer.dropoff,
         source: WaybillRecord.exclusiveOfferSource,
-        driverName: WaybillRecord.moveraDriverName,
+        driverName: _driverName,
+        // The rider's fare, unless the save already holds the driver's pay.
+        riderFare: offer.driverEarnings == offer.fare ? null : offer.fare,
         vehicle: _vehicleLabel,
         licensePlate: _vehiclePlate,
         passengerCapacity: 4,
@@ -426,12 +485,12 @@ extension _AcceptRideTrip on _AcceptRideState {
           // waiting fee and, for cash, what was collected.
           final completed = status == TripStatus.completed;
           final cash = completed && widget.paidByCash;
-          final paid = completed ? _paidWaybill() : null;
+          final settled = completed ? _settledPaid() : null;
           await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
-            paid ?? _waybills.current ?? _buildCurrentWaybill(),
+            settled?.paid ?? _waybills.current ?? _buildCurrentWaybill(),
             status: status, authoritative:true, next:next,
             paymentMethod: completed ? (cash ? 'Cash' : 'Card') : null,
-            cashCollected: cash ? _cashToCollect : null);
+            cashCollected: cash ? settled?.cash : null);
           if (!mounted) { return; }
           if (!await _rideLifecycle.applyProjection(status)) {
             // driver-r3-12: a background save (GPS snapshot, lock screen)
@@ -442,7 +501,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           }
           if (identical(event, _pendingProjection)) { _pendingProjection = null; }
           _projectionRetryDelay = _AcceptRideState._projectionRetryBase;
-          await _leaveAfterAuthoritativeOutcome(status, next, paid);
+          await _leaveAfterAuthoritativeOutcome(status, next, settled?.paid);
           return;
         } else if (status.isReleasedToDispatch) {
           // X5: admin reassign or a released reservation. Already over here
@@ -1114,13 +1173,14 @@ extension _AcceptRideTrip on _AcceptRideState {
         return;
       }
       try {
-        // Q43: the waiting fee is the driver's, in the trip's earnings.
-        final paid = _paidWaybill();
+        // Q43: the waiting fee is the driver's, in the trip's earnings;
+        // N9: a live trip takes the server's final numbers.
+        final (:paid, :cash) = _settledPaid();
         _waybills.beginCurrent(paid);
         await CompletionJournal(active: widget.activeRideRepository ?? MemoryActiveRideRepository()).finish(
           paid, next: next,
           paymentMethod: widget.paidByCash ? 'Cash' : 'Card',
-          cashCollected: widget.paidByCash ? _cashToCollect : null);
+          cashCollected: cash);
         if (!mounted) { return; }
         if (await _yieldToAuthoritativeTerminal()) return;
         if (!await _rideLifecycle.complete(clearSnapshot: false)) {
@@ -1711,8 +1771,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     SafetyAlertTrip _safetyAlertTrip() => SafetyAlertTrip(
       tripId: widget.tripId, riderName: widget.riderName, riderRating: widget.riderRating,
-      pickup: widget.pickupAddress, dropoff: widget.dropoffAddress, fare: widget.fare,
-      category: widget.category, driverName: WaybillRecord.moveraDriverName, vehicle: _vehicleLabel,
+      pickup: _pickupAddress, dropoff: widget.dropoffAddress, fare: widget.fare,
+      category: widget.category, driverName: _driverName, vehicle: _vehicleLabel,
       plate: _vehiclePlate,
       position: _rideCheckGpsFresh ? GeoPointMaps.fromLatLng(_driverPosition) : null);
     /// driver-u86: GPS that went quiet (a tunnel, a garage) is lost, not a

@@ -393,8 +393,8 @@ void main() {
       home.dispatch.publish([_trip('a'), _trip('b')]);
       await _frames(tester, const Duration(milliseconds: 300));
       tester
-          .widget<GestureDetector>(
-            find.byKey(const ValueKey<String>('radar-home-all-offers')),
+          .widget<InkWell>(
+            find.byKey(const ValueKey<String>('last-trip-launcher')),
           )
           .onTap!
           .call();
@@ -420,6 +420,52 @@ void main() {
     });
   });
 
+  group('owner N1 (live test 2026-10-26): Radar offers on the island', () {
+    testWidgets('no pill above the deck; the island middle counts the '
+        'offers, opens the radar and goes back by itself', (tester) async {
+      final home = await _pumpHome(tester);
+      home.dispatch.publish([_trip('a')]);
+      await _frames(tester, const Duration(seconds: 26));
+      expect(find.byKey(const ValueKey<String>('radar-offer-card-a')),
+          findsOneWidget);
+      // The "01 ALL OFFERS >" pill is gone; the island says "1 offer".
+      expect(find.byKey(const ValueKey<String>('radar-home-all-offers')),
+          findsNothing);
+      final face = find.byKey(const ValueKey<String>('island-radar-offers'));
+      expect(face, findsOneWidget);
+      expect(tester.widget<Text>(face).textSpan!.toPlainText(),
+          '1 offer · radar');
+      // The menu and the destination search stay beside it, with their
+      // own actions (not tucked away as for a passing message).
+      expect(find.byTooltip('Menu'), findsOneWidget);
+      final search = tester.widget<InkWell>(
+          find.byKey(const ValueKey<String>('destination-mode-open')));
+      expect(search.onTap, isNotNull);
+      // A second trip on Radar only: the count follows.
+      home.dispatch.publish([_trip('a'), _trip('b')]);
+      await _frames(tester, const Duration(milliseconds: 300));
+      expect(tester.widget<Text>(face).textSpan!.toPlainText(),
+          '2 offers · radar');
+      // Tapping the middle opens the full-screen radar.
+      await tester.tap(face);
+      await _frames(tester, const Duration(seconds: 1));
+      expect(find.byType(RideRequests), findsOneWidget);
+      expect(home.dispatch.claims, isEmpty);
+      // Closed with offers left: the island stays in offers mode.
+      tester.widget<RideRequests>(find.byType(RideRequests)).onCloseRides!(true);
+      await _frames(tester, const Duration(seconds: 1));
+      expect(find.byType(RideRequests), findsNothing);
+      expect(face, findsOneWidget);
+      // No offers left: the earnings line is back on its own, no close X.
+      home.dispatch.publish(const []);
+      await _frames(tester, const Duration(seconds: 4));
+      expect(face, findsNothing);
+      expect(find.byKey(const ValueKey<String>('island-finding')),
+          findsOneWidget);
+      await _end(tester);
+    });
+  });
+
   group('driver-u118: the driving limit with the Radar list open', () {
     testWidgets('the list closes and the driver is offline', (tester) async {
       final rule = DrivingTimeClock.instance.rule;
@@ -432,8 +478,8 @@ void main() {
       home.dispatch.publish([_trip('a'), _trip('b')]);
       await _frames(tester, const Duration(seconds: 20));
       tester
-          .widget<GestureDetector>(
-            find.byKey(const ValueKey<String>('radar-home-all-offers')),
+          .widget<InkWell>(
+            find.byKey(const ValueKey<String>('last-trip-launcher')),
           )
           .onTap!
           .call();

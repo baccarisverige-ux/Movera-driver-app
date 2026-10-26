@@ -20,6 +20,7 @@ class WaybillRecord {
     this.waitingFee,
     this.driverBonus,
     this.paidByCash = false,
+    this.riderFare,
   });
 
   final String tripId;
@@ -49,6 +50,13 @@ class WaybillRecord {
 
   /// The rider pays the driver in the car; otherwise in the app.
   final bool paidByCash;
+
+  /// What the rider pays for the trip, e.g. "184,00 kr" (owner N11, live
+  /// test 2026-10-26): on the waybill only, next to the driver's own
+  /// [fare]; nowhere else does the driver see it. After a live finish it
+  /// is the server's final fare. Null when not known (older saves, a
+  /// sample trip).
+  final String? riderFare;
 
   /// Stored values of [statusLabel] and [source]. They stay in English in
   /// storage; the screens show them in the driver's language.
@@ -139,11 +147,15 @@ class WaybillRecord {
   WaybillRecord copyWith({
     String? fare,
     String? waitingFee,
+    bool clearWaitingFee = false,
     String? statusLabel,
     DateTime? issuedAt,
     String? vehicle,
     String? licensePlate,
     bool? paidByCash,
+    String? riderFare,
+    String? driverName,
+    String? pickup,
   }) {
     return WaybillRecord(
       tripId: tripId,
@@ -152,16 +164,17 @@ class WaybillRecord {
       fare: fare ?? this.fare,
       service: service,
       riderName: riderName,
-      pickup: pickup,
+      pickup: pickup ?? this.pickup,
       dropoff: dropoff,
       source: source,
-      driverName: driverName,
+      driverName: driverName ?? this.driverName,
       vehicle: vehicle ?? this.vehicle,
       licensePlate: licensePlate ?? this.licensePlate,
       passengerCapacity: passengerCapacity,
-      waitingFee: waitingFee ?? this.waitingFee,
+      waitingFee: clearWaitingFee ? null : waitingFee ?? this.waitingFee,
       driverBonus: driverBonus,
       paidByCash: paidByCash ?? this.paidByCash,
+      riderFare: riderFare ?? this.riderFare,
     );
   }
 }

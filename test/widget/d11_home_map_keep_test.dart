@@ -153,7 +153,8 @@ void main() {
         DriverOfferRules.current.exclusiveAcceptTime + const Duration(seconds: 2));
     final made = maps.created;
     expect(made, 1);
-    final allOffers = find.byKey(const ValueKey<String>('radar-home-all-offers'));
+    // Owner N1: the island's middle opens the list.
+    final allOffers = find.byKey(const ValueKey<String>('island-radar-offers'));
     expect(allOffers, findsOneWidget);
     await tester.tap(allOffers);
     await _frames(tester, const Duration(milliseconds: 400));

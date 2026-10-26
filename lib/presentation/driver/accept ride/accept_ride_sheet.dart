@@ -74,7 +74,7 @@ extension _AcceptRideSheet on _AcceptRideState {
             ActiveRideStage.waitingForRider => tr.pickupArrived,
             ActiveRideStage.onTrip => tr.pickupPickedUp,
           },
-          address: widget.pickupAddress,
+          address: _pickupAddress,
           color: TripCard.pickupGreen,
         ),
         for (var i = 0; i < stops.length; i++)

@@ -16,6 +16,8 @@ import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 
+export 'package:movera/core/live/live_trip_money.dart' show LiveTripMoney;
+
 /// A live build's link to movera-server (`MOVERA_AUTH_REQUIRED=true`):
 /// dispatch over the offer endpoints, the driver's availability and
 /// location, and the trip's commands and live events. The app root
@@ -40,6 +42,7 @@ class LiveDriverServices {
     );
     trips = LiveTripCommands(api: api, lastFix: () => reporter.lastFix);
     chat = LiveTripChat(api: api);
+    places = LiveAddressLookup(api: api);
     dispatch = ApiDispatchRepository(
       client: client,
       baseUri: apiBase,
@@ -68,6 +71,9 @@ class LiveDriverServices {
 
   /// The trip's chat with the rider (messages and unread count per trip).
   late final LiveTripChat chat;
+
+  /// Addresses for points the offer came without (owner N11).
+  late final LiveAddressLookup places;
   late final ApiDispatchRepository dispatch;
   late final LivePresence presence;
 
@@ -94,6 +100,43 @@ class LiveDriverServices {
     presence.detach();
     reporter.stop();
     await dispatch.dispose();
+  }
+}
+
+/// `POST /locations/reverse-geocode` (contract §10): the address at a point,
+/// in the driver's language. For a pickup an offer named only by its
+/// coordinates (owner N11, live test 2026-10-26).
+class LiveAddressLookup {
+  LiveAddressLookup({required ApiClient api}) : _api = api;
+
+  final ApiClient _api;
+
+  static const path = '/api/v1/locations/reverse-geocode';
+
+  /// A bare coordinate pair ("59.195885, 17.597423", "59.2,17.6").
+  static final RegExp _coordinates =
+      RegExp(r'^-?\d{1,3}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$');
+
+  /// True when [address] names no place: empty, or only coordinates.
+  static bool unnamed(String address) {
+    final text = address.trim();
+    return text.isEmpty || _coordinates.hasMatch(text);
+  }
+
+  /// The address at the point, or null when the server has none (or
+  /// could not be asked); the caller keeps what it had.
+  Future<String?> reverseGeocode(double latitude, double longitude) async {
+    try {
+      final found = await _api.post(path, body: {
+        'latitude': latitude,
+        'longitude': longitude,
+      });
+      final address = found['address'];
+      return address is String && address.trim().isNotEmpty ? address.trim() : null;
+    } catch (error) {
+      DriverLog.warn('reverse geocode failed: $error', name: 'live');
+      return null;
+    }
   }
 }
 

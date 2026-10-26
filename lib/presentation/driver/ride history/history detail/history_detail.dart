@@ -83,7 +83,6 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
                 zoomControlsEnabled: false,
                 mapToolbarEnabled: false,
                 compassEnabled: false,
-                trafficEnabled: false,
                 buildingsEnabled: true,
                 indoorViewEnabled: false,
                 mapType: MapType.normal,

@@ -1092,7 +1092,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                       key: const ValueKey<String>('current-trip-waybill-option'),
                       title: tr.currentWaybill,
                       subtitle:
-                          '${widget.pickupAddress} → ${widget.dropoffAddress}',
+                          '$_pickupAddress → ${widget.dropoffAddress}',
                       onTap: () {
                         if (!popOwned(sheetContext)) return;
                         final record = _waybills.current;

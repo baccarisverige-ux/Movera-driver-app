@@ -1169,6 +1169,7 @@ extension _HomeOfferRadar on _DriverHomeState {
             paidByCash: offer.cash,
             cashToCollect: terms.cashToCollect,
             driverBonus: terms.driverBonus,
+            riderFare: offer.fare,
             category: offer.category,
             matchedVia: matchedVia,
             waybillRepository: _waybills,
@@ -1304,8 +1305,9 @@ extension _HomeOfferRadar on _DriverHomeState {
           leg: PickupLeg(km: offer.pickupKm, minutes: offer.pickupMinutes),
           serverPay: offer.serverPickupPay,
         );
-    /// Radar offers on Home: a deck of cards above the radar, with the
-    /// total count on top (tap it for the full-screen list).
+    /// Radar offers on Home: a deck of cards above the radar. The total
+    /// count and the way to the full-screen list are on the island's
+    /// middle (owner N1, live test 2026-10-26), not above the deck.
     Widget _buildRadarOffersTray() {
       final offers = List<_HomeDirectOffer>.unmodifiable(_radarHomeOffers);
       final taken = <String>{
@@ -1321,37 +1323,6 @@ extension _HomeOfferRadar on _DriverHomeState {
           ids: [for (final offer in offers) offer.id],
           taken: taken,
           onFrontChanged: _onRadarDeckFront,
-          // driver-u136: a button, taking touches in a 44 px tall box (the
-          // room is above the badge, so the badge stays where it was).
-          top: Semantics(
-            button: true,
-            child: GestureDetector(
-              key: const ValueKey<String>('radar-home-all-offers'),
-              behavior: HitTestBehavior.opaque,
-              onTap: _openRideOffers,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 44),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  widthFactor: 1,
-                  child: LedCountBadge(
-                    count: _radarTripTotal(),
-                    label: tr.allOffers,
-                    tone: LedCountTone.grey,
-                    trailing: SvgPicture.asset(
-                      AppAssets.offerChevron,
-                      width: 13,
-                      height: 13,
-                      colorFilter: const ColorFilter.mode(
-                        Color(0xFF5F6B72),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
           cardFor: (id) {
             final offer = offers.firstWhere((item) => item.id == id);
             final state = _homeRadarStateFor(id);

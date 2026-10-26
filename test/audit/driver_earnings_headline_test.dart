@@ -294,10 +294,13 @@ void main() {
     expect(trip.driverBonus, Money.ore(900));
     expect(trip.paidByCash, isTrue);
     expect(trip.cashToCollect, '200,00 kr');
+    // Owner N11: the rider's fare travels with the trip for the waybill.
+    expect(trip.riderFare, '200,00 kr');
     // Its waybill, which the summary and history are made from.
     final waybill = WaybillStore.current;
     expect(waybill, isNotNull);
     expect(waybill!.fare, '179,00 kr');
+    expect(waybill.riderFare, '200,00 kr');
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
     await _frames(tester, const Duration(seconds: 1));

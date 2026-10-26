@@ -121,6 +121,7 @@ class PersistedActiveRide {
     this.fare,
     this.paidByCash = false,
     this.cashToCollect,
+    this.riderFare,
     this.driverBonus,
     this.category,
     this.matchedVia,
@@ -174,6 +175,9 @@ class PersistedActiveRide {
   /// R8-4: the cash to take from the rider, their own fare. Null only on
   /// a trip saved before the fare became the driver's pay.
   final String? cashToCollect;
+
+  /// Owner N11: what the rider pays, for the waybill; null when unknown.
+  final String? riderFare;
 
   /// Movera's bonus already in [fare] (contract `driverBonus`, Q16/Q18).
   final Money? driverBonus;
@@ -259,6 +263,7 @@ class PersistedActiveRide {
       fare: fare,
       paidByCash: paidByCash,
       cashToCollect: cashToCollect,
+      riderFare: riderFare,
       driverBonus: driverBonus,
       category: category,
       matchedVia: matchedVia,
@@ -307,6 +312,7 @@ class PersistedActiveRide {
     if (fare != null) 'fare': fare,
     if (paidByCash) 'paidByCash': true,
     if (cashToCollect != null) 'cashToCollect': cashToCollect,
+    if (riderFare != null) 'riderFare': riderFare,
     if (driverBonus != null) 'driverBonus': driverBonus!.toJson(),
     if (category != null) 'category': category,
     if (matchedVia != null) 'matchedVia': matchedVia,
@@ -461,6 +467,7 @@ class PersistedActiveRide {
       cashToCollect: json['cashToCollect'] is String
           ? json['cashToCollect'] as String
           : null,
+      riderFare: json['riderFare'] is String ? json['riderFare'] as String : null,
       driverBonus: _money(json['driverBonus']),
       category: json['category'] as String?,
       matchedVia: json['matchedVia'] as String?,

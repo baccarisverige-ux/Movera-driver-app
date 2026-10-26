@@ -19,11 +19,11 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/auth/additional%20detail/screens/upload%20document/take%20id%20photo/take_id_photo.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
+import 'package:movera/presentation/driver/home/components/reservation_island_face.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/profile/profile.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/layout_viewport.dart';
-import 'package:movera/widgets/led_count_badge.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
@@ -230,10 +230,9 @@ void main() {
     // Radar trips are dealt 3 s + the Exclusive accept time after Radar
     // is live.
     await _frames(tester, 220);
-    final badge = find.descendant(
-        of: find.byKey(const ValueKey<String>('radar-home-all-offers')),
-        matching: find.byType(LedCountBadge));
-    expect(tester.widget<LedCountBadge>(badge).count, 2);
+    // Owner N1: the island's middle carries the count, no pill on the deck.
+    final face = find.byKey(const ValueKey<String>('island-radar-offers-face'));
+    expect(tester.widget<DigitalRadarOffersFace>(face).count, 2);
     await tester.pumpWidget(const SizedBox());
   });
 }
