@@ -132,54 +132,6 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
     }
   }
 
-  /// The one SOS row, in the look of the Ride check card's "Call 112".
-  Widget _sosButton() => Material(
-    key: const ValueKey('safety-sos'),
-    color: RideCheckStyle.red,
-    borderRadius: BorderRadius.circular(18),
-    clipBehavior: Clip.antiAlias,
-    child: InkWell(
-      onTap: _confirmSos,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            _iconCircle(
-              AppAssets.solarDangerTriangle,
-              RideCheckStyle.white(.18),
-              Colors.white,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr.safetySos,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    tr.safetySosHint,
-                    style: TextStyle(
-                      color: RideCheckStyle.white(.92),
-                      fontSize: 12.5,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-
   static Widget _iconCircle(String asset, Color fill, Color color) => Container(
     width: 46,
     height: 46,
@@ -440,60 +392,141 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
     );
   }
 
-  /// One list row: icon, title, a short hint, and what sits on the right.
-  Widget _row({
-    Key? key,
-    required String icon,
-    required String title,
-    String? hint,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) => InkWell(
-    key: key,
-    onTap: onTap,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RideCheckStyle.icon(icon, color: const Color(0xFF4D5A61)),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: _ink,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (hint != null) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    hint,
-                    style: const TextStyle(
-                      color: _muted,
-                      fontSize: 12,
-                      height: 1.35,
+  /// The big SOS card (option B).
+  Widget _sosCard() => Material(
+    key: const ValueKey('safety-sos'),
+    color: RideCheckStyle.red,
+    borderRadius: BorderRadius.circular(24),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: _confirmSos,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          children: [
+            _iconCircle(
+              AppAssets.solarDangerTriangle,
+              RideCheckStyle.white(.18),
+              Colors.white,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              tr.safetySos,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              tr.safetySosHint,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: RideCheckStyle.white(.92),
+                fontSize: 13,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  static const _cardShape = RoundedRectangleBorder(
+    borderRadius: BorderRadius.all(Radius.circular(19)),
+    side: BorderSide(color: _line),
+  );
+
+  Widget _tile(String icon, String label, VoidCallback onTap) => Material(
+    color: Colors.white,
+    shape: _cardShape,
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 96),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            RideCheckStyle.icon(icon, color: const Color(0xFF4D5A61)),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: _ink,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                height: 1.25,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  Widget _rideCheckCard() => Container(
+    key: const ValueKey('ride-check-info'),
+    padding: const EdgeInsets.all(16),
+    decoration: ShapeDecoration(color: Colors.white, shape: _cardShape),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RideCheckStyle.icon(
+          AppAssets.solarShieldWarning,
+          color: const Color(0xFF4D5A61),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      tr.rideCheck,
+                      style: const TextStyle(
+                        color: _ink,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
+                  _onPill(),
                 ],
-              ],
-            ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                tr.safetyRideCheckExplained,
+                style: const TextStyle(
+                  color: _muted,
+                  fontSize: 12,
+                  height: 1.35,
+                ),
+              ),
+            ],
           ),
-          if (trailing != null) ...[const SizedBox(width: 10), trailing],
-        ],
-      ),
+        ),
+      ],
     ),
   );
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    const divider = Divider(height: 1, thickness: 1, color: _line, indent: 52);
+    final tiles = <Widget>[
+      // Owner decision 10: hidden while the option is off.
+      if (SafetyAudioOption.enabled)
+        _tile(AppAssets.solarMicrophone, tr.recordAudio, _toggleRecording),
+      _tile(AppAssets.solarUploadMinimalistic, tr.safetyShareTrip, _shareTrip),
+      _tile(AppAssets.solarTuning2, tr.safetyPreferences, _openPreferences),
+    ];
 
     return SafeArea(
       top: false,
@@ -512,66 +545,29 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
               const SizedBox(height: 12),
               _header(context),
               const SizedBox(height: 12),
-              _sosButton(),
+              _sosCard(),
               if (_status != null) ...[
                 const SizedBox(height: 10),
                 _statusBanner(),
               ],
-              const SizedBox(height: 20),
-              Material(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(19),
-                  side: const BorderSide(color: _line),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
+              const SizedBox(height: 12),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Owner decision 10: hidden while the option is off.
-                    if (SafetyAudioOption.enabled) ...[
-                      _row(
-                        icon: AppAssets.solarMicrophone,
-                        title: tr.recordAudio,
-                        onTap: _toggleRecording,
-                      ),
-                      divider,
+                    for (var i = 0; i < tiles.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 12),
+                      Expanded(child: tiles[i]),
                     ],
-                    _row(
-                      icon: AppAssets.solarUploadMinimalistic,
-                      title: tr.safetyShareTrip,
-                      hint: tr.safetyShareTripHint,
-                      trailing: _chevron,
-                      onTap: _shareTrip,
-                    ),
-                    divider,
-                    _row(
-                      key: const ValueKey('ride-check-info'),
-                      icon: AppAssets.solarShieldWarning,
-                      title: tr.rideCheck,
-                      hint: tr.safetyRideCheckExplained,
-                      trailing: _onPill(),
-                    ),
-                    divider,
-                    _row(
-                      icon: AppAssets.solarTuning2,
-                      title: tr.safetyPreferences,
-                      hint: tr.safetyRideCheckOnPreviewOnly,
-                      trailing: _chevron,
-                      onTap: _openPreferences,
-                    ),
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
+              _rideCheckCard(),
             ],
           ),
         ),
       ),
     );
   }
-
-  static final Widget _chevron = RideCheckStyle.icon(
-    AppAssets.solarAltArrowRight,
-    color: const Color(0xFF98A3A8),
-    size: 18,
-  );
 }

@@ -160,8 +160,7 @@ void main() {
     expect(find.text('Record audio'), findsNothing);
     expect(find.byIcon(Icons.mic_outlined), findsNothing);
     expect(find.bySemanticsLabel(RegExp('Record audio')), findsNothing);
-    // Owner 2026-10-27: no Contact 112 (SOS opens 112); Share trip fills
-    // the row from the left edge, under the SOS button.
+    // Owner 2026-10-27: no Contact 112 (SOS opens 112).
     final sos = tester.getRect(find.byKey(const ValueKey('safety-sos')));
     final share = tester.getRect(
       find
@@ -170,7 +169,18 @@ void main() {
     );
     expect(find.text('Contact 112'), findsNothing);
     expect(share.left, moreOrLessEquals(sos.left, epsilon: 1));
-    expect(share.width, moreOrLessEquals(sos.width, epsilon: 1));
+    // Design option B: Share trip and Safety preferences share the row
+    // in two equal tiles, edge to edge under the SOS card.
+    final prefs = tester.getRect(
+      find
+          .ancestor(
+            of: find.text('Safety preferences'),
+            matching: find.byType(InkWell),
+          )
+          .first,
+    );
+    expect(prefs.right, moreOrLessEquals(sos.right, epsilon: 1));
+    expect(share.width, moreOrLessEquals(prefs.width, epsilon: 1));
     semantics.dispose();
   });
 
