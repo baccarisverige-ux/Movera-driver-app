@@ -208,7 +208,17 @@ assert.equal(gestures, 4, 'Touch jitter preserves follow');
 div.fire('touchmove', [touch(130,120)]);
 assert.equal(gestures, 5, 'Touch pan releases follow');
 assert.equal(map.camera.center.x, -27, 'One-finger pan after jitter threshold');
+// Owner N6: the app takes the camera back (return to the car) while the
+// finger is still down; the finger's next move hands it back at once.
+api.claim(7, false); map.panTo(map.camera.center);
+div.fire('touchmove', [touch(140,125)]);
+assert.equal(gestures, 6, 'A gesture after an app claim releases follow again');
+div.fire('touchmove', [touch(150,130)]);
+assert.equal(gestures, 6, 'Still released once per claim');
 div.fire('touchend');
+api.claim(7, false); map.panTo(map.camera.center);
+div.fire('touchstart', [touch(100,100)]); div.fire('touchend');
+assert.equal(gestures, 6, 'A claim with no finger down rearms nothing');
 div.fire('touchstart', [touch(100,100),touch(200,100)]);
 div.fire('touchmove', [touch(80,80),touch(220,120)]);
 assert.ok(map.getZoom() > 16 && map.getHeading() !== 0, 'Combined pinch + twist');
