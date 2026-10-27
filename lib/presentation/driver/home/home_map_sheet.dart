@@ -1363,6 +1363,19 @@ extension _HomeMapSheet on _DriverHomeState {
                 ),
               ),
             ),
+          // Contract v0.7.1: Movera told the drivers about a surge here.
+          if (!isDestinationPanel && _liveHold)
+            Positioned(
+              left: 16,
+              right: 16,
+              top:
+                  MediaQuery.paddingOf(context).top +
+                  DigitalIslandParts.height +
+                  16,
+              child: PointerInterceptor(
+                child: SurgeNoticeBanner(session: accountSessionOf(context)!),
+              ),
+            ),
           if (!isDestinationPanel) ...[
             // As high as the phone allows: tucked just under the clock
             // and notch (the safe area keeps a few spare pixels below).

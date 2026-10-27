@@ -85,6 +85,7 @@ import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
+import 'package:movera/presentation/driver/notifications/surge_notice_banner.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/presentation/driver/home/components/destination_set_panel.dart';

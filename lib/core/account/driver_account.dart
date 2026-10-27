@@ -502,6 +502,7 @@ class ServerNotification {
     required this.read,
     this.tripId,
     this.deepLink,
+    this.data = const {},
   });
 
   factory ServerNotification.fromJson(Map<String, dynamic> json) =>
@@ -514,6 +515,9 @@ class ServerNotification {
         read: json['read'] == true,
         tripId: _text(json['tripId']),
         deepLink: _text(json['deepLink']),
+        data: json['data'] is Map
+            ? Map<String, dynamic>.unmodifiable(json['data'] as Map)
+            : const {},
       );
 
   final String notificationId;
@@ -527,6 +531,20 @@ class ServerNotification {
   final String? tripId;
   final String? deepLink;
 
+  /// The notice's own details (contract `Notification.data`), e.g. a
+  /// surge's `{zoneId, multiplier, until}`.
+  final Map<String, dynamic> data;
+
+  /// Contract v0.7.1 (`contract.json#surgeNotice`): Movera tells drivers a
+  /// surge started in their zone.
+  bool get isSurge => kind == 'surge_started';
+
+  /// The surge multiplier of a surge notice, or null.
+  double? get surgeMultiplier {
+    final value = data['multiplier'];
+    return value is num ? value.toDouble() : null;
+  }
+
   /// A tap opens My fleet (the invitations).
   bool get opensFleet => kind == 'fleet_invitation';
 
@@ -539,6 +557,7 @@ class ServerNotification {
     read: true,
     tripId: tripId,
     deepLink: deepLink,
+    data: data,
   );
 }
 
