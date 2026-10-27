@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/safety/driver_sos.dart';
 import 'package:movera/core/safety/emergency_dial.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,10 +23,14 @@ class SafetyToolKits extends StatefulWidget {
   const SafetyToolKits({
     super.key,
     this.launchEmergencyDial,
+    this.sendSos,
     this.web = kIsWeb,
   });
 
   final Future<bool> Function()? launchEmergencyDial;
+
+  /// Contract v0.7.0: the SOS to Movera ([DriverSos.fromApp] by default).
+  final Future<DriverSosOutcome> Function()? sendSos;
 
   /// A browser build: its tel: launch reports success whether or not a
   /// dialer opened (url_launcher_web), so the sheet never says it did.
@@ -41,6 +46,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
   static const Color _green = Color(0xFF19865C);
   static const Color _line = Color(0xFFE5E9EB);
   static const Color _canvas = Color(0xFFF4F6F7);
+  static const Color _red = Color(0xFFCB424B);
 
   String? _status;
 
@@ -120,6 +126,96 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
       _emergencyInFlight = false;
     }
   }
+
+  /// Owner safety part 1 (2026-10-27): SOS opens the 112 call on the phone
+  /// AND alerts Movera with the phone's position; afterwards the sheet says
+  /// only "SOS sent".
+  Future<void> _confirmSos() async {
+    if (!_ownsRoute || _emergencyInFlight) return;
+    _emergencyInFlight = true;
+    try {
+      final send = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            tr.safetySosQ,
+            style: const TextStyle(
+              color: _ink,
+              fontSize: 19,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          content: Text(
+            tr.safetySosBody,
+            style: const TextStyle(color: _muted, fontSize: 13, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => popOwned(dialogContext, false),
+              child: Text(tr.cancel),
+            ),
+            FilledButton(
+              key: const ValueKey('safety-sos-send'),
+              onPressed: () => popOwned(dialogContext, true),
+              style: FilledButton.styleFrom(backgroundColor: _red),
+              child: Text(tr.safetySosSend),
+            ),
+          ],
+        ),
+      );
+      if (send != true || !_ownsRoute) return;
+      // Both at once: the dialer does not wait for the network.
+      final alert = (widget.sendSos ?? DriverSos.fromApp)();
+      final dial = await handoffEmergencyDial(
+        widget.launchEmergencyDial ?? () => launchUrl(Uri.parse('tel:112')),
+      );
+      final outcome = await alert;
+      if (!_ownsRoute) return;
+      final dialed = dial == EmergencyDialResult.opened;
+      _showMessage(switch (outcome) {
+        DriverSosOutcome.sent =>
+          dialed ? tr.safetySosSent : tr.safetySosSentNoDialer,
+        DriverSosOutcome.noTrip => tr.safetySosNoTrip,
+        DriverSosOutcome.failed => tr.safetySosNotSent,
+      }, ok: outcome == DriverSosOutcome.sent && dialed);
+    } finally {
+      _emergencyInFlight = false;
+    }
+  }
+
+  Widget _sosButton() => Material(
+    key: const ValueKey('safety-sos'),
+    color: _red,
+    borderRadius: BorderRadius.circular(18),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: _confirmSos,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 58),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 24),
+            const SizedBox(width: 10),
+            Text(
+              tr.safetySos,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   void _toggleRecording() {
     _showMessage(tr.safetyAudioUnavailable);
@@ -428,6 +524,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                 ),
               ),
               const SizedBox(height: 16),
+              _sosButton(),
+              const SizedBox(height: 9),
               Row(
                 children: [
                   Expanded(

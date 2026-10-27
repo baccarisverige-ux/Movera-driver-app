@@ -3806,6 +3806,34 @@ class AppLocalizationsFr extends AppLocalizations {
       'N’appelez le 112 que si vous ou une autre personne avez besoin d’une aide immédiate.';
 
   @override
+  String get safetySos => 'SOS';
+
+  @override
+  String get safetySosQ => 'Envoyer un SOS ?';
+
+  @override
+  String get safetySosBody =>
+      'L’équipe sécurité de Movera est alertée avec votre position, et votre téléphone ouvre le 112.';
+
+  @override
+  String get safetySosSend => 'Envoyer le SOS';
+
+  @override
+  String get safetySosSent => 'SOS envoyé';
+
+  @override
+  String get safetySosSentNoDialer =>
+      'SOS envoyé. Impossible d’ouvrir le composeur : composez le 112 sur votre téléphone.';
+
+  @override
+  String get safetySosNotSent =>
+      'Le SOS n’a pas atteint Movera. Appelez le 112.';
+
+  @override
+  String get safetySosNoTrip =>
+      'Le SOS vers Movera fonctionne pendant une course. Appelez le 112.';
+
+  @override
   String get safetyDialerOpened =>
       'Composeur d’urgence ouvert — confirmez l’appel sur votre appareil.';
 

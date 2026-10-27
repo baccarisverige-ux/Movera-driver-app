@@ -3759,6 +3759,32 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use 112 only when you or someone else needs immediate help.';
 
   @override
+  String get safetySos => 'SOS';
+
+  @override
+  String get safetySosQ => 'Send SOS?';
+
+  @override
+  String get safetySosBody =>
+      'Movera\'s safety team is alerted with your position, and your phone opens 112.';
+
+  @override
+  String get safetySosSend => 'Send SOS';
+
+  @override
+  String get safetySosSent => 'SOS sent';
+
+  @override
+  String get safetySosSentNoDialer =>
+      'SOS sent. Could not open the dialer: dial 112 on your phone.';
+
+  @override
+  String get safetySosNotSent => 'SOS could not reach Movera. Call 112.';
+
+  @override
+  String get safetySosNoTrip => 'SOS to Movera works during a trip. Call 112.';
+
+  @override
   String get safetyDialerOpened =>
       'Emergency dialer opened — confirm the call on your device.';
 

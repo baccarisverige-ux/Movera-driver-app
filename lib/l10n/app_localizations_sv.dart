@@ -3773,6 +3773,33 @@ class AppLocalizationsSv extends AppLocalizations {
       'Ring 112 bara när du eller någon annan behöver hjälp direkt.';
 
   @override
+  String get safetySos => 'SOS';
+
+  @override
+  String get safetySosQ => 'Skicka SOS?';
+
+  @override
+  String get safetySosBody =>
+      'Moveras säkerhetsteam larmas med din position, och telefonen öppnar 112.';
+
+  @override
+  String get safetySosSend => 'Skicka SOS';
+
+  @override
+  String get safetySosSent => 'SOS skickat';
+
+  @override
+  String get safetySosSentNoDialer =>
+      'SOS skickat. Telefonen kunde inte öppnas: ring 112 på din telefon.';
+
+  @override
+  String get safetySosNotSent => 'SOS nådde inte Movera. Ring 112.';
+
+  @override
+  String get safetySosNoTrip =>
+      'SOS till Movera fungerar under en resa. Ring 112.';
+
+  @override
   String get safetyDialerOpened =>
       'Nödsamtalet är förberett – bekräfta samtalet på din enhet.';
 
