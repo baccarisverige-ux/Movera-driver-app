@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/geo/geo_point.dart';
@@ -73,11 +75,22 @@ class LiveActiveTrip {
     final cash = trip['paymentMethod'] == 'cash';
     final category = trip['categoryId'];
     final accepted = trip['acceptedAt'];
+    // Contract `Waiting.arrivedAt`: the wait at the pickup counts from it.
+    final waiting = trip['waiting'];
+    final arrived = waiting is Map ? waiting['arrivedAt'] : null;
+    final arrivedAt = arrived is String
+        ? DateTime.tryParse(arrived)?.toLocal()
+        : null;
     return PersistedActiveRide(
       tripId: id,
       stage: stage,
       acceptedAt: accepted is String
           ? DateTime.tryParse(accepted)?.toLocal()
+          : null,
+      arrivedAt: arrivedAt,
+      // The trip screen's waiting clock restores from these seconds.
+      waitSeconds: stage == ActiveRideStage.waitingForRider && arrivedAt != null
+          ? math.max(0, DateTime.now().difference(arrivedAt).inSeconds)
           : null,
       fare: pay?.formatted,
       paidByCash: cash,
