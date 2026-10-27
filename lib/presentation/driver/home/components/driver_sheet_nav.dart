@@ -111,7 +111,7 @@ class DriverSheetNav {
                                 pushSingle(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => const SupportInboxScreen(),
+                                    builder: (_) => const SupportScreen(),
                                   ),
                                 );
                               },
@@ -232,7 +232,7 @@ class DriverSheetNav {
             onTap: () {
               pushSingle(
                 context,
-                MaterialPageRoute(builder: (_) => const SupportInboxScreen()),
+                MaterialPageRoute(builder: (_) => const SupportScreen()),
               );
             },
           ),

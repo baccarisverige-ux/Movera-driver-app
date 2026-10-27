@@ -5,6 +5,8 @@ import 'package:movera/widgets/single_route_entry.dart';
 import 'dart:async';
 
 import 'package:movera/core/support/local_support_repository.dart';
+import 'package:movera/core/support/server_support_tickets.dart';
+import 'package:movera/presentation/driver/support/live_support_inbox.dart';
 import 'package:flutter/material.dart';
 
 class SupportInboxScreen extends StatefulWidget {
@@ -12,6 +14,22 @@ class SupportInboxScreen extends StatefulWidget {
   final LocalSupportRepository? repository;
   @override
   State<SupportInboxScreen> createState() => _SupportInboxScreenState();
+}
+
+/// Live builds send support messages to the server as tickets (contract v0.9.0 §16); the demo keeps the local inbox.
+class SupportScreen extends StatelessWidget {
+  const SupportScreen({super.key, this.repository, this.tickets});
+  final LocalSupportRepository? repository;
+  final ServerSupportTickets? tickets;
+  @override
+  Widget build(BuildContext context) {
+    final live = repository == null
+        ? tickets ?? ServerSupportTickets.fromApp()
+        : null;
+    return live != null
+        ? LiveSupportInbox(tickets: live)
+        : SupportInboxScreen(repository: repository);
+  }
 }
 
 class _SupportInboxScreenState extends State<SupportInboxScreen> {

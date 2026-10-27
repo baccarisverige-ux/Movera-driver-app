@@ -9918,6 +9918,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You get'**
   String get rcYouGet;
+
+  /// No description provided for @ratingTagOnTime.
+  ///
+  /// In en, this message translates to:
+  /// **'On time'**
+  String get ratingTagOnTime;
+
+  /// No description provided for @ratingTagPolite.
+  ///
+  /// In en, this message translates to:
+  /// **'Polite'**
+  String get ratingTagPolite;
+
+  /// No description provided for @ratingTagClearPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear pickup'**
+  String get ratingTagClearPickup;
+
+  /// No description provided for @ratingCommentOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment (optional)'**
+  String get ratingCommentOptional;
+
+  /// No description provided for @ratingCouldNotSend.
+  ///
+  /// In en, this message translates to:
+  /// **'The rating could not be sent.'**
+  String get ratingCouldNotSend;
+
+  /// No description provided for @message.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get message;
+
+  /// No description provided for @supportTicketAnswered.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera answered'**
+  String get supportTicketAnswered;
+
+  /// No description provided for @supportTicketSolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Solved'**
+  String get supportTicketSolved;
+
+  /// No description provided for @supportTicketClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get supportTicketClosed;
+
+  /// No description provided for @supportTicketWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Movera'**
+  String get supportTicketWaiting;
+
+  /// No description provided for @supportTicketMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera support'**
+  String get supportTicketMovera;
+
+  /// No description provided for @supportSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send. Try again.'**
+  String get supportSendFailed;
+
+  /// No description provided for @supportSendToMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Movera'**
+  String get supportSendToMovera;
+
+  /// No description provided for @supportSentToMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to Movera. The answer shows here.'**
+  String get supportSentToMovera;
+
+  /// No description provided for @supportWriteToMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'Write to Movera'**
+  String get supportWriteToMovera;
+
+  /// No description provided for @supportNoTicketsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages to Movera yet.'**
+  String get supportNoTicketsYet;
 }
 
 class _AppLocalizationsDelegate

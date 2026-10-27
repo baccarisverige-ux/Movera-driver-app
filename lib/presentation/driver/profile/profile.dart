@@ -311,7 +311,7 @@ class _DriverProfileState extends State<DriverProfile> {
               _item(
                 Icons.help_outline_rounded,
                 tr.helpCenter,
-                const SupportInboxScreen(),
+                const SupportScreen(),
               ),
             ]),
             const SizedBox(height: 12),

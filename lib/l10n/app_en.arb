@@ -3698,5 +3698,21 @@
   "rcTripTotal": "Trip total",
   "rcMoveraCommission": "Movera commission",
   "rcYouGet": "You get",
-  "@rcMoveraCommission": {"description": "Ride completed: Movera's share, shown as a minus amount; Trip total minus it is what the driver gets."}
+  "@rcMoveraCommission": {"description": "Ride completed: Movera's share, shown as a minus amount; Trip total minus it is what the driver gets."},
+  "ratingTagOnTime": "On time",
+  "ratingTagPolite": "Polite",
+  "ratingTagClearPickup": "Clear pickup",
+  "ratingCommentOptional": "Comment (optional)",
+  "ratingCouldNotSend": "The rating could not be sent.",
+  "message": "Message",
+  "supportTicketAnswered": "Movera answered",
+  "supportTicketSolved": "Solved",
+  "supportTicketClosed": "Closed",
+  "supportTicketWaiting": "Waiting for Movera",
+  "supportTicketMovera": "Movera support",
+  "supportSendFailed": "Could not send. Try again.",
+  "supportSendToMovera": "Send to Movera",
+  "supportSentToMovera": "Sent to Movera. The answer shows here.",
+  "supportWriteToMovera": "Write to Movera",
+  "supportNoTicketsYet": "No messages to Movera yet."
 }

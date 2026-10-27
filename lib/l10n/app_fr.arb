@@ -1632,5 +1632,21 @@
   "profStatusSuspended": "Compte suspendu",
   "rcTripTotal": "Total de la course",
   "rcMoveraCommission": "Commission Movera",
-  "rcYouGet": "Vous recevez"
+  "rcYouGet": "Vous recevez",
+  "ratingTagOnTime": "À l'heure",
+  "ratingTagPolite": "Poli",
+  "ratingTagClearPickup": "Prise en charge claire",
+  "ratingCommentOptional": "Commentaire (facultatif)",
+  "ratingCouldNotSend": "La note n'a pas pu être envoyée.",
+  "message": "Message",
+  "supportTicketAnswered": "Movera a répondu",
+  "supportTicketSolved": "Résolu",
+  "supportTicketClosed": "Fermé",
+  "supportTicketWaiting": "En attente de Movera",
+  "supportTicketMovera": "Support Movera",
+  "supportSendFailed": "Envoi impossible. Réessayez.",
+  "supportSendToMovera": "Envoyer à Movera",
+  "supportSentToMovera": "Envoyé à Movera. La réponse s'affiche ici.",
+  "supportWriteToMovera": "Écrire à Movera",
+  "supportNoTicketsYet": "Aucun message à Movera pour l'instant."
 }
