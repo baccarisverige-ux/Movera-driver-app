@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
+import 'package:movera/core/safety/driver_sos.dart';
 import 'package:movera/core/safety/emergency_dial.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_gate.dart';
@@ -178,6 +179,12 @@ class RideCheckController extends ChangeNotifier {
   /// driver-u43: the app only opens the dialer, and that can fail. The
   /// answer and the alert topic say "Call 112" (what the driver chose);
   /// whether the dialer opened follows as its own answer and alert update.
+  bool _sosSent = false;
+  DriverSosOutcome? _sosOutcome;
+
+  /// What the SOS sent with Call 112 came to; null before it has an answer.
+  DriverSosOutcome? get sosOutcome => _sosOutcome;
+
   Future<void> callEmergency() async {
     if (!_answerable) return;
     switch (_step) {
@@ -193,6 +200,20 @@ class RideCheckController extends ChangeNotifier {
     _dialFailed = false;
     notifyListeners();
     _ensureAlert('Call 112');
+    // Owner decision 2026-10-27: no 112 button without the SOS to Movera.
+    // Once per check; the dialer does not wait for it.
+    if (!_sosSent) {
+      _sosSent = true;
+      unawaited(
+        services.sos().catchError((_) => DriverSosOutcome.failed).then((
+          outcome,
+        ) {
+          if (_disposed) return;
+          _sosOutcome = outcome;
+          notifyListeners();
+        }),
+      );
+    }
     final result = await handoffEmergencyDial(
       () => services.launch(RideCheckServices.emergencyNumber),
     );

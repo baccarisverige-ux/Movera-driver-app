@@ -1,5 +1,6 @@
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/safety/driver_sos.dart';
 import 'package:movera/core/safety/ride_check_l10n.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -665,7 +666,7 @@ class RideCheckCard extends StatelessWidget {
         height: 48,
         onTap: c.done,
       ),
-      _footer(tr.yourAnswersAreSavedToThis),
+      _footer(tr.yourAnswerIsSavedToThis),
     ]);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -693,7 +694,16 @@ class RideCheckCard extends StatelessWidget {
             height: 1.35,
           ),
         ),
-        if (c.alertSent || c.alertFailed) _alertNote(),
+        // Owner 2026-10-27: Call 112 is also the SOS to Movera; where the
+        // SOS reaches the server the card says what happened to it, not
+        // the ride check alert's own channel.
+        if (c.services.sosReachesMovera)
+          if (c.sosOutcome != null)
+            _sosNote(c.sosOutcome!)
+          else
+            const SizedBox()
+        else if (c.alertSent || c.alertFailed)
+          _alertNote(),
         _big112(),
         const SizedBox(height: 16),
         _button(
@@ -704,8 +714,55 @@ class RideCheckCard extends StatelessWidget {
           height: 48,
           onTap: c.done,
         ),
-        _footer(tr.yourAnswersAreSavedToThis),
+        _footer(tr.yourAnswerIsSavedToThis),
       ],
+    );
+  }
+
+  Widget _sosNote(DriverSosOutcome outcome) {
+    final sent = outcome == DriverSosOutcome.sent;
+    return Container(
+      key: ValueKey(sent ? 'ride-check-sos-sent' : 'ride-check-sos-failed'),
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: RideCheckStyle.white(.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          _solar(AppAssets.solarBellBing, Colors.white, 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: sent
+                        ? tr.moveraSafetyTeamAlerted
+                        : tr.moveraCouldNotBeAlerted,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextSpan(
+                    text: sent
+                        ? tr.rideCheckSosSentWithPosition
+                        : tr.call112IfYouNeedHelp,
+                  ),
+                ],
+              ),
+              style: TextStyle(
+                color: RideCheckStyle.white(.8),
+                fontSize: 12.5,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

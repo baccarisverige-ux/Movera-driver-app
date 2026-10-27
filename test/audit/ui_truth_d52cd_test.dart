@@ -134,7 +134,8 @@ class _Dispatch implements DispatchRepository {
   Stream<OfferWithdrawal> watchWithdrawals() => const Stream.empty();
 }
 
-/// Safety toolkit: Contact 112 > Call 112 with a dial launch answering
+/// Safety toolkit: SOS > Send SOS (owner 2026-10-27: SOS opens 112 and
+/// alerts Movera; the demo's SOS reads as sent) with a dial launch answering
 /// [opened].
 Future<void> _call112(
   WidgetTester tester, {
@@ -147,9 +148,9 @@ Future<void> _call112(
       body: SafetyToolKits(launchEmergencyDial: () async => opened, web: web),
     ),
   );
-  await tester.tap(find.text('Contact 112'));
+  await tester.tap(find.byKey(const ValueKey('safety-sos')));
   await tester.pumpAndSettle();
-  await tester.tap(find.widgetWithText(FilledButton, 'Call 112'));
+  await tester.tap(find.byKey(const ValueKey('safety-sos-send')));
   await tester.pumpAndSettle();
 }
 
@@ -316,7 +317,7 @@ void main() {
       'check', (tester) async {
     await _call112(tester, opened: false);
     expect(
-      find.text('Could not open the dialer. Dial 112 manually.'),
+      find.text('SOS sent. Could not open the dialer: dial 112 on your phone.'),
       findsOneWidget,
     );
     expect(find.byIcon(Icons.check_circle_outline_rounded), findsNothing);

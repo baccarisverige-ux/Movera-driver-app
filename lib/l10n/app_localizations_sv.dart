@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -3773,6 +3774,39 @@ class AppLocalizationsSv extends AppLocalizations {
       'Ring 112 bara när du eller någon annan behöver hjälp direkt.';
 
   @override
+  String get rideCheckSosSentWithPosition => '\nSOS skickat med din position.';
+
+  @override
+  String get safetySos => 'SOS';
+
+  @override
+  String get safetySosHint => 'Ringer 112 och larmar Movera';
+
+  @override
+  String get safetySosQ => 'Skicka SOS?';
+
+  @override
+  String get safetySosBody =>
+      'Moveras säkerhetsteam larmas med din position, och telefonen öppnar 112.';
+
+  @override
+  String get safetySosSend => 'Skicka SOS';
+
+  @override
+  String get safetySosSent => 'SOS skickat';
+
+  @override
+  String get safetySosSentNoDialer =>
+      'SOS skickat. Telefonen kunde inte öppnas: ring 112 på din telefon.';
+
+  @override
+  String get safetySosNotSent => 'SOS nådde inte Movera. Ring 112.';
+
+  @override
+  String get safetySosNoTrip =>
+      'SOS till Movera fungerar under en resa. Ring 112.';
+
+  @override
   String get safetyDialerOpened =>
       'Nödsamtalet är förberett – bekräfta samtalet på din enhet.';
 
@@ -3825,6 +3859,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get safetyContact112 => 'Kontakta 112';
+
+  @override
+  String get safetyShareTripHint => 'Visa någon var du är';
 
   @override
   String get safetyShareTrip => 'Dela resan';

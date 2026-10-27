@@ -6519,6 +6519,66 @@ abstract class AppLocalizations {
   /// **'Use 112 only when you or someone else needs immediate help.'**
   String get safetyUse112Only;
 
+  /// No description provided for @rideCheckSosSentWithPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'\nSOS sent with your position.'**
+  String get rideCheckSosSentWithPosition;
+
+  /// No description provided for @safetySos.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS'**
+  String get safetySos;
+
+  /// No description provided for @safetySosHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls 112 and alerts Movera'**
+  String get safetySosHint;
+
+  /// No description provided for @safetySosQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Send SOS?'**
+  String get safetySosQ;
+
+  /// No description provided for @safetySosBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera\'s safety team is alerted with your position, and your phone opens 112.'**
+  String get safetySosBody;
+
+  /// No description provided for @safetySosSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send SOS'**
+  String get safetySosSend;
+
+  /// No description provided for @safetySosSent.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS sent'**
+  String get safetySosSent;
+
+  /// No description provided for @safetySosSentNoDialer.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS sent. Could not open the dialer: dial 112 on your phone.'**
+  String get safetySosSentNoDialer;
+
+  /// No description provided for @safetySosNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS could not reach Movera. Call 112.'**
+  String get safetySosNotSent;
+
+  /// No description provided for @safetySosNoTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS to Movera works during a trip. Call 112.'**
+  String get safetySosNoTrip;
+
   /// No description provided for @safetyDialerOpened.
   ///
   /// In en, this message translates to:
@@ -6608,6 +6668,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contact 112'**
   String get safetyContact112;
+
+  /// No description provided for @safetyShareTripHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show someone where you are'**
+  String get safetyShareTripHint;
 
   /// No description provided for @safetyShareTrip.
   ///
