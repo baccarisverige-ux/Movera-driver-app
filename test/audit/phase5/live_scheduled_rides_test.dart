@@ -21,6 +21,16 @@ void main() {
     ScheduledRideStore.reset();
     await tester.pumpWidget(const MaterialApp(home: ScheduledRidesScreen()));
     expect(find.text(tr.schedNoneYet), findsOneWidget);
+    // Owner: an icon above the text, like the Radar list's empty state.
+    final icon = tester.widget<Icon>(
+      find.byKey(const ValueKey<String>('scheduled-rides-empty-icon')),
+    );
+    expect(icon.icon, Icons.event_available_rounded);
+    expect(icon.size, 30);
+    expect(
+      tester.getTopLeft(find.byWidget(icon)).dy,
+      lessThan(tester.getTopLeft(find.text(tr.schedNoneYet)).dy),
+    );
     expect(find.textContaining('Preview — not binding'), findsNothing);
     expect(ScheduledRideStore.upcoming, isEmpty);
     await tester.tap(find.text(tr.schedAcceptedTab));

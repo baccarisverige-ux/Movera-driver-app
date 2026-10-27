@@ -194,13 +194,26 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
                   return Padding(
                     key: const ValueKey<String>('scheduled-rides-empty'),
                     padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Text(
-                      tr.schedNoneYet,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFF6F7B82),
-                        fontSize: 14,
-                      ),
+                    // Owner: the same empty-state look as the Radar list.
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.event_available_rounded,
+                          key: ValueKey<String>('scheduled-rides-empty-icon'),
+                          color: Color(0xFF6F7B82),
+                          size: 30,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          tr.schedNoneYet,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xFF6F7B82),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }
