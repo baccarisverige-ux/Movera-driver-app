@@ -3807,6 +3807,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'N’appelez le 112 que si vous ou une autre personne avez besoin d’une aide immédiate.';
 
   @override
+  String get rideCheckSosSentWithPosition =>
+      '\nSOS envoyé avec votre position.';
+
+  @override
   String get safetySos => 'SOS';
 
   @override

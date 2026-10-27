@@ -6519,6 +6519,12 @@ abstract class AppLocalizations {
   /// **'Use 112 only when you or someone else needs immediate help.'**
   String get safetyUse112Only;
 
+  /// No description provided for @rideCheckSosSentWithPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'\nSOS sent with your position.'**
+  String get rideCheckSosSentWithPosition;
+
   /// No description provided for @safetySos.
   ///
   /// In en, this message translates to:

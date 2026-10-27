@@ -1068,6 +1068,7 @@
   "prefSave": "Enregistrer les préférences",
   "safetyContactEmergencyQ": "Contacter les services d’urgence ?",
   "safetyUse112Only": "N’appelez le 112 que si vous ou une autre personne avez besoin d’une aide immédiate.",
+  "rideCheckSosSentWithPosition": "\nSOS envoyé avec votre position.",
   "safetySos": "SOS",
   "safetySosHint": "Appelle le 112 et alerte Movera",
   "safetySosQ": "Envoyer un SOS ?",

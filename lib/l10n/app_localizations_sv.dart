@@ -3774,6 +3774,9 @@ class AppLocalizationsSv extends AppLocalizations {
       'Ring 112 bara när du eller någon annan behöver hjälp direkt.';
 
   @override
+  String get rideCheckSosSentWithPosition => '\nSOS skickat med din position.';
+
+  @override
   String get safetySos => 'SOS';
 
   @override

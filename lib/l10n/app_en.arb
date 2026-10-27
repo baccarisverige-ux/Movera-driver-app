@@ -2635,6 +2635,7 @@
   "prefSave": "Save preferences",
   "safetyContactEmergencyQ": "Contact emergency services?",
   "safetyUse112Only": "Use 112 only when you or someone else needs immediate help.",
+  "rideCheckSosSentWithPosition": "\nSOS sent with your position.",
   "safetySos": "SOS",
   "safetySosHint": "Calls 112 and alerts Movera",
   "safetySosQ": "Send SOS?",
