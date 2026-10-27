@@ -234,6 +234,12 @@
     const releaseTouch = () => {
       if (!touchReleased) { touchReleased = true; release(); }
     };
+    // Owner N6: Flutter's pointer events do not reach the trip map on the
+    // web, so Dart cannot see a finger that stays on the map. When the app
+    // takes the camera back during a touch (the 12 s return to the car
+    // under a resting thumb), the gesture that follows must hand it back
+    // again; released once per touch, it fought the app frame by frame.
+    state.appClaimDuringTouch = () => { if (previous) touchReleased = false; };
     // moveCamera({zoom}) scales about the map center. Real pinch/double-tap
     // gestures instead scale about the point between the user's fingers.
     // Compensate in screen pixels so the tapped road stays under the fingers.
@@ -659,6 +665,7 @@
     },
     claim(id, anchored, lead) {
       const state = states.get(id); if (!state) return;
+      state.appClaimDuringTouch?.();
       state.claim = anchored === false ? 'free' : 'anchor';
       if (anchored !== false) state.lead = Number.isFinite(lead) ? lead : null;
     },
