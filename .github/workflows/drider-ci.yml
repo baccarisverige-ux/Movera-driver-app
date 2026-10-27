@@ -90,6 +90,9 @@ jobs:
       - name: Build web
         run: flutter build web --release
 
+      - name: Web size budget (audit Phase 7; baseline 5,631,828 B raw, 1,595,503 B gzip)
+        run: python3 tool/check_web_budget.py build/web --main-raw 6200000 --main-gzip 1760000
+
       - name: Upload verification evidence
         if: always()
         uses: actions/upload-artifact@v4
