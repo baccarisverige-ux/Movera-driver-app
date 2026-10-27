@@ -413,12 +413,13 @@ void main() {
         ),
         findsOneWidget,
       );
-      // Deny is a "no" for the missed-offers row too.
+      // Owner 2026-10-27 (contract v0.8.0 §6.7): a deny while driving a
+      // rider never counts toward going offline.
       await tester.tap(
         find.byKey(const ValueKey<String>('on-trip-radar-deny')),
       );
       await tester.pump(const Duration(milliseconds: 300));
-      expect(ExclusiveAnswers.instance.missedInRow, 1);
+      expect(ExclusiveAnswers.instance.missedInRow, 0);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });

@@ -1,5 +1,6 @@
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/contracts/driver_config_parts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/money/money.dart';
@@ -53,6 +54,8 @@ class DriverAppConfig {
         ZoneDefaults.missedExclusiveBeforeOffline,
     this.driverBonus,
     this.reservations = const ScheduledRideRules(),
+    this.parts = const DriverConfigParts(),
+    this.usesStandard = false,
   });
 
   final int version;
@@ -100,6 +103,14 @@ class DriverAppConfig {
   /// `reservations`: Dispatch › Reservations, the scheduled-ride rules
   /// (leave now, late ETA, offline backup, ride types).
   final ScheduledRideRules reservations;
+
+  /// Offers, pickup pay, ride check, texts, notices and cancel fees as
+  /// published (owner 2026-10-27); [apply] puts them in use.
+  final DriverConfigParts parts;
+
+  /// v0.8.0: the zone has no settings of its own and uses its country's
+  /// Standard.
+  final bool usesStandard;
 
   /// The bonus limits of the zone, the defaults when the document has none.
   DriverBonusLimits get driverBonusLimits =>
@@ -171,17 +182,26 @@ class DriverAppConfig {
           : seed.missedExclusiveBeforeOffline,
       driverBonus: _bonus(_map(json['driverBonus']), currency),
       reservations: _reservations(json),
+      parts: DriverConfigParts.fromJson(json, currency),
+      usesStandard: json['usesStandard'] == true,
     );
   }
 
   /// Puts this zone's rules in use where the app reads them.
   void apply() {
     WaitingRules.current = waiting;
-    // Q46: the zone's number of missed Exclusive offers before offline.
-    DriverOfferRules.current = DriverOfferRules.current.withAutoOffline(
-      on: autoOffline,
-      after: missedExclusiveBeforeOffline,
-    );
+    // Q46: the zone's number of missed Exclusive offers before offline;
+    // the offer timers, card, reasons and Exclusive while driving.
+    final offers = parts.offers;
+    DriverOfferRules.current =
+        (offers == null
+                ? DriverOfferRules.current
+                : DriverOfferRules.current.withOffers(offers))
+            .withAutoOffline(
+              on: autoOffline,
+              after: missedExclusiveBeforeOffline,
+            );
+    parts.apply();
     DestinationModeRules.current = destinationMode;
     NextTripRules.current = nextTrips;
     ScheduledRideRules.current = reservations;

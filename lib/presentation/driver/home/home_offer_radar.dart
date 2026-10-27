@@ -1237,6 +1237,9 @@ extension _HomeOfferRadar on _DriverHomeState {
     if (!_radarHomeOffers.any((item) => item.id == offer.id)) {
       return;
     }
+    // Owner 2026-10-27: any accepted trip, Radar too, starts the row of
+    // missed Exclusive offers again.
+    ExclusiveAnswers.instance.accepted();
     _openOfferTrip(offer, WaybillRecord.moveraRadarSource);
   }
 
