@@ -145,7 +145,11 @@ class _MoveraAppState extends State<MoveraApp> {
     _session = DriverSessionController(repository: _sessionStore);
     _waybills = InMemoryWaybillRepository.instance;
     _location = widget.locationRepository ?? const DriverLocationService();
-    _routing = RoadRouteService();
+    // Live builds take driving routes from movera-server (owner decision
+    // 2026-10-27); the demo keeps asking the OSRM host directly.
+    _routing = RoadRouteService(
+      api: DriverRuntimeConfig.current.authRequired ? _api : null,
+    );
     // A live build takes its offers from the server and tells it when the
     // driver goes online, where the car is and each trip step; the demo
     // keeps its in-process dispatch.

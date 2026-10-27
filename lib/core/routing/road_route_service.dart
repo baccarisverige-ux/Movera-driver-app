@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/routing/osrm_route_parser.dart';
 import 'package:movera/core/routing/route_repository.dart';
@@ -17,10 +19,11 @@ class RoadRouteException implements Exception {
 
 /// Frontend road-routing adapter.
 ///
-/// The current implementation uses the public OSRM demo endpoint so the
-/// frontend can follow actual roads without exposing a private routing key.
-/// Production should swap this adapter for Movera's backend routing endpoint
-/// while keeping the UI contract unchanged.
+/// With [api] (live builds) routes come from movera-server's OSRM proxy,
+/// `GET /api/v1/routes/driving/{coordinates}`, signed like every API call;
+/// a 503 `routing_unavailable` (server without `OSRM_URL`) is a route error
+/// like any other, so the trip shows "Route unavailable — retry". Without
+/// [api] (the demo) the adapter asks the OSRM [host] directly.
 class RoadRouteService implements RouteRepository {
   RoadRouteService({
     http.Client? client,
@@ -28,10 +31,13 @@ class RoadRouteService implements RouteRepository {
     OsrmRouteParser parser = const OsrmRouteParser(),
     this.timeout = const Duration(seconds: 8),
     this.host = defaultHost,
-  }) : _client = client ?? http.Client(),
+    ApiClient? api,
+  }) : _api = api,
+       _client = client ?? http.Client(),
        _ownsClient = ownsClient ?? client == null,
        _parser = parser;
 
+  final ApiClient? _api;
   final http.Client _client;
   final bool _ownsClient;
   final OsrmRouteParser _parser;
@@ -51,7 +57,18 @@ class RoadRouteService implements RouteRepository {
   static const publicDemoHost = 'router.project-osrm.org';
 
   /// True when routes go to the public demo server.
-  bool get usesPublicDemoServer => host == publicDemoHost;
+  bool get usesPublicDemoServer => _api == null && host == publicDemoHost;
+
+  /// True when routes go through movera-server.
+  bool get usesServer => _api != null;
+
+  static const _query = <String, String>{
+    'overview': 'full',
+    'geometries': 'geojson',
+    'steps': 'true',
+    'annotations': 'false',
+    'alternatives': 'false',
+  };
   var _closed = false;
 
   /// Closes the HTTP client only when this service created it.
@@ -77,17 +94,11 @@ class RoadRouteService implements RouteRepository {
         '${origin.longitude},${origin.latitude};'
         '${destination.longitude},${destination.latitude}';
 
-    final uri = Uri.https(
-      host,
-      '/route/v1/driving/$coordinates',
-      const <String, String>{
-        'overview': 'full',
-        'geometries': 'geojson',
-        'steps': 'true',
-        'annotations': 'false',
-        'alternatives': 'false',
-      },
-    );
+    final api = _api;
+    if (api != null) {
+      return _serverRoute(api, coordinates);
+    }
+    final uri = Uri.https(host, '/route/v1/driving/$coordinates', _query);
 
     final http.Response response;
     try {
@@ -113,7 +124,44 @@ class RoadRouteService implements RouteRepository {
       );
     }
 
-    final decoded = jsonDecode(response.body);
+    return _parse(jsonDecode(response.body));
+  }
+
+  Future<RoadRoute> _serverRoute(ApiClient api, String coordinates) async {
+    final Map<String, dynamic> decoded;
+    try {
+      decoded = await api
+          .get(
+            '/api/v1/routes/driving/$coordinates?'
+            '${Uri(queryParameters: _query).query}',
+          )
+          .timeout(timeout);
+    } on TimeoutException {
+      throw const RoadRouteException(
+        'Routing is taking too long. The trip is still active.',
+      );
+    } on ApiError catch (error) {
+      if (error.code == ApiError.timeout) {
+        throw const RoadRouteException(
+          'Routing is taking too long. The trip is still active.',
+        );
+      }
+      if (error.neverReachedServer) {
+        throw const RoadRouteException(
+          'Routing is offline. The trip is still active.',
+        );
+      }
+      throw RoadRouteException(
+        'Routing service returned ${error.statusCode ?? error.code}.',
+      );
+    }
+    if (_closed) {
+      throw const RoadRouteException('Routing is closed.');
+    }
+    return _parse(decoded);
+  }
+
+  RoadRoute _parse(Object? decoded) {
     if (decoded is! Map<String, dynamic> || decoded['code'] != 'Ok') {
       throw const RoadRouteException('No road route was found.');
     }

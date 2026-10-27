@@ -653,7 +653,9 @@ class _AcceptRideState extends State<AcceptRide>
         ) ??
         widget.locationRepository ??
         const DriverLocationService();
-    _routeService = widget.routeRepository ?? RoadRouteService();
+    _routeService =
+        widget.routeRepository ??
+        RoadRouteService(api: LiveDriverServices.instance?.api);
     _waybills = widget.waybillRepository ?? InMemoryWaybillRepository.instance;
     _navigation = NavigationController(routeRepository: _routeService);
     _navigation.addListener(_onNavigationChangedListener);
