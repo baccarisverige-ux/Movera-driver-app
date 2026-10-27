@@ -1618,5 +1618,8 @@
   "profStatusActive": "Compte actif",
   "profStatusOnHold": "En attente de la validation de Movera",
   "profStatusPending": "Informations pas encore envoyées",
-  "profStatusSuspended": "Compte suspendu"
+  "profStatusSuspended": "Compte suspendu",
+  "rcTripTotal": "Total de la course",
+  "rcMoveraCommission": "Commission Movera",
+  "rcYouGet": "Vous recevez"
 }

@@ -1618,5 +1618,8 @@
   "profStatusActive": "Aktivt konto",
   "profStatusOnHold": "Väntar på Moveras godkännande",
   "profStatusPending": "Uppgifter inte skickade än",
-  "profStatusSuspended": "Kontot är avstängt"
+  "profStatusSuspended": "Kontot är avstängt",
+  "rcTripTotal": "Resans totalpris",
+  "rcMoveraCommission": "Moveras provision",
+  "rcYouGet": "Du får"
 }

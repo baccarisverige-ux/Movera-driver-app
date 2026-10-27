@@ -5694,4 +5694,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profStatusSuspended => 'Account suspended';
+
+  @override
+  String get rcTripTotal => 'Trip total';
+
+  @override
+  String get rcMoveraCommission => 'Movera commission';
+
+  @override
+  String get rcYouGet => 'You get';
 }

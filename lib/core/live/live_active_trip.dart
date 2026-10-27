@@ -67,11 +67,13 @@ class LiveActiveTrip {
     final pickupPay = _money(trip['pickupPay']);
     final riderFare = _money(trip['fare']);
     final bonus = _money(trip['driverBonus']);
-    final pay = earnings == null
-        ? null
-        : pickupPay == null || pickupPay.currency != earnings.currency
-        ? earnings
-        : earnings + pickupPay;
+    // "You get": earnings + pickup pay + bonus (fare − commission).
+    Money? pay = earnings;
+    for (final extra in [pickupPay, bonus]) {
+      if (pay != null && extra != null && extra.currency == pay.currency) {
+        pay = pay + extra;
+      }
+    }
     final cash = trip['paymentMethod'] == 'cash';
     final category = trip['categoryId'];
     final accepted = trip['acceptedAt'];

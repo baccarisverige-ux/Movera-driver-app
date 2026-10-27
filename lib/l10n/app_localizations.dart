@@ -9834,6 +9834,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account suspended'**
   String get profStatusSuspended;
+
+  /// No description provided for @rcTripTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip total'**
+  String get rcTripTotal;
+
+  /// Ride completed: Movera's share, shown as a minus amount; Trip total minus it is what the driver gets.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera commission'**
+  String get rcMoveraCommission;
+
+  /// No description provided for @rcYouGet.
+  ///
+  /// In en, this message translates to:
+  /// **'You get'**
+  String get rcYouGet;
 }
 
 class _AppLocalizationsDelegate

@@ -3683,5 +3683,9 @@
   "profStatusPending": "Details not sent yet",
   "@profStatusPending": {"description": "Profile header (live): profStatusPending"},
   "profStatusSuspended": "Account suspended",
-  "@profStatusSuspended": {"description": "Profile header (live): profStatusSuspended"}
+  "@profStatusSuspended": {"description": "Profile header (live): profStatusSuspended"},
+  "rcTripTotal": "Trip total",
+  "rcMoveraCommission": "Movera commission",
+  "rcYouGet": "You get",
+  "@rcMoveraCommission": {"description": "Ride completed: Movera's share, shown as a minus amount; Trip total minus it is what the driver gets."}
 }

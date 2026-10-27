@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -174,8 +175,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                       style: const TextStyle(color: _muted, fontSize: 14),
                     ),
                     const SizedBox(height: 22),
-                    _fare(record?.fare),
-                    // Owner decision 2026-10-27: one amount, no breakdown.
+                    _money(record),
                     const SizedBox(height: 12),
                     Center(child: _chip(record)),
                     const SizedBox(height: 26),
@@ -291,6 +291,58 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     fontSize: 15,
     fontWeight: FontWeight.w600,
   );
+
+  /// Owner decision 2026-10-27: exactly three lines, Trip total (what the
+  /// rider pays), Movera commission (minus) and You get (pickup pay,
+  /// waiting and any bonus in it). The commission is the difference, so
+  /// the lines always add up (the server's `commission` is the same:
+  /// fare − driverEarnings − pickupPay − driverBonus). Without the
+  /// rider's fare (an older save) only the driver's amount shows.
+  Widget _money(WaybillRecord? record) {
+    final get = record == null ? null : Money.parseLabel(record.fare);
+    final paid = record?.riderFare == null || get == null
+        ? null
+        : Money.parseLabel(record!.riderFare!, currency: get.currency);
+    if (get == null || paid == null) return _fare(record?.fare);
+    final commission = paid - get;
+    final share = commission.minorUnits < 0
+        ? '+${(get - paid).formatted}'
+        : '−${commission.formatted}';
+    return Column(
+      key: const ValueKey<String>('ride-completed-money'),
+      children: [
+        _row(
+          tr.rcTripTotal,
+          Text(
+            paid.formatted,
+            key: const ValueKey<String>('ride-completed-total'),
+            style: _value,
+          ),
+        ),
+        _row(
+          tr.rcMoveraCommission,
+          Text(
+            share,
+            key: const ValueKey<String>('ride-completed-commission'),
+            style: _value,
+          ),
+        ),
+        const Divider(height: 14, thickness: 1, color: _line),
+        _row(
+          tr.rcYouGet,
+          Text.rich(
+            key: const ValueKey<String>('ride-completed-fare'),
+            TextSpan(text: get.formatted),
+            style: const TextStyle(
+              color: _ink,
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _fare(String? fare) {
     if (fare == null) {

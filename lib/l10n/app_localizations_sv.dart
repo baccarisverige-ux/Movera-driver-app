@@ -5709,4 +5709,13 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get profStatusSuspended => 'Kontot är avstängt';
+
+  @override
+  String get rcTripTotal => 'Resans totalpris';
+
+  @override
+  String get rcMoveraCommission => 'Moveras provision';
+
+  @override
+  String get rcYouGet => 'Du får';
 }
