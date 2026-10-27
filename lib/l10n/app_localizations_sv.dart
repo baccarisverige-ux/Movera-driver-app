@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -3776,6 +3777,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get safetySos => 'SOS';
 
   @override
+  String get safetySosHint => 'Ringer 112 och larmar Movera';
+
+  @override
   String get safetySosQ => 'Skicka SOS?';
 
   @override
@@ -3852,6 +3856,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get safetyContact112 => 'Kontakta 112';
+
+  @override
+  String get safetyShareTripHint => 'Visa någon var du är';
 
   @override
   String get safetyShareTrip => 'Dela resan';

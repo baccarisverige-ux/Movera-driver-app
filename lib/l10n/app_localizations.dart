@@ -6525,6 +6525,12 @@ abstract class AppLocalizations {
   /// **'SOS'**
   String get safetySos;
 
+  /// No description provided for @safetySosHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls 112 and alerts Movera'**
+  String get safetySosHint;
+
   /// No description provided for @safetySosQ.
   ///
   /// In en, this message translates to:
@@ -6656,6 +6662,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Contact 112'**
   String get safetyContact112;
+
+  /// No description provided for @safetyShareTripHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show someone where you are'**
+  String get safetyShareTripHint;
 
   /// No description provided for @safetyShareTrip.
   ///
