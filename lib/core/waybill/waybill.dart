@@ -141,9 +141,6 @@ class WaybillRecord {
   static String? bonusLabel(Money? bonus) =>
       bonus == null || bonus.minorUnits <= 0 ? null : bonus.formattedShort;
 
-  /// "incl. +40 kr Movera bonus", under the fare wherever earnings show.
-  static String bonusNote(String bonus) => tr.inclBonusMoveraBonus(bonus);
-
   WaybillRecord copyWith({
     String? fare,
     String? waitingFee,

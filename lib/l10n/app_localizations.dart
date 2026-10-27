@@ -2190,12 +2190,6 @@ abstract class AppLocalizations {
   /// **'Ride completed'**
   String get rideCompleted;
 
-  /// No description provided for @includesFeeWaitingFee.
-  ///
-  /// In en, this message translates to:
-  /// **'Includes {fee} waiting fee'**
-  String includesFeeWaitingFee(Object fee);
-
   /// No description provided for @payment.
   ///
   /// In en, this message translates to:
@@ -2321,12 +2315,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Movera fee'**
   String get moveraFee;
-
-  /// No description provided for @moveraBonus.
-  ///
-  /// In en, this message translates to:
-  /// **'Paid by Movera'**
-  String get moveraBonus;
 
   /// No description provided for @yourEarnings.
   ///
@@ -3308,12 +3296,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Assigned by Movera'**
   String get assignedByMovera;
-
-  /// No description provided for @inclBonusMoveraBonus.
-  ///
-  /// In en, this message translates to:
-  /// **'incl. +{bonus} paid by Movera'**
-  String inclBonusMoveraBonus(Object bonus);
 
   /// Admin text key island.online (Content › Driver app texts).
   ///
@@ -9420,12 +9402,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This trip changed meanwhile. Check it and try again.'**
   String get liveTripChanged;
-
-  /// Waybill: the trip's own part of the driver's earnings, without the waiting fee and the Movera bonus.
-  ///
-  /// In en, this message translates to:
-  /// **'Base · {service}'**
-  String earningsBaseService(String service);
 
   /// No description provided for @liveTripFailed.
   ///

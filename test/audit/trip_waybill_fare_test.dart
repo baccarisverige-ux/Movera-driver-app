@@ -104,7 +104,7 @@ void main() {
       expect(find.textContaining('*'), findsNothing);
     });
 
-    testWidgets('the bonus is a part of the earnings, on its own row', (
+    testWidgets('the bonus is in the earnings, with no row of its own', (
       tester,
     ) async {
       await _openWaybill(
@@ -112,9 +112,12 @@ void main() {
         _record(fare: '158,39 kr', driverBonus: '40 kr'),
       );
       expect(_row(tester, 'Movera fee'), isNull);
-      expect(_row(tester, 'Paid by Movera'), '+40 kr');
+      // Owner decision 2026-10-27: no breakdown on the waybill.
+      expect(_row(tester, 'Paid by Movera'), isNull);
       expect(_row(tester, 'Your earnings'), '158,39 kr');
-      expect(find.text('incl. +40 kr paid by Movera'), findsOneWidget);
+      expect(find.textContaining('Movera bonus'), findsNothing);
+      expect(find.textContaining('paid by Movera'), findsNothing);
+      expect(find.textContaining('+40 kr'), findsNothing);
     });
 
     testWidgets('a trip without waiting shows its earnings whole', (
@@ -145,19 +148,19 @@ void main() {
     });
   });
 
-  group('driver-u50: the waiting fee is not in the base', () {
-    testWidgets('base without the wait, the wait on its own row', (
+  // Owner decision 2026-10-27: the waybill shows two totals only, what
+  // the rider pays and what the driver gets; no base, waiting or bonus
+  // rows.
+  group('two totals only', () {
+    testWidgets('no base or waiting row; the earnings are whole', (
       tester,
     ) async {
-      await _openWaybill(tester, _record());
-      expect(_row(tester, 'Base · Movera'), '100,00 kr');
-      expect(_row(tester, 'Waiting time'), '+18,39 kr');
-    });
-
-    testWidgets('no waiting row without a waiting fee', (tester) async {
-      await _openWaybill(tester, _record(fare: '100,00 kr', waitingFee: null));
-      expect(_row(tester, 'Base · Movera'), '100,00 kr');
+      await _openWaybill(tester, _record(riderFare: '140,00 kr'));
+      expect(_row(tester, 'Base · Movera'), isNull);
       expect(_row(tester, 'Waiting time'), isNull);
+      expect(find.textContaining('+18,39 kr'), findsNothing);
+      expect(_row(tester, 'Rider pays'), '140,00 kr');
+      expect(_row(tester, 'Your earnings'), '118,39 kr');
     });
   });
 }

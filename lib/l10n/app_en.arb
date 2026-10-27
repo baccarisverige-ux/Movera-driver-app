@@ -771,14 +771,6 @@
   "tripDetails": "Trip details",
   "justNow": "Just now",
   "rideCompleted": "Ride completed",
-  "includesFeeWaitingFee": "Includes {fee} waiting fee",
-  "@includesFeeWaitingFee": {
-    "placeholders": {
-      "fee": {
-        "type": "Object"
-      }
-    }
-  },
   "payment": "Payment",
   "lastWaybill": "Last waybill",
   "open": "Open",
@@ -814,7 +806,6 @@
     }
   },
   "moveraFee": "Movera fee",
-  "moveraBonus": "Paid by Movera",
   "yourEarnings": "Your earnings",
   "riderPays": "Rider pays",
   "roundToNearestWholeKronaIn": "* Round to the nearest whole krona in the taximeter.",
@@ -1118,14 +1109,6 @@
     }
   },
   "assignedByMovera": "Assigned by Movera",
-  "inclBonusMoveraBonus": "incl. +{bonus} paid by Movera",
-  "@inclBonusMoveraBonus": {
-    "placeholders": {
-      "bonus": {
-        "type": "Object"
-      }
-    }
-  },
   "islandOnline": "Radar online",
   "@islandOnline": {
     "description": "Admin text key island.online (Content › Driver app texts)."
@@ -3554,11 +3537,6 @@
   "liveTripNotAtPickup": "Movera doesn't see you at the pickup yet. Drive closer and try again.",
   "liveTripNoShowTooEarly": "It's too early for a no-show. Wait a little longer.",
   "liveTripChanged": "This trip changed meanwhile. Check it and try again.",
-  "earningsBaseService": "Base · {service}",
-  "@earningsBaseService": {
-    "description": "Waybill: the trip's own part of the driver's earnings, without the waiting fee and the Movera bonus.",
-    "placeholders": {"service": {"type": "String"}}
-  },
   "liveTripFailed": "Movera could not record this step. Try again.",
   "authProviderComingSoon": "Sign-in with Apple and Google is coming soon. Use your phone number.",
   "authErrProvider": "Couldn’t sign in that way. Try again, or use your phone number.",

@@ -1,6 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
-import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
 
 /// The trip's waybill: one plain list, label on the left, value on the
@@ -70,22 +69,10 @@ Future<void> showMoveraWaybillSheet(
 const _ink = Color(0xFF303A3F);
 const _muted = Color(0xFF7D898F);
 
+// Owner decision 2026-10-27: two totals only, what the rider pays and
+// what the driver gets (pickup pay, waiting fee and any bonus are in it);
+// no breakdown lines.
 List<Widget> _rows(WaybillRecord record) {
-  final bonus = record.driverBonus;
-  final earnings = Money.parseLabel(record.fare);
-  final wait = record.waitingFee == null || earnings == null
-      ? null
-      : Money.parseLabel(record.waitingFee!, currency: earnings.currency);
-  final extra = bonus == null || earnings == null
-      ? null
-      : Money.parseLabel(bonus, currency: earnings.currency);
-  // The trip's own part of the earnings: without the waiting fee (Q43,
-  // driver-u50) and Movera's bonus (Q16/Q18), which have their own rows.
-  final base = earnings == null
-      ? null
-      : earnings -
-            (wait ?? Money(minorUnits: 0, currency: earnings.currency)) -
-            (extra ?? Money(minorUnits: 0, currency: earnings.currency));
   return [
     _Row(tr.trip, record.tripId),
     _Row(tr.time, formatWaybillTime(record.issuedAt)),
@@ -100,17 +87,7 @@ List<Widget> _rows(WaybillRecord record) {
     const SizedBox(height: 14),
     _Row(tr.payment, record.paidByCash ? tr.cash : tr.inApp),
     if (record.riderFare case final paid?) _Row(tr.riderPays, paid),
-    if (base != null) ...[
-      _Row(tr.earningsBaseService(record.service), base.formatted),
-      // Q43: the waiting fee is all the driver's.
-      if (wait case final fee? when !fee.isZero)
-        _Row(tr.waitingTime, '+${fee.formatted}'),
-      if (extra case final money? when !money.isZero)
-        _Row(tr.moveraBonus, '+${money.formattedShort}'),
-    ],
     _Row(tr.yourEarnings, record.fare),
-    if (bonus != null)
-      _Note(WaybillRecord.bonusNote(bonus), id: 'waybill-fare-bonus'),
   ];
 }
 
@@ -121,26 +98,6 @@ String formatWaybillTime(DateTime value) {
   return '${DriverDates.dayMonth(value)} ${value.year}, '
       '${two(value.hour)}:${two(value.minute)}:${two(value.second)} '
       '${value.timeZoneName}';
-}
-
-/// A small muted line under a row, e.g. "incl. +40 kr Movera bonus".
-class _Note extends StatelessWidget {
-  const _Note(this.text, {required this.id});
-
-  final String text;
-  final String id;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Text(
-        text,
-        key: ValueKey<String>(id),
-        style: const TextStyle(color: _muted, fontSize: 13),
-      ),
-    );
-  }
 }
 
 class _Row extends StatelessWidget {

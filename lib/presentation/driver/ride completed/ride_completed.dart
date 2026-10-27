@@ -175,32 +175,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                     ),
                     const SizedBox(height: 22),
                     _fare(record?.fare),
-                    // Q43: the waiting fee is all the driver's.
-                    if (record?.waitingFee case final fee?)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          tr.includesFeeWaitingFee(fee),
-                          key: const ValueKey<String>(
-                            'ride-completed-waiting-fee',
-                          ),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: _muted, fontSize: 13.5),
-                        ),
-                      ),
-                    // Q16/Q18: Movera's bonus is in the fare.
-                    if (record?.driverBonus case final bonus?)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          WaybillRecord.bonusNote(bonus),
-                          key: const ValueKey<String>(
-                            'ride-completed-driver-bonus',
-                          ),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: _muted, fontSize: 13.5),
-                        ),
-                      ),
+                    // Owner decision 2026-10-27: one amount, no breakdown.
                     const SizedBox(height: 12),
                     Center(child: _chip(record)),
                     const SizedBox(height: 26),

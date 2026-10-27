@@ -1241,11 +1241,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rideCompleted => 'Resan är klar';
 
   @override
-  String includesFeeWaitingFee(Object fee) {
-    return 'Inkl. $fee väntavgift';
-  }
-
-  @override
   String get payment => 'Betalning';
 
   @override
@@ -1311,9 +1306,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get moveraFee => 'Moveras avgift';
-
-  @override
-  String get moveraBonus => 'Betalt av Movera';
 
   @override
   String get yourEarnings => 'Din intäkt';
@@ -1858,11 +1850,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get assignedByMovera => 'Tilldelad av Movera';
-
-  @override
-  String inclBonusMoveraBonus(Object bonus) {
-    return 'inkl. +$bonus betalt av Movera';
-  }
 
   @override
   String get islandOnline => 'Radar online';
@@ -5456,11 +5443,6 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get liveTripChanged =>
       'Resan har ändrats under tiden. Kontrollera den och försök igen.';
-
-  @override
-  String earningsBaseService(String service) {
-    return 'Grund · $service';
-  }
 
   @override
   String get liveTripFailed =>

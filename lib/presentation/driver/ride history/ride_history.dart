@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/history/trip_history.dart';
-import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
 import 'package:movera/presentation/driver/ride%20history/cash_balance_sheet.dart';
@@ -926,20 +925,6 @@ class _HistoryRideCard extends StatelessWidget {
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      // Q16/Q18: the earnings have Movera's bonus in them.
-                      if (ride.status == TripStatus.completed &&
-                          ride.record.driverBonus != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          WaybillRecord.bonusNote(ride.record.driverBonus!),
-                          key: ValueKey<String>('history-row-bonus-${ride.id}'),
-                          style: const TextStyle(
-                            color: Color(0xFF7C868D),
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
                       const SizedBox(height: 3),
                       Text(
                         ride.time,

@@ -71,12 +71,6 @@ class PickupPayQuote {
       cashToCollect: cashToCollect,
     );
   }
-
-  /// "incl. 21,60 kr pickup · 4.2 km · 9 min", only when admin shows the
-  /// pickup line.
-  String? get line => hasPay && display == PickupPayDisplay.fareWithPickupLine
-      ? 'incl. ${pay.formatted} pickup · ${leg.label}'
-      : null;
 }
 
 /// Pure pickup pay maths:
