@@ -137,6 +137,7 @@ part 'home_offer_sound.dart';
 part 'home_back.dart';
 part 'home_recovery.dart';
 part 'home_live.dart';
+part 'home_radar_motion.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -249,11 +250,7 @@ class _DriverHomeState extends State<DriverHome>
     _HomeOfferRules(this)._releaseHeldOffline();
     _HomeOfferRoute(this)._resumeRouteLine();
     _HomeMapSheet(this)._showNextIslandMessage();
-    if (!MediaQuery.disableAnimationsOf(context)) {
-      _goOnlinePulseController.repeat(reverse: true);
-      _radarSweepController.repeat();
-      _radarMotionController.repeat();
-    }
+    _HomeRadarMotion(this)._syncRadarAnimation();
     setState(() {});
   }
 
@@ -586,15 +583,16 @@ class _DriverHomeState extends State<DriverHome>
     _goOnlinePulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
-    )..repeat(reverse: true);
+    );
     _radarSweepController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1600),
-    )..repeat();
+    );
     _radarMotionController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
-    )..repeat();
+    );
+    _HomeRadarMotion(this)._syncRadarAnimation(checkMotion: false);
     _snapSheet = MoveraSnapSheetController(
       panel: _panelController,
       vsync: this,
@@ -819,6 +817,7 @@ class _DriverHomeState extends State<DriverHome>
     if (!mounted) {
       return;
     }
+    _HomeRadarMotion(this)._syncRadarAnimation();
     _HomeOfferRules(
       this,
     )._releaseHeldOffline(); // Decision 3: a won trip began.

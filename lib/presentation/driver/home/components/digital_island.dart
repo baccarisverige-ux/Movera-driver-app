@@ -82,7 +82,9 @@ class _DigitalIslandShellState extends State<DigitalIslandShell>
         ..stop()
         ..value = 1;
     } else if (!_sweep.isAnimating) {
-      _sweep.repeat();
+      // P7-D1: one pass of light, then the island rests (no frame on
+      // every vsync while the driver only looks at Home).
+      _sweep.forward(from: 0);
     }
   }
 
