@@ -10,7 +10,14 @@ import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/notifications/surge_notice_banner.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 /// Contract v0.7.1 (owner Pricing decisions 2026-10-27): the driver app
 /// reports "Framme vid stoppet" and leaving each middle stop to the server
@@ -121,6 +128,62 @@ void main() {
       expect((await trips.arriveAtStop('t1', 1)).ok, isTrue);
     });
   });
+
+  testWidgets(
+    'on the way to a middle stop the arrival button says Framme vid stoppet',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      DriverAppTexts.language = 'sv';
+      addTearDown(DriverAppTexts.reset);
+      await tester.pumpWidget(
+        ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, _) => MaterialApp(
+            home: AcceptRide(
+              tripId: 'stop-label-trip',
+              fare: '245 kr',
+              matchedVia: 'Radar',
+              stopAddresses: const ['Odenplan'],
+              initialStage: ActiveRideStage.waitingForRider,
+              activeRideRepository: MemoryActiveRideRepository(),
+              waybillRepository: InMemoryWaybillRepository.instance,
+            ),
+          ),
+        ),
+      );
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      final slide = find.byKey(const ValueKey('active-ride-primary-action'));
+      if (slide.evaluate().isEmpty) {
+        tester
+            .widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel))
+            .last
+            .controller!
+            .animatePanelToSnapPoint();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 820));
+      }
+      await tester.drag(slide, const Offset(320, 0));
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      final button = find.byKey(
+        const ValueKey<String>('active-ride-arrived-button'),
+      );
+      expect(button, findsOneWidget);
+      expect(
+        find.descendant(of: button, matching: find.text('Framme vid stoppet')),
+        findsOneWidget,
+      );
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+    },
+  );
 
   group('surge notice', () {
     final notices = {
