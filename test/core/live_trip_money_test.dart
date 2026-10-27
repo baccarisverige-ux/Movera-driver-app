@@ -71,4 +71,22 @@ void main() {
     final noPickupPay = {...completed}..remove('pickupPay');
     expect(LiveTripMoney.tryParse(noPickupPay)!.driverPay, Money.ore(3920));
   });
+
+  test('owner 2026-10-27: You get = fare − commission, bonus included', () {
+    // The server: commission = fare − driverEarnings − pickupPay − bonus.
+    final bonused = {
+      ...completed,
+      'driverBonus': money(300),
+      'commission': money(1100),
+    };
+    final parsed = LiveTripMoney.tryParse(bonused)!;
+    expect(parsed.driverPay, Money.ore(4300));
+    for (final trip in [completed, bonused]) {
+      final money = LiveTripMoney.tryParse(trip)!;
+      final commission = Money.fromJson(
+        trip['commission'] as Map<String, dynamic>,
+      );
+      expect(money.riderFare - commission, money.driverPay);
+    }
+  });
 }

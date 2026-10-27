@@ -1,8 +1,9 @@
 import 'package:movera/core/money/money.dart';
 
 /// The money of a live trip as its projection carries it (contract §2,
-/// §3.5): the rider's `fare`, the driver's `driverEarnings` (Movera's
-/// bonus already in it) with `pickupPay` on top, the waiting lines and
+/// §3.5): the rider's `fare`, the driver's `driverEarnings` with
+/// `pickupPay` and `driverBonus` on top (the server keeps both out of
+/// `driverEarnings` and pays them from Movera's share), the waiting lines and
 /// what a cash rider hands over. The server works it out on `complete`:
 /// a finish away from the drop-off is priced by what was driven (km and
 /// minutes on board), never below the category's minimum
@@ -14,6 +15,7 @@ class LiveTripMoney {
     required this.riderFare,
     required this.driverEarnings,
     this.pickupPay,
+    this.driverBonus,
     this.waitingFee,
     Money? cashToCollect,
   }) : _cashToCollect = cashToCollect;
@@ -47,11 +49,15 @@ class LiveTripMoney {
       }
     }
     final pickupPay = money(projection['pickupPay']);
+    final bonus = money(projection['driverBonus']);
     return LiveTripMoney(
       riderFare: fare,
       driverEarnings: earnings,
       pickupPay: pickupPay != null && pickupPay.currency == earnings.currency
           ? pickupPay
+          : null,
+      driverBonus: bonus != null && bonus.currency == earnings.currency
+          ? bonus
           : null,
       waitingFee: waiting != null && waiting.minorUnits > 0 ? waiting : null,
       cashToCollect: money(projection['cashToCollect']),
@@ -61,11 +67,14 @@ class LiveTripMoney {
   /// What the rider pays (`fare`).
   final Money riderFare;
 
-  /// The driver's share after Movera's commission, the bonus in it.
+  /// The driver's share after Movera's commission (`driverEarnings`).
   final Money driverEarnings;
 
   /// Movera's pickup pay, on top of the earnings; null for none.
   final Money? pickupPay;
+
+  /// The admin's driver bonus, on top of the earnings; null for none.
+  final Money? driverBonus;
 
   /// The `waiting` and `stop_waiting` lines, all the driver's; null for
   /// none.
@@ -73,10 +82,13 @@ class LiveTripMoney {
 
   final Money? _cashToCollect;
 
-  /// The driver's own money for the trip: earnings plus pickup pay.
+  /// The driver's own money for the trip ("You get"): earnings plus
+  /// pickup pay plus bonus, so `fare − commission` is exactly this.
   Money get driverPay {
-    final pay = pickupPay;
-    return pay == null ? driverEarnings : driverEarnings + pay;
+    var pay = driverEarnings;
+    if (pickupPay case final extra?) pay = pay + extra;
+    if (driverBonus case final extra?) pay = pay + extra;
+    return pay;
   }
 
   /// On a cash trip, what the rider hands over: the server's

@@ -177,17 +177,17 @@ void main() {
       },
     );
 
-    test('total only by default; the pickup line when admin shows it', () {
-      expect(quote(4.2, 9).line, isNull);
+    test('one total, also when admin asked for the pickup line', () {
+      // Owner decision 2026-10-27: the driver sees one amount only.
       final withLine = quote(
         4.2,
         9,
         rules: config.copyWith(display: PickupPayDisplay.fareWithPickupLine),
       );
-      expect(withLine.line, 'incl. 16,60 kr pickup · 4.2 km · 9 min');
+      expect(withLine.totalOf('126,75 kr'), '143,35 kr');
     });
 
-    test('no pay leaves the fare and shows no line', () {
+    test('no pay leaves the fare', () {
       final none = quote(
         0.5,
         1,
@@ -195,7 +195,6 @@ void main() {
       );
       expect(none.hasPay, isFalse);
       expect(none.totalOf('104,80 kr'), '104,80 kr');
-      expect(none.line, isNull);
       expect(quote(4.2, 9).totalOf('—'), '—');
     });
 

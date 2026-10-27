@@ -102,11 +102,13 @@ void main() {
     final last = InMemoryWaybillRepository.instance.last!;
     expect(last.fare, '118,39 kr');
     expect(last.waitingFee, '18,39 kr');
+    // Owner decision 2026-10-27: one amount, the fee is in it, no line.
+    expect(find.text('118,39 kr'), findsWidgets);
     expect(
       find.byKey(const ValueKey('ride-completed-waiting-fee')),
-      findsOneWidget,
+      findsNothing,
     );
-    expect(find.text('Includes 18,39 kr waiting fee'), findsOneWidget);
+    expect(find.textContaining('waiting fee'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester);

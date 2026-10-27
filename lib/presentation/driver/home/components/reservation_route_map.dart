@@ -1,3 +1,4 @@
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/scheduled/reservation_when.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -68,7 +69,7 @@ void openReservationRoute(
   var roadRoute = route;
   if (roadRoute == null) {
     final routes = DriverRuntimeConfig.current.externalRouting
-        ? RoadRouteService()
+        ? RoadRouteService(api: LiveDriverServices.instance?.api)
         : null;
     roadRoute = loadReservationRoute(request, routes);
     if (routes != null) {

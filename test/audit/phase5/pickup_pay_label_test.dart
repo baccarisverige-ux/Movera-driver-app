@@ -1,31 +1,42 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/money/money.dart';
-import 'package:movera/core/waybill/waybill.dart';
 
-/// M6 (Phase 3 cross-app, S4): the 1,55 kr pickup pay is folded into the
-/// trip's Movera-paid extra ([PickupPayQuote.termsOf]) and the done
-/// screen called it "Movera-bonus". It is pickup pay, not a bonus: the
-/// label says only what is true of both, "paid by Movera".
+/// Owner decision 2026-10-27 (replaces M6's "paid by Movera" note): the
+/// driver sees no breakdown. The pickup pay is in the one amount the
+/// driver gets, and no text of the app names it, or calls it a bonus.
 void main() {
-  tearDown(() => DriverAppTexts.language = 'en');
+  test('the pickup pay is in the one total', () {
+    final terms = const PickupPayQuote(
+      pay: Money(minorUnits: 155),
+      leg: PickupLeg(km: 2.4, minutes: 5),
+    ).termsOf(fare: '120,00 kr');
+    expect(terms.fare, '121,55 kr');
+  });
 
-  final terms = const PickupPayQuote(
-    pay: Money(minorUnits: 155),
-    leg: PickupLeg(km: 2.4, minutes: 5),
-  ).termsOf(fare: '120,00 kr');
-
-  for (final (language, expected) in [
-    ('sv', 'inkl. +1,55 kr betalt av Movera'),
-    ('fr', 'dont +1,55 kr payés par Movera'),
-    ('en', 'incl. +1,55 kr paid by Movera'),
-  ]) {
-    test('$language: pickup pay is not called a bonus', () {
-      DriverAppTexts.language = language;
-      final note = WaybillRecord.bonusNote(terms.driverBonus!.formatted);
-      expect(note, expected);
-      expect(note.toLowerCase(), isNot(contains('bonus')));
+  for (final language in ['en', 'fr', 'sv']) {
+    test('$language: no breakdown texts are left', () {
+      final arb =
+          jsonDecode(File('lib/l10n/app_$language.arb').readAsStringSync())
+              as Map<String, dynamic>;
+      for (final key in [
+        'moveraBonus',
+        'inclBonusMoveraBonus',
+        'earningsBaseService',
+        'includesFeeWaitingFee',
+      ]) {
+        expect(arb.containsKey(key), isFalse, reason: key);
+      }
+      for (final text in arb.values.whereType<String>()) {
+        final lower = text.toLowerCase();
+        expect(lower, isNot(contains('paid by movera')));
+        expect(lower, isNot(contains('betalt av movera')));
+        expect(lower, isNot(contains('payés par movera')));
+        expect(lower, isNot(contains('pickup pay')), reason: text);
+      }
     });
   }
 }

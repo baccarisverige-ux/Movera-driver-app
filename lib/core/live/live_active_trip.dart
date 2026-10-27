@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/geo/geo_point.dart';
@@ -65,19 +67,32 @@ class LiveActiveTrip {
     final pickupPay = _money(trip['pickupPay']);
     final riderFare = _money(trip['fare']);
     final bonus = _money(trip['driverBonus']);
-    final pay = earnings == null
-        ? null
-        : pickupPay == null || pickupPay.currency != earnings.currency
-        ? earnings
-        : earnings + pickupPay;
+    // "You get": earnings + pickup pay + bonus (fare − commission).
+    Money? pay = earnings;
+    for (final extra in [pickupPay, bonus]) {
+      if (pay != null && extra != null && extra.currency == pay.currency) {
+        pay = pay + extra;
+      }
+    }
     final cash = trip['paymentMethod'] == 'cash';
     final category = trip['categoryId'];
     final accepted = trip['acceptedAt'];
+    // Contract `Waiting.arrivedAt`: the wait at the pickup counts from it.
+    final waiting = trip['waiting'];
+    final arrived = waiting is Map ? waiting['arrivedAt'] : null;
+    final arrivedAt = arrived is String
+        ? DateTime.tryParse(arrived)?.toLocal()
+        : null;
     return PersistedActiveRide(
       tripId: id,
       stage: stage,
       acceptedAt: accepted is String
           ? DateTime.tryParse(accepted)?.toLocal()
+          : null,
+      arrivedAt: arrivedAt,
+      // The trip screen's waiting clock restores from these seconds.
+      waitSeconds: stage == ActiveRideStage.waitingForRider && arrivedAt != null
+          ? math.max(0, DateTime.now().difference(arrivedAt).inSeconds)
           : null,
       fare: pay?.formatted,
       paidByCash: cash,

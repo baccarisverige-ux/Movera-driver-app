@@ -74,6 +74,39 @@ void main() {
       expect(ride.fare, contains('121,55'));
     });
 
+    test(
+      'an arrived trip keeps when the driver arrived (waiting.arrivedAt)',
+      () {
+        final trip = projection('arrived')
+          ..['waiting'] = {
+            'arrivedAt': '2026-10-26T10:07:30Z',
+            'freeUntil': '2026-10-26T10:12:30Z',
+            'noShowAt': '2026-10-26T10:12:30Z',
+            'chargedSeconds': 0,
+          };
+        final ride = LiveActiveTrip.snapshotOf(trip)!;
+        expect(ride.stage, ActiveRideStage.waitingForRider);
+        expect(ride.arrivedAt!.toUtc(), DateTime.utc(2026, 10, 26, 10, 7, 30));
+        expect(ride.arrivedAt!.isUtc, isFalse);
+        expect(ride.waitSeconds, isNotNull);
+        final recent = projection('arrived')
+          ..['waiting'] = {
+            'arrivedAt': DateTime.now()
+                .subtract(const Duration(seconds: 90))
+                .toUtc()
+                .toIso8601String(),
+          };
+        expect(
+          LiveActiveTrip.snapshotOf(recent)!.waitSeconds,
+          inInclusiveRange(89, 92),
+        );
+        expect(
+          LiveActiveTrip.snapshotOf(projection('arrived'))!.arrivedAt,
+          isNull,
+        );
+      },
+    );
+
     test('no coordinates: nothing to restore', () {
       final trip = projection('accepted')..remove('pickup');
       expect(LiveActiveTrip.snapshotOf(trip), isNull);

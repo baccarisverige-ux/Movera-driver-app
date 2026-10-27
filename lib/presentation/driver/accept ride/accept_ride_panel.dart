@@ -396,7 +396,6 @@ extension _AcceptRidePanel on _AcceptRideState {
                 ),
               ],
             ),
-            PickupPayLine(quote: offer.pickupPay),
             const SizedBox(height: 5),
             Text(
               tr.availableAfterYourCurrentDropOff,

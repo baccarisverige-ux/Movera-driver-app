@@ -57,7 +57,6 @@ import 'package:movera/core/dispatch/next_trip_gate.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
-import 'package:movera/widgets/pickup_pay_line.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -653,7 +652,9 @@ class _AcceptRideState extends State<AcceptRide>
         ) ??
         widget.locationRepository ??
         const DriverLocationService();
-    _routeService = widget.routeRepository ?? RoadRouteService();
+    _routeService =
+        widget.routeRepository ??
+        RoadRouteService(api: LiveDriverServices.instance?.api);
     _waybills = widget.waybillRepository ?? InMemoryWaybillRepository.instance;
     _navigation = NavigationController(routeRepository: _routeService);
     _navigation.addListener(_onNavigationChangedListener);

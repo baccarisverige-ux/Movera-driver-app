@@ -94,7 +94,7 @@ void main() {
     WaitingRules.current = const WaitingRules();
   });
 
-  testWidgets('an admin offer with a bonus: "incl. +30 kr Movera bonus"', (
+  testWidgets('an admin offer with a bonus: in the total, no bonus line', (
     tester,
   ) async {
     await _trip(
@@ -105,7 +105,9 @@ void main() {
     final last = InMemoryWaybillRepository.instance.last!;
     expect(last.fare, '128,60 kr');
     expect(last.driverBonus, '30 kr');
-    expect(find.text('incl. +30 kr paid by Movera'), findsOneWidget);
+    // Owner decision 2026-10-27: the bonus is in the one amount, no line.
+    expect(find.textContaining('paid by Movera'), findsNothing);
+    expect(find.textContaining('bonus'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester);
@@ -126,7 +128,7 @@ void main() {
     // 90 paid seconds at 0,50 € / min.
     expect(last.fare, '24,75 €');
     expect(last.waitingFee, '0,75 €');
-    expect(find.text('Includes 0,75 € waiting fee'), findsOneWidget);
+    expect(find.textContaining('waiting fee'), findsNothing);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await _frames(tester);

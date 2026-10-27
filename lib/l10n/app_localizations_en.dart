@@ -1240,11 +1240,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rideCompleted => 'Ride completed';
 
   @override
-  String includesFeeWaitingFee(Object fee) {
-    return 'Includes $fee waiting fee';
-  }
-
-  @override
   String get payment => 'Payment';
 
   @override
@@ -1310,9 +1305,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moveraFee => 'Movera fee';
-
-  @override
-  String get moveraBonus => 'Paid by Movera';
 
   @override
   String get yourEarnings => 'Your earnings';
@@ -1857,11 +1849,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assignedByMovera => 'Assigned by Movera';
-
-  @override
-  String inclBonusMoveraBonus(Object bonus) {
-    return 'incl. +$bonus paid by Movera';
-  }
 
   @override
   String get islandOnline => 'Radar online';
@@ -5438,11 +5425,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This trip changed meanwhile. Check it and try again.';
 
   @override
-  String earningsBaseService(String service) {
-    return 'Base · $service';
-  }
-
-  @override
   String get liveTripFailed => 'Movera could not record this step. Try again.';
 
   @override
@@ -5712,4 +5694,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profStatusSuspended => 'Account suspended';
+
+  @override
+  String get rcTripTotal => 'Trip total';
+
+  @override
+  String get rcMoveraCommission => 'Movera commission';
+
+  @override
+  String get rcYouGet => 'You get';
 }

@@ -1251,11 +1251,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get rideCompleted => 'Course terminée';
 
   @override
-  String includesFeeWaitingFee(Object fee) {
-    return 'Dont $fee de frais d’attente';
-  }
-
-  @override
   String get payment => 'Paiement';
 
   @override
@@ -1321,9 +1316,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get moveraFee => 'Frais Movera';
-
-  @override
-  String get moveraBonus => 'Payé par Movera';
 
   @override
   String get yourEarnings => 'Vos gains';
@@ -1877,11 +1869,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get assignedByMovera => 'Attribuée par Movera';
-
-  @override
-  String inclBonusMoveraBonus(Object bonus) {
-    return 'dont +$bonus payés par Movera';
-  }
 
   @override
   String get islandOnline => 'Radar en ligne';
@@ -5526,11 +5513,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Cette course a changé entre-temps. Vérifiez-la et réessayez.';
 
   @override
-  String earningsBaseService(String service) {
-    return 'Base · $service';
-  }
-
-  @override
   String get liveTripFailed =>
       'Movera n\'a pas pu enregistrer cette étape. Réessayez.';
 
@@ -5801,4 +5783,13 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get profStatusSuspended => 'Compte suspendu';
+
+  @override
+  String get rcTripTotal => 'Total de la course';
+
+  @override
+  String get rcMoveraCommission => 'Commission Movera';
+
+  @override
+  String get rcYouGet => 'Vous recevez';
 }

@@ -268,7 +268,7 @@ void main() {
   });
 
   testWidgets('from the Live list to the trip and its summary: the driver\'s '
-      'money, the rider\'s fare only as cash to collect', (tester) async {
+      'money; the summary: Trip total − commission = You get', (tester) async {
     final maps = GoogleMapsFlutterPlatform.instance;
     GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
     addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
@@ -334,7 +334,23 @@ void main() {
       find.byKey(const ValueKey<String>('ride-completed-fare')),
     );
     expect(summary.textSpan!.toPlainText(), '179,00 kr');
-    expect(find.textContaining('200,00', findRichText: true), findsNothing);
+    // Owner decision 2026-10-27: Trip total − Movera commission = You get.
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('ride-completed-total')),
+          )
+          .data,
+      '200,00 kr',
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('ride-completed-commission')),
+          )
+          .data,
+      '−21,00 kr',
+    );
     expect(tester.takeException(), isNull);
   });
 }

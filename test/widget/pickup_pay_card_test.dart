@@ -72,16 +72,16 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('$name: total and the grey pickup line', (tester) async {
-      await _pump(tester, card(PickupPayDisplay.fareWithPickupLine));
-      expect(find.text('112,12 kr'), findsOneWidget);
-      expect(find.byKey(_lineKey), findsOneWidget);
-      expect(
-        find.text('incl. 21,60 kr pickup · 4.2 km · 9 min'),
-        findsOneWidget,
-      );
-      expect(tester.takeException(), isNull);
-    });
+    testWidgets(
+      '$name: one total also with the pickup line setting (owner 2026-10-27)',
+      (tester) async {
+        await _pump(tester, card(PickupPayDisplay.fareWithPickupLine));
+        expect(find.text('112,12 kr'), findsOneWidget);
+        expect(find.byKey(_lineKey), findsNothing);
+        expect(find.textContaining('pickup ·'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
   }
 
   testWidgets('the driver share gets the pickup pay on top', (tester) async {

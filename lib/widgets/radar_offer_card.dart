@@ -6,7 +6,6 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/widgets/offer_badges.dart';
-import 'package:movera/widgets/pickup_pay_line.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 
 /// What a Radar offer card shows. The same card is used on Home (the deck
@@ -394,7 +393,6 @@ class RadarOfferCard extends StatelessWidget {
               ),
             ],
           ),
-          PickupPayLine(quote: offer.pickupPay),
         ],
       ),
     );

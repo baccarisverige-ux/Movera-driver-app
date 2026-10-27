@@ -5,7 +5,6 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/presentation/driver/home/components/home_offer_sheet.dart';
 import 'package:movera/widgets/offer_badges.dart';
-import 'package:movera/widgets/pickup_pay_line.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 
 /// The Exclusive offer on Home: the same sheet as the reservation request
@@ -97,11 +96,6 @@ class ExclusiveRequestSheet extends StatelessWidget {
       trip: show.tripMinutesKm
           ? tr.tripMinutesMinTrip(offer.tripMinutes)
           : null,
-      // "incl. … pickup" under the total, when admin shows it.
-      underFare: PickupPayLine(
-        quote: offer.pickupPay,
-        padding: const EdgeInsets.only(top: 4),
-      ),
       pickup: OfferSheetStop(
         place: pickupPlace,
         pickup: true,

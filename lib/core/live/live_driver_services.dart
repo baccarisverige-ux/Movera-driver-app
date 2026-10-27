@@ -67,6 +67,9 @@ class LiveDriverServices {
   final TokenStore _tokens;
   final ApiClient _api;
 
+  /// The signed API client (driving routes go through it).
+  ApiClient get api => _api;
+
   /// The origin plus `/api/v1` (contract `servers`).
   final Uri apiBase;
 
