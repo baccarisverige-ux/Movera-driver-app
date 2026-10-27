@@ -3759,6 +3759,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use 112 only when you or someone else needs immediate help.';
 
   @override
+  String get rideCheckSosSentWithPosition => '\nSOS sent with your position.';
+
+  @override
   String get safetySos => 'SOS';
 
   @override

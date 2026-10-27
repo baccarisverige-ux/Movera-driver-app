@@ -180,6 +180,10 @@ class RideCheckController extends ChangeNotifier {
   /// answer and the alert topic say "Call 112" (what the driver chose);
   /// whether the dialer opened follows as its own answer and alert update.
   bool _sosSent = false;
+  DriverSosOutcome? _sosOutcome;
+
+  /// What the SOS sent with Call 112 came to; null before it has an answer.
+  DriverSosOutcome? get sosOutcome => _sosOutcome;
 
   Future<void> callEmergency() async {
     if (!_answerable) return;
@@ -200,7 +204,15 @@ class RideCheckController extends ChangeNotifier {
     // Once per check; the dialer does not wait for it.
     if (!_sosSent) {
       _sosSent = true;
-      unawaited(services.sos().catchError((_) => DriverSosOutcome.failed));
+      unawaited(
+        services.sos().catchError((_) => DriverSosOutcome.failed).then((
+          outcome,
+        ) {
+          if (_disposed) return;
+          _sosOutcome = outcome;
+          notifyListeners();
+        }),
+      );
     }
     final result = await handoffEmergencyDial(
       () => services.launch(RideCheckServices.emergencyNumber),
