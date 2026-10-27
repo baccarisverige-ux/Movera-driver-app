@@ -7,6 +7,7 @@ import 'package:movera/core/safety/ride_check_controller.dart';
 import 'package:movera/core/safety/ride_check_detector.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
 import 'package:movera/core/safety/ride_check_recorder.dart';
+import 'package:movera/core/safety/driver_sos.dart';
 import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/safety/safety_alert_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -487,6 +488,29 @@ void main() {
       await controller.settleAlerts();
       expect(dialed, hasLength(2));
       expect(alerts.alerts, hasLength(1));
+    });
+
+    test('Call 112 is also the SOS to Movera, once per check', () async {
+      var sos = 0;
+      final withSos = RideCheckController(
+        services: RideCheckServices(
+          alerts: alerts,
+          log: log,
+          launch: (_) async => true,
+          sos: () async {
+            sos++;
+            return DriverSosOutcome.sent;
+          },
+        ),
+        tripId: 'trip-3',
+        tripDetails: () => _trip,
+      );
+      withSos.open(event(RideCheckTrigger.possibleCrash));
+      await withSos.callEmergency();
+      await withSos.callEmergency();
+      expect(sos, 1);
+      expect(withSos.dialOpened, isTrue);
+      await withSos.settleAlerts();
     });
 
     test('a failed dialer says to dial 112 manually', () async {

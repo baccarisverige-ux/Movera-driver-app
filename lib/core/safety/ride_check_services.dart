@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:movera/core/admin/ride_check_admin_config.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
+import 'package:movera/core/safety/driver_sos.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
 import 'package:movera/core/safety/ride_check_recorder.dart';
@@ -18,7 +19,9 @@ class RideCheckServices {
     Future<bool> Function(Uri uri)? launch,
     this.hardStops,
     DateTime Function()? now,
+    Future<DriverSosOutcome> Function()? sos,
   }) : _rules = rules,
+       sos = sos ?? DriverSos.fromApp,
        createRecorder = recorder ?? createRideCheckRecorder,
        launch = launch ?? launchUrl,
        now = now ?? DateTime.now;
@@ -40,6 +43,10 @@ class RideCheckServices {
   /// and the demo tools open the crash card instead.
   final Stream<DateTime>? hardStops;
   final DateTime Function() now;
+
+  /// Owner decision 2026-10-27: "Call 112" is also the SOS to Movera
+  /// (POST /driver/trips/{tripId}/sos, [DriverSos.fromApp]).
+  final Future<DriverSosOutcome> Function() sos;
 
   static final Uri emergencyNumber = Uri(scheme: 'tel', path: '112');
 

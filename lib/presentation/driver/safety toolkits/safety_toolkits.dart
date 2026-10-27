@@ -65,68 +65,6 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
     });
   }
 
-  Future<void> _confirmEmergencyCall() async {
-    if (!_ownsRoute || _emergencyInFlight) return;
-    _emergencyInFlight = true;
-    try {
-      final call = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) {
-          return AlertDialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            title: Text(
-              tr.safetyContactEmergencyQ,
-              style: TextStyle(
-                color: _ink,
-                fontSize: 19,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            content: Text(
-              tr.safetyUse112Only,
-              style: TextStyle(color: _muted, fontSize: 13, height: 1.4),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => popOwned(dialogContext, false),
-                child: Text(tr.cancel),
-              ),
-              FilledButton(
-                onPressed: () => popOwned(dialogContext, true),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFCB424B),
-                ),
-                child: Text(tr.call112),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (call == true && _ownsRoute) {
-        final result = await handoffEmergencyDial(
-          widget.launchEmergencyDial ?? () => launchUrl(Uri.parse('tel:112')),
-        );
-        if (!_ownsRoute) {
-          return;
-        }
-        _showMessage(
-          result != EmergencyDialResult.opened
-              ? tr.couldNotOpenDialerDial112
-              : widget.web
-              ? tr.safetyDialerAskedBrowser
-              : tr.safetyDialerOpened,
-          ok: result == EmergencyDialResult.opened && !widget.web,
-        );
-      }
-    } finally {
-      _emergencyInFlight = false;
-    }
-  }
-
   /// Owner safety part 1 (2026-10-27): SOS opens the 112 call on the phone
   /// AND alerts Movera with the phone's position; afterwards the sheet says
   /// only "SOS sent".
@@ -177,11 +115,17 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
       if (!_ownsRoute) return;
       final dialed = dial == EmergencyDialResult.opened;
       _showMessage(switch (outcome) {
+        // A browser reports a tel: launch as opened whether or not a dialer
+        // opened (url_launcher_web), so it never says it did.
         DriverSosOutcome.sent =>
-          dialed ? tr.safetySosSent : tr.safetySosSentNoDialer,
+          !dialed
+              ? tr.safetySosSentNoDialer
+              : widget.web
+              ? '${tr.safetySosSent}. ${tr.safetyDialerAskedBrowser}'
+              : tr.safetySosSent,
         DriverSosOutcome.noTrip => tr.safetySosNoTrip,
         DriverSosOutcome.failed => tr.safetySosNotSent,
-      }, ok: outcome == DriverSosOutcome.sent && dialed);
+      }, ok: outcome == DriverSosOutcome.sent && dialed && !widget.web);
     } finally {
       _emergencyInFlight = false;
     }
@@ -200,7 +144,11 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 24),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
             const SizedBox(width: 10),
             Text(
               tr.safetySos,
@@ -528,16 +476,10 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
               const SizedBox(height: 9),
               Row(
                 children: [
-                  Expanded(
-                    child: _SafetyToolButton(
-                      icon: Icons.call_outlined,
-                      label: tr.safetyContact112,
-                      onTap: _confirmEmergencyCall,
-                    ),
-                  ),
+                  // Owner decision 2026-10-27: no "Contact 112" button; SOS
+                  // above opens 112 and alerts Movera.
                   // Owner decision 10: hidden while the option is off.
                   if (SafetyAudioOption.enabled) ...[
-                    const SizedBox(width: 9),
                     Expanded(
                       child: _SafetyToolButton(
                         icon: Icons.mic_outlined,
@@ -545,8 +487,8 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                         onTap: _toggleRecording,
                       ),
                     ),
+                    const SizedBox(width: 9),
                   ],
-                  const SizedBox(width: 9),
                   Expanded(
                     child: _SafetyToolButton(
                       icon: Icons.ios_share_outlined,

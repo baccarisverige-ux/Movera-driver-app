@@ -40,13 +40,13 @@ void main() {
         launches++;
         return dial.future;
       });
-      final contact = _tap(tester, 'Contact 112');
+      final contact = _tap(tester, 'SOS');
       contact();
       contact();
       await tester.pumpAndSettle();
       expect(find.byType(AlertDialog), findsOneWidget);
       final confirm = tester
-          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Call 112'))
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Send SOS'))
           .onPressed!;
       confirm();
       confirm();
@@ -58,7 +58,9 @@ void main() {
       dial.complete(false);
       await tester.pumpAndSettle();
       expect(
-        find.text('Could not open the dialer. Dial 112 manually.'),
+        find.text(
+          'SOS sent. Could not open the dialer: dial 112 on your phone.',
+        ),
         findsOneWidget,
       );
       contact();
@@ -97,11 +99,11 @@ void main() {
         addTearDown(() => SafetyAudioOption.debugEnabled = null);
         final dial = Completer<bool>();
         final navigator = await _open(tester, () => dial.future);
-        final contact = _tap(tester, 'Contact 112');
+        final contact = _tap(tester, 'SOS');
         final recording = _tap(tester, 'Record audio');
         contact();
         await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(FilledButton, 'Call 112'));
+        await tester.tap(find.widgetWithText(FilledButton, 'Send SOS'));
         await tester.pumpAndSettle();
         if (disposed) {
           await tester.pumpWidget(const SizedBox());
@@ -120,12 +122,7 @@ void main() {
         if (!disposed) {
           navigator.currentState!.pop();
           await tester.pumpAndSettle();
-          expect(
-            find.text(
-              'Emergency dialer opened — confirm the call on your device.',
-            ),
-            findsNothing,
-          );
+          expect(find.text('SOS sent'), findsNothing);
           expect(
             find.text('Audio recording is unavailable in this demo.'),
             findsNothing,
