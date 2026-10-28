@@ -1298,7 +1298,6 @@
   "rcCrashTrail": " a été détecté",
   "rcCrashTrailAt": " a été détecté · {place}",
   "tipHighBoostNearby": "Forte majoration à proximité",
-  "tipHighBoostIn": "Forte majoration · +{kr} kr à {zone}",
   "tipExpectTrip": "Une course est attendue d’ici 2 à 5 min",
   "tipPromotionRides": "Promotion · {rides} courses = {kr} kr",
   "tipBusyArea": "Zone animée · courses attendues bientôt",

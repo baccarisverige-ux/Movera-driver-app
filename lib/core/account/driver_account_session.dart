@@ -18,11 +18,6 @@ class DriverAccountSession extends ChangeNotifier {
   /// [refreshUnread]; a failed read keeps the last count.
   final ValueNotifier<int> unreadNotifications = ValueNotifier<int>(0);
 
-  /// Contract v0.7.1: the newest unread surge notice (`surge_started`),
-  /// shown on Home until the driver closes it; null when there is none.
-  final ValueNotifier<ServerNotification?> surgeNotice =
-      ValueNotifier<ServerNotification?>(null);
-
   DriverAccountRepository get repository => _repository;
 
   /// The last profile the server sent, or null before the first read.
@@ -51,8 +46,6 @@ class DriverAccountSession extends ChangeNotifier {
     try {
       final unread = await _repository.notifications(unreadOnly: true);
       unreadNotifications.value = unread.length;
-      // Newest first: the first unread surge notice is the one to show.
-      surgeNotice.value = unread.where((n) => n.isSurge).firstOrNull;
     } catch (_) {
       // Offline or a server fault: the count stays.
     }
@@ -77,25 +70,10 @@ class DriverAccountSession extends ChangeNotifier {
     return account;
   }
 
-  /// The driver closed the surge notice: it is read on the server and
-  /// leaves Home (a failed read keeps it closed here).
-  Future<void> dismissSurge() async {
-    final notice = surgeNotice.value;
-    if (notice == null) return;
-    surgeNotice.value = null;
-    if (unreadNotifications.value > 0) unreadNotifications.value -= 1;
-    try {
-      await _repository.markNotificationRead(notice.notificationId);
-    } catch (_) {
-      // Offline: the server shows it again on the next read.
-    }
-  }
-
   /// Forgets the account (sign-out).
   void clear() {
     _account = null;
     unreadNotifications.value = 0;
-    surgeNotice.value = null;
     notifyListeners();
   }
 }

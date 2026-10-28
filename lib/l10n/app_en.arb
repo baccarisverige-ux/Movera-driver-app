@@ -2997,17 +2997,6 @@
     }
   },
   "tipHighBoostNearby": "High boost nearby",
-  "tipHighBoostIn": "High boost · +{kr} kr in {zone}",
-  "@tipHighBoostIn": {
-    "placeholders": {
-      "kr": {
-        "type": "String"
-      },
-      "zone": {
-        "type": "String"
-      }
-    }
-  },
   "tipExpectTrip": "Expect a trip in 2–5 min",
   "tipPromotionRides": "Promotion · {rides} rides = {kr} kr",
   "@tipPromotionRides": {

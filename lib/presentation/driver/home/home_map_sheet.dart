@@ -1194,6 +1194,8 @@ extension _HomeMapSheet on _DriverHomeState {
                       ),
                     ),
                   ),
+                  // Contract v0.7.2 §17: surge zones as colour only.
+                  polygons: _isOnline ? _surgePolygons : const {},
                   myLocationEnabled: false,
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
@@ -1361,19 +1363,6 @@ extension _HomeMapSheet on _DriverHomeState {
                         _HomeOfferRoute(this)._offerCardMeasured(deck: height),
                   ),
                 ),
-              ),
-            ),
-          // Contract v0.7.1: Movera told the drivers about a surge here.
-          if (!isDestinationPanel && _liveHold)
-            Positioned(
-              left: 16,
-              right: 16,
-              top:
-                  MediaQuery.paddingOf(context).top +
-                  DigitalIslandParts.height +
-                  16,
-              child: PointerInterceptor(
-                child: SurgeNoticeBanner(session: accountSessionOf(context)!),
               ),
             ),
           if (!isDestinationPanel) ...[
@@ -1792,6 +1781,11 @@ extension _HomeMapSheet on _DriverHomeState {
         : IslandWaitingSignals.fromHome(
             _adminHomeConfig,
             now: ScheduledClock.instance.now(),
+            // Contract v0.7.2 §17: inside a surge zone or within 3 km.
+            boostNearby: nearSurgeZone(
+              GeoPoint(_driverPosition.latitude, _driverPosition.longitude),
+              _surgeMap?.zones ?? const [],
+            ),
           );
     return signals.tips();
   }

@@ -85,7 +85,6 @@ import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
-import 'package:movera/presentation/driver/notifications/surge_notice_banner.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/presentation/driver/home/components/destination_set_panel.dart';
@@ -95,6 +94,7 @@ import 'package:movera/presentation/driver/home/components/home_island_notices.d
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/components/island_waiting.dart';
 import 'package:movera/core/island/island_waiting_signals.dart';
+import 'package:movera/core/surge/surge_map.dart';
 import 'package:movera/core/sound/radar_offer_sound.dart';
 import 'package:movera/presentation/driver/home/components/trip_problem_sheet.dart';
 import 'package:movera/presentation/driver/home/components/driver_sheet_nav.dart';
@@ -139,6 +139,7 @@ part 'home_back.dart';
 part 'home_recovery.dart';
 part 'home_live.dart';
 part 'home_radar_motion.dart';
+part 'home_updates.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -213,46 +214,10 @@ class _DriverHomeState extends State<DriverHome>
       _HomeAccount(this)._refreshLiveBadges();
     }
     if (_liveVisible) {
-      _resumeHomeUpdates();
+      _HomeUpdates(this)._resumeHomeUpdates();
     } else {
-      _pauseHomeUpdates();
+      _HomeUpdates(this)._pauseHomeUpdates();
     }
-  }
-
-  void _pauseHomeUpdates() {
-    _camera.suspend();
-    _locationEpoch++;
-    _driverLocationSubscription?.cancel();
-    _driverLocationSubscription = null;
-    _radarSubscription?.cancel();
-    _radarSubscription = null;
-    _withdrawalSubscription?.cancel();
-    _HomeOfferRadar(this)._cancelAllOfferTimers(preserveClaim: true);
-    _offerSimulationTimer?.cancel();
-    _directOfferTimer?.cancel();
-    _expandedDirectOfferTimer?.cancel();
-    _radarOfferTwoTimer?.cancel();
-    _radarOfferThreeTimer?.cancel();
-    _goOnlinePulseController.stop();
-    _radarSweepController.stop();
-    _radarMotionController.stop();
-    _offerRouteFrame.stopLine();
-  }
-
-  void _resumeHomeUpdates() {
-    if (!mounted || !_liveVisible) {
-      return;
-    }
-    _camera.resume();
-    unawaited(_HomeMapSheet(this)._startDriverLocation());
-    _HomeMapSheet(this)._recheckDestinationLimit();
-    _HomeOfferRadar(this)._scheduleVisibleOffers();
-    _HomeOfferRadar(this)._resumeOfferTimers();
-    _HomeOfferRules(this)._releaseHeldOffline();
-    _HomeOfferRoute(this)._resumeRouteLine();
-    _HomeMapSheet(this)._showNextIslandMessage();
-    _HomeRadarMotion(this)._syncRadarAnimation();
-    setState(() {});
   }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -358,6 +323,8 @@ class _DriverHomeState extends State<DriverHome>
   late final RouteRepository _roadRouteService;
   late final WaybillRepository _waybills;
   late final DispatchRepository _dispatch;
+  SurgeMapController? _surgeMap; // home_updates.dart
+  Set<Polygon> _surgePolygons = const {};
   StreamSubscription<List<RideOffer>>? _radarSubscription;
   StreamSubscription<OfferWithdrawal>? _withdrawalSubscription;
   List<RideOffer> _latestDispatchOffers = const <RideOffer>[];
@@ -565,6 +532,7 @@ class _DriverHomeState extends State<DriverHome>
     _waybills = widget.waybillRepository ?? InMemoryWaybillRepository.instance;
     _ownsDispatch = widget.dispatchRepository == null;
     _dispatch = widget.dispatchRepository ?? DemoDispatchRepository();
+    _HomeUpdates(this)._startSurgeMap();
     if (widget.sessionController != null && widget.initialOnline) {
       _driverSession.setOnline(true);
     }
@@ -814,6 +782,7 @@ class _DriverHomeState extends State<DriverHome>
 
   void _onDriverSessionChanged() {
     DrivingTimeClock.instance.sync(online: _driverSession.isOnline);
+    _HomeUpdates(this)._syncSurgeMap();
     _HomeAccount(this)._syncDrivingLimit();
     if (!mounted) {
       return;
@@ -1365,6 +1334,7 @@ class _DriverHomeState extends State<DriverHome>
     _withdrawalSubscription?.cancel();
     _homeSheetPositionGuardTimer?.cancel();
     _goOnlinePulseController.dispose();
+    _surgeMap?.dispose();
     _onlineTransitionTimer?.cancel();
     _islandIdleTimer?.cancel();
     _islandWakeTimer?.cancel();

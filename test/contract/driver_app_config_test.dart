@@ -63,8 +63,8 @@ void main() {
     expect(config.currency, 'SEK');
     expect(config.categoryIds, ['economy', 'comfort']);
     expect(config.feature('scheduledRides'), isTrue);
-    expect(config.waiting.base.perMinute.formatted, '5,00 kr');
-    expect(config.waiting.base.noShowFee.formatted, '50,00 kr');
+    expect(config.waiting.base.perMinute.formatted, '12,26 kr');
+    expect(config.waiting.base.noShowFee.formatted, '65,00 kr');
     expect(config.waiting.base.driverShareNoShowPercent, 80);
     expect(config.cancelReasons['noShow'], ['rider_no_show']);
     expect(config.latestVersion, '1.2.0');
@@ -257,7 +257,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.5.5');
+      expect(contract['version'], '0.7.2');
       expect(
         ZoneDefaults.paymentMethods,
         contract['zonePaymentMethods']['values'],
@@ -343,7 +343,7 @@ void main() {
         _read('contracts/fixtures/config/driver_app_config.json'),
       );
       expect(config.country, 'SE');
-      expect(config.missedExclusiveBeforeOffline, 3);
+      expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonusLimits.defaultLimit, Money(minorUnits: 20000));
       expect(config.waiting.base.freeMinutes, 5);
       expect(
@@ -360,7 +360,7 @@ void main() {
       expect(config.paymentMethods, ZoneDefaults.paymentMethods);
       expect(config.maxStops, 3);
       expect(config.maxPickupMoveMeters, 500);
-      expect(config.missedExclusiveBeforeOffline, 3);
+      expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonus, isNull);
       expect(
         config.driverBonusLimits.defaultLimit,
@@ -398,7 +398,7 @@ void main() {
       expect(config.maxStops, 3);
       expect(config.maxPickupMoveMeters, 500);
       expect(config.autoOffline, isTrue);
-      expect(config.missedExclusiveBeforeOffline, 3);
+      expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonus, isNull, reason: 'limit above the hard max');
       expect(
         config.driverBonusLimits.defaultLimit,

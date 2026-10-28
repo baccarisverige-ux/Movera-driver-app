@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:movera/core/account/driver_account_repository.dart';
-import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
@@ -15,13 +13,13 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
-import 'package:movera/presentation/driver/notifications/surge_notice_banner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 /// Contract v0.7.1 (owner Pricing decisions 2026-10-27): the driver app
 /// reports "Framme vid stoppet" and leaving each middle stop to the server
-/// (no free minutes at a stop), and shows Movera's surge notice on Home.
+/// (no free minutes at a stop). v0.7.2: the surge notice on Home is gone
+/// (test/pricing/surge_map_test.dart).
 void main() {
   final origin = Uri.parse('https://api.test.movera.se');
   late List<http.Request> requests;
@@ -184,75 +182,4 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
     },
   );
-
-  group('surge notice', () {
-    final notices = {
-      'items': [
-        {
-          'notificationId': 'n2',
-          'audience': 'driver',
-          'kind': 'surge_started',
-          'title': 'Högre priser nu',
-          'body': 'Prishöjning ×2.0 i ditt område. Fler resor väntar.',
-          'at': '2026-10-27T10:00:00Z',
-          'read': false,
-          'data': {'zoneId': 'Z001', 'multiplier': 2},
-        },
-        {
-          'notificationId': 'n1',
-          'audience': 'driver',
-          'kind': 'fleet_invitation',
-          'title': 'Inbjudan',
-          'body': 'x',
-          'at': '2026-10-26T10:00:00Z',
-          'read': false,
-        },
-      ],
-      'nextCursor': null,
-    };
-
-    testWidgets(
-      'Home shows the newest unread surge notice until it is closed',
-      (tester) async {
-        answers
-          ..add((_) => json(200, notices))
-          ..add(
-            (_) => json(200, {
-              ...(notices['items'] as List).first as Map,
-              'read': true,
-            }),
-          );
-        final session = DriverAccountSession(
-          repository: DriverAccountRepository(api()),
-        );
-        await tester.runAsync(session.refreshUnread);
-        expect(session.unreadNotifications.value, 2);
-        expect(session.surgeNotice.value?.surgeMultiplier, 2);
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: SurgeNoticeBanner(
-                session: session,
-                pollEvery: const Duration(hours: 1),
-              ),
-            ),
-          ),
-        );
-        expect(find.text('Högre priser nu'), findsOneWidget);
-        expect(find.text('×2.0'), findsOneWidget);
-        await tester.tap(
-          find.byKey(const ValueKey<String>('surge-notice-close')),
-        );
-        await tester.runAsync(() => Future<void>.delayed(Duration.zero));
-        await tester.pump();
-        expect(
-          find.byKey(const ValueKey<String>('surge-notice-banner')),
-          findsNothing,
-        );
-        expect(requests.last.url.path, '/api/v1/notifications/n2/read');
-        expect(session.unreadNotifications.value, 1);
-      },
-    );
-  });
 }
