@@ -8,6 +8,7 @@ import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_active_trip.dart';
+import 'package:movera/core/live/live_driver_config.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
@@ -17,6 +18,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/surge/api_surge_map.dart';
 
 export 'package:movera/core/live/live_trip_money.dart' show LiveTripMoney;
 
@@ -47,6 +49,7 @@ class LiveDriverServices {
     places = LiveAddressLookup(api: api);
     activeTrip = LiveActiveTrip(api: api);
     earnings = LiveEarnings(api: api);
+    surgeMap = ApiSurgeMapSource(api: api);
     dispatch = ApiDispatchRepository(
       client: client,
       baseUri: apiBase,
@@ -55,6 +58,12 @@ class LiveDriverServices {
       onAccepted: trips.observe,
     );
     presence = LivePresence(api: api, dispatch: dispatch, reporter: reporter);
+    config = LiveDriverConfig(
+      client: client,
+      apiBase: apiBase,
+      accessToken: tokens.readAccess,
+      renewSession: api.renewAccess,
+    );
   }
 
   /// Set by the app root in a live build; null in the demo.
@@ -87,8 +96,15 @@ class LiveDriverServices {
 
   /// Today's earnings from the server (audit R3).
   late final LiveEarnings earnings;
+
+  /// The coloured surge zones of Home's map (contract v0.7.2 §17).
+  late final ApiSurgeMapSource surgeMap;
   late final ApiDispatchRepository dispatch;
   late final LivePresence presence;
+
+  /// The published DriverAppConfig (owner 2026-10-27): read on start, again
+  /// on each config_published, put in use at once; last good kept.
+  late final LiveDriverConfig config;
 
   static Uri _withPrefix(Uri origin) => origin.replace(
     path: '${origin.path.replaceFirst(RegExp(r'/$'), '')}/api/v1',
@@ -107,7 +123,11 @@ class LiveDriverServices {
   /// Follows the app's availability: the feed and location run while the
   /// driver is online or on a trip, and the server hears an offline that
   /// did not come from Home's switch (after a trip, a hold, sign-out).
-  void attach(DriverSessionController session) => presence.attach(session);
+  void attach(DriverSessionController session) {
+    presence.attach(session);
+    dispatch.onDriverOffline = () => session.setOnline(false);
+    unawaited(config.start().then((_) => config.watch()));
+  }
 
   /// The app is on screen again ([LivePresence.resumed]).
   void resumed() => presence.resumed();
@@ -115,6 +135,7 @@ class LiveDriverServices {
   Future<void> dispose() async {
     presence.detach();
     reporter.stop();
+    config.dispose();
     await dispatch.dispose();
   }
 }

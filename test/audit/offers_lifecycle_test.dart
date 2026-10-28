@@ -279,7 +279,9 @@ void main() {
             const Duration(milliseconds: 1750),
       );
       expect(find.byKey(_offerCard), findsNothing);
-      expect(ExclusiveAnswers.instance.missedInRow, 1);
+      // Owner 2026-10-27 (contract v0.8.0 §6.7): an Exclusive offer missed
+      // while on a trip never counts toward going offline.
+      expect(ExclusiveAnswers.instance.missedInRow, 0);
       await _unmount(tester, location);
     });
   });

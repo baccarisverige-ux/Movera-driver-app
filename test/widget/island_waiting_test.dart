@@ -57,7 +57,7 @@ void main() {
     expect(
       demo.map((t) => t.title),
       containsAll(<String>[
-        'High boost · +25 kr in Södermalm',
+        'High boost nearby',
         'Expect a trip in 2–5 min',
         'Busy area · trips expected soon',
         'Demand rising near you',

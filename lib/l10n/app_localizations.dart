@@ -7899,12 +7899,6 @@ abstract class AppLocalizations {
   /// **'High boost nearby'**
   String get tipHighBoostNearby;
 
-  /// No description provided for @tipHighBoostIn.
-  ///
-  /// In en, this message translates to:
-  /// **'High boost · +{kr} kr in {zone}'**
-  String tipHighBoostIn(String kr, String zone);
-
   /// No description provided for @tipExpectTrip.
   ///
   /// In en, this message translates to:

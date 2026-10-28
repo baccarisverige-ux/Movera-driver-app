@@ -992,6 +992,18 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (_stage == ActiveRideStage.onTrip &&
         !_paidStopWait &&
         _stopCursor < widget.stopAddresses.length) {
+      // Contract v0.7.1 §3.8: the server charges the stop wait from this
+      // tap, so a live build tells it first.
+      final stop = _stopCursor;
+      if (LiveDriverServices.active &&
+          (!await _AcceptRideLive(this)._serverStep(
+                (trips) => trips.arriveAtStop(widget.tripId, stop),
+              ) ||
+              !mounted ||
+              _stage != ActiveRideStage.onTrip ||
+              _paidStopWait)) {
+        return;
+      }
       _paidStopWait = true;
       _waitSeconds = 0;
       _waitAnchorAt = null;
@@ -1489,6 +1501,17 @@ extension _AcceptRideTrip on _AcceptRideState {
 
       case ActiveRideStage.onTrip:
         if (_paidStopWait) {
+          // Leaving the stop ends its paid wait on the server (v0.7.1).
+          final stop = _stopCursor;
+          if (LiveDriverServices.active &&
+              (!await _AcceptRideLive(this)._serverStep(
+                    (trips) => trips.leaveStop(widget.tripId, stop),
+                  ) ||
+                  !mounted ||
+                  !_paidStopWait)) {
+            _stageTransitioning = false;
+            return;
+          }
           _syncWaitClock();
           _paidWaitSeconds += _paidWaitNow;
           _paidStopWait = false;
@@ -2034,16 +2057,9 @@ extension _AcceptRideTrip on _AcceptRideState {
       _onTripRadarState = _OnTripRadarState.scanning;
     });
     _restoreRideSheet();
-    // Q16: a declined or missed Exclusive offer counts; at the admin's
-    // number in a row the driver goes offline after this trip.
-    if (ExclusiveAnswers.instance.missed()) {
-      widget.sessionController?.setOnline(false);
-      IslandMessages.show(
-        HomeIslandNotices.offlineAfterMissed(
-          DriverOfferRules.current.autoOfflineAfter,
-        ),
-      );
-    }
+    // Owner 2026-10-27 (contract v0.8.0 §6.7): an Exclusive offer missed or
+    // declined while the driver is on a trip never counts toward going
+    // offline.
   }
 
   void _startWaitTimer() {

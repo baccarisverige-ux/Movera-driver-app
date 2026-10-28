@@ -24,8 +24,7 @@ class IslandWaitingTip {
 @immutable
 class IslandWaitingSignals {
   const IslandWaitingSignals({
-    this.boostKr,
-    this.boostZone,
+    this.boostNearby = false,
     this.busyArea = false,
     this.demandRising = false,
     this.expectTripSoon = false,
@@ -37,9 +36,10 @@ class IslandWaitingSignals {
     this.promotionKr,
   });
 
-  /// A fare boost nearby, in kr, and its zone when known.
-  final int? boostKr;
-  final String? boostZone;
+  /// Contract v0.7.2 §17: the driver is inside a coloured surge zone or
+  /// less than 3 km from one (`nearSurgeZone`). The tip says only "High
+  /// boost nearby": no money, number or zone name.
+  final bool boostNearby;
 
   /// An area with high demand: trips are expected soon.
   final bool busyArea;
@@ -65,9 +65,9 @@ class IslandWaitingSignals {
   final int? promotionRides;
   final int? promotionKr;
 
-  /// What Home knows today: the busy windows of today's events. Boosts,
-  /// promotions, the airport queue and streaks come from dispatch once it
-  /// sends them.
+  /// What Home knows today: the busy windows of today's events and, in a
+  /// live build, whether a surge zone is near ([boostNearby]). Promotions,
+  /// the airport queue and streaks come from dispatch once it sends them.
   ///
   /// driver-u20: the admin's Stockholm demand per area says nothing about
   /// the area the driver is in (areas have no position) and is a level,
@@ -78,6 +78,7 @@ class IslandWaitingSignals {
     DriverHomeAdminConfig config, {
     required DateTime now,
     int streak = 0,
+    bool boostNearby = false,
   }) {
     String? peak;
     for (final event in config.events) {
@@ -90,24 +91,18 @@ class IslandWaitingSignals {
         break;
       }
     }
-    return IslandWaitingSignals(peakStart: peak, streak: streak);
+    return IslandWaitingSignals(
+      peakStart: peak,
+      streak: streak,
+      boostNearby: boostNearby,
+    );
   }
 
   /// The demo: every kind of message has its fact, so all of them show.
   factory IslandWaitingSignals.demo(DriverHomeAdminConfig config) {
-    final inner = config.stockholmWork.innerAreas;
-    String? zone;
-    var top = 0;
-    for (final area in inner) {
-      if (area.demandPercent > top) {
-        top = area.demandPercent;
-        zone = area.name;
-      }
-    }
     final events = config.events.where((e) => e.enabled);
     return IslandWaitingSignals(
-      boostKr: 25,
-      boostZone: zone,
+      boostNearby: true,
       busyArea: true,
       demandRising: true,
       expectTripSoon: true,
@@ -122,14 +117,8 @@ class IslandWaitingSignals {
 
   /// The messages these facts allow, in the order they rotate.
   List<IslandWaitingTip> tips() => [
-    if (boostKr case final kr?)
-      IslandWaitingTip(
-        'boost',
-        boostZone == null
-            ? tr.tipHighBoostNearby
-            : tr.tipHighBoostIn('$kr', boostZone!),
-        IslandTipLook.boost,
-      ),
+    if (boostNearby)
+      IslandWaitingTip('boost', tr.tipHighBoostNearby, IslandTipLook.boost),
     if (expectTripSoon)
       IslandWaitingTip('expect', tr.tipExpectTrip, IslandTipLook.info),
     if (promotionRides case final rides?)

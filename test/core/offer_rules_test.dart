@@ -20,9 +20,9 @@ void main() {
 
     test('defaults mirror the admin', () {
       expect(rules.autoOffline, isTrue);
-      // Q46: three in a row, until admin sends its own number.
-      expect(rules.autoOfflineAfter, 3);
-      expect(DriverOfferRules.defaultAutoOfflineAfter, 3);
+      // Q46: ten in a row (contract v0.5.6), until admin sends its own.
+      expect(rules.autoOfflineAfter, 10);
+      expect(DriverOfferRules.defaultAutoOfflineAfter, 10);
       expect(rules.hiddenComesBackAfter, const Duration(minutes: 2));
       expect(rules.exclusiveWhileDriving, isTrue);
       expect(rules.exclusiveWhileDrivingCount, 1);
@@ -78,18 +78,20 @@ void main() {
     });
 
     test('Q46: 3 Exclusive offers in a row without Accept go offline', () {
+      // The zone's own number (the default is 10, contract v0.5.6).
+      const three = DriverOfferRules(autoOfflineAfter: 3);
       final answers = ExclusiveAnswers.instance..reset();
-      expect(answers.missed(rules), isFalse);
-      expect(answers.lastBeforeOffline(rules), isFalse);
-      expect(answers.missed(rules), isFalse);
-      expect(answers.lastBeforeOffline(rules), isTrue);
+      expect(answers.missed(three), isFalse);
+      expect(answers.lastBeforeOffline(three), isFalse);
+      expect(answers.missed(three), isFalse);
+      expect(answers.lastBeforeOffline(three), isTrue);
       // Accept starts the row again.
       answers.accepted();
       expect(answers.missedInRow, 0);
       for (var i = 0; i < 2; i++) {
-        answers.missed(rules);
+        answers.missed(three);
       }
-      expect(answers.missed(rules), isTrue);
+      expect(answers.missed(three), isTrue);
       expect(answers.missedInRow, 0);
       // Off in admin: never offline.
       for (var i = 0; i < 10; i++) {

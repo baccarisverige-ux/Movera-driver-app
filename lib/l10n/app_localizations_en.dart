@@ -4531,11 +4531,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tipHighBoostNearby => 'High boost nearby';
 
   @override
-  String tipHighBoostIn(String kr, String zone) {
-    return 'High boost · +$kr kr in $zone';
-  }
-
-  @override
   String get tipExpectTrip => 'Expect a trip in 2–5 min';
 
   @override

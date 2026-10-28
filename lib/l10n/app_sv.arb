@@ -1298,7 +1298,6 @@
   "rcCrashTrail": " upptäcktes",
   "rcCrashTrailAt": " upptäcktes · {place}",
   "tipHighBoostNearby": "Hög bonus i närheten",
-  "tipHighBoostIn": "Hög bonus · +{kr} kr i {zone}",
   "tipExpectTrip": "Räkna med en resa om 2–5 min",
   "tipPromotionRides": "Kampanj · {rides} resor = {kr} kr",
   "tipBusyArea": "Livligt område · resor väntas snart",

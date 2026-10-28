@@ -23,11 +23,12 @@ class DriverOfferRules {
   /// The rules in use. Mirrors the admin defaults until a backend sets it.
   static DriverOfferRules current = const DriverOfferRules();
 
-  /// Q46: Exclusive offers missed or declined in a row before the driver
+  /// Q46 (contract v0.5.6, owner decision 35: 10, was 3): Exclusive offers
+  /// missed or declined in a row before the driver
   /// goes offline. The fallback: the zone's `DriverAppConfig` sets its own
   /// number (`offers.autoOffline.missedExclusive`) through
   /// [withAutoOffline] when it is applied.
-  static const int defaultAutoOfflineAfter = 3;
+  static const int defaultAutoOfflineAfter = 10;
 
   /// Q14: what the offer cards show.
   final OfferCardDetails card;
@@ -76,6 +77,70 @@ class DriverOfferRules {
         exclusiveAcceptTime: exclusiveAcceptTime,
         radarTime: radarTime,
       );
+
+  /// These rules with the published `DriverAppConfig.offers` (owner
+  /// 2026-10-27, settings flow): the timers, Exclusive while driving, the
+  /// offer card, the Exclusive reasons and the hidden-trip time. A missing
+  /// or bad value keeps what is in use.
+  DriverOfferRules withOffers(Map<String, dynamic> offers) {
+    int? seconds(Object? raw) =>
+        raw is int && raw >= 1 && raw <= 600 ? raw : null;
+    final whileDriving = offers['exclusiveWhileDriving'];
+    final card = offers['offerCard'];
+    final reasons = offers['exclusiveReasons'];
+    final auto = offers['autoOffline'];
+    final hidden = auto is Map ? auto['hiddenComesBackMin'] : null;
+    bool? flag(Map<dynamic, dynamic>? map, String key) =>
+        map != null && map[key] is bool ? map[key] as bool : null;
+    final count = whileDriving is Map ? whileDriving['count'] : null;
+    return DriverOfferRules(
+      card: card is Map
+          ? this.card.copyWith(
+              netFare: flag(card, 'netFare'),
+              pickupAddress: flag(card, 'pickupAddress'),
+              dropoffAreaOnly: flag(card, 'dropoffAreaOnly'),
+              stops: flag(card, 'stops'),
+              riderRating: flag(card, 'riderRating'),
+              tripMinutesKm: flag(card, 'tripMinutesKm'),
+              pickupDistance: flag(card, 'pickupDistance'),
+              badges: flag(card, 'badges'),
+            )
+          : this.card,
+      exclusiveReasons: reasons is List
+          ? [
+              for (final reason in reasons)
+                if (reason is Map &&
+                    reason['id'] is String &&
+                    reason['text'] is String)
+                  ExclusiveReasonRule(
+                    id: reason['id'] as String,
+                    text: reason['text'] as String,
+                    on: reason['on'] != false,
+                  ),
+            ]
+          : exclusiveReasons,
+      autoOffline: autoOffline,
+      autoOfflineAfter: autoOfflineAfter,
+      hiddenComesBackAfter: hidden is num && hidden >= 0
+          ? Duration(seconds: (hidden * 60).round())
+          : hiddenComesBackAfter,
+      exclusiveWhileDriving:
+          flag(whileDriving is Map ? whileDriving : null, 'on') ??
+          exclusiveWhileDriving,
+      exclusiveWhileDrivingCount: count is int && count >= 1 && count <= 5
+          ? count
+          : exclusiveWhileDrivingCount,
+      commissionRate: commissionRate,
+      exclusiveAcceptTime: switch (seconds(offers['exclusiveSeconds'])) {
+        final value? => Duration(seconds: value),
+        null => exclusiveAcceptTime,
+      },
+      radarTime: switch (seconds(offers['radarSeconds'])) {
+        final value? => Duration(seconds: value),
+        null => radarTime,
+      },
+    );
+  }
 
   /// The text of Exclusive reason [id], or '' when admin switched it off
   /// or it is unknown.

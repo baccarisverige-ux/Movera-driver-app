@@ -4598,11 +4598,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tipHighBoostNearby => 'Forte majoration à proximité';
 
   @override
-  String tipHighBoostIn(String kr, String zone) {
-    return 'Forte majoration · +$kr kr à $zone';
-  }
-
-  @override
   String get tipExpectTrip => 'Une course est attendue d’ici 2 à 5 min';
 
   @override

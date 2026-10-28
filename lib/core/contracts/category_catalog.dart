@@ -1,4 +1,4 @@
-/// Ride category ids, `contracts/contract.json#categories` (v0.3.0).
+/// Ride category ids, `contracts/contract.json#categories` (v0.3.0; v0.6.0 adds `child_seat`).
 ///
 /// Ids come from the admin Pricing catalog (admins can add more); these are
 /// the seed ids every app must know. Labels are display only: the driver app
@@ -15,11 +15,13 @@ abstract final class CategoryCatalog {
     'xl',
     'electric',
     'pet',
+    'child_seat',
   ];
 
   /// Accepted on read for one release (`movera` was the old economy id).
   static const Map<String, String> aliases = <String, String>{
     'movera': 'economy',
+    'kids': 'child_seat',
   };
 
   /// The driver app's display names for the seed ids.
@@ -31,6 +33,8 @@ abstract final class CategoryCatalog {
     'xl': 'Movera XL',
     'electric': 'Electric',
     'pet': 'Movera Pet',
+    // v0.6.0: the driver app's "Booster Seat" is the child_seat category.
+    'child_seat': 'Booster Seat',
   };
 
   /// Short names some offers use.
@@ -53,7 +57,7 @@ abstract final class CategoryCatalog {
   }
 
   /// The id behind a driver display name, or null when the name is not a
-  /// category (e.g. "Booster Seat", an extra).
+  /// category.
   static String? idForLabel(String label) {
     final short = _shortLabels[label];
     if (short != null) return short;

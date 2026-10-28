@@ -454,7 +454,8 @@ void main() {
     // About 9 s were left; it runs out then, not 15 s later.
     await _pumpFor(tester, const Duration(seconds: 10));
     expect(find.byKey(_offerCard), findsNothing);
-    expect(ExclusiveAnswers.instance.missedInRow, 1);
+    // Owner 2026-10-27 (§6.7): missed while on a trip, so it never counts.
+    expect(ExclusiveAnswers.instance.missedInRow, 0);
     await _unmount(tester);
   });
 
