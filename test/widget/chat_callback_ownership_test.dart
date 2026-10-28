@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:movera/core/safety/rider_contact.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
 
 void main() {
@@ -40,8 +39,7 @@ void main() {
             .widget<IconButton>(
               find.byWidgetPredicate(
                 (widget) =>
-                    widget is IconButton &&
-                    widget.tooltip == RiderContactPolicy.unavailableMessage,
+                    widget is IconButton && widget.tooltip == 'Call rider',
               ),
             )
             .onPressed!;

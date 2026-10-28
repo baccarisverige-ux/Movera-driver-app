@@ -4280,6 +4280,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get emFamily => 'Famille';
 
   @override
+  String get callUnavailableUseChat =>
+      'Les appels ne sont pas encore disponibles – utilisez le chat';
+
+  @override
+  String get chatClosedAfterTrip => 'Le chat est fermé après la course';
+
+  @override
   String get chatLocalDemo =>
       'Discussion de démo locale · les messages ne sont pas envoyés au passager.';
 
@@ -4783,10 +4790,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get moveWithin100MOfStop =>
       'Approchez-vous à moins de 100 m de l’arrêt pour confirmer l’arrivée.';
-
-  @override
-  String get riderPhoneNotConnected =>
-      'Le contact téléphonique du passager n’est pas connecté dans cette démo.';
 
   @override
   String get recordAudioStarting => 'démarrage…';

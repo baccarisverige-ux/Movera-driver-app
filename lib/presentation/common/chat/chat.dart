@@ -9,6 +9,7 @@ import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/presentation/common/chat/components/appbar.dart';
+import 'package:movera/presentation/common/chat/trip_call.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/custom_textfield.dart';
 import 'package:movera/widgets/responsive_size.dart';
@@ -33,13 +34,21 @@ class LocalChatMessages {
 }
 
 class Chat extends StatefulWidget {
-  const Chat({super.key, required this.riderDisplayName, this.tripId});
+  const Chat({
+    super.key,
+    required this.riderDisplayName,
+    this.tripId,
+    this.liveChat,
+  });
 
   final String riderDisplayName;
 
   /// The trip whose messages this Chat shows: the server's in a live
   /// build, this phone's local ones in the demo.
   final String? tripId;
+
+  /// Test seam: the live chat; by default the live build's.
+  final LiveTripChat? liveChat;
 
   @override
   State<Chat> createState() => _ChatState();
@@ -53,7 +62,7 @@ class _ChatState extends State<Chat> {
   /// A live build: the trip's chat on the server; null in the demo.
   late final LiveTripChat? _live = widget.tripId == null
       ? null
-      : LiveDriverServices.instance?.chat;
+      : widget.liveChat ?? LiveDriverServices.instance?.chat;
   TripChatThread? _thread;
   bool _historyFailed = false;
   final ScrollController _scroll = ScrollController();
@@ -116,6 +125,7 @@ class _ChatState extends State<Chat> {
   // Function to send message
   void _sendMessage() {
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    if (_thread?.closed ?? false) return;
     final text = _messageController.text.trim();
     if (text.isEmpty) {
       return; // Don't send if text is empty
@@ -216,13 +226,26 @@ class _ChatState extends State<Chat> {
     final thread = _thread;
     final live = thread != null;
     final count = live ? thread.messages.length : _messages.length;
+    // Contract v0.13.0 §22: the chat closes at drop-off; the history stays.
+    final closed = thread?.closed ?? false;
+    final canSend = showSendIcon && !closed;
     return Scaffold(
       backgroundColor: const Color(0xffFAFAFA),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(
           (ResSize.h * 75).clamp(kToolbarHeight, double.infinity),
         ),
-        child: ChatAppBar(riderDisplayName: widget.riderDisplayName),
+        child: ChatAppBar(
+          riderDisplayName: widget.riderDisplayName,
+          tripId: widget.tripId,
+          onCall: widget.liveChat == null
+              ? null
+              : () => callRider(
+                  context,
+                  tripId: widget.tripId,
+                  chat: widget.liveChat,
+                ),
+        ),
       ),
       body: Column(
         children: [
@@ -253,51 +276,73 @@ class _ChatState extends State<Chat> {
                   horizontal: screenHorizPadding,
                   vertical: 12,
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: customTextfield(
-                        borderColor: Colors.transparent,
-                        borderWidth: 0,
-                        textColor: AppColor.black,
-                        controller: _messageController,
-                        fontSize: 14,
-                        hint: tr.chatSendMessageHint,
-                        fillColor: const Color(0xffF6F6F6),
-                        borderRadius: 32,
-                        hintTextColor: const Color(0xff969696),
-                        contentHorizPadding: 14,
-                        contentVertPadding: 12,
-                        textInputAction: TextInputAction.send,
-                        onFieldSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Semantics(
-                      container: true,
-                      label: live ? tr.chatSend : tr.chatSaveLocally,
-                      button: true,
-                      enabled: showSendIcon,
-                      onTap: showSendIcon ? _sendMessage : null,
-                      child: ExcludeSemantics(
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: const BoxDecoration(
-                            color: Color(0xffF6F6F6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            tooltip: live ? tr.chatSend : tr.chatSaveLocally,
-                            onPressed: showSendIcon ? _sendMessage : null,
-                            padding: const EdgeInsets.all(12),
-                            icon: Image.asset(
-                              AppAssets.send,
-                              excludeFromSemantics: true,
-                            ),
+                    if (closed)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          tr.chatClosedAfterTrip,
+                          key: const ValueKey<String>('chat-closed'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xFF5C656C),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: customTextfield(
+                            borderColor: Colors.transparent,
+                            borderWidth: 0,
+                            textColor: AppColor.black,
+                            controller: _messageController,
+                            fontSize: 14,
+                            hint: tr.chatSendMessageHint,
+                            fillColor: const Color(0xffF6F6F6),
+                            borderRadius: 32,
+                            hintTextColor: const Color(0xff969696),
+                            contentHorizPadding: 14,
+                            contentVertPadding: 12,
+                            enabled: !closed,
+                            textInputAction: TextInputAction.send,
+                            onFieldSubmitted: (_) => _sendMessage(),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Semantics(
+                          container: true,
+                          label: live ? tr.chatSend : tr.chatSaveLocally,
+                          button: true,
+                          enabled: canSend,
+                          onTap: canSend ? _sendMessage : null,
+                          child: ExcludeSemantics(
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: const BoxDecoration(
+                                color: Color(0xffF6F6F6),
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                tooltip: live
+                                    ? tr.chatSend
+                                    : tr.chatSaveLocally,
+                                onPressed: canSend ? _sendMessage : null,
+                                padding: const EdgeInsets.all(12),
+                                icon: Image.asset(
+                                  AppAssets.send,
+                                  excludeFromSemantics: true,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

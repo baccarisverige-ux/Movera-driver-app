@@ -1012,13 +1012,20 @@ extension _AcceptRidePanel on _AcceptRideState {
     );
   }
 
+  /// Contract v0.13.0 §22: a masked call, never the rider's number.
   void _callRider() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(RiderContactPolicy.unavailableMessage),
-        backgroundColor: _AcceptRideState._ink,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    unawaited(
+      callRider(
+        context,
+        tripId: widget.tripId,
+        snackBar: (text) => SnackBar(
+          content: Text(text),
+          backgroundColor: _AcceptRideState._ink,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
       ),
     );
   }
