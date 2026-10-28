@@ -1,4 +1,6 @@
+import 'package:flutter/painting.dart' show Color;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:movera/core/surge/surge_map.dart';
 import 'package:movera/widgets/movera_destination_marker.dart';
 
 const String destinationModeMarkerId = 'destination_mode_target';
@@ -47,3 +49,36 @@ Marker destinationModeMarker(LatLng position, String address) => Marker(
     polylines: {...destinationPolylines, ...offerPolylines},
   );
 }
+
+/// Contract v0.7.2 §17 (`contract.json#driverSurgeMap.colours`): a surge
+/// zone's colour by level. No text, number or money goes with it.
+const Map<SurgeLevel, Color> surgeLevelColours = {
+  SurgeLevel.low: Color(0xFFFFC79E),
+  SurgeLevel.medium: Color(0xFFFF8A3D),
+  SurgeLevel.high: Color(0xFFE5482B),
+};
+
+/// About 40 % fill, with a 2 px edge of the same colour.
+const double surgeFillOpacity = 0.4;
+const int surgeEdgeWidth = 2;
+
+/// The Home map's surge zones: each rectangle as a filled polygon under
+/// the routes and pins, not tappable.
+Set<Polygon> surgeZonePolygons(Iterable<DriverSurgeZone> zones) => {
+  for (final zone in zones)
+    Polygon(
+      polygonId: PolygonId('surge_${zone.zoneId}'),
+      points: [
+        for (final corner in zone.bounds.corners)
+          LatLng(corner.latitude, corner.longitude),
+      ],
+      fillColor: surgeLevelColours[zone.level]!.withValues(
+        alpha: surgeFillOpacity,
+      ),
+      strokeColor: surgeLevelColours[zone.level]!,
+      strokeWidth: surgeEdgeWidth,
+      geodesic: false,
+      consumeTapEvents: false,
+      zIndex: 0,
+    ),
+};
