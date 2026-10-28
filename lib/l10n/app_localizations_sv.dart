@@ -4748,10 +4748,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Kom inom 100 m från stoppet för att vara framme.';
 
   @override
-  String get riderPhoneNotConnected =>
-      'Telefonkontakt med passageraren är inte ansluten i den här demon.';
-
-  @override
   String get recordAudioStarting => 'startar…';
 
   @override

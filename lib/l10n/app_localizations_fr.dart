@@ -4798,10 +4798,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Approchez-vous à moins de 100 m de l’arrêt pour confirmer l’arrivée.';
 
   @override
-  String get riderPhoneNotConnected =>
-      'Le contact téléphonique du passager n’est pas connecté dans cette démo.';
-
-  @override
   String get recordAudioStarting => 'démarrage…';
 
   @override

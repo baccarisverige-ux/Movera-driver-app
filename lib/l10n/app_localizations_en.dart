@@ -4729,10 +4729,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moveWithin100MOfStop => 'Move within 100 m of the stop to arrive.';
 
   @override
-  String get riderPhoneNotConnected =>
-      'Rider phone contact is not connected in this demo.';
-
-  @override
   String get recordAudioStarting => 'starting…';
 
   @override

@@ -8223,12 +8223,6 @@ abstract class AppLocalizations {
   /// **'Move within 100 m of the stop to arrive.'**
   String get moveWithin100MOfStop;
 
-  /// No description provided for @riderPhoneNotConnected.
-  ///
-  /// In en, this message translates to:
-  /// **'Rider phone contact is not connected in this demo.'**
-  String get riderPhoneNotConnected;
-
   /// No description provided for @recordAudioStarting.
   ///
   /// In en, this message translates to:
