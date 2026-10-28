@@ -116,7 +116,7 @@ class LiveDriverServices {
   /// The Content page's texts, terms and app versions (contract §19).
   late final LiveDriverContent content;
 
-  /// The open zones with outline and names (contract v0.11.0 §20): read on
+  /// The open zones with outline and names (contract v0.11.0 §21): read on
   /// start, again on config_published doc zones; last answer kept.
   late final LiveDriverZones zones;
 

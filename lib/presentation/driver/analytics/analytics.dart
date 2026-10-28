@@ -138,7 +138,7 @@ class Analytics extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // v0.11.0 §20: the sample Stockholm areas are the demo's; a live
+          // v0.11.0 §21: the sample Stockholm areas are the demo's; a live
           // build has no such list.
           if (!LiveDriverServices.active) ...[
             _demand(const DriverHomeAdminContentService().load().stockholmWork),

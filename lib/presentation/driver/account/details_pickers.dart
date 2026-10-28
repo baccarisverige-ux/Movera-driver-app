@@ -73,7 +73,7 @@ Future<String?> showDetailsCityPicker(
           value: city.cityId,
           key: 'pick-city-${city.cityId}',
           title: city.name,
-          // v0.11.0 §20: the zone's name from the server, in the app
+          // v0.11.0 §21: the zone's name from the server, in the app
           // language; the built-in hint without it.
           subtitle:
               DriverZones.nameOf(city.zoneId, DriverAppTexts.language) ??

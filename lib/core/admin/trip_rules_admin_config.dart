@@ -191,7 +191,7 @@ class NextTripRules {
   }
 }
 
-/// Admin zone ids. Contract v0.11.0 §20 (decision #9, "the server's list
+/// Admin zone ids. Contract v0.11.0 §21 (decision #9, "the server's list
 /// is the truth"): in a live build the zones are the OPEN zones of
 /// `GET /driver/zones` ([LiveDriverZones] calls [useServer]); the demo
 /// knows only its seed zone, [defaultId].

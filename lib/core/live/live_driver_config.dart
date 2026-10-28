@@ -79,7 +79,7 @@ class LiveDriverConfig extends ChangeNotifier {
   /// Content page published) goes here instead of a config fetch.
   final void Function()? onContentPublished;
 
-  /// Contract v0.11.0 §20: a `config_published` with doc `zones` (a zone
+  /// Contract v0.11.0 §21: a `config_published` with doc `zones` (a zone
   /// was created, changed, opened or closed) goes here.
   final void Function()? onZonesPublished;
   final Duration retryAfter;

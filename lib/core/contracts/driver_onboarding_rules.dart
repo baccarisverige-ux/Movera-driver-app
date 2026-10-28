@@ -67,7 +67,7 @@ abstract final class DriverOnboardingRules {
   };
 
   /// [country]'s cities a driver can sign up in now: the contract's, less
-  /// a city whose zone the server's list (v0.11.0 §20) does not have open.
+  /// a city whose zone the server's list (v0.11.0 §21) does not have open.
   static List<OnboardingCity> citiesOf(String country) => [
     for (final city in countries[country]?.cities ?? const <OnboardingCity>[])
       if (DriverZones.offers(city.zoneId)) city,

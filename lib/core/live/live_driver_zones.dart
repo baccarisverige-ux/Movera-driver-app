@@ -47,7 +47,7 @@ class MemoryDriverZonesCache implements DriverZonesCache {
   }
 }
 
-/// Zones from the server (contract v0.11.0 §20): `GET /driver/zones` on
+/// Zones from the server (contract v0.11.0 §21): `GET /driver/zones` on
 /// start and on `config_published` with doc `zones` ([LiveDriverConfig]
 /// hears it); the last answer is kept on the device and used until the
 /// server answers ([DriverZones.useServer]). Live builds only: the demo

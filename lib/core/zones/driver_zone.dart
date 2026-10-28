@@ -1,4 +1,4 @@
-/// A zone of `GET /driver/zones` (contract v0.11.0 §20): an OPEN zone with
+/// A zone of `GET /driver/zones` (contract v0.11.0 §21): an OPEN zone with
 /// its outline and its names in the app languages.
 class DriverZone {
   const DriverZone({
