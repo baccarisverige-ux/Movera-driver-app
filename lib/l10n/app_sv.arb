@@ -1702,5 +1702,19 @@
   "swRatingStatusNotRequested": "Inte begärt",
   "swRatingStatusPending": "Väntande",
   "swRatingStatusSubmitted": "Lämnat",
-  "swRatingStatusSkipped": "Överhoppat"
+  "swRatingStatusSkipped": "Överhoppat",
+  "mapYourCar": "Din bil",
+  "noticeDemoEventTitle": "Kvällsefterfrågan i Stockholm",
+  "noticeDemoEventBody": "18:00–22:30 · Centrala Stockholm. Var online före den stora avresetiden.",
+  "noticeDemoEventIsland": "Evenemang i kväll · City",
+  "categoryComfort": "Komfort",
+  "categoryPriority": "Prioritet",
+  "categoryElectric": "Elbil",
+  "categoryBoosterSeat": "Bältesstol",
+  "demoPickupNearYou": "Upphämtning nära dig",
+  "demoNearPlace": "Nära {place}",
+  "demoYourDestination": "din destination",
+  "demoOnYourWayPercent": "På vägen · {percent} %",
+  "demoAwayFromRoute": "Utanför din rutt",
+  "demoBehindYou": "Bakom dig"
 }

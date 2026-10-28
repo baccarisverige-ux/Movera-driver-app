@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:async';
 
@@ -662,7 +663,7 @@ class OfferSheetBody extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        category,
+        categoryNameText(category),
         key: ValueKey<String>('$keyPrefix-category'),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,

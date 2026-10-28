@@ -1702,5 +1702,19 @@
   "swRatingStatusNotRequested": "Non demandée",
   "swRatingStatusPending": "En attente",
   "swRatingStatusSubmitted": "Envoyée",
-  "swRatingStatusSkipped": "Ignorée"
+  "swRatingStatusSkipped": "Ignorée",
+  "mapYourCar": "Votre voiture",
+  "noticeDemoEventTitle": "Demande du soir à Stockholm",
+  "noticeDemoEventBody": "18:00–22:30 · Centre de Stockholm. Soyez en ligne avant le principal créneau de départs.",
+  "noticeDemoEventIsland": "Événement ce soir · City",
+  "categoryComfort": "Confort",
+  "categoryPriority": "Prioritaire",
+  "categoryElectric": "Électrique",
+  "categoryBoosterSeat": "Rehausseur",
+  "demoPickupNearYou": "Prise en charge près de vous",
+  "demoNearPlace": "Près de {place}",
+  "demoYourDestination": "votre destination",
+  "demoOnYourWayPercent": "Sur votre trajet · {percent} %",
+  "demoAwayFromRoute": "Hors de votre trajet",
+  "demoBehindYou": "Derrière vous"
 }

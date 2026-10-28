@@ -5962,4 +5962,51 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Överhoppat';
+
+  @override
+  String get mapYourCar => 'Din bil';
+
+  @override
+  String get noticeDemoEventTitle => 'Kvällsefterfrågan i Stockholm';
+
+  @override
+  String get noticeDemoEventBody =>
+      '18:00–22:30 · Centrala Stockholm. Var online före den stora avresetiden.';
+
+  @override
+  String get noticeDemoEventIsland => 'Evenemang i kväll · City';
+
+  @override
+  String get categoryComfort => 'Komfort';
+
+  @override
+  String get categoryPriority => 'Prioritet';
+
+  @override
+  String get categoryElectric => 'Elbil';
+
+  @override
+  String get categoryBoosterSeat => 'Bältesstol';
+
+  @override
+  String get demoPickupNearYou => 'Upphämtning nära dig';
+
+  @override
+  String demoNearPlace(String place) {
+    return 'Nära $place';
+  }
+
+  @override
+  String get demoYourDestination => 'din destination';
+
+  @override
+  String demoOnYourWayPercent(int percent) {
+    return 'På vägen · $percent %';
+  }
+
+  @override
+  String get demoAwayFromRoute => 'Utanför din rutt';
+
+  @override
+  String get demoBehindYou => 'Bakom dig';
 }

@@ -5948,4 +5948,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Skipped';
+
+  @override
+  String get mapYourCar => 'Your car';
+
+  @override
+  String get noticeDemoEventTitle => 'Stockholm evening demand';
+
+  @override
+  String get noticeDemoEventBody =>
+      '18:00–22:30 · Central Stockholm. Be online before the main departure window.';
+
+  @override
+  String get noticeDemoEventIsland => 'Event tonight · City';
+
+  @override
+  String get categoryComfort => 'Comfort';
+
+  @override
+  String get categoryPriority => 'Priority';
+
+  @override
+  String get categoryElectric => 'Electric';
+
+  @override
+  String get categoryBoosterSeat => 'Booster Seat';
+
+  @override
+  String get demoPickupNearYou => 'Pickup near you';
+
+  @override
+  String demoNearPlace(String place) {
+    return 'Near $place';
+  }
+
+  @override
+  String get demoYourDestination => 'your destination';
+
+  @override
+  String demoOnYourWayPercent(int percent) {
+    return 'On your way · $percent %';
+  }
+
+  @override
+  String get demoAwayFromRoute => 'Away from your route';
+
+  @override
+  String get demoBehindYou => 'Behind you';
 }

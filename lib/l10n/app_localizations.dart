@@ -10338,6 +10338,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skipped'**
   String get swRatingStatusSkipped;
+
+  /// Map: the name of the driver's own car marker.
+  ///
+  /// In en, this message translates to:
+  /// **'Your car'**
+  String get mapYourCar;
+
+  /// Demo notification: an evening event.
+  ///
+  /// In en, this message translates to:
+  /// **'Stockholm evening demand'**
+  String get noticeDemoEventTitle;
+
+  /// Demo notification: the event's line.
+  ///
+  /// In en, this message translates to:
+  /// **'18:00–22:30 · Central Stockholm. Be online before the main departure window.'**
+  String get noticeDemoEventBody;
+
+  /// Demo notification: the island text of the event.
+  ///
+  /// In en, this message translates to:
+  /// **'Event tonight · City'**
+  String get noticeDemoEventIsland;
+
+  /// Ride category name (built-in Comfort).
+  ///
+  /// In en, this message translates to:
+  /// **'Comfort'**
+  String get categoryComfort;
+
+  /// Ride category name (built-in Priority).
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get categoryPriority;
+
+  /// Ride category name (built-in Electric).
+  ///
+  /// In en, this message translates to:
+  /// **'Electric'**
+  String get categoryElectric;
+
+  /// Ride category name (built-in Booster Seat).
+  ///
+  /// In en, this message translates to:
+  /// **'Booster Seat'**
+  String get categoryBoosterSeat;
+
+  /// Destination mode demo trip: its pickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup near you'**
+  String get demoPickupNearYou;
+
+  /// Destination mode demo trip: ends near the destination.
+  ///
+  /// In en, this message translates to:
+  /// **'Near {place}'**
+  String demoNearPlace(String place);
+
+  /// Destination mode demo trip: the destination when it has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'your destination'**
+  String get demoYourDestination;
+
+  /// Destination mode demo trip: ends this far along the route.
+  ///
+  /// In en, this message translates to:
+  /// **'On your way · {percent} %'**
+  String demoOnYourWayPercent(int percent);
+
+  /// Destination mode demo trip: far off the route.
+  ///
+  /// In en, this message translates to:
+  /// **'Away from your route'**
+  String get demoAwayFromRoute;
+
+  /// Destination mode demo trip: behind the driver.
+  ///
+  /// In en, this message translates to:
+  /// **'Behind you'**
+  String get demoBehindYou;
 }
 
 class _AppLocalizationsDelegate

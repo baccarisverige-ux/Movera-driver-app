@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/scheduled/reservation_when.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -427,7 +428,7 @@ class ReservationRouteMapPage extends StatelessWidget {
               children: [
                 Text(
                   // The day as seen now, not as booked (driver-u142).
-                  '${ReservationWhen.dayWord(request.pickupDayAt(ScheduledClock.instance.now()))} · ${request.category}',
+                  '${ReservationWhen.dayWord(request.pickupDayAt(ScheduledClock.instance.now()))} · ${categoryNameText(request.category)}',
                   style: const TextStyle(color: _muted, fontSize: 13),
                 ),
                 Text(

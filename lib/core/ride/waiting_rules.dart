@@ -172,7 +172,11 @@ class WaitingRules {
         freeMinutes: 5,
         perMinute: Money(minorUnits: 1690),
       ),
-      'xl': WaitingRule(label: 'XL', freeMinutes: 3, noShowAfterMinutes: 3),
+      'xl': WaitingRule(
+        label: 'Movera XL',
+        freeMinutes: 3,
+        noShowAfterMinutes: 3,
+      ),
     },
   });
 
