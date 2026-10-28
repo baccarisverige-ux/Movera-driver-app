@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:movera/core/api/api_client.dart';
+import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
@@ -345,6 +346,70 @@ void main() {
       expect(chat.thread('t1').messages.single.text, 'Missed while down');
       expect(chat.unreadOf('t1'), 1);
       await sub.cancel();
+    });
+  });
+
+  group('v0.13.0 §22: closed at drop-off, masked calls', () {
+    test(
+      'a 409 chat_closed send closes the thread; later sends stop',
+      () async {
+        answers.add(
+          (_) => json(409, {
+            'code': 'invalid_transition',
+            'message': 'Closed.',
+            'reason': 'chat_closed',
+          }),
+        );
+        final first = await chat.send('t1', 'Hej');
+        expect(first.ok, isFalse);
+        expect(chat.thread('t1').closed, isTrue);
+        final second = await chat.send('t1', 'Igen');
+        expect(second.message, tr.chatClosedAfterTrip);
+        expect(requests, hasLength(1));
+      },
+    );
+
+    test('a terminal projection closes the chat', () {
+      final commands = LiveTripCommands(api: api(), onEnded: chat.markClosed);
+      commands.observe({'tripId': 't1', 'status': 'in_trip', 'version': 3});
+      expect(chat.thread('t1').closed, isFalse);
+      commands.observe({'tripId': 't1', 'status': 'completed', 'version': 4});
+      expect(chat.thread('t1').closed, isTrue);
+    });
+
+    test('call posts /trips/{id}/call and returns the proxy number', () async {
+      answers.add(
+        (_) => json(200, {
+          'tripId': 't1',
+          'proxyNumber': '+46101234567',
+          'expiresAt': '2026-10-28T10:00:00Z',
+        }),
+      );
+      expect(await chat.call('t1'), '+46101234567');
+      expect(requests.single.method, 'POST');
+      expect(requests.single.url.path, '/api/v1/trips/t1/call');
+      expect(requests.single.headers['Idempotency-Key'], isNotNull);
+    });
+
+    test('503 call_unavailable is thrown; 409 also closes the chat', () async {
+      answers.add(
+        (_) => json(503, {
+          'code': 'unavailable',
+          'message': 'No.',
+          'reason': 'call_unavailable',
+        }),
+      );
+      await expectLater(chat.call('t1'), throwsA(isA<ApiError>()));
+      expect(chat.thread('t1').closed, isFalse);
+      answers.add(
+        (_) => json(409, {
+          'code': 'invalid_transition',
+          'message': 'No.',
+          'reason': 'chat_closed',
+        }),
+      );
+      await expectLater(chat.call('t1'), throwsA(isA<ApiError>()));
+      expect(chat.thread('t1').closed, isTrue);
     });
   });
 }
