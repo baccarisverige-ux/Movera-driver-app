@@ -4240,6 +4240,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get emFamily => 'Familj';
 
   @override
+  String get callUnavailableUseChat =>
+      'Samtal är inte tillgängliga än – använd chatten';
+
+  @override
+  String get chatClosedAfterTrip => 'Chatten är stängd efter resan';
+
+  @override
   String get chatLocalDemo =>
       'Lokal demochatt · meddelanden skickas inte till passageraren.';
 

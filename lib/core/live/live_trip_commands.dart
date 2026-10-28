@@ -31,12 +31,31 @@ typedef LiveFix = Map<String, Object?>;
 /// sends the version the server has. The trip screen keeps its own stages;
 /// this only asks the server first.
 class LiveTripCommands {
-  LiveTripCommands({required ApiClient api, LiveFix? Function()? lastFix})
-    : _api = api,
-      _lastFix = lastFix ?? (() => null);
+  LiveTripCommands({
+    required ApiClient api,
+    LiveFix? Function()? lastFix,
+    this.onEnded,
+  }) : _api = api,
+       _lastFix = lastFix ?? (() => null);
 
   final ApiClient _api;
   final LiveFix? Function() _lastFix;
+
+  /// Told when a projection says the trip is over (contract.json
+  /// `tripStatus.terminal`): the chat closes at drop-off (v0.13.0 §22).
+  final void Function(String tripId)? onEnded;
+
+  /// contract.json `tripStatus.terminal`.
+  static const terminal = {
+    'completed',
+    'cancelled_by_rider',
+    'cancelled_by_driver',
+    'cancelled_by_admin',
+    'cancelled_by_system',
+    'no_show',
+    'expired',
+    'failed',
+  };
 
   static const _base = '/api/v1/trips';
 
@@ -71,6 +90,7 @@ class LiveTripCommands {
     final known = versionOf(id);
     if (known != null && version.toInt() < known) return;
     _trips[id] = {...?_trips[id], ...projection};
+    if (terminal.contains(projection['status'])) onEnded?.call(id);
   }
 
   /// True when [status] is where one of this phone's own commands took

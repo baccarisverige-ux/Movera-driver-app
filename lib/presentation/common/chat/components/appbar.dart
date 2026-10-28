@@ -4,14 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/constants/appcolors.dart';
 import 'package:movera/constants/appfontweight.dart';
-import 'package:movera/core/safety/rider_contact.dart';
+import 'package:movera/presentation/common/chat/trip_call.dart';
 import 'package:movera/widgets/responsive_size.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
 class ChatAppBar extends StatelessWidget {
-  const ChatAppBar({super.key, required this.riderDisplayName});
+  const ChatAppBar({
+    super.key,
+    required this.riderDisplayName,
+    this.tripId,
+    this.onCall,
+  });
 
   final String riderDisplayName;
+
+  /// The trip whose rider a call reaches through a masked number.
+  final String? tripId;
+
+  /// Test seam; by default [callRider].
+  final VoidCallback? onCall;
 
   @override
   Widget build(BuildContext context) {
@@ -54,19 +65,14 @@ class ChatAppBar extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          tooltip: RiderContactPolicy.available
-              ? tr.callRider
-              : RiderContactPolicy.unavailableMessage,
+          tooltip: tr.callRider,
           onPressed: () {
             if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) {
               return;
             }
-            if (RiderContactPolicy.available) {
-              return;
-            }
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(RiderContactPolicy.unavailableMessage)),
-            );
+            // Contract v0.13.0 §22: a masked call, never the rider's number.
+            if (onCall case final call?) return call();
+            callRider(context, tripId: tripId);
           },
           icon: Image.asset(AppAssets.phoneOutl, height: ResSize.h * 23),
         ),

@@ -4286,6 +4286,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get emFamily => 'Famille';
 
   @override
+  String get callUnavailableUseChat =>
+      'Les appels ne sont pas encore disponibles – utilisez le chat';
+
+  @override
+  String get chatClosedAfterTrip => 'Le chat est fermé après la course';
+
+  @override
   String get chatLocalDemo =>
       'Discussion de démo locale · les messages ne sont pas envoyés au passager.';
 

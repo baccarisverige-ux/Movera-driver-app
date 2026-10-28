@@ -1205,6 +1205,8 @@
   "emEmergency": "Nödsituation",
   "emAlreadyInContacts": "Numret finns redan bland dina kontakter.",
   "emFamily": "Familj",
+  "callUnavailableUseChat": "Samtal är inte tillgängliga än – använd chatten",
+  "chatClosedAfterTrip": "Chatten är stängd efter resan",
   "chatLocalDemo": "Lokal demochatt · meddelanden skickas inte till passageraren.",
   "chatSendMessageHint": "skicka meddelande…",
   "chatSaveLocally": "Spara meddelandet lokalt",

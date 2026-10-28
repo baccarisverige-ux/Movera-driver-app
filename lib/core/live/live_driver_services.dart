@@ -47,8 +47,12 @@ class LiveDriverServices {
       location: location,
       every: locationEvery,
     );
-    trips = LiveTripCommands(api: api, lastFix: () => reporter.lastFix);
     chat = LiveTripChat(api: api);
+    trips = LiveTripCommands(
+      api: api,
+      lastFix: () => reporter.lastFix,
+      onEnded: chat.markClosed,
+    );
     places = LiveAddressLookup(api: api);
     activeTrip = LiveActiveTrip(api: api);
     earnings = LiveEarnings(api: api);

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -74,6 +75,17 @@ class TripChatThread extends ChangeNotifier {
   int _unread = 0;
   int _open = 0;
   bool _loaded = false;
+  bool _closed = false;
+
+  /// The trip ended: the chat closed at drop-off (contract v0.13.0 §22).
+  /// The history stays readable; the driver can no longer write.
+  bool get closed => _closed;
+
+  void _markClosed() {
+    if (_closed) return;
+    _closed = true;
+    notifyListeners();
+  }
 
   /// Oldest first.
   List<TripChatMessage> get messages => List.unmodifiable(_messages);
@@ -255,6 +267,9 @@ class LiveTripChat {
   Future<LiveTripOutcome> send(String tripId, String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return Future.value(const LiveTripOutcome.ok());
+    if (thread(tripId).closed) {
+      return Future.value(LiveTripOutcome.failed(tr.chatClosedAfterTrip));
+    }
     // The copy's id is the request's Idempotency-Key: a retry is the
     // same message to the server.
     final key = ApiClient.randomKey();
@@ -304,9 +319,38 @@ class LiveTripChat {
   }
 
   LiveTripOutcome _notSent(TripChatThread thread, String key, Object error) {
+    // 409 invalid_transition, reason chat_closed: the trip has ended.
+    if (error is ApiError && error.reason == 'chat_closed') {
+      thread._markClosed();
+    }
     final copy = thread._find(key);
     if (copy != null) thread._put(copy._with(TripChatSendState.failed));
     return LiveTripOutcome.failed(liveChatErrorMessage(error), error: error);
+  }
+
+  /// The trip is over: its chat is closed (contract v0.13.0 §22).
+  void markClosed(String tripId) => thread(tripId)._markClosed();
+
+  /// `POST /trips/{tripId}/call` (contract v0.13.0 §22): the masked number
+  /// to dial, never the rider's own. Throws the `ApiError` (`503
+  /// call_unavailable` while no provider is set up, `409 chat_closed`
+  /// after drop-off, which also closes the chat).
+  Future<String> call(String tripId) async {
+    try {
+      final answer = await _api.post(
+        '$_base/${Uri.encodeComponent(tripId)}/call',
+        body: const <String, dynamic>{},
+        idempotencyKey: ApiClient.randomKey(),
+      );
+      final number = answer['proxyNumber'];
+      if (number is! String || number.trim().isEmpty) {
+        throw const FormatException('Missing proxyNumber');
+      }
+      return number.trim();
+    } on ApiError catch (error) {
+      if (error.reason == 'chat_closed') markClosed(tripId);
+      rethrow;
+    }
   }
 
   /// Sign-out: the next driver must not read these.

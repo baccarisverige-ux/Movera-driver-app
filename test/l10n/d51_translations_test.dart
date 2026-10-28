@@ -330,14 +330,11 @@ void main() {
   }
 
   for (final code in languages) {
-    testWidgets('driver-u48: rider phone not connected in $code', (
-      tester,
-    ) async {
+    testWidgets('v0.13.0: calls not available yet in $code', (tester) async {
       await show(tester, code, const Chat(riderDisplayName: 'Maya'));
-      await tester.tap(find.byTooltip(tr.riderPhoneNotConnected));
+      await tester.tap(find.byTooltip(tr.callRider));
       await tester.pump();
-      expect(find.text(tr.riderPhoneNotConnected), findsOneWidget);
-      expect(words('not connected in this demo'), findsNothing);
+      expect(find.text(tr.callUnavailableUseChat), findsOneWidget);
     });
   }
 

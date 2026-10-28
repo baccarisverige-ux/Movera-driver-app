@@ -7341,6 +7341,18 @@ abstract class AppLocalizations {
   /// **'Family'**
   String get emFamily;
 
+  /// No description provided for @callUnavailableUseChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls aren\'t available yet – use the chat'**
+  String get callUnavailableUseChat;
+
+  /// No description provided for @chatClosedAfterTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'The chat is closed after the trip'**
+  String get chatClosedAfterTrip;
+
   /// No description provided for @chatLocalDemo.
   ///
   /// In en, this message translates to:

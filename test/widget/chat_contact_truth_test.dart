@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:movera/core/safety/rider_contact.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
 
 void main() {
@@ -69,10 +69,10 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.byTooltip(RiderContactPolicy.unavailableMessage));
+    await tester.tap(find.byTooltip(tr.callRider));
     await tester.pump();
 
-    expect(find.text(RiderContactPolicy.unavailableMessage), findsWidgets);
+    expect(find.text(tr.callUnavailableUseChat), findsWidgets);
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
@@ -104,11 +104,6 @@ void main() {
       contains(
         'Chat(riderDisplayName: widget.riderName, tripId: widget.tripId)',
       ),
-    );
-    expect(RiderContactPolicy.available, isFalse);
-    expect(
-      RiderContactPolicy.unavailableMessage,
-      'Rider phone contact is not connected in this demo.',
     );
   });
 }
