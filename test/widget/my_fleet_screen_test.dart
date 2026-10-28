@@ -113,7 +113,15 @@ Map<String, Object?> _fleetView({
       'fleetId': 'flt_1',
       'driverId': 'drv_1',
       'inUse': true,
-      'documents': [],
+      // Contract v0.14.0: only a car with its documents approved is picked.
+      'documents': [
+        {
+          'documentId': 'vd1',
+          'type': 'vehicle_registration',
+          'status': 'approved',
+        },
+        {'documentId': 'vd2', 'type': 'insurance', 'status': 'approved'},
+      ],
       'requiredDocuments': ['vehicle_registration', 'insurance'],
     },
   ],
