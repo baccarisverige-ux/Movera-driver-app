@@ -1647,5 +1647,15 @@
   "supportSendToMovera": "Skicka till Movera",
   "supportSentToMovera": "Skickat till Movera. Svaret visas här.",
   "supportWriteToMovera": "Skriv till Movera",
-  "supportNoTicketsYet": "Inga meddelanden till Movera än."
+  "supportNoTicketsYet": "Inga meddelanden till Movera än.",
+  "contentUpdateTitle": "Uppdatera appen",
+  "contentUpdateBody": "Den här versionen av Movera Driver kan inte längre användas. Uppdatera den för att fortsätta köra.",
+  "contentUpdateStore": "Öppna butiken",
+  "contentUpdateStoreFailed": "Butiken kunde inte öppnas.",
+  "contentUpdateRecommended": "En ny version av appen finns.",
+  "contentUpdateAfterTrip": "Uppdatera appen efter resan.",
+  "contentTermsTitle": "Nya villkor",
+  "contentTermsAccept": "Jag godkänner",
+  "contentTermsFailed": "Inte sparat. Kontrollera anslutningen och försök igen.",
+  "contentTermsBlockOnline": "Godkänn de nya villkoren för att gå online."
 }

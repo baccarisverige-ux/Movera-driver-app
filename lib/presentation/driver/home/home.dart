@@ -41,6 +41,8 @@ import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/content/driver_content_store.dart';
+import 'package:movera/presentation/driver/content/content_card.dart';
 import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';

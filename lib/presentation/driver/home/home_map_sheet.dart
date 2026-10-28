@@ -2548,6 +2548,10 @@ extension _HomeMapSheet on _DriverHomeState {
         performance.showAcceptanceRate ||
         performance.showCancellationRate;
     return [
+      // Contract v0.10.0 §19: the Content page's driver-home and
+      // driver-event texts (live builds; the demo has none).
+      for (final item in DriverContentStore.instance.home)
+        DriverContentCard(item: item),
       Padding(
         padding: EdgeInsets.only(bottom: 14),
         child: Text(
@@ -2822,17 +2826,20 @@ extension _HomeMapSheet on _DriverHomeState {
             ),
           ),
           Expanded(
-            child: ListView(
-              key: const PageStorageKey<String>('driver-overview-list'),
-              controller: sc,
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(
-                12,
-                20,
-                12,
-                MoveraSheetMetrics.collapsedHeight + 70,
+            child: ListenableBuilder(
+              listenable: DriverContentStore.instance,
+              builder: (context, _) => ListView(
+                key: const PageStorageKey<String>('driver-overview-list'),
+                controller: sc,
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  12,
+                  20,
+                  12,
+                  MoveraSheetMetrics.collapsedHeight + 70,
+                ),
+                children: _todayList(),
               ),
-              children: _todayList(),
             ),
           ),
         ],

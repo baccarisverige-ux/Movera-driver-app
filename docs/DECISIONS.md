@@ -23,7 +23,7 @@ Terminal:
 
 `completed` · `cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `cancelled_by_system` · `no_show` · `expired` · `failed`
 
-The source of truth is now `contracts/contract.json` (v0.9.0, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
+The source of truth is now `contracts/contract.json` (v0.10.0, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
 
 Driver `ActiveRideStage` maps onto the live slice only:
 
@@ -101,7 +101,7 @@ Fix (no UX change, no lifecycle change):
 
 ## Contract v0.4 (October 2026)
 
-`contracts/` now holds the shared Movera contract v0.9.0 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
+`contracts/` now holds the shared Movera contract v0.10.0 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
 
 - v0.4.0: per-zone config fields (languages, tips, payment methods, waiting by category, auto-offline, driver bonus limits), `TripProjection.acceptedAt`, whole-star ratings and admin dispatch (direct assign, radar group, lock after accept).
 - v0.4.1: `DriverAppConfig.reservations` carries the reservation timings and the running-late ETA watch.
@@ -114,6 +114,7 @@ Fix (no UX change, no lifecycle change):
 - v0.7.2 (28 Oct 2026, owner Pricing answers): no surge notice to drivers (`contract.json#surgeNoticeRemoved`; the v0.7.1 Home banner is removed); Home's map colours the surge zones from `GET /driver/surge-map` (`lib/core/surge/`: low `#FFC79E`, medium `#FF8A3D`, high `#E5482B`, ~40 % fill, 2 px edge, no text or number; asked on going online, every 60 s while online on Home and on coming back to the front, the last answer kept on a failure, nothing offline; the demo draws three zones around the driver). The waiting tip is only "Hög bonus i närheten", inside a zone or within 3 km of one.
 - v0.8.0–v0.8.1 (27–28 Oct 2026): the settings flow (`contracts/fixtures/settings_flow.json`, live driver config, Exclusive deny/offline rules in §6.7); v0.8.1 carries v0.7.2 pricing on top.
 - v0.9.0 (28 Oct 2026): real data part 3 (§18): payouts (`fixtures/payouts.json`; `PayoutLine` breakdown is admin only, the driver app shows only the payout total), support ticket messages, fixed rating tags, risk signals and KPIs. Additive; X-Api-Version stays `0.5`.
+- v0.10.0 (28 Oct 2026): Content (§19): admin-published driver-home / driver-event / help / legal / app-versions items, `GET /driver/content?zoneId`, `POST /account/terms/accept`. Additive; X-Api-Version stays `0.5`.
 
 ## Contract v0.3 (19 October 2026)
 

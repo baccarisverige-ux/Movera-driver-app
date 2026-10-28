@@ -10008,6 +10008,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No messages to Movera yet.'**
   String get supportNoTicketsYet;
+
+  /// No description provided for @contentUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update the app'**
+  String get contentUpdateTitle;
+
+  /// No description provided for @contentUpdateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Movera Driver can no longer be used. Update it to keep driving.'**
+  String get contentUpdateBody;
+
+  /// No description provided for @contentUpdateStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the store'**
+  String get contentUpdateStore;
+
+  /// No description provided for @contentUpdateStoreFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The store could not be opened.'**
+  String get contentUpdateStoreFailed;
+
+  /// No description provided for @contentUpdateRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of the app is ready.'**
+  String get contentUpdateRecommended;
+
+  /// No description provided for @contentUpdateAfterTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Update the app after this trip.'**
+  String get contentUpdateAfterTrip;
+
+  /// No description provided for @contentTermsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New terms'**
+  String get contentTermsTitle;
+
+  /// No description provided for @contentTermsAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept'**
+  String get contentTermsAccept;
+
+  /// No description provided for @contentTermsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved. Check the connection and try again.'**
+  String get contentTermsFailed;
+
+  /// No description provided for @contentTermsBlockOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the new terms to go online.'**
+  String get contentTermsBlockOnline;
 }
 
 class _AppLocalizationsDelegate

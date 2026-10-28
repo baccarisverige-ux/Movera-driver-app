@@ -3703,5 +3703,15 @@
   "supportSendToMovera": "Send to Movera",
   "supportSentToMovera": "Sent to Movera. The answer shows here.",
   "supportWriteToMovera": "Write to Movera",
-  "supportNoTicketsYet": "No messages to Movera yet."
+  "supportNoTicketsYet": "No messages to Movera yet.",
+  "contentUpdateTitle": "Update the app",
+  "contentUpdateBody": "This version of Movera Driver can no longer be used. Update it to keep driving.",
+  "contentUpdateStore": "Open the store",
+  "contentUpdateStoreFailed": "The store could not be opened.",
+  "contentUpdateRecommended": "A new version of the app is ready.",
+  "contentUpdateAfterTrip": "Update the app after this trip.",
+  "contentTermsTitle": "New terms",
+  "contentTermsAccept": "I accept",
+  "contentTermsFailed": "Not saved. Check the connection and try again.",
+  "contentTermsBlockOnline": "Accept the new terms to go online."
 }

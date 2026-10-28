@@ -59,6 +59,7 @@ class LiveDriverConfig extends ChangeNotifier {
     required Uri apiBase,
     required Future<String?> Function() accessToken,
     this.renewSession,
+    this.onContentPublished,
     DriverConfigCache? cache,
     this.retryAfter = const Duration(seconds: 5),
     this.requestTimeout = const Duration(seconds: 60),
@@ -72,6 +73,10 @@ class LiveDriverConfig extends ChangeNotifier {
   final Future<String?> Function() _token;
   final DriverConfigCache _cache;
   final Future<void> Function()? renewSession;
+
+  /// Contract v0.10.0 §19: a `config_published` with doc `content` (the
+  /// Content page published) goes here instead of a config fetch.
+  final void Function()? onContentPublished;
   final Duration retryAfter;
   final Duration requestTimeout;
 
@@ -197,6 +202,10 @@ class LiveDriverConfig extends ChangeNotifier {
               try {
                 final event = jsonDecode(raw);
                 if (event is! Map || event['kind'] != 'config_published') {
+                  return;
+                }
+                if (event['doc'] == 'content') {
+                  onContentPublished?.call();
                   return;
                 }
                 final version = event['version'];

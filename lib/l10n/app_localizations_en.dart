@@ -5781,4 +5781,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportNoTicketsYet => 'No messages to Movera yet.';
+
+  @override
+  String get contentUpdateTitle => 'Update the app';
+
+  @override
+  String get contentUpdateBody =>
+      'This version of Movera Driver can no longer be used. Update it to keep driving.';
+
+  @override
+  String get contentUpdateStore => 'Open the store';
+
+  @override
+  String get contentUpdateStoreFailed => 'The store could not be opened.';
+
+  @override
+  String get contentUpdateRecommended => 'A new version of the app is ready.';
+
+  @override
+  String get contentUpdateAfterTrip => 'Update the app after this trip.';
+
+  @override
+  String get contentTermsTitle => 'New terms';
+
+  @override
+  String get contentTermsAccept => 'I accept';
+
+  @override
+  String get contentTermsFailed =>
+      'Not saved. Check the connection and try again.';
+
+  @override
+  String get contentTermsBlockOnline => 'Accept the new terms to go online.';
 }

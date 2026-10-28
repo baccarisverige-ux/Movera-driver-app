@@ -5797,4 +5797,37 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get supportNoTicketsYet => 'Inga meddelanden till Movera än.';
+
+  @override
+  String get contentUpdateTitle => 'Uppdatera appen';
+
+  @override
+  String get contentUpdateBody =>
+      'Den här versionen av Movera Driver kan inte längre användas. Uppdatera den för att fortsätta köra.';
+
+  @override
+  String get contentUpdateStore => 'Öppna butiken';
+
+  @override
+  String get contentUpdateStoreFailed => 'Butiken kunde inte öppnas.';
+
+  @override
+  String get contentUpdateRecommended => 'En ny version av appen finns.';
+
+  @override
+  String get contentUpdateAfterTrip => 'Uppdatera appen efter resan.';
+
+  @override
+  String get contentTermsTitle => 'Nya villkor';
+
+  @override
+  String get contentTermsAccept => 'Jag godkänner';
+
+  @override
+  String get contentTermsFailed =>
+      'Inte sparat. Kontrollera anslutningen och försök igen.';
+
+  @override
+  String get contentTermsBlockOnline =>
+      'Godkänn de nya villkoren för att gå online.';
 }
