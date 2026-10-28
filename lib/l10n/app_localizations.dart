@@ -1376,6 +1376,12 @@ abstract class AppLocalizations {
   /// **'Movera could not be alerted'**
   String get moveraCouldNotBeAlerted;
 
+  /// No description provided for @rideCheckSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get rideCheckSent;
+
   /// No description provided for @moveraSafetyTeamAlerted.
   ///
   /// In en, this message translates to:

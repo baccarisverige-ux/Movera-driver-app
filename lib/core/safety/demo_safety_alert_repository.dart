@@ -45,6 +45,7 @@ class DemoSafetyAlertRepository implements SafetyAlertRepository {
     required String reason,
     required String topic,
     required List<RideCheckAnswer> answers,
+    String? checkId,
   }) async {
     _check();
     final at = _now();
@@ -62,6 +63,22 @@ class DemoSafetyAlertRepository implements SafetyAlertRepository {
     _record('sent', alert, at);
     return alert;
   }
+
+  /// The demo has no server: nothing to report.
+  @override
+  Future<void> shown({
+    required String checkId,
+    required String tripId,
+    required RideCheckTrigger trigger,
+    required DateTime at,
+  }) async {}
+
+  @override
+  Future<void> answeredOk({
+    required String checkId,
+    required String tripId,
+    required RideCheckTrigger trigger,
+  }) async {}
 
   @override
   Future<SafetyAlert> update(String alertId, RideCheckAnswer answer) async {

@@ -765,6 +765,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get moveraCouldNotBeAlerted => 'Impossible d’alerter Movera';
 
   @override
+  String get rideCheckSent => 'Envoyé';
+
+  @override
   String get moveraSafetyTeamAlerted => 'Équipe sécurité de Movera alertée';
 
   @override

@@ -23,7 +23,7 @@ Terminal:
 
 `completed` · `cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `cancelled_by_system` · `no_show` · `expired` · `failed`
 
-The source of truth is now `contracts/contract.json` (v0.13.0, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
+The source of truth is now `contracts/contract.json` (v0.14.0, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
 
 Driver `ActiveRideStage` maps onto the live slice only:
 
@@ -101,7 +101,7 @@ Fix (no UX change, no lifecycle change):
 
 ## Contract v0.4 (October 2026)
 
-`contracts/` now holds the shared Movera contract v0.13.0 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
+`contracts/` now holds the shared Movera contract v0.14.0 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
 
 - v0.4.0: per-zone config fields (languages, tips, payment methods, waiting by category, auto-offline, driver bonus limits), `TripProjection.acceptedAt`, whole-star ratings and admin dispatch (direct assign, radar group, lock after accept).
 - v0.4.1: `DriverAppConfig.reservations` carries the reservation timings and the running-late ETA watch.
@@ -117,7 +117,9 @@ Fix (no UX change, no lifecycle change):
 - v0.10.0 (28 Oct 2026): Content (§19): admin-published driver-home / driver-event / help / legal / app-versions items, `GET /driver/content?zoneId`, `POST /account/terms/accept`. Additive; X-Api-Version stays `0.5`.
 - v0.10.4 (28 Oct 2026): one status word list (§20, `contract.json#statusWords`): the app shows the contract's sv/fr/en status words via `tool/gen_status_words.py` (ARB entries plus `lib/core/contracts/status_words.g.dart`); `test/contract/status_words_contract_test.dart` fails when a word differs. Swedish says "Resenär", never "Passagerare".
 - v0.11.0 (28 Oct 2026): Zones from the server (§20): `GET /driver/zones` (open zones with names and outline), read on start and on `config_published` doc `zones`; onboarding cities whose zone is not open are hidden. Additive; X-Api-Version stays `0.5`.
+- v0.12.0 (28 Oct 2026): Ride check answers (§22): `POST /driver/trips/{tripId}/ride-check` (shown, then ok | need_help). Additive; X-Api-Version stays `0.5`.
 - v0.13.0 (28 Oct 2026): Trip chat (§23): the chat closes at drop-off; calls only through `POST /trips/{tripId}/call` (masked number, 503 `call_unavailable` without a provider); no real phone number of the rider in any driver payload. Additive except the chat window; X-Api-Version stays `0.5`.
+- v0.14.0 (28 Oct 2026): account activation and car approval are separate (§14). Only the contract copy is updated here.
 
 ## Contract v0.3 (19 October 2026)
 

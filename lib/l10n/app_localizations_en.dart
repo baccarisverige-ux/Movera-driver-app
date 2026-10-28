@@ -761,6 +761,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moveraCouldNotBeAlerted => 'Movera could not be alerted';
 
   @override
+  String get rideCheckSent => 'Sent';
+
+  @override
   String get moveraSafetyTeamAlerted => 'Movera safety team alerted';
 
   @override
