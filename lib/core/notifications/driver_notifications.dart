@@ -424,11 +424,9 @@ class DriverNotices {
       const Duration(seconds: 50),
       (now) => event(
         now,
-        title: 'Stockholm evening demand',
-        body:
-            '18:00–22:30 · Central Stockholm. Be online before the '
-            'main departure window.',
-        island: 'Event tonight · City',
+        title: tr.noticeDemoEventTitle,
+        body: tr.noticeDemoEventBody,
+        island: tr.noticeDemoEventIsland,
       ),
     ),
   ];

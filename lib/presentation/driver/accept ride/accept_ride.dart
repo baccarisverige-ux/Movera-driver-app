@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_external_action.dart';
@@ -1809,7 +1810,7 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     icon: widget.vehicleIcon,
     // No default map bubble on the car.
     consumeTapEvents: true,
-    infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
+    infoWindow: InfoWindow(title: tr.mapYourCar),
   );
 
   /// The pins; they change only with the trip's step.

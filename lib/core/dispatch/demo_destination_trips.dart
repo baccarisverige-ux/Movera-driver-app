@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 
 /// Demo trips for Destination mode (R13-9): with real filtering the fixed
@@ -21,7 +22,7 @@ class DemoDestinationTrips {
     required GeoPoint destination,
     List<GeoPoint> route = const <GeoPoint>[],
     double corridorKm = 5,
-    String destinationLabel = 'your destination',
+    String? destinationLabel,
   }) {
     final path = route.length >= 2 ? route : <GeoPoint>[driver, destination];
     final corridor = corridorKm * 1000;
@@ -46,7 +47,7 @@ class DemoDestinationTrips {
         pickupKm: 0.8,
         tripMinutes: math.max(4, (km * 1.4).round()),
         tripKm: double.parse(km.toStringAsFixed(1)),
-        pickup: 'Pickup near you',
+        pickup: tr.demoPickupNearYou,
         dropoff: dropoff,
         pickupPosition: pickup,
         dropoffPosition: at,
@@ -63,7 +64,7 @@ class DemoDestinationTrips {
       trip(
         'final',
         'Sofia',
-        'Near $destinationLabel',
+        tr.demoNearPlace(destinationLabel ?? tr.demoYourDestination),
         _offset(nearEnd, endBearing + 90, math.min(800, corridor * 0.2)),
         Money.ore(24800),
         follows: true,
@@ -71,7 +72,7 @@ class DemoDestinationTrips {
       trip(
         'way-1',
         'Adam',
-        'On your way · 35 %',
+        tr.demoOnYourWayPercent(35),
         _offset(way1, way1Bearing + 90, corridor * 0.4),
         Money.ore(16450),
         follows: true,
@@ -79,7 +80,7 @@ class DemoDestinationTrips {
       trip(
         'way-2',
         'Ella',
-        'On your way · 60 %',
+        tr.demoOnYourWayPercent(60),
         _offset(way2, way2Bearing - 90, corridor * 0.5),
         Money.ore(19830),
         follows: true,
@@ -87,7 +88,7 @@ class DemoDestinationTrips {
       trip(
         'off-route',
         'Karl',
-        'Away from your route',
+        tr.demoAwayFromRoute,
         _offset(mid, midBearing + 90, corridor * 3),
         Money.ore(15200),
         follows: false,
@@ -95,7 +96,7 @@ class DemoDestinationTrips {
       trip(
         'behind',
         'Noor',
-        'Behind you',
+        tr.demoBehindYou,
         _offset(driver, _bearing(destination, driver), corridor * 1.5),
         Money.ore(12140),
         follows: false,

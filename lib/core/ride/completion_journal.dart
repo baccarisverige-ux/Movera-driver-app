@@ -196,9 +196,9 @@ class CompletionJournal {
           pickup: row['pickup'] as String,
           dropoff: row['dropoff'] as String,
           source: WaybillRecord.localDemoSource,
-          driverName: 'Unavailable',
-          vehicle: 'Unavailable',
-          licensePlate: 'Unavailable',
+          driverName: WaybillRecord.unavailable,
+          vehicle: WaybillRecord.unavailable,
+          licensePlate: WaybillRecord.unavailable,
           passengerCapacity: 0,
           driverBonus: row['driverBonus'] is String
               ? row['driverBonus'] as String
