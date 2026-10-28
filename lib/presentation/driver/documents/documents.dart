@@ -189,9 +189,12 @@ class DriverDocuments extends StatelessWidget {
 
   Widget _status(DocStatus status) {
     final (color, label) = switch (status) {
-      DocStatus.approved => (_green, tr.docStatusApproved),
-      DocStatus.inReview => (const Color(0xFFD08A1E), tr.docStatusInReview),
-      DocStatus.needed => (const Color(0xFFC2453A), tr.docStatusNeeded),
+      DocStatus.approved => (_green, tr.swDocumentStatusApproved),
+      DocStatus.inReview => (
+        const Color(0xFFD08A1E),
+        tr.swDocumentStatusInReview,
+      ),
+      DocStatus.needed => (const Color(0xFFC2453A), tr.swDocumentStatusNeeded),
     };
     return Row(
       mainAxisSize: MainAxisSize.min,

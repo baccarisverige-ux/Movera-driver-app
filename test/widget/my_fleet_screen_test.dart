@@ -614,7 +614,8 @@ void main() {
       expect(find.byKey(const ValueKey('fleet-code-waiting')), findsOneWidget);
       expect(find.text(tr.fleetCodeWaiting), findsOneWidget);
       expect(find.byKey(const ValueKey('fleet-share')), findsNothing);
-      expect(find.text(tr.fleetStatusPending), findsWidgets);
+      // v0.10.4: the contract word for a fleet under review.
+      expect(find.text(tr.swVehicleReviewStatusInReview), findsWidgets);
       await tester.pumpWidget(const SizedBox.shrink());
     });
   });

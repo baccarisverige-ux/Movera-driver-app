@@ -323,7 +323,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get moveraRadar => 'Movera Radar';
 
   @override
-  String get rider => 'Passagerare';
+  String get rider => 'Resenär';
 
   @override
   String get cash => 'Kontant';
@@ -390,7 +390,7 @@ class AppLocalizationsSv extends AppLocalizations {
       'Den oläsbara resan gick inte att avsluta.';
 
   @override
-  String get riderDataUnavailable => 'Passageraruppgifter saknas';
+  String get riderDataUnavailable => 'Resenärsuppgifter saknas';
 
   @override
   String get finishOrCloseSavedTripBefore =>
@@ -450,7 +450,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get couldNotSaveRiderCancellationRetry =>
-      'Passagerarens avbokning gick inte att spara. Försök igen.';
+      'Resenärens avbokning gick inte att spara. Försök igen.';
 
   @override
   String get tripProgressCouldNotBeSaved =>
@@ -508,7 +508,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get onlyEndTripAfterYouHave =>
-      'Avsluta bara resan när du har stannat på en säker plats och passageraren kan kliva ur säkert.';
+      'Avsluta bara resan när du har stannat på en säker plats och resenären kan kliva ur säkert.';
 
   @override
   String get cancelNextTrip => 'Avboka nästa resa';
@@ -695,7 +695,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String youPickedUpRiderMinutesMin(Object minutes) {
-    return 'Du hämtade passageraren för $minutes min sedan. Avsluta bara om resan verkligen är slut.';
+    return 'Du hämtade resenären för $minutes min sedan. Avsluta bara om resan verkligen är slut.';
   }
 
   @override
@@ -777,7 +777,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get tripDriverAndRiderDetailsWere =>
-      '\nUppgifter om resa, förare och passagerare har skickats.';
+      '\nUppgifter om resa, förare och resenär har skickats.';
 
   @override
   String get call112Now => 'Ring 112 nu';
@@ -845,17 +845,17 @@ class AppLocalizationsSv extends AppLocalizations {
   String get thisTripWasCancelledFromYour => 'Resan avbokades från ditt konto.';
 
   @override
-  String get riderCancelled => 'Passageraren avbokade';
+  String get riderCancelled => 'Resenären avbokade';
 
   @override
-  String get riderCancelledThisTrip => 'Passageraren avbokade resan.';
+  String get riderCancelledThisTrip => 'Resenären avbokade resan.';
 
   @override
-  String get riderNoShowRecorded => 'Utebliven passagerare registrerad';
+  String get riderNoShowRecorded => 'Utebliven resenär registrerad';
 
   @override
   String get thisPickupWasClosedBecauseRider =>
-      'Upphämtningen avslutades eftersom passageraren inte kom.';
+      'Upphämtningen avslutades eftersom resenären inte kom.';
 
   @override
   String get tripExpired => 'Resan har gått ut';
@@ -868,7 +868,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get tripWasClosedBecauseOfSystem =>
-      'Resan avslutades på grund av ett systemfel. Kontakta support om passageraren fortfarande är med dig.';
+      'Resan avslutades på grund av ett systemfel. Kontakta support om resenären fortfarande är med dig.';
 
   @override
   String get tripRemovedByMovera => 'Resan borttagen av Movera';
@@ -951,14 +951,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get googleMapsIsUnavailable => 'Google Maps är inte tillgängligt.';
 
   @override
-  String get callRider => 'Ring passageraren';
+  String get callRider => 'Ring resenären';
 
   @override
-  String get messageRider => 'Skriv till passageraren';
+  String get messageRider => 'Skriv till resenären';
 
   @override
   String get riderDetailsFromBookingWillAppear =>
-      'Passageraruppgifter från bokningen visas här när profilen är kopplad till servern.';
+      'Resenärsuppgifter från bokningen visas här när profilen är kopplad till servern.';
 
   @override
   String get retryRoute => 'Hämta rutten igen';
@@ -1010,7 +1010,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get pickReasonThatFitsBest => 'Välj den orsak som passar bäst.';
 
   @override
-  String get riderEndedTrip => 'Passageraren avslutade resan';
+  String get riderEndedTrip => 'Resenären avslutade resan';
 
   @override
   String riderNameCancelledWhileTripWas(Object riderName) {
@@ -1023,11 +1023,10 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get activeTripCancelledByRider =>
-      'Pågående resa avbokad av passageraren';
+  String get activeTripCancelledByRider => 'Pågående resa avbokad av resenären';
 
   @override
-  String get pickupCancelledByRider => 'Upphämtning avbokad av passageraren';
+  String get pickupCancelledByRider => 'Upphämtning avbokad av resenären';
 
   @override
   String get tripUpdate => 'RESEUPPDATERING';
@@ -1072,15 +1071,15 @@ class AppLocalizationsSv extends AppLocalizations {
   String get yourFare => 'Ditt pris';
 
   @override
-  String get cashFromRider => 'Kontant från passageraren';
+  String get cashFromRider => 'Kontant från resenären';
 
   @override
   String get riderPaidMoreThanYourFare =>
-      'Passageraren betalade mer än ditt pris (kampanj). Det regleras i din nästa utbetalning.';
+      'Resenären betalade mer än ditt pris (kampanj). Det regleras i din nästa utbetalning.';
 
   @override
   String get riderPaidLessThanYourFare =>
-      'Passageraren betalade mindre än ditt pris (kampanj). Movera lägger till mellanskillnaden i din nästa utbetalning.';
+      'Resenären betalade mindre än ditt pris (kampanj). Movera lägger till mellanskillnaden i din nästa utbetalning.';
 
   @override
   String get to => 'TILL';
@@ -1116,7 +1115,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get openWaybill => 'Öppna körorder';
 
   @override
-  String get contactRider => 'Kontakta passageraren';
+  String get contactRider => 'Kontakta resenären';
 
   @override
   String get yourCurrentTripContinuesReasonRequired =>
@@ -1175,11 +1174,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String canBeAppliedAfterNoShow(Object noShowAfterMinutes) {
-    return 'Kan användas efter $noShowAfterMinutes min om passageraren inte har kommit.';
+    return 'Kan användas efter $noShowAfterMinutes min om resenären inte har kommit.';
   }
 
   @override
-  String get riderDidnTShow => 'Passageraren kom inte';
+  String get riderDidnTShow => 'Resenären kom inte';
 
   @override
   String youGetDriverShareWaitPercent(Object driverShareWaitPercent) {
@@ -1229,7 +1228,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get riderIsStillNotHereNo =>
-      'Passageraren är fortfarande inte här. Beloppet för uteblivet finns nu.';
+      'Resenären är fortfarande inte här. Beloppet för uteblivet finns nu.';
 
   @override
   String get tripDetails => 'Resedetaljer';
@@ -1273,7 +1272,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get fare => 'Pris';
 
   @override
-  String get passenger => 'Passagerare';
+  String get passenger => 'Resenär';
 
   @override
   String get via => 'Via';
@@ -1294,7 +1293,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get passengerCapacity => 'Antal platser';
 
   @override
-  String get paidByPassenger => 'Betalt av passageraren';
+  String get paidByPassenger => 'Betalt av resenären';
 
   @override
   String get inApp => 'I appen';
@@ -1311,7 +1310,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get yourEarnings => 'Din intäkt';
 
   @override
-  String get riderPays => 'Passageraren betalar';
+  String get riderPays => 'Resenären betalar';
 
   @override
   String get roundToNearestWholeKronaIn =>
@@ -1333,7 +1332,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get earningsPreview => 'Förhandsvisning av intäkter';
 
   @override
-  String get demoRider => 'Demopassagerare';
+  String get demoRider => 'Demoresenär';
 
   @override
   String get sampleDistance => 'Exempelsträcka';
@@ -1399,7 +1398,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rideCompletedOn => 'Resan klar';
 
   @override
-  String get cancelledByRider => 'Avbokad av passageraren';
+  String get cancelledByRider => 'Avbokad av resenären';
 
   @override
   String get cancelledByDriver => 'Avbokad av föraren';
@@ -1411,7 +1410,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get cancelledByMovera => 'Avbokad av Movera';
 
   @override
-  String get riderDidNotArrive => 'Passageraren kom inte';
+  String get riderDidNotArrive => 'Resenären kom inte';
 
   @override
   String get tripFailed => 'Resan misslyckades';
@@ -1630,7 +1629,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get spokenTurnsWhileYouDrive => 'Upplästa sväng medan du kör';
 
   @override
-  String get readRiderMessages => 'Läs upp passagerarens meddelanden';
+  String get readRiderMessages => 'Läs upp resenärens meddelanden';
 
   @override
   String get readsNewChatMessagesAloud => 'Läser upp nya chattmeddelanden';
@@ -1655,11 +1654,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get tellRidersIfYouAreDeaf =>
-      'Berätta för passagerare om du är döv eller hörselskadad.';
+      'Berätta för resenärer om du är döv eller hörselskadad.';
 
   @override
   String get demoPreviewNoInformationIsShared =>
-      'Demoförhandsvisning — ingen information delas med passagerare.';
+      'Demoförhandsvisning — ingen information delas med resenärer.';
 
   @override
   String get closePreview => 'Stäng förhandsvisning';
@@ -1858,10 +1857,10 @@ class AppLocalizationsSv extends AppLocalizations {
   String get islandOffline => 'Radar offline';
 
   @override
-  String get islandRiderCancelled => 'Passageraren avbokade';
+  String get islandRiderCancelled => 'Resenären avbokade';
 
   @override
-  String get islandRiderEndedTrip => 'Passageraren avslutade';
+  String get islandRiderEndedTrip => 'Resenären avslutade';
 
   @override
   String get islandTripRemoved => 'Resan borttagen av Movera';
@@ -2143,27 +2142,26 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tripFinishRide => 'Avsluta resan';
 
   @override
-  String get cancelReasonRiderNoShow => 'Passageraren kom inte';
+  String get cancelReasonRiderNoShow => 'Resenären kom inte';
 
   @override
   String get cancelReasonRiderNoShowDetail =>
-      'Väntetiden har gått ut och passageraren är inte här';
+      'Väntetiden har gått ut och resenären är inte här';
 
   @override
-  String get cancelReasonRiderRequestedCancel =>
-      'Passageraren bad om avbokning';
+  String get cancelReasonRiderRequestedCancel => 'Resenären bad om avbokning';
 
   @override
   String get cancelReasonRiderRequestedCancelDetail =>
-      'Passageraren vill inte fortsätta';
+      'Resenären vill inte fortsätta';
 
   @override
   String get cancelReasonRiderNotAtPickup =>
-      'Passageraren är inte vid upphämtningen';
+      'Resenären är inte vid upphämtningen';
 
   @override
   String get cancelReasonRiderNotAtPickupDetail =>
-      'Du är framme men hittar inte passageraren';
+      'Du är framme men hittar inte resenären';
 
   @override
   String get cancelReasonUnsafePickup => 'Osäker upphämtning';
@@ -2195,11 +2193,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get cancelReasonRiderRequestedEarlyEnd =>
-      'Passageraren vill avsluta resan';
+      'Resenären vill avsluta resan';
 
   @override
   String get cancelReasonRiderRequestedEarlyEndDetail =>
-      'Passageraren vill kliva av före destinationen';
+      'Resenären vill kliva av före destinationen';
 
   @override
   String get cancelReasonSafetyConcernOnTrip => 'Säkerhetsrisk';
@@ -2224,11 +2222,11 @@ class AppLocalizationsSv extends AppLocalizations {
       'En händelse eller ett nödläge hindrar resan';
 
   @override
-  String get cancelReasonRiderBehavior => 'Passagerarens beteende';
+  String get cancelReasonRiderBehavior => 'Resenärens beteende';
 
   @override
   String get cancelReasonRiderBehaviorDetail =>
-      'Passagerarens beteende gör att resan måste avslutas';
+      'Resenärens beteende gör att resan måste avslutas';
 
   @override
   String get cancelReasonTripOrDestinationIssue =>
@@ -2282,12 +2280,11 @@ class AppLocalizationsSv extends AppLocalizations {
       'Nästa upphämtning är längre bort än väntat';
 
   @override
-  String get cancelReasonNextTripRiderRequested =>
-      'Passageraren bad mig avboka';
+  String get cancelReasonNextTripRiderRequested => 'Resenären bad mig avboka';
 
   @override
   String get cancelReasonNextTripRiderRequestedDetail =>
-      'Nästa passagerare vill inte ha resan';
+      'Nästa resenär vill inte ha resan';
 
   @override
   String get cancelReasonNextTripVehicleIssue => 'Problem med bilen';
@@ -2337,7 +2334,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get exclusiveReasonBestMatch => 'Bästa matchningen';
 
   @override
-  String get exclusiveReasonFavourite => 'Passagerarens favorit';
+  String get exclusiveReasonFavourite => 'Resenärens favorit';
 
   @override
   String get exclusiveReasonFinishingNearby => 'Du avslutar i närheten';
@@ -2368,8 +2365,8 @@ class AppLocalizationsSv extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Passageraren har $count väskor',
-      one: 'Passageraren har 1 väska',
+      other: 'Resenären har $count väskor',
+      one: 'Resenären har 1 väska',
     );
     return '$_temp0';
   }
@@ -2780,7 +2777,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get navDropOffLower => 'avlämningen';
 
   @override
-  String get navWaitingForRider => 'Väntar på passageraren';
+  String get navWaitingForRider => 'Väntar på resenären';
 
   @override
   String get navRouteUpdating => 'Rutten uppdateras…';
@@ -3166,15 +3163,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get vehicle => 'Fordon';
 
   @override
-  String get docStatusApproved => 'Godkänt';
-
-  @override
-  String get docStatusInReview => 'Granskas';
-
-  @override
-  String get docStatusNeeded => 'Behövs';
-
-  @override
   String get docPreviewNotAvailable =>
       'Inte tillgängligt än – exempelsida. Att skicka det här dokumentet finns inte i appen än. Inget dokument har laddats upp eller granskats.';
 
@@ -3409,7 +3397,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get schedAcceptedBadge => 'Accepterad';
 
   @override
-  String get supportCatTripRider => 'Resa och passagerare';
+  String get supportCatTripRider => 'Resa och resenär';
 
   @override
   String get supportCatWallet => 'Plånbok och betalningar';
@@ -4194,7 +4182,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get pinAskEveryPickup =>
-      'Be om passagerarens pinkod vid varje upphämtning.';
+      'Be om resenärens pinkod vid varje upphämtning.';
 
   @override
   String get pinVerifySession => 'Verifiera den här sessionen';
@@ -4240,15 +4228,8 @@ class AppLocalizationsSv extends AppLocalizations {
   String get emFamily => 'Familj';
 
   @override
-  String get callUnavailableUseChat =>
-      'Samtal är inte tillgängliga än – använd chatten';
-
-  @override
-  String get chatClosedAfterTrip => 'Chatten är stängd efter resan';
-
-  @override
   String get chatLocalDemo =>
-      'Lokal demochatt · meddelanden skickas inte till passageraren.';
+      'Lokal demochatt · meddelanden skickas inte till resenären.';
 
   @override
   String get chatSendMessageHint => 'skicka meddelande…';
@@ -4281,8 +4262,8 @@ class AppLocalizationsSv extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count nya meddelanden från passageraren',
-      one: '1 nytt meddelande från passageraren',
+      other: '$count nya meddelanden från resenären',
+      one: '1 nytt meddelande från resenären',
     );
     return '$_temp0';
   }
@@ -4346,7 +4327,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get cancelRateEveryCancelCounts =>
-      'Varje avbokning räknas, utom skäl som är märkta ”Räknas inte”, till exempel en passagerare som inte dyker upp eller ett säkerhetsproblem.';
+      'Varje avbokning räknas, utom skäl som är märkta ”Räknas inte”, till exempel en resenär som inte dyker upp eller ett säkerhetsproblem.';
 
   @override
   String get moreInformation => 'Mer information';
@@ -4396,7 +4377,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get acceptRateWhyBody =>
-      'En låg acceptansgrad minskar chansen att få förfrågningar och kan påverka din ställning på plattformen. En hög grad ger dig fler resor och en pålitlig upplevelse för passagerarna.';
+      'En låg acceptansgrad minskar chansen att få förfrågningar och kan påverka din ställning på plattformen. En hög grad ger dig fler resor och en pålitlig upplevelse för resenärerna.';
 
   @override
   String get rcTriggerDroppedFar => 'Avslutad långt från avlämningen';
@@ -4423,22 +4404,22 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rcTopicCarProblem => 'Problem med bilen';
 
   @override
-  String get rcTopicRiderAskedStop => 'Passageraren bad om ett stopp';
+  String get rcTopicRiderAskedStop => 'Resenären bad om ett stopp';
 
   @override
   String get rcTopicTraffic => 'Trafik eller vägarbete';
 
   @override
-  String get rcTopicRiderStopHere => 'Passageraren bad att få stanna här';
+  String get rcTopicRiderStopHere => 'Resenären bad att få stanna här';
 
   @override
-  String get rcTopicRiderChangedDestination => 'Passageraren ändrade mål';
+  String get rcTopicRiderChangedDestination => 'Resenären ändrade mål';
 
   @override
   String get rcTopicRoadClosed => 'Vägen är avstängd eller saknar tillfart';
 
   @override
-  String get rcTopicRiderOtherRoute => 'Passageraren bad om en annan väg';
+  String get rcTopicRiderOtherRoute => 'Resenären bad om en annan väg';
 
   @override
   String get rcShortAccident => 'Olycka';
@@ -4450,7 +4431,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rcShortUnsafe => 'Otrygg';
 
   @override
-  String get rcShortRiderStop => 'Passagerarstopp';
+  String get rcShortRiderStop => 'Resenärsstopp';
 
   @override
   String get rcShortTraffic => 'Trafik';
@@ -4495,7 +4476,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get rcAnswerMe => 'Jag';
 
   @override
-  String get rcAnswerTheRider => 'Passageraren';
+  String get rcAnswerTheRider => 'Resenären';
 
   @override
   String get rcAnswerSomeoneElse => 'Någon annan';
@@ -4746,6 +4727,10 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get moveWithin100MOfStop =>
       'Kom inom 100 m från stoppet för att vara framme.';
+
+  @override
+  String get riderPhoneNotConnected =>
+      'Telefonkontakt med resenären är inte ansluten i den här demon.';
 
   @override
   String get recordAudioStarting => 'startar…';
@@ -5145,12 +5130,6 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get docStatusRejected => 'Avvisat';
-
-  @override
-  String get docStatusExpired => 'Utgånget';
-
-  @override
   String get docMoveraBooks => 'Movera bokar detta med dig';
 
   @override
@@ -5320,12 +5299,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get fleetStatusPending => 'Väntar på godkännande';
 
   @override
-  String get fleetStatusApproved => 'Godkänt';
-
-  @override
-  String get fleetStatusRejected => 'Avvisat';
-
-  @override
   String get fleetStatusBlocked => 'Blockerat';
 
   @override
@@ -5394,15 +5367,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get fleetOffline => 'Offline';
-
-  @override
-  String get vehStatusPending => 'Granskas';
-
-  @override
-  String get vehStatusApproved => 'Godkänd';
-
-  @override
-  String get vehStatusRejected => 'Avvisad';
 
   @override
   String get vehStatusBlocked => 'Blockerad';
@@ -5733,18 +5697,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get profLiveNoNameYet => 'Dina uppgifter är inte skickade än';
 
   @override
-  String get profStatusActive => 'Aktivt konto';
-
-  @override
-  String get profStatusOnHold => 'Väntar på Moveras godkännande';
-
-  @override
-  String get profStatusPending => 'Uppgifter inte skickade än';
-
-  @override
-  String get profStatusSuspended => 'Kontot är avstängt';
-
-  @override
   String get rcTripTotal => 'Resans totalpris';
 
   @override
@@ -5770,18 +5722,6 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get message => 'Meddelande';
-
-  @override
-  String get supportTicketAnswered => 'Movera har svarat';
-
-  @override
-  String get supportTicketSolved => 'Löst';
-
-  @override
-  String get supportTicketClosed => 'Stängt';
-
-  @override
-  String get supportTicketWaiting => 'Väntar på Movera';
 
   @override
   String get supportTicketMovera => 'Movera support';
@@ -5833,4 +5773,193 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get contentTermsBlockOnline =>
       'Godkänn de nya villkoren för att gå online.';
+
+  @override
+  String get swTripStatusDraft => 'Utkast';
+
+  @override
+  String get swTripStatusQuoted => 'Offererad';
+
+  @override
+  String get swTripStatusRequested => 'Begärd';
+
+  @override
+  String get swTripStatusSearching => 'Söker';
+
+  @override
+  String get swTripStatusOffered => 'Erbjuden';
+
+  @override
+  String get swTripStatusAccepted => 'Accepterad';
+
+  @override
+  String get swTripStatusDriverToPickup => 'Förare till upphämtning';
+
+  @override
+  String get swTripStatusArrived => 'Framme';
+
+  @override
+  String get swTripStatusRiderOnboard => 'Resenären ombord';
+
+  @override
+  String get swTripStatusInTrip => 'På resa';
+
+  @override
+  String get swTripStatusApproachingDropoff => 'Närmar sig avlämning';
+
+  @override
+  String get swTripStatusCompleted => 'Slutförd';
+
+  @override
+  String get swTripStatusCancelledByRider => 'Avbokad av resenär';
+
+  @override
+  String get swTripStatusCancelledByDriver => 'Avbokad av förare';
+
+  @override
+  String get swTripStatusCancelledByAdmin => 'Avbokad av admin';
+
+  @override
+  String get swTripStatusCancelledBySystem => 'Avbokad av systemet';
+
+  @override
+  String get swTripStatusNoShow => 'Utebliven';
+
+  @override
+  String get swTripStatusExpired => 'Utgången';
+
+  @override
+  String get swTripStatusFailed => 'Misslyckad';
+
+  @override
+  String get swDriverAccountStatusPending => 'Väntande';
+
+  @override
+  String get swDriverAccountStatusActive => 'Aktiv';
+
+  @override
+  String get swDriverAccountStatusOnHold => 'Väntar på granskning';
+
+  @override
+  String get swDriverAccountStatusSuspended => 'Avstängd';
+
+  @override
+  String get swDriverOnlineStatusOffline => 'Offline';
+
+  @override
+  String get swDriverOnlineStatusGoingOnline => 'Går online';
+
+  @override
+  String get swDriverOnlineStatusOnline => 'Online';
+
+  @override
+  String get swDriverOnlineStatusOnTrip => 'På resa';
+
+  @override
+  String get swDriverOnlineStatusSuspended => 'Avstängd';
+
+  @override
+  String get swPaymentStatusPending => 'Väntande';
+
+  @override
+  String get swPaymentStatusAuthorized => 'Auktoriserad';
+
+  @override
+  String get swPaymentStatusCaptured => 'Debiterad';
+
+  @override
+  String get swPaymentStatusFailed => 'Misslyckad';
+
+  @override
+  String get swPaymentStatusRefunded => 'Återbetald';
+
+  @override
+  String get swPaymentStatusPartiallyRefunded => 'Delvis återbetald';
+
+  @override
+  String get swFeeStatusPaid => 'Betald';
+
+  @override
+  String get swFeeStatusOwed => 'Obetald';
+
+  @override
+  String get swFeeStatusWaived => 'Efterskänkt';
+
+  @override
+  String get swPayoutStatusPending => 'Väntande';
+
+  @override
+  String get swPayoutStatusPaid => 'Utbetald';
+
+  @override
+  String get swDocumentStatusNeeded => 'Krävs';
+
+  @override
+  String get swDocumentStatusInReview => 'Granskas';
+
+  @override
+  String get swDocumentStatusApproved => 'Godkänt';
+
+  @override
+  String get swDocumentStatusRejected => 'Avslaget';
+
+  @override
+  String get swDocumentStatusExpired => 'Utgånget';
+
+  @override
+  String get swDocumentStatusExpiring => 'Går ut snart';
+
+  @override
+  String get swDocumentStatusMissing => 'Saknas';
+
+  @override
+  String get swTicketStatusOpen => 'Öppet';
+
+  @override
+  String get swTicketStatusPending => 'Väntande';
+
+  @override
+  String get swTicketStatusResolved => 'Löst';
+
+  @override
+  String get swTicketStatusClosed => 'Stängt';
+
+  @override
+  String get swVehicleReviewStatusInReview => 'Granskas';
+
+  @override
+  String get swVehicleReviewStatusApproved => 'Godkänt';
+
+  @override
+  String get swVehicleReviewStatusRejected => 'Avslaget';
+
+  @override
+  String get swOfferStatusOpen => 'Öppet';
+
+  @override
+  String get swOfferStatusClaimed => 'Taget';
+
+  @override
+  String get swOfferStatusClaimedElsewhere => 'Taget av annan förare';
+
+  @override
+  String get swOfferStatusDeclined => 'Avböjt';
+
+  @override
+  String get swOfferStatusExpired => 'Utgånget';
+
+  @override
+  String get swOfferStatusWithdrawn => 'Tillbakadraget';
+
+  @override
+  String get swRatingStatusNotRequested => 'Inte begärt';
+
+  @override
+  String get swRatingStatusPending => 'Väntande';
+
+  @override
+  String get swRatingStatusSubmitted => 'Lämnat';
+
+  @override
+  String get swRatingStatusSkipped => 'Överhoppat';
 }

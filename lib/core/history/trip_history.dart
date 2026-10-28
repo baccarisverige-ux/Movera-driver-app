@@ -1,4 +1,5 @@
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
@@ -18,16 +19,19 @@ String paymentMethodText(String? method) =>
 /// How a finished trip ended, in the driver's language: "Completed",
 /// "Cancelled by rider", … A trip released back to dispatch was the
 /// driver's cancel (driver-86).
+/// v0.10.4: terminal outcomes use the contract words (statusWords
+/// tripStatus).
 String tripOutcomeText(TripStatus status) => switch (status) {
-  TripStatus.completed => tr.completed,
-  TripStatus.cancelledByRider => tr.cancelledByRider,
-  TripStatus.cancelledByDriver => tr.cancelledByDriver,
-  TripStatus.cancelledByAdmin => tr.cancelledBySupport,
-  TripStatus.cancelledBySystem => tr.cancelledByMovera,
-  TripStatus.searching || TripStatus.requested => tr.cancelledByDriver,
-  TripStatus.noShow => tr.riderDidNotArrive,
-  TripStatus.expired => tr.tripExpired,
-  TripStatus.failed => tr.tripFailed,
+  TripStatus.completed ||
+  TripStatus.cancelledByRider ||
+  TripStatus.cancelledByDriver ||
+  TripStatus.cancelledByAdmin ||
+  TripStatus.cancelledBySystem ||
+  TripStatus.noShow ||
+  TripStatus.expired ||
+  TripStatus.failed => statusWord(tr, 'tripStatus', status.wireName)!,
+  TripStatus.searching ||
+  TripStatus.requested => tr.swTripStatusCancelledByDriver,
   _ => tr.tripEnded,
 };
 

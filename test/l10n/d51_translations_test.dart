@@ -601,7 +601,7 @@ void main() {
       expect(words(tr.riderPays), findsOneWidget);
       expect(tr.riderPays, switch (code) {
         'fr' => 'Le passager paie',
-        'sv' => 'Passageraren betalar',
+        'sv' => 'Resenären betalar',
         _ => 'Rider pays',
       });
     });

@@ -115,7 +115,9 @@ Fix (no UX change, no lifecycle change):
 - v0.8.0–v0.8.1 (27–28 Oct 2026): the settings flow (`contracts/fixtures/settings_flow.json`, live driver config, Exclusive deny/offline rules in §6.7); v0.8.1 carries v0.7.2 pricing on top.
 - v0.9.0 (28 Oct 2026): real data part 3 (§18): payouts (`fixtures/payouts.json`; `PayoutLine` breakdown is admin only, the driver app shows only the payout total), support ticket messages, fixed rating tags, risk signals and KPIs. Additive; X-Api-Version stays `0.5`.
 - v0.10.0 (28 Oct 2026): Content (§19): admin-published driver-home / driver-event / help / legal / app-versions items, `GET /driver/content?zoneId`, `POST /account/terms/accept`. Additive; X-Api-Version stays `0.5`.
-- v0.13.0 (28 Oct 2026): Zones from the server (§20): `GET /driver/zones` (open zones with names and outline), read on start and on `config_published` doc `zones`; onboarding cities whose zone is not open are hidden. Additive; X-Api-Version stays `0.5`.
+- v0.10.4 (28 Oct 2026): one status word list (§20, `contract.json#statusWords`): the app shows the contract's sv/fr/en status words via `tool/gen_status_words.py` (ARB entries plus `lib/core/contracts/status_words.g.dart`); `test/contract/status_words_contract_test.dart` fails when a word differs. Swedish says "Resenär", never "Passagerare".
+- v0.11.0 (28 Oct 2026): Zones from the server (§20): `GET /driver/zones` (open zones with names and outline), read on start and on `config_published` doc `zones`; onboarding cities whose zone is not open are hidden. Additive; X-Api-Version stays `0.5`.
+- v0.13.0 (28 Oct 2026): Trip chat (§23): the chat closes at drop-off; calls only through `POST /trips/{tripId}/call` (masked number, 503 `call_unavailable` without a provider); no real phone number of the rider in any driver payload. Additive except the chat window; X-Api-Version stays `0.5`.
 
 ## Contract v0.3 (19 October 2026)
 

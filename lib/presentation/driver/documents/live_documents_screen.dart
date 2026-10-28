@@ -329,11 +329,14 @@ class DocumentRow extends StatelessWidget {
   final VoidCallback? onTap;
 
   static (String, Color) chipOf(String status) => switch (status) {
-    'approved' => (tr.docStatusApproved, AccountStyle.green),
-    'in_review' => (tr.docStatusInReview, AccountStyle.amber),
-    'rejected' => (tr.docStatusRejected, AccountStyle.error),
-    'expired' => (tr.docStatusExpired, AccountStyle.error),
-    _ => (tr.docStatusNeeded, AccountStyle.error),
+    // v0.10.4: contract words (statusWords documentStatus).
+    'approved' => (tr.swDocumentStatusApproved, AccountStyle.green),
+    'in_review' => (tr.swDocumentStatusInReview, AccountStyle.amber),
+    'rejected' => (tr.swDocumentStatusRejected, AccountStyle.error),
+    'expired' => (tr.swDocumentStatusExpired, AccountStyle.error),
+    'expiring' => (tr.swDocumentStatusExpiring, AccountStyle.amber),
+    // missing (stored) and needed (required, not uploaded) show "needed".
+    _ => (tr.swDocumentStatusNeeded, AccountStyle.error),
   };
 
   @override
