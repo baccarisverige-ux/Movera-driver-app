@@ -47,6 +47,6 @@ void main() {
       File('contracts/contract.json').readAsStringSync(),
       contains('"version": "0.11.0"'),
     );
-    expect(TripTransitions.contractVersion, '0.11.0');
+    expect(TripTransitions.contractVersion, '0.14.0');
   });
 }

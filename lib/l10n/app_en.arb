@@ -3817,5 +3817,10 @@
   "swRatingStatusSubmitted": "Submitted",
   "@swRatingStatusSubmitted": {"description": "Contract status word statusWords.families.ratingStatus.submitted (tool/gen_status_words.py)."},
   "swRatingStatusSkipped": "Skipped",
-  "@swRatingStatusSkipped": {"description": "Contract status word statusWords.families.ratingStatus.skipped (tool/gen_status_words.py)."}
+  "@swRatingStatusSkipped": {"description": "Contract status word statusWords.families.ratingStatus.skipped (tool/gen_status_words.py)."},
+  "vehDocsMissingCantDrive": "Can't be driven – upload documents",
+  "docsNotApprovedCar": "This car can't be driven until its documents are approved. Missing: {names}",
+  "@docsNotApprovedCar": {"placeholders": {"names": {"type": "String"}}},
+  "docsNotApprovedAccount": "Your account can't be used until these documents are approved: {names}",
+  "@docsNotApprovedAccount": {"placeholders": {"names": {"type": "String"}}}
 }

@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/contracts/driver_onboarding_rules.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/live/live_error_message.dart';
 
 /// The field of the details screen a server reason belongs under.
 enum DetailsField {
@@ -54,6 +55,7 @@ String accountErrorMessage(Object error, {required String fallback}) {
     return tr.authErrTooManyIn(tr.authRetrySeconds(seconds));
   }
   if (status >= 500) return tr.authErrServer;
+  if (error.documentsNotApproved) return documentsNotApprovedMessage(error);
   return switch (error.detail) {
     'under_age' => tr.acctUnderAge(DriverOnboardingRules.minAge),
     'invalid_date_of_birth' => tr.acctInvalidDate,

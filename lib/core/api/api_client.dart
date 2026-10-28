@@ -346,6 +346,7 @@ class ApiClient {
     var message = 'Request failed.';
     String? reason;
     Map<String, dynamic>? projection;
+    var details = const <String>[];
     try {
       final decoded = jsonDecode(response.body);
       if (decoded is Map<String, dynamic>) {
@@ -360,6 +361,13 @@ class ApiClient {
         }
         if (rawReason is String && rawReason.trim().isNotEmpty) {
           reason = rawReason.trim();
+        }
+        final rawDetails = decoded['details'];
+        if (rawDetails is List) {
+          details = [
+            for (final item in rawDetails)
+              if (item is String && item.trim().isNotEmpty) item.trim(),
+          ];
         }
         final rawProjection = decoded['projection'];
         if (rawProjection is Map) {
@@ -380,6 +388,7 @@ class ApiClient {
       statusCode: response.statusCode,
       retryAfter: retrySeconds == null ? null : Duration(seconds: retrySeconds),
       projection: projection,
+      details: details,
     );
   }
 }

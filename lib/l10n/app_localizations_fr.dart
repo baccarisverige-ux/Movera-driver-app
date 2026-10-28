@@ -6043,4 +6043,18 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Ignorée';
+
+  @override
+  String get vehDocsMissingCantDrive =>
+      'Ne peut pas rouler – téléversez les documents';
+
+  @override
+  String docsNotApprovedCar(String names) {
+    return 'Cette voiture ne peut pas rouler tant que ses documents ne sont pas approuvés. Manquants : $names';
+  }
+
+  @override
+  String docsNotApprovedAccount(String names) {
+    return 'Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : $names';
+  }
 }

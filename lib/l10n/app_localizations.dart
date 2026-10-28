@@ -10338,6 +10338,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skipped'**
   String get swRatingStatusSkipped;
+
+  /// No description provided for @vehDocsMissingCantDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be driven – upload documents'**
+  String get vehDocsMissingCantDrive;
+
+  /// No description provided for @docsNotApprovedCar.
+  ///
+  /// In en, this message translates to:
+  /// **'This car can\'t be driven until its documents are approved. Missing: {names}'**
+  String docsNotApprovedCar(String names);
+
+  /// No description provided for @docsNotApprovedAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account can\'t be used until these documents are approved: {names}'**
+  String docsNotApprovedAccount(String names);
 }
 
 class _AppLocalizationsDelegate

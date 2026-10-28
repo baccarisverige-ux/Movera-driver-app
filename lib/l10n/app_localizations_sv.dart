@@ -5962,4 +5962,17 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Överhoppat';
+
+  @override
+  String get vehDocsMissingCantDrive => 'Kan inte köras – ladda upp dokument';
+
+  @override
+  String docsNotApprovedCar(String names) {
+    return 'Den här bilen kan inte köras förrän dess dokument är godkända. Saknas: $names';
+  }
+
+  @override
+  String docsNotApprovedAccount(String names) {
+    return 'Ditt konto kan inte användas förrän de här dokumenten är godkända: $names';
+  }
 }
