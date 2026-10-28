@@ -762,6 +762,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get moveraCouldNotBeAlerted => 'Movera kunde inte larmas';
 
   @override
+  String get rideCheckSent => 'Skickat';
+
+  @override
   String get moveraSafetyTeamAlerted => 'Moveras säkerhetsteam har larmats';
 
   @override
