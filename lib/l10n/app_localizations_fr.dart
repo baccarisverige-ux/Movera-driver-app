@@ -6046,4 +6046,51 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Ignorée';
+
+  @override
+  String get mapYourCar => 'Votre voiture';
+
+  @override
+  String get noticeDemoEventTitle => 'Demande du soir à Stockholm';
+
+  @override
+  String get noticeDemoEventBody =>
+      '18:00–22:30 · Centre de Stockholm. Soyez en ligne avant le principal créneau de départs.';
+
+  @override
+  String get noticeDemoEventIsland => 'Événement ce soir · City';
+
+  @override
+  String get categoryComfort => 'Confort';
+
+  @override
+  String get categoryPriority => 'Prioritaire';
+
+  @override
+  String get categoryElectric => 'Électrique';
+
+  @override
+  String get categoryBoosterSeat => 'Rehausseur';
+
+  @override
+  String get demoPickupNearYou => 'Prise en charge près de vous';
+
+  @override
+  String demoNearPlace(String place) {
+    return 'Près de $place';
+  }
+
+  @override
+  String get demoYourDestination => 'votre destination';
+
+  @override
+  String demoOnYourWayPercent(int percent) {
+    return 'Sur votre trajet · $percent %';
+  }
+
+  @override
+  String get demoAwayFromRoute => 'Hors de votre trajet';
+
+  @override
+  String get demoBehindYou => 'Derrière vous';
 }

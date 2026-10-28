@@ -45,7 +45,7 @@ extension _HomeStartPosition on _DriverHomeState {
     Marker(
       markerId: const MarkerId('driver_location'),
       position: _driverPosition,
-      infoWindow: const InfoWindow(title: 'Driver camera vehicle'),
+      infoWindow: InfoWindow(title: tr.mapYourCar),
       icon: _driverVehicleIcon,
       // Upright arrow; CustomGoogleMap turns it to the screen.
       flat: false,

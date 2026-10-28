@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/money/money.dart';
 
+/// The words the rider app sends with [DriverRealtimeKind.riderOnTheWay];
+/// the driver reads its own translated line instead.
+const String riderOnTheWayMessage = "I'm on the way";
+
 /// Trip realtime envelope, `contracts/contract.json#realtime` (v0.3.0).
 ///
 /// `{eventId, tripId, sequence, version, kind, occurredAt, serverTime}` plus

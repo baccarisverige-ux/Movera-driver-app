@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:flutter/material.dart';
@@ -435,7 +436,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
 
   Widget _chip(WaybillRecord? record) {
     final label = [
-      record?.service ?? 'Movera',
+      categoryNameText(record?.service ?? 'Movera'),
       if (record != null && record.source.trim().isNotEmpty) record.sourceText,
     ].join(' · ');
     return Container(

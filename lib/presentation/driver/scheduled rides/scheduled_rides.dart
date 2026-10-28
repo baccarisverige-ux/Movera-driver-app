@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/constants/appassets.dart';
@@ -1267,7 +1268,7 @@ class _ScheduledRideCard extends StatelessWidget {
                       Flexible(
                         child: _RideMeta(
                           icon: AppAssets.solarCar,
-                          label: ride.category,
+                          label: categoryNameText(ride.category),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1868,7 +1869,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '${ride.distance} • ${ride.category}',
+                  '${ride.distance} • ${categoryNameText(ride.category)}',
                   style: const TextStyle(
                     color: _ink,
                     fontSize: 10,

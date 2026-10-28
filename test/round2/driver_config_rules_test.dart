@@ -63,7 +63,7 @@ void main() {
       );
       expect(terms.freeMinutes, 7);
       expect(terms.noShowAfterMinutes, 7);
-      expect(terms.rule, 'XL · Scheduled ride');
+      expect(terms.rule, 'Movera XL · Scheduled ride');
     });
   });
 

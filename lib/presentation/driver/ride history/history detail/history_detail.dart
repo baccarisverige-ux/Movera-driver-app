@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/core/contracts/trip_status.dart';
@@ -425,7 +426,7 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
           paymentIcon: true,
         ),
         16.height,
-        _detailRow(tr.rideType, _ride.category),
+        _detailRow(tr.rideType, categoryNameText(_ride.category)),
         // Q23 / R8-4: on a cash trip, the cash the driver collected and
         // the balance: earnings − cash, owed by (−) or to (+) the driver,
         // settled in the next payout.
