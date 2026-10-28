@@ -29,10 +29,11 @@ class FleetCarCard extends StatelessWidget {
   final bool busy;
 
   static (String, Color) statusOf(String status) => switch (status) {
-    'approved' => (tr.vehStatusApproved, AccountStyle.green),
-    'rejected' => (tr.vehStatusRejected, AccountStyle.error),
+    // v0.10.4: contract words (statusWords vehicleReviewStatus).
+    'approved' => (tr.swVehicleReviewStatusApproved, AccountStyle.green),
+    'rejected' => (tr.swVehicleReviewStatusRejected, AccountStyle.error),
     'blocked' => (tr.vehStatusBlocked, AccountStyle.error),
-    _ => (tr.vehStatusPending, AccountStyle.amber),
+    _ => (tr.swVehicleReviewStatusInReview, AccountStyle.amber),
   };
 
   @override
