@@ -140,6 +140,73 @@ class LiveTripCommands {
     leadsTo: const {'completed'},
   );
 
+  /// "Framme vid stoppet" (contract v0.7.1 §3.8): the paid wait at the
+  /// middle stop [stopIndex] (0-based) starts now; there are no free
+  /// minutes at a stop.
+  Future<LiveTripOutcome> arriveAtStop(String tripId, int stopIndex) =>
+      _stopStep(tripId, stopIndex, 'arrive');
+
+  /// The trip goes on from the middle stop [stopIndex]: its paid wait ends.
+  Future<LiveTripOutcome> leaveStop(String tripId, int stopIndex) =>
+      _stopStep(tripId, stopIndex, 'leave');
+
+  /// True when the projection already has the stop's tap (a retry after a
+  /// lost answer).
+  bool _stopDone(String tripId, int stopIndex, String verb) {
+    final visits = _trips[tripId]?['stopVisits'];
+    if (visits is! List) return false;
+    for (final visit in visits) {
+      if (visit is Map && visit['stopIndex'] == stopIndex) {
+        return verb == 'arrive'
+            ? visit['arrivedAt'] != null
+            : visit['leftAt'] != null;
+      }
+    }
+    return false;
+  }
+
+  Future<LiveTripOutcome> _stopStep(
+    String tripId,
+    int stopIndex,
+    String verb,
+  ) async {
+    final path =
+        '/api/v1/driver/trips/${Uri.encodeComponent(tripId)}/stops/$stopIndex/$verb';
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final current = await _current(tripId);
+      if (current == null) return _unknown;
+      if (_stopDone(tripId, stopIndex, verb)) return const LiveTripOutcome.ok();
+      final payload = {'expectedVersion': versionOf(tripId)};
+      final signature = '$path ${jsonEncode(payload)}';
+      final key = _keys.putIfAbsent(signature, ApiClient.randomKey);
+      try {
+        observe(await _api.post(path, body: payload, idempotencyKey: key));
+        _keys.remove(signature);
+        return const LiveTripOutcome.ok();
+      } on ApiError catch (error) {
+        if (!error.isRetryable) _keys.remove(signature);
+        final projection = error.projection;
+        if (projection != null) observe({'tripId': tripId, ...projection});
+        // Already recorded (another screen, or a lost answer): nothing to do.
+        if (error.reason == 'stop_already_arrived' && verb == 'arrive' ||
+            error.reason == 'stop_already_left' && verb == 'leave') {
+          return const LiveTripOutcome.ok();
+        }
+        if (error.code == 'version_mismatch' &&
+            projection != null &&
+            attempt == 0) {
+          continue;
+        }
+        DriverLog.warn('stop $verb refused: ${error.detail}', name: 'live');
+        return LiveTripOutcome.failed(
+          liveTripErrorMessage(error),
+          error: error,
+        );
+      }
+    }
+    return _unknown;
+  }
+
   /// The rider did not come (`no-show`, after the zone's wait).
   Future<LiveTripOutcome> noShow(String tripId, {String? reasonCode}) => _step(
     tripId,

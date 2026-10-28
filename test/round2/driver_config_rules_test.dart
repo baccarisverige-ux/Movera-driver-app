@@ -159,7 +159,7 @@ void main() {
       expect(answers.missed(), isTrue);
     });
 
-    test('the local default (3) stays the fallback', () {
+    test('the local default (10, contract v0.5.6) stays the fallback', () {
       DriverAppConfig.fromJson({
         'offers': {
           'autoOffline': {'missedExclusive': 0},
@@ -169,7 +169,7 @@ void main() {
         DriverOfferRules.current.autoOfflineAfter,
         DriverOfferRules.defaultAutoOfflineAfter,
       );
-      expect(DriverOfferRules.defaultAutoOfflineAfter, 3);
+      expect(DriverOfferRules.defaultAutoOfflineAfter, 10);
     });
 
     test('admin can switch it off', () {

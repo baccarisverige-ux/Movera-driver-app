@@ -40,7 +40,7 @@ void main() {
       'Movera XL': 'xl',
       'Electric': 'electric',
       'Movera Pet': 'pet',
-      'Booster Seat': null,
+      'Booster Seat': 'child_seat',
     });
     expect(CategoryCatalog.idForLabel('XL'), 'xl');
   });

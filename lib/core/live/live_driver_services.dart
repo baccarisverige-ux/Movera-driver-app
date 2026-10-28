@@ -18,6 +18,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/surge/api_surge_map.dart';
 
 export 'package:movera/core/live/live_trip_money.dart' show LiveTripMoney;
 
@@ -48,6 +49,7 @@ class LiveDriverServices {
     places = LiveAddressLookup(api: api);
     activeTrip = LiveActiveTrip(api: api);
     earnings = LiveEarnings(api: api);
+    surgeMap = ApiSurgeMapSource(api: api);
     dispatch = ApiDispatchRepository(
       client: client,
       baseUri: apiBase,
@@ -94,6 +96,9 @@ class LiveDriverServices {
 
   /// Today's earnings from the server (audit R3).
   late final LiveEarnings earnings;
+
+  /// The coloured surge zones of Home's map (contract v0.7.2 §17).
+  late final ApiSurgeMapSource surgeMap;
   late final ApiDispatchRepository dispatch;
   late final LivePresence presence;
 

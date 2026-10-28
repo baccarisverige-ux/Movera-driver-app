@@ -992,6 +992,18 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (_stage == ActiveRideStage.onTrip &&
         !_paidStopWait &&
         _stopCursor < widget.stopAddresses.length) {
+      // Contract v0.7.1 §3.8: the server charges the stop wait from this
+      // tap, so a live build tells it first.
+      final stop = _stopCursor;
+      if (LiveDriverServices.active &&
+          (!await _AcceptRideLive(this)._serverStep(
+                (trips) => trips.arriveAtStop(widget.tripId, stop),
+              ) ||
+              !mounted ||
+              _stage != ActiveRideStage.onTrip ||
+              _paidStopWait)) {
+        return;
+      }
       _paidStopWait = true;
       _waitSeconds = 0;
       _waitAnchorAt = null;
@@ -1489,6 +1501,17 @@ extension _AcceptRideTrip on _AcceptRideState {
 
       case ActiveRideStage.onTrip:
         if (_paidStopWait) {
+          // Leaving the stop ends its paid wait on the server (v0.7.1).
+          final stop = _stopCursor;
+          if (LiveDriverServices.active &&
+              (!await _AcceptRideLive(this)._serverStep(
+                    (trips) => trips.leaveStop(widget.tripId, stop),
+                  ) ||
+                  !mounted ||
+                  !_paidStopWait)) {
+            _stageTransitioning = false;
+            return;
+          }
           _syncWaitClock();
           _paidWaitSeconds += _paidWaitNow;
           _paidStopWait = false;

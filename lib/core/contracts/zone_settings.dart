@@ -96,7 +96,8 @@ abstract final class ZoneDefaults {
 
   static const maxStops = 3;
   static const maxPickupMoveMeters = 500;
-  static const missedExclusiveBeforeOffline = 3;
+  // v0.5.6 (owner decision 35): 10 missed Exclusive offers in a row.
+  static const missedExclusiveBeforeOffline = 10;
   static const waitingDriverSharePct = 100;
   static const noShowDriverSharePct = 80;
 

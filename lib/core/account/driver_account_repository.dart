@@ -127,10 +127,14 @@ class DriverAccountRepository {
     return [
       if (items is List)
         for (final item in items)
-          if (item is Map)
+          if (item is Map && item['kind'] != hiddenKind)
             ServerNotification.fromJson(Map<String, dynamic>.from(item)),
     ];
   }
+
+  /// Contract v0.7.2 (contract.json, no notice on surges): drivers get no surge notice,
+  /// so an old one the server still holds is never listed or counted.
+  static const hiddenKind = 'surge_started';
 
   /// `POST /notifications/{id}/read`.
   Future<ServerNotification> markNotificationRead(

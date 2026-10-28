@@ -131,12 +131,12 @@ extension _HomeBack on _DriverHomeState {
 extension _HomeRoutes on _DriverHomeState {
   void _pageCovered() {
     _routeVisible = false;
-    _pauseHomeUpdates();
+    _HomeUpdates(this)._pauseHomeUpdates();
   }
 
   void _pageUncovered() {
     _routeVisible = true;
-    _resumeHomeUpdates();
+    _HomeUpdates(this)._resumeHomeUpdates();
     _HomeMapSheet(this)._adoptSessionDestination(); // driver-u65
     // A covering ride may have handed storage to a queued trip before it
     // closed. Re-check ownership so a persisted trip is never hidden behind

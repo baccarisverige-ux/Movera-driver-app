@@ -3341,14 +3341,16 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 160));
     await _middleActiveRideSheet(tester);
-    expect(find.text("I've arrived"), findsOneWidget);
+    // v0.7.1: on the way to a middle stop the button is the stop's own.
+    expect(find.text('Arrive at the stop'), findsOneWidget);
     await _tapArrived(tester);
     expect(
       find.text('This stop needs a verified map location before arrival.'),
       findsOneWidget,
     );
     await _middleActiveRideSheet(tester);
-    expect(find.text("I've arrived"), findsOneWidget);
+    // v0.7.1: on the way to a middle stop the button is the stop's own.
+    expect(find.text('Arrive at the stop'), findsOneWidget);
     _expectNoException(tester);
   });
 }

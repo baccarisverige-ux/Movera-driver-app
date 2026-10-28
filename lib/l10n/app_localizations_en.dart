@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -4530,11 +4529,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tipHighBoostNearby => 'High boost nearby';
-
-  @override
-  String tipHighBoostIn(String kr, String zone) {
-    return 'High boost · +$kr kr in $zone';
-  }
 
   @override
   String get tipExpectTrip => 'Expect a trip in 2–5 min';
