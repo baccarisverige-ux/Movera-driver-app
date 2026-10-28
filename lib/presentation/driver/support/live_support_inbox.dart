@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/presentation/driver/content/content_card.dart';
 import 'package:movera/core/support/server_support_tickets.dart';
 
 /// The live build's Support (contract v0.9.0, owner 2026-10-27): the driver
@@ -64,48 +66,61 @@ class _LiveSupportInboxState extends State<LiveSupportInbox> {
       icon: const Icon(Icons.add_rounded),
       label: Text(tr.supportWriteToMovera),
     ),
-    body: FutureBuilder<List<ServerTicket>>(
-      future: _list,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(
-            child: TextButton(
-              onPressed: _reload,
-              child: Text(tr.supportCouldNotLoadRetry),
-            ),
-          );
-        }
-        final tickets = snapshot.data ?? const <ServerTicket>[];
-        if (tickets.isEmpty) {
-          return Center(child: Text(tr.supportNoTicketsYet));
-        }
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-          children: [
-            for (final ticket in tickets)
-              Card(
-                child: ListTile(
-                  key: ValueKey<String>('live-ticket-${ticket.id}'),
-                  title: Text(ticket.subject),
-                  subtitle: Text(liveTicketStatus(ticket.status)),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => _LiveTicket(
-                        ticketId: ticket.id,
-                        tickets: widget.tickets,
-                      ),
+    body: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Contract v0.10.0 §19: the Content page's Help text.
+        if (DriverContentStore.instance.help case final help?)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: DriverContentCard(item: help),
+          ),
+        Expanded(child: _tickets()),
+      ],
+    ),
+  );
+
+  Widget _tickets() => FutureBuilder<List<ServerTicket>>(
+    future: _list,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (snapshot.hasError) {
+        return Center(
+          child: TextButton(
+            onPressed: _reload,
+            child: Text(tr.supportCouldNotLoadRetry),
+          ),
+        );
+      }
+      final tickets = snapshot.data ?? const <ServerTicket>[];
+      if (tickets.isEmpty) {
+        return Center(child: Text(tr.supportNoTicketsYet));
+      }
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+        children: [
+          for (final ticket in tickets)
+            Card(
+              child: ListTile(
+                key: ValueKey<String>('live-ticket-${ticket.id}'),
+                title: Text(ticket.subject),
+                subtitle: Text(liveTicketStatus(ticket.status)),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => _LiveTicket(
+                      ticketId: ticket.id,
+                      tickets: widget.tickets,
                     ),
                   ),
                 ),
               ),
-          ],
-        );
-      },
-    ),
+            ),
+        ],
+      );
+    },
   );
 }
 

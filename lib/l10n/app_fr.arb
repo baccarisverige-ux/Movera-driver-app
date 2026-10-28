@@ -1647,5 +1647,15 @@
   "supportSendToMovera": "Envoyer à Movera",
   "supportSentToMovera": "Envoyé à Movera. La réponse s'affiche ici.",
   "supportWriteToMovera": "Écrire à Movera",
-  "supportNoTicketsYet": "Aucun message à Movera pour l'instant."
+  "supportNoTicketsYet": "Aucun message à Movera pour l'instant.",
+  "contentUpdateTitle": "Mettre à jour l'app",
+  "contentUpdateBody": "Cette version de Movera Driver ne peut plus être utilisée. Mettez-la à jour pour continuer à conduire.",
+  "contentUpdateStore": "Ouvrir le store",
+  "contentUpdateStoreFailed": "Le store n'a pas pu être ouvert.",
+  "contentUpdateRecommended": "Une nouvelle version de l'app est disponible.",
+  "contentUpdateAfterTrip": "Mettez à jour l'app après la course.",
+  "contentTermsTitle": "Nouvelles conditions",
+  "contentTermsAccept": "J'accepte",
+  "contentTermsFailed": "Non enregistré. Vérifiez la connexion et réessayez.",
+  "contentTermsBlockOnline": "Acceptez les nouvelles conditions pour passer en ligne."
 }

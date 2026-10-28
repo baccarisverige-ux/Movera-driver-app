@@ -6,6 +6,7 @@ import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/logging/global_error_hooks.dart';
 
 import 'package:flutter/material.dart';
+import 'package:movera/presentation/driver/content/driver_content_gate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:movera/core/account/driver_account_repository.dart';
@@ -265,30 +266,34 @@ class _MoveraAppState extends State<MoveraApp> {
                   account: DriverRuntimeConfig.current.authRequired
                       ? _account
                       : null,
-                  child: LayoutViewport(
-                    child: Column(
-                      children: [
-                        // A live build (round 4) has an account: no demo
-                        // banner, only the status-bar inset it would take.
-                        if (DriverRuntimeConfig.current.authRequired)
-                          const SafeArea(
-                            bottom: false,
-                            child: SizedBox.shrink(),
-                          )
-                        else
-                          const DemoModeBanner(),
-                        // The banner took the status-bar inset: the
-                        // screens below must not pad for it again.
-                        Expanded(
-                          child: Builder(
-                            builder: (viewport) => MediaQuery.removePadding(
-                              context: viewport,
-                              removeTop: true,
-                              child: child ?? const SizedBox.shrink(),
+                  child: DriverContentGate(
+                    session: _session,
+                    navigatorKey: _navigatorKey,
+                    child: LayoutViewport(
+                      child: Column(
+                        children: [
+                          // A live build (round 4) has an account: no demo
+                          // banner, only the status-bar inset it would take.
+                          if (DriverRuntimeConfig.current.authRequired)
+                            const SafeArea(
+                              bottom: false,
+                              child: SizedBox.shrink(),
+                            )
+                          else
+                            const DemoModeBanner(),
+                          // The banner took the status-bar inset: the
+                          // screens below must not pad for it again.
+                          Expanded(
+                            child: Builder(
+                              builder: (viewport) => MediaQuery.removePadding(
+                                context: viewport,
+                                removeTop: true,
+                                child: child ?? const SizedBox.shrink(),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

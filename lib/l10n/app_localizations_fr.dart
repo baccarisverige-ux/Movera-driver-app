@@ -5874,4 +5874,38 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportNoTicketsYet => 'Aucun message à Movera pour l\'instant.';
+
+  @override
+  String get contentUpdateTitle => 'Mettre à jour l\'app';
+
+  @override
+  String get contentUpdateBody =>
+      'Cette version de Movera Driver ne peut plus être utilisée. Mettez-la à jour pour continuer à conduire.';
+
+  @override
+  String get contentUpdateStore => 'Ouvrir le store';
+
+  @override
+  String get contentUpdateStoreFailed => 'Le store n\'a pas pu être ouvert.';
+
+  @override
+  String get contentUpdateRecommended =>
+      'Une nouvelle version de l\'app est disponible.';
+
+  @override
+  String get contentUpdateAfterTrip => 'Mettez à jour l\'app après la course.';
+
+  @override
+  String get contentTermsTitle => 'Nouvelles conditions';
+
+  @override
+  String get contentTermsAccept => 'J\'accepte';
+
+  @override
+  String get contentTermsFailed =>
+      'Non enregistré. Vérifiez la connexion et réessayez.';
+
+  @override
+  String get contentTermsBlockOnline =>
+      'Acceptez les nouvelles conditions pour passer en ligne.';
 }

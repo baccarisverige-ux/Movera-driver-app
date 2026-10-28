@@ -9,6 +9,8 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_active_trip.dart';
 import 'package:movera/core/live/live_driver_config.dart';
+import 'package:movera/core/live/live_driver_content.dart';
+import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
@@ -58,11 +60,13 @@ class LiveDriverServices {
       onAccepted: trips.observe,
     );
     presence = LivePresence(api: api, dispatch: dispatch, reporter: reporter);
+    content = LiveDriverContent(api: api, zoneId: () => config.current?.zoneId);
     config = LiveDriverConfig(
       client: client,
       apiBase: apiBase,
       accessToken: tokens.readAccess,
       renewSession: api.renewAccess,
+      onContentPublished: () => unawaited(content.refresh()),
     );
   }
 
@@ -106,6 +110,9 @@ class LiveDriverServices {
   /// on each config_published, put in use at once; last good kept.
   late final LiveDriverConfig config;
 
+  /// The Content page's texts, terms and app versions (contract §19).
+  late final LiveDriverContent content;
+
   static Uri _withPrefix(Uri origin) => origin.replace(
     path: '${origin.path.replaceFirst(RegExp(r'/$'), '')}/api/v1',
   );
@@ -126,7 +133,12 @@ class LiveDriverServices {
   void attach(DriverSessionController session) {
     presence.attach(session);
     dispatch.onDriverOffline = () => session.setOnline(false);
-    unawaited(config.start().then((_) => config.watch()));
+    unawaited(
+      config.start().then((_) {
+        unawaited(content.start());
+        return config.watch();
+      }),
+    );
   }
 
   /// The app is on screen again ([LivePresence.resumed]).
@@ -246,6 +258,14 @@ class LivePresence {
   /// driver (no car, fleet not approved, no connection…).
   Future<String?> goOnline() {
     _wantOnline = true;
+    // Contract §19: until the new terms are accepted the driver cannot go
+    // online (the server refuses too); the terms screen shows again.
+    final terms = DriverContentStore.instance;
+    if (terms.blocksOnline) {
+      _wantOnline = false;
+      terms.askTerms();
+      return Future<String?>.value(tr.contentTermsBlockOnline);
+    }
     return _serial(() async {
       if (!_wantOnline) return null;
       try {
