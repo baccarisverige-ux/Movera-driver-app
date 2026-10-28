@@ -117,7 +117,8 @@ Fix (no UX change, no lifecycle change):
 - v0.10.0 (28 Oct 2026): Content (§19): admin-published driver-home / driver-event / help / legal / app-versions items, `GET /driver/content?zoneId`, `POST /account/terms/accept`. Additive; X-Api-Version stays `0.5`.
 - v0.10.4 (28 Oct 2026): one status word list (§20, `contract.json#statusWords`): the app shows the contract's sv/fr/en status words via `tool/gen_status_words.py` (ARB entries plus `lib/core/contracts/status_words.g.dart`); `test/contract/status_words_contract_test.dart` fails when a word differs. Swedish says "Resenär", never "Passagerare".
 - v0.11.0 (28 Oct 2026): Zones from the server (§20): `GET /driver/zones` (open zones with names and outline), read on start and on `config_published` doc `zones`; onboarding cities whose zone is not open are hidden. Additive; X-Api-Version stays `0.5`.
-- v0.14.0 (28 Oct 2026): Activation needs approved documents (`409 documents_not_approved`, `details` "<scope>:<type>"); a car whose required documents are not all approved can't be picked or driven (reason `vehicle_documents_not_approved`). The app names the missing documents and shows such a car as "Can't be driven – upload documents" without a pick button. (v0.12.0 ride check and v0.13.0 chat come in with their own driver PRs.)
+- v0.12.0 (28 Oct 2026): Ride check answers (§22): `POST /driver/trips/{tripId}/ride-check` (shown, then ok | need_help). Additive; X-Api-Version stays `0.5`.
+- v0.14.0 (28 Oct 2026): Activation needs approved documents (`409 documents_not_approved`, `details` "<scope>:<type>"); a car whose required documents are not all approved can't be picked or driven (reason `vehicle_documents_not_approved`). The app names the missing documents and shows such a car as "Can't be driven – upload documents" without a pick button. (v0.13.0 chat comes in with its own driver PR.)
 
 ## Contract v0.3 (19 October 2026)
 
