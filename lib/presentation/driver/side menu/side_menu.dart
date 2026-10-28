@@ -161,7 +161,7 @@ class DriverSideMenu extends StatelessWidget {
                         asset: AppAssets.menuSupport,
                         title: tr.support,
                         subtitle: tr.messagesAndSupportTickets,
-                        onTap: () => _open(context, const SupportInboxScreen()),
+                        onTap: () => _open(context, const SupportScreen()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuSettings,

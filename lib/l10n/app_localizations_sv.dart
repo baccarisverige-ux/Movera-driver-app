@@ -5749,4 +5749,52 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get rcYouGet => 'Du får';
+
+  @override
+  String get ratingTagOnTime => 'I tid';
+
+  @override
+  String get ratingTagPolite => 'Artig';
+
+  @override
+  String get ratingTagClearPickup => 'Tydlig upphämtning';
+
+  @override
+  String get ratingCommentOptional => 'Kommentar (valfri)';
+
+  @override
+  String get ratingCouldNotSend => 'Betyget kunde inte skickas.';
+
+  @override
+  String get message => 'Meddelande';
+
+  @override
+  String get supportTicketAnswered => 'Movera har svarat';
+
+  @override
+  String get supportTicketSolved => 'Löst';
+
+  @override
+  String get supportTicketClosed => 'Stängt';
+
+  @override
+  String get supportTicketWaiting => 'Väntar på Movera';
+
+  @override
+  String get supportTicketMovera => 'Movera support';
+
+  @override
+  String get supportSendFailed => 'Kunde inte skicka. Försök igen.';
+
+  @override
+  String get supportSendToMovera => 'Skicka till Movera';
+
+  @override
+  String get supportSentToMovera => 'Skickat till Movera. Svaret visas här.';
+
+  @override
+  String get supportWriteToMovera => 'Skriv till Movera';
+
+  @override
+  String get supportNoTicketsYet => 'Inga meddelanden till Movera än.';
 }

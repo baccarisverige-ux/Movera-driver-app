@@ -5733,4 +5733,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rcYouGet => 'You get';
+
+  @override
+  String get ratingTagOnTime => 'On time';
+
+  @override
+  String get ratingTagPolite => 'Polite';
+
+  @override
+  String get ratingTagClearPickup => 'Clear pickup';
+
+  @override
+  String get ratingCommentOptional => 'Comment (optional)';
+
+  @override
+  String get ratingCouldNotSend => 'The rating could not be sent.';
+
+  @override
+  String get message => 'Message';
+
+  @override
+  String get supportTicketAnswered => 'Movera answered';
+
+  @override
+  String get supportTicketSolved => 'Solved';
+
+  @override
+  String get supportTicketClosed => 'Closed';
+
+  @override
+  String get supportTicketWaiting => 'Waiting for Movera';
+
+  @override
+  String get supportTicketMovera => 'Movera support';
+
+  @override
+  String get supportSendFailed => 'Could not send. Try again.';
+
+  @override
+  String get supportSendToMovera => 'Send to Movera';
+
+  @override
+  String get supportSentToMovera => 'Sent to Movera. The answer shows here.';
+
+  @override
+  String get supportWriteToMovera => 'Write to Movera';
+
+  @override
+  String get supportNoTicketsYet => 'No messages to Movera yet.';
 }

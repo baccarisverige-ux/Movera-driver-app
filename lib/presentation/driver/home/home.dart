@@ -830,7 +830,7 @@ class _DriverHomeState extends State<DriverHome>
   void _openActivationSupport() {
     pushSingle(
       context,
-      MaterialPageRoute<void>(builder: (_) => const SupportInboxScreen()),
+      MaterialPageRoute<void>(builder: (_) => const SupportScreen()),
     );
   }
 

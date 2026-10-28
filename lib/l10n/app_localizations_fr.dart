@@ -5825,4 +5825,53 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get rcYouGet => 'Vous recevez';
+
+  @override
+  String get ratingTagOnTime => 'À l\'heure';
+
+  @override
+  String get ratingTagPolite => 'Poli';
+
+  @override
+  String get ratingTagClearPickup => 'Prise en charge claire';
+
+  @override
+  String get ratingCommentOptional => 'Commentaire (facultatif)';
+
+  @override
+  String get ratingCouldNotSend => 'La note n\'a pas pu être envoyée.';
+
+  @override
+  String get message => 'Message';
+
+  @override
+  String get supportTicketAnswered => 'Movera a répondu';
+
+  @override
+  String get supportTicketSolved => 'Résolu';
+
+  @override
+  String get supportTicketClosed => 'Fermé';
+
+  @override
+  String get supportTicketWaiting => 'En attente de Movera';
+
+  @override
+  String get supportTicketMovera => 'Support Movera';
+
+  @override
+  String get supportSendFailed => 'Envoi impossible. Réessayez.';
+
+  @override
+  String get supportSendToMovera => 'Envoyer à Movera';
+
+  @override
+  String get supportSentToMovera =>
+      'Envoyé à Movera. La réponse s\'affiche ici.';
+
+  @override
+  String get supportWriteToMovera => 'Écrire à Movera';
+
+  @override
+  String get supportNoTicketsYet => 'Aucun message à Movera pour l\'instant.';
 }

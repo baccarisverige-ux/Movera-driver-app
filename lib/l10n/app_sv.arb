@@ -1631,5 +1631,21 @@
   "profStatusSuspended": "Kontot är avstängt",
   "rcTripTotal": "Resans totalpris",
   "rcMoveraCommission": "Moveras provision",
-  "rcYouGet": "Du får"
+  "rcYouGet": "Du får",
+  "ratingTagOnTime": "I tid",
+  "ratingTagPolite": "Artig",
+  "ratingTagClearPickup": "Tydlig upphämtning",
+  "ratingCommentOptional": "Kommentar (valfri)",
+  "ratingCouldNotSend": "Betyget kunde inte skickas.",
+  "message": "Meddelande",
+  "supportTicketAnswered": "Movera har svarat",
+  "supportTicketSolved": "Löst",
+  "supportTicketClosed": "Stängt",
+  "supportTicketWaiting": "Väntar på Movera",
+  "supportTicketMovera": "Movera support",
+  "supportSendFailed": "Kunde inte skicka. Försök igen.",
+  "supportSendToMovera": "Skicka till Movera",
+  "supportSentToMovera": "Skickat till Movera. Svaret visas här.",
+  "supportWriteToMovera": "Skriv till Movera",
+  "supportNoTicketsYet": "Inga meddelanden till Movera än."
 }

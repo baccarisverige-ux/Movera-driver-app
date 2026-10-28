@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/core/ratings/rider_rating.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
@@ -24,6 +25,7 @@ class DriverRideCompleted extends StatefulWidget {
     this.activeRideRepository,
     this.nextRide,
     this.paidByCash,
+    this.ratingSender,
   });
 
   final WaybillRepository? waybillRepository;
@@ -34,6 +36,10 @@ class DriverRideCompleted extends StatefulWidget {
   /// True for a cash trip, false for one paid in the app (card, Apple Pay,
   /// Google Pay, Swish …); null shows a dash.
   final bool? paidByCash;
+
+  /// Contract v0.9.0: sends the rating of the rider (stars, tags, comment).
+  /// Defaults to the live build's client; the demo sends nothing.
+  final RiderRatingSender? ratingSender;
 
   @override
   State<DriverRideCompleted> createState() => _DriverRideCompletedState();
@@ -49,6 +55,10 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   static const Color _starOn = Color(0xFFF2A12E);
 
   double _rating = 0;
+  final Set<String> _tags = <String>{};
+  final TextEditingController _comment = TextEditingController();
+  late final RiderRatingSender _ratings =
+      widget.ratingSender ?? RiderRatingSender.fromApp();
 
   /// driver-u153: 'Rating not sent' shows once, not once per drag update.
   bool _ratingNoticeShown = false;
@@ -61,6 +71,41 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
   void initState() {
     super.initState();
     _waybills = widget.waybillRepository ?? InMemoryWaybillRepository.instance;
+  }
+
+  @override
+  void dispose() {
+    _comment.dispose();
+    super.dispose();
+  }
+
+  /// Done: a rating the driver gave goes to Movera first (owner, part 3).
+  /// It is optional, so a failed send says so and the driver goes on.
+  Future<void> _done() async {
+    if (!mounted || _finishing || ModalRoute.of(context)?.isCurrent != true) {
+      return;
+    }
+    final tripId = _record?.tripId;
+    if (_rating >= 1 && tripId != null && _ratings.live) {
+      setState(() => _finishing = true);
+      final outcome = await _ratings.send(
+        tripId: tripId,
+        stars: _rating.round(),
+        tags: [
+          for (final tag in RiderRatingTags.aboutRider)
+            if (_tags.contains(tag)) tag,
+        ],
+        comment: _comment.text,
+      );
+      if (!mounted) return;
+      if (outcome == RiderRatingOutcome.failed) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr.ratingCouldNotSend)));
+      }
+      setState(() => _finishing = false);
+    }
+    _finish();
   }
 
   void _finish() {
@@ -253,7 +298,7 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                 width: double.infinity,
                 child: FilledButton(
                   key: const ValueKey<String>('ride-completed-done'),
-                  onPressed: _finishing ? null : _finish,
+                  onPressed: _finishing ? null : _done,
                   style: FilledButton.styleFrom(
                     elevation: 0,
                     backgroundColor: _ink,
@@ -439,7 +484,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
           ),
           onRatingUpdate: (rating) {
             setState(() => _rating = rating);
-            if (_ratingNoticeShown) return;
+            // Only the demo says the rating is not sent; live sends it on Done.
+            if (_ratingNoticeShown || _ratings.live) return;
             _ratingNoticeShown = true;
             ScaffoldMessenger.of(
               context,
@@ -452,6 +498,39 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
           tr.rateRider(rider),
           style: const TextStyle(color: _muted, fontSize: 14),
         ),
+        // Contract v0.9.0: optional tags and comment once a star is given.
+        if (_rating >= 1) ...[
+          const SizedBox(height: 14),
+          Wrap(
+            key: const ValueKey<String>('rider-rating-tags'),
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final tag in RiderRatingTags.aboutRider)
+                FilterChip(
+                  key: ValueKey<String>('rider-rating-tag-$tag'),
+                  label: Text(RiderRatingTags.label(tag)),
+                  selected: _tags.contains(tag),
+                  onSelected: (_) => setState(() {
+                    if (!_tags.remove(tag)) _tags.add(tag);
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            key: const ValueKey<String>('rider-rating-comment'),
+            controller: _comment,
+            maxLength: RiderRatingTags.commentMaxLength,
+            minLines: 1,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: tr.ratingCommentOptional,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ],
       ],
     );
   }
