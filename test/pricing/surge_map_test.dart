@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:movera/core/account/driver_account_repository.dart';
+import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
@@ -305,6 +307,50 @@ void main() {
     });
   });
 
+  test(
+    'surge_started notices are hidden from the list and the count',
+    () async {
+      final api = ApiClient(
+        client: MockClient(
+          (request) async => http.Response(
+            jsonEncode({
+              'items': [
+                {
+                  'notificationId': 'n2',
+                  'kind': 'surge_started',
+                  'title': 'Högre priser nu',
+                  'body': 'Prishöjning ×2.0',
+                  'at': '2026-10-27T10:00:00Z',
+                  'read': false,
+                },
+                {
+                  'notificationId': 'n1',
+                  'kind': 'fleet_invitation',
+                  'title': 'Inbjudan',
+                  'body': 'x',
+                  'at': '2026-10-26T10:00:00Z',
+                  'read': false,
+                },
+              ],
+              'nextCursor': null,
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          ),
+        ),
+        baseUri: Uri.parse('https://api.test.movera.se'),
+        tokens: MemoryTokenStore()..save(access: 'a1', refresh: 'r1'),
+      );
+      final session = DriverAccountSession(
+        repository: DriverAccountRepository(api),
+      );
+      final list = await session.repository.notifications();
+      expect(list.map((n) => n.notificationId), ['n1']);
+      await session.refreshUnread();
+      expect(session.unreadNotifications.value, 1);
+    },
+  );
+
   test('no surge notice remains in the driver app', () {
     final offenders = <String>[];
     final banned = RegExp(
@@ -316,7 +362,12 @@ void main() {
       if (!entity.path.endsWith('.dart') && !entity.path.endsWith('.arb')) {
         continue;
       }
-      if (banned.hasMatch(entity.readAsStringSync())) {
+      var text = entity.readAsStringSync();
+      if (entity.path.endsWith('driver_account_repository.dart')) {
+        // The one place it may appear: the kind the list hides.
+        text = text.replaceFirst("hiddenKind = 'surge_started'", '');
+      }
+      if (banned.hasMatch(text)) {
         offenders.add(entity.path);
       }
     }
