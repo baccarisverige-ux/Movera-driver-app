@@ -91,6 +91,10 @@ class WaybillRecord {
   static const String vehicleUnavailable = 'Vehicle data unavailable';
   static const String plateUnavailable = 'Plate unavailable';
 
+  /// What a replayed completion journal stores for the driver, vehicle
+  /// and plate it does not have.
+  static const String unavailable = 'Unavailable';
+
   /// [riderName] in the driver's language.
   String get riderNameText =>
       riderName == riderUnavailable ? tr.riderDataUnavailable : riderName;
@@ -99,16 +103,23 @@ class WaybillRecord {
   String get driverNameText => switch (driverName) {
     moveraDriverName => tr.moveraDriver,
     demoDriverName => tr.demoDriverIdentityUnavailable,
+    unavailable => tr.unavailable,
     _ => driverName,
   };
 
   /// [vehicle] in the driver's language.
-  String get vehicleText =>
-      vehicle == vehicleUnavailable ? tr.vehicleDataUnavailable : vehicle;
+  String get vehicleText => switch (vehicle) {
+    vehicleUnavailable => tr.vehicleDataUnavailable,
+    unavailable => tr.unavailable,
+    _ => vehicle,
+  };
 
   /// [licensePlate] in the driver's language.
-  String get licensePlateText =>
-      licensePlate == plateUnavailable ? tr.plateUnavailable : licensePlate;
+  String get licensePlateText => switch (licensePlate) {
+    plateUnavailable => tr.plateUnavailable,
+    unavailable => tr.unavailable,
+    _ => licensePlate,
+  };
 
   /// [statusLabel] in the driver's language ("Course en cours").
   String get statusText => switch (statusLabel) {

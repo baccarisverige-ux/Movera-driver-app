@@ -285,7 +285,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Text(
-                    offer.category,
+                    categoryNameText(offer.category),
                     style: const TextStyle(
                       color: _AcceptRideState._ink,
                       fontSize: 11,

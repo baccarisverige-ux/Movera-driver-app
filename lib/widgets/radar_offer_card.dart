@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -217,7 +218,7 @@ class RadarOfferCard extends StatelessWidget {
                         border: Border.all(color: ink),
                       ),
                       child: Text(
-                        offer.category,
+                        categoryNameText(offer.category),
                         style: const TextStyle(
                           color: ink,
                           fontSize: 12,

@@ -120,7 +120,8 @@ extension _AcceptRideSheet on _AcceptRideState {
         title: onTrip ? tr.currentTrip : tr.yourTrip,
         fare: widget.fare,
         points: points,
-        footer: '${widget.category} · ${widget.riderName.split(' ').first}',
+        footer:
+            '${categoryNameText(widget.category)} · ${widget.riderName.split(' ').first}',
         moreKey: const ValueKey<String>('current-trip-more'),
         onMore: _AcceptRidePanel(this)._showTripOptions,
         waybillKey: const ValueKey<String>('current-waybill-shortcut'),
@@ -162,7 +163,7 @@ extension _AcceptRideSheet on _AcceptRideState {
             square: true,
           ),
         ],
-        footer: '${offer.category} · ${offer.riderName}',
+        footer: '${categoryNameText(offer.category)} · ${offer.riderName}',
         moreKey: const ValueKey<String>('next-trip-more'),
         moreTooltip: tr.nextTripOptions,
         onMore: _showNextTripOptions,

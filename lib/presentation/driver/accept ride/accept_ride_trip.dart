@@ -525,7 +525,10 @@ extension _AcceptRideTrip on _AcceptRideState {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           SnackBar(
             content: Text(
-              event.message?.trim().isNotEmpty == true
+              // The rider app sends its own English words ("I'm on the
+              // way"); they read in the driver's language.
+              event.message?.trim().isNotEmpty == true &&
+                      event.message!.trim() != riderOnTheWayMessage
                   ? event.message!
                   : tr.riderNameIsOnWay(widget.riderName),
             ),

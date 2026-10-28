@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -901,7 +902,7 @@ class _HistoryRideCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '${ride.category} · ${ride.duration} · ${ride.distance}',
+                          '${categoryNameText(ride.category)} · ${ride.duration} · ${ride.distance}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
