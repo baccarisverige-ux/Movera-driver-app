@@ -7,6 +7,8 @@
 /// account (`Driver.requiredDocuments` …), never computed here.
 library;
 
+import 'package:movera/core/admin/trip_rules_admin_config.dart';
+
 class OnboardingCity {
   const OnboardingCity(this.cityId, this.name, this.zoneId);
   final String cityId;
@@ -63,6 +65,17 @@ abstract final class DriverOnboardingRules {
     ),
     'TN': OnboardingCountry(open: false, cities: []),
   };
+
+  /// [country]'s cities a driver can sign up in now: the contract's, less
+  /// a city whose zone the server's list (v0.11.0 §21) does not have open.
+  static List<OnboardingCity> citiesOf(String country) => [
+    for (final city in countries[country]?.cities ?? const <OnboardingCity>[])
+      if (DriverZones.offers(city.zoneId)) city,
+  ];
+
+  /// True when [country] is open and has a city open now.
+  static bool isOpen(String country) =>
+      (countries[country]?.open ?? false) && citiesOf(country).isNotEmpty;
 
   static const String fleetCodePrefix = 'MV-';
   static const int fleetCodeLength = 5;

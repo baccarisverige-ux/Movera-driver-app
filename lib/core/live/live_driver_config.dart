@@ -60,6 +60,7 @@ class LiveDriverConfig extends ChangeNotifier {
     required Future<String?> Function() accessToken,
     this.renewSession,
     this.onContentPublished,
+    this.onZonesPublished,
     DriverConfigCache? cache,
     this.retryAfter = const Duration(seconds: 5),
     this.requestTimeout = const Duration(seconds: 60),
@@ -77,6 +78,10 @@ class LiveDriverConfig extends ChangeNotifier {
   /// Contract v0.10.0 §19: a `config_published` with doc `content` (the
   /// Content page published) goes here instead of a config fetch.
   final void Function()? onContentPublished;
+
+  /// Contract v0.11.0 §21: a `config_published` with doc `zones` (a zone
+  /// was created, changed, opened or closed) goes here.
+  final void Function()? onZonesPublished;
   final Duration retryAfter;
   final Duration requestTimeout;
 
@@ -206,6 +211,10 @@ class LiveDriverConfig extends ChangeNotifier {
                 }
                 if (event['doc'] == 'content') {
                   onContentPublished?.call();
+                  return;
+                }
+                if (event['doc'] == 'zones') {
+                  onZonesPublished?.call();
                   return;
                 }
                 final version = event['version'];

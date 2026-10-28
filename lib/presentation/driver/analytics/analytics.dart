@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -137,8 +138,12 @@ class Analytics extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _demand(const DriverHomeAdminContentService().load().stockholmWork),
-          const SizedBox(height: 16),
+          // v0.11.0 §21: the sample Stockholm areas are the demo's; a live
+          // build has no such list.
+          if (!LiveDriverServices.active) ...[
+            _demand(const DriverHomeAdminContentService().load().stockholmWork),
+            const SizedBox(height: 16),
+          ],
           Text(
             tr.anaSamplePerformance,
             style: TextStyle(
