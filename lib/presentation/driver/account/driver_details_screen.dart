@@ -173,11 +173,10 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     super.dispose();
   }
 
-  static bool _open(String country) =>
-      DriverOnboardingRules.countries[country]?.open ?? false;
+  static bool _open(String country) => DriverOnboardingRules.isOpen(country);
 
   static String? _onlyCity(String country) {
-    final cities = DriverOnboardingRules.countries[country]?.cities ?? const [];
+    final cities = DriverOnboardingRules.citiesOf(country);
     return cities.length == 1 ? cities.single.cityId : null;
   }
 
@@ -225,7 +224,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
   }
 
   static List<OnboardingCity> _citiesOf(String country) =>
-      DriverOnboardingRules.countries[country]?.cities ?? const [];
+      DriverOnboardingRules.citiesOf(country);
 
   /// A field changed: the errors go, the draft is saved.
   void _changed() {

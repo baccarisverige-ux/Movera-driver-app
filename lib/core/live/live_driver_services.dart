@@ -10,6 +10,7 @@ import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_active_trip.dart';
 import 'package:movera/core/live/live_driver_config.dart';
 import 'package:movera/core/live/live_driver_content.dart';
+import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
@@ -61,12 +62,14 @@ class LiveDriverServices {
     );
     presence = LivePresence(api: api, dispatch: dispatch, reporter: reporter);
     content = LiveDriverContent(api: api, zoneId: () => config.current?.zoneId);
+    zones = LiveDriverZones(api: api);
     config = LiveDriverConfig(
       client: client,
       apiBase: apiBase,
       accessToken: tokens.readAccess,
       renewSession: api.renewAccess,
       onContentPublished: () => unawaited(content.refresh()),
+      onZonesPublished: () => unawaited(zones.refresh()),
     );
   }
 
@@ -113,6 +116,10 @@ class LiveDriverServices {
   /// The Content page's texts, terms and app versions (contract §19).
   late final LiveDriverContent content;
 
+  /// The open zones with outline and names (contract v0.11.0 §20): read on
+  /// start, again on config_published doc zones; last answer kept.
+  late final LiveDriverZones zones;
+
   static Uri _withPrefix(Uri origin) => origin.replace(
     path: '${origin.path.replaceFirst(RegExp(r'/$'), '')}/api/v1',
   );
@@ -133,6 +140,7 @@ class LiveDriverServices {
   void attach(DriverSessionController session) {
     presence.attach(session);
     dispatch.onDriverOffline = () => session.setOnline(false);
+    unawaited(zones.start());
     unawaited(
       config.start().then((_) {
         unawaited(content.start());
