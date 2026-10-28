@@ -273,9 +273,10 @@ void main() {
     for (final code in languages) {
       speak(code);
       final outcomes = {
-        TripStatus.cancelledByRider: tr.cancelledByRider,
-        TripStatus.searching: tr.cancelledByDriver,
-        TripStatus.noShow: tr.riderDidNotArrive,
+        // v0.10.4: the contract status words (statusWords tripStatus).
+        TripStatus.cancelledByRider: tr.swTripStatusCancelledByRider,
+        TripStatus.searching: tr.swTripStatusCancelledByDriver,
+        TripStatus.noShow: tr.swTripStatusNoShow,
       };
       await show(
         tester,

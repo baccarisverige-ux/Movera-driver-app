@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/driver_onboarding_rules.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/movera_modal_sheet.dart';
@@ -38,8 +40,7 @@ Future<String?> showDetailsCountryPicker(
     title: tr.acctChooseCountry,
     subtitle: tr.acctChooseCountryBody,
     rows: [
-      for (final MapEntry(key: code, value: country)
-          in DriverOnboardingRules.countries.entries)
+      for (final code in DriverOnboardingRules.countries.keys)
         PickerRow(
           value: code,
           key: 'pick-country-$code',
@@ -48,8 +49,8 @@ Future<String?> showDetailsCountryPicker(
             style: const TextStyle(fontSize: 30, height: 1),
           ),
           title: countryName(code),
-          enabled: country.open,
-          tag: country.open ? null : tr.acctComingSoon,
+          enabled: DriverOnboardingRules.isOpen(code),
+          tag: DriverOnboardingRules.isOpen(code) ? null : tr.acctComingSoon,
         ),
     ],
     selected: selected,
@@ -61,7 +62,7 @@ Future<String?> showDetailsCityPicker(
   required String country,
   required String? selected,
 }) {
-  final cities = DriverOnboardingRules.countries[country]?.cities ?? const [];
+  final cities = DriverOnboardingRules.citiesOf(country);
   return showDetailsPicker<String>(
     context,
     title: tr.acctChooseCity,
@@ -72,7 +73,11 @@ Future<String?> showDetailsCityPicker(
           value: city.cityId,
           key: 'pick-city-${city.cityId}',
           title: city.name,
-          subtitle: cityHint(city.cityId),
+          // v0.11.0 §21: the zone's name from the server, in the app
+          // language; the built-in hint without it.
+          subtitle:
+              DriverZones.nameOf(city.zoneId, DriverAppTexts.language) ??
+              cityHint(city.cityId),
         ),
     ],
     selected: selected,

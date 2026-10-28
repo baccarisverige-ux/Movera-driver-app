@@ -6,6 +6,8 @@
 /// trips within 5 km or 10 min of the final drop-off.
 library;
 
+import 'package:movera/core/zones/driver_zone.dart';
+
 /// Which trips match a destination.
 enum DestinationFocus {
   /// Only trips that end near the final destination.
@@ -189,10 +191,62 @@ class NextTripRules {
   }
 }
 
-/// Admin zone ids (`contracts/fixtures/config`: `Z001`, `FR-PC`, `TN-TC`).
+/// Admin zone ids. Contract v0.11.0 §21 (decision #9, "the server's list
+/// is the truth"): in a live build the zones are the OPEN zones of
+/// `GET /driver/zones` ([LiveDriverZones] calls [useServer]); the demo
+/// knows only its seed zone, [defaultId].
 abstract final class DriverZones {
-  /// Admin's Greater Stockholm zone.
+  /// The seed document's zone (Greater Stockholm): the zone of the app's
+  /// own settings before the server's document is read, and the demo's.
   static const String defaultId = 'Z001';
+
+  static List<DriverZone>? _server;
+
+  /// The server's open zones, or null before they were read (and in the
+  /// demo).
+  static List<DriverZone>? get server => _server;
+
+  static void useServer(List<DriverZone> zones) {
+    _server = List.unmodifiable(zones);
+  }
+
+  /// Back to no server list (tests, sign-out).
+  static void forget() {
+    _server = null;
+  }
+
+  /// The open zone with [id] (an alias read as its current id), or null.
+  static DriverZone? byId(String? id) {
+    if (id == null) return null;
+    final current = canonical(id);
+    for (final zone in _server ?? const <DriverZone>[]) {
+      if (zone.id == current) return zone;
+    }
+    return null;
+  }
+
+  /// False only when the server's list is known and [id] is not open in it.
+  static bool offers(String id) => _server == null || byId(id) != null;
+
+  /// [id]'s name in [language], when the server's list has it.
+  static String? nameOf(String? id, String language) =>
+      byId(id)?.nameIn(language);
+
+  /// The zone that takes a ride from [lat], [lng] (contract.json#zones
+  /// .lookup): a city zone before an airport, then the smallest. Null
+  /// outside every open zone or without the server's list.
+  static DriverZone? zoneAt(double lat, double lng) {
+    DriverZone? best;
+    for (final zone in _server ?? const <DriverZone>[]) {
+      if (!zone.contains(lat, lng)) continue;
+      if (best == null ||
+          (best.isAirport && !zone.isAirport) ||
+          (best.isAirport == zone.isAirport && zone.area < best.area)) {
+        best = zone;
+      }
+    }
+    return best;
+  }
 
   /// Ids older builds and exports used; read as their current id.
   static const Map<String, String> legacyAliases = <String, String>{
