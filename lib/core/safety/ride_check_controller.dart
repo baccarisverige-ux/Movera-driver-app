@@ -148,6 +148,15 @@ class RideCheckController extends ChangeNotifier {
       openedAt: event.at,
     );
     _save();
+    _report(
+      'shown',
+      () => services.alerts.shown(
+        checkId: _record!.id,
+        tripId: tripId,
+        trigger: event.trigger,
+        at: event.at,
+      ),
+    );
     // A possible crash opens at once, with Call 112 on top.
     final now = instant || event.trigger == RideCheckTrigger.possibleCrash;
     _phase = now ? RideCheckPhase.card : RideCheckPhase.pill;
@@ -234,6 +243,7 @@ class RideCheckController extends ChangeNotifier {
   Future<void> imOk() async {
     if (!_answerable || _step != RideCheckStep.main) return;
     _addAnswer(RideCheckAnswer.first, "I'm OK");
+    _reportOk();
     await _close();
   }
 
@@ -271,6 +281,8 @@ class RideCheckController extends ChangeNotifier {
     if (_topic == RideCheckTopic.somethingElse && note.isNotEmpty) {
       _addAnswer('What happened', note);
     }
+    // A non-red row without an alert is an "I'm OK" for Movera.
+    if (_alert == null && !_sending) _reportOk();
     await _close();
   }
 
@@ -423,6 +435,7 @@ class RideCheckController extends ChangeNotifier {
           reason: event.reason.english,
           topic: topic,
           answers: answers,
+          checkId: _record?.id,
         );
         if (_disposed) return;
         _alert = sent;
@@ -453,6 +466,31 @@ class RideCheckController extends ChangeNotifier {
         DriverLog.warn('Ride check alert update failed: $error');
       }
       if (!_disposed) notifyListeners();
+    });
+  }
+
+  void _reportOk() {
+    final record = _record;
+    final event = _event;
+    if (record == null || event == null) return;
+    _report(
+      'ok',
+      () => services.alerts.answeredOk(
+        checkId: record.id,
+        tripId: tripId,
+        trigger: event.trigger,
+      ),
+    );
+  }
+
+  /// Reports run in the alert queue, so the shown report goes first.
+  void _report(String what, Future<void> Function() action) {
+    _alertQueue = _alertQueue.then((_) async {
+      try {
+        await action();
+      } catch (error) {
+        DriverLog.warn('Ride check $what report failed: $error');
+      }
     });
   }
 

@@ -90,6 +90,22 @@ abstract interface class SafetyAlertRepository {
     required String reason,
     required String topic,
     required List<RideCheckAnswer> answers,
+    String? checkId,
+  });
+
+  /// Contract v0.12.0: the card for [checkId] showed (no answer yet).
+  Future<void> shown({
+    required String checkId,
+    required String tripId,
+    required RideCheckTrigger trigger,
+    required DateTime at,
+  });
+
+  /// Contract v0.12.0: "I'm OK" (only saved by Movera, no case).
+  Future<void> answeredOk({
+    required String checkId,
+    required String tripId,
+    required RideCheckTrigger trigger,
   });
 
   /// Adds a follow-up answer to an alert already sent.

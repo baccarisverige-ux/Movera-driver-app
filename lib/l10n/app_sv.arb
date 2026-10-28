@@ -212,6 +212,7 @@
   "couldNotOpenDialerDial112": "Telefonen gick inte att öppna. Slå 112 själv.",
   "yourDialerOpensWith112Movera": "Telefonen öppnas med 112. Movera ringer aldrig åt dig.",
   "moveraCouldNotBeAlerted": "Movera kunde inte larmas",
+  "rideCheckSent": "Skickat",
   "moveraSafetyTeamAlerted": "Moveras säkerhetsteam har larmats",
   "safetyAlertKeptOnPhoneDemo": "Demo: larmet sparas bara på den här telefonen. Ingen på Movera har larmats.",
   "safetyAlertNotSentLive": "Inte skickat: Movera kan inte ta emot larm från resekontrollen än. Vid fara, ring 112.",

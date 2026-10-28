@@ -40,6 +40,8 @@ import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
+import 'package:movera/core/safety/live_safety_alert_repository.dart';
+import 'package:movera/core/safety/safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check_log.dart';
 import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -108,7 +110,7 @@ class _MoveraAppState extends State<MoveraApp> {
   late final DispatchRepository _dispatch;
   late final DriverHomeConfigRepository _homeConfig;
   late ActiveRideRepository _activeRide;
-  late final DemoSafetyAlertRepository _safetyAlerts;
+  late final SafetyAlertRepository _safetyAlerts;
   late final RideCheckServices _rideCheck;
   late final TokenStore _tokens;
   late final http.Client _http;
@@ -171,9 +173,15 @@ class _MoveraAppState extends State<MoveraApp> {
     }
     _homeConfig = const LocalDriverHomeConfigRepository();
     _activeRide = PrefsActiveRideRepository();
-    // Ride check alerts go to admin and Dispatch; demo outbox until a
-    // backend exists.
-    _safetyAlerts = DemoSafetyAlertRepository();
+    // Ride check answers (contract v0.12.0 §22): a live build reports them
+    // to movera-server; the demo keeps its in-memory outbox.
+    final liveServices = _live;
+    _safetyAlerts = liveServices != null
+        ? LiveSafetyAlertRepository(
+            api: _api,
+            fix: () => liveServices.reporter.lastFix,
+          )
+        : DemoSafetyAlertRepository();
     _rideCheck = RideCheckServices(
       alerts: _safetyAlerts,
       log: PrefsRideCheckLog(),
@@ -214,7 +222,7 @@ class _MoveraAppState extends State<MoveraApp> {
         LiveDriverServices.instance = null;
       }
     }
-    _safetyAlerts.dispose();
+    if (_safetyAlerts case final DemoSafetyAlertRepository demo) demo.dispose();
     if (widget.httpClient == null) _http.close();
     super.dispose();
   }
@@ -347,7 +355,7 @@ class _MoveraAppState extends State<MoveraApp> {
     if (dispatch is DemoDispatchRepository) {
       dispatch.reset();
     }
-    _safetyAlerts.reset();
+    if (_safetyAlerts case final DemoSafetyAlertRepository demo) demo.reset();
     ScheduledRideStore.reset();
     // Per-driver state kept in memory: the next driver must not see these
     // notifications (rider pickup addresses) or documents in review.
