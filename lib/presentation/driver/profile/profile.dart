@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
@@ -105,12 +106,9 @@ class _DriverProfileState extends State<DriverProfile> {
   String get _headerStatus {
     final account = _liveAccount;
     if (account == null) return tr.profDemoNoVerified;
-    return switch (account.accountStatus) {
-      'active' => tr.profStatusActive,
-      'on_hold' => tr.profStatusOnHold,
-      'suspended' => tr.profStatusSuspended,
-      _ => tr.profStatusPending,
-    };
+    // v0.10.4: the contract word (statusWords driverAccountStatus).
+    return statusWord(tr, 'driverAccountStatus', account.accountStatus) ??
+        tr.swDriverAccountStatusPending;
   }
 
   void _vehicleChanged() {

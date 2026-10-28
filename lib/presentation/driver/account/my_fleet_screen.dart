@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:flutter/services.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
@@ -509,10 +510,11 @@ class _MyFleetScreenState extends State<MyFleetScreen>
 }
 
 (String, Color) fleetStatusOf(String status) => switch (status) {
-  'approved' => (tr.fleetStatusApproved, AccountStyle.green),
-  'rejected' => (tr.fleetStatusRejected, AccountStyle.error),
+  // v0.10.4: contract words (statusWords vehicleReviewStatus).
+  'approved' => (tr.swVehicleReviewStatusApproved, AccountStyle.green),
+  'rejected' => (tr.swVehicleReviewStatusRejected, AccountStyle.error),
   'blocked' => (tr.fleetStatusBlocked, AccountStyle.error),
-  _ => (tr.fleetStatusPending, AccountStyle.amber),
+  _ => (tr.swVehicleReviewStatusInReview, AccountStyle.amber),
 };
 
 class _FleetCard extends StatelessWidget {
@@ -687,7 +689,7 @@ class _DriverRow extends StatelessWidget {
                 Text(driver.fullName, style: AccountStyle.rowTitle()),
                 Text(
                   '${online ? tr.fleetOnline : tr.fleetOffline} · '
-                  '${driver.accountStatus == 'active' ? tr.fleetStatusApproved : tr.fleetStatusPending}',
+                  '${statusWord(tr, 'driverAccountStatus', driver.accountStatus) ?? tr.swDriverAccountStatusPending}',
                   style: AccountStyle.hint(),
                 ),
               ],

@@ -139,10 +139,10 @@ void main() {
         CancelReasonGroup.driverBeforeTrip,
       );
       expect(reasons.first.code, 'rider_requested_cancel');
-      expect(reasons.first.title, 'Passageraren bad om avbokning');
+      expect(reasons.first.title, 'Resenären bad om avbokning');
       expect(
         CancelReasons.current.byCode('rider_no_show')!.title,
-        'Passageraren kom inte',
+        'Resenären kom inte',
       );
       // Admin's own list in Swedish is shown as written.
       const swedish = CancelReasons(

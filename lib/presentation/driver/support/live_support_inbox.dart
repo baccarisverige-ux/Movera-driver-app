@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/content/content_card.dart';
@@ -15,12 +16,10 @@ class LiveSupportInbox extends StatefulWidget {
   State<LiveSupportInbox> createState() => _LiveSupportInboxState();
 }
 
-String liveTicketStatus(String status) => switch (status) {
-  'pending' => tr.supportTicketAnswered,
-  'resolved' => tr.supportTicketSolved,
-  'closed' => tr.supportTicketClosed,
-  _ => tr.supportTicketWaiting,
-};
+/// v0.10.4: the contract word (statusWords ticketStatus); an unknown code
+/// reads as open.
+String liveTicketStatus(String status) =>
+    statusWord(tr, 'ticketStatus', status) ?? tr.swTicketStatusOpen;
 
 class _LiveSupportInboxState extends State<LiveSupportInbox> {
   late Future<List<ServerTicket>> _list = widget.tickets.mine();

@@ -179,14 +179,17 @@ void main() {
     // terms is approved at sign-up; the information session is Movera's.
     final terms = find.byKey(const ValueKey('doc-row-drv_1-terms'));
     expect(
-      find.descendant(of: terms, matching: find.text(tr.docStatusApproved)),
+      find.descendant(
+        of: terms,
+        matching: find.text(tr.swDocumentStatusApproved),
+      ),
       findsOneWidget,
     );
     expect(find.text(tr.docMoveraBooks), findsOneWidget);
     expect(find.text('Blurry photo'), findsOneWidget);
-    expect(find.text(tr.docStatusRejected), findsOneWidget);
-    expect(find.text(tr.docStatusInReview), findsOneWidget);
-    expect(find.text(tr.docStatusNeeded), findsWidgets);
+    expect(find.text(tr.swDocumentStatusRejected), findsOneWidget);
+    expect(find.text(tr.swDocumentStatusInReview), findsOneWidget);
+    expect(find.text(tr.swDocumentStatusNeeded), findsWidgets);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
@@ -224,7 +227,10 @@ void main() {
     );
     expect(latin1.decode(upload.bodyBytes), contains('filename="photo.jpg"'));
     expect(
-      find.descendant(of: row, matching: find.text(tr.docStatusInReview)),
+      find.descendant(
+        of: row,
+        matching: find.text(tr.swDocumentStatusInReview),
+      ),
       findsOneWidget,
     );
     expect(find.text(tr.docUploaded), findsOneWidget);
