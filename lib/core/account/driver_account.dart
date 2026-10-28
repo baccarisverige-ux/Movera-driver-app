@@ -295,6 +295,21 @@ class FleetVehicle {
 
   bool get isApproved => status == 'approved';
 
+  /// Contract v0.14.0: the required car documents that are not approved.
+  List<String> get missingDocuments {
+    final approved = {
+      for (final doc in documents)
+        if (doc.status == 'approved') doc.type,
+    };
+    return [
+      for (final type in requiredDocuments)
+        if (!approved.contains(type)) type,
+    ];
+  }
+
+  /// Nobody can pick or drive a car whose documents are not all approved.
+  bool get canBeDriven => isApproved && missingDocuments.isEmpty;
+
   /// "Volvo XC60 2022".
   String get title => '$make $model${year > 0 ? ' $year' : ''}'.trim();
 }

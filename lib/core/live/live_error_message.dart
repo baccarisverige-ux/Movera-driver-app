@@ -1,5 +1,23 @@
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/contracts/driver_onboarding_rules.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+
+/// Contract v0.14.0: the missing documents of a `409 documents_not_approved`
+/// by their contract names in the app's language ("Insurance, Registration").
+String missingDocumentNames(ApiError error) => {
+  for (final type in error.missingDocumentTypes)
+    DriverOnboardingRules.documentName(type, tr.localeName),
+}.join(', ');
+
+/// The driver's words for `409 documents_not_approved`: a car
+/// (`vehicle_documents_not_approved`) or the account's own documents.
+String documentsNotApprovedMessage(ApiError error) {
+  final names = missingDocumentNames(error);
+  final car =
+      error.detail == 'vehicle_documents_not_approved' ||
+      error.details.any((item) => item.startsWith('vehicle:'));
+  return car ? tr.docsNotApprovedCar(names) : tr.docsNotApprovedAccount(names);
+}
 
 /// Plain words for a failed call that never got a clear answer: offline,
 /// too many tries, or the server's own fault. Null for a real refusal.
@@ -16,6 +34,7 @@ String? _transportMessage(ApiError error) {
 String liveAvailabilityErrorMessage(Object? error, {required bool online}) {
   final fallback = online ? tr.liveOnlineFailed : tr.liveOfflineFailed;
   if (error is! ApiError) return fallback;
+  if (error.documentsNotApproved) return documentsNotApprovedMessage(error);
   return _transportMessage(error) ??
       switch (error.detail) {
         'account_not_active' => tr.liveOnlineNotActive,

@@ -3847,5 +3847,10 @@
   "demoAwayFromRoute": "Away from your route",
   "@demoAwayFromRoute": {"description": "Destination mode demo trip: far off the route."},
   "demoBehindYou": "Behind you",
-  "@demoBehindYou": {"description": "Destination mode demo trip: behind the driver."}
+  "@demoBehindYou": {"description": "Destination mode demo trip: behind the driver."},
+  "vehDocsMissingCantDrive": "Can't be driven – upload documents",
+  "docsNotApprovedCar": "This car can't be driven until its documents are approved. Missing: {names}",
+  "@docsNotApprovedCar": {"placeholders": {"names": {"type": "String"}}},
+  "docsNotApprovedAccount": "Your account can't be used until these documents are approved: {names}",
+  "@docsNotApprovedAccount": {"placeholders": {"names": {"type": "String"}}}
 }

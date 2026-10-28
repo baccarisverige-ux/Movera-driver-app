@@ -1718,5 +1718,8 @@
   "demoYourDestination": "votre destination",
   "demoOnYourWayPercent": "Sur votre trajet · {percent} %",
   "demoAwayFromRoute": "Hors de votre trajet",
-  "demoBehindYou": "Derrière vous"
+  "demoBehindYou": "Derrière vous",
+  "vehDocsMissingCantDrive": "Ne peut pas rouler – téléversez les documents",
+  "docsNotApprovedCar": "Cette voiture ne peut pas rouler tant que ses documents ne sont pas approuvés. Manquants : {names}",
+  "docsNotApprovedAccount": "Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : {names}"
 }

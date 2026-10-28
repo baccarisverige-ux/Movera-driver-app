@@ -6001,4 +6001,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get demoBehindYou => 'Behind you';
+
+  @override
+  String get vehDocsMissingCantDrive => 'Can\'t be driven – upload documents';
+
+  @override
+  String docsNotApprovedCar(String names) {
+    return 'This car can\'t be driven until its documents are approved. Missing: $names';
+  }
+
+  @override
+  String docsNotApprovedAccount(String names) {
+    return 'Your account can\'t be used until these documents are approved: $names';
+  }
 }

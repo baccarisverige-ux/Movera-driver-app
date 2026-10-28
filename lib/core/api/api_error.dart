@@ -10,6 +10,7 @@ class ApiError implements Exception {
     this.statusCode,
     this.retryAfter,
     this.projection,
+    this.details = const [],
   });
 
   /// Client code for a request that never got an answer from the server.
@@ -39,6 +40,22 @@ class ApiError implements Exception {
   /// (a `409 version_mismatch` or `invalid_transition` sends it), so the
   /// caller can retry with its version.
   final Map<String, dynamic>? projection;
+
+  /// Contract v0.14.0 `details`: for `documents_not_approved`, the missing
+  /// required documents as `<scope>:<type>` (`driver:terms`,
+  /// `fleet:company_registration`, `vehicle:insurance`).
+  final List<String> details;
+
+  /// The document types of [details], without their scope.
+  List<String> get missingDocumentTypes => [
+    for (final item in details)
+      if (item.contains(':')) item.substring(item.indexOf(':') + 1) else item,
+  ];
+
+  /// `409 documents_not_approved`: required documents are not approved.
+  bool get documentsNotApproved =>
+      code.trim().toLowerCase() == 'documents_not_approved' ||
+      detail == 'vehicle_documents_not_approved';
 
   /// True when the request never got an answer (offline, timed out).
   bool get neverReachedServer => code == network || code == timeout;

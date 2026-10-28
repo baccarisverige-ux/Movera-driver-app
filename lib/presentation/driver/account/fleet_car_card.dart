@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/contracts/driver_onboarding_rules.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
@@ -124,7 +125,33 @@ class FleetCarCard extends StatelessWidget {
                 style: AccountStyle.hint(),
               ),
             ),
-          if (!mine && onPick != null && vehicle.isApproved)
+          if (vehicle.isApproved && vehicle.missingDocuments.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Column(
+                key: ValueKey('car-docs-missing-${vehicle.vehicleId}'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr.vehDocsMissingCantDrive,
+                    style: AuthText.urbanist(
+                      size: 14,
+                      weight: FontWeight.w700,
+                      color: AccountStyle.error,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    {
+                      for (final type in vehicle.missingDocuments)
+                        DriverOnboardingRules.documentName(type, tr.localeName),
+                    }.join(', '),
+                    style: AccountStyle.hint(),
+                  ),
+                ],
+              ),
+            ),
+          if (!mine && onPick != null && vehicle.canBeDriven)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: SizedBox(

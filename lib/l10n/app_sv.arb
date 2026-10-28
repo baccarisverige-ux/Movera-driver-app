@@ -1718,5 +1718,8 @@
   "demoYourDestination": "din destination",
   "demoOnYourWayPercent": "På vägen · {percent} %",
   "demoAwayFromRoute": "Utanför din rutt",
-  "demoBehindYou": "Bakom dig"
+  "demoBehindYou": "Bakom dig",
+  "vehDocsMissingCantDrive": "Kan inte köras – ladda upp dokument",
+  "docsNotApprovedCar": "Den här bilen kan inte köras förrän dess dokument är godkända. Saknas: {names}",
+  "docsNotApprovedAccount": "Ditt konto kan inte användas förrän de här dokumenten är godkända: {names}"
 }
