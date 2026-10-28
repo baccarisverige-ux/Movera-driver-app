@@ -421,15 +421,23 @@ S["AuditEntry"] = obj({"auditId": ref("Id"), "at": ref("Timestamp"), "actor": re
                        "requestId": s(), "idempotencyKey": s()},
                       ["auditId", "at", "actor", "actorId", "action", "targetType", "targetId", "result", "requestId"])
 S["ConfigDocName"] = s("app documents are served to the apps; pricing and dispatch (v0.5.1) are server-only (x-server-only, contract.json#configDocs).",
-                        enum=C["configDocs"]["app"] + C["configDocs"]["serverOnly"], **{"x-server-only": C["configDocs"]["serverOnly"]})
-S["ConfigDraft"] = obj({"doc": ref("ConfigDocName"), "zoneId": ref("Id"),
+                        enum=C["configDocs"]["app"] + C["configDocs"]["serverOnly"] + C["configDocs"]["rules"], **{"x-server-only": C["configDocs"]["serverOnly"] + C["configDocs"]["rules"]})
+CONFIG_DOC_ONE_OF = [ref("RiderAppConfig"), ref("DriverAppConfig"), ref("PricingDocument"), ref("DispatchDocument"), ref("CountryRules")]
+S["ConfigDraft"] = obj({"doc": ref("ConfigDocName"), "zoneId": ref("Id"), "country": ref("CountryCode"),
+                        "usesStandard": b("v0.8.0: the zone has no own published document of this kind and uses its country's standard (configDocs.standard); the draft starts from the standard."),
                         "version": i("Draft version (expectedVersion for PUT/publish).", minimum=1),
                         "liveVersion": i("Version of the published document the apps read.", minimum=0),
-                        "document": {"oneOf": [ref("RiderAppConfig"), ref("DriverAppConfig"), ref("PricingDocument"), ref("DispatchDocument")]},
+                        "document": {"oneOf": CONFIG_DOC_ONE_OF},
                         "updatedAt": ref("Timestamp"), "updatedBy": ref("Id")},
-                       ["doc", "zoneId", "version", "liveVersion", "document", "updatedAt"])
-S["ConfigPublication"] = obj({"doc": ref("ConfigDocName"), "zoneId": ref("Id"), "version": i(minimum=1),
-                              "publishedAt": ref("Timestamp")}, ["doc", "zoneId", "version", "publishedAt"])
+                       ["doc", "version", "liveVersion", "document", "updatedAt"], "v0.8.0: zoneId for a zone's document, country for a country's standard or country_rules (" + C["configDocs"]["scope"] + ")")
+S["ConfigPublication"] = obj({"doc": ref("ConfigDocName"), "zoneId": ref("Id"), "country": ref("CountryCode"), "version": i("Stamped by the server (contract.json#configVersion).", minimum=1),
+                              "publishedAt": ref("Timestamp")}, ["doc", "version", "publishedAt"])
+S["CountryRules"] = obj(OrderedDict([
+    ("version", i("Stamped by the server.", minimum=1)), ("publishedAt", ref("Timestamp")),
+    ("country", ref("CountryCode")), ("currency", ref("CurrencyCode")),
+    ("tips", arr(ref("AmountOption"))), ("raiseSteps", arr(ref("AmountOption"))), ("driverBonus", ref("DriverBonusLimits")),
+]), ["version", "publishedAt", "country", "currency", "tips", "raiseSteps", "driverBonus"],
+    "v0.8.1, server-only, per zone or per country (its standard): " + C["configDocs"]["countryRules"], **{"x-server-only": True})
 
 # --- config documents (unknown keys ignored => additionalProperties allowed)
 S["FeeRule"] = {
@@ -444,7 +452,8 @@ S["FeeRule"] = {
     ]}
 S["CancelFeeTable"] = {"type": "object", "description": "FeeRule per categoryId.", "propertyNames": ref("CategoryId"),
                        "additionalProperties": ref("FeeRule")}
-S["CancelFees"] = obj({"live": ref("CancelFeeTable"), "reservation": ref("CancelFeeTable")})
+S["CancelFees"] = obj({"live": ref("CancelFeeTable"), "reservation": ref("CancelFeeTable"),
+                      "driverSharePct": {**n(minimum=0, maximum=100), "default": C["cancelFees"]["driverSharePctDefault"], "description": "DriverAppConfig only. " + C["cancelFees"]["note"]}})
 S["LocalizedLine"] = obj({"sv": s(maxLength=80), "fr": s(maxLength=80), "en": s(maxLength=80)}, desc="v0.7.1: a short text in each app language.")
 S["CategoryCatalog"] = obj({"categories": arr(obj({"id": ref("CategoryId"), "label": s(), "seats": i(minimum=1), "sort": i(),
                                                    "line": {"allOf": [ref("LocalizedLine")], "description": "v0.7.1: the sub-line under the name (admin Manage categories), e.g. Movera XL — up to 6 people; the rider app shows it."}},
@@ -507,11 +516,11 @@ S["DriverReservations"] = obj(OrderedDict([
     ("lateEta", ref("LateEta")),
 ]), desc="Scheduled-ride rules for the driver app (CONTRACT.md §6). Every field is optional; a missing or invalid one keeps the default "
          "(contract.json#configDefaults.reservations).")
-CONFIG_HEAD = OrderedDict([("version", i("Only increases; apps keep the last good document.", minimum=1)),
+CONFIG_HEAD = OrderedDict([("version", i("Stamped by the server (contract.json#configVersion); only increases; apps keep the last good document.", minimum=1)),
                            ("publishedAt", ref("Timestamp")), ("zoneId", ref("Id")), ("currency", ref("CurrencyCode")),
                            ("timeZone", s("IANA zone of the zone, for wall-clock rules and booking times.", pattern=r"^[A-Za-z_]+(/[A-Za-z0-9_+\-]+)*$",
                                           examples=["Europe/Stockholm", "Europe/Paris", "Africa/Tunis"])),
-                           ("country", ref("CountryCode")), ("languages", ref("Languages"))])
+                           ("country", ref("CountryCode")), ("languages", ref("Languages")), ("usesStandard", b("v0.8.0: set by the server when it serves or uses the country standard for this zone (contract.json#configDocs.standard)."))])
 ZONE_PM = ("paymentMethods", arr(ref("ZonePaymentMethod"), uniqueItems=True, description="Methods offered in the zone; the wallet is separate."))
 
 # --- v0.5.0: pickup pay, offer limits while driving, surge schedule, auth, push devices
@@ -631,7 +640,7 @@ S["DriverAppConfig"] = obj(OrderedDict(list(CONFIG_HEAD.items()) + [
                                   "properties": {"netFare": b(), "pickupAddress": b(), "dropoffAreaOnly": b(), "stops": b()},
                                   "additionalProperties": {"type": "boolean"}},
                     "exclusiveReasons": arr(obj({"id": s(pattern="^[a-z][a-z0-9_-]{0,63}$"), "text": s(), "on": b()}, ["id", "text", "on"])),
-                    "autoOffline": obj({"missedExclusive": i("Missed or declined exclusive offers in a row before the driver is set offline (default 10, owner decision 35; 3 before v0.5.6).", minimum=0),
+                    "autoOffline": obj({"missedExclusive": i("Missed or declined exclusive offers in a row before the driver is set offline (default 10, owner decision 35; 3 before v0.5.6). " + C["autoOffline"]["note"], minimum=0),
                                         "hiddenComesBackMin": n(minimum=0)})})),
     ("pickupPay", ref("DriverPickupPay")),
     ("driverBonus", ref("DriverBonusLimits")),
@@ -694,7 +703,7 @@ S["PricingSurge"] = obj({"maxMultiplier": {**n(minimum=1, maximum=PR["maxMultipl
                          "notifyDrivers": {**b("Deprecated in v0.7.2 and ignored: drivers get no surge notice (owner 2026-10-28, contract.json#surgeNoticeRemoved)."), "deprecated": True, "default": False}}, ["smart", "scheduled"],
                         "Surge sources after the zone's surge schedule (§3.4): " + PR["surgeSource"])
 S["PricingDocument"] = obj(OrderedDict([
-    ("version", i("Admin revision of the zone's live pricing document (contract.json#configVersion).", minimum=1)), ("publishedAt", ref("Timestamp")),
+    ("version", i("Server-stamped revision of the zone's live pricing document (contract.json#configVersion).", minimum=1)), ("publishedAt", ref("Timestamp")),
     ("zoneId", ref("Id")), ("currency", ref("CurrencyCode")), ("country", ref("CountryCode")), ("timeZone", s(pattern=r"^[A-Za-z_]+(/[A-Za-z0-9_+\-]+)*$")),
     ("priceStep", money("The total is rounded once, half-up, to a multiple of this (admin fees.rounding).")),
     ("categories", {"type": "object", "propertyNames": ref("CategoryId"), "additionalProperties": ref("CategoryPricing")}),
@@ -702,6 +711,7 @@ S["PricingDocument"] = obj(OrderedDict([
     ("fixedRoutes", arr(ref("FixedRoute"))),
     ("surge", ref("PricingSurge")),
     ("fleetCommissionPct", n("Fleet owner's share (admin Pricing); not in the rider's fare.", minimum=0, maximum=30)),
+    ("usesStandard", b("v0.8.0: set by the server when it serves or uses the country standard for this zone (contract.json#configDocs.standard).")),
 ]), ["version", "publishedAt", "zoneId", "currency", "country", "priceStep", "categories", "fees", "fixedRoutes", "surge", "fleetCommissionPct"],
     "Server-only (contract.json#configDocs): the zone's prices, read by the server's quote engine. Never served to the apps. " + PR["note"] + " Sample: fixtures/config/pricing_document.json.",
     **{"x-server-only": True})
@@ -718,7 +728,7 @@ S["DispatchWaitingStep"] = obj({"id": s(minLength=1), "kind": s(enum=DP["waiting
                                 "afterMin": n("From search start.", minimum=0, maximum=30), "message": s(), "extraMin": {"type": ["number", "null"], "description": "keep_waiting: minutes added on Keep waiting."}},
                                ["id", "kind", "on", "afterMin", "message"])
 S["DispatchDocument"] = obj(OrderedDict([
-    ("version", i("Admin revision of the zone's live dispatch document (contract.json#configVersion).", minimum=1)), ("publishedAt", ref("Timestamp")),
+    ("version", i("Server-stamped revision of the zone's live dispatch document (contract.json#configVersion).", minimum=1)), ("publishedAt", ref("Timestamp")),
     ("zoneId", ref("Id")), ("country", ref("CountryCode")), ("timeZone", s("IANA zone for the time rules.", pattern=r"^[A-Za-z_]+(/[A-Za-z0-9_+\-]+)*$")),
     ("radar", ref("DispatchModeRules")), ("exclusive", ref("DispatchModeRules")), ("choose", ref("DispatchChoose")),
     ("rulesFrom", s("Kept, ignored in v0.5.1: the pickup zone's document governs the search.", enum=["driver", "pickup"])),
@@ -728,6 +738,7 @@ S["DispatchDocument"] = obj(OrderedDict([
     ("favourite", obj({"on": b(), "maxKm": n(minimum=0)}, ["on", "maxKm"])),
     ("exclusiveWhileDriving", ref("ExclusiveWhileDriving")),
     ("waiting", arr(ref("DispatchWaitingStep"))),
+    ("usesStandard", b("v0.8.0: set by the server when it serves or uses the country standard for this zone (contract.json#configDocs.standard).")),
 ]), ["version", "publishedAt", "zoneId", "country", "timeZone", "radar", "exclusive", "choose", "radius", "factors", "finishing", "favourite", "exclusiveWhileDriving", "waiting"],
     "Server-only (contract.json#configDocs): the zone's automatic dispatch rules (admin Dispatch, a subset of the movera.dispatch.rules export, admin field names). "
     "Never served to the apps; DriverAppConfig.offers timers must equal radar/exclusive seconds and on. Algorithm: contract.json#dispatch, CONTRACT.md §3.6. Sample: fixtures/config/dispatch_document.json.",
@@ -844,7 +855,8 @@ S["OfferEvent"] = obj({"eventId": ref("Id"), "sequence": i("Per-driver feed curs
                        "kind": s(enum=["offer_created", "offer_updated", "offer_withdrawn"]),
                        "occurredAt": ref("Timestamp"), "serverTime": ref("Timestamp"),
                        "offer": {"allOf": [ref("Offer")],
-                                 "description": "For offer_withdrawn, offer.status is claimed_elsewhere | expired | withdrawn."}},
+                                 "description": "For offer_withdrawn, offer.status is claimed_elsewhere | expired | withdrawn."},
+                       "driverOffline": b("v0.8.0: this declined or expired Exclusive offer was the last of the run that set the driver offline (contract.json#autoOffline).")},
                       ["eventId", "sequence", "kind", "occurredAt", "serverTime", "offer"], "Driver offer feed event.")
 S["ConfigEvent"] = obj({"eventId": ref("Id"), "kind": s(const="config_published"), "doc": ref("ConfigDocName"),
                         "zoneId": ref("Id"), "version": i(minimum=1), "publishedAt": ref("Timestamp"),
@@ -1006,9 +1018,9 @@ S["DriverOnboardingRequest"] = obj({"firstName": s(minLength=1, maxLength=60), "
 S["FleetCodeCommand"] = obj(EV, ["expectedVersion"], "v0.5.3: POST /admin/fleets/{fleetId}/code.")
 S["FleetReviewCommand"] = obj(dict(EV, decision=s(enum=["approved", "rejected", "blocked"]), note=s(maxLength=1000)), ["expectedVersion", "decision"],
                               "v0.5.3: approved makes the fleet code (first approval) and lets drivers join; blocked takes every linked driver offline and withdraws their offers.")
-S["ConfigDraftUpdate"] = obj(dict(EV, zoneId=ref("Id"), document={"oneOf": [ref("RiderAppConfig"), ref("DriverAppConfig"), ref("PricingDocument"), ref("DispatchDocument")]}),
-                             ["expectedVersion", "zoneId", "document"])
-S["ConfigPublishCommand"] = obj(dict(EV, zoneId=ref("Id"), note=s(maxLength=1000)), ["expectedVersion", "zoneId"])
+S["ConfigDraftUpdate"] = obj(dict(EV, zoneId=ref("Id"), country=ref("CountryCode"), document={"oneOf": CONFIG_DOC_ONE_OF}),
+                             ["expectedVersion", "document"], "Exactly one of zoneId or country (v0.8.0). " + C["configDocs"]["scope"])
+S["ConfigPublishCommand"] = obj(dict(EV, zoneId=ref("Id"), country=ref("CountryCode"), note=s(maxLength=1000)), ["expectedVersion"], "Exactly one of zoneId or country (v0.8.0).")
 S["ApprovalDecision"] = obj({"note": s(maxLength=1000)})
 
 # ---------------------------------------------------------------- parameters / responses
@@ -1039,6 +1051,8 @@ PARAMS["LastEventId"] = {"name": "Last-Event-ID", "in": "header", "required": Fa
                          "description": "SSE reconnect: last sequence received (same meaning as `after`).", "schema": {"type": "string"}}
 PARAMS["ZoneIdQuery"] = {"name": "zoneId", "in": "query", "required": False, "description": "Defaults to the zone in the token / current location.", "schema": ref("Id")}
 PARAMS["ZoneIdRequired"] = {"name": "zoneId", "in": "query", "required": True, "schema": ref("Id")}
+PARAMS["ConfigZoneId"] = {"name": "zoneId", "in": "query", "required": False, "description": "v0.8.0: the zone's own document; exactly one of zoneId or country.", "schema": ref("Id")}
+PARAMS["ConfigCountry"] = {"name": "country", "in": "query", "required": False, "description": "v0.8.0: the country's standard (v0.8.1: also of country_rules); exactly one of zoneId or country.", "schema": ref("CountryCode")}
 PARAMS["From"] = {"name": "from", "in": "query", "required": False, "schema": ref("Timestamp")}
 PARAMS["To"] = {"name": "to", "in": "query", "required": False, "schema": ref("Timestamp")}
 PARAMS["Q"] = {"name": "q", "in": "query", "required": False, "description": "Free-text search.", "schema": {"type": "string", "maxLength": 200}}
@@ -1437,19 +1451,23 @@ op("get", "/admin/documents/{documentId}/file", "adminGetDocumentFile", "The upl
    params=[pref("DocumentId")], content=FILE_CONTENT, ok=(200, None), ok_desc="The file, with its media type.", permission="documents.approve",
    desc="v0.5.3. Read in the admin's zones only; every read is written in the audit.")
 op("get", "/admin/config/{doc}", "adminGetConfigDraft", "Get the config draft for a zone", ["admin"], "Admin · Config",
-   params=[pref("ConfigDoc"), pref("ZoneIdRequired")], ok=(200, "ConfigDraft"), permission="settings.read", permission_v050="config.read",
+   params=[pref("ConfigDoc"), pref("ConfigZoneId"), pref("ConfigCountry")], ok=(200, "ConfigDraft"), permission="settings.read", permission_v050="config.read",
    desc="pricing and dispatch (v0.5.1) are server-only documents: only admins with settings.read read them; GET /rider/config and /driver/config never include them.")
 op("put", "/admin/config/{doc}", "adminPutConfigDraft", "Replace the config draft", ["admin"], "Admin · Config",
    params=[pref("ConfigDoc")], body="ConfigDraftUpdate", ok=(200, "ConfigDraft"), mutation=True, permission="settings.edit", permission_v050="config.edit",
-   ext={"x-permission-by-doc": {"rider_app_config": "settings.edit", "driver_app_config": "settings.edit", "pricing": "settings.edit", "dispatch": "dispatch.edit"}},
+   ext={"x-permission-by-doc": {"rider_app_config": "settings.edit", "driver_app_config": "settings.edit", "pricing": "settings.edit", "dispatch": "dispatch.edit", "country_rules": "settings.edit"}},
    desc="The draft's document must be the doc's schema (pricing → PricingDocument, dispatch → DispatchDocument, v0.5.1). x-permission-by-doc: the admin panel saves dispatch rules with dispatch.edit.")
-op("post", "/admin/config/{doc}/publish", "adminPublishConfig", "Publish the draft (two-person approval)", ["admin"], "Admin · Config",
-   params=[pref("ConfigDoc")], body="ConfigPublishCommand", ok=(200, "ConfigPublication"), mutation=True, approval=True,
+op("post", "/admin/config/{doc}/publish", "adminPublishConfig", "Publish the draft at once (no second admin, v0.8.0)", ["admin"], "Admin · Config",
+   params=[pref("ConfigDoc")], body="ConfigPublishCommand", ok=(200, "ConfigPublication"), mutation=True,
    permission="settings.publish", permission_v050="config.edit",
-   ext={"x-permission-by-doc": {"rider_app_config": "settings.publish", "driver_app_config": "settings.publish", "pricing": "settings.publish", "dispatch": "dispatch.edit"},
-        "x-approver-permission-by-doc": {"rider_app_config": "settings.publish", "driver_app_config": "settings.publish", "pricing": "settings.publish", "dispatch": "dispatch.approve"}},
-   desc="v0.7.2 (owner 2026-10-28, one admin is enough): 200 at once for every admin with the publish permission, written in the audit. "
+   ext={"x-permission-by-doc": {"rider_app_config": "settings.publish", "driver_app_config": "settings.publish", "pricing": "settings.publish", "dispatch": "dispatch.edit", "country_rules": "settings.publish"}},
+   desc=C["configDocs"]["publishApproval"] + " The server stamps version and publishedAt (contract.json#configVersion). "
         "Emits config_published on the app streams for rider_app_config and driver_app_config only; pricing and dispatch (server-only) are published with the same version rule but never reach the apps.")
+S["UseStandardCommand"] = obj(dict(EV, zoneId=ref("Id")), ["expectedVersion", "zoneId"], C["configDocs"]["useStandard"])
+op("post", "/admin/config/{doc}/use-standard", "adminUseStandardConfig", "Go back to the country standard (v0.8.0)", ["admin"], "Admin · Config",
+   params=[pref("ConfigDoc")], body="UseStandardCommand", ok=(200, "ConfigPublication"), mutation=True, permission="settings.publish",
+   ext={"x-permission-by-doc": {"rider_app_config": "settings.publish", "driver_app_config": "settings.publish", "pricing": "settings.publish", "dispatch": "dispatch.edit"}},
+   desc=C["configDocs"]["useStandard"] + " The answer names the zone and the standard's new version.")
 op("get", "/admin/zones/{zoneId}/surge", "adminGetSurge", "The zone's current surge schedule", ["admin"], "Admin · Config",
    params=[pref("ZoneId")], ok=(200, "SurgeSchedule"), permission="settings.read", permission_v050="pricing.read", desc="204 when the zone has none (flat ×1.0).")
 PATHS["/admin/zones/{zoneId}/surge"]["get"]["responses"]["204"] = {"description": "No surge schedule", "headers": HDR_REQ}

@@ -1,6 +1,6 @@
 {
   "contract": "movera",
-  "version": "0.7.2",
+  "version": "0.8.1",
   "note": "Canonical cross-app contract for Rider, Driver and Admin. Frontend-only today; a future single backend implements it. Every app ships an identical copy under contracts/ and runs contract tests against it.",
   "wire": {
     "ids": {
@@ -857,7 +857,7 @@
     }
   },
   "configVersion": {
-    "note": "v0.5.0. RiderAppConfig.version / DriverAppConfig.version is the admin's revision number of the zone's live document, strictly increasing per zone and document; publishedAt is when it was published. The server stores the published document as the admin built it and serves it unchanged from GET /rider/config and GET /driver/config; config_published carries the same version. Apps keep the last good document and ignore an older version."
+    "note": "v0.8.0 (owner 2026-10-27, \"the server's version number counts\"): the SERVER stamps version and publishedAt on every publish; whatever the admin sends in those two fields is ignored. version is strictly increasing per zone and document as the apps see it: a zone that served its country's standard (configDocs.standard) and then gets its own document continues above the standard's version. config_published carries the same version. Apps keep the last good document and ignore an older or equal version."
   },
   "adminPermissions": {
     "note": "v0.5.1 (CONTRACT.md §9): the admin panel's 34 permission ids (platform/team.ts). Every admin operation names one in x-permission; where v0.5.1 changed a v0.5.0 value, openapi.yaml keeps the old one under x-permission-v050. Roles: AdminRole; super has all of them.",
@@ -960,7 +960,7 @@
     }
   },
   "configDocs": {
-    "note": "v0.5.1 (CONTRACT.md §6.2, §6.3). ConfigDocName values. app documents are served to the apps (GET /rider/config, /driver/config, config_published). serverOnly documents are published by the admin through the same draft / publish calls and the same version rule (configVersion), read only by the server and by admins with settings.read; the apps never get them.",
+    "note": "v0.5.1 (CONTRACT.md §6.2, §6.3). ConfigDocName values. app documents are served to the apps (GET /rider/config, /driver/config, config_published). serverOnly documents are published by the admin through the same draft / publish calls and the same version rule (configVersion), read only by the server and by admins with settings.read; the apps never get them. v0.8.0: country_rules is published per country only (configDocs.countryRules); the four zone documents may also be published per country as that country's standard (configDocs.standard).",
     "app": [
       "rider_app_config",
       "driver_app_config"
@@ -977,7 +977,18 @@
       "DriverAppConfig.offers.exclusiveWhileDriving = dispatch.exclusiveWhileDriving"
     ],
     "mustMatchNote": "mustMatch binds the documents published for one zone. v0.6.0: the sample documents fixtures/config/rider_app_config.json and driver_app_config.json are aligned with fixtures/config/pricing_document.json (12.26 kr/min, Premium 16.90, no-show fee 65 kr) and reference_check.py checks the rule against them.",
-    "publishPricing": "v0.6.0 (owner 2026-10-27): publishing the pricing document keeps the app documents in step. In the same transaction the server writes the zone's live rider_app_config and driver_app_config again with waiting.byCategory (freeWaitMin, perMin, noShowAfterMin, noShowFee), the top-level waiting terms of the headline category, RiderAppConfig.pickupFee.byCategory and DriverAppConfig.pickupPay.byCategory[].riderFee taken from the new pricing document; every other field stays as published. Each app document whose values change gets the next version and publishedAt and sends config_published; one whose values are already equal is left as it is. A zone with no app document published yet gets none (the admin publishes the first one). An app document's draft, when there is one, takes the same values and its draft version goes up by 1 (an admin holding the old draft version gets 409 version_mismatch and reloads), so a later app publish does not undo them."
+    "publishPricing": "v0.6.0 (owner 2026-10-27): publishing the pricing document keeps the app documents in step. In the same transaction the server writes the zone's live rider_app_config and driver_app_config again with waiting.byCategory (freeWaitMin, perMin, noShowAfterMin, noShowFee), the top-level waiting terms of the headline category, RiderAppConfig.pickupFee.byCategory and DriverAppConfig.pickupPay.byCategory[].riderFee taken from the new pricing document; every other field stays as published. Each app document whose values change gets the next version and publishedAt and sends config_published; one whose values are already equal is left as it is. A zone with no app document published yet gets none (the admin publishes the first one). An app document's draft, when there is one, takes the same values and its draft version goes up by 1 (an admin holding the old draft version gets 409 version_mismatch and reloads), so a later app publish does not undo them.",
+    "rules": [
+      "country_rules"
+    ],
+    "countryOnly": [],
+    "countryOnlyNote": "v0.8.1: empty; country_rules (configDocs.rules) is now published per zone or per country like the others.",
+    "scope": "v0.8.0: GET, PUT and POST …/publish on /admin/config/{doc} name exactly one of zoneId (the zone's own document) or country (ISO alpha-2; the country's standard). Both or neither → 400 invalid_request (reason scope_required). v0.8.1: country_rules too may name a zoneId (the zone's own tips and limits) or a country (its standard). A country scope is open to any admin who covers at least one zone of that country and holds the document's permission (owner 2026-10-27).",
+    "standard": "v0.8.0 (owner 2026-10-27): every country has one standard rider_app_config, driver_app_config, pricing and dispatch, set in the admin, in the country's currency. A zone with no own published document of a kind uses its country's standard of that kind: the server serves it (GET /rider/config, /driver/config) and prices and dispatches with it, with zoneId set to the zone's id and usesStandard: true; its version is the standard's version. A zone with its own published document never uses the standard. Publishing a standard sends config_published (app documents) for every zone of the country that uses it. A zone's first own publish gets version max(own live, standard live) + 1. A standard document carries zoneId \"standard-<CC>\" (e.g. standard-SE) and its country's currency, country and timeZone. GET /admin/config/{doc}?zoneId returns usesStandard: true and the standard as the draft's starting point while the zone has nothing of its own.",
+    "countryRules": "v0.8.1 (owner 2026-10-28: Tips & limits apply only to the zones chosen at the top; for the whole country the admin chooses all zones): tips, raiseSteps and driverBonus are the country_rules document { version, publishedAt, country, currency, tips: [AmountOption], raiseSteps: [AmountOption], driverBonus: { defaultLimit, hardMax } }, like the other documents published per zone (?zoneId, the zone's own) or per country (?country, the country's standard). A zone's rules are its own once published for it, else its country's standard (usesStandard: true); a zone with its own rules never uses the standard again until 'Go back to Standard' (useStandard, also for country_rules). Publishing a zone's own rules writes, in the same transaction, RiderAppConfig.tips / raiseSteps and DriverAppConfig.driverBonus of that zone's live and draft app documents; a zone that uses the standard app documents gets its own, copied from the standard with the new values (as publishPricing does), each changed one as its next version with config_published. Publishing the standard rules writes them into the standard app documents and into the own app documents of every zone of the country that has no own rules; zones with their own rules keep them. While a zone's rules (own or standard) are live, PUT and publish of that zone's app documents take those three fields from them, whatever the admin sent; the dispatch driver bonus limit of a trip is its zone's rules. The admin panel publishes to exactly the zones chosen at the top ('All zones' = every zone of the country it may work in, each as its own) and to the standard only when it is chosen.",
+    "publishApproval": "v0.8.0 (owner 2026-10-27, as refunds): no second admin. Any admin with the publish permission (settings.publish; dispatch.edit for dispatch; settings.publish for country_rules) publishes at once: 200 ConfigPublication, never 202. dispatch.approve and approval.decide no longer apply to config.",
+    "useStandard": "v0.8.0 (owner 2026-10-27): POST /admin/config/{doc}/use-standard { zoneId, expectedVersion } (the zone's draft version; same permission as publish; the admin confirms first) makes a zone with its own document use its country's standard again. The zone's own live document and draft are removed (every version stays in the history); the server re-stamps the standard as version max(standard live, the zone's own live) + 1 (a history row, the same content) so the zone's apps never see a lower version, and sends config_published to every zone using the standard. No standard published for the country → 409 conflict (reason standard_not_published); a zone already using the standard → 409 (reason already_standard).  v0.8.1: also for country_rules: the zone's own rules are removed and the standard rules are written into the zone's app documents (next version).",
+    "countryRulesV080": "v0.8.0 (replaced by v0.8.1): country_rules was published per country only and applied to every zone."
   },
   "pricing": {
     "note": "v0.5.1 (CONTRACT.md §3.5). The server prices every quote and fare from the zone's pricing document (admin Pricing, the order of quoteRide), with owner decisions 16-21 applied. Amounts are exact until they become a fare line. Cases: fixtures/fares.json.",
@@ -2144,7 +2155,8 @@
         "paused": false,
         "mode": null
       }
-    }
+    },
+    "cancelDriverSharePct": 100
   },
   "realtime": {
     "envelope": [
@@ -2209,6 +2221,41 @@
     "Idempotency-Key": "required on every mutation, 16–128 chars",
     "X-Request-Id": "sent by clients, echoed by the server",
     "X-Api-Version": "0.5"
+  },
+  "cancelFees": {
+    "note": "v0.8.0 (owner 2026-10-27): DriverAppConfig.cancelFees.driverSharePct, set in Admin › Dispatch per zone: the driver's share of a rider's cancel fee, 0–100, default 100. Movera keeps the rest.",
+    "driverSharePctDefault": 100
+  },
+  "bookingSnapshot": {
+    "note": "v0.8.0 (owner 2026-10-27): a booked trip keeps ALL its rules from booking time (POST /trips). The server keeps on the trip: the pricing document (version and scope) it was quoted with, the category's cancel fee rule (live or reservation by Trip.kind, from RiderAppConfig.cancelFees, else the built-in default), DriverAppConfig.cancelFees.driverSharePct, the category's waiting terms (free wait, per minute, no-show after, no-show fee), DriverAppConfig.waiting.driverSharePct (no-show share) and driverShareWaitPct. A later publish never changes a booked trip; fixtures/settings_flow.json#snapshot.",
+    "fields": [
+      "pricing",
+      "cancelRule",
+      "cancelDriverSharePct",
+      "waiting",
+      "noShowDriverSharePct",
+      "waitDriverSharePct"
+    ]
+  },
+  "autoOffline": {
+    "note": "v0.8.0 (owner 2026-10-27): a driver goes offline after offers.autoOffline.missedExclusive (default 10) Exclusive offers of live trips in a row that were declined or expired. Only kind=exclusive offers of live trips sent while the driver was free count; an Exclusive offer sent while the driver is on a trip never counts; Radar, assigned and reservation (scheduled) offers declined or expired never count. ANY accepted offer (Exclusive or Radar, any kind) and going online set the count back to 0. Both the server (it sets onlineStatus offline and marks the offer event driverOffline: true) and the driver app enforce it; fixtures/settings_flow.json#autoOffline.",
+    "counts": [
+      "exclusive"
+    ],
+    "countsStatuses": [
+      "declined",
+      "expired"
+    ],
+    "resets": [
+      "any offer accepted",
+      "driver goes online"
+    ],
+    "neverCounts": [
+      "radar",
+      "assigned",
+      "reservation",
+      "exclusive sent while on a trip"
+    ]
   },
   "safety": {
     "note": "v0.7.0 (CONTRACT.md §15, owner safety part 1 decisions 2026-10-27). SOS from the rider or the driver and the server's 'car lost' alarm become incidents the admin takes, solves or calls a false alarm. The apps open the phone's emergency call (112) themselves AND send the SOS to Movera; afterwards they show only 'SOS sent' (no later update).",

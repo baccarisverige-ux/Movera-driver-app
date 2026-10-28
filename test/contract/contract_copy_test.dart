@@ -42,11 +42,11 @@ void main() {
     }
   });
 
-  test('the copy is contract v0.7.2', () {
+  test('the copy is contract v0.8.1', () {
     expect(
       File('contracts/contract.json').readAsStringSync(),
-      contains('"version": "0.7.2"'),
+      contains('"version": "0.8.1"'),
     );
-    expect(TripTransitions.contractVersion, '0.7.2');
+    expect(TripTransitions.contractVersion, '0.8.1');
   });
 }

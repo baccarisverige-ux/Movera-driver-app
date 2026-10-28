@@ -1,5 +1,5 @@
 """Reference engine for contract.json: replays fixtures/scenarios.json, events.json, money.json, cancel_fees.json, pickup_pay.json, surge.json,
-fares.json and dispatch.json, and checks the pricing and dispatch sample documents agree with contract.json#configDefaults.
+fares.json, dispatch.json and settings_flow.json (v0.8.0), and checks the pricing and dispatch sample documents agree with contract.json#configDefaults.
 Each app's contract tests must give the same answers."""
 import json, sys
 c = json.load(open('contract.json'))
@@ -358,6 +358,50 @@ for cid, fee in rcfg['pickupFee']['byCategory'].items():
     if fee != pdoc['categories'][cid]['riderPickupFee']: bad += 1; print('MUSTMATCH rider pickupFee', cid)
 for cid, rate in dcfg['pickupPay']['byCategory'].items():
     if rate['riderFee'] != pdoc['categories'][cid]['riderPickupFee']: bad += 1; print('MUSTMATCH driver riderFee', cid)
+# v0.8.0 settings flow: country standard, server-stamped versions, country rules, auto-offline, booking snapshot.
+sf = json.load(open('fixtures/settings_flow.json'))
+def served(own, standard, zone):
+    if zone['zoneId'] in own: return {'usesStandard': False, 'version': own[zone['zoneId']]}
+    if zone['country'] in standard: return {'usesStandard': True, 'version': standard[zone['country']]}
+    return {'usesStandard': False, 'version': None}
+for case in sf['standard']:
+    got = served(case['own'], case['standard'], case['zone'])
+    if got != case['expect']: bad += 1; print('STANDARD', case['id'], 'expected', case['expect'], 'got', got)
+for case in sf['versions']:
+    own, std, seen = None, None, 0
+    for st in case['steps']:
+        if st['publish'] == 'standard': std = (std or 0) + 1
+        else: own = max(own or 0, seen, std or 0) + 1
+        seen = own if own is not None else std   # what the zone's apps see (adminVersion is ignored)
+        if seen != st['expect']: bad += 1; print('VERSION', case['id'], st, 'got', seen)
+for case in sf['countryRules']:
+    got = dict(case['document']) if case['rules'] is None else {k: case['rules'][k] for k in ('tips', 'raiseSteps', 'driverBonus')}
+    if got != case['expect']: bad += 1; print('COUNTRY RULES', case['id'], 'got', got)
+def auto_offline(limit, offers):
+    run = 0
+    for idx, o in enumerate(offers):
+        if o == 'on': run = 0; continue
+        kind, outcome = o[0], o[1]
+        if outcome == 'a': run = 0; continue          # any accepted offer starts the run again
+        if kind != 'x': continue                      # radar, assigned, scheduled and on-trip ('t') misses never count
+        run += 1
+        if run >= limit: return idx
+    return None
+if c['autoOffline']['counts'] != ['exclusive'] or c['autoOffline']['resets'][0] != 'any offer accepted' or c['configDefaults']['missedExclusiveBeforeOffline'] != 10: bad += 1; print('AUTO OFFLINE rule')
+for case in sf['autoOffline']:
+    got = auto_offline(case['limit'], case['offers'])
+    if got != case['expectOfflineAt']: bad += 1; print('AUTO OFFLINE', case['id'], 'expected', case['expectOfflineAt'], 'got', got)
+for case in sf['snapshot']:
+    kept = case['atBooking']   # the trip's rules are the ones of booking time; publishedLater must not matter
+    fee = kept['cancelRule']['value'] if kept['cancelRule']['type'] == 'fixed' else None
+    got = {'cancelFee': fee, 'cancelDriverPart': fee * kept['cancelDriverSharePct'] // 100,
+           'noShowFee': kept['noShowFee'], 'noShowDriverPart': kept['noShowFee'] * kept['noShowDriverSharePct'] // 100}
+    if got != case['expect']: bad += 1; print('SNAPSHOT', case['id'], 'got', got)
+if not (c['configDefaults']['cancelDriverSharePct'] == c['cancelFees']['driverSharePctDefault'] == 100): bad += 1; print('CANCEL SHARE default')
+for case in sf['useStandard']:
+    std = max(case['standard'], case['own']) + 1
+    got = {'standard': std, 'servedVersion': std, 'usesStandard': True}
+    if got != case['expect']: bad += 1; print('USE STANDARD', case['id'], 'got', got)
 # v0.7.2: the driver map's colour levels (contract.json#driverSurgeMap.levels)
 def surge_level(m):
     return None if m <= 1.0 else 'low' if m < 1.5 else 'medium' if m <= 2.5 else 'high'
