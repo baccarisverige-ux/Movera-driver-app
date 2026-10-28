@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/session/driver_session_repository.dart';
 
 /// Canonical driver availability (P1 / D10).
@@ -120,6 +121,8 @@ class DriverSessionController extends ChangeNotifier {
       return;
     }
     _status = next;
+    // Going online starts the row of missed Exclusive offers again (§6.7).
+    if (value) ExclusiveAnswers.instance.reset();
     notifyListeners();
     _save(() => _repository.saveOnline(value));
   }

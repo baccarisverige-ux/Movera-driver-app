@@ -196,6 +196,10 @@ class ApiDispatchRepository implements DispatchRepository {
   /// version is the trip's first `expectedVersion`.
   final void Function(Map<String, dynamic> trip)? onAccepted;
 
+  /// The server took the driver offline (`OfferEvent.driverOffline`, the
+  /// row of missed Exclusive offers). Set when a session attaches.
+  void Function()? onDriverOffline;
+
   final Map<String, RideOffer> _offers = <String, RideOffer>{};
   final Map<String, RideOffer> _nextTrips = <String, RideOffer>{};
   final StreamController<List<RideOffer>> _nearby =
@@ -492,6 +496,9 @@ class ApiDispatchRepository implements DispatchRepository {
     final event = OfferFeedEvent.tryParse(json);
     if (event == null || event.sequence <= _lastSequence) return;
     _lastSequence = event.sequence;
+    // Contract v0.8.0 §6.7: the server set the driver offline after the
+    // row of missed Exclusive offers; the app goes offline too.
+    if (json['driverOffline'] == true) onDriverOffline?.call();
     final offer = event.offerJson;
     switch (event.kind) {
       case 'offer_created' || 'offer_updated' when offer != null:

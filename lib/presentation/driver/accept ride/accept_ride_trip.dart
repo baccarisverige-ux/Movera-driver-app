@@ -2057,16 +2057,9 @@ extension _AcceptRideTrip on _AcceptRideState {
       _onTripRadarState = _OnTripRadarState.scanning;
     });
     _restoreRideSheet();
-    // Q16: a declined or missed Exclusive offer counts; at the admin's
-    // number in a row the driver goes offline after this trip.
-    if (ExclusiveAnswers.instance.missed()) {
-      widget.sessionController?.setOnline(false);
-      IslandMessages.show(
-        HomeIslandNotices.offlineAfterMissed(
-          DriverOfferRules.current.autoOfflineAfter,
-        ),
-      );
-    }
+    // Owner 2026-10-27 (contract v0.8.0 §6.7): an Exclusive offer missed or
+    // declined while the driver is on a trip never counts toward going
+    // offline.
   }
 
   void _startWaitTimer() {
