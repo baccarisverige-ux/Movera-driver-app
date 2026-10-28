@@ -11,6 +11,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
+import 'package:movera/core/safety/live_safety_alert_repository.dart';
 import 'package:movera/core/safety/ride_check_controller.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_island.dart';
@@ -772,6 +773,9 @@ class RideCheckCard extends StatelessWidget {
     // Movera, so the card must not say the safety team was alerted.
     final demo =
         !failed && controller.services.alerts is DemoSafetyAlertRepository;
+    // Contract v0.12.0: the live answer reached Movera; only "Sent".
+    final live =
+        !failed && controller.services.alerts is LiveSafetyAlertRepository;
     return Container(
       key: ValueKey(
         failed ? 'ride-check-alert-failed' : 'ride-check-alert-sent',
@@ -793,6 +797,8 @@ class RideCheckCard extends StatelessWidget {
                   TextSpan(
                     text: failed
                         ? tr.moveraCouldNotBeAlerted
+                        : live
+                        ? tr.rideCheckSent
                         : demo
                         // A live build has no alert endpoint yet (audit
                         // R2): said plainly, without "Demo".
@@ -806,11 +812,12 @@ class RideCheckCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  TextSpan(
-                    text: failed || demo
-                        ? tr.call112IfYouNeedHelp
-                        : tr.tripDriverAndRiderDetailsWere,
-                  ),
+                  if (!live)
+                    TextSpan(
+                      text: failed || demo
+                          ? tr.call112IfYouNeedHelp
+                          : tr.tripDriverAndRiderDetailsWere,
+                    ),
                 ],
               ),
               style: TextStyle(

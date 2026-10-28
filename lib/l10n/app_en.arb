@@ -490,6 +490,7 @@
   "couldNotOpenDialerDial112": "Could not open the dialer. Dial 112 manually.",
   "yourDialerOpensWith112Movera": "Your dialer opens with 112. Movera never calls for you.",
   "moveraCouldNotBeAlerted": "Movera could not be alerted",
+  "rideCheckSent": "Sent",
   "moveraSafetyTeamAlerted": "Movera safety team alerted",
   "safetyAlertKeptOnPhoneDemo": "Demo: alert kept on this phone only. No one at Movera was notified.",
   "safetyAlertNotSentLive": "Not sent: Movera cannot receive ride-check alerts yet. In danger, call 112.",
