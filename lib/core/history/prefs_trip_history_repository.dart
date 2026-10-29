@@ -1,6 +1,7 @@
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
 import 'dart:convert';
@@ -66,6 +67,8 @@ class PrefsTripHistoryRepository {
             waitingFee: data['waitingFee'] as String?,
             feeEarned: data['feeEarned'] as String?,
             // Saved in UTC (driver-r4-14); older rows in local time.
+            pickupPoint: pointOf(data['pickupLat'], data['pickupLng']),
+            dropoffPoint: pointOf(data['dropoffLat'], data['dropoffLng']),
             completedAt: DateTime.tryParse(
               data['completedAt'] as String? ?? '',
             )?.toLocal(),
@@ -73,6 +76,13 @@ class PrefsTripHistoryRepository {
         )
         .toList(growable: false);
   });
+
+  /// A saved point, or null when it is missing or not a place on Earth.
+  static GeoPoint? pointOf(Object? lat, Object? lng) {
+    if (lat is! num || lng is! num) return null;
+    final point = GeoPoint(lat.toDouble(), lng.toDouble());
+    return point.isValid ? point : null;
+  }
 
   /// A terminal status, or a driver cancel that sent the trip back to
   /// dispatch (contract v0.3: `searching` / `requested`).
@@ -214,6 +224,8 @@ class PrefsTripHistoryRepository {
     String? cancellationReasonCode,
     bool authoritative = false,
     String? feeEarned,
+    GeoPoint? pickupPoint,
+    GeoPoint? dropoffPoint,
   }) {
     if (record.tripId.trim().isEmpty ||
         !(status.isTerminal ||
@@ -269,6 +281,13 @@ class PrefsTripHistoryRepository {
         if (status != TripStatus.completed &&
             feeEarned?.trim().isNotEmpty == true)
           'feeEarned': feeEarned!.trim(),
+        // v0.17.0: the past-ride map's pins without the server.
+        if (pickupPoint != null && dropoffPoint != null) ...{
+          'pickupLat': pickupPoint.latitude,
+          'pickupLng': pickupPoint.longitude,
+          'dropoffLat': dropoffPoint.latitude,
+          'dropoffLng': dropoffPoint.longitude,
+        },
         // UTC: a local time has no offset, so the repeated autumn hour
         // would read back an hour off (driver-r4-14).
         'completedAt': at.toUtc().toIso8601String(),

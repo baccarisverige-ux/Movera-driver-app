@@ -1380,8 +1380,13 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get illustrativeMapArchivedRouteUnavailable =>
-      'Carte indicative · itinéraire archivé indisponible';
+  String get pastRideRouteDriven => 'Itinéraire parcouru';
+
+  @override
+  String get pastRidePlannedRoute => 'Itinéraire prévu';
+
+  @override
+  String get pastRideRouteUnavailable => 'Itinéraire indisponible';
 
   @override
   String get rideCost => 'Prix de la course';

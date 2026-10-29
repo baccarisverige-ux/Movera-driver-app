@@ -1369,8 +1369,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get illustrativeMapArchivedRouteUnavailable =>
-      'Illustrative map · archived route unavailable';
+  String get pastRideRouteDriven => 'Route driven';
+
+  @override
+  String get pastRidePlannedRoute => 'Planned route';
+
+  @override
+  String get pastRideRouteUnavailable => 'Route not available';
 
   @override
   String get rideCost => 'Ride Cost';

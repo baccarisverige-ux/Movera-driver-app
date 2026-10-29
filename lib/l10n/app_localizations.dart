@@ -2430,11 +2430,23 @@ abstract class AppLocalizations {
   /// **'Audio saved only on this phone · {time}'**
   String audioSavedOnlyOnThisPhone(Object time);
 
-  /// No description provided for @illustrativeMapArchivedRouteUnavailable.
+  /// No description provided for @pastRideRouteDriven.
   ///
   /// In en, this message translates to:
-  /// **'Illustrative map · archived route unavailable'**
-  String get illustrativeMapArchivedRouteUnavailable;
+  /// **'Route driven'**
+  String get pastRideRouteDriven;
+
+  /// No description provided for @pastRidePlannedRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned route'**
+  String get pastRidePlannedRoute;
+
+  /// No description provided for @pastRideRouteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Route not available'**
+  String get pastRideRouteUnavailable;
 
   /// No description provided for @rideCost.
   ///
