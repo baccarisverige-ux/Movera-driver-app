@@ -1687,7 +1687,7 @@
   "docsNotApprovedAccount": "Ditt konto kan inte användas förrän de här dokumenten är godkända: {names}",
   "authStartingServer": "Servern startar…",
   "authErrTooManyWrongCodes": "För många fel försök – tryck på {button}",
-  "authRetryMinutes": "{count} min",
+  "authRetryMinutes": "{count, plural, =1{1 minut} other{{count} minuter}}",
   "authJoinWaitlist": "Gå med i väntelistan",
   "authWaitlistSaved": "Du står på väntelistan. Vi hör av oss när inloggningen öppnar för ditt nummer.",
   "authTestNumbersTitle": "Testnummer (endast testversion)",

@@ -1687,7 +1687,7 @@
   "docsNotApprovedAccount": "Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : {names}",
   "authStartingServer": "Démarrage du serveur…",
   "authErrTooManyWrongCodes": "Trop d’essais erronés – touchez {button}",
-  "authRetryMinutes": "{count} min",
+  "authRetryMinutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
   "authJoinWaitlist": "Rejoindre la liste d’attente",
   "authWaitlistSaved": "Vous êtes sur la liste d’attente. Nous vous préviendrons quand la connexion ouvrira pour votre numéro.",
   "authTestNumbersTitle": "Numéros de test (version de test uniquement)",

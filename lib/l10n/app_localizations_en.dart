@@ -5904,7 +5904,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String authRetryMinutes(int count) {
-    return '$count min';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min',
+      one: '1 min',
+    );
+    return '$_temp0';
   }
 
   @override

@@ -12,6 +12,7 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/session/driver_composition_guard.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/auth/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_controls.dart';
@@ -33,8 +34,9 @@ class DriverSignIn extends StatefulWidget {
   final AuthController? controller;
 
   /// Owner 2026-10-29, decision 6 ("Only in test builds"): the test
-  /// numbers with their account status under the form. Null: every build
-  /// but a store build (`MOVERA_PRODUCTION`).
+  /// numbers with their account status under the form. Null: a build with
+  /// a server (`MOVERA_API_BASE_URL`) that is not a store build
+  /// (`MOVERA_PRODUCTION`).
   final bool? showTestAccounts;
 
   @override
@@ -156,8 +158,11 @@ class _DriverSignInState extends State<DriverSignIn>
 
   Future<void> _loadTestAccounts() async {
     final auth = _auth;
-    if (!(widget.showTestAccounts ?? !driverProductionRequested) ||
-        auth == null) {
+    // A test build that talks to a server (not a store build, not the demo).
+    final testBuild =
+        !driverProductionRequested &&
+        DriverRuntimeConfig.current.apiBaseUrl.isNotEmpty;
+    if (!(widget.showTestAccounts ?? testBuild) || auth == null) {
       return;
     }
     try {

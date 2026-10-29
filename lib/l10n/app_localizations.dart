@@ -10246,7 +10246,7 @@ abstract class AppLocalizations {
   /// Owner decision 4: a sign-in wait of a minute or more, rounded up.
   ///
   /// In en, this message translates to:
-  /// **'{count} min'**
+  /// **'{count, plural, =1{1 min} other{{count} min}}'**
   String authRetryMinutes(int count);
 
   /// No description provided for @authJoinWaitlist.
