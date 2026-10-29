@@ -149,9 +149,12 @@ jobs:
         env:
           LIVE_API: ${{ vars.MOVERA_LIVE_API_URL || 'https://movera-server.onrender.com' }}
         run: |
+          # Contract v0.16.0: crash reports name the pubspec version.
+          app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"
           flutter build web --release --base-href "/Movera-driver-app/live/" \
             --dart-define=MOVERA_AUTH_REQUIRED=true \
-            --dart-define=MOVERA_API_BASE_URL="$LIVE_API"
+            --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
+            --dart-define=MOVERA_APP_VERSION="$app_version"
 
   android-release:
     name: Android release signing and preview

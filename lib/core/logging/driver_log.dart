@@ -11,6 +11,7 @@ class DriverLogRecord {
     required this.message,
     this.error,
     this.stack,
+    this.fatal = false,
   });
 
   final DriverLogLevel level;
@@ -18,6 +19,10 @@ class DriverLogRecord {
   final String message;
   final Object? error;
   final StackTrace? stack;
+
+  /// Contract v0.16.0: an uncaught error (`kind: crash`); a reported
+  /// [DriverLog.error] with an error object is `kind: error`.
+  final bool fatal;
 }
 
 /// Destination for log records. A crash-reporting adapter (with user consent
@@ -62,6 +67,20 @@ class DriverLog {
   static void warn(String message, {String name = 'movera'}) {
     sink(
       DriverLogRecord(level: DriverLogLevel.warn, name: name, message: message),
+    );
+  }
+
+  /// An uncaught framework or platform error (see installGlobalErrorHooks).
+  static void crash(String message, Object error, StackTrace? stack) {
+    sink(
+      DriverLogRecord(
+        level: DriverLogLevel.error,
+        name: 'movera',
+        message: message,
+        error: scrub(error),
+        stack: stack,
+        fatal: true,
+      ),
     );
   }
 

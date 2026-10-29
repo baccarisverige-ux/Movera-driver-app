@@ -100,9 +100,12 @@ jobs:
           LIVE_API: ${{ vars.MOVERA_LIVE_API_URL }}
         run: |
           case "$LIVE_API" in https://*) ;; *) echo "::error::MOVERA_LIVE_API_URL must start with https://"; exit 1 ;; esac
+          # Contract v0.16.0: crash reports name the pubspec version.
+          app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"
           flutter build web --release --base-href "/Movera-driver-app/live/" \
             --dart-define=MOVERA_AUTH_REQUIRED=true \
-            --dart-define=MOVERA_API_BASE_URL="$LIVE_API"
+            --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
+            --dart-define=MOVERA_APP_VERSION="$app_version"
           rm -rf "$RUNNER_TEMP/drider-live"
           mv build/web "$RUNNER_TEMP/drider-live"
 

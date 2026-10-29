@@ -3910,7 +3910,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Vous vous engagez à conduire uniquement avec un permis et une assurance valides et un véhicule conforme aux documents de cette application.\n\nLes offres Radar vont au premier qui les prend. Accepter une autre course pendant un trajet est facultatif. Terminer une course crée une feuille de route que vous pouvez rouvrir depuis l’accueil.\n\nMovera peut suspendre un compte de démo qui utilise abusivement les outils de sécurité ou les appels d’urgence.';
+      'Vous vous engagez à conduire uniquement avec un permis et une assurance valides et un véhicule conforme aux documents de cette application.\n\nLes offres Radar vont au premier qui les prend. Accepter une autre course pendant un trajet est facultatif. Terminer une course crée une feuille de route que vous pouvez rouvrir depuis l’accueil.\n\nMovera peut suspendre un compte de démo qui utilise abusivement les outils de sécurité ou les appels d’urgence.\n\nRapports de plantage et d’erreur : quand l’application plante ou affiche une erreur, elle envoie automatiquement un rapport à Movera pour que nous puissions corriger le problème : l’erreur, l’endroit de l’application où elle s’est produite, la version, la plateforme et l’heure. Les noms, numéros de téléphone, adresses e-mail, adresses et positions sont retirés avant que le rapport ne quitte votre appareil. Les rapports sont conservés 30 jours.';
 
   @override
   String get privacyPolicyTitle => 'Politique de confidentialité';

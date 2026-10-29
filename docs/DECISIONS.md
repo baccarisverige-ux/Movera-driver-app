@@ -121,7 +121,6 @@ Fix (no UX change, no lifecycle change):
 - v0.13.0 (28 Oct 2026): Trip chat (§23): the chat closes at drop-off; calls only through `POST /trips/{tripId}/call` (masked number, 503 `call_unavailable` without a provider); no real phone number of the rider in any driver payload. Additive except the chat window; X-Api-Version stays `0.5`.
 - v0.14.0 (28 Oct 2026): Activation needs approved documents (`409 documents_not_approved`, `details` "<scope>:<type>"); a car whose required documents are not all approved can't be picked or driven (reason `vehicle_documents_not_approved`). The app names the missing documents and shows such a car as "Can't be driven – upload documents" without a pick button.
 - v0.15.0 (29 Oct 2026): Sign-in group 1: the sign-in calls wait up to 60 s with "Starting the server…"; 429 waits shown in minutes; "Too many wrong tries" highlights Resend code; a restricted number can join the waiting list (`POST /auth/waitlist`); test builds list the test numbers (`GET /auth/test-accounts`, not in production).
-- v0.16.0 (29 Oct 2026): Crashes & errors: optional crash report fields (server and admin only; no driver app change).
 - v0.17.0 (29 Oct 2026): Past ride route: `GET /trips/{tripId}/path` (driven path from the trip trace, else the planned route); the past-ride screen keeps the map fixed on the top 40 %, fits the route with the pickup and drop-off pins, shows the category icon, date and time and status, and no person photo.
 
 ## Contract v0.3 (19 October 2026)

@@ -6678,7 +6678,7 @@ abstract class AppLocalizations {
   /// No description provided for @legalTermsBody.
   ///
   /// In en, this message translates to:
-  /// **'You agree to drive only with a valid licence, insurance and a vehicle that matches the documents in this app.\n\nRadar offers are first-come. Matching another order while on a trip is optional. Completing a trip creates a waybill you can reopen from Home.\n\nMovera may suspend a demo account that misuses Safety tools or emergency calling.'**
+  /// **'You agree to drive only with a valid licence, insurance and a vehicle that matches the documents in this app.\n\nRadar offers are first-come. Matching another order while on a trip is optional. Completing a trip creates a waybill you can reopen from Home.\n\nMovera may suspend a demo account that misuses Safety tools or emergency calling.\n\nCrash and error reports: when the app crashes or shows an error, it automatically sends a report to Movera so we can fix it: the error, where in the app it happened, the app version, the platform and the time. Names, phone numbers, e-mail addresses, addresses and locations are removed before the report leaves your device. Reports are kept for 30 days.'**
   String get legalTermsBody;
 
   /// No description provided for @privacyPolicyTitle.
