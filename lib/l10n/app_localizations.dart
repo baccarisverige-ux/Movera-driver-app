@@ -4863,161 +4863,11 @@ abstract class AppLocalizations {
   /// **'Route unavailable — check location'**
   String get navRouteUnavailableLocation;
 
-  /// No description provided for @authAddVehicle.
-  ///
-  /// In en, this message translates to:
-  /// **'Add Vehicle'**
-  String get authAddVehicle;
-
-  /// No description provided for @authAddVehicleDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'Add Vehicle details for verification'**
-  String get authAddVehicleDetails;
-
-  /// No description provided for @vehicleMake.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle make'**
-  String get vehicleMake;
-
-  /// No description provided for @vehicleModel.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle model'**
-  String get vehicleModel;
-
-  /// No description provided for @vehicleYear.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle year'**
-  String get vehicleYear;
-
-  /// No description provided for @enterModelYear.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter model year'**
-  String get enterModelYear;
-
   /// No description provided for @licensePlateNumber.
   ///
   /// In en, this message translates to:
   /// **'License plate number'**
   String get licensePlateNumber;
-
-  /// No description provided for @vehicleType.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle type'**
-  String get vehicleType;
-
-  /// No description provided for @vehicleColor.
-  ///
-  /// In en, this message translates to:
-  /// **'Color'**
-  String get vehicleColor;
-
-  /// No description provided for @selectColor.
-  ///
-  /// In en, this message translates to:
-  /// **'Select color'**
-  String get selectColor;
-
-  /// No description provided for @tapToUpload.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to upload'**
-  String get tapToUpload;
-
-  /// No description provided for @openingEllipsis.
-  ///
-  /// In en, this message translates to:
-  /// **'Opening...'**
-  String get openingEllipsis;
-
-  /// No description provided for @openCamera.
-  ///
-  /// In en, this message translates to:
-  /// **'Open Camera'**
-  String get openCamera;
-
-  /// No description provided for @fileSelectedSuccessfully.
-  ///
-  /// In en, this message translates to:
-  /// **'File selected successfully!'**
-  String get fileSelectedSuccessfully;
-
-  /// No description provided for @vehicleDocumentSelectionFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle document selection failed'**
-  String get vehicleDocumentSelectionFailed;
-
-  /// No description provided for @couldNotReadSelectedFile.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not read the selected file. Please try again.'**
-  String get couldNotReadSelectedFile;
-
-  /// No description provided for @photoCapturedSuccessfully.
-  ///
-  /// In en, this message translates to:
-  /// **'Photo captured successfully!'**
-  String get photoCapturedSuccessfully;
-
-  /// No description provided for @couldNotReadCapturedPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not read the captured photo. Please try again.'**
-  String get couldNotReadCapturedPhoto;
-
-  /// No description provided for @docPassport.
-  ///
-  /// In en, this message translates to:
-  /// **'Passport'**
-  String get docPassport;
-
-  /// No description provided for @scanYourPassportPhoto.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan your passport photo'**
-  String get scanYourPassportPhoto;
-
-  /// No description provided for @docDrivingLicense.
-  ///
-  /// In en, this message translates to:
-  /// **'Driving License'**
-  String get docDrivingLicense;
-
-  /// No description provided for @scanYourDrivingLicense.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan your driving license'**
-  String get scanYourDrivingLicense;
-
-  /// No description provided for @docNationalId.
-  ///
-  /// In en, this message translates to:
-  /// **'National ID'**
-  String get docNationalId;
-
-  /// No description provided for @scanYourNationalId.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan your national Id'**
-  String get scanYourNationalId;
-
-  /// No description provided for @selectDocumentTypeToScan.
-  ///
-  /// In en, this message translates to:
-  /// **'Select the type of document you wish to scan'**
-  String get selectDocumentTypeToScan;
-
-  /// No description provided for @weNeedToDetermineDocument.
-  ///
-  /// In en, this message translates to:
-  /// **'We need to determine  if an identity document is authentic and belongs to you'**
-  String get weNeedToDetermineDocument;
 
   /// No description provided for @createAccount.
   ///
@@ -5181,89 +5031,17 @@ abstract class AppLocalizations {
   /// **'Apple and Google sign-in require the account service.'**
   String get socialSignInNeedsService;
 
-  /// No description provided for @idPhotoPreview.
-  ///
-  /// In en, this message translates to:
-  /// **'ID photo preview'**
-  String get idPhotoPreview;
-
-  /// No description provided for @idPhotoSampleOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Sample image only. Camera capture and verification are not connected. No ID is submitted.'**
-  String get idPhotoSampleOnly;
-
-  /// No description provided for @returnToHome.
-  ///
-  /// In en, this message translates to:
-  /// **'Return to home'**
-  String get returnToHome;
-
-  /// No description provided for @retakeUnavailablePreview.
-  ///
-  /// In en, this message translates to:
-  /// **'Retake unavailable in this preview'**
-  String get retakeUnavailablePreview;
-
   /// No description provided for @enterValidPhoneWeWillSend.
   ///
   /// In en, this message translates to:
   /// **'Enter a valid phone number where we will send'**
   String get enterValidPhoneWeWillSend;
 
-  /// No description provided for @verifyAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Verify'**
-  String get verifyAction;
-
-  /// No description provided for @stepOfTotal.
-  ///
-  /// In en, this message translates to:
-  /// **'{step} of {total}'**
-  String stepOfTotal(String step, String total);
-
-  /// No description provided for @uploadId.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload ID'**
-  String get uploadId;
-
-  /// No description provided for @weNeedToVerifyYourId.
-  ///
-  /// In en, this message translates to:
-  /// **'we need to verify your Id'**
-  String get weNeedToVerifyYourId;
-
-  /// No description provided for @approveAccountIdentityReason.
-  ///
-  /// In en, this message translates to:
-  /// **'In order to approve your account, we need to be 100% sure that you are who you say you are, for security and transparency purposes.'**
-  String get approveAccountIdentityReason;
-
-  /// No description provided for @vehicleRegistration.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle Registration'**
-  String get vehicleRegistration;
-
-  /// No description provided for @uploadVehicleRegistration.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload vehicle registration document'**
-  String get uploadVehicleRegistration;
-
   /// No description provided for @insurance.
   ///
   /// In en, this message translates to:
   /// **'Insurance'**
   String get insurance;
-
-  /// No description provided for @uploadCarInsurance.
-  ///
-  /// In en, this message translates to:
-  /// **'Upload car insurance for verification'**
-  String get uploadCarInsurance;
 
   /// No description provided for @todayLower.
   ///

@@ -2794,87 +2794,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Route unavailable — check location';
 
   @override
-  String get authAddVehicle => 'Add Vehicle';
-
-  @override
-  String get authAddVehicleDetails => 'Add Vehicle details for verification';
-
-  @override
-  String get vehicleMake => 'Vehicle make';
-
-  @override
-  String get vehicleModel => 'Vehicle model';
-
-  @override
-  String get vehicleYear => 'Vehicle year';
-
-  @override
-  String get enterModelYear => 'Enter model year';
-
-  @override
   String get licensePlateNumber => 'License plate number';
-
-  @override
-  String get vehicleType => 'Vehicle type';
-
-  @override
-  String get vehicleColor => 'Color';
-
-  @override
-  String get selectColor => 'Select color';
-
-  @override
-  String get tapToUpload => 'Tap to upload';
-
-  @override
-  String get openingEllipsis => 'Opening...';
-
-  @override
-  String get openCamera => 'Open Camera';
-
-  @override
-  String get fileSelectedSuccessfully => 'File selected successfully!';
-
-  @override
-  String get vehicleDocumentSelectionFailed =>
-      'Vehicle document selection failed';
-
-  @override
-  String get couldNotReadSelectedFile =>
-      'Could not read the selected file. Please try again.';
-
-  @override
-  String get photoCapturedSuccessfully => 'Photo captured successfully!';
-
-  @override
-  String get couldNotReadCapturedPhoto =>
-      'Could not read the captured photo. Please try again.';
-
-  @override
-  String get docPassport => 'Passport';
-
-  @override
-  String get scanYourPassportPhoto => 'Scan your passport photo';
-
-  @override
-  String get docDrivingLicense => 'Driving License';
-
-  @override
-  String get scanYourDrivingLicense => 'Scan your driving license';
-
-  @override
-  String get docNationalId => 'National ID';
-
-  @override
-  String get scanYourNationalId => 'Scan your national Id';
-
-  @override
-  String get selectDocumentTypeToScan =>
-      'Select the type of document you wish to scan';
-
-  @override
-  String get weNeedToDetermineDocument =>
-      'We need to determine  if an identity document is authentic and belongs to you';
 
   @override
   String get createAccount => 'Create account';
@@ -2965,52 +2885,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Apple and Google sign-in require the account service.';
 
   @override
-  String get idPhotoPreview => 'ID photo preview';
-
-  @override
-  String get idPhotoSampleOnly =>
-      'Sample image only. Camera capture and verification are not connected. No ID is submitted.';
-
-  @override
-  String get returnToHome => 'Return to home';
-
-  @override
-  String get retakeUnavailablePreview => 'Retake unavailable in this preview';
-
-  @override
   String get enterValidPhoneWeWillSend =>
       'Enter a valid phone number where we will send';
 
   @override
-  String get verifyAction => 'Verify';
-
-  @override
-  String stepOfTotal(String step, String total) {
-    return '$step of $total';
-  }
-
-  @override
-  String get uploadId => 'Upload ID';
-
-  @override
-  String get weNeedToVerifyYourId => 'we need to verify your Id';
-
-  @override
-  String get approveAccountIdentityReason =>
-      'In order to approve your account, we need to be 100% sure that you are who you say you are, for security and transparency purposes.';
-
-  @override
-  String get vehicleRegistration => 'Vehicle Registration';
-
-  @override
-  String get uploadVehicleRegistration =>
-      'Upload vehicle registration document';
-
-  @override
   String get insurance => 'Insurance';
-
-  @override
-  String get uploadCarInsurance => 'Upload car insurance for verification';
 
   @override
   String get todayLower => 'today';

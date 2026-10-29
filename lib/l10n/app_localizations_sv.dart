@@ -2797,88 +2797,7 @@ class AppLocalizationsSv extends AppLocalizations {
       'Rutten är inte tillgänglig – kontrollera platsen';
 
   @override
-  String get authAddVehicle => 'Lägg till fordon';
-
-  @override
-  String get authAddVehicleDetails =>
-      'Lägg till fordonsuppgifter för verifiering';
-
-  @override
-  String get vehicleMake => 'Fordonsmärke';
-
-  @override
-  String get vehicleModel => 'Fordonsmodell';
-
-  @override
-  String get vehicleYear => 'Årsmodell';
-
-  @override
-  String get enterModelYear => 'Ange årsmodell';
-
-  @override
   String get licensePlateNumber => 'Registreringsnummer';
-
-  @override
-  String get vehicleType => 'Fordonstyp';
-
-  @override
-  String get vehicleColor => 'Färg';
-
-  @override
-  String get selectColor => 'Välj färg';
-
-  @override
-  String get tapToUpload => 'Tryck för att ladda upp';
-
-  @override
-  String get openingEllipsis => 'Öppnar…';
-
-  @override
-  String get openCamera => 'Öppna kameran';
-
-  @override
-  String get fileSelectedSuccessfully => 'Filen har valts!';
-
-  @override
-  String get vehicleDocumentSelectionFailed =>
-      'Det gick inte att välja fordonsdokumentet';
-
-  @override
-  String get couldNotReadSelectedFile =>
-      'Det gick inte att läsa den valda filen. Försök igen.';
-
-  @override
-  String get photoCapturedSuccessfully => 'Fotot är taget!';
-
-  @override
-  String get couldNotReadCapturedPhoto =>
-      'Det gick inte att läsa fotot. Försök igen.';
-
-  @override
-  String get docPassport => 'Pass';
-
-  @override
-  String get scanYourPassportPhoto => 'Skanna fotot i ditt pass';
-
-  @override
-  String get docDrivingLicense => 'Körkort';
-
-  @override
-  String get scanYourDrivingLicense => 'Skanna ditt körkort';
-
-  @override
-  String get docNationalId => 'Id-kort';
-
-  @override
-  String get scanYourNationalId => 'Skanna ditt id-kort';
-
-  @override
-  String get selectDocumentTypeToScan =>
-      'Välj vilken typ av dokument du vill skanna';
-
-  @override
-  String get weNeedToDetermineDocument =>
-      'Vi behöver kontrollera att id-handlingen är äkta och tillhör dig';
 
   @override
   String get createAccount => 'Skapa konto';
@@ -2971,53 +2890,11 @@ class AppLocalizationsSv extends AppLocalizations {
       'Inloggning med Apple eller Google kräver kontotjänsten.';
 
   @override
-  String get idPhotoPreview => 'Förhandsvisning av id-foto';
-
-  @override
-  String get idPhotoSampleOnly =>
-      'Endast exempelbild. Kamera och verifiering är inte anslutna. Ingen id-handling skickas.';
-
-  @override
-  String get returnToHome => 'Tillbaka till start';
-
-  @override
-  String get retakeUnavailablePreview =>
-      'Det går inte att ta om fotot i förhandsvisningen';
-
-  @override
   String get enterValidPhoneWeWillSend =>
       'Ange ett giltigt telefonnummer som vi skickar till';
 
   @override
-  String get verifyAction => 'Verifiera';
-
-  @override
-  String stepOfTotal(String step, String total) {
-    return '$step av $total';
-  }
-
-  @override
-  String get uploadId => 'Ladda upp id-handling';
-
-  @override
-  String get weNeedToVerifyYourId => 'vi behöver verifiera din identitet';
-
-  @override
-  String get approveAccountIdentityReason =>
-      'För att godkänna ditt konto behöver vi vara helt säkra på att du är den du säger, av säkerhets- och transparensskäl.';
-
-  @override
-  String get vehicleRegistration => 'Registreringsbevis';
-
-  @override
-  String get uploadVehicleRegistration =>
-      'Ladda upp fordonets registreringsbevis';
-
-  @override
   String get insurance => 'Försäkring';
-
-  @override
-  String get uploadCarInsurance => 'Ladda upp bilförsäkringen för verifiering';
 
   @override
   String get todayLower => 'i dag';

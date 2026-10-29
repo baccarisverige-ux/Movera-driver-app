@@ -14,10 +14,8 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/prefs_active_ride_repository.dart';
-import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
-import 'package:movera/presentation/driver/auth/additional%20detail/screens/upload%20document/take%20id%20photo/take_id_photo.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/components/reservation_island_face.dart';
 import 'package:movera/presentation/driver/home/home.dart';
@@ -27,30 +25,6 @@ import 'package:movera/widgets/layout_viewport.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
-
-/// [first] as the app's first route, inside the app's runtime scope, with
-/// [push] opened on top of it.
-Future<void> _app(WidgetTester tester, Widget first, [Widget? push]) async {
-  tester.view.physicalSize = const Size(390, 844);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.resetPhysicalSize);
-  addTearDown(tester.view.resetDevicePixelRatio);
-  final navigator = GlobalKey<NavigatorState>();
-  await tester.pumpWidget(
-    DriverRuntimeScope(
-      session: DriverSessionController(),
-      homeBuilder: () => const Scaffold(body: Text('Driver home')),
-      child: ScreenUtilInit(
-        designSize: const Size(375, 812),
-        builder: (_, __) => MaterialApp(navigatorKey: navigator, home: first),
-      ),
-    ),
-  );
-  if (push != null) {
-    navigator.currentState!.push(MaterialPageRoute<void>(builder: (_) => push));
-  }
-  await tester.pumpAndSettle();
-}
 
 RideOffer _offer(String id, {OfferSource source = OfferSource.system}) =>
     RideOffer(
@@ -144,19 +118,6 @@ Future<void> _home(
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-
-  testWidgets('driver-r3-10: "Return to home" at the end of onboarding opens '
-      'Home, not the Sign-in screen it started from', (tester) async {
-    await _app(
-      tester,
-      const Scaffold(body: Text('Sign in')),
-      const TakeIdPhoto(),
-    );
-    await tester.tap(find.byKey(const ValueKey('id-preview-return')));
-    await tester.pumpAndSettle();
-    expect(find.text('Driver home'), findsOneWidget);
-    expect(find.text('Sign in'), findsNothing);
-  });
 
   testWidgets('driver-81: Profile does not flash "Vehicle data unavailable" '
       'while the vehicle is being read', (tester) async {
