@@ -2136,6 +2136,13 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tripGoToDropoff => 'Kör till avlämning';
 
   @override
+  String get cashPriceChanged => 'Priset ändrades – ta emot det nya beloppet';
+
+  @override
+  String get cashPriceRecalculatedEarlyEnd =>
+      'Avslutas före destinationen – priset räknades om';
+
+  @override
   String get tripCollectCash => 'Ta emot kontant';
 
   @override

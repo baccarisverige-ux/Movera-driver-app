@@ -2135,6 +2135,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripGoToDropoff => 'Go to drop-off';
 
   @override
+  String get cashPriceChanged => 'The price changed – collect the new amount';
+
+  @override
+  String get cashPriceRecalculatedEarlyEnd =>
+      'Ending before the destination – price recalculated';
+
+  @override
   String get tripCollectCash => 'Collect cash';
 
   @override

@@ -1,6 +1,6 @@
 {
   "contract": "movera",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "note": "Canonical cross-app contract for Rider, Driver and Admin. Frontend-only today; a future single backend implements it. Every app ships an identical copy under contracts/ and runs contract tests against it.",
   "wire": {
     "ids": {
@@ -1109,6 +1109,8 @@
     },
     "quoteAndFare": "The quote prices the server's own route (OSRM km and minutes; a client distance is a hint) with no waiting. The fare at completion is the same calculation with the quote's km and minutes, the quote's surge multiplier, the stops made and the waiting the trip had (Waiting.chargedSeconds, stop waits from the driver's arrive / leave taps), rounded once. A reservation (kind=scheduled) keeps the price of its booking: no surge in force later is added (owner 2026-10-27).",
     "endEarly": "owner decisions 8 and 19: ride part = base + km driven × perKm + minutes on board × perMin, × the booked surge multiplier, then minimum and maximum; no extras; + app fee + pickup fee. If that exceeds the booked fare (Quote.total plus route changes, without outstanding_fee) the ride part is lowered (maximum_adjust) to (booked − pickup fee) / (1 + appFeePct / 100), so the exact sum is the booked fare; then rounded once to priceStep. driverEarnings from that ride part.",
+    "driverEndsEarly": "v0.18.1, owner decision 28: when the driver completes a trip and the driver's latest fix (POST /driver/location) is farther than completeNearDropoffMeters from the drop-off, the trip ended early: the rider pays what was driven, priced exactly as endEarly (km on board from the trip trace, minutes since boarding, the category minimum and maximum, never more than the booked fare). Within completeNearDropoffMeters (or with no fix) the booked fare stands, plus the waiting at middle stops. An admin's force-complete fare is taken as given.",
+    "completeNearDropoffMeters": 300,
     "surgeSource": "first match: the zone's active surge schedule (§3.4, PUT /admin/zones/{zoneId}/surge: the manual Start/Stop), then the highest pricing.surge.scheduled window in force (v0.7.1: overlapping planned surges, the higher counts; the admin is warned on save), then smart surge when smart.enabled (v0.7.1: contract.json#smartSurge, off by default); else 1.0. Every source is clamped to [1, 6]; the maximum of each is the value the admin chose on its slider (manual surge, planned window, smart profile cap; v0.7.1, no separate maximum). The quote keeps its multiplier; a reservation keeps the price shown at booking (no surge added later).",
     "requestExtras": {
       "note": "v0.7.1 (owner 2026-10-27): the only priced thing the rider sends is fixedRouteId (QuoteRequest, repeated unchanged on CreateTripRequest, else 400 invalid_request quote_mismatch). Seats and airport are no longer sent: a child_seat trip always includes one seat, and the airport fees come from the airport zones (server).",
@@ -4017,5 +4019,17 @@
     "maxPoints": 300,
     "retention": "No new storage: the driven path is read from the trip trace and follows its rule (deleted traceKeepDays = 30 days after the fix); afterwards the answer is the planned route. keptUntil is when the trace goes.",
     "apps": "The driver's past-ride screen (and the rider's, when it reads the server) shows the line and pins; a failed call shows the pickup and drop-off pins only."
+  },
+  "completePreview": {
+    "note": "v0.18.1 (owner 2026-10-29, live bug A, 'Server's final price (Recommended)'; CONTRACT.md §26): the driver app asks the server for the final price before it shows Collect cash, so the driver, the rider, the receipt and the history all show the same amount.",
+    "path": "GET /driver/trips/{tripId}/complete-preview → CompletePreview { previewId, expiresAt, tripId, total: Money, cashDue: Money, driverEarnings: Money, earlyEnd: boolean, fareLines: FareLine[] }",
+    "actors": "the trip's own driver (anyone else 404 not_found); only while the trip is on board (rider_onboard, in_trip, approaching_dropoff), else 409 invalid_transition, reason trip_not_on_board. No Idempotency-Key; the wallet is not touched; the trip's version does not change. Each call freezes its price for freezeSeconds and replaces the trip's earlier preview.",
+    "same": "total and fareLines are computed by the same code as POST /trips/{tripId}/complete would at that moment with the driver's latest fix (pricing.driverEndsEarly): earlyEnd is true when the driver is farther than pricing.completeNearDropoffMeters from the drop-off. cashDue = total − the part the rider's wallet would pay. driverEarnings = the driver's part of that total (as TripProjection.driverEarnings after complete), for the sheet's cash balance.",
+    "cashCollected": "The app sends POST /trips/{tripId}/complete { expectedVersion, previewId, cashCollected = the cashDue it showed } on a cash trip. On 409 price_changed it shows the sheet again with error.preview (never resends the old amount). After completing the app shows the fare of the returned TripProjection. An older server without the preview (404) leaves the app on the old flow (complete without cashCollected).",
+    "apps": "Collect <cashDue>; when earlyEnd also 'Ending before the destination – price recalculated' (sv: 'Avslutas före destinationen – priset räknades om', fr: 'Fin avant la destination – prix recalculé'). If the preview fails the app does not show a booked price as the amount to collect. The sheet's earnings line is the driver's own earnings from the preview (driverEarnings), labelled 'Your earnings' / 'Din intäkt' / 'Vos gains'.",
+    "freezeSeconds": 120,
+    "frozen": "POST /trips/{tripId}/complete { expectedVersion, previewId, cashCollected } with the trip's latest previewId before expiresAt: complete uses the frozen price exactly (total, fareLines, driverEarnings, earlyEnd): no early-end flip, no extra minutes or waiting. On a cash trip cashCollected must equal its cashDue (and the wallet part must be unchanged); otherwise 409 conflict, reason price_changed, with a fresh preview in the error's preview field.",
+    "unfrozen": "previewId missing, unknown or expired: complete prices the trip as now. If the app sent previewId with cashCollected and that no longer equals the cash part of the new price: 409 conflict, reason price_changed, with a fresh preview (error.preview); the trip is not completed and the driver is never trapped by a 400. Without previewId (older apps) cashCollected keeps its old rule (at most the fare less the wallet, else 400 cash_above_fare).",
+    "stored": "A completed trip's cashCollected is always the cash part of its final fare when a previewId was sent."
   }
 }

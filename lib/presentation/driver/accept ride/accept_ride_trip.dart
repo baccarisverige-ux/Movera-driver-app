@@ -1436,18 +1436,41 @@ extension _AcceptRideTrip on _AcceptRideState {
 
   /// Q24 / R8-4: shows the cash to collect; "Finish {category}" there
   /// completes it.
-  Future<void> _collectCash() async {
+  Future<void> _collectCash({CompletePreview? changed}) async {
     if (!_collectsCashNow || _stageTransitioning || _rideLifecycle.terminal) {
       return;
+    }
+    // Owner 2026-10-29 (live bug A, contract v0.18.1 §26): a live trip
+    // shows the server's final price, never the booked cash: a finish more
+    // than 300 m before the drop-off is priced by what was driven.
+    final trips = _AcceptRideLive(this)._liveTrips;
+    CompletePreview? preview = changed;
+    if (trips != null && preview == null) {
+      _stageTransitioning = true;
+      try {
+        preview = await trips.previewComplete(widget.tripId);
+      } finally {
+        _stageTransitioning = false;
+      }
+      if (!mounted) {
+        return;
+      }
+      // A server before the preview (404): the old finish, so a cash trip
+      // is never stuck.
+      if (preview == null && !trips.previewUnsupported(widget.tripId)) {
+        _AcceptRideLive(this)._showServerRefusal(liveTripErrorMessage(null));
+        return;
+      }
     }
     final complete = await showCashCollectSheet(
       context,
       // The driver's own money (owner decision 2026-10-26): no fee is
       // taken off it again.
-      fare: _fareWithWaiting,
-      cash: _cashToCollect,
+      fare: preview?.driverEarnings?.formatted ?? _fareWithWaiting,
+      cash: preview?.cashDue.formatted ?? _cashToCollect,
       riderName: widget.riderName,
       category: widget.category,
+      recalculated: preview?.earlyEnd ?? false,
     );
     if (!complete || !mounted || !_collectsCashNow) {
       return;
@@ -1602,13 +1625,24 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState == _OnTripRadarState.secured && offer != null;
     final next = queuedNext ? _snapshotForOffer(offer) : null;
     if (LiveDriverServices.active &&
-        (!await _AcceptRideLive(
-              this,
-            )._serverStep((trips) => trips.complete(widget.tripId)) ||
+        (!await _AcceptRideLive(this)._serverStep(
+              (trips) => trips.complete(
+                widget.tripId,
+                preview: trips.previewOf(widget.tripId),
+                cash: widget.paidByCash,
+              ),
+            ) ||
             !mounted ||
             _rideLifecycle.terminal)) {
       _completionInFlight = false;
       _stageTransitioning = false;
+      // v0.18.1 §26: 409 price_changed: the sheet again with the new price.
+      final changed = _AcceptRideLive(
+        this,
+      )._liveTrips?.takePriceChanged(widget.tripId);
+      if (changed != null && mounted) {
+        unawaited(_collectCash(changed: changed));
+      }
       return;
     }
     try {

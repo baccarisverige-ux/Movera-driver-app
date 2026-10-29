@@ -614,6 +614,8 @@
   "tripComplete": "Terminer la course",
   "tripGoToStop": "Aller au {stop} arrêt",
   "tripGoToDropoff": "Aller à la dépose",
+  "cashPriceChanged": "Le prix a changé – encaissez le nouveau montant",
+  "cashPriceRecalculatedEarlyEnd": "Fin avant la destination – prix recalculé",
   "tripCollectCash": "Encaisser les espèces",
   "tripCompleteRide": "Terminer la course",
   "tripFinishCategory": "Terminer {category}",
