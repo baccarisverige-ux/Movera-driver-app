@@ -400,6 +400,83 @@ void main() {
       expect(trips.isOwnEcho('t1', 'arrived'), isFalse);
     });
 
+    test('contract v0.17.3 §26: the final price before Collect cash, and '
+        'complete sends the cash shown', () async {
+      trips.observe(trip('in_trip', 8));
+      Map<String, dynamic> sek(int minor) => {
+        'amountMinor': minor,
+        'currency': 'SEK',
+      };
+      answers
+        ..add(
+          (_) => json(200, {
+            'tripId': 't1',
+            'total': sek(5400),
+            'cashDue': sek(5000),
+            'driverEarnings': sek(3920),
+            'earlyEnd': true,
+            'fareLines': const [],
+          }),
+        )
+        ..add((_) => json(200, trip('completed', 9)));
+      final preview = await trips.previewComplete('t1');
+      expect(requests.single.method, 'GET');
+      expect(
+        requests.single.url.path,
+        '/api/v1/driver/trips/t1/complete-preview',
+      );
+      expect(preview!.total.minorUnits, 5400);
+      expect(preview.cashDue.minorUnits, 5000);
+      expect(preview.earlyEnd, isTrue);
+      expect(preview.driverEarnings!.minorUnits, 3920);
+      expect(trips.previewOf('t1'), same(preview));
+      expect(
+        (await trips.complete('t1', cashCollected: preview.cashDue)).ok,
+        isTrue,
+      );
+      expect(body(requests[1]), {
+        'cashCollected': sek(5000),
+        'expectedVersion': 8,
+      });
+    });
+
+    test('a refused or malformed preview is null', () async {
+      answers
+        ..add(
+          (_) => json(
+            409,
+            error(
+              'invalid_transition',
+              reason: 'trip_not_on_board',
+              projection: trip('arrived', 5),
+            ),
+          ),
+        )
+        ..add((_) => json(200, {'tripId': 't1', 'total': 'x'}))
+        ..add(
+          (_) => json(200, {
+            'tripId': 't1',
+            'total': {'amountMinor': 1, 'currency': 'SEK'},
+            'cashDue': {'amountMinor': 1, 'currency': 'EUR'},
+            'earlyEnd': false,
+          }),
+        )
+        ..add(
+          (_) => json(200, {
+            'tripId': 't1',
+            'total': {'amountMinor': 1.5, 'currency': 'SEK'},
+            'cashDue': {'amountMinor': 1, 'currency': 'SEK'},
+            'earlyEnd': false,
+          }),
+        );
+      expect(await trips.previewComplete('t1'), isNull);
+      expect(trips.previewOf('t1'), isNull);
+      expect(trips.statusOf('t1'), 'arrived');
+      expect(await trips.previewComplete('t1'), isNull);
+      expect(await trips.previewComplete('t1'), isNull);
+      expect(await trips.previewComplete('t1'), isNull);
+    });
+
     test('a stale version is retried once with the server\'s', () async {
       trips.observe(trip('arrived', 5));
       answers

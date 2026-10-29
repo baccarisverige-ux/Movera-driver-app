@@ -5,6 +5,7 @@ import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/logging/driver_log.dart';
+import 'package:movera/core/money/money.dart';
 
 /// What the server said to one trip step: done, or a plain [message] for
 /// the driver.
@@ -15,6 +16,49 @@ class LiveTripOutcome {
   final String? message;
   final Object? error;
   bool get ok => message == null;
+}
+
+/// The server's final price before Collect cash (contract v0.17.3 §26):
+/// [total] the rider's fare, [cashDue] what the driver takes in cash
+/// (the fare less the wallet's part), [earlyEnd] when the driver is more
+/// than 300 m from the drop-off (owner decision 28: priced by what was
+/// driven, at least the category minimum).
+class CompletePreview {
+  const CompletePreview({
+    required this.total,
+    required this.cashDue,
+    required this.earlyEnd,
+    this.driverEarnings,
+  });
+
+  /// The answer's money, or null when it is not a `CompletePreview`.
+  static CompletePreview? tryParse(Map<String, dynamic> json) {
+    try {
+      final total = json['total'];
+      final cash = json['cashDue'];
+      final early = json['earlyEnd'];
+      final earnings = json['driverEarnings'];
+      if (total is! Map || cash is! Map || early is! bool) return null;
+      final parsed = CompletePreview(
+        total: Money.fromJson(Map<String, dynamic>.from(total)),
+        cashDue: Money.fromJson(Map<String, dynamic>.from(cash)),
+        earlyEnd: early,
+        driverEarnings: earnings is Map
+            ? Money.fromJson(Map<String, dynamic>.from(earnings))
+            : null,
+      );
+      return parsed.cashDue.currency == parsed.total.currency ? parsed : null;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  final Money total;
+  final Money cashDue;
+  final bool earlyEnd;
+
+  /// The driver's part of [total]; null from a server that leaves it out.
+  final Money? driverEarnings;
 }
 
 /// A device fix as the contract's `GeoFix` (`{lat, lng, accuracy,
@@ -59,6 +103,13 @@ class LiveTripCommands {
 
   static const _base = '/api/v1/trips';
 
+  /// The last final price shown per trip (contract v0.17.3 §26).
+  final Map<String, CompletePreview> _previews = {};
+
+  /// The last [previewComplete] answer for [tripId]: its `cashDue` is the
+  /// cash the driver was told to take, sent as `cashCollected`.
+  CompletePreview? previewOf(String tripId) => _previews[tripId];
+
   /// Newest known projection per trip (`tripId`, `status`, `version`).
   final Map<String, Map<String, dynamic>> _trips = {};
 
@@ -101,6 +152,7 @@ class LiveTripCommands {
   /// Forgets a trip that is over for this phone.
   void forget(String tripId) {
     _trips.remove(tripId);
+    _previews.remove(tripId);
     _own.remove(tripId);
   }
 
@@ -151,14 +203,45 @@ class LiveTripCommands {
     );
   }
 
-  /// Finish (`complete`). The server counts the cash taken: the fare,
-  /// waiting included, less what the rider's wallet paid.
-  Future<LiveTripOutcome> complete(String tripId) => _step(
-    tripId,
-    'complete',
-    done: const {'completed'},
-    leadsTo: const {'completed'},
-  );
+  /// Finish (`complete`). [cashCollected] is the cash the driver was told
+  /// to take (the preview's `cashDue`, contract v0.17.3 §26); without it
+  /// the server counts the fare less what the rider's wallet paid.
+  Future<LiveTripOutcome> complete(String tripId, {Money? cashCollected}) =>
+      _step(
+        tripId,
+        'complete',
+        body: {
+          if (cashCollected != null) 'cashCollected': cashCollected.toJson(),
+        },
+        done: const {'completed'},
+        leadsTo: const {'completed'},
+      );
+
+  /// The final price `complete` would set now (contract v0.17.3 §26,
+  /// `GET /driver/trips/{tripId}/complete-preview`, read-only): shown on
+  /// Collect cash so the driver takes what the rider is charged (owner
+  /// 2026-10-29, live bug A). Null when the server did not answer with
+  /// one: the app then never shows the booked price as the amount.
+  Future<CompletePreview?> previewComplete(String tripId) async {
+    try {
+      final answer = await _api.get(
+        '/api/v1/driver/trips/${Uri.encodeComponent(tripId)}/complete-preview',
+      );
+      final preview = CompletePreview.tryParse(answer);
+      if (preview == null) {
+        _previews.remove(tripId);
+      } else {
+        _previews[tripId] = preview;
+      }
+      return preview;
+    } on ApiError catch (error) {
+      final projection = error.projection;
+      if (projection != null) observe({'tripId': tripId, ...projection});
+      _previews.remove(tripId);
+      DriverLog.warn('complete preview refused: ${error.detail}', name: 'live');
+      return null;
+    }
+  }
 
   /// "Framme vid stoppet" (contract v0.7.1 §3.8): the paid wait at the
   /// middle stop [stopIndex] (0-based) starts now; there are no free

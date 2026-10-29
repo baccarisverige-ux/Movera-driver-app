@@ -880,6 +880,21 @@ S["ReverseGeocodeResult"] = obj({"address": {"type": ["string", "null"], "descri
                                  "latitude": n(minimum=-90, maximum=90), "longitude": n(minimum=-180, maximum=180)}, ["address", "latitude", "longitude"],
                                 "The address in the caller's profile language (or Accept-Language when sent).")
 S["LatLng"] = obj({"lat": n(minimum=-90, maximum=90), "lng": n(minimum=-180, maximum=180)}, ["lat", "lng"])
+TPATH = C["tripPath"]
+S["TripPath"] = obj({"tripId": ref("Id"), "source": s(enum=TPATH["sources"], description="driven: thinned from the trip's GPS trace; planned: the server's road route (trace deleted or never sent)."),
+                     "points": arr(ref("LatLng"), minItems=2, maxItems=TPATH["maxPoints"], description="The line, in order."),
+                     "pickup": ref("LatLng"), "dropoff": ref("LatLng"), "stops": arr(ref("LatLng"), description="Middle stops, in order."),
+                     "keptUntil": ref("Timestamp")},
+                    ["tripId", "source", "points", "pickup", "dropoff", "stops"],
+                    "v0.17.0 (CONTRACT.md §25): the route of an ended trip. " + TPATH["retention"], addl=False)
+CPV = C["completePreview"]
+S["CompletePreview"] = obj({"tripId": ref("Id"), "total": ref("Money"),
+                            "cashDue": {"allOf": [ref("Money")], "description": "What the driver collects in cash: total less what the rider's wallet would pay. Send it as cashCollected on complete."},
+                            "driverEarnings": {"allOf": [ref("Money")], "description": "The driver's part of total (TripProjection.driverEarnings after complete)."},
+                            "earlyEnd": {"type": "boolean", "description": "The driver is farther than " + str(C["pricing"]["completeNearDropoffMeters"]) + " m from the drop-off: priced as what was driven (owner decision 28)."},
+                            "fareLines": arr(ref("FareLine"))},
+                           ["tripId", "total", "cashDue", "driverEarnings", "earlyEnd", "fareLines"],
+                           "v0.17.3 (CONTRACT.md §26): the final price complete would set now. " + CPV["same"], addl=False)
 S["RouteRequest"] = obj({"mode": s(enum=MP["routeModes"]), "from": ref("LatLng"), "to": ref("LatLng")}, ["mode", "from", "to"])
 S["RoadRoute"] = obj({"points": arr(ref("LatLng"), minItems=2, description="The road geometry, in order."), "distanceMeters": i(minimum=0),
                       "durationSeconds": ref("DurationSeconds"), "provider": s(examples=["osrm"])}, ["points"],
@@ -994,7 +1009,7 @@ for p in PAGES:
 EV = {"expectedVersion": i("Version the caller last saw; stale → 409 version_mismatch.", minimum=1)}
 S["TripCommand"] = obj(dict(EV, location=ref("GeoFix")), ["expectedVersion"], "Body of driver trip commands.")
 S["BoardCommand"] = {"allOf": [ref("TripCommand"), obj({"verifiedPinToken": s("Required when the trip has pinRequired=true.")})]}
-S["CompleteCommand"] = {"allOf": [ref("TripCommand"), obj({"cashCollected": ref("Money")})]}
+S["CompleteCommand"] = {"allOf": [ref("TripCommand"), obj({"cashCollected": {"allOf": [ref("Money")], "description": "v0.17.3: on a cash trip the cashDue of GET /driver/trips/{tripId}/complete-preview that the app showed; at most the fare less the wallet (else 400 cash_above_fare). Absent: the fare less the wallet."}})]}
 S["NoShowCommand"] = {"allOf": [ref("TripCommand"), obj({"reasonCode": ref("NoShowReasonCode")})]}
 S["CancelCommand"] = obj(dict(EV, reasonCode=ref("CancelReasonCode"), note=s(maxLength=1000), location=ref("GeoFix")),
                          ["expectedVersion", "reasonCode"],
@@ -1155,6 +1170,9 @@ PARAMS["After"] = {"name": "after", "in": "query", "required": False, "descripti
 PARAMS["LastEventId"] = {"name": "Last-Event-ID", "in": "header", "required": False,
                          "description": "SSE reconnect: last sequence received (same meaning as `after`).", "schema": {"type": "string"}}
 PARAMS["ZoneIdQuery"] = {"name": "zoneId", "in": "query", "required": False, "description": "Defaults to the zone in the token / current location.", "schema": ref("Id")}
+PARAMS["ListZoneId"] = {"name": "zoneId", "in": "query", "required": False, "description": "v0.17.2: only this zone (inside the admin's zones; a zone outside them → 403 zone_out_of_scope).", "schema": ref("Id")}
+PARAMS["ListZoneIds"] = {"name": "zoneIds", "in": "query", "required": False, "description": "v0.17.2: only these zones, comma separated or repeated (at most 200; one outside the admin's zones → 403 zone_out_of_scope). Joined with zoneId.", "schema": {"type": "array", "items": ref("Id"), "maxItems": 200}, "style": "form", "explode": False}
+PARAMS["ListCountry"] = {"name": "country", "in": "query", "required": False, "description": "v0.17.2: only the zones of this country that the admin covers (with zoneId/zoneIds: only those of them in the country).", "schema": ref("CountryCode")}
 PARAMS["ZoneIdRequired"] = {"name": "zoneId", "in": "query", "required": True, "schema": ref("Id")}
 PARAMS["ConfigZoneId"] = {"name": "zoneId", "in": "query", "required": False, "description": "v0.8.0: the zone's own document; exactly one of zoneId or country.", "schema": ref("Id")}
 PARAMS["ConfigCountry"] = {"name": "country", "in": "query", "required": False, "description": "v0.8.0: the country's standard (v0.8.1: also of country_rules); exactly one of zoneId or country.", "schema": ref("CountryCode")}
@@ -1466,36 +1484,39 @@ op("get", "/driver/documents/{documentId}/file", "getDriverDocumentFile", "The u
    params=[pref("DocumentId")], content=FILE_CONTENT, ok=(200, None), ok_desc="The file, with its media type.",
    desc="v0.5.3. The owner of the document, or the fleet owner for his drivers' and cars' documents; anyone else → 404.")
 # ---- Admin
+ZF = [pref("ListZoneId"), pref("ListZoneIds"), pref("ListCountry")]
+ZF_DESC = " v0.17.2 (contract.json#adminListFilters): zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason unknown_filter)."
 AL = [pref("Cursor"), pref("Limit")]
 lists = {
-    "trips": ("TripProjectionPage", "trips.read", [q("status", ref("TripStatus"), multi=True), q("kind", ref("TripKind")), pref("ZoneIdQuery"),
+    "trips": ("TripProjectionPage", "trips.read", [q("status", ref("TripStatus"), multi=True), q("kind", ref("TripKind")), *ZF,
               q("categoryId", ref("CategoryId")), q("riderId", ref("Id")), q("driverId", ref("Id")), q("paymentStatus", ref("PaymentStatus")),
               pref("From"), pref("To"), pref("Q")]),
-    "riders": ("RiderPage", "riders.read", [q("status", {"type": "string", "enum": ["active", "suspended"]}), pref("ZoneIdQuery"), pref("Q")]),
+    "riders": ("RiderPage", "riders.read", [q("status", {"type": "string", "enum": ["active", "suspended"]}), *ZF, pref("Q")]),
     "drivers": ("DriverPage", "drivers.read", [q("accountStatus", ref("DriverAccountStatus"), multi=True),
-                q("onlineStatus", ref("DriverOnlineStatus"), multi=True), pref("ZoneIdQuery"), q("categoryId", ref("CategoryId")), pref("Q")]),
+                q("onlineStatus", ref("DriverOnlineStatus"), multi=True), *ZF, q("categoryId", ref("CategoryId")), pref("Q")]),
     "fleets": ("FleetPage", "drivers.read", [q("status", ref("FleetStatus"), multi=True), q("country", ref("DriverCountry")), pref("ZoneIdQuery"), pref("Q")]),
     "vehicles": ("VehiclePage", "drivers.read", [q("status", ref("VehicleStatus"), multi=True), q("driverId", ref("Id")), q("fleetId", ref("Id")),
                  q("categoryId", ref("CategoryId")), pref("Q")]),
     "payments": ("PaymentIntentPage", "finance.read", [q("status", ref("PaymentStatus"), multi=True), q("method", ref("PaymentMethod")),
-                 q("tripId", ref("Id")), q("riderId", ref("Id")), pref("ZoneIdQuery"), pref("From"), pref("To")]),
+                 q("tripId", ref("Id")), q("riderId", ref("Id")), *ZF, pref("From"), pref("To")]),
     "refunds": ("RefundPage", "finance.read", [q("status", ref("RefundStatus"), multi=True), q("paymentId", ref("Id")), q("tripId", ref("Id")),
-                pref("From"), pref("To")]),
+                pref("From"), pref("To"), *ZF]),
     "payouts": ("PayoutPage", "finance.read", [q("status", {"type": "string", "enum": ["pending", "pending_approval", "paid", "failed", "held"]}, multi=True),
-                q("driverId", ref("Id")), pref("From"), pref("To")]),
+                q("driverId", ref("Id")), pref("From"), pref("To"), *ZF]),
     "tickets": ("SupportTicketPage", "support.reply", [q("status", {"type": "string", "enum": ["open", "pending", "resolved", "closed"]}, multi=True),
                 q("priority", {"type": "string", "enum": ["low", "normal", "high", "urgent"]}), q("tripId", ref("Id")),
-                q("riderId", ref("Id")), q("driverId", ref("Id")), pref("Q")]),
+                q("riderId", ref("Id")), q("driverId", ref("Id")), pref("Q"), *ZF]),
     "incidents": ("IncidentPage", "incidents.read", [q("status", {"type": "string", "enum": ["open", "investigating", "resolved", "dismissed"]}, multi=True),
                   q("severity", {"type": "string", "enum": ["low", "medium", "high", "critical"]}), q("kind", {"type": "string"}),
-                  q("tripId", ref("Id")), pref("ZoneIdQuery"), pref("From"), pref("To")]),
+                  q("tripId", ref("Id")), *ZF, pref("From"), pref("To")]),
 }
 PERM_V050 = {"vehicles": "fleet.read", "payments": "payments.read", "refunds": "payments.read", "payouts": "payments.read",
              "tickets": "support.read", "incidents": "safety.read"}
+ZF_LISTS = {"trips", "riders", "drivers", "payments", "refunds", "payouts", "tickets", "incidents"}
 for name, (page, perm, filt) in lists.items():
     op("get", f"/admin/{name}", f"adminList{name.capitalize()}", f"List {name} (cursor paging)", ["admin"], "Admin · Lists",
        params=AL + filt, ok=(200, page), permission=perm, permission_v050=PERM_V050.get(name),
-       desc="Results are limited to the zones in the admin's token scope.")
+       desc="Results are limited to the zones in the admin's token scope." + (ZF_DESC if name in ZF_LISTS else ""))
 S["WaitlistEntryPage"] = {"allOf": [ref("Page"), {"type": "object", "properties": {"items": arr(ref("WaitlistEntry"))}}], "description": "Page<WaitlistEntry>"}
 op("get", "/admin/waitlist", "adminListWaitlist", "The sign-in waiting list (newest first)", ["admin"], "Admin · Lists",
    params=AL + [q("app", {"type": "string", "enum": ["rider", "driver"]})], ok=(200, "WaitlistEntryPage"), permission="overview.read",
@@ -1551,19 +1572,19 @@ op("post", "/admin/tickets/{ticketId}/reply", "adminReplyTicket", "Answer a supp
    desc="v0.9.0. The person sees the answer in the app (GET /support/tickets/{ticketId}). v0.13.0: the admin's zones only (else 403 zone_out_of_scope); audited.")
 op("get", "/admin/ratings", "adminListRatings", "Ratings riders and drivers gave each other", ["admin"], "Admin · Reviews",
    params=AL + [q("rater", {"type": "string", "enum": ["rider", "driver"]}, "Who gave the rating."), q("hidden", {"type": "boolean"}), q("maxStars", {"type": "integer", "minimum": 1, "maximum": 5}),
-                q("driverId", ref("Id")), q("riderId", ref("Id")), pref("ZoneIdQuery"), pref("From"), pref("To")],
-   ok=(200, "AdminRatingPage"), permission="settings.read", desc="v0.9.0. Newest first; limited to the admin's zones.")
+                q("driverId", ref("Id")), q("riderId", ref("Id")), *ZF, pref("From"), pref("To")],
+   ok=(200, "AdminRatingPage"), permission="settings.read", desc="v0.9.0. Newest first; limited to the admin's zones." + ZF_DESC)
 for verb, summ in [("hide", "Hide a rating"), ("restore", "Show a hidden rating again")]:
     op("post", f"/admin/ratings/{{tripId}}/{{from}}/{verb}", f"admin{verb.capitalize()}Rating", summ, ["admin"], "Admin · Reviews",
        params=TID + [pref("RatingFrom")], body="RatingModerationCommand", ok=(200, "AdminRating"), mutation=True, permission="settings.publish",
        desc="v0.9.0. A hidden rating stops counting in the person's average and in the low-rating risk signal; restoring counts it again.")
 op("get", "/admin/risk/signals", "adminRiskSignals", "Risk signals the server counts (cancels, failed payments, low rating)", ["admin"], "Admin · Safety",
-   params=AL + [q("who", {"type": "string", "enum": ["driver", "rider"]}), pref("ZoneIdQuery")], ok=(200, "RiskPage"), permission="safety.edit",
-   desc="v0.9.0 (contract.json#risk). People with at least one counted event in the window.")
+   params=AL + [q("who", {"type": "string", "enum": ["driver", "rider"]}), *ZF], ok=(200, "RiskPage"), permission="safety.edit",
+   desc="v0.9.0 (contract.json#risk). People with at least one counted event in the window." + ZF_DESC)
 op("get", "/admin/kpis", "adminKpis", "Key numbers per zone and day", ["admin"], "Admin · Reports",
-   params=[pref("ZoneIdQuery"), q("fromDate", {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"}), q("toDate", {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"})],
+   params=[*ZF, q("fromDate", {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"}), q("toDate", {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"})],
    ok=(200, "KpiReport"), permission="overview.read",
-   desc="v0.9.0 (contract.json#kpis). Days are zone-local, both ends included, at most kpis.maxDays. Today: source live; earlier: the nightly summary.")
+   desc="v0.9.0 (contract.json#kpis). Days are zone-local, both ends included, at most kpis.maxDays. Today: source live; earlier: the nightly summary." + ZF_DESC)
 # ---- v0.7.0 (CONTRACT.md §15): SOS and incidents
 for who, path, opid in [("rider", "/rider/trips/{tripId}/sos", "riderSos"), ("driver", "/driver/trips/{tripId}/sos", "driverSos")]:
     op("post", path, opid, f"The {who} presses SOS: alert Movera", [who], "Safety", params=TID, body="SosRequest", ok=(200, "SosReceipt"), mutation=True,
@@ -1679,6 +1700,11 @@ for p in ["/admin/auth/setup-password", "/admin/auth/setup-password/check"]:
     PATHS[p]["post"]["responses"]["410"] = err("otp_expired: the setup link expired (setup_link_expired) or was used (setup_link_used); ask for a new link.")
 op("post", "/admin/auth/sign-out", "adminSignOut", "End this admin session", ["admin"], "Admin · Auth", ok=(204, None), desc="Revokes the refresh token; idempotent.")
 op("get", "/admin/auth/me", "adminMe", "The signed-in admin: role, expanded permissions, scope", ["admin"], "Admin · Auth", ok=(200, "AdminMe"))
+# v0.17.1 (owner 2026-10-29, "Fix fully (Recommended)"): the admin saves their own panel language (contract.json#auth.admin.meLanguage).
+S["AdminMeUpdate"] = obj(OrderedDict([("language", nullable("Language"))]), ["language"], "v0.17.1: the signed-in admin's own panel language; null clears it.")
+op("patch", "/admin/auth/me", "adminUpdateMe", "Save the signed-in admin's own panel language", ["admin"], "Admin · Auth",
+   body="AdminMeUpdate", ok=(200, "AdminMe"), mutation=True,
+   desc="v0.17.1: " + AA["meLanguage"]["note"].split(": ", 1)[1])
 op("post", "/admin/agents/{adminId}/setup-link", "adminIssueSetupLink", "Issue a one-time password setup link for an admin", ["admin"], "Admin · Auth",
    params=[pref("AdminId")], ok=(201, "SetupLink"), mutation=True, permission="team.edit",
    desc=f"Single use, {AU_A['setupLinkHours']} h; a new link revokes the admin's earlier unused one. The first Super admin's link comes from the server seed / CLI.")
@@ -1721,6 +1747,12 @@ op("post", "/trips/{tripId}/keep-waiting", "answerKeepWaiting", "Answer the Keep
         "stop → the normal free rider cancel (cancel → cancelled_by_rider, reason wait_too_long, no fee). Otherwise 409 invalid_transition with the projection.")
 op("post", "/account/deletion", "requestAccountDeletion", "Ask to delete the rider account", ["rider"], "Rider · Account",
    ok=(202, "AccountDeletion"), mutation=True, ok_desc="Accepted; the server erases the account on its own schedule.")
+op("get", "/trips/{tripId}/path", "getTripPath", "The route of an ended trip (driven or planned)", ["rider", "driver"], "Trips",
+   params=TID, ok=(200, "TripPath"),
+   desc="v0.17.0 (CONTRACT.md §25): " + TPATH["actors"] + ". " + TPATH["driven"] + " " + TPATH["planned"])["responses"]["409"] = rref("Conflict")
+op("get", "/driver/trips/{tripId}/complete-preview", "previewCompleteTrip", "The final price before completing (read-only)", ["driver"], "Driver · Trip",
+   params=TID, ok=(200, "CompletePreview"), read_only=True,
+   desc="v0.17.3 (CONTRACT.md §26): " + CPV["actors"] + " " + CPV["same"] + " " + CPV["cashCollected"])["responses"]["409"] = rref("Conflict")
 # Admin: dispatch control, live drivers, trip trace
 op("get", "/admin/zones/{zoneId}/dispatch-control", "adminGetDispatchControl", "The zone's live dispatch switch", ["admin"], "Admin · Dispatch",
    params=[pref("ZoneId")], ok=(200, "DispatchControl"), permission="trips.read")
@@ -1729,8 +1761,8 @@ op("put", "/admin/zones/{zoneId}/dispatch-control", "adminPutDispatchControl", "
    desc="CONTRACT.md §3.6. v0.7.2 (one admin is enough): pause, force a mode, resume and back to rules run at once (200) for every admin with dispatch.edit. "
         "Forcing a mode that is off → 400 invalid_request (mode_off). Running searches stop new offers while paused; a forced mode applies to new searches.")
 op("get", "/admin/live/drivers", "adminLiveDrivers", "Driver positions for the admin live map", ["admin"], "Admin · Dispatch",
-   params=[pref("ZoneIdQuery")], ok=(200, "LiveDriverList"), permission="trips.read",
-   desc="Limited to the zones in the admin's scope. stale = no fix for staleAfterSeconds.")
+   params=ZF, ok=(200, "LiveDriverList"), permission="trips.read",
+   desc="Limited to the zones in the admin's scope. stale = no fix for staleAfterSeconds." + ZF_DESC)
 op("get", "/admin/trips/{tripId}/trace", "adminTripTrace", "The trip's GPS trace", ["admin"], "Admin · Trips",
    params=TID, ok=(200, "TripTrace"), permission="trips.read", desc="Traces are deleted 30 days after the trip (owner decision 11): 404 after that.")
 

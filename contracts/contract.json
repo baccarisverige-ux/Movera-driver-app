@@ -1,6 +1,6 @@
 {
   "contract": "movera",
-  "version": "0.16.0",
+  "version": "0.17.3",
   "note": "Canonical cross-app contract for Rider, Driver and Admin. Frontend-only today; a future single backend implements it. Every app ships an identical copy under contracts/ and runs contract tests against it.",
   "wire": {
     "ids": {
@@ -874,8 +874,14 @@
         "POST /admin/auth/refresh",
         "POST /admin/auth/sign-out",
         "GET /admin/auth/me",
+        "PATCH /admin/auth/me",
         "POST /admin/agents/{adminId}/setup-link"
       ],
+      "meLanguage": {
+        "note": "v0.17.1 (owner 2026-10-29, \"Why change languages in admin doesn't work\"; \"Fix fully (Recommended)\"): PATCH /admin/auth/me { language } saves the signed-in admin's own panel language on the server; null clears it (the panel then uses its default). Any signed-in admin, every role, no permission id, like GET /admin/auth/me. Audited. Answers AdminMe.",
+        "values": "languages.values or null",
+        "permission": "any signed-in admin, every role"
+      },
       "passwordMinLength": 10,
       "passwordHash": "argon2id, server side; the password never leaves the sign-in and setup calls",
       "setupLinkHours": 72,
@@ -1099,6 +1105,8 @@
     },
     "quoteAndFare": "The quote prices the server's own route (OSRM km and minutes; a client distance is a hint) with no waiting. The fare at completion is the same calculation with the quote's km and minutes, the quote's surge multiplier, the stops made and the waiting the trip had (Waiting.chargedSeconds, stop waits from the driver's arrive / leave taps), rounded once. A reservation (kind=scheduled) keeps the price of its booking: no surge in force later is added (owner 2026-10-27).",
     "endEarly": "owner decisions 8 and 19: ride part = base + km driven × perKm + minutes on board × perMin, × the booked surge multiplier, then minimum and maximum; no extras; + app fee + pickup fee. If that exceeds the booked fare (Quote.total plus route changes, without outstanding_fee) the ride part is lowered (maximum_adjust) to (booked − pickup fee) / (1 + appFeePct / 100), so the exact sum is the booked fare; then rounded once to priceStep. driverEarnings from that ride part.",
+    "driverEndsEarly": "v0.17.3, owner decision 28: when the driver completes a trip and the driver's latest fix (POST /driver/location) is farther than completeNearDropoffMeters from the drop-off, the trip ended early: the rider pays what was driven, priced exactly as endEarly (km on board from the trip trace, minutes since boarding, the category minimum and maximum, never more than the booked fare). Within completeNearDropoffMeters (or with no fix) the booked fare stands, plus the waiting at middle stops. An admin's force-complete fare is taken as given.",
+    "completeNearDropoffMeters": 300,
     "surgeSource": "first match: the zone's active surge schedule (§3.4, PUT /admin/zones/{zoneId}/surge: the manual Start/Stop), then the highest pricing.surge.scheduled window in force (v0.7.1: overlapping planned surges, the higher counts; the admin is warned on save), then smart surge when smart.enabled (v0.7.1: contract.json#smartSurge, off by default); else 1.0. Every source is clamped to [1, 6]; the maximum of each is the value the admin chose on its slider (manual surge, planned window, smart profile cap; v0.7.1, no separate maximum). The quote keeps its multiplier; a reservation keeps the price shown at booking (no surge added later).",
     "requestExtras": {
       "note": "v0.7.1 (owner 2026-10-27): the only priced thing the rider sends is fixedRouteId (QuoteRequest, repeated unchanged on CreateTripRequest, else 400 invalid_request quote_mismatch). Seats and airport are no longer sent: a child_seat trip always includes one seat, and the airport fees come from the airport zones (server).",
@@ -1310,6 +1318,41 @@
       "permission": "any signed-in admin, every role, for the list and for marking fixed; no permission id, like GET /admin/auth/me (owner 2026-10-29: \"No code now every one can see and later we add\"; \"All admin roles (Recommended)\"). The rest of System keeps system.read.",
       "admin": "GET /admin/errors?app=&platform=&version=&status=&cursor=&limit= → ErrorGroupPage, newest lastSeen first; PATCH /admin/errors/{errorId} { status } → ErrorGroup."
     }
+  },
+  "adminListFilters": {
+    "note": "v0.17.2 (owner 2026-10-29, \"if I chose France it show Sweden trips\"; decision \"Fix fully (Recommended)\"): the admin lists follow the country and zones picked in the panel's top bar (CONTRACT.md §7).",
+    "lists": [
+      "GET /admin/trips",
+      "GET /admin/drivers",
+      "GET /admin/riders",
+      "GET /admin/payments",
+      "GET /admin/refunds",
+      "GET /admin/payouts",
+      "GET /admin/tickets",
+      "GET /admin/ratings",
+      "GET /admin/incidents",
+      "GET /admin/live/drivers",
+      "GET /admin/risk/signals",
+      "GET /admin/kpis"
+    ],
+    "reservations": "reservations are trips: GET /admin/trips?kind=scheduled with the same filters",
+    "params": {
+      "zoneId": "one zone id",
+      "zoneIds": "several zone ids, comma separated or repeated, at most 200; joined with zoneId",
+      "country": "ISO 3166-1 alpha-2: every zone of that country"
+    },
+    "rules": [
+      "the filters only narrow: a list never leaves the admin's own zones",
+      "a zone named in zoneId or zoneIds outside the admin's zones is 403 forbidden (reason zone_out_of_scope)",
+      "country alone: the zones of that country the admin covers (none covered: an empty page)",
+      "country with zoneId or zoneIds: only the named zones that are in that country",
+      "riders have no zone: a rider is in a zone when one of the rider's trips is",
+      "drivers: by any of the driver's zones; live drivers: the zone of the latest fix, else the driver's first zone",
+      "a ticket without a zone is in no zone: it is left out as soon as a filter is given",
+      "no filter: the list as before (every zone of the admin)",
+      "a query key the list does not know is 400 invalid_request (reason unknown_filter); a malformed value is 400 invalid_request"
+    ],
+    "panel": "the admin sends zoneIds (or zoneId for one zone) of the zones picked, and country when \"All zones\" of a country is picked; each money value is shown in its own currency, never the picked country's"
   },
   "liveDrivers": {
     "note": "v0.5.1 (CONTRACT.md §12), owner decision 11: the admin live map reads driver positions from the server.",
@@ -3257,5 +3300,27 @@
       "closed": "409 invalid_transition, reason chat_closed, outside the open statuses.",
       "provider": "Number masking needs a telephony provider. The owner must pick one; the server reads its keys from the environment, never from git. Until then the provider is 'disabled'."
     }
+  },
+  "tripPath": {
+    "note": "v0.17.0 (owner 2026-10-29, driver past ride detail; CONTRACT.md §25): the route of an ended trip for the trip's own driver or rider, drawn on the past-ride map with pickup and drop-off pins.",
+    "path": "GET /trips/{tripId}/path → TripPath { tripId, source: driven | planned, points: LatLng[], pickup, dropoff, stops, keptUntil? }",
+    "actors": "the trip's rider or the trip's driver (anyone else: 404 not_found, like GET /trips/{tripId}); only once the trip is terminal (tripStatus.terminal), else 409 invalid_transition, reason trip_not_ended",
+    "sources": [
+      "driven",
+      "planned"
+    ],
+    "driven": "The driven path is made from the trip's own GPS trace (the fixes of POST /driver/location kept in the trip trace, §12) from boarding to the end: fixes with accuracy ≤ 50 m, a step only once the car moved 25 m, no step faster than 150 km/h, then evenly thinned to at most maxPoints. At least 2 such points are needed.",
+    "planned": "No usable trace (the trace was deleted after liveDrivers.traceKeepDays, or never sent): the server's road route (§10, OSRM or the straight-line estimate) from the pickup through the stops to the drop-off.",
+    "maxPoints": 300,
+    "retention": "No new storage: the driven path is read from the trip trace and follows its rule (deleted traceKeepDays = 30 days after the fix); afterwards the answer is the planned route. keptUntil is when the trace goes.",
+    "apps": "The driver's past-ride screen (and the rider's, when it reads the server) shows the line and pins; a failed call shows the pickup and drop-off pins only."
+  },
+  "completePreview": {
+    "note": "v0.17.3 (owner 2026-10-29, live bug A, 'Server's final price (Recommended)'; CONTRACT.md §26): the driver app asks the server for the final price before it shows Collect cash, so the driver, the rider, the receipt and the history all show the same amount.",
+    "path": "GET /driver/trips/{tripId}/complete-preview → CompletePreview { tripId, total: Money, cashDue: Money, driverEarnings: Money, earlyEnd: boolean, fareLines: FareLine[] }",
+    "actors": "the trip's own driver (anyone else 404 not_found); only while the trip is on board (rider_onboard, in_trip, approaching_dropoff), else 409 invalid_transition, reason trip_not_on_board. Read-only: no Idempotency-Key, nothing is stored, the wallet is not touched.",
+    "same": "total and fareLines are computed by the same code as POST /trips/{tripId}/complete would at that moment with the driver's latest fix (pricing.driverEndsEarly): earlyEnd is true when the driver is farther than pricing.completeNearDropoffMeters from the drop-off. cashDue = total − the part the rider's wallet would pay. driverEarnings = the driver's part of that total (as TripProjection.driverEarnings after complete), for the sheet's cash balance.",
+    "cashCollected": "The app then sends POST /trips/{tripId}/complete { expectedVersion, cashCollected = the cashDue it showed } on a cash trip. More than the fare less the wallet is 400 invalid_request, reason cash_above_fare. After completing the app shows the fare of the returned TripProjection.",
+    "apps": "Collect <cashDue>; when earlyEnd also 'Ending before the destination – price recalculated' (sv: 'Avslutas före destinationen – priset räknades om', fr: 'Fin avant la destination – prix recalculé'). If the preview fails the app does not show a booked price as the amount to collect."
   }
 }

@@ -1436,14 +1436,35 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (!_collectsCashNow || _stageTransitioning || _rideLifecycle.terminal) {
       return;
     }
+    // Owner 2026-10-29 (live bug A, contract v0.17.3 §26): a live trip
+    // shows the server's final price, never the booked cash: a finish more
+    // than 300 m before the drop-off is priced by what was driven.
+    final trips = _AcceptRideLive(this)._liveTrips;
+    CompletePreview? preview;
+    if (trips != null) {
+      _stageTransitioning = true;
+      try {
+        preview = await trips.previewComplete(widget.tripId);
+      } finally {
+        _stageTransitioning = false;
+      }
+      if (!mounted) {
+        return;
+      }
+      if (preview == null) {
+        _AcceptRideLive(this)._showServerRefusal(liveTripErrorMessage(null));
+        return;
+      }
+    }
     final complete = await showCashCollectSheet(
       context,
       // The driver's own money (owner decision 2026-10-26): no fee is
       // taken off it again.
-      fare: _fareWithWaiting,
-      cash: _cashToCollect,
+      fare: preview?.driverEarnings?.formatted ?? _fareWithWaiting,
+      cash: preview?.cashDue.formatted ?? _cashToCollect,
       riderName: widget.riderName,
       category: widget.category,
+      recalculated: preview?.earlyEnd ?? false,
     );
     if (!complete || !mounted || !_collectsCashNow) {
       return;
@@ -1598,9 +1619,14 @@ extension _AcceptRideTrip on _AcceptRideState {
         _onTripRadarState == _OnTripRadarState.secured && offer != null;
     final next = queuedNext ? _snapshotForOffer(offer) : null;
     if (LiveDriverServices.active &&
-        (!await _AcceptRideLive(
-              this,
-            )._serverStep((trips) => trips.complete(widget.tripId)) ||
+        (!await _AcceptRideLive(this)._serverStep(
+              (trips) => trips.complete(
+                widget.tripId,
+                cashCollected: widget.paidByCash
+                    ? trips.previewOf(widget.tripId)?.cashDue
+                    : null,
+              ),
+            ) ||
             !mounted ||
             _rideLifecycle.terminal)) {
       _completionInFlight = false;

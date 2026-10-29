@@ -3783,6 +3783,12 @@ abstract class AppLocalizations {
   /// **'Go to drop-off'**
   String get tripGoToDropoff;
 
+  /// No description provided for @cashPriceRecalculatedEarlyEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Ending before the destination – price recalculated'**
+  String get cashPriceRecalculatedEarlyEnd;
+
   /// Admin text key trip.collectCash (Content › Driver app texts).
   ///
   /// In en, this message translates to:

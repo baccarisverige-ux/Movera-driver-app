@@ -29,6 +29,10 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 /// - N9: the finish screen, the waybill, history and the cash balance
 ///   take the server's final money (40,00 kr earnings, 54,00 kr cash),
 ///   not the 151,36 kr / 208,00 kr booked at accept.
+/// - Live bug A (owner 2026-10-29, contract v0.17.3 §26): Collect cash
+///   shows the server's final price from `complete-preview` (54 kr, with
+///   "Ending before the destination – price recalculated"), not the
+///   booked 208 kr, and complete sends that amount as `cashCollected`.
 /// - N11: the waybill names the signed-in driver and their car, the
 ///   pickup's address is looked up when the offer carried only its
 ///   coordinates, and the rider's fare is on it.
@@ -36,6 +40,7 @@ void main() {
   late List<http.Request> requests;
   late LiveDriverServices live;
   late DriverAccountSession account;
+  late http.Response Function() preview;
   Map<String, dynamic> money(int minor) => {
     'amountMinor': minor,
     'currency': 'SEK',
@@ -69,6 +74,14 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     InMemoryWaybillRepository.instance.reset();
     requests = [];
+    preview = () => json(200, {
+      'tripId': 'live-trip',
+      'total': money(5400),
+      'cashDue': money(5400),
+      'driverEarnings': money(3920),
+      'earlyEnd': true,
+      'fareLines': completed['fareLines'],
+    });
     final tokens = MemoryTokenStore()..save(access: 'a1', refresh: 'r1');
     final client = MockClient((request) async {
       final path = request.url.path;
@@ -80,6 +93,10 @@ void main() {
           'status': 'in_trip',
           'version': 8,
         });
+      }
+      if (request.method == 'GET' &&
+          path == '/api/v1/driver/trips/live-trip/complete-preview') {
+        return preview();
       }
       if (request.method == 'POST' &&
           path == '/api/v1/trips/live-trip/complete') {
@@ -159,6 +176,107 @@ void main() {
     }
   }
 
+  Future<List<http.Request>> openCashSheet(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final session = DriverSessionController(initialOnline: true);
+    addTearDown(session.dispose);
+    await tester.pumpWidget(
+      DriverRuntimeScope(
+        session: session,
+        homeBuilder: () => const SizedBox(),
+        account: account,
+        child: ScreenUtilInit(
+          designSize: const Size(375, 812),
+          builder: (_, __) => MaterialApp(
+            home: AcceptRide(
+              tripId: 'live-trip',
+              initialStage: ActiveRideStage.onTrip,
+              riderName: 'Passenger',
+              fare: '151,36 kr',
+              riderFare: '208,00 kr',
+              paidByCash: true,
+              cashToCollect: '208,00 kr',
+              category: 'Economy',
+              matchedVia: WaybillRecord.moveraRadarSource,
+              pickupAddress: 'Sergels torg',
+              pickupArea: '',
+              pickupPosition: const LatLng(59.3326, 18.0649),
+              dropoffAddress: 'Klockarvägen 37, Södertälje',
+              dropoffPosition: const LatLng(59.2411, 17.6031),
+              locationRepository: _NoGps(),
+              activeRideRepository: MemoryActiveRideRepository(),
+              sessionController: session,
+              waybillRepository: InMemoryWaybillRepository.instance,
+            ),
+          ),
+        ),
+      ),
+    );
+    await frames(tester, 20);
+    tester
+        .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+        .controller!
+        .animatePanelToSnapPoint();
+    await frames(tester, 16);
+    final collect = find.byKey(
+      const ValueKey<String>('active-ride-collect-cash'),
+    );
+    await tester.ensureVisible(collect);
+    await tester.tap(collect);
+    await frames(tester, 10);
+    return requests;
+  }
+
+  Future<void> close(WidgetTester tester) async {
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  }
+
+  testWidgets('live bug A: at the drop-off the server\'s price is shown '
+      'without the recalculated notice', (tester) async {
+    preview = () => json(200, {
+      'tripId': 'live-trip',
+      'total': money(21700),
+      'cashDue': money(21700),
+      'earlyEnd': false,
+      'fareLines': const [],
+    });
+    await openCashSheet(tester);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('cash-collect-case')),
+        matching: find.text('217 kr'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('cash-price-recalculated')),
+      findsNothing,
+    );
+    await close(tester);
+  });
+
+  testWidgets('live bug A: no answer from the server, no booked price as '
+      'the amount to collect and nothing completed', (tester) async {
+    preview = () => json(503, {
+      'code': 'unavailable',
+      'message': 'Down.',
+      'requestId': 'r',
+      'retryable': true,
+    });
+    final sent = await openCashSheet(tester);
+    expect(
+      find.byKey(const ValueKey<String>('cash-collect-sheet')),
+      findsNothing,
+    );
+    expect(sent.where((r) => r.url.path.endsWith('/complete')), isEmpty);
+    await close(tester);
+  });
+
   testWidgets('an early finish shows the server\'s final money; the waybill '
       'names the driver, the car, the pickup and the rider\'s fare', (
     tester,
@@ -232,6 +350,25 @@ void main() {
     await tester.ensureVisible(collect);
     await tester.tap(collect);
     await frames(tester, 10);
+    // Live bug A: the server's final price, asked before the sheet.
+    expect(
+      requests.where((r) => r.url.path.endsWith('/complete-preview')),
+      hasLength(1),
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('cash-collect-case')),
+        matching: find.text('54 kr'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('208', findRichText: true), findsNothing);
+    // The balance uses the server's earnings for that price: 39,20 − 54.
+    expect(find.text('−14,80 kr'), findsOneWidget);
+    expect(
+      find.text('Ending before the destination – price recalculated'),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
     for (
       var i = 0;
@@ -248,7 +385,8 @@ void main() {
         .single;
     expect(jsonDecode(complete.body), {
       'expectedVersion': 8,
-    }, reason: 'no fare of its own: the server prices the finish');
+      'cashCollected': money(5400),
+    }, reason: 'no fare of its own: the cash the server\'s price said');
 
     // N9: the server's final money everywhere after the finish.
     final summary = tester.widget<Text>(

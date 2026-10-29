@@ -17,6 +17,7 @@ Future<bool> showCashCollectSheet(
   String? cash,
   required String riderName,
   String category = '',
+  bool recalculated = false,
 }) async {
   final done = await showModalBottomSheet<bool>(
     context: context,
@@ -28,6 +29,7 @@ Future<bool> showCashCollectSheet(
       cash: cash ?? fare,
       riderName: riderName,
       category: category,
+      recalculated: recalculated,
     ),
   );
   return done == true;
@@ -40,6 +42,7 @@ class CashCollectSheet extends StatelessWidget {
     String? cash,
     required this.riderName,
     this.category = '',
+    this.recalculated = false,
   }) : cash = cash ?? fare;
 
   /// The driver's own money for the trip, after Movera's commission
@@ -51,6 +54,11 @@ class CashCollectSheet extends StatelessWidget {
   final String cash;
   final String riderName;
   final String category;
+
+  /// Contract v0.17.3 §26 (owner decision 28): the driver finishes more
+  /// than 300 m before the drop-off, so the server priced what was driven;
+  /// the sheet says so above the amount.
+  final bool recalculated;
 
   /// Share of the screen the sheet covers.
   static const double heightFactor = 0.76;
@@ -132,6 +140,10 @@ class CashCollectSheet extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (recalculated) ...[
+                          _recalculatedNotice(),
+                          const SizedBox(height: 12),
+                        ],
                         _cashCase(amount),
                         if (balance != null) ...[
                           const SizedBox(height: 14),
@@ -181,6 +193,34 @@ class CashCollectSheet extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// "Ending before the destination – price recalculated".
+  Widget _recalculatedNotice() {
+    return Container(
+      key: const ValueKey<String>('cash-price-recalculated'),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4E0),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, size: 20, color: Color(0xFF7A5200)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              tr.cashPriceRecalculatedEarlyEnd,
+              style: const TextStyle(
+                color: Color(0xFF5C3D00),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

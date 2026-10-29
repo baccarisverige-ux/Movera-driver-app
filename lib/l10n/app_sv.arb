@@ -612,6 +612,7 @@
   "tripComplete": "Avsluta resan",
   "tripGoToStop": "Kör till {stop} stoppet",
   "tripGoToDropoff": "Kör till avlämning",
+  "cashPriceRecalculatedEarlyEnd": "Avslutas före destinationen – priset räknades om",
   "tripCollectCash": "Ta emot kontant",
   "tripCompleteRide": "Avsluta resan",
   "tripFinishCategory": "Avsluta {category}",

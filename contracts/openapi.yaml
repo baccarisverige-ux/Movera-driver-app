@@ -1,11 +1,11 @@
-# Movera API v0.16.0 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
+# Movera API v0.17.3 — generated from contract.json (+ CONTRACT.md §7). PROPOSED; no backend exists.
 openapi: 3.1.0
 info:
   title: Movera API
-  version: 0.16.0
+  version: 0.17.3
   description: '**Proposed contract — no backend exists yet.** One future backend serves the Rider (Flutter), Driver (Flutter)
     and Admin (React/TS) apps. Source of truth for names, enums, transitions, realtime and errors is `contract.json` + `CONTRACT.md`
-    v0.16.0 in this folder; this file must agree with them.
+    v0.17.3 in this folder; this file must agree with them.
 
 
     Wire rules: ids match `^[A-Za-z0-9_-]{1,64}$`; times are RFC 3339 UTC with `Z`; durations are integer seconds; money is
@@ -80,7 +80,7 @@ tags:
   description: 'Zones from the server: list, create, outline, open and close (v0.11.0)'
 x-contract:
   name: movera
-  version: 0.16.0
+  version: 0.17.3
   source: contract.json
 paths:
   /auth/otp/request:
@@ -3724,7 +3724,9 @@ paths:
     get:
       operationId: adminListTrips
       summary: List trips (cursor paging)
-      description: Results are limited to the zones in the admin's token scope.
+      description: 'Results are limited to the zones in the admin''s token scope. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Lists
       x-actor:
@@ -3747,7 +3749,9 @@ paths:
         required: false
         schema:
           $ref: '#/components/schemas/TripKind'
-      - $ref: '#/components/parameters/ZoneIdQuery'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - name: categoryId
         in: query
         required: false
@@ -3801,7 +3805,9 @@ paths:
     get:
       operationId: adminListRiders
       summary: List riders (cursor paging)
-      description: Results are limited to the zones in the admin's token scope.
+      description: 'Results are limited to the zones in the admin''s token scope. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Lists
       x-actor:
@@ -3818,7 +3824,9 @@ paths:
           enum:
           - active
           - suspended
-      - $ref: '#/components/parameters/ZoneIdQuery'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - $ref: '#/components/parameters/Q'
       - $ref: '#/components/parameters/RequestId'
       - $ref: '#/components/parameters/ApiVersion'
@@ -3850,7 +3858,9 @@ paths:
     get:
       operationId: adminListDrivers
       summary: List drivers (cursor paging)
-      description: Results are limited to the zones in the admin's token scope.
+      description: 'Results are limited to the zones in the admin''s token scope. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Lists
       x-actor:
@@ -3877,7 +3887,9 @@ paths:
             $ref: '#/components/schemas/DriverOnlineStatus'
         style: form
         explode: true
-      - $ref: '#/components/parameters/ZoneIdQuery'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - name: categoryId
         in: query
         required: false
@@ -4034,7 +4046,9 @@ paths:
     get:
       operationId: adminListPayments
       summary: List payments (cursor paging)
-      description: Results are limited to the zones in the admin's token scope.
+      description: 'Results are limited to the zones in the admin''s token scope. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Lists
       x-actor:
@@ -4068,7 +4082,9 @@ paths:
         required: false
         schema:
           $ref: '#/components/schemas/Id'
-      - $ref: '#/components/parameters/ZoneIdQuery'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - $ref: '#/components/parameters/From'
       - $ref: '#/components/parameters/To'
       - $ref: '#/components/parameters/RequestId'
@@ -4101,7 +4117,9 @@ paths:
     get:
       operationId: adminListRefunds
       summary: List refunds (cursor paging)
-      description: Results are limited to the zones in the admin's token scope.
+      description: 'Results are limited to the zones in the admin''s token scope. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Lists
       x-actor:
@@ -4132,6 +4150,9 @@ paths:
           $ref: '#/components/schemas/Id'
       - $ref: '#/components/parameters/From'
       - $ref: '#/components/parameters/To'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - $ref: '#/components/parameters/RequestId'
       - $ref: '#/components/parameters/ApiVersion'
       responses:
@@ -4162,7 +4183,9 @@ paths:
     get:
       operationId: adminListPayouts
       summary: List payouts (cursor paging)
-      description: Results are limited to the zones in the admin's token scope.
+      description: 'Results are limited to the zones in the admin''s token scope. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Lists
       x-actor:
@@ -4194,6 +4217,9 @@ paths:
           $ref: '#/components/schemas/Id'
       - $ref: '#/components/parameters/From'
       - $ref: '#/components/parameters/To'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - $ref: '#/components/parameters/RequestId'
       - $ref: '#/components/parameters/ApiVersion'
       responses:
@@ -4270,7 +4296,9 @@ paths:
     get:
       operationId: adminListTickets
       summary: List tickets (cursor paging)
-      description: Results are limited to the zones in the admin's token scope.
+      description: 'Results are limited to the zones in the admin''s token scope. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Lists
       x-actor:
@@ -4320,6 +4348,9 @@ paths:
         schema:
           $ref: '#/components/schemas/Id'
       - $ref: '#/components/parameters/Q'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - $ref: '#/components/parameters/RequestId'
       - $ref: '#/components/parameters/ApiVersion'
       responses:
@@ -4350,7 +4381,9 @@ paths:
     get:
       operationId: adminListIncidents
       summary: List incidents (cursor paging)
-      description: Results are limited to the zones in the admin's token scope.
+      description: 'Results are limited to the zones in the admin''s token scope. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Lists
       x-actor:
@@ -4394,7 +4427,9 @@ paths:
         required: false
         schema:
           $ref: '#/components/schemas/Id'
-      - $ref: '#/components/parameters/ZoneIdQuery'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - $ref: '#/components/parameters/From'
       - $ref: '#/components/parameters/To'
       - $ref: '#/components/parameters/RequestId'
@@ -5386,7 +5421,8 @@ paths:
     get:
       operationId: adminListRatings
       summary: Ratings riders and drivers gave each other
-      description: v0.9.0. Newest first; limited to the admin's zones.
+      description: 'v0.9.0. Newest first; limited to the admin''s zones. v0.17.2 (contract.json#adminListFilters): zoneId,
+        zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason unknown_filter).'
       tags:
       - Admin · Reviews
       x-actor:
@@ -5426,7 +5462,9 @@ paths:
         required: false
         schema:
           $ref: '#/components/schemas/Id'
-      - $ref: '#/components/parameters/ZoneIdQuery'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - $ref: '#/components/parameters/From'
       - $ref: '#/components/parameters/To'
       - $ref: '#/components/parameters/RequestId'
@@ -5557,7 +5595,9 @@ paths:
     get:
       operationId: adminRiskSignals
       summary: Risk signals the server counts (cancels, failed payments, low rating)
-      description: v0.9.0 (contract.json#risk). People with at least one counted event in the window.
+      description: 'v0.9.0 (contract.json#risk). People with at least one counted event in the window. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Safety
       x-actor:
@@ -5574,7 +5614,9 @@ paths:
           enum:
           - driver
           - rider
-      - $ref: '#/components/parameters/ZoneIdQuery'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - $ref: '#/components/parameters/RequestId'
       - $ref: '#/components/parameters/ApiVersion'
       responses:
@@ -5606,14 +5648,17 @@ paths:
       operationId: adminKpis
       summary: Key numbers per zone and day
       description: 'v0.9.0 (contract.json#kpis). Days are zone-local, both ends included, at most kpis.maxDays. Today: source
-        live; earlier: the nightly summary.'
+        live; earlier: the nightly summary. v0.17.2 (contract.json#adminListFilters): zoneId, zoneIds and country narrow the
+        list inside those zones; an unknown query key → 400 invalid_request (reason unknown_filter).'
       tags:
       - Admin · Reports
       x-actor:
       - admin
       x-permission: overview.read
       parameters:
-      - $ref: '#/components/parameters/ZoneIdQuery'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - name: fromDate
         in: query
         required: false
@@ -7468,6 +7513,52 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+    patch:
+      operationId: adminUpdateMe
+      summary: Save the signed-in admin's own panel language
+      description: 'v0.17.1: PATCH /admin/auth/me { language } saves the signed-in admin''s own panel language on the server;
+        null clears it (the panel then uses its default). Any signed-in admin, every role, no permission id, like GET /admin/auth/me.
+        Audited. Answers AdminMe.'
+      tags:
+      - Admin · Auth
+      x-actor:
+      - admin
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminMeUpdate'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              description: Echo of the request id (server-generated if absent).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminMe'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /admin/agents/{adminId}/setup-link:
     post:
       operationId: adminIssueSetupLink
@@ -8038,6 +8129,100 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+  /trips/{tripId}/path:
+    get:
+      operationId: getTripPath
+      summary: The route of an ended trip (driven or planned)
+      description: 'v0.17.0 (CONTRACT.md §25): the trip''s rider or the trip''s driver (anyone else: 404 not_found, like GET
+        /trips/{tripId}); only once the trip is terminal (tripStatus.terminal), else 409 invalid_transition, reason trip_not_ended.
+        The driven path is made from the trip''s own GPS trace (the fixes of POST /driver/location kept in the trip trace,
+        §12) from boarding to the end: fixes with accuracy ≤ 50 m, a step only once the car moved 25 m, no step faster than
+        150 km/h, then evenly thinned to at most maxPoints. At least 2 such points are needed. No usable trace (the trace
+        was deleted after liveDrivers.traceKeepDays, or never sent): the server''s road route (§10, OSRM or the straight-line
+        estimate) from the pickup through the stops to the drop-off.'
+      tags:
+      - Trips
+      x-actor:
+      - rider
+      - driver
+      parameters:
+      - $ref: '#/components/parameters/TripId'
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              description: Echo of the request id (server-generated if absent).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripPath'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /driver/trips/{tripId}/complete-preview:
+    get:
+      operationId: previewCompleteTrip
+      summary: The final price before completing (read-only)
+      description: 'v0.17.3 (CONTRACT.md §26): the trip''s own driver (anyone else 404 not_found); only while the trip is
+        on board (rider_onboard, in_trip, approaching_dropoff), else 409 invalid_transition, reason trip_not_on_board. Read-only:
+        no Idempotency-Key, nothing is stored, the wallet is not touched. total and fareLines are computed by the same code
+        as POST /trips/{tripId}/complete would at that moment with the driver''s latest fix (pricing.driverEndsEarly): earlyEnd
+        is true when the driver is farther than pricing.completeNearDropoffMeters from the drop-off. cashDue = total − the
+        part the rider''s wallet would pay. driverEarnings = the driver''s part of that total (as TripProjection.driverEarnings
+        after complete), for the sheet''s cash balance. The app then sends POST /trips/{tripId}/complete { expectedVersion,
+        cashCollected = the cashDue it showed } on a cash trip. More than the fare less the wallet is 400 invalid_request,
+        reason cash_above_fare. After completing the app shows the fare of the returned TripProjection.'
+      tags:
+      - Driver · Trip
+      x-actor:
+      - driver
+      x-read-only: true
+      parameters:
+      - $ref: '#/components/parameters/TripId'
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Request-Id:
+              description: Echo of the request id (server-generated if absent).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletePreview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /admin/zones/{zoneId}/dispatch-control:
     get:
       operationId: adminGetDispatchControl
@@ -8127,14 +8312,18 @@ paths:
     get:
       operationId: adminLiveDrivers
       summary: Driver positions for the admin live map
-      description: Limited to the zones in the admin's scope. stale = no fix for staleAfterSeconds.
+      description: 'Limited to the zones in the admin''s scope. stale = no fix for staleAfterSeconds. v0.17.2 (contract.json#adminListFilters):
+        zoneId, zoneIds and country narrow the list inside those zones; an unknown query key → 400 invalid_request (reason
+        unknown_filter).'
       tags:
       - Admin · Dispatch
       x-actor:
       - admin
       x-permission: trips.read
       parameters:
-      - $ref: '#/components/parameters/ZoneIdQuery'
+      - $ref: '#/components/parameters/ListZoneId'
+      - $ref: '#/components/parameters/ListZoneIds'
+      - $ref: '#/components/parameters/ListCountry'
       - $ref: '#/components/parameters/RequestId'
       - $ref: '#/components/parameters/ApiVersion'
       responses:
@@ -9753,6 +9942,34 @@ components:
       description: Defaults to the zone in the token / current location.
       schema:
         $ref: '#/components/schemas/Id'
+    ListZoneId:
+      name: zoneId
+      in: query
+      required: false
+      description: 'v0.17.2: only this zone (inside the admin''s zones; a zone outside them → 403 zone_out_of_scope).'
+      schema:
+        $ref: '#/components/schemas/Id'
+    ListZoneIds:
+      name: zoneIds
+      in: query
+      required: false
+      description: 'v0.17.2: only these zones, comma separated or repeated (at most 200; one outside the admin''s zones →
+        403 zone_out_of_scope). Joined with zoneId.'
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/Id'
+        maxItems: 200
+      style: form
+      explode: false
+    ListCountry:
+      name: country
+      in: query
+      required: false
+      description: 'v0.17.2: only the zones of this country that the admin covers (with zoneId/zoneIds: only those of them
+        in the country).'
+      schema:
+        $ref: '#/components/schemas/CountryCode'
     ZoneIdRequired:
       name: zoneId
       in: query
@@ -15349,6 +15566,83 @@ components:
           type: number
           minimum: -180
           maximum: 180
+    TripPath:
+      type: object
+      description: 'v0.17.0 (CONTRACT.md §25): the route of an ended trip. No new storage: the driven path is read from the
+        trip trace and follows its rule (deleted traceKeepDays = 30 days after the fix); afterwards the answer is the planned
+        route. keptUntil is when the trace goes.'
+      required:
+      - tripId
+      - source
+      - points
+      - pickup
+      - dropoff
+      - stops
+      properties:
+        tripId:
+          $ref: '#/components/schemas/Id'
+        source:
+          type: string
+          enum:
+          - driven
+          - planned
+          description: 'driven: thinned from the trip''s GPS trace; planned: the server''s road route (trace deleted or never
+            sent).'
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/LatLng'
+          minItems: 2
+          maxItems: 300
+          description: The line, in order.
+        pickup:
+          $ref: '#/components/schemas/LatLng'
+        dropoff:
+          $ref: '#/components/schemas/LatLng'
+        stops:
+          type: array
+          items:
+            $ref: '#/components/schemas/LatLng'
+          description: Middle stops, in order.
+        keptUntil:
+          $ref: '#/components/schemas/Timestamp'
+      additionalProperties: false
+    CompletePreview:
+      type: object
+      description: 'v0.17.3 (CONTRACT.md §26): the final price complete would set now. total and fareLines are computed by
+        the same code as POST /trips/{tripId}/complete would at that moment with the driver''s latest fix (pricing.driverEndsEarly):
+        earlyEnd is true when the driver is farther than pricing.completeNearDropoffMeters from the drop-off. cashDue = total
+        − the part the rider''s wallet would pay. driverEarnings = the driver''s part of that total (as TripProjection.driverEarnings
+        after complete), for the sheet''s cash balance.'
+      required:
+      - tripId
+      - total
+      - cashDue
+      - driverEarnings
+      - earlyEnd
+      - fareLines
+      properties:
+        tripId:
+          $ref: '#/components/schemas/Id'
+        total:
+          $ref: '#/components/schemas/Money'
+        cashDue:
+          allOf:
+          - $ref: '#/components/schemas/Money'
+          description: 'What the driver collects in cash: total less what the rider''s wallet would pay. Send it as cashCollected
+            on complete.'
+        driverEarnings:
+          allOf:
+          - $ref: '#/components/schemas/Money'
+          description: The driver's part of total (TripProjection.driverEarnings after complete).
+        earlyEnd:
+          type: boolean
+          description: 'The driver is farther than 300 m from the drop-off: priced as what was driven (owner decision 28).'
+        fareLines:
+          type: array
+          items:
+            $ref: '#/components/schemas/FareLine'
+      additionalProperties: false
     RouteRequest:
       type: object
       required:
@@ -16281,7 +16575,10 @@ components:
       - type: object
         properties:
           cashCollected:
-            $ref: '#/components/schemas/Money'
+            allOf:
+            - $ref: '#/components/schemas/Money'
+            description: 'v0.17.3: on a cash trip the cashDue of GET /driver/trips/{tripId}/complete-preview that the app
+              showed; at most the fare less the wallet (else 400 cash_above_fare). Absent: the fare less the wallet.'
     NoShowCommand:
       allOf:
       - $ref: '#/components/schemas/TripCommand'
@@ -17373,6 +17670,16 @@ components:
           description: Version the caller last saw; stale → 409 version_mismatch.
         zoneId:
           $ref: '#/components/schemas/Id'
+    AdminMeUpdate:
+      type: object
+      description: 'v0.17.1: the signed-in admin''s own panel language; null clears it.'
+      required:
+      - language
+      properties:
+        language:
+          oneOf:
+          - $ref: '#/components/schemas/Language'
+          - type: 'null'
     StopVisit:
       type: object
       description: 'v0.7.1: one extra stop the driver arrived at (contract.json#stopWaits); stop_waiting runs from arrivedAt
