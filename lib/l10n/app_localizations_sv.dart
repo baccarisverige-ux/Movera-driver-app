@@ -1369,8 +1369,13 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String get illustrativeMapArchivedRouteUnavailable =>
-      'Illustrativ karta · arkiverad rutt saknas';
+  String get pastRideRouteDriven => 'Körd rutt';
+
+  @override
+  String get pastRidePlannedRoute => 'Planerad rutt';
+
+  @override
+  String get pastRideRouteUnavailable => 'Rutten är inte tillgänglig';
 
   @override
   String get rideCost => 'Resans pris';

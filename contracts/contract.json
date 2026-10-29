@@ -1,6 +1,6 @@
 {
   "contract": "movera",
-  "version": "0.15.0",
+  "version": "0.17.0",
   "note": "Canonical cross-app contract for Rider, Driver and Admin. Frontend-only today; a future single backend implements it. Every app ships an identical copy under contracts/ and runs contract tests against it.",
   "wire": {
     "ids": {
@@ -1268,7 +1268,48 @@
     "maxBodyBytes": 16384,
     "keepDays": 30,
     "privacy": "clients scrub e-mails, phone numbers and coordinates; the server scrubs again before storing",
-    "limits": "rate limited per address and device: 429 rate_limited; a body over maxBodyBytes is 400 invalid_request (reason payload_too_large)"
+    "limits": "rate limited per address and device: 429 rate_limited; a body over maxBodyBytes is 400 invalid_request (reason payload_too_large)",
+    "crashReport": {
+      "note": "v0.16.0 (owner 2026-10-29, \"Want section on dispatch to show all crash droids and bugs detected from server\"): POST /telemetry/crashes takes optional app, platform, appVersion, build, screen, kind and occurredAt next to error, stack and extra (additive; an older app sends none). The server scrubs again, groups each report and keeps the reports keepDays days.",
+      "apps": [
+        "driver",
+        "rider"
+      ],
+      "platforms": [
+        "android",
+        "ios",
+        "web"
+      ],
+      "kinds": [
+        "crash",
+        "error"
+      ],
+      "defaultKind": "crash",
+      "fields": "app (driver|rider), platform (android|ios|web), appVersion (e.g. 1.4.2), build (store build number), screen (route or screen name, no ids), kind (crash: the app stopped; error: caught and shown), occurredAt (RFC 3339 on the device; the server keeps its own receive time too)"
+    },
+    "errorGroups": {
+      "note": "v0.16.0 (owner 2026-10-29): the admin \"Crashes & errors\" section. Reports with the same fingerprint are one ErrorGroup. The server also records its own unhandled 5xx errors as app server (scrubbed, platform server).",
+      "fingerprint": "app + platform + the message with numbers, hex and ids replaced + the top stack frame",
+      "apps": [
+        "driver",
+        "rider",
+        "server"
+      ],
+      "platforms": [
+        "android",
+        "ios",
+        "web",
+        "server"
+      ],
+      "statuses": [
+        "open",
+        "fixed"
+      ],
+      "reopen": "a group marked fixed that occurs again is open again",
+      "maxEventsPerGroup": 200,
+      "permission": "any signed-in admin, every role, for the list and for marking fixed; no permission id, like GET /admin/auth/me (owner 2026-10-29: \"No code now every one can see and later we add\"; \"All admin roles (Recommended)\"). The rest of System keeps system.read.",
+      "admin": "GET /admin/errors?app=&platform=&version=&status=&cursor=&limit= → ErrorGroupPage, newest lastSeen first; PATCH /admin/errors/{errorId} { status } → ErrorGroup."
+    }
   },
   "liveDrivers": {
     "note": "v0.5.1 (CONTRACT.md §12), owner decision 11: the admin live map reads driver positions from the server.",
@@ -3216,5 +3257,19 @@
       "closed": "409 invalid_transition, reason chat_closed, outside the open statuses.",
       "provider": "Number masking needs a telephony provider. The owner must pick one; the server reads its keys from the environment, never from git. Until then the provider is 'disabled'."
     }
+  },
+  "tripPath": {
+    "note": "v0.17.0 (owner 2026-10-29, driver past ride detail; CONTRACT.md §25): the route of an ended trip for the trip's own driver or rider, drawn on the past-ride map with pickup and drop-off pins.",
+    "path": "GET /trips/{tripId}/path → TripPath { tripId, source: driven | planned, points: LatLng[], pickup, dropoff, stops, keptUntil? }",
+    "actors": "the trip's rider or the trip's driver (anyone else: 404 not_found, like GET /trips/{tripId}); only once the trip is terminal (tripStatus.terminal), else 409 invalid_transition, reason trip_not_ended",
+    "sources": [
+      "driven",
+      "planned"
+    ],
+    "driven": "The driven path is made from the trip's own GPS trace (the fixes of POST /driver/location kept in the trip trace, §12) from boarding to the end: fixes with accuracy ≤ 50 m, a step only once the car moved 25 m, no step faster than 150 km/h, then evenly thinned to at most maxPoints. At least 2 such points are needed.",
+    "planned": "No usable trace (the trace was deleted after liveDrivers.traceKeepDays, or never sent): the server's road route (§10, OSRM or the straight-line estimate) from the pickup through the stops to the drop-off.",
+    "maxPoints": 300,
+    "retention": "No new storage: the driven path is read from the trip trace and follows its rule (deleted traceKeepDays = 30 days after the fix); afterwards the answer is the planned route. keptUntil is when the trace goes.",
+    "apps": "The driver's past-ride screen (and the rider's, when it reads the server) shows the line and pins; a failed call shows the pickup and drop-off pins only."
   }
 }
