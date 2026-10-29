@@ -382,7 +382,11 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
       ),
       child: Text(
         tr.authResendCode,
-        style: AuthText.urbanist(size: 13.5, weight: FontWeight.w600),
+        style: AuthText.urbanist(
+          size: 13.5,
+          weight: FontWeight.w600,
+          color: _tooManyWrong ? Colors.white : AuthColors.ink,
+        ),
       ),
     );
   }
