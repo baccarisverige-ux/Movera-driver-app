@@ -5857,198 +5857,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authHelpClose => 'Fermer';
 
   @override
-  String get swTripStatusDraft => 'Brouillon';
-
-  @override
-  String get swTripStatusQuoted => 'Devis établi';
-
-  @override
-  String get swTripStatusRequested => 'Demandée';
-
-  @override
-  String get swTripStatusSearching => 'En recherche';
-
-  @override
-  String get swTripStatusOffered => 'Proposée';
-
-  @override
-  String get swTripStatusAccepted => 'Acceptée';
-
-  @override
-  String get swTripStatusDriverToPickup => 'Chauffeur vers la prise en charge';
-
-  @override
-  String get swTripStatusArrived => 'Chauffeur arrivé';
-
-  @override
-  String get swTripStatusRiderOnboard => 'Passager à bord';
-
-  @override
-  String get swTripStatusInTrip => 'En course';
-
-  @override
-  String get swTripStatusApproachingDropoff => 'Approche de la dépose';
-
-  @override
-  String get swTripStatusCompleted => 'Terminée';
-
-  @override
-  String get swTripStatusCancelledByRider => 'Annulée par le passager';
-
-  @override
-  String get swTripStatusCancelledByDriver => 'Annulée par le chauffeur';
-
-  @override
-  String get swTripStatusCancelledByAdmin => 'Annulée par un admin';
-
-  @override
-  String get swTripStatusCancelledBySystem => 'Annulée par le système';
-
-  @override
-  String get swTripStatusNoShow => 'Absence';
-
-  @override
-  String get swTripStatusExpired => 'Expirée';
-
-  @override
-  String get swTripStatusFailed => 'Échec';
-
-  @override
-  String get swDriverAccountStatusPending => 'En attente';
-
-  @override
-  String get swDriverAccountStatusActive => 'Actif';
-
-  @override
-  String get swDriverAccountStatusOnHold => 'En cours de validation';
-
-  @override
-  String get swDriverAccountStatusSuspended => 'Suspendu';
-
-  @override
-  String get swDriverOnlineStatusOffline => 'Hors ligne';
-
-  @override
-  String get swDriverOnlineStatusGoingOnline => 'Mise en ligne';
-
-  @override
-  String get swDriverOnlineStatusOnline => 'En ligne';
-
-  @override
-  String get swDriverOnlineStatusOnTrip => 'En course';
-
-  @override
-  String get swDriverOnlineStatusSuspended => 'Suspendu';
-
-  @override
-  String get swPaymentStatusPending => 'En attente';
-
-  @override
-  String get swPaymentStatusAuthorized => 'Autorisé';
-
-  @override
-  String get swPaymentStatusCaptured => 'Encaissé';
-
-  @override
-  String get swPaymentStatusFailed => 'Échec';
-
-  @override
-  String get swPaymentStatusRefunded => 'Remboursé';
-
-  @override
-  String get swPaymentStatusPartiallyRefunded => 'Partiellement remboursé';
-
-  @override
-  String get swFeeStatusPaid => 'Payés';
-
-  @override
-  String get swFeeStatusOwed => 'Dus';
-
-  @override
-  String get swFeeStatusWaived => 'Remis';
-
-  @override
-  String get swPayoutStatusPending => 'En attente';
-
-  @override
-  String get swPayoutStatusPaid => 'Versé';
-
-  @override
-  String get swDocumentStatusNeeded => 'Requis';
-
-  @override
-  String get swDocumentStatusInReview => 'En vérification';
-
-  @override
-  String get swDocumentStatusApproved => 'Approuvé';
-
-  @override
-  String get swDocumentStatusRejected => 'Refusé';
-
-  @override
-  String get swDocumentStatusExpired => 'Expiré';
-
-  @override
-  String get swDocumentStatusExpiring => 'Expire bientôt';
-
-  @override
-  String get swDocumentStatusMissing => 'Manquant';
-
-  @override
-  String get swDocumentStatusWaitingForMovera => 'En attente de Movera';
-
-  @override
-  String get swTicketStatusOpen => 'Ouvert';
-
-  @override
-  String get swTicketStatusPending => 'En attente';
-
-  @override
-  String get swTicketStatusResolved => 'Résolu';
-
-  @override
-  String get swTicketStatusClosed => 'Fermé';
-
-  @override
-  String get swVehicleReviewStatusInReview => 'En vérification';
-
-  @override
-  String get swVehicleReviewStatusApproved => 'Approuvé';
-
-  @override
-  String get swVehicleReviewStatusRejected => 'Refusé';
-
-  @override
-  String get swOfferStatusOpen => 'Ouverte';
-
-  @override
-  String get swOfferStatusClaimed => 'Prise';
-
-  @override
-  String get swOfferStatusClaimedElsewhere => 'Prise par un autre chauffeur';
-
-  @override
-  String get swOfferStatusDeclined => 'Refusée';
-
-  @override
-  String get swOfferStatusExpired => 'Expirée';
-
-  @override
-  String get swOfferStatusWithdrawn => 'Retirée';
-
-  @override
-  String get swRatingStatusNotRequested => 'Non demandée';
-
-  @override
-  String get swRatingStatusPending => 'En attente';
-
-  @override
-  String get swRatingStatusSubmitted => 'Envoyée';
-
-  @override
-  String get swRatingStatusSkipped => 'Ignorée';
-
-  @override
   String remTitle(Object count) {
     return 'Rappels importants ($count)';
   }
@@ -6459,4 +6267,196 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get carPhotosDone => 'Terminé';
+
+  @override
+  String get swTripStatusDraft => 'Brouillon';
+
+  @override
+  String get swTripStatusQuoted => 'Devis établi';
+
+  @override
+  String get swTripStatusRequested => 'Demandée';
+
+  @override
+  String get swTripStatusSearching => 'En recherche';
+
+  @override
+  String get swTripStatusOffered => 'Proposée';
+
+  @override
+  String get swTripStatusAccepted => 'Acceptée';
+
+  @override
+  String get swTripStatusDriverToPickup => 'Chauffeur vers la prise en charge';
+
+  @override
+  String get swTripStatusArrived => 'Chauffeur arrivé';
+
+  @override
+  String get swTripStatusRiderOnboard => 'Passager à bord';
+
+  @override
+  String get swTripStatusInTrip => 'En course';
+
+  @override
+  String get swTripStatusApproachingDropoff => 'Approche de la dépose';
+
+  @override
+  String get swTripStatusCompleted => 'Terminée';
+
+  @override
+  String get swTripStatusCancelledByRider => 'Annulée par le passager';
+
+  @override
+  String get swTripStatusCancelledByDriver => 'Annulée par le chauffeur';
+
+  @override
+  String get swTripStatusCancelledByAdmin => 'Annulée par un admin';
+
+  @override
+  String get swTripStatusCancelledBySystem => 'Annulée par le système';
+
+  @override
+  String get swTripStatusNoShow => 'Absence';
+
+  @override
+  String get swTripStatusExpired => 'Expirée';
+
+  @override
+  String get swTripStatusFailed => 'Échec';
+
+  @override
+  String get swDriverAccountStatusPending => 'En attente';
+
+  @override
+  String get swDriverAccountStatusActive => 'Actif';
+
+  @override
+  String get swDriverAccountStatusOnHold => 'En cours de validation';
+
+  @override
+  String get swDriverAccountStatusSuspended => 'Suspendu';
+
+  @override
+  String get swDriverOnlineStatusOffline => 'Hors ligne';
+
+  @override
+  String get swDriverOnlineStatusGoingOnline => 'Mise en ligne';
+
+  @override
+  String get swDriverOnlineStatusOnline => 'En ligne';
+
+  @override
+  String get swDriverOnlineStatusOnTrip => 'En course';
+
+  @override
+  String get swDriverOnlineStatusSuspended => 'Suspendu';
+
+  @override
+  String get swPaymentStatusPending => 'En attente';
+
+  @override
+  String get swPaymentStatusAuthorized => 'Autorisé';
+
+  @override
+  String get swPaymentStatusCaptured => 'Encaissé';
+
+  @override
+  String get swPaymentStatusFailed => 'Échec';
+
+  @override
+  String get swPaymentStatusRefunded => 'Remboursé';
+
+  @override
+  String get swPaymentStatusPartiallyRefunded => 'Partiellement remboursé';
+
+  @override
+  String get swFeeStatusPaid => 'Payés';
+
+  @override
+  String get swFeeStatusOwed => 'Dus';
+
+  @override
+  String get swFeeStatusWaived => 'Remis';
+
+  @override
+  String get swPayoutStatusPending => 'En attente';
+
+  @override
+  String get swPayoutStatusPaid => 'Versé';
+
+  @override
+  String get swDocumentStatusNeeded => 'Requis';
+
+  @override
+  String get swDocumentStatusInReview => 'En vérification';
+
+  @override
+  String get swDocumentStatusApproved => 'Approuvé';
+
+  @override
+  String get swDocumentStatusRejected => 'Refusé';
+
+  @override
+  String get swDocumentStatusExpired => 'Expiré';
+
+  @override
+  String get swDocumentStatusExpiring => 'Expire bientôt';
+
+  @override
+  String get swDocumentStatusMissing => 'Manquant';
+
+  @override
+  String get swDocumentStatusWaitingForMovera => 'En attente de Movera';
+
+  @override
+  String get swTicketStatusOpen => 'Ouvert';
+
+  @override
+  String get swTicketStatusPending => 'En attente';
+
+  @override
+  String get swTicketStatusResolved => 'Résolu';
+
+  @override
+  String get swTicketStatusClosed => 'Fermé';
+
+  @override
+  String get swVehicleReviewStatusInReview => 'En vérification';
+
+  @override
+  String get swVehicleReviewStatusApproved => 'Approuvé';
+
+  @override
+  String get swVehicleReviewStatusRejected => 'Refusé';
+
+  @override
+  String get swOfferStatusOpen => 'Ouverte';
+
+  @override
+  String get swOfferStatusClaimed => 'Prise';
+
+  @override
+  String get swOfferStatusClaimedElsewhere => 'Prise par un autre chauffeur';
+
+  @override
+  String get swOfferStatusDeclined => 'Refusée';
+
+  @override
+  String get swOfferStatusExpired => 'Expirée';
+
+  @override
+  String get swOfferStatusWithdrawn => 'Retirée';
+
+  @override
+  String get swRatingStatusNotRequested => 'Non demandée';
+
+  @override
+  String get swRatingStatusPending => 'En attente';
+
+  @override
+  String get swRatingStatusSubmitted => 'Envoyée';
+
+  @override
+  String get swRatingStatusSkipped => 'Ignorée';
 }
