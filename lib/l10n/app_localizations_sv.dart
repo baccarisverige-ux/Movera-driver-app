@@ -5942,9 +5942,23 @@ class AppLocalizationsSv extends AppLocalizations {
   String get gateSignOut => 'Logga ut';
 
   @override
-  String get gateSupportUnavailable =>
-      'Kunde inte öppna e-post. Skriv till Movera-supporten från en annan enhet.';
+  String get gateTryAgain => 'Försök igen';
 
   @override
-  String get gateTryAgain => 'Försök igen';
+  String get authNeedHelp => 'Behöver du hjälp?';
+
+  @override
+  String get authHelpComingSoon => 'Kontaktuppgifter kommer snart';
+
+  @override
+  String get authHelpEmail => 'E-post';
+
+  @override
+  String get authHelpPhone => 'Telefon';
+
+  @override
+  String get authHelpCompany => 'Företag';
+
+  @override
+  String get authHelpClose => 'Stäng';
 }

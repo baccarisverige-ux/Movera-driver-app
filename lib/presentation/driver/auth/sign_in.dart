@@ -18,6 +18,7 @@ import 'package:movera/presentation/driver/auth/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_controls.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_scaffold.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
+import 'package:movera/presentation/driver/auth/widgets/need_help.dart';
 import 'package:movera/presentation/driver/auth/widgets/balloon_brand_intro.dart';
 import 'package:movera/presentation/driver/auth/widgets/slow_server_note.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
@@ -467,6 +468,10 @@ class _DriverSignInState extends State<DriverSignIn>
               ),
             ),
           if (_testAccounts.isNotEmpty) _testAccountList(),
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: NeedHelpLink(),
+          ),
         ],
       ),
     );

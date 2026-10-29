@@ -1693,6 +1693,11 @@
   "authTestNumbersTitle": "Numéros de test (version de test uniquement)",
   "authTestStatusNew": "Test · pas encore de compte",
   "gateSignOut": "Se déconnecter",
-  "gateSupportUnavailable": "Impossible d’ouvrir l’e-mail. Écrivez à l’assistance Movera depuis un autre appareil.",
-  "gateTryAgain": "Réessayer"
+  "gateTryAgain": "Réessayer",
+  "authNeedHelp": "Besoin d’aide ?",
+  "authHelpComingSoon": "Coordonnées bientôt disponibles",
+  "authHelpEmail": "E-mail",
+  "authHelpPhone": "Téléphone",
+  "authHelpCompany": "Société",
+  "authHelpClose": "Fermer"
 }

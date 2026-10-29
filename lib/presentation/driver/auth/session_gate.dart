@@ -5,9 +5,9 @@ import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
-import 'package:movera/core/support/support_contact.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
+import 'package:movera/presentation/driver/support/support_inbox.dart';
 
 /// The app's first route when a session is required
 /// (`MOVERA_AUTH_REQUIRED=true`): Sign in without tokens; with them the
@@ -22,15 +22,16 @@ class DriverSessionGate extends StatefulWidget {
     required this.homeBuilder,
     required this.signInBuilder,
     this.account,
-    this.support,
+    this.supportBuilder,
   });
 
   /// Owner 2026-10-29, decision 2: how long the start waits in silence
   /// before a spinner shows.
   static const spinnerAfter = Duration(seconds: 2);
 
-  /// "Contact support" on the error view; null: the build's address.
-  final SupportContact? support;
+  /// "Contact support" on the error view opens the in-app support tickets
+  /// (owner 2026-10-29: "Open the in-app support chat"); null: Support.
+  final Widget Function()? supportBuilder;
 
   final AuthController auth;
   final Widget Function() homeBuilder;
@@ -117,7 +118,8 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
           return _GateError(
             onRetry: _retry,
             onSignOut: _signOut,
-            support: widget.support ?? const SupportContact(),
+            supportBuilder:
+                widget.supportBuilder ?? () => const SupportScreen(),
           );
         }
         if (snapshot.connectionState != ConnectionState.done) {
@@ -153,30 +155,28 @@ class _DriverSessionGateState extends State<DriverSessionGate> {
 }
 
 /// The profile could not be read: say so, offer to try again, to sign out
-/// or to write to support (owner 2026-10-29, decision 2).
+/// or to write to support in the app (owner 2026-10-29, decision 2).
 class _GateError extends StatefulWidget {
   const _GateError({
     required this.onRetry,
     required this.onSignOut,
-    required this.support,
+    required this.supportBuilder,
   });
 
   final VoidCallback onRetry;
   final Future<void> Function() onSignOut;
-  final SupportContact support;
+  final Widget Function() supportBuilder;
 
   @override
   State<_GateError> createState() => _GateErrorState();
 }
 
 class _GateErrorState extends State<_GateError> {
-  bool _supportFailed = false;
   bool _signingOut = false;
 
-  Future<void> _contact() async {
-    final opened = await widget.support.openEmail(subject: tr.acctCouldNotLoad);
-    if (mounted) setState(() => _supportFailed = !opened);
-  }
+  void _contact() => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => widget.supportBuilder()));
 
   Future<void> _signOut() async {
     setState(() => _signingOut = true);
@@ -233,16 +233,6 @@ class _GateErrorState extends State<_GateError> {
                 style: outline,
                 child: Text(tr.contactSupport),
               ),
-              if (_supportFailed)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    tr.gateSupportUnavailable,
-                    key: const ValueKey('gate-support-failed'),
-                    textAlign: TextAlign.center,
-                    style: AuthText.small(),
-                  ),
-                ),
             ],
           ),
         ),

@@ -1693,6 +1693,11 @@
   "authTestNumbersTitle": "Testnummer (endast testversion)",
   "authTestStatusNew": "Test · inget konto än",
   "gateSignOut": "Logga ut",
-  "gateSupportUnavailable": "Kunde inte öppna e-post. Skriv till Movera-supporten från en annan enhet.",
-  "gateTryAgain": "Försök igen"
+  "gateTryAgain": "Försök igen",
+  "authNeedHelp": "Behöver du hjälp?",
+  "authHelpComingSoon": "Kontaktuppgifter kommer snart",
+  "authHelpEmail": "E-post",
+  "authHelpPhone": "Telefon",
+  "authHelpCompany": "Företag",
+  "authHelpClose": "Stäng"
 }

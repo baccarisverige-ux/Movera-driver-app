@@ -18,7 +18,6 @@ import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
-import 'package:movera/core/support/support_contact.dart';
 import 'package:movera/presentation/driver/auth/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/session_gate.dart';
 import 'package:movera/presentation/driver/auth/sign_in.dart';
@@ -375,7 +374,7 @@ void main() {
     Future<void> pumpGate(
       WidgetTester tester, {
       required FutureOr<http.Response> Function() profile,
-      SupportContact? support,
+      Widget Function()? supportBuilder,
     }) async {
       _phoneSize(tester);
       final tokens = MemoryTokenStore();
@@ -402,7 +401,7 @@ void main() {
             account: DriverAccountSession(
               repository: DriverAccountRepository(api),
             ),
-            support: support,
+            supportBuilder: supportBuilder,
           ),
         ),
       );
@@ -422,17 +421,10 @@ void main() {
     testWidgets('an error offers Try again, Sign out and Contact support', (
       tester,
     ) async {
-      final opened = <Uri>[];
       await pumpGate(
         tester,
         profile: () => _json(503, {'code': 'unavailable', 'message': 'x'}),
-        support: SupportContact(
-          email: 'help@movera.test',
-          launcher: (uri) async {
-            opened.add(uri);
-            return false;
-          },
-        ),
+        supportBuilder: () => const Text('in-app support'),
       );
       await tester.pump();
       await tester.pump();
@@ -440,9 +432,10 @@ void main() {
       expect(find.text(tr.gateSignOut), findsOneWidget);
       expect(find.text(tr.contactSupport), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('gate-support')));
-      await tester.pump();
-      expect(opened.single.scheme, 'mailto');
-      expect(find.byKey(const ValueKey('gate-support-failed')), findsOneWidget);
+      await _settle(tester);
+      expect(find.text('in-app support'), findsOneWidget);
+      Navigator.of(tester.element(find.text('in-app support'))).pop();
+      await _settle(tester);
       await tester.tap(find.byKey(const ValueKey('gate-sign-out')));
       await _settle(tester);
       expect(find.text('sign in'), findsOneWidget);
