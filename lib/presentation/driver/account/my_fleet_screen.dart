@@ -12,6 +12,7 @@ import 'package:movera/presentation/driver/account/fleet_actions.dart';
 import 'package:movera/presentation/driver/account/fleet_car_card.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/presentation/driver/account/join_fleet_screen.dart';
+import 'package:movera/presentation/driver/account/start_company_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -256,6 +257,44 @@ class _MyFleetScreenState extends State<MyFleetScreen>
     }
   }
 
+  /// Owner item 7: "Start my own company"; the account comes back as a
+  /// fleet waiting for Movera.
+  Future<void> _startCompany() async {
+    await pushSingle(
+      context,
+      RightToLeftTransition(StartCompanyScreen(account: widget.account)),
+    );
+    if (mounted) await _refreshAll();
+  }
+
+  Widget _startCompanyCard() => Padding(
+    padding: const EdgeInsets.only(top: 22),
+    child: Container(
+      key: const ValueKey('fleet-start-company'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AccountStyle.field,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AccountStyle.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(tr.startCompanyTitle, style: AccountStyle.rowTitle()),
+          const SizedBox(height: 4),
+          Text(tr.startCompanyIntro, style: AccountStyle.hint()),
+          const SizedBox(height: 12),
+          AccountButton(
+            key: const ValueKey('fleet-start-company-open'),
+            label: tr.startCompanyTitle,
+            outlined: true,
+            onPressed: _busyId == null ? _startCompany : null,
+          ),
+        ],
+      ),
+    ),
+  );
+
   Future<void> _addCar() async {
     await pushSingle(
       context,
@@ -390,10 +429,34 @@ class _MyFleetScreenState extends State<MyFleetScreen>
           ],
           const SizedBox(height: 22),
           _section(tr.fleetCars, tr.fleetCarCount(view.vehicles.length)),
-          if (view.vehicles.isEmpty)
-            Text(
-              owner ? tr.fleetNoCars : tr.fleetNoCarsMember,
-              style: AccountStyle.hint(),
+          if (view.vehicles.isEmpty && owner)
+            Text(tr.fleetNoCars, style: AccountStyle.hint()),
+          // Owner item 9: no car can be picked yet; nobody goes online.
+          if (!view.vehicles.any((v) => v.canBeDriven) &&
+              (!owner || view.vehicles.isNotEmpty))
+            Padding(
+              key: const ValueKey('fleet-no-approved-car'),
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr.fleetNoCarsMember,
+                    style: AuthText.urbanist(
+                      size: 14.5,
+                      weight: FontWeight.w700,
+                      color: AccountStyle.error,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    owner
+                        ? tr.remFleetNoApprovedCarOwner
+                        : tr.remFleetNoApprovedCarMember,
+                    style: AccountStyle.hint(),
+                  ),
+                ],
+              ),
             ),
           for (final vehicle in view.vehicles) ...[
             FleetCarCard(
@@ -406,6 +469,7 @@ class _MyFleetScreenState extends State<MyFleetScreen>
                         .firstOrNull
                   : null,
               busy: _busyId == vehicle.vehicleId,
+              owner: owner,
               onPick: () => _pick(vehicle),
             ),
             const SizedBox(height: 10),
@@ -426,6 +490,7 @@ class _MyFleetScreenState extends State<MyFleetScreen>
               busy: _busyId == 'leave',
               onPressed: () => _leave(view.fleet),
             ),
+            if (me?.accountType == 'driver') _startCompanyCard(),
           ],
         ],
       ),
@@ -491,6 +556,7 @@ class _MyFleetScreenState extends State<MyFleetScreen>
                 _refreshAll();
               },
             ),
+          _startCompanyCard(),
         ],
       ),
     );

@@ -17,6 +17,8 @@ import 'package:movera/presentation/driver/account/join_fleet_screen.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
 import 'package:movera/presentation/driver/vehicles/live_vehicles_screen.dart';
 
+import '../../onboarding/g2_fixtures.dart';
+
 /// Audit Phase 5: the four round-4b live screens that had no test at all
 /// (baseline R7): loading, empty and error states, one request per
 /// action however often it is tapped, forms, Back, and small screens with
@@ -205,6 +207,13 @@ void main() {
   group('Add car', () {
     const path = '/api/v1/driver/vehicles';
 
+    // Contract v0.17.0 (owner group 2 item 11): the car rules of the
+    // country decide which car types are offered.
+    setUp(() {
+      routes['GET ${DriverAccountRepository.onboardingSettingsPath}'] = (_) =>
+          json(200, settingsJson('SE'));
+    });
+
     Future<void> fill(WidgetTester tester, {String year = '2022'}) async {
       await tester.enterText(find.byKey(const ValueKey('car-make')), 'Volvo');
       await tester.enterText(find.byKey(const ValueKey('car-model')), 'XC60');
@@ -212,6 +221,16 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('car-color')), 'Black');
       await tester.enterText(find.byKey(const ValueKey('car-plate')), 'ABC123');
       await tester.pump();
+      final fuel = find.byKey(const ValueKey('car-fuel-petrol'));
+      await tester.ensureVisible(fuel);
+      await tester.tap(fuel);
+      await tester.pump();
+      final economy = find.byKey(const ValueKey('car-type-economy'));
+      if (economy.evaluate().isNotEmpty) {
+        await tester.ensureVisible(economy);
+        await tester.tap(economy);
+        await tester.pump();
+      }
     }
 
     bool saveEnabled(WidgetTester tester) =>
@@ -233,6 +252,8 @@ void main() {
       await fill(tester, year: '1900');
       expect(saveEnabled(tester), isFalse);
       await tester.enterText(find.byKey(const ValueKey('car-year')), '2022');
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('car-type-economy')));
       await tester.pump();
       expect(saveEnabled(tester), isTrue);
       await back(tester);

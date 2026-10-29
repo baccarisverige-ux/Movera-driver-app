@@ -51,6 +51,7 @@ const statusWordFamilies = <String, List<String>>{
     'expired',
     'expiring',
     'missing',
+    'waiting_for_movera',
   ],
   'ticketStatus': ['open', 'pending', 'resolved', 'closed'],
   'vehicleReviewStatus': ['in_review', 'approved', 'rejected'],
@@ -187,6 +188,8 @@ String? statusWord(AppLocalizations l, String family, String code) {
           return l.swDocumentStatusExpiring;
         case 'missing':
           return l.swDocumentStatusMissing;
+        case 'waiting_for_movera':
+          return l.swDocumentStatusWaitingForMovera;
       }
       return null;
     case 'ticketStatus':

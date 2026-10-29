@@ -4,9 +4,10 @@ part of 'home.dart';
 // - the admin's driving limit, 12 h of work then 6 h of rest (Q25): island
 //   warnings at 30 and 10 min left; at the limit Radar goes offline and
 //   going online waits for "Rest until 04:30";
-// - documents that run out (Q26): island and notification warnings on the
-//   admin's days before; on the expiry day going online waits for admin to
-//   approve the new one;
+// - Important reminders (contract v0.17.0, owner group 2 items 1, 2, 3
+//   and 9): the server's list on the Home sheet; a red line (a missing or
+//   expired document, no approved car, no car picked, the account not
+//   active) keeps the driver offline and the island says why;
 // - notifications (Q31): popups on the island, also while offline;
 // - driver app texts from admin (Q30).
 
@@ -21,7 +22,7 @@ class _HomeAccountState {
   final List<Timer> arrivalTimers = <Timer>[];
 
   VoidCallback? feedListener;
-  VoidCallback? documentsListener;
+  VoidCallback? remindersListener;
   VoidCallback? categoriesListener;
 
   /// The rest that ended, so "Rest over" comes once.
@@ -43,8 +44,8 @@ class _HomeAccountState {
     if (feedListener case final listener?) {
       DriverNotificationFeed.instance.changes.removeListener(listener);
     }
-    if (documentsListener case final listener?) {
-      DocumentExpiryStore.instance.changes.removeListener(listener);
+    if (remindersListener case final listener?) {
+      DriverRemindersStore.instance.removeListener(listener);
     }
     if (categoriesListener case final listener?) {
       DriverCategoryChoice.off.removeListener(listener);
@@ -65,8 +66,8 @@ extension _HomeAccount on _DriverHomeState {
     final account = _account;
     final onFeed = account.feedListener = _showNoticePopups;
     _feed.changes.addListener(onFeed);
-    final onDocuments = account.documentsListener = _onDocumentsChanged;
-    DocumentExpiryStore.instance.changes.addListener(onDocuments);
+    final onReminders = account.remindersListener = _onRemindersChanged;
+    DriverRemindersStore.instance.addListener(onReminders);
     final onCategories = account.categoriesListener = _HomeOfferRules(
       this,
     )._onCategoriesChanged;
@@ -85,7 +86,6 @@ extension _HomeAccount on _DriverHomeState {
       if (!mounted) {
         return;
       }
-      _warnDocuments();
       _showNoticePopups();
     });
   }
@@ -163,30 +163,79 @@ extension _HomeAccount on _DriverHomeState {
     _rebuild(() {});
   }
 
-  // Documents (Q26).
+  // Important reminders (contract v0.17.0).
 
-  /// Warnings on the admin's days before expiry, each once.
-  void _warnDocuments() {
-    for (final warning in DocumentExpiryStore.instance.takeWarnings()) {
-      final document = warning.document;
-      _feed.add(
-        DriverNotices.documentExpiring(
-          _feed.now,
-          documentId: document.id,
-          title: () => document.title,
-          shortTitle: () => document.shortTitle,
-          when: () => expiresInLabel(warning.daysLeft),
-        ),
-      );
-    }
-  }
-
-  void _onDocumentsChanged() {
+  void _onRemindersChanged() {
     if (!mounted) {
       return;
     }
-    _warnDocuments();
     _rebuild(() {});
+  }
+
+  /// The words of the first red line, for the island and the orb.
+  String? _blockingReminderText() {
+    final first = DriverRemindersStore.instance.firstBlocking;
+    if (first == null) {
+      return null;
+    }
+    return reminderWords(
+      first,
+      nameOf: (type) =>
+          OnboardingSettingsStore.instance.nameOf(type, tr.localeName),
+      owner: accountSessionOf(context)?.account?.fleet?.isOwner ?? false,
+    ).title;
+  }
+
+  /// Opens the Home sheet on the reminders.
+  void _showReminders() {
+    if (!mounted || !_panelController.isAttached) {
+      return;
+    }
+    unawaited(_springPanelTo(1));
+  }
+
+  /// A tap on a reminder line: the upload guide, "How to book", My fleet
+  /// or the car list (`ReminderFix.target`).
+  Future<void> _fixReminder(DriverReminder reminder) async {
+    final session = accountSessionOf(context);
+    final fix = reminder.fix;
+    if (!mounted || session == null || fix == null) {
+      return;
+    }
+    final me = session.account;
+    final Widget page = switch (fix.target) {
+      ReminderFixTarget.document => UploadGuideScreen(
+        account: session,
+        type: fix.documentType ?? reminder.documentType ?? '',
+        ownerId: fix.vehicleId ?? me?.driverId ?? '',
+        isCar: fix.vehicleId != null,
+        country: me?.country ?? DriverAccountRules.current.country,
+        status: reminder.status,
+        expiresAt: reminder.expiresAt,
+      ),
+      ReminderFixTarget.infoSession => InfoSessionScreen(
+        status: reminder.status ?? 'waiting_for_movera',
+      ),
+      ReminderFixTarget.fleetVehicles => MyFleetScreen(account: session),
+      ReminderFixTarget.pickVehicle => LiveVehiclesScreen(account: session),
+    };
+    await pushSingle(context, MaterialPageRoute<void>(builder: (_) => page));
+    if (mounted) {
+      _refreshLiveBadges();
+    }
+  }
+
+  /// The Home sheet box (live builds; nothing in the demo).
+  Widget _remindersBox() {
+    final session = accountSessionOf(context);
+    if (session == null) {
+      return const SizedBox.shrink();
+    }
+    return ImportantRemindersBox(
+      store: DriverRemindersStore.instance,
+      owner: session.account?.fleet?.isOwner ?? false,
+      onFix: (reminder) => unawaited(_fixReminder(reminder)),
+    );
   }
 
   // Going online.
@@ -198,14 +247,17 @@ extension _HomeAccount on _DriverHomeState {
       IslandMessages.show(HomeIslandNotices.restUntil(clockLabel(rest)));
       return true;
     }
-    final document = DocumentExpiryStore.instance.blocking;
-    if (document != null) {
+    // Owner items 1, 3 and 9: a red reminder keeps the driver offline
+    // (the server refuses too); the island says why, the sheet shows all.
+    final reason = _blockingReminderText();
+    if (reason != null) {
       IslandMessages.show(
-        document.inReview
-            ? HomeIslandNotices.documentInReview
-            : HomeIslandNotices.documentExpired(document.shortTitle),
+        HomeIslandNotices.holdReminder(
+          tr.remCantGoOnline(reason),
+          _showReminders,
+        ),
       );
-      unawaited(showDocumentBlockedSheet(context, document));
+      _showReminders();
       return true;
     }
     return false;
@@ -218,8 +270,9 @@ extension _HomeAccount on _DriverHomeState {
     if (rest != null) {
       return (status: tr.statusRest, subtitle: tr.untilTime(clockLabel(rest)));
     }
-    if (DocumentExpiryStore.instance.blocking != null) {
-      return (status: tr.statusHold, subtitle: tr.documentExpired);
+    final reason = _blockingReminderText();
+    if (reason != null) {
+      return (status: tr.statusHold, subtitle: reason);
     }
     return null;
   }
@@ -245,13 +298,9 @@ extension _HomeAccount on _DriverHomeState {
         _HomeMapSheet(this)._openDrivingTime,
       );
     }
-    final document = DocumentExpiryStore.instance.blocking;
-    if (document != null) {
-      return HomeIslandNotices.holdDocument(
-        document.shortTitle,
-        inReview: document.inReview,
-        onTap: () => unawaited(showDocumentBlockedSheet(context, document)),
-      );
+    final reason = _blockingReminderText();
+    if (reason != null) {
+      return HomeIslandNotices.holdReminder(reason, _showReminders);
     }
     return null;
   }
@@ -399,6 +448,10 @@ extension _HomeAccount on _DriverHomeState {
         }
       }),
     );
+    // Contract v0.17.0: the reminders and the country's settings (names of
+    // the admin's own document types).
+    unawaited(refreshReminders(session));
+    unawaited(refreshOnboardingSettings(session).then((_) {}, onError: (_) {}));
   }
 
   void _openDocuments() {

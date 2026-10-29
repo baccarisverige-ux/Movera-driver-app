@@ -23,7 +23,7 @@ Terminal:
 
 `completed` · `cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `cancelled_by_system` · `no_show` · `expired` · `failed`
 
-The source of truth is now `contracts/contract.json` (v0.17.0, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
+The source of truth is now `contracts/contract.json` (v0.18.0, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
 
 Driver `ActiveRideStage` maps onto the live slice only:
 
@@ -101,7 +101,7 @@ Fix (no UX change, no lifecycle change):
 
 ## Contract v0.4 (October 2026)
 
-`contracts/` now holds the shared Movera contract v0.17.0 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
+`contracts/` now holds the shared Movera contract v0.18.0 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
 
 - v0.4.0: per-zone config fields (languages, tips, payment methods, waiting by category, auto-offline, driver bonus limits), `TripProjection.acceptedAt`, whole-star ratings and admin dispatch (direct assign, radar group, lock after accept).
 - v0.4.1: `DriverAppConfig.reservations` carries the reservation timings and the running-late ETA watch.
@@ -122,6 +122,7 @@ Fix (no UX change, no lifecycle change):
 - v0.14.0 (28 Oct 2026): Activation needs approved documents (`409 documents_not_approved`, `details` "<scope>:<type>"); a car whose required documents are not all approved can't be picked or driven (reason `vehicle_documents_not_approved`). The app names the missing documents and shows such a car as "Can't be driven – upload documents" without a pick button.
 - v0.15.0 (29 Oct 2026): Sign-in group 1: the sign-in calls wait up to 60 s with "Starting the server…"; 429 waits shown in minutes; "Too many wrong tries" highlights Resend code; a restricted number can join the waiting list (`POST /auth/waitlist`); test builds list the test numbers (`GET /auth/test-accounts`, not in production).
 - v0.17.0 (29 Oct 2026): Past ride route: `GET /trips/{tripId}/path` (driven path from the trip trace, else the planned route); the past-ride screen keeps the map fixed on the top 40 %, fits the route with the pickup and drop-off pins, shows the category icon, date and time and status, and no person photo.
+- v0.18.0 (29 Oct 2026): Driver group 2 "Onboarding" (§25): the app follows the admin's onboarding settings of the driver's country (`GET /driver/onboarding/settings`: document lists with the admin's own types and texts, which expire, warning days, car rules per category, four car photos). Home sheet "Important reminders (N)" from `GET /driver/reminders` (red blocks going online, orange due soon, tap-to-fix); an upload guide per document and country (drawn example, checklist, tips, one Upload button; camera blocked → Open Settings / Choose file; uploads wait up to 60 s and keep the photo with Try again); the info session's "How to book" (content slot `driver-info-session`) and "Waiting for Movera"; "Start my own company" in My fleet (`POST /driver/fleet/start-company`); a fleet with no approved car, or no car picked, cannot go online. The old demo expiry store (`lib/core/documents`, `document_renewal.dart`, `document_preview.dart`) is gone.
 
 ## Contract v0.3 (19 October 2026)
 

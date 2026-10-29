@@ -157,6 +157,7 @@ class _LiveVehiclesScreenState extends State<LiveVehiclesScreen> {
                   vehicle: car,
                   myDriverId: me?.driverId ?? '',
                   busy: _busyId == car.vehicleId,
+                  owner: owner,
                   onPick: () => _pick(car),
                 ),
                 const SizedBox(height: 10),

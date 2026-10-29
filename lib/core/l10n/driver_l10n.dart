@@ -64,6 +64,10 @@ abstract final class DriverDates {
   static String dayMonth(DateTime at) =>
       DateFormat('d MMM', _locale).format(at);
 
+  /// "20 Oct 2026" · "20 oct. 2026" · "20 okt. 2026".
+  static String dayMonthYear(DateTime at) =>
+      DateFormat('d MMM y', _locale).format(at);
+
   /// "Mon 20 Oct" · "lun. 20 oct." · "mån 20 okt.".
   static String weekdayDayMonth(DateTime at) =>
       DateFormat('EEE d MMM', _locale).format(at);

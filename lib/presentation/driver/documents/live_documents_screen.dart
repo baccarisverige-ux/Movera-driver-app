@@ -1,21 +1,32 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/driver_onboarding_rules.dart';
+import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/onboarding/document_status.dart';
+import 'package:movera/core/onboarding/onboarding_settings.dart';
+import 'package:movera/presentation/driver/documents/info_session_screen.dart';
+import 'package:movera/presentation/driver/documents/onboarding_refresh.dart';
+import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
+import 'package:movera/widgets/navigation_transition.dart';
+import 'package:movera/widgets/single_route_entry.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/presentation/driver/documents/document_file_picker.dart';
-import 'package:movera/widgets/movera_modal_sheet.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 
 /// Documents, live (contract v0.5.3 §14): the person's required documents
 /// ("You"), the company's for a fleet account ("Company") and each car's
-/// ("Car PLATE"), from the lists the server sends. A file document is
-/// uploaded from the camera, the photo library or a PDF; the terms are
-/// approved at sign-up; the information session is booked by Movera.
+/// ("Car PLATE"), from the lists the server sends, named with the
+/// admin's published texts (types the admin made included). A file
+/// document opens its upload guide (owner item 4); the terms are approved
+/// at sign-up; the information session opens "How to book" and shows
+/// "Waiting for Movera" until Movera marks it held (item 8).
 class LiveDocumentsScreen extends StatefulWidget {
   const LiveDocumentsScreen({
     super.key,
@@ -35,10 +46,6 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen> {
   List<FleetVehicle> _cars = const [];
   bool _loading = true;
   String? _error;
-
-  /// `ownerId/type` of the upload in flight.
-  String? _uploading;
-  String? _uploadError;
 
   @override
   void initState() {
@@ -67,6 +74,9 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen> {
       final results = await Future.wait([
         repository.documents(),
         repository.vehicles().catchError((Object _) => <FleetVehicle>[]),
+        refreshOnboardingSettings(
+          widget.account,
+        ).then<Object?>((s) => s, onError: (Object _) => null),
         if (widget.account.account == null)
           widget.account.refresh()
         else
@@ -107,113 +117,60 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen> {
     return 'missing';
   }
 
-  Future<void> _upload(String ownerId, String type, bool isCar) async {
-    final picked = await _pickFile();
-    if (picked == null || !mounted) return;
-    if (picked.bytes.length > DriverOnboardingRules.uploadMaxBytes) {
-      setState(() => _uploadError = tr.docFileTooLarge);
-      return;
-    }
-    if (!DriverOnboardingRules.uploadMediaTypes.contains(picked.mediaType)) {
-      setState(() => _uploadError = tr.docUnsupportedFile);
-      return;
-    }
-    setState(() {
-      _uploading = '$ownerId/$type';
-      _uploadError = null;
-    });
-    try {
-      final doc = await widget.account.repository.uploadDocument(
-        type: type,
-        bytes: picked.bytes,
-        fileName: picked.fileName,
-        mediaType: picked.mediaType,
-        ownerId: isCar ? ownerId : null,
-      );
-      if (!mounted) return;
-      setState(() {
-        _docs = [
-          for (final d in _docs)
-            if (!(d.ownerId == doc.ownerId && d.type == doc.type)) d,
-          doc,
-        ];
-      });
-      ScaffoldMessenger.of(
+  /// Owner item 4: a file document opens its upload guide; the info
+  /// session opens "How to book" (item 8). The list is read again after.
+  Future<void> _open(
+    String ownerId,
+    String type,
+    bool isCar,
+    String status,
+  ) async {
+    final me = widget.account.account;
+    final kind = OnboardingSettingsStore.instance.kindOf(type);
+    if (kind == DocumentKind.adminCheck) {
+      if (type != InfoSessionScreen.type) return;
+      await pushSingle(
         context,
-      ).showSnackBar(SnackBar(content: Text(tr.docUploaded)));
-    } catch (error) {
-      if (!mounted) return;
-      setState(
-        () => _uploadError = accountErrorMessage(
-          error,
-          fallback: tr.docUploadFailed,
-        ),
+        RightToLeftTransition(InfoSessionScreen(status: status)),
       );
-    } finally {
-      if (mounted) setState(() => _uploading = null);
+      return;
     }
-  }
-
-  /// "Take photo / Choose photo / Choose PDF".
-  Future<PickedDocumentFile?> _pickFile() async {
-    final choice = await showMoveraModalSheet<String>(
-      context: context,
-      fitContent: true,
-      builder: (sheet) => Material(
-        color: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                  child: Text(tr.docChooseHow, style: AccountStyle.rowTitle()),
-                ),
-                for (final (id, icon, label) in [
-                  ('camera', Icons.photo_camera_outlined, tr.docTakePhoto),
-                  ('gallery', Icons.photo_library_outlined, tr.docChoosePhoto),
-                  ('pdf', Icons.picture_as_pdf_outlined, tr.docChoosePdf),
-                ])
-                  ListTile(
-                    key: ValueKey('doc-pick-$id'),
-                    leading: Icon(icon, color: AccountStyle.ink),
-                    title: Text(label, style: AccountStyle.body()),
-                    onTap: () => Navigator.of(sheet).pop(id),
-                  ),
-              ],
-            ),
-          ),
+    final doc = _doc(ownerId, type);
+    final result = await pushSingle<Object?>(
+      context,
+      RightToLeftTransition(
+        UploadGuideScreen(
+          account: widget.account,
+          type: type,
+          ownerId: ownerId,
+          isCar: isCar,
+          country: me?.country ?? DriverAccountRules.current.country,
+          status: status,
+          expiresAt: doc?.expiresAt,
+          filePicker: widget.filePicker,
         ),
       ),
     );
-    if (choice == null) return null;
-    try {
-      return switch (choice) {
-        'camera' => await widget.filePicker.takePhoto(),
-        'gallery' => await widget.filePicker.choosePhoto(),
-        _ => await widget.filePicker.choosePdf(),
-      };
-    } catch (_) {
-      // A refused camera or a closed picker: nothing to upload.
-      return null;
-    }
+    if (!mounted || result is! AccountDocument) return;
+    final uploaded = result;
+    setState(() {
+      _docs = [
+        for (final d in _docs)
+          if (!(d.ownerId == uploaded.ownerId && d.type == uploaded.type)) d,
+        uploaded,
+      ];
+    });
+    unawaited(refreshReminders(widget.account));
   }
 
   @override
   Widget build(BuildContext context) {
     final me = widget.account.account;
     final language = DriverAppTexts.language;
-    final cars = [
-      for (final car in _cars)
-        if ((me?.isFleetAccount ?? false) || car.isApproved) car,
-    ];
+    // Owner decision 19: car documents are the fleet owner's (an owner who
+    // drives too); a member driver sees only his own documents and picks a
+    // car in My fleet / Vehicles.
+    final cars = [if (me != null && seesCarDocuments(me)) ..._cars];
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AccountStyle.appBar(
@@ -239,7 +196,6 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen> {
                   onPressed: _load,
                 ),
               ],
-              if (_uploadError != null) AccountErrorLine(_uploadError!),
               if (me != null) ...[
                 _section(tr.docYou),
                 if (me.requiredDocuments.isEmpty)
@@ -288,25 +244,44 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen> {
     String language, {
     required bool isCar,
   }) {
-    final kind = DriverOnboardingRules.kindOf(type);
-    final status = kind == DocumentKind.acceptance
-        ? 'approved'
-        : _status(ownerId, type, summary);
+    final settings = OnboardingSettingsStore.instance;
+    final kind = settings.kindOf(type);
     final doc = _doc(ownerId, type);
-    final uploading = _uploading == '$ownerId/$type';
-    final canUpload = kind == DocumentKind.file && _uploading == null;
+    final status = shownDocumentStatus(
+      kind: kind,
+      stored: _status(ownerId, type, summary),
+      expiresAt: doc?.expiresAt ?? _summaryExpiry(type, summary),
+      warnDays: isCar
+          ? settings.settings?.vehicleWarnDays
+          : settings.settings?.warnDays.firstOrNull,
+      now: DateTime.now(),
+    );
+    final expiresAt = doc?.expiresAt ?? _summaryExpiry(type, summary);
+    final opens =
+        kind == DocumentKind.file ||
+        (kind == DocumentKind.adminCheck && type == InfoSessionScreen.type);
     return DocumentRow(
       key: ValueKey('doc-row-$ownerId-$type'),
-      title: DriverOnboardingRules.documentName(type, language),
+      title: settings.nameOf(type, language),
       status: status,
       note: kind == DocumentKind.adminCheck
-          ? tr.docMoveraBooks
+          ? (type == InfoSessionScreen.type && status != 'approved'
+                ? tr.infoHowToBook
+                : null)
           : status == 'rejected'
           ? doc?.reviewNote
+          : expiresAt != null && status != 'needed'
+          ? tr.docExpiresOnNote(DriverDates.dayMonthYear(expiresAt.toLocal()))
           : doc?.fileName,
-      uploading: uploading,
-      onTap: canUpload ? () => _upload(ownerId, type, isCar) : null,
+      onTap: opens ? () => _open(ownerId, type, isCar, status) : null,
     );
+  }
+
+  DateTime? _summaryExpiry(String type, List<DocumentSummary> summary) {
+    for (final item in summary) {
+      if (item.type == type) return item.expiresAt;
+    }
+    return null;
   }
 }
 
@@ -335,6 +310,11 @@ class DocumentRow extends StatelessWidget {
     'rejected' => (tr.swDocumentStatusRejected, AccountStyle.error),
     'expired' => (tr.swDocumentStatusExpired, AccountStyle.error),
     'expiring' => (tr.swDocumentStatusExpiring, AccountStyle.amber),
+    // v0.17.0 (owner item 8): the info session until Movera marks it.
+    'waiting_for_movera' => (
+      tr.swDocumentStatusWaitingForMovera,
+      AccountStyle.amber,
+    ),
     // missing (stored) and needed (required, not uploaded) show "needed".
     _ => (tr.swDocumentStatusNeeded, AccountStyle.error),
   };
@@ -381,9 +361,9 @@ class DocumentRow extends StatelessWidget {
                 if (onTap != null && !uploading) ...[
                   const SizedBox(width: 4),
                   const Icon(
-                    Icons.upload_rounded,
+                    Icons.chevron_right_rounded,
                     color: AccountStyle.ink,
-                    size: 20,
+                    size: 22,
                   ),
                 ],
               ],
@@ -411,3 +391,8 @@ class DocumentRow extends StatelessWidget {
     );
   }
 }
+
+/// Owner decision 19: only the fleet owner (a fleet account, also when he
+/// drives) sees and uploads car documents.
+bool seesCarDocuments(DriverAccount account) =>
+    account.isFleetAccount || (account.fleet?.isOwner ?? false);

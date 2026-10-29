@@ -5744,6 +5744,544 @@ class AppLocalizationsFr extends AppLocalizations {
       'Acceptez les nouvelles conditions pour passer en ligne.';
 
   @override
+  String get mapYourCar => 'Votre voiture';
+
+  @override
+  String get noticeDemoEventTitle => 'Demande du soir à Stockholm';
+
+  @override
+  String get noticeDemoEventBody =>
+      '18:00–22:30 · Centre de Stockholm. Soyez en ligne avant le principal créneau de départs.';
+
+  @override
+  String get noticeDemoEventIsland => 'Événement ce soir · City';
+
+  @override
+  String get categoryComfort => 'Confort';
+
+  @override
+  String get categoryPriority => 'Prioritaire';
+
+  @override
+  String get categoryElectric => 'Électrique';
+
+  @override
+  String get categoryBoosterSeat => 'Rehausseur';
+
+  @override
+  String get demoPickupNearYou => 'Prise en charge près de vous';
+
+  @override
+  String demoNearPlace(String place) {
+    return 'Près de $place';
+  }
+
+  @override
+  String get demoYourDestination => 'votre destination';
+
+  @override
+  String demoOnYourWayPercent(int percent) {
+    return 'Sur votre trajet · $percent %';
+  }
+
+  @override
+  String get demoAwayFromRoute => 'Hors de votre trajet';
+
+  @override
+  String get demoBehindYou => 'Derrière vous';
+
+  @override
+  String get vehDocsMissingCantDrive =>
+      'Ne peut pas rouler – téléversez les documents';
+
+  @override
+  String docsNotApprovedCar(String names) {
+    return 'Cette voiture ne peut pas rouler tant que ses documents ne sont pas approuvés. Manquants : $names';
+  }
+
+  @override
+  String docsNotApprovedAccount(String names) {
+    return 'Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : $names';
+  }
+
+  @override
+  String get authStartingServer => 'Démarrage du serveur…';
+
+  @override
+  String authErrTooManyWrongCodes(String button) {
+    return 'Trop d’essais erronés – touchez $button';
+  }
+
+  @override
+  String authRetryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authJoinWaitlist => 'Rejoindre la liste d’attente';
+
+  @override
+  String get authWaitlistSaved =>
+      'Vous êtes sur la liste d’attente. Nous vous préviendrons quand la connexion ouvrira pour votre numéro.';
+
+  @override
+  String get authTestNumbersTitle =>
+      'Numéros de test (version de test uniquement)';
+
+  @override
+  String get authTestStatusNew => 'Test · pas encore de compte';
+
+  @override
+  String get gateSignOut => 'Se déconnecter';
+
+  @override
+  String get gateTryAgain => 'Réessayer';
+
+  @override
+  String get authNeedHelp => 'Besoin d’aide ?';
+
+  @override
+  String get authHelpComingSoon => 'Coordonnées bientôt disponibles';
+
+  @override
+  String get authHelpEmail => 'E-mail';
+
+  @override
+  String get authHelpPhone => 'Téléphone';
+
+  @override
+  String get authHelpCompany => 'Société';
+
+  @override
+  String get authHelpClose => 'Fermer';
+
+  @override
+  String remTitle(Object count) {
+    return 'Rappels importants ($count)';
+  }
+
+  @override
+  String get remShow => 'Afficher les rappels';
+
+  @override
+  String get remHide => 'Masquer les rappels';
+
+  @override
+  String get remBlocksOnlineLegend =>
+      'Rouge : vous ne pouvez pas passer en ligne avant que ce soit réglé';
+
+  @override
+  String remDocOfCar(Object document, Object car) {
+    return '$document · $car';
+  }
+
+  @override
+  String remDocumentNeeded(Object document) {
+    return 'Il manque : $document';
+  }
+
+  @override
+  String remDocumentRejected(Object document) {
+    return 'Refusé : $document';
+  }
+
+  @override
+  String remDocumentExpired(Object document) {
+    return '$document a expiré';
+  }
+
+  @override
+  String remDocumentExpiring(Object document, Object when) {
+    return '$document expire $when';
+  }
+
+  @override
+  String remDocumentInReview(Object document) {
+    return '$document : Movera le vérifie';
+  }
+
+  @override
+  String get remCantGoOnlineUntil =>
+      'Vous ne pouvez pas passer en ligne avant que Movera valide le nouveau.';
+
+  @override
+  String get remAccountNotActive => 'Movera vérifie votre compte';
+
+  @override
+  String get remAccountNotActiveDetail =>
+      'Tout est envoyé. Vous pourrez passer en ligne quand Movera aura activé votre compte.';
+
+  @override
+  String get remFleetNotApproved => 'Movera n’a pas encore validé votre flotte';
+
+  @override
+  String get remFleetNoApprovedCar =>
+      'Votre flotte n’a pas encore de voiture validée';
+
+  @override
+  String get remFleetNoApprovedCarOwner =>
+      'Ajoutez une voiture ou terminez ses documents dans Ma flotte. Les chauffeurs pourront passer en ligne dès qu’une voiture est validée.';
+
+  @override
+  String get remFleetNoApprovedCarMember =>
+      'Vous pourrez passer en ligne quand le gérant de votre flotte aura une voiture validée à choisir.';
+
+  @override
+  String get remNoVehicle =>
+      'Choisissez une voiture de votre flotte avant de passer en ligne';
+
+  @override
+  String get remUpload => 'Envoyer';
+
+  @override
+  String get remUploadNew => 'Envoyer le nouveau';
+
+  @override
+  String get remOpen => 'Ouvrir';
+
+  @override
+  String remCantGoOnline(Object reason) {
+    return 'Vous ne pouvez pas encore passer en ligne : $reason';
+  }
+
+  @override
+  String liveOnlineDocumentsExpired(Object documents) {
+    return 'Un document a expiré : $documents. Envoyez le nouveau pour passer en ligne.';
+  }
+
+  @override
+  String get infoHowToBook => 'Comment réserver votre session d’information';
+
+  @override
+  String get infoHowToBookShort => 'Réserver';
+
+  @override
+  String get infoNoContent =>
+      'Movera vous contactera pour fixer un horaire. Vous n’avez rien d’autre à faire pour l’instant.';
+
+  @override
+  String get infoHeld =>
+      'Movera a noté votre session d’information comme suivie.';
+
+  @override
+  String get infoOpenLink => 'Ouvrir la page de réservation';
+
+  @override
+  String get infoRequiredBeforeOnline =>
+      'La session d’information est obligatoire avant de passer en ligne.';
+
+  @override
+  String get guideExampleLabel => 'Exemple dessiné par Movera';
+
+  @override
+  String get guideMustBeVisible => 'Vérifiez que ceci est visible';
+
+  @override
+  String get guideTipsTitle => 'Conseils pour une bonne photo';
+
+  @override
+  String get guideUpload => 'Envoyer';
+
+  @override
+  String get guidePickTakePhoto => 'Prendre une photo';
+
+  @override
+  String get guidePickLibrary => 'Photothèque';
+
+  @override
+  String get guidePickFile => 'Choisir un fichier';
+
+  @override
+  String get guideCameraBlockedTitle =>
+      'Movera ne peut pas utiliser l’appareil photo';
+
+  @override
+  String get guideCameraBlockedBody =>
+      'L’accès à l’appareil photo est désactivé pour Movera. Activez-le dans Réglages, ou choisissez un fichier que vous avez déjà.';
+
+  @override
+  String get guideOpenSettings => 'Ouvrir les Réglages';
+
+  @override
+  String get guideUploadingSlow =>
+      'Envoi en cours… cela peut prendre jusqu’à une minute.';
+
+  @override
+  String get guideKeptPhoto =>
+      'L’envoi n’a pas abouti. Votre photo est conservée, vous pouvez réessayer.';
+
+  @override
+  String get guideTryAgain => 'Réessayer';
+
+  @override
+  String get guideChooseAnother => 'En choisir un autre';
+
+  @override
+  String guideExpiryNote(Object days) {
+    return 'Ce document a une date de fin. Movera la saisit lors de la validation et vous le rappelle $days jours avant.';
+  }
+
+  @override
+  String guideCurrentStatus(Object status) {
+    return 'Actuellement : $status';
+  }
+
+  @override
+  String guideExpiresOn(Object date) {
+    return 'Expire le $date';
+  }
+
+  @override
+  String guideSelectedFile(Object name) {
+    return 'Sélectionné : $name';
+  }
+
+  @override
+  String get guideLicenceBothSides => 'Recto et verso du permis';
+
+  @override
+  String get guideNameAndPhoto => 'Votre nom et votre photo';
+
+  @override
+  String get guideValidUntil => 'La date de fin de validité';
+
+  @override
+  String get guideLicenceCategoryB => 'Catégorie B';
+
+  @override
+  String get guideLicenceCategoryB3Years =>
+      'Catégorie B, obtenue depuis au moins 3 ans';
+
+  @override
+  String get guideIdWholeCard =>
+      'La carte entière ou la page photo du passeport';
+
+  @override
+  String get guidePhotoFaceFront => 'Votre visage de face, yeux ouverts';
+
+  @override
+  String get guidePhotoPlainBackground => 'Un fond uni et clair';
+
+  @override
+  String get guidePhotoNoSunglasses =>
+      'Pas de lunettes de soleil, de casquette ni d’autres personnes';
+
+  @override
+  String get guideCardBothSides => 'Recto et verso de la carte';
+
+  @override
+  String get guideCardNumber => 'Le numéro de la carte';
+
+  @override
+  String get guideSeRegistrationBolagsverket =>
+      'Le certificat d’immatriculation du Bolagsverket';
+
+  @override
+  String get guideKbisRecent =>
+      'Extrait Kbis ou avis SIRENE de moins de 3 mois';
+
+  @override
+  String get guideCompanyNameAndNumber => 'Le nom et le numéro de l’entreprise';
+
+  @override
+  String get guideAllPages => 'Toutes les pages';
+
+  @override
+  String get guideSeTrafficPermit =>
+      'L’autorisation de taxi du Transportstyrelsen';
+
+  @override
+  String get guideSeFTax => 'L’attestation F-skatt du Skatteverket';
+
+  @override
+  String get guideFrRib => 'Le RIB de la société avec IBAN et BIC';
+
+  @override
+  String get guideSeBankAccount =>
+      'L’attestation de compte avec numéros de clearing et de compte';
+
+  @override
+  String get guideAccountHolderName => 'Le nom du titulaire du compte';
+
+  @override
+  String get guideFrVtcRegister =>
+      'Le certificat d’inscription au registre VTC';
+
+  @override
+  String get guideFrRcPro =>
+      'L’attestation RC Pro pour le transport de personnes';
+
+  @override
+  String get guideFrUrssafRecent =>
+      'L’attestation de vigilance URSSAF de moins de 6 mois';
+
+  @override
+  String get guideFrCarteGrise => 'La carte grise, recto';
+
+  @override
+  String get guideSeRegistrationFront =>
+      'Le certificat d’immatriculation, partie 1';
+
+  @override
+  String get guidePlateVisible => 'Le numéro d’immatriculation';
+
+  @override
+  String get guideOwnerName => 'Le nom du titulaire';
+
+  @override
+  String get guideFrPassengerInsurance =>
+      'L’attestation d’assurance transport de personnes';
+
+  @override
+  String get guideSeInsuranceLetter => 'L’attestation d’assurance pour le taxi';
+
+  @override
+  String get guideFrStickerOnCar => 'Le macaron VTC sur le pare-brise';
+
+  @override
+  String get guideCarFront => 'Tout l’avant de la voiture';
+
+  @override
+  String get guideCarBack => 'Tout l’arrière de la voiture';
+
+  @override
+  String get guideCarSide => 'Tout le côté de la voiture, roues comprises';
+
+  @override
+  String get guideCarInside => 'Les sièges depuis la porte arrière, propres';
+
+  @override
+  String get guidePlateReadable => 'La plaque est lisible';
+
+  @override
+  String get guideWholeDocument => 'Le document entier, tous les coins';
+
+  @override
+  String get guideNameAndPhotoIfAny =>
+      'Votre nom (et votre photo, s’il y en a une)';
+
+  @override
+  String get tipFlatDarkSurface => 'Posez-le à plat sur une table sombre';
+
+  @override
+  String get tipNoGlare => 'Sans flash ni reflet';
+
+  @override
+  String get tipFourCorners => 'Les quatre coins dans la photo';
+
+  @override
+  String get tipPhotoHoldStill => 'Restez immobile pour que le texte soit net';
+
+  @override
+  String get tipPhotoDaylight => 'Bonne lumière du jour, pas de contre-jour';
+
+  @override
+  String get tipPhotoNoFilter => 'Pas de filtre ni de retouche';
+
+  @override
+  String get tipCarWholeInFrame =>
+      'Reculez pour que toute la voiture tienne dans l’image';
+
+  @override
+  String get docOpenGuide => 'Ouvrir le guide et envoyer';
+
+  @override
+  String docExpiresOnNote(Object date) {
+    return 'Expire le $date';
+  }
+
+  @override
+  String get startCompanyTitle => 'Créer ma propre entreprise';
+
+  @override
+  String get startCompanyIntro =>
+      'Votre compte devient un compte entreprise (flotte). Vos documents déjà envoyés sont conservés : vous ajoutez seulement ceux de l’entreprise et des voitures. Movera le valide ensuite comme une nouvelle flotte.';
+
+  @override
+  String startCompanyLeavesFleet(Object fleet) {
+    return 'Vous quittez $fleet et passez hors ligne. Vous ne pourrez pas passer en ligne avant que Movera valide votre entreprise.';
+  }
+
+  @override
+  String get startCompanyConfirmQ =>
+      'Transformer votre compte en compte entreprise ? Movera le vérifie avant que vous puissiez rouler à nouveau.';
+
+  @override
+  String get startCompanySend => 'Envoyer à Movera';
+
+  @override
+  String get startCompanySent => 'Envoyé. Votre entreprise attend Movera.';
+
+  @override
+  String get startCompanyFailed =>
+      'Impossible de créer l’entreprise. Réessayez.';
+
+  @override
+  String get startCompanyAlreadyFleet =>
+      'Votre compte est déjà un compte entreprise.';
+
+  @override
+  String get carFuel => 'Carburant';
+
+  @override
+  String get fuelPetrol => 'Essence';
+
+  @override
+  String get fuelDiesel => 'Diesel';
+
+  @override
+  String get fuelHybrid => 'Hybride';
+
+  @override
+  String get fuelElectric => 'Électrique';
+
+  @override
+  String carTypesFitHint(Object country) {
+    return 'Seuls les types de voiture adaptés à ce véhicule sont proposés (règles Movera pour $country).';
+  }
+
+  @override
+  String get carTypesEnterFirst =>
+      'Saisissez l’année, les places et le carburant pour voir les types de voiture.';
+
+  @override
+  String get carNoTypeFits =>
+      'Cette voiture ne correspond à aucun type. Vérifiez l’année, les places et le carburant.';
+
+  @override
+  String get carRulesCouldNotLoad =>
+      'Impossible de charger les règles Movera pour les voitures.';
+
+  @override
+  String get carCategoryNotAllowed =>
+      'Cette voiture ne correspond pas à l’un des types choisis.';
+
+  @override
+  String get carPhotosTitle => 'Photos de la voiture';
+
+  @override
+  String carPhotosIntro(Object car) {
+    return 'Movera a besoin de ces 4 photos de $car avant qu’elle puisse rouler.';
+  }
+
+  @override
+  String get carPhotosDone => 'Terminé';
+
+  @override
+  String get vehNotApprovedCantDrive =>
+      'Ne peut pas rouler – Movera n’a pas encore validé cette voiture';
+
+  @override
+  String get vehDocsMissingOwnerUploads =>
+      'Ne peut pas rouler – le gérant de la flotte doit compléter ses documents';
+
+  @override
   String get swTripStatusDraft => 'Brouillon';
 
   @override
@@ -5882,6 +6420,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swDocumentStatusMissing => 'Manquant';
 
   @override
+  String get swDocumentStatusWaitingForMovera => 'En attente de Movera';
+
+  @override
   String get swTicketStatusOpen => 'Ouvert';
 
   @override
@@ -5933,120 +6474,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swRatingStatusSkipped => 'Ignorée';
 
   @override
-  String get mapYourCar => 'Votre voiture';
-
-  @override
-  String get noticeDemoEventTitle => 'Demande du soir à Stockholm';
-
-  @override
-  String get noticeDemoEventBody =>
-      '18:00–22:30 · Centre de Stockholm. Soyez en ligne avant le principal créneau de départs.';
-
-  @override
-  String get noticeDemoEventIsland => 'Événement ce soir · City';
-
-  @override
-  String get categoryComfort => 'Confort';
-
-  @override
-  String get categoryPriority => 'Prioritaire';
-
-  @override
-  String get categoryElectric => 'Électrique';
-
-  @override
-  String get categoryBoosterSeat => 'Rehausseur';
-
-  @override
-  String get demoPickupNearYou => 'Prise en charge près de vous';
-
-  @override
-  String demoNearPlace(String place) {
-    return 'Près de $place';
-  }
-
-  @override
-  String get demoYourDestination => 'votre destination';
-
-  @override
-  String demoOnYourWayPercent(int percent) {
-    return 'Sur votre trajet · $percent %';
-  }
-
-  @override
-  String get demoAwayFromRoute => 'Hors de votre trajet';
-
-  @override
-  String get demoBehindYou => 'Derrière vous';
-
-  @override
-  String get vehDocsMissingCantDrive =>
-      'Ne peut pas rouler – téléversez les documents';
-
-  @override
-  String docsNotApprovedCar(String names) {
-    return 'Cette voiture ne peut pas rouler tant que ses documents ne sont pas approuvés. Manquants : $names';
-  }
-
-  @override
-  String docsNotApprovedAccount(String names) {
-    return 'Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : $names';
-  }
-
-  @override
-  String get authStartingServer => 'Démarrage du serveur…';
-
-  @override
-  String authErrTooManyWrongCodes(String button) {
-    return 'Trop d’essais erronés – touchez $button';
-  }
-
-  @override
-  String authRetryMinutes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count minutes',
-      one: '1 minute',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get authJoinWaitlist => 'Rejoindre la liste d’attente';
-
-  @override
-  String get authWaitlistSaved =>
-      'Vous êtes sur la liste d’attente. Nous vous préviendrons quand la connexion ouvrira pour votre numéro.';
-
-  @override
-  String get authTestNumbersTitle =>
-      'Numéros de test (version de test uniquement)';
-
-  @override
-  String get authTestStatusNew => 'Test · pas encore de compte';
-
-  @override
-  String get gateSignOut => 'Se déconnecter';
-
-  @override
-  String get gateTryAgain => 'Réessayer';
-
-  @override
-  String get authNeedHelp => 'Besoin d’aide ?';
-
-  @override
-  String get authHelpComingSoon => 'Coordonnées bientôt disponibles';
-
-  @override
-  String get authHelpEmail => 'E-mail';
-
-  @override
-  String get authHelpPhone => 'Téléphone';
-
-  @override
-  String get authHelpCompany => 'Société';
-
-  @override
-  String get authHelpClose => 'Fermer';
+  String get docFleetOwnerOnly =>
+      'Seul le gérant de la flotte peut envoyer ou ouvrir les documents de la voiture.';
 }

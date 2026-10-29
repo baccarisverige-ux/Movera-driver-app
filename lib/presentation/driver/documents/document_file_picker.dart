@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:movera/core/onboarding/document_upload.dart';
 
 /// A file the driver chose for a document upload.
 class PickedDocumentFile {
@@ -19,12 +20,13 @@ class PickedDocumentFile {
 }
 
 /// How the driver picks a file for a document: the camera, the photo
-/// library or a PDF. Tests hand in a fake; the app uses the device's
-/// pickers ([DeviceDocumentFilePicker]).
+/// library or a file (PDF or image). Tests hand in a fake; the app uses
+/// the device's pickers ([DeviceDocumentFilePicker]). A refused camera
+/// throws (see `isCameraBlocked`).
 abstract class DocumentFilePicker {
   Future<PickedDocumentFile?> takePhoto();
   Future<PickedDocumentFile?> choosePhoto();
-  Future<PickedDocumentFile?> choosePdf();
+  Future<PickedDocumentFile?> chooseFile();
 }
 
 class DeviceDocumentFilePicker implements DocumentFilePicker {
@@ -37,10 +39,12 @@ class DeviceDocumentFilePicker implements DocumentFilePicker {
   Future<PickedDocumentFile?> choosePhoto() => _image(ImageSource.gallery);
 
   Future<PickedDocumentFile?> _image(ImageSource source) async {
+    // Owner item 6: the photo is shrunk before it goes up.
     final file = await ImagePicker().pickImage(
       source: source,
-      imageQuality: 88,
-      maxWidth: 2400,
+      imageQuality: DocumentUploadPolicy.photoQuality,
+      maxWidth: DocumentUploadPolicy.photoMaxSide,
+      maxHeight: DocumentUploadPolicy.photoMaxSide,
     );
     if (file == null) return null;
     final bytes = await file.readAsBytes();
@@ -53,10 +57,10 @@ class DeviceDocumentFilePicker implements DocumentFilePicker {
   }
 
   @override
-  Future<PickedDocumentFile?> choosePdf() async {
+  Future<PickedDocumentFile?> chooseFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: const ['pdf'],
+      allowedExtensions: const ['pdf', 'jpg', 'jpeg', 'png', 'heic'],
       withData: true,
     );
     final file = result?.files.singleOrNull;
@@ -65,7 +69,7 @@ class DeviceDocumentFilePicker implements DocumentFilePicker {
     return PickedDocumentFile(
       bytes: bytes,
       fileName: file.name,
-      mediaType: 'application/pdf',
+      mediaType: mediaTypeOf(file.name, fallback: 'application/pdf'),
     );
   }
 

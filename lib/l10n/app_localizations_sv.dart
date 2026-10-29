@@ -5663,6 +5663,528 @@ class AppLocalizationsSv extends AppLocalizations {
       'Godkänn de nya villkoren för att gå online.';
 
   @override
+  String get mapYourCar => 'Din bil';
+
+  @override
+  String get noticeDemoEventTitle => 'Kvällsefterfrågan i Stockholm';
+
+  @override
+  String get noticeDemoEventBody =>
+      '18:00–22:30 · Centrala Stockholm. Var online före den stora avresetiden.';
+
+  @override
+  String get noticeDemoEventIsland => 'Evenemang i kväll · City';
+
+  @override
+  String get categoryComfort => 'Komfort';
+
+  @override
+  String get categoryPriority => 'Prioritet';
+
+  @override
+  String get categoryElectric => 'Elbil';
+
+  @override
+  String get categoryBoosterSeat => 'Bältesstol';
+
+  @override
+  String get demoPickupNearYou => 'Upphämtning nära dig';
+
+  @override
+  String demoNearPlace(String place) {
+    return 'Nära $place';
+  }
+
+  @override
+  String get demoYourDestination => 'din destination';
+
+  @override
+  String demoOnYourWayPercent(int percent) {
+    return 'På vägen · $percent %';
+  }
+
+  @override
+  String get demoAwayFromRoute => 'Utanför din rutt';
+
+  @override
+  String get demoBehindYou => 'Bakom dig';
+
+  @override
+  String get vehDocsMissingCantDrive => 'Kan inte köras – ladda upp dokument';
+
+  @override
+  String docsNotApprovedCar(String names) {
+    return 'Den här bilen kan inte köras förrän dess dokument är godkända. Saknas: $names';
+  }
+
+  @override
+  String docsNotApprovedAccount(String names) {
+    return 'Ditt konto kan inte användas förrän de här dokumenten är godkända: $names';
+  }
+
+  @override
+  String get authStartingServer => 'Servern startar…';
+
+  @override
+  String authErrTooManyWrongCodes(String button) {
+    return 'För många fel försök – tryck på $button';
+  }
+
+  @override
+  String authRetryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minuter',
+      one: '1 minut',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authJoinWaitlist => 'Gå med i väntelistan';
+
+  @override
+  String get authWaitlistSaved =>
+      'Du står på väntelistan. Vi hör av oss när inloggningen öppnar för ditt nummer.';
+
+  @override
+  String get authTestNumbersTitle => 'Testnummer (endast testversion)';
+
+  @override
+  String get authTestStatusNew => 'Test · inget konto än';
+
+  @override
+  String get gateSignOut => 'Logga ut';
+
+  @override
+  String get gateTryAgain => 'Försök igen';
+
+  @override
+  String get authNeedHelp => 'Behöver du hjälp?';
+
+  @override
+  String get authHelpComingSoon => 'Kontaktuppgifter kommer snart';
+
+  @override
+  String get authHelpEmail => 'E-post';
+
+  @override
+  String get authHelpPhone => 'Telefon';
+
+  @override
+  String get authHelpCompany => 'Företag';
+
+  @override
+  String get authHelpClose => 'Stäng';
+
+  @override
+  String remTitle(Object count) {
+    return 'Viktiga påminnelser ($count)';
+  }
+
+  @override
+  String get remShow => 'Visa påminnelser';
+
+  @override
+  String get remHide => 'Dölj påminnelser';
+
+  @override
+  String get remBlocksOnlineLegend =>
+      'Rött: du kan inte gå online förrän det är fixat';
+
+  @override
+  String remDocOfCar(Object document, Object car) {
+    return '$document · $car';
+  }
+
+  @override
+  String remDocumentNeeded(Object document) {
+    return '$document saknas';
+  }
+
+  @override
+  String remDocumentRejected(Object document) {
+    return '$document godkändes inte';
+  }
+
+  @override
+  String remDocumentExpired(Object document) {
+    return '$document har gått ut';
+  }
+
+  @override
+  String remDocumentExpiring(Object document, Object when) {
+    return '$document går ut $when';
+  }
+
+  @override
+  String remDocumentInReview(Object document) {
+    return '$document: Movera granskar det';
+  }
+
+  @override
+  String get remCantGoOnlineUntil =>
+      'Du kan inte gå online förrän Movera godkänt det nya.';
+
+  @override
+  String get remAccountNotActive => 'Movera granskar ditt konto';
+
+  @override
+  String get remAccountNotActiveDetail =>
+      'Allt är skickat. Du kan gå online när Movera aktiverat ditt konto.';
+
+  @override
+  String get remFleetNotApproved => 'Movera har inte godkänt ditt åkeri än';
+
+  @override
+  String get remFleetNoApprovedCar => 'Ditt åkeri har ingen godkänd bil än';
+
+  @override
+  String get remFleetNoApprovedCarOwner =>
+      'Lägg till en bil eller slutför dess dokument under Mitt åkeri. Förarna kan gå online när en bil är godkänd.';
+
+  @override
+  String get remFleetNoApprovedCarMember =>
+      'Du kan gå online när åkeriägaren har en godkänd bil som du kan välja.';
+
+  @override
+  String get remNoVehicle => 'Välj en bil från ditt åkeri innan du går online';
+
+  @override
+  String get remUpload => 'Ladda upp';
+
+  @override
+  String get remUploadNew => 'Ladda upp nytt';
+
+  @override
+  String get remOpen => 'Öppna';
+
+  @override
+  String remCantGoOnline(Object reason) {
+    return 'Du kan inte gå online än: $reason';
+  }
+
+  @override
+  String liveOnlineDocumentsExpired(Object documents) {
+    return 'Ett dokument har gått ut: $documents. Ladda upp det nya för att gå online.';
+  }
+
+  @override
+  String get infoHowToBook => 'Så bokar du ditt informationsmöte';
+
+  @override
+  String get infoHowToBookShort => 'Så bokar du';
+
+  @override
+  String get infoNoContent =>
+      'Movera kontaktar dig för att boka en tid. Du behöver inte göra något mer nu.';
+
+  @override
+  String get infoHeld =>
+      'Movera har markerat ditt informationsmöte som genomfört.';
+
+  @override
+  String get infoOpenLink => 'Öppna bokningssidan';
+
+  @override
+  String get infoRequiredBeforeOnline =>
+      'Informationsmötet krävs innan du kan gå online.';
+
+  @override
+  String get guideExampleLabel => 'Exempel ritat av Movera';
+
+  @override
+  String get guideMustBeVisible => 'Se till att detta syns';
+
+  @override
+  String get guideTipsTitle => 'Tips för ett bra foto';
+
+  @override
+  String get guideUpload => 'Ladda upp';
+
+  @override
+  String get guidePickTakePhoto => 'Ta foto';
+
+  @override
+  String get guidePickLibrary => 'Bildbibliotek';
+
+  @override
+  String get guidePickFile => 'Välj fil';
+
+  @override
+  String get guideCameraBlockedTitle => 'Movera kan inte använda kameran';
+
+  @override
+  String get guideCameraBlockedBody =>
+      'Kameraåtkomst är avstängd för Movera. Slå på den i Inställningar, eller välj en fil du redan har.';
+
+  @override
+  String get guideOpenSettings => 'Öppna Inställningar';
+
+  @override
+  String get guideUploadingSlow => 'Laddar upp… det kan ta upp till en minut.';
+
+  @override
+  String get guideKeptPhoto =>
+      'Uppladdningen blev inte klar. Ditt foto finns kvar, så du kan försöka igen.';
+
+  @override
+  String get guideTryAgain => 'Försök igen';
+
+  @override
+  String get guideChooseAnother => 'Välj en annan';
+
+  @override
+  String guideExpiryNote(Object days) {
+    return 'Dokumentet har ett slutdatum. Movera fyller i det vid godkännandet och påminner dig $days dagar innan.';
+  }
+
+  @override
+  String guideCurrentStatus(Object status) {
+    return 'Nu: $status';
+  }
+
+  @override
+  String guideExpiresOn(Object date) {
+    return 'Går ut $date';
+  }
+
+  @override
+  String guideSelectedFile(Object name) {
+    return 'Vald: $name';
+  }
+
+  @override
+  String get guideLicenceBothSides => 'Körkortets fram- och baksida';
+
+  @override
+  String get guideNameAndPhoto => 'Ditt namn och foto';
+
+  @override
+  String get guideValidUntil => 'Giltig till-datumet';
+
+  @override
+  String get guideLicenceCategoryB => 'Behörighet B';
+
+  @override
+  String get guideLicenceCategoryB3Years => 'Behörighet B, i minst 3 år';
+
+  @override
+  String get guideIdWholeCard => 'Hela kortet eller passets fotosida';
+
+  @override
+  String get guidePhotoFaceFront => 'Ditt ansikte rakt framifrån, ögonen öppna';
+
+  @override
+  String get guidePhotoPlainBackground => 'En enkel, ljus bakgrund';
+
+  @override
+  String get guidePhotoNoSunglasses =>
+      'Inga solglasögon, keps eller andra personer';
+
+  @override
+  String get guideCardBothSides => 'Kortets fram- och baksida';
+
+  @override
+  String get guideCardNumber => 'Kortnumret';
+
+  @override
+  String get guideSeRegistrationBolagsverket =>
+      'Registreringsbeviset från Bolagsverket';
+
+  @override
+  String get guideKbisRecent =>
+      'Kbis eller SIRENE-intyg, högst 3 månader gammalt';
+
+  @override
+  String get guideCompanyNameAndNumber => 'Företagets namn och nummer';
+
+  @override
+  String get guideAllPages => 'Alla sidor';
+
+  @override
+  String get guideSeTrafficPermit =>
+      'Taxitrafiktillståndet från Transportstyrelsen';
+
+  @override
+  String get guideSeFTax => 'F-skattsedeln från Skatteverket';
+
+  @override
+  String get guideFrRib => 'Företagets RIB med IBAN och BIC';
+
+  @override
+  String get guideSeBankAccount => 'Kontobeviset med clearing- och kontonummer';
+
+  @override
+  String get guideAccountHolderName => 'Kontoinnehavarens namn';
+
+  @override
+  String get guideFrVtcRegister => 'Intyget från VTC-registret';
+
+  @override
+  String get guideFrRcPro => 'RC Pro-intyget för persontransport';
+
+  @override
+  String get guideFrUrssafRecent => 'URSSAF-intyget, högst 6 månader gammalt';
+
+  @override
+  String get guideFrCarteGrise => 'Carte grise, framsidan';
+
+  @override
+  String get guideSeRegistrationFront => 'Registreringsbeviset, del 1';
+
+  @override
+  String get guidePlateVisible => 'Registreringsnumret';
+
+  @override
+  String get guideOwnerName => 'Ägarens namn';
+
+  @override
+  String get guideFrPassengerInsurance =>
+      'Försäkringsintyget för persontransport';
+
+  @override
+  String get guideSeInsuranceLetter => 'Försäkringsbrevet för taxitrafik';
+
+  @override
+  String get guideFrStickerOnCar => 'VTC-dekalen på vindrutan';
+
+  @override
+  String get guideCarFront => 'Hela bilens framsida';
+
+  @override
+  String get guideCarBack => 'Hela bilens baksida';
+
+  @override
+  String get guideCarSide => 'Hela bilens sida, med hjulen';
+
+  @override
+  String get guideCarInside => 'Sätena från bakdörren, rena';
+
+  @override
+  String get guidePlateReadable => 'Registreringsskylten går att läsa';
+
+  @override
+  String get guideWholeDocument => 'Hela dokumentet, alla hörn';
+
+  @override
+  String get guideNameAndPhotoIfAny => 'Ditt namn (och foto, om det finns)';
+
+  @override
+  String get tipFlatDarkSurface => 'Lägg det plant på ett mörkt bord';
+
+  @override
+  String get tipNoGlare => 'Ingen blixt och inga reflexer';
+
+  @override
+  String get tipFourCorners => 'Alla fyra hörn med på bilden';
+
+  @override
+  String get tipPhotoHoldStill => 'Håll still så att texten blir skarp';
+
+  @override
+  String get tipPhotoDaylight => 'Bra dagsljus, inget motljus';
+
+  @override
+  String get tipPhotoNoFilter => 'Inga filter eller redigeringar';
+
+  @override
+  String get tipCarWholeInFrame =>
+      'Ta ett steg bakåt så att hela bilen kommer med';
+
+  @override
+  String get docOpenGuide => 'Öppna guiden och ladda upp';
+
+  @override
+  String docExpiresOnNote(Object date) {
+    return 'Går ut $date';
+  }
+
+  @override
+  String get startCompanyTitle => 'Starta eget företag';
+
+  @override
+  String get startCompanyIntro =>
+      'Ditt konto blir ett företagskonto (åkeri). Dokumenten du redan har finns kvar – du lägger bara till företagets och bilarnas dokument. Sedan godkänner Movera det som ett nytt åkeri.';
+
+  @override
+  String startCompanyLeavesFleet(Object fleet) {
+    return 'Du lämnar $fleet och går offline. Du kan inte gå online förrän Movera godkänt ditt företag.';
+  }
+
+  @override
+  String get startCompanyConfirmQ =>
+      'Göra ditt konto till ett företagskonto? Movera granskar det innan du kan köra igen.';
+
+  @override
+  String get startCompanySend => 'Skicka till Movera';
+
+  @override
+  String get startCompanySent => 'Skickat. Ditt företag väntar på Movera.';
+
+  @override
+  String get startCompanyFailed => 'Kunde inte starta företaget. Försök igen.';
+
+  @override
+  String get startCompanyAlreadyFleet =>
+      'Ditt konto är redan ett företagskonto.';
+
+  @override
+  String get carFuel => 'Drivmedel';
+
+  @override
+  String get fuelPetrol => 'Bensin';
+
+  @override
+  String get fuelDiesel => 'Diesel';
+
+  @override
+  String get fuelHybrid => 'Hybrid';
+
+  @override
+  String get fuelElectric => 'El';
+
+  @override
+  String carTypesFitHint(Object country) {
+    return 'Bara biltyperna som bilen passar för visas (Moveras regler för $country).';
+  }
+
+  @override
+  String get carTypesEnterFirst =>
+      'Fyll i årsmodell, platser och drivmedel för att se biltyperna.';
+
+  @override
+  String get carNoTypeFits =>
+      'Bilen passar ingen biltyp. Kontrollera årsmodell, platser och drivmedel.';
+
+  @override
+  String get carRulesCouldNotLoad => 'Kunde inte hämta Moveras bilregler.';
+
+  @override
+  String get carCategoryNotAllowed =>
+      'Bilen passar inte en av de valda biltyperna.';
+
+  @override
+  String get carPhotosTitle => 'Foton av bilen';
+
+  @override
+  String carPhotosIntro(Object car) {
+    return 'Movera behöver de här 4 fotona av $car innan bilen kan köras.';
+  }
+
+  @override
+  String get carPhotosDone => 'Klar';
+
+  @override
+  String get vehNotApprovedCantDrive =>
+      'Kan inte köras – Movera har inte godkänt bilen än';
+
+  @override
+  String get vehDocsMissingOwnerUploads =>
+      'Kan inte köras – åkeriägaren behöver slutföra bilens dokument';
+
+  @override
   String get swTripStatusDraft => 'Utkast';
 
   @override
@@ -5801,6 +6323,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get swDocumentStatusMissing => 'Saknas';
 
   @override
+  String get swDocumentStatusWaitingForMovera => 'Väntar på Movera';
+
+  @override
   String get swTicketStatusOpen => 'Öppet';
 
   @override
@@ -5852,118 +6377,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get swRatingStatusSkipped => 'Överhoppat';
 
   @override
-  String get mapYourCar => 'Din bil';
-
-  @override
-  String get noticeDemoEventTitle => 'Kvällsefterfrågan i Stockholm';
-
-  @override
-  String get noticeDemoEventBody =>
-      '18:00–22:30 · Centrala Stockholm. Var online före den stora avresetiden.';
-
-  @override
-  String get noticeDemoEventIsland => 'Evenemang i kväll · City';
-
-  @override
-  String get categoryComfort => 'Komfort';
-
-  @override
-  String get categoryPriority => 'Prioritet';
-
-  @override
-  String get categoryElectric => 'Elbil';
-
-  @override
-  String get categoryBoosterSeat => 'Bältesstol';
-
-  @override
-  String get demoPickupNearYou => 'Upphämtning nära dig';
-
-  @override
-  String demoNearPlace(String place) {
-    return 'Nära $place';
-  }
-
-  @override
-  String get demoYourDestination => 'din destination';
-
-  @override
-  String demoOnYourWayPercent(int percent) {
-    return 'På vägen · $percent %';
-  }
-
-  @override
-  String get demoAwayFromRoute => 'Utanför din rutt';
-
-  @override
-  String get demoBehindYou => 'Bakom dig';
-
-  @override
-  String get vehDocsMissingCantDrive => 'Kan inte köras – ladda upp dokument';
-
-  @override
-  String docsNotApprovedCar(String names) {
-    return 'Den här bilen kan inte köras förrän dess dokument är godkända. Saknas: $names';
-  }
-
-  @override
-  String docsNotApprovedAccount(String names) {
-    return 'Ditt konto kan inte användas förrän de här dokumenten är godkända: $names';
-  }
-
-  @override
-  String get authStartingServer => 'Servern startar…';
-
-  @override
-  String authErrTooManyWrongCodes(String button) {
-    return 'För många fel försök – tryck på $button';
-  }
-
-  @override
-  String authRetryMinutes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count minuter',
-      one: '1 minut',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get authJoinWaitlist => 'Gå med i väntelistan';
-
-  @override
-  String get authWaitlistSaved =>
-      'Du står på väntelistan. Vi hör av oss när inloggningen öppnar för ditt nummer.';
-
-  @override
-  String get authTestNumbersTitle => 'Testnummer (endast testversion)';
-
-  @override
-  String get authTestStatusNew => 'Test · inget konto än';
-
-  @override
-  String get gateSignOut => 'Logga ut';
-
-  @override
-  String get gateTryAgain => 'Försök igen';
-
-  @override
-  String get authNeedHelp => 'Behöver du hjälp?';
-
-  @override
-  String get authHelpComingSoon => 'Kontaktuppgifter kommer snart';
-
-  @override
-  String get authHelpEmail => 'E-post';
-
-  @override
-  String get authHelpPhone => 'Telefon';
-
-  @override
-  String get authHelpCompany => 'Företag';
-
-  @override
-  String get authHelpClose => 'Stäng';
+  String get docFleetOwnerOnly =>
+      'Bara åkeriägaren kan ladda upp eller öppna bilens dokument.';
 }

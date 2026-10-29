@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
-import 'package:movera/core/documents/document_expiry.dart';
+import 'package:movera/core/onboarding/document_status.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
@@ -55,12 +55,14 @@ void main() {
     expect([at.day, at.hour, at.minute], [29, 7, 40]);
   });
 
-  test('demo documents expire on calendar days across the autumn change '
-      '(driver-r4-12)', () {
-    final now = DateTime(2026, 10, 21, 9);
-    final insurance = DocumentExpiryStore.demo(now).first;
-    expect(insurance.expiresOn, DateTime(2026, 10, 28));
-    expect(insurance.daysLeft(now), 7);
+  test('document days left count whole days across the autumn change '
+      '(driver-r4-12, contract v0.17.0 daysLeft rounded up)', () {
+    final now = DateTime.utc(2026, 10, 21, 7);
+    // 7 calendar days later in Stockholm, with the 25 Oct clock change
+    // between: still 7 days, never 6 or 8.
+    expect(documentDaysLeft(DateTime.utc(2026, 10, 28, 6), now), 7);
+    expect(documentDaysLeft(DateTime.utc(2026, 10, 28, 7), now), 7);
+    expect(documentDaysLeft(DateTime.utc(2026, 10, 21, 6), now), 0);
   });
 
   group('saved times keep their instant in the repeated autumn hour '

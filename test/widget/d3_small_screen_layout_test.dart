@@ -4,15 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/trip_status.dart';
-import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/presentation/driver/accept%20ride/rider_cancelled_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_outcome_sheet.dart';
 import 'package:movera/presentation/driver/analytics/acceptance%20rate/acceptance_rate.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/presentation/driver/analytics/cancelation%20rate/cancelation_rate.dart';
-import 'package:movera/presentation/driver/documents/document_preview.dart';
-import 'package:movera/presentation/driver/documents/document_renewal.dart';
+import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
@@ -149,29 +147,22 @@ void main() {
       });
     }
 
-    // UI-13: the document upload sheet scrolls instead of overflowing.
-    testWidgets('UI-13 document upload sheet fits at $at', (tester) async {
-      final document = TrackedDocument(
-        id: 'DOC-INS-1',
-        title: 'Insurance letter',
-        shortTitle: 'Insurance',
-        expiresOn: DateTime(2030),
-      );
+    // UI-13 (owner group 2 item 4): the upload guide scrolls instead of
+    // overflowing; its Upload button stays reachable.
+    testWidgets('UI-13 document upload guide fits at $at', (tester) async {
       await _pumpAt(
         tester,
         size,
-        _opener(
-          (context) => showDocumentUploadSheet(
-            context,
-            document,
-            store: DocumentExpiryStore(),
-          ),
+        const UploadGuideScreen(
+          type: 'insurance',
+          ownerId: '',
+          isCar: true,
+          country: 'SE',
         ),
       );
-      await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      final send = find.byKey(const ValueKey<String>('document-upload-send'));
+      final send = find.byKey(const ValueKey<String>('guide-upload'));
       await tester.ensureVisible(send);
       await tester.pumpAndSettle();
       _expectTappable(tester, send, size);
@@ -245,9 +236,14 @@ void main() {
       await _pumpAt(
         tester,
         size,
-        const DocumentPreview(title: 'Driver’s license'),
+        const UploadGuideScreen(
+          type: 'driving_license',
+          ownerId: '',
+          isCar: false,
+          country: 'SE',
+        ),
       );
-      expect(find.textContaining('Not available yet'), findsOneWidget);
+      expect(find.text('Example drawn by Movera'), findsWidgets);
     });
 
     // UI-10: one set of sample numbers, formatted the same everywhere.

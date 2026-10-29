@@ -51,7 +51,8 @@ import 'package:movera/core/session/driver_session_repository.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
-import 'package:movera/core/documents/document_expiry.dart';
+import 'package:movera/core/onboarding/driver_reminders.dart';
+import 'package:movera/core/onboarding/onboarding_settings.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
@@ -387,7 +388,8 @@ class _MoveraAppState extends State<MoveraApp> {
     // Per-driver state kept in memory: the next driver must not see these
     // notifications (rider pickup addresses) or documents in review.
     DriverNotificationFeed.instance.reset();
-    DocumentExpiryStore.instance.reset();
+    DriverRemindersStore.instance.clear();
+    OnboardingSettingsStore.instance.clear();
     LocalChatMessages.reset();
     // Nor the trip chats read from the server.
     _live?.chat.reset();

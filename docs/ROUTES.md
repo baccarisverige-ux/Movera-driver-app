@@ -13,7 +13,6 @@ Refreshed against main `2b46a5711a9590da76b82d978f7103d045ad7f92` (F10d, pull re
 | Analytics | `lib/presentation/driver/analytics/analytics.dart` | demo reachable | `lib/presentation/driver/profile/profile.dart` |
 | CancelationRate | `lib/presentation/driver/analytics/cancelation rate/cancelation_rate.dart` | demo reachable | `lib/presentation/driver/analytics/analytics.dart` |
 | Chat | `lib/presentation/common/chat/chat.dart` | demo reachable | `lib/presentation/driver/accept ride/accept_ride_panel.dart` |
-| DocumentPreview | `lib/presentation/driver/documents/document_preview.dart` | demo reachable | `lib/presentation/driver/documents/documents.dart` |
 | DriverCreateAccount | `lib/presentation/driver/auth/create acc/create_acc.dart` | legacy gated | `lib/presentation/driver/auth/sign in/sign_in.dart` |
 | DriverCreateAccountPhone | `lib/presentation/driver/auth/create acc/create_acc_phone.dart` | legacy gated | `lib/presentation/driver/auth/create acc/create_acc.dart` |
 | DriverDestinationPicker | `lib/presentation/driver/destination mode/destination_picker.dart` | demo reachable | `lib/presentation/driver/home/home_map_sheet.dart` |
@@ -49,7 +48,7 @@ Refreshed against main `2b46a5711a9590da76b82d978f7103d045ad7f92` (F10d, pull re
 ## Canonical tasks
 - Active trips: Home → AcceptRide → DriverRideCompleted → Home or queued AcceptRide.
 - History: RideHistory → detail, with illustrative route map.
-- Documents: DriverDocuments → item-specific DocumentPreview (no legacy upload).
+- Documents: DriverDocuments → UploadGuideScreen per document (group 2, owner item 4; the demo uploads nothing) or InfoSessionScreen ("How to book"); live: LiveDocumentsScreen → the same. DocumentPreview was removed with the demo expiry code (contract v0.17.0).
 - Support: SupportInboxScreen → local conversation draft.
 - Reservations: ScheduledRidesScreen → nonbinding preview detail.
 - Logout: back to Home in demo mode (the demo landing screen was removed); legacy sign-in is disabled by default.

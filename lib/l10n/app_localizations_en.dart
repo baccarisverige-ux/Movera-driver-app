@@ -5651,6 +5651,529 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contentTermsBlockOnline => 'Accept the new terms to go online.';
 
   @override
+  String get mapYourCar => 'Your car';
+
+  @override
+  String get noticeDemoEventTitle => 'Stockholm evening demand';
+
+  @override
+  String get noticeDemoEventBody =>
+      '18:00–22:30 · Central Stockholm. Be online before the main departure window.';
+
+  @override
+  String get noticeDemoEventIsland => 'Event tonight · City';
+
+  @override
+  String get categoryComfort => 'Comfort';
+
+  @override
+  String get categoryPriority => 'Priority';
+
+  @override
+  String get categoryElectric => 'Electric';
+
+  @override
+  String get categoryBoosterSeat => 'Booster Seat';
+
+  @override
+  String get demoPickupNearYou => 'Pickup near you';
+
+  @override
+  String demoNearPlace(String place) {
+    return 'Near $place';
+  }
+
+  @override
+  String get demoYourDestination => 'your destination';
+
+  @override
+  String demoOnYourWayPercent(int percent) {
+    return 'On your way · $percent %';
+  }
+
+  @override
+  String get demoAwayFromRoute => 'Away from your route';
+
+  @override
+  String get demoBehindYou => 'Behind you';
+
+  @override
+  String get vehDocsMissingCantDrive => 'Can\'t be driven – upload documents';
+
+  @override
+  String docsNotApprovedCar(String names) {
+    return 'This car can\'t be driven until its documents are approved. Missing: $names';
+  }
+
+  @override
+  String docsNotApprovedAccount(String names) {
+    return 'Your account can\'t be used until these documents are approved: $names';
+  }
+
+  @override
+  String get authStartingServer => 'Starting the server…';
+
+  @override
+  String authErrTooManyWrongCodes(String button) {
+    return 'Too many wrong tries – tap $button';
+  }
+
+  @override
+  String authRetryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min',
+      one: '1 min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authJoinWaitlist => 'Join the waiting list';
+
+  @override
+  String get authWaitlistSaved =>
+      'You’re on the waiting list. We’ll let you know when sign-in opens for your number.';
+
+  @override
+  String get authTestNumbersTitle => 'Test numbers (test build only)';
+
+  @override
+  String get authTestStatusNew => 'Test · no account yet';
+
+  @override
+  String get gateSignOut => 'Sign out';
+
+  @override
+  String get gateTryAgain => 'Try again';
+
+  @override
+  String get authNeedHelp => 'Need help?';
+
+  @override
+  String get authHelpComingSoon => 'Contact details coming soon';
+
+  @override
+  String get authHelpEmail => 'E-mail';
+
+  @override
+  String get authHelpPhone => 'Phone';
+
+  @override
+  String get authHelpCompany => 'Company';
+
+  @override
+  String get authHelpClose => 'Close';
+
+  @override
+  String remTitle(Object count) {
+    return 'Important reminders ($count)';
+  }
+
+  @override
+  String get remShow => 'Show reminders';
+
+  @override
+  String get remHide => 'Hide reminders';
+
+  @override
+  String get remBlocksOnlineLegend =>
+      'Red: you can\'t go online until it is fixed';
+
+  @override
+  String remDocOfCar(Object document, Object car) {
+    return '$document · $car';
+  }
+
+  @override
+  String remDocumentNeeded(Object document) {
+    return '$document is missing';
+  }
+
+  @override
+  String remDocumentRejected(Object document) {
+    return '$document was rejected';
+  }
+
+  @override
+  String remDocumentExpired(Object document) {
+    return '$document has expired';
+  }
+
+  @override
+  String remDocumentExpiring(Object document, Object when) {
+    return '$document expires $when';
+  }
+
+  @override
+  String remDocumentInReview(Object document) {
+    return '$document: Movera is checking it';
+  }
+
+  @override
+  String get remCantGoOnlineUntil =>
+      'You can\'t go online until Movera approves the new one.';
+
+  @override
+  String get remAccountNotActive => 'Movera is checking your account';
+
+  @override
+  String get remAccountNotActiveDetail =>
+      'Everything is sent. You can go online when Movera activates your account.';
+
+  @override
+  String get remFleetNotApproved => 'Movera has not approved your fleet yet';
+
+  @override
+  String get remFleetNoApprovedCar => 'Your fleet has no approved car yet';
+
+  @override
+  String get remFleetNoApprovedCarOwner =>
+      'Add a car or finish its documents in My fleet. Drivers can go online once a car is approved.';
+
+  @override
+  String get remFleetNoApprovedCarMember =>
+      'You can go online when your fleet owner has an approved car for you to choose.';
+
+  @override
+  String get remNoVehicle =>
+      'Choose a car from your fleet before you go online';
+
+  @override
+  String get remUpload => 'Upload';
+
+  @override
+  String get remUploadNew => 'Upload new';
+
+  @override
+  String get remOpen => 'Open';
+
+  @override
+  String remCantGoOnline(Object reason) {
+    return 'You can\'t go online yet: $reason';
+  }
+
+  @override
+  String liveOnlineDocumentsExpired(Object documents) {
+    return 'A document has expired: $documents. Upload the new one to go online.';
+  }
+
+  @override
+  String get infoHowToBook => 'How to book your info session';
+
+  @override
+  String get infoHowToBookShort => 'How to book';
+
+  @override
+  String get infoNoContent =>
+      'Movera will contact you to book a time. You don\'t need to do anything else now.';
+
+  @override
+  String get infoHeld => 'Movera has marked your info session as held.';
+
+  @override
+  String get infoOpenLink => 'Open the booking page';
+
+  @override
+  String get infoRequiredBeforeOnline =>
+      'The info session is needed before you can go online.';
+
+  @override
+  String get guideExampleLabel => 'Example drawn by Movera';
+
+  @override
+  String get guideMustBeVisible => 'Make sure this is visible';
+
+  @override
+  String get guideTipsTitle => 'Tips for a good photo';
+
+  @override
+  String get guideUpload => 'Upload';
+
+  @override
+  String get guidePickTakePhoto => 'Take photo';
+
+  @override
+  String get guidePickLibrary => 'Photo library';
+
+  @override
+  String get guidePickFile => 'Choose file';
+
+  @override
+  String get guideCameraBlockedTitle => 'Movera can\'t use your camera';
+
+  @override
+  String get guideCameraBlockedBody =>
+      'Camera access is off for Movera. Turn it on in Settings, or choose a file you already have.';
+
+  @override
+  String get guideOpenSettings => 'Open Settings';
+
+  @override
+  String get guideUploadingSlow => 'Uploading… this can take up to a minute.';
+
+  @override
+  String get guideKeptPhoto =>
+      'The upload did not finish. Your photo is kept, so you can try again.';
+
+  @override
+  String get guideTryAgain => 'Try again';
+
+  @override
+  String get guideChooseAnother => 'Choose another';
+
+  @override
+  String guideExpiryNote(Object days) {
+    return 'This document has an end date. Movera types it when approving, and reminds you $days days before.';
+  }
+
+  @override
+  String guideCurrentStatus(Object status) {
+    return 'Now: $status';
+  }
+
+  @override
+  String guideExpiresOn(Object date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String guideSelectedFile(Object name) {
+    return 'Selected: $name';
+  }
+
+  @override
+  String get guideLicenceBothSides => 'Front and back of the licence';
+
+  @override
+  String get guideNameAndPhoto => 'Your name and photo';
+
+  @override
+  String get guideValidUntil => 'The valid-until date';
+
+  @override
+  String get guideLicenceCategoryB => 'Category B';
+
+  @override
+  String get guideLicenceCategoryB3Years =>
+      'Category B, held for at least 3 years';
+
+  @override
+  String get guideIdWholeCard => 'The whole card or the passport photo page';
+
+  @override
+  String get guidePhotoFaceFront => 'Your face from the front, eyes open';
+
+  @override
+  String get guidePhotoPlainBackground => 'A plain, light background';
+
+  @override
+  String get guidePhotoNoSunglasses => 'No sunglasses, cap or other people';
+
+  @override
+  String get guideCardBothSides => 'Front and back of the card';
+
+  @override
+  String get guideCardNumber => 'The card number';
+
+  @override
+  String get guideSeRegistrationBolagsverket =>
+      'The registration certificate from Bolagsverket';
+
+  @override
+  String get guideKbisRecent => 'Kbis or SIRENE notice, less than 3 months old';
+
+  @override
+  String get guideCompanyNameAndNumber => 'The company name and number';
+
+  @override
+  String get guideAllPages => 'Every page';
+
+  @override
+  String get guideSeTrafficPermit =>
+      'The taxi traffic permit from Transportstyrelsen';
+
+  @override
+  String get guideSeFTax => 'The F-skatt certificate from Skatteverket';
+
+  @override
+  String get guideFrRib => 'The company RIB with IBAN and BIC';
+
+  @override
+  String get guideSeBankAccount =>
+      'The account certificate with clearing and account number';
+
+  @override
+  String get guideAccountHolderName => 'The account holder\'s name';
+
+  @override
+  String get guideFrVtcRegister =>
+      'The certificate of the VTC operators register';
+
+  @override
+  String get guideFrRcPro => 'The RC Pro certificate for passenger transport';
+
+  @override
+  String get guideFrUrssafRecent =>
+      'The URSSAF certificate, less than 6 months old';
+
+  @override
+  String get guideFrCarteGrise => 'The carte grise, front side';
+
+  @override
+  String get guideSeRegistrationFront => 'The registration certificate, part 1';
+
+  @override
+  String get guidePlateVisible => 'The plate number';
+
+  @override
+  String get guideOwnerName => 'The owner\'s name';
+
+  @override
+  String get guideFrPassengerInsurance =>
+      'The passenger transport insurance certificate';
+
+  @override
+  String get guideSeInsuranceLetter => 'The insurance letter for taxi traffic';
+
+  @override
+  String get guideFrStickerOnCar => 'The VTC sticker on the windscreen';
+
+  @override
+  String get guideCarFront => 'The whole front of the car';
+
+  @override
+  String get guideCarBack => 'The whole back of the car';
+
+  @override
+  String get guideCarSide => 'The whole side of the car, wheels included';
+
+  @override
+  String get guideCarInside => 'The seats from the back door, clean';
+
+  @override
+  String get guidePlateReadable => 'The plate can be read';
+
+  @override
+  String get guideWholeDocument => 'The whole document, every corner';
+
+  @override
+  String get guideNameAndPhotoIfAny => 'Your name (and photo, if it has one)';
+
+  @override
+  String get tipFlatDarkSurface => 'Lay it flat on a dark table';
+
+  @override
+  String get tipNoGlare => 'No flash and no glare on it';
+
+  @override
+  String get tipFourCorners => 'All four corners in the photo';
+
+  @override
+  String get tipPhotoHoldStill => 'Hold still so the text is sharp';
+
+  @override
+  String get tipPhotoDaylight => 'Good daylight, no backlight';
+
+  @override
+  String get tipPhotoNoFilter => 'No filters or edits';
+
+  @override
+  String get tipCarWholeInFrame => 'Step back so the whole car fits';
+
+  @override
+  String get docOpenGuide => 'Open the guide and upload';
+
+  @override
+  String docExpiresOnNote(Object date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get startCompanyTitle => 'Start my own company';
+
+  @override
+  String get startCompanyIntro =>
+      'Your account becomes a company (fleet) account. The documents you already have are kept – you only add the company\'s and your cars\' documents. Movera then approves it like a new fleet.';
+
+  @override
+  String startCompanyLeavesFleet(Object fleet) {
+    return 'You leave $fleet and go offline. You can\'t go online until Movera approves your company.';
+  }
+
+  @override
+  String get startCompanyConfirmQ =>
+      'Make your account a company account? Movera checks it before you can drive again.';
+
+  @override
+  String get startCompanySend => 'Send to Movera';
+
+  @override
+  String get startCompanySent => 'Sent. Your company waits for Movera.';
+
+  @override
+  String get startCompanyFailed => 'Could not start the company. Try again.';
+
+  @override
+  String get startCompanyAlreadyFleet =>
+      'Your account is already a company account.';
+
+  @override
+  String get carFuel => 'Fuel';
+
+  @override
+  String get fuelPetrol => 'Petrol';
+
+  @override
+  String get fuelDiesel => 'Diesel';
+
+  @override
+  String get fuelHybrid => 'Hybrid';
+
+  @override
+  String get fuelElectric => 'Electric';
+
+  @override
+  String carTypesFitHint(Object country) {
+    return 'Only the car types this car fits are shown (Movera\'s rules for $country).';
+  }
+
+  @override
+  String get carTypesEnterFirst =>
+      'Enter the year, seats and fuel to see the car types.';
+
+  @override
+  String get carNoTypeFits =>
+      'This car fits no car type. Check the year, seats and fuel.';
+
+  @override
+  String get carRulesCouldNotLoad => 'Could not load Movera\'s car rules.';
+
+  @override
+  String get carCategoryNotAllowed =>
+      'This car does not fit one of the chosen car types.';
+
+  @override
+  String get carPhotosTitle => 'Photos of the car';
+
+  @override
+  String carPhotosIntro(Object car) {
+    return 'Movera needs these 4 photos of $car before it can be driven.';
+  }
+
+  @override
+  String get carPhotosDone => 'Done';
+
+  @override
+  String get vehNotApprovedCantDrive =>
+      'Can\'t be driven – Movera has not approved this car yet';
+
+  @override
+  String get vehDocsMissingOwnerUploads =>
+      'Can\'t be driven – the fleet owner must finish its documents';
+
+  @override
   String get swTripStatusDraft => 'Draft';
 
   @override
@@ -5789,6 +6312,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get swDocumentStatusMissing => 'Missing';
 
   @override
+  String get swDocumentStatusWaitingForMovera => 'Waiting for Movera';
+
+  @override
   String get swTicketStatusOpen => 'Open';
 
   @override
@@ -5840,118 +6366,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get swRatingStatusSkipped => 'Skipped';
 
   @override
-  String get mapYourCar => 'Your car';
-
-  @override
-  String get noticeDemoEventTitle => 'Stockholm evening demand';
-
-  @override
-  String get noticeDemoEventBody =>
-      '18:00–22:30 · Central Stockholm. Be online before the main departure window.';
-
-  @override
-  String get noticeDemoEventIsland => 'Event tonight · City';
-
-  @override
-  String get categoryComfort => 'Comfort';
-
-  @override
-  String get categoryPriority => 'Priority';
-
-  @override
-  String get categoryElectric => 'Electric';
-
-  @override
-  String get categoryBoosterSeat => 'Booster Seat';
-
-  @override
-  String get demoPickupNearYou => 'Pickup near you';
-
-  @override
-  String demoNearPlace(String place) {
-    return 'Near $place';
-  }
-
-  @override
-  String get demoYourDestination => 'your destination';
-
-  @override
-  String demoOnYourWayPercent(int percent) {
-    return 'On your way · $percent %';
-  }
-
-  @override
-  String get demoAwayFromRoute => 'Away from your route';
-
-  @override
-  String get demoBehindYou => 'Behind you';
-
-  @override
-  String get vehDocsMissingCantDrive => 'Can\'t be driven – upload documents';
-
-  @override
-  String docsNotApprovedCar(String names) {
-    return 'This car can\'t be driven until its documents are approved. Missing: $names';
-  }
-
-  @override
-  String docsNotApprovedAccount(String names) {
-    return 'Your account can\'t be used until these documents are approved: $names';
-  }
-
-  @override
-  String get authStartingServer => 'Starting the server…';
-
-  @override
-  String authErrTooManyWrongCodes(String button) {
-    return 'Too many wrong tries – tap $button';
-  }
-
-  @override
-  String authRetryMinutes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count min',
-      one: '1 min',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get authJoinWaitlist => 'Join the waiting list';
-
-  @override
-  String get authWaitlistSaved =>
-      'You’re on the waiting list. We’ll let you know when sign-in opens for your number.';
-
-  @override
-  String get authTestNumbersTitle => 'Test numbers (test build only)';
-
-  @override
-  String get authTestStatusNew => 'Test · no account yet';
-
-  @override
-  String get gateSignOut => 'Sign out';
-
-  @override
-  String get gateTryAgain => 'Try again';
-
-  @override
-  String get authNeedHelp => 'Need help?';
-
-  @override
-  String get authHelpComingSoon => 'Contact details coming soon';
-
-  @override
-  String get authHelpEmail => 'E-mail';
-
-  @override
-  String get authHelpPhone => 'Phone';
-
-  @override
-  String get authHelpCompany => 'Company';
-
-  @override
-  String get authHelpClose => 'Close';
+  String get docFleetOwnerOnly =>
+      'Only the fleet owner can upload or open car documents.';
 }
