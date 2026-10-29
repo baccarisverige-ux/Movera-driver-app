@@ -3861,7 +3861,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get legalTermsBody =>
-      'Du godkänner att bara köra med giltigt körkort, försäkring och ett fordon som stämmer med dokumenten i appen.\n\nRadarerbjudanden går till den som är först. Att ta en ny resa under en pågående resa är frivilligt. En avslutad resa skapar en körjournal som du kan öppna igen från start.\n\nMovera kan stänga av ett demokonto som missbrukar säkerhetsverktygen eller nödsamtal.';
+      'Du godkänner att bara köra med giltigt körkort, försäkring och ett fordon som stämmer med dokumenten i appen.\n\nRadarerbjudanden går till den som är först. Att ta en ny resa under en pågående resa är frivilligt. En avslutad resa skapar en körjournal som du kan öppna igen från start.\n\nMovera kan stänga av ett demokonto som missbrukar säkerhetsverktygen eller nödsamtal.\n\nKrasch- och felrapporter: när appen kraschar eller visar ett fel skickar den automatiskt en rapport till Movera så att vi kan rätta felet: felet, var i appen det hände, appversion, plattform och tid. Namn, telefonnummer, e-postadresser, adresser och platser tas bort innan rapporten lämnar din enhet. Rapporterna sparas i 30 dagar.';
 
   @override
   String get privacyPolicyTitle => 'Integritetspolicy';

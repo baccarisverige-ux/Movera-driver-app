@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:movera/core/logging/crash_reports.dart';
 
 /// The app's route observer. Subscribers hear about every modal route,
 /// dialogs and bottom sheets included; [pages] only about full screens,
@@ -12,12 +13,14 @@ class DriverRouteObserver extends RouteObserver<ModalRoute<void>> {
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
     pages.didPush(route, previousRoute);
+    _top(route);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
     pages.didPop(route, previousRoute);
+    _top(previousRoute);
   }
 
   @override
@@ -30,6 +33,12 @@ class DriverRouteObserver extends RouteObserver<ModalRoute<void>> {
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
     pages.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    _top(newRoute);
+  }
+
+  /// Contract v0.16.0: a crash report names the screen on top.
+  static void _top(Route<dynamic>? route) {
+    if (route != null) CrashReports.currentScreen = route.settings.name;
   }
 }
 

@@ -1092,7 +1092,7 @@
   "rrNewTripsAppear": "Nya resor visas här när radarn hittar förfrågningar runt dig.",
   "moveraDriver": "Movera-förare",
   "legalPrivacyBody": "Movera Driver använder plats-, rese- och fordonsdata för att tilldela resor, visa rutter och spara en körjournal på enheten.\n\nDemoversioner sparar informationen i telefonens minne. Inget säljs till annonsörer. Du kan logga ut när som helst från Profil.\n\nNär en riktig server är ansluten används samma text tills en signerad version publiceras.",
-  "legalTermsBody": "Du godkänner att bara köra med giltigt körkort, försäkring och ett fordon som stämmer med dokumenten i appen.\n\nRadarerbjudanden går till den som är först. Att ta en ny resa under en pågående resa är frivilligt. En avslutad resa skapar en körjournal som du kan öppna igen från start.\n\nMovera kan stänga av ett demokonto som missbrukar säkerhetsverktygen eller nödsamtal.",
+  "legalTermsBody": "Du godkänner att bara köra med giltigt körkort, försäkring och ett fordon som stämmer med dokumenten i appen.\n\nRadarerbjudanden går till den som är först. Att ta en ny resa under en pågående resa är frivilligt. En avslutad resa skapar en körjournal som du kan öppna igen från start.\n\nMovera kan stänga av ett demokonto som missbrukar säkerhetsverktygen eller nödsamtal.\n\nKrasch- och felrapporter: när appen kraschar eller visar ett fel skickar den automatiskt en rapport till Movera så att vi kan rätta felet: felet, var i appen det hände, appversion, plattform och tid. Namn, telefonnummer, e-postadresser, adresser och platser tas bort innan rapporten lämnar din enhet. Rapporterna sparas i 30 dagar.",
   "privacyPolicyTitle": "Integritetspolicy",
   "termsOfService": "Användarvillkor",
   "profSampleDriver": "Exempelprofil för förare",

@@ -4,6 +4,8 @@ import 'package:movera/core/session/driver_route_observer.dart';
 
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/logging/global_error_hooks.dart';
+import 'package:movera/core/logging/crash_reports.dart';
+import 'package:movera/core/logging/driver_log.dart';
 
 import 'package:flutter/material.dart';
 import 'package:movera/presentation/driver/content/driver_content_gate.dart';
@@ -126,6 +128,9 @@ class _MoveraAppState extends State<MoveraApp> {
   /// Live builds: tells [LiveDriverServices] when the app is back on screen.
   AppLifecycleListener? _lifecycle;
 
+  /// Live builds: crash and error reports to movera-server.
+  CrashReportSink? _crashReports;
+
   @override
   void initState() {
     super.initState();
@@ -141,6 +146,23 @@ class _MoveraAppState extends State<MoveraApp> {
       tokens: _tokens,
       onSessionExpired: _sessionExpired,
     );
+    // Contract v0.16.0 (owner 2026-10-29, "Add automatic and add this in
+    // term and condition"): a live build sends crashes and reported errors
+    // on its own, scrubbed, with the driver's token when signed in. The
+    // demo has no server to send them to.
+    if (DriverRuntimeConfig.current.authRequired) {
+      final version = CrashReports.splitVersion(driverAppVersion);
+      final reports = _crashReports = CrashReportSink(
+        baseUri: DriverRuntimeConfig.current.apiBaseUri,
+        client: _http,
+        accessToken: _tokens.readAccess,
+        appVersion: version.version,
+        build: version.build,
+        platform: CrashReports.platformName(),
+        next: DriverLog.sink,
+      );
+      DriverLog.sink = reports.call;
+    }
     _auth = AuthController(
       repository: AuthRepository(api: _api, tokens: _tokens),
     );
@@ -216,6 +238,11 @@ class _MoveraAppState extends State<MoveraApp> {
       dispatch.dispose();
     }
     _lifecycle?.dispose();
+    final reports = _crashReports;
+    if (reports != null) {
+      if (reports.next != null) DriverLog.sink = reports.next!;
+      reports.dispose();
+    }
     final live = _live;
     if (live != null) {
       unawaited(live.dispose());
