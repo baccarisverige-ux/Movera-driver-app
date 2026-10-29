@@ -6014,4 +6014,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String docsNotApprovedAccount(String names) {
     return 'Your account can\'t be used until these documents are approved: $names';
   }
+
+  @override
+  String get authStartingServer => 'Starting the server…';
+
+  @override
+  String authErrTooManyWrongCodes(String button) {
+    return 'Too many wrong tries – tap $button';
+  }
+
+  @override
+  String authRetryMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String get authJoinWaitlist => 'Join the waiting list';
+
+  @override
+  String get authWaitlistSaved =>
+      'You’re on the waiting list. We’ll let you know when sign-in opens for your number.';
+
+  @override
+  String get authTestNumbersTitle => 'Test numbers (test build only)';
+
+  @override
+  String get authTestStatusNew => 'Test · no account yet';
+
+  @override
+  String get gateSignOut => 'Sign out';
+
+  @override
+  String get gateSupportUnavailable =>
+      'Couldn’t open e-mail. Write to Movera support from another device.';
+
+  @override
+  String get gateTryAgain => 'Try again';
 }

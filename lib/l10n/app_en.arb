@@ -3852,5 +3852,18 @@
   "docsNotApprovedCar": "This car can't be driven until its documents are approved. Missing: {names}",
   "@docsNotApprovedCar": {"placeholders": {"names": {"type": "String"}}},
   "docsNotApprovedAccount": "Your account can't be used until these documents are approved: {names}",
-  "@docsNotApprovedAccount": {"placeholders": {"names": {"type": "String"}}}
+  "@docsNotApprovedAccount": {"placeholders": {"names": {"type": "String"}}},
+  "authStartingServer": "Starting the server…",
+  "@authStartingServer": {"description": "Owner 2026-10-29 decision 1: shown while a sign-in call waits for a sleeping server."},
+  "authErrTooManyWrongCodes": "Too many wrong tries – tap {button}",
+  "@authErrTooManyWrongCodes": {"description": "Owner decision 3: after 5 wrong codes. {button} is the resend button label.", "placeholders": {"button": {"type": "String"}}},
+  "authRetryMinutes": "{count} min",
+  "@authRetryMinutes": {"description": "Owner decision 4: a sign-in wait of a minute or more, rounded up.", "placeholders": {"count": {"type": "int"}}},
+  "authJoinWaitlist": "Join the waiting list",
+  "authWaitlistSaved": "You’re on the waiting list. We’ll let you know when sign-in opens for your number.",
+  "authTestNumbersTitle": "Test numbers (test build only)",
+  "authTestStatusNew": "Test · no account yet",
+  "gateSignOut": "Sign out",
+  "gateSupportUnavailable": "Couldn’t open e-mail. Write to Movera support from another device.",
+  "gateTryAgain": "Try again"
 }

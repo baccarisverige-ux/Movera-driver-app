@@ -17,6 +17,8 @@ class AuthRepository {
   static const verifyPath = '/api/v1/auth/otp/verify';
   static const providerPath = '/api/v1/auth/provider';
   static const signOutPath = '/api/v1/auth/sign-out';
+  static const waitlistPath = '/api/v1/auth/waitlist';
+  static const testAccountsPath = '/api/v1/auth/test-accounts';
 
   /// A 4-digit code, as the server checks it.
   static bool isValidCode(String code) => RegExp(r'^\d{4}$').hasMatch(code);
@@ -36,6 +38,7 @@ class AuthRepository {
         if (link != null) 'linkToken': link.linkToken,
       },
       authenticated: false,
+      timeout: ApiClient.signInTimeout,
     );
     final sessionId = response['sessionId'];
     final expiresAt = DateTime.tryParse('${response['expiresAt'] ?? ''}');
@@ -77,6 +80,7 @@ class AuthRepository {
         if (link != null) 'linkToken': link.linkToken,
       },
       authenticated: false,
+      timeout: ApiClient.signInTimeout,
     );
     return _saveSession(response);
   }
@@ -105,6 +109,7 @@ class AuthRepository {
         if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
       },
       authenticated: false,
+      timeout: ApiClient.signInTimeout,
     );
     if (response['code'] == 'PHONE_REQUIRED') {
       final linkToken = response['linkToken'];
@@ -145,6 +150,46 @@ class AuthRepository {
     );
   }
 
+  /// Contract v0.15.0 (owner 2026-10-29, decision 5): a number answered
+  /// `403 sign_in_restricted` joins the waiting list; the admin sees it.
+  Future<void> joinWaitlist(String phone, {String? locale}) async {
+    await _api.post(
+      waitlistPath,
+      body: {
+        'phone': phone.replaceAll(' ', '').trim(),
+        'app': 'driver',
+        if (locale != null) 'locale': locale,
+      },
+      authenticated: false,
+      timeout: ApiClient.signInTimeout,
+    );
+  }
+
+  /// Contract v0.15.0 (decision 6): the test numbers of this app with
+  /// each account's status. Only test builds ask; a production server has
+  /// no such route (404).
+  Future<List<TestAccount>> testAccounts() async {
+    final response = await _api.get(
+      testAccountsPath,
+      authenticated: false,
+      timeout: ApiClient.signInTimeout,
+    );
+    final list = response['accounts'];
+    if (list is! List) return const [];
+    return [
+      for (final item in list)
+        if (item is Map &&
+            item['app'] == 'driver' &&
+            item['phone'] is String &&
+            item['status'] is String)
+          TestAccount(
+            phone: item['phone'] as String,
+            status: item['status'] as String,
+            name: item['name'] is String ? item['name'] as String : null,
+          ),
+    ];
+  }
+
   Future<String?> readAccessToken() => _tokens.readAccess();
 
   /// True with both tokens on this device.
@@ -172,4 +217,14 @@ class AuthRepository {
       await _tokens.clear();
     }
   }
+}
+
+/// One test number and its driver account's status (`test` before the
+/// first sign-in, else the account status).
+class TestAccount {
+  const TestAccount({required this.phone, required this.status, this.name});
+
+  final String phone;
+  final String status;
+  final String? name;
 }

@@ -1721,5 +1721,15 @@
   "demoBehindYou": "Derrière vous",
   "vehDocsMissingCantDrive": "Ne peut pas rouler – téléversez les documents",
   "docsNotApprovedCar": "Cette voiture ne peut pas rouler tant que ses documents ne sont pas approuvés. Manquants : {names}",
-  "docsNotApprovedAccount": "Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : {names}"
+  "docsNotApprovedAccount": "Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : {names}",
+  "authStartingServer": "Démarrage du serveur…",
+  "authErrTooManyWrongCodes": "Trop d’essais erronés – touchez {button}",
+  "authRetryMinutes": "{count} min",
+  "authJoinWaitlist": "Rejoindre la liste d’attente",
+  "authWaitlistSaved": "Vous êtes sur la liste d’attente. Nous vous préviendrons quand la connexion ouvrira pour votre numéro.",
+  "authTestNumbersTitle": "Numéros de test (version de test uniquement)",
+  "authTestStatusNew": "Test · pas encore de compte",
+  "gateSignOut": "Se déconnecter",
+  "gateSupportUnavailable": "Impossible d’ouvrir l’e-mail. Écrivez à l’assistance Movera depuis un autre appareil.",
+  "gateTryAgain": "Réessayer"
 }
