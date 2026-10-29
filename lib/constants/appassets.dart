@@ -4,8 +4,6 @@ class AppAssets {
   static const String send = 'assets/icons/send.png';
   static const String phoneOutl = 'assets/icons/phone_outl.png';
   static const String wallet2 = 'assets/icons/wallet2.png';
-  static const String vehicle = 'assets/icons/vehicle.png';
-  static const String model = 'assets/icons/model.png';
   static const String menu = 'assets/icons/menu.png';
   // Lucide (ISC) bottom-sheet nav icons — see assets/icons/NAV_ICONS_LICENSE.txt
   static const String navMenuBranch = 'assets/icons/nav_menu_branch.svg';
@@ -133,12 +131,6 @@ class AppAssets {
   static const String homeImage3 = 'assets/images/home_image3.png';
   static const String earningStatsCardImg =
       'assets/images/earning_stats_card_img.png';
-  static const String verify = 'assets/images/verify.png';
-  static const String verifyCrntSession =
-      'assets/images/verify_crnt_session.png';
-  static const String dontVerify = 'assets/images/dont_verify.png';
-  static const String scanCard = 'assets/images/scan_card.png';
-  static const String id = 'assets/images/id.png';
   static const String queue = 'assets/images/queue.png';
   static const String destinationSelected =
       'assets/images/destination_selected.png';

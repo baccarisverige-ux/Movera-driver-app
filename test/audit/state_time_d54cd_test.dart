@@ -26,7 +26,6 @@ import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/support/local_support_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
-import 'package:movera/presentation/driver/auth/additional%20detail/navigation.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
@@ -36,7 +35,6 @@ import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:movera/widgets/custom_btn.dart';
 import 'package:movera/widgets/google_driver_camera_port.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -146,39 +144,6 @@ Future<void> _until(
     await tester.pump(const Duration(milliseconds: 100));
   }
 }
-
-/// The onboarding wizard, pushed over a plain home.
-Future<void> _pumpOnboarding(WidgetTester tester) async {
-  tester.view.physicalSize = const Size(430, 1000);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-  final navigator = GlobalKey<NavigatorState>();
-  await tester.pumpWidget(
-    ScreenUtilInit(
-      designSize: const Size(375, 812),
-      builder: (_, _) => MaterialApp(
-        navigatorKey: navigator,
-        home: const Scaffold(body: Text('Existing home')),
-      ),
-    ),
-  );
-  navigator.currentState!.push(
-    MaterialPageRoute<void>(builder: (_) => const AdditionalInfoNavigation()),
-  );
-  await tester.pumpAndSettle();
-}
-
-Future<void> _onboardingStep(WidgetTester tester, {bool back = false}) async {
-  if (back) {
-    await tester.tap(find.byTooltip('Back'));
-  } else {
-    await tester.tap(find.byType(CustomButton));
-  }
-  await tester.pumpAndSettle();
-}
-
-int _onboardingPage(WidgetTester tester) =>
-    tester.widget<PageView>(find.byType(PageView)).controller!.page!.round();
 
 /// A map whose camera moves are recorded; each waits [ack] when set, or
 /// takes [latency] of test time.
@@ -555,38 +520,6 @@ void main() {
     );
     await _unmount(tester);
   });
-
-  testWidgets('driver-u98: system back goes to the previous onboarding step', (
-    tester,
-  ) async {
-    await _pumpOnboarding(tester);
-    await _onboardingStep(tester);
-    await _onboardingStep(tester);
-    expect(_onboardingPage(tester), 2);
-    await tester.binding.handlePopRoute(); // Android back
-    await tester.pumpAndSettle();
-    expect(find.byType(AdditionalInfoNavigation), findsOneWidget);
-    expect(_onboardingPage(tester), 1);
-  });
-
-  testWidgets(
-    'driver-r3-8: Back to an onboarding step keeps what was entered',
-    (tester) async {
-      await _pumpOnboarding(tester);
-      await tester.enterText(
-        find.byWidgetPredicate(
-          (w) => w is TextField && w.decoration?.hintText == 'Enter model year',
-        ),
-        '2019',
-      );
-      FocusManager.instance.primaryFocus?.unfocus();
-      await tester.pumpAndSettle();
-      await _onboardingStep(tester);
-      await _onboardingStep(tester, back: true);
-      expect(_onboardingPage(tester), 0);
-      expect(find.text('2019'), findsOneWidget);
-    },
-  );
 
   testWidgets('driver-100: with reduced motion a fix that lands during the '
       'camera move is still sent', (tester) async {

@@ -2824,88 +2824,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Itinéraire indisponible — vérifiez la localisation';
 
   @override
-  String get authAddVehicle => 'Ajouter un véhicule';
-
-  @override
-  String get authAddVehicleDetails =>
-      'Ajoutez les détails du véhicule pour vérification';
-
-  @override
-  String get vehicleMake => 'Marque du véhicule';
-
-  @override
-  String get vehicleModel => 'Modèle du véhicule';
-
-  @override
-  String get vehicleYear => 'Année du véhicule';
-
-  @override
-  String get enterModelYear => 'Saisissez l’année du modèle';
-
-  @override
   String get licensePlateNumber => 'Numéro d’immatriculation';
-
-  @override
-  String get vehicleType => 'Type de véhicule';
-
-  @override
-  String get vehicleColor => 'Couleur';
-
-  @override
-  String get selectColor => 'Choisissez une couleur';
-
-  @override
-  String get tapToUpload => 'Touchez pour importer';
-
-  @override
-  String get openingEllipsis => 'Ouverture…';
-
-  @override
-  String get openCamera => 'Ouvrir l’appareil photo';
-
-  @override
-  String get fileSelectedSuccessfully => 'Fichier sélectionné !';
-
-  @override
-  String get vehicleDocumentSelectionFailed =>
-      'Échec de la sélection du document du véhicule';
-
-  @override
-  String get couldNotReadSelectedFile =>
-      'Impossible de lire le fichier sélectionné. Veuillez réessayer.';
-
-  @override
-  String get photoCapturedSuccessfully => 'Photo prise !';
-
-  @override
-  String get couldNotReadCapturedPhoto =>
-      'Impossible de lire la photo prise. Veuillez réessayer.';
-
-  @override
-  String get docPassport => 'Passeport';
-
-  @override
-  String get scanYourPassportPhoto => 'Scannez la photo de votre passeport';
-
-  @override
-  String get docDrivingLicense => 'Permis de conduire';
-
-  @override
-  String get scanYourDrivingLicense => 'Scannez votre permis de conduire';
-
-  @override
-  String get docNationalId => 'Carte d’identité';
-
-  @override
-  String get scanYourNationalId => 'Scannez votre carte d’identité';
-
-  @override
-  String get selectDocumentTypeToScan =>
-      'Choisissez le type de document à scanner';
-
-  @override
-  String get weNeedToDetermineDocument =>
-      'Nous devons vérifier que la pièce d’identité est authentique et vous appartient';
 
   @override
   String get createAccount => 'Créer un compte';
@@ -2997,53 +2916,11 @@ class AppLocalizationsFr extends AppLocalizations {
       'La connexion avec Apple ou Google nécessite le service de compte.';
 
   @override
-  String get idPhotoPreview => 'Aperçu de la photo d’identité';
-
-  @override
-  String get idPhotoSampleOnly =>
-      'Image d’exemple uniquement. La prise de vue et la vérification ne sont pas connectées. Aucune pièce d’identité n’est envoyée.';
-
-  @override
-  String get returnToHome => 'Retour à l’accueil';
-
-  @override
-  String get retakeUnavailablePreview => 'Reprise indisponible dans cet aperçu';
-
-  @override
   String get enterValidPhoneWeWillSend =>
       'Saisissez un numéro de téléphone valide auquel nous enverrons';
 
   @override
-  String get verifyAction => 'Vérifier';
-
-  @override
-  String stepOfTotal(String step, String total) {
-    return '$step sur $total';
-  }
-
-  @override
-  String get uploadId => 'Importer une pièce d’identité';
-
-  @override
-  String get weNeedToVerifyYourId => 'nous devons vérifier votre identité';
-
-  @override
-  String get approveAccountIdentityReason =>
-      'Pour approuver votre compte, nous devons être sûrs à 100 % que vous êtes bien la personne que vous dites être, pour des raisons de sécurité et de transparence.';
-
-  @override
-  String get vehicleRegistration => 'Carte grise';
-
-  @override
-  String get uploadVehicleRegistration =>
-      'Importez le certificat d’immatriculation';
-
-  @override
   String get insurance => 'Assurance';
-
-  @override
-  String get uploadCarInsurance =>
-      'Importez l’assurance du véhicule pour vérification';
 
   @override
   String get todayLower => 'aujourd’hui';
