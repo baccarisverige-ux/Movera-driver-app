@@ -5,8 +5,9 @@ import 'package:movera/presentation/driver/documents/live_documents_screen.dart'
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
-import 'document_preview.dart';
-import 'package:movera/presentation/driver/documents/document_renewal.dart';
+import 'package:movera/core/account/driver_account_rules.dart';
+import 'package:movera/presentation/driver/documents/info_session_screen.dart';
+import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
 enum DocStatus { approved, inReview, needed }
@@ -21,19 +22,27 @@ class DriverDocuments extends StatelessWidget {
 
   // Nothing is uploaded or checked yet, so every document is still needed.
   static List<_Doc> get _driver => [
-    _Doc(tr.docTermsAndConditions),
-    _Doc(tr.docVirtualInfoSession),
-    _Doc(tr.docDriversLicenseLower),
-    _Doc(tr.docProfilePhoto),
-    _Doc(tr.docCompanyRegistration, note: tr.docCompanyRegistrationNote),
-    _Doc(tr.docTaxiDriverLicense),
-    _Doc(tr.docTaxiTrafficPermit),
-    _Doc(tr.docTaxSettings),
-    _Doc(tr.docBankStatement),
+    _Doc('terms', tr.docTermsAndConditions),
+    _Doc('info_session', tr.docVirtualInfoSession),
+    _Doc('driving_license', tr.docDriversLicenseLower),
+    _Doc('profile_photo', tr.docProfilePhoto),
+    _Doc(
+      'company_registration',
+      tr.docCompanyRegistration,
+      note: tr.docCompanyRegistrationNote,
+    ),
+    _Doc('taxi_driver_license', tr.docTaxiDriverLicense),
+    _Doc('taxi_traffic_permit', tr.docTaxiTrafficPermit),
+    _Doc('tax_settings', tr.docTaxSettings),
+    _Doc('bank_statement', tr.docBankStatement),
   ];
   static List<_Doc> get _vehicle => [
-    _Doc(tr.docRegistrationCertificate, note: tr.docFrontPage),
-    _Doc(tr.docInsuranceLetter),
+    _Doc(
+      'vehicle_registration',
+      tr.docRegistrationCertificate,
+      note: tr.docFrontPage,
+    ),
+    _Doc('insurance', tr.docInsuranceLetter),
   ];
 
   @override
@@ -72,8 +81,6 @@ class DriverDocuments extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 30),
         children: [
-          // Q26: documents that run out soon, with "Upload new".
-          const DocumentExpiryList(),
           Padding(
             padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
             child: Column(
@@ -224,12 +231,25 @@ class DriverDocuments extends StatelessWidget {
       children: [
         for (var i = 0; i < items.length; i++) ...[
           InkWell(
-            onTap: () {
-              pushSingle(
-                context,
-                RightToLeftTransition(DocumentPreview(title: items[i].title)),
-              );
-            },
+            // Owner item 4: the document's upload guide (the demo has
+            // no upload); the info session's "How to book" (item 8).
+            onTap: items[i].type == 'terms'
+                ? null
+                : () => pushSingle(
+                    context,
+                    RightToLeftTransition(
+                      items[i].type == InfoSessionScreen.type
+                          ? const InfoSessionScreen(
+                              status: 'waiting_for_movera',
+                            )
+                          : UploadGuideScreen(
+                              type: items[i].type,
+                              ownerId: '',
+                              isCar: false,
+                              country: DriverAccountRules.current.country,
+                            ),
+                    ),
+                  ),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(22, 16, 14, 16),
               child: Row(
@@ -284,7 +304,10 @@ class DriverDocuments extends StatelessWidget {
 }
 
 class _Doc {
-  const _Doc(this.title, {this.note});
+  const _Doc(this.type, this.title, {this.note});
+
+  /// The contract type (`driving_license`, …).
+  final String type;
   final String title;
   final String? note;
   // No upload or review service yet: every document starts as needed.

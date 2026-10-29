@@ -1,12 +1,12 @@
 import 'package:movera/core/api/api_error.dart';
-import 'package:movera/core/contracts/driver_onboarding_rules.dart';
+import 'package:movera/core/onboarding/onboarding_settings.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 
 /// Contract v0.14.0: the missing documents of a `409 documents_not_approved`
 /// by their contract names in the app's language ("Insurance, Registration").
 String missingDocumentNames(ApiError error) => {
   for (final type in error.missingDocumentTypes)
-    DriverOnboardingRules.documentName(type, tr.localeName),
+    OnboardingSettingsStore.instance.nameOf(type, tr.localeName),
 }.join(', ');
 
 /// The driver's words for `409 documents_not_approved`: a car
@@ -34,9 +34,16 @@ String? _transportMessage(ApiError error) {
 String liveAvailabilityErrorMessage(Object? error, {required bool online}) {
   final fallback = online ? tr.liveOnlineFailed : tr.liveOfflineFailed;
   if (error is! ApiError) return fallback;
+  // v0.17.0 (owner items 1 and 3): an expired document keeps the driver
+  // offline until Movera approves the new one.
+  if (error.detail == 'documents_expired') {
+    return tr.liveOnlineDocumentsExpired(missingDocumentNames(error));
+  }
   if (error.documentsNotApproved) return documentsNotApprovedMessage(error);
   return _transportMessage(error) ??
       switch (error.detail) {
+        // v0.17.0 (owner item 9): no car in the fleet can be picked.
+        'fleet_no_approved_car' => tr.remFleetNoApprovedCar,
         'account_not_active' => tr.liveOnlineNotActive,
         'no_fleet' => tr.liveOnlineNoFleet,
         'fleet_not_approved' => tr.liveOnlineFleetNotApproved,

@@ -247,6 +247,7 @@ class FleetVehicle {
     this.inUse = false,
     this.documents = const [],
     this.requiredDocuments = const [],
+    this.fuel,
   });
 
   factory FleetVehicle.fromJson(Map<String, dynamic> json) => FleetVehicle(
@@ -269,6 +270,7 @@ class FleetVehicle {
           if (item is Map) DocumentSummary.fromJson(_map(item)),
     ],
     requiredDocuments: _strings(json['requiredDocuments']),
+    fuel: _text(json['fuel']),
   );
 
   final String vehicleId;
@@ -292,6 +294,9 @@ class FleetVehicle {
   final bool inUse;
   final List<DocumentSummary> documents;
   final List<String> requiredDocuments;
+
+  /// v0.17.0 `Vehicle.fuel`.
+  final String? fuel;
 
   bool get isApproved => status == 'approved';
 
@@ -545,6 +550,14 @@ class ServerNotification {
   /// A tap opens My fleet (the invitations).
   bool get opensFleet => kind == 'fleet_invitation';
 
+  /// Contract v0.17.0 (owner group 2 items 1, 3 and the note check): an
+  /// expiry warning (30 / 7 / 1 days), an expired document or "Finish
+  /// your sign-up" opens Documents.
+  bool get opensDocuments =>
+      kind == 'document_expiring' ||
+      kind == 'document_expired' ||
+      kind == 'finish_sign_up';
+
   ServerNotification asRead() => ServerNotification(
     notificationId: notificationId,
     kind: kind,
@@ -648,6 +661,7 @@ class NewVehicle {
     required this.plate,
     required this.seats,
     required this.categoryIds,
+    this.fuel,
   });
 
   final String make;
@@ -658,6 +672,9 @@ class NewVehicle {
   final int seats;
   final List<String> categoryIds;
 
+  /// v0.17.0: `petrol`, `diesel`, `hybrid` or `electric`.
+  final String? fuel;
+
   Map<String, dynamic> toJson() => {
     'make': make.trim(),
     'model': model.trim(),
@@ -666,5 +683,6 @@ class NewVehicle {
     'plate': plate.trim().toUpperCase(),
     'seats': seats,
     'categoryIds': categoryIds,
+    if (fuel != null) 'fuel': fuel,
   };
 }

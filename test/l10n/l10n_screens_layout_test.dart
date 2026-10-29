@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/contracts/zone_settings.dart';
-import 'package:movera/core/documents/document_expiry.dart';
+import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/presentation/driver/add%20vehicle/add_vehicle.dart';
@@ -14,7 +14,9 @@ import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/presentation/driver/auth/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/sign_in.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
-import 'package:movera/presentation/driver/documents/document_renewal.dart';
+import 'package:movera/presentation/driver/documents/info_session_screen.dart';
+import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
+import 'package:movera/presentation/driver/home/components/important_reminders.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
 import 'package:movera/presentation/driver/my%20bank/add%20new%20account/add_new_account.dart';
@@ -86,12 +88,30 @@ Future<void> _settle(WidgetTester tester) async {
 /// [text] somewhere on screen, also inside rich text.
 Finder _words(String text) => find.textContaining(text, findRichText: true);
 
-final _document = TrackedDocument(
-  id: 'DOC-INS-418',
-  title: 'Insurance letter',
-  shortTitle: 'Insurance',
-  expiresOn: DateTime(2030),
-);
+/// Group 2 (contract v0.17.0): one line of each level.
+DriverRemindersStore _reminderStore() => DriverRemindersStore()
+  ..replace(
+    const DriverReminderList([
+      DriverReminder(
+        kind: 'fleet_no_approved_car',
+        level: ReminderLevel.blocksOnline,
+        fix: ReminderFix(target: ReminderFixTarget.fleetVehicles),
+      ),
+      DriverReminder(
+        kind: 'document_expiring',
+        level: ReminderLevel.dueSoon,
+        documentType: 'driving_license',
+        daysLeft: 12,
+        fix: ReminderFix(target: ReminderFixTarget.document),
+      ),
+      DriverReminder(
+        kind: 'info_session_waiting',
+        level: ReminderLevel.waiting,
+        documentType: 'info_session',
+        fix: ReminderFix(target: ReminderFixTarget.infoSession),
+      ),
+    ]),
+  );
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -170,6 +190,41 @@ void main() {
           () => tr.privacyPolicyTitle,
         ),
         'Terms': (() => LegalDocumentScreen.terms, () => tr.termsOfService),
+        // Group 2 (owner item 4): a document of this country's own list.
+        'Upload guide': (
+          () => UploadGuideScreen(
+            type: country == 'FR' ? 'vtc_card' : 'taxi_traffic_permit',
+            ownerId: '',
+            isCar: false,
+            country: country,
+          ),
+          () => country == 'FR' ? tr.guideCardNumber : tr.guideSeTrafficPermit,
+        ),
+        'Upload guide, car photo': (
+          () => UploadGuideScreen(
+            type: 'vehicle_photo_front',
+            ownerId: '',
+            isCar: true,
+            country: country,
+          ),
+          () => tr.guidePlateReadable,
+        ),
+        // Items 8 and 13: Sweden and France both have the info session.
+        'Info session': (
+          () => const InfoSessionScreen(status: 'waiting_for_movera'),
+          () => tr.infoNoContent,
+        ),
+        // Items 2, 3 and 9: the Home sheet's reminders.
+        'Important reminders': (
+          () => Scaffold(
+            body: ListView(
+              children: [
+                ImportantRemindersBox(store: _reminderStore(), onFix: (_) {}),
+              ],
+            ),
+          ),
+          () => tr.remFleetNoApprovedCar,
+        ),
       };
       for (final MapEntry(key: name, value: (screen, text))
           in screens.entries) {
@@ -195,16 +250,6 @@ void main() {
       });
 
       final sheets = <String, Future<void> Function(BuildContext)>{
-        'New document': (c) => showDocumentUploadSheet(c, _document),
-        'Document blocks going online': (c) => showDocumentBlockedSheet(
-          c,
-          TrackedDocument(
-            id: 'DOC-INS-418',
-            title: tr.docInsuranceLetter,
-            shortTitle: tr.insurance,
-            expiresOn: DateTime(2000),
-          ),
-        ),
         'Safety sheet': (c) => showSafetyToolKitSheet<void>(c),
       };
       for (final entry in sheets.entries) {
@@ -219,19 +264,28 @@ void main() {
     });
   }
 
-  test('a document keeps its English words in English', () {
-    expect(expiresInLabel(7), 'in 7 days');
-    expect(expiresInLabel(1), 'tomorrow');
-    expect(expiresInLabel(0), 'today');
-    expect(documentDateLabel(DateTime(2026, 10, 22)), '22 Oct');
+  String expiring(int days) => reminderWords(
+    DriverReminder(
+      kind: 'document_expiring',
+      level: ReminderLevel.dueSoon,
+      documentType: 'insurance',
+      daysLeft: days,
+    ),
+    nameOf: (_) => 'X',
+  ).title;
+
+  test('a reminder keeps its English words in English', () {
+    expect(expiring(7), 'X expires in 7 days');
+    expect(expiring(1), 'X expires tomorrow');
+    expect(expiring(0), 'X expires today');
   });
 
   test('the same words in French and Swedish', () {
     DriverLanguage.applyZone(AppLanguages.forCountry('FR'));
-    expect(expiresInLabel(7), 'dans 7 jours');
-    expect(expiresInLabel(1), 'demain');
+    expect(expiring(7), 'X expire dans 7 jours');
+    expect(expiring(1), 'X expire demain');
     DriverLanguage.applyZone(AppLanguages.forCountry('SE'));
-    expect(expiresInLabel(7), 'om 7 dagar');
-    expect(expiresInLabel(0), 'i dag');
+    expect(expiring(7), 'X går ut om 7 dagar');
+    expect(expiring(0), 'X går ut i dag');
   });
 }

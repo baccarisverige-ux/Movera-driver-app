@@ -25,7 +25,7 @@ import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/vehicle/local_vehicle_store.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
-import 'package:movera/core/documents/document_expiry.dart';
+import 'package:movera/core/onboarding/onboarding_settings.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/island/trip_island_controller.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -479,16 +479,21 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('driver-13: demo documents follow a language switch', (
+  testWidgets('driver-13: document names follow a language switch', (
     tester,
   ) async {
     speak('sv');
-    final store = DocumentExpiryStore.instance..reset();
-    expect(store.documents.first.title, tr.docInsuranceLetter);
+    expect(
+      OnboardingSettingsStore.instance.nameOf('insurance', tr.localeName),
+      'Försäkringsbrev',
+    );
     await show(tester, 'fr', const DriverDocuments());
-    expect(store.documents.first.title, tr.docInsuranceLetter);
-    expect(words(tr.docInsuranceLetter), findsWidgets);
+    expect(words(tr.docTermsAndConditions), findsWidgets);
     expect(words('Försäkringsbrev'), findsNothing);
+    expect(
+      OnboardingSettingsStore.instance.nameOf('insurance', tr.localeName),
+      'Assurance transport de personnes',
+    );
   });
 
   testWidgets('driver-u30: notifications made in Swedish read in French', (

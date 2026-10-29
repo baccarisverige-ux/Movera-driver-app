@@ -84,6 +84,9 @@ String accountErrorMessage(Object error, {required String fallback}) {
     'vehicle_not_approved' => tr.fleetVehicleNotApproved,
     'vehicle_not_found' => tr.fleetVehicleNotYours,
     'plate_taken' => tr.fleetPlateTaken,
+    // v0.17.0 (owner items 7 and 11).
+    'category_not_allowed' => tr.carCategoryNotAllowed,
+    'already_fleet' => tr.startCompanyAlreadyFleet,
     'unknown_document_type' ||
     'not_a_file_document' ||
     'wrong_document_owner' => tr.docTypeNotAccepted,

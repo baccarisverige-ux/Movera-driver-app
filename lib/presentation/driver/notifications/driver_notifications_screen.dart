@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
-import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
-import 'package:movera/presentation/driver/documents/document_renewal.dart';
+import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/styles/movera_map_palette.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -160,12 +159,11 @@ class _DriverNotificationsScreenState extends State<DriverNotificationsScreen> {
           ),
         );
       case DriverNoticeAction.uploadDocument:
-        final document = DocumentExpiryStore.instance.byId(
-          notice.documentId ?? '',
+        // Contract v0.17.0: the documents and their upload guides.
+        pushSingle(
+          context,
+          MaterialPageRoute<void>(builder: (_) => const DriverDocuments()),
         );
-        if (document != null && !document.inReview) {
-          showDocumentUploadSheet(context, document);
-        }
       case null:
         break;
     }

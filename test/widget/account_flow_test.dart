@@ -10,7 +10,7 @@ import 'package:movera/core/admin/driver_home_config_repository.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
-import 'package:movera/core/documents/document_expiry.dart';
+import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -170,15 +170,8 @@ Future<DriverSessionController> _pumpHome(
 
 Iterable<String> get _said => IslandMessages.posted.map((m) => m.title);
 
-TrackedDocument _insurance(int daysLeft) {
-  final now = ScheduledClock.realNow();
-  return TrackedDocument(
-    id: 'DOC-INS-418',
-    title: 'Insurance letter',
-    shortTitle: 'Insurance',
-    expiresOn: DateTime(now.year, now.month, now.day + daysLeft),
-  );
-}
+DriverReminderList _reminders(List<DriverReminder> items) =>
+    DriverReminderList(items);
 
 void main() {
   setUp(() {
@@ -244,19 +237,24 @@ void main() {
     });
   });
 
-  group('Q26: documents that run out', () {
-    testWidgets('7 days before: island and notification with Upload new', (
+  // Contract v0.17.0 (owner group 2 items 1, 3 and 9): the server's
+  // reminders decide; the old demo expiry store is gone.
+  group('Q26: Home reminders keep the driver offline', () {
+    testWidgets('due soon (orange) does not block going online', (
       tester,
     ) async {
-      DocumentExpiryStore.instance.load([_insurance(7)]);
+      DriverRemindersStore.instance.replace(
+        _reminders(const [
+          DriverReminder(
+            kind: 'document_expiring',
+            level: ReminderLevel.dueSoon,
+            documentType: 'insurance',
+            daysLeft: 7,
+          ),
+        ]),
+      );
       final session = await _pumpHome(tester, online: false);
-      await _frames(tester, const Duration(milliseconds: 300));
-      expect(_said, contains('Insurance expires in 7 days'));
-      final notice = DriverNotificationFeed.instance.items.first;
-      expect(notice.kind, DriverNoticeKind.documentExpiring);
-      expect(notice.title, 'Insurance letter expires in 7 days');
-      expect(notice.actionLabel, 'Upload new');
-      // A warning does not block.
+      expect(find.text('HOLD'), findsNothing);
       _tapRadar(tester);
       await _frames(tester, const Duration(milliseconds: 1500));
       expect(session.availableForOffers, isTrue);
@@ -264,49 +262,62 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
-    testWidgets('expired: offline until the new one is approved', (
+    testWidgets('expired (red): HOLD with the reason; going online refused', (
       tester,
     ) async {
-      DocumentExpiryStore.instance.load([_insurance(0)]);
+      DriverRemindersStore.instance.replace(
+        _reminders(const [
+          DriverReminder(
+            kind: 'document_expired',
+            level: ReminderLevel.blocksOnline,
+            documentType: 'insurance',
+            daysLeft: 0,
+          ),
+        ]),
+      );
       final session = await _pumpHome(tester, online: false);
       expect(find.text('HOLD'), findsOneWidget);
-      expect(find.text('Document expired'), findsOneWidget);
+      expect(find.text('Vehicle insurance has expired'), findsWidgets);
 
+      IslandMessages.reset();
       _tapRadar(tester);
       await _frames(tester, const Duration(milliseconds: 600));
-      expect(_said, contains('Insurance expired'));
-      expect(session.availableForOffers, isFalse);
       expect(
-        find.byKey(const ValueKey<String>('document-blocked-sheet')),
-        findsOneWidget,
+        _said,
+        contains("You can't go online yet: Vehicle insurance has expired"),
       );
+      expect(session.availableForOffers, isFalse);
 
-      await tester.tap(
-        find.byKey(const ValueKey<String>('document-blocked-upload')),
-      );
-      await _frames(tester, const Duration(milliseconds: 600));
-      await tester.tap(
-        find.byKey(const ValueKey<String>('document-upload-send')),
-      );
-      await _frames(tester, const Duration(milliseconds: 600));
-      expect(DocumentExpiryStore.instance.blocking?.inReview, isTrue);
-      expect(find.text('Sent for review'), findsOneWidget);
-
-      // In review it still blocks; the demo approves it.
-      await tester.tap(
-        find.byKey(const ValueKey<String>('document-blocked-approve')),
-      );
+      // Movera approved the new one: the next list has no red line.
+      DriverRemindersStore.instance.replace(DriverReminderList.empty);
       await _frames(tester, const Duration(milliseconds: 300));
-      expect(DocumentExpiryStore.instance.blocking, isNull);
-      expect(find.text('You can go online now.'), findsOneWidget);
-      await tester.tap(find.text('Done'));
-      await _frames(tester, const Duration(milliseconds: 800));
-      expect(_said, contains('Document approved'));
       expect(find.text('HOLD'), findsNothing);
-
       _tapRadar(tester);
       await _frames(tester, const Duration(milliseconds: 1500));
       expect(session.availableForOffers, isTrue);
+      tester.takeException();
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a fleet with no approved car: no going online (item 9)', (
+      tester,
+    ) async {
+      DriverRemindersStore.instance.replace(
+        _reminders(const [
+          DriverReminder(
+            kind: 'fleet_no_approved_car',
+            level: ReminderLevel.blocksOnline,
+          ),
+        ]),
+      );
+      final session = await _pumpHome(tester, online: false);
+      _tapRadar(tester);
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(
+        _said,
+        contains("You can't go online yet: Your fleet has no approved car yet"),
+      );
+      expect(session.availableForOffers, isFalse);
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     });

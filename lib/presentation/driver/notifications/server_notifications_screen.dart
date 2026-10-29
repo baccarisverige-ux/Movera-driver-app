@@ -5,6 +5,7 @@ import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
+import 'package:movera/presentation/driver/documents/live_documents_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -97,6 +98,12 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
         RightToLeftTransition(MyFleetScreen(account: widget.account)),
       );
       if (mounted) await _load();
+    } else if (notice.opensDocuments) {
+      await pushSingle(
+        context,
+        RightToLeftTransition(LiveDocumentsScreen(account: widget.account)),
+      );
+      if (mounted) await _load();
     }
   }
 
@@ -178,7 +185,11 @@ class _NotificationRow extends StatelessWidget {
     return Semantics(
       button: true,
       label: '${notice.title}. ${notice.body}. $when',
-      hint: notice.opensFleet ? tr.myFleet : null,
+      hint: notice.opensFleet
+          ? tr.myFleet
+          : notice.opensDocuments
+          ? tr.documents
+          : null,
       onTap: onTap,
       excludeSemantics: true,
       child: InkWell(
@@ -201,6 +212,8 @@ class _NotificationRow extends StatelessWidget {
                 child: Icon(
                   notice.opensFleet
                       ? Icons.groups_outlined
+                      : notice.opensDocuments
+                      ? Icons.description_outlined
                       : Icons.notifications_none_rounded,
                   size: 20,
                   color: notice.read ? AuthColors.muted : AuthColors.green,
@@ -252,7 +265,7 @@ class _NotificationRow extends StatelessWidget {
                   ],
                 ),
               ),
-              if (notice.opensFleet)
+              if (notice.opensFleet || notice.opensDocuments)
                 const Padding(
                   padding: EdgeInsets.only(left: 6, top: 8),
                   child: Icon(

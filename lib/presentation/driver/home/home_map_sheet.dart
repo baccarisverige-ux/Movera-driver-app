@@ -828,6 +828,9 @@ extension _HomeMapSheet on _DriverHomeState {
                     ),
                   ),
                 ),
+                // Owner group 2 item 3 (and group 1): why the account
+                // cannot go online yet, each with its fix.
+                _HomeAccount(this)._remindersBox(),
                 if (_liveAwaitsFleet)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
@@ -2548,6 +2551,9 @@ extension _HomeMapSheet on _DriverHomeState {
         performance.showAcceptanceRate ||
         performance.showCancellationRate;
     return [
+      // Contract v0.17.0 (owner group 2 items 2, 3 and 9): "Important
+      // reminders (N)" first (live builds; the demo has none).
+      _HomeAccount(this)._remindersBox(),
       // Contract v0.10.0 §19: the Content page's driver-home and
       // driver-event texts (live builds; the demo has none).
       for (final item in DriverContentStore.instance.home)

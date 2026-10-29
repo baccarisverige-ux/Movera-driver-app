@@ -139,16 +139,10 @@ class HomeIslandNotices {
   static IslandMessage holdRest(String time, VoidCallback onTap) =>
       _hold(driverText(DriverTexts.islandRestUntil, {'time': time}), onTap);
 
-  static IslandMessage holdDocument(
-    String document, {
-    required bool inReview,
-    required VoidCallback onTap,
-  }) => _hold(
-    inReview
-        ? driverText(DriverTexts.islandDocumentInReview)
-        : driverText(DriverTexts.islandDocumentExpired, {'document': document}),
-    onTap,
-  );
+  /// v0.17.0 (owner items 1, 3 and 9): the first red line of the Home
+  /// sheet's reminders keeps the driver offline; a tap shows them.
+  static IslandMessage holdReminder(String title, VoidCallback onTap) =>
+      _hold(title, onTap);
 
   /// R13-9: no destination now, or the time limit ended it.
   static IslandMessage get destinationsUsed => IslandMessage(
