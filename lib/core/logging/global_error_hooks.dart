@@ -6,7 +6,7 @@ import 'package:movera/core/logging/driver_log.dart';
 void installGlobalErrorHooks() {
   final previousFlutter = FlutterError.onError;
   FlutterError.onError = (details) {
-    DriverLog.error(
+    DriverLog.crash(
       'Flutter framework error',
       details.exception,
       details.stack,
@@ -15,7 +15,7 @@ void installGlobalErrorHooks() {
   };
   final previousPlatform = PlatformDispatcher.instance.onError;
   PlatformDispatcher.instance.onError = (error, stack) {
-    DriverLog.error('Uncaught async error', error, stack);
+    DriverLog.crash('Uncaught async error', error, stack);
     return previousPlatform?.call(error, stack) ?? true;
   };
 }

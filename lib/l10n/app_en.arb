@@ -2694,7 +2694,7 @@
   "rrNewTripsAppear": "New trips will appear here when the radar finds requests around you.",
   "moveraDriver": "Movera Driver",
   "legalPrivacyBody": "Movera Driver uses location, trip and vehicle data to assign rides, show routes and keep a waybill on this device.\n\nDemo builds keep this information in memory on the phone. Nothing is sold to advertisers. You can log out at any time from Profile.\n\nWhen a live backend is connected, the same screens will keep using this policy text until a signed version is published.",
-  "legalTermsBody": "You agree to drive only with a valid licence, insurance and a vehicle that matches the documents in this app.\n\nRadar offers are first-come. Matching another order while on a trip is optional. Completing a trip creates a waybill you can reopen from Home.\n\nMovera may suspend a demo account that misuses Safety tools or emergency calling.",
+  "legalTermsBody": "You agree to drive only with a valid licence, insurance and a vehicle that matches the documents in this app.\n\nRadar offers are first-come. Matching another order while on a trip is optional. Completing a trip creates a waybill you can reopen from Home.\n\nMovera may suspend a demo account that misuses Safety tools or emergency calling.\n\nCrash and error reports: when the app crashes or shows an error, it automatically sends a report to Movera so we can fix it: the error, where in the app it happened, the app version, the platform and the time. Names, phone numbers, e-mail addresses, addresses and locations are removed before the report leaves your device. Reports are kept for 30 days.",
   "privacyPolicyTitle": "Privacy policy",
   "termsOfService": "Terms of service",
   "profSampleDriver": "Sample driver profile",
