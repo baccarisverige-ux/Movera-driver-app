@@ -839,7 +839,9 @@
       }
     }
   },
-  "illustrativeMapArchivedRouteUnavailable": "Illustrative map · archived route unavailable",
+  "pastRideRouteDriven": "Route driven",
+  "pastRidePlannedRoute": "Planned route",
+  "pastRideRouteUnavailable": "Route not available",
   "rideCost": "Ride Cost",
   "tip": "Tip",
   "paymentMethod": "Payment Method",

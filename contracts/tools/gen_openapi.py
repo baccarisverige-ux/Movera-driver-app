@@ -880,6 +880,13 @@ S["ReverseGeocodeResult"] = obj({"address": {"type": ["string", "null"], "descri
                                  "latitude": n(minimum=-90, maximum=90), "longitude": n(minimum=-180, maximum=180)}, ["address", "latitude", "longitude"],
                                 "The address in the caller's profile language (or Accept-Language when sent).")
 S["LatLng"] = obj({"lat": n(minimum=-90, maximum=90), "lng": n(minimum=-180, maximum=180)}, ["lat", "lng"])
+TPATH = C["tripPath"]
+S["TripPath"] = obj({"tripId": ref("Id"), "source": s(enum=TPATH["sources"], description="driven: thinned from the trip's GPS trace; planned: the server's road route (trace deleted or never sent)."),
+                     "points": arr(ref("LatLng"), minItems=2, maxItems=TPATH["maxPoints"], description="The line, in order."),
+                     "pickup": ref("LatLng"), "dropoff": ref("LatLng"), "stops": arr(ref("LatLng"), description="Middle stops, in order."),
+                     "keptUntil": ref("Timestamp")},
+                    ["tripId", "source", "points", "pickup", "dropoff", "stops"],
+                    "v0.17.0 (CONTRACT.md §25): the route of an ended trip. " + TPATH["retention"], addl=False)
 S["RouteRequest"] = obj({"mode": s(enum=MP["routeModes"]), "from": ref("LatLng"), "to": ref("LatLng")}, ["mode", "from", "to"])
 S["RoadRoute"] = obj({"points": arr(ref("LatLng"), minItems=2, description="The road geometry, in order."), "distanceMeters": i(minimum=0),
                       "durationSeconds": ref("DurationSeconds"), "provider": s(examples=["osrm"])}, ["points"],
@@ -1721,6 +1728,9 @@ op("post", "/trips/{tripId}/keep-waiting", "answerKeepWaiting", "Answer the Keep
         "stop → the normal free rider cancel (cancel → cancelled_by_rider, reason wait_too_long, no fee). Otherwise 409 invalid_transition with the projection.")
 op("post", "/account/deletion", "requestAccountDeletion", "Ask to delete the rider account", ["rider"], "Rider · Account",
    ok=(202, "AccountDeletion"), mutation=True, ok_desc="Accepted; the server erases the account on its own schedule.")
+op("get", "/trips/{tripId}/path", "getTripPath", "The route of an ended trip (driven or planned)", ["rider", "driver"], "Trips",
+   params=TID, ok=(200, "TripPath"),
+   desc="v0.17.0 (CONTRACT.md §25): " + TPATH["actors"] + ". " + TPATH["driven"] + " " + TPATH["planned"])["responses"]["409"] = rref("Conflict")
 # Admin: dispatch control, live drivers, trip trace
 op("get", "/admin/zones/{zoneId}/dispatch-control", "adminGetDispatchControl", "The zone's live dispatch switch", ["admin"], "Admin · Dispatch",
    params=[pref("ZoneId")], ok=(200, "DispatchControl"), permission="trips.read")

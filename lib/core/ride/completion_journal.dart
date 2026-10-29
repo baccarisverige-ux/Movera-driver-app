@@ -10,6 +10,7 @@ import 'package:movera/core/contracts/trip_transitions.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/history/prefs_trip_history_repository.dart';
 import 'package:movera/core/waybill/waybill.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/storage/local_quarantine.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
@@ -91,6 +92,8 @@ class CompletionJournal {
     String? cashCollected,
     DateTime? endedAt,
     String? feeEarned,
+    GeoPoint? pickupPoint,
+    GeoPoint? dropoffPoint,
   }) => _serial(() async {
     final prefs = await load();
     // Do not overwrite an earlier unfinished transaction.
@@ -126,6 +129,13 @@ class CompletionJournal {
         if (record.waitingFee != null) 'waitingFee': record.waitingFee,
         // driver-r5-13: the cancel or no-show fee the driver earned.
         if (feeEarned != null) 'feeEarned': feeEarned,
+        // v0.17.0: the past-ride map's pins without the server.
+        if (pickupPoint != null && dropoffPoint != null) ...{
+          'pickupLat': pickupPoint.latitude,
+          'pickupLng': pickupPoint.longitude,
+          'dropoffLat': dropoffPoint.latitude,
+          'dropoffLng': dropoffPoint.longitude,
+        },
       },
       if (cancellationReasonCode != null || cancellationActor != null)
         'cancellation': {
@@ -218,6 +228,14 @@ class CompletionJournal {
         feeEarned: row['feeEarned'] is String
             ? row['feeEarned'] as String
             : null,
+        pickupPoint: PrefsTripHistoryRepository.pointOf(
+          row['pickupLat'],
+          row['pickupLng'],
+        ),
+        dropoffPoint: PrefsTripHistoryRepository.pointOf(
+          row['dropoffLat'],
+          row['dropoffLng'],
+        ),
         authoritative: data['authoritative'] == true,
         cancellationActor: data['cancellation'] is Map
             ? (data['cancellation'] as Map)['actor'] as String?

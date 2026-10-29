@@ -1,6 +1,7 @@
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
@@ -61,9 +62,17 @@ class TripHistoryRecord {
     this.driverBonus,
     this.waitingFee,
     this.feeEarned,
+    this.pickupPoint,
+    this.dropoffPoint,
   });
 
   final String tripId;
+
+  /// Where the trip was picked up and dropped off, as this phone saved
+  /// them (v0.17.0): the past-ride map's pins when the server cannot be
+  /// asked for the route. Null on older rows.
+  final GeoPoint? pickupPoint;
+  final GeoPoint? dropoffPoint;
   final String riderName;
   final String whenLabel;
   final String pickup;

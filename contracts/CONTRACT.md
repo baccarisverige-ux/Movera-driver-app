@@ -1,4 +1,6 @@
-# Movera shared contract v0.16.0
+# Movera shared contract v0.17.0
+
+v0.17.0 (owner decisions of 2026-10-29, "Driver past ride detail"; X-Api-Version stays `0.5`, additive): **The route of a past ride** (§25, `contract.json#tripPath`): `GET /trips/{tripId}/path` (the trip's rider or driver, once the trip has ended) → `TripPath { tripId, source: driven | planned, points: LatLng[], pickup, dropoff, stops, keptUntil? }`. `driven` is thinned from the trip's own GPS trace (at most 300 points); once the trace is deleted (30 days, §12) or when none was sent, `planned` is the server's road route through the stops. No new storage, no longer retention.
 
 v0.16.0 (owner decisions of 2026-10-29, "Crashes & errors"; X-Api-Version stays `0.5`, additive): **Crashes & errors** (§11, `contract.json#telemetry.crashReport`, `telemetry.errorGroups`): `POST /telemetry/crashes` takes optional `app`, `platform`, `appVersion`, `build`, `screen`, `kind` and `occurredAt` (no new path); the server groups reports by fingerprint and records its own unhandled 5xx errors as app `server`; the admin reads `GET /admin/errors` → `ErrorGroupPage` and marks a group with `PATCH /admin/errors/{errorId} { status }`, open to any signed-in admin of every role (owner: "All admin roles (Recommended)").
 
@@ -760,3 +762,13 @@ Owner decisions "chat only support roles in their zones" and of 2026-10-28; the 
 - **Waiting list** (`auth.waitlist`). While no SMS provider is chosen, a number that is not a test number is `403 forbidden`, reason `sign_in_restricted`. The app then offers "Join the waiting list": `POST /auth/waitlist { phone, app, locale? }` (no bearer token) → `200 WaitlistReceipt { status: saved, requestId }`; the same phone and app again keeps one row (count and `lastAt` go up); `429 rate_limited`, reason `waitlist_too_many`, above 30 per address and hour. The admin reads it with `GET /admin/waitlist?app=&cursor=&limit=` → `WaitlistEntryPage` of `WaitlistEntry { phone, app, locale?, firstAt, lastAt, count }`, newest `lastAt` first (`overview.read`), and the Waiting list page reads it again every 15 s.
 - **Test accounts** (`auth.testAccounts`, "only in test builds"). `GET /auth/test-accounts` (no bearer token) → `TestAccountList { accounts: [TestAccount { phone, app, status, name? }] }`, status `test` (no account in that app yet) or the account's status (`pending`, `active`, `on_hold`, `suspended`). It exists only while `MOVERA_ENV` is not `production`: production answers `404 not_found`. Only staging and test builds of the apps show the list on the sign-in screen; store builds never call it.
 - **Code autofill** (`auth.codeAutofill`). The code field is marked for one-time-code autofill (iOS and the web `autocomplete="one-time-code"`, Android SMS User Consent where available). No wire change; nothing changes until SMS codes are sent.
+
+## 25. The route of a past ride (v0.17.0)
+
+`contract.json#tripPath` (owner decisions of 2026-10-29: "Real driven path (Recommended)", "Map stays, details scroll (Recommended)", "Category icon (Recommended)").
+
+- **Call.** `GET /trips/{tripId}/path` → `TripPath { tripId, source, points: LatLng[] (2..300, in order), pickup: LatLng, dropoff: LatLng, stops: LatLng[], keptUntil? }`. Only the trip's rider or driver (anyone else `404 not_found`); only once the trip is terminal, else `409 invalid_transition`, reason `trip_not_ended`. Read-only, no Idempotency-Key.
+- **`driven`.** Made from the trip's trace (the fixes of `POST /driver/location` during the trip, §12) from boarding to the end: accuracy ≤ 50 m, a step once the car moved 25 m, no step faster than 150 km/h, evenly thinned to at most 300 points (first and last kept). `keptUntil` is when the trace is deleted.
+- **`planned`.** No usable trace (deleted after 30 days, or never sent): the server's road route (§10) from the pickup through the stops to the drop-off; the straight-line estimate when OSRM does not answer.
+- **Privacy.** No new storage and no longer retention: the path follows the trace's 30-day rule. Only each driver's latest position is kept beyond it.
+- **Apps.** The driver's past-ride screen keeps the map fixed at the top (about 40 % of the height), fits the whole line with the pickup and drop-off pins, and scrolls only the details; a failed call shows the two pins only.

@@ -616,6 +616,8 @@ extension _AcceptRideTrip on _AcceptRideState {
           active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
         ).finish(
           settled?.paid ?? _waybills.current ?? _buildCurrentWaybill(),
+          pickupPoint: GeoPointMaps.fromLatLng(widget.pickupPosition),
+          dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
           status: status,
           authoritative: true,
           next: next,
@@ -821,6 +823,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
       ).finish(
         _waybills.current ?? _buildCurrentWaybill(),
+        pickupPoint: GeoPointMaps.fromLatLng(widget.pickupPosition),
+        dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
         status: TripStatus.cancelledByRider,
         authoritative: true,
         // The rider's own reason code is not sent to the driver yet.
@@ -1616,6 +1620,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
       ).finish(
         paid,
+        pickupPoint: GeoPointMaps.fromLatLng(widget.pickupPosition),
+        dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
         next: next,
         paymentMethod: widget.paidByCash ? 'Cash' : 'Card',
         cashCollected: cash,
@@ -2250,6 +2256,8 @@ extension _AcceptRideTrip on _AcceptRideState {
         active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
       ).finish(
         _waybills.current ?? _buildCurrentWaybill(),
+        pickupPoint: GeoPointMaps.fromLatLng(widget.pickupPosition),
+        dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
         status: outcome,
         cancellationReasonCode: reason.code,
         cancellationActor: 'driver',

@@ -23,7 +23,7 @@ Terminal:
 
 `completed` · `cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `cancelled_by_system` · `no_show` · `expired` · `failed`
 
-The source of truth is now `contracts/contract.json` (v0.16.0, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
+The source of truth is now `contracts/contract.json` (v0.17.0, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
 
 Driver `ActiveRideStage` maps onto the live slice only:
 
@@ -101,7 +101,7 @@ Fix (no UX change, no lifecycle change):
 
 ## Contract v0.4 (October 2026)
 
-`contracts/` now holds the shared Movera contract v0.16.0 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
+`contracts/` now holds the shared Movera contract v0.17.0 (from the `movera-contracts` repository, `tool/sync_contract.sh <commit>`); `test/contract/contract_copy_test.dart` pins that version and `TripTransitions.contractVersion`. The 0.4 line is additive to v0.3 below; `contracts/CONTRACT.md` has the full notes:
 
 - v0.4.0: per-zone config fields (languages, tips, payment methods, waiting by category, auto-offline, driver bonus limits), `TripProjection.acceptedAt`, whole-star ratings and admin dispatch (direct assign, radar group, lock after accept).
 - v0.4.1: `DriverAppConfig.reservations` carries the reservation timings and the running-late ETA watch.
@@ -120,8 +120,8 @@ Fix (no UX change, no lifecycle change):
 - v0.12.0 (28 Oct 2026): Ride check answers (§22): `POST /driver/trips/{tripId}/ride-check` (shown, then ok | need_help). Additive; X-Api-Version stays `0.5`.
 - v0.13.0 (28 Oct 2026): Trip chat (§23): the chat closes at drop-off; calls only through `POST /trips/{tripId}/call` (masked number, 503 `call_unavailable` without a provider); no real phone number of the rider in any driver payload. Additive except the chat window; X-Api-Version stays `0.5`.
 - v0.14.0 (28 Oct 2026): Activation needs approved documents (`409 documents_not_approved`, `details` "<scope>:<type>"); a car whose required documents are not all approved can't be picked or driven (reason `vehicle_documents_not_approved`). The app names the missing documents and shows such a car as "Can't be driven – upload documents" without a pick button.
-- v0.16.0 (29 Oct 2026): Crashes & errors: the live app sends crashes and reported errors to `POST /telemetry/crashes` on its own (owner: "Add automatic and add this in term and condition") with app, platform, appVersion, build, screen, kind and occurredAt, scrubbed on the phone (`lib/core/logging/crash_reports.dart`); the Terms of service say so.
 - v0.15.0 (29 Oct 2026): Sign-in group 1: the sign-in calls wait up to 60 s with "Starting the server…"; 429 waits shown in minutes; "Too many wrong tries" highlights Resend code; a restricted number can join the waiting list (`POST /auth/waitlist`); test builds list the test numbers (`GET /auth/test-accounts`, not in production).
+- v0.17.0 (29 Oct 2026): Past ride route: `GET /trips/{tripId}/path` (driven path from the trip trace, else the planned route); the past-ride screen keeps the map fixed on the top 40 %, fits the route with the pickup and drop-off pins, shows the category icon, date and time and status, and no person photo.
 
 ## Contract v0.3 (19 October 2026)
 
