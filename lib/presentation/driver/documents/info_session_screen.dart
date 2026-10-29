@@ -82,25 +82,17 @@ class _InfoSessionScreenState extends State<InfoSessionScreen> {
               key: const ValueKey('info-session'),
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
               children: [
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      tr.infoStatusLine(statusLabel),
-                      style: AccountStyle.rowTitle(),
-                    ),
-                    StatusChip(
-                      statusLabel,
-                      key: const ValueKey('info-session-status'),
-                      color: status == 'approved'
-                          ? AccountStyle.green
-                          : status == 'rejected'
-                          ? AccountStyle.error
-                          : AccountStyle.amber,
-                    ),
-                  ],
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: StatusChip(
+                    statusLabel,
+                    key: const ValueKey('info-session-status'),
+                    color: status == 'approved'
+                        ? AccountStyle.green
+                        : status == 'rejected'
+                        ? AccountStyle.error
+                        : AccountStyle.amber,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 if (status == 'approved')

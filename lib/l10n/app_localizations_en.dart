@@ -6057,11 +6057,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Movera will contact you to book a time. You don\'t need to do anything else now.';
 
   @override
-  String infoStatusLine(Object status) {
-    return 'Status: $status';
-  }
-
-  @override
   String get infoHeld => 'Movera has marked your info session as held.';
 
   @override

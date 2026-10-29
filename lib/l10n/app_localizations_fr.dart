@@ -6070,12 +6070,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String remDocumentNeeded(Object document) {
-    return '$document manquant';
+    return 'Il manque : $document';
   }
 
   @override
   String remDocumentRejected(Object document) {
-    return '$document a été refusé';
+    return 'Refusé : $document';
   }
 
   @override
@@ -6151,11 +6151,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get infoNoContent =>
       'Movera vous contactera pour fixer un horaire. Vous n’avez rien d’autre à faire pour l’instant.';
-
-  @override
-  String infoStatusLine(Object status) {
-    return 'Statut : $status';
-  }
 
   @override
   String get infoHeld =>

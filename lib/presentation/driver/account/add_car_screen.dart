@@ -8,6 +8,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/core/onboarding/onboarding_settings.dart';
 import 'package:movera/presentation/driver/account/car_photos_screen.dart';
+import 'package:movera/presentation/driver/account/details_pickers.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/presentation/driver/documents/onboarding_refresh.dart';
 import 'package:movera/widgets/navigation_transition.dart';
@@ -354,7 +355,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
       const SizedBox(height: 8),
       Text(
         tr.carTypesFitHint(
-          widget.account.account?.country ?? _rules?.country ?? '',
+          countryName(widget.account.account?.country ?? _rules?.country ?? ''),
         ),
         style: AccountStyle.hint(),
       ),

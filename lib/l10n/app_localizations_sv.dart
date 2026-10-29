@@ -6068,11 +6068,6 @@ class AppLocalizationsSv extends AppLocalizations {
       'Movera kontaktar dig för att boka en tid. Du behöver inte göra något mer nu.';
 
   @override
-  String infoStatusLine(Object status) {
-    return 'Status: $status';
-  }
-
-  @override
   String get infoHeld =>
       'Movera har markerat ditt informationsmöte som genomfört.';
 

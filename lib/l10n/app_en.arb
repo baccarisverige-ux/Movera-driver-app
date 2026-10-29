@@ -3861,8 +3861,6 @@
   "infoHowToBook": "How to book your info session",
   "infoHowToBookShort": "How to book",
   "infoNoContent": "Movera will contact you to book a time. You don't need to do anything else now.",
-  "infoStatusLine": "Status: {status}",
-  "@infoStatusLine": {"placeholders": {"status": {"type": "Object"}}},
   "infoHeld": "Movera has marked your info session as held.",
   "infoOpenLink": "Open the booking page",
   "infoRequiredBeforeOnline": "The info session is needed before you can go online.",

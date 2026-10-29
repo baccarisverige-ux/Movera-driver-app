@@ -1727,7 +1727,6 @@
   "infoHowToBook": "Så bokar du ditt informationsmöte",
   "infoHowToBookShort": "Så bokar du",
   "infoNoContent": "Movera kontaktar dig för att boka en tid. Du behöver inte göra något mer nu.",
-  "infoStatusLine": "Status: {status}",
   "infoHeld": "Movera har markerat ditt informationsmöte som genomfört.",
   "infoOpenLink": "Öppna bokningssidan",
   "infoRequiredBeforeOnline": "Informationsmötet krävs innan du kan gå online.",

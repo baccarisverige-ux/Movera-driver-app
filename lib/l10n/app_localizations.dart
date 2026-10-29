@@ -10483,12 +10483,6 @@ abstract class AppLocalizations {
   /// **'Movera will contact you to book a time. You don\'t need to do anything else now.'**
   String get infoNoContent;
 
-  /// No description provided for @infoStatusLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Status: {status}'**
-  String infoStatusLine(Object status);
-
   /// No description provided for @infoHeld.
   ///
   /// In en, this message translates to:
