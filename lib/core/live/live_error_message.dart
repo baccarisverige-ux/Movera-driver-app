@@ -56,6 +56,7 @@ String liveTripErrorMessage(Object? error) {
   return _transportMessage(error) ??
       switch (error.detail) {
         'not_at_pickup' => tr.liveTripNotAtPickup,
+        'price_changed' => tr.cashPriceChanged,
         'no_show_too_early' => tr.liveTripNoShowTooEarly,
         'version_mismatch' || 'invalid_transition' => tr.liveTripChanged,
         _ => tr.liveTripFailed,

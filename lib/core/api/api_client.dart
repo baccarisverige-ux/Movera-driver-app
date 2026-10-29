@@ -365,6 +365,7 @@ class ApiClient {
     var message = 'Request failed.';
     String? reason;
     Map<String, dynamic>? projection;
+    Map<String, dynamic>? preview;
     var details = const <String>[];
     try {
       final decoded = jsonDecode(response.body);
@@ -392,6 +393,10 @@ class ApiClient {
         if (rawProjection is Map) {
           projection = Map<String, dynamic>.from(rawProjection);
         }
+        final rawPreview = decoded['preview'];
+        if (rawPreview is Map) {
+          preview = Map<String, dynamic>.from(rawPreview);
+        }
       }
     } on FormatException {
       // A non-JSON error body still keeps the HTTP status and request id.
@@ -408,6 +413,7 @@ class ApiClient {
       retryAfter: retrySeconds == null ? null : Duration(seconds: retrySeconds),
       projection: projection,
       details: details,
+      preview: preview,
     );
   }
 }

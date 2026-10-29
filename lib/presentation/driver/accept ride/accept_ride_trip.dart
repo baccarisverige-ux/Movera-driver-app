@@ -1436,7 +1436,7 @@ extension _AcceptRideTrip on _AcceptRideState {
 
   /// Q24 / R8-4: shows the cash to collect; "Finish {category}" there
   /// completes it.
-  Future<void> _collectCash() async {
+  Future<void> _collectCash({CompletePreview? changed}) async {
     if (!_collectsCashNow || _stageTransitioning || _rideLifecycle.terminal) {
       return;
     }
@@ -1444,8 +1444,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     // shows the server's final price, never the booked cash: a finish more
     // than 300 m before the drop-off is priced by what was driven.
     final trips = _AcceptRideLive(this)._liveTrips;
-    CompletePreview? preview;
-    if (trips != null) {
+    CompletePreview? preview = changed;
+    if (trips != null && preview == null) {
       _stageTransitioning = true;
       try {
         preview = await trips.previewComplete(widget.tripId);
@@ -1455,7 +1455,9 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!mounted) {
         return;
       }
-      if (preview == null) {
+      // A server before the preview (404): the old finish, so a cash trip
+      // is never stuck.
+      if (preview == null && !trips.previewUnsupported(widget.tripId)) {
         _AcceptRideLive(this)._showServerRefusal(liveTripErrorMessage(null));
         return;
       }
@@ -1626,15 +1628,21 @@ extension _AcceptRideTrip on _AcceptRideState {
         (!await _AcceptRideLive(this)._serverStep(
               (trips) => trips.complete(
                 widget.tripId,
-                cashCollected: widget.paidByCash
-                    ? trips.previewOf(widget.tripId)?.cashDue
-                    : null,
+                preview: trips.previewOf(widget.tripId),
+                cash: widget.paidByCash,
               ),
             ) ||
             !mounted ||
             _rideLifecycle.terminal)) {
       _completionInFlight = false;
       _stageTransitioning = false;
+      // v0.17.3 §26: 409 price_changed: the sheet again with the new price.
+      final changed = _AcceptRideLive(
+        this,
+      )._liveTrips?.takePriceChanged(widget.tripId);
+      if (changed != null && mounted) {
+        unawaited(_collectCash(changed: changed));
+      }
       return;
     }
     try {

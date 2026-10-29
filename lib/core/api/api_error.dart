@@ -11,6 +11,7 @@ class ApiError implements Exception {
     this.retryAfter,
     this.projection,
     this.details = const [],
+    this.preview,
   });
 
   /// Client code for a request that never got an answer from the server.
@@ -45,6 +46,10 @@ class ApiError implements Exception {
   /// required documents as `<scope>:<type>` (`driver:terms`,
   /// `fleet:company_registration`, `vehicle:insurance`).
   final List<String> details;
+
+  /// Contract v0.17.3 §26: with `409 price_changed` on complete, the fresh
+  /// frozen price (`CompletePreview`) to show and collect.
+  final Map<String, dynamic>? preview;
 
   /// The document types of [details], without their scope.
   List<String> get missingDocumentTypes => [

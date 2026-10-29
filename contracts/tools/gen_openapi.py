@@ -888,13 +888,14 @@ S["TripPath"] = obj({"tripId": ref("Id"), "source": s(enum=TPATH["sources"], des
                     ["tripId", "source", "points", "pickup", "dropoff", "stops"],
                     "v0.17.0 (CONTRACT.md §25): the route of an ended trip. " + TPATH["retention"], addl=False)
 CPV = C["completePreview"]
-S["CompletePreview"] = obj({"tripId": ref("Id"), "total": ref("Money"),
+S["CompletePreview"] = obj({"previewId": ref("Id"), "expiresAt": {"allOf": [ref("Timestamp")], "description": "The frozen price holds until then (freezeSeconds after the call)."},
+                            "tripId": ref("Id"), "total": ref("Money"),
                             "cashDue": {"allOf": [ref("Money")], "description": "What the driver collects in cash: total less what the rider's wallet would pay. Send it as cashCollected on complete."},
                             "driverEarnings": {"allOf": [ref("Money")], "description": "The driver's part of total (TripProjection.driverEarnings after complete)."},
                             "earlyEnd": {"type": "boolean", "description": "The driver is farther than " + str(C["pricing"]["completeNearDropoffMeters"]) + " m from the drop-off: priced as what was driven (owner decision 28)."},
                             "fareLines": arr(ref("FareLine"))},
-                           ["tripId", "total", "cashDue", "driverEarnings", "earlyEnd", "fareLines"],
-                           "v0.17.3 (CONTRACT.md §26): the final price complete would set now. " + CPV["same"], addl=False)
+                           ["previewId", "expiresAt", "tripId", "total", "cashDue", "driverEarnings", "earlyEnd", "fareLines"],
+                           "v0.17.3 (CONTRACT.md §26): the final price complete would set now, frozen for " + str(CPV["freezeSeconds"]) + " s. " + CPV["same"], addl=False)
 S["RouteRequest"] = obj({"mode": s(enum=MP["routeModes"]), "from": ref("LatLng"), "to": ref("LatLng")}, ["mode", "from", "to"])
 S["RoadRoute"] = obj({"points": arr(ref("LatLng"), minItems=2, description="The road geometry, in order."), "distanceMeters": i(minimum=0),
                       "durationSeconds": ref("DurationSeconds"), "provider": s(examples=["osrm"])}, ["points"],
@@ -988,7 +989,8 @@ S["Error"] = obj({"code": ref("ErrorCode"), "message": s(), "requestId": s(), "r
                   "details": {"type": "array", "items": s(), "description": C["errors"]["details"]},
                   "projection": {"description": "Current authoritative resource. Always present for version_mismatch and invalid_transition "
                                                  "(TripProjection for trip commands; Offer / Driver / Rider / Vehicle / ConfigDraft for their commands).",
-                                 "anyOf": [ref("TripProjection"), ref("Offer"), ref("Driver"), ref("Rider"), ref("Vehicle"), ref("ConfigDraft"), ref("Incident")]}},
+                                 "anyOf": [ref("TripProjection"), ref("Offer"), ref("Driver"), ref("Rider"), ref("Vehicle"), ref("ConfigDraft"), ref("Incident")]},
+                  "preview": {"allOf": [ref("CompletePreview")], "description": "v0.17.3: with reason price_changed on POST /trips/{tripId}/complete, the fresh frozen price to show and collect (CONTRACT.md §26)."}},
                  ["code", "message", "requestId", "retryable"])
 S["ConflictError"] = {"allOf": [ref("Error")],
                       "if": {"properties": {"code": {"enum": ["version_mismatch", "invalid_transition"]}}, "required": ["code"]},
@@ -1009,7 +1011,7 @@ for p in PAGES:
 EV = {"expectedVersion": i("Version the caller last saw; stale → 409 version_mismatch.", minimum=1)}
 S["TripCommand"] = obj(dict(EV, location=ref("GeoFix")), ["expectedVersion"], "Body of driver trip commands.")
 S["BoardCommand"] = {"allOf": [ref("TripCommand"), obj({"verifiedPinToken": s("Required when the trip has pinRequired=true.")})]}
-S["CompleteCommand"] = {"allOf": [ref("TripCommand"), obj({"cashCollected": {"allOf": [ref("Money")], "description": "v0.17.3: on a cash trip the cashDue of GET /driver/trips/{tripId}/complete-preview that the app showed; at most the fare less the wallet (else 400 cash_above_fare). Absent: the fare less the wallet."}})]}
+S["CompleteCommand"] = {"allOf": [ref("TripCommand"), obj({"previewId": {"allOf": [ref("Id")], "description": "v0.17.3: the latest complete-preview's previewId. " + C["completePreview"]["frozen"] + " " + C["completePreview"]["unfrozen"]}, "cashCollected": {"allOf": [ref("Money")], "description": "v0.17.3: on a cash trip the cashDue of GET /driver/trips/{tripId}/complete-preview that the app showed; at most the fare less the wallet (else 400 cash_above_fare). Absent: the fare less the wallet."}})]}
 S["NoShowCommand"] = {"allOf": [ref("TripCommand"), obj({"reasonCode": ref("NoShowReasonCode")})]}
 S["CancelCommand"] = obj(dict(EV, reasonCode=ref("CancelReasonCode"), note=s(maxLength=1000), location=ref("GeoFix")),
                          ["expectedVersion", "reasonCode"],
@@ -1751,8 +1753,8 @@ op("get", "/trips/{tripId}/path", "getTripPath", "The route of an ended trip (dr
    params=TID, ok=(200, "TripPath"),
    desc="v0.17.0 (CONTRACT.md §25): " + TPATH["actors"] + ". " + TPATH["driven"] + " " + TPATH["planned"])["responses"]["409"] = rref("Conflict")
 op("get", "/driver/trips/{tripId}/complete-preview", "previewCompleteTrip", "The final price before completing (read-only)", ["driver"], "Driver · Trip",
-   params=TID, ok=(200, "CompletePreview"), read_only=True,
-   desc="v0.17.3 (CONTRACT.md §26): " + CPV["actors"] + " " + CPV["same"] + " " + CPV["cashCollected"])["responses"]["409"] = rref("Conflict")
+   params=TID, ok=(200, "CompletePreview"),
+   desc="v0.17.3 (CONTRACT.md §26): " + CPV["actors"] + " " + CPV["same"] + " " + CPV["frozen"] + " " + CPV["cashCollected"])["responses"]["409"] = rref("Conflict")
 # Admin: dispatch control, live drivers, trip trace
 op("get", "/admin/zones/{zoneId}/dispatch-control", "adminGetDispatchControl", "The zone's live dispatch switch", ["admin"], "Admin · Dispatch",
    params=[pref("ZoneId")], ok=(200, "DispatchControl"), permission="trips.read")

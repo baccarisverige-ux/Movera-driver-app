@@ -8180,19 +8180,24 @@ paths:
       operationId: previewCompleteTrip
       summary: The final price before completing (read-only)
       description: 'v0.17.3 (CONTRACT.md §26): the trip''s own driver (anyone else 404 not_found); only while the trip is
-        on board (rider_onboard, in_trip, approaching_dropoff), else 409 invalid_transition, reason trip_not_on_board. Read-only:
-        no Idempotency-Key, nothing is stored, the wallet is not touched. total and fareLines are computed by the same code
-        as POST /trips/{tripId}/complete would at that moment with the driver''s latest fix (pricing.driverEndsEarly): earlyEnd
-        is true when the driver is farther than pricing.completeNearDropoffMeters from the drop-off. cashDue = total − the
-        part the rider''s wallet would pay. driverEarnings = the driver''s part of that total (as TripProjection.driverEarnings
-        after complete), for the sheet''s cash balance. The app then sends POST /trips/{tripId}/complete { expectedVersion,
-        cashCollected = the cashDue it showed } on a cash trip. More than the fare less the wallet is 400 invalid_request,
-        reason cash_above_fare. After completing the app shows the fare of the returned TripProjection.'
+        on board (rider_onboard, in_trip, approaching_dropoff), else 409 invalid_transition, reason trip_not_on_board. No
+        Idempotency-Key; the wallet is not touched; the trip''s version does not change. Each call freezes its price for freezeSeconds
+        and replaces the trip''s earlier preview. total and fareLines are computed by the same code as POST /trips/{tripId}/complete
+        would at that moment with the driver''s latest fix (pricing.driverEndsEarly): earlyEnd is true when the driver is
+        farther than pricing.completeNearDropoffMeters from the drop-off. cashDue = total − the part the rider''s wallet would
+        pay. driverEarnings = the driver''s part of that total (as TripProjection.driverEarnings after complete), for the
+        sheet''s cash balance. POST /trips/{tripId}/complete { expectedVersion, previewId, cashCollected } with the trip''s
+        latest previewId before expiresAt: complete uses the frozen price exactly (total, fareLines, driverEarnings, earlyEnd):
+        no early-end flip, no extra minutes or waiting. On a cash trip cashCollected must equal its cashDue (and the wallet
+        part must be unchanged); otherwise 409 conflict, reason price_changed, with a fresh preview in the error''s preview
+        field. The app sends POST /trips/{tripId}/complete { expectedVersion, previewId, cashCollected = the cashDue it showed
+        } on a cash trip. On 409 price_changed it shows the sheet again with error.preview (never resends the old amount).
+        After completing the app shows the fare of the returned TripProjection. An older server without the preview (404)
+        leaves the app on the old flow (complete without cashCollected).'
       tags:
       - Driver · Trip
       x-actor:
       - driver
-      x-read-only: true
       parameters:
       - $ref: '#/components/parameters/TripId'
       - $ref: '#/components/parameters/RequestId'
@@ -15609,12 +15614,14 @@ components:
       additionalProperties: false
     CompletePreview:
       type: object
-      description: 'v0.17.3 (CONTRACT.md §26): the final price complete would set now. total and fareLines are computed by
-        the same code as POST /trips/{tripId}/complete would at that moment with the driver''s latest fix (pricing.driverEndsEarly):
-        earlyEnd is true when the driver is farther than pricing.completeNearDropoffMeters from the drop-off. cashDue = total
-        − the part the rider''s wallet would pay. driverEarnings = the driver''s part of that total (as TripProjection.driverEarnings
-        after complete), for the sheet''s cash balance.'
+      description: 'v0.17.3 (CONTRACT.md §26): the final price complete would set now, frozen for 120 s. total and fareLines
+        are computed by the same code as POST /trips/{tripId}/complete would at that moment with the driver''s latest fix
+        (pricing.driverEndsEarly): earlyEnd is true when the driver is farther than pricing.completeNearDropoffMeters from
+        the drop-off. cashDue = total − the part the rider''s wallet would pay. driverEarnings = the driver''s part of that
+        total (as TripProjection.driverEarnings after complete), for the sheet''s cash balance.'
       required:
+      - previewId
+      - expiresAt
       - tripId
       - total
       - cashDue
@@ -15622,6 +15629,12 @@ components:
       - earlyEnd
       - fareLines
       properties:
+        previewId:
+          $ref: '#/components/schemas/Id'
+        expiresAt:
+          allOf:
+          - $ref: '#/components/schemas/Timestamp'
+          description: The frozen price holds until then (freezeSeconds after the call).
         tripId:
           $ref: '#/components/schemas/Id'
         total:
@@ -16278,6 +16291,11 @@ components:
           - $ref: '#/components/schemas/Vehicle'
           - $ref: '#/components/schemas/ConfigDraft'
           - $ref: '#/components/schemas/Incident'
+        preview:
+          allOf:
+          - $ref: '#/components/schemas/CompletePreview'
+          description: 'v0.17.3: with reason price_changed on POST /trips/{tripId}/complete, the fresh frozen price to show
+            and collect (CONTRACT.md §26).'
     ConflictError:
       allOf:
       - $ref: '#/components/schemas/Error'
@@ -16574,6 +16592,18 @@ components:
       - $ref: '#/components/schemas/TripCommand'
       - type: object
         properties:
+          previewId:
+            allOf:
+            - $ref: '#/components/schemas/Id'
+            description: 'v0.17.3: the latest complete-preview''s previewId. POST /trips/{tripId}/complete { expectedVersion,
+              previewId, cashCollected } with the trip''s latest previewId before expiresAt: complete uses the frozen price
+              exactly (total, fareLines, driverEarnings, earlyEnd): no early-end flip, no extra minutes or waiting. On a cash
+              trip cashCollected must equal its cashDue (and the wallet part must be unchanged); otherwise 409 conflict, reason
+              price_changed, with a fresh preview in the error''s preview field. previewId missing, unknown or expired: complete
+              prices the trip as now. If the app sent previewId with cashCollected and that no longer equals the cash part
+              of the new price: 409 conflict, reason price_changed, with a fresh preview (error.preview); the trip is not
+              completed and the driver is never trapped by a 400. Without previewId (older apps) cashCollected keeps its old
+              rule (at most the fare less the wallet, else 400 cash_above_fare).'
           cashCollected:
             allOf:
             - $ref: '#/components/schemas/Money'

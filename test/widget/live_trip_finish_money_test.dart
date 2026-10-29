@@ -41,6 +41,7 @@ void main() {
   late LiveDriverServices live;
   late DriverAccountSession account;
   late http.Response Function() preview;
+  late List<http.Response Function()> completeAnswers;
   Map<String, dynamic> money(int minor) => {
     'amountMinor': minor,
     'currency': 'SEK',
@@ -74,7 +75,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     InMemoryWaybillRepository.instance.reset();
     requests = [];
+    completeAnswers = [];
     preview = () => json(200, {
+      'previewId': 'cpv_first',
       'tripId': 'live-trip',
       'total': money(5400),
       'cashDue': money(5400),
@@ -100,6 +103,7 @@ void main() {
       }
       if (request.method == 'POST' &&
           path == '/api/v1/trips/live-trip/complete') {
+        if (completeAnswers.isNotEmpty) return completeAnswers.removeAt(0)();
         return json(200, completed);
       }
       if (request.method == 'GET' && path == '/api/v1/driver/profile') {
@@ -260,6 +264,75 @@ void main() {
     await close(tester);
   });
 
+  Future<void> finish(WidgetTester tester) async {
+    await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+  }
+
+  testWidgets('checker: 409 price_changed shows the sheet again with the new '
+      'amount and never resends the old one', (tester) async {
+    completeAnswers.add(
+      () => json(409, {
+        'code': 'conflict',
+        'message': 'The price changed.',
+        'requestId': 'r',
+        'retryable': false,
+        'reason': 'price_changed',
+        'preview': {
+          'previewId': 'cpv_fresh',
+          'tripId': 'live-trip',
+          'total': money(5900),
+          'cashDue': money(5900),
+          'driverEarnings': money(4300),
+          'earlyEnd': true,
+          'fareLines': const [],
+        },
+      }),
+    );
+    final sent = await openCashSheet(tester);
+    await finish(tester);
+    // The sheet is back with the server's new amount.
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('cash-collect-case')),
+        matching: find.text('59 kr'),
+      ),
+      findsOneWidget,
+    );
+    await finish(tester);
+    final bodies = [
+      for (final r in sent.where((r) => r.url.path.endsWith('/complete')))
+        jsonDecode(r.body) as Map,
+    ];
+    expect(bodies, hasLength(2));
+    expect(bodies[0]['previewId'], 'cpv_first');
+    expect(bodies[0]['cashCollected'], money(5400));
+    expect(bodies[1]['previewId'], 'cpv_fresh');
+    expect(bodies[1]['cashCollected'], money(5900));
+    await close(tester);
+  });
+
+  testWidgets('checker: an older server without the preview (404) keeps the '
+      'old finish, so the cash trip is not stuck', (tester) async {
+    preview = () =>
+        json(404, {'message': 'Route not found', 'error': 'Not Found'});
+    final sent = await openCashSheet(tester);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('cash-collect-case')),
+        matching: find.text('208 kr'),
+      ),
+      findsOneWidget,
+    );
+    await finish(tester);
+    final complete = sent.where((r) => r.url.path.endsWith('/complete'));
+    expect(complete, hasLength(1));
+    expect(jsonDecode(complete.single.body), {'expectedVersion': 8});
+    await close(tester);
+  });
+
   testWidgets('live bug A: no answer from the server, no booked price as '
       'the amount to collect and nothing completed', (tester) async {
     preview = () => json(503, {
@@ -385,6 +458,7 @@ void main() {
         .single;
     expect(jsonDecode(complete.body), {
       'expectedVersion': 8,
+      'previewId': 'cpv_first',
       'cashCollected': money(5400),
     }, reason: 'no fare of its own: the cash the server\'s price said');
 

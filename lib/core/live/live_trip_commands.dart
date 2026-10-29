@@ -25,6 +25,7 @@ class LiveTripOutcome {
 /// driven, at least the category minimum).
 class CompletePreview {
   const CompletePreview({
+    this.previewId,
     required this.total,
     required this.cashDue,
     required this.earlyEnd,
@@ -39,7 +40,9 @@ class CompletePreview {
       final early = json['earlyEnd'];
       final earnings = json['driverEarnings'];
       if (total is! Map || cash is! Map || early is! bool) return null;
+      final id = json['previewId'];
       final parsed = CompletePreview(
+        previewId: id is String && id.isNotEmpty ? id : null,
         total: Money.fromJson(Map<String, dynamic>.from(total)),
         cashDue: Money.fromJson(Map<String, dynamic>.from(cash)),
         earlyEnd: early,
@@ -53,6 +56,9 @@ class CompletePreview {
     }
   }
 
+  /// The frozen price's id (2 minutes, contract v0.17.3 §26), sent back
+  /// on complete; null from a server before the freeze.
+  final String? previewId;
   final Money total;
   final Money cashDue;
   final bool earlyEnd;
@@ -105,6 +111,13 @@ class LiveTripCommands {
 
   /// The last final price shown per trip (contract v0.17.3 §26).
   final Map<String, CompletePreview> _previews = {};
+  final Map<String, CompletePreview> _changed = {};
+  final Set<String> _unsupported = {};
+
+  /// True when the server has no complete-preview (`404` without
+  /// `trip_not_found`: a server before contract v0.17.3). The app then
+  /// keeps the old finish so a cash trip is never stuck.
+  bool previewUnsupported(String tripId) => _unsupported.contains(tripId);
 
   /// The last [previewComplete] answer for [tripId]: its `cashDue` is the
   /// cash the driver was told to take, sent as `cashCollected`.
@@ -153,6 +166,8 @@ class LiveTripCommands {
   void forget(String tripId) {
     _trips.remove(tripId);
     _previews.remove(tripId);
+    _changed.remove(tripId);
+    _unsupported.remove(tripId);
     _own.remove(tripId);
   }
 
@@ -203,26 +218,54 @@ class LiveTripCommands {
     );
   }
 
-  /// Finish (`complete`). [cashCollected] is the cash the driver was told
-  /// to take (the preview's `cashDue`, contract v0.17.3 §26); without it
-  /// the server counts the fare less what the rider's wallet paid.
-  Future<LiveTripOutcome> complete(String tripId, {Money? cashCollected}) =>
-      _step(
-        tripId,
-        'complete',
-        body: {
-          if (cashCollected != null) 'cashCollected': cashCollected.toJson(),
-        },
-        done: const {'completed'},
-        leadsTo: const {'completed'},
-      );
+  /// Finish (`complete`). [preview] is the frozen price the driver was
+  /// shown (contract v0.17.3 §26): its `previewId` and, on a [cash] trip,
+  /// its `cashDue` as `cashCollected`. Without it the server counts the
+  /// fare less what the rider's wallet paid. On `409 price_changed` the
+  /// server's fresh price is kept ([takePriceChanged]) and the step fails:
+  /// the app shows the sheet again and never resends the old amount.
+  Future<LiveTripOutcome> complete(
+    String tripId, {
+    CompletePreview? preview,
+    bool cash = false,
+  }) async {
+    final outcome = await _step(
+      tripId,
+      'complete',
+      body: {
+        if (preview?.previewId != null) 'previewId': preview!.previewId,
+        if (cash && preview != null) 'cashCollected': preview.cashDue.toJson(),
+      },
+      done: const {'completed'},
+      leadsTo: const {'completed'},
+    );
+    final error = outcome.error;
+    if (error is ApiError && error.detail == 'price_changed') {
+      final fresh = error.preview == null
+          ? null
+          : CompletePreview.tryParse(error.preview!);
+      // The fresh frozen price replaces the shown one; it is what the next
+      // complete sends.
+      if (fresh == null) {
+        _previews.remove(tripId);
+      } else {
+        _previews[tripId] = fresh;
+        _changed[tripId] = fresh;
+      }
+    }
+    return outcome;
+  }
 
-  /// The final price `complete` would set now (contract v0.17.3 §26,
-  /// `GET /driver/trips/{tripId}/complete-preview`, read-only): shown on
-  /// Collect cash so the driver takes what the rider is charged (owner
-  /// 2026-10-29, live bug A). Null when the server did not answer with
-  /// one: the app then never shows the booked price as the amount.
+  /// The fresh price of a `409 price_changed`, once: the sheet shows it.
+  CompletePreview? takePriceChanged(String tripId) => _changed.remove(tripId);
+
+  /// The final price `complete` would set now, frozen for 2 minutes
+  /// (contract v0.17.3 §26, `GET /driver/trips/{tripId}/complete-preview`):
+  /// shown on Collect cash so the driver takes what the rider is charged
+  /// (owner 2026-10-29, live bug A). Null when the server did not answer
+  /// with one; see [previewUnsupported].
   Future<CompletePreview?> previewComplete(String tripId) async {
+    _unsupported.remove(tripId);
     try {
       final answer = await _api.get(
         '/api/v1/driver/trips/${Uri.encodeComponent(tripId)}/complete-preview',
@@ -238,6 +281,9 @@ class LiveTripCommands {
       final projection = error.projection;
       if (projection != null) observe({'tripId': tripId, ...projection});
       _previews.remove(tripId);
+      if (error.statusCode == 404 && error.reason != 'trip_not_found') {
+        _unsupported.add(tripId);
+      }
       DriverLog.warn('complete preview refused: ${error.detail}', name: 'live');
       return null;
     }

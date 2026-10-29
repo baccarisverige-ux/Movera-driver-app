@@ -1534,6 +1534,7 @@
   "@tripGoToDropoff": {
     "description": "Admin text key trip.goToDropoff (Content › Driver app texts)."
   },
+  "cashPriceChanged": "The price changed – collect the new amount",
   "cashPriceRecalculatedEarlyEnd": "Ending before the destination – price recalculated",
   "tripCollectCash": "Collect cash",
   "@tripCollectCash": {

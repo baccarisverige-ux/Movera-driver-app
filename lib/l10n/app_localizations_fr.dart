@@ -2155,6 +2155,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tripGoToDropoff => 'Aller à la dépose';
 
   @override
+  String get cashPriceChanged =>
+      'Le prix a changé – encaissez le nouveau montant';
+
+  @override
   String get cashPriceRecalculatedEarlyEnd =>
       'Fin avant la destination – prix recalculé';
 

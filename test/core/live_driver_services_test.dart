@@ -410,6 +410,8 @@ void main() {
       answers
         ..add(
           (_) => json(200, {
+            'previewId': 'cpv_1',
+            'expiresAt': '2026-10-29T12:02:00Z',
             'tripId': 't1',
             'total': sek(5400),
             'cashDue': sek(5000),
@@ -430,14 +432,72 @@ void main() {
       expect(preview.earlyEnd, isTrue);
       expect(preview.driverEarnings!.minorUnits, 3920);
       expect(trips.previewOf('t1'), same(preview));
+      expect(preview.previewId, 'cpv_1');
       expect(
-        (await trips.complete('t1', cashCollected: preview.cashDue)).ok,
+        (await trips.complete(
+          't1',
+          preview: trips.previewOf('t1'),
+          cash: true,
+        )).ok,
         isTrue,
       );
       expect(body(requests[1]), {
+        'previewId': 'cpv_1',
         'cashCollected': sek(5000),
         'expectedVersion': 8,
       });
+    });
+
+    test('409 price_changed keeps the fresh price once; the old amount is '
+        'never resent', () async {
+      trips.observe(trip('in_trip', 8));
+      Map<String, dynamic> sek(int minor) => {
+        'amountMinor': minor,
+        'currency': 'SEK',
+      };
+      Map<String, dynamic> priced(String id, int minor) => {
+        'previewId': id,
+        'tripId': 't1',
+        'total': sek(minor),
+        'cashDue': sek(minor),
+        'earlyEnd': true,
+        'fareLines': const [],
+      };
+      answers
+        ..add((_) => json(200, priced('cpv_1', 5400)))
+        ..add(
+          (_) => json(409, {
+            ...error('conflict', reason: 'price_changed'),
+            'preview': priced('cpv_2', 5900),
+          }),
+        );
+      await trips.previewComplete('t1');
+      final outcome = await trips.complete(
+        't1',
+        preview: trips.previewOf('t1'),
+        cash: true,
+      );
+      expect(outcome.ok, isFalse);
+      expect(outcome.message, tr.cashPriceChanged);
+      final fresh = trips.takePriceChanged('t1');
+      expect(trips.previewOf('t1'), same(fresh));
+      expect(fresh!.previewId, 'cpv_2');
+      expect(fresh.cashDue.minorUnits, 5900);
+      expect(trips.takePriceChanged('t1'), isNull);
+    });
+
+    test('a server without the preview (404, no trip_not_found) is '
+        'remembered as unsupported; a missing trip is not', () async {
+      answers
+        ..add(
+          (_) => json(404, {'message': 'Route not found', 'statusCode': 404}),
+        )
+        ..add((_) => json(404, error('not_found', reason: 'trip_not_found')));
+      expect(await trips.previewComplete('t1'), isNull);
+      expect(trips.previewUnsupported('t1'), isTrue);
+      expect(await trips.previewComplete('t1'), isNull);
+      expect(trips.previewUnsupported('t1'), isFalse);
+      trips.forget('t1');
     });
 
     test('a refused or malformed preview is null', () async {
