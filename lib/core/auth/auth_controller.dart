@@ -86,6 +86,13 @@ class AuthController {
 
   Future<bool> hasSession() => _auth.hasSession();
 
+  /// Contract v0.15.0 (decision 5): `POST /auth/waitlist`.
+  Future<void> joinWaitlist(String phone, {String? locale}) =>
+      _auth.joinWaitlist(phone, locale: locale);
+
+  /// Contract v0.15.0 (decision 6): the test numbers, test builds only.
+  Future<List<TestAccount>> testAccounts() => _auth.testAccounts();
+
   /// Ends the session on the server and on this device.
   Future<void> signOut() async {
     signInResult = null;

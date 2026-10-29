@@ -10230,6 +10230,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your account can\'t be used until these documents are approved: {names}'**
   String docsNotApprovedAccount(String names);
+
+  /// Owner 2026-10-29 decision 1: shown while a sign-in call waits for a sleeping server.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the server…'**
+  String get authStartingServer;
+
+  /// Owner decision 3: after 5 wrong codes. {button} is the resend button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong tries – tap {button}'**
+  String authErrTooManyWrongCodes(String button);
+
+  /// Owner decision 4: a sign-in wait of a minute or more, rounded up.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 min} other{{count} min}}'**
+  String authRetryMinutes(int count);
+
+  /// No description provided for @authJoinWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the waiting list'**
+  String get authJoinWaitlist;
+
+  /// No description provided for @authWaitlistSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re on the waiting list. We’ll let you know when sign-in opens for your number.'**
+  String get authWaitlistSaved;
+
+  /// No description provided for @authTestNumbersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test numbers (test build only)'**
+  String get authTestNumbersTitle;
+
+  /// No description provided for @authTestStatusNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Test · no account yet'**
+  String get authTestStatusNew;
+
+  /// No description provided for @gateSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get gateSignOut;
+
+  /// No description provided for @gateSupportUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t open e-mail. Write to Movera support from another device.'**
+  String get gateSupportUnavailable;
+
+  /// No description provided for @gateTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get gateTryAgain;
 }
 
 class _AppLocalizationsDelegate

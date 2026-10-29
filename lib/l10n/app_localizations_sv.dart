@@ -5905,4 +5905,46 @@ class AppLocalizationsSv extends AppLocalizations {
   String docsNotApprovedAccount(String names) {
     return 'Ditt konto kan inte användas förrän de här dokumenten är godkända: $names';
   }
+
+  @override
+  String get authStartingServer => 'Servern startar…';
+
+  @override
+  String authErrTooManyWrongCodes(String button) {
+    return 'För många fel försök – tryck på $button';
+  }
+
+  @override
+  String authRetryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minuter',
+      one: '1 minut',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authJoinWaitlist => 'Gå med i väntelistan';
+
+  @override
+  String get authWaitlistSaved =>
+      'Du står på väntelistan. Vi hör av oss när inloggningen öppnar för ditt nummer.';
+
+  @override
+  String get authTestNumbersTitle => 'Testnummer (endast testversion)';
+
+  @override
+  String get authTestStatusNew => 'Test · inget konto än';
+
+  @override
+  String get gateSignOut => 'Logga ut';
+
+  @override
+  String get gateSupportUnavailable =>
+      'Kunde inte öppna e-post. Skriv till Movera-supporten från en annan enhet.';
+
+  @override
+  String get gateTryAgain => 'Försök igen';
 }

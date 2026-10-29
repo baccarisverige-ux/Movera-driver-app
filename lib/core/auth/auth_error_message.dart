@@ -17,6 +17,24 @@ bool isProviderComingSoon(Object error) {
   return error is ApiError && error.detail == 'provider_not_configured';
 }
 
+/// Contract v0.15.0 `429 rate_limited`, reason `otp_too_many_attempts`.
+bool isTooManyWrongCodes(Object error) =>
+    error is ApiError && error.detail == 'otp_too_many_attempts';
+
+/// Contract v0.15.0 `403 forbidden`, reason `sign_in_restricted`: the number
+/// can join the waiting list.
+bool isSignInRestricted(Object error) =>
+    error is ApiError && error.detail == 'sign_in_restricted';
+
+/// Owner 2026-10-29, decision 4 (`fixtures/sign_in.json#waitDisplay`): a
+/// wait under one minute in seconds, else in whole minutes rounded up
+/// ("42 min").
+String authWaitText(Duration wait) {
+  final seconds = wait.inSeconds + (wait.inMilliseconds % 1000 == 0 ? 0 : 1);
+  if (seconds < 60) return tr.authRetrySeconds(seconds);
+  return tr.authRetryMinutes((seconds + 59) ~/ 60);
+}
+
 /// A specific, honest message for a sign-in failure: whether the code was
 /// wrong (`400 invalid_request` / `invalid_otp_code`), expired
 /// (`410 otp_expired`), rate limited (`429`, with the server's wait), the
@@ -29,12 +47,15 @@ String authErrorMessage(Object error, AuthAction action) {
   if (error is ApiError) {
     if (error.neverReachedServer) return tr.authErrOffline;
     final status = error.statusCode ?? 0;
+    // Contract v0.15.0 (owner 2026-10-29, decision 3): after 5 wrong codes
+    // the session is spent; a new code is the way on.
+    if (isTooManyWrongCodes(error)) {
+      return tr.authErrTooManyWrongCodes(tr.authResendCode);
+    }
     if (status == 429 || error.detail == 'rate_limited') {
       final wait = error.retryAfter;
       if (wait == null || wait <= Duration.zero) return tr.authErrTooManyWait;
-      final seconds =
-          wait.inSeconds + (wait.inMilliseconds % 1000 == 0 ? 0 : 1);
-      return tr.authErrTooManyIn(tr.authRetrySeconds(seconds));
+      return tr.authErrTooManyIn(authWaitText(wait));
     }
     // A provider without keys answers 503: "coming soon", not a fault.
     if (error.detail == 'provider_not_configured') {

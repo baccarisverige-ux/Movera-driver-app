@@ -5987,4 +5987,47 @@ class AppLocalizationsFr extends AppLocalizations {
   String docsNotApprovedAccount(String names) {
     return 'Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : $names';
   }
+
+  @override
+  String get authStartingServer => 'Démarrage du serveur…';
+
+  @override
+  String authErrTooManyWrongCodes(String button) {
+    return 'Trop d’essais erronés – touchez $button';
+  }
+
+  @override
+  String authRetryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authJoinWaitlist => 'Rejoindre la liste d’attente';
+
+  @override
+  String get authWaitlistSaved =>
+      'Vous êtes sur la liste d’attente. Nous vous préviendrons quand la connexion ouvrira pour votre numéro.';
+
+  @override
+  String get authTestNumbersTitle =>
+      'Numéros de test (version de test uniquement)';
+
+  @override
+  String get authTestStatusNew => 'Test · pas encore de compte';
+
+  @override
+  String get gateSignOut => 'Se déconnecter';
+
+  @override
+  String get gateSupportUnavailable =>
+      'Impossible d’ouvrir l’e-mail. Écrivez à l’assistance Movera depuis un autre appareil.';
+
+  @override
+  String get gateTryAgain => 'Réessayer';
 }

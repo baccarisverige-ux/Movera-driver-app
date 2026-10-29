@@ -62,9 +62,17 @@ class ApiClient {
     (_) => _random.nextInt(16).toRadixString(16),
   ).join();
 
-  /// `GET path`.
-  Future<Map<String, dynamic>> get(String path, {bool authenticated = true}) =>
-      _send('GET', path, authenticated: authenticated);
+  /// Contract v0.15.0 `auth.slowStart.waitSeconds` (owner 2026-10-29,
+  /// decision 1): a sleeping server (Render free plan) answers its first
+  /// request after about 50 s, so the sign-in calls wait up to 60 s.
+  static const signInTimeout = Duration(seconds: 60);
+
+  /// `GET path`. [timeout] replaces [requestTimeout] for this call.
+  Future<Map<String, dynamic>> get(
+    String path, {
+    bool authenticated = true,
+    Duration? timeout,
+  }) => _send('GET', path, authenticated: authenticated, timeout: timeout);
 
   /// `POST path` with a JSON [body] and an `Idempotency-Key`. Sign-in calls
   /// pass `authenticated: false`: no bearer token, and their 401 is a
@@ -74,12 +82,14 @@ class ApiClient {
     Map<String, dynamic>? body,
     String? idempotencyKey,
     bool authenticated = true,
+    Duration? timeout,
   }) => _send(
     'POST',
     path,
     body: body,
     idempotencyKey: idempotencyKey ?? _idempotencyKey(),
     authenticated: authenticated,
+    timeout: timeout,
   );
 
   /// `PATCH path` with a JSON [body] and an `Idempotency-Key`.
@@ -148,6 +158,7 @@ class ApiClient {
     String? idempotencyKey,
     required bool authenticated,
     http.BaseRequest Function(Uri uri)? build,
+    Duration? timeout,
   }) async {
     final requestId = _requestId();
     final uri = uriFor(path);
@@ -163,7 +174,14 @@ class ApiClient {
           'Authorization': 'Bearer $access',
         if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
       };
-      var response = await _request(method, uri, headers, body, build);
+      var response = await _request(
+        method,
+        uri,
+        headers,
+        body,
+        build,
+        timeout: timeout,
+      );
       if (response.statusCode == 401 && access != null && access.isNotEmpty) {
         final refresh = await _refreshAccess(access);
         if (refresh.unavailable) {
@@ -235,8 +253,9 @@ class ApiClient {
     Uri uri,
     Map<String, String> headers,
     Map<String, dynamic>? body,
-    http.BaseRequest Function(Uri uri)? build,
-  ) {
+    http.BaseRequest Function(Uri uri)? build, {
+    Duration? timeout,
+  }) {
     final http.BaseRequest request;
     if (build != null) {
       request = build(uri)..headers.addAll(headers);
@@ -250,7 +269,7 @@ class ApiClient {
     return _client
         .send(request)
         .then(http.Response.fromStream)
-        .timeout(_timeout);
+        .timeout(timeout ?? _timeout);
   }
 
   /// Renews the session after a `401` another transport saw (the offer
