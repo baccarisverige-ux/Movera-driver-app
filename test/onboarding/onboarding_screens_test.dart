@@ -581,6 +581,125 @@ void main() {
         expect(find.byKey(const ValueKey('info-session')), findsOneWidget);
       });
 
+      // Owner decision 19: car documents are the fleet owner's only.
+      for (final owner in [false, true]) {
+        testWidgets('Documents: car sections only for the fleet owner '
+            '(${owner ? 'owner' : 'member'})', (tester) async {
+          final server = FakeServer({
+            'GET ${DriverAccountRepository.profilePath}': (_) async =>
+                jsonResponse(
+                  200,
+                  profileJson(
+                    country: country,
+                    accountType: owner ? 'fleet' : 'driver',
+                    role: owner ? 'owner' : 'member',
+                  ),
+                ),
+            'GET ${DriverAccountRepository.documentsPath}': (_) async =>
+                jsonResponse(200, {'items': []}),
+            'GET ${DriverAccountRepository.vehiclesPath}': (_) async =>
+                jsonResponse(200, {
+                  'items': [
+                    {
+                      'vehicleId': 'veh_1',
+                      'make': 'Volvo',
+                      'model': 'V60',
+                      'year': 2021,
+                      'plate': 'TST 001',
+                      'status': 'approved',
+                      'requiredDocuments': [
+                        'vehicle_registration',
+                        'insurance',
+                      ],
+                    },
+                  ],
+                }),
+            'GET ${DriverAccountRepository.onboardingSettingsPath}':
+                (_) async => jsonResponse(200, settingsJson(country)),
+          });
+          await _host(tester, LiveDocumentsScreen(account: server.session()));
+          await tester.pumpAndSettle();
+          expect(
+            find.byKey(const ValueKey('doc-row-veh_1-insurance')),
+            owner ? findsOneWidget : findsNothing,
+          );
+          expect(
+            find.byKey(const ValueKey('doc-row-drv_1-driving_license')),
+            findsOneWidget,
+          );
+        });
+      }
+
+      testWidgets('a member gets no car-document reminders; the owner does', (
+        tester,
+      ) async {
+        final list = DriverReminderList.fromJson({
+          'items': [
+            {
+              'kind': 'document_needed',
+              'level': 'blocks_online',
+              'scope': 'vehicle',
+              'vehicleId': 'veh_1',
+              'documentType': 'insurance',
+            },
+            {
+              'kind': 'document_needed',
+              'level': 'blocks_online',
+              'scope': 'driver',
+              'documentType': 'driving_license',
+            },
+          ],
+        });
+        expect(list.forViewer(owner: false).items.map((r) => r.scope), [
+          'driver',
+        ]);
+        expect(list.forViewer(owner: true).items, hasLength(2));
+      });
+
+      testWidgets('a member sees every fleet car; only drivable ones are '
+          'pickable, the others say why', (tester) async {
+        FleetVehicle car(String id, String status, List<String> docs) =>
+            FleetVehicle.fromJson({
+              'vehicleId': id,
+              'make': 'Volvo',
+              'model': 'V60',
+              'plate': id,
+              'status': status,
+              'documents': [
+                for (final t in docs)
+                  {'documentId': t, 'type': t, 'status': 'approved'},
+              ],
+              'requiredDocuments': ['insurance', 'vehicle_photo_front'],
+            });
+        await _host(
+          tester,
+          Scaffold(
+            body: ListView(
+              children: [
+                for (final c in [
+                  car('ok', 'approved', ['insurance', 'vehicle_photo_front']),
+                  car('docs', 'approved', ['insurance']),
+                  car('new', 'pending', const []),
+                ])
+                  FleetCarCard(
+                    vehicle: c,
+                    myDriverId: 'drv_1',
+                    owner: false,
+                    onPick: () {},
+                  ),
+              ],
+            ),
+          ),
+        );
+        expect(find.byKey(const ValueKey('car-pick-ok')), findsOneWidget);
+        expect(find.byKey(const ValueKey('car-pick-docs')), findsNothing);
+        expect(find.byKey(const ValueKey('car-pick-new')), findsNothing);
+        expect(find.text(tr.vehDocsMissingOwnerUploads), findsOneWidget);
+        expect(find.text(tr.vehNotApprovedCantDrive), findsOneWidget);
+        // A member is not shown which car documents are missing.
+        expect(find.textContaining('Photo'), findsNothing);
+      });
+
       testWidgets('a car without approved documents: Can\'t be driven, '
           'not pickable', (tester) async {
         final car = FleetVehicle.fromJson(const {

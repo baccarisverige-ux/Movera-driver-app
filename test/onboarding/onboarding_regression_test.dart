@@ -2,6 +2,7 @@
 // behaviour that was wrong before, written only against APIs main already
 // had, so it fails on main and passes with this change (SE and FR).
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +19,9 @@ import 'package:movera/core/contracts/zone_settings.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/live/live_error_message.dart';
+import 'package:flutter/material.dart';
+import 'package:movera/core/account/driver_account_session.dart';
+import 'package:movera/presentation/driver/documents/live_documents_screen.dart';
 
 DriverAccountRepository _repository(
   Future<http.Response> Function(http.Request) answer,
@@ -131,6 +135,72 @@ void main() {
           'text': {'sv': 'Boka', 'fr': 'Réserver', 'en': 'Book'},
         });
         expect(item, isNotNull);
+      });
+
+      // Owner decision 19: a member driver sees no car documents (main
+      // listed the approved cars' documents to every member).
+      testWidgets('a member driver sees only his own documents', (
+        tester,
+      ) async {
+        http.Response json(Object body) => http.Response(
+          jsonEncode(body),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+        final repository = _repository((request) async {
+          switch (request.url.path) {
+            case DriverAccountRepository.profilePath:
+              return json({
+                'driverId': 'drv_1',
+                'accountStatus': 'active',
+                'firstName': 'Eva',
+                'accountType': 'driver',
+                'country': country,
+                'fleet': {
+                  'fleetId': 'f',
+                  'name': 'Nord',
+                  'role': 'member',
+                  'status': 'approved',
+                },
+                'requiredDocuments': ['driving_license'],
+                'version': 1,
+              });
+            case DriverAccountRepository.vehiclesPath:
+              return json({
+                'items': [
+                  {
+                    'vehicleId': 'veh_1',
+                    'plate': 'TST 001',
+                    'status': 'approved',
+                    'requiredDocuments': ['insurance'],
+                  },
+                ],
+              });
+          }
+          return json({'items': []});
+        });
+        tester.view.physicalSize = const Size(390, 1400);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: LiveDocumentsScreen(
+              account: DriverAccountSession(repository: repository),
+            ),
+          ),
+        );
+        for (var i = 0; i < 8; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        expect(
+          find.byKey(const ValueKey('doc-row-drv_1-driving_license')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('doc-row-veh_1-insurance')),
+          findsNothing,
+        );
       });
     });
   }

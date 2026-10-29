@@ -11022,6 +11022,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skipped'**
   String get swRatingStatusSkipped;
+
+  /// No description provided for @vehNotApprovedCantDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be driven – Movera has not approved this car yet'**
+  String get vehNotApprovedCantDrive;
+
+  /// No description provided for @vehDocsMissingOwnerUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be driven – the fleet owner must finish its documents'**
+  String get vehDocsMissingOwnerUploads;
 }
 
 class _AppLocalizationsDelegate

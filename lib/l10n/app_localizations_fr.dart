@@ -6464,4 +6464,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Ignorée';
+
+  @override
+  String get vehNotApprovedCantDrive =>
+      'Ne peut pas rouler – Movera n’a pas encore validé cette voiture';
+
+  @override
+  String get vehDocsMissingOwnerUploads =>
+      'Ne peut pas rouler – le gérant de la flotte doit compléter ses documents';
 }

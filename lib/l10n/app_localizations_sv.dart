@@ -6367,4 +6367,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Överhoppat';
+
+  @override
+  String get vehNotApprovedCantDrive =>
+      'Kan inte köras – Movera har inte godkänt bilen än';
+
+  @override
+  String get vehDocsMissingOwnerUploads =>
+      'Kan inte köras – åkeriägaren behöver slutföra bilens dokument';
 }

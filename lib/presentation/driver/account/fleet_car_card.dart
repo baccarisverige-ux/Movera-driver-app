@@ -17,7 +17,12 @@ class FleetCarCard extends StatelessWidget {
     this.pickedByName,
     this.onPick,
     this.busy = false,
+    this.owner = true,
   });
+
+  /// The fleet owner sees which car documents are missing; a member driver
+  /// only sees why the car can't be driven (owner decision 19).
+  final bool owner;
 
   final FleetVehicle vehicle;
   final String myDriverId;
@@ -125,7 +130,37 @@ class FleetCarCard extends StatelessWidget {
                 style: AccountStyle.hint(),
               ),
             ),
-          if (vehicle.isApproved && vehicle.missingDocuments.isNotEmpty)
+          if (!vehicle.isApproved && !owner)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                tr.vehNotApprovedCantDrive,
+                key: ValueKey('car-not-approved-${vehicle.vehicleId}'),
+                style: AuthText.urbanist(
+                  size: 14,
+                  weight: FontWeight.w700,
+                  color: AccountStyle.error,
+                ),
+              ),
+            ),
+          if (vehicle.isApproved &&
+              vehicle.missingDocuments.isNotEmpty &&
+              !owner)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                tr.vehDocsMissingOwnerUploads,
+                key: ValueKey('car-docs-missing-${vehicle.vehicleId}'),
+                style: AuthText.urbanist(
+                  size: 14,
+                  weight: FontWeight.w700,
+                  color: AccountStyle.error,
+                ),
+              ),
+            ),
+          if (vehicle.isApproved &&
+              vehicle.missingDocuments.isNotEmpty &&
+              owner)
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: Column(

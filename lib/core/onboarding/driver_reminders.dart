@@ -164,6 +164,15 @@ class DriverReminderList {
 
   final List<DriverReminder> items;
 
+  /// Owner decision 19: car-document lines are the fleet owner's; a member
+  /// driver gets none (the server also leaves them out).
+  DriverReminderList forViewer({required bool owner}) => owner
+      ? this
+      : DriverReminderList([
+          for (final item in items)
+            if (item.scope != 'vehicle') item,
+        ]);
+
   int get count => items.length;
   bool get isEmpty => items.isEmpty;
 

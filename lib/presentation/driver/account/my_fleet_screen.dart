@@ -469,6 +469,7 @@ class _MyFleetScreenState extends State<MyFleetScreen>
                         .firstOrNull
                   : null,
               busy: _busyId == vehicle.vehicleId,
+              owner: owner,
               onPick: () => _pick(vehicle),
             ),
             const SizedBox(height: 10),

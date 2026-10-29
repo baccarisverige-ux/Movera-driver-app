@@ -3958,5 +3958,7 @@
   "swRatingStatusSubmitted": "Submitted",
   "@swRatingStatusSubmitted": {"description": "Contract status word statusWords.families.ratingStatus.submitted (tool/gen_status_words.py)."},
   "swRatingStatusSkipped": "Skipped",
-  "@swRatingStatusSkipped": {"description": "Contract status word statusWords.families.ratingStatus.skipped (tool/gen_status_words.py)."}
+  "@swRatingStatusSkipped": {"description": "Contract status word statusWords.families.ratingStatus.skipped (tool/gen_status_words.py)."},
+  "vehNotApprovedCantDrive": "Can't be driven – Movera has not approved this car yet",
+  "vehDocsMissingOwnerUploads": "Can't be driven – the fleet owner must finish its documents"
 }

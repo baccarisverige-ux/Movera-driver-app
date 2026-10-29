@@ -16,9 +16,13 @@ Future<OnboardingSettings> refreshOnboardingSettings(
 /// quiet on failure (the last list stays).
 Future<void> refreshReminders(DriverAccountSession session) async {
   try {
-    await DriverRemindersStore.instance.refresh(
-      () => session.repository.reminders(),
-    );
+    await DriverRemindersStore.instance.refresh(() async {
+      final list = await session.repository.reminders();
+      final me = session.account;
+      return list.forViewer(
+        owner: me == null || me.isFleetAccount || (me.fleet?.isOwner ?? false),
+      );
+    });
   } catch (_) {
     // Offline or a server fault: the sheet keeps what it showed.
   }

@@ -1816,5 +1816,7 @@
   "swRatingStatusNotRequested": "Non demandée",
   "swRatingStatusPending": "En attente",
   "swRatingStatusSubmitted": "Envoyée",
-  "swRatingStatusSkipped": "Ignorée"
+  "swRatingStatusSkipped": "Ignorée",
+  "vehNotApprovedCantDrive": "Ne peut pas rouler – Movera n’a pas encore validé cette voiture",
+  "vehDocsMissingOwnerUploads": "Ne peut pas rouler – le gérant de la flotte doit compléter ses documents"
 }

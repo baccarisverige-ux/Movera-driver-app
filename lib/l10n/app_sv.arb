@@ -1816,5 +1816,7 @@
   "swRatingStatusNotRequested": "Inte begärt",
   "swRatingStatusPending": "Väntande",
   "swRatingStatusSubmitted": "Lämnat",
-  "swRatingStatusSkipped": "Överhoppat"
+  "swRatingStatusSkipped": "Överhoppat",
+  "vehNotApprovedCantDrive": "Kan inte köras – Movera har inte godkänt bilen än",
+  "vehDocsMissingOwnerUploads": "Kan inte köras – åkeriägaren behöver slutföra bilens dokument"
 }

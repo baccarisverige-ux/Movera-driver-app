@@ -167,10 +167,10 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen> {
   Widget build(BuildContext context) {
     final me = widget.account.account;
     final language = DriverAppTexts.language;
-    final cars = [
-      for (final car in _cars)
-        if ((me?.isFleetAccount ?? false) || car.isApproved) car,
-    ];
+    // Owner decision 19: car documents are the fleet owner's (an owner who
+    // drives too); a member driver sees only his own documents and picks a
+    // car in My fleet / Vehicles.
+    final cars = [if (me != null && seesCarDocuments(me)) ..._cars];
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AccountStyle.appBar(
@@ -391,3 +391,8 @@ class DocumentRow extends StatelessWidget {
     );
   }
 }
+
+/// Owner decision 19: only the fleet owner (a fleet account, also when he
+/// drives) sees and uploads car documents.
+bool seesCarDocuments(DriverAccount account) =>
+    account.isFleetAccount || (account.fleet?.isOwner ?? false);
