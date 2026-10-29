@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
-import 'package:movera/core/documents/document_expiry.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
-import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/vehicle/ride_categories.dart';
-import 'package:movera/presentation/driver/documents/document_renewal.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/home/components/reservation_request_sheet.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
@@ -29,16 +26,6 @@ Future<void> _show(
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(MaterialApp(home: page));
   await tester.pumpAndSettle();
-}
-
-TrackedDocument _insurance(int daysLeft) {
-  final now = ScheduledClock.realNow();
-  return TrackedDocument(
-    id: 'DOC-INS-418',
-    title: 'Insurance letter',
-    shortTitle: 'Insurance',
-    expiresOn: DateTime(now.year, now.month, now.day + daysLeft),
-  );
 }
 
 void main() {
@@ -65,54 +52,19 @@ void main() {
     });
   });
 
-  group('Q26: Documents', () {
-    testWidgets('a document running out shows Upload new, then review', (
-      tester,
-    ) async {
-      DocumentExpiryStore.instance.load([_insurance(7)]);
-      await _show(tester, const DriverDocuments());
-      final card = find.byKey(
-        const ValueKey<String>('document-expiry-DOC-INS-418'),
-      );
-      expect(card, findsOneWidget);
-      expect(
-        find.descendant(
-          of: card,
-          matching: find.textContaining('Expires in 7 days'),
-        ),
-        findsOneWidget,
-      );
-      await tester.tap(
-        find.byKey(const ValueKey<String>('document-upload-DOC-INS-418')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.byKey(const ValueKey<String>('document-upload-send')),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('New document in review'), findsOneWidget);
-      await tester.tap(
-        find.byKey(const ValueKey<String>('document-approve-DOC-INS-418')),
-      );
-      await tester.pumpAndSettle();
-      expect(card, findsNothing);
-      expect(
-        DriverNotificationFeed.instance.items.first.kind,
-        DriverNoticeKind.documentApproved,
-      );
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('nothing running out: the onboarding list only', (
+  group('Q26: Documents (demo)', () {
+    testWidgets('the sample list only; no made-up end dates (group 2)', (
       tester,
     ) async {
       await _show(tester, const DriverDocuments());
-      expect(
-        find.byType(DocumentExpiryList, skipOffstage: false),
-        findsOneWidget,
-      );
       expect(find.textContaining('Expires'), findsNothing);
       expect(find.text('0 of 11 approved'), findsOneWidget);
+      // A row opens its upload guide (owner item 4).
+      await tester.tap(find.text('Driver’s license'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('upload-guide')), findsOneWidget);
+      expect(find.text('Tips for a good photo'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 
@@ -120,7 +72,6 @@ void main() {
     testWidgets('N1–N3 in one list, with filters, a map and Upload new', (
       tester,
     ) async {
-      DocumentExpiryStore.instance.load([_insurance(7)]);
       final feed = DriverNotificationFeed.instance..reset();
       final now = feed.now;
       feed
@@ -159,10 +110,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Upload new'));
       await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey<String>('document-upload-sheet')),
-        findsOneWidget,
-      );
+      // Contract v0.17.0: the documents with their upload guides.
+      expect(find.byType(DriverDocuments), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

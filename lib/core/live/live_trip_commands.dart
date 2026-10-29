@@ -18,7 +18,7 @@ class LiveTripOutcome {
   bool get ok => message == null;
 }
 
-/// The server's final price before Collect cash (contract v0.17.3 §26):
+/// The server's final price before Collect cash (contract v0.18.1 §26):
 /// [total] the rider's fare, [cashDue] what the driver takes in cash
 /// (the fare less the wallet's part), [earlyEnd] when the driver is more
 /// than 300 m from the drop-off (owner decision 28: priced by what was
@@ -56,7 +56,7 @@ class CompletePreview {
     }
   }
 
-  /// The frozen price's id (2 minutes, contract v0.17.3 §26), sent back
+  /// The frozen price's id (2 minutes, contract v0.18.1 §26), sent back
   /// on complete; null from a server before the freeze.
   final String? previewId;
   final Money total;
@@ -109,13 +109,13 @@ class LiveTripCommands {
 
   static const _base = '/api/v1/trips';
 
-  /// The last final price shown per trip (contract v0.17.3 §26).
+  /// The last final price shown per trip (contract v0.18.1 §26).
   final Map<String, CompletePreview> _previews = {};
   final Map<String, CompletePreview> _changed = {};
   final Set<String> _unsupported = {};
 
   /// True when the server has no complete-preview (`404` without
-  /// `trip_not_found`: a server before contract v0.17.3). The app then
+  /// `trip_not_found`: a server before contract v0.18.1). The app then
   /// keeps the old finish so a cash trip is never stuck.
   bool previewUnsupported(String tripId) => _unsupported.contains(tripId);
 
@@ -219,7 +219,7 @@ class LiveTripCommands {
   }
 
   /// Finish (`complete`). [preview] is the frozen price the driver was
-  /// shown (contract v0.17.3 §26): its `previewId` and, on a [cash] trip,
+  /// shown (contract v0.18.1 §26): its `previewId` and, on a [cash] trip,
   /// its `cashDue` as `cashCollected`. Without it the server counts the
   /// fare less what the rider's wallet paid. On `409 price_changed` the
   /// server's fresh price is kept ([takePriceChanged]) and the step fails:
@@ -260,7 +260,7 @@ class LiveTripCommands {
   CompletePreview? takePriceChanged(String tripId) => _changed.remove(tripId);
 
   /// The final price `complete` would set now, frozen for 2 minutes
-  /// (contract v0.17.3 §26, `GET /driver/trips/{tripId}/complete-preview`):
+  /// (contract v0.18.1 §26, `GET /driver/trips/{tripId}/complete-preview`):
   /// shown on Collect cash so the driver takes what the rider is charged
   /// (owner 2026-10-29, live bug A). Null when the server did not answer
   /// with one; see [previewUnsupported].

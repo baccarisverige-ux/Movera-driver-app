@@ -33,8 +33,8 @@ class _FakePicker implements DocumentFilePicker {
   }
 
   @override
-  Future<PickedDocumentFile?> choosePdf() async {
-    calls.add('pdf');
+  Future<PickedDocumentFile?> chooseFile() async {
+    calls.add('file');
     return file;
   }
 }
@@ -185,7 +185,9 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text(tr.docMoveraBooks), findsOneWidget);
+    // v0.17.0 (owner item 8): "Waiting for Movera" and "How to book".
+    expect(find.text(tr.swDocumentStatusWaitingForMovera), findsOneWidget);
+    expect(find.text(tr.infoHowToBook), findsOneWidget);
     expect(find.text('Blurry photo'), findsOneWidget);
     expect(find.text(tr.swDocumentStatusRejected), findsOneWidget);
     expect(find.text(tr.swDocumentStatusInReview), findsOneWidget);
@@ -208,12 +210,16 @@ void main() {
     );
     await tester.ensureVisible(row);
     await tester.tap(row);
-    await tester.pump();
+    await tester.pumpAndSettle();
+    // Owner item 4: the upload guide first, one Upload button.
+    await tester.tap(find.byKey(const ValueKey('guide-upload')));
+    await tester.pumpAndSettle();
     expect(find.text(tr.docChooseHow), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('doc-pick-gallery')));
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
+    await tester.pumpAndSettle();
     expect(picker.calls, ['gallery']);
     final upload = server.uploads.single;
     expect(upload.headers['content-type'], startsWith('multipart/form-data'));
@@ -249,8 +255,10 @@ void main() {
     final row = find.byKey(const ValueKey('doc-row-drv_1-profile_photo'));
     await tester.ensureVisible(row);
     await tester.tap(row);
-    await tester.pump();
-    await tester.tap(find.byKey(const ValueKey('doc-pick-pdf')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('guide-upload')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('doc-pick-file')));
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }

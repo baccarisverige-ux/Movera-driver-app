@@ -47,7 +47,7 @@ class ApiError implements Exception {
   /// `fleet:company_registration`, `vehicle:insurance`).
   final List<String> details;
 
-  /// Contract v0.17.3 §26: with `409 price_changed` on complete, the fresh
+  /// Contract v0.18.1 §26: with `409 price_changed` on complete, the fresh
   /// frozen price (`CompletePreview`) to show and collect.
   final Map<String, dynamic>? preview;
 

@@ -400,7 +400,7 @@ void main() {
       expect(trips.isOwnEcho('t1', 'arrived'), isFalse);
     });
 
-    test('contract v0.17.3 §26: the final price before Collect cash, and '
+    test('contract v0.18.1 §26: the final price before Collect cash, and '
         'complete sends the cash shown', () async {
       trips.observe(trip('in_trip', 8));
       Map<String, dynamic> sek(int minor) => {

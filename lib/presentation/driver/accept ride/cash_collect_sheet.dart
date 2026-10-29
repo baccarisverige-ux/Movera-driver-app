@@ -55,7 +55,7 @@ class CashCollectSheet extends StatelessWidget {
   final String riderName;
   final String category;
 
-  /// Contract v0.17.3 §26 (owner decision 28): the driver finishes more
+  /// Contract v0.18.1 §26 (owner decision 28): the driver finishes more
   /// than 300 m before the drop-off, so the server priced what was driven;
   /// the sheet says so above the amount.
   final bool recalculated;

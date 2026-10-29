@@ -23,7 +23,7 @@ import 'package:movera/presentation/driver/settings/emergency_contacts.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
-import 'package:movera/presentation/driver/documents/document_preview.dart';
+import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -44,7 +44,12 @@ void main() {
     'DriverDestinationPicker': const DriverDestinationPicker(),
     'DriverRideHistory': const DriverRideHistory(),
     'Analytics': const Analytics(),
-    'DocumentPreview': const DocumentPreview(title: 'Driver’s License'),
+    'UploadGuideScreen': const UploadGuideScreen(
+      type: 'driving_license',
+      ownerId: '',
+      isCar: false,
+      country: 'SE',
+    ),
   };
   for (final size in [
     const Size(320, 568),
@@ -100,9 +105,7 @@ void main() {
       });
     }
   }
-  testWidgets('document preview screenshot smoke produces a PNG', (
-    tester,
-  ) async {
+  testWidgets('upload guide screenshot smoke produces a PNG', (tester) async {
     final key = GlobalKey();
     await tester.binding.setSurfaceSize(const Size(375, 812));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -124,7 +127,12 @@ void main() {
         theme: ThemeData(fontFamily: sdkRoot == null ? null : 'EvidenceRoboto'),
         home: RepaintBoundary(
           key: key,
-          child: const DocumentPreview(title: 'License'),
+          child: const UploadGuideScreen(
+            type: 'driving_license',
+            ownerId: '',
+            isCar: false,
+            country: 'FR',
+          ),
         ),
       ),
     );
@@ -138,7 +146,7 @@ void main() {
       expect(bytes!.lengthInBytes, greaterThan(100));
       Directory('build/test-evidence').createSync(recursive: true);
       File(
-        'build/test-evidence/document-preview.png',
+        'build/test-evidence/upload-guide.png',
       ).writeAsBytesSync(bytes.buffer.asUint8List());
       image.dispose();
     });

@@ -83,6 +83,7 @@ class DriverContentStore extends ChangeNotifier {
   List<DriverContentItem> get home => _content.homeAt(_now());
   DriverContentItem? get help => _content.helpAt(_now());
   DriverContentItem? get legal => _content.legalAt(_now());
+  DriverContentItem? get infoSession => _content.infoSessionAt(_now());
 
   UpdateNeed get updateNeed =>
       _content.updateNeed(DriverAppVersion.current, _now());

@@ -3,6 +3,9 @@ import 'dart:typed_data';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/onboarding/document_upload.dart';
+import 'package:movera/core/onboarding/driver_reminders.dart';
+import 'package:movera/core/onboarding/onboarding_settings.dart';
 
 /// The driver's account over the contract's v0.5.3 §14 endpoints: profile
 /// and details, fleet, cars and documents.
@@ -18,6 +21,9 @@ class DriverAccountRepository {
   static const fleetInvitePath = '/api/v1/driver/fleet/invite';
   static const fleetInvitationsPath = '/api/v1/driver/fleet/invitations';
   static const fleetLeavePath = '/api/v1/driver/fleet/leave';
+  static const startCompanyPath = '/api/v1/driver/fleet/start-company';
+  static const onboardingSettingsPath = '/api/v1/driver/onboarding/settings';
+  static const remindersPath = '/api/v1/driver/reminders';
   static const notificationsPath = '/api/v1/notifications';
   static const vehiclesPath = '/api/v1/driver/vehicles';
   static const documentsPath = '/api/v1/driver/documents';
@@ -42,6 +48,24 @@ class DriverAccountRepository {
       DriverAccount.fromJson(
         await _api.post(onboardingPath, body: request.toJson()),
       );
+
+  /// Contract v0.17.0: `GET /driver/onboarding/settings`, the admin's
+  /// onboarding and car rules of the driver's country. [country] only for
+  /// an account that has none yet.
+  Future<OnboardingSettings> onboardingSettings({
+    String? country,
+  }) async => OnboardingSettings.fromJson(
+    await _api.get(
+      country == null
+          ? onboardingSettingsPath
+          : '$onboardingSettingsPath?country=${Uri.encodeQueryComponent(country)}',
+    ),
+  );
+
+  /// Contract v0.17.0: `GET /driver/reminders`, the Home sheet's
+  /// "Important reminders".
+  Future<DriverReminderList> reminders() async =>
+      DriverReminderList.fromJson(await _api.get(remindersPath));
 
   /// `GET /driver/fleet`; null when the driver is in no fleet (404).
   Future<FleetView?> fleet() async {
@@ -147,6 +171,20 @@ class DriverAccountRepository {
   Future<DriverAccount> leaveFleet() async =>
       DriverAccount.fromJson(await _api.post(fleetLeavePath));
 
+  /// Contract v0.17.0 (owner item 7): `POST /driver/fleet/start-company
+  /// { expectedVersion, company }`, "Start my own company". The account
+  /// becomes a fleet with a new pending fleet and goes on hold; the
+  /// documents it has stay, only the company's and the cars' are new.
+  Future<DriverAccount> startCompany(
+    FleetCompany company,
+    int expectedVersion,
+  ) async => DriverAccount.fromJson(
+    await _api.post(
+      startCompanyPath,
+      body: {'expectedVersion': expectedVersion, 'company': company.toJson()},
+    ),
+  );
+
   /// `POST /driver/fleet/drivers/{driverId}/remove` (the owner; 204).
   Future<void> removeFleetDriver(String driverId) =>
       _api.post(removeDriverPath(driverId));
@@ -218,6 +256,8 @@ class DriverAccountRepository {
       bytes: bytes,
       fileName: fileName,
       mediaType: mediaType,
+      // Owner item 6: a slow upload is waited for up to 60 s.
+      timeout: DocumentUploadPolicy.timeout,
     ),
   );
 }

@@ -11,7 +11,17 @@ abstract final class DriverContentSlots {
   static const legal = 'legal';
   static const appVersions = 'app-versions';
 
-  static const all = <String>{home, event, help, legal, appVersions};
+  /// v0.17.0 (owner item 8): "How to book your info session".
+  static const infoSession = 'driver-info-session';
+
+  static const all = <String>{
+    home,
+    event,
+    help,
+    legal,
+    appVersions,
+    infoSession,
+  };
 }
 
 /// One `ContentItem`. A broken item is left out ([tryParse] returns null).
@@ -208,6 +218,9 @@ class DriverContent {
 
   DriverContentItem? legalAt(DateTime now) =>
       _slot(DriverContentSlots.legal, now);
+
+  DriverContentItem? infoSessionAt(DateTime now) =>
+      _slot(DriverContentSlots.infoSession, now);
 
   /// The legal version the driver must accept, or null when none is due
   /// ([accepted]: the version the driver last accepted).

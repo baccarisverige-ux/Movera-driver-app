@@ -9775,6 +9775,894 @@ abstract class AppLocalizations {
   /// **'Accept the new terms to go online.'**
   String get contentTermsBlockOnline;
 
+  /// Map: the name of the driver's own car marker.
+  ///
+  /// In en, this message translates to:
+  /// **'Your car'**
+  String get mapYourCar;
+
+  /// Demo notification: an evening event.
+  ///
+  /// In en, this message translates to:
+  /// **'Stockholm evening demand'**
+  String get noticeDemoEventTitle;
+
+  /// Demo notification: the event's line.
+  ///
+  /// In en, this message translates to:
+  /// **'18:00–22:30 · Central Stockholm. Be online before the main departure window.'**
+  String get noticeDemoEventBody;
+
+  /// Demo notification: the island text of the event.
+  ///
+  /// In en, this message translates to:
+  /// **'Event tonight · City'**
+  String get noticeDemoEventIsland;
+
+  /// Ride category name (built-in Comfort).
+  ///
+  /// In en, this message translates to:
+  /// **'Comfort'**
+  String get categoryComfort;
+
+  /// Ride category name (built-in Priority).
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get categoryPriority;
+
+  /// Ride category name (built-in Electric).
+  ///
+  /// In en, this message translates to:
+  /// **'Electric'**
+  String get categoryElectric;
+
+  /// Ride category name (built-in Booster Seat).
+  ///
+  /// In en, this message translates to:
+  /// **'Booster Seat'**
+  String get categoryBoosterSeat;
+
+  /// Destination mode demo trip: its pickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup near you'**
+  String get demoPickupNearYou;
+
+  /// Destination mode demo trip: ends near the destination.
+  ///
+  /// In en, this message translates to:
+  /// **'Near {place}'**
+  String demoNearPlace(String place);
+
+  /// Destination mode demo trip: the destination when it has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'your destination'**
+  String get demoYourDestination;
+
+  /// Destination mode demo trip: ends this far along the route.
+  ///
+  /// In en, this message translates to:
+  /// **'On your way · {percent} %'**
+  String demoOnYourWayPercent(int percent);
+
+  /// Destination mode demo trip: far off the route.
+  ///
+  /// In en, this message translates to:
+  /// **'Away from your route'**
+  String get demoAwayFromRoute;
+
+  /// Destination mode demo trip: behind the driver.
+  ///
+  /// In en, this message translates to:
+  /// **'Behind you'**
+  String get demoBehindYou;
+
+  /// No description provided for @vehDocsMissingCantDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be driven – upload documents'**
+  String get vehDocsMissingCantDrive;
+
+  /// No description provided for @docsNotApprovedCar.
+  ///
+  /// In en, this message translates to:
+  /// **'This car can\'t be driven until its documents are approved. Missing: {names}'**
+  String docsNotApprovedCar(String names);
+
+  /// No description provided for @docsNotApprovedAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account can\'t be used until these documents are approved: {names}'**
+  String docsNotApprovedAccount(String names);
+
+  /// Owner 2026-10-29 decision 1: shown while a sign-in call waits for a sleeping server.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the server…'**
+  String get authStartingServer;
+
+  /// Owner decision 3: after 5 wrong codes. {button} is the resend button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong tries – tap {button}'**
+  String authErrTooManyWrongCodes(String button);
+
+  /// Owner decision 4: a sign-in wait of a minute or more, rounded up.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 min} other{{count} min}}'**
+  String authRetryMinutes(int count);
+
+  /// No description provided for @authJoinWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the waiting list'**
+  String get authJoinWaitlist;
+
+  /// No description provided for @authWaitlistSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re on the waiting list. We’ll let you know when sign-in opens for your number.'**
+  String get authWaitlistSaved;
+
+  /// No description provided for @authTestNumbersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test numbers (test build only)'**
+  String get authTestNumbersTitle;
+
+  /// No description provided for @authTestStatusNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Test · no account yet'**
+  String get authTestStatusNew;
+
+  /// No description provided for @gateSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get gateSignOut;
+
+  /// No description provided for @gateTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get gateTryAgain;
+
+  /// No description provided for @authNeedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help?'**
+  String get authNeedHelp;
+
+  /// No description provided for @authHelpComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact details coming soon'**
+  String get authHelpComingSoon;
+
+  /// No description provided for @authHelpEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail'**
+  String get authHelpEmail;
+
+  /// No description provided for @authHelpPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get authHelpPhone;
+
+  /// No description provided for @authHelpCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get authHelpCompany;
+
+  /// No description provided for @authHelpClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get authHelpClose;
+
+  /// No description provided for @remTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Important reminders ({count})'**
+  String remTitle(Object count);
+
+  /// No description provided for @remShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show reminders'**
+  String get remShow;
+
+  /// No description provided for @remHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide reminders'**
+  String get remHide;
+
+  /// No description provided for @remBlocksOnlineLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Red: you can\'t go online until it is fixed'**
+  String get remBlocksOnlineLegend;
+
+  /// No description provided for @remDocOfCar.
+  ///
+  /// In en, this message translates to:
+  /// **'{document} · {car}'**
+  String remDocOfCar(Object document, Object car);
+
+  /// No description provided for @remDocumentNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'{document} is missing'**
+  String remDocumentNeeded(Object document);
+
+  /// No description provided for @remDocumentRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'{document} was rejected'**
+  String remDocumentRejected(Object document);
+
+  /// No description provided for @remDocumentExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'{document} has expired'**
+  String remDocumentExpired(Object document);
+
+  /// No description provided for @remDocumentExpiring.
+  ///
+  /// In en, this message translates to:
+  /// **'{document} expires {when}'**
+  String remDocumentExpiring(Object document, Object when);
+
+  /// No description provided for @remDocumentInReview.
+  ///
+  /// In en, this message translates to:
+  /// **'{document}: Movera is checking it'**
+  String remDocumentInReview(Object document);
+
+  /// No description provided for @remCantGoOnlineUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t go online until Movera approves the new one.'**
+  String get remCantGoOnlineUntil;
+
+  /// No description provided for @remAccountNotActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera is checking your account'**
+  String get remAccountNotActive;
+
+  /// No description provided for @remAccountNotActiveDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is sent. You can go online when Movera activates your account.'**
+  String get remAccountNotActiveDetail;
+
+  /// No description provided for @remFleetNotApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera has not approved your fleet yet'**
+  String get remFleetNotApproved;
+
+  /// No description provided for @remFleetNoApprovedCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Your fleet has no approved car yet'**
+  String get remFleetNoApprovedCar;
+
+  /// No description provided for @remFleetNoApprovedCarOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a car or finish its documents in My fleet. Drivers can go online once a car is approved.'**
+  String get remFleetNoApprovedCarOwner;
+
+  /// No description provided for @remFleetNoApprovedCarMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You can go online when your fleet owner has an approved car for you to choose.'**
+  String get remFleetNoApprovedCarMember;
+
+  /// No description provided for @remNoVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a car from your fleet before you go online'**
+  String get remNoVehicle;
+
+  /// No description provided for @remUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get remUpload;
+
+  /// No description provided for @remUploadNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload new'**
+  String get remUploadNew;
+
+  /// No description provided for @remOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get remOpen;
+
+  /// No description provided for @remCantGoOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'You can\'t go online yet: {reason}'**
+  String remCantGoOnline(Object reason);
+
+  /// No description provided for @liveOnlineDocumentsExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'A document has expired: {documents}. Upload the new one to go online.'**
+  String liveOnlineDocumentsExpired(Object documents);
+
+  /// No description provided for @infoHowToBook.
+  ///
+  /// In en, this message translates to:
+  /// **'How to book your info session'**
+  String get infoHowToBook;
+
+  /// No description provided for @infoHowToBookShort.
+  ///
+  /// In en, this message translates to:
+  /// **'How to book'**
+  String get infoHowToBookShort;
+
+  /// No description provided for @infoNoContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera will contact you to book a time. You don\'t need to do anything else now.'**
+  String get infoNoContent;
+
+  /// No description provided for @infoHeld.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera has marked your info session as held.'**
+  String get infoHeld;
+
+  /// No description provided for @infoOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the booking page'**
+  String get infoOpenLink;
+
+  /// No description provided for @infoRequiredBeforeOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'The info session is needed before you can go online.'**
+  String get infoRequiredBeforeOnline;
+
+  /// No description provided for @guideExampleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Example drawn by Movera'**
+  String get guideExampleLabel;
+
+  /// No description provided for @guideMustBeVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure this is visible'**
+  String get guideMustBeVisible;
+
+  /// No description provided for @guideTipsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips for a good photo'**
+  String get guideTipsTitle;
+
+  /// No description provided for @guideUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get guideUpload;
+
+  /// No description provided for @guidePickTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get guidePickTakePhoto;
+
+  /// No description provided for @guidePickLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo library'**
+  String get guidePickLibrary;
+
+  /// No description provided for @guidePickFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file'**
+  String get guidePickFile;
+
+  /// No description provided for @guideCameraBlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera can\'t use your camera'**
+  String get guideCameraBlockedTitle;
+
+  /// No description provided for @guideCameraBlockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is off for Movera. Turn it on in Settings, or choose a file you already have.'**
+  String get guideCameraBlockedBody;
+
+  /// No description provided for @guideOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get guideOpenSettings;
+
+  /// No description provided for @guideUploadingSlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading… this can take up to a minute.'**
+  String get guideUploadingSlow;
+
+  /// No description provided for @guideKeptPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload did not finish. Your photo is kept, so you can try again.'**
+  String get guideKeptPhoto;
+
+  /// No description provided for @guideTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get guideTryAgain;
+
+  /// No description provided for @guideChooseAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another'**
+  String get guideChooseAnother;
+
+  /// No description provided for @guideExpiryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This document has an end date. Movera types it when approving, and reminds you {days} days before.'**
+  String guideExpiryNote(Object days);
+
+  /// No description provided for @guideCurrentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Now: {status}'**
+  String guideCurrentStatus(Object status);
+
+  /// No description provided for @guideExpiresOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String guideExpiresOn(Object date);
+
+  /// No description provided for @guideSelectedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: {name}'**
+  String guideSelectedFile(Object name);
+
+  /// No description provided for @guideLicenceBothSides.
+  ///
+  /// In en, this message translates to:
+  /// **'Front and back of the licence'**
+  String get guideLicenceBothSides;
+
+  /// No description provided for @guideNameAndPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name and photo'**
+  String get guideNameAndPhoto;
+
+  /// No description provided for @guideValidUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'The valid-until date'**
+  String get guideValidUntil;
+
+  /// No description provided for @guideLicenceCategoryB.
+  ///
+  /// In en, this message translates to:
+  /// **'Category B'**
+  String get guideLicenceCategoryB;
+
+  /// No description provided for @guideLicenceCategoryB3Years.
+  ///
+  /// In en, this message translates to:
+  /// **'Category B, held for at least 3 years'**
+  String get guideLicenceCategoryB3Years;
+
+  /// No description provided for @guideIdWholeCard.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole card or the passport photo page'**
+  String get guideIdWholeCard;
+
+  /// No description provided for @guidePhotoFaceFront.
+  ///
+  /// In en, this message translates to:
+  /// **'Your face from the front, eyes open'**
+  String get guidePhotoFaceFront;
+
+  /// No description provided for @guidePhotoPlainBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'A plain, light background'**
+  String get guidePhotoPlainBackground;
+
+  /// No description provided for @guidePhotoNoSunglasses.
+  ///
+  /// In en, this message translates to:
+  /// **'No sunglasses, cap or other people'**
+  String get guidePhotoNoSunglasses;
+
+  /// No description provided for @guideCardBothSides.
+  ///
+  /// In en, this message translates to:
+  /// **'Front and back of the card'**
+  String get guideCardBothSides;
+
+  /// No description provided for @guideCardNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'The card number'**
+  String get guideCardNumber;
+
+  /// No description provided for @guideSeRegistrationBolagsverket.
+  ///
+  /// In en, this message translates to:
+  /// **'The registration certificate from Bolagsverket'**
+  String get guideSeRegistrationBolagsverket;
+
+  /// No description provided for @guideKbisRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Kbis or SIRENE notice, less than 3 months old'**
+  String get guideKbisRecent;
+
+  /// No description provided for @guideCompanyNameAndNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'The company name and number'**
+  String get guideCompanyNameAndNumber;
+
+  /// No description provided for @guideAllPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Every page'**
+  String get guideAllPages;
+
+  /// No description provided for @guideSeTrafficPermit.
+  ///
+  /// In en, this message translates to:
+  /// **'The taxi traffic permit from Transportstyrelsen'**
+  String get guideSeTrafficPermit;
+
+  /// No description provided for @guideSeFTax.
+  ///
+  /// In en, this message translates to:
+  /// **'The F-skatt certificate from Skatteverket'**
+  String get guideSeFTax;
+
+  /// No description provided for @guideFrRib.
+  ///
+  /// In en, this message translates to:
+  /// **'The company RIB with IBAN and BIC'**
+  String get guideFrRib;
+
+  /// No description provided for @guideSeBankAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'The account certificate with clearing and account number'**
+  String get guideSeBankAccount;
+
+  /// No description provided for @guideAccountHolderName.
+  ///
+  /// In en, this message translates to:
+  /// **'The account holder\'s name'**
+  String get guideAccountHolderName;
+
+  /// No description provided for @guideFrVtcRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'The certificate of the VTC operators register'**
+  String get guideFrVtcRegister;
+
+  /// No description provided for @guideFrRcPro.
+  ///
+  /// In en, this message translates to:
+  /// **'The RC Pro certificate for passenger transport'**
+  String get guideFrRcPro;
+
+  /// No description provided for @guideFrUrssafRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'The URSSAF certificate, less than 6 months old'**
+  String get guideFrUrssafRecent;
+
+  /// No description provided for @guideFrCarteGrise.
+  ///
+  /// In en, this message translates to:
+  /// **'The carte grise, front side'**
+  String get guideFrCarteGrise;
+
+  /// No description provided for @guideSeRegistrationFront.
+  ///
+  /// In en, this message translates to:
+  /// **'The registration certificate, part 1'**
+  String get guideSeRegistrationFront;
+
+  /// No description provided for @guidePlateVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'The plate number'**
+  String get guidePlateVisible;
+
+  /// No description provided for @guideOwnerName.
+  ///
+  /// In en, this message translates to:
+  /// **'The owner\'s name'**
+  String get guideOwnerName;
+
+  /// No description provided for @guideFrPassengerInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'The passenger transport insurance certificate'**
+  String get guideFrPassengerInsurance;
+
+  /// No description provided for @guideSeInsuranceLetter.
+  ///
+  /// In en, this message translates to:
+  /// **'The insurance letter for taxi traffic'**
+  String get guideSeInsuranceLetter;
+
+  /// No description provided for @guideFrStickerOnCar.
+  ///
+  /// In en, this message translates to:
+  /// **'The VTC sticker on the windscreen'**
+  String get guideFrStickerOnCar;
+
+  /// No description provided for @guideCarFront.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole front of the car'**
+  String get guideCarFront;
+
+  /// No description provided for @guideCarBack.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole back of the car'**
+  String get guideCarBack;
+
+  /// No description provided for @guideCarSide.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole side of the car, wheels included'**
+  String get guideCarSide;
+
+  /// No description provided for @guideCarInside.
+  ///
+  /// In en, this message translates to:
+  /// **'The seats from the back door, clean'**
+  String get guideCarInside;
+
+  /// No description provided for @guidePlateReadable.
+  ///
+  /// In en, this message translates to:
+  /// **'The plate can be read'**
+  String get guidePlateReadable;
+
+  /// No description provided for @guideWholeDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole document, every corner'**
+  String get guideWholeDocument;
+
+  /// No description provided for @guideNameAndPhotoIfAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name (and photo, if it has one)'**
+  String get guideNameAndPhotoIfAny;
+
+  /// No description provided for @tipFlatDarkSurface.
+  ///
+  /// In en, this message translates to:
+  /// **'Lay it flat on a dark table'**
+  String get tipFlatDarkSurface;
+
+  /// No description provided for @tipNoGlare.
+  ///
+  /// In en, this message translates to:
+  /// **'No flash and no glare on it'**
+  String get tipNoGlare;
+
+  /// No description provided for @tipFourCorners.
+  ///
+  /// In en, this message translates to:
+  /// **'All four corners in the photo'**
+  String get tipFourCorners;
+
+  /// No description provided for @tipPhotoHoldStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold still so the text is sharp'**
+  String get tipPhotoHoldStill;
+
+  /// No description provided for @tipPhotoDaylight.
+  ///
+  /// In en, this message translates to:
+  /// **'Good daylight, no backlight'**
+  String get tipPhotoDaylight;
+
+  /// No description provided for @tipPhotoNoFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'No filters or edits'**
+  String get tipPhotoNoFilter;
+
+  /// No description provided for @tipCarWholeInFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Step back so the whole car fits'**
+  String get tipCarWholeInFrame;
+
+  /// No description provided for @docOpenGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the guide and upload'**
+  String get docOpenGuide;
+
+  /// No description provided for @docExpiresOnNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String docExpiresOnNote(Object date);
+
+  /// No description provided for @startCompanyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start my own company'**
+  String get startCompanyTitle;
+
+  /// No description provided for @startCompanyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account becomes a company (fleet) account. The documents you already have are kept – you only add the company\'s and your cars\' documents. Movera then approves it like a new fleet.'**
+  String get startCompanyIntro;
+
+  /// No description provided for @startCompanyLeavesFleet.
+  ///
+  /// In en, this message translates to:
+  /// **'You leave {fleet} and go offline. You can\'t go online until Movera approves your company.'**
+  String startCompanyLeavesFleet(Object fleet);
+
+  /// No description provided for @startCompanyConfirmQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Make your account a company account? Movera checks it before you can drive again.'**
+  String get startCompanyConfirmQ;
+
+  /// No description provided for @startCompanySend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Movera'**
+  String get startCompanySend;
+
+  /// No description provided for @startCompanySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent. Your company waits for Movera.'**
+  String get startCompanySent;
+
+  /// No description provided for @startCompanyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the company. Try again.'**
+  String get startCompanyFailed;
+
+  /// No description provided for @startCompanyAlreadyFleet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is already a company account.'**
+  String get startCompanyAlreadyFleet;
+
+  /// No description provided for @carFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel'**
+  String get carFuel;
+
+  /// No description provided for @fuelPetrol.
+  ///
+  /// In en, this message translates to:
+  /// **'Petrol'**
+  String get fuelPetrol;
+
+  /// No description provided for @fuelDiesel.
+  ///
+  /// In en, this message translates to:
+  /// **'Diesel'**
+  String get fuelDiesel;
+
+  /// No description provided for @fuelHybrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Hybrid'**
+  String get fuelHybrid;
+
+  /// No description provided for @fuelElectric.
+  ///
+  /// In en, this message translates to:
+  /// **'Electric'**
+  String get fuelElectric;
+
+  /// No description provided for @carTypesFitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the car types this car fits are shown (Movera\'s rules for {country}).'**
+  String carTypesFitHint(Object country);
+
+  /// No description provided for @carTypesEnterFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the year, seats and fuel to see the car types.'**
+  String get carTypesEnterFirst;
+
+  /// No description provided for @carNoTypeFits.
+  ///
+  /// In en, this message translates to:
+  /// **'This car fits no car type. Check the year, seats and fuel.'**
+  String get carNoTypeFits;
+
+  /// No description provided for @carRulesCouldNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load Movera\'s car rules.'**
+  String get carRulesCouldNotLoad;
+
+  /// No description provided for @carCategoryNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This car does not fit one of the chosen car types.'**
+  String get carCategoryNotAllowed;
+
+  /// No description provided for @carPhotosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos of the car'**
+  String get carPhotosTitle;
+
+  /// No description provided for @carPhotosIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera needs these 4 photos of {car} before it can be driven.'**
+  String carPhotosIntro(Object car);
+
+  /// No description provided for @carPhotosDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get carPhotosDone;
+
+  /// No description provided for @vehNotApprovedCantDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be driven – Movera has not approved this car yet'**
+  String get vehNotApprovedCantDrive;
+
+  /// No description provided for @vehDocsMissingOwnerUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be driven – the fleet owner must finish its documents'**
+  String get vehDocsMissingOwnerUploads;
+
   /// Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py).
   ///
   /// In en, this message translates to:
@@ -10051,6 +10939,12 @@ abstract class AppLocalizations {
   /// **'Missing'**
   String get swDocumentStatusMissing;
 
+  /// Contract status word statusWords.families.documentStatus.waiting_for_movera (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Movera'**
+  String get swDocumentStatusWaitingForMovera;
+
   /// Contract status word statusWords.families.ticketStatus.open (tool/gen_status_words.py).
   ///
   /// In en, this message translates to:
@@ -10153,197 +11047,11 @@ abstract class AppLocalizations {
   /// **'Skipped'**
   String get swRatingStatusSkipped;
 
-  /// Map: the name of the driver's own car marker.
+  /// No description provided for @docFleetOwnerOnly.
   ///
   /// In en, this message translates to:
-  /// **'Your car'**
-  String get mapYourCar;
-
-  /// Demo notification: an evening event.
-  ///
-  /// In en, this message translates to:
-  /// **'Stockholm evening demand'**
-  String get noticeDemoEventTitle;
-
-  /// Demo notification: the event's line.
-  ///
-  /// In en, this message translates to:
-  /// **'18:00–22:30 · Central Stockholm. Be online before the main departure window.'**
-  String get noticeDemoEventBody;
-
-  /// Demo notification: the island text of the event.
-  ///
-  /// In en, this message translates to:
-  /// **'Event tonight · City'**
-  String get noticeDemoEventIsland;
-
-  /// Ride category name (built-in Comfort).
-  ///
-  /// In en, this message translates to:
-  /// **'Comfort'**
-  String get categoryComfort;
-
-  /// Ride category name (built-in Priority).
-  ///
-  /// In en, this message translates to:
-  /// **'Priority'**
-  String get categoryPriority;
-
-  /// Ride category name (built-in Electric).
-  ///
-  /// In en, this message translates to:
-  /// **'Electric'**
-  String get categoryElectric;
-
-  /// Ride category name (built-in Booster Seat).
-  ///
-  /// In en, this message translates to:
-  /// **'Booster Seat'**
-  String get categoryBoosterSeat;
-
-  /// Destination mode demo trip: its pickup.
-  ///
-  /// In en, this message translates to:
-  /// **'Pickup near you'**
-  String get demoPickupNearYou;
-
-  /// Destination mode demo trip: ends near the destination.
-  ///
-  /// In en, this message translates to:
-  /// **'Near {place}'**
-  String demoNearPlace(String place);
-
-  /// Destination mode demo trip: the destination when it has no name.
-  ///
-  /// In en, this message translates to:
-  /// **'your destination'**
-  String get demoYourDestination;
-
-  /// Destination mode demo trip: ends this far along the route.
-  ///
-  /// In en, this message translates to:
-  /// **'On your way · {percent} %'**
-  String demoOnYourWayPercent(int percent);
-
-  /// Destination mode demo trip: far off the route.
-  ///
-  /// In en, this message translates to:
-  /// **'Away from your route'**
-  String get demoAwayFromRoute;
-
-  /// Destination mode demo trip: behind the driver.
-  ///
-  /// In en, this message translates to:
-  /// **'Behind you'**
-  String get demoBehindYou;
-
-  /// No description provided for @vehDocsMissingCantDrive.
-  ///
-  /// In en, this message translates to:
-  /// **'Can\'t be driven – upload documents'**
-  String get vehDocsMissingCantDrive;
-
-  /// No description provided for @docsNotApprovedCar.
-  ///
-  /// In en, this message translates to:
-  /// **'This car can\'t be driven until its documents are approved. Missing: {names}'**
-  String docsNotApprovedCar(String names);
-
-  /// No description provided for @docsNotApprovedAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'Your account can\'t be used until these documents are approved: {names}'**
-  String docsNotApprovedAccount(String names);
-
-  /// Owner 2026-10-29 decision 1: shown while a sign-in call waits for a sleeping server.
-  ///
-  /// In en, this message translates to:
-  /// **'Starting the server…'**
-  String get authStartingServer;
-
-  /// Owner decision 3: after 5 wrong codes. {button} is the resend button label.
-  ///
-  /// In en, this message translates to:
-  /// **'Too many wrong tries – tap {button}'**
-  String authErrTooManyWrongCodes(String button);
-
-  /// Owner decision 4: a sign-in wait of a minute or more, rounded up.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 min} other{{count} min}}'**
-  String authRetryMinutes(int count);
-
-  /// No description provided for @authJoinWaitlist.
-  ///
-  /// In en, this message translates to:
-  /// **'Join the waiting list'**
-  String get authJoinWaitlist;
-
-  /// No description provided for @authWaitlistSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'You’re on the waiting list. We’ll let you know when sign-in opens for your number.'**
-  String get authWaitlistSaved;
-
-  /// No description provided for @authTestNumbersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Test numbers (test build only)'**
-  String get authTestNumbersTitle;
-
-  /// No description provided for @authTestStatusNew.
-  ///
-  /// In en, this message translates to:
-  /// **'Test · no account yet'**
-  String get authTestStatusNew;
-
-  /// No description provided for @gateSignOut.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign out'**
-  String get gateSignOut;
-
-  /// No description provided for @gateTryAgain.
-  ///
-  /// In en, this message translates to:
-  /// **'Try again'**
-  String get gateTryAgain;
-
-  /// No description provided for @authNeedHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Need help?'**
-  String get authNeedHelp;
-
-  /// No description provided for @authHelpComingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Contact details coming soon'**
-  String get authHelpComingSoon;
-
-  /// No description provided for @authHelpEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'E-mail'**
-  String get authHelpEmail;
-
-  /// No description provided for @authHelpPhone.
-  ///
-  /// In en, this message translates to:
-  /// **'Phone'**
-  String get authHelpPhone;
-
-  /// No description provided for @authHelpCompany.
-  ///
-  /// In en, this message translates to:
-  /// **'Company'**
-  String get authHelpCompany;
-
-  /// No description provided for @authHelpClose.
-  ///
-  /// In en, this message translates to:
-  /// **'Close'**
-  String get authHelpClose;
+  /// **'Only the fleet owner can upload or open car documents.'**
+  String get docFleetOwnerOnly;
 }
 
 class _AppLocalizationsDelegate

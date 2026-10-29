@@ -29,7 +29,7 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 /// - N9: the finish screen, the waybill, history and the cash balance
 ///   take the server's final money (40,00 kr earnings, 54,00 kr cash),
 ///   not the 151,36 kr / 208,00 kr booked at accept.
-/// - Live bug A (owner 2026-10-29, contract v0.17.3 §26): Collect cash
+/// - Live bug A (owner 2026-10-29, contract v0.18.1 §26): Collect cash
 ///   shows the server's final price from `complete-preview` (54 kr, with
 ///   "Ending before the destination – price recalculated"), not the
 ///   booked 208 kr, and complete sends that amount as `cashCollected`.

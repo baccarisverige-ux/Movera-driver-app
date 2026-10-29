@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
-import 'package:movera/core/documents/document_expiry.dart';
+import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
@@ -39,17 +39,18 @@ void main() {
     );
     feed.add(reminder, popup: false);
     feed.markAllRead();
-    final documents = DocumentExpiryStore.instance;
-    documents.load([
-      TrackedDocument(
-        id: 'DRIVER-A-INSURANCE',
-        title: 'Insurance letter',
-        shortTitle: 'Insurance',
-        expiresOn: DateTime(2027, 1, 1),
-      ),
-    ]);
-    documents.uploadNew('DRIVER-A-INSURANCE');
-    expect(documents.byId('DRIVER-A-INSURANCE')!.inReview, isTrue);
+    // Contract v0.17.0: driver A's Home reminders must not reach B.
+    final reminders = DriverRemindersStore.instance;
+    reminders.replace(
+      const DriverReminderList([
+        DriverReminder(
+          kind: 'document_in_review',
+          level: ReminderLevel.waiting,
+          documentType: 'insurance',
+        ),
+      ]),
+    );
+    expect(reminders.items, hasLength(1));
     // driver-r4-11: today's destinations are the driver's too.
     DestinationModeSession.instance.started(address: 'Solna');
 
@@ -61,7 +62,7 @@ void main() {
 
     expect(feed.items.map((n) => n.id), isNot(contains(reminder.id)));
     expect(feed.isRead(reminder), isFalse);
-    expect(documents.byId('DRIVER-A-INSURANCE'), isNull);
+    expect(reminders.items, isEmpty);
     expect(DestinationModeSession.instance.usedToday(), 0);
     expect(DestinationModeSession.instance.activeAddress, isNull);
 

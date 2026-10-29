@@ -1440,7 +1440,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (!_collectsCashNow || _stageTransitioning || _rideLifecycle.terminal) {
       return;
     }
-    // Owner 2026-10-29 (live bug A, contract v0.17.3 §26): a live trip
+    // Owner 2026-10-29 (live bug A, contract v0.18.1 §26): a live trip
     // shows the server's final price, never the booked cash: a finish more
     // than 300 m before the drop-off is priced by what was driven.
     final trips = _AcceptRideLive(this)._liveTrips;
@@ -1636,7 +1636,7 @@ extension _AcceptRideTrip on _AcceptRideState {
             _rideLifecycle.terminal)) {
       _completionInFlight = false;
       _stageTransitioning = false;
-      // v0.17.3 §26: 409 price_changed: the sheet again with the new price.
+      // v0.18.1 §26: 409 price_changed: the sheet again with the new price.
       final changed = _AcceptRideLive(
         this,
       )._liveTrips?.takePriceChanged(widget.tripId);

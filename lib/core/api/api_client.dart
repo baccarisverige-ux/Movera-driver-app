@@ -114,7 +114,8 @@ class ApiClient {
 
   /// `POST path` as `multipart/form-data`: the text [fields] and one file
   /// part named [fileField]. Same headers, `Idempotency-Key` and refresh
-  /// handling as [post]; the body is built again for the retry.
+  /// handling as [post]; the body is built again for the retry. [timeout]
+  /// replaces [requestTimeout] (a document upload waits up to 60 s).
   Future<Map<String, dynamic>> postMultipart(
     String path, {
     required Map<String, String> fields,
@@ -123,11 +124,13 @@ class ApiClient {
     required String fileName,
     required String mediaType,
     String? idempotencyKey,
+    Duration? timeout,
   }) => _send(
     'POST',
     path,
     idempotencyKey: idempotencyKey ?? _idempotencyKey(),
     authenticated: true,
+    timeout: timeout,
     build: (uri) => http.MultipartRequest('POST', uri)
       ..fields.addAll(fields)
       ..files.add(
