@@ -5930,9 +5930,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gateSignOut => 'Sign out';
 
   @override
-  String get gateSupportUnavailable =>
-      'Couldn’t open e-mail. Write to Movera support from another device.';
+  String get gateTryAgain => 'Try again';
 
   @override
-  String get gateTryAgain => 'Try again';
+  String get authNeedHelp => 'Need help?';
+
+  @override
+  String get authHelpComingSoon => 'Contact details coming soon';
+
+  @override
+  String get authHelpEmail => 'E-mail';
+
+  @override
+  String get authHelpPhone => 'Phone';
+
+  @override
+  String get authHelpCompany => 'Company';
+
+  @override
+  String get authHelpClose => 'Close';
 }

@@ -6025,9 +6025,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gateSignOut => 'Se déconnecter';
 
   @override
-  String get gateSupportUnavailable =>
-      'Impossible d’ouvrir l’e-mail. Écrivez à l’assistance Movera depuis un autre appareil.';
+  String get gateTryAgain => 'Réessayer';
 
   @override
-  String get gateTryAgain => 'Réessayer';
+  String get authNeedHelp => 'Besoin d’aide ?';
+
+  @override
+  String get authHelpComingSoon => 'Coordonnées bientôt disponibles';
+
+  @override
+  String get authHelpEmail => 'E-mail';
+
+  @override
+  String get authHelpPhone => 'Téléphone';
+
+  @override
+  String get authHelpCompany => 'Société';
+
+  @override
+  String get authHelpClose => 'Fermer';
 }

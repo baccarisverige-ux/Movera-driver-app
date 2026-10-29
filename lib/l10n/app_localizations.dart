@@ -10279,17 +10279,47 @@ abstract class AppLocalizations {
   /// **'Sign out'**
   String get gateSignOut;
 
-  /// No description provided for @gateSupportUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn’t open e-mail. Write to Movera support from another device.'**
-  String get gateSupportUnavailable;
-
   /// No description provided for @gateTryAgain.
   ///
   /// In en, this message translates to:
   /// **'Try again'**
   String get gateTryAgain;
+
+  /// No description provided for @authNeedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help?'**
+  String get authNeedHelp;
+
+  /// No description provided for @authHelpComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact details coming soon'**
+  String get authHelpComingSoon;
+
+  /// No description provided for @authHelpEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail'**
+  String get authHelpEmail;
+
+  /// No description provided for @authHelpPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get authHelpPhone;
+
+  /// No description provided for @authHelpCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get authHelpCompany;
+
+  /// No description provided for @authHelpClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get authHelpClose;
 }
 
 class _AppLocalizationsDelegate

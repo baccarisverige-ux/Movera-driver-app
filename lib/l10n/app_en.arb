@@ -3817,6 +3817,11 @@
   "authTestNumbersTitle": "Test numbers (test build only)",
   "authTestStatusNew": "Test · no account yet",
   "gateSignOut": "Sign out",
-  "gateSupportUnavailable": "Couldn’t open e-mail. Write to Movera support from another device.",
-  "gateTryAgain": "Try again"
+  "gateTryAgain": "Try again",
+  "authNeedHelp": "Need help?",
+  "authHelpComingSoon": "Contact details coming soon",
+  "authHelpEmail": "E-mail",
+  "authHelpPhone": "Phone",
+  "authHelpCompany": "Company",
+  "authHelpClose": "Close"
 }
