@@ -10639,6 +10639,18 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get carPhotosDone;
 
+  /// No description provided for @vehNotApprovedCantDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be driven – Movera has not approved this car yet'**
+  String get vehNotApprovedCantDrive;
+
+  /// No description provided for @vehDocsMissingOwnerUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be driven – the fleet owner must finish its documents'**
+  String get vehDocsMissingOwnerUploads;
+
   /// Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py).
   ///
   /// In en, this message translates to:
@@ -11023,17 +11035,11 @@ abstract class AppLocalizations {
   /// **'Skipped'**
   String get swRatingStatusSkipped;
 
-  /// No description provided for @vehNotApprovedCantDrive.
+  /// No description provided for @docFleetOwnerOnly.
   ///
   /// In en, this message translates to:
-  /// **'Can\'t be driven – Movera has not approved this car yet'**
-  String get vehNotApprovedCantDrive;
-
-  /// No description provided for @vehDocsMissingOwnerUploads.
-  ///
-  /// In en, this message translates to:
-  /// **'Can\'t be driven – the fleet owner must finish its documents'**
-  String get vehDocsMissingOwnerUploads;
+  /// **'Only the fleet owner can upload or open car documents.'**
+  String get docFleetOwnerOnly;
 }
 
 class _AppLocalizationsDelegate

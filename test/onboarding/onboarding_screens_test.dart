@@ -680,6 +680,21 @@ void main() {
                   car('ok', 'approved', ['insurance', 'vehicle_photo_front']),
                   car('docs', 'approved', ['insurance']),
                   car('new', 'pending', const []),
+                  // v0.18.0: a member gets no car documents, only the
+                  // server's pickable / notPickableReason.
+                  FleetVehicle.fromJson(const {
+                    'vehicleId': 'srv',
+                    'plate': 'srv',
+                    'status': 'approved',
+                    'pickable': false,
+                    'notPickableReason': 'vehicle_documents_not_approved',
+                  }),
+                  FleetVehicle.fromJson(const {
+                    'vehicleId': 'srvok',
+                    'plate': 'srvok',
+                    'status': 'approved',
+                    'pickable': true,
+                  }),
                 ])
                   FleetCarCard(
                     vehicle: c,
@@ -692,9 +707,11 @@ void main() {
           ),
         );
         expect(find.byKey(const ValueKey('car-pick-ok')), findsOneWidget);
+        expect(find.byKey(const ValueKey('car-pick-srv')), findsNothing);
+        expect(find.byKey(const ValueKey('car-pick-srvok')), findsOneWidget);
         expect(find.byKey(const ValueKey('car-pick-docs')), findsNothing);
         expect(find.byKey(const ValueKey('car-pick-new')), findsNothing);
-        expect(find.text(tr.vehDocsMissingOwnerUploads), findsOneWidget);
+        expect(find.text(tr.vehDocsMissingOwnerUploads), findsNWidgets(2));
         expect(find.text(tr.vehNotApprovedCantDrive), findsOneWidget);
         // A member is not shown which car documents are missing.
         expect(find.textContaining('Photo'), findsNothing);

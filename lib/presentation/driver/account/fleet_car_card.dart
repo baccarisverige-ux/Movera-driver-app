@@ -130,7 +130,7 @@ class FleetCarCard extends StatelessWidget {
                 style: AccountStyle.hint(),
               ),
             ),
-          if (!vehicle.isApproved && !owner)
+          if (!owner && vehicle.cantDriveReason == 'vehicle_not_approved')
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: Text(
@@ -143,9 +143,8 @@ class FleetCarCard extends StatelessWidget {
                 ),
               ),
             ),
-          if (vehicle.isApproved &&
-              vehicle.missingDocuments.isNotEmpty &&
-              !owner)
+          if (!owner &&
+              vehicle.cantDriveReason == 'vehicle_documents_not_approved')
             Padding(
               padding: const EdgeInsets.only(top: 10),
               child: Text(

@@ -6177,6 +6177,14 @@ class AppLocalizationsSv extends AppLocalizations {
   String get carPhotosDone => 'Klar';
 
   @override
+  String get vehNotApprovedCantDrive =>
+      'Kan inte köras – Movera har inte godkänt bilen än';
+
+  @override
+  String get vehDocsMissingOwnerUploads =>
+      'Kan inte köras – åkeriägaren behöver slutföra bilens dokument';
+
+  @override
   String get swTripStatusDraft => 'Utkast';
 
   @override
@@ -6369,10 +6377,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get swRatingStatusSkipped => 'Överhoppat';
 
   @override
-  String get vehNotApprovedCantDrive =>
-      'Kan inte köras – Movera har inte godkänt bilen än';
-
-  @override
-  String get vehDocsMissingOwnerUploads =>
-      'Kan inte köras – åkeriägaren behöver slutföra bilens dokument';
+  String get docFleetOwnerOnly =>
+      'Bara åkeriägaren kan ladda upp eller öppna bilens dokument.';
 }

@@ -248,6 +248,8 @@ class FleetVehicle {
     this.documents = const [],
     this.requiredDocuments = const [],
     this.fuel,
+    this.pickable,
+    this.notPickableReason,
   });
 
   factory FleetVehicle.fromJson(Map<String, dynamic> json) => FleetVehicle(
@@ -271,6 +273,8 @@ class FleetVehicle {
     ],
     requiredDocuments: _strings(json['requiredDocuments']),
     fuel: _text(json['fuel']),
+    pickable: json['pickable'] is bool ? json['pickable'] as bool : null,
+    notPickableReason: _text(json['notPickableReason']),
   );
 
   final String vehicleId;
@@ -298,6 +302,15 @@ class FleetVehicle {
   /// v0.17.0 `Vehicle.fuel`.
   final String? fuel;
 
+  /// v0.18.0 (owner decision 19): the server says whether the car can be
+  /// picked; members get no car documents, so they rely on this. Null
+  /// from an older server.
+  final bool? pickable;
+
+  /// `vehicle_not_approved`, `vehicle_documents_not_approved` or
+  /// `vehicle_in_use`, when [pickable] is false.
+  final String? notPickableReason;
+
   bool get isApproved => status == 'approved';
 
   /// Contract v0.14.0: the required car documents that are not approved.
@@ -313,7 +326,16 @@ class FleetVehicle {
   }
 
   /// Nobody can pick or drive a car whose documents are not all approved.
-  bool get canBeDriven => isApproved && missingDocuments.isEmpty;
+  bool get canBeDriven => pickable ?? (isApproved && missingDocuments.isEmpty);
+
+  /// Why it can't be driven, in the contract's words.
+  String? get cantDriveReason =>
+      notPickableReason ??
+      (!isApproved
+          ? 'vehicle_not_approved'
+          : missingDocuments.isNotEmpty
+          ? 'vehicle_documents_not_approved'
+          : null);
 
   /// "Volvo XC60 2022".
   String get title => '$make $model${year > 0 ? ' $year' : ''}'.trim();

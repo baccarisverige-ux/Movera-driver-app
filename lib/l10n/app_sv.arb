@@ -1753,6 +1753,8 @@
   "carPhotosTitle": "Foton av bilen",
   "carPhotosIntro": "Movera behöver de här 4 fotona av {car} innan bilen kan köras.",
   "carPhotosDone": "Klar",
+  "vehNotApprovedCantDrive": "Kan inte köras – Movera har inte godkänt bilen än",
+  "vehDocsMissingOwnerUploads": "Kan inte köras – åkeriägaren behöver slutföra bilens dokument",
   "swTripStatusDraft": "Utkast",
   "swTripStatusQuoted": "Offererad",
   "swTripStatusRequested": "Begärd",
@@ -1817,6 +1819,5 @@
   "swRatingStatusPending": "Väntande",
   "swRatingStatusSubmitted": "Lämnat",
   "swRatingStatusSkipped": "Överhoppat",
-  "vehNotApprovedCantDrive": "Kan inte köras – Movera har inte godkänt bilen än",
-  "vehDocsMissingOwnerUploads": "Kan inte köras – åkeriägaren behöver slutföra bilens dokument"
+  "docFleetOwnerOnly": "Bara åkeriägaren kan ladda upp eller öppna bilens dokument."
 }

@@ -3831,6 +3831,8 @@
   "carPhotosIntro": "Movera needs these 4 photos of {car} before it can be driven.",
   "@carPhotosIntro": {"placeholders": {"car": {"type": "Object"}}},
   "carPhotosDone": "Done",
+  "vehNotApprovedCantDrive": "Can't be driven – Movera has not approved this car yet",
+  "vehDocsMissingOwnerUploads": "Can't be driven – the fleet owner must finish its documents",
   "swTripStatusDraft": "Draft",
   "@swTripStatusDraft": {"description": "Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py)."},
   "swTripStatusQuoted": "Quoted",
@@ -3959,6 +3961,5 @@
   "@swRatingStatusSubmitted": {"description": "Contract status word statusWords.families.ratingStatus.submitted (tool/gen_status_words.py)."},
   "swRatingStatusSkipped": "Skipped",
   "@swRatingStatusSkipped": {"description": "Contract status word statusWords.families.ratingStatus.skipped (tool/gen_status_words.py)."},
-  "vehNotApprovedCantDrive": "Can't be driven – Movera has not approved this car yet",
-  "vehDocsMissingOwnerUploads": "Can't be driven – the fleet owner must finish its documents"
+  "docFleetOwnerOnly": "Only the fleet owner can upload or open car documents."
 }

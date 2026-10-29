@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/api/api_error.dart';
@@ -576,6 +577,31 @@ void main() {
       expect(failed, isNull);
       await tester.pump(const Duration(seconds: 2));
       expect((failed as ApiError?)?.code, ApiError.timeout);
+    });
+  });
+
+  group('decision 19: car documents are the fleet owner\'s', () {
+    test('a member refused a car document hears why', () {
+      expect(
+        accountErrorMessage(
+          const ApiError(
+            statusCode: 403,
+            code: 'forbidden',
+            message: 'x',
+            reason: 'fleet_owner_only',
+          ),
+          fallback: 'x',
+        ),
+        tr.docFleetOwnerOnly,
+      );
+      final car = FleetVehicle.fromJson(const {
+        'vehicleId': 'v',
+        'status': 'approved',
+        'pickable': false,
+        'notPickableReason': 'vehicle_in_use',
+      });
+      expect(car.canBeDriven, isFalse);
+      expect(car.cantDriveReason, 'vehicle_in_use');
     });
   });
 

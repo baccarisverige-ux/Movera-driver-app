@@ -1753,6 +1753,8 @@
   "carPhotosTitle": "Photos de la voiture",
   "carPhotosIntro": "Movera a besoin de ces 4 photos de {car} avant qu’elle puisse rouler.",
   "carPhotosDone": "Terminé",
+  "vehNotApprovedCantDrive": "Ne peut pas rouler – Movera n’a pas encore validé cette voiture",
+  "vehDocsMissingOwnerUploads": "Ne peut pas rouler – le gérant de la flotte doit compléter ses documents",
   "swTripStatusDraft": "Brouillon",
   "swTripStatusQuoted": "Devis établi",
   "swTripStatusRequested": "Demandée",
@@ -1817,6 +1819,5 @@
   "swRatingStatusPending": "En attente",
   "swRatingStatusSubmitted": "Envoyée",
   "swRatingStatusSkipped": "Ignorée",
-  "vehNotApprovedCantDrive": "Ne peut pas rouler – Movera n’a pas encore validé cette voiture",
-  "vehDocsMissingOwnerUploads": "Ne peut pas rouler – le gérant de la flotte doit compléter ses documents"
+  "docFleetOwnerOnly": "Seul le gérant de la flotte peut envoyer ou ouvrir les documents de la voiture."
 }

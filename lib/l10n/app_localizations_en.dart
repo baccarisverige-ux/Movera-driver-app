@@ -6166,6 +6166,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get carPhotosDone => 'Done';
 
   @override
+  String get vehNotApprovedCantDrive =>
+      'Can\'t be driven – Movera has not approved this car yet';
+
+  @override
+  String get vehDocsMissingOwnerUploads =>
+      'Can\'t be driven – the fleet owner must finish its documents';
+
+  @override
   String get swTripStatusDraft => 'Draft';
 
   @override
@@ -6358,10 +6366,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get swRatingStatusSkipped => 'Skipped';
 
   @override
-  String get vehNotApprovedCantDrive =>
-      'Can\'t be driven – Movera has not approved this car yet';
-
-  @override
-  String get vehDocsMissingOwnerUploads =>
-      'Can\'t be driven – the fleet owner must finish its documents';
+  String get docFleetOwnerOnly =>
+      'Only the fleet owner can upload or open car documents.';
 }

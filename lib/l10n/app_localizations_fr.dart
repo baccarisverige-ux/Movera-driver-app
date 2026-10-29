@@ -6274,6 +6274,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get carPhotosDone => 'Terminé';
 
   @override
+  String get vehNotApprovedCantDrive =>
+      'Ne peut pas rouler – Movera n’a pas encore validé cette voiture';
+
+  @override
+  String get vehDocsMissingOwnerUploads =>
+      'Ne peut pas rouler – le gérant de la flotte doit compléter ses documents';
+
+  @override
   String get swTripStatusDraft => 'Brouillon';
 
   @override
@@ -6466,10 +6474,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swRatingStatusSkipped => 'Ignorée';
 
   @override
-  String get vehNotApprovedCantDrive =>
-      'Ne peut pas rouler – Movera n’a pas encore validé cette voiture';
-
-  @override
-  String get vehDocsMissingOwnerUploads =>
-      'Ne peut pas rouler – le gérant de la flotte doit compléter ses documents';
+  String get docFleetOwnerOnly =>
+      'Seul le gérant de la flotte peut envoyer ou ouvrir les documents de la voiture.';
 }
