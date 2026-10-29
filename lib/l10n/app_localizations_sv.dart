@@ -5658,6 +5658,122 @@ class AppLocalizationsSv extends AppLocalizations {
       'Godkänn de nya villkoren för att gå online.';
 
   @override
+  String get mapYourCar => 'Din bil';
+
+  @override
+  String get noticeDemoEventTitle => 'Kvällsefterfrågan i Stockholm';
+
+  @override
+  String get noticeDemoEventBody =>
+      '18:00–22:30 · Centrala Stockholm. Var online före den stora avresetiden.';
+
+  @override
+  String get noticeDemoEventIsland => 'Evenemang i kväll · City';
+
+  @override
+  String get categoryComfort => 'Komfort';
+
+  @override
+  String get categoryPriority => 'Prioritet';
+
+  @override
+  String get categoryElectric => 'Elbil';
+
+  @override
+  String get categoryBoosterSeat => 'Bältesstol';
+
+  @override
+  String get demoPickupNearYou => 'Upphämtning nära dig';
+
+  @override
+  String demoNearPlace(String place) {
+    return 'Nära $place';
+  }
+
+  @override
+  String get demoYourDestination => 'din destination';
+
+  @override
+  String demoOnYourWayPercent(int percent) {
+    return 'På vägen · $percent %';
+  }
+
+  @override
+  String get demoAwayFromRoute => 'Utanför din rutt';
+
+  @override
+  String get demoBehindYou => 'Bakom dig';
+
+  @override
+  String get vehDocsMissingCantDrive => 'Kan inte köras – ladda upp dokument';
+
+  @override
+  String docsNotApprovedCar(String names) {
+    return 'Den här bilen kan inte köras förrän dess dokument är godkända. Saknas: $names';
+  }
+
+  @override
+  String docsNotApprovedAccount(String names) {
+    return 'Ditt konto kan inte användas förrän de här dokumenten är godkända: $names';
+  }
+
+  @override
+  String get authStartingServer => 'Servern startar…';
+
+  @override
+  String authErrTooManyWrongCodes(String button) {
+    return 'För många fel försök – tryck på $button';
+  }
+
+  @override
+  String authRetryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minuter',
+      one: '1 minut',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authJoinWaitlist => 'Gå med i väntelistan';
+
+  @override
+  String get authWaitlistSaved =>
+      'Du står på väntelistan. Vi hör av oss när inloggningen öppnar för ditt nummer.';
+
+  @override
+  String get authTestNumbersTitle => 'Testnummer (endast testversion)';
+
+  @override
+  String get authTestStatusNew => 'Test · inget konto än';
+
+  @override
+  String get gateSignOut => 'Logga ut';
+
+  @override
+  String get gateTryAgain => 'Försök igen';
+
+  @override
+  String get authNeedHelp => 'Behöver du hjälp?';
+
+  @override
+  String get authHelpComingSoon => 'Kontaktuppgifter kommer snart';
+
+  @override
+  String get authHelpEmail => 'E-post';
+
+  @override
+  String get authHelpPhone => 'Telefon';
+
+  @override
+  String get authHelpCompany => 'Företag';
+
+  @override
+  String get authHelpClose => 'Stäng';
+
+  @override
   String get swTripStatusDraft => 'Utkast';
 
   @override
@@ -5796,6 +5912,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get swDocumentStatusMissing => 'Saknas';
 
   @override
+  String get swDocumentStatusWaitingForMovera => 'Väntar på Movera';
+
+  @override
   String get swTicketStatusOpen => 'Öppet';
 
   @override
@@ -5845,120 +5964,4 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Överhoppat';
-
-  @override
-  String get mapYourCar => 'Din bil';
-
-  @override
-  String get noticeDemoEventTitle => 'Kvällsefterfrågan i Stockholm';
-
-  @override
-  String get noticeDemoEventBody =>
-      '18:00–22:30 · Centrala Stockholm. Var online före den stora avresetiden.';
-
-  @override
-  String get noticeDemoEventIsland => 'Evenemang i kväll · City';
-
-  @override
-  String get categoryComfort => 'Komfort';
-
-  @override
-  String get categoryPriority => 'Prioritet';
-
-  @override
-  String get categoryElectric => 'Elbil';
-
-  @override
-  String get categoryBoosterSeat => 'Bältesstol';
-
-  @override
-  String get demoPickupNearYou => 'Upphämtning nära dig';
-
-  @override
-  String demoNearPlace(String place) {
-    return 'Nära $place';
-  }
-
-  @override
-  String get demoYourDestination => 'din destination';
-
-  @override
-  String demoOnYourWayPercent(int percent) {
-    return 'På vägen · $percent %';
-  }
-
-  @override
-  String get demoAwayFromRoute => 'Utanför din rutt';
-
-  @override
-  String get demoBehindYou => 'Bakom dig';
-
-  @override
-  String get vehDocsMissingCantDrive => 'Kan inte köras – ladda upp dokument';
-
-  @override
-  String docsNotApprovedCar(String names) {
-    return 'Den här bilen kan inte köras förrän dess dokument är godkända. Saknas: $names';
-  }
-
-  @override
-  String docsNotApprovedAccount(String names) {
-    return 'Ditt konto kan inte användas förrän de här dokumenten är godkända: $names';
-  }
-
-  @override
-  String get authStartingServer => 'Servern startar…';
-
-  @override
-  String authErrTooManyWrongCodes(String button) {
-    return 'För många fel försök – tryck på $button';
-  }
-
-  @override
-  String authRetryMinutes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count minuter',
-      one: '1 minut',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get authJoinWaitlist => 'Gå med i väntelistan';
-
-  @override
-  String get authWaitlistSaved =>
-      'Du står på väntelistan. Vi hör av oss när inloggningen öppnar för ditt nummer.';
-
-  @override
-  String get authTestNumbersTitle => 'Testnummer (endast testversion)';
-
-  @override
-  String get authTestStatusNew => 'Test · inget konto än';
-
-  @override
-  String get gateSignOut => 'Logga ut';
-
-  @override
-  String get gateTryAgain => 'Försök igen';
-
-  @override
-  String get authNeedHelp => 'Behöver du hjälp?';
-
-  @override
-  String get authHelpComingSoon => 'Kontaktuppgifter kommer snart';
-
-  @override
-  String get authHelpEmail => 'E-post';
-
-  @override
-  String get authHelpPhone => 'Telefon';
-
-  @override
-  String get authHelpCompany => 'Företag';
-
-  @override
-  String get authHelpClose => 'Stäng';
 }

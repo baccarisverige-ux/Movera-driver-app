@@ -9751,6 +9751,198 @@ abstract class AppLocalizations {
   /// **'Accept the new terms to go online.'**
   String get contentTermsBlockOnline;
 
+  /// Map: the name of the driver's own car marker.
+  ///
+  /// In en, this message translates to:
+  /// **'Your car'**
+  String get mapYourCar;
+
+  /// Demo notification: an evening event.
+  ///
+  /// In en, this message translates to:
+  /// **'Stockholm evening demand'**
+  String get noticeDemoEventTitle;
+
+  /// Demo notification: the event's line.
+  ///
+  /// In en, this message translates to:
+  /// **'18:00–22:30 · Central Stockholm. Be online before the main departure window.'**
+  String get noticeDemoEventBody;
+
+  /// Demo notification: the island text of the event.
+  ///
+  /// In en, this message translates to:
+  /// **'Event tonight · City'**
+  String get noticeDemoEventIsland;
+
+  /// Ride category name (built-in Comfort).
+  ///
+  /// In en, this message translates to:
+  /// **'Comfort'**
+  String get categoryComfort;
+
+  /// Ride category name (built-in Priority).
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get categoryPriority;
+
+  /// Ride category name (built-in Electric).
+  ///
+  /// In en, this message translates to:
+  /// **'Electric'**
+  String get categoryElectric;
+
+  /// Ride category name (built-in Booster Seat).
+  ///
+  /// In en, this message translates to:
+  /// **'Booster Seat'**
+  String get categoryBoosterSeat;
+
+  /// Destination mode demo trip: its pickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup near you'**
+  String get demoPickupNearYou;
+
+  /// Destination mode demo trip: ends near the destination.
+  ///
+  /// In en, this message translates to:
+  /// **'Near {place}'**
+  String demoNearPlace(String place);
+
+  /// Destination mode demo trip: the destination when it has no name.
+  ///
+  /// In en, this message translates to:
+  /// **'your destination'**
+  String get demoYourDestination;
+
+  /// Destination mode demo trip: ends this far along the route.
+  ///
+  /// In en, this message translates to:
+  /// **'On your way · {percent} %'**
+  String demoOnYourWayPercent(int percent);
+
+  /// Destination mode demo trip: far off the route.
+  ///
+  /// In en, this message translates to:
+  /// **'Away from your route'**
+  String get demoAwayFromRoute;
+
+  /// Destination mode demo trip: behind the driver.
+  ///
+  /// In en, this message translates to:
+  /// **'Behind you'**
+  String get demoBehindYou;
+
+  /// No description provided for @vehDocsMissingCantDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be driven – upload documents'**
+  String get vehDocsMissingCantDrive;
+
+  /// No description provided for @docsNotApprovedCar.
+  ///
+  /// In en, this message translates to:
+  /// **'This car can\'t be driven until its documents are approved. Missing: {names}'**
+  String docsNotApprovedCar(String names);
+
+  /// No description provided for @docsNotApprovedAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account can\'t be used until these documents are approved: {names}'**
+  String docsNotApprovedAccount(String names);
+
+  /// Owner 2026-10-29 decision 1: shown while a sign-in call waits for a sleeping server.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the server…'**
+  String get authStartingServer;
+
+  /// Owner decision 3: after 5 wrong codes. {button} is the resend button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong tries – tap {button}'**
+  String authErrTooManyWrongCodes(String button);
+
+  /// Owner decision 4: a sign-in wait of a minute or more, rounded up.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 min} other{{count} min}}'**
+  String authRetryMinutes(int count);
+
+  /// No description provided for @authJoinWaitlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the waiting list'**
+  String get authJoinWaitlist;
+
+  /// No description provided for @authWaitlistSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re on the waiting list. We’ll let you know when sign-in opens for your number.'**
+  String get authWaitlistSaved;
+
+  /// No description provided for @authTestNumbersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Test numbers (test build only)'**
+  String get authTestNumbersTitle;
+
+  /// No description provided for @authTestStatusNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Test · no account yet'**
+  String get authTestStatusNew;
+
+  /// No description provided for @gateSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get gateSignOut;
+
+  /// No description provided for @gateTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get gateTryAgain;
+
+  /// No description provided for @authNeedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Need help?'**
+  String get authNeedHelp;
+
+  /// No description provided for @authHelpComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact details coming soon'**
+  String get authHelpComingSoon;
+
+  /// No description provided for @authHelpEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail'**
+  String get authHelpEmail;
+
+  /// No description provided for @authHelpPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get authHelpPhone;
+
+  /// No description provided for @authHelpCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company'**
+  String get authHelpCompany;
+
+  /// No description provided for @authHelpClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get authHelpClose;
+
   /// Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py).
   ///
   /// In en, this message translates to:
@@ -10027,6 +10219,12 @@ abstract class AppLocalizations {
   /// **'Missing'**
   String get swDocumentStatusMissing;
 
+  /// Contract status word statusWords.families.documentStatus.waiting_for_movera (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Movera'**
+  String get swDocumentStatusWaitingForMovera;
+
   /// Contract status word statusWords.families.ticketStatus.open (tool/gen_status_words.py).
   ///
   /// In en, this message translates to:
@@ -10128,198 +10326,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skipped'**
   String get swRatingStatusSkipped;
-
-  /// Map: the name of the driver's own car marker.
-  ///
-  /// In en, this message translates to:
-  /// **'Your car'**
-  String get mapYourCar;
-
-  /// Demo notification: an evening event.
-  ///
-  /// In en, this message translates to:
-  /// **'Stockholm evening demand'**
-  String get noticeDemoEventTitle;
-
-  /// Demo notification: the event's line.
-  ///
-  /// In en, this message translates to:
-  /// **'18:00–22:30 · Central Stockholm. Be online before the main departure window.'**
-  String get noticeDemoEventBody;
-
-  /// Demo notification: the island text of the event.
-  ///
-  /// In en, this message translates to:
-  /// **'Event tonight · City'**
-  String get noticeDemoEventIsland;
-
-  /// Ride category name (built-in Comfort).
-  ///
-  /// In en, this message translates to:
-  /// **'Comfort'**
-  String get categoryComfort;
-
-  /// Ride category name (built-in Priority).
-  ///
-  /// In en, this message translates to:
-  /// **'Priority'**
-  String get categoryPriority;
-
-  /// Ride category name (built-in Electric).
-  ///
-  /// In en, this message translates to:
-  /// **'Electric'**
-  String get categoryElectric;
-
-  /// Ride category name (built-in Booster Seat).
-  ///
-  /// In en, this message translates to:
-  /// **'Booster Seat'**
-  String get categoryBoosterSeat;
-
-  /// Destination mode demo trip: its pickup.
-  ///
-  /// In en, this message translates to:
-  /// **'Pickup near you'**
-  String get demoPickupNearYou;
-
-  /// Destination mode demo trip: ends near the destination.
-  ///
-  /// In en, this message translates to:
-  /// **'Near {place}'**
-  String demoNearPlace(String place);
-
-  /// Destination mode demo trip: the destination when it has no name.
-  ///
-  /// In en, this message translates to:
-  /// **'your destination'**
-  String get demoYourDestination;
-
-  /// Destination mode demo trip: ends this far along the route.
-  ///
-  /// In en, this message translates to:
-  /// **'On your way · {percent} %'**
-  String demoOnYourWayPercent(int percent);
-
-  /// Destination mode demo trip: far off the route.
-  ///
-  /// In en, this message translates to:
-  /// **'Away from your route'**
-  String get demoAwayFromRoute;
-
-  /// Destination mode demo trip: behind the driver.
-  ///
-  /// In en, this message translates to:
-  /// **'Behind you'**
-  String get demoBehindYou;
-
-  /// No description provided for @vehDocsMissingCantDrive.
-  ///
-  /// In en, this message translates to:
-  /// **'Can\'t be driven – upload documents'**
-  String get vehDocsMissingCantDrive;
-
-  /// No description provided for @docsNotApprovedCar.
-  ///
-  /// In en, this message translates to:
-  /// **'This car can\'t be driven until its documents are approved. Missing: {names}'**
-  String docsNotApprovedCar(String names);
-
-  /// No description provided for @docsNotApprovedAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'Your account can\'t be used until these documents are approved: {names}'**
-  String docsNotApprovedAccount(String names);
-
-  /// Owner 2026-10-29 decision 1: shown while a sign-in call waits for a sleeping server.
-  ///
-  /// In en, this message translates to:
-  /// **'Starting the server…'**
-  String get authStartingServer;
-
-  /// Owner decision 3: after 5 wrong codes. {button} is the resend button label.
-  ///
-  /// In en, this message translates to:
-  /// **'Too many wrong tries – tap {button}'**
-  String authErrTooManyWrongCodes(String button);
-
-  /// Owner decision 4: a sign-in wait of a minute or more, rounded up.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 min} other{{count} min}}'**
-  String authRetryMinutes(int count);
-
-  /// No description provided for @authJoinWaitlist.
-  ///
-  /// In en, this message translates to:
-  /// **'Join the waiting list'**
-  String get authJoinWaitlist;
-
-  /// No description provided for @authWaitlistSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'You’re on the waiting list. We’ll let you know when sign-in opens for your number.'**
-  String get authWaitlistSaved;
-
-  /// No description provided for @authTestNumbersTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Test numbers (test build only)'**
-  String get authTestNumbersTitle;
-
-  /// No description provided for @authTestStatusNew.
-  ///
-  /// In en, this message translates to:
-  /// **'Test · no account yet'**
-  String get authTestStatusNew;
-
-  /// No description provided for @gateSignOut.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign out'**
-  String get gateSignOut;
-
-  /// No description provided for @gateTryAgain.
-  ///
-  /// In en, this message translates to:
-  /// **'Try again'**
-  String get gateTryAgain;
-
-  /// No description provided for @authNeedHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Need help?'**
-  String get authNeedHelp;
-
-  /// No description provided for @authHelpComingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Contact details coming soon'**
-  String get authHelpComingSoon;
-
-  /// No description provided for @authHelpEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'E-mail'**
-  String get authHelpEmail;
-
-  /// No description provided for @authHelpPhone.
-  ///
-  /// In en, this message translates to:
-  /// **'Phone'**
-  String get authHelpPhone;
-
-  /// No description provided for @authHelpCompany.
-  ///
-  /// In en, this message translates to:
-  /// **'Company'**
-  String get authHelpCompany;
-
-  /// No description provided for @authHelpClose.
-  ///
-  /// In en, this message translates to:
-  /// **'Close'**
-  String get authHelpClose;
 }
 
 class _AppLocalizationsDelegate

@@ -5646,6 +5646,122 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contentTermsBlockOnline => 'Accept the new terms to go online.';
 
   @override
+  String get mapYourCar => 'Your car';
+
+  @override
+  String get noticeDemoEventTitle => 'Stockholm evening demand';
+
+  @override
+  String get noticeDemoEventBody =>
+      '18:00–22:30 · Central Stockholm. Be online before the main departure window.';
+
+  @override
+  String get noticeDemoEventIsland => 'Event tonight · City';
+
+  @override
+  String get categoryComfort => 'Comfort';
+
+  @override
+  String get categoryPriority => 'Priority';
+
+  @override
+  String get categoryElectric => 'Electric';
+
+  @override
+  String get categoryBoosterSeat => 'Booster Seat';
+
+  @override
+  String get demoPickupNearYou => 'Pickup near you';
+
+  @override
+  String demoNearPlace(String place) {
+    return 'Near $place';
+  }
+
+  @override
+  String get demoYourDestination => 'your destination';
+
+  @override
+  String demoOnYourWayPercent(int percent) {
+    return 'On your way · $percent %';
+  }
+
+  @override
+  String get demoAwayFromRoute => 'Away from your route';
+
+  @override
+  String get demoBehindYou => 'Behind you';
+
+  @override
+  String get vehDocsMissingCantDrive => 'Can\'t be driven – upload documents';
+
+  @override
+  String docsNotApprovedCar(String names) {
+    return 'This car can\'t be driven until its documents are approved. Missing: $names';
+  }
+
+  @override
+  String docsNotApprovedAccount(String names) {
+    return 'Your account can\'t be used until these documents are approved: $names';
+  }
+
+  @override
+  String get authStartingServer => 'Starting the server…';
+
+  @override
+  String authErrTooManyWrongCodes(String button) {
+    return 'Too many wrong tries – tap $button';
+  }
+
+  @override
+  String authRetryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min',
+      one: '1 min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authJoinWaitlist => 'Join the waiting list';
+
+  @override
+  String get authWaitlistSaved =>
+      'You’re on the waiting list. We’ll let you know when sign-in opens for your number.';
+
+  @override
+  String get authTestNumbersTitle => 'Test numbers (test build only)';
+
+  @override
+  String get authTestStatusNew => 'Test · no account yet';
+
+  @override
+  String get gateSignOut => 'Sign out';
+
+  @override
+  String get gateTryAgain => 'Try again';
+
+  @override
+  String get authNeedHelp => 'Need help?';
+
+  @override
+  String get authHelpComingSoon => 'Contact details coming soon';
+
+  @override
+  String get authHelpEmail => 'E-mail';
+
+  @override
+  String get authHelpPhone => 'Phone';
+
+  @override
+  String get authHelpCompany => 'Company';
+
+  @override
+  String get authHelpClose => 'Close';
+
+  @override
   String get swTripStatusDraft => 'Draft';
 
   @override
@@ -5784,6 +5900,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get swDocumentStatusMissing => 'Missing';
 
   @override
+  String get swDocumentStatusWaitingForMovera => 'Waiting for Movera';
+
+  @override
   String get swTicketStatusOpen => 'Open';
 
   @override
@@ -5833,120 +5952,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Skipped';
-
-  @override
-  String get mapYourCar => 'Your car';
-
-  @override
-  String get noticeDemoEventTitle => 'Stockholm evening demand';
-
-  @override
-  String get noticeDemoEventBody =>
-      '18:00–22:30 · Central Stockholm. Be online before the main departure window.';
-
-  @override
-  String get noticeDemoEventIsland => 'Event tonight · City';
-
-  @override
-  String get categoryComfort => 'Comfort';
-
-  @override
-  String get categoryPriority => 'Priority';
-
-  @override
-  String get categoryElectric => 'Electric';
-
-  @override
-  String get categoryBoosterSeat => 'Booster Seat';
-
-  @override
-  String get demoPickupNearYou => 'Pickup near you';
-
-  @override
-  String demoNearPlace(String place) {
-    return 'Near $place';
-  }
-
-  @override
-  String get demoYourDestination => 'your destination';
-
-  @override
-  String demoOnYourWayPercent(int percent) {
-    return 'On your way · $percent %';
-  }
-
-  @override
-  String get demoAwayFromRoute => 'Away from your route';
-
-  @override
-  String get demoBehindYou => 'Behind you';
-
-  @override
-  String get vehDocsMissingCantDrive => 'Can\'t be driven – upload documents';
-
-  @override
-  String docsNotApprovedCar(String names) {
-    return 'This car can\'t be driven until its documents are approved. Missing: $names';
-  }
-
-  @override
-  String docsNotApprovedAccount(String names) {
-    return 'Your account can\'t be used until these documents are approved: $names';
-  }
-
-  @override
-  String get authStartingServer => 'Starting the server…';
-
-  @override
-  String authErrTooManyWrongCodes(String button) {
-    return 'Too many wrong tries – tap $button';
-  }
-
-  @override
-  String authRetryMinutes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count min',
-      one: '1 min',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get authJoinWaitlist => 'Join the waiting list';
-
-  @override
-  String get authWaitlistSaved =>
-      'You’re on the waiting list. We’ll let you know when sign-in opens for your number.';
-
-  @override
-  String get authTestNumbersTitle => 'Test numbers (test build only)';
-
-  @override
-  String get authTestStatusNew => 'Test · no account yet';
-
-  @override
-  String get gateSignOut => 'Sign out';
-
-  @override
-  String get gateTryAgain => 'Try again';
-
-  @override
-  String get authNeedHelp => 'Need help?';
-
-  @override
-  String get authHelpComingSoon => 'Contact details coming soon';
-
-  @override
-  String get authHelpEmail => 'E-mail';
-
-  @override
-  String get authHelpPhone => 'Phone';
-
-  @override
-  String get authHelpCompany => 'Company';
-
-  @override
-  String get authHelpClose => 'Close';
 }

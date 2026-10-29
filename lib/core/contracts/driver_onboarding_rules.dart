@@ -210,6 +210,34 @@ abstract final class DriverOnboardingRules {
       sv: 'VTC-dekal',
       fr: 'Macaron VTC',
     ),
+    'vehicle_photo_front': DocumentTypeInfo(
+      owner: 'vehicle',
+      kind: DocumentKind.file,
+      en: 'Photo: front with plate',
+      sv: 'Foto: framifrån med registreringsskylt',
+      fr: 'Photo : avant avec plaque',
+    ),
+    'vehicle_photo_back': DocumentTypeInfo(
+      owner: 'vehicle',
+      kind: DocumentKind.file,
+      en: 'Photo: back with plate',
+      sv: 'Foto: bakifrån med registreringsskylt',
+      fr: 'Photo : arrière avec plaque',
+    ),
+    'vehicle_photo_side': DocumentTypeInfo(
+      owner: 'vehicle',
+      kind: DocumentKind.file,
+      en: 'Photo: side',
+      sv: 'Foto: från sidan',
+      fr: 'Photo : côté',
+    ),
+    'vehicle_photo_inside': DocumentTypeInfo(
+      owner: 'vehicle',
+      kind: DocumentKind.file,
+      en: 'Photo: inside',
+      sv: 'Foto: insidan',
+      fr: 'Photo : intérieur',
+    ),
   };
 
   /// The document's name in [language]; the raw type for one the contract

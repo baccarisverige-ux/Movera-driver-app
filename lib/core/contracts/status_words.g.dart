@@ -4,64 +4,16 @@ import 'package:movera/l10n/app_localizations.dart';
 
 /// The status families this app shows (contract statusWords.families).
 const statusWordFamilies = <String, List<String>>{
-  'tripStatus': [
-    'draft',
-    'quoted',
-    'requested',
-    'searching',
-    'offered',
-    'accepted',
-    'driver_to_pickup',
-    'arrived',
-    'rider_onboard',
-    'in_trip',
-    'approaching_dropoff',
-    'completed',
-    'cancelled_by_rider',
-    'cancelled_by_driver',
-    'cancelled_by_admin',
-    'cancelled_by_system',
-    'no_show',
-    'expired',
-    'failed',
-  ],
+  'tripStatus': ['draft', 'quoted', 'requested', 'searching', 'offered', 'accepted', 'driver_to_pickup', 'arrived', 'rider_onboard', 'in_trip', 'approaching_dropoff', 'completed', 'cancelled_by_rider', 'cancelled_by_driver', 'cancelled_by_admin', 'cancelled_by_system', 'no_show', 'expired', 'failed'],
   'driverAccountStatus': ['pending', 'active', 'on_hold', 'suspended'],
-  'driverOnlineStatus': [
-    'offline',
-    'going_online',
-    'online',
-    'on_trip',
-    'suspended',
-  ],
-  'paymentStatus': [
-    'pending',
-    'authorized',
-    'captured',
-    'failed',
-    'refunded',
-    'partially_refunded',
-  ],
+  'driverOnlineStatus': ['offline', 'going_online', 'online', 'on_trip', 'suspended'],
+  'paymentStatus': ['pending', 'authorized', 'captured', 'failed', 'refunded', 'partially_refunded'],
   'feeStatus': ['paid', 'owed', 'waived'],
   'payoutStatus': ['pending', 'paid'],
-  'documentStatus': [
-    'needed',
-    'in_review',
-    'approved',
-    'rejected',
-    'expired',
-    'expiring',
-    'missing',
-  ],
+  'documentStatus': ['needed', 'in_review', 'approved', 'rejected', 'expired', 'expiring', 'missing', 'waiting_for_movera'],
   'ticketStatus': ['open', 'pending', 'resolved', 'closed'],
   'vehicleReviewStatus': ['in_review', 'approved', 'rejected'],
-  'offerStatus': [
-    'open',
-    'claimed',
-    'claimed_elsewhere',
-    'declined',
-    'expired',
-    'withdrawn',
-  ],
+  'offerStatus': ['open', 'claimed', 'claimed_elsewhere', 'declined', 'expired', 'withdrawn'],
   'ratingStatus': ['not_requested', 'pending', 'submitted', 'skipped'],
 };
 
@@ -187,6 +139,8 @@ String? statusWord(AppLocalizations l, String family, String code) {
           return l.swDocumentStatusExpiring;
         case 'missing':
           return l.swDocumentStatusMissing;
+        case 'waiting_for_movera':
+          return l.swDocumentStatusWaitingForMovera;
       }
       return null;
     case 'ticketStatus':

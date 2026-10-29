@@ -5739,6 +5739,124 @@ class AppLocalizationsFr extends AppLocalizations {
       'Acceptez les nouvelles conditions pour passer en ligne.';
 
   @override
+  String get mapYourCar => 'Votre voiture';
+
+  @override
+  String get noticeDemoEventTitle => 'Demande du soir à Stockholm';
+
+  @override
+  String get noticeDemoEventBody =>
+      '18:00–22:30 · Centre de Stockholm. Soyez en ligne avant le principal créneau de départs.';
+
+  @override
+  String get noticeDemoEventIsland => 'Événement ce soir · City';
+
+  @override
+  String get categoryComfort => 'Confort';
+
+  @override
+  String get categoryPriority => 'Prioritaire';
+
+  @override
+  String get categoryElectric => 'Électrique';
+
+  @override
+  String get categoryBoosterSeat => 'Rehausseur';
+
+  @override
+  String get demoPickupNearYou => 'Prise en charge près de vous';
+
+  @override
+  String demoNearPlace(String place) {
+    return 'Près de $place';
+  }
+
+  @override
+  String get demoYourDestination => 'votre destination';
+
+  @override
+  String demoOnYourWayPercent(int percent) {
+    return 'Sur votre trajet · $percent %';
+  }
+
+  @override
+  String get demoAwayFromRoute => 'Hors de votre trajet';
+
+  @override
+  String get demoBehindYou => 'Derrière vous';
+
+  @override
+  String get vehDocsMissingCantDrive =>
+      'Ne peut pas rouler – téléversez les documents';
+
+  @override
+  String docsNotApprovedCar(String names) {
+    return 'Cette voiture ne peut pas rouler tant que ses documents ne sont pas approuvés. Manquants : $names';
+  }
+
+  @override
+  String docsNotApprovedAccount(String names) {
+    return 'Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : $names';
+  }
+
+  @override
+  String get authStartingServer => 'Démarrage du serveur…';
+
+  @override
+  String authErrTooManyWrongCodes(String button) {
+    return 'Trop d’essais erronés – touchez $button';
+  }
+
+  @override
+  String authRetryMinutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authJoinWaitlist => 'Rejoindre la liste d’attente';
+
+  @override
+  String get authWaitlistSaved =>
+      'Vous êtes sur la liste d’attente. Nous vous préviendrons quand la connexion ouvrira pour votre numéro.';
+
+  @override
+  String get authTestNumbersTitle =>
+      'Numéros de test (version de test uniquement)';
+
+  @override
+  String get authTestStatusNew => 'Test · pas encore de compte';
+
+  @override
+  String get gateSignOut => 'Se déconnecter';
+
+  @override
+  String get gateTryAgain => 'Réessayer';
+
+  @override
+  String get authNeedHelp => 'Besoin d’aide ?';
+
+  @override
+  String get authHelpComingSoon => 'Coordonnées bientôt disponibles';
+
+  @override
+  String get authHelpEmail => 'E-mail';
+
+  @override
+  String get authHelpPhone => 'Téléphone';
+
+  @override
+  String get authHelpCompany => 'Société';
+
+  @override
+  String get authHelpClose => 'Fermer';
+
+  @override
   String get swTripStatusDraft => 'Brouillon';
 
   @override
@@ -5877,6 +5995,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get swDocumentStatusMissing => 'Manquant';
 
   @override
+  String get swDocumentStatusWaitingForMovera => 'En attente de Movera';
+
+  @override
   String get swTicketStatusOpen => 'Ouvert';
 
   @override
@@ -5926,122 +6047,4 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get swRatingStatusSkipped => 'Ignorée';
-
-  @override
-  String get mapYourCar => 'Votre voiture';
-
-  @override
-  String get noticeDemoEventTitle => 'Demande du soir à Stockholm';
-
-  @override
-  String get noticeDemoEventBody =>
-      '18:00–22:30 · Centre de Stockholm. Soyez en ligne avant le principal créneau de départs.';
-
-  @override
-  String get noticeDemoEventIsland => 'Événement ce soir · City';
-
-  @override
-  String get categoryComfort => 'Confort';
-
-  @override
-  String get categoryPriority => 'Prioritaire';
-
-  @override
-  String get categoryElectric => 'Électrique';
-
-  @override
-  String get categoryBoosterSeat => 'Rehausseur';
-
-  @override
-  String get demoPickupNearYou => 'Prise en charge près de vous';
-
-  @override
-  String demoNearPlace(String place) {
-    return 'Près de $place';
-  }
-
-  @override
-  String get demoYourDestination => 'votre destination';
-
-  @override
-  String demoOnYourWayPercent(int percent) {
-    return 'Sur votre trajet · $percent %';
-  }
-
-  @override
-  String get demoAwayFromRoute => 'Hors de votre trajet';
-
-  @override
-  String get demoBehindYou => 'Derrière vous';
-
-  @override
-  String get vehDocsMissingCantDrive =>
-      'Ne peut pas rouler – téléversez les documents';
-
-  @override
-  String docsNotApprovedCar(String names) {
-    return 'Cette voiture ne peut pas rouler tant que ses documents ne sont pas approuvés. Manquants : $names';
-  }
-
-  @override
-  String docsNotApprovedAccount(String names) {
-    return 'Votre compte ne peut pas être utilisé tant que ces documents ne sont pas approuvés : $names';
-  }
-
-  @override
-  String get authStartingServer => 'Démarrage du serveur…';
-
-  @override
-  String authErrTooManyWrongCodes(String button) {
-    return 'Trop d’essais erronés – touchez $button';
-  }
-
-  @override
-  String authRetryMinutes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count minutes',
-      one: '1 minute',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get authJoinWaitlist => 'Rejoindre la liste d’attente';
-
-  @override
-  String get authWaitlistSaved =>
-      'Vous êtes sur la liste d’attente. Nous vous préviendrons quand la connexion ouvrira pour votre numéro.';
-
-  @override
-  String get authTestNumbersTitle =>
-      'Numéros de test (version de test uniquement)';
-
-  @override
-  String get authTestStatusNew => 'Test · pas encore de compte';
-
-  @override
-  String get gateSignOut => 'Se déconnecter';
-
-  @override
-  String get gateTryAgain => 'Réessayer';
-
-  @override
-  String get authNeedHelp => 'Besoin d’aide ?';
-
-  @override
-  String get authHelpComingSoon => 'Coordonnées bientôt disponibles';
-
-  @override
-  String get authHelpEmail => 'E-mail';
-
-  @override
-  String get authHelpPhone => 'Téléphone';
-
-  @override
-  String get authHelpCompany => 'Société';
-
-  @override
-  String get authHelpClose => 'Fermer';
 }
