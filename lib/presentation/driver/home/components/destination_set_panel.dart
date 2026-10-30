@@ -13,11 +13,16 @@ class DestinationSetPanel extends StatefulWidget {
   final VoidCallback? onClose;
   final PanelController controller;
 
+  /// The destination the driver picked (driver group 3: was a fixed demo
+  /// address, "1141 central park, DHA"); empty while it is looked up.
+  final String address;
+
   const DestinationSetPanel({
     super.key,
     required this.onClose,
     required this.controller,
     required this.body,
+    required this.address,
   });
 
   @override
@@ -83,7 +88,7 @@ class _DestinationSetPanelState extends State<DestinationSetPanel> {
                         ),
                         2.height,
                         TextWidget(
-                          text: "1141 central park, DHA",
+                          text: widget.address,
                           fontSize: 14,
                           fontWeight: fwMedium,
                           color: AppColor.subtitle,
@@ -184,7 +189,7 @@ class _DestinationSetPanelState extends State<DestinationSetPanel> {
                         ),
                         6.height,
                         TextWidget(
-                          text: "1141 central park, DHA",
+                          text: widget.address,
                           color: AppColor.subtitle,
                           fontSize: 14,
                           fontWeight: fwNormal,

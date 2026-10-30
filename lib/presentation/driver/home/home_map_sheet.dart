@@ -66,45 +66,10 @@ extension _HomeMapSheet on _DriverHomeState {
         _hasLiveDriverLocation = false;
         _startLocationFailed = true;
       });
-      // driver-u24: allowed but approximate only. No fix will ever be
-      // usable, so ask for precise location instead of "Finding…".
-      if (error is PreciseLocationRequiredException) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            content: Text(tr.preciseLocationOff),
-            action: SnackBarAction(
-              label: tr.settings,
-              onPressed: () => unawaited(DriverLocationService.openSettings()),
-            ),
-          ),
-        );
-      }
-      // driver-r5-51: location not allowed. No prompt comes back by
-      // itself: the driver allows it here, or in Settings when blocked.
-      if (error is LocationPermissionDeniedException) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            content: Text(
-              error.forever
-                  ? tr.locationBlockedSettings
-                  : tr.locationNotAllowed,
-            ),
-            action: SnackBarAction(
-              label: error.forever ? tr.settings : tr.allowLocation,
-              onPressed: () {
-                if (error.forever) {
-                  unawaited(DriverLocationService.openSettings());
-                  return;
-                }
-                DriverLocationService.allowPrompt();
-                if (mounted) {
-                  unawaited(_startDriverLocation());
-                }
-              },
-            ),
-          ),
-        );
-      }
+      // driver-u24, driver-r5-51, decision 2: approximate only, not
+      // allowed or location off. The reason card says so above the radar
+      // (driver group 3: a snackbar covered Go online).
+      _HomeOnlineGate(this)._locationFailed(error);
       // A transient one-shot GPS failure must not leave Home without a
       // location subscription until the next app resume or recenter tap.
       // Continuous updates can recover when permissions/provider return.
@@ -133,7 +98,7 @@ extension _HomeMapSheet on _DriverHomeState {
               unawaited(_animateToDriverLocation());
             }
           },
-          onError: (_) {
+          onError: (Object error) {
             if (!mounted || !_liveVisible || epoch != _locationEpoch) {
               return;
             }
@@ -141,6 +106,7 @@ extension _HomeMapSheet on _DriverHomeState {
               _hasLiveDriverLocation = false;
               _startLocationFailed = true;
             });
+            _HomeOnlineGate(this)._locationFailed(error);
           },
         );
   }
@@ -149,7 +115,23 @@ extension _HomeMapSheet on _DriverHomeState {
     if (!mounted || !_liveVisible) {
       return;
     }
+    _HomeOnlineGate(this)._locationWorks();
     if (!location.isDisplayableAt(DateTime.now())) {
+      // Driver group 3 (live test: the map stayed on a zoomed-out
+      // Stockholm): a fresh fix too rough for the car (a laptop's Wi-Fi
+      // position) still opens the map where the driver is.
+      if (!_didCenterOnLiveLocation && location.isStartHintAt(DateTime.now())) {
+        _didCenterOnLiveLocation = true;
+        _cameraLocation = location;
+        _rebuild(() {
+          _driverPosition = location.point.toLatLng();
+          _hasLiveDriverLocation = false;
+          _startPositionKnown = true;
+          _markers = _HomeStartPosition(this)._driverMarkers();
+        });
+        unawaited(_animateToDriverLocation());
+        return;
+      }
       _rebuild(() => _hasLiveDriverLocation = false);
       return;
     }
@@ -179,6 +161,28 @@ extension _HomeMapSheet on _DriverHomeState {
       _refreshDestinationRoadRoute();
     }
     unawaited(_animateToDriverLocation());
+  }
+
+  /// Driver group 3: a destination picked as a bare point ("59.33,
+  /// 18.06") gets its street address from the server's reverse geocode.
+  void _nameDestination(String address, LatLng destination) {
+    final places = LiveDriverServices.instance?.places;
+    if (places == null || !LiveAddressLookup.unnamed(address)) {
+      return;
+    }
+    unawaited(
+      places.reverseGeocode(destination.latitude, destination.longitude).then((
+        found,
+      ) {
+        if (found == null ||
+            !mounted ||
+            !_destinationModeActive ||
+            _destinationPosition != destination) {
+          return;
+        }
+        _rebuild(() => _destinationAddress = found);
+      }),
+    );
   }
 
   Future<void> _prepareDriverVehicleMarker() async {
@@ -477,6 +481,7 @@ extension _HomeMapSheet on _DriverHomeState {
       };
       _destinationRoutePolylines = <Polyline>{};
     });
+    _nameDestination(result.address, destination);
     if (MoveraDestinationMarker.cachedPin == null) {
       unawaited(
         MoveraDestinationMarker.pin().then((_) {
@@ -2545,7 +2550,7 @@ extension _HomeMapSheet on _DriverHomeState {
   /// Home sheet, open: "Today", then one card with driving time,
   /// Performance and the latest waybill. Each row opens its details.
   List<Widget> _todayList() {
-    final performance = _adminHomeConfig.performance;
+    final performance = DriverPerformanceConfig.current;
     final showPerformance =
         performance.showRating ||
         performance.showAcceptanceRate ||
@@ -2705,7 +2710,7 @@ extension _HomeMapSheet on _DriverHomeState {
   }
 
   void _openPerformance() {
-    final performance = _adminHomeConfig.performance;
+    final performance = DriverPerformanceConfig.current;
     unawaited(
       _openDetailsSheet(
         title: tr.performance,

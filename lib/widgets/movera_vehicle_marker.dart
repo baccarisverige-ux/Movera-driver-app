@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'web_map_bitmap.dart';
@@ -22,6 +24,16 @@ import 'web_map_bitmap.dart';
 /// markers; keep the sizes and colours in step.
 class MoveraVehicleMarker {
   const MoveraVehicleMarker._();
+
+  /// Web: the marker title by which web/driver_map_camera.js knows the own
+  /// car (and draws its turning arrow and ring); it strips the title, so
+  /// it is never shown.
+  static const String webCameraTag = 'Driver camera vehicle';
+
+  /// The own car's marker title: [webCameraTag] on the web (driver group
+  /// 3: a translated title made the web map show the car's raster picture
+  /// in a broken image box), "Your car" elsewhere.
+  static String get ownTitle => kIsWeb ? webCameraTag : tr.mapYourCar;
 
   /// The arrow's own box (logical pixels): the arrow is 25 of its 38
   /// points wide, small like the reference (owner: 52 looked too big).

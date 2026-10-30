@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/home/components/app_update_sheet.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -89,6 +90,12 @@ import 'package:movera/presentation/driver/documents/info_session_screen.dart';
 import 'package:movera/presentation/driver/documents/onboarding_refresh.dart';
 import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
 import 'package:movera/presentation/driver/home/components/important_reminders.dart';
+import 'package:movera/presentation/driver/home/components/home_reason_card.dart';
+import 'package:movera/presentation/driver/auth/widgets/slow_server_note.dart';
+import 'package:movera/core/driver/driver_home_notices.dart';
+import 'package:battery_plus/battery_plus.dart';
+import 'package:geolocator/geolocator.dart'
+    show LocationServiceDisabledException;
 import 'package:movera/presentation/driver/vehicles/live_vehicles_screen.dart';
 import 'package:movera/presentation/driver/account/join_fleet_screen.dart';
 import 'package:movera/presentation/driver/account/start_company_screen.dart';
@@ -150,6 +157,7 @@ part 'home_recovery.dart';
 part 'home_live.dart';
 part 'home_radar_motion.dart';
 part 'home_updates.dart';
+part 'home_online_gate.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({
@@ -257,6 +265,7 @@ class _DriverHomeState extends State<DriverHome>
   }
 
   Timer? _onlineTransitionTimer;
+  final _HomeGateState _gate = _HomeGateState(); // home_online_gate.dart
 
   /// Puts the top island back on the hidden total after 5 s untouched.
   Timer? _islandIdleTimer;
@@ -559,6 +568,7 @@ class _DriverHomeState extends State<DriverHome>
     ScheduledRideStore.applyAdmin(_adminHomeConfig.scheduledRides);
     ScheduledRideStore.openRequests.addListener(_onScheduledRequests);
     _HomeAccount(this)._startAccount();
+    _HomeOnlineGate(this)._startOnlineGate();
     _goOnlinePulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
@@ -707,19 +717,21 @@ class _DriverHomeState extends State<DriverHome>
     final close = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(tr.savedTripCannotBeRead),
-        content: Text(tr.tripSavedOnThisDeviceIs),
-        actions: [
-          TextButton(
-            onPressed: () => popOwned(context, false),
-            child: Text(tr.notNow),
-          ),
-          FilledButton(
-            onPressed: () => popOwned(context, true),
-            child: Text(tr.closeUnreadableTrip),
-          ),
-        ],
+      builder: (context) => MoveraDialogTheme(
+        child: AlertDialog(
+          title: Text(tr.savedTripCannotBeRead),
+          content: Text(tr.tripSavedOnThisDeviceIs),
+          actions: [
+            TextButton(
+              onPressed: () => popOwned(context, false),
+              child: Text(tr.notNow),
+            ),
+            FilledButton(
+              onPressed: () => popOwned(context, true),
+              child: Text(tr.closeUnreadableTrip),
+            ),
+          ],
+        ),
       ),
     );
     if (!mounted) {
@@ -930,6 +942,8 @@ class _DriverHomeState extends State<DriverHome>
                   )
                 : hideMainPanel
                 ? DestinationSetPanel(
+                    key: const ValueKey<String>('destination-set-panel'),
+                    address: _destinationAddress?.trim() ?? '',
                     controller: _destinationPanelController,
                     onClose: () {
                       setState(() {
@@ -1050,6 +1064,7 @@ class _DriverHomeState extends State<DriverHome>
                           ],
                         ),
                       ),
+                      _HomeOnlineGate(this)._reasonLayer(), // over radar
                       _HomeMapSheet(this)._homeRadarLayer(),
                       // A reservation request: its sheet over the dock, its orb on top.
                       _HomeReservation(this)._reservationLayer(),
@@ -1088,6 +1103,9 @@ class _DriverHomeState extends State<DriverHome>
       return;
     }
     if (_HomeAccount(this)._blocksGoingOnline()) {
+      return;
+    }
+    if (_HomeOnlineGate(this)._blocksOnline()) {
       return;
     }
 
@@ -1335,6 +1353,7 @@ class _DriverHomeState extends State<DriverHome>
     _reservation.fade.cancel();
     _scheduled.dispose();
     _HomeAccount(this)._stopAccount();
+    _HomeOnlineGate(this)._stopOnlineGate();
     WidgetsBinding.instance.removeObserver(this);
     driverRouteObserver.unsubscribe(this);
     driverRouteObserver.pages.unsubscribe(_pageCover);

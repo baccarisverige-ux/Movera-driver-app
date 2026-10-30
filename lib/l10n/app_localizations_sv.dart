@@ -6473,4 +6473,68 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get pushAskLater => 'Inte nu';
+
+  @override
+  String get backgroundLocationTitle => 'Movera är online';
+
+  @override
+  String get backgroundLocationBody =>
+      'Din position skickas för att du ska få resor';
+
+  @override
+  String get locationRequired => 'Slå på platstjänster för att gå online';
+
+  @override
+  String get locationOpenSettings => 'Öppna inställningar';
+
+  @override
+  String get batterySaverWarning =>
+      'Batterisparläget är på. Movera kan sluta skicka din position – stäng av det för att få resor.';
+
+  @override
+  String get setOfflineLine =>
+      'Du har satts offline – tryck för att gå online igen';
+
+  @override
+  String get outsideAreaTitle => 'Du får inte köra i det här området';
+
+  @override
+  String outsideAreaBody(String zones) {
+    return 'Du får inga resor här. Kör tillbaka till $zones för att få resor.';
+  }
+
+  @override
+  String get outsideAreaOk => 'OK';
+
+  @override
+  String get anaYourPerformance => 'Ditt resultat · senaste 30 dagarna';
+
+  @override
+  String anaAcceptanceDetail(String rate) {
+    return '$rate av erbjudandena accepterade';
+  }
+
+  @override
+  String anaCancellationDetail(String rate) {
+    return '$rate av accepterade resor';
+  }
+
+  @override
+  String get destRecentAddresses => 'Dina senaste destinationer';
+
+  @override
+  String get destSearchUnavailable => 'Adressökningen fungerar inte just nu';
+
+  @override
+  String get destSearchTryAgain => 'Kontrollera anslutningen och försök igen.';
+
+  @override
+  String get destSearchStart => 'Sök efter en adress';
+
+  @override
+  String get destSearchStartBody =>
+      'Skriv en gata, en plats eller en stad. Dina 5 senaste destinationer visas här.';
+
+  @override
+  String get anaNotEnoughData => 'Inte tillräckligt med underlag än';
 }

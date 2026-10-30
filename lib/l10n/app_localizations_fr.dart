@@ -6572,4 +6572,70 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pushAskLater => 'Plus tard';
+
+  @override
+  String get backgroundLocationTitle => 'Movera est en ligne';
+
+  @override
+  String get backgroundLocationBody =>
+      'Votre position est envoyée pour recevoir des courses';
+
+  @override
+  String get locationRequired => 'Activez la localisation pour passer en ligne';
+
+  @override
+  String get locationOpenSettings => 'Ouvrir les réglages';
+
+  @override
+  String get batterySaverWarning =>
+      'L\'économiseur de batterie est activé. Movera peut cesser d\'envoyer votre position – désactivez-le pour recevoir des courses.';
+
+  @override
+  String get setOfflineLine =>
+      'Vous avez été mis hors ligne – appuyez pour repasser en ligne';
+
+  @override
+  String get outsideAreaTitle =>
+      'Vous n\'êtes pas autorisé à conduire dans cette zone';
+
+  @override
+  String outsideAreaBody(String zones) {
+    return 'Vous ne recevrez aucune course ici. Retournez dans $zones pour recevoir des courses.';
+  }
+
+  @override
+  String get outsideAreaOk => 'OK';
+
+  @override
+  String get anaYourPerformance => 'Vos performances · 30 derniers jours';
+
+  @override
+  String anaAcceptanceDetail(String rate) {
+    return '$rate des offres acceptées';
+  }
+
+  @override
+  String anaCancellationDetail(String rate) {
+    return '$rate des courses acceptées';
+  }
+
+  @override
+  String get destRecentAddresses => 'Vos destinations récentes';
+
+  @override
+  String get destSearchUnavailable =>
+      'La recherche d’adresse n’est pas disponible';
+
+  @override
+  String get destSearchTryAgain => 'Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get destSearchStart => 'Recherchez une adresse';
+
+  @override
+  String get destSearchStartBody =>
+      'Saisissez une rue, un lieu ou une ville. Vos 5 dernières destinations s’affichent ici.';
+
+  @override
+  String get anaNotEnoughData => 'Pas encore assez de données';
 }

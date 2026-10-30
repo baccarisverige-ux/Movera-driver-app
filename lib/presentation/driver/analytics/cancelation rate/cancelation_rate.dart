@@ -13,21 +13,26 @@ import 'package:movera/widgets/rate_rule_note.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
 class CancelationRate extends StatelessWidget {
-  const CancelationRate({
-    super.key,
-    this.performance = DriverPerformanceConfig.sample,
-  });
+  const CancelationRate({super.key, DriverPerformanceConfig? performance})
+    : _performance = performance;
 
-  /// Sample numbers until the driver's real rates exist: the same ones as
-  /// Analytics and the Home performance sheet (UI-10).
-  final DriverPerformanceConfig performance;
+  /// The demo's sample numbers, or a live driver's real ones from
+  /// `GET /driver/profile` (G3-D2): the same ones as Analytics and the
+  /// Home performance sheet (UI-10).
+  final DriverPerformanceConfig? _performance;
+  DriverPerformanceConfig get performance =>
+      _performance ?? DriverPerformanceConfig.current;
 
   /// "2.4%" of the counted offers or trips.
   String get _rateShare => performance.cancellationLabel;
 
   /// What is left of 100 %.
   String get _otherShare {
-    final rest = 100 - performance.cancellationRate;
+    final rate = performance.cancellationRate;
+    if (rate == null) {
+      return DriverPerformanceConfig.dash;
+    }
+    final rest = 100 - rate;
     return '${driverDecimal(rest, rest == rest.roundToDouble() ? 0 : 1)}%';
   }
 
@@ -89,33 +94,36 @@ class CancelationRate extends StatelessWidget {
             fontSize: 36,
             fontWeight: fwSemiBold,
           ),
-          4.height,
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            runSpacing: 4,
-            children: [
-              Image.asset(
-                AppAssets.triangle,
-                color: AppColor.red,
-                height: 17 * ResSize.h,
-              ),
-              6.width,
-              TextWidget(
-                text: tr.sample,
-                color: AppColor.red,
-                fontSize: 16,
-                fontWeight: fwMedium,
-              ),
-              6.width,
-              TextWidget(
-                text: tr.notYourRealRateYet,
-                color: AppColor.subtitle,
-                fontSize: 16,
-                fontWeight: fwMedium,
-              ),
-            ],
-          ),
+          // G3-D2: only the demo's numbers are labelled "Sample".
+          if (performance.isSample) ...[
+            4.height,
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              runSpacing: 4,
+              children: [
+                Image.asset(
+                  AppAssets.triangle,
+                  color: AppColor.red,
+                  height: 17 * ResSize.h,
+                ),
+                6.width,
+                TextWidget(
+                  text: tr.sample,
+                  color: AppColor.red,
+                  fontSize: 16,
+                  fontWeight: fwMedium,
+                ),
+                6.width,
+                TextWidget(
+                  text: tr.notYourRealRateYet,
+                  color: AppColor.subtitle,
+                  fontSize: 16,
+                  fontWeight: fwMedium,
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -201,13 +209,15 @@ class CancelationRate extends StatelessWidget {
             ],
           ),
           16.height,
-          TextWidget(
-            text: tr.sampleNumbersNotReal,
-            color: AppColor.title,
-            fontSize: 12,
-            fontWeight: fwMedium,
-          ),
-          16.height,
+          if (performance.isSample) ...[
+            TextWidget(
+              text: tr.sampleNumbersNotReal,
+              color: AppColor.title,
+              fontSize: 12,
+              fontWeight: fwMedium,
+            ),
+            16.height,
+          ],
           RateRuleNote(
             key: ValueKey<String>('cancel-rate-rule'),
             title: tr.cancelRateKeepLow,

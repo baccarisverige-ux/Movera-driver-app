@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/support/support_details.dart';
@@ -15,39 +16,41 @@ class NeedHelpLink extends StatelessWidget {
   void _show(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        key: const ValueKey('auth-need-help-box'),
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        title: Text(tr.authNeedHelp, style: AuthText.cardTitle()),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: details.isEmpty
-              ? [
-                  Text(
-                    tr.authHelpComingSoon,
-                    key: const ValueKey('auth-need-help-soon'),
-                    style: AuthText.cardSub(),
-                  ),
-                ]
-              : [
-                  if (details.email.trim().isNotEmpty)
-                    _row(tr.authHelpEmail, details.email.trim()),
-                  if (details.phone.trim().isNotEmpty)
-                    _row(tr.authHelpPhone, details.phone.trim()),
-                  if (details.company.trim().isNotEmpty)
-                    _row(tr.authHelpCompany, details.company.trim()),
-                ],
-        ),
-        actions: [
-          TextButton(
-            key: const ValueKey('auth-need-help-close'),
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(foregroundColor: AuthColors.ink),
-            child: Text(tr.authHelpClose),
+      builder: (context) => MoveraDialogTheme(
+        child: AlertDialog(
+          key: const ValueKey('auth-need-help-box'),
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          title: Text(tr.authNeedHelp, style: AuthText.cardTitle()),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: details.isEmpty
+                ? [
+                    Text(
+                      tr.authHelpComingSoon,
+                      key: const ValueKey('auth-need-help-soon'),
+                      style: AuthText.cardSub(),
+                    ),
+                  ]
+                : [
+                    if (details.email.trim().isNotEmpty)
+                      _row(tr.authHelpEmail, details.email.trim()),
+                    if (details.phone.trim().isNotEmpty)
+                      _row(tr.authHelpPhone, details.phone.trim()),
+                    if (details.company.trim().isNotEmpty)
+                      _row(tr.authHelpCompany, details.company.trim()),
+                  ],
           ),
-        ],
+          actions: [
+            TextButton(
+              key: const ValueKey('auth-need-help-close'),
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(foregroundColor: AuthColors.ink),
+              child: Text(tr.authHelpClose),
+            ),
+          ],
+        ),
       ),
     );
   }

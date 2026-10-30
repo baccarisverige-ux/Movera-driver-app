@@ -25,8 +25,12 @@ extension _HomeLive on _DriverHomeState {
 
   /// Asks the server to go online while the switch animates; null in the
   /// demo.
-  Future<String?>? _askServerOnline() =>
-      LiveDriverServices.instance?.presence.goOnline();
+  Future<String?>? _askServerOnline() {
+    final answer = LiveDriverServices.instance?.presence.goOnline();
+    if (answer == null) return null;
+    _HomeOnlineGate(this)._serverWaitStarted();
+    return answer.whenComplete(() => _HomeOnlineGate(this)._serverWaitEnded());
+  }
 
   /// After the animation: true when Home may go online. A refusal (no car,
   /// fleet not approved, no connection…) is said plainly and Home goes back
@@ -40,7 +44,8 @@ extension _HomeLive on _DriverHomeState {
       return true;
     }
     await _goOffline(notice: false);
-    _showLiveProblem(refused);
+    // Driver group 3: a permanent reason card, not a 6 s snackbar.
+    _HomeOnlineGate(this)._showServerRefusal(refused);
     return false;
   }
 

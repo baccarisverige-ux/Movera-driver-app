@@ -45,6 +45,27 @@ class DriverLocation {
     return true;
   }
 
+  /// Driver group 3: a fresh fix good enough to open the map near the
+  /// driver (up to [startHintAccuracyMeters] wide, at most 2 min old),
+  /// though too rough for the car's own position or a trip.
+  bool isStartHintAt(DateTime now) {
+    final at = measuredAt, accuracy = accuracyMeters;
+    if (at == null || !point.latitude.isFinite || !point.longitude.isFinite) {
+      return false;
+    }
+    if (point.latitude.abs() > 90 || point.longitude.abs() > 180) return false;
+    if (accuracy != null &&
+        (!accuracy.isFinite ||
+            accuracy < 0 ||
+            accuracy > startHintAccuracyMeters)) {
+      return false;
+    }
+    final age = now.difference(at);
+    return age >= -gpsClockSkewTolerance && age <= const Duration(minutes: 2);
+  }
+
+  static const double startHintAccuracyMeters = 2000;
+
   bool isUsableAt(DateTime now) {
     final at = measuredAt, accuracy = accuracyMeters;
     if (at == null ||

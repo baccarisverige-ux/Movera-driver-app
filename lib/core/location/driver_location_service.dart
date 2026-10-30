@@ -59,16 +59,28 @@ class DriverLocationService implements DriverLocationRepository {
   static void resetForTesting() {
     _prompt = null;
     _declined = false;
+    _online = null;
   }
 
   static const Duration _oneShotLimit = Duration(seconds: 8);
 
-  LocationSettings get _settings => LocationSettings(
-    accuracy: kIsWeb
-        ? LocationAccuracy.high
-        : LocationAccuracy.bestForNavigation,
-    timeLimit: _oneShotLimit,
-  );
+  /// Driver group 3 (live test 2026-10-30, "position sent only once"): a
+  /// browser one-shot with `maximumAge: 0` waits for a *new* position, and
+  /// a laptop's network location gives a new one only when it moves, so
+  /// every read after the first timed out. The browser may answer from
+  /// its own fix of the last [webMaximumAge].
+  static const Duration webMaximumAge = Duration(seconds: 30);
+
+  LocationSettings get _settings => kIsWeb
+      ? WebSettings(
+          accuracy: LocationAccuracy.high,
+          maximumAge: webMaximumAge,
+          timeLimit: _oneShotLimit,
+        )
+      : LocationSettings(
+          accuracy: LocationAccuracy.bestForNavigation,
+          timeLimit: _oneShotLimit,
+        );
 
   /// The app's page in the device settings, where precise location is
   /// turned on.
@@ -104,10 +116,28 @@ class DriverLocationService implements DriverLocationRepository {
       if (fallback != null) {
         return fallback;
       }
-      DriverLog.error('No recent accurate GPS fix available', error, stack);
+      // No signal, a timeout, location off or not allowed: the phone's
+      // normal life, not an app fault, so no crash report (driver group 3:
+      // one report a minute while online indoors).
+      if (isNormalGpsFailure(error)) {
+        DriverLog.warn('No recent accurate GPS fix: ${error.runtimeType}');
+      } else {
+        DriverLog.error('No recent accurate GPS fix available', error, stack);
+      }
       rethrow;
     }
   }
+
+  /// A GPS read that failed the way phones do (timeout, no signal,
+  /// location off, not allowed), not through an app fault.
+  @visibleForTesting
+  static bool isNormalGpsFailure(Object error) =>
+      error is TimeoutException ||
+      error is PositionUpdateException ||
+      error is LocationServiceDisabledException ||
+      error is PermissionDeniedException ||
+      error is PermissionRequestInProgressException ||
+      error is DriverLocationException;
 
   /// The platform's cached fix, or null where it has none to give: web
   /// (geolocator_web throws UnsupportedError) must not replace the real
@@ -129,6 +159,15 @@ class DriverLocationService implements DriverLocationRepository {
 
   LocationSettings _streamSettings(int distanceFilterMeters) {
     final navigation = distanceFilterMeters == 0;
+    final online = _online;
+    if (online != null && !kIsWeb) {
+      return onlineSettings(
+        platform: defaultTargetPlatform,
+        notificationTitle: online.title,
+        notificationText: online.text,
+        navigation: navigation,
+      );
+    }
     if (kIsWeb || !navigation) {
       return LocationSettings(
         accuracy: kIsWeb
@@ -159,13 +198,141 @@ class DriverLocationService implements DriverLocationRepository {
     );
   }
 
+  /// The open position streams. Android and iOS share ONE native stream
+  /// between all listeners, made with the first listener's settings, so
+  /// switching to the online (background) settings must close every
+  /// listener before the first opens again ([setOnlineBackground]).
+  static final Set<_PositionWatch> _watches = <_PositionWatch>{};
+
+  /// The "Movera is online" notification while online; null offline.
+  static ({String title, String text})? _online;
+
+  /// Decision 1: while online every position stream keeps running with
+  /// the phone locked (Android foreground service with [notification],
+  /// iOS background location); null goes back to foreground only. The web
+  /// has no background location; nothing changes there.
+  static Future<void> setOnlineBackground(
+    ({String title, String text})? notification,
+  ) async {
+    if (notification == _online) return;
+    _online = notification;
+    if (kIsWeb) return;
+    final open = _watches.toList();
+    for (final watch in open) {
+      await watch.pause();
+    }
+    for (final watch in open) {
+      if (_watches.contains(watch)) watch.resume();
+    }
+  }
+
+  @visibleForTesting
+  static bool get onlineBackground => _online != null;
+
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) async* {
     await _ensurePermission();
+    final watch = _PositionWatch(
+      () => _streamSettings(distanceFilterMeters),
+      _toDriverLocation,
+    );
+    _watches.add(watch);
+    watch.output.onCancel = () {
+      _watches.remove(watch);
+      return watch.pause();
+    };
+    watch.resume();
+    yield* watch.output.stream;
+  }
 
-    yield* Geolocator.getPositionStream(
-      locationSettings: _streamSettings(distanceFilterMeters),
-    ).map(_toDriverLocation);
+  /// Owner decision 1 (driver group 3): the stream settings while online
+  /// for [platform] (null: the web). Android runs geolocator's location
+  /// foreground service with the persistent [notificationTitle]
+  /// notification ("Movera is online"); iOS keeps the when-in-use session
+  /// running in the background (`UIBackgroundModes location`, blue
+  /// indicator). A browser has no background mode: Chrome throttles a
+  /// hidden tab's timers and its geolocation watch goes quiet without an
+  /// error, so `LiveLocationReporter` itself stops sending while the page
+  /// is hidden, and the server sets the driver offline after
+  /// `autoOffline.noFixMinutes`.
+  @visibleForTesting
+  static LocationSettings onlineSettings({
+    required TargetPlatform? platform,
+    required String notificationTitle,
+    required String notificationText,
+    bool navigation = false,
+  }) {
+    if (platform == null) {
+      return WebSettings(
+        accuracy: LocationAccuracy.high,
+        maximumAge: webMaximumAge,
+      );
+    }
+    if (platform == TargetPlatform.android) {
+      return AndroidSettings(
+        accuracy: navigation
+            ? LocationAccuracy.bestForNavigation
+            : LocationAccuracy.high,
+        distanceFilter: 0,
+        intervalDuration: Duration(seconds: navigation ? 1 : 5),
+        foregroundNotificationConfig: ForegroundNotificationConfig(
+          notificationTitle: notificationTitle,
+          notificationText: notificationText,
+          notificationChannelName: notificationTitle,
+          setOngoing: true,
+          enableWakeLock: true,
+        ),
+      );
+    }
+    if (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS) {
+      return AppleSettings(
+        accuracy: navigation
+            ? LocationAccuracy.bestForNavigation
+            : LocationAccuracy.high,
+        distanceFilter: 0,
+        activityType: ActivityType.automotiveNavigation,
+        pauseLocationUpdatesAutomatically: false,
+        allowBackgroundLocationUpdates: true,
+        showBackgroundLocationIndicator: true,
+      );
+    }
+    return LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 0);
+  }
+
+  /// Decision 2: whether the phone's location is off or not allowed, read
+  /// without asking (Go online is blocked then). Null: allowed and on.
+  static Future<DriverLocationException?> locationBlock() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        return const DriverLocationException(
+          'Location services are turned off.',
+        );
+      }
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.deniedForever) {
+        return const LocationPermissionDeniedException(forever: true);
+      }
+      if (permission == LocationPermission.denied && _declined) {
+        return const LocationPermissionDeniedException();
+      }
+    } catch (error) {
+      DriverLog.warn('Location state unknown: ${error.runtimeType}');
+    }
+    return null;
+  }
+
+  /// The phone's location settings (Android, iOS: the app's page when
+  /// that is all the platform opens).
+  static Future<bool> openLocationSettings() async {
+    try {
+      if (await Geolocator.isLocationServiceEnabled()) {
+        return await Geolocator.openAppSettings();
+      }
+      return await Geolocator.openLocationSettings();
+    } catch (error) {
+      DriverLog.warn('Could not open location settings: $error');
+      return false;
+    }
   }
 
   DriverLocation _toDriverLocation(Position position) {
@@ -219,5 +386,32 @@ class DriverLocationService implements DriverLocationRepository {
     if (accuracy == LocationAccuracyStatus.reduced) {
       throw const PreciseLocationRequiredException();
     }
+  }
+}
+
+/// One listener of [DriverLocationService.watchPosition]: its own output,
+/// fed by the platform stream, which [pause] closes and [resume] opens
+/// again with the settings of that moment.
+class _PositionWatch {
+  _PositionWatch(this._settings, this._map);
+
+  final LocationSettings Function() _settings;
+  final DriverLocation Function(Position) _map;
+  final StreamController<DriverLocation> output =
+      StreamController<DriverLocation>();
+  StreamSubscription<Position>? _inner;
+
+  void resume() {
+    if (_inner != null || output.isClosed) return;
+    _inner = Geolocator.getPositionStream(locationSettings: _settings()).listen(
+      (position) => output.add(_map(position)),
+      onError: output.addError,
+    );
+  }
+
+  Future<void> pause() async {
+    final inner = _inner;
+    _inner = null;
+    await inner?.cancel();
   }
 }

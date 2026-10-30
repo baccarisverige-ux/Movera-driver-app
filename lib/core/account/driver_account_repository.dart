@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:movera/core/account/driver_account.dart';
+import 'package:movera/core/driver/driver_home_notices.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/onboarding/document_upload.dart';
@@ -39,8 +40,12 @@ class DriverAccountRepository {
       '$notificationsPath/${Uri.encodeComponent(notificationId)}/read';
 
   /// `GET /driver/profile`.
-  Future<DriverAccount> profile() async =>
-      DriverAccount.fromJson(await _api.get(profilePath));
+  /// Driver group 3 (G3-R2): its `outsideArea` reaches [DriverAreaWatch].
+  Future<DriverAccount> profile() async {
+    final json = await _api.get(profilePath);
+    DriverAreaWatch.instance.observe(json);
+    return DriverAccount.fromJson(json);
+  }
 
   /// `POST /driver/onboarding`: the details, once (a resend while pending
   /// or on hold replaces them).

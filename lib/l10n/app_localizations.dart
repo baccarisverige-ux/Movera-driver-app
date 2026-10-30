@@ -11184,6 +11184,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get pushAskLater;
+
+  /// Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Movera is online'**
+  String get backgroundLocationTitle;
+
+  /// Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Your position is sent so you get trips'**
+  String get backgroundLocationBody;
+
+  /// Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on location to go online'**
+  String get locationRequired;
+
+  /// Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get locationOpenSettings;
+
+  /// Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Battery saver is on. Movera may stop sending your position – turn it off to get trips.'**
+  String get batterySaverWarning;
+
+  /// Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'You were set offline – tap to go online again'**
+  String get setOfflineLine;
+
+  /// Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'You are not eligible to drive in this area'**
+  String get outsideAreaTitle;
+
+  /// Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'You get no trips here. Drive back to {zones} to get trips.'**
+  String outsideAreaBody(String zones);
+
+  /// Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get outsideAreaOk;
+
+  /// No description provided for @anaYourPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Your performance · last 30 days'**
+  String get anaYourPerformance;
+
+  /// No description provided for @anaAcceptanceDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{rate} of offers accepted'**
+  String anaAcceptanceDetail(String rate);
+
+  /// No description provided for @anaCancellationDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{rate} of accepted trips'**
+  String anaCancellationDetail(String rate);
+
+  /// No description provided for @destRecentAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recent destinations'**
+  String get destRecentAddresses;
+
+  /// No description provided for @destSearchUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Address search is not available'**
+  String get destSearchUnavailable;
+
+  /// No description provided for @destSearchTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get destSearchTryAgain;
+
+  /// No description provided for @destSearchStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for an address'**
+  String get destSearchStart;
+
+  /// No description provided for @destSearchStartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a street, a place or a city. Your last 5 destinations show here.'**
+  String get destSearchStartBody;
+
+  /// No description provided for @anaNotEnoughData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet'**
+  String get anaNotEnoughData;
 }
 
 class _AppLocalizationsDelegate

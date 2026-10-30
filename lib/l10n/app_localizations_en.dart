@@ -6466,4 +6466,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pushAskLater => 'Not now';
+
+  @override
+  String get backgroundLocationTitle => 'Movera is online';
+
+  @override
+  String get backgroundLocationBody => 'Your position is sent so you get trips';
+
+  @override
+  String get locationRequired => 'Turn on location to go online';
+
+  @override
+  String get locationOpenSettings => 'Open Settings';
+
+  @override
+  String get batterySaverWarning =>
+      'Battery saver is on. Movera may stop sending your position – turn it off to get trips.';
+
+  @override
+  String get setOfflineLine => 'You were set offline – tap to go online again';
+
+  @override
+  String get outsideAreaTitle => 'You are not eligible to drive in this area';
+
+  @override
+  String outsideAreaBody(String zones) {
+    return 'You get no trips here. Drive back to $zones to get trips.';
+  }
+
+  @override
+  String get outsideAreaOk => 'OK';
+
+  @override
+  String get anaYourPerformance => 'Your performance · last 30 days';
+
+  @override
+  String anaAcceptanceDetail(String rate) {
+    return '$rate of offers accepted';
+  }
+
+  @override
+  String anaCancellationDetail(String rate) {
+    return '$rate of accepted trips';
+  }
+
+  @override
+  String get destRecentAddresses => 'Your recent destinations';
+
+  @override
+  String get destSearchUnavailable => 'Address search is not available';
+
+  @override
+  String get destSearchTryAgain => 'Check your connection and try again.';
+
+  @override
+  String get destSearchStart => 'Search for an address';
+
+  @override
+  String get destSearchStartBody =>
+      'Type a street, a place or a city. Your last 5 destinations show here.';
+
+  @override
+  String get anaNotEnoughData => 'Not enough data yet';
 }

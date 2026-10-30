@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -445,22 +446,24 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     }
     final leave = await showDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: Text(tr.acctLeaveSignUpQ),
-        content: Text(tr.acctLeaveSignUpBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(false),
-            child: Text(tr.stay),
-          ),
-          FilledButton(
-            key: const ValueKey('details-sign-out'),
-            onPressed: () => Navigator.of(dialog).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AccountStyle.ink),
-            child: Text(tr.logOut),
-          ),
-        ],
+      builder: (dialog) => MoveraDialogTheme(
+        child: AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(tr.acctLeaveSignUpQ),
+          content: Text(tr.acctLeaveSignUpBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialog).pop(false),
+              child: Text(tr.stay),
+            ),
+            FilledButton(
+              key: const ValueKey('details-sign-out'),
+              onPressed: () => Navigator.of(dialog).pop(true),
+              style: FilledButton.styleFrom(backgroundColor: AccountStyle.ink),
+              child: Text(tr.logOut),
+            ),
+          ],
+        ),
       ),
     );
     if (leave != true || !mounted) return;
