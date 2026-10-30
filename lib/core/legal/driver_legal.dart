@@ -159,6 +159,23 @@ class DriverLegal extends ChangeNotifier {
   bool _asked = false;
   bool _failed = false;
 
+  /// The signed-in driver (`Driver.driverId`); null before sign-in and
+  /// after sign-out. Checker blocker 1: nothing is asked without one.
+  String? _driverId;
+
+  /// The server refused going online with `terms_not_accepted`: the
+  /// screen shows whatever this phone remembers (checker HIGH 2).
+  bool _forced = false;
+
+  /// This app run already decided whether to ask at start.
+  bool _startChecked = false;
+
+  String? get driverId => _driverId;
+
+  /// Acceptances are kept per driver and country, so a second account on
+  /// the same phone is asked on its own (checker HIGH 2).
+  String _acceptKey(String country) => '${_driverId ?? ''}|$country';
+
   /// A live build talks to the server; the demo has none.
   bool get live => _api != null;
 
@@ -178,13 +195,20 @@ class DriverLegal extends ChangeNotifier {
   /// not accepted it).
   bool get due {
     final texts = current;
+    if (_driverId == null) return false;
     if (texts == null || !texts.reaccept || texts.version <= 0) return false;
-    return (_accepted[texts.country] ?? -1) < texts.version;
+    return (_accepted[_acceptKey(texts.country)] ?? -1) < texts.version;
   }
 
-  /// The terms screen shows: due at this app start, or after a refused
-  /// go-online. The gate never shows it during a trip.
-  bool get screenWanted => _asked && due;
+  /// The terms screen shows: only for a signed-in driver (never on the
+  /// sign-in screen: "I accept" needs his token), due at this app start,
+  /// or after the server refused going online for it. The gate never
+  /// shows it during a trip.
+  bool get screenWanted {
+    final texts = current;
+    if (_driverId == null || texts == null) return false;
+    return _forced || (_asked && due);
+  }
 
   /// Kept answers and accepted versions.
   Future<void> restore() async {
@@ -230,13 +254,51 @@ class DriverLegal extends ChangeNotifier {
     if (_country != before && live) unawaited(refresh());
   }
 
+  /// The signed-in account (`GET /driver/profile`): its driver and
+  /// country. The first time this run that the texts and the driver are
+  /// both known, a due version is asked for (the "app start" check).
+  void useAccount({required String driverId, String? country}) {
+    if (driverId.isEmpty) return;
+    final changed = _driverId != driverId;
+    _driverId = driverId;
+    if (changed) {
+      _startChecked = false;
+      _asked = false;
+      _forced = false;
+    }
+    useAccountCountry(country);
+    _checkAtStart();
+    notifyListeners();
+  }
+
+  /// Sign-out (own or ended by Movera): this driver's acceptances leave
+  /// the phone and nothing is asked until the next sign-in.
+  Future<void> signedOut() async {
+    final id = _driverId;
+    _driverId = null;
+    _asked = false;
+    _forced = false;
+    _startChecked = false;
+    if (id != null) {
+      _accepted.removeWhere((key, _) => key.startsWith('$id|'));
+      await _save();
+    }
+    notifyListeners();
+  }
+
+  void _checkAtStart() {
+    if (_startChecked || _driverId == null || current == null) return;
+    _startChecked = true;
+    if (due) _asked = true;
+  }
+
   /// App start: the kept answer, then the server's; a due version is
   /// asked for at this start.
   Future<void> start({String? country}) async {
     useCountry(country);
     await restore();
     await refresh();
-    if (due) _asked = true;
+    _checkAtStart();
     notifyListeners();
   }
 
@@ -258,6 +320,7 @@ class DriverLegal extends ChangeNotifier {
       final texts = LegalTexts.fromJson(answer);
       _texts[country] = texts;
       _failed = false;
+      _checkAtStart();
       notifyListeners();
       await _save();
       return texts;
@@ -273,7 +336,12 @@ class DriverLegal extends ChangeNotifier {
   /// trip; the gate decides). Reads the live version first.
   Future<void> askAgain() async {
     await refresh();
+    // The server knows better than this phone: forget the acceptance and
+    // show the screen (checker HIGH 2).
+    final texts = current;
+    if (texts != null) _accepted.remove(_acceptKey(texts.country));
     _asked = true;
+    _forced = _driverId != null;
     notifyListeners();
   }
 
@@ -283,14 +351,16 @@ class DriverLegal extends ChangeNotifier {
   Future<bool> accept() async {
     final texts = current;
     final api = _api;
-    if (texts == null || api == null) return false;
+    // Checker blocker 1: never without a signed-in driver.
+    if (texts == null || api == null || _driverId == null) return false;
     try {
       await api.post(
         acceptPath,
         body: {'country': texts.country, 'version': texts.version},
       );
-      _accepted[texts.country] = texts.version;
+      _accepted[_acceptKey(texts.country)] = texts.version;
       _asked = false;
+      _forced = false;
       notifyListeners();
       await _save();
       return true;
@@ -328,6 +398,9 @@ class DriverLegal extends ChangeNotifier {
     _country = 'SE';
     _asked = false;
     _failed = false;
+    _forced = false;
+    _startChecked = false;
+    _driverId = null;
     _api = null;
     notifyListeners();
   }

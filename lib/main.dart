@@ -319,6 +319,8 @@ class _MoveraAppState extends State<MoveraApp> {
   Future<void> _sessionExpired() async {
     if (!DriverRuntimeConfig.current.authRequired) return;
     _live?.signedOut();
+    // Checker blocker 1 / HIGH 2: no terms screen over Sign in.
+    unawaited(DriverLegal.instance.signedOut());
     final navigator = _navigatorKey.currentState;
     if (navigator == null) return;
     showDriverSignIn(navigator, _signIn);

@@ -77,7 +77,10 @@ class DriverAccountSession extends ChangeNotifier {
     // over the phone's when nothing was picked on this phone.
     DriverLanguage.useAccount(account.language);
     // Contract v0.18.5 `legal.apps`: the account's country's terms.
-    DriverLegal.instance.useAccountCountry(account.country);
+    DriverLegal.instance.useAccount(
+      driverId: account.driverId,
+      country: account.country,
+    );
     notifyListeners();
     return account;
   }

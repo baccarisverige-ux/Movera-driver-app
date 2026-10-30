@@ -18,6 +18,7 @@ import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/l10n/driver_language.dart';
@@ -31,8 +32,10 @@ import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/platform/safe_area_insets.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
+import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/presentation/driver/auth/phone_verify.dart';
+import 'package:movera/presentation/driver/content/driver_content_gate.dart';
 import 'package:movera/presentation/driver/auth/sign_in.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
@@ -395,6 +398,9 @@ void main() {
       final get = requests.first;
       expect(get.url.path, '/api/v1/legal/FR');
       expect(get.headers.containsKey('Authorization'), isFalse);
+      // Checker blocker 1: nothing is asked before sign-in.
+      expect(legal.screenWanted, isFalse);
+      legal.useAccount(driverId: 'drv_a', country: 'FR');
       expect(legal.due, isTrue);
       expect(legal.screenWanted, isTrue);
       expect(await legal.accept(), isTrue);
@@ -407,6 +413,79 @@ void main() {
         (_contract['auth'] as Map)['beforeSignIn']['allowed'],
         contains('GET /legal/{country}'),
       );
+    });
+
+    DriverLegal reacceptLegal(List<http.Request> requests) => DriverLegal(
+      api: ApiClient(
+        client: MockClient((request) async {
+          requests.add(request);
+          return request.method == 'GET'
+              ? _json(200, legalAnswer(version: 3, reaccept: true))
+              : http.Response('', 204);
+        }),
+        baseUri: _origin,
+        tokens: MemoryTokenStore()..save(access: 'a', refresh: 'r'),
+      ),
+      cache: MemoryDriverLegalCache(),
+    );
+
+    testWidgets('checker blocker 1: signed out, the sign-in screen stays '
+        'reachable (no terms cover); signed in, the cover shows', (
+      tester,
+    ) async {
+      final requests = <http.Request>[];
+      final legal = reacceptLegal(requests);
+      await legal.start(country: 'FR');
+      final key = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: key,
+          builder: (context, child) => DriverContentGate(
+            session: DriverSessionController(),
+            navigatorKey: key,
+            store: DriverContentStore(cache: MemoryDriverContentCache()),
+            legal: legal,
+            child: child!,
+          ),
+          home: const Scaffold(body: Text('sign in')),
+        ),
+      );
+      await tester.pump();
+      expect(find.byKey(const ValueKey('legal-accept')), findsNothing);
+      expect(find.text('sign in'), findsOneWidget);
+      // "I accept" never goes without a signed-in driver.
+      expect(await legal.accept(), isFalse);
+      expect(requests.where((r) => r.method == 'POST'), isEmpty);
+      legal.useAccount(driverId: 'drv_a', country: 'FR');
+      await tester.pump();
+      expect(find.byKey(const ValueKey('legal-accept')), findsOneWidget);
+    });
+
+    test('checker HIGH 2: a second account on the same phone is asked on '
+        'its own; sign-out forgets; terms_not_accepted forces the '
+        'screen', () async {
+      final requests = <http.Request>[];
+      final legal = reacceptLegal(requests);
+      await legal.start(country: 'FR');
+      legal.useAccount(driverId: 'drv_a', country: 'FR');
+      expect(await legal.accept(), isTrue);
+      expect(legal.screenWanted, isFalse);
+      await legal.signedOut();
+      expect(legal.screenWanted, isFalse, reason: 'nothing over Sign in');
+      legal.useAccount(driverId: 'drv_b', country: 'FR');
+      expect(legal.due, isTrue, reason: 'driver B never accepted');
+      expect(legal.screenWanted, isTrue);
+      expect(await legal.accept(), isTrue);
+      expect(legal.screenWanted, isFalse);
+      // The server still says no (accepted elsewhere was lost, or reset):
+      // the screen shows again.
+      await legal.askAgain();
+      expect(legal.screenWanted, isTrue);
+      // Driver A back on this phone: his acceptance left with his
+      // sign-out, so he is asked again too.
+      await legal.signedOut();
+      legal.useAccount(driverId: 'drv_a', country: 'FR');
+      expect(legal.due, isTrue);
     });
 
     test('version 0 (Movera drafts) needs no accept; a kept answer is '

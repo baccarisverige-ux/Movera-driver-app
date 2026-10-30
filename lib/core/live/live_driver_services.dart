@@ -733,6 +733,13 @@ class LiveLocationReporter {
     final read = await _readOnce();
     if (read == null) return null;
     final at = read.measuredAt;
+    // The bound: this read is a one-shot asked of the browser with
+    // `maximumAge` 30 s (DriverLocationService.webMaximumAge), so the
+    // browser vouches that the position is at most 30 s old even when its
+    // timestamp says otherwise (a stamp kept from before the reload). Only
+    // such an answer, read just now, is restamped; the stream's held fix
+    // is never used here, and a phone build (no restamp) sends the stamp
+    // as it came.
     final stale = at == null || _now().difference(at) > heldFresh;
     return _wire(read, measuredAt: _restamp && stale ? _now() : null);
   }
