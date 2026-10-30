@@ -1,6 +1,7 @@
 import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/provider_token_source.dart';
+import 'package:movera/core/auth/signed_out_notice.dart';
 
 /// The sign-in flow's state between its three steps, over [AuthRepository].
 ///
@@ -106,6 +107,9 @@ class AuthController {
 
   /// Ends the session on the server and on this device.
   Future<void> signOut() async {
+    // Contract v0.18.5 `auth.signedOut.ownSignOut`: no message after the
+    // driver's own Sign out.
+    SignedOutNotice.clear();
     signInResult = null;
     lastChallenge = null;
     providerLink = null;

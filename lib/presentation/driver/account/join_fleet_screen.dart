@@ -6,6 +6,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
+import 'package:movera/widgets/keep_above_keyboard.dart';
 
 /// A driver account without a fleet asks to join one (`POST
 /// /driver/fleet/join`, round 4b): the owner's code, name and e-mail must
@@ -148,13 +149,15 @@ class _JoinFleetFormState extends State<JoinFleetForm> {
         ),
         if (_error != null) AccountErrorLine(_error!),
         const SizedBox(height: 12),
-        ListenableBuilder(
-          listenable: Listenable.merge([_code, _owner, _email]),
-          builder: (context, _) => AccountButton(
-            key: const ValueKey('join-submit'),
-            label: tr.fleetAskToJoin,
-            busy: _busy,
-            onPressed: _complete ? _join : null,
+        KeepAboveKeyboard(
+          child: ListenableBuilder(
+            listenable: Listenable.merge([_code, _owner, _email]),
+            builder: (context, _) => AccountButton(
+              key: const ValueKey('join-submit'),
+              label: tr.fleetAskToJoin,
+              busy: _busy,
+              onPressed: _complete ? _join : null,
+            ),
           ),
         ),
         const SizedBox(height: 10),

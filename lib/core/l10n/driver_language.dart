@@ -14,8 +14,9 @@ abstract final class DriverLanguage {
   static const String section = 'language';
   static const String key = 'code';
 
-  /// The app's languages, in the order Settings lists them.
-  static const List<String> supported = <String>['fr', 'sv', 'en'];
+  /// The app's languages, in the order every list shows them (owner G1-B5
+  /// "Same in both": Svenska, Français, English, as the rider app).
+  static const List<String> supported = <String>['sv', 'fr', 'en'];
 
   /// Each language in its own words, for the Settings list.
   static const Map<String, String> names = <String, String>{
