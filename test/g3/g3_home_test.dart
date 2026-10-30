@@ -19,6 +19,7 @@ import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/home/components/destination_set_panel.dart';
+import 'package:movera/presentation/driver/home/components/home_reason_card.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
@@ -138,6 +139,29 @@ void main() {
     final card = tester.getRect(
       find.byKey(const ValueKey<String>('home-reason-location-required')),
     );
+    expect(card.bottom, lessThanOrEqualTo(tester.getRect(radar()).top));
+    await leave(tester, null);
+  });
+
+  testWidgets('03c: the location card sits above the bell, never over it', (
+    tester,
+  ) async {
+    await pumpHome(tester, location: _LocationOff());
+    await tester.tap(radar());
+    await frames(tester, 5);
+    final card = tester.getRect(
+      find.byKey(const ValueKey<String>('home-reason-location-required')),
+    );
+    // The bell: 48 x 48 at left 16, its bottom HomeMapButtonLayout.bellBottom
+    // above the screen's bottom (844).
+    const bell = Rect.fromLTWH(
+      16,
+      844 - HomeMapButtonLayout.bellTop,
+      HomeMapButtonLayout.buttonSize,
+      HomeMapButtonLayout.buttonSize,
+    );
+    expect(card.overlaps(bell), isFalse, reason: 'card $card, bell $bell');
+    expect(card.bottom, lessThanOrEqualTo(bell.top));
     expect(card.bottom, lessThanOrEqualTo(tester.getRect(radar()).top));
     await leave(tester, null);
   });

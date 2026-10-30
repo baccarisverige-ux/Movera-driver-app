@@ -1325,7 +1325,7 @@ extension _HomeMapSheet on _DriverHomeState {
               duration: const Duration(milliseconds: 320),
               curve: Curves.easeOutCubic,
               left: 16,
-              bottom: 138 + _homeMapButtonSize + 12,
+              bottom: HomeMapButtonLayout.bellBottom,
               child: _HomeAccount(this)._buildNotificationsBell(),
             ),
           if (!isDestinationPanel)

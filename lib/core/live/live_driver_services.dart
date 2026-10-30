@@ -85,7 +85,16 @@ class LiveDriverServices {
       renewSession: api.renewAccess,
       onAccepted: trips.observe,
     );
-    presence = LivePresence(api: api, dispatch: dispatch, reporter: reporter);
+    presence = LivePresence(
+      api: api,
+      dispatch: dispatch,
+      reporter: reporter,
+      // Live test 2026-10-30: the phone's own location state, not only
+      // the server's last fix, decides whether the driver may go online.
+      locationBlock: location is DriverLocationService
+          ? DriverLocationService.locationBlock
+          : null,
+    );
     content = LiveDriverContent(api: api, zoneId: () => config.current?.zoneId);
     zones = LiveDriverZones(api: api);
     config = LiveDriverConfig(
@@ -263,13 +272,21 @@ class LivePresence {
     required ApiClient api,
     required ApiDispatchRepository dispatch,
     required LiveLocationReporter reporter,
+    Future<Object?> Function()? locationBlock,
   }) : _api = api,
        _dispatch = dispatch,
-       _reporter = reporter;
+       _reporter = reporter,
+       _locationBlock = locationBlock;
 
   final ApiClient _api;
   final ApiDispatchRepository _dispatch;
   final LiveLocationReporter _reporter;
+
+  /// Decision 2 (live test 2026-10-30: a driver with location blocked went
+  /// online because the server still had a fix under 2 min old): the
+  /// phone's location off or not allowed, read without asking; null when
+  /// it is on and allowed (or the platform cannot tell).
+  final Future<Object?> Function()? _locationBlock;
 
   static const profilePath = '/api/v1/driver/profile';
   static const availabilityPath = '/api/v1/driver/availability';
@@ -333,6 +350,13 @@ class LivePresence {
     return _serial(() async {
       if (!_wantOnline) return null;
       try {
+        // Decision 2: location off or not allowed on the phone keeps the
+        // driver offline, and the server is not asked at all.
+        final block = await _locationBlock?.call();
+        if (block != null) {
+          _wantOnline = false;
+          return tr.locationRequired;
+        }
         final fix = await _reporter.freshFix();
         // v0.18.4 `auth.slowStart` covers going online: a sleeping server
         // answers after about 50 s, so wait up to 60 s.
@@ -365,6 +389,9 @@ class LivePresence {
           return tr.liveOnlineFailed;
         }
         serverOnline = true;
+        // Live test 2026-10-30: an old "set offline" the feed replays must
+        // not undo this Go online a second later.
+        _dispatch.markOnline();
         final version = profile['version'];
         _onlineVersion = version is num ? version.toInt() : null;
         DriverSetOfflineNotice.instance.clear();

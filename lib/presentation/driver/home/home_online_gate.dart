@@ -322,13 +322,16 @@ extension _HomeOnlineGate on _DriverHomeState {
       left: 16,
       right: 16,
       // Over the radar and the map buttons beside it, so Go online (and
-      // recenter, safety) is never covered.
-      bottom:
-          MoveraSheetMetrics.collapsedHeight -
-          50 +
-          HomeOfferSheet.orbSize +
-          14 +
-          _homeMapButtonSize,
+      // recenter, safety) is never covered, and over the bell (live test
+      // 2026-10-30: the location card covered it).
+      bottom: math.max(
+        MoveraSheetMetrics.collapsedHeight -
+            50 +
+            HomeOfferSheet.orbSize +
+            14 +
+            _homeMapButtonSize,
+        HomeMapButtonLayout.reasonBottom,
+      ),
       child: ValueListenableBuilder<double>(
         valueListenable: _panelSlidePosition,
         builder: (context, position, child) =>
