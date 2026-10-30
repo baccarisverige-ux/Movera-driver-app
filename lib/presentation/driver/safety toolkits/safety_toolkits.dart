@@ -11,23 +11,35 @@ import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-Future<T?> showSafetyToolKitSheet<T>(BuildContext context) {
+/// Contract v0.18.5 `safety.onlyDuringTrip` (owner 2026-10-30 "Only during
+/// a trip (Recommended)"): [duringTrip] false (Home, Settings) shows only
+/// "Call 112" (the phone's dialer, nothing sent to Movera) and Safety
+/// preferences; during a trip the sheet has SOS, Share trip and Ride check.
+Future<T?> showSafetyToolKitSheet<T>(
+  BuildContext context, {
+  bool duringTrip = false,
+}) {
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: const Color(0xFF172027).withValues(alpha: 0.30),
-    builder: (_) => const SafetyToolKits(),
+    builder: (_) => SafetyToolKits(duringTrip: duringTrip),
   );
 }
 
 class SafetyToolKits extends StatefulWidget {
   const SafetyToolKits({
     super.key,
+    this.duringTrip = false,
     this.launchEmergencyDial,
     this.sendSos,
     this.web = kIsWeb,
   });
+
+  /// A trip is live: SOS, Share trip and Ride check. Without one, only
+  /// "Call 112" and Safety preferences (`safety.onlyDuringTrip`).
+  final bool duringTrip;
 
   final Future<bool> Function()? launchEmergencyDial;
 
@@ -134,6 +146,70 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
       _emergencyInFlight = false;
     }
   }
+
+  /// No trip: "Call 112" opens the phone's dialer; nothing goes to Movera
+  /// (the server takes an SOS only during a live trip).
+  Future<void> _call112() async {
+    if (!_ownsRoute || _emergencyInFlight) return;
+    _emergencyInFlight = true;
+    try {
+      final dial = await handoffEmergencyDial(
+        widget.launchEmergencyDial ?? () => launchUrl(Uri.parse('tel:112')),
+      );
+      if (dial != EmergencyDialResult.opened) {
+        _showMessage(tr.couldNotOpenDialerDial112);
+      }
+    } finally {
+      _emergencyInFlight = false;
+    }
+  }
+
+  Widget _call112Button() => Material(
+    key: const ValueKey('safety-call-112'),
+    color: RideCheckStyle.red,
+    borderRadius: BorderRadius.circular(18),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      onTap: _call112,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            _iconCircle(
+              AppAssets.solarDangerTriangle,
+              RideCheckStyle.white(.18),
+              Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr.safetyCall112,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    tr.yourDialerOpensWith112Movera,
+                    style: TextStyle(
+                      color: RideCheckStyle.white(.92),
+                      fontSize: 12.5,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   /// The one SOS row, in the look of the Ride check card's "Call 112".
   Widget _sosButton() => Material(
@@ -325,15 +401,6 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                                   letterSpacing: -0.3,
                                 ),
                               ),
-                              SizedBox(height: 3),
-                              Text(
-                                tr.safetyRideCheckOnOthersPreview,
-                                style: TextStyle(
-                                  color: _muted,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
                             ],
                           ),
                         ),
@@ -515,7 +582,7 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
               const SizedBox(height: 12),
               _header(context),
               const SizedBox(height: 12),
-              _sosButton(),
+              if (widget.duringTrip) _sosButton() else _call112Button(),
               if (_status != null) ...[
                 const SizedBox(height: 10),
                 _statusBanner(),
@@ -530,35 +597,39 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   children: [
-                    // Owner decision 10: hidden while the option is off.
-                    if (SafetyAudioOption.enabled) ...[
+                    // Contract v0.18.5 `safety.onlyDuringTrip`: sharing and
+                    // Ride check belong to a trip.
+                    if (widget.duringTrip) ...[
+                      // Owner decision 10: hidden while the option is off.
+                      if (SafetyAudioOption.enabled) ...[
+                        _row(
+                          icon: AppAssets.solarMicrophone,
+                          title: tr.recordAudio,
+                          onTap: _toggleRecording,
+                        ),
+                        divider,
+                      ],
                       _row(
-                        icon: AppAssets.solarMicrophone,
-                        title: tr.recordAudio,
-                        onTap: _toggleRecording,
+                        icon: AppAssets.solarUploadMinimalistic,
+                        title: tr.safetyShareTrip,
+                        hint: tr.safetyShareTripHint,
+                        trailing: _chevron,
+                        onTap: _shareTrip,
+                      ),
+                      divider,
+                      _row(
+                        key: const ValueKey('ride-check-info'),
+                        icon: AppAssets.solarShieldWarning,
+                        title: tr.rideCheck,
+                        hint: tr.safetyRideCheckExplained,
+                        trailing: _onPill(),
                       ),
                       divider,
                     ],
                     _row(
-                      icon: AppAssets.solarUploadMinimalistic,
-                      title: tr.safetyShareTrip,
-                      hint: tr.safetyShareTripHint,
-                      trailing: _chevron,
-                      onTap: _shareTrip,
-                    ),
-                    divider,
-                    _row(
-                      key: const ValueKey('ride-check-info'),
-                      icon: AppAssets.solarShieldWarning,
-                      title: tr.rideCheck,
-                      hint: tr.safetyRideCheckExplained,
-                      trailing: _onPill(),
-                    ),
-                    divider,
-                    _row(
+                      key: const ValueKey('safety-preferences'),
                       icon: AppAssets.solarTuning2,
                       title: tr.safetyPreferences,
-                      hint: tr.safetyRideCheckOnPreviewOnly,
                       trailing: _chevron,
                       onTap: _openPreferences,
                     ),

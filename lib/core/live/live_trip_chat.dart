@@ -78,11 +78,18 @@ class TripChatThread extends ChangeNotifier {
   bool _closed = false;
 
   /// The trip ended: the chat closed at drop-off (contract v0.13.0 §22).
-  /// The history stays readable; the driver can no longer write.
+  /// Since v0.18.5 (`chat.appStorage.afterTrip`) the messages are gone
+  /// too: the driver reads no history after the trip.
   bool get closed => _closed;
 
-  void _markClosed() {
-    if (_closed) return;
+  /// Contract v0.18.5 `chat.appStorage` (owner 2026-10-30: "Never store
+  /// messages between rider or driver in driver app or rider app"): the
+  /// trip ended, so the chat is closed and every message leaves this
+  /// phone; nothing is kept.
+  void _forget() {
+    _messages.clear();
+    _unread = 0;
+    _loaded = true;
     _closed = true;
     notifyListeners();
   }
@@ -212,6 +219,12 @@ class LiveTripChat {
     final thread = this.thread(tripId);
     try {
       final page = await _api.get('${_path(tripId)}?limit=$pageLimit');
+      // v0.18.5 `chat.appStorage.afterTrip`: after the trip the server
+      // answers `{ items: [], closed: true }`.
+      if (page['closed'] == true) {
+        thread._forget();
+        return true;
+      }
       final items = page['items'];
       if (items is List) {
         for (final item in items) {
@@ -321,15 +334,24 @@ class LiveTripChat {
   LiveTripOutcome _notSent(TripChatThread thread, String key, Object error) {
     // 409 invalid_transition, reason chat_closed: the trip has ended.
     if (error is ApiError && error.reason == 'chat_closed') {
-      thread._markClosed();
+      thread._forget();
+      return LiveTripOutcome.failed(liveChatErrorMessage(error), error: error);
     }
     final copy = thread._find(key);
     if (copy != null) thread._put(copy._with(TripChatSendState.failed));
     return LiveTripOutcome.failed(liveChatErrorMessage(error), error: error);
   }
 
-  /// The trip is over: its chat is closed (contract v0.13.0 §22).
-  void markClosed(String tripId) => thread(tripId)._markClosed();
+  /// The trip is over: its chat is closed (contract v0.13.0 §22) and,
+  /// v0.18.5 `chat.appStorage`, its messages are dropped from this phone.
+  void markClosed(String tripId) => thread(tripId)._forget();
+
+  /// A trip event with a terminal status (completed, cancelled…): the
+  /// chat of that trip ends here.
+  void tripEnded(String tripId) {
+    final thread = _threads[tripId];
+    if (thread != null) thread._forget();
+  }
 
   /// `POST /trips/{tripId}/call` (contract v0.13.0 §22): the masked number
   /// to dial, never the rider's own. Throws the `ApiError` (`503

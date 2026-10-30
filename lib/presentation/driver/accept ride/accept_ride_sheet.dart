@@ -260,7 +260,7 @@ extension _AcceptRideSheet on _AcceptRideState {
                 subtitle: SafetyAudioOption.toolkitSubtitle,
                 onTap: () {
                   if (popOwned(sheetContext)) {
-                    showSafetyToolKitSheet(context);
+                    showSafetyToolKitSheet(context, duringTrip: true);
                   }
                 },
               ),

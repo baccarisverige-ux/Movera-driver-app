@@ -655,7 +655,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                 key: const ValueKey<String>('active-ride-safety-button'),
                 tooltip: tr.safetyToolkit,
                 size: 50,
-                onTap: () => showSafetyToolKitSheet(context),
+                onTap: () => showSafetyToolKitSheet(context, duringTrip: true),
                 child: SvgPicture.asset(
                   AppAssets.mapSafety,
                   width: 26,
@@ -1292,7 +1292,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                     subtitle: SafetyAudioOption.toolkitSubtitle,
                     onTap: () {
                       if (!popOwned(sheetContext)) return;
-                      showSafetyToolKitSheet(context);
+                      showSafetyToolKitSheet(context, duringTrip: true);
                     },
                   ),
                   _CleanRow(
