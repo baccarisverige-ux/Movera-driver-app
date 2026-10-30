@@ -4792,16 +4792,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authConsentLabel =>
-      'J’accepte les conditions d’utilisation et la politique de confidentialité';
+      'J’accepte les conditions et la politique de confidentialité';
 
   @override
-  String get authConsentPrefix => 'En continuant, vous acceptez nos ';
+  String get authConsentPrefix => 'En continuant, vous acceptez les ';
 
   @override
-  String get authConsentTerms => 'conditions d’utilisation';
+  String get authConsentTerms => 'conditions';
 
   @override
-  String get authAnd => ' et ';
+  String get authAnd => ' et la ';
 
   @override
   String get authConsentPrivacy => 'politique de confidentialité';
@@ -4920,7 +4920,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get authSignInRestricted =>
-      'Ce numéro ne fait pas encore partie de la liste de test des chauffeurs. Contactez Movera pour obtenir l’accès.';
+      'Ce numéro ne peut pas encore se connecter. Rejoignez la liste d’attente et nous vous préviendrons.';
 
   @override
   String get acctDetailsTitle => 'Vos informations';
@@ -6499,7 +6499,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get remNoFleet =>
-      'Rejoignez une flotte pour rouler – demandez le code Movera à votre gérant de flotte';
+      'Rejoignez une flotte pour rouler – demandez à votre gérant le code Movera, son nom et son e-mail';
 
   @override
   String get remActionJoinFleet => 'Rejoindre une flotte';
@@ -6638,4 +6638,68 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get anaNotEnoughData => 'Pas encore assez de données';
+
+  @override
+  String get authSignedOutExpired =>
+      'Vous avez été déconnecté – reconnectez-vous';
+
+  @override
+  String get authSignedOutRevoked =>
+      'Vous avez été déconnecté – reconnectez-vous';
+
+  @override
+  String get authSignedOutDetailExpired =>
+      'Vous n’avez pas utilisé l’application depuis 30 jours.';
+
+  @override
+  String get authSignedOutDetailRevoked => 'Movera a fermé votre session.';
+
+  @override
+  String get docInvalidFileContent =>
+      'Ce fichier n’est pas une photo ni un PDF';
+
+  @override
+  String get docExpiryTooFar => 'Vérifiez la date de fin';
+
+  @override
+  String remFleetInvitation(String fleet) {
+    return '$fleet vous a invité';
+  }
+
+  @override
+  String get remActionAcceptInvitation => 'Accepter';
+
+  @override
+  String get remActionDeclineInvitation => 'Refuser';
+
+  @override
+  String get safetyCall112 => 'Appeler le 112';
+
+  @override
+  String authPhoneFieldLabel(String dial) {
+    return 'Numéro de mobile ($dial)';
+  }
+
+  @override
+  String get authCodeFieldLabel => 'Code à 4 chiffres reçu par SMS';
+
+  @override
+  String get legalCouldNotLoad =>
+      'Impossible de charger le texte. Vérifiez la connexion et réessayez.';
+
+  @override
+  String get docRenewalWaiting => 'Nouveau document en attente de vérification';
+
+  @override
+  String get docRenewalRejected => 'Nouveau document refusé';
+
+  @override
+  String get remRenewalInReview => 'Le nouveau est en cours de vérification';
+
+  @override
+  String get remRenewalRejected => 'Le nouveau a été refusé';
+
+  @override
+  String get carTypesByMovera =>
+      'Movera choisit les types de course quand la voiture est validée.';
 }

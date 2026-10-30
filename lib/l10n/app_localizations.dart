@@ -8192,31 +8192,31 @@ abstract class AppLocalizations {
   /// **'Enter a valid mobile number.'**
   String get authInvalidMobileNumber;
 
-  /// No description provided for @authConsentLabel.
+  /// Owner G1-B5 / B6 (screen reader).
   ///
   /// In en, this message translates to:
-  /// **'I agree to the terms of service and the privacy policy'**
+  /// **'I accept the terms and the privacy policy'**
   String get authConsentLabel;
 
-  /// No description provided for @authConsentPrefix.
+  /// Owner G1-B5 (same words as the rider app).
   ///
   /// In en, this message translates to:
-  /// **'By continuing you agree to our '**
+  /// **'By continuing you accept the '**
   String get authConsentPrefix;
 
-  /// No description provided for @authConsentTerms.
+  /// Owner G1-B5.
   ///
   /// In en, this message translates to:
-  /// **'terms of service'**
+  /// **'terms'**
   String get authConsentTerms;
 
-  /// No description provided for @authAnd.
+  /// Owner G1-B5.
   ///
   /// In en, this message translates to:
   /// **' and '**
   String get authAnd;
 
-  /// No description provided for @authConsentPrivacy.
+  /// Owner G1-B5.
   ///
   /// In en, this message translates to:
   /// **'privacy policy'**
@@ -8396,10 +8396,10 @@ abstract class AppLocalizations {
   /// **'Couldn\'t check the code. Try again.'**
   String get authErrCheckCode;
 
-  /// No description provided for @authSignInRestricted.
+  /// Owner G1-B4 (same as the rider app's signInRestricted).
   ///
   /// In en, this message translates to:
-  /// **'This number isn\'t on the driver test list yet. Contact Movera to get access.'**
+  /// **'This number isn’t open for sign-in yet. Join the waiting list and we’ll let you know.'**
   String get authSignInRestricted;
 
   /// No description provided for @acctDetailsTitle.
@@ -11053,10 +11053,10 @@ abstract class AppLocalizations {
   /// **'Only the fleet owner can upload or open car documents.'**
   String get docFleetOwnerOnly;
 
-  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  /// Contract v0.18.5 reminders.texts.no_fleet (G2-D5.6).
   ///
   /// In en, this message translates to:
-  /// **'Join a fleet to drive – ask your fleet owner for the Movera code'**
+  /// **'Join a fleet to drive – ask your fleet owner for the Movera code, his name and e-mail'**
   String get remNoFleet;
 
   /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
@@ -11292,6 +11292,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not enough data yet'**
   String get anaNotEnoughData;
+
+  /// Contract v0.18.5 auth.signedOut (G1-D3).
+  ///
+  /// In en, this message translates to:
+  /// **'You were signed out – please sign in again'**
+  String get authSignedOutExpired;
+
+  /// Contract v0.18.5 auth.signedOut (G1-D3).
+  ///
+  /// In en, this message translates to:
+  /// **'You were signed out – please sign in again'**
+  String get authSignedOutRevoked;
+
+  /// Contract v0.18.5 auth.signedOut (G1-D3).
+  ///
+  /// In en, this message translates to:
+  /// **'You have not used the app for 30 days.'**
+  String get authSignedOutDetailExpired;
+
+  /// Contract v0.18.5 auth.signedOut (G1-D3).
+  ///
+  /// In en, this message translates to:
+  /// **'Movera ended your session.'**
+  String get authSignedOutDetailRevoked;
+
+  /// Contract v0.18.5 documents.upload.contentCheck (G2-D5.2).
+  ///
+  /// In en, this message translates to:
+  /// **'This file is not a photo or PDF'**
+  String get docInvalidFileContent;
+
+  /// Contract v0.18.5 documentExpiry (G2-D5.8).
+  ///
+  /// In en, this message translates to:
+  /// **'Check the end date'**
+  String get docExpiryTooFar;
+
+  /// Contract v0.18.5 reminders.kinds.fleet_invitation (G2-D5.6).
+  ///
+  /// In en, this message translates to:
+  /// **'{fleet} invited you'**
+  String remFleetInvitation(String fleet);
+
+  /// Contract v0.18.5 (G2-D5.6).
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get remActionAcceptInvitation;
+
+  /// Contract v0.18.5 (G2-D5.6).
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get remActionDeclineInvitation;
+
+  /// Contract v0.18.5 safety.onlyDuringTrip (G14).
+  ///
+  /// In en, this message translates to:
+  /// **'Call 112'**
+  String get safetyCall112;
+
+  /// Owner G1-B6 screen-reader label.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile number ({dial})'**
+  String authPhoneFieldLabel(String dial);
+
+  /// Owner G1-B6 screen-reader label.
+  ///
+  /// In en, this message translates to:
+  /// **'4-digit code from the SMS'**
+  String get authCodeFieldLabel;
+
+  /// Contract v0.18.5 legal (G1-B2).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t load the text. Check the connection and try again.'**
+  String get legalCouldNotLoad;
+
+  /// Contract v0.18.5 documentRenewal (G2-D1).
+  ///
+  /// In en, this message translates to:
+  /// **'New document waiting for review'**
+  String get docRenewalWaiting;
+
+  /// Contract v0.18.5 documentRenewal (G2-D1).
+  ///
+  /// In en, this message translates to:
+  /// **'New document rejected'**
+  String get docRenewalRejected;
+
+  /// Contract v0.18.5 reminders.renewal (G2-D1).
+  ///
+  /// In en, this message translates to:
+  /// **'Your new one is being checked'**
+  String get remRenewalInReview;
+
+  /// Contract v0.18.5 reminders.renewal (G2-D1).
+  ///
+  /// In en, this message translates to:
+  /// **'Your new one was rejected'**
+  String get remRenewalRejected;
+
+  /// Contract v0.18.5 vehicleRules.categoriesByAdmin (G2-D5.3).
+  ///
+  /// In en, this message translates to:
+  /// **'Movera chooses the ride types when it approves the car.'**
+  String get carTypesByMovera;
 }
 
 class _AppLocalizationsDelegate

@@ -4737,19 +4737,19 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get authConsentLabel =>
-      'Jag godkänner användarvillkoren och integritetspolicyn';
+      'Jag godkänner villkoren och integritetspolicyn';
 
   @override
-  String get authConsentPrefix => 'Genom att fortsätta godkänner du våra ';
+  String get authConsentPrefix => 'Genom att fortsätta godkänner du ';
 
   @override
-  String get authConsentTerms => 'användarvillkor';
+  String get authConsentTerms => 'villkoren';
 
   @override
   String get authAnd => ' och ';
 
   @override
-  String get authConsentPrivacy => 'integritetspolicy';
+  String get authConsentPrivacy => 'integritetspolicyn';
 
   @override
   String get authConsentTickFirst =>
@@ -4862,7 +4862,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get authSignInRestricted =>
-      'Det här numret finns inte med på förarnas testlista ännu. Kontakta Movera för att få tillgång.';
+      'Det här numret kan inte logga in än. Gå med i väntelistan så hör vi av oss.';
 
   @override
   String get acctDetailsTitle => 'Dina uppgifter';
@@ -6401,7 +6401,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get remNoFleet =>
-      'Gå med i ett åkeri för att köra – be din åkare om Movera-koden';
+      'Gå med i ett åkeri för att köra – be din åkare om Movera-koden, hans namn och e-post';
 
   @override
   String get remActionJoinFleet => 'Gå med i ett åkeri';
@@ -6537,4 +6537,65 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get anaNotEnoughData => 'Inte tillräckligt med underlag än';
+
+  @override
+  String get authSignedOutExpired => 'Du loggades ut – logga in igen';
+
+  @override
+  String get authSignedOutRevoked => 'Du loggades ut – logga in igen';
+
+  @override
+  String get authSignedOutDetailExpired =>
+      'Du har inte använt appen på 30 dagar.';
+
+  @override
+  String get authSignedOutDetailRevoked => 'Movera avslutade din session.';
+
+  @override
+  String get docInvalidFileContent => 'Filen är inte ett foto eller en PDF';
+
+  @override
+  String get docExpiryTooFar => 'Kontrollera slutdatumet';
+
+  @override
+  String remFleetInvitation(String fleet) {
+    return '$fleet bjöd in dig';
+  }
+
+  @override
+  String get remActionAcceptInvitation => 'Acceptera';
+
+  @override
+  String get remActionDeclineInvitation => 'Avböj';
+
+  @override
+  String get safetyCall112 => 'Ring 112';
+
+  @override
+  String authPhoneFieldLabel(String dial) {
+    return 'Mobilnummer ($dial)';
+  }
+
+  @override
+  String get authCodeFieldLabel => 'Fyrsiffrig kod från sms:et';
+
+  @override
+  String get legalCouldNotLoad =>
+      'Kunde inte läsa in texten. Kontrollera anslutningen och försök igen.';
+
+  @override
+  String get docRenewalWaiting => 'Nytt dokument väntar på granskning';
+
+  @override
+  String get docRenewalRejected => 'Nytt dokument avvisat';
+
+  @override
+  String get remRenewalInReview => 'Ditt nya granskas';
+
+  @override
+  String get remRenewalRejected => 'Ditt nya avvisades';
+
+  @override
+  String get carTypesByMovera =>
+      'Movera väljer resetyperna när bilen godkänns.';
 }
