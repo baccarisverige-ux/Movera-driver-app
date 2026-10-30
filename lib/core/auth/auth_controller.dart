@@ -9,11 +9,20 @@ class AuthController {
   AuthController({
     required AuthRepository repository,
     ProviderTokenSource? providerTokens,
+    this.onSignedIn,
+    this.onSignedOut,
   }) : _auth = repository,
        _providerTokens = providerTokens ?? PlatformProviderTokenSource();
 
   final AuthRepository _auth;
   final ProviderTokenSource _providerTokens;
+
+  /// Contract v0.18.2 `auth.beforeSignIn`: the calls that need a session
+  /// start here, right after a sign-in (the app root hands it in).
+  final void Function()? onSignedIn;
+
+  /// And stop here, when the session ends on this device.
+  final void Function()? onSignedOut;
 
   /// The code last sent, until it is verified.
   OtpChallenge? lastChallenge;
@@ -53,6 +62,7 @@ class AuthController {
     lastChallenge = null;
     signInResult = result;
     signedInPhone = challenge.phone;
+    onSignedIn?.call();
     return result;
   }
 
@@ -73,6 +83,7 @@ class AuthController {
         providerLink = null;
         signInResult = result;
         signedInPhone = null;
+        onSignedIn?.call();
       case ProviderPhoneRequired(:final link):
         providerLink = link;
     }
@@ -99,6 +110,7 @@ class AuthController {
     lastChallenge = null;
     providerLink = null;
     signedInPhone = null;
+    onSignedOut?.call();
     await _auth.signOut();
   }
 }

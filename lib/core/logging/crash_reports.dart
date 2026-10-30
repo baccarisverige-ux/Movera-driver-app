@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
 /// The running build's version (`pubspec` `version`, e.g. `1.0.0+1`), passed
@@ -97,6 +98,11 @@ class CrashReportSink {
     );
   }
 
+  /// A `401` from the server: no session, or one the server refused.
+  static bool isUnauthorized(Object error) =>
+      error is ApiError &&
+      (error.statusCode == 401 || error.code == 'unauthorized');
+
   void report(
     Object error,
     StackTrace stack, {
@@ -104,7 +110,9 @@ class CrashReportSink {
     String? message,
     String? screen,
   }) {
-    if (_disposed) return;
+    // Contract v0.18.2 `auth.beforeSignIn`: a refused session (401) is not
+    // an app fault and is never sent as an error report.
+    if (_disposed || isUnauthorized(error)) return;
     try {
       final now = _clock();
       final body = CrashReports.body(

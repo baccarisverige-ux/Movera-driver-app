@@ -126,6 +126,10 @@ class LiveDriverConfig extends ChangeNotifier {
 
   Future<DriverAppConfig?> _fetch() async {
     try {
+      // Contract v0.18.2 `auth.beforeSignIn`: no session, no call (the
+      // app's own settings are used until the driver signs in).
+      final token = await _token();
+      if (token == null || token.isEmpty) return _current;
       var response = await _client
           .get(
             _uri('/driver/config'),
@@ -134,6 +138,12 @@ class LiveDriverConfig extends ChangeNotifier {
           .timeout(requestTimeout);
       if (response.statusCode == 401 && renewSession != null) {
         await renewSession!();
+        // Asked again only with a renewed token: a 401 is never retried
+        // with the token the server just refused.
+        final renewed = await _token();
+        if (renewed == null || renewed.isEmpty || renewed == token) {
+          return _current;
+        }
         response = await _client
             .get(
               _uri('/driver/config'),
@@ -179,6 +189,13 @@ class LiveDriverConfig extends ChangeNotifier {
   Future<void> _connect() async {
     if (_disposed || !_watching) return;
     try {
+      // Contract v0.18.2 `auth.beforeSignIn`: no session, no stream; the
+      // app starts watching again once the driver signs in ([watch]).
+      final token = await _token();
+      if (token == null || token.isEmpty) {
+        stop();
+        return;
+      }
       final request = http.Request('GET', _uri('/driver/config/stream'))
         ..headers.addAll({
           ...await _headers('text/event-stream'),
@@ -187,7 +204,16 @@ class LiveDriverConfig extends ChangeNotifier {
       final response = await _client.send(request).timeout(requestTimeout);
       if (response.statusCode != 200) {
         unawaited(response.stream.drain<void>().catchError((_) {}));
-        if (response.statusCode == 401) await renewSession?.call();
+        if (response.statusCode == 401) {
+          await renewSession?.call();
+          // A 401 is never retried in a loop: the stream opens again only
+          // with a renewed token, else after the next sign-in.
+          final renewed = await _token();
+          if (renewed == null || renewed.isEmpty || renewed == token) {
+            stop();
+            return;
+          }
+        }
         _reconnect();
         return;
       }
@@ -233,6 +259,16 @@ class LiveDriverConfig extends ChangeNotifier {
       DriverLog.warn('driver_config.stream_failed: $error');
       _reconnect();
     }
+  }
+
+  /// Stops following the stream (signed out, or the server refused the
+  /// session); [watch] starts it again.
+  void stop() {
+    _watching = false;
+    _retry?.cancel();
+    _retry = null;
+    unawaited(_stream?.cancel());
+    _stream = null;
   }
 
   void _reconnect() {

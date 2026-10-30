@@ -21,6 +21,12 @@ bool isProviderComingSoon(Object error) {
 bool isTooManyWrongCodes(Object error) =>
     error is ApiError && error.detail == 'otp_too_many_attempts';
 
+/// A wrong code (`invalid_otp_code`): contract v0.18.2
+/// `auth.codeClearOnWrong` empties the boxes.
+bool isWrongCode(Object error) =>
+    error is ApiError &&
+    (error.detail == 'invalid_otp_code' || error.detail == 'invalid_otp');
+
 /// Contract v0.15.0 `403 forbidden`, reason `sign_in_restricted`: the number
 /// can join the waiting list.
 bool isSignInRestricted(Object error) =>

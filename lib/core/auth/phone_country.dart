@@ -54,13 +54,25 @@ abstract final class PhoneCountries {
     return null;
   }
 
-  /// The phone field's starting country: the driver's market
-  /// ([marketCountry], Sweden in the demo), else the device's region,
-  /// else Sweden.
-  static PhoneCountry defaultFor({
-    String? marketCountry,
-    String? localeRegion,
-  }) => byIso(marketCountry) ?? byIso(localeRegion) ?? sweden;
+  /// Contract v0.18.2 `auth.startCountry.countries` (owner 2026-10-30,
+  /// "France or sweden"): the only countries the phone field starts with.
+  static const List<String> startCountries = <String>['SE', 'FR'];
+
+  /// The phone field's starting country (`auth.startCountry`): the
+  /// country of the last good fix, else of the last zone, else the
+  /// device's region, each only when it is Sweden or France; else Sweden.
+  /// Any other country can still be picked from the list.
+  static PhoneCountry startFor({
+    String? lastFix,
+    String? lastZone,
+    String? deviceRegion,
+  }) {
+    for (final hint in [lastFix, lastZone, deviceRegion]) {
+      final iso = hint?.trim().toUpperCase();
+      if (startCountries.contains(iso)) return byIso(iso)!;
+    }
+    return sweden;
+  }
 
   /// The countries whose name (English or in [language]) or ISO code
   /// matches [query], or whose dial code starts with its digits ("+21",

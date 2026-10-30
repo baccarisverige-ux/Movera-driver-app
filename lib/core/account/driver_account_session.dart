@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
+import 'package:movera/core/l10n/driver_language.dart';
 
 /// The live account (`GET /driver/profile`) for the life of the session:
 /// read at the gate, after the details screen and whenever a screen
@@ -66,6 +67,9 @@ class DriverAccountSession extends ChangeNotifier {
   /// Takes the account a command answered with.
   DriverAccount replace(DriverAccount account) {
     _account = account;
+    // Contract v0.18.2 `auth.firstLanguage`: an account's language wins
+    // over the phone's when nothing was picked on this phone.
+    DriverLanguage.useAccount(account.language);
     notifyListeners();
     return account;
   }
