@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/home/components/app_update_sheet.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -716,19 +717,21 @@ class _DriverHomeState extends State<DriverHome>
     final close = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(tr.savedTripCannotBeRead),
-        content: Text(tr.tripSavedOnThisDeviceIs),
-        actions: [
-          TextButton(
-            onPressed: () => popOwned(context, false),
-            child: Text(tr.notNow),
-          ),
-          FilledButton(
-            onPressed: () => popOwned(context, true),
-            child: Text(tr.closeUnreadableTrip),
-          ),
-        ],
+      builder: (context) => MoveraDialogTheme(
+        child: AlertDialog(
+          title: Text(tr.savedTripCannotBeRead),
+          content: Text(tr.tripSavedOnThisDeviceIs),
+          actions: [
+            TextButton(
+              onPressed: () => popOwned(context, false),
+              child: Text(tr.notNow),
+            ),
+            FilledButton(
+              onPressed: () => popOwned(context, true),
+              child: Text(tr.closeUnreadableTrip),
+            ),
+          ],
+        ),
       ),
     );
     if (!mounted) {

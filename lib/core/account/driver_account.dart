@@ -2,6 +2,8 @@
 /// `Driver`, `Fleet`, `FleetView`, `Vehicle`, `Document`).
 library;
 
+import 'package:movera/core/admin/driver_home_admin_content.dart';
+
 String? _text(Object? value) =>
     value is String && value.isNotEmpty ? value : null;
 
@@ -149,6 +151,7 @@ class DriverAccount {
     this.requiredDocuments = const [],
     this.requiredFleetDocuments = const [],
     this.onlineStatus,
+    this.performance,
   });
 
   factory DriverAccount.fromJson(Map<String, dynamic> json) {
@@ -178,6 +181,9 @@ class DriverAccount {
       requiredDocuments: _strings(json['requiredDocuments']),
       requiredFleetDocuments: _strings(json['requiredFleetDocuments']),
       onlineStatus: _text(json['onlineStatus']),
+      performance: json.containsKey('performance')
+          ? DriverPerformanceConfig.fromServer(json['performance'])
+          : null,
     );
   }
 
@@ -216,6 +222,10 @@ class DriverAccount {
   /// `offline`, `online` or `on_trip` (driver group 3: the server sets a
   /// driver without a position offline, G3-R1); null when not sent.
   final String? onlineStatus;
+
+  /// G3-D2: `performance` (only `GET /driver/profile` sends it; command
+  /// answers do not, so null here keeps the numbers the app has).
+  final DriverPerformanceConfig? performance;
 
   bool get isActive => accountStatus == 'active';
 

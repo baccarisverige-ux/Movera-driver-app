@@ -66,7 +66,8 @@ extension _HomeAccount on _DriverHomeState {
   DrivingTimeClock get _drivingClock => DrivingTimeClock.instance;
   DriverNotificationFeed get _feed => DriverNotificationFeed.instance;
 
-  /// From initState: admin texts, listeners, the demo arrivals.
+  /// From initState: admin texts, listeners, the demo arrivals (none on
+  /// a live build, G3-D1).
   void _startAccount() {
     DriverAppTexts.overrides = _adminHomeConfig.appTexts;
     final account = _account;
@@ -368,6 +369,12 @@ extension _HomeAccount on _DriverHomeState {
 
   void _openNotifications() {
     if (!mounted) {
+      return;
+    }
+    // G3-D1: a live build has one list, the server's (the bell's).
+    final session = accountSessionOf(context);
+    if (session != null) {
+      unawaited(_openServerNotifications(session));
       return;
     }
     pushSingle(

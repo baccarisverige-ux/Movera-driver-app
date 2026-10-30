@@ -1,4 +1,9 @@
+import 'dart:async';
+
+import 'package:movera/core/destination/destination_search.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/routing/route_repository.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_confirm.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -27,12 +32,21 @@ class DriverDestinationResult {
 }
 
 class DriverDestinationPicker extends StatefulWidget {
-  const DriverDestinationPicker({super.key, this.origin, this.routeRepository});
+  const DriverDestinationPicker({
+    super.key,
+    this.origin,
+    this.routeRepository,
+    this.search,
+  });
 
   /// The car. With it, a chosen place opens the confirm map (arc + one
   /// "Fastest route" option) and only "Confirm destination" returns it.
   final LatLng? origin;
   final RouteRepository? routeRepository;
+
+  /// G3-D3: where addresses are searched. Default: the server's address
+  /// search on a live build, the demo's sample places otherwise.
+  final DestinationSearch? search;
 
   static Future<DriverDestinationResult?> open(BuildContext context) {
     return pushSingle<DriverDestinationResult>(
@@ -52,64 +66,43 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
   static const Color _line = Color(0xFFE3E8E5);
   static const Color _softGreen = Color(0xFFF0F6F2);
 
-  static const List<_DestinationPlace> _places = [
-    _DestinationPlace(
-      id: 'stockholm-central',
-      name: 'Stockholm Central',
-      address: 'Centralplan 15, Stockholm',
-      position: LatLng(59.3300, 18.0581),
-      icon: Icons.train_rounded,
-    ),
-    _DestinationPlace(
-      id: 'solna',
-      name: 'Solna centrum',
-      address: 'Solna Torg, Solna',
-      position: LatLng(59.3603, 18.0009),
-      icon: Icons.location_city_rounded,
-    ),
-    _DestinationPlace(
-      id: 'kista',
-      name: 'Kista centrum',
-      address: 'Kista Galleria, Stockholm',
-      position: LatLng(59.4032, 17.9448),
-      icon: Icons.apartment_rounded,
-    ),
-    _DestinationPlace(
-      id: 'sodertalje',
-      name: 'Södertälje centrum',
-      address: 'Storgatan, Södertälje',
-      position: LatLng(59.1955, 17.6253),
-      icon: Icons.location_on_rounded,
-    ),
-    _DestinationPlace(
-      id: 'arlanda',
-      name: 'Arlanda Airport',
-      address: 'Stockholm Arlanda Airport',
-      position: LatLng(59.6519, 17.9186),
-      icon: Icons.flight_takeoff_rounded,
-    ),
-    _DestinationPlace(
-      id: 'bromma',
-      name: 'Bromma Airport',
-      address: 'Flygplatsinfarten, Bromma',
-      position: LatLng(59.3544, 17.9422),
-      icon: Icons.flight_rounded,
-    ),
-  ];
+  /// How long typing pauses before the server is asked.
+  static const Duration _debounce = Duration(milliseconds: 300);
 
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
   bool _selectionReturned = false;
 
-  List<_DestinationPlace> get _results {
-    final query = _searchController.text.trim().toLowerCase();
-    if (query.isEmpty) {
-      return _places.take(4).toList();
+  late final DestinationSearch _search =
+      widget.search ??
+      switch (LiveDriverServices.instance) {
+        final live? => ApiDestinationSearch(api: live.api),
+        null => const DemoDestinationSearch(),
+      };
+
+  /// G3-D3: the driver's last 5 destinations (on this phone).
+  List<DestinationPlace> _recent = const [];
+  List<DestinationPlace> _found = const [];
+  bool _searching = false;
+  bool _searchFailed = false;
+  Timer? _typing;
+  int _asked = 0;
+
+  String get _query => _searchController.text.trim();
+
+  /// Before typing: his recent destinations, then (demo only) the sample
+  /// places. A live build has no fixed list (G3-D3).
+  List<DestinationPlace> get _results {
+    if (_query.isEmpty) {
+      final search = _search;
+      return [
+        ..._recent,
+        if (search is DemoDestinationSearch)
+          for (final place in search.suggestions)
+            if (!_recent.any((r) => r.address == place.address)) place,
+      ];
     }
-    return _places.where((place) {
-      return place.name.toLowerCase().contains(query) ||
-          place.address.toLowerCase().contains(query);
-    }).toList();
+    return _found;
   }
 
   @override
@@ -120,16 +113,72 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
         _searchFocus.requestFocus();
       }
     });
+    unawaited(
+      RecentDestinations.load().then((recent) {
+        if (mounted) {
+          setState(() => _recent = recent);
+        }
+      }),
+    );
   }
 
   @override
   void dispose() {
+    _typing?.cancel();
     _searchController.dispose();
     _searchFocus.dispose();
     super.dispose();
   }
 
-  void _select(_DestinationPlace place) {
+  void _onQueryChanged() {
+    _typing?.cancel();
+    final query = _query;
+    setState(() {
+      _searchFailed = false;
+      if (query.isEmpty) {
+        _found = const [];
+        _searching = false;
+      } else {
+        _searching = true;
+      }
+    });
+    if (query.isEmpty) {
+      return;
+    }
+    if (_search is DemoDestinationSearch) {
+      unawaited(_runSearch(query));
+    } else {
+      _typing = Timer(_debounce, () => unawaited(_runSearch(query)));
+    }
+  }
+
+  Future<void> _runSearch(String query) async {
+    final asked = ++_asked;
+    final origin = widget.origin;
+    List<DestinationPlace> found;
+    var failed = false;
+    try {
+      found = await _search.search(
+        query,
+        near: origin == null
+            ? null
+            : GeoPoint(origin.latitude, origin.longitude),
+      );
+    } catch (_) {
+      found = const [];
+      failed = true;
+    }
+    if (!mounted || asked != _asked || query != _query) {
+      return;
+    }
+    setState(() {
+      _found = found;
+      _searching = false;
+      _searchFailed = failed;
+    });
+  }
+
+  Future<void> _select(DestinationPlace choice) async {
     // A closing route remains mounted during its reverse animation. A second
     // tap must not return another result or pop the screen beneath the picker.
     if (_selectionReturned ||
@@ -138,13 +187,24 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
       return;
     }
     _selectionReturned = true;
+    final place = await _search.resolve(choice);
+    if (!mounted) {
+      return;
+    }
+    final point = place?.position;
+    if (place == null || point == null) {
+      _selectionReturned = false;
+      setState(() => _searchFailed = true);
+      return;
+    }
     final picked = DriverDestinationResult(
-      position: place.position,
+      position: LatLng(point.latitude, point.longitude),
       address: place.address,
       name: place.name,
     );
     final origin = widget.origin;
     if (origin == null) {
+      unawaited(RecentDestinations.remember(place));
       Navigator.of(context).pop(picked);
       return;
     }
@@ -166,6 +226,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
             _selectionReturned = false; // Back to the list: pick again.
             return;
           }
+          unawaited(RecentDestinations.remember(place));
           Navigator.of(context).pop(confirmed);
         });
   }
@@ -286,7 +347,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                   key: const ValueKey<String>('destination-search'),
                   controller: _searchController,
                   focusNode: _searchFocus,
-                  onChanged: (_) => setState(() {}),
+                  onChanged: (_) => _onQueryChanged(),
                   textInputAction: TextInputAction.search,
                   style: const TextStyle(
                     color: _ink,
@@ -312,7 +373,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                             ),
                             onPressed: () {
                               _searchController.clear();
-                              setState(() {});
+                              _onQueryChanged();
                             },
                             icon: const Icon(
                               Icons.close_rounded,
@@ -349,9 +410,11 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                 children: [
                   Expanded(
                     child: Text(
-                      _searchController.text.trim().isEmpty
-                          ? tr.destSuggestedAddresses
-                          : tr.destResults,
+                      _query.isNotEmpty
+                          ? tr.destResults
+                          : _recent.isNotEmpty
+                          ? tr.destRecentAddresses
+                          : tr.destSuggestedAddresses,
                       style: const TextStyle(
                         color: _ink,
                         fontSize: 13,
@@ -360,7 +423,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (_searchController.text.trim().isNotEmpty)
+                  if (_query.isNotEmpty && !_searching)
                     Text(
                       tr.destResultsFound(results.length),
                       style: const TextStyle(
@@ -374,7 +437,31 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
             ),
             const SizedBox(height: 8),
             SizedBox(
-              child: results.isEmpty
+              child: _searching && results.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Center(
+                        child: SizedBox.square(
+                          dimension: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: _ink,
+                          ),
+                        ),
+                      ),
+                    )
+                  : _searchFailed
+                  ? _NoDestinationResults(
+                      title: tr.destSearchUnavailable,
+                      body: tr.destSearchTryAgain,
+                    )
+                  : results.isEmpty && _query.isEmpty
+                  ? _NoDestinationResults(
+                      icon: Icons.search_rounded,
+                      title: tr.destSearchStart,
+                      body: tr.destSearchStartBody,
+                    )
+                  : results.isEmpty
                   ? const _NoDestinationResults()
                   : ListView.separated(
                       shrinkWrap: true,
@@ -393,7 +480,7 @@ class _DriverDestinationPickerState extends State<DriverDestinationPicker> {
                         final place = results[index];
                         return _DestinationRow(
                           place: place,
-                          onTap: () => _select(place),
+                          onTap: () => unawaited(_select(place)),
                         );
                       },
                     ),
@@ -430,7 +517,7 @@ class _DirectionBadge extends StatelessWidget {
 class _DestinationRow extends StatelessWidget {
   const _DestinationRow({required this.place, required this.onTap});
 
-  final _DestinationPlace place;
+  final DestinationPlace place;
   final VoidCallback onTap;
 
   @override
@@ -453,7 +540,9 @@ class _DestinationRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
-                  place.icon,
+                  place.recent
+                      ? Icons.history_rounded
+                      : Icons.location_on_rounded,
                   color: const Color(0xFF46534D),
                   size: 20,
                 ),
@@ -502,7 +591,15 @@ class _DestinationRow extends StatelessWidget {
 }
 
 class _NoDestinationResults extends StatelessWidget {
-  const _NoDestinationResults();
+  const _NoDestinationResults({
+    this.icon = Icons.location_off_outlined,
+    this.title,
+    this.body,
+  });
+
+  final IconData icon;
+  final String? title;
+  final String? body;
 
   @override
   Widget build(BuildContext context) {
@@ -512,14 +609,10 @@ class _NoDestinationResults extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.location_off_outlined,
-              color: Color(0xFF9AA4A0),
-              size: 30,
-            ),
+            Icon(icon, color: Color(0xFF9AA4A0), size: 30),
             SizedBox(height: 10),
             Text(
-              tr.destNoAddressFound,
+              title ?? tr.destNoAddressFound,
               style: TextStyle(
                 color: Color(0xFF252E3A),
                 fontSize: 14,
@@ -528,7 +621,7 @@ class _NoDestinationResults extends StatelessWidget {
             ),
             SizedBox(height: 4),
             Text(
-              tr.destTryAnother,
+              body ?? tr.destTryAnother,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF7D898F),
@@ -542,20 +635,4 @@ class _NoDestinationResults extends StatelessWidget {
       ),
     );
   }
-}
-
-class _DestinationPlace {
-  const _DestinationPlace({
-    required this.id,
-    required this.name,
-    required this.address,
-    required this.position,
-    required this.icon,
-  });
-
-  final String id;
-  final String name;
-  final String address;
-  final LatLng position;
-  final IconData icon;
 }

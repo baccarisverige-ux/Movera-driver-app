@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/account/driver_account.dart';
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 
@@ -67,6 +68,10 @@ class DriverAccountSession extends ChangeNotifier {
   /// Takes the account a command answered with.
   DriverAccount replace(DriverAccount account) {
     _account = account;
+    // G3-D2: the driver's real numbers (Home, side menu, Analytics).
+    if (account.performance case final performance?) {
+      DriverPerformanceConfig.live.value = performance;
+    }
     // Contract v0.18.2 `auth.firstLanguage`: an account's language wins
     // over the phone's when nothing was picked on this phone.
     DriverLanguage.useAccount(account.language);
@@ -78,6 +83,7 @@ class DriverAccountSession extends ChangeNotifier {
   void clear() {
     _account = null;
     unreadNotifications.value = 0;
+    DriverPerformanceConfig.live.value = null;
     notifyListeners();
   }
 }

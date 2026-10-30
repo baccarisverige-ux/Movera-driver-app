@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'dart:async';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/contracts/status_words.g.dart';
@@ -493,20 +494,22 @@ class _DriverProfileState extends State<DriverProfile> {
           popOwned(dialogContext, result);
         }
 
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(tr.logOutQ),
-          content: Text(tr.profLogOutClears),
-          actions: [
-            TextButton(onPressed: () => close(false), child: Text(tr.stay)),
-            FilledButton(
-              onPressed: () => close(true),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF252E3A),
+        return MoveraDialogTheme(
+          child: AlertDialog(
+            backgroundColor: Colors.white,
+            title: Text(tr.logOutQ),
+            content: Text(tr.profLogOutClears),
+            actions: [
+              TextButton(onPressed: () => close(false), child: Text(tr.stay)),
+              FilledButton(
+                onPressed: () => close(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF252E3A),
+                ),
+                child: Text(tr.logOut),
               ),
-              child: Text(tr.logOut),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

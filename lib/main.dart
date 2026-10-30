@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_repository.dart';
@@ -210,6 +211,10 @@ class _MoveraAppState extends State<MoveraApp> {
         location: _location,
       );
       LiveDriverServices.instance = live;
+      // G3-D2: a live build never shows the demo's sample performance.
+      DriverPerformanceConfig.liveBuild = true;
+      // G3-D1: one real notification list (the server's), no demo list.
+      DriverNotificationFeed.instance.useLive();
       // Contract v0.18.3 R7: push after sign-in (web build; see docs/push.md).
       final pushPlatform = createPushPlatform();
       final push = _push = PushRegistrar(
@@ -330,9 +335,14 @@ class _MoveraAppState extends State<MoveraApp> {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            theme: ThemeData.light(
-              useMaterial3: true,
-            ).copyWith(scaffoldBackgroundColor: AppColor.bg),
+            // G3-D7: dialogs in Movera black/green, never default purple.
+            theme: ThemeData.light(useMaterial3: true)
+                .copyWith(scaffoldBackgroundColor: AppColor.bg)
+                .copyWith(
+                  dialogTheme: moveraDialogThemeData(
+                    ThemeData.light(useMaterial3: true),
+                  ).dialogTheme,
+                ),
             builder: (context, child) {
               return RideCheckScope(
                 services: _rideCheck,

@@ -166,8 +166,25 @@ class DriverNotificationFeed {
 
   DateTime get now => _now();
 
-  List<DriverNotice> get items =>
-      List.unmodifiable(_items ??= DriverNotices.demoReceived(_now()));
+  List<DriverNotice> get items => List.unmodifiable(
+    _items ??= _live ? <DriverNotice>[] : DriverNotices.demoReceived(_now()),
+  );
+
+  bool _live = false;
+
+  /// A live build (G3-D1): never the demo's invented list or arrivals.
+  /// The driver's notifications are the server's (`GET /notifications`),
+  /// read by the menu and the Home bell with one unread count.
+  bool get live => _live;
+
+  void useLive() {
+    _live = true;
+    arrivals = const [];
+    _items = <DriverNotice>[];
+    _read.clear();
+    _popups.clear();
+    _changes.value++;
+  }
 
   int get unread => items.where((n) => !_read.contains(n.id)).length;
 
@@ -219,7 +236,7 @@ class DriverNotificationFeed {
     _items = null;
     _read.clear();
     _popups.clear();
-    arrivals = DriverNotices.demoArrivals;
+    arrivals = _live ? const [] : DriverNotices.demoArrivals;
     _changes.value++;
   }
 }

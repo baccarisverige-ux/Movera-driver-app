@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
@@ -11,22 +12,24 @@ import 'package:movera/widgets/owned_route_exit.dart';
 Future<bool> showGoOfflineConfirm(BuildContext context) async {
   final off = await showDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      key: const ValueKey<String>('go-offline-confirm'),
-      title: Text(tr.goOfflineQuestion),
-      content: Text(tr.youStopGettingTripOffersUntil),
-      actions: [
-        TextButton(
-          key: const ValueKey<String>('go-offline-stay'),
-          onPressed: () => popOwned(context, false),
-          child: Text(tr.stayOnline),
-        ),
-        FilledButton(
-          key: const ValueKey<String>('go-offline-yes'),
-          onPressed: () => popOwned(context, true),
-          child: Text(tr.goOffline),
-        ),
-      ],
+    builder: (context) => MoveraDialogTheme(
+      child: AlertDialog(
+        key: const ValueKey<String>('go-offline-confirm'),
+        title: Text(tr.goOfflineQuestion),
+        content: Text(tr.youStopGettingTripOffersUntil),
+        actions: [
+          TextButton(
+            key: const ValueKey<String>('go-offline-stay'),
+            onPressed: () => popOwned(context, false),
+            child: Text(tr.stayOnline),
+          ),
+          FilledButton(
+            key: const ValueKey<String>('go-offline-yes'),
+            onPressed: () => popOwned(context, true),
+            child: Text(tr.goOffline),
+          ),
+        ],
+      ),
     ),
   );
   return off == true;

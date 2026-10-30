@@ -10,6 +10,9 @@ import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
 import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
+import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
+import 'package:movera/presentation/driver/auth/auth_navigation.dart';
+import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/profile/profile.dart';
 import 'package:movera/presentation/driver/promotions/promotions.dart';
@@ -48,15 +51,36 @@ class DriverSideMenu extends StatelessWidget {
     pushSingle(context, _DriverMenuRoute(page), rootNavigator: true);
   }
 
-  static String? _unreadBadge() {
-    final unread = DriverNotificationFeed.instance.unread;
-    return unread == 0 ? null : '$unread';
+  /// G3-D1: a live build's count is the server's unread count, the same
+  /// one the Home bell shows; the demo counts its own list.
+  static String? _unreadBadge(DriverAccountSession? session) {
+    final unread = session != null
+        ? session.unreadNotifications.value
+        : DriverNotificationFeed.instance.unread;
+    if (unread == 0) {
+      return null;
+    }
+    return unread > 99 ? '99+' : '$unread';
+  }
+
+  /// G3-D1: live builds open the server's list (`GET /notifications`),
+  /// the same screen as the Home bell; the demo keeps its own list.
+  void _openNotifications(BuildContext context, DriverAccountSession? session) {
+    if (session != null) {
+      _open(context, ServerNotificationsScreen(account: session));
+      return;
+    }
+    _open(
+      context,
+      DriverNotificationsScreen(dispatchRepository: dispatchRepository),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final session = accountSessionOf(context);
 
     return Drawer(
       key: const ValueKey<String>('driver-side-menu'),
@@ -104,15 +128,10 @@ class DriverSideMenu extends StatelessWidget {
                       // Q31: ride alerts, demand and account messages.
                       _MenuAction(
                         asset: AppAssets.solarBellBing,
-                        badge: _unreadBadge(),
+                        badge: _unreadBadge(session),
                         title: tr.notifications,
                         subtitle: tr.rideAlertsDemandAndAccount,
-                        onTap: () => _open(
-                          context,
-                          DriverNotificationsScreen(
-                            dispatchRepository: dispatchRepository,
-                          ),
-                        ),
+                        onTap: () => _openNotifications(context, session),
                       ),
                     ],
                   ),
@@ -140,7 +159,10 @@ class DriverSideMenu extends StatelessWidget {
                       ),
                       _MenuAction(
                         asset: AppAssets.menuTag,
-                        badge: tr.orbNew,
+                        // G3-D6: "NEW" only for an unopened campaign.
+                        badge: session == null && Promotions.hasUnopened
+                            ? tr.orbNew
+                            : null,
                         title: tr.promotions,
                         subtitle: tr.bonusesAndCampaignOffers,
                         onTap: () => _open(context, const Promotions()),
@@ -283,11 +305,16 @@ class DriverSideMenu extends StatelessWidget {
                           runSpacing: 4,
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            // The demo's sample rating, as on Home (UI-10).
+                            // The same rating as Home (UI-10): the demo's
+                            // sample, a live driver's real one (G3-D2).
                             Semantics(
-                              label: tr.sampleRating(
-                                DriverPerformanceConfig.sample.ratingLabel,
-                              ),
+                              label: DriverPerformanceConfig.current.isSample
+                                  ? tr.sampleRating(
+                                      DriverPerformanceConfig
+                                          .current
+                                          .ratingLabel,
+                                    )
+                                  : '${tr.rating} ${DriverPerformanceConfig.current.ratingLabel}',
                               excludeSemantics: true,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -299,7 +326,7 @@ class DriverSideMenu extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    DriverPerformanceConfig.sample.ratingLabel,
+                                    DriverPerformanceConfig.current.ratingLabel,
                                     style: const TextStyle(
                                       color: Color(0xFF111614),
                                       fontSize: 14.5,

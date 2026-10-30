@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/core/settings/settings_repository.dart';
@@ -156,21 +157,23 @@ class _AccessibilityState extends State<Accessibility> {
               showDialog<void>(
                 context: context,
                 builder: (dialogContext) {
-                  return AlertDialog(
-                    backgroundColor: Colors.white,
-                    title: Text(tr.hearing),
-                    content: Text(tr.demoPreviewNoInformationIsShared),
-                    actions: [
-                      TextButton(
-                        onPressed: () => popOwned(dialogContext),
-                        child: Text(tr.notNow),
-                      ),
-                      FilledButton(
-                        onPressed: () => popOwned(dialogContext),
-                        style: FilledButton.styleFrom(backgroundColor: _ink),
-                        child: Text(tr.closePreview),
-                      ),
-                    ],
+                  return MoveraDialogTheme(
+                    child: AlertDialog(
+                      backgroundColor: Colors.white,
+                      title: Text(tr.hearing),
+                      content: Text(tr.demoPreviewNoInformationIsShared),
+                      actions: [
+                        TextButton(
+                          onPressed: () => popOwned(dialogContext),
+                          child: Text(tr.notNow),
+                        ),
+                        FilledButton(
+                          onPressed: () => popOwned(dialogContext),
+                          style: FilledButton.styleFrom(backgroundColor: _ink),
+                          child: Text(tr.closePreview),
+                        ),
+                      ],
+                    ),
                   );
                 },
               );

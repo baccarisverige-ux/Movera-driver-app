@@ -11238,6 +11238,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OK'**
   String get outsideAreaOk;
+
+  /// No description provided for @anaYourPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Your performance · last 30 days'**
+  String get anaYourPerformance;
+
+  /// No description provided for @anaAcceptanceDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{rate} of offers accepted'**
+  String anaAcceptanceDetail(String rate);
+
+  /// No description provided for @anaCancellationDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'{rate} of accepted trips'**
+  String anaCancellationDetail(String rate);
+
+  /// No description provided for @destRecentAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recent destinations'**
+  String get destRecentAddresses;
+
+  /// No description provided for @destSearchUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Address search is not available'**
+  String get destSearchUnavailable;
+
+  /// No description provided for @destSearchTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get destSearchTryAgain;
+
+  /// No description provided for @destSearchStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for an address'**
+  String get destSearchStart;
+
+  /// No description provided for @destSearchStartBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a street, a place or a city. Your last 5 destinations show here.'**
+  String get destSearchStartBody;
+
+  /// No description provided for @anaNotEnoughData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet'**
+  String get anaNotEnoughData;
 }
 
 class _AppLocalizationsDelegate

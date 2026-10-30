@@ -1852,5 +1852,14 @@
   "setOfflineLine": "Vous avez été mis hors ligne – appuyez pour repasser en ligne",
   "outsideAreaTitle": "Vous n'êtes pas autorisé à conduire dans cette zone",
   "outsideAreaBody": "Vous ne recevrez aucune course ici. Retournez dans {zones} pour recevoir des courses.",
-  "outsideAreaOk": "OK"
+  "outsideAreaOk": "OK",
+  "anaYourPerformance": "Vos performances · 30 derniers jours",
+  "anaAcceptanceDetail": "{rate} des offres acceptées",
+  "anaCancellationDetail": "{rate} des courses acceptées",
+  "destRecentAddresses": "Vos destinations récentes",
+  "destSearchUnavailable": "La recherche d’adresse n’est pas disponible",
+  "destSearchTryAgain": "Vérifiez votre connexion et réessayez.",
+  "destSearchStart": "Recherchez une adresse",
+  "destSearchStartBody": "Saisissez une rue, un lieu ou une ville. Vos 5 dernières destinations s’affichent ici.",
+  "anaNotEnoughData": "Pas encore assez de données"
 }

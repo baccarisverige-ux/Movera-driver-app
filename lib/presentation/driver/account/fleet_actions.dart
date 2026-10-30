@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
@@ -51,23 +52,25 @@ Future<bool> confirmAccountAction(
 }) async {
   final answer = await showDialog<bool>(
     context: context,
-    builder: (dialog) => AlertDialog(
-      backgroundColor: Colors.white,
-      content: Text(question),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialog).pop(false),
-          child: Text(tr.cancel),
-        ),
-        FilledButton(
-          key: const ValueKey('confirm-yes'),
-          onPressed: () => Navigator.of(dialog).pop(true),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF111214),
+    builder: (dialog) => MoveraDialogTheme(
+      child: AlertDialog(
+        backgroundColor: Colors.white,
+        content: Text(question),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(false),
+            child: Text(tr.cancel),
           ),
-          child: Text(yes),
-        ),
-      ],
+          FilledButton(
+            key: const ValueKey('confirm-yes'),
+            onPressed: () => Navigator.of(dialog).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF111214),
+            ),
+            child: Text(yes),
+          ),
+        ],
+      ),
     ),
   );
   return answer == true;

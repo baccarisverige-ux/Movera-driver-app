@@ -6496,4 +6496,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get outsideAreaOk => 'OK';
+
+  @override
+  String get anaYourPerformance => 'Your performance · last 30 days';
+
+  @override
+  String anaAcceptanceDetail(String rate) {
+    return '$rate of offers accepted';
+  }
+
+  @override
+  String anaCancellationDetail(String rate) {
+    return '$rate of accepted trips';
+  }
+
+  @override
+  String get destRecentAddresses => 'Your recent destinations';
+
+  @override
+  String get destSearchUnavailable => 'Address search is not available';
+
+  @override
+  String get destSearchTryAgain => 'Check your connection and try again.';
+
+  @override
+  String get destSearchStart => 'Search for an address';
+
+  @override
+  String get destSearchStartBody =>
+      'Type a street, a place or a city. Your last 5 destinations show here.';
+
+  @override
+  String get anaNotEnoughData => 'Not enough data yet';
 }

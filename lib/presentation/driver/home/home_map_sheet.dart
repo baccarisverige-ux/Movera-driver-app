@@ -2550,7 +2550,7 @@ extension _HomeMapSheet on _DriverHomeState {
   /// Home sheet, open: "Today", then one card with driving time,
   /// Performance and the latest waybill. Each row opens its details.
   List<Widget> _todayList() {
-    final performance = _adminHomeConfig.performance;
+    final performance = DriverPerformanceConfig.current;
     final showPerformance =
         performance.showRating ||
         performance.showAcceptanceRate ||
@@ -2710,7 +2710,7 @@ extension _HomeMapSheet on _DriverHomeState {
   }
 
   void _openPerformance() {
-    final performance = _adminHomeConfig.performance;
+    final performance = DriverPerformanceConfig.current;
     unawaited(
       _openDetailsSheet(
         title: tr.performance,

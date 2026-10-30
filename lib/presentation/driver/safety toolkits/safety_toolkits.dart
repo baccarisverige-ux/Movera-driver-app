@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -75,35 +76,37 @@ class _SafetyToolKitsState extends State<SafetyToolKits> {
     try {
       final send = await showDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Text(
-            tr.safetySosQ,
-            style: const TextStyle(
-              color: _ink,
-              fontSize: 19,
-              fontWeight: FontWeight.w800,
+        builder: (dialogContext) => MoveraDialogTheme(
+          child: AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
             ),
-          ),
-          content: Text(
-            tr.safetySosBody,
-            style: const TextStyle(color: _muted, fontSize: 13, height: 1.4),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => popOwned(dialogContext, false),
-              child: Text(tr.cancel),
+            title: Text(
+              tr.safetySosQ,
+              style: const TextStyle(
+                color: _ink,
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-            FilledButton(
-              key: const ValueKey('safety-sos-send'),
-              onPressed: () => popOwned(dialogContext, true),
-              style: FilledButton.styleFrom(backgroundColor: _red),
-              child: Text(tr.safetySosSend),
+            content: Text(
+              tr.safetySosBody,
+              style: const TextStyle(color: _muted, fontSize: 13, height: 1.4),
             ),
-          ],
+            actions: [
+              TextButton(
+                onPressed: () => popOwned(dialogContext, false),
+                child: Text(tr.cancel),
+              ),
+              FilledButton(
+                key: const ValueKey('safety-sos-send'),
+                onPressed: () => popOwned(dialogContext, true),
+                style: FilledButton.styleFrom(backgroundColor: _red),
+                child: Text(tr.safetySosSend),
+              ),
+            ],
+          ),
         ),
       );
       if (send != true || !_ownsRoute) return;

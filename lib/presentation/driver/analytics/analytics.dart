@@ -17,8 +17,10 @@ class Analytics extends StatelessWidget {
   static const Color _muted = Color(0xFF7D898F);
   static const Color _line = Color(0xFFE6E8EA);
 
-  /// The same sample numbers as the Home performance sheet.
-  static const DriverPerformanceConfig _sample = DriverPerformanceConfig.sample;
+  /// The same numbers as the Home performance sheet: the demo's sample,
+  /// or a live driver's real ones (G3-D2, "—" until there are enough).
+  static DriverPerformanceConfig get _performance =>
+      DriverPerformanceConfig.current;
 
   @override
   Widget build(BuildContext context) {
@@ -144,45 +146,60 @@ class Analytics extends StatelessWidget {
             _demand(const DriverHomeAdminContentService().load().stockholmWork),
             const SizedBox(height: 16),
           ],
-          Text(
-            tr.anaSamplePerformance,
-            style: TextStyle(
-              color: _ink,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
+          // G3-D2: admin's features.performance off hides the numbers.
+          if (DriverPerformanceConfig.featureOn) ...[
+            Text(
+              _performance.isSample
+                  ? tr.anaSamplePerformance
+                  : tr.anaYourPerformance,
+              style: TextStyle(
+                color: _ink,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              _metric(tr.rating, _sample.ratingLabel),
-              const SizedBox(width: 8),
-              _metric(tr.acceptance, _sample.acceptanceLabel),
-              const SizedBox(width: 8),
-              _metric(tr.anaCancel, _sample.cancellationLabel),
-            ],
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _metric(tr.rating, _performance.ratingLabel),
+                const SizedBox(width: 8),
+                _metric(tr.acceptance, _performance.acceptanceLabel),
+                const SizedBox(width: 8),
+                _metric(tr.anaCancel, _performance.cancellationLabel),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
           _link(
             context,
             title: tr.earnings,
             detail: tr.anaSamePeriodHome,
             page: const EarningStatsScreen(),
           ),
-          const SizedBox(height: 8),
-          _link(
-            context,
-            title: tr.acceptanceRate,
-            detail: tr.anaSampleAcceptance(_sample.acceptanceLabel),
-            page: const AcceptanceRate(),
-          ),
-          const SizedBox(height: 8),
-          _link(
-            context,
-            title: tr.cancellationRate,
-            detail: tr.anaSampleCancellation(_sample.cancellationLabel),
-            page: const CancelationRate(),
-          ),
+          if (DriverPerformanceConfig.featureOn) ...[
+            const SizedBox(height: 8),
+            _link(
+              context,
+              title: tr.acceptanceRate,
+              detail: _performance.isSample
+                  ? tr.anaSampleAcceptance(_performance.acceptanceLabel)
+                  : _performance.acceptanceRate == null
+                  ? tr.anaNotEnoughData
+                  : tr.anaAcceptanceDetail(_performance.acceptanceLabel),
+              page: const AcceptanceRate(),
+            ),
+            const SizedBox(height: 8),
+            _link(
+              context,
+              title: tr.cancellationRate,
+              detail: _performance.isSample
+                  ? tr.anaSampleCancellation(_performance.cancellationLabel)
+                  : _performance.cancellationRate == null
+                  ? tr.anaNotEnoughData
+                  : tr.anaCancellationDetail(_performance.cancellationLabel),
+              page: const CancelationRate(),
+            ),
+          ],
         ],
       ),
     );

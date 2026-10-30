@@ -4025,5 +4025,28 @@
   "outsideAreaBody": "You get no trips here. Drive back to {zones} to get trips.",
   "@outsideAreaBody": {"description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).", "placeholders": {"zones": {"type": "String"}}},
   "outsideAreaOk": "OK",
-  "@outsideAreaOk": {"description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."}
+  "@outsideAreaOk": {"description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."},
+  "anaYourPerformance": "Your performance · last 30 days",
+  "anaAcceptanceDetail": "{rate} of offers accepted",
+  "@anaAcceptanceDetail": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "anaCancellationDetail": "{rate} of accepted trips",
+  "@anaCancellationDetail": {
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "destRecentAddresses": "Your recent destinations",
+  "destSearchUnavailable": "Address search is not available",
+  "destSearchTryAgain": "Check your connection and try again.",
+  "destSearchStart": "Search for an address",
+  "destSearchStartBody": "Type a street, a place or a city. Your last 5 destinations show here.",
+  "anaNotEnoughData": "Not enough data yet"
 }

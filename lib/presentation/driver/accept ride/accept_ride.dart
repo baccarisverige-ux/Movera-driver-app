@@ -1,3 +1,4 @@
+import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -1996,22 +1997,12 @@ class _SlideRideActionState extends State<_SlideRideAction> {
     if (_confirming) {
       return;
     }
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(widget.label.replaceFirst('Slide to ', '')),
-        content: Text(tr.confirmThisTripActionQuestion),
-        actions: [
-          TextButton(
-            onPressed: () => popOwned(context, false),
-            child: Text(tr.cancel),
-          ),
-          FilledButton(
-            onPressed: () => popOwned(context, true),
-            child: Text(tr.confirm),
-          ),
-        ],
-      ),
+    final confirmed = await showMoveraConfirm(
+      context,
+      title: widget.label.replaceFirst('Slide to ', ''),
+      body: tr.confirmThisTripActionQuestion,
+      cancel: tr.cancel,
+      confirm: tr.confirm,
     );
     if (!mounted || confirmed != true || _confirming) {
       return;

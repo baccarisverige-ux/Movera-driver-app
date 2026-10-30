@@ -270,16 +270,18 @@ extension _HomeOnlineGate on _DriverHomeState {
     unawaited(
       showDialog<void>(
         context: context,
-        builder: (context) => AlertDialog(
-          key: const ValueKey<String>('home-outside-area'),
-          title: Text(tr.outsideAreaTitle),
-          content: Text(tr.outsideAreaBody(zones.join(', '))),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(tr.outsideAreaOk),
-            ),
-          ],
+        builder: (context) => MoveraDialogTheme(
+          child: AlertDialog(
+            key: const ValueKey<String>('home-outside-area'),
+            title: Text(tr.outsideAreaTitle),
+            content: Text(tr.outsideAreaBody(zones.join(', '))),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(tr.outsideAreaOk),
+              ),
+            ],
+          ),
         ),
       ),
     );

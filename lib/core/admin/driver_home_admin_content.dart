@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
@@ -45,37 +46,103 @@ class DriverHomeAdminConfig {
 
 class DriverPerformanceConfig {
   const DriverPerformanceConfig({
-    required this.rating,
-    required this.acceptanceRate,
-    required this.cancellationRate,
+    this.rating,
+    this.acceptanceRate,
+    this.cancellationRate,
     this.showRating = true,
     this.showAcceptanceRate = true,
     this.showCancellationRate = true,
+    this.isSample = false,
   });
 
+  /// G3-D2: `Driver.performance` from `GET /driver/profile` (contract
+  /// v0.18.4 `driverHome.performance`). A missing or null number stays
+  /// null and is shown as "—" (too few offers, trips or ratings yet).
+  factory DriverPerformanceConfig.fromServer(Object? json) {
+    if (json is! Map) {
+      return none;
+    }
+    double? number(Object? value) => value is num ? value.toDouble() : null;
+    return DriverPerformanceConfig(
+      rating: number(json['rating']),
+      acceptanceRate: number(json['acceptancePct']),
+      cancellationRate: number(json['cancellationPct']),
+    );
+  }
+
   /// The demo's sample numbers. Home, the side menu and Analytics all read
-  /// these, so the same metric never shows two values (UI-10).
+  /// these, so the same metric never shows two values (UI-10). Never used
+  /// by a live build (G3-D2).
   static const DriverPerformanceConfig sample = DriverPerformanceConfig(
     rating: 4.88,
     acceptanceRate: 94.0,
     cancellationRate: 2.4,
+    isSample: true,
   );
 
-  final double rating;
-  final double acceptanceRate;
-  final double cancellationRate;
+  /// A live driver whose numbers have not arrived (or are too few): "—".
+  static const DriverPerformanceConfig none = DriverPerformanceConfig();
+
+  /// What the side menu, Home and Analytics show: the demo's sample, or
+  /// on a live build the server's numbers ([live]).
+  static DriverPerformanceConfig get current => _liveBuild
+      ? (live.value ?? none).withFeature(featureOn)
+      : sample.withFeature(featureOn);
+
+  /// G3-D2: the server's numbers, set from every `GET /driver/profile`.
+  static final ValueNotifier<DriverPerformanceConfig?> live =
+      ValueNotifier<DriverPerformanceConfig?>(null);
+
+  /// `DriverAppConfig.features.performance` (admin); on when not sent.
+  static bool featureOn = true;
+
+  /// Set by a live build (signed-in server) so the sample is never shown.
+  static bool liveBuild = false;
+  static bool get _liveBuild => liveBuild || live.value != null;
+
+  /// Shown as the value of a metric with no number yet.
+  static const String dash = '—';
+
+  final double? rating;
+  final double? acceptanceRate;
+  final double? cancellationRate;
   final bool showRating;
   final bool showAcceptanceRate;
   final bool showCancellationRate;
 
-  /// "4.88", "4,88" in French and Swedish.
-  String get ratingLabel => driverDecimal(rating, 2);
+  /// The demo's invented numbers (labelled "Sample" on screen).
+  final bool isSample;
 
-  /// "94%"
-  String get acceptanceLabel => '${acceptanceRate.toStringAsFixed(0)}%';
+  DriverPerformanceConfig withFeature(bool on) => on
+      ? this
+      : DriverPerformanceConfig(
+          rating: rating,
+          acceptanceRate: acceptanceRate,
+          cancellationRate: cancellationRate,
+          showRating: false,
+          showAcceptanceRate: false,
+          showCancellationRate: false,
+          isSample: isSample,
+        );
 
-  /// "2.4%", "2,4%" in French and Swedish.
-  String get cancellationLabel => '${driverDecimal(cancellationRate, 1)}%';
+  /// "4.88", "4,88" in French and Swedish; "—" without a rating.
+  String get ratingLabel => switch (rating) {
+    final value? => driverDecimal(value, 2),
+    null => dash,
+  };
+
+  /// "94%"; "—" while too few offers.
+  String get acceptanceLabel => switch (acceptanceRate) {
+    final value? => '${value.toStringAsFixed(0)}%',
+    null => dash,
+  };
+
+  /// "2.4%", "2,4%" in French and Swedish; "—" while too few trips.
+  String get cancellationLabel => switch (cancellationRate) {
+    final value? =>
+      '${driverDecimal(value, value == value.roundToDouble() ? 0 : 1)}%',
+    null => dash,
+  };
 }
 
 class ScheduledRidesAdminConfig {
@@ -810,7 +877,7 @@ class DriverHomeAdminContentService {
     return DriverHomeAdminConfig(
       destinationMode: tripRules?.$1,
       nextTrips: tripRules?.$2,
-      performance: DriverPerformanceConfig.sample,
+      performance: DriverPerformanceConfig.current,
       scheduledRides: ScheduledRidesAdminConfig(
         // Owner decision 2: the zone's reservations switch, for every
         // driver (`reservations.on`, also `features.scheduledRides`).

@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,16 @@ class Promotions extends StatefulWidget {
   const Promotions({super.key, this.copyCode});
 
   final Future<void> Function(String)? copyCode;
+
+  /// G3-D6: the side menu's "NEW" shows only while a campaign was not
+  /// opened yet. The demo's sample campaigns count until this screen is
+  /// opened once; a live build has no campaign source, so never.
+  static bool get hasUnopened => !LiveDriverServices.active && !_opened;
+  static bool _opened = false;
+
+  /// Tests: the demo's campaigns unopened again.
+  @visibleForTesting
+  static void resetOpened() => _opened = false;
 
   @override
   State<Promotions> createState() => _PromotionsState();
@@ -63,6 +74,12 @@ class _PromotionsState extends State<Promotions> {
       code: 'EVE60',
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    Promotions._opened = true;
+  }
 
   final Set<String> _saved = {'airport'};
   int _tab = 0;

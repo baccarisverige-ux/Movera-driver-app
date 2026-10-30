@@ -1852,5 +1852,14 @@
   "setOfflineLine": "Du har satts offline – tryck för att gå online igen",
   "outsideAreaTitle": "Du får inte köra i det här området",
   "outsideAreaBody": "Du får inga resor här. Kör tillbaka till {zones} för att få resor.",
-  "outsideAreaOk": "OK"
+  "outsideAreaOk": "OK",
+  "anaYourPerformance": "Ditt resultat · senaste 30 dagarna",
+  "anaAcceptanceDetail": "{rate} av erbjudandena accepterade",
+  "anaCancellationDetail": "{rate} av accepterade resor",
+  "destRecentAddresses": "Dina senaste destinationer",
+  "destSearchUnavailable": "Adressökningen fungerar inte just nu",
+  "destSearchTryAgain": "Kontrollera anslutningen och försök igen.",
+  "destSearchStart": "Sök efter en adress",
+  "destSearchStartBody": "Skriv en gata, en plats eller en stad. Dina 5 senaste destinationer visas här.",
+  "anaNotEnoughData": "Inte tillräckligt med underlag än"
 }

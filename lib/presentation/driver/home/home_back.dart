@@ -58,25 +58,27 @@ extension _HomeBack on _DriverHomeState {
         barrierDismissible: false,
         builder: (context) => PopScope(
           canPop: false,
-          child: AlertDialog(
-            title: Text(tr.unresolvedTrip),
-            content: Text(
-              snapshot.hasVerifiedEndpoints
-                  ? tr.thisSavedTripIsOlderThan
-                  : tr.savedRouteCoordinatesAreUnavailableClose,
+          child: MoveraDialogTheme(
+            child: AlertDialog(
+              title: Text(tr.unresolvedTrip),
+              content: Text(
+                snapshot.hasVerifiedEndpoints
+                    ? tr.thisSavedTripIsOlderThan
+                    : tr.savedRouteCoordinatesAreUnavailableClose,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => popOwned(context, false),
+                  child: Text(tr.closeTrip),
+                ),
+                FilledButton(
+                  onPressed: snapshot.hasVerifiedEndpoints
+                      ? () => popOwned(context, true)
+                      : null,
+                  child: Text(tr.resumeTrip),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () => popOwned(context, false),
-                child: Text(tr.closeTrip),
-              ),
-              FilledButton(
-                onPressed: snapshot.hasVerifiedEndpoints
-                    ? () => popOwned(context, true)
-                    : null,
-                child: Text(tr.resumeTrip),
-              ),
-            ],
           ),
         ),
       );

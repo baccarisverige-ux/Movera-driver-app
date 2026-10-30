@@ -1,3 +1,4 @@
+import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/contracts/driver_config_parts.dart';
@@ -205,6 +206,8 @@ class DriverAppConfig {
     DestinationModeRules.current = destinationMode;
     NextTripRules.current = nextTrips;
     ScheduledRideRules.current = reservations;
+    // G3-D2: admin's `features.performance` (on when not sent).
+    DriverPerformanceConfig.featureOn = feature('performance', fallback: true);
   }
 
   /// The ids of [categories], or the seed ids when the document has none.
