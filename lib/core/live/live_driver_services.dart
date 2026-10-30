@@ -14,10 +14,12 @@ import 'package:movera/core/live/live_driver_config.dart';
 import 'package:movera/core/live/live_driver_content.dart';
 import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:movera/core/live/page_visibility.dart';
 import 'package:movera/core/driver/driver_home_notices.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
@@ -50,6 +52,8 @@ class LiveDriverServices {
       api: api,
       location: location,
       every: locationEvery,
+      noFixMinutes: () =>
+          config.current?.noFixMinutes ?? DriverAppConfig.defaultNoFixMinutes,
       // Decision 1: while sending, the phone keeps sending when locked.
       onRunning: location is DriverLocationService
           ? (running) => unawaited(
@@ -515,11 +519,15 @@ class LiveLocationReporter {
     this.every = defaultEvery,
     DateTime Function()? now,
     bool? restampHeldFix,
+    PageVisibility? visibility,
+    int Function()? noFixMinutes,
     this.onRunning,
   }) : _api = api,
        _location = location,
        _now = now ?? DateTime.now,
-       _restamp = restampHeldFix ?? kIsWeb;
+       _restamp = restampHeldFix ?? kIsWeb,
+       _visibility = visibility ?? PageVisibility.platform(),
+       _noFixMinutes = noFixMinutes;
 
   static const defaultEvery = Duration(seconds: 10);
 
@@ -531,11 +539,45 @@ class LiveLocationReporter {
   /// no longer asks for a brand-new one-shot fix every 10 s, which a
   /// browser (and a phone indoors) cannot give in time. It keeps the
   /// position stream open while running and sends its latest fix.
-  /// A browser's stream reports only when the position changes; while it
-  /// is open without an error the driver is still where it last said, so
-  /// on the web that fix goes out stamped now ([_restamp]), else the
-  /// server would see no new position and set the driver offline.
+  /// A browser's stream reports only when the position changes, so a
+  /// laptop standing still sends no new fix. On the web ([_restamp]) the
+  /// last real fix is sent again stamped now, but only (checker, PR #412)
+  /// while the page is visible ([_visibility]) and for at most
+  /// `autoOffline.noFixMinutes` ([_noFixMinutes]) after that real fix.
+  /// A hidden tab sends nothing at all: Chrome throttles its timer and its
+  /// geolocation watch goes quiet without an error, so re-sending there
+  /// would keep a driver who left the laptop online forever and defeat
+  /// G3-R1 (offline after `noFixMinutes` without a position). When the tab
+  /// shows again a fresh fix is asked for at once.
+  ///
+  /// Trade-off: the contract's GeoFix has one timestamp (`measuredAt`) and
+  /// no field for "re-sent", so a re-sent fix carries the send time, up to
+  /// `noFixMinutes` later than the real measurement. This is accepted only
+  /// for a visible, stationary tab, where the driver is still at that
+  /// point; after the limit only real measurements (a one-shot read with
+  /// its own time) go out, so the server's auto-offline still works.
   final bool _restamp;
+
+  /// The page's visibility on the web; null elsewhere (always visible).
+  final PageVisibility? _visibility;
+
+  /// The published `autoOffline.noFixMinutes` (default 5).
+  final int Function()? _noFixMinutes;
+
+  StreamSubscription<bool>? _visibilityWatch;
+
+  /// When the held fix was really measured (or received, if undated).
+  DateTime? _heldAt;
+
+  bool get _pageVisible => _visibility?.visible ?? true;
+
+  Duration get _restampLimit {
+    final minutes =
+        _noFixMinutes?.call() ?? DriverAppConfig.defaultNoFixMinutes;
+    return Duration(
+      minutes: minutes > 0 ? minutes : DriverAppConfig.defaultNoFixMinutes,
+    );
+  }
 
   /// Called with true when sending starts and false when it stops
   /// (decision 1: the background location mode follows it).
@@ -578,6 +620,10 @@ class LiveLocationReporter {
     _timer = Timer.periodic(every, (_) => unawaited(sendNow()));
     onRunning?.call(true);
     _openWatch();
+    _visibilityWatch = _visibility?.changes.listen((visible) {
+      // Back on screen: ask for a fresh fix now, not the held one.
+      if (visible && running) unawaited(sendNow(fresh: true));
+    });
     unawaited(sendNow());
   }
 
@@ -587,7 +633,10 @@ class LiveLocationReporter {
     _timer = null;
     unawaited(_watch?.cancel());
     _watch = null;
+    unawaited(_visibilityWatch?.cancel());
+    _visibilityWatch = null;
     _held = null;
+    _heldAt = null;
     onRunning?.call(false);
   }
 
@@ -595,11 +644,19 @@ class LiveLocationReporter {
     _watch = _location
         .watchPosition(distanceFilterMeters: 0)
         .listen(
-          (location) => _held = location,
+          _hold,
           // No signal or no permission: the next tick reads once instead.
-          onError: (Object _) => _held = null,
+          onError: (Object _) {
+            _held = null;
+            _heldAt = null;
+          },
           cancelOnError: false,
         );
+  }
+
+  void _hold(DriverLocation location) {
+    _held = location;
+    _heldAt = location.measuredAt ?? _now();
   }
 
   /// The stream's latest fix when it can go out now, else null.
@@ -611,25 +668,41 @@ class LiveLocationReporter {
     if (age != null && age <= heldFresh && age >= -gpsClockSkewTolerance) {
       return _wire(held);
     }
-    return _restamp ? _wire(held, measuredAt: _now()) : null;
+    if (!_restamp || !_pageVisible) return null;
+    final since = _heldAt;
+    if (since == null || _now().difference(since) > _restampLimit) return null;
+    return _wire(held, measuredAt: _now());
   }
 
   /// A fix read now, or null when the phone has none (no permission, no
   /// signal) within [readTimeout].
   Future<LiveFix?> freshFix() async {
+    final read = await _readOnce();
+    return read == null ? null : _wire(read);
+  }
+
+  Future<DriverLocation?> _readOnce() async {
     try {
-      return _wire(await _location.getCurrentPosition().timeout(readTimeout));
+      return await _location.getCurrentPosition().timeout(readTimeout);
     } catch (_) {
       return null;
     }
   }
 
   /// Reads the position and sends it; a failure waits for the next tick.
-  Future<bool> sendNow() async {
+  /// With [fresh] the held fix is skipped and a new one is read.
+  Future<bool> sendNow({bool fresh = false}) async {
+    // A hidden web tab sends nothing, so the server's auto-offline works.
+    if (_restamp && !_pageVisible) return false;
     if (_sending) return false;
     _sending = true;
     try {
-      final fix = _heldFix() ?? await freshFix();
+      var fix = fresh ? null : _heldFix();
+      if (fix == null) {
+        final read = await _readOnce();
+        if (read != null && _restamp) _hold(read);
+        fix = read == null ? null : _wire(read);
+      }
       if (fix == null) return false;
       final ack = await _api.post(
         locationPath,

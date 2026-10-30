@@ -53,6 +53,7 @@ class DriverAppConfig {
     this.autoOffline = true,
     this.missedExclusiveBeforeOffline =
         ZoneDefaults.missedExclusiveBeforeOffline,
+    this.noFixMinutes = defaultNoFixMinutes,
     this.driverBonus,
     this.reservations = const ScheduledRideRules(),
     this.parts = const DriverConfigParts(),
@@ -97,6 +98,13 @@ class DriverAppConfig {
   final bool autoOffline;
   final int missedExclusiveBeforeOffline;
 
+  /// `offers.autoOffline.noFixMinutes` (G3-R1): the server sets the driver
+  /// offline after this many minutes without a position (0 = never).
+  final int noFixMinutes;
+
+  /// Contract `configDefaults.noFixMinutesBeforeOffline`.
+  static const defaultNoFixMinutes = 5;
+
   /// `driverBonus` limits in the zone's currency (Q17); null = the
   /// country defaults ([driverBonusLimits]).
   final DriverBonusLimits? driverBonus;
@@ -140,6 +148,7 @@ class DriverAppConfig {
     final booking = _map(json['booking']);
     final autoOffline = _map(_map(json['offers'])?['autoOffline']);
     final missed = _int(autoOffline?['missedExclusive']);
+    final noFix = _int(autoOffline?['noFixMinutes']);
     return DriverAppConfig(
       version: _int(json['version']) ?? seed.version,
       publishedAt: published is String ? DateTime.tryParse(published) : null,
@@ -181,6 +190,7 @@ class DriverAppConfig {
           missed != null && missed >= 1 && missed <= 99
           ? missed
           : seed.missedExclusiveBeforeOffline,
+      noFixMinutes: noFix != null && noFix >= 0 ? noFix : seed.noFixMinutes,
       driverBonus: _bonus(_map(json['driverBonus']), currency),
       reservations: _reservations(json),
       parts: DriverConfigParts.fromJson(json, currency),

@@ -250,8 +250,11 @@ class DriverLocationService implements DriverLocationRepository {
   /// foreground service with the persistent [notificationTitle]
   /// notification ("Movera is online"); iOS keeps the when-in-use session
   /// running in the background (`UIBackgroundModes location`, blue
-  /// indicator). A browser cannot: a hidden tab stops sending, and the
-  /// server sets the driver offline after `autoOffline.noFixMinutes`.
+  /// indicator). A browser has no background mode: Chrome throttles a
+  /// hidden tab's timers and its geolocation watch goes quiet without an
+  /// error, so `LiveLocationReporter` itself stops sending while the page
+  /// is hidden, and the server sets the driver offline after
+  /// `autoOffline.noFixMinutes`.
   @visibleForTesting
   static LocationSettings onlineSettings({
     required TargetPlatform? platform,

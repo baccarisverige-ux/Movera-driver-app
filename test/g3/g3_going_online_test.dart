@@ -14,6 +14,7 @@ import 'package:movera/core/driver/driver_home_notices.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/page_visibility.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -117,6 +118,97 @@ void main() {
       requests.clear();
       expect(await reporter.sendNow(), isFalse);
       expect(requests, isEmpty);
+      reporter.stop();
+      await gps.stream.close();
+    });
+  });
+
+  group('PR #412 checker: the web re-send stops when hidden or stale', () {
+    int sends() =>
+        requests.where((r) => r.url.path == '/api/v1/driver/location').length;
+
+    test('a hidden tab sends nothing after it becomes hidden', () async {
+      final gps = _FirstReadOnly(firstFails: true, always: false);
+      final page = _FakeVisibility();
+      var now = DateTime.utc(2026, 10, 30, 12);
+      final reporter = LiveLocationReporter(
+        api: api(),
+        location: gps,
+        every: const Duration(hours: 1),
+        now: () => now,
+        restampHeldFix: true,
+        visibility: page,
+        noFixMinutes: () => 5,
+      );
+      reporter.start();
+      await pumpEventQueue();
+      gps.stream.add(gps.fix(now));
+      await pumpEventQueue();
+      now = now.add(const Duration(minutes: 1));
+      expect(await reporter.sendNow(), isTrue);
+      page.set(false);
+      await pumpEventQueue();
+      requests.clear();
+      for (var i = 0; i < 3; i++) {
+        now = now.add(const Duration(seconds: 10));
+        expect(await reporter.sendNow(), isFalse);
+      }
+      expect(sends(), 0);
+      reporter.stop();
+      await gps.stream.close();
+    });
+
+    test('a visible stationary tab re-sends only for noFixMinutes since '
+        'the last real fix', () async {
+      final gps = _FirstReadOnly(firstFails: true);
+      final page = _FakeVisibility();
+      var now = DateTime.utc(2026, 10, 30, 12);
+      final reporter = LiveLocationReporter(
+        api: api(),
+        location: gps,
+        every: const Duration(hours: 1),
+        now: () => now,
+        restampHeldFix: true,
+        visibility: page,
+        noFixMinutes: () => 5,
+      );
+      reporter.start();
+      await pumpEventQueue();
+      gps.stream.add(gps.fix(now));
+      await pumpEventQueue();
+      now = now.add(const Duration(minutes: 4, seconds: 50));
+      expect(await reporter.sendNow(), isTrue);
+      now = now.add(const Duration(seconds: 20));
+      requests.clear();
+      expect(await reporter.sendNow(), isFalse);
+      now = now.add(const Duration(minutes: 30));
+      expect(await reporter.sendNow(), isFalse);
+      expect(sends(), 0);
+      reporter.stop();
+      await gps.stream.close();
+    });
+
+    test('becoming visible asks for a fresh fix at once', () async {
+      final gps = _FirstReadOnly(always: true);
+      final page = _FakeVisibility();
+      final reporter = LiveLocationReporter(
+        api: api(),
+        location: gps,
+        every: const Duration(hours: 1),
+        restampHeldFix: true,
+        visibility: page,
+        noFixMinutes: () => 5,
+      );
+      reporter.start();
+      await pumpEventQueue();
+      page.set(false);
+      await pumpEventQueue();
+      final readsBefore = gps.reads;
+      requests.clear();
+      page.set(true);
+      await pumpEventQueue();
+      expect(gps.reads, readsBefore + 1, reason: 'a one-shot read now');
+      expect(sends(), 1);
       reporter.stop();
       await gps.stream.close();
     });
@@ -549,4 +641,20 @@ class _FakeDispatch implements ApiDispatchRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeVisibility implements PageVisibility {
+  bool _visible = true;
+  final StreamController<bool> _changes = StreamController<bool>.broadcast();
+
+  void set(bool visible) {
+    _visible = visible;
+    _changes.add(visible);
+  }
+
+  @override
+  bool get visible => _visible;
+
+  @override
+  Stream<bool> get changes => _changes.stream;
 }
