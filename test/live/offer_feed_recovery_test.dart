@@ -59,11 +59,25 @@ void main() {
     late List<http.BaseRequest> requests;
     late List<StreamController<List<int>>> feeds;
 
+    /// GET /driver/offers: the offers the server still has open.
+    late List<Object> open;
+
     ApiDispatchRepository repo() {
       requests = [];
       feeds = [];
+      open = [];
       return ApiDispatchRepository(
         client: MockClient.streaming((request, _) async {
+          // 03c: a reconnect also reloads the open offers (none new here);
+          // only the feed's own requests are counted.
+          if (request.url.path.endsWith('/driver/offers')) {
+            return http.StreamedResponse(
+              Stream.value(
+                utf8.encode(jsonEncode({'items': open, 'nextCursor': null})),
+              ),
+              200,
+            );
+          }
           requests.add(request);
           final feed = StreamController<List<int>>();
           feeds.add(feed);
@@ -84,6 +98,7 @@ void main() {
       await pumpEventQueue();
       expect(requests, hasLength(1));
       feeds.last.add(_event(1));
+      open = [_offer(1)['offer'] as Object];
       await pumpEventQueue();
       expect((await dispatch.watchNearbyOffers().first).map((o) => o.id), [
         'o1',

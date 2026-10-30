@@ -7,6 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:movera/core/account/driver_account.dart';
+import 'package:movera/core/account/driver_account_repository.dart';
+import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/driver/driver_home_notices.dart';
@@ -17,9 +20,9 @@ import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/home/components/destination_set_panel.dart';
-import 'package:movera/presentation/driver/home/components/home_reason_card.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
@@ -75,6 +78,7 @@ void main() {
     DriverLocationRepository? location,
     Future<http.Response> Function(http.Request request)? answer,
     bool initialOnline = false,
+    DriverAccountSession? account,
   }) async {
     LiveDriverServices? live;
     if (answer != null) {
@@ -96,6 +100,13 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final session = DriverSessionController(initialOnline: initialOnline);
+    final Widget home = DriverHome(
+      sessionController: session,
+      dispatchRepository: live?.dispatch,
+      initialOnline: initialOnline,
+      locationRepository: location ?? _Gps(),
+      activeRideRepository: MemoryActiveRideRepository(),
+    );
     await tester.pumpWidget(
       LayoutViewport(
         child: ScreenUtilInit(
@@ -104,13 +115,15 @@ void main() {
           splitScreenMode: true,
           useInheritedMediaQuery: true,
           builder: (_, _) => MaterialApp(
-            home: DriverHome(
-              sessionController: session,
-              dispatchRepository: live?.dispatch,
-              initialOnline: initialOnline,
-              locationRepository: location ?? _Gps(),
-              activeRideRepository: MemoryActiveRideRepository(),
-            ),
+            // A signed-in (live) account, as the app root provides it.
+            home: account == null
+                ? home
+                : DriverRuntimeScope(
+                    session: session,
+                    homeBuilder: () => const SizedBox(),
+                    account: account,
+                    child: home,
+                  ),
           ),
         ),
       ),
@@ -146,20 +159,47 @@ void main() {
   testWidgets('03c: the location card sits above the bell, never over it', (
     tester,
   ) async {
-    await pumpHome(tester, location: _LocationOff());
+    // The bell shows for a signed-in (live) account only.
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      simulatedArrival: false,
+      externalRouting: false,
+      skipAccountActivation: true,
+      liveMapTicker: false,
+      reservationPopup: false,
+      islandHint: false,
+      authRequired: true,
+    );
+    final client = MockClient((_) async => json(200, {}));
+    final account =
+        DriverAccountSession(
+          repository: DriverAccountRepository(
+            ApiClient(
+              client: client,
+              baseUri: Uri.parse('https://api.test.movera.se'),
+              tokens: MemoryTokenStore()..save(access: 'a1', refresh: 'r1'),
+            ),
+          ),
+        )..replace(
+          DriverAccount.fromJson(const {
+            'driverId': 'd1',
+            'accountStatus': 'active',
+            'firstName': 'Amira',
+            'version': 3,
+            'country': 'SE',
+          }),
+        );
+    await pumpHome(tester, location: _LocationOff(), account: account);
     await tester.tap(radar());
     await frames(tester, 5);
     final card = tester.getRect(
       find.byKey(const ValueKey<String>('home-reason-location-required')),
     );
-    // The bell: 48 x 48 at left 16, its bottom HomeMapButtonLayout.bellBottom
-    // above the screen's bottom (844).
-    const bell = Rect.fromLTWH(
-      16,
-      844 - HomeMapButtonLayout.bellTop,
-      HomeMapButtonLayout.buttonSize,
-      HomeMapButtonLayout.buttonSize,
+    // The real bell, measured where it is drawn (not from layout constants).
+    final bellFinder = find.byKey(
+      const ValueKey<String>('home-notifications-bell'),
     );
+    expect(bellFinder, findsOneWidget);
+    final bell = tester.getRect(bellFinder);
     expect(card.overlaps(bell), isFalse, reason: 'card $card, bell $bell');
     expect(card.bottom, lessThanOrEqualTo(bell.top));
     expect(card.bottom, lessThanOrEqualTo(tester.getRect(radar()).top));

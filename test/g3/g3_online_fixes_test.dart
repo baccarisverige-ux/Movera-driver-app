@@ -244,6 +244,120 @@ void main() {
     });
   });
 
+  group('03c fixes: no offer is lost around Go online or a network loss', () {
+    final offer = {
+      'offerId': 'gap1',
+      'tripId': 'trip-gap1',
+      'kind': 'exclusive',
+      'status': 'open',
+      'version': 1,
+      'expiresAt': '2026-10-30T12:00:15Z',
+      'fare': {'amountMinor': 4717, 'currency': 'SEK'},
+      'source': 'system',
+      'pickup': {
+        'address': 'Södertälje centrum',
+        'lat': 59.1955,
+        'lng': 17.6253,
+      },
+      'dropoff': {'address': 'Södertälje syd', 'lat': 59.1622, 'lng': 17.6461},
+      'categoryId': 'economy',
+      'paymentMethod': 'card',
+      'pickupEtaSeconds': 180,
+      'pickupMeters': 900,
+      'tripSeconds': 720,
+      'tripMeters': 5200,
+    };
+
+    ({
+      ApiDispatchRepository repo,
+      List<http.BaseRequest> seen,
+      List<StreamController<List<int>>> feeds,
+    })
+    feedRepo({List<Object> Function()? snapshot}) {
+      final seen = <http.BaseRequest>[];
+      final feeds = <StreamController<List<int>>>[];
+      final repo = ApiDispatchRepository(
+        client: MockClient.streaming((request, _) async {
+          seen.add(request);
+          if (request.url.path == '/api/v1/driver/offers') {
+            return json(200, {
+              'items': snapshot?.call() ?? <Object>[],
+              'nextCursor': null,
+            });
+          }
+          final next = StreamController<List<int>>();
+          feeds.add(next);
+          return http.StreamedResponse(next.stream, 200);
+        }),
+        baseUri: origin.replace(path: '/api/v1'),
+        accessToken: () async => 'token',
+        reconnectDelay: (_) => Duration.zero,
+      );
+      return (repo: repo, seen: seen, feeds: feeds);
+    }
+
+    List<http.BaseRequest> streams(List<http.BaseRequest> seen) => seen
+        .where((r) => r.url.path == '/api/v1/driver/offers/stream')
+        .toList();
+
+    test('a cursor of 0 (`id: 0`, a driver with no offer events yet) is a '
+        'cursor: the reconnect sends after=0, so offers made in the gap '
+        'are replayed', () async {
+      final f = feedRepo();
+      await f.repo.connect();
+      expect(
+        streams(f.seen).single.url.queryParameters,
+        isNot(contains('after')),
+      );
+      f.feeds.single.add(utf8.encode(': stream open\n\nid: 0\n\n'));
+      await pumpEventQueue();
+      expect(f.repo.lastSequence, 0);
+      // Network loss: the feed ends; the app reconnects by itself.
+      await f.feeds.single.close();
+      await pumpEventQueue();
+      await pumpEventQueue();
+      final reconnect = streams(f.seen).last;
+      expect(streams(f.seen), hasLength(2));
+      expect(reconnect.url.queryParameters['after'], '0');
+      expect(reconnect.headers['Last-Event-ID'], '0');
+      await f.repo.dispose();
+      for (final feed in f.feeds) {
+        unawaited(feed.close());
+      }
+    });
+
+    test('every reconnect after a lost feed reloads the open offers '
+        '(GET /driver/offers) as well', () async {
+      var items = <Object>[];
+      final f = feedRepo(snapshot: () => items);
+      await f.repo.connect();
+      f.feeds.single.add(utf8.encode('id: 3\n\n'));
+      await pumpEventQueue();
+      expect(
+        f.seen.where((r) => r.url.path == '/api/v1/driver/offers'),
+        isEmpty,
+      );
+      // Made while the phone was away.
+      items = [offer];
+      await f.feeds.single.close();
+      await pumpEventQueue();
+      await pumpEventQueue();
+      expect(streams(f.seen), hasLength(2));
+      expect(
+        f.seen.where((r) => r.url.path == '/api/v1/driver/offers'),
+        hasLength(1),
+      );
+      await pumpEventQueue();
+      expect((await f.repo.watchNearbyOffers().first).map((o) => o.id), [
+        'gap1',
+      ]);
+      await f.repo.dispose();
+      for (final feed in f.feeds) {
+        unawaited(feed.close());
+      }
+    });
+  });
+
   group('MEDIUM: Go online is blocked by the phone\'s location', () {
     for (final (name, block) in [
       (

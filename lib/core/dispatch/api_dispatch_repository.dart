@@ -245,6 +245,23 @@ class ApiDispatchRepository implements DispatchRepository {
   final StreamController<OfferWithdrawal> _withdrawals =
       StreamController<OfferWithdrawal>.broadcast();
   int _lastSequence = 0;
+
+  /// True once the server gave a cursor (an `id:`, `id: 0` too) or an
+  /// event: a reconnect then sends `after=` (also `after=0`), so nothing
+  /// made while the phone was away is skipped.
+  bool _hasCursor = false;
+
+  /// Set when the feed was lost: the next open feed also reloads the open
+  /// offers (`GET /driver/offers`), in case events were missed.
+  bool _reloadOnOpen = false;
+
+  /// Offers withdrawn by the feed while a [_load] was under way: an older
+  /// snapshot does not bring them back.
+  final Set<String> _goneDuringLoad = <String>{};
+
+  /// Offers the feed made or changed while a [_load] was under way: an
+  /// older snapshot does not drop them (the feed's copy is kept).
+  final Set<String> _cameDuringLoad = <String>{};
   StreamSubscription<String>? _feed;
   Timer? _feedIdle;
   final StreamController<bool> _live = StreamController<bool>.broadcast();
@@ -379,6 +396,8 @@ class ApiDispatchRepository implements DispatchRepository {
   void refreshOffers() => unawaited(_load());
 
   Future<void> _load() async {
+    _goneDuringLoad.clear();
+    _cameDuringLoad.clear();
     try {
       final headers = await _headers();
       final response = await _client
@@ -390,12 +409,24 @@ class ApiDispatchRepository implements DispatchRepository {
       if (response.statusCode != 200) return;
       final body = jsonDecode(response.body);
       final items = body is Map ? body['items'] : null;
-      if (items is! List) return;
+      if (items is! List || !_wanted || _disposed) return;
+      final keepOffers = {
+        for (final e in _offers.entries)
+          if (_cameDuringLoad.contains(e.key)) e.key: e.value,
+      };
+      final keepNext = {
+        for (final e in _nextTrips.entries)
+          if (_cameDuringLoad.contains(e.key)) e.key: e.value,
+      };
       _offers.clear();
       _nextTrips.clear();
       for (final item in items) {
-        if (item is Map) _upsert(Map<String, dynamic>.from(item));
+        if (item is Map && !_goneDuringLoad.contains(item['offerId'])) {
+          _upsert(Map<String, dynamic>.from(item));
+        }
       }
+      _offers.addAll(keepOffers);
+      _nextTrips.addAll(keepNext);
       _emit();
     } catch (_) {
       // Offline: the list stays as it was.
@@ -419,13 +450,13 @@ class ApiDispatchRepository implements DispatchRepository {
           http.Request(
               'GET',
               _uri('/driver/offers/stream', {
-                if (_lastSequence > 0) 'after': '$_lastSequence',
+                if (_hasCursor) 'after': '$_lastSequence',
               }),
             )
             ..headers.addAll({
               ...await _headers(),
               'Accept': 'text/event-stream',
-              if (_lastSequence > 0) 'Last-Event-ID': '$_lastSequence',
+              if (_hasCursor) 'Last-Event-ID': '$_lastSequence',
             });
       response = await _client.send(request).timeout(requestTimeout);
     } catch (_) {
@@ -455,6 +486,11 @@ class ApiDispatchRepository implements DispatchRepository {
     }
     _reconnects = 0;
     _setLive(true);
+    if (_reloadOnOpen) {
+      // Belt and braces after a lost feed: the open offers come again.
+      _reloadOnOpen = false;
+      unawaited(_load());
+    }
     final data = StringBuffer();
     void quiet() {
       if (generation != _generation) return;
@@ -480,11 +516,15 @@ class ApiDispatchRepository implements DispatchRepository {
               blockId = int.tryParse(line.substring(3).trim());
             } else if (line.isEmpty && data.isEmpty) {
               // An `id:` with no data is the feed's cursor (SSE): a feed
-              // opened without one starts at the server's newest event,
-              // and a reconnect goes on from there, not from 0.
+              // opened without one says where it starts (`id: 0` when the
+              // driver has no events yet), and a reconnect goes on from
+              // there with `after=`, `after=0` too.
               final id = blockId;
               blockId = null;
-              if (id != null && id > _lastSequence) _lastSequence = id;
+              if (id != null) {
+                _hasCursor = true;
+                if (id > _lastSequence) _lastSequence = id;
+              }
             } else if (line.isEmpty && data.isNotEmpty) {
               blockId = null;
               final raw = data.toString();
@@ -509,6 +549,7 @@ class ApiDispatchRepository implements DispatchRepository {
     _feedIdle = null;
     _setLive(false);
     if (_disposed || !_wanted) return;
+    _reloadOnOpen = true;
     _reconnect?.cancel();
     _reconnect = Timer(
       _reconnectDelay(_reconnects++),
@@ -543,6 +584,7 @@ class ApiDispatchRepository implements DispatchRepository {
     final event = OfferFeedEvent.tryParse(json);
     if (event == null || event.sequence <= _lastSequence) return;
     _lastSequence = event.sequence;
+    _hasCursor = true;
     // Contract v0.8.0 §6.7: the server set the driver offline after the
     // row of missed Exclusive offers; the app goes offline too, unless it
     // happened before the driver's latest Go online (a replayed old one).
@@ -553,6 +595,7 @@ class ApiDispatchRepository implements DispatchRepository {
     switch (event.kind) {
       case 'offer_created' || 'offer_updated' when offer != null:
         if (offer['status'] == null || offer['status'] == 'open') {
+          if (offer['offerId'] case final String id) _cameDuringLoad.add(id);
           _upsert(offer);
         } else {
           _withdraw(
@@ -587,6 +630,7 @@ class ApiDispatchRepository implements DispatchRepository {
 
   void _withdraw(Object? offerId, OfferGoneReason reason, {bool emit = false}) {
     if (offerId is! String) return;
+    _goneDuringLoad.add(offerId);
     final gone = _offers.remove(offerId) ?? _nextTrips.remove(offerId);
     if (gone == null) return;
     if (!_withdrawals.isClosed) {
