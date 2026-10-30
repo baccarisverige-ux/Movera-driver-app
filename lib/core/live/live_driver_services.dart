@@ -28,6 +28,7 @@ import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/surge/api_surge_map.dart';
+import 'package:movera/core/legal/driver_legal.dart';
 
 export 'package:movera/core/live/live_trip_money.dart' show LiveTripMoney;
 
@@ -347,6 +348,14 @@ class LivePresence {
       terms.askTerms();
       return Future<String?>.value(tr.contentTermsBlockOnline);
     }
+    // Contract v0.18.5 `legal.accept` (G1-B2): the same for a new version
+    // of the country's terms (`GET /legal/{country}` with reaccept).
+    final legal = DriverLegal.instance;
+    if (legal.due) {
+      _wantOnline = false;
+      unawaited(legal.askAgain());
+      return Future<String?>.value(tr.contentTermsBlockOnline);
+    }
     return _serial(() async {
       if (!_wantOnline) return null;
       try {
@@ -358,6 +367,13 @@ class LivePresence {
           return tr.locationRequired;
         }
         final fix = await _reporter.freshFix();
+        // G3 live check (after 03c): going online without a position is
+        // always refused (409 location_required), so it is not sent at all
+        // (a long press, a reload while the GPS was still waking up).
+        if (fix == null) {
+          _wantOnline = false;
+          return tr.locationRequired;
+        }
         // v0.18.4 `auth.slowStart` covers going online: a sleeping server
         // answers after about 50 s, so wait up to 60 s.
         var profile = await _api.get(
@@ -373,7 +389,7 @@ class LivePresence {
               body: {
                 'expectedVersion': profile['version'],
                 'onlineStatus': 'online',
-                if (fix != null) 'location': fix,
+                'location': fix,
               },
               timeout: ApiClient.signInTimeout,
             );
@@ -402,6 +418,9 @@ class LivePresence {
       } catch (error) {
         _wantOnline = false;
         DriverLog.warn('online refused: ${_detail(error)}', name: 'live');
+        if (error is ApiError && error.detail == 'terms_not_accepted') {
+          unawaited(DriverLegal.instance.askAgain());
+        }
         return liveAvailabilityErrorMessage(error, online: true);
       }
     });
@@ -703,9 +722,19 @@ class LiveLocationReporter {
 
   /// A fix read now, or null when the phone has none (no permission, no
   /// signal) within [readTimeout].
+  ///
+  /// G3 live check (after 03c, "after a reload Go online is refused"): a
+  /// browser answers this one-shot from its own fix of the last 30 s, but
+  /// may stamp it with the time it first had it — before the reload — and
+  /// the server refuses a fix older than 2 minutes. In the browser
+  /// ([_restamp]) the answer to "where am I now" is stamped now; the old
+  /// held fix of the stream is never used for going online.
   Future<LiveFix?> freshFix() async {
     final read = await _readOnce();
-    return read == null ? null : _wire(read);
+    if (read == null) return null;
+    final at = read.measuredAt;
+    final stale = at == null || _now().difference(at) > heldFresh;
+    return _wire(read, measuredAt: _restamp && stale ? _now() : null);
   }
 
   Future<DriverLocation?> _readOnce() async {

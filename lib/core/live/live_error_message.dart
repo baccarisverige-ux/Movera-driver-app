@@ -54,6 +54,8 @@ String liveAvailabilityErrorMessage(Object? error, {required bool online}) {
         'on_trip' => tr.liveOfflineOnTrip,
         // v0.18.4 (decision 2): no fresh position came with going online.
         'location_required' => tr.locationRequired,
+        // v0.18.5 (G1-B2): new terms the driver has not accepted yet.
+        'terms_not_accepted' => tr.contentTermsBlockOnline,
         _ => fallback,
       };
 }

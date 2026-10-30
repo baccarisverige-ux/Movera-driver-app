@@ -6,6 +6,7 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/content/driver_content.dart';
 import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/legal/driver_legal.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';
@@ -24,7 +25,11 @@ class DriverContentGate extends StatefulWidget {
     this.store,
     this.acceptTerms,
     this.openStore,
+    this.legal,
   });
+
+  /// Contract v0.18.5 `legal`: null is [DriverLegal.instance].
+  final DriverLegal? legal;
 
   final DriverSessionController session;
   final GlobalKey<NavigatorState> navigatorKey;
@@ -41,6 +46,7 @@ class DriverContentGate extends StatefulWidget {
 
 class _DriverContentGateState extends State<DriverContentGate> {
   DriverContentStore get _store => widget.store ?? DriverContentStore.instance;
+  DriverLegal get _legal => widget.legal ?? DriverLegal.instance;
 
   /// The SOS opened from the block is on screen.
   bool _sosOpen = false;
@@ -53,7 +59,12 @@ class _DriverContentGateState extends State<DriverContentGate> {
     setState(() => _sosOpen = true);
     unawaited(
       navigator
-          .push(MaterialPageRoute<void>(builder: (_) => const SafetyToolKits()))
+          .push(
+            MaterialPageRoute<void>(
+              // v0.18.5 `safety.onlyDuringTrip`: SOS only on a trip.
+              builder: (_) => SafetyToolKits(duringTrip: _onTrip),
+            ),
+          )
           .whenComplete(() {
             if (mounted) setState(() => _sosOpen = false);
           }),
@@ -74,7 +85,7 @@ class _DriverContentGateState extends State<DriverContentGate> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([_store, widget.session]),
+      listenable: Listenable.merge([_store, widget.session, _legal]),
       builder: (context, _) {
         final view = _store.updateView(onTrip: _onTrip);
         final terms = _store.termsDue;
@@ -90,6 +101,10 @@ class _DriverContentGateState extends State<DriverContentGate> {
             version: terms,
             accept: _accept,
           );
+        } else if (!_onTrip && _legal.screenWanted) {
+          // Contract v0.18.5 `legal.apps`: a new version of the country's
+          // terms at the next app start, never during a trip.
+          cover = LegalAcceptScreen(legal: _legal);
         }
         return Stack(
           children: [
@@ -346,6 +361,92 @@ class _TermsAcceptScreenState extends State<TermsAcceptScreen> {
           ),
         FilledButton(
           key: const ValueKey<String>('content-terms-accept'),
+          onPressed: _busy ? null : _accept,
+          style: _primary,
+          child: Text(tr.contentTermsAccept, style: _label),
+        ),
+      ],
+    );
+  }
+}
+
+/// Contract v0.18.5 `legal` (owner G1-B2): the new terms of use and
+/// privacy policy of the driver's country, with "I accept"
+/// (`POST /account/legal/accept`).
+class LegalAcceptScreen extends StatefulWidget {
+  const LegalAcceptScreen({super.key, required this.legal});
+
+  final DriverLegal legal;
+
+  @override
+  State<LegalAcceptScreen> createState() => _LegalAcceptScreenState();
+}
+
+class _LegalAcceptScreenState extends State<LegalAcceptScreen> {
+  bool _busy = false;
+  bool _failed = false;
+
+  Future<void> _accept() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _failed = false;
+    });
+    final ok = await widget.legal.accept();
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _failed = !ok;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final texts = widget.legal.current;
+    final language = DriverAppTexts.language;
+    final title = TextStyle(
+      color: const Color(0xFF111614),
+      fontSize: 17,
+      fontWeight: FontWeight.w800,
+    );
+    return _FullScreen(
+      key: const ValueKey<String>('legal-accept'),
+      icon: Icons.article_outlined,
+      title: tr.contentTermsTitle,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (texts != null)
+              for (final doc in [texts.terms, texts.privacy]) ...[
+                Semantics(
+                  header: true,
+                  child: Text(doc.titleIn(language), style: title),
+                ),
+                const SizedBox(height: 8),
+                for (final paragraph in doc.paragraphsIn(language))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(paragraph, style: _bodyStyle),
+                  ),
+                const SizedBox(height: 12),
+              ],
+          ],
+        ),
+      ),
+      expandBody: true,
+      actions: [
+        if (_failed)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              tr.contentTermsFailed,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFFCB424B)),
+            ),
+          ),
+        FilledButton(
+          key: const ValueKey<String>('legal-accept-button'),
           onPressed: _busy ? null : _accept,
           style: _primary,
           child: Text(tr.contentTermsAccept, style: _label),

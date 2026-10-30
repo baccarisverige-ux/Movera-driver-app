@@ -23,7 +23,12 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <!-- Owner 2026-10-30 "Map under the strip": installed on the Home Screen
+       the app draws under the status bar (black-translucent), like a native
+       app; the screens move their top by env(safe-area-inset-top), which
+       Dart reads from a probe element (lib/core/platform/safe_area_insets*)
+       because Flutter web reports no viewPadding. -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Movera Driver">
   <meta name="theme-color" content="#252E3A">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -32,6 +37,59 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>Movera Driver</title>
+  <style>
+    /* One coordinate space for drawing and for taps (owner "Map under the
+       strip"): the page is exactly the screen, fixed at 0,0 and never
+       scrolled, so the Flutter canvas, the pointer positions and the
+       safe-area insets all start at the same top-left corner. The rider
+       app's old bug (taps offset by the status bar's height in the
+       Home-Screen app) came from drawing under the bar while the page
+       could move under it; here nothing can scroll and the insets are paid
+       back by the screens themselves. */
+    html, body {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: #252E3A;
+    }
+    /* iPhone 15 / iOS 17 check 2026-10-30: Safari zooms the page in (and
+       keeps it zoomed) when a text field under 16px gets focus. Flutter's
+       own hidden <input>/<textarea> (in flt-text-editing-host, and the
+       screen reader's fields) take the font of the Flutter field, e.g. the
+       13-15px phone and code fields. They are invisible (Flutter draws the
+       text), so 16px changes nothing on screen and Safari never zooms.
+       Pinch-zoom stays allowed (the viewport is not locked), for accessibility. */
+    input, textarea, select { font-size: 16px !important; }
+    /* Driver G3 live check: Google Maps' marker hit area is an <img> of
+       maps.gstatic.com/mapfiles/transparent.png; when it does not load the
+       browser draws a broken-image box next to the car. Its <div> still
+       takes taps; only the image is hidden. */
+    .gm-style img[src*="/mapfiles/transparent.png"] { visibility: hidden !important; }
+  </style>
+  <script>
+    // Flutter web replaces <meta name="viewport"> with its own when it
+    // starts, without viewport-fit=cover; without it env(safe-area-inset-*)
+    // are all 0 and nothing can draw under the status bar. Put it back on
+    // whichever viewport tag is there, now and after the engine's swap.
+    (function () {
+      function cover() {
+        var metas = document.querySelectorAll('meta[name="viewport"]');
+        for (var i = 0; i < metas.length; i++) {
+          var c = metas[i].getAttribute('content') || '';
+          if (c.indexOf('viewport-fit=cover') < 0) {
+            metas[i].setAttribute('content', (c ? c + ', ' : '') + 'viewport-fit=cover');
+          }
+        }
+      }
+      cover();
+      new MutationObserver(cover).observe(document.head, { childList: true });
+    })();
+  </script>
   <link rel="manifest" href="manifest.json">
 
   <!-- Replaced with the newmap131189 repository secret during deployment.

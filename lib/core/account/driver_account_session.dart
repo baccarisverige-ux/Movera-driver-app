@@ -3,6 +3,7 @@ import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/l10n/driver_language.dart';
+import 'package:movera/core/legal/driver_legal.dart';
 
 /// The live account (`GET /driver/profile`) for the life of the session:
 /// read at the gate, after the details screen and whenever a screen
@@ -75,6 +76,8 @@ class DriverAccountSession extends ChangeNotifier {
     // Contract v0.18.2 `auth.firstLanguage`: an account's language wins
     // over the phone's when nothing was picked on this phone.
     DriverLanguage.useAccount(account.language);
+    // Contract v0.18.5 `legal.apps`: the account's country's terms.
+    DriverLegal.instance.useAccountCountry(account.country);
     notifyListeners();
     return account;
   }
