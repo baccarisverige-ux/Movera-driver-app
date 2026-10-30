@@ -145,7 +145,12 @@ Future<void> _call112(
   await _show(
     tester,
     Scaffold(
-      body: SafetyToolKits(launchEmergencyDial: () async => opened, web: web),
+      // v0.18.5 `safety.onlyDuringTrip`: SOS is on the trip's sheet.
+      body: SafetyToolKits(
+        duringTrip: true,
+        launchEmergencyDial: () async => opened,
+        web: web,
+      ),
     ),
   );
   await tester.tap(find.byKey(const ValueKey('safety-sos')));

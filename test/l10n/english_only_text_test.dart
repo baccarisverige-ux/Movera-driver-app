@@ -39,6 +39,10 @@ const _dataFiles = {
 };
 
 const _allowed = <String, Set<String>>{
+  'CSS, never shown (lib/core/platform/safe_area_insets_web.dart)': {
+    'env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) '
+        'env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)',
+  },
   'names: brands, languages in their own name, places, demo riders, '
       'demo cars and a font': {
     'Movera',

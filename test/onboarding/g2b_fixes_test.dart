@@ -106,8 +106,8 @@ void main() {
     });
 
     for (final language in _languages) {
-      testWidgets('[$language] Booster Seat alone cannot be sent; its name is '
-          'translated', (tester) async {
+      testWidgets('[$language] no ride-type choice on Add car (owner '
+          'G2-D5.3; replaces the R2 Booster Seat chip check)', (tester) async {
         _speak(language);
         final server = FakeServer({
           'GET ${DriverAccountRepository.onboardingSettingsPath}': (_) async =>
@@ -128,34 +128,11 @@ void main() {
           'abc123',
         );
         await _tapKey(tester, 'car-fuel-petrol');
-        final chip = find.byKey(const ValueKey('car-type-child_seat'));
-        expect(
-          find.descendant(
-            of: chip,
-            matching: find.text(tr.categoryBoosterSeat),
-          ),
-          findsOneWidget,
-        );
-        if (language != 'en') {
-          expect(
-            find.descendant(of: chip, matching: find.text('Booster Seat')),
-            findsNothing,
-          );
-        }
-        await _tapKey(tester, 'car-type-child_seat');
-        expect(
-          find.byKey(const ValueKey('car-extra-needs-ride')),
-          findsOneWidget,
-        );
-        expect(find.text(tr.carExtraNeedsRide), findsOneWidget);
-        await _tapKey(tester, 'car-save');
-        expect(server.requests.where((r) => r.method == 'POST'), isEmpty);
-        // With a ride type it goes.
-        await _tapKey(tester, 'car-type-economy');
-        expect(
-          find.byKey(const ValueKey('car-extra-needs-ride')),
-          findsNothing,
-        );
+        // v0.18.5 (owner G2-D5.3): no chips at all, Booster Seat included;
+        // the hint says Movera gives the ride types, in this language.
+        expect(find.byKey(const ValueKey('car-type-child_seat')), findsNothing);
+        expect(find.byKey(const ValueKey('car-type-economy')), findsNothing);
+        expect(find.text(tr.carTypesByMovera), findsOneWidget);
       });
 
       test('[$language] 400 category_not_allowed says each problem', () {

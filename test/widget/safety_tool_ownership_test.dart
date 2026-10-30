@@ -17,7 +17,10 @@ Future<GlobalKey<NavigatorState>> _open(
   await tester.pumpWidget(
     MaterialApp(
       navigatorKey: navigator,
-      home: Scaffold(body: SafetyToolKits(launchEmergencyDial: launch)),
+      // v0.18.5 `safety.onlyDuringTrip`: SOS is on the trip's sheet.
+      home: Scaffold(
+        body: SafetyToolKits(duringTrip: true, launchEmergencyDial: launch),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -80,10 +83,9 @@ void main() {
     preferences();
     preferences();
     await tester.pumpAndSettle();
-    expect(
-      find.text('Ride check is on. The others are preview only.'),
-      findsOneWidget,
-    );
+    // v0.18.5 (owner G14): no demo words ("others in preview").
+    expect(find.text('Safety preferences'), findsWidgets);
+    expect(find.textContaining('preview'), findsNothing);
     await tester.pumpWidget(const SizedBox());
     preferences();
     await tester.pumpAndSettle();

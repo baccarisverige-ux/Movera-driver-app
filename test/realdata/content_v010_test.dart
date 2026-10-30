@@ -446,16 +446,17 @@ void main() {
       await tester.pump();
       expect(opened.single.host, 'play.google.com');
       expect(driverStoreUri(TargetPlatform.iOS).host, 'apps.apple.com');
-      // SOS stays reachable.
+      // SOS stays reachable; with no trip it is "Call 112" (v0.18.5
+      // `safety.onlyDuringTrip`).
       await tester.tap(find.byKey(const ValueKey('content-update-sos')));
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('safety-sos')), findsOneWidget);
+      expect(find.byKey(const ValueKey('safety-call-112')), findsOneWidget);
       expect(
         find.byKey(const ValueKey('content-update-required')),
         findsNothing,
       );
       Navigator.of(
-        tester.element(find.byKey(const ValueKey('safety-sos'))),
+        tester.element(find.byKey(const ValueKey('safety-call-112'))),
       ).pop();
       await tester.pumpAndSettle();
       expect(

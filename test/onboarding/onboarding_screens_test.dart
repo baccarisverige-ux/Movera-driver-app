@@ -465,71 +465,77 @@ void main() {
       });
 
       // Item 11: only fitting categories, then 4 photos.
-      testWidgets('Add car: only the car types the car fits, then 4 photos', (
-        tester,
-      ) async {
-        final server = FakeServer({
-          'GET ${DriverAccountRepository.onboardingSettingsPath}': (_) async =>
-              jsonResponse(200, settingsJson(country)),
-          'POST ${DriverAccountRepository.vehiclesPath}': (request) async {
-            final body = jsonDecode(request.body) as Map<String, dynamic>;
-            return jsonResponse(201, {
-              'vehicleId': 'veh_9',
-              'make': body['make'],
-              'model': body['model'],
-              'year': body['year'],
-              'color': body['color'],
-              'plate': body['plate'],
-              'seats': body['seats'],
-              'categoryIds': body['categoryIds'],
-              'fuel': body['fuel'],
-              'status': 'pending',
-              'version': 1,
-              'requiredDocuments': [
-                'vehicle_registration',
-                'insurance',
-                ...OnboardingSettings.photoTypes,
-              ],
-            });
-          },
-        });
-        await _host(tester, AddCarScreen(account: server.session()));
-        await tester.enterText(find.byKey(const ValueKey('car-make')), 'Volvo');
-        await tester.enterText(find.byKey(const ValueKey('car-model')), 'V60');
-        await tester.enterText(find.byKey(const ValueKey('car-year')), '2015');
-        await tester.enterText(find.byKey(const ValueKey('car-color')), 'Grey');
-        await tester.enterText(
-          find.byKey(const ValueKey('car-plate')),
-          'abc123',
-        );
-        await _tapKey(tester, 'car-fuel-petrol');
-        // SE takes a 2015 car as Movera (economy); FR's base year is 2016.
-        if (country == 'SE') {
-          expect(
-            find.byKey(const ValueKey('car-type-economy')),
-            findsOneWidget,
+      testWidgets(
+        'Add car: no ride-type choice (Movera gives them), then 4 photos',
+        (tester) async {
+          final server = FakeServer({
+            'GET ${DriverAccountRepository.onboardingSettingsPath}':
+                (_) async => jsonResponse(200, settingsJson(country)),
+            'POST ${DriverAccountRepository.vehiclesPath}': (request) async {
+              final body = jsonDecode(request.body) as Map<String, dynamic>;
+              return jsonResponse(201, {
+                'vehicleId': 'veh_9',
+                'make': body['make'],
+                'model': body['model'],
+                'year': body['year'],
+                'color': body['color'],
+                'plate': body['plate'],
+                'seats': body['seats'],
+                'categoryIds': body['categoryIds'],
+                'fuel': body['fuel'],
+                'status': 'pending',
+                'version': 1,
+                'requiredDocuments': [
+                  'vehicle_registration',
+                  'insurance',
+                  ...OnboardingSettings.photoTypes,
+                ],
+              });
+            },
+          });
+          await _host(tester, AddCarScreen(account: server.session()));
+          await tester.enterText(
+            find.byKey(const ValueKey('car-make')),
+            'Volvo',
           );
-        } else {
+          await tester.enterText(
+            find.byKey(const ValueKey('car-model')),
+            'V60',
+          );
+          await tester.enterText(
+            find.byKey(const ValueKey('car-year')),
+            '2015',
+          );
+          await tester.enterText(
+            find.byKey(const ValueKey('car-color')),
+            'Grey',
+          );
+          await tester.enterText(
+            find.byKey(const ValueKey('car-plate')),
+            'abc123',
+          );
+          await _tapKey(tester, 'car-fuel-petrol');
+          // v0.18.5 (owner G2-D5.3 "The owner never decide"): no ride-type
+          // choice on Add car; Movera gives the categories on approval.
           expect(find.byKey(const ValueKey('car-type-economy')), findsNothing);
-        }
-        expect(find.byKey(const ValueKey('car-type-comfort')), findsNothing);
-        expect(find.byKey(const ValueKey('car-type-electric')), findsNothing);
-        await tester.enterText(find.byKey(const ValueKey('car-year')), '2023');
-        await tester.pump();
-        expect(find.byKey(const ValueKey('car-type-comfort')), findsOneWidget);
-        expect(find.byKey(const ValueKey('car-type-xl')), findsNothing);
-        await _tapKey(tester, 'car-type-comfort');
-        await _tapKey(tester, 'car-save');
-        await tester.pumpAndSettle();
-        final post = server.requests.firstWhere((r) => r.method == 'POST');
-        final body = jsonDecode(post.body) as Map<String, dynamic>;
-        expect(body['categoryIds'], ['comfort']);
-        expect(body['fuel'], 'petrol');
-        expect(find.byKey(const ValueKey('car-photos')), findsOneWidget);
-        for (final type in OnboardingSettings.photoTypes) {
-          expect(find.byKey(ValueKey('car-photo-$type')), findsOneWidget);
-        }
-      });
+          expect(find.byKey(const ValueKey('car-types-by-movera')), findsOne);
+          await tester.enterText(
+            find.byKey(const ValueKey('car-year')),
+            '2023',
+          );
+          await tester.pump();
+          await _tapKey(tester, 'car-save');
+          await tester.pumpAndSettle();
+          final post = server.requests.firstWhere((r) => r.method == 'POST');
+          final body = jsonDecode(post.body) as Map<String, dynamic>;
+          expect(body['categoryIds'], isEmpty);
+          expect(body['fuel'], 'petrol');
+          expect(find.byKey(const ValueKey('car-photos')), findsOneWidget);
+          for (final type in OnboardingSettings.photoTypes) {
+            expect(find.byKey(ValueKey('car-photo-$type')), findsOneWidget);
+          }
+        },
+      );
 
       // Item 14 + "already decided": the live list renders a custom type;
       // the info session waits; a car without approved documents can't be
