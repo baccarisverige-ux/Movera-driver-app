@@ -1839,5 +1839,9 @@
   "carProblemFuelNotAllowed": "drivmedlet är inte tillåtet",
   "carProblemFuelRequired": "välj drivmedel",
   "carProblemExtraNeedsRide": "bara tillsammans med en biltyp",
-  "carProblemOther": "passar inte"
+  "carProblemOther": "passar inte",
+  "pushAskTitle": "Få aviseringar när appen är stängd?",
+  "pushAskBody": "Movera meddelar dig när ett dokument snart går ut, när Movera har granskat dina dokument eller din bil, om flottinbjudningar och meddelanden från resenärer. Du kan stänga av det när som helst i webbläsarens eller telefonens inställningar.",
+  "pushAskAllow": "Slå på",
+  "pushAskLater": "Inte nu"
 }

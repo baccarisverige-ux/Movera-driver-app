@@ -6460,4 +6460,17 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get carProblemOther => 'passar inte';
+
+  @override
+  String get pushAskTitle => 'Få aviseringar när appen är stängd?';
+
+  @override
+  String get pushAskBody =>
+      'Movera meddelar dig när ett dokument snart går ut, när Movera har granskat dina dokument eller din bil, om flottinbjudningar och meddelanden från resenärer. Du kan stänga av det när som helst i webbläsarens eller telefonens inställningar.';
+
+  @override
+  String get pushAskAllow => 'Slå på';
+
+  @override
+  String get pushAskLater => 'Inte nu';
 }

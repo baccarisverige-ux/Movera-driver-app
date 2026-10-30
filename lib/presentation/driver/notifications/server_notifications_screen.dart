@@ -18,9 +18,17 @@ import 'package:movera/widgets/single_route_entry.dart';
 /// the row read (`POST /notifications/{id}/read`); a `fleet_invitation`
 /// opens My fleet, where the invitations are answered.
 class ServerNotificationsScreen extends StatefulWidget {
-  const ServerNotificationsScreen({super.key, required this.account});
+  const ServerNotificationsScreen({
+    super.key,
+    required this.account,
+    this.openNotificationId,
+  });
 
   final DriverAccountSession account;
+
+  /// Contract v0.18.3 R7: the notice of the push the driver tapped; it
+  /// opens like a tap on its row once the list is read.
+  final String? openNotificationId;
 
   @override
   State<ServerNotificationsScreen> createState() =>
@@ -30,6 +38,7 @@ class ServerNotificationsScreen extends StatefulWidget {
 class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
     with WidgetsBindingObserver {
   List<ServerNotification> _items = const [];
+  late String? _pendingOpen = widget.openNotificationId;
   bool _loading = true;
   String? _error;
 
@@ -63,6 +72,18 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
       widget.account.unreadNotifications.value = items
           .where((n) => !n.read)
           .length;
+      final pushed = _pendingOpen;
+      _pendingOpen = null;
+      if (pushed != null) {
+        for (final notice in items) {
+          if (notice.notificationId == pushed) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _open(notice);
+            });
+            break;
+          }
+        }
+      }
     } catch (error) {
       if (!mounted) return;
       setState(

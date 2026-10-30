@@ -3999,5 +3999,13 @@
   "carProblemExtraNeedsRide": "only together with a ride type",
   "@carProblemExtraNeedsRide": {"description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."},
   "carProblemOther": "does not fit",
-  "@carProblemOther": {"description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."}
+  "@carProblemOther": {"description": "Contract v0.18.3 driver group 2 re-check (owner 2026-10-30)."},
+  "pushAskTitle": "Get notices when the app is closed?",
+  "@pushAskTitle": {"description": "Contract v0.18.3 R7 push (owner 2026-10-30)."},
+  "pushAskBody": "Movera tells you when a document is about to expire, when Movera has checked your documents or car, about fleet invitations and messages from riders. You can turn this off at any time in your browser or phone settings.",
+  "@pushAskBody": {"description": "Contract v0.18.3 R7 push (owner 2026-10-30)."},
+  "pushAskAllow": "Turn on",
+  "@pushAskAllow": {"description": "Contract v0.18.3 R7 push (owner 2026-10-30)."},
+  "pushAskLater": "Not now",
+  "@pushAskLater": {"description": "Contract v0.18.3 R7 push (owner 2026-10-30)."}
 }

@@ -1856,6 +1856,17 @@ S["DocumentReviewCommand"]["description"] += " v0.18.0: " + C["driverOnboarding"
 S["DocumentReviewCommand"]["properties"]["issuedAt"] = ref("Timestamp")
 S["Vehicle"]["properties"]["ruleProblems"] = arr(s(), description="v0.18.3 (admin and fleet-owner views): " + C["driverOnboarding"]["vehicleRules"]["approval"] + " " + C["driverOnboarding"]["vehicleRules"]["baseYear"])
 S["Notification"]["description"] = "v0.18.3 review notices: " + C["driverOnboarding"]["reviewNotices"]["note"]
+# ---- v0.18.3 (R7): push to a closed phone through Firebase Cloud Messaging
+PD = AU["devices"]
+S["PushWebConfig"] = obj({"apiKey": s("Public Firebase web API key (not a secret)."), "appId": s(), "messagingSenderId": s(), "projectId": s(),
+                          "authDomain": s()}, ["apiKey", "appId", "messagingSenderId", "projectId"], "v0.18.3: the Firebase web app's public settings.")
+S["PushConfig"] = obj({"provider": s(enum=["fcm"]), "enabled": b("False when the server has no Firebase settings; the app then skips push."),
+                       "projectId": s(), "webConfig": ref("PushWebConfig")}, ["provider", "enabled"], PD["config"]["note"])
+o = op("get", "/push/config", "getPushConfig", "Public push settings for the app (Firebase web config)", ["rider", "driver"], "Auth",
+       params=[{"name": "app", "in": "query", "required": True, "schema": s(enum=PD["config"]["apps"])}], ok=(200, "PushConfig"),
+       desc=PD["config"]["note"] + " " + PD["appFlow"])
+o["security"] = []
+PATHS["/push/devices"]["post"]["description"] += " v0.18.3: " + PD["sending"]["note"] + " " + PD["sending"]["riderConsent"]
 
 # ---- v0.18.0: group 2 admin actions on live (contract.json#driverOnboarding.adminActions)
 AA = C["driverOnboarding"]["adminActions"]

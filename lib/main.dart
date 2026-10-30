@@ -59,6 +59,10 @@ import 'package:movera/presentation/driver/home/components/island_messages.dart'
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/widgets/layout_viewport.dart';
+import 'package:movera/core/push/push_platform.dart';
+import 'package:movera/core/push/push_registrar.dart';
+import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
+import 'package:movera/presentation/driver/push/push_explanation.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -137,6 +141,7 @@ class _MoveraAppState extends State<MoveraApp> {
   /// Live builds only (MOVERA_AUTH_REQUIRED): dispatch, availability,
   /// location and trip steps through movera-server. Null in the demo.
   LiveDriverServices? _live;
+  PushRegistrar? _push;
 
   /// Live builds: tells [LiveDriverServices] when the app is back on screen.
   AppLifecycleListener? _lifecycle;
@@ -205,6 +210,26 @@ class _MoveraAppState extends State<MoveraApp> {
         location: _location,
       );
       LiveDriverServices.instance = live;
+      // Contract v0.18.3 R7: push after sign-in (web build; see docs/push.md).
+      final pushPlatform = createPushPlatform();
+      final push = _push = PushRegistrar(
+        platform: pushPlatform,
+        api: ApiPushApi(
+          _api,
+          app: 'driver',
+          appVersion: CrashReports.splitVersion(driverAppVersion).version,
+          locale: () => DriverLanguage.current.value,
+        ),
+        store: PrefsPushStore(),
+        explain: _explainPush,
+      );
+      pushPlatform.onOpen(_openPush);
+      live.afterSignedIn = () => unawaited(
+        push.signedIn().then((_) {
+          final launch = pushPlatform.takeLaunchOpen();
+          if (launch != null) _openPush(launch);
+        }),
+      );
       live.attach(_session);
       _lifecycle = AppLifecycleListener(onResume: live.resumed);
       _dispatch = live.dispatch;
@@ -374,6 +399,35 @@ class _MoveraAppState extends State<MoveraApp> {
 
   Widget _signIn() => DriverSignIn(controller: _auth);
 
+  /// Contract v0.18.3 R7: the explanation before the system asks, once the
+  /// app has a screen to show it on.
+  Future<bool> _explainPush() async {
+    for (var i = 0; i < 50; i++) {
+      final context = _navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        return showPushExplanation(context);
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
+    return false;
+  }
+
+  /// A tap on a push: the bell list, which opens the notice's deep link.
+  void _openPush(PushOpen open) {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) return;
+    unawaited(
+      navigator.push(
+        MaterialPageRoute<void>(
+          builder: (_) => ServerNotificationsScreen(
+            account: _account,
+            openNotificationId: open.notificationId,
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _logout() async {
     // Round 4: the server's session first, while the token is still there;
     // the tokens go whatever it answers. The demo (no session required,
@@ -385,6 +439,7 @@ class _MoveraAppState extends State<MoveraApp> {
         const Duration(seconds: 5),
         onTimeout: () => null,
       );
+      await _push?.signingOut();
       await _auth.signOut();
       _account.clear();
     }

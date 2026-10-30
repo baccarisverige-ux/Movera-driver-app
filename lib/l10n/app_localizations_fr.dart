@@ -6559,4 +6559,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get carProblemOther => 'ne convient pas';
+
+  @override
+  String get pushAskTitle => 'Recevoir les avis quand l’app est fermée ?';
+
+  @override
+  String get pushAskBody =>
+      'Movera vous prévient quand un document va expirer, quand Movera a vérifié vos documents ou votre voiture, des invitations de flotte et des messages des passagers. Vous pouvez désactiver cela à tout moment dans les réglages du navigateur ou du téléphone.';
+
+  @override
+  String get pushAskAllow => 'Activer';
+
+  @override
+  String get pushAskLater => 'Plus tard';
 }

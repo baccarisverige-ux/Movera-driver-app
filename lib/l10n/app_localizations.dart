@@ -11160,6 +11160,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'does not fit'**
   String get carProblemOther;
+
+  /// Contract v0.18.3 R7 push (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Get notices when the app is closed?'**
+  String get pushAskTitle;
+
+  /// Contract v0.18.3 R7 push (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Movera tells you when a document is about to expire, when Movera has checked your documents or car, about fleet invitations and messages from riders. You can turn this off at any time in your browser or phone settings.'**
+  String get pushAskBody;
+
+  /// Contract v0.18.3 R7 push (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get pushAskAllow;
+
+  /// Contract v0.18.3 R7 push (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get pushAskLater;
 }
 
 class _AppLocalizationsDelegate

@@ -6453,4 +6453,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get carProblemOther => 'does not fit';
+
+  @override
+  String get pushAskTitle => 'Get notices when the app is closed?';
+
+  @override
+  String get pushAskBody =>
+      'Movera tells you when a document is about to expire, when Movera has checked your documents or car, about fleet invitations and messages from riders. You can turn this off at any time in your browser or phone settings.';
+
+  @override
+  String get pushAskAllow => 'Turn on';
+
+  @override
+  String get pushAskLater => 'Not now';
 }
