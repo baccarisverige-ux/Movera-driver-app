@@ -45,14 +45,14 @@ class FleetInvitationCard extends StatelessWidget {
         title = invitation.driverName ?? tr.fleetADriver;
         body = tr.fleetRequestBodyOwner;
       } else {
-        title =
-            invitation.driverName ??
-            (invitation.phone == null
-                ? tr.fleetADriver
-                : displayPhoneNumber(invitation.phone!));
-        body = invitation.driverId == null
-            ? tr.fleetInviteWaitsSignUp
-            : tr.fleetInviteWaitsAnswer;
+        // Contract v0.18.5 (owner G2-D5.5 "Name after he accepts"): the
+        // owner sees only the number he invited until the driver accepts
+        // ("Invitation sent to +46 70…"), never a name, even if an older
+        // server sent one.
+        title = invitation.phone == null
+            ? tr.fleetADriver
+            : tr.fleetInviteSent(displayPhoneNumber(invitation.phone!));
+        body = tr.fleetInviteWaitsAnswer;
       }
     } else {
       title = invitation.fleetName;

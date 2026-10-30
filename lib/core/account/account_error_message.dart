@@ -105,6 +105,9 @@ String accountErrorMessage(
     'unsupported_file_type' => tr.docUnsupportedFile,
     'file_too_large' => tr.docFileTooLarge,
     'empty_file' => tr.docEmptyFile,
+    // v0.18.5 (owner G2-D5.2 "Check real file", D5.8 "Max 15 years ahead").
+    'invalid_file_content' => tr.docInvalidFileContent,
+    'expiry_too_far' => tr.docExpiryTooFar,
     'version_mismatch' => tr.acctChangedReload,
     _ => fallback,
   };
