@@ -154,17 +154,18 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('empty fields, an under-age date and no consent are said '
-      'under the right field, nothing is sent', (tester) async {
+  testWidgets('empty fields and an under-age date are said under the right '
+      'field, nothing is sent', (tester) async {
     final server = _Server();
     await _pump(tester, server);
     await _tap(tester, 'details-continue');
     expect(find.text(tr.acctRequired), findsWidgets);
-    expect(find.text(tr.acctTermsRequired), findsOneWidget);
+    // Contract v0.18.2 `auth.driverTermsOnce`: the terms were ticked on the
+    // phone-number screen; this step does not ask again.
+    expect(find.text(tr.acctTermsRequired), findsNothing);
     expect(server.bodies, isEmpty);
 
     await _fillPerson(tester, dob: '2010-01-01');
-    await _tap(tester, 'details-terms');
     await _tap(tester, 'details-continue');
     expect(find.text(tr.acctUnderAge(21)), findsOneWidget);
     expect(find.text(tr.acctTermsRequired), findsNothing);
@@ -268,7 +269,6 @@ void main() {
     // Editable: the relay e-mail Apple may give is replaced.
     await _type(tester, 'details-email', 'lina@berg.se');
     await _type(tester, 'details-dob', '1990-05-04');
-    await _tap(tester, 'details-terms');
     await _tap(tester, 'details-continue');
     await _settle(tester);
     expect(server.bodies.single['firstName'], 'Lina');
@@ -306,7 +306,6 @@ void main() {
           .keyboardType,
       TextInputType.number,
     );
-    await _tap(tester, 'details-terms');
     await _tap(tester, 'details-continue');
     expect(find.text(tr.acctOrgNumberSeRule), findsOneWidget);
     expect(server.bodies, isEmpty);
@@ -358,7 +357,6 @@ void main() {
     await _type(tester, 'details-dob', '1990-05-04');
     await _type(tester, 'details-org-number', '556677-8899');
     await _type(tester, 'details-company-address', 'Storgatan 1');
-    await _tap(tester, 'details-terms');
     await _tap(tester, 'details-continue');
     await _settle(tester);
     expect(done, ['home']);
@@ -377,7 +375,6 @@ void main() {
     await _type(tester, 'details-join-code', 'MV-7K3Q9');
     await _type(tester, 'details-join-owner', 'Eva Nord');
     await _type(tester, 'details-join-email', 'eva@nord.se');
-    await _tap(tester, 'details-terms');
     await _tap(tester, 'details-continue');
     await _settle(tester);
     expect(server.bodies.single, {
@@ -409,7 +406,6 @@ void main() {
     await _fillPerson(tester);
     await _tap(tester, 'details-type-fleet');
     expect(find.text(tr.acctOrgNumberSe.toUpperCase()), findsOneWidget);
-    await _tap(tester, 'details-terms');
     await _tap(tester, 'details-continue');
     expect(find.text(tr.acctCompanyRequired), findsOneWidget);
     expect(server.bodies, isEmpty);
@@ -435,12 +431,49 @@ void main() {
     final server = _Server(refuse: 'invalid_email');
     final (:done, session: _) = await _pump(tester, server);
     await _fillPerson(tester);
-    await _tap(tester, 'details-terms');
     await _tap(tester, 'details-continue');
     await _settle(tester);
     expect(server.bodies, hasLength(1));
     expect(find.text(tr.acctInvalidEmail), findsOneWidget);
     expect(done, isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  group('contract v0.18.2 auth.driverTermsOnce (owner 2026-10-30, "Ask once '
+      '(Recommended)")', () {
+    testWidgets('the details step has no second terms tick; a driver sends '
+        'termsAccepted: true without one', (tester) async {
+      final server = _Server();
+      final (:done, session: _) = await _pump(tester, server);
+      expect(find.byKey(const ValueKey('details-terms')), findsNothing);
+      await _fillPerson(tester);
+      await _tap(tester, 'details-continue');
+      await _settle(tester);
+      expect(server.bodies, hasLength(1));
+      expect(server.bodies.single['termsAccepted'], isTrue);
+      expect(server.bodies.single['accountType'], 'driver');
+      expect(done, ['home']);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('a fleet (company) account too: no tick, termsAccepted: true', (
+      tester,
+    ) async {
+      final server = _Server();
+      final (:done, session: _) = await _pump(tester, server);
+      await _fillPerson(tester);
+      await _tap(tester, 'details-type-fleet');
+      expect(find.byKey(const ValueKey('details-terms')), findsNothing);
+      await _type(tester, 'details-company-name', 'Berg Taxi AB');
+      await _type(tester, 'details-org-number', '556677-8899');
+      await _type(tester, 'details-company-address', 'Storgatan 1');
+      await _tap(tester, 'details-continue');
+      await _settle(tester);
+      expect(server.bodies, hasLength(1));
+      expect(server.bodies.single['termsAccepted'], isTrue);
+      expect(server.bodies.single['accountType'], 'fleet');
+      expect(done, ['home']);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
   });
 }

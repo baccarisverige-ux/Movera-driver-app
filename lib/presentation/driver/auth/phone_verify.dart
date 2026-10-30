@@ -17,7 +17,8 @@ import 'package:movera/presentation/driver/auth/widgets/slow_server_note.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:pinput/pinput.dart';
 
-/// Step 2: enter the 4-digit code. Verify unlocks at four digits; resend
+/// Step 2: enter the 4-digit code. The fourth digit sends it (Verify also
+/// unlocks at four digits); a wrong code empties the boxes; resend
 /// unlocks when the server's retry window has passed.
 class DriverPhoneVerification extends StatefulWidget {
   /// Whether this build runs in a browser (tests set it).
@@ -181,6 +182,14 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
       await enterDriverApp(context);
     } catch (error) {
       if (!mounted) return;
+      // Contract v0.18.2 `auth.codeClearOnWrong` (owner 2026-10-30, "Clear
+      // boxes"): a wrong code empties the boxes (before the error is set,
+      // so the emptying does not take the error line away) and the field
+      // keeps its focus for the next code.
+      if (isWrongCode(error)) {
+        _pin.clear();
+        if (!_pinFocus.hasFocus) _pinFocus.requestFocus();
+      }
       setState(() {
         _error = authErrorMessage(error, AuthAction.verifyCode);
         if (isTooManyWrongCodes(error)) _tooManyWrong = true;
@@ -240,7 +249,10 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
             autofillHints: const [AutofillHints.oneTimeCode],
             keyboardType: TextInputType.number,
             forceErrorState: _error != null,
-            onCompleted: (_) => setState(() {}),
+            // Contract v0.18.2 `auth.codeAutoSubmit` (owner 2026-10-30,
+            // "Check by itself"): the last digit sends the code at once;
+            // Verify stays, and [_verify] sends one call at a time.
+            onCompleted: (_) => _verify(),
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             defaultPinTheme: _box(),
             focusedPinTheme: _box(focused: true),

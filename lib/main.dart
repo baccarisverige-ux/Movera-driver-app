@@ -17,6 +17,7 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_repository.dart';
+import 'package:movera/core/auth/phone_country_default.dart';
 import 'package:movera/core/auth/secure_token_store.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
@@ -66,10 +67,22 @@ Future<void> main() async {
   // Round 4: the zone's default language, then the driver's saved choice.
   // A slow or broken store never holds the first frame for long.
   DriverLanguage.applyZone(const DriverHomeAdminContentService().languages);
+  // Contract v0.18.2 (owner 2026-10-30): the phone field starts in Sweden
+  // or France from what this phone knows, and until a language is picked
+  // the app speaks the phone's language ("Phone language (Recommended)").
+  try {
+    await StartCountryHints.load().timeout(const Duration(seconds: 2));
+  } catch (_) {
+    // The device region decides.
+  }
+  DriverLanguage.applyDevice(
+    phoneLanguage: deviceLanguage(),
+    startCountry: defaultPhoneCountry().iso,
+  );
   try {
     await DriverLanguage.restore().timeout(const Duration(seconds: 2));
   } catch (_) {
-    // The zone default stays.
+    // The phone's language stays.
   }
   runApp(const MoveraApp());
 }
@@ -165,6 +178,10 @@ class _MoveraAppState extends State<MoveraApp> {
     }
     _auth = AuthController(
       repository: AuthRepository(api: _api, tokens: _tokens),
+      // Contract v0.18.2 `auth.beforeSignIn`: the signed-in calls start
+      // after the sign-in, not on the sign-in screen.
+      onSignedIn: () => _live?.signedIn(),
+      onSignedOut: () => _live?.signedOut(),
     );
     _account = DriverAccountSession(repository: DriverAccountRepository(_api));
     _sessionStore = MemoryDriverSessionRepository();
@@ -260,6 +277,7 @@ class _MoveraAppState extends State<MoveraApp> {
   /// never gets here.
   Future<void> _sessionExpired() async {
     if (!DriverRuntimeConfig.current.authRequired) return;
+    _live?.signedOut();
     final navigator = _navigatorKey.currentState;
     if (navigator == null) return;
     showDriverSignIn(navigator, _signIn);

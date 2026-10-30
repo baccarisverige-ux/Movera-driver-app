@@ -144,6 +144,25 @@ class LiveDriverServices {
   void attach(DriverSessionController session) {
     presence.attach(session);
     dispatch.onDriverOffline = () => session.setOnline(false);
+    // Contract v0.18.2 `auth.beforeSignIn` (owner 2026-10-30, "Yes, stop
+    // it"): the settings, their stream, the zones and the content need the
+    // driver's session. Without one nothing is asked; [signedIn] starts
+    // them right after the sign-in.
+    unawaited(
+      _tokens.readAccess().then((access) {
+        if (access != null && access.isNotEmpty) signedIn();
+      }, onError: (Object _) {}),
+    );
+  }
+
+  bool _signedInStarted = false;
+
+  /// The driver has a session (a sign-in, or one kept from before): the
+  /// zones, the settings with their stream and the content are read now.
+  /// Once per session.
+  void signedIn() {
+    if (_signedInStarted) return;
+    _signedInStarted = true;
     unawaited(zones.start());
     unawaited(
       config.start().then((_) {
@@ -151,6 +170,13 @@ class LiveDriverServices {
         return config.watch();
       }),
     );
+  }
+
+  /// The session ended (sign-out, or refused by the server): the settings
+  /// stream stops until the next [signedIn].
+  void signedOut() {
+    _signedInStarted = false;
+    config.stop();
   }
 
   /// The app is on screen again ([LivePresence.resumed]).

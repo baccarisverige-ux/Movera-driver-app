@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:movera/core/account/account_error_message.dart';
@@ -21,9 +20,6 @@ import 'package:movera/presentation/driver/account/details_pickers.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_scaffold.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
-import 'package:movera/presentation/driver/profile/legal_document.dart';
-import 'package:movera/widgets/navigation_transition.dart';
-import 'package:movera/widgets/single_route_entry.dart';
 
 /// Step 3 of the sign-in (round 4b): the details Movera needs once
 /// (contract v0.5.3 §14, `POST /driver/onboarding`), on one scrollable
@@ -98,18 +94,12 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
   late String _language;
   String _accountType = 'driver';
   bool _joinOpen = false;
-  bool _agreed = false;
   bool _busy = false;
   bool _leaving = false;
   final Map<DetailsField, String> _errors = {};
   String? _formError;
   late final DetailsDraft _draft = widget.draft ?? DetailsDraft();
   bool _restored = false;
-
-  late final _termsTap = TapGestureRecognizer()
-    ..onTap = () => _openLegal(LegalDocumentScreen.terms);
-  late final _privacyTap = TapGestureRecognizer()
-    ..onTap = () => _openLegal(LegalDocumentScreen.privacy);
 
   static final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
   static final _datePattern = RegExp(r'^\d{4}-\d{2}-\d{2}$');
@@ -144,8 +134,6 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     _lastName.text = known(account?.lastName) ?? prefill?.lastName ?? '';
     _dateOfBirth.text = account?.dateOfBirth ?? '';
     _email.text = known(account?.email) ?? prefill?.email ?? '';
-    // A resend: the terms were accepted the first time.
-    _agreed = account?.accountStatus == 'on_hold';
     for (final controller in _controllers) {
       controller.addListener(_changed);
     }
@@ -162,8 +150,6 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
 
   @override
   void dispose() {
-    _termsTap.dispose();
-    _privacyTap.dispose();
     for (final controller in _controllers) {
       controller.dispose();
     }
@@ -256,10 +242,6 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
       'joinOwner': _joinOwner.text,
       'joinEmail': _joinEmail.text,
     });
-  }
-
-  void _openLegal(Widget page) {
-    pushSingle(context, RightToLeftTransition(page));
   }
 
   Future<void> _pickCountry() async {
@@ -379,7 +361,6 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
         errors[DetailsField.fleetJoin] = tr.acctRequired;
       }
     }
-    if (!_agreed) errors[DetailsField.terms] = tr.acctTermsRequired;
     setState(() {
       _errors
         ..clear()
@@ -779,17 +760,10 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
           ),
           const SizedBox(height: 18),
         ],
-        _Consent(
-          agreed: _agreed,
-          onToggle: _busy
-              ? null
-              : () => setState(() {
-                  _agreed = !_agreed;
-                  _errors.remove(DetailsField.terms);
-                }),
-          termsTap: _termsTap,
-          privacyTap: _privacyTap,
-        ),
+        // Contract v0.18.2 `auth.driverTermsOnce` (owner 2026-10-30, "Ask
+        // once"): the terms are ticked on the phone-number screen only;
+        // the request still says termsAccepted. A server that refuses it
+        // anyway (`terms_required`) is shown here.
         if (_errors[DetailsField.terms] != null)
           AccountErrorLine(_errors[DetailsField.terms]!),
         if (_formError != null) AccountErrorLine(_formError!),
@@ -1222,94 +1196,6 @@ class _JoinBox extends StatelessWidget {
             ),
         ],
       ),
-    );
-  }
-}
-
-class _Consent extends StatelessWidget {
-  const _Consent({
-    required this.agreed,
-    required this.onToggle,
-    required this.termsTap,
-    required this.privacyTap,
-  });
-
-  final bool agreed;
-  final VoidCallback? onToggle;
-  final TapGestureRecognizer termsTap;
-  final TapGestureRecognizer privacyTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Semantics(
-          key: const ValueKey('details-terms'),
-          checked: agreed,
-          label: tr.authConsentLabel,
-          onTap: onToggle,
-          excludeSemantics: true,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onToggle,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 2, 12, 8),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: agreed ? AccountStyle.ink : Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: agreed ? AccountStyle.ink : const Color(0xFFC7CFC9),
-                    width: 2,
-                  ),
-                ),
-                child: agreed
-                    ? const Icon(
-                        Icons.check_rounded,
-                        size: 17,
-                        color: Colors.white,
-                      )
-                    : null,
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text.rich(
-            TextSpan(
-              text: tr.authConsentPrefix,
-              children: [
-                TextSpan(
-                  text: tr.authConsentTerms,
-                  recognizer: termsTap,
-                  style: AuthText.urbanist(
-                    weight: FontWeight.w800,
-                    color: AuthColors.ink,
-                  ),
-                ),
-                TextSpan(text: tr.authAnd),
-                TextSpan(
-                  text: tr.authConsentPrivacy,
-                  recognizer: privacyTap,
-                  style: AuthText.urbanist(
-                    weight: FontWeight.w800,
-                    color: AuthColors.ink,
-                  ),
-                ),
-              ],
-            ),
-            style: AuthText.urbanist(
-              size: 13.5,
-              height: 1.4,
-              color: AuthColors.muted,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

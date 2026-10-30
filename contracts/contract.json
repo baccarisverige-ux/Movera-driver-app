@@ -1,6 +1,6 @@
 {
   "contract": "movera",
-  "version": "0.18.1",
+  "version": "0.18.2",
   "note": "Canonical cross-app contract for Rider, Driver and Admin. Frontend-only today; a future single backend implements it. Every app ships an identical copy under contracts/ and runs contract tests against it.",
   "wire": {
     "ids": {
@@ -948,7 +948,49 @@
       ],
       "statusNote": "test: the number has no account in that app yet (the first sign-in creates it); otherwise the account's status: the driver's accountStatus (pending, active, on_hold, suspended), the rider's (active, suspended)."
     },
-    "codeAutofill": "v0.15.0 (owner 2026-10-29, decision 7): the apps mark the code field for one-time-code autofill (iOS / web autocomplete=one-time-code, Android SMS User Consent where available). No wire change; it does nothing until SMS codes are sent."
+    "codeAutofill": "v0.15.0 (owner 2026-10-29, decision 7): the apps mark the code field for one-time-code autofill (iOS / web autocomplete=one-time-code, Android SMS User Consent where available). No wire change; it does nothing until SMS codes are sent.",
+    "codeAutoSubmit": "v0.18.2 (owner 2026-10-30, 'Check by itself (Recommended)'): typing the last digit of the code sends POST /auth/otp/verify at once (one call per complete code); the Verify button stays for slow connections.",
+    "codeClearOnWrong": "v0.18.2 (owner 2026-10-30, 'Clear boxes (Recommended)'): after a wrong code (invalid_otp_code) the code boxes empty themselves, the error line stays, and the field keeps focus so the next code can be typed at once.",
+    "startCountry": {
+      "note": "v0.18.2 (owner 2026-10-30, 'France or sweden'): the phone field of both apps starts with Sweden (+46) or France (+33) only; any other country can still be picked from the list.",
+      "countries": [
+        "SE",
+        "FR"
+      ],
+      "order": [
+        "lastFix",
+        "lastZone",
+        "deviceRegion"
+      ],
+      "fallback": "SE"
+    },
+    "firstLanguage": {
+      "note": "v0.18.2 (owner 2026-10-30, 'Phone language (Recommended)'): until the person picks a language (globe button) both apps speak the phone's language when it is sv, fr or en; otherwise the default of the start country (SE sv, FR fr); else en. A picked language is kept and wins.",
+      "supported": [
+        "sv",
+        "fr",
+        "en"
+      ],
+      "countryDefault": {
+        "SE": "sv",
+        "FR": "fr"
+      },
+      "fallback": "en"
+    },
+    "beforeSignIn": {
+      "note": "v0.18.2 (owner 2026-10-30, 'Yes, stop it (Recommended)'): with no stored session the apps call only endpoints that need no bearer token; config, config stream, zones, content and profile load right after sign-in. A 401 is never retried in a loop and is not sent as an error report.",
+      "allowed": [
+        "POST /auth/otp/request",
+        "POST /auth/otp/verify",
+        "POST /auth/provider",
+        "POST /auth/waitlist",
+        "GET /auth/test-accounts",
+        "POST /telemetry/logs",
+        "POST /telemetry/analytics",
+        "POST /telemetry/crashes"
+      ]
+    },
+    "driverTermsOnce": "v0.18.2 (owner 2026-10-30, 'Ask once (Recommended)'): the driver app asks for the terms once, on the phone-number screen (as the rider app); its details step has no second tick and still sends termsAccepted: true on POST /driver/onboarding (server unchanged)."
   },
   "configVersion": {
     "note": "v0.8.0 (owner 2026-10-27, \"the server's version number counts\"): the SERVER stamps version and publishedAt on every publish; whatever the admin sends in those two fields is ignored. version is strictly increasing per zone and document as the apps see it: a zone that served its country's standard (configDocs.standard) and then gets its own document continues above the standard's version. config_published carries the same version. Apps keep the last good document and ignore an older or equal version."
