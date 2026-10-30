@@ -276,6 +276,14 @@ void main() {
       next = Completer<void>();
       return ApiDispatchRepository(
         client: MockClient.streaming((request, _) async {
+          // 03c: a reconnect also reloads the open offers (none here); only
+          // the feed's own requests are counted.
+          if (request.url.path.endsWith('/driver/offers')) {
+            return http.StreamedResponse(
+              Stream.value(utf8.encode('{"items":[],"nextCursor":null}')),
+              200,
+            );
+          }
           requests.add(request);
           if (!next.isCompleted) next.complete();
           if (requests.length == 1) {

@@ -219,7 +219,9 @@ jobs:
 
   ios-release-preflight:
     name: iOS release compile preflight
-    runs-on: macos-14
+    # macos-14 images are retired on 2026-11-02 and fail during scheduled brownouts before that
+    # (actions/runner-images#13518); macos-15 is the supported image.
+    runs-on: macos-15
     timeout-minutes: 45
     steps:
       - name: Checkout Drider

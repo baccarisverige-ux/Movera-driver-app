@@ -166,17 +166,20 @@ class ApiDispatchRepository implements DispatchRepository {
     this.feedIdleTimeout = defaultFeedIdleTimeout,
     this.renewSession,
     this.onAccepted,
+    DateTime Function()? now,
   }) : _client = client,
        _base = baseUri,
        _token = accessToken,
        _key = idempotencyKey ?? _randomKey,
-       _reconnectDelay = reconnectDelay ?? _backoff;
+       _reconnectDelay = reconnectDelay ?? _backoff,
+       _now = now ?? DateTime.now;
 
   final http.Client _client;
   final Uri _base;
   final Future<String?> Function() _token;
   final String Function() _key;
   final Duration Function(int attempt) _reconnectDelay;
+  final DateTime Function() _now;
 
   /// Owner, live test 2026-10-26 ("driver don't receive offers"): a feed
   /// that goes silent without closing (an iPhone that locked or changed
@@ -200,6 +203,39 @@ class ApiDispatchRepository implements DispatchRepository {
   /// row of missed Exclusive offers). Set when a session attaches.
   void Function()? onDriverOffline;
 
+  /// Driver group 3 live test (2026-10-30, "the first Go online after every
+  /// start is undone a second later"): when the server answered the
+  /// driver's latest Go online, on this phone's clock. A `driverOffline`
+  /// that happened before it is history (an old auto-offline replayed by
+  /// the feed), not a reason to go offline now.
+  DateTime? _onlineSince;
+
+  /// The server just answered Go online ([LivePresence.goOnline]): every
+  /// `driverOffline` that happened before now is old news.
+  void markOnline() => _onlineSince = _now();
+
+  /// When [event] happened on this phone's clock: the server's own age of
+  /// the event (`serverTime` − `occurredAt`) taken from now, so a phone
+  /// clock that is off does not matter. Null without both times.
+  DateTime? _happenedAt(Map<String, dynamic> event) {
+    final occurred = event['occurredAt'];
+    final server = event['serverTime'];
+    if (occurred is! String || server is! String) return null;
+    final at = DateTime.tryParse(occurred);
+    final sent = DateTime.tryParse(server);
+    if (at == null || sent == null) return null;
+    return _now().subtract(sent.difference(at));
+  }
+
+  /// True when the event's `driverOffline` is older than the driver's
+  /// latest Go online (a replay), so it must not set him offline again.
+  bool _staleOffline(Map<String, dynamic> event) {
+    final since = _onlineSince;
+    if (since == null) return false;
+    final at = _happenedAt(event);
+    return at != null && at.isBefore(since);
+  }
+
   final Map<String, RideOffer> _offers = <String, RideOffer>{};
   final Map<String, RideOffer> _nextTrips = <String, RideOffer>{};
   final StreamController<List<RideOffer>> _nearby =
@@ -209,6 +245,23 @@ class ApiDispatchRepository implements DispatchRepository {
   final StreamController<OfferWithdrawal> _withdrawals =
       StreamController<OfferWithdrawal>.broadcast();
   int _lastSequence = 0;
+
+  /// True once the server gave a cursor (an `id:`, `id: 0` too) or an
+  /// event: a reconnect then sends `after=` (also `after=0`), so nothing
+  /// made while the phone was away is skipped.
+  bool _hasCursor = false;
+
+  /// Set when the feed was lost: the next open feed also reloads the open
+  /// offers (`GET /driver/offers`), in case events were missed.
+  bool _reloadOnOpen = false;
+
+  /// Offers withdrawn by the feed while a [_load] was under way: an older
+  /// snapshot does not bring them back.
+  final Set<String> _goneDuringLoad = <String>{};
+
+  /// Offers the feed made or changed while a [_load] was under way: an
+  /// older snapshot does not drop them (the feed's copy is kept).
+  final Set<String> _cameDuringLoad = <String>{};
   StreamSubscription<String>? _feed;
   Timer? _feedIdle;
   final StreamController<bool> _live = StreamController<bool>.broadcast();
@@ -343,6 +396,8 @@ class ApiDispatchRepository implements DispatchRepository {
   void refreshOffers() => unawaited(_load());
 
   Future<void> _load() async {
+    _goneDuringLoad.clear();
+    _cameDuringLoad.clear();
     try {
       final headers = await _headers();
       final response = await _client
@@ -354,12 +409,24 @@ class ApiDispatchRepository implements DispatchRepository {
       if (response.statusCode != 200) return;
       final body = jsonDecode(response.body);
       final items = body is Map ? body['items'] : null;
-      if (items is! List) return;
+      if (items is! List || !_wanted || _disposed) return;
+      final keepOffers = {
+        for (final e in _offers.entries)
+          if (_cameDuringLoad.contains(e.key)) e.key: e.value,
+      };
+      final keepNext = {
+        for (final e in _nextTrips.entries)
+          if (_cameDuringLoad.contains(e.key)) e.key: e.value,
+      };
       _offers.clear();
       _nextTrips.clear();
       for (final item in items) {
-        if (item is Map) _upsert(Map<String, dynamic>.from(item));
+        if (item is Map && !_goneDuringLoad.contains(item['offerId'])) {
+          _upsert(Map<String, dynamic>.from(item));
+        }
       }
+      _offers.addAll(keepOffers);
+      _nextTrips.addAll(keepNext);
       _emit();
     } catch (_) {
       // Offline: the list stays as it was.
@@ -383,13 +450,13 @@ class ApiDispatchRepository implements DispatchRepository {
           http.Request(
               'GET',
               _uri('/driver/offers/stream', {
-                if (_lastSequence > 0) 'after': '$_lastSequence',
+                if (_hasCursor) 'after': '$_lastSequence',
               }),
             )
             ..headers.addAll({
               ...await _headers(),
               'Accept': 'text/event-stream',
-              if (_lastSequence > 0) 'Last-Event-ID': '$_lastSequence',
+              if (_hasCursor) 'Last-Event-ID': '$_lastSequence',
             });
       response = await _client.send(request).timeout(requestTimeout);
     } catch (_) {
@@ -419,6 +486,11 @@ class ApiDispatchRepository implements DispatchRepository {
     }
     _reconnects = 0;
     _setLive(true);
+    if (_reloadOnOpen) {
+      // Belt and braces after a lost feed: the open offers come again.
+      _reloadOnOpen = false;
+      unawaited(_load());
+    }
     final data = StringBuffer();
     void quiet() {
       if (generation != _generation) return;
@@ -429,6 +501,7 @@ class ApiDispatchRepository implements DispatchRepository {
 
     _feedIdle?.cancel();
     _feedIdle = Timer(feedIdleTimeout, quiet);
+    int? blockId;
     _feed = response.stream
         .transform(utf8.decoder)
         .transform(const LineSplitter())
@@ -439,7 +512,21 @@ class ApiDispatchRepository implements DispatchRepository {
             _feedIdle = Timer(feedIdleTimeout, quiet);
             if (line.startsWith('data:')) {
               data.write(line.substring(5).trim());
+            } else if (line.startsWith('id:')) {
+              blockId = int.tryParse(line.substring(3).trim());
+            } else if (line.isEmpty && data.isEmpty) {
+              // An `id:` with no data is the feed's cursor (SSE): a feed
+              // opened without one says where it starts (`id: 0` when the
+              // driver has no events yet), and a reconnect goes on from
+              // there with `after=`, `after=0` too.
+              final id = blockId;
+              blockId = null;
+              if (id != null) {
+                _hasCursor = true;
+                if (id > _lastSequence) _lastSequence = id;
+              }
             } else if (line.isEmpty && data.isNotEmpty) {
+              blockId = null;
               final raw = data.toString();
               data.clear();
               try {
@@ -462,6 +549,7 @@ class ApiDispatchRepository implements DispatchRepository {
     _feedIdle = null;
     _setLive(false);
     if (_disposed || !_wanted) return;
+    _reloadOnOpen = true;
     _reconnect?.cancel();
     _reconnect = Timer(
       _reconnectDelay(_reconnects++),
@@ -496,13 +584,18 @@ class ApiDispatchRepository implements DispatchRepository {
     final event = OfferFeedEvent.tryParse(json);
     if (event == null || event.sequence <= _lastSequence) return;
     _lastSequence = event.sequence;
+    _hasCursor = true;
     // Contract v0.8.0 §6.7: the server set the driver offline after the
-    // row of missed Exclusive offers; the app goes offline too.
-    if (json['driverOffline'] == true) onDriverOffline?.call();
+    // row of missed Exclusive offers; the app goes offline too, unless it
+    // happened before the driver's latest Go online (a replayed old one).
+    if (json['driverOffline'] == true && !_staleOffline(json)) {
+      onDriverOffline?.call();
+    }
     final offer = event.offerJson;
     switch (event.kind) {
       case 'offer_created' || 'offer_updated' when offer != null:
         if (offer['status'] == null || offer['status'] == 'open') {
+          if (offer['offerId'] case final String id) _cameDuringLoad.add(id);
           _upsert(offer);
         } else {
           _withdraw(
@@ -537,6 +630,7 @@ class ApiDispatchRepository implements DispatchRepository {
 
   void _withdraw(Object? offerId, OfferGoneReason reason, {bool emit = false}) {
     if (offerId is! String) return;
+    _goneDuringLoad.add(offerId);
     final gone = _offers.remove(offerId) ?? _nextTrips.remove(offerId);
     if (gone == null) return;
     if (!_withdrawals.isClosed) {

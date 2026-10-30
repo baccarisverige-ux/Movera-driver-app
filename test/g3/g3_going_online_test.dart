@@ -640,6 +640,9 @@ class _FakeDispatch implements ApiDispatchRepository {
   void refreshOffers() {}
 
   @override
+  void markOnline() {}
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

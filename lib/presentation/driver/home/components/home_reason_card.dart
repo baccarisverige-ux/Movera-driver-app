@@ -106,3 +106,24 @@ class HomeReasonCard extends StatelessWidget {
 }
 
 enum HomeReasonTone { problem, warning, info }
+
+/// Where Home's floating map buttons sit, from the bottom of the screen
+/// (driver group 3 live test 2026-10-30: the location card covered the
+/// bell). The safety and recenter buttons are on the lowest row, the bell
+/// one row above the safety button, and the reason card above the bell.
+abstract final class HomeMapButtonLayout {
+  static const double buttonSize = 48;
+
+  /// The safety and recenter buttons' bottom edge.
+  static const double buttonsBottom = 138;
+
+  static const double gap = 12;
+
+  /// The bell, above the safety button.
+  static const double bellBottom = buttonsBottom + buttonSize + gap;
+  static const double bellTop = bellBottom + buttonSize;
+
+  /// The reason card's bottom edge: above the bell, so it never covers it
+  /// (nor the radar and the buttons below).
+  static const double reasonBottom = bellTop + gap;
+}
