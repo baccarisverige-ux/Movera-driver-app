@@ -4,6 +4,7 @@ import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/core/onboarding/onboarding_settings.dart';
@@ -111,8 +112,21 @@ class _AddCarScreenState extends State<AddCarScreen> {
         seats >= 1 &&
         seats <= 20 &&
         _fuel != null &&
-        _categories.any(_fitting.contains);
+        _rideChosen;
   }
+
+  /// Contract v0.18.3 (R2): at least one ride type is ticked; an extra
+  /// (Booster Seat) alone is not enough.
+  bool get _rideChosen => _categories.any(
+    (id) => _fitting.contains(id) && !OnboardingSettings.isExtra(id),
+  );
+
+  /// Only extras are ticked: say a ride type is needed too.
+  bool get _onlyExtras =>
+      !_rideChosen &&
+      _categories.any(
+        (id) => _fitting.contains(id) && OnboardingSettings.isExtra(id),
+      );
 
   Future<void> _save() async {
     if (_busy || !_complete) return;
@@ -166,6 +180,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
         () => _error = accountErrorMessage(
           error,
           fallback: tr.fleetCouldNotAddCar,
+          baseYear: _rules?.baseYear,
         ),
       );
     } finally {
@@ -334,7 +349,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
           for (final id in fitting)
             FilterChip(
               key: ValueKey('car-type-$id'),
-              label: Text(CategoryCatalog.driverLabels[id] ?? id),
+              label: Text(
+                categoryNameText(CategoryCatalog.driverLabels[id] ?? id),
+              ),
               selected: _categories.contains(id),
               onSelected: _busy
                   ? null
@@ -352,6 +369,19 @@ class _AddCarScreenState extends State<AddCarScreen> {
             ),
         ],
       ),
+      if (_onlyExtras)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            tr.carExtraNeedsRide,
+            key: const ValueKey('car-extra-needs-ride'),
+            style: AuthText.urbanist(
+              size: 14,
+              weight: FontWeight.w600,
+              color: AccountStyle.error,
+            ),
+          ),
+        ),
       const SizedBox(height: 8),
       Text(
         tr.carTypesFitHint(

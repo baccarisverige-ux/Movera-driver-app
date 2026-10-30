@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
+import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/documents/live_documents_screen.dart';
+import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -96,6 +98,25 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
       await pushSingle(
         context,
         RightToLeftTransition(MyFleetScreen(account: widget.account)),
+      );
+      if (mounted) await _load();
+    } else if (notice.kind == 'document_rejected' &&
+        notice.documentLink != null) {
+      // R6: a rejected document opens its upload guide (a new one).
+      final link = notice.documentLink!;
+      final me = widget.account.account;
+      await pushSingle(
+        context,
+        RightToLeftTransition(
+          UploadGuideScreen(
+            account: widget.account,
+            type: link.type,
+            ownerId: link.vehicleId ?? me?.driverId ?? '',
+            isCar: link.vehicleId != null,
+            country: me?.country ?? DriverAccountRules.current.country,
+            status: 'rejected',
+          ),
+        ),
       );
       if (mounted) await _load();
     } else if (notice.opensDocuments) {

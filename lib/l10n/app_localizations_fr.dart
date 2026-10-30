@@ -5890,23 +5890,35 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String remDocumentNeeded(Object document) {
-    return 'Il manque : $document';
+  String remDocumentNeeded(Object document, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'other': 'Il manque : $document',
+    });
+    return '$_temp0';
   }
 
   @override
-  String remDocumentRejected(Object document) {
-    return 'Refusé : $document';
+  String remDocumentRejected(Object document, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'other': 'Refusé : $document',
+    });
+    return '$_temp0';
   }
 
   @override
-  String remDocumentExpired(Object document) {
-    return '$document a expiré';
+  String remDocumentExpired(Object document, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'other': '$document a expiré',
+    });
+    return '$_temp0';
   }
 
   @override
-  String remDocumentExpiring(Object document, Object when) {
-    return '$document expire $when';
+  String remDocumentExpiring(Object document, Object when, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'other': '$document expire $when',
+    });
+    return '$_temp0';
   }
 
   @override
@@ -6484,4 +6496,67 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get docFleetOwnerOnly =>
       'Seul le gérant de la flotte peut envoyer ou ouvrir les documents de la voiture.';
+
+  @override
+  String get remNoFleet =>
+      'Rejoignez une flotte pour rouler – demandez le code Movera à votre gérant de flotte';
+
+  @override
+  String get remActionJoinFleet => 'Rejoindre une flotte';
+
+  @override
+  String get remActionStartCompany => 'Créer ma propre société';
+
+  @override
+  String get remNoVehicleNotActive => 'Choisissez une voiture de votre flotte';
+
+  @override
+  String get fleetNoApprovedCarOwnerHere =>
+      'Ajoutez une voiture ci-dessous ou terminez ses documents. Les chauffeurs pourront passer en ligne dès qu’une voiture est validée.';
+
+  @override
+  String get holdAccountChecking =>
+      'Votre compte est en cours de vérification. Nous vous dirons quand vous pourrez conduire.';
+
+  @override
+  String get carExtraNeedsRide =>
+      'Le rehausseur est une option : choisissez aussi un type de course.';
+
+  @override
+  String get carRulesNotMet =>
+      'Ce véhicule ne respecte pas les règles Movera :';
+
+  @override
+  String carProblemLine(Object category, Object problem) {
+    return '$category : $problem';
+  }
+
+  @override
+  String get carWholeCar => 'Le véhicule';
+
+  @override
+  String get carProblemYearTooOld => 'le véhicule est trop ancien pour Movera';
+
+  @override
+  String carProblemYearTooOldBase(int year) {
+    return 'le véhicule doit dater de $year ou plus récent';
+  }
+
+  @override
+  String get carProblemCategoryOff => 'non proposé dans ce pays';
+
+  @override
+  String get carProblemTooFewSeats => 'pas assez de places';
+
+  @override
+  String get carProblemFuelNotAllowed => 'ce carburant n’est pas autorisé';
+
+  @override
+  String get carProblemFuelRequired => 'choisissez le carburant';
+
+  @override
+  String get carProblemExtraNeedsRide => 'seulement avec un type de course';
+
+  @override
+  String get carProblemOther => 'ne convient pas';
 }

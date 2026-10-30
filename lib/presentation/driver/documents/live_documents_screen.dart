@@ -41,23 +41,54 @@ class LiveDocumentsScreen extends StatefulWidget {
   State<LiveDocumentsScreen> createState() => _LiveDocumentsScreenState();
 }
 
-class _LiveDocumentsScreenState extends State<LiveDocumentsScreen> {
+class _LiveDocumentsScreenState extends State<LiveDocumentsScreen>
+    with WidgetsBindingObserver {
   List<AccountDocument> _docs = const [];
   List<FleetVehicle> _cars = const [];
   bool _loading = true;
   String? _error;
 
+  /// R6 (owner 2026-10-30, "Update + notice"): an admin's decision shows
+  /// without leaving the screen: read again every 60 s, when the app
+  /// returns and when a page opened from here closes.
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
     widget.account.addListener(_changed);
+    WidgetsBinding.instance.addObserver(this);
+    _refreshTimer = Timer.periodic(
+      onboardingRefreshEvery,
+      (_) => _refreshQuietly(),
+    );
     _load();
   }
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     widget.account.removeListener(_changed);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refreshQuietly();
+  }
+
+  /// The documents and the reminders again, without the spinner; a
+  /// failed read keeps what the screen shows.
+  Future<void> _refreshQuietly() async {
+    if (!mounted || _loading) return;
+    unawaited(refreshReminders(widget.account));
+    try {
+      final docs = await widget.account.repository.documents();
+      if (mounted) setState(() => _docs = docs);
+    } catch (_) {
+      // Offline or a server fault: the next tick tries again.
+    }
   }
 
   void _changed() {
@@ -133,6 +164,7 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen> {
         context,
         RightToLeftTransition(InfoSessionScreen(status: status)),
       );
+      unawaited(_refreshQuietly());
       return;
     }
     final doc = _doc(ownerId, type);
@@ -151,7 +183,11 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen> {
         ),
       ),
     );
-    if (!mounted || result is! AccountDocument) return;
+    if (!mounted) return;
+    if (result is! AccountDocument) {
+      unawaited(_refreshQuietly());
+      return;
+    }
     final uploaded = result;
     setState(() {
       _docs = [

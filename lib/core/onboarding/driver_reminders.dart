@@ -42,13 +42,21 @@ enum ReminderFixTarget {
   fleetVehicles,
 
   /// The fleet's car list, to pick one.
-  pickVehicle;
+  pickVehicle,
+
+  /// Contract v0.18.3 (R4): My fleet › Join a fleet.
+  joinFleet,
+
+  /// Contract v0.18.3 (R4): My fleet › Start my own company.
+  startCompany;
 
   static ReminderFixTarget? of(Object? wire) => switch (wire) {
     'document' => document,
     'info_session' => infoSession,
     'fleet_vehicles' => fleetVehicles,
     'pick_vehicle' => pickVehicle,
+    'join_fleet' => joinFleet,
+    'start_company' => startCompany,
     _ => null,
   };
 }
@@ -98,6 +106,7 @@ class DriverReminder {
     this.daysLeft,
     this.reviewNote,
     this.fix,
+    this.actions = const [],
   });
 
   factory DriverReminder.fromJson(Map<String, dynamic> json) => DriverReminder(
@@ -116,6 +125,11 @@ class DriverReminder {
         : null,
     reviewNote: _text(json['reviewNote']),
     fix: ReminderFix.fromJson(json['fix']),
+    actions: [
+      if (json['actions'] case final List<Object?> raw)
+        for (final row in raw)
+          if (ReminderFix.fromJson(row) case final action?) action,
+    ],
   );
 
   /// `document_needed`, `document_expiring`, `fleet_no_approved_car`, …
@@ -134,6 +148,10 @@ class DriverReminder {
   final int? daysLeft;
   final String? reviewNote;
   final ReminderFix? fix;
+
+  /// Contract v0.18.3 (R4): the line's buttons, in order (`no_fleet`:
+  /// Join a fleet, Start my own company); [fix] stays the tap on the line.
+  final List<ReminderFix> actions;
 
   bool get blocksOnline => level == ReminderLevel.blocksOnline;
 }
@@ -248,18 +266,40 @@ class ReminderWords {
   final String? action;
 }
 
+/// The label of a line's button (`reminders.texts.actions`).
+String reminderActionLabel(ReminderFixTarget target) => switch (target) {
+  ReminderFixTarget.joinFleet => tr.remActionJoinFleet,
+  ReminderFixTarget.startCompany => tr.remActionStartCompany,
+  ReminderFixTarget.document => tr.remUpload,
+  ReminderFixTarget.infoSession => tr.infoHowToBookShort,
+  ReminderFixTarget.fleetVehicles => tr.myFleet,
+  ReminderFixTarget.pickVehicle => tr.fleetChooseCar,
+};
+
+/// R10 (owner 2026-10-30, "Bank details were rejected"): an English name
+/// that is a plural ("Bank details", "Company bank details (RIB)") takes
+/// "were" / "are" / "have".
+bool _pluralName(String english) => RegExp(
+  r'\b(details|papers|documents)\b',
+  caseSensitive: false,
+).hasMatch(english);
+
 /// The words of [reminder]. [nameOf] names a document type in the app's
 /// language (the admin's texts, custom types included); [carName] names
 /// a car by its id ("ABC 123"), null when unknown; [owner] is the fleet
-/// owner (the fleet_no_approved_car fix is his).
+/// owner (the fleet_no_approved_car fix is his); [active] is false while
+/// the account waits for Movera (no "go online" words then, R10).
 ReminderWords reminderWords(
   DriverReminder reminder, {
   required String Function(String type) nameOf,
   String? Function(String vehicleId)? carName,
   bool owner = false,
+  bool active = true,
 }) {
   final type = reminder.documentType;
   var document = type == null ? tr.documents : nameOf(type);
+  // Only the English lines change with it (sv / fr read the same).
+  final plural = _pluralName(document) ? 'yes' : 'no';
   final vehicleId = reminder.vehicleId;
   if (reminder.scope == 'vehicle' && vehicleId != null) {
     final car = carName?.call(vehicleId);
@@ -267,21 +307,25 @@ ReminderWords reminderWords(
   }
   return switch (reminder.kind) {
     'document_needed' => ReminderWords(
-      tr.remDocumentNeeded(document),
+      tr.remDocumentNeeded(document, plural),
       action: tr.remUpload,
     ),
     'document_rejected' => ReminderWords(
-      tr.remDocumentRejected(document),
+      tr.remDocumentRejected(document, plural),
       detail: reminder.reviewNote,
       action: tr.remUploadNew,
     ),
     'document_expired' => ReminderWords(
-      tr.remDocumentExpired(document),
+      tr.remDocumentExpired(document, plural),
       detail: reminder.blocksOnline ? tr.remCantGoOnlineUntil : null,
       action: tr.remUploadNew,
     ),
     'document_expiring' => ReminderWords(
-      tr.remDocumentExpiring(document, _daysLabel(reminder.daysLeft ?? 0)),
+      tr.remDocumentExpiring(
+        document,
+        _daysLabel(reminder.daysLeft ?? 0),
+        plural,
+      ),
       action: tr.remUploadNew,
     ),
     'document_in_review' => ReminderWords(tr.remDocumentInReview(document)),
@@ -306,7 +350,17 @@ ReminderWords reminderWords(
           : tr.remFleetNoApprovedCarMember,
       action: reminder.fix == null ? null : tr.myFleet,
     ),
-    'no_vehicle' => ReminderWords(tr.remNoVehicle, action: tr.fleetChooseCar),
+    'no_vehicle' => ReminderWords(
+      active ? tr.remNoVehicle : tr.remNoVehicleNotActive,
+      action: tr.fleetChooseCar,
+    ),
+    // Contract v0.18.3 (R4): an account of type driver in no fleet.
+    'no_fleet' => ReminderWords(
+      tr.remNoFleet,
+      action: reminder.actions.isEmpty && reminder.fix != null
+          ? tr.remActionJoinFleet
+          : null,
+    ),
     _ => ReminderWords(
       document,
       action: reminder.fix == null ? null : tr.remOpen,
@@ -320,3 +374,22 @@ String _daysLabel(int days) => switch (days) {
   1 => tr.tomorrowLower,
   _ => tr.inDaysCount(days),
 };
+
+/// R10 (owner 2026-10-30, "HOLD text matches the real reason"): the first
+/// line of the hold sheet: the first red reminder ("Join a fleet…",
+/// "Driving licence is missing"), else "your account is being checked"
+/// (never "upload your documents" when every document is uploaded).
+String holdHeadline(
+  DriverReminderList list, {
+  required String Function(String type) nameOf,
+  bool owner = false,
+}) {
+  final first = list.firstBlocking;
+  if (first == null) return tr.holdAccountChecking;
+  return reminderWords(
+    first,
+    nameOf: nameOf,
+    owner: owner,
+    active: false,
+  ).title;
+}

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:http/http.dart' as http;
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/contracts/driver_onboarding_rules.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_error_message.dart';
@@ -37,8 +39,13 @@ DetailsField? detailsFieldOf(Object error) {
 
 /// A plain text for an account, fleet, car or document failure
 /// (contract v0.5.3 §14 reasons); [fallback] for anything else that the
-/// server refused.
-String accountErrorMessage(Object error, {required String fallback}) {
+/// server refused. [baseYear] is the country's base year for a car that
+/// is too old (contract v0.18.3 R2), when known.
+String accountErrorMessage(
+  Object error, {
+  required String fallback,
+  int? baseYear,
+}) {
   if (error is TimeoutException || error is http.ClientException) {
     return tr.authErrOffline;
   }
@@ -85,7 +92,10 @@ String accountErrorMessage(Object error, {required String fallback}) {
     'vehicle_not_found' => tr.fleetVehicleNotYours,
     'plate_taken' => tr.fleetPlateTaken,
     // v0.17.0 (owner items 7 and 11).
-    'category_not_allowed' => tr.carCategoryNotAllowed,
+    'category_not_allowed' => categoryNotAllowedMessage(
+      error.details,
+      baseYear: baseYear,
+    ),
     'already_fleet' => tr.startCompanyAlreadyFleet,
     // v0.18.0 (owner decision 19): car documents are the fleet owner's.
     'fleet_owner_only' => tr.docFleetOwnerOnly,
@@ -98,4 +108,39 @@ String accountErrorMessage(Object error, {required String fallback}) {
     'version_mismatch' => tr.acctChangedReload,
     _ => fallback,
   };
+}
+
+/// Contract v0.18.3 (R2, owner 2026-10-30): `400 category_not_allowed`
+/// with its `details` ("child_seat:extra_needs_ride", "car:year_too_old",
+/// "economy:too_few_seats") as one plain line each, in the app's language;
+/// the general sentence when the server sent none.
+String categoryNotAllowedMessage(List<String> details, {int? baseYear}) {
+  final lines = <String>[
+    for (final item in details)
+      if (item.contains(':')) _categoryProblemLine(item, baseYear),
+  ];
+  if (lines.isEmpty) return tr.carCategoryNotAllowed;
+  return [tr.carRulesNotMet, for (final line in lines) '• $line'].join('\n');
+}
+
+String _categoryProblemLine(String item, int? baseYear) {
+  final split = item.indexOf(':');
+  final category = item.substring(0, split);
+  final problem = item.substring(split + 1);
+  final name = category == 'car'
+      ? tr.carWholeCar
+      : categoryNameText(CategoryCatalog.labelOf(category));
+  final words = switch (problem) {
+    'year_too_old' when baseYear != null => tr.carProblemYearTooOldBase(
+      baseYear,
+    ),
+    'year_too_old' => tr.carProblemYearTooOld,
+    'category_off' => tr.carProblemCategoryOff,
+    'too_few_seats' => tr.carProblemTooFewSeats,
+    'fuel_not_allowed' => tr.carProblemFuelNotAllowed,
+    'fuel_required' => tr.carProblemFuelRequired,
+    'extra_needs_ride' => tr.carProblemExtraNeedsRide,
+    _ => tr.carProblemOther,
+  };
+  return tr.carProblemLine(name, words);
 }

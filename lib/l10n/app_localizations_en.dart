@@ -5794,23 +5794,39 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String remDocumentNeeded(Object document) {
-    return '$document is missing';
+  String remDocumentNeeded(Object document, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'yes': '$document are missing',
+      'other': '$document is missing',
+    });
+    return '$_temp0';
   }
 
   @override
-  String remDocumentRejected(Object document) {
-    return '$document was rejected';
+  String remDocumentRejected(Object document, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'yes': '$document were rejected',
+      'other': '$document was rejected',
+    });
+    return '$_temp0';
   }
 
   @override
-  String remDocumentExpired(Object document) {
-    return '$document has expired';
+  String remDocumentExpired(Object document, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'yes': '$document have expired',
+      'other': '$document has expired',
+    });
+    return '$_temp0';
   }
 
   @override
-  String remDocumentExpiring(Object document, Object when) {
-    return '$document expires $when';
+  String remDocumentExpiring(Object document, Object when, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'yes': '$document expire $when',
+      'other': '$document expires $when',
+    });
+    return '$_temp0';
   }
 
   @override
@@ -6375,4 +6391,66 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get docFleetOwnerOnly =>
       'Only the fleet owner can upload or open car documents.';
+
+  @override
+  String get remNoFleet =>
+      'Join a fleet to drive – ask your fleet owner for the Movera code';
+
+  @override
+  String get remActionJoinFleet => 'Join a fleet';
+
+  @override
+  String get remActionStartCompany => 'Start my own company';
+
+  @override
+  String get remNoVehicleNotActive => 'Choose a car from your fleet';
+
+  @override
+  String get fleetNoApprovedCarOwnerHere =>
+      'Add a car below or finish its documents. Drivers can go online once a car is approved.';
+
+  @override
+  String get holdAccountChecking =>
+      'Your account is being checked. We tell you when you can drive.';
+
+  @override
+  String get carExtraNeedsRide =>
+      'Booster Seat is an extra: also choose a ride type.';
+
+  @override
+  String get carRulesNotMet => 'This car does not meet Movera’s rules:';
+
+  @override
+  String carProblemLine(Object category, Object problem) {
+    return '$category: $problem';
+  }
+
+  @override
+  String get carWholeCar => 'The car';
+
+  @override
+  String get carProblemYearTooOld => 'the car is too old for Movera';
+
+  @override
+  String carProblemYearTooOldBase(int year) {
+    return 'the car must be from $year or later';
+  }
+
+  @override
+  String get carProblemCategoryOff => 'not offered in this country';
+
+  @override
+  String get carProblemTooFewSeats => 'too few seats';
+
+  @override
+  String get carProblemFuelNotAllowed => 'this fuel is not allowed';
+
+  @override
+  String get carProblemFuelRequired => 'choose the fuel';
+
+  @override
+  String get carProblemExtraNeedsRide => 'only together with a ride type';
+
+  @override
+  String get carProblemOther => 'does not fit';
 }
