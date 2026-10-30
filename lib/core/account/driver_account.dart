@@ -569,8 +569,32 @@ class ServerNotification {
   final String? tripId;
   final String? deepLink;
 
-  /// A tap opens My fleet (the invitations).
-  bool get opensFleet => kind == 'fleet_invitation';
+  /// A tap opens My fleet (the invitations; v0.18.3 R6: a car's
+  /// approval, rejection or block, deep link `movera-driver://fleet`).
+  bool get opensFleet =>
+      kind == 'fleet_invitation' ||
+      kind == 'vehicle_approved' ||
+      kind == 'vehicle_rejected' ||
+      kind == 'vehicle_blocked' ||
+      deepLink == 'movera-driver://fleet';
+
+  /// Contract v0.18.3 `reviewNotices` (R6): the document of a
+  /// `document_approved` / `document_rejected` notice, from its deep link
+  /// `movera-driver://documents/{type}[?vehicleId=]`; null otherwise.
+  ({String type, String? vehicleId})? get documentLink {
+    final link = deepLink;
+    if (link == null) return null;
+    final uri = Uri.tryParse(link);
+    if (uri == null || uri.scheme != 'movera-driver') return null;
+    if (uri.host != 'documents' || uri.pathSegments.isEmpty) return null;
+    final type = uri.pathSegments.first;
+    if (type.isEmpty) return null;
+    final vehicleId = uri.queryParameters['vehicleId'];
+    return (
+      type: type,
+      vehicleId: vehicleId == null || vehicleId.isEmpty ? null : vehicleId,
+    );
+  }
 
   /// Contract v0.17.0 (owner group 2 items 1, 3 and the note check): an
   /// expiry warning (30 / 7 / 1 days), an expired document or "Finish
@@ -578,7 +602,10 @@ class ServerNotification {
   bool get opensDocuments =>
       kind == 'document_expiring' ||
       kind == 'document_expired' ||
-      kind == 'finish_sign_up';
+      kind == 'finish_sign_up' ||
+      kind == 'document_approved' ||
+      kind == 'document_rejected' ||
+      documentLink != null;
 
   ServerNotification asRead() => ServerNotification(
     notificationId: notificationId,

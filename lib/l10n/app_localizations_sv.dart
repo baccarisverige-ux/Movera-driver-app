@@ -5806,23 +5806,35 @@ class AppLocalizationsSv extends AppLocalizations {
   }
 
   @override
-  String remDocumentNeeded(Object document) {
-    return '$document saknas';
+  String remDocumentNeeded(Object document, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'other': '$document saknas',
+    });
+    return '$_temp0';
   }
 
   @override
-  String remDocumentRejected(Object document) {
-    return '$document godkändes inte';
+  String remDocumentRejected(Object document, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'other': '$document godkändes inte',
+    });
+    return '$_temp0';
   }
 
   @override
-  String remDocumentExpired(Object document) {
-    return '$document har gått ut';
+  String remDocumentExpired(Object document, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'other': '$document har gått ut',
+    });
+    return '$_temp0';
   }
 
   @override
-  String remDocumentExpiring(Object document, Object when) {
-    return '$document går ut $when';
+  String remDocumentExpiring(Object document, Object when, String plural) {
+    String _temp0 = intl.Intl.selectLogic(plural, {
+      'other': '$document går ut $when',
+    });
+    return '$_temp0';
   }
 
   @override
@@ -6386,4 +6398,79 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get docFleetOwnerOnly =>
       'Bara åkeriägaren kan ladda upp eller öppna bilens dokument.';
+
+  @override
+  String get remNoFleet =>
+      'Gå med i ett åkeri för att köra – be din åkare om Movera-koden';
+
+  @override
+  String get remActionJoinFleet => 'Gå med i ett åkeri';
+
+  @override
+  String get remActionStartCompany => 'Starta mitt eget företag';
+
+  @override
+  String get remNoVehicleNotActive => 'Välj en bil från ditt åkeri';
+
+  @override
+  String get fleetNoApprovedCarOwnerHere =>
+      'Lägg till en bil nedan eller slutför dess dokument. Förarna kan gå online när en bil är godkänd.';
+
+  @override
+  String get holdAccountChecking =>
+      'Ditt konto kontrolleras. Vi säger till när du kan köra.';
+
+  @override
+  String get carExtraNeedsRide =>
+      'Bältesstol är ett tillval: välj också en biltyp.';
+
+  @override
+  String get carRulesNotMet => 'Bilen uppfyller inte Moveras regler:';
+
+  @override
+  String carProblemLine(Object category, Object problem) {
+    return '$category: $problem';
+  }
+
+  @override
+  String get carWholeCar => 'Bilen';
+
+  @override
+  String get carProblemYearTooOld => 'bilen är för gammal för Movera';
+
+  @override
+  String carProblemYearTooOldBase(int year) {
+    return 'bilen måste vara årsmodell $year eller nyare';
+  }
+
+  @override
+  String get carProblemCategoryOff => 'erbjuds inte i det här landet';
+
+  @override
+  String get carProblemTooFewSeats => 'för få platser';
+
+  @override
+  String get carProblemFuelNotAllowed => 'drivmedlet är inte tillåtet';
+
+  @override
+  String get carProblemFuelRequired => 'välj drivmedel';
+
+  @override
+  String get carProblemExtraNeedsRide => 'bara tillsammans med en biltyp';
+
+  @override
+  String get carProblemOther => 'passar inte';
+
+  @override
+  String get pushAskTitle => 'Få aviseringar när appen är stängd?';
+
+  @override
+  String get pushAskBody =>
+      'Movera meddelar dig när ett dokument snart går ut, när Movera har granskat dina dokument eller din bil, om flottinbjudningar och meddelanden från resenärer. Du kan stänga av det när som helst i webbläsarens eller telefonens inställningar.';
+
+  @override
+  String get pushAskAllow => 'Slå på';
+
+  @override
+  String get pushAskLater => 'Inte nu';
 }

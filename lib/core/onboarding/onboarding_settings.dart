@@ -70,6 +70,8 @@ class OnboardingDocumentType {
     this.custom = false,
     this.name,
     this.help,
+    this.checklist = const [],
+    this.tips = const [],
   });
 
   factory OnboardingDocumentType.fromJson(
@@ -87,7 +89,15 @@ class OnboardingDocumentType {
     custom: json['custom'] == true || type.startsWith('custom_'),
     name: LocalText.fromJson(json['name']),
     help: LocalText.fromJson(json['help']),
+    checklist: _lines(_map(json['guide'])['checklist']),
+    tips: _lines(_map(json['guide'])['tips']),
   );
+
+  static List<LocalText> _lines(Object? value) => [
+    if (value is List)
+      for (final line in value)
+        if (LocalText.fromJson(line) case final text?) text,
+  ];
 
   final String type;
 
@@ -100,6 +110,13 @@ class OnboardingDocumentType {
 
   /// The admin's help / checklist text, one point per line.
   final LocalText? help;
+
+  /// Contract v0.18.3 (R8, "Admin edits all text"): the upload guide's
+  /// checklist and tips of this type in the country
+  /// (`DocumentTypeInfo.guide`), one line each; empty when the admin wrote
+  /// none (the app's own text then).
+  final List<LocalText> checklist;
+  final List<LocalText> tips;
 }
 
 /// `VehicleCategoryRule`: what a car needs for one category.
@@ -201,6 +218,12 @@ class OnboardingSettings {
   /// `contract.json#driverOnboarding.settings.fuels`.
   static const List<String> fuels = ['petrol', 'diesel', 'hybrid', 'electric'];
 
+  /// Contract v0.18.3 `vehicleRules.extraCategories` (R2): an extra (the
+  /// app's "Booster Seat") goes only with a ride category.
+  static const List<String> extraCategories = ['child_seat'];
+
+  static bool isExtra(String category) => extraCategories.contains(category);
+
   /// `settings.photoTypes`: the four car photos.
   static const List<String> photoTypes = [
     'vehicle_photo_front',
@@ -230,11 +253,13 @@ class OnboardingSettings {
 
   OnboardingDocumentType? typeOf(String type) => documentTypes[type];
 
-  /// The document's name in [language]: the admin's text, else the
-  /// contract's, else the raw type.
+  /// The document's name in [language]: the server's name of this
+  /// country (the admin's text, else `nameByCountry`), else the contract's
+  /// name of [country] (contract v0.18.3 R5, "Name per country"), else the
+  /// raw type.
   String nameOf(String type, String language) =>
       documentTypes[type]?.name?.inLanguage(language) ??
-      DriverOnboardingRules.documentName(type, language);
+      DriverOnboardingRules.documentName(type, language, country: country);
 
   /// The admin's help text, one point per line; empty when none.
   List<String> helpOf(String type, String language) => [
@@ -257,14 +282,33 @@ class OnboardingSettings {
     return null;
   }
 
-  /// Why [category] does not fit the car, or null when it does. A category
-  /// with no rule (e.g. child_seat) is not checked.
+  /// Contract v0.18.3 `vehicleRules.baseYear` (R2, "Year rule for every
+  /// car"): the smallest minYear of the categories that are on and are not
+  /// extras (SE 2015, FR 2016); null without such a category.
+  int? get baseYear {
+    int? year;
+    for (final rule in categories) {
+      if (!rule.on || isExtra(rule.category)) continue;
+      if (year == null || rule.minYear < year) year = rule.minYear;
+    }
+    return year;
+  }
+
+  /// Why [category] does not fit the car, or null when it does. Every car
+  /// must meet [baseYear], also for a category with no rule (child_seat,
+  /// contract v0.18.3 R2).
   String? categoryProblem(
     String category, {
     required int year,
     required int seats,
     String? fuel,
-  }) => ruleFor(category)?.problemFor(year: year, seats: seats, fuel: fuel);
+  }) {
+    final rule = ruleFor(category);
+    if (rule != null && !rule.on) return 'category_off';
+    final base = baseYear;
+    if (base != null && year < base) return 'year_too_old';
+    return rule?.problemFor(year: year, seats: seats, fuel: fuel);
+  }
 
   /// The categories of [catalog] the car fits, in catalog order.
   List<String> fittingCategories(
@@ -293,6 +337,10 @@ class OnboardingSettingsStore extends ChangeNotifier {
 
   OnboardingSettings? get settings => _settings;
 
+  /// The signed-in account's country (`SE`, `FR`), for names before the
+  /// settings are read (contract v0.18.3 R5: names follow the country).
+  String? country;
+
   /// One read at a time; [load] answers or throws.
   Future<OnboardingSettings> refresh(
     Future<OnboardingSettings> Function() load,
@@ -312,10 +360,10 @@ class OnboardingSettingsStore extends ChangeNotifier {
   }
 
   /// The document's name with the published texts when read, else the
-  /// contract's.
+  /// contract's name of the account's country.
   String nameOf(String type, String language) =>
       _settings?.nameOf(type, language) ??
-      DriverOnboardingRules.documentName(type, language);
+      DriverOnboardingRules.documentName(type, language, country: country);
 
   DocumentKind kindOf(String type) =>
       _settings?.kindOf(type) ?? DriverOnboardingRules.kindOf(type);
@@ -328,6 +376,7 @@ class OnboardingSettingsStore extends ChangeNotifier {
 
   void clear() {
     _settings = null;
+    country = null;
     notifyListeners();
   }
 }

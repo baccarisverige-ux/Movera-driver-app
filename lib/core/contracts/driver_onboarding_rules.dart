@@ -33,6 +33,7 @@ class DocumentTypeInfo {
     required this.en,
     required this.sv,
     required this.fr,
+    this.byCountry = const {},
   });
 
   /// `driver` or `vehicle`.
@@ -42,11 +43,19 @@ class DocumentTypeInfo {
   final String sv;
   final String fr;
 
-  String nameIn(String language) => switch (language) {
-    'sv' => sv,
-    'fr' => fr,
-    _ => en,
-  };
+  /// Contract v0.18.3 (R5 "Name per country"): `nameByCountry[country]`
+  /// as `{ en, sv, fr }`; the country's name wins over the general one.
+  final Map<String, Map<String, String>> byCountry;
+
+  String nameIn(String language, {String? country}) {
+    final local = byCountry[country]?[language];
+    if (local != null) return local;
+    return switch (language) {
+      'sv' => sv,
+      'fr' => fr,
+      _ => en,
+    };
+  }
 }
 
 abstract final class DriverOnboardingRules {
@@ -132,6 +141,13 @@ abstract final class DriverOnboardingRules {
       en: 'Taxi driver licence',
       sv: 'Taxiförarlegitimation',
       fr: 'Carte de chauffeur de taxi',
+      byCountry: {
+        'SE': {
+          'en': 'Taxi driver licence (Transportstyrelsen)',
+          'sv': 'Taxiförarlegitimation',
+          'fr': 'Carte de conducteur de taxi (Transportstyrelsen)',
+        },
+      },
     ),
     'vtc_card': DocumentTypeInfo(
       owner: 'driver',
@@ -146,6 +162,18 @@ abstract final class DriverOnboardingRules {
       en: 'Company registration',
       sv: 'Registreringsbevis (Bolagsverket)',
       fr: 'Extrait Kbis ou avis SIRENE (moins de 3 mois)',
+      byCountry: {
+        'SE': {
+          'en': 'Company registration certificate (Bolagsverket)',
+          'sv': 'Registreringsbevis (Bolagsverket)',
+          'fr': 'Certificat d’enregistrement de la société (Bolagsverket)',
+        },
+        'FR': {
+          'en': 'Kbis extract or SIRENE notice (under 3 months)',
+          'sv': 'Kbis-utdrag eller SIRENE-intyg (högst 3 månader)',
+          'fr': 'Extrait Kbis ou avis SIRENE (moins de 3 mois)',
+        },
+      },
     ),
     'taxi_traffic_permit': DocumentTypeInfo(
       owner: 'driver',
@@ -153,6 +181,13 @@ abstract final class DriverOnboardingRules {
       en: 'Taxi traffic permit',
       sv: 'Taxitrafiktillstånd (Transportstyrelsen)',
       fr: 'Licence de taxi',
+      byCountry: {
+        'SE': {
+          'en': 'Taxi traffic permit (Transportstyrelsen)',
+          'sv': 'Taxitrafiktillstånd (Transportstyrelsen)',
+          'fr': 'Autorisation de trafic taxi (Transportstyrelsen)',
+        },
+      },
     ),
     'tax_settings': DocumentTypeInfo(
       owner: 'driver',
@@ -160,6 +195,13 @@ abstract final class DriverOnboardingRules {
       en: 'Tax settings (F-skatt)',
       sv: 'F-skattsedel',
       fr: 'Attestation fiscale',
+      byCountry: {
+        'SE': {
+          'en': 'F-tax certificate (Skatteverket)',
+          'sv': 'F-skattsedel',
+          'fr': 'Attestation F-skatt (Skatteverket)',
+        },
+      },
     ),
     'bank_statement': DocumentTypeInfo(
       owner: 'driver',
@@ -167,6 +209,18 @@ abstract final class DriverOnboardingRules {
       en: 'Bank details',
       sv: 'Kontobevis',
       fr: 'RIB de la société',
+      byCountry: {
+        'SE': {
+          'en': 'Company bank account statement',
+          'sv': 'Kontobevis',
+          'fr': 'Relevé bancaire de l’entreprise',
+        },
+        'FR': {
+          'en': 'Company bank details (RIB)',
+          'sv': 'Företagets bankuppgifter (RIB)',
+          'fr': 'RIB de la société',
+        },
+      },
     ),
     'vtc_register_certificate': DocumentTypeInfo(
       owner: 'driver',
@@ -195,6 +249,18 @@ abstract final class DriverOnboardingRules {
       en: 'Registration certificate',
       sv: 'Registreringsbevis',
       fr: 'Certificat d’immatriculation (carte grise)',
+      byCountry: {
+        'SE': {
+          'en': 'Registration certificate (Transportstyrelsen)',
+          'sv': 'Registreringsbevis',
+          'fr': 'Certificat d’immatriculation (Transportstyrelsen)',
+        },
+        'FR': {
+          'en': 'Registration certificate (carte grise)',
+          'sv': 'Registreringsbevis (carte grise)',
+          'fr': 'Certificat d’immatriculation (carte grise)',
+        },
+      },
     ),
     'insurance': DocumentTypeInfo(
       owner: 'vehicle',
@@ -202,6 +268,18 @@ abstract final class DriverOnboardingRules {
       en: 'Vehicle insurance',
       sv: 'Försäkringsbrev',
       fr: 'Assurance transport de personnes',
+      byCountry: {
+        'SE': {
+          'en': 'Vehicle insurance (taxi)',
+          'sv': 'Försäkringsbrev',
+          'fr': 'Assurance du véhicule (taxi)',
+        },
+        'FR': {
+          'en': 'Passenger transport insurance',
+          'sv': 'Försäkring för persontransport',
+          'fr': 'Assurance transport de personnes',
+        },
+      },
     ),
     'vtc_sticker': DocumentTypeInfo(
       owner: 'vehicle',
@@ -242,8 +320,8 @@ abstract final class DriverOnboardingRules {
 
   /// The document's name in [language]; the raw type for one the contract
   /// copy does not know yet.
-  static String documentName(String type, String language) =>
-      documentTypes[type]?.nameIn(language) ?? type;
+  static String documentName(String type, String language, {String? country}) =>
+      documentTypes[type]?.nameIn(language, country: country) ?? type;
 
   static DocumentKind kindOf(String type) =>
       documentTypes[type]?.kind ?? DocumentKind.file;

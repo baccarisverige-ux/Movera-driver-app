@@ -10000,26 +10000,26 @@ abstract class AppLocalizations {
   /// No description provided for @remDocumentNeeded.
   ///
   /// In en, this message translates to:
-  /// **'{document} is missing'**
-  String remDocumentNeeded(Object document);
+  /// **'{plural, select, yes{{document} are missing} other{{document} is missing}}'**
+  String remDocumentNeeded(Object document, String plural);
 
   /// No description provided for @remDocumentRejected.
   ///
   /// In en, this message translates to:
-  /// **'{document} was rejected'**
-  String remDocumentRejected(Object document);
+  /// **'{plural, select, yes{{document} were rejected} other{{document} was rejected}}'**
+  String remDocumentRejected(Object document, String plural);
 
   /// No description provided for @remDocumentExpired.
   ///
   /// In en, this message translates to:
-  /// **'{document} has expired'**
-  String remDocumentExpired(Object document);
+  /// **'{plural, select, yes{{document} have expired} other{{document} has expired}}'**
+  String remDocumentExpired(Object document, String plural);
 
   /// No description provided for @remDocumentExpiring.
   ///
   /// In en, this message translates to:
-  /// **'{document} expires {when}'**
-  String remDocumentExpiring(Object document, Object when);
+  /// **'{plural, select, yes{{document} expire {when}} other{{document} expires {when}}}'**
+  String remDocumentExpiring(Object document, Object when, String plural);
 
   /// No description provided for @remDocumentInReview.
   ///
@@ -11052,6 +11052,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only the fleet owner can upload or open car documents.'**
   String get docFleetOwnerOnly;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Join a fleet to drive – ask your fleet owner for the Movera code'**
+  String get remNoFleet;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Join a fleet'**
+  String get remActionJoinFleet;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Start my own company'**
+  String get remActionStartCompany;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a car from your fleet'**
+  String get remNoVehicleNotActive;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Add a car below or finish its documents. Drivers can go online once a car is approved.'**
+  String get fleetNoApprovedCarOwnerHere;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is being checked. We tell you when you can drive.'**
+  String get holdAccountChecking;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Booster Seat is an extra: also choose a ride type.'**
+  String get carExtraNeedsRide;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'This car does not meet Movera’s rules:'**
+  String get carRulesNotMet;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'{category}: {problem}'**
+  String carProblemLine(Object category, Object problem);
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'The car'**
+  String get carWholeCar;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'the car is too old for Movera'**
+  String get carProblemYearTooOld;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'the car must be from {year} or later'**
+  String carProblemYearTooOldBase(int year);
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'not offered in this country'**
+  String get carProblemCategoryOff;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'too few seats'**
+  String get carProblemTooFewSeats;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'this fuel is not allowed'**
+  String get carProblemFuelNotAllowed;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'choose the fuel'**
+  String get carProblemFuelRequired;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'only together with a ride type'**
+  String get carProblemExtraNeedsRide;
+
+  /// Contract v0.18.3 driver group 2 re-check (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'does not fit'**
+  String get carProblemOther;
+
+  /// Contract v0.18.3 R7 push (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Get notices when the app is closed?'**
+  String get pushAskTitle;
+
+  /// Contract v0.18.3 R7 push (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Movera tells you when a document is about to expire, when Movera has checked your documents or car, about fleet invitations and messages from riders. You can turn this off at any time in your browser or phone settings.'**
+  String get pushAskBody;
+
+  /// Contract v0.18.3 R7 push (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get pushAskAllow;
+
+  /// Contract v0.18.3 R7 push (owner 2026-10-30).
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get pushAskLater;
 }
 
 class _AppLocalizationsDelegate

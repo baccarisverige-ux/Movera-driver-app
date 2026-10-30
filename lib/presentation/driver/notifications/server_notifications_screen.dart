@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
+import 'package:movera/core/account/driver_account_rules.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/documents/live_documents_screen.dart';
+import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -16,9 +18,17 @@ import 'package:movera/widgets/single_route_entry.dart';
 /// the row read (`POST /notifications/{id}/read`); a `fleet_invitation`
 /// opens My fleet, where the invitations are answered.
 class ServerNotificationsScreen extends StatefulWidget {
-  const ServerNotificationsScreen({super.key, required this.account});
+  const ServerNotificationsScreen({
+    super.key,
+    required this.account,
+    this.openNotificationId,
+  });
 
   final DriverAccountSession account;
+
+  /// Contract v0.18.3 R7: the notice of the push the driver tapped; it
+  /// opens like a tap on its row once the list is read.
+  final String? openNotificationId;
 
   @override
   State<ServerNotificationsScreen> createState() =>
@@ -28,6 +38,7 @@ class ServerNotificationsScreen extends StatefulWidget {
 class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
     with WidgetsBindingObserver {
   List<ServerNotification> _items = const [];
+  late String? _pendingOpen = widget.openNotificationId;
   bool _loading = true;
   String? _error;
 
@@ -61,6 +72,18 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
       widget.account.unreadNotifications.value = items
           .where((n) => !n.read)
           .length;
+      final pushed = _pendingOpen;
+      _pendingOpen = null;
+      if (pushed != null) {
+        for (final notice in items) {
+          if (notice.notificationId == pushed) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _open(notice);
+            });
+            break;
+          }
+        }
+      }
     } catch (error) {
       if (!mounted) return;
       setState(
@@ -96,6 +119,25 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
       await pushSingle(
         context,
         RightToLeftTransition(MyFleetScreen(account: widget.account)),
+      );
+      if (mounted) await _load();
+    } else if (notice.kind == 'document_rejected' &&
+        notice.documentLink != null) {
+      // R6: a rejected document opens its upload guide (a new one).
+      final link = notice.documentLink!;
+      final me = widget.account.account;
+      await pushSingle(
+        context,
+        RightToLeftTransition(
+          UploadGuideScreen(
+            account: widget.account,
+            type: link.type,
+            ownerId: link.vehicleId ?? me?.driverId ?? '',
+            isCar: link.vehicleId != null,
+            country: me?.country ?? DriverAccountRules.current.country,
+            status: 'rejected',
+          ),
+        ),
       );
       if (mounted) await _load();
     } else if (notice.opensDocuments) {

@@ -21,6 +21,10 @@ class _HomeAccountState {
   /// Demo notifications that arrive while Home is open.
   final List<Timer> arrivalTimers = <Timer>[];
 
+  /// R6 (owner 2026-10-30, "Update + notice"): the profile, the bell and
+  /// the reminders are read again every 60 s while Home is open.
+  Timer? refreshTimer;
+
   VoidCallback? feedListener;
   VoidCallback? remindersListener;
   VoidCallback? categoriesListener;
@@ -37,6 +41,8 @@ class _HomeAccountState {
 
   void dispose() {
     cancelDriving();
+    refreshTimer?.cancel();
+    refreshTimer = null;
     for (final timer in arrivalTimers) {
       timer.cancel();
     }
@@ -73,6 +79,11 @@ extension _HomeAccount on _DriverHomeState {
     )._onCategoriesChanged;
     DriverCategoryChoice.off.addListener(onCategories);
     _syncDrivingLimit();
+    account.refreshTimer = Timer.periodic(onboardingRefreshEvery, (_) {
+      if (mounted && _liveVisible) {
+        _refreshLiveBadges();
+      }
+    });
     for (final (after, make) in _feed.takeArrivals()) {
       account.arrivalTimers.add(
         Timer(after, () {
@@ -183,8 +194,18 @@ extension _HomeAccount on _DriverHomeState {
       nameOf: (type) =>
           OnboardingSettingsStore.instance.nameOf(type, tr.localeName),
       owner: accountSessionOf(context)?.account?.fleet?.isOwner ?? false,
+      active: isAccountActivated,
     ).title;
   }
+
+  /// R10 (owner 2026-10-30): the hold sheet's first line names the real
+  /// first reason.
+  String _holdHeadline() => holdHeadline(
+    DriverRemindersStore.instance.list,
+    nameOf: (type) =>
+        OnboardingSettingsStore.instance.nameOf(type, tr.localeName),
+    owner: accountSessionOf(context)?.account?.fleet?.isOwner ?? false,
+  );
 
   /// Opens the Home sheet on the reminders.
   void _showReminders() {
@@ -196,9 +217,12 @@ extension _HomeAccount on _DriverHomeState {
 
   /// A tap on a reminder line: the upload guide, "How to book", My fleet
   /// or the car list (`ReminderFix.target`).
-  Future<void> _fixReminder(DriverReminder reminder) async {
+  Future<void> _fixReminder(
+    DriverReminder reminder, [
+    ReminderFix? action,
+  ]) async {
     final session = accountSessionOf(context);
-    final fix = reminder.fix;
+    final fix = action ?? reminder.fix;
     if (!mounted || session == null || fix == null) {
       return;
     }
@@ -218,6 +242,9 @@ extension _HomeAccount on _DriverHomeState {
       ),
       ReminderFixTarget.fleetVehicles => MyFleetScreen(account: session),
       ReminderFixTarget.pickVehicle => LiveVehiclesScreen(account: session),
+      // Contract v0.18.3 (R4): the no_fleet line's two buttons.
+      ReminderFixTarget.joinFleet => JoinFleetScreen(account: session),
+      ReminderFixTarget.startCompany => StartCompanyScreen(account: session),
     };
     await pushSingle(context, MaterialPageRoute<void>(builder: (_) => page));
     if (mounted) {
@@ -234,7 +261,9 @@ extension _HomeAccount on _DriverHomeState {
     return ImportantRemindersBox(
       store: DriverRemindersStore.instance,
       owner: session.account?.fleet?.isOwner ?? false,
+      active: isAccountActivated,
       onFix: (reminder) => unawaited(_fixReminder(reminder)),
+      onAction: (reminder, action) => unawaited(_fixReminder(reminder, action)),
     );
   }
 

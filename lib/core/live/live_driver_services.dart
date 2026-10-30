@@ -157,12 +157,17 @@ class LiveDriverServices {
 
   bool _signedInStarted = false;
 
+  /// Set by the app root: runs once per session start (push, R7).
+  void Function()? afterSignedIn;
+
   /// The driver has a session (a sign-in, or one kept from before): the
   /// zones, the settings with their stream and the content are read now.
   /// Once per session.
   void signedIn() {
     if (_signedInStarted) return;
     _signedInStarted = true;
+    // Contract v0.18.3 R7: push is set up once there is a session.
+    afterSignedIn?.call();
     unawaited(zones.start());
     unawaited(
       config.start().then((_) {

@@ -817,7 +817,7 @@ extension _HomeMapSheet on _DriverHomeState {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                   child: Text(
-                    tr.holdBeingChecked,
+                    _HomeAccount(this)._holdHeadline(),
                     key: const ValueKey('hold-being-checked'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(

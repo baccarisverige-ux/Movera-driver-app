@@ -99,6 +99,10 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
   final Map<DetailsField, String> _errors = {};
   String? _formError;
   late final DetailsDraft _draft = widget.draft ?? DetailsDraft();
+
+  /// The confirmed phone: the sign-in's, else the one kept in the draft
+  /// (R10, owner 2026-10-30: the row stays after the app is reloaded).
+  late String? _phone = widget.phone;
   bool _restored = false;
 
   static final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -205,8 +209,11 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
         _accountType = type;
       }
       _joinOpen = saved['joinOpen'] == true;
+      _phone ??= text('phone');
       _restored = true;
     });
+    // Keep the confirmed phone for a reload of this step.
+    if (widget.phone != null) _saveDraft();
   }
 
   static List<OnboardingCity> _citiesOf(String country) =>
@@ -241,6 +248,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
       'joinCode': _joinCode.text,
       'joinOwner': _joinOwner.text,
       'joinEmail': _joinEmail.text,
+      'phone': _phone,
     });
   }
 
@@ -308,6 +316,9 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     // `DateTime.parse` rolls 2000-02-31 over; refuse such dates.
     final parts = text.split('-').map(int.parse).toList();
     if (date.month != parts[1] || date.day != parts[2]) return null;
+    // R10: a real birth date (not 0990-05-05 nor one in the future).
+    final now = (widget.clock ?? DateTime.now)();
+    if (date.year < now.year - 120 || date.isAfter(now)) return null;
     return date;
   }
 
@@ -543,7 +554,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
 
   Widget _form() {
     final prefill = widget.prefill;
-    final phone = widget.phone;
+    final phone = _phone;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -613,10 +624,8 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
           error: _errors[DetailsField.dateOfBirth],
           hint: 'YYYY-MM-DD',
           keyboard: TextInputType.datetime,
-          formatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9\-]')),
-            LengthLimitingTextInputFormatter(10),
-          ],
+          // R10 (owner 2026-10-30): "19900505" becomes "1990-05-05".
+          formatters: const [BirthDateFormatter()],
           suffix: IconButton(
             key: const ValueKey('details-pick-date'),
             tooltip: tr.acctPickDate,
@@ -1196,6 +1205,38 @@ class _JoinBox extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// R10 (owner 2026-10-30, "birth date format check"): the date of birth
+/// is typed as digits and shown as `YYYY-MM-DD`: the dashes come by
+/// themselves ("19900505" becomes "1990-05-05"), anything else is
+/// dropped, at most 8 digits.
+class BirthDateFormatter extends TextInputFormatter {
+  const BirthDateFormatter();
+
+  static String format(String text) {
+    final digits = text.replaceAll(RegExp(r'[^0-9]'), '');
+    final kept = digits.length > 8 ? digits.substring(0, 8) : digits;
+    final out = StringBuffer();
+    for (var i = 0; i < kept.length; i++) {
+      if (i == 4 || i == 6) out.write('-');
+      out.write(kept[i]);
+    }
+    return out.toString();
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = format(newValue.text);
+    if (text == newValue.text) return newValue;
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 }

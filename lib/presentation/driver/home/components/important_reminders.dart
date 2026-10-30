@@ -14,7 +14,9 @@ class ImportantRemindersBox extends StatefulWidget {
     super.key,
     required this.store,
     required this.onFix,
+    this.onAction,
     this.owner = false,
+    this.active = true,
     this.carName,
     this.initiallyOpen = true,
   });
@@ -23,6 +25,14 @@ class ImportantRemindersBox extends StatefulWidget {
 
   /// A tap on a line with a fix.
   final void Function(DriverReminder reminder) onFix;
+
+  /// A tap on one of the line's buttons (contract v0.18.3 R4: `no_fleet`
+  /// has Join a fleet and Start my own company); null: [onFix] with the
+  /// line.
+  final void Function(DriverReminder reminder, ReminderFix action)? onAction;
+
+  /// False while the account waits for Movera (R10: no "go online" words).
+  final bool active;
 
   /// The fleet owner (the fleet_no_approved_car fix is his).
   final bool owner;
@@ -139,6 +149,7 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
           OnboardingSettingsStore.instance.nameOf(type, tr.localeName),
       carName: widget.carName,
       owner: widget.owner,
+      active: widget.active,
     );
     final color = ImportantRemindersBox.colorOf(item.level);
     final canFix = item.fix != null;
@@ -189,6 +200,18 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
                         ),
                       ),
                     ),
+                  if (item.actions.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final action in item.actions)
+                            _actionButton(item, index, action),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -217,6 +240,43 @@ class _ImportantRemindersBoxState extends State<ImportantRemindersBox> {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionButton(DriverReminder item, int index, ReminderFix action) {
+    final primary = identical(action, item.actions.first);
+    final color = ImportantRemindersBox.colorOf(item.level);
+    return Semantics(
+      button: true,
+      child: InkWell(
+        key: ValueKey('home-reminder-$index-action-${action.target.name}'),
+        borderRadius: BorderRadius.circular(14),
+        onTap: () {
+          final onAction = widget.onAction;
+          if (onAction != null) {
+            onAction(item, action);
+          } else {
+            widget.onFix(item);
+          }
+        },
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 36),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: primary ? color : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color),
+          ),
+          child: Text(
+            reminderActionLabel(action.target),
+            style: TextStyle(
+              color: primary ? Colors.white : color,
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ),
       ),
     );

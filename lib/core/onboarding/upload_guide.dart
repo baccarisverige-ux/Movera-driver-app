@@ -88,7 +88,14 @@ abstract final class UploadGuides {
     OnboardingSettings? settings,
   }) {
     final language = tr.localeName;
-    final admin = settings?.helpOf(type, language) ?? const <String>[];
+    final info = settings?.typeOf(type);
+    // Contract v0.18.3 (R8): the admin's guide lines of this country
+    // first, then the older help text, then the app's own text.
+    final guideChecklist = _inLanguage(info?.checklist, language);
+    final admin = guideChecklist.isNotEmpty
+        ? guideChecklist
+        : settings?.helpOf(type, language) ?? const <String>[];
+    final adminTips = _inLanguage(info?.tips, language);
     final example = exampleOf(type);
     return UploadGuide(
       type: type,
@@ -97,12 +104,19 @@ abstract final class UploadGuides {
           DriverOnboardingRules.documentName(type, language),
       example: example,
       checklist: admin.isNotEmpty ? admin : _checklist(type, country),
-      tips: _tips(example),
+      tips: adminTips.isNotEmpty ? adminTips : _tips(example),
       fromAdmin: admin.isNotEmpty,
       expires: settings?.expires(type) ?? false,
       warnDays: _firstWarning(type, settings),
     );
   }
+
+  static List<String> _inLanguage(List<LocalText>? lines, String language) => [
+    for (final line in lines ?? const <LocalText>[])
+      if (line.inLanguage(language)?.trim() case final text?
+          when text.isNotEmpty)
+        text,
+  ];
 
   static int _firstWarning(String type, OnboardingSettings? settings) {
     if (settings == null) return 30;

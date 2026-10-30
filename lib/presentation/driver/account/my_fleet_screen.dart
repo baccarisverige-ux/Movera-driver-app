@@ -451,7 +451,7 @@ class _MyFleetScreenState extends State<MyFleetScreen>
                   const SizedBox(height: 2),
                   Text(
                     owner
-                        ? tr.remFleetNoApprovedCarOwner
+                        ? tr.fleetNoApprovedCarOwnerHere
                         : tr.remFleetNoApprovedCarMember,
                     style: AccountStyle.hint(),
                   ),

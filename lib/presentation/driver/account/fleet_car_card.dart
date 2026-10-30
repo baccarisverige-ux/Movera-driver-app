@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
-import 'package:movera/core/contracts/driver_onboarding_rules.dart';
+import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/onboarding/onboarding_settings.dart';
 import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 
@@ -49,7 +50,7 @@ class FleetCarCard extends StatelessWidget {
     final (statusLabel, statusColor) = statusOf(vehicle.status);
     final types = [
       for (final id in vehicle.categoryIds)
-        CategoryCatalog.driverLabels[id] ?? id,
+        categoryNameText(CategoryCatalog.driverLabels[id] ?? id),
     ].join(' · ');
     return Container(
       key: ValueKey('car-${vehicle.vehicleId}'),
@@ -178,7 +179,10 @@ class FleetCarCard extends StatelessWidget {
                   Text(
                     {
                       for (final type in vehicle.missingDocuments)
-                        DriverOnboardingRules.documentName(type, tr.localeName),
+                        OnboardingSettingsStore.instance.nameOf(
+                          type,
+                          tr.localeName,
+                        ),
                     }.join(', '),
                     style: AccountStyle.hint(),
                   ),

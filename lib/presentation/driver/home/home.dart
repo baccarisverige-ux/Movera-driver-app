@@ -90,6 +90,8 @@ import 'package:movera/presentation/driver/documents/onboarding_refresh.dart';
 import 'package:movera/presentation/driver/documents/upload_guide_screen.dart';
 import 'package:movera/presentation/driver/home/components/important_reminders.dart';
 import 'package:movera/presentation/driver/vehicles/live_vehicles_screen.dart';
+import 'package:movera/presentation/driver/account/join_fleet_screen.dart';
+import 'package:movera/presentation/driver/account/start_company_screen.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
