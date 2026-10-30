@@ -6466,4 +6466,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pushAskLater => 'Not now';
+
+  @override
+  String get backgroundLocationTitle => 'Movera is online';
+
+  @override
+  String get backgroundLocationBody => 'Your position is sent so you get trips';
+
+  @override
+  String get locationRequired => 'Turn on location to go online';
+
+  @override
+  String get locationOpenSettings => 'Open Settings';
+
+  @override
+  String get batterySaverWarning =>
+      'Battery saver is on. Movera may stop sending your position – turn it off to get trips.';
+
+  @override
+  String get setOfflineLine => 'You were set offline – tap to go online again';
+
+  @override
+  String get outsideAreaTitle => 'You are not eligible to drive in this area';
+
+  @override
+  String outsideAreaBody(String zones) {
+    return 'You get no trips here. Drive back to $zones to get trips.';
+  }
+
+  @override
+  String get outsideAreaOk => 'OK';
 }

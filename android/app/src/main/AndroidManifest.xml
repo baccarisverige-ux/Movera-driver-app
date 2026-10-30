@@ -3,6 +3,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Owner decision 1 (driver group 3, contract v0.18.4): while online the
+         position keeps going out with the phone locked, from geolocator's
+         location foreground service and its "Movera is online" notification. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Ride check "Record audio": the recording stays on this phone. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 

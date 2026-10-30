@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
@@ -16,7 +18,9 @@ import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:movera/core/driver/driver_home_notices.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/driver_location_service.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
@@ -46,6 +50,19 @@ class LiveDriverServices {
       api: api,
       location: location,
       every: locationEvery,
+      // Decision 1: while sending, the phone keeps sending when locked.
+      onRunning: location is DriverLocationService
+          ? (running) => unawaited(
+              DriverLocationService.setOnlineBackground(
+                running
+                    ? (
+                        title: tr.backgroundLocationTitle,
+                        text: tr.backgroundLocationBody,
+                      )
+                    : null,
+              ),
+            )
+          : null,
     );
     chat = LiveTripChat(api: api);
     trips = LiveTripCommands(
@@ -313,7 +330,12 @@ class LivePresence {
       if (!_wantOnline) return null;
       try {
         final fix = await _reporter.freshFix();
-        var profile = await _api.get(profilePath);
+        // v0.18.4 `auth.slowStart` covers going online: a sleeping server
+        // answers after about 50 s, so wait up to 60 s.
+        var profile = await _api.get(
+          profilePath,
+          timeout: ApiClient.signInTimeout,
+        );
         for (var attempt = 0; attempt < 3; attempt++) {
           final status = profile['onlineStatus'];
           if (status == 'online' || status == 'on_trip') break;
@@ -325,6 +347,7 @@ class LivePresence {
                 'onlineStatus': 'online',
                 if (fix != null) 'location': fix,
               },
+              timeout: ApiClient.signInTimeout,
             );
           } on ApiError catch (error) {
             final current = error.projection;
@@ -338,6 +361,11 @@ class LivePresence {
           return tr.liveOnlineFailed;
         }
         serverOnline = true;
+        final version = profile['version'];
+        _onlineVersion = version is num ? version.toInt() : null;
+        DriverSetOfflineNotice.instance.clear();
+        // G3-R2: online, but outside his zones the popup says so.
+        DriverAreaWatch.instance.observe(profile);
         _startOnline();
         return null;
       } catch (error) {
@@ -346,6 +374,20 @@ class LivePresence {
         return liveAvailabilityErrorMessage(error, online: true);
       }
     });
+  }
+
+  /// The Driver.version of the going-online answer.
+  int? _onlineVersion;
+
+  /// G3-R1: a profile read after going online says the server set the
+  /// driver offline (no position for `autoOffline.noFixMinutes`).
+  bool serverSetOffline({required String? onlineStatus, required int version}) {
+    final since = _onlineVersion;
+    return serverOnline &&
+        _wantOnline &&
+        since != null &&
+        version > since &&
+        onlineStatus == 'offline';
   }
 
   bool _settled = false;
@@ -374,6 +416,10 @@ class LivePresence {
                 'onlineStatus': 'offline',
               },
             );
+            // Decision 3: "You were set offline – tap to go online again".
+            if (profile['onlineStatus'] == 'offline') {
+              DriverSetOfflineNotice.instance.show();
+            }
           } on ApiError catch (error) {
             final current = error.projection;
             if (error.code != 'version_mismatch' || current == null) rethrow;
@@ -393,6 +439,8 @@ class LivePresence {
   /// Null when done; else what to tell the driver.
   Future<String?> goOffline() {
     _wantOnline = false;
+    _onlineVersion = null;
+    DriverAreaWatch.instance.reset();
     _stopOnline();
     return _serial(() async {
       if (_wantOnline || !serverOnline) return null;
@@ -466,11 +514,35 @@ class LiveLocationReporter {
     required DriverLocationRepository location,
     this.every = defaultEvery,
     DateTime Function()? now,
+    bool? restampHeldFix,
+    this.onRunning,
   }) : _api = api,
        _location = location,
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now,
+       _restamp = restampHeldFix ?? kIsWeb;
 
   static const defaultEvery = Duration(seconds: 10);
+
+  /// A fix from the position stream younger than this goes out as it is.
+  static const heldFresh = Duration(seconds: 20);
+
+  /// Driver group 3 (live test 2026-10-30: one position after going
+  /// online, then "No recent accurate GPS fix" every tick): the reporter
+  /// no longer asks for a brand-new one-shot fix every 10 s, which a
+  /// browser (and a phone indoors) cannot give in time. It keeps the
+  /// position stream open while running and sends its latest fix.
+  /// A browser's stream reports only when the position changes; while it
+  /// is open without an error the driver is still where it last said, so
+  /// on the web that fix goes out stamped now ([_restamp]), else the
+  /// server would see no new position and set the driver offline.
+  final bool _restamp;
+
+  /// Called with true when sending starts and false when it stops
+  /// (decision 1: the background location mode follows it).
+  final void Function(bool running)? onRunning;
+
+  StreamSubscription<DriverLocation>? _watch;
+  DriverLocation? _held;
   static const locationPath = '/api/v1/driver/location';
 
   /// The longest one GPS read may take.
@@ -504,12 +576,42 @@ class LiveLocationReporter {
   void start() {
     if (_timer != null) return;
     _timer = Timer.periodic(every, (_) => unawaited(sendNow()));
+    onRunning?.call(true);
+    _openWatch();
     unawaited(sendNow());
   }
 
   void stop() {
+    if (_timer == null) return;
     _timer?.cancel();
     _timer = null;
+    unawaited(_watch?.cancel());
+    _watch = null;
+    _held = null;
+    onRunning?.call(false);
+  }
+
+  void _openWatch() {
+    _watch = _location
+        .watchPosition(distanceFilterMeters: 0)
+        .listen(
+          (location) => _held = location,
+          // No signal or no permission: the next tick reads once instead.
+          onError: (Object _) => _held = null,
+          cancelOnError: false,
+        );
+  }
+
+  /// The stream's latest fix when it can go out now, else null.
+  LiveFix? _heldFix() {
+    final held = _held;
+    if (held == null) return null;
+    final at = held.measuredAt;
+    final age = at == null ? null : _now().difference(at);
+    if (age != null && age <= heldFresh && age >= -gpsClockSkewTolerance) {
+      return _wire(held);
+    }
+    return _restamp ? _wire(held, measuredAt: _now()) : null;
   }
 
   /// A fix read now, or null when the phone has none (no permission, no
@@ -527,15 +629,17 @@ class LiveLocationReporter {
     if (_sending) return false;
     _sending = true;
     try {
-      final fix = await freshFix();
+      final fix = _heldFix() ?? await freshFix();
       if (fix == null) return false;
-      await _api.post(
+      final ack = await _api.post(
         locationPath,
         body: {
           'fixes': [fix],
         },
       );
       lastFix = fix;
+      // G3-R2: "You are not eligible to drive in this area" once per entry.
+      DriverAreaWatch.instance.observe(ack);
       return true;
     } catch (error) {
       DriverLog.warn('location not sent: ${error.runtimeType}', name: 'live');
@@ -545,7 +649,7 @@ class LiveLocationReporter {
     }
   }
 
-  LiveFix? _wire(DriverLocation location) {
+  LiveFix? _wire(DriverLocation location, {DateTime? measuredAt}) {
     final point = location.point;
     if (!point.isValid) return null;
     final heading = location.headingDegrees;
@@ -560,7 +664,9 @@ class LiveLocationReporter {
       if (heading.isFinite && heading >= 0 && heading < 360) 'heading': heading,
       if (speed != null && speed.isFinite && speed >= 0) 'speedMps': speed,
       if (speed != null && speed.isFinite) 'moving': speed >= 1,
-      'measuredAt': (location.measuredAt ?? _now()).toUtc().toIso8601String(),
+      'measuredAt': (measuredAt ?? location.measuredAt ?? _now())
+          .toUtc()
+          .toIso8601String(),
     };
   }
 }

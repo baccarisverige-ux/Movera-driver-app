@@ -6572,4 +6572,37 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pushAskLater => 'Plus tard';
+
+  @override
+  String get backgroundLocationTitle => 'Movera est en ligne';
+
+  @override
+  String get backgroundLocationBody =>
+      'Votre position est envoyée pour recevoir des courses';
+
+  @override
+  String get locationRequired => 'Activez la localisation pour passer en ligne';
+
+  @override
+  String get locationOpenSettings => 'Ouvrir les réglages';
+
+  @override
+  String get batterySaverWarning =>
+      'L\'économiseur de batterie est activé. Movera peut cesser d\'envoyer votre position – désactivez-le pour recevoir des courses.';
+
+  @override
+  String get setOfflineLine =>
+      'Vous avez été mis hors ligne – appuyez pour repasser en ligne';
+
+  @override
+  String get outsideAreaTitle =>
+      'Vous n\'êtes pas autorisé à conduire dans cette zone';
+
+  @override
+  String outsideAreaBody(String zones) {
+    return 'Vous ne recevrez aucune course ici. Retournez dans $zones pour recevoir des courses.';
+  }
+
+  @override
+  String get outsideAreaOk => 'OK';
 }

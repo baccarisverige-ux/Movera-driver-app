@@ -52,6 +52,8 @@ String liveAvailabilityErrorMessage(Object? error, {required bool online}) {
         'vehicle_in_use' => tr.liveOnlineVehicleInUse,
         'no_category' => tr.liveOnlineNoCategory,
         'on_trip' => tr.liveOfflineOnTrip,
+        // v0.18.4 (decision 2): no fresh position came with going online.
+        'location_required' => tr.locationRequired,
         _ => fallback,
       };
 }

@@ -148,6 +148,7 @@ class DriverAccount {
     this.documents = const [],
     this.requiredDocuments = const [],
     this.requiredFleetDocuments = const [],
+    this.onlineStatus,
   });
 
   factory DriverAccount.fromJson(Map<String, dynamic> json) {
@@ -176,6 +177,7 @@ class DriverAccount {
       ],
       requiredDocuments: _strings(json['requiredDocuments']),
       requiredFleetDocuments: _strings(json['requiredFleetDocuments']),
+      onlineStatus: _text(json['onlineStatus']),
     );
   }
 
@@ -210,6 +212,10 @@ class DriverAccount {
   final List<DocumentSummary> documents;
   final List<String> requiredDocuments;
   final List<String> requiredFleetDocuments;
+
+  /// `offline`, `online` or `on_trip` (driver group 3: the server sets a
+  /// driver without a position offline, G3-R1); null when not sent.
+  final String? onlineStatus;
 
   bool get isActive => accountStatus == 'active';
 

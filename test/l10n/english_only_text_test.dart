@@ -84,7 +84,6 @@ const _allowed = <String, Set<String>>{
     'Kungsgatan 42, Stockholm',
     'Hornstull, Stockholm',
     'Odengatan 63, Stockholm',
-    '1141 central park, DHA',
     'Angelica',
     'Maya',
     'Nils',
@@ -146,6 +145,9 @@ const _allowed = <String, Set<String>>{
     '+ {body.substring(dial.length + 1)}',
     'min · km',
     'km · min',
+    // web/driver_map_camera.js knows the own car by this marker title and
+    // strips it (driver group 3); it is never shown.
+    'Driver camera vehicle',
   },
 };
 

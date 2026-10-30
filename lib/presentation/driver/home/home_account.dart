@@ -474,6 +474,8 @@ extension _HomeAccount on _DriverHomeState {
       session.refreshBadges().then((_) {
         if (mounted) {
           _rebuild(() {});
+          // G3-R1: the server set the driver offline (no position).
+          _HomeOnlineGate(this)._checkServerSetOffline(session);
         }
       }),
     );

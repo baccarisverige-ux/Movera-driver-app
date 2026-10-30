@@ -1810,7 +1810,7 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     icon: widget.vehicleIcon,
     // No default map bubble on the car.
     consumeTapEvents: true,
-    infoWindow: InfoWindow(title: tr.mapYourCar),
+    infoWindow: InfoWindow(title: MoveraVehicleMarker.ownTitle),
   );
 
   /// The pins; they change only with the trip's step.
