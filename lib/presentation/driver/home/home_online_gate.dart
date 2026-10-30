@@ -45,7 +45,7 @@ class _HomeGateState {
 }
 
 /// Decision 2: the battery saver warning is shown once per install.
-const String _batterySaverWarnedKey = 'g3_battery_saver_warned';
+const String _batterySaverWarnedPref = 'g3_battery_saver_warned';
 
 extension _HomeOnlineGate on _DriverHomeState {
   void _startOnlineGate() {
@@ -180,9 +180,9 @@ extension _HomeOnlineGate on _DriverHomeState {
     if (_driverLocationService is! DriverLocationService) return;
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool(_batterySaverWarnedKey) ?? false) return;
+      if (prefs.getBool(_batterySaverWarnedPref) ?? false) return;
       if (!await Battery().isInBatterySaveMode) return;
-      await prefs.setBool(_batterySaverWarnedKey, true);
+      await prefs.setBool(_batterySaverWarnedPref, true);
     } catch (_) {
       // Browsers and some phones cannot tell: nothing to warn about.
       return;
