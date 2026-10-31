@@ -78,7 +78,6 @@ class RideOffer {
     this.version = 1,
     this.kind,
     this.expiresAt,
-    this.reasonCode,
   });
 
   /// A reservation as a Radar trip. The driver's distance to the pickup is
@@ -279,10 +278,6 @@ class RideOffer {
   /// when not known; the app's own offer time applies then.
   final DateTime? expiresAt;
 
-  /// Contract `Offer.reasonCode`: why it is Exclusive, an id of
-  /// `driver.offers.exclusiveReasons`. Null when not sent.
-  final String? reasonCode;
-
   /// An Exclusive offer for this driver alone, answered with Accept or No
   /// through dispatch: an admin direct assign (§3.1), or dispatch's own
   /// `kind: exclusive` / `assigned` offer (§3). Never a Radar trip.
@@ -331,18 +326,27 @@ class OfferWithdrawal {
 }
 
 class ClaimResult {
-  const ClaimResult._(this.outcome, {this.offer});
+  const ClaimResult._(this.outcome, {this.offer, this.afterCheck = false});
 
-  const ClaimResult.success(RideOffer offer)
-    : this._(ClaimOutcome.success, offer: offer);
+  const ClaimResult.success(RideOffer offer, {bool afterCheck = false})
+    : this._(ClaimOutcome.success, offer: offer, afterCheck: afterCheck);
 
-  const ClaimResult.alreadyClaimed() : this._(ClaimOutcome.alreadyClaimed);
-  const ClaimResult.expired() : this._(ClaimOutcome.expired);
-  const ClaimResult.unavailable() : this._(ClaimOutcome.unavailable);
+  const ClaimResult.alreadyClaimed({bool afterCheck = false})
+    : this._(ClaimOutcome.alreadyClaimed, afterCheck: afterCheck);
+  const ClaimResult.expired({bool afterCheck = false})
+    : this._(ClaimOutcome.expired, afterCheck: afterCheck);
+  const ClaimResult.unavailable({bool afterCheck = false})
+    : this._(ClaimOutcome.unavailable, afterCheck: afterCheck);
   const ClaimResult.networkError() : this._(ClaimOutcome.networkError);
 
   final ClaimOutcome outcome;
   final RideOffer? offer;
+
+  /// G4 decision 4 (contract v0.18.6 `driverOffers.acceptCheck`): the
+  /// Accept's own answer was lost and this result is what
+  /// `GET /driver/offers/{offerId}` said afterwards. Not won that way, the
+  /// driver sees "Offer no longer available" (not a miss).
+  final bool afterCheck;
 
   bool get isSuccess => outcome == ClaimOutcome.success;
 }

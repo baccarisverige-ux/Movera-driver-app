@@ -1982,9 +1982,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get islandCashOff => 'Cash rides off';
 
   @override
-  String get islandLastMissed => 'Next missed offer: offline';
-
-  @override
   String islandOfflineMissed(Object count) {
     return 'Offline: $count offers missed';
   }
@@ -6590,6 +6587,43 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera chooses the ride types when it approves the car.';
+
+  @override
+  String get offerAccepting => 'Accepting…';
+
+  @override
+  String get offerNoLongerAvailable => 'Offer no longer available';
+
+  @override
+  String get riderRatingLabel => 'Rider rating';
+
+  @override
+  String get soundOffNotice => 'Sound is off – you may miss offers';
+
+  @override
+  String get soundOffTapToAllow => 'Tap to allow sound';
+
+  @override
+  String riderRidesOnly(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides',
+      one: '1 ride',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventRunning => 'Happening now';
+
+  @override
+  String eventStarts(String time) {
+    return 'Starts $time';
+  }
+
+  @override
+  String get eventPickupNote => 'Pickup';
 
   @override
   String get offlineCardTitle => 'You\'re offline';

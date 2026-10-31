@@ -3525,12 +3525,6 @@ abstract class AppLocalizations {
   /// **'Cash rides off'**
   String get islandCashOff;
 
-  /// Admin text key island.lastMissed (Content › Driver app texts).
-  ///
-  /// In en, this message translates to:
-  /// **'Next missed offer: offline'**
-  String get islandLastMissed;
-
   /// Admin text key island.offlineMissed (Content › Driver app texts).
   ///
   /// In en, this message translates to:
@@ -11400,6 +11394,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Movera chooses the ride types when it approves the car.'**
   String get carTypesByMovera;
+
+  /// Contract v0.18.6 driverOffers.acceptCheck.texts.accepting (G4 decision 4).
+  ///
+  /// In en, this message translates to:
+  /// **'Accepting…'**
+  String get offerAccepting;
+
+  /// Contract v0.18.6 driverOffers.acceptCheck.texts.gone (G4 decisions 4, 5).
+  ///
+  /// In en, this message translates to:
+  /// **'Offer no longer available'**
+  String get offerNoLongerAvailable;
+
+  /// Contract v0.18.6 driverOffers.riderRating.texts.label (G4 decision 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Rider rating'**
+  String get riderRatingLabel;
+
+  /// G4 decision 2: online with the sound off (app text; not in contract v0.18.6).
+  ///
+  /// In en, this message translates to:
+  /// **'Sound is off – you may miss offers'**
+  String get soundOffNotice;
+
+  /// G4 decision 2: the browser plays no sound before a tap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to allow sound'**
+  String get soundOffTapToAllow;
+
+  /// G4 decision 3: the rider's rides when there is no rating to show.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride} other{{count} rides}}'**
+  String riderRidesOnly(int count);
+
+  /// Contract v0.18.6 dispatchTools.events.texts.running (G4-F6).
+  ///
+  /// In en, this message translates to:
+  /// **'Happening now'**
+  String get eventRunning;
+
+  /// Contract v0.18.6 dispatchTools.events.texts.upcoming (G4-F6).
+  ///
+  /// In en, this message translates to:
+  /// **'Starts {time}'**
+  String eventStarts(String time);
+
+  /// Contract v0.18.6 dispatchTools.events.texts.pickupNote (G4-F6).
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup'**
+  String get eventPickupNote;
 
   /// Owner 2026-10-31 'new set offline message' (decisions/driver-g3.md): title of the offline card in the Home sheet.
   ///

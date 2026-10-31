@@ -90,6 +90,17 @@ class ExclusiveRequestSheet extends StatelessWidget {
             key: ValueKey<String>('exclusive-offer-boost-$id'),
           ),
         if (onYourWay) OfferBadge.note(driverText(DriverTexts.offerOnYourWay)),
+        // G4 decision 3: the rider's real rating while the zone shows it
+        // (`offers.offerCard.riderRating`); none at all without one.
+        if (offer.shownRating case final rating? when show.riderRating)
+          Semantics(
+            label: '${tr.riderRatingLabel} $rating',
+            excludeSemantics: true,
+            child: OfferBadge.riderRating(
+              rating,
+              key: ValueKey<String>('exclusive-offer-rating-$id'),
+            ),
+          ),
       ],
       fareWhole: whole,
       fareRest: rest,

@@ -80,14 +80,14 @@ class DriverOfferRules {
 
   /// These rules with the published `DriverAppConfig.offers` (owner
   /// 2026-10-27, settings flow): the timers, Exclusive while driving, the
-  /// offer card, the Exclusive reasons and the hidden-trip time. A missing
+  /// offer card (its rider rating switch too, G4 decision 3) and the
+  /// hidden-trip time. A missing
   /// or bad value keeps what is in use.
   DriverOfferRules withOffers(Map<String, dynamic> offers) {
     int? seconds(Object? raw) =>
         raw is int && raw >= 1 && raw <= 600 ? raw : null;
     final whileDriving = offers['exclusiveWhileDriving'];
     final card = offers['offerCard'];
-    final reasons = offers['exclusiveReasons'];
     final auto = offers['autoOffline'];
     final hidden = auto is Map ? auto['hiddenComesBackMin'] : null;
     bool? flag(Map<dynamic, dynamic>? map, String key) =>
@@ -106,19 +106,9 @@ class DriverOfferRules {
               badges: flag(card, 'badges'),
             )
           : this.card,
-      exclusiveReasons: reasons is List
-          ? [
-              for (final reason in reasons)
-                if (reason is Map &&
-                    reason['id'] is String &&
-                    reason['text'] is String)
-                  ExclusiveReasonRule(
-                    id: reason['id'] as String,
-                    text: reason['text'] as String,
-                    on: reason['on'] != false,
-                  ),
-            ]
-          : exclusiveReasons,
+      // G4-E7 (contract v0.18.6): `offers.exclusiveReasons` is deprecated
+      // and ignored; the offer card shows no "why you" line.
+      exclusiveReasons: exclusiveReasons,
       autoOffline: autoOffline,
       autoOfflineAfter: autoOfflineAfter,
       hiddenComesBackAfter: hidden is num && hidden >= 0
@@ -310,6 +300,18 @@ class ExclusiveAnswers {
 
   int get missedInRow => _missedInRow;
 
+  /// Contract §6.7 / `autoOffline.counts` (G4 decision 6, E3): the phone
+  /// counts a missed or declined offer only as the server does: an
+  /// Exclusive or admin hand-sent (assigned) offer of a live trip; never a
+  /// reservation or a scheduled ride Movera assigned. A [live] build
+  /// counts nothing itself: the server counts, and its `driverOffline`
+  /// takes the driver offline, so the two never disagree.
+  static bool counts({
+    required bool live,
+    required bool reservation,
+    required bool scheduledAssignment,
+  }) => !live && !reservation && !scheduledAssignment;
+
   /// The driver accepted one: the row starts again.
   void accepted() => _missedInRow = 0;
 
@@ -323,12 +325,6 @@ class ExclusiveAnswers {
     }
     _missedInRow = 0;
     return true;
-  }
-
-  /// One more missed offer takes the driver offline.
-  bool lastBeforeOffline([DriverOfferRules? rules]) {
-    final limit = rules ?? DriverOfferRules.current;
-    return limit.autoOffline && _missedInRow == limit.autoOfflineAfter - 1;
   }
 
   void reset() => _missedInRow = 0;

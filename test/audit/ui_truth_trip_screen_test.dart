@@ -329,8 +329,8 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('driver-u133: a rider without a usable rating is shown as New, '
-      'not as an invented 4.9', (tester) async {
+  testWidgets('driver-u133 / G4 decision 3: a rider without a usable rating '
+      'shows no rating at all (no "New", no invented 4.9)', (tester) async {
     await _trip(
       tester,
       AcceptRide(
@@ -346,8 +346,10 @@ void main() {
     await tester.ensureVisible(rider.first);
     await tester.tap(rider.first);
     await _frames(tester, 16);
-    expect(find.textContaining('New ★'), findsWidgets);
-    expect(find.textContaining('4.9 ★'), findsNothing);
+    // G4 decision 3 (checker LOW 11): only the rides, no rating word.
+    expect(find.text('0 rides'), findsWidgets);
+    expect(find.textContaining('New ★'), findsNothing);
+    expect(find.textContaining('★'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }

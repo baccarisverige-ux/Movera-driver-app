@@ -93,7 +93,12 @@ void main() {
       expect(rules.exclusiveWhileDrivingCount, 2);
       expect(rules.autoOfflineAfter, 10);
       expect(rules.card.pickupAddress, isFalse);
-      expect(rules.reasonText('nearby'), 'Nära dig');
+      // G4-E7 (v0.18.6): an old document's exclusiveReasons are ignored.
+      expect(
+        rules.reasonText('nearby'),
+        isNot('Nära dig'),
+        reason: 'offers.exclusiveReasons is deprecated',
+      );
       expect(PickupPayConfig.current.categories['economy']?.krPerKm, 2.5);
       expect(PickupPayConfig.current.kinds, {PickupPayOfferKind.radar});
       expect(RideCheckAdminConfig.current.longStopMinutes, 4);

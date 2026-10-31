@@ -251,7 +251,7 @@ class _DriverHomeState extends State<DriverHome>
   /// R15-4: one 10 s loop for the Radar's soft sweep (5 turns with trips
   /// found, 3 while scanning) and the black MATCH pulse (4 per loop).
   late final AnimationController _radarMotionController;
-  final RadarOfferSound _offerSound = RadarOfferSound();
+  final RadarOfferSound _offerSound = _HomeSoundNotice.newOfferSound();
   bool _offerSoundQueued = false;
   double _radarWedge({required bool found}) =>
       (_radarMotionController.value * (found ? 5 : 3)) % 1;
@@ -862,10 +862,9 @@ class _DriverHomeState extends State<DriverHome>
   @override
   Widget build(BuildContext context) {
     _syncOfferSound();
-    // R15-5: any tap on the screen stops the radar sound.
     return Listener(
       behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) => _offerSound.tap(),
+      onPointerDown: (_) => _HomeSoundNotice(this)._homeTapped(),
       child: LayoutViewport(
         // UI-03: Back closes the overlay on top before it leaves Home.
         child: _HomeBack(this)._backScope(
@@ -1070,6 +1069,7 @@ class _DriverHomeState extends State<DriverHome>
                       _HomeReservation(this)._reservationLayer(),
                       // An Exclusive offer: the same sheet, its grey orb on top.
                       _HomeExclusive(this)._exclusiveLayer(),
+                      _HomeSoundNotice(this)._soundNoticeLayer(), // G4 d.2
                     ],
                   ),
           ),
@@ -1389,7 +1389,7 @@ class _DriverHomeState extends State<DriverHome>
     _driverLocationSubscription?.cancel();
     _radarSweepController.dispose();
     _radarMotionController.dispose();
-    _offerSound.dispose();
+    _HomeSoundNotice(this)._disposeSound();
     _panelSlidePosition.dispose();
     _snapSheet.dispose();
     _exclusive.dispose();

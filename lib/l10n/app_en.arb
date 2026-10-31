@@ -1303,10 +1303,6 @@
   "@islandCashOff": {
     "description": "Admin text key island.cashOff (Content › Driver app texts)."
   },
-  "islandLastMissed": "Next missed offer: offline",
-  "@islandLastMissed": {
-    "description": "Admin text key island.lastMissed (Content › Driver app texts)."
-  },
   "islandOfflineMissed": "Offline: {count} offers missed",
   "@islandOfflineMissed": {
     "description": "Admin text key island.offlineMissed (Content › Driver app texts).",
@@ -4091,6 +4087,24 @@
   "@remRenewalRejected": {"description": "Contract v0.18.5 reminders.renewal (G2-D1)."},
   "carTypesByMovera": "Movera chooses the ride types when it approves the car.",
   "@carTypesByMovera": {"description": "Contract v0.18.5 vehicleRules.categoriesByAdmin (G2-D5.3)."},
+  "offerAccepting": "Accepting…",
+  "@offerAccepting": {"description": "Contract v0.18.6 driverOffers.acceptCheck.texts.accepting (G4 decision 4)."},
+  "offerNoLongerAvailable": "Offer no longer available",
+  "@offerNoLongerAvailable": {"description": "Contract v0.18.6 driverOffers.acceptCheck.texts.gone (G4 decisions 4, 5)."},
+  "riderRatingLabel": "Rider rating",
+  "@riderRatingLabel": {"description": "Contract v0.18.6 driverOffers.riderRating.texts.label (G4 decision 3)."},
+  "soundOffNotice": "Sound is off – you may miss offers",
+  "@soundOffNotice": {"description": "G4 decision 2: online with the sound off (app text; not in contract v0.18.6)."},
+  "soundOffTapToAllow": "Tap to allow sound",
+  "@soundOffTapToAllow": {"description": "G4 decision 2: the browser plays no sound before a tap."},
+  "riderRidesOnly": "{count, plural, =1{1 ride} other{{count} rides}}",
+  "@riderRidesOnly": {"description": "G4 decision 3: the rider's rides when there is no rating to show.", "placeholders": {"count": {"type": "int"}}},
+  "eventRunning": "Happening now",
+  "@eventRunning": {"description": "Contract v0.18.6 dispatchTools.events.texts.running (G4-F6)."},
+  "eventStarts": "Starts {time}",
+  "@eventStarts": {"description": "Contract v0.18.6 dispatchTools.events.texts.upcoming (G4-F6).", "placeholders": {"time": {"type": "String"}}},
+  "eventPickupNote": "Pickup",
+  "@eventPickupNote": {"description": "Contract v0.18.6 dispatchTools.events.texts.pickupNote (G4-F6)."},
   "offlineCardTitle": "You're offline",
   "@offlineCardTitle": {"description": "Owner 2026-10-31 'new set offline message' (decisions/driver-g3.md): title of the offline card in the Home sheet."},
   "offlineReasonNoPosition": "Your phone sent no position for {minutes} min",

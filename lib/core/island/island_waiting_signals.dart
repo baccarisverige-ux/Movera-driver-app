@@ -1,6 +1,7 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
+import 'package:movera/core/events/driver_events.dart';
 
 /// How a short waiting message looks on the island: the colour of its dot.
 enum IslandTipLook { boost, demand, info, promotion, good }
@@ -79,9 +80,10 @@ class IslandWaitingSignals {
     required DateTime now,
     int streak = 0,
     bool boostNearby = false,
+    Iterable<DriverEvent> liveEvents = const [],
   }) {
-    String? peak;
-    for (final event in config.events) {
+    String? peak = _peakOfLive(liveEvents, now);
+    for (final event in peak == null ? config.events : const []) {
       if (!event.enabled || !_isToday(event.dateLabel, now)) {
         continue;
       }
@@ -96,6 +98,23 @@ class IslandWaitingSignals {
       streak: streak,
       boostNearby: boostNearby,
     );
+  }
+
+  /// G4-F6: the real start (phone time, "HH:mm") of the first of the
+  /// admin's events that starts later today; null when none does.
+  static String? _peakOfLive(Iterable<DriverEvent> events, DateTime now) {
+    final today = now.toLocal();
+    for (final event in events) {
+      final start = event.startsAt.toLocal();
+      if (start.isAfter(today) &&
+          start.year == today.year &&
+          start.month == today.month &&
+          start.day == today.day) {
+        String two(int n) => n.toString().padLeft(2, '0');
+        return '${two(start.hour)}:${two(start.minute)}';
+      }
+    }
+    return null;
   }
 
   /// The demo: every kind of message has its fact, so all of them show.

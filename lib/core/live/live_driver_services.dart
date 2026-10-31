@@ -29,6 +29,7 @@ import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/surge/api_surge_map.dart';
+import 'package:movera/core/events/driver_events.dart';
 import 'package:movera/core/legal/driver_legal.dart';
 
 export 'package:movera/core/live/live_trip_money.dart' show LiveTripMoney;
@@ -99,6 +100,7 @@ class LiveDriverServices {
     );
     content = LiveDriverContent(api: api, zoneId: () => config.current?.zoneId);
     zones = LiveDriverZones(api: api);
+    events = LiveDriverEvents(api: api);
     config = LiveDriverConfig(
       client: client,
       apiBase: apiBase,
@@ -106,6 +108,7 @@ class LiveDriverServices {
       renewSession: api.renewAccess,
       onContentPublished: () => unawaited(content.refresh()),
       onZonesPublished: () => unawaited(zones.refresh()),
+      onEventsPublished: () => unawaited(events.refresh()),
     );
   }
 
@@ -155,6 +158,11 @@ class LiveDriverServices {
   /// The open zones with outline and names (contract v0.11.0 §21): read on
   /// start, again on config_published doc zones; last answer kept.
   late final LiveDriverZones zones;
+
+  /// The events of the driver's country for the Home map (contract
+  /// v0.18.6 §32, G4-F6): read on start, on coming back to the front and
+  /// on config_published doc events.
+  late final LiveDriverEvents events;
 
   static Uri _withPrefix(Uri origin) => origin.replace(
     path: '${origin.path.replaceFirst(RegExp(r'/$'), '')}/api/v1',
@@ -216,6 +224,7 @@ class LiveDriverServices {
     // Contract v0.18.3 R7: push is set up once there is a session.
     afterSignedIn?.call();
     unawaited(zones.start());
+    unawaited(events.refresh());
     unawaited(
       config.start().then((_) {
         unawaited(content.start());
@@ -229,10 +238,15 @@ class LiveDriverServices {
   void signedOut() {
     _signedInStarted = false;
     config.stop();
+    events.events.clear();
   }
 
-  /// The app is on screen again ([LivePresence.resumed]).
-  void resumed() => presence.resumed();
+  /// The app is on screen again ([LivePresence.resumed]); the events are
+  /// read again (G4-F6).
+  void resumed() {
+    presence.resumed();
+    if (_signedInStarted) unawaited(events.refresh());
+  }
 
   Future<void> dispose() async {
     presence.detach();

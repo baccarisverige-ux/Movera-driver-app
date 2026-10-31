@@ -1983,9 +1983,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get islandCashOff => 'Kontantresor av';
 
   @override
-  String get islandLastMissed => 'Nästa missade erbjudande: offline';
-
-  @override
   String islandOfflineMissed(Object count) {
     return 'Offline: $count missade erbjudanden';
   }
@@ -6598,6 +6595,44 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera väljer resetyperna när bilen godkänns.';
+
+  @override
+  String get offerAccepting => 'Accepterar…';
+
+  @override
+  String get offerNoLongerAvailable =>
+      'Erbjudandet är inte längre tillgängligt';
+
+  @override
+  String get riderRatingLabel => 'Kundens betyg';
+
+  @override
+  String get soundOffNotice => 'Ljudet är av – du kan missa erbjudanden';
+
+  @override
+  String get soundOffTapToAllow => 'Tryck för att tillåta ljud';
+
+  @override
+  String riderRidesOnly(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count resor',
+      one: '1 resa',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get eventRunning => 'Pågår nu';
+
+  @override
+  String eventStarts(String time) {
+    return 'Börjar $time';
+  }
+
+  @override
+  String get eventPickupNote => 'Upphämtning';
 
   @override
   String get offlineCardTitle => 'Du är offline';

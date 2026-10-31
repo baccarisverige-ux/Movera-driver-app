@@ -62,6 +62,8 @@ import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dar
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:movera/core/push/push_platform.dart';
 import 'package:movera/core/push/push_registrar.dart';
+import 'package:movera/core/push/offer_push.dart';
+import 'package:movera/core/sound/offer_alert.dart';
 import 'package:movera/core/phone/phone_checks.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
 import 'package:movera/presentation/driver/push/push_explanation.dart';
@@ -146,6 +148,9 @@ class _MoveraAppState extends State<MoveraApp> {
   /// location and trip steps through movera-server. Null in the demo.
   LiveDriverServices? _live;
   PushRegistrar? _push;
+
+  /// G4-E6: tells the web push whether offer pushes may vibrate.
+  VoidCallback? _offerAlertsToPush;
 
   /// Live builds: tells [LiveDriverServices] when the app is back on screen.
   AppLifecycleListener? _lifecycle;
@@ -232,6 +237,14 @@ class _MoveraAppState extends State<MoveraApp> {
         explain: _explainPush,
       );
       pushPlatform.onOpen(_openPush);
+      // G4-E6: offer pushes vibrate only while the driver's own Vibrate
+      // setting is on; the web service worker reads it from here.
+      void offerAlertsToPush() => pushPlatform.setOfferAlerts(
+        vibrate: OfferAlertSettings.vibrate.value,
+      );
+      _offerAlertsToPush = offerAlertsToPush;
+      OfferAlertSettings.vibrate.addListener(offerAlertsToPush);
+      offerAlertsToPush();
       // The offline card's "Turn on" notifications registers push too.
       DevicePhoneChecks.notificationsAllowed = () => unawaited(push.signedIn());
       live.afterSignedIn = () => unawaited(
@@ -271,6 +284,8 @@ class _MoveraAppState extends State<MoveraApp> {
       log: PrefsRideCheckLog(),
     );
     unawaited(_session.restore());
+    // G4-E6: the driver's Vibrate setting for offers, from the first frame.
+    unawaited(OfferAlertSettings.restore());
     // Offers follow the saved Ride-preferences choice from the first frame.
     unawaited(DriverCategoryChoice.restore());
     DriverLanguage.current.addListener(_languageChanged);
@@ -292,6 +307,10 @@ class _MoveraAppState extends State<MoveraApp> {
   @override
   void dispose() {
     DriverLanguage.current.removeListener(_languageChanged);
+    final offerAlerts = _offerAlertsToPush;
+    if (offerAlerts != null) {
+      OfferAlertSettings.vibrate.removeListener(offerAlerts);
+    }
     _session.dispose();
     _routing.dispose();
     final dispatch = _dispatch;
@@ -444,9 +463,19 @@ class _MoveraAppState extends State<MoveraApp> {
   }
 
   /// A tap on a push: the bell list, which opens the notice's deep link.
+  /// G4 decision 1: a new-offer push is not a bell notice: it opens Home,
+  /// where the offer card shows while it is still open ([openOfferPush]).
   void _openPush(PushOpen open) {
     final navigator = _navigatorKey.currentState;
     if (navigator == null) return;
+    if (open.offerId != null) {
+      openOfferPush(
+        navigator,
+        availableForOffers: _session.availableForOffers,
+        dispatch: _dispatch,
+      );
+      return;
+    }
     unawaited(
       navigator.push(
         MaterialPageRoute<void>(
@@ -481,6 +510,8 @@ class _MoveraAppState extends State<MoveraApp> {
     // The language stays: a device setting (clearLocalUserData keeps it).
     // The saved category choice is gone with the settings (driver-82).
     DriverCategoryChoice.reset();
+    // The Vibrate setting went with the settings.
+    OfferAlertSettings.reset();
     _activeRide = PrefsActiveRideRepository();
     _waybills.reset();
     final dispatch = _dispatch;

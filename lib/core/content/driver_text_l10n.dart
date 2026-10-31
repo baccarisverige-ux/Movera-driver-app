@@ -37,7 +37,6 @@ String? driverTextTemplate(AppLocalizations l, String id) => switch (id) {
   'island.lateReassigned' => l.islandLateReassigned('{minutes}'),
   'island.cashOn' => l.islandCashOn,
   'island.cashOff' => l.islandCashOff,
-  'island.lastMissed' => l.islandLastMissed,
   'island.offlineMissed' => l.islandOfflineMissed('{count}'),
   'island.drivingLeft' => l.islandDrivingLeft('{minutes}'),
   'island.restUntil' => l.islandRestUntil('{time}'),

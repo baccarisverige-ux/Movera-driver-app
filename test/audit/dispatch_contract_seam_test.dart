@@ -182,8 +182,8 @@ void main() {
   });
   tearDown(() => DriverOfferRules.current = const DriverOfferRules());
 
-  group('driver-r4-4: Offer.kind, expiresAt and reasonCode', () {
-    test('OfferWire keeps them', () {
+  group('driver-r4-4: Offer.kind and expiresAt (reasonCode: G4-E7)', () {
+    test('OfferWire keeps kind and expiresAt', () {
       final offer = OfferWire.parse(
         _wire(
           kind: 'exclusive',
@@ -192,14 +192,13 @@ void main() {
         ),
       );
       expect(offer.kind, OfferKind.exclusive);
-      expect(offer.reasonCode, 'nearby');
       expect(offer.expiresAt, DateTime.utc(2026, 10, 20, 12, 0, 15));
       expect(offer.isExclusive, isTrue);
       expect(OfferWire.parse(_wire()).isExclusive, isFalse);
     });
 
     testWidgets('a system kind=exclusive offer is the Exclusive sheet, '
-        'with its reason', (tester) async {
+        'without a "why you" line (G4-E7)', (tester) async {
       // The server lets it go in 8 s, not the app's 15 s.
       final expires = DateTime.now().add(const Duration(seconds: 8));
       await _online(tester, [
@@ -220,10 +219,13 @@ void main() {
         find.byKey(const ValueKey<String>('radar-offer-card-o1')),
         findsNothing,
       );
+      // G4-E7 (owner "Remove short line explain"): an old server's
+      // reasonCode shows nothing; the pill keeps "Exclusive for you".
       expect(
-        find.textContaining(RegExp(r"Rider's favourite · [0-8] s")),
+        find.textContaining(RegExp(r'Exclusive for you · [0-8] s')),
         findsWidgets,
       );
+      expect(find.textContaining("Rider's favourite"), findsNothing);
       tester.takeException();
       await tester.pumpWidget(const SizedBox());
     });
@@ -233,15 +235,23 @@ void main() {
     test('Accept again after no answer is the same command', () async {
       final api = _Api();
       await api.open([_wire()]);
+      final later = DateTime.now().add(const Duration(seconds: 10));
+      // G4 decision 4 (v0.18.6): no answer → GET /driver/offers/o1 says
+      // it is still open → the same Accept again, same key.
       api.answers
         ..add((_) => http.ClientException('connection dropped'))
+        ..add(
+          (_) => _json({
+            'offer': {..._wire(), 'expiresAt': later.toUtc().toIso8601String()},
+          }),
+        )
         ..add((_) => _json({'tripId': 'trip-o1', 'status': 'accepted'}));
-      expect(
-        (await api.repo.claimOffer('o1')).outcome,
-        ClaimOutcome.networkError,
-      );
-      expect((await api.repo.claimOffer('o1')).isSuccess, isTrue);
-      expect(api.keys, ['key-1', 'key-1']);
+      final result = await api.repo.claimOffer('o1');
+      expect(result.isSuccess, isTrue);
+      expect(result.afterCheck, isTrue);
+      expect(api.keys, ['key-1', null, 'key-1']);
+      expect(api.requests[1].method, 'GET');
+      expect(api.requests[1].url.path, '/api/v1/driver/offers/o1');
     });
 
     test('a new version or a new answer is a new command', () async {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
@@ -83,7 +84,11 @@ abstract final class OfferWire {
       priority: json['priority'] == true,
       source: OfferSource.fromWire(json['source']),
       groupId: json['groupId'] is String ? json['groupId'] as String : null,
-      rating: rating is num ? rating.toStringAsFixed(2) : '—',
+      // G4 decision 3: the rider's real average, or nothing at all (no
+      // made-up value); the card shows it with one decimal.
+      rating: rating is num && rating.isFinite && rating >= 0 && rating <= 5
+          ? rating.toStringAsFixed(2)
+          : '',
       riderTrips: (json['riderTrips'] as num?)?.toInt() ?? 0,
       pickupMinutes: (whole('pickupEtaSeconds') / 60).ceil(),
       pickupKm: whole('pickupMeters') / 1000,
@@ -105,9 +110,6 @@ abstract final class OfferWire {
       kind: OfferKind.fromWire(json['kind']),
       expiresAt: json['expiresAt'] is String
           ? DateTime.tryParse(json['expiresAt'] as String)
-          : null,
-      reasonCode: json['reasonCode'] is String
-          ? json['reasonCode'] as String
           : null,
       reservationTime: json['kind'] == 'reservation' && at != null
           ? '${two(at.hour)}:${two(at.minute)}'
@@ -167,7 +169,12 @@ class ApiDispatchRepository implements DispatchRepository {
     this.renewSession,
     this.onAccepted,
     DateTime Function()? now,
+    this.acceptAnswerTimeout = const Duration(seconds: 8),
+    this.acceptCheckEvery = const Duration(seconds: 2),
+    this.acceptCheckFor = const Duration(seconds: 20),
+    @visibleForTesting Stopwatch Function()? stopwatch,
   }) : _client = client,
+       _stopwatch = stopwatch ?? Stopwatch.new,
        _base = baseUri,
        _token = accessToken,
        _key = idempotencyKey ?? _randomKey,
@@ -235,6 +242,20 @@ class ApiDispatchRepository implements DispatchRepository {
     final at = _happenedAt(event);
     return at != null && at.isBefore(since);
   }
+
+  /// G4 decision 4 (contract v0.18.6 `driverOffers.acceptCheck`): no
+  /// answer to an Accept within this long is a lost answer
+  /// (`answerTimeoutSeconds`, 8).
+  final Duration acceptAnswerTimeout;
+
+  /// After a lost Accept answer, `GET /driver/offers/{offerId}` every
+  /// [acceptCheckEvery] (`checkEverySeconds`, 2) for up to
+  /// [acceptCheckFor] (`checkForSeconds`, 20).
+  final Duration acceptCheckEvery;
+  final Duration acceptCheckFor;
+
+  /// Measures the [acceptCheckFor] window (tests pass a fake one).
+  final Stopwatch Function() _stopwatch;
 
   final Map<String, RideOffer> _offers = <String, RideOffer>{};
   final Map<String, RideOffer> _nextTrips = <String, RideOffer>{};
@@ -334,7 +355,11 @@ class ApiDispatchRepository implements DispatchRepository {
 
   /// POST [path] with [body] under the command's key. The key is dropped
   /// once the server answered (not on no answer or a 5xx).
-  Future<http.Response> _command(String path, Map<String, Object?> body) async {
+  Future<http.Response> _command(
+    String path,
+    Map<String, Object?> body, {
+    Duration timeout = requestTimeout,
+  }) async {
     final text = jsonEncode(body);
     final command = '$path $text';
     final key = _commandKeys.putIfAbsent(command, _key);
@@ -344,7 +369,7 @@ class ApiDispatchRepository implements DispatchRepository {
           headers: await _headers(idempotencyKey: key),
           body: text,
         )
-        .timeout(requestTimeout);
+        .timeout(timeout);
     final renew = renewSession;
     if (response.statusCode == 401 && renew != null) {
       // An expired access token: renewed once, then the same command.
@@ -355,7 +380,7 @@ class ApiDispatchRepository implements DispatchRepository {
             headers: await _headers(idempotencyKey: key),
             body: text,
           )
-          .timeout(requestTimeout);
+          .timeout(timeout);
     }
     if (response.statusCode < 500) _commandKeys.remove(command);
     return response;
@@ -654,20 +679,36 @@ class ApiDispatchRepository implements DispatchRepository {
 
   /// `POST /offers/{offerId}/accept` with the offer's version. A stale
   /// version is retried once with the server's.
+  ///
+  /// G4 decision 4 (contract v0.18.6 `driverOffers.acceptCheck`): when the
+  /// answer is lost (a network error, or none within
+  /// [acceptAnswerTimeout]) the app asks `GET /driver/offers/{offerId}`
+  /// until it knows ([_checkLostAccept]) instead of guessing.
   @override
   Future<ClaimResult> claimOffer(String offerId) async {
     final offer = _find(offerId);
     if (offer == null) return const ClaimResult.unavailable();
-    var version = offer.version;
+    final outcome = await _sendAccept(offerId, offer, offer.version);
+    return outcome ?? await _checkLostAccept(offerId, offer);
+  }
+
+  /// One Accept (and its one stale-version retry). Null: no answer.
+  Future<ClaimResult?> _sendAccept(
+    String offerId,
+    RideOffer offer,
+    int version, {
+    bool afterCheck = false,
+  }) async {
     for (var attempt = 0; attempt < 2; attempt++) {
       final http.Response response;
       try {
         response = await _command(
           '/offers/${Uri.encodeComponent(offerId)}/accept',
           {'expectedVersion': version},
+          timeout: acceptAnswerTimeout,
         );
       } catch (_) {
-        return const ClaimResult.networkError();
+        return null;
       }
       final body = _json(response.body);
       switch (response.statusCode) {
@@ -680,7 +721,7 @@ class ApiDispatchRepository implements DispatchRepository {
           _offers.remove(offerId);
           _nextTrips.remove(offerId);
           _emit();
-          return ClaimResult.success(offer);
+          return ClaimResult.success(offer, afterCheck: afterCheck);
         case 409:
           final current = body?['projection'];
           final status = current is Map ? current['status'] : null;
@@ -694,18 +735,123 @@ class ApiDispatchRepository implements DispatchRepository {
           }
           _withdraw(offerId, OfferGoneReason.fromWire(status), emit: true);
           return status == 'expired'
-              ? const ClaimResult.expired()
+              ? ClaimResult.expired(afterCheck: afterCheck)
               : status == 'claimed_elsewhere' || body?['code'] == 'conflict'
-              ? const ClaimResult.alreadyClaimed()
-              : const ClaimResult.unavailable();
+              ? ClaimResult.alreadyClaimed(afterCheck: afterCheck)
+              : ClaimResult.unavailable(afterCheck: afterCheck);
         case 404:
           _withdraw(offerId, OfferGoneReason.withdrawn, emit: true);
-          return const ClaimResult.unavailable();
+          return ClaimResult.unavailable(afterCheck: afterCheck);
         default:
           return const ClaimResult.networkError();
       }
     }
-    return const ClaimResult.unavailable();
+    return ClaimResult.unavailable(afterCheck: afterCheck);
+  }
+
+  /// The Accept's answer was lost. `GET /driver/offers/{offerId}` →
+  /// `OfferCheck { offer, trip? }` every [acceptCheckEvery] for up to
+  /// [acceptCheckFor]:
+  /// - `claimed` with the trip: it is his, the trip opens;
+  /// - `open` and not run out: the SAME Accept again, with the SAME
+  ///   Idempotency-Key (the server answers the first one if it ran);
+  /// - anything else, or `404 offer_not_found`: gone ("Offer no longer
+  ///   available", not a miss).
+  /// No answer to any check: a network error, as before.
+  Future<ClaimResult> _checkLostAccept(String offerId, RideOffer offer) async {
+    // At most [acceptCheckFor] in all, on a stopwatch (a phone clock that
+    // jumps does not stretch or cut it), and never more checks than fit
+    // in it.
+    final until = _CheckBudget(
+      acceptCheckFor.inMicroseconds ~/ acceptCheckEvery.inMicroseconds,
+      _stopwatch()..start(),
+      acceptCheckFor,
+    );
+    var version = offer.version;
+    while (true) {
+      final http.Response response;
+      try {
+        response = await _client
+            .get(
+              _uri('/driver/offers/${Uri.encodeComponent(offerId)}'),
+              headers: await _headers(),
+            )
+            // Each check waits at most until the next one is due.
+            .timeout(acceptCheckEvery);
+      } catch (_) {
+        if (!await _waitForNextCheck(until)) {
+          return const ClaimResult.networkError();
+        }
+        continue;
+      }
+      if (response.statusCode == 404) {
+        _withdraw(offerId, OfferGoneReason.withdrawn, emit: true);
+        return const ClaimResult.unavailable(afterCheck: true);
+      }
+      final body = response.statusCode == 200 ? _json(response.body) : null;
+      final checked = body?['offer'];
+      if (checked is! Map) {
+        // A 5xx or a body that is not an OfferCheck: ask again.
+        if (!await _waitForNextCheck(until)) {
+          return const ClaimResult.networkError();
+        }
+        continue;
+      }
+      final status = checked['status'];
+      final trip = body?['trip'];
+      if (status == 'claimed' && trip is Map && trip['tripId'] is String) {
+        onAccepted?.call(Map<String, dynamic>.from(trip));
+        _offers.remove(offerId);
+        _nextTrips.remove(offerId);
+        _emit();
+        return ClaimResult.success(offer, afterCheck: true);
+      }
+      final expires = checked['expiresAt'] is String
+          ? DateTime.tryParse(checked['expiresAt'] as String)
+          : null;
+      if (status == 'open' && (expires == null || expires.isAfter(_now()))) {
+        if (checked['version'] is int) version = checked['version'] as int;
+        final again = await _sendAccept(
+          offerId,
+          offer,
+          version,
+          afterCheck: true,
+        );
+        if (again != null && again.outcome != ClaimOutcome.networkError) {
+          return again;
+        }
+        if (until.over) return const ClaimResult.networkError();
+        if (!await _waitForNextCheck(until)) {
+          return const ClaimResult.networkError();
+        }
+        continue;
+      }
+      // claimed_elsewhere, expired (an open offer past its time reads
+      // expired here too), withdrawn, declined: gone.
+      final reason = status == 'open'
+          ? OfferGoneReason.expired
+          : OfferGoneReason.fromWire(status);
+      _withdraw(offerId, reason, emit: true);
+      return switch (reason) {
+        OfferGoneReason.claimedElsewhere => const ClaimResult.alreadyClaimed(
+          afterCheck: true,
+        ),
+        OfferGoneReason.expired => const ClaimResult.expired(afterCheck: true),
+        OfferGoneReason.withdrawn => const ClaimResult.unavailable(
+          afterCheck: true,
+        ),
+      };
+    }
+  }
+
+  /// Waits [acceptCheckEvery]; false when the next check would start
+  /// after [acceptCheckFor] since the first (or the repository closed).
+  Future<bool> _waitForNextCheck(_CheckBudget budget) async {
+    if (_disposed || !budget.take()) {
+      return false;
+    }
+    await Future<void>.delayed(acceptCheckEvery);
+    return !_disposed;
   }
 
   /// `POST /offers/{offerId}/decline` with the offer's version.
@@ -749,5 +895,25 @@ class ApiDispatchRepository implements DispatchRepository {
     await _nearby.close();
     await _next.close();
     await _withdrawals.close();
+  }
+}
+
+/// The checks after a lost Accept answer still allowed
+/// (`checkForSeconds / checkEverySeconds`, 10).
+class _CheckBudget {
+  _CheckBudget(this._left, this._watch, this._window);
+
+  int _left;
+  final Stopwatch _watch;
+  final Duration _window;
+
+  /// The [_window] (`checkForSeconds`) has run out.
+  bool get over => _watch.elapsed >= _window;
+
+  /// One more check, if any is left and the window is not over.
+  bool take() {
+    if (_left <= 0 || over) return false;
+    _left--;
+    return true;
   }
 }

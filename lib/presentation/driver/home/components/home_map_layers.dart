@@ -1,7 +1,14 @@
 import 'package:flutter/painting.dart' show Color;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/core/surge/surge_map.dart';
+import 'package:movera/core/events/driver_events.dart';
 import 'package:movera/widgets/movera_destination_marker.dart';
+import 'package:movera/widgets/movera_event_marker.dart';
+
+// Home draws the admin's events (G4-F6) through this file.
+export 'package:movera/core/events/driver_events.dart';
+export 'package:movera/presentation/driver/home/components/event_details_sheet.dart';
+export 'package:movera/widgets/movera_event_marker.dart';
 
 const String destinationModeMarkerId = 'destination_mode_target';
 
@@ -82,3 +89,16 @@ Set<Polygon> surgeZonePolygons(Iterable<DriverSurgeZone> zones) => {
       zIndex: 0,
     ),
 };
+
+/// G4-F6 (contract v0.18.6 §32): the Home map's markers with the admin's
+/// events of the driver's country, each a small premium mark at its exact
+/// point ([MoveraEventMarker]); a tap calls [onTap]. Ended events are
+/// left out ([DriverEvents.visible]).
+Set<Marker> withEventMarkers(
+  Set<Marker> markers,
+  DriverEvents events, {
+  required void Function(DriverEvent event) onTap,
+}) {
+  final marks = MoveraEventMarker.markers(events.visible(), onTap: onTap);
+  return marks.isEmpty ? markers : {...marks, ...markers};
+}

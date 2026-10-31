@@ -28,4 +28,7 @@ class UnsupportedPushPlatform implements PushPlatform {
 
   @override
   void onOpen(void Function(PushOpen open) handler) {}
+
+  @override
+  void setOfferAlerts({required bool vibrate}) {}
 }

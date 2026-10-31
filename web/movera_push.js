@@ -6,6 +6,8 @@
   'use strict';
   var SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
   var SCOPE = './firebase-cloud-messaging-push-scope';
+  var PREFS_CACHE = 'movera-push-prefs';
+  var PREFS = 'movera-push-prefs.json';
   var handler = null;
   var waiting = [];
 
@@ -56,6 +58,16 @@
           return app.messaging().getToken({ serviceWorkerRegistration: registration });
         })
         .then(function (token) { return token || null; });
+    },
+    // G4-E6 (contract v0.18.6 driverOffers.push): the driver's own Vibrate
+    // setting, kept where the service worker reads it when an offer push
+    // comes (the app may be closed then). Same file name in the worker.
+    setOfferPrefs: function (json) {
+      if (!('caches' in window)) return Promise.resolve();
+      var url = new URL(PREFS, document.baseURI).href;
+      return caches.open(PREFS_CACHE).then(function (cache) {
+        return cache.put(url, new Response(json, { headers: { 'content-type': 'application/json' } }));
+      }).catch(function () {});
     },
     setOpenHandler: function (fn) {
       handler = fn;

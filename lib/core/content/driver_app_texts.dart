@@ -253,11 +253,6 @@ class DriverTexts {
     'Cash rides off',
     DriverTextArea.island,
   );
-  static const islandLastMissed = DriverTextKey(
-    'island.lastMissed',
-    'Next missed offer: offline',
-    DriverTextArea.island,
-  );
   static const islandOfflineMissed = DriverTextKey(
     'island.offlineMissed',
     'Offline: {count} offers missed',
@@ -504,7 +499,6 @@ class DriverTexts {
     islandLateReassigned,
     islandCashOn,
     islandCashOff,
-    islandLastMissed,
     islandOfflineMissed,
     islandDrivingLeft,
     islandRestUntil,

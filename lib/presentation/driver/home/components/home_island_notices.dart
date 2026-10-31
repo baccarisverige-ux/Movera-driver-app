@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 
@@ -105,6 +106,23 @@ class HomeIslandNotices {
   static IslandMessage get tripUnavailable => IslandMessage(
     title: driverText(DriverTexts.islandTripUnavailable),
     tone: IslandTone.warning,
+    group: 'radar-match',
+  );
+
+  /// G4 decision 4: an Exclusive Accept is with the server.
+  static IslandMessage get accepting => IslandMessage(
+    title: tr.offerAccepting,
+    priority: IslandPriority.low,
+    group: 'radar-match',
+  );
+
+  /// G4 decisions 4 and 5 (contract v0.18.6 `driverOffers.acceptCheck`):
+  /// the server said, after a lost Accept answer, that the offer is gone.
+  /// 2 s on the island; never a miss.
+  static IslandMessage get offerGone => IslandMessage(
+    title: tr.offerNoLongerAvailable,
+    tone: IslandTone.warning,
+    priority: IslandPriority.low,
     group: 'radar-match',
   );
 
@@ -299,13 +317,6 @@ class HomeIslandNotices {
     title: driverText(DriverTexts.islandCashOff),
     priority: IslandPriority.low,
     group: 'cash',
-  );
-
-  /// Q16: one more missed Exclusive offer takes the driver offline.
-  static IslandMessage get lastMissedBeforeOffline => IslandMessage(
-    title: driverText(DriverTexts.islandLastMissed),
-    tone: IslandTone.warning,
-    group: 'missed',
   );
 
   /// Q16: [count] Exclusive offers in a row went without Accept.

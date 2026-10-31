@@ -1180,16 +1180,26 @@ extension _HomeMapSheet on _DriverHomeState {
           if (!_HomeStartPosition(this)._mapReady)
             _HomeStartPosition(this)._locating()
           else
-            ValueListenableBuilder<Set<Polyline>>(
-              // Only the map redraws for each step of the line motion.
-              valueListenable: _offerRouteFrame.flowLine,
-              builder: (context, band, _) {
-                final layers = layersWith(band);
+            ListenableBuilder(
+              // G4-F6: the admin's events, and their icon once painted.
+              listenable: Listenable.merge([
+                _offerRouteFrame.flowLine,
+                DriverEvents.instance,
+                MoveraEventMarker.icon,
+              ]),
+              builder: (context, _) {
+                final layers = layersWith(_offerRouteFrame.flowLine.value);
+                unawaited(MoveraEventMarker.paintIcon());
                 return CustomGoogleMap(
                   key: _homeMapKey,
                   initialPosition: _initialPosition,
-                  markers: _HomeExclusive(this)._exclusiveFadedPins(
-                    _HomeReservation(this)._fadedPins(layers.markers),
+                  markers: withEventMarkers(
+                    _HomeExclusive(this)._exclusiveFadedPins(
+                      _HomeReservation(this)._fadedPins(layers.markers),
+                    ),
+                    DriverEvents.instance,
+                    onTap: (event) =>
+                        unawaited(showEventDetails(context, event)),
                   ),
                   polylines: _HomeExclusive(this)._exclusiveFadedLines(
                     _HomeReservation(this)._fadedLines(
@@ -1794,6 +1804,8 @@ extension _HomeMapSheet on _DriverHomeState {
               GeoPoint(_driverPosition.latitude, _driverPosition.longitude),
               _surgeMap?.zones ?? const [],
             ),
+            // G4-F6: "Peak hours start at" the real start of an event.
+            liveEvents: DriverEvents.instance.visible(),
           );
     return signals.tips();
   }
