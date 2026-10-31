@@ -128,6 +128,19 @@ class _DriverSignInState extends State<DriverSignIn>
 
   AuthController? get _auth => widget.controller ?? authControllerOf(context);
 
+  /// Contract G1-B2 (live iPhone check 2026-10-31: bold words alone did not
+  /// read as links): "terms" and "privacy policy" in the consent sentence
+  /// look like links, underlined in the sign-in black, and each opens the
+  /// server's text (GET /legal/{country}) on its own page; a tap on them
+  /// never ticks the box.
+  static TextStyle get _linkStyle =>
+      AuthText.urbanist(weight: FontWeight.w800).copyWith(
+        color: AuthColors.ink,
+        decoration: TextDecoration.underline,
+        decorationColor: AuthColors.ink,
+        decorationThickness: 1.5,
+      );
+
   void _openLegal(Widget page) {
     pushSingle(context, RightToLeftTransition(page));
   }
@@ -374,15 +387,17 @@ class _DriverSignInState extends State<DriverSignIn>
                         TextSpan(
                           text: tr.authConsentTerms,
                           recognizer: _termsTap,
+                          mouseCursor: SystemMouseCursors.click,
                           semanticsLabel: tr.authConsentTerms,
-                          style: AuthText.urbanist(weight: FontWeight.w800),
+                          style: _linkStyle,
                         ),
                         TextSpan(text: tr.authAnd),
                         TextSpan(
                           text: tr.authConsentPrivacy,
                           recognizer: _privacyTap,
+                          mouseCursor: SystemMouseCursors.click,
                           semanticsLabel: tr.authConsentPrivacy,
-                          style: AuthText.urbanist(weight: FontWeight.w800),
+                          style: _linkStyle,
                         ),
                       ],
                     ),
