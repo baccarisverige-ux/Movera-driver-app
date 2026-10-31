@@ -371,36 +371,35 @@ class _MoveraAppState extends State<MoveraApp> {
                   child: DriverContentGate(
                     session: _session,
                     navigatorKey: _navigatorKey,
-                    // Owner 2026-10-30 "Map under the strip": a live
-                    // build draws edge to edge, under the status bar, like
-                    // a native app; every screen moves its own top by the
-                    // real inset (SafeArea, AppBar, or Home's buttons with
-                    // MediaQuery.paddingOf(context).top). In the browser
-                    // the inset comes from CSS (SafeAreaFromPage).
+                    // Owner 2026-10-31 "Go back to before": the layout
+                    // before "Map under the strip". SafeAreaFromPage stays:
+                    // without viewport-fit=cover the page's insets are 0.
                     child: SafeAreaFromPage(
                       child: LayoutViewport(
-                        child: DriverRuntimeConfig.current.authRequired
-                            ? child ?? const SizedBox.shrink()
-                            : Column(
-                                children: [
-                                  const DemoModeBanner(),
-                                  // The banner took the status-bar inset:
-                                  // the screens below must not pad for it
-                                  // again.
-                                  Expanded(
-                                    child: Builder(
-                                      builder: (viewport) =>
-                                          MediaQuery.removePadding(
-                                            context: viewport,
-                                            removeTop: true,
-                                            child:
-                                                child ??
-                                                const SizedBox.shrink(),
-                                          ),
-                                    ),
-                                  ),
-                                ],
+                        child: Column(
+                          children: [
+                            // A live build (round 4) has an account: no demo
+                            // banner, only the status-bar inset it would take.
+                            if (DriverRuntimeConfig.current.authRequired)
+                              const SafeArea(
+                                bottom: false,
+                                child: SizedBox.shrink(),
+                              )
+                            else
+                              const DemoModeBanner(),
+                            // The banner took the status-bar inset: the
+                            // screens below must not pad for it again.
+                            Expanded(
+                              child: Builder(
+                                builder: (viewport) => MediaQuery.removePadding(
+                                  context: viewport,
+                                  removeTop: true,
+                                  child: child ?? const SizedBox.shrink(),
+                                ),
                               ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
