@@ -581,6 +581,9 @@ void main() {
       final sound = _FakeRadarSound();
       RadarOfferSound.debugPlayer = sound;
       addTearDown(() => RadarOfferSound.debugPlayer = null);
+      final vibrations = <List<int>>[];
+      OfferVibration.debugVibrate = vibrations.add;
+      addTearDown(() => OfferVibration.debugVibrate = null);
       await _pumpHome(tester, const Size(375, 812));
 
       await tester.tap(find.text('OFF'));
@@ -600,8 +603,10 @@ void main() {
         find.byKey(const ValueKey<String>('radar-home-deck')),
         findsNothing,
       );
-      // Exclusive: no radar sound.
-      expect(sound.calls, isEmpty);
+      // G4-E6 (owner "Sound + vibration"): the Exclusive offer rings; a
+      // tap anywhere stops it.
+      expect(sound.calls, ['start']);
+      expect(vibrations, isEmpty, reason: 'the Vibrate setting is off');
       // Exclusive keeps its own radar: no soft sweep.
       expect(
         find.descendant(
@@ -638,9 +643,9 @@ void main() {
       );
       expect(match.style!.color!.withValues(alpha: 1), MoveraRadarOrb.offerInk);
       expect(await _wedgeTurnsPerSecond(tester, accept), closeTo(0.5, 0.01));
-      // R15-5: the radar sound loops while Radar offers show; a tap
-      // anywhere stops it.
-      expect(sound.calls, ['start']);
+      // G4-E6: Radar offers stay quiet (until v0.18.6 they rang, R15-5).
+      // The Exclusive offer's sound stopped when it left.
+      expect(sound.calls, ['start', 'stop']);
       await tester.tapAt(const Offset(187, 300));
       await tester.pump();
       expect(sound.calls, ['start', 'stop']);

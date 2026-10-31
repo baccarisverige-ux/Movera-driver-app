@@ -60,6 +60,11 @@ class _FakePlatform implements PushPlatform {
 
   @override
   void onOpen(void Function(PushOpen open) handler) {}
+
+  final offerAlerts = <bool>[];
+
+  @override
+  void setOfferAlerts({required bool vibrate}) => offerAlerts.add(vibrate);
 }
 
 class _FakeApi implements PushApi {

@@ -41,6 +41,10 @@ class RadarOfferView {
   /// How the rider pays, e.g. "Card", "Apple Pay" or "Cash". The card only
   /// says it when it is cash (see [cash]).
   final String payment;
+
+  /// The rider's rating as dispatch sent it (`Offer.riderRating`), e.g.
+  /// "4.87"; '' (or anything not a 0–5 number) when the rider has none.
+  /// The card shows [shownRating].
   final String rating;
 
   /// The rider's fare label as dispatch sent it, e.g. "104,80 kr". The
@@ -119,9 +123,20 @@ class RadarOfferView {
   /// "1 stop", "2 stops"; '' with none.
   String get stopsLabel => stops <= 0 ? '' : tr.stopsCount(stops);
 
-  /// "4.95" or, with the trips known, "4.95 · 86 trips".
-  String get ratingLabel =>
-      riderTrips > 0 ? tr.ratingRiderTripsTrips(rating, riderTrips) : rating;
+  /// G4 decision 3 (contract v0.18.6 `driverOffers.riderRating`): the
+  /// rider's real rating with one decimal ("4.9"), or null when there is
+  /// none: then the card shows no rating at all, never a made-up one.
+  String? get shownRating => shownRatingOf(rating);
+
+  /// [rating] ("4.87") with one decimal ("4.9"); null when not a 0–5
+  /// number.
+  static String? shownRatingOf(String rating) {
+    final value = double.tryParse(rating.trim());
+    if (value == null || !value.isFinite || value < 0 || value > 5) {
+      return null;
+    }
+    return value.toStringAsFixed(1);
+  }
 }
 
 enum RadarOfferCardState { available, matching, expired, taken }
@@ -284,7 +299,9 @@ class RadarOfferCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (show.riderRating) ...[
+              // G4 decision 3: only a real rating, and only while the
+              // zone's switch (`offers.offerCard.riderRating`) is on.
+              if (show.riderRating && offer.shownRating != null) ...[
                 const SizedBox(width: 8),
                 Container(
                   key: ValueKey<String>('radar-offer-rating-${offer.id}'),
@@ -303,7 +320,9 @@ class RadarOfferCard extends StatelessWidget {
                       _icon(AppAssets.offerStar, 12, ink),
                       const SizedBox(width: 5),
                       Text(
-                        offer.rating,
+                        offer.shownRating!,
+                        semanticsLabel:
+                            '${tr.riderRatingLabel} ${offer.shownRating}',
                         style: const TextStyle(
                           color: ink,
                           fontSize: 12.5,

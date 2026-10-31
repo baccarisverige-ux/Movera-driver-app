@@ -89,6 +89,17 @@ class OfferBadge extends StatelessWidget {
       foreground = _grey,
       border = _greyLine;
 
+  /// G4 decision 3: the rider's real rating with one decimal and a star,
+  /// e.g. "★ 4.9" (contract v0.18.6 `driverOffers.riderRating`).
+  const OfferBadge.riderRating(String rating, {super.key, this.vertical = 3})
+    : _label = rating,
+      _kind = _BadgeText.given,
+      icon = AppAssets.offerStar,
+      iconColor = null,
+      background = Colors.white,
+      foreground = _grey,
+      border = _greyLine;
+
   /// The black "Exclusive" mark with a bolt.
   const OfferBadge.exclusive({super.key, this.vertical = 4})
     : _label = null,

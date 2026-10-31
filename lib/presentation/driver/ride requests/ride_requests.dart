@@ -498,7 +498,8 @@ class _RideRequestsState extends State<RideRequests> {
         tripId: rider.tripId ?? tripOccurrenceId(trip.id),
         dispatchRepository: _dispatch,
         riderName: rider.riderName.isEmpty ? tr.rider : rider.riderName,
-        riderRating: double.tryParse(rider.rating) ?? 4.9,
+        // G4 decision 3: no made-up 4.9; an unknown rating stays unknown.
+        riderRating: double.tryParse(rider.rating),
         riderTrips: rider.riderTrips,
         fare: terms.fare,
         paidByCash: paidByCash,

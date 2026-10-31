@@ -706,7 +706,7 @@
   "hideRequest": "Dölj förfrågan",
   "holdToGoOffline": "Håll för att gå offline",
   "tripOptions": "Resealternativ",
-  "orbMatch": "TA",
+  "orbMatch": "MATCHA",
   "orbWait": "VÄNTA",
   "orbOff": "AV",
   "orbOn": "PÅ",
@@ -1879,5 +1879,10 @@
   "docRenewalRejected": "Nytt dokument avvisat",
   "remRenewalInReview": "Ditt nya granskas",
   "remRenewalRejected": "Ditt nya avvisades",
-  "carTypesByMovera": "Movera väljer resetyperna när bilen godkänns."
+  "carTypesByMovera": "Movera väljer resetyperna när bilen godkänns.",
+  "offerAccepting": "Accepterar…",
+  "offerNoLongerAvailable": "Erbjudandet är inte längre tillgängligt",
+  "riderRatingLabel": "Kundens betyg",
+  "soundOffNotice": "Ljudet är av – du kan missa erbjudanden",
+  "soundOffTapToAllow": "Tryck för att tillåta ljud"
 }

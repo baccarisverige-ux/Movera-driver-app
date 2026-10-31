@@ -4,6 +4,11 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
 
+// Home reads the offer alert (G4-E6) and the phone's sound (decision 2)
+// through this file.
+export 'package:movera/core/sound/offer_alert.dart';
+export 'package:movera/core/sound/phone_sound.dart';
+
 /// Plays the radar sound again and again while it runs.
 abstract class RadarSoundPlayer {
   Future<void> startLoop();
@@ -17,13 +22,21 @@ abstract class RadarSoundPlayer {
   Future<void> dispose() async {}
 }
 
-/// R15-5: the radar sound while Radar offers are on Home.
+/// The Movera offer sound on Home (the owner's sound,
+/// assets/sounds/radar_offer.mp3), looped while an offer that rings is up.
+///
+/// G4-E6 (owner "Sound + vibration", contract v0.18.6
+/// `driverOffers.push.rule`): it rings for Exclusive and hand-sent
+/// (assigned) offers; Radar offers stay quiet (until v0.18.6 it rang for
+/// Radar offers, R15-5). Home decides which offers ring
+/// (`home_offer_sound.dart`).
 ///
 /// It starts when an offer the driver has not heard yet shows, and stops
-/// when no offers are left, when the driver taps Match, or on any tap on
-/// the screen ([silence]). A new offer after that starts it again.
+/// when no offers are left, when the driver accepts, or on any tap on the
+/// screen ([silence]). A new offer after that starts it again; each new
+/// offer also calls [onNewOffer] (the vibration).
 class RadarOfferSound {
-  RadarOfferSound({RadarSoundPlayer? player})
+  RadarOfferSound({RadarSoundPlayer? player, this.onNewOffer})
     : _ownsPlayer = player == null && debugPlayer == null,
       _player =
           player ??
@@ -43,12 +56,15 @@ class RadarOfferSound {
 
   final RadarSoundPlayer _player;
   final bool _ownsPlayer;
+
+  /// Called once for each offer heard for the first time.
+  final void Function()? onNewOffer;
   final Set<String> _heard = <String>{};
   bool _playing = false;
 
   bool get playing => _playing;
 
-  /// [ids]: the Radar offers on Home now (empty: none, or covered).
+  /// [ids]: the offers that ring on Home now (empty: none, or covered).
   void sync(Iterable<String> ids) {
     final now = ids.toSet();
     _heard.retainAll(now);
@@ -59,6 +75,7 @@ class RadarOfferSound {
     if (!now.every(_heard.contains)) {
       _heard.addAll(now);
       _set(true);
+      onNewOffer?.call();
     }
   }
 

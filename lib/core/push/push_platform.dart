@@ -8,6 +8,19 @@ class PushOpen {
 
   final String notificationId;
   final String? deepLink;
+
+  static final RegExp _offerLink = RegExp(
+    r'^movera-driver://offers/([^/?#]+)$',
+  );
+
+  /// G4 decision 1 (contract v0.18.6 `driverOffers.push`): the offer of a
+  /// `new_offer` push (`movera-driver://offers/{offerId}`), else null. Its
+  /// `notificationId` is not a bell notice (never marked read).
+  String? get offerId {
+    final match = _offerLink.firstMatch(deepLink?.trim() ?? '');
+    final id = match == null ? null : Uri.decodeComponent(match.group(1)!);
+    return id == null || id.isEmpty ? null : id;
+  }
 }
 
 /// The device side of push: the permission, the FCM token and taps.
@@ -37,6 +50,10 @@ abstract class PushPlatform {
 
   /// Called on every tap on a push while the app runs.
   void onOpen(void Function(PushOpen open) handler);
+
+  /// G4-E6: tells the push side (the web service worker) whether an offer
+  /// push may vibrate: only while the driver's own Vibrate setting is on.
+  void setOfferAlerts({required bool vibrate});
 }
 
 PushPlatform createPushPlatform() => createPlatformPush();

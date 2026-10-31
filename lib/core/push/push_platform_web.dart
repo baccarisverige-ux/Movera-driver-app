@@ -17,6 +17,7 @@ extension type _MoveraPush._(JSObject _) implements JSObject {
   external JSPromise<JSString> requestPermission();
   external JSPromise<JSString?> getToken(String config, String serviceWorker);
   external void setOpenHandler(JSFunction handler);
+  external JSFunction? get setOfferPrefs;
 }
 
 class WebPushPlatform implements PushPlatform {
@@ -71,6 +72,20 @@ class WebPushPlatform implements PushPlatform {
       // Keeping the query is harmless.
     }
     return PushOpen(notificationId: id, deepLink: query['movera_link']);
+  }
+
+  /// G4-E6: `moveraPush.setOfferPrefs` keeps it where the service worker
+  /// reads it when an offer push comes (the app may be closed then).
+  @override
+  void setOfferAlerts({required bool vibrate}) {
+    try {
+      final push = _moveraPush;
+      final set = push?.setOfferPrefs;
+      if (push == null || set == null) return;
+      set.callAsFunction(push, jsonEncode({'vibrate': vibrate}).toJS);
+    } catch (_) {
+      // An older page script: the push vibrates as the server says.
+    }
   }
 
   @override

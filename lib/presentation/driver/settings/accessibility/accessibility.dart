@@ -2,6 +2,7 @@ import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/core/sound/offer_alert.dart';
 import 'package:flutter/material.dart';
 
 class Accessibility extends StatefulWidget {
@@ -52,6 +53,7 @@ class _AccessibilityState extends State<Accessibility> {
         if (data['vibration'] is bool) {
           _vibration = data['vibration'] as bool;
         }
+        OfferAlertSettings.vibrate.value = _vibration;
       });
     } catch (_) {
       if (mounted) {
@@ -75,6 +77,8 @@ class _AccessibilityState extends State<Accessibility> {
         'vibration': _vibration,
       });
       saved = true;
+      // G4-E6: offers (and the web push) vibrate only while this is on.
+      OfferAlertSettings.vibrate.value = _vibration;
     } catch (_) {
       saved = false;
     }

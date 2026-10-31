@@ -6590,4 +6590,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera chooses the ride types when it approves the car.';
+
+  @override
+  String get offerAccepting => 'Accepting…';
+
+  @override
+  String get offerNoLongerAvailable => 'Offer no longer available';
+
+  @override
+  String get riderRatingLabel => 'Rider rating';
+
+  @override
+  String get soundOffNotice => 'Sound is off – you may miss offers';
+
+  @override
+  String get soundOffTapToAllow => 'Tap to allow sound';
 }

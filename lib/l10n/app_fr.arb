@@ -1264,7 +1264,7 @@
   "rcCrashBold": "freinage très brusque",
   "rcCrashTrail": " a été détecté",
   "rcCrashTrailAt": " a été détecté · {place}",
-  "tipHighBoostNearby": "Forte majoration à proximité",
+  "tipHighBoostNearby": "Bonus élevé à proximité",
   "tipExpectTrip": "Une course est attendue d’ici 2 à 5 min",
   "tipPromotionRides": "Promotion · {rides} courses = {kr} kr",
   "tipBusyArea": "Zone animée · courses attendues bientôt",
@@ -1879,5 +1879,10 @@
   "docRenewalRejected": "Nouveau document refusé",
   "remRenewalInReview": "Le nouveau est en cours de vérification",
   "remRenewalRejected": "Le nouveau a été refusé",
-  "carTypesByMovera": "Movera choisit les types de course quand la voiture est validée."
+  "carTypesByMovera": "Movera choisit les types de course quand la voiture est validée.",
+  "offerAccepting": "Acceptation…",
+  "offerNoLongerAvailable": "Cette offre n’est plus disponible",
+  "riderRatingLabel": "Note du client",
+  "soundOffNotice": "Le son est coupé – vous risquez de manquer des offres",
+  "soundOffTapToAllow": "Touchez pour autoriser le son"
 }

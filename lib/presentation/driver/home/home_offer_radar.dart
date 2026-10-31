@@ -646,7 +646,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         _homeRadarMatchingOfferId != null) {
       return;
     }
-    // R15-5: Match stops the radar sound.
+    // Match keeps Home quiet (G4-E6: Radar offers never ring).
     _offerSound.silence();
 
     _rebuild(() {
@@ -817,15 +817,13 @@ extension _HomeOfferRadar on _DriverHomeState {
   }
 
   /// An admin direct assign (contract §3.1) or dispatch's own Exclusive
-  /// offer (§3, with its `reasonCode`) as an Exclusive offer. It runs to
-  /// the server's `expiresAt` when dispatch sent one.
+  /// offer (§3) as an Exclusive offer. It runs to the server's
+  /// `expiresAt` when dispatch sent one. G4-E7: no "why you" reason.
   _HomeDirectOffer _adminAssignOffer(RideOffer offer) {
     final left = offer.expiresAt?.difference(DateTime.now());
     return _HomeDirectOffer.fromRide(
       offer,
-      reason: offer.isAdminDirectAssign
-          ? ExclusiveReasons.assigned
-          : offer.reasonCode ?? '',
+      reason: offer.isAdminDirectAssign ? ExclusiveReasons.assigned : '',
       dispatchExclusive: true,
       lifetime: left != null && left > Duration.zero ? left : null,
     );
@@ -1119,7 +1117,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     _outsideOfferTimeoutTimer?.cancel();
     _exclusive.clock.stop();
     _rebuild(() => _exclusive.claimingId = offer.id);
-    IslandMessages.show(HomeIslandNotices.matching);
+    IslandMessages.show(HomeIslandNotices.accepting);
     ClaimResult result;
     try {
       result = await _dispatch.claimOffer(offer.id);
@@ -1151,6 +1149,14 @@ extension _HomeOfferRadar on _DriverHomeState {
               : WaybillRecord.assignedByMoveraSource,
         );
         return;
+      case ClaimOutcome.alreadyClaimed ||
+              ClaimOutcome.expired ||
+              ClaimOutcome.unavailable
+          when result.afterCheck:
+        // G4 decision 4: the Accept's answer was lost and the server then
+        // said it is gone: "Offer no longer available", 2 s, not a miss.
+        IslandMessages.show(HomeIslandNotices.offerGone);
+        _dismissOutsideRadarOffer();
       case ClaimOutcome.alreadyClaimed:
         IslandMessages.show(HomeIslandNotices.takenByOther);
         _dismissOutsideRadarOffer();
@@ -1519,7 +1525,6 @@ extension _HomeOfferRadar on _DriverHomeState {
     required int secondsLeft,
   }) {
     final reservation = offer.reservation && !offer.driverSigned;
-    final reason = ExclusiveReasons.text(offer.reason);
     return ExclusiveRequestSheet(
       offer: _radarOfferView(offer),
       secondsLeft: secondsLeft,
@@ -1529,12 +1534,10 @@ extension _HomeOfferRadar on _DriverHomeState {
       onYourWay:
           _destinationModeActive ||
           (!offer.assigned && _HomeScheduled(this)._towardPickupTime != null),
-      // A ride Movera assigned says so (Q29).
-      // Dispatch's Exclusive offer says why it is this driver's.
+      // A ride Movera assigned says so (Q29). G4-E7 (owner "Remove short
+      // line explain"): no "why you got this trip" line on any other.
       lead: offer.assigned || offer.adminAssigned
           ? ExclusiveReasons.text(ExclusiveReasons.assigned)
-          : offer.dispatchExclusive && reason.isNotEmpty
-          ? reason
           : ExclusiveRequestSheet.defaultLead,
     );
   }

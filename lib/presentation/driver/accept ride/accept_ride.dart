@@ -53,7 +53,6 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/common/chat/trip_call.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
-import 'package:movera/core/dispatch/exclusive_reasons.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/dispatch/next_trip_gate.dart';
 import 'package:movera/core/dispatch/pickup_pay.dart';
@@ -126,7 +125,8 @@ class AcceptRide extends StatefulWidget {
     this.offerId,
     String? tripId,
     this.riderName = 'Angelica',
-    this.riderRating = 4.9,
+    // G4 decision 3: no made-up rating; none shows "New".
+    this.riderRating,
     this.riderTrips = 312,
     this.fare = '—',
     this.paidByCash = false,

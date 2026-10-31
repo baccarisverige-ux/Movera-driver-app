@@ -401,9 +401,11 @@ void main() {
         ),
         findsOneWidget,
       );
+      // G4-E7 (owner "Remove short line explain"): the mark, no "why you"
+      // line.
       expect(
         find.descendant(of: card, matching: find.text('Finishing nearby')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(find.textContaining('Radar trip'), findsNothing);
       expect(

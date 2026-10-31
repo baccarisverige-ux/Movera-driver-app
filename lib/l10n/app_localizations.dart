@@ -11400,6 +11400,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Movera chooses the ride types when it approves the car.'**
   String get carTypesByMovera;
+
+  /// Contract v0.18.6 driverOffers.acceptCheck.texts.accepting (G4 decision 4).
+  ///
+  /// In en, this message translates to:
+  /// **'Accepting…'**
+  String get offerAccepting;
+
+  /// Contract v0.18.6 driverOffers.acceptCheck.texts.gone (G4 decisions 4, 5).
+  ///
+  /// In en, this message translates to:
+  /// **'Offer no longer available'**
+  String get offerNoLongerAvailable;
+
+  /// Contract v0.18.6 driverOffers.riderRating.texts.label (G4 decision 3).
+  ///
+  /// In en, this message translates to:
+  /// **'Rider rating'**
+  String get riderRatingLabel;
+
+  /// G4 decision 2: online with the sound off (app text; not in contract v0.18.6).
+  ///
+  /// In en, this message translates to:
+  /// **'Sound is off – you may miss offers'**
+  String get soundOffNotice;
+
+  /// G4 decision 2: the browser plays no sound before a tap.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to allow sound'**
+  String get soundOffTapToAllow;
 }
 
 class _AppLocalizationsDelegate

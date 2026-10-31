@@ -340,24 +340,12 @@ extension _AcceptRidePanel on _AcceptRideState {
               ],
             ),
             const SizedBox(height: 10),
-            // Q18: while driving a rider, only Exclusive offers.
-            Row(
+            // Q18: while driving a rider, only Exclusive offers. G4-E7: the
+            // mark alone, no "why you got this trip" line.
+            const Row(
               children: [
-                const OfferBadge.exclusive(
+                OfferBadge.exclusive(
                   key: ValueKey<String>('on-trip-exclusive-mark'),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    ExclusiveReasons.text(ExclusiveReasons.finishingNearby),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF5F6B72),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
                 ),
               ],
             ),

@@ -406,8 +406,10 @@ extension _HomeExclusive on _DriverHomeState {
         builder: (context, child) {
           final left = _exclusive.clock.value;
           return MoveraRadarOrb(
+            // G4 decision 4: the first tap locks Accept and says
+            // "Accepting…" until the server's answer (or its check).
             title: claiming
-                ? driverText(DriverTexts.offerMatching)
+                ? tr.offerAccepting
                 : driverText(DriverTexts.offerAccept),
             status: claiming ? tr.orbWait : tr.orbMatch,
             subtitle: claiming ? tr.pleaseWait : tr.tapToAccept,

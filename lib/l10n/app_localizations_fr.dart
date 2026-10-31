@@ -4486,7 +4486,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get tipHighBoostNearby => 'Forte majoration à proximité';
+  String get tipHighBoostNearby => 'Bonus élevé à proximité';
 
   @override
   String get tipExpectTrip => 'Une course est attendue d’ici 2 à 5 min';
@@ -6702,4 +6702,20 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera choisit les types de course quand la voiture est validée.';
+
+  @override
+  String get offerAccepting => 'Acceptation…';
+
+  @override
+  String get offerNoLongerAvailable => 'Cette offre n’est plus disponible';
+
+  @override
+  String get riderRatingLabel => 'Note du client';
+
+  @override
+  String get soundOffNotice =>
+      'Le son est coupé – vous risquez de manquer des offres';
+
+  @override
+  String get soundOffTapToAllow => 'Touchez pour autoriser le son';
 }

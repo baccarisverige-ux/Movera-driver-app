@@ -2461,7 +2461,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tripOptions => 'Resealternativ';
 
   @override
-  String get orbMatch => 'TA';
+  String get orbMatch => 'MATCHA';
 
   @override
   String get orbWait => 'VÄNTA';
@@ -6598,4 +6598,20 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera väljer resetyperna när bilen godkänns.';
+
+  @override
+  String get offerAccepting => 'Accepterar…';
+
+  @override
+  String get offerNoLongerAvailable =>
+      'Erbjudandet är inte längre tillgängligt';
+
+  @override
+  String get riderRatingLabel => 'Kundens betyg';
+
+  @override
+  String get soundOffNotice => 'Ljudet är av – du kan missa erbjudanden';
+
+  @override
+  String get soundOffTapToAllow => 'Tryck för att tillåta ljud';
 }
