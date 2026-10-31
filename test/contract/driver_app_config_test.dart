@@ -257,7 +257,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.18.5');
+      expect(contract['version'], '0.18.6');
       expect(
         ZoneDefaults.paymentMethods,
         contract['zonePaymentMethods']['values'],
@@ -324,7 +324,8 @@ void main() {
         expect(config.maxStops, 3);
         expect(config.maxPickupMoveMeters, 500);
         expect(config.autoOffline, isTrue);
-        expect(config.missedExclusiveBeforeOffline, 3);
+        // G4-E2 (owner "Set 10 everywhere"): the seed said 3 until v0.18.6.
+        expect(config.missedExclusiveBeforeOffline, 10);
         expect(config.driverBonus, isNotNull);
         expect(config.driverBonusLimits.defaultLimit.currency, config.currency);
         String digits(String text) => text.replaceAll(RegExp(r'\s'), '');
