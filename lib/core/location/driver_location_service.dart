@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/own_position_accuracy.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
 class DriverLocationException implements Exception {
@@ -336,6 +337,8 @@ class DriverLocationService implements DriverLocationRepository {
   }
 
   DriverLocation _toDriverLocation(Position position) {
+    // The position arrow's halo shows this fix's accuracy.
+    OwnPositionAccuracy.meters.value = position.accuracy;
     return DriverLocation(
       point: GeoPoint(position.latitude, position.longitude),
       headingDegrees: position.heading,

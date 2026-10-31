@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart'
-    show GoogleMapsFlutterPlatform, MarkerUpdates;
+    show CircleUpdates, GoogleMapsFlutterPlatform, MarkerUpdates;
 
 import '../core/l10n/driver_l10n.dart';
 import '../core/navigation/map_camera_report.dart';
@@ -151,38 +151,152 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     if (!MapCameraReport.isFrame(position)) return;
     final band = _styleBand.at(position.zoom);
     if (band != _styleBand && mounted) setState(() => _styleBand = band);
-    _turnVehicleWith(position);
+    _followCamera(position);
     widget.onCameraMove?.call(position);
   }
 
-  /// The map bearing the own vehicle's billboard rotation was last worked
-  /// out for (native maps; web turns its own native marker). Zoom and tilt
-  /// play no part: the marker keeps one size and one picture.
+  /// The camera the own position arrow and its halo were last drawn for
+  /// (phones; web draws its own in web/driver_map_camera.js).
   late double _vehicleBearing = widget.initialPosition?.bearing ?? 0;
+  late double _vehicleTilt = widget.initialPosition?.tilt ?? 0;
+  late double _vehicleZoom =
+      widget.initialPosition?.zoom ?? _defaultPosition.zoom;
 
   static bool _isOwnVehicle(Marker marker) =>
       marker.markerId.value == 'driver' ||
       marker.markerId.value == 'driver_location';
 
-  /// A billboard turns with the screen: as the camera turns, turn the
-  /// arrow back onto its heading. Only a visible change (over 1.5°)
-  /// rebuilds the markers, so a following camera does not churn them.
-  void _turnVehicleWith(CameraPosition camera) {
-    if (kIsWeb || !mounted) return;
+  Marker? get _ownVehicle {
     for (final marker in _allMarkers) {
-      if (!_isOwnVehicle(marker) || marker.flat) continue;
-      final shown = MoveraVehicleMarker.screenRotation(
-        marker.rotation,
-        _vehicleBearing,
+      if (_isOwnVehicle(marker)) return marker;
+    }
+    return null;
+  }
+
+  /// The own position arrow keeps pointing along its heading as the camera
+  /// turns and lies in perspective as it tilts; its halo keeps its clamped
+  /// size as the camera zooms. Only a new arrow picture (a 2° / 3° bucket)
+  /// or a halo change over 2 % redraws, so a following camera does not
+  /// churn the markers.
+  void _followCamera(CameraPosition camera) {
+    if (kIsWeb || !mounted) return;
+    final own = _ownVehicle;
+    if (own == null) return;
+    final shown = _arrowView(own, _vehicleBearing, _vehicleTilt);
+    final wanted = _arrowView(own, camera.bearing, camera.tilt);
+    final halo = _haloRadius(own, _vehicleZoom);
+    final nextHalo = _haloRadius(own, camera.zoom);
+    if (shown != wanted || (nextHalo - halo).abs() > halo * .02) {
+      setState(() {
+        _vehicleBearing = camera.bearing;
+        _vehicleTilt = camera.tilt;
+        _vehicleZoom = camera.zoom;
+      });
+    }
+  }
+
+  static PositionArrowView _arrowView(
+    Marker own,
+    double bearing,
+    double tilt,
+  ) => MoveraVehicleMarker.view(
+    heading: own.rotation,
+    bearing: bearing,
+    tilt: tilt,
+  );
+
+  static double _haloRadius(Marker own, double zoom) =>
+      MoveraVehicleMarker.haloRadiusMeters(
+        accuracyMeters: MoveraVehicleMarker.accuracyMeters.value,
+        latitude: own.position.latitude,
+        zoom: zoom,
       );
-      final wanted = MoveraVehicleMarker.screenRotation(
-        marker.rotation,
-        camera.bearing,
+
+  /// The arrow picture last shown (while a new one is being drawn).
+  PositionArrowView? _arrowShown;
+  BitmapDescriptor? _arrowIconShown;
+
+  /// The own vehicle as the map gets it: the arrow picture for the camera,
+  /// centred on the position; flat (turned by the heading) on a map seen
+  /// from above, else a screen-facing picture drawn in perspective.
+  Marker _ownArrow(Marker marker) {
+    var view = _arrowView(marker, _vehicleBearing, _vehicleTilt);
+    var icon = MoveraVehicleMarker.iconFor(view);
+    if (icon == null) {
+      unawaited(
+        MoveraVehicleMarker.makeIcon(view).then((made) {
+          if (made == null || !mounted) return;
+          setState(() {});
+        }),
       );
-      final change = ((wanted - shown + 540) % 360 - 180).abs();
-      if (change > 1.5) setState(() => _vehicleBearing = camera.bearing);
+      final shown = _arrowShown;
+      if (shown != null && _arrowIconShown != null) {
+        view = shown;
+        icon = _arrowIconShown;
+      } else {
+        // Nothing drawn yet: the screen's own (flat) picture.
+        view = MoveraVehicleMarker.view(
+          heading: marker.rotation,
+          bearing: 0,
+          tilt: 0,
+        );
+        icon = marker.icon;
+      }
+    } else {
+      _arrowShown = view;
+      _arrowIconShown = icon;
+    }
+    return marker.copyWith(
+      iconParam: icon,
+      flatParam: view.flat,
+      rotationParam: view.markerRotation,
+      anchorParam: MoveraVehicleMarker.anchor,
+    );
+  }
+
+  /// Phones: the accuracy halo under the own position (web draws it in
+  /// web/driver_map_camera.js, in step with every zoom frame).
+  Set<Circle> get _haloCircles {
+    if (kIsWeb) return const <Circle>{};
+    final own = _ownVehicle;
+    if (own == null || !own.visible) return const <Circle>{};
+    return {
+      Circle(
+        circleId: const CircleId(ownHaloId),
+        center: own.position,
+        radius: _haloRadius(own, _vehicleZoom),
+        fillColor: MoveraVehicleMarker.halo.withValues(
+          alpha: MoveraVehicleMarker.haloOpacity,
+        ),
+        strokeWidth: 0,
+        strokeColor: const Color(0x00000000),
+        zIndex: 0,
+      ),
+    };
+  }
+
+  /// The own position's accuracy halo's circle id.
+  static const String ownHaloId = 'own-position-halo';
+
+  Set<Circle> get _mapCircles => {...?widget.circles, ..._haloCircles};
+
+  /// What [GoogleMap] gets as circles, the halo included.
+  Set<Circle> get _mapCirclesSent {
+    _haloShown = _haloCircles;
+    return _mapCircles;
+  }
+
+  /// The halo as last given to the map.
+  Set<Circle> _haloShown = const <Circle>{};
+
+  void _onAccuracy() {
+    if (!mounted) return;
+    if (kIsWeb) {
+      final controller = _mapController;
+      if (controller != null) _updateWebVehicle(controller.mapId);
       return;
     }
+    setState(() {});
   }
 
   /// Every marker, the live one included.
@@ -208,6 +322,22 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     return live == null ? const <Marker>{} : _shown([live]);
   }
 
+  /// Phones: the halo follows the live car between rebuilds.
+  void _pushHalo(int mapId) {
+    if (kIsWeb) return;
+    final next = _haloCircles;
+    final updates = CircleUpdates.from(_haloShown, next);
+    _haloShown = next;
+    if (updates.circlesToAdd.isEmpty &&
+        updates.circlesToChange.isEmpty &&
+        updates.circleIdsToRemove.isEmpty) {
+      return;
+    }
+    unawaited(
+      GoogleMapsFlutterPlatform.instance.updateCircles(updates, mapId: mapId),
+    );
+  }
+
   bool _livePushQueued = false;
 
   /// At most one live-marker update a frame, as a rebuild would be.
@@ -231,6 +361,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     final next = _liveNow;
     final updates = MarkerUpdates.from(_liveShown, next);
     _liveShown = next;
+    _pushHalo(controller.mapId);
     if (updates.markersToAdd.isEmpty &&
         updates.markersToChange.isEmpty &&
         updates.markerIdsToRemove.isEmpty) {
@@ -245,22 +376,14 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     _updateWebVehicle(controller.mapId);
   }
 
-  /// The markers as the map gets them: the own vehicle (a billboard, its
-  /// rotation a compass heading) turned to the screen. One marker, one
-  /// size: the ring is in its picture.
+  /// The markers as the map gets them: the own vehicle (its rotation a
+  /// compass heading) as the position arrow for the camera ([_ownArrow]).
+  /// Web: as given; web/driver_map_camera.js draws the arrow.
   Set<Marker> _shown(Iterable<Marker> markers) {
     if (kIsWeb) return markers.toSet();
     return {
       for (final marker in markers)
-        if (_isOwnVehicle(marker) && !marker.flat)
-          marker.copyWith(
-            rotationParam: MoveraVehicleMarker.screenRotation(
-              marker.rotation,
-              _vehicleBearing,
-            ),
-          )
-        else
-          marker,
+        if (_isOwnVehicle(marker)) _ownArrow(marker) else marker,
     };
   }
 
@@ -277,6 +400,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void initState() {
     super.initState();
     widget.liveMarker?.addListener(_onLiveMarker);
+    MoveraVehicleMarker.accuracyMeters.addListener(_onAccuracy);
     if (_mapsReady) return;
     const poll = Duration(milliseconds: 50);
     _mapsReadyPoll = Timer.periodic(poll, (timer) {
@@ -336,7 +460,11 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void _updateWebVehicle(int mapId) {
     for (final marker in _allMarkers) {
       if (_isOwnVehicle(marker)) {
-        web.vehicle(mapId, marker.rotation);
+        web.vehicle(
+          mapId,
+          marker.rotation,
+          MoveraVehicleMarker.accuracyMeters.value,
+        );
       }
     }
   }
@@ -444,7 +572,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               initialCameraPosition: widget.initialPosition ?? _defaultPosition,
               markers: _mapMarkersSent,
               polylines: widget.polylines ?? {},
-              circles: widget.circles ?? {},
+              circles: _mapCirclesSent,
               polygons: widget.polygons ?? {},
               myLocationEnabled: widget.myLocationEnabled,
               myLocationButtonEnabled: widget.myLocationButtonEnabled,
@@ -509,6 +637,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   @override
   void dispose() {
     widget.liveMarker?.removeListener(_onLiveMarker);
+    MoveraVehicleMarker.accuracyMeters.removeListener(_onAccuracy);
     _mapsReadyPoll?.cancel();
     _removeWebGesture?.call();
     // A map replaced under a finger must not leave the camera held.
