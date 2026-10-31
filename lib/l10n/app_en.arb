@@ -4171,8 +4171,14 @@
   "@pickupMovedIsland": {"description": "Contract v0.18.7 pickupWaiting.pickupMove.texts.island (G5 status item 4): realtime kind pickup_moved."},
   "waitingChargedSoFar": "Waiting charged so far: {amount}",
   "@waitingChargedSoFar": {"description": "Contract v0.18.7 pickupWaiting.runningTotal (G5 Q5): waiting.chargedSoFar while arrived.", "placeholders": {"amount": {"type": "Object"}}},
-  "cancelAfterArrivedNote": "Cancelling after the driver has arrived counts as a no-show",
+  "cancelAfterArrivedNote": "Cancelling after the driver has arrived and the free waiting is over counts as a no-show",
   "@cancelAfterArrivedNote": {"description": "Contract v0.18.7 pickupWaiting.terms.texts.cancelAfterArrived (G5 Q2): shown when terms.cancelAfterArrivedIsNoShow."},
   "navigationAppSaveFailed": "Navigation app not saved. Try again.",
-  "@navigationAppSaveFailed": {"description": "G5 status item 3: the trip settings could not be saved on the phone."}
+  "@navigationAppSaveFailed": {"description": "G5 status item 3: the trip settings could not be saved on the phone."},
+  "etaLastKnown": "Last known: {eta}",
+  "@etaLastKnown": {"description": "G5 checker M2: TripEta.source stale (no driver position for 2 min); the last ETA the server kept.", "placeholders": {"eta": {"type": "Object"}}},
+  "feeKindNoShowShort": "No-show fee",
+  "@feeKindNoShowShort": {"description": "G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown)."},
+  "feeKindCancelShort": "Cancellation fee",
+  "@feeKindCancelShort": {"description": "G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown)."}
 }

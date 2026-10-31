@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/settings/navigation_app.dart';
 import 'package:movera/core/settings/settings_repository.dart';
@@ -106,16 +104,14 @@ class _TripSettingsState extends State<TripSettings> {
                 key: const ValueKey<String>('trip-settings-google-maps'),
                 app: NavigationApp.googleMaps,
                 chosen: chosen,
-                title: 'Google Maps',
-                mark: AppAssets.mapGoogle,
+                title: NavigationApp.googleMaps.displayName,
               ),
               const Divider(height: 1, color: _line),
               _choice(
                 key: const ValueKey<String>('trip-settings-waze'),
                 app: NavigationApp.waze,
                 chosen: chosen,
-                title: 'Waze',
-                mark: AppAssets.mapWaze,
+                title: NavigationApp.waze.displayName,
               ),
             ]),
           ),
@@ -184,7 +180,6 @@ class _TripSettingsState extends State<TripSettings> {
     required NavigationApp app,
     required NavigationApp chosen,
     required String title,
-    required String mark,
   }) {
     final selected = app == chosen;
     return Semantics(
@@ -206,7 +201,11 @@ class _TripSettingsState extends State<TripSettings> {
                   color: const Color(0xFFF4F5F6),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: SvgPicture.asset(mark, width: 22, height: 22),
+                child: const Icon(
+                  Icons.navigation_outlined,
+                  size: 20,
+                  color: _ink,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

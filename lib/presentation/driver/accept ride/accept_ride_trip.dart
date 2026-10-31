@@ -674,11 +674,15 @@ extension _AcceptRideTrip on _AcceptRideState {
     try {
       if (status == TripStatus.cancelledByRider) {
         // Q6 (contract v0.18.7): what the driver gets is
-        // `cancellation.driverShare`; `cancelFee` only from an older
-        // server (the rider's fee, before the share existed).
+        // `cancellation.driverShare`. `cancelFee` is the RIDER's fee: it is
+        // never shown as the driver's money (checker round 1); only "no
+        // fee" (zero) is safe to say from it.
         final cancellation = event.live?.cancellation;
+        final riderFeeZero = event.cancelFee?.isZero == true
+            ? event.cancelFee
+            : null;
         await _handleRiderCancelled(
-          fee: cancellation?.driverEarns ?? event.cancelFee,
+          fee: cancellation == null ? riderFeeZero : cancellation.driverEarns,
           feeKind: cancellation?.feeKind,
           riderFee: cancellation?.fee,
         );
@@ -962,7 +966,11 @@ extension _AcceptRideTrip on _AcceptRideState {
     final home = _navigatorAtTripRoute();
     if (next == null && home.canPop()) {
       IslandMessages.show(
-        HomeIslandNotices.riderCancelledWithFee(fee, onTrip: wasOnTrip),
+        HomeIslandNotices.riderCancelledWithFee(
+          fee,
+          onTrip: wasOnTrip,
+          feeKind: riderFee != null && !riderFee.isZero ? feeKind : null,
+        ),
       );
       widget.sessionController?.stayOnlineAfterTrip();
       home.pop();
@@ -2338,12 +2346,15 @@ extension _AcceptRideTrip on _AcceptRideState {
   /// Q6 (contract v0.18.7 `feeAmountsShown`): the driver's part of the
   /// no-show fee as the server set it at arrive (`waiting.noShowDriverShare`);
   /// the trip's terms before a server sends it.
-  Money get _noShowDriverShare =>
-      _live?.waiting?.noShowDriverShare ?? _waitTerms.driverNoShowFee;
+  Money? get _noShowDriverShare =>
+      _live?.waiting?.noShowDriverShare ??
+      (_waitTerms.pricesKnown ? _waitTerms.driverNoShowFee : null);
 
-  /// "Mark as no-show? You get 52 kr" / "… No fee".
+  /// "Mark as no-show? You get 52 kr" / "… No fee"; no amount the phone
+  /// does not know (no server terms).
   String get _noShowConfirmTitle {
     final share = _noShowDriverShare;
+    if (share == null) return tr.cancelThisTripQuestion;
     return share.isZero
         ? tr.noShowConfirmNoFee
         : tr.noShowConfirmYouGet(share.formattedShort);
@@ -2354,6 +2365,7 @@ extension _AcceptRideTrip on _AcceptRideState {
   String? get _noShowEarned {
     final fee = _noShowDriverShare;
     final wait = _waitTerms.driverWaitingFee(_paidWaitTotal);
+    if (fee == null) return wait.minorUnits <= 0 ? null : wait.formatted;
     final total = wait.currency == fee.currency ? fee + wait : fee;
     return total.minorUnits <= 0 ? null : total.formatted;
   }

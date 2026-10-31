@@ -317,6 +317,23 @@ void main() {
   });
 
   group('prices from the server only (owner rule 16)', () {
+    test('no server terms: no prices at all (time only)', () {
+      const base = WaitingRules();
+      expect(base.base.pricesKnown, isFalse);
+      expect(base.base.perMinute.isZero, isTrue);
+      expect(base.base.noShowFee.isZero, isTrue);
+      expect(
+        DriverAppConfig.fromJson({'currency': 'SEK'}).waiting.base.pricesKnown,
+        isFalse,
+      );
+      expect(
+        TripLiveDetails.fromProjection(
+          _projection(),
+        ).terms!.waiting.pricesKnown,
+        isTrue,
+      );
+    });
+
     test('the app has no far-pickup, airport or event rule of its own', () {
       const rules = WaitingRules();
       final base = rules.termsFor();

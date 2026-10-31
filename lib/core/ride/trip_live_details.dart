@@ -218,10 +218,14 @@ class TripEta {
   final String target;
   final DateTime? at;
 
-  /// `osrm` (a road route) or `estimate` (straight line).
+  /// `osrm` (a road route), `estimate` (straight line) or `stale`.
   final String source;
 
   bool get toPickup => target == 'pickup';
+
+  /// `source: stale` (contract 0.18.7 final): the server kept its last ETA
+  /// because the driver sent no position for 2 min.
+  bool get isStale => source == 'stale';
 
   /// Whole minutes rounded up, at least 1.
   int get minutes => math.max(1, (etaSeconds / 60).ceil());
@@ -266,6 +270,8 @@ class TripEta {
 class TripWaitingNow {
   const TripWaitingNow({
     this.arrivedAt,
+    this.freeUntil,
+    this.noShowAt,
     this.noShowFee,
     this.noShowDriverShare,
     this.chargedSecondsNow,
@@ -276,8 +282,13 @@ class TripWaitingNow {
     if (json is! Map) return null;
     final arrived = json['arrivedAt'];
     final seconds = json['chargedSecondsNow'];
+    DateTime? at(String key) => json[key] is String
+        ? DateTime.tryParse(json[key] as String)?.toUtc()
+        : null;
     return TripWaitingNow(
       arrivedAt: arrived is String ? DateTime.tryParse(arrived)?.toUtc() : null,
+      freeUntil: at('freeUntil'),
+      noShowAt: at('noShowAt'),
       noShowFee: _money(json['noShowFee']),
       noShowDriverShare: _money(json['noShowDriverShare']),
       chargedSecondsNow: seconds is num && seconds >= 0
@@ -288,6 +299,19 @@ class TripWaitingNow {
   }
 
   final DateTime? arrivedAt;
+
+  /// The server's moments: paid waiting starts at [freeUntil]; the driver
+  /// may mark a no-show from [noShowAt] (a reservation: its booked time).
+  final DateTime? freeUntil;
+  final DateTime? noShowAt;
+
+  /// Seconds after arrival, for the waiting clocks; null without both.
+  int? secondsAfterArrival(DateTime? moment) {
+    final arrived = arrivedAt;
+    if (arrived == null || moment == null) return null;
+    return math.max(0, moment.difference(arrived).inSeconds);
+  }
+
   final Money? noShowFee;
 
   /// What the driver gets for a no-show ("Mark as no-show? You get 52 kr").

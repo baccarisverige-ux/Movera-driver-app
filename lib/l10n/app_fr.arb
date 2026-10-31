@@ -1921,6 +1921,9 @@
   "distanceM": "{value} m",
   "pickupMovedIsland": "Le point de départ a été déplacé",
   "waitingChargedSoFar": "Attente facturée jusqu’ici : {amount}",
-  "cancelAfterArrivedNote": "Annuler après l’arrivée du chauffeur compte comme un client absent",
-  "navigationAppSaveFailed": "Appli de navigation non enregistrée. Réessayez."
+  "cancelAfterArrivedNote": "Annuler après l’arrivée du chauffeur et la fin de l’attente gratuite compte comme un client absent",
+  "navigationAppSaveFailed": "Appli de navigation non enregistrée. Réessayez.",
+  "etaLastKnown": "Dernière estimation : {eta}",
+  "feeKindNoShowShort": "Frais de client absent",
+  "feeKindCancelShort": "Frais d’annulation"
 }

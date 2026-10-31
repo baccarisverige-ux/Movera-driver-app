@@ -8,6 +8,18 @@ import 'package:movera/presentation/driver/home/components/exclusive_request_she
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 
+// G5 checker round 1: the zone's served terms (the app has no prices).
+final _served = DriverAppConfig.fromJson({
+  'currency': 'SEK',
+  'waiting': {
+    'freeWaitMin': 5,
+    'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+    'noShowAfterMin': 5,
+    'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+    'driverSharePct': 80,
+  },
+}).waiting;
+
 const _fee = ValueKey<String>('waiting-fee-counter');
 const _feeAmount = ValueKey<String>('waiting-fee-amount');
 const _noShow = ValueKey<String>('waiting-no-show-cancel');
@@ -94,7 +106,7 @@ void main() {
     testWidgets('free wait: no fee, no "Rider didn’t show" yet', (
       tester,
     ) async {
-      await _sheet(tester, () => 4 * 60 + 59, const WaitingRules().termsFor());
+      await _sheet(tester, () => 4 * 60 + 59, _served.termsFor());
       expect(find.byKey(_fee), findsNothing);
       expect(find.byKey(_noShow), findsNothing);
       expect(find.text('Rider didn’t show'), findsNothing);
@@ -102,7 +114,7 @@ void main() {
 
     testWidgets('after the free wait the fee counts up live', (tester) async {
       var seconds = 5 * 60 + 30;
-      await _sheet(tester, () => seconds, const WaitingRules().termsFor());
+      await _sheet(tester, () => seconds, _served.termsFor());
       // 30 s at 12,26 kr / min, all the driver's.
       expect(_amount(tester), '+6,13 kr');
       expect(find.text('waiting fee · 12,26 kr / min'), findsOneWidget);
@@ -168,12 +180,7 @@ void main() {
     });
 
     testWidgets('a stop wait is paid from its first second', (tester) async {
-      await _sheet(
-        tester,
-        () => 60,
-        const WaitingRules().termsFor(),
-        fullyPaid: true,
-      );
+      await _sheet(tester, () => 60, _served.termsFor(), fullyPaid: true);
       expect(_amount(tester), '+12,26 kr');
       expect(find.byKey(_noShow), findsNothing);
     });

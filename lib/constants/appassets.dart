@@ -103,11 +103,6 @@ class AppAssets {
   static const String rideBooster = 'assets/icons/ride_booster.svg';
   // Active ride sheet and map controls
   static const String mapSafety = 'assets/icons/map_safety.svg';
-  static const String mapGoogle = 'assets/icons/map_google.svg';
-
-  // Waze mark, only on the trip map button when the driver chose Waze (G5
-  // status item 3, owner "Use the Waze logo"); nothing else is branded.
-  static const String mapWaze = 'assets/icons/map_waze.svg';
   static const String mapRecenter = 'assets/icons/map_recenter.svg';
   // Side menu line icons
   static const String menuProfile = 'assets/icons/menu_profile.svg';

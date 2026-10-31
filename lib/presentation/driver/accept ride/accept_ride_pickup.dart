@@ -19,6 +19,9 @@ extension _AcceptRidePickup on _AcceptRideState {
   TripEta? get _serverEta {
     final eta = _live?.eta;
     if (eta == null || _countingWait) return null;
+    // Checker round 1: a `stale` ETA (no driver position for 2 min) gives
+    // way to the phone's own route time when the phone has one.
+    if (eta.isStale && _routeDurationSeconds != null) return null;
     return switch (_stage) {
       ActiveRideStage.headingToPickup => eta.toPickup ? eta : null,
       ActiveRideStage.waitingForRider => null,
@@ -33,7 +36,17 @@ extension _AcceptRidePickup on _AcceptRideState {
   /// snapshot of the zone's pricing, in the zone's currency: a Paris trip
   /// is in euro); they win over the zone's served config. Nothing here is
   /// an app constant (owner rule 16).
-  WaitingTerms get _waitTerms => _live?.terms?.waiting ?? _zoneWaitTerms;
+  WaitingTerms get _waitTerms {
+    final terms = _live?.terms?.waiting ?? _zoneWaitTerms;
+    // Checker round 1: the free / no-show moments are the server's
+    // (`waiting.freeUntil` / `noShowAt`); the local count only without them.
+    final waiting = _live?.waiting;
+    final free = waiting?.secondsAfterArrival(waiting.freeUntil);
+    final noShow = waiting?.secondsAfterArrival(waiting.noShowAt);
+    return free == null && noShow == null
+        ? terms
+        : terms.anchored(freeSeconds: free, noShowSeconds: noShow);
+  }
 
   /// What the server already told this phone (the accept answer, a read
   /// at restore), the navigation app choice, and the follow poll.
@@ -62,7 +75,7 @@ extension _AcceptRidePickup on _AcceptRideState {
     // ETA, the same number the rider and the admin see; the app's own
     // route time only on a build without one (the demo, an older server).
     if (_serverEta case final eta?) {
-      return eta.minutesLabel;
+      return eta.isStale ? tr.etaLastKnown(eta.minutesLabel) : eta.minutesLabel;
     }
     final seconds = _routeDurationSeconds;
     // Until a road route arrives, a calm word instead of a placeholder.
@@ -77,7 +90,7 @@ extension _AcceptRidePickup on _AcceptRideState {
   String get _nextStopDetail {
     // Q4: "Arrives in 4 min · 1,2 km" from the server while driving.
     if (_serverEta case final eta?) {
-      return eta.line;
+      return eta.isStale ? tr.etaLastKnown(eta.line) : eta.line;
     }
     switch (_stage) {
       case ActiveRideStage.headingToPickup:

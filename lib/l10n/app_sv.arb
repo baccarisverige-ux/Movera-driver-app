@@ -1921,6 +1921,9 @@
   "distanceM": "{value} m",
   "pickupMovedIsland": "Upphämtningen flyttades",
   "waitingChargedSoFar": "Väntetid debiterad hittills: {amount}",
-  "cancelAfterArrivedNote": "Avbokning efter att föraren anlänt räknas som utebliven kund",
-  "navigationAppSaveFailed": "Navigationsapp inte sparad. Försök igen."
+  "cancelAfterArrivedNote": "Avbokning efter att föraren anlänt och den fria väntetiden gått ut räknas som utebliven kund",
+  "navigationAppSaveFailed": "Navigationsapp inte sparad. Försök igen.",
+  "etaLastKnown": "Senast kända: {eta}",
+  "feeKindNoShowShort": "Avgift för utebliven kund",
+  "feeKindCancelShort": "Avbokningsavgift"
 }

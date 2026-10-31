@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/money/money.dart';
@@ -16,7 +18,36 @@ class WaitingTerms {
     this.driverShareWaitPercent = 100,
     this.driverShareNoShowPercent = 100,
     this.ruleLabels = const <String>[],
+    this.pricesKnown = true,
+    this.serverFreeSeconds,
+    this.serverNoShowSeconds,
   });
+
+  /// G5 checker round 1: the server's own moments, as seconds after the
+  /// driver arrived (`waiting.freeUntil` / `waiting.noShowAt` −
+  /// `arrivedAt`). A reservation reached early waits until its booked time
+  /// plus the free minutes; the phone's count follows the server.
+  final int? serverFreeSeconds;
+  final int? serverNoShowSeconds;
+
+  /// These terms with the server's moments (null leaves the local count).
+  WaitingTerms anchored({int? freeSeconds, int? noShowSeconds}) => WaitingTerms(
+    freeMinutes: freeMinutes,
+    perMinute: perMinute,
+    noShowAfterMinutes: noShowAfterMinutes,
+    noShowFee: noShowFee,
+    driverShareWaitPercent: driverShareWaitPercent,
+    driverShareNoShowPercent: driverShareNoShowPercent,
+    ruleLabels: ruleLabels,
+    pricesKnown: pricesKnown,
+    serverFreeSeconds: freeSeconds,
+    serverNoShowSeconds: noShowSeconds,
+  );
+
+  /// False when no server terms reached the phone yet (no zone document,
+  /// no trip `terms`): the screens then show the waiting TIME only, never
+  /// an amount the app made up (G5 checker round 1, owner rule 16).
+  final bool pricesKnown;
 
   /// The first minutes are part of the fare.
   final int freeMinutes;
@@ -47,8 +78,9 @@ class WaitingTerms {
   static String farPickupLabel(String km) => '$_farPickup$km';
   static const String _farPickup = 'pickupOverKm:';
 
-  int get freeSeconds => freeMinutes * 60;
-  int get noShowSeconds => noShowAfterMinutes * 60;
+  int get freeSeconds => serverFreeSeconds ?? freeMinutes * 60;
+  int get noShowSeconds =>
+      math.max(freeSeconds, serverNoShowSeconds ?? noShowAfterMinutes * 60);
 
   /// The driver's part of the no-show fee, in the fee's own currency and
   /// minor units (öre, cents, millimes).
@@ -97,6 +129,7 @@ class WaitingTerms {
     noShowFee: rule.noShowFee ?? noShowFee,
     driverShareWaitPercent: driverShareWaitPercent,
     driverShareNoShowPercent: driverShareNoShowPercent,
+    pricesKnown: pricesKnown,
     ruleLabels: [
       ...ruleLabels,
       if ((label ?? rule.label).isNotEmpty) label ?? rule.label,
@@ -144,13 +177,16 @@ class WaitingRules {
     // the zone's served pricing (`GET /driver/config` → `waiting`, contract
     // v0.18.7 `pickupWaiting.servedConfig`) and each trip with its own
     // `terms`; nothing here is a price the driver is ever shown on its own.
+    // No prices of the app's own (G5 checker round 1): without server
+    // terms the amounts are zero and [WaitingTerms.pricesKnown] is false.
     this.base = const WaitingTerms(
       freeMinutes: 5,
-      perMinute: Money(minorUnits: 1226),
+      perMinute: Money(minorUnits: 0),
       noShowAfterMinutes: 5,
-      noShowFee: Money(minorUnits: 6500),
+      noShowFee: Money(minorUnits: 0),
       driverShareWaitPercent: 100,
       driverShareNoShowPercent: 80,
+      pricesKnown: false,
     ),
     // Contract v0.18.7 (driver group 5): the app's own extra rules (far
     // pickup, airport, event) are gone — the server never knew them

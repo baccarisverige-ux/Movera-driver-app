@@ -275,19 +275,19 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
   }
   // Contract v0.18.7 `pickupWaiting.servedConfig`: the top-level terms and
   // `byCategory` are the zone's live pricing, in the zone's currency.
+  final perMin = _money(json['perMin'], currency);
+  final noShowFee = _money(json['noShowFee'], currency);
   final terms = WaitingTerms(
     freeMinutes: _int(json['freeWaitMin']) ?? base.freeMinutes,
-    perMinute:
-        _money(json['perMin'], currency) ??
-        _sameCurrency(base.perMinute, currency),
+    perMinute: perMin ?? _sameCurrency(base.perMinute, currency),
     noShowAfterMinutes: _int(json['noShowAfterMin']) ?? base.noShowAfterMinutes,
-    noShowFee:
-        _money(json['noShowFee'], currency) ??
-        _sameCurrency(base.noShowFee, currency),
+    noShowFee: noShowFee ?? _sameCurrency(base.noShowFee, currency),
     driverShareWaitPercent:
         _percent(json['driverShareWaitPct']) ?? base.driverShareWaitPercent,
     driverShareNoShowPercent:
         _percent(json['driverSharePct']) ?? base.driverShareNoShowPercent,
+    // Served pricing (v0.18.7): amounts only when the server sent them.
+    pricesKnown: perMin != null && noShowFee != null,
   );
 
   final byCategory = _map(json['byCategory']);
@@ -358,6 +358,7 @@ WaitingTerms _rebaseTerms(WaitingTerms terms, String currency) => WaitingTerms(
   noShowFee: _sameCurrency(terms.noShowFee, currency),
   driverShareWaitPercent: terms.driverShareWaitPercent,
   driverShareNoShowPercent: terms.driverShareNoShowPercent,
+  pricesKnown: false,
 );
 
 Money _sameCurrency(Money seed, String currency) =>

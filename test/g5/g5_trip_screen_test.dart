@@ -355,7 +355,10 @@ void main() {
     await tester.scrollUntilVisible(rule, 120, scrollable: sheetList.first);
     expect(rule, findsOneWidget);
     expect(
-      find.text('Cancelling after the driver has arrived counts as a no-show'),
+      find.text(
+        'Cancelling after the driver has arrived and the free waiting is '
+        'over counts as a no-show',
+      ),
       findsOneWidget,
     );
     final noShow = find.byKey(const ValueKey('waiting-no-show-cancel'));
@@ -518,6 +521,140 @@ void main() {
       await NavigationAppSetting.load(SettingsRepository()),
       NavigationApp.waze,
     );
+  });
+
+  testWidgets('checker M1: a reservation reached 8 min early → no-show only '
+      'from waiting.noShowAt', (tester) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    // 10 min on the phone's own count: the local rule (5 + 5) would allow
+    // the no-show, the server's moments do not (booked time + 5 min).
+    await _pumpTrip(
+      tester,
+      realtime: realtime,
+      stage: ActiveRideStage.waitingForRider,
+      waitSeconds: 10 * 60,
+    );
+    realtime.emit(
+      tripId: _trip,
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.arrived,
+      projection: _projection(
+        status: 'arrived',
+        eta: null,
+        waiting: {
+          'arrivedAt': '2026-10-31T09:52:00Z',
+          // Booked 10:00, 5 free minutes after it.
+          'freeUntil': '2026-10-31T10:05:00Z',
+          'noShowAt': '2026-10-31T10:05:00Z',
+          'chargedSeconds': 0,
+          'noShowFee': {'amountMinor': 615, 'currency': 'EUR'},
+          'noShowDriverShare': {'amountMinor': 492, 'currency': 'EUR'},
+        },
+      ),
+    );
+    await _frames(tester);
+    expect(WaitingTerms.active.freeSeconds, 13 * 60);
+    expect(WaitingTerms.active.noShowSeconds, 13 * 60);
+    _island(tester).onWait();
+    await _frames(tester, 8);
+    expect(find.byKey(const ValueKey('waiting-no-show-cancel')), findsNothing);
+    // Still in the free minutes on the island too.
+    expect(_island(tester).paidWait, isFalse);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('checker M2: a stale ETA without a local route says '
+      '"last known"', (tester) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    await _pumpTrip(tester, realtime: realtime);
+    realtime.emit(
+      tripId: _trip,
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.driverToPickup,
+      projection: _projection(
+        eta: {
+          'etaSeconds': 215,
+          'distanceMeters': 1249,
+          'target': 'pickup',
+          'at': '2026-10-31T09:01:00Z',
+          'source': 'stale',
+        },
+      ),
+    );
+    await _frames(tester);
+    expect(_island(tester).eta, 'Last known: 4 min');
+    expect(_island(tester).detail, 'Last known: Arrives in 4 min · 1.2 km');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  for (final (name, cancellation, title)
+      in <(String, Map<String, dynamic>?, String)>[
+        // Contract 0.18.6: no cancellation on the projection at all.
+        ('0.18.6 server', null, 'Rider cancelled'),
+        (
+          'no driverShare',
+          {
+            'actor': 'rider',
+            'reasonCode': 'plans_changed',
+            'at': '2026-10-31T09:12:00Z',
+            'fee': {'amountMinor': 615, 'currency': 'EUR'},
+            'feeKind': 'no_show',
+          },
+          'Rider cancelled · No-show fee',
+        ),
+      ]) {
+    testWidgets('checker M3: the rider\'s fee is never the driver\'s money '
+        '($name)', (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      await _pumpTrip(
+        tester,
+        realtime: realtime,
+        stage: ActiveRideStage.waitingForRider,
+        waitSeconds: 6 * 60,
+        home: true,
+      );
+      final projection = _projection(status: 'cancelled_by_rider', eta: null);
+      if (cancellation != null) projection['cancellation'] = cancellation;
+      realtime.emit(
+        tripId: _trip,
+        kind: DriverRealtimeKind.riderCancelled,
+        status: TripStatus.cancelledByRider,
+        cancelFee: Money(minorUnits: 615, currency: 'EUR'),
+        projection: projection,
+      );
+      await _frames(tester, 30);
+      final message = IslandMessages.take();
+      expect(message?.title, title);
+      expect(message?.title, isNot(contains('6,15')));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    });
+  }
+
+  testWidgets('checker M4: the map button has a neutral icon and the name', (
+    tester,
+  ) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    await _pumpTrip(tester, realtime: realtime);
+    final label = find.byKey(
+      const ValueKey<String>('active-ride-navigation-label'),
+    );
+    expect(tester.widget<Text>(label).data, 'Google Maps');
+    await NavigationAppSetting.save(NavigationApp.waze, SettingsRepository());
+    await _frames(tester, 4);
+    expect(tester.widget<Text>(label).data, 'Waze');
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey<String>('active-ride-navigation-button')),
+        matching: find.byIcon(Icons.navigation_outlined),
+      ),
+      findsOneWidget,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('follow: poll every 10 s only while the stream is down', (

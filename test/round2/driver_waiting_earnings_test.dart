@@ -1,3 +1,5 @@
+import 'package:movera/core/ride/waiting_rules.dart';
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,6 +42,18 @@ Future<void> _slide(WidgetTester tester) async {
 /// the trip's earnings.
 void main() {
   setUp(() {
+    // G5 checker round 1: the zone's served terms (no app prices).
+    WaitingRules.current = DriverAppConfig.fromJson({
+      'currency': 'SEK',
+      'waiting': {
+        'freeWaitMin': 5,
+        'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+        'noShowAfterMin': 5,
+        'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+        'driverSharePct': 80,
+      },
+    }).waiting;
+    addTearDown(() => WaitingRules.current = const WaitingRules());
     SharedPreferences.setMockInitialValues({});
     InMemoryWaybillRepository.instance.reset();
   });

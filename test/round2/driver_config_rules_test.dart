@@ -99,8 +99,18 @@ void main() {
       expect(terms.driverWaitingFee(90), terms.waitingFee(90));
     });
 
-    test('the seed rate: 12,26 kr / min, 90 s = 18,39 kr', () {
-      final terms = const WaitingRules().termsFor();
+    test('the served rate: 12,26 kr / min, 90 s = 18,39 kr', () {
+      // G5 checker round 1: no seed price; the zone serves the rate.
+      final terms = DriverAppConfig.fromJson({
+        'currency': 'SEK',
+        'waiting': {
+          'freeWaitMin': 5,
+          'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+          'noShowAfterMin': 5,
+          'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+          'driverSharePct': 80,
+        },
+      }).waiting.termsFor();
       expect(terms.waitingFee(90).formatted, '18,39 kr');
       expect(terms.driverShareWaitPercent, 100);
     });

@@ -6748,8 +6748,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelAfterArrivedNote =>
-      'Cancelling after the driver has arrived counts as a no-show';
+      'Cancelling after the driver has arrived and the free waiting is over counts as a no-show';
 
   @override
   String get navigationAppSaveFailed => 'Navigation app not saved. Try again.';
+
+  @override
+  String etaLastKnown(Object eta) {
+    return 'Last known: $eta';
+  }
+
+  @override
+  String get feeKindNoShowShort => 'No-show fee';
+
+  @override
+  String get feeKindCancelShort => 'Cancellation fee';
 }

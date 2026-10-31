@@ -661,8 +661,8 @@ extension _AcceptRidePanel on _AcceptRideState {
               if (!_browsing) ...[
                 const SizedBox(height: 12),
                 // G5 status item 3: the app the driver chose in Trip
-                // settings (Google Maps by default); only this button
-                // shows the Waze mark (owner "Use the Waze logo").
+                // settings (Google Maps by default). Checker round 1: no
+                // brand mark, a neutral navigation icon and the app's name.
                 ValueListenableBuilder<NavigationApp>(
                   valueListenable: NavigationAppSetting.current,
                   builder: (context, app, _) => MapControlButton(
@@ -675,12 +675,33 @@ extension _AcceptRidePanel on _AcceptRideState {
                     size: 56,
                     fill: MapControlButton.googleGrey,
                     onTap: _openNavigationApp,
-                    child: SvgPicture.asset(
-                      app == NavigationApp.waze
-                          ? AppAssets.mapWaze
-                          : AppAssets.mapGoogle,
-                      width: 26,
-                      height: 26,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.navigation_outlined,
+                            size: 22,
+                            color: Color(0xFF252E3A),
+                          ),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              app.displayName,
+                              key: const ValueKey<String>(
+                                'active-ride-navigation-label',
+                              ),
+                              maxLines: 1,
+                              style: const TextStyle(
+                                color: Color(0xFF252E3A),
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

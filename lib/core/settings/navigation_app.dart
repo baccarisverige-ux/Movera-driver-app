@@ -14,6 +14,12 @@ enum NavigationApp {
   const NavigationApp(this.storedName);
   final String storedName;
 
+  /// The app's own name, shown as a word (never its logo).
+  String get displayName => switch (this) {
+    NavigationApp.googleMaps => 'Google Maps',
+    NavigationApp.waze => 'Waze',
+  };
+
   static NavigationApp parse(Object? value) => switch (value) {
     'waze' => NavigationApp.waze,
     _ => NavigationApp.googleMaps,

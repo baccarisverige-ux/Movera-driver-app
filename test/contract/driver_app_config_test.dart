@@ -164,7 +164,9 @@ void main() {
         final config = DriverAppConfig.fromJson(input);
         expect(config.zoneId, DriverZones.defaultId);
         expect(config.currency, 'SEK');
-        expect(config.waiting.base.noShowFee.formatted, '65,00 kr');
+        // G5 checker round 1: without a document no price at all.
+        expect(config.waiting.base.noShowFee.formatted, '0,00 kr');
+        expect(config.waiting.base.pricesKnown, isFalse);
         // G5: without a document there is no category rule either.
         expect(config.waiting.termsFor(category: 'xl').freeMinutes, 5);
         expect(config.categoryIds, isNotEmpty);
@@ -220,8 +222,10 @@ void main() {
       expect(config.feature('scheduledRides', fallback: true), isFalse);
       final waiting = config.waiting;
       expect(waiting.base.freeMinutes, 5);
-      expect(waiting.base.perMinute.formatted, '12,26 kr');
-      expect(waiting.base.noShowFee.formatted, '65,00 kr');
+      // G5 checker round 1: broken amounts are no amounts, never a seed.
+      expect(waiting.base.perMinute.formatted, '0,00 kr');
+      expect(waiting.base.noShowFee.formatted, '0,00 kr');
+      expect(waiting.base.pricesKnown, isFalse);
       expect(waiting.base.driverShareNoShowPercent, 80);
       expect(waiting.rideTypes.containsKey(WaitingRideType.airport), isFalse);
       expect(waiting.termsFor(category: 'pet').freeMinutes, 4);

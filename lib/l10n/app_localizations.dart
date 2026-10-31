@@ -11650,7 +11650,7 @@ abstract class AppLocalizations {
   /// Contract v0.18.7 pickupWaiting.terms.texts.cancelAfterArrived (G5 Q2): shown when terms.cancelAfterArrivedIsNoShow.
   ///
   /// In en, this message translates to:
-  /// **'Cancelling after the driver has arrived counts as a no-show'**
+  /// **'Cancelling after the driver has arrived and the free waiting is over counts as a no-show'**
   String get cancelAfterArrivedNote;
 
   /// G5 status item 3: the trip settings could not be saved on the phone.
@@ -11658,6 +11658,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Navigation app not saved. Try again.'**
   String get navigationAppSaveFailed;
+
+  /// G5 checker M2: TripEta.source stale (no driver position for 2 min); the last ETA the server kept.
+  ///
+  /// In en, this message translates to:
+  /// **'Last known: {eta}'**
+  String etaLastKnown(Object eta);
+
+  /// G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown).
+  ///
+  /// In en, this message translates to:
+  /// **'No-show fee'**
+  String get feeKindNoShowShort;
+
+  /// G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation fee'**
+  String get feeKindCancelShort;
 }
 
 class _AppLocalizationsDelegate

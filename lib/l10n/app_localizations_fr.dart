@@ -6865,9 +6865,20 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get cancelAfterArrivedNote =>
-      'Annuler après l’arrivée du chauffeur compte comme un client absent';
+      'Annuler après l’arrivée du chauffeur et la fin de l’attente gratuite compte comme un client absent';
 
   @override
   String get navigationAppSaveFailed =>
       'Appli de navigation non enregistrée. Réessayez.';
+
+  @override
+  String etaLastKnown(Object eta) {
+    return 'Dernière estimation : $eta';
+  }
+
+  @override
+  String get feeKindNoShowShort => 'Frais de client absent';
+
+  @override
+  String get feeKindCancelShort => 'Frais d’annulation';
 }

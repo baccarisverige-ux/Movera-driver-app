@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
@@ -103,7 +104,18 @@ void main() {
   });
 
   group('waiting at pickup (Q19/Q20)', () {
-    const rules = WaitingRules();
+    // G5 checker round 1: the prices are the zone's served terms; the app
+    // has none of its own.
+    final rules = DriverAppConfig.fromJson({
+      'currency': 'SEK',
+      'waiting': {
+        'freeWaitMin': 5,
+        'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+        'noShowAfterMin': 5,
+        'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+        'driverSharePct': 80,
+      },
+    }).waiting;
 
     test('the zone\'s terms and the driver\'s share', () {
       final terms = rules.termsFor(category: 'Comfort');

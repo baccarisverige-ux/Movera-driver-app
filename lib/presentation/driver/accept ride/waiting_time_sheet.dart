@@ -170,7 +170,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                       ),
                       // Q42/Q43: once the free wait is over, the waiting
                       // fee counts up live; it is all the driver's.
-                      if (paidSeconds > 0) ...[
+                      if (paidSeconds > 0 && terms.pricesKnown) ...[
                         const SizedBox(height: 12),
                         WaitingFeeCounter(
                           fee: terms.driverWaitingFee(paidSeconds),
@@ -224,7 +224,9 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   detail: widget.fullyPaid
                       ? tr.addedFromFirstSecondAtThis
                       : tr.addedToFareWhenThisTrip,
-                  value: tr.perMinuteFormattedMin(terms.perMinute.formatted),
+                  value: terms.pricesKnown
+                      ? tr.perMinuteFormattedMin(terms.perMinute.formatted)
+                      : '',
                   tone: const Color(0xFF146B45),
                   state: widget.fullyPaid || seconds >= _graceSeconds
                       ? _PhaseState.now
@@ -237,7 +239,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                     detail: tr.canBeAppliedAfterNoShow(
                       terms.noShowAfterMinutes,
                     ),
-                    value: terms.noShowFee.formatted,
+                    value: terms.pricesKnown ? terms.noShowFee.formatted : '',
                     tone: const Color(0xFF9E2B33),
                     state: seconds < _noShowSeconds
                         ? _PhaseState.later
@@ -289,25 +291,26 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   ),
                 ],
                 const SizedBox(height: 14),
-                Text(
-                  widget.fullyPaid
-                      ? tr.youGetDriverShareWaitPercent(
-                          terms.driverShareWaitPercent,
-                        )
-                      : tr.youGetDriverShareWaitPercent2(
-                          terms.driverShareWaitPercent,
-                          terms.driverShareNoShowPercent,
-                          terms.driverNoShowFee.formatted,
-                        ),
-                  key: const ValueKey<String>('waiting-driver-share'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: _ink,
-                    fontSize: 12.5,
-                    height: 1.35,
-                    fontWeight: FontWeight.w600,
+                if (terms.pricesKnown)
+                  Text(
+                    widget.fullyPaid
+                        ? tr.youGetDriverShareWaitPercent(
+                            terms.driverShareWaitPercent,
+                          )
+                        : tr.youGetDriverShareWaitPercent2(
+                            terms.driverShareWaitPercent,
+                            terms.driverShareNoShowPercent,
+                            terms.driverNoShowFee.formatted,
+                          ),
+                    key: const ValueKey<String>('waiting-driver-share'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: _ink,
+                      fontSize: 12.5,
+                      height: 1.35,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 8),
                 Text(
                   tr.amountsCanChangeWithTaxesAnd,

@@ -6758,9 +6758,20 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get cancelAfterArrivedNote =>
-      'Avbokning efter att föraren anlänt räknas som utebliven kund';
+      'Avbokning efter att föraren anlänt och den fria väntetiden gått ut räknas som utebliven kund';
 
   @override
   String get navigationAppSaveFailed =>
       'Navigationsapp inte sparad. Försök igen.';
+
+  @override
+  String etaLastKnown(Object eta) {
+    return 'Senast kända: $eta';
+  }
+
+  @override
+  String get feeKindNoShowShort => 'Avgift för utebliven kund';
+
+  @override
+  String get feeKindCancelShort => 'Avbokningsavgift';
 }
