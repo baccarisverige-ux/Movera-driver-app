@@ -233,9 +233,10 @@ void main() {
       return null;
     }
 
-    // Wider by class: local < arterial < highway.
+    // Wider by class: local = arterial (darker) < highway; whole numbers
+    // for the web plugin (driver-03f).
     expect(weight('road.local'), 2);
-    expect(weight('road.arterial'), 2.5);
+    expect(weight('road.arterial'), 2);
     expect(weight('road.highway'), 3);
     // Otherwise the near style: same palette, same park green.
     expect(
@@ -246,6 +247,47 @@ void main() {
     for (final style in [moveraMapStyleFar, moveraMapStyleNear]) {
       expect(style, isNot(contains('"weight"')));
     }
+  });
+
+  // driver-03f: google_maps_flutter_web 0.5.14+2 turns each styler into a
+  // MapStyler with these casts (MapStyler.fromJson); one wrong type throws
+  // and the web map is never styled or drawn (grey at zoom 17). Every band
+  // must pass the same casts.
+  test('every style band passes the web plugin\'s styler casts', () {
+    Object? webStyler(Map<String, Object?> json) => (
+      json['hue'] as String?,
+      json['lightness'] as num?,
+      json['saturation'] as num?,
+      json['gamma'] as num?,
+      json['invert_lightness'] as bool?,
+      json['visibility'] as String?,
+      json['color'] as String?,
+      json['weight'] as int?,
+    );
+    for (final band in MoveraMapStyleBand.values) {
+      for (final rule in _rules(band.style)) {
+        expect(rule['featureType'], anyOf(isNull, isA<String>()));
+        expect(rule['elementType'], anyOf(isNull, isA<String>()));
+        for (final styler in (rule['stylers'] as List<Object?>)) {
+          final json = (styler as Map).cast<String, Object?>();
+          expect(
+            _stylerKeys.keys,
+            containsAll(json.keys),
+            reason: '$band: only stylers Maps knows',
+          );
+          expect(
+            () => webStyler(json),
+            returnsNormally,
+            reason: '$band: $json',
+          );
+        }
+      }
+    }
+    // The bug itself: a fractional weight fails these casts.
+    expect(
+      () => webStyler({'weight': jsonDecode('2.5')}),
+      throwsA(isA<TypeError>()),
+    );
   });
 
   test('style band switches at 12.5 with hysteresis', () {

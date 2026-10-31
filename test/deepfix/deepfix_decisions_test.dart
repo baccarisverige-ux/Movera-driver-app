@@ -937,14 +937,22 @@ void main() {
     });
   });
 
-  group('Owner "Map under the strip"', () {
-    test('web/index.html draws under the status bar and keeps the page '
-        'fixed', () {
+  group('Owner "Go back to before" (2026-10-31, was "Map under the strip")', () {
+    test('web/index.html is the page before edge to edge: opaque status bar, '
+        'no viewport-fit, no fixed page, no viewport-gap script', () {
       final html = File('web/index.html').readAsStringSync();
-      expect(html, contains('content="black-translucent"'));
-      expect(html, contains('viewport-fit=cover'));
-      expect(html, contains('MutationObserver(cover)'));
-      expect(html, contains('position: fixed;'));
+      expect(
+        html,
+        contains(
+          '<meta name="apple-mobile-web-app-status-bar-style" content="black">',
+        ),
+      );
+      expect(html, contains('<meta name="theme-color" content="#252E3A">'));
+      expect(html, isNot(contains('black-translucent')));
+      expect(html, isNot(contains('viewport-fit')));
+      expect(html, isNot(contains('MutationObserver(cover)')));
+      expect(html, isNot(contains('position: fixed')));
+      expect(html, isNot(contains('movera-viewport-gap')));
       // iPhone 15 / iOS 17: no auto-zoom on a focused field, pinch zoom
       // still allowed.
       expect(
@@ -954,6 +962,8 @@ void main() {
       expect(html, isNot(contains('maximum-scale=1')));
     });
 
+    // SafeAreaFromPage stays: without viewport-fit=cover the page's insets
+    // read 0 and it changes nothing; it still merges real insets correctly.
     testWidgets('the page\'s safe-area insets reach MediaQuery when the '
         'engine reports none', (tester) async {
       final source = _FixedInsets(const EdgeInsets.only(top: 47, bottom: 34));
