@@ -2027,21 +2027,14 @@ void main() {
     expect(find.text('Safety tools'), findsOneWidget);
     _expectNoException(tester);
 
-    await tester.tap(find.text('Record audio'));
-    await tester.pump();
-    expect(find.text('Stop audio'), findsNothing);
-    expect(
-      find.text('Audio recording is unavailable in this demo.'),
-      findsOneWidget,
-    );
-    _expectNoException(tester);
-
-    await tester.tap(find.text('Share trip'));
-    await tester.pump();
-    expect(
-      find.text('Trip sharing is unavailable in this demo.'),
-      findsOneWidget,
-    );
+    // v0.18.5 `safety.onlyDuringTrip` (owner 2026-10-30): Home has no
+    // trip, so only "Call 112" and Safety preferences; no SOS, no audio,
+    // no Share trip.
+    expect(find.text('Call 112'), findsWidgets);
+    expect(find.text('Safety preferences'), findsOneWidget);
+    expect(find.text('Record audio'), findsNothing);
+    expect(find.text('Share trip'), findsNothing);
+    expect(find.byKey(const ValueKey('safety-sos')), findsNothing);
     _expectNoException(tester);
 
     await tester.tap(find.byTooltip('Close'));

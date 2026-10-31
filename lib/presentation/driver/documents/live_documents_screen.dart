@@ -130,9 +130,23 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen>
     }
   }
 
+  /// The document of [type] (never its renewal).
   AccountDocument? _doc(String ownerId, String type) {
     for (final doc in _docs) {
-      if (doc.ownerId == ownerId && doc.type == type) return doc;
+      if (doc.ownerId == ownerId && doc.type == type && !doc.isRenewal) {
+        return doc;
+      }
+    }
+    return null;
+  }
+
+  /// Contract v0.18.5 (G2-D1): the renewal waiting under the approved
+  /// document of [type], if any.
+  AccountDocument? _renewal(String ownerId, String type) {
+    for (final doc in _docs) {
+      if (doc.ownerId == ownerId && doc.type == type && doc.isRenewal) {
+        return doc;
+      }
     }
     return null;
   }
@@ -143,7 +157,7 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen>
     final doc = _doc(ownerId, type);
     if (doc != null) return doc.status;
     for (final item in summary) {
-      if (item.type == type) return item.status;
+      if (item.type == type && !item.isRenewal) return item.status;
     }
     return 'missing';
   }
@@ -190,9 +204,14 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen>
     }
     final uploaded = result;
     setState(() {
+      // v0.18.5 (G2-D1): a renewal sits next to the approved document,
+      // which stays; any other upload replaces the type's document.
       _docs = [
         for (final d in _docs)
-          if (!(d.ownerId == uploaded.ownerId && d.type == uploaded.type)) d,
+          if (!(d.ownerId == uploaded.ownerId &&
+              d.type == uploaded.type &&
+              (!uploaded.isRenewal || d.isRenewal)))
+            d,
         uploaded,
       ];
     });
@@ -296,7 +315,7 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen>
     final opens =
         kind == DocumentKind.file ||
         (kind == DocumentKind.adminCheck && type == InfoSessionScreen.type);
-    return DocumentRow(
+    final row = DocumentRow(
       key: ValueKey('doc-row-$ownerId-$type'),
       title: settings.nameOf(type, language),
       status: status,
@@ -311,11 +330,63 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen>
           : doc?.fileName,
       onTap: opens ? () => _open(ownerId, type, isCar, status) : null,
     );
+    final renewal = _renewal(ownerId, type);
+    final listed = renewal == null ? _summaryRenewal(type, summary) : null;
+    final renewalStatus = renewal?.status ?? listed?.status;
+    if (renewalStatus == null) return row;
+    // Contract v0.18.5 (G2-D1): "New document waiting for review" under
+    // the approved one; a rejected renewal says why.
+    final rejected = renewalStatus == 'rejected';
+    final note = renewal?.reviewNote;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        row,
+        Padding(
+          key: ValueKey('doc-renewal-$ownerId-$type'),
+          padding: const EdgeInsets.fromLTRB(14, 0, 0, 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                rejected
+                    ? Icons.error_outline_rounded
+                    : Icons.hourglass_top_rounded,
+                size: 16,
+                color: rejected ? const Color(0xFFCB424B) : AuthColors.muted,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  rejected
+                      ? (note == null
+                            ? tr.docRenewalRejected
+                            : '${tr.docRenewalRejected}: $note')
+                      : tr.docRenewalWaiting,
+                  style: AccountStyle.hint().copyWith(
+                    color: rejected ? const Color(0xFFCB424B) : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// The renewal the profile's summary lists for [type] (before the
+  /// document list was read).
+  DocumentSummary? _summaryRenewal(String type, List<DocumentSummary> summary) {
+    for (final item in summary) {
+      if (item.type == type && item.isRenewal) return item;
+    }
+    return null;
   }
 
   DateTime? _summaryExpiry(String type, List<DocumentSummary> summary) {
     for (final item in summary) {
-      if (item.type == type) return item.expiresAt;
+      if (item.type == type && !item.isRenewal) return item.expiresAt;
     }
     return null;
   }

@@ -222,6 +222,9 @@ class ApiDriverRealtime implements DriverRealtime {
         'version': version,
       });
     }
+    // Contract v0.18.5 `chat.appStorage`: no chat is kept after the trip
+    // (also when the end is this driver's own step, echoed below).
+    if (status != null && _isTerminal(status)) _chat?.tripEnded(tripId);
     if (json['kind'] == 'trip_projection' &&
         (_trips?.isOwnEcho(tripId, status) ?? false)) {
       return;
@@ -289,3 +292,6 @@ class ApiDriverRealtime implements DriverRealtime {
     unawaited(_out.close());
   }
 }
+
+bool _isTerminal(String wire) =>
+    TripStatusWire.tryParse(wire)?.isTerminal ?? false;

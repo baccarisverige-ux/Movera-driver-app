@@ -14,6 +14,7 @@ import 'package:movera/presentation/driver/auth/widgets/auth_controls.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_scaffold.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/presentation/driver/auth/widgets/slow_server_note.dart';
+import 'package:movera/widgets/keep_above_keyboard.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:pinput/pinput.dart';
 
@@ -99,7 +100,8 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
 
   void _pinChanged() {
     setState(() {
-      if (_error != null) _error = null;
+      // "Too many wrong tries" stays until a new code is sent.
+      if (_error != null && !_tooManyWrong) _error = null;
     });
   }
 
@@ -168,6 +170,9 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
     // No device-clock expiry check: the server answers 410 for an expired
     // code and authErrorMessage says so.
     if (!AuthRepository.isValidCode(code)) return;
+    // Contract v0.18.5 G1-B3: after "Too many wrong tries" this code
+    // session is spent; only Send new code goes on.
+    if (_tooManyWrong) return;
     setState(() {
       _submitting = true;
       _error = null;
@@ -186,7 +191,7 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
       // boxes"): a wrong code empties the boxes (before the error is set,
       // so the emptying does not take the error line away) and the field
       // keeps its focus for the next code.
-      if (isWrongCode(error)) {
+      if (isWrongCode(error) || isTooManyWrongCodes(error)) {
         _pin.clear();
         if (!_pinFocus.hasFocus) _pinFocus.requestFocus();
       }
@@ -237,27 +242,31 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
       card: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Pinput(
-            key: const ValueKey('auth-code'),
-            length: 4,
-            controller: _pin,
-            focusNode: _pinFocus,
-            autofocus: DriverPhoneVerification.autofocusCode,
-            onTap: _refocus,
-            // Owner decision 7: one-time-code autofill (iOS, the web's
-            // autocomplete="one-time-code", Android autofill services).
-            autofillHints: const [AutofillHints.oneTimeCode],
-            keyboardType: TextInputType.number,
-            forceErrorState: _error != null,
-            // Contract v0.18.2 `auth.codeAutoSubmit` (owner 2026-10-30,
-            // "Check by itself"): the last digit sends the code at once;
-            // Verify stays, and [_verify] sends one call at a time.
-            onCompleted: (_) => _verify(),
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            defaultPinTheme: _box(),
-            focusedPinTheme: _box(focused: true),
-            submittedPinTheme: _box(),
-            errorPinTheme: _box(error: true),
+          // Owner G1-B6: the code boxes have a name for a screen reader.
+          Semantics(
+            label: tr.authCodeFieldLabel,
+            child: Pinput(
+              key: const ValueKey('auth-code'),
+              length: 4,
+              controller: _pin,
+              focusNode: _pinFocus,
+              autofocus: DriverPhoneVerification.autofocusCode,
+              onTap: _refocus,
+              // Owner decision 7: one-time-code autofill (iOS, the web's
+              // autocomplete="one-time-code", Android autofill services).
+              autofillHints: const [AutofillHints.oneTimeCode],
+              keyboardType: TextInputType.number,
+              forceErrorState: _error != null,
+              // Contract v0.18.2 `auth.codeAutoSubmit` (owner 2026-10-30,
+              // "Check by itself"): the last digit sends the code at once;
+              // Verify stays, and [_verify] sends one call at a time.
+              onCompleted: (_) => _verify(),
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              defaultPinTheme: _box(),
+              focusedPinTheme: _box(focused: true),
+              submittedPinTheme: _box(),
+              errorPinTheme: _box(error: true),
+            ),
           ),
           if (_error != null) AuthErrorText(_error!),
           if (_info != null && _error == null)
@@ -281,12 +290,18 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
             text: tr.authNeverAskCode,
           ),
           const SizedBox(height: 14),
-          AuthPrimaryButton(
-            key: const ValueKey('auth-verify'),
-            label: tr.authVerify,
-            showArrow: false,
-            busy: _submitting,
-            onPressed: complete ? _verify : null,
+          // Owner 2026-10-30 (keyboard video): Verify stays visible just
+          // above the keyboard.
+          KeepAboveKeyboard(
+            child: AuthPrimaryButton(
+              key: const ValueKey('auth-verify'),
+              label: tr.authVerify,
+              showArrow: false,
+              busy: _submitting,
+              // Contract v0.18.5 G1-B3 (owner "Fix it"): Verify is off once
+              // the 5th wrong code says "Too many wrong tries".
+              onPressed: complete && !_tooManyWrong ? _verify : null,
+            ),
           ),
         ],
       ),

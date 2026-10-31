@@ -1082,7 +1082,8 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      const MaterialApp(home: Scaffold(body: SafetyToolKits())),
+      // v0.18.5 `safety.onlyDuringTrip`: Ride check is on the trip's sheet.
+      const MaterialApp(home: Scaffold(body: SafetyToolKits(duringTrip: true))),
     );
     await tester.pumpAndSettle();
     final info = find.byKey(const ValueKey('ride-check-info'));

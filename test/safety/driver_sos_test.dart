@@ -135,6 +135,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SafetyToolKits(
+            // v0.18.5 `safety.onlyDuringTrip`: SOS is on the trip's sheet.
+            duringTrip: true,
             launchEmergencyDial: dial,
             sendSos: sos,
             web: false,
@@ -205,6 +207,8 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SafetyToolKits(
+            // v0.18.5 `safety.onlyDuringTrip`: SOS is on the trip's sheet.
+            duringTrip: true,
             launchEmergencyDial: () async => true,
             sendSos: () async {
               alerts++;

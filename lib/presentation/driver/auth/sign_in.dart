@@ -8,6 +8,7 @@ import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/phone_country.dart';
 import 'package:movera/core/auth/phone_country_default.dart';
+import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -22,6 +23,7 @@ import 'package:movera/presentation/driver/auth/widgets/need_help.dart';
 import 'package:movera/presentation/driver/auth/widgets/balloon_brand_intro.dart';
 import 'package:movera/presentation/driver/auth/widgets/slow_server_note.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
+import 'package:movera/widgets/keep_above_keyboard.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 
@@ -249,8 +251,12 @@ class _DriverSignInState extends State<DriverSignIn>
       setState(() => _phoneError = tr.authErrSendCode);
       return;
     }
+    // Owner G1-B6 ("Fix all three"): a new try clears the last try's
+    // error line (an old "No connection" must not stay on screen).
     setState(() {
       _busy = true;
+      _phoneError = null;
+      _providerError = null;
       _restrictedNumber = null;
       _waitlistSaved = false;
     });
@@ -293,6 +299,7 @@ class _DriverSignInState extends State<DriverSignIn>
       card: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SignedOutLine(),
           Text(tr.authEnterPhone, style: AuthText.cardTitle()),
           const SizedBox(height: 2),
           Text(
@@ -317,19 +324,23 @@ class _DriverSignInState extends State<DriverSignIn>
           const SizedBox(height: 16),
           // The driver must tick the box before Continue works (stores
           // expect an explicit consent).
-          Semantics(
+          // Owner G1-B6: the tick is one checkbox for a screen reader, and
+          // Terms and Privacy policy are two separate links (not hidden
+          // inside the checkbox's label).
+          GestureDetector(
             key: const ValueKey('auth-consent'),
-            checked: _agreed,
-            label: tr.authConsentLabel,
+            behavior: HitTestBehavior.opaque,
             onTap: _toggleAgreed,
-            excludeSemantics: true,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _toggleAgreed,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AnimatedContainer(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(
+                  key: const ValueKey('auth-consent-box'),
+                  checked: _agreed,
+                  label: tr.authConsentLabel,
+                  onTap: _toggleAgreed,
+                  excludeSemantics: true,
+                  child: AnimatedContainer(
                     duration: const Duration(milliseconds: 160),
                     width: 24,
                     height: 24,
@@ -351,33 +362,34 @@ class _DriverSignInState extends State<DriverSignIn>
                           )
                         : null,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text.rich(
-                      TextSpan(
-                        text: tr.authConsentPrefix,
-                        children: [
-                          TextSpan(
-                            text: tr.authConsentTerms,
-                            recognizer: _termsTap,
-                            style: AuthText.urbanist(weight: FontWeight.w800),
-                          ),
-                          TextSpan(text: tr.authAnd),
-                          TextSpan(
-                            text: tr.authConsentPrivacy,
-                            recognizer: _privacyTap,
-                            style: AuthText.urbanist(weight: FontWeight.w800),
-                          ),
-                        ],
-                      ),
-                      style: AuthText.small().copyWith(
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  // Owner G1-B5 ("Same in both"): "By continuing you accept
+                  // the terms and privacy policy", as the rider app.
+                  child: Text.rich(
+                    TextSpan(
+                      text: tr.authConsentPrefix,
+                      children: [
+                        TextSpan(
+                          text: tr.authConsentTerms,
+                          recognizer: _termsTap,
+                          semanticsLabel: tr.authConsentTerms,
+                          style: AuthText.urbanist(weight: FontWeight.w800),
+                        ),
+                        TextSpan(text: tr.authAnd),
+                        TextSpan(
+                          text: tr.authConsentPrivacy,
+                          recognizer: _privacyTap,
+                          semanticsLabel: tr.authConsentPrivacy,
+                          style: AuthText.urbanist(weight: FontWeight.w800),
+                        ),
+                      ],
                     ),
+                    style: AuthText.small().copyWith(fontSize: 13, height: 1.4),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           if (_consentNudge)
@@ -392,14 +404,18 @@ class _DriverSignInState extends State<DriverSignIn>
               ),
             ),
           const SizedBox(height: 18),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _agreed ? null : _nudgeConsent,
-            child: AuthPrimaryButton(
-              key: const ValueKey('auth-continue'),
-              label: tr.authContinue,
-              busy: _busy,
-              onPressed: idle ? _continue : null,
+          // Owner 2026-10-30 (keyboard video): the phone field, the terms
+          // tick and Continue stay visible just above the keyboard.
+          KeepAboveKeyboard(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _agreed ? null : _nudgeConsent,
+              child: AuthPrimaryButton(
+                key: const ValueKey('auth-continue'),
+                label: tr.authContinue,
+                busy: _busy,
+                onPressed: idle ? _continue : null,
+              ),
             ),
           ),
           SlowServerNote(busy: _busy || _providerBusy != null || _waitlistBusy),
@@ -561,6 +577,72 @@ class _DriverSignInState extends State<DriverSignIn>
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Contract v0.18.5 `auth.signedOut` (owner G1-D3 "Show a message
+/// (Recommended)"): after the server ended the session, "You were signed
+/// out – please sign in again" and why (30 days unused, or ended by
+/// Movera). Nothing after the driver's own Sign out.
+class SignedOutLine extends StatelessWidget {
+  const SignedOutLine({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String?>(
+      valueListenable: SignedOutNotice.kind,
+      builder: (context, kind, _) {
+        if (kind == null) return const SizedBox.shrink();
+        final detail = switch (kind) {
+          SignedOutNotice.expired => tr.authSignedOutDetailExpired,
+          SignedOutNotice.revoked => tr.authSignedOutDetailRevoked,
+          _ => null,
+        };
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Semantics(
+            liveRegion: true,
+            child: Container(
+              key: const ValueKey('auth-signed-out'),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF4E5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 18,
+                    color: AuthColors.ink,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          kind == SignedOutNotice.expired
+                              ? tr.authSignedOutExpired
+                              : tr.authSignedOutRevoked,
+                          style: AuthText.small().copyWith(
+                            color: AuthColors.ink,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (detail != null)
+                          Text(detail, style: AuthText.small()),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

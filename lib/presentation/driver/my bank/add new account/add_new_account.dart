@@ -2,6 +2,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/money/bank_account.dart';
+import 'package:movera/widgets/keep_above_keyboard.dart';
 
 /// Local-only validation preview; no account details are persisted or sent.
 class AddNewAccount extends StatefulWidget {
@@ -325,21 +326,23 @@ class _AddNewAccountState extends State<AddNewAccount> {
             ),
           ),
           const SizedBox(height: 30),
-          SizedBox(
-            height: 52,
-            child: FilledButton(
-              key: const ValueKey<String>('bank-save'),
-              onPressed: _save,
-              style: FilledButton.styleFrom(
-                backgroundColor: _ink,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(26),
+          KeepAboveKeyboard(
+            child: SizedBox(
+              height: 52,
+              child: FilledButton(
+                key: const ValueKey<String>('bank-save'),
+                onPressed: _save,
+                style: FilledButton.styleFrom(
+                  backgroundColor: _ink,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(26),
+                  ),
                 ),
-              ),
-              child: Text(
-                tr.checkDetails,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                child: Text(
+                  tr.checkDetails,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
           ),

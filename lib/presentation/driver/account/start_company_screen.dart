@@ -9,6 +9,7 @@ import 'package:movera/presentation/driver/account/account_style.dart';
 import 'package:movera/presentation/driver/account/fleet_actions.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
+import 'package:movera/widgets/keep_above_keyboard.dart';
 
 /// Owner decision of 2026-10-29, driver group 2 item 7: "Start my own
 /// company" from My fleet (`POST /driver/fleet/start-company`). The
@@ -157,11 +158,13 @@ class _StartCompanyScreenState extends State<StartCompanyScreen> {
               ),
               if (_error != null) AccountErrorLine(_error!),
               const SizedBox(height: 16),
-              AccountButton(
-                key: const ValueKey('start-company-send'),
-                label: tr.startCompanySend,
-                busy: _busy,
-                onPressed: _complete ? _send : null,
+              KeepAboveKeyboard(
+                child: AccountButton(
+                  key: const ValueKey('start-company-send'),
+                  label: tr.startCompanySend,
+                  busy: _busy,
+                  onPressed: _complete ? _send : null,
+                ),
               ),
             ],
           ),

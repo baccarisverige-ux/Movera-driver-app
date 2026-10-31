@@ -58,6 +58,9 @@ void main() {
     '/api/v1/telemetry/logs',
     '/api/v1/telemetry/analytics',
     '/api/v1/telemetry/crashes',
+    // v0.18.5 (G1-B2): the terms and privacy policy, no token.
+    '/api/v1/legal/SE',
+    '/api/v1/legal/FR',
   };
 
   setUp(() {

@@ -21,6 +21,7 @@ import 'package:movera/presentation/driver/account/details_pickers.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_scaffold.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_style.dart';
+import 'package:movera/widgets/keep_above_keyboard.dart';
 
 /// Step 3 of the sign-in (round 4b): the details Movera needs once
 /// (contract v0.5.3 §14, `POST /driver/onboarding`), on one scrollable
@@ -780,11 +781,15 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
           AccountErrorLine(_errors[DetailsField.terms]!),
         if (_formError != null) AccountErrorLine(_formError!),
         const SizedBox(height: 18),
-        AccountButton(
-          key: const ValueKey('details-continue'),
-          label: widget.editing ? tr.acctSaveDetails : tr.authContinue,
-          busy: _busy,
-          onPressed: _submit,
+        // Owner 2026-10-30 (keyboard video): Continue stays visible just
+        // above the keyboard when it fits with the field being filled.
+        KeepAboveKeyboard(
+          child: AccountButton(
+            key: const ValueKey('details-continue'),
+            label: widget.editing ? tr.acctSaveDetails : tr.authContinue,
+            busy: _busy,
+            onPressed: _submit,
+          ),
         ),
       ],
     );

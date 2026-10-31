@@ -4722,14 +4722,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authInvalidMobileNumber => 'Enter a valid mobile number.';
 
   @override
-  String get authConsentLabel =>
-      'I agree to the terms of service and the privacy policy';
+  String get authConsentLabel => 'I accept the terms and the privacy policy';
 
   @override
-  String get authConsentPrefix => 'By continuing you agree to our ';
+  String get authConsentPrefix => 'By continuing you accept the ';
 
   @override
-  String get authConsentTerms => 'terms of service';
+  String get authConsentTerms => 'terms';
 
   @override
   String get authAnd => ' and ';
@@ -4847,7 +4846,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authSignInRestricted =>
-      'This number isn\'t on the driver test list yet. Contact Movera to get access.';
+      'This number isn’t open for sign-in yet. Join the waiting list and we’ll let you know.';
 
   @override
   String get acctDetailsTitle => 'Your details';
@@ -6394,7 +6393,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get remNoFleet =>
-      'Join a fleet to drive – ask your fleet owner for the Movera code';
+      'Join a fleet to drive – ask your fleet owner for the Movera code, his name and e-mail';
 
   @override
   String get remActionJoinFleet => 'Join a fleet';
@@ -6528,4 +6527,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get anaNotEnoughData => 'Not enough data yet';
+
+  @override
+  String get authSignedOutExpired =>
+      'You were signed out – please sign in again';
+
+  @override
+  String get authSignedOutRevoked =>
+      'You were signed out – please sign in again';
+
+  @override
+  String get authSignedOutDetailExpired =>
+      'You have not used the app for 30 days.';
+
+  @override
+  String get authSignedOutDetailRevoked => 'Movera ended your session.';
+
+  @override
+  String get docInvalidFileContent => 'This file is not a photo or PDF';
+
+  @override
+  String get docExpiryTooFar => 'Check the end date';
+
+  @override
+  String remFleetInvitation(String fleet) {
+    return '$fleet invited you';
+  }
+
+  @override
+  String get remActionAcceptInvitation => 'Accept';
+
+  @override
+  String get remActionDeclineInvitation => 'Decline';
+
+  @override
+  String get safetyCall112 => 'Call 112';
+
+  @override
+  String authPhoneFieldLabel(String dial) {
+    return 'Mobile number ($dial)';
+  }
+
+  @override
+  String get authCodeFieldLabel => '4-digit code from the SMS';
+
+  @override
+  String get legalCouldNotLoad =>
+      'Couldn’t load the text. Check the connection and try again.';
+
+  @override
+  String get docRenewalWaiting => 'New document waiting for review';
+
+  @override
+  String get docRenewalRejected => 'New document rejected';
+
+  @override
+  String get remRenewalInReview => 'Your new one is being checked';
+
+  @override
+  String get remRenewalRejected => 'Your new one was rejected';
+
+  @override
+  String get carTypesByMovera =>
+      'Movera chooses the ride types when it approves the car.';
 }

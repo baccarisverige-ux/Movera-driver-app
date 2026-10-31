@@ -582,7 +582,9 @@ void main() {
       }
       expect(calls, ['invite +46701740608']);
       expect(find.byKey(const ValueKey('invitation-inv_p')), findsOneWidget);
-      expect(find.text(tr.fleetInviteWaitsSignUp), findsOneWidget);
+      // v0.18.5 (owner G2-D5.5): the number, never a name, until he accepts.
+      expect(find.text(tr.fleetInviteWaitsAnswer), findsOneWidget);
+      expect(find.textContaining('Invitation sent to +46'), findsWidgets);
       expect(
         find.byKey(const ValueKey('invitation-cancel-inv_p')),
         findsOneWidget,

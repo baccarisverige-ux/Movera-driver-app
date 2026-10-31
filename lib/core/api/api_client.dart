@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart' show MediaType;
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
@@ -211,6 +212,7 @@ class ApiClient {
           await _expireSession(
             replacement ?? access,
             cause: replacement == null ? refresh.cause : 'retry_401',
+            reason: refresh.reason,
           );
         }
       }
@@ -283,7 +285,11 @@ class ApiClient {
     if (access == null || access.isEmpty) return;
     final refresh = await _refreshAccess(access);
     if (!refresh.unavailable && refresh.access == null) {
-      await _expireSession(access, cause: refresh.cause);
+      await _expireSession(
+        access,
+        cause: refresh.cause,
+        reason: refresh.reason,
+      );
     }
   }
 
@@ -314,21 +320,13 @@ class ApiClient {
       return const _Refresh.rejected('no_refresh_token');
     }
     try {
-      final response = await _client
-          .post(
-            uriFor(refreshPath),
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              'X-Request-Id': _requestId(),
-              'X-Api-Version': apiVersion,
-            },
-            body: jsonEncode({'refreshToken': refresh}),
-          )
-          .timeout(_timeout);
+      final response = await _postRefresh(refresh);
       final status = response.statusCode;
       if (status == 400 || status == 401 || status == 403) {
-        return _Refresh.rejected('refresh_$status');
+        return _Refresh.rejected(
+          'refresh_$status',
+          reason: status == 401 ? _reasonOf(response) : null,
+        );
       }
       if (status != 200) return const _Refresh.unavailable();
       final payload = jsonDecode(response.body);
@@ -349,14 +347,77 @@ class ApiClient {
     }
   }
 
+  /// Contract v0.18.5 `auth.tokens.refreshRetry` (G1-B6): the answer to a
+  /// refresh can be lost on a bad connection after the server already
+  /// used the token. The same refresh token sent again within
+  /// [refreshRetryWindow] still gets a fresh pair; later, the server ends
+  /// the session (`refresh_token_reused`). So a lost answer is retried at
+  /// once, with the same token, while the window is open.
+  static const refreshRetryWindow = Duration(seconds: 60);
+
+  Future<http.Response> _postRefresh(String refresh) async {
+    final started = DateTime.now();
+    while (true) {
+      try {
+        return await _client
+            .post(
+              uriFor(refreshPath),
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Request-Id': _requestId(),
+                'X-Api-Version': apiVersion,
+              },
+              body: jsonEncode({'refreshToken': refresh}),
+            )
+            .timeout(_timeout);
+      } catch (error) {
+        final spent = DateTime.now().difference(started);
+        // One retry, and only while the server still takes the token.
+        if (spent + const Duration(seconds: 1) >= refreshRetryWindow ||
+            !_firstRefreshTry(started)) {
+          rethrow;
+        }
+        DriverLog.warn(
+          'refresh answer lost (${error.runtimeType}); sending it again',
+          name: 'api',
+        );
+      }
+    }
+  }
+
+  DateTime? _retried;
+
+  /// True the first time a refresh started at [started] fails.
+  bool _firstRefreshTry(DateTime started) {
+    if (_retried == started) return false;
+    _retried = started;
+    return true;
+  }
+
+  static String? _reasonOf(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['reason'] is String) {
+        return decoded['reason'] as String;
+      }
+    } on FormatException {
+      // No body: the reason is unknown.
+    }
+    return null;
+  }
+
   /// Runs once per rejected access token, so a burst of concurrent 401s
   /// does not clear the session and open Sign in several times.
   Future<void> _expireSession(
     String failedAccess, {
     required String? cause,
+    String? reason,
   }) async {
     if (_expiredAccess == failedAccess) return;
     _expiredAccess = failedAccess;
+    // Contract v0.18.5 `auth.signedOut`: the sign-in screen says why.
+    if (cause == 'refresh_401') SignedOutNotice.sessionRefused(reason);
     // Why the driver was signed out (never the tokens).
     DriverLog.warn('session expired: ${cause ?? 'unknown'}', name: 'auth');
     await _tokens.clear();
@@ -424,19 +485,25 @@ class ApiClient {
 class _Refresh {
   const _Refresh.refreshed(String this.access)
     : unavailable = false,
-      cause = null;
-  const _Refresh.rejected(String this.cause)
+      cause = null,
+      reason = null;
+  const _Refresh.rejected(String this.cause, {this.reason})
     : access = null,
       unavailable = false;
   const _Refresh.unavailable()
     : access = null,
       unavailable = true,
-      cause = null;
+      cause = null,
+      reason = null;
 
   final String? access;
 
   /// Why the refresh was refused (`refresh_401`, `no_refresh_token`, …).
   final String? cause;
+
+  /// The server's reason on a 401 (`session_expired`, `session_ended`,
+  /// `refresh_token_reused`, `refresh_token_unknown`).
+  final String? reason;
 
   /// The refresh endpoint could not answer; the tokens are kept.
   final bool unavailable;

@@ -1587,8 +1587,10 @@ class _AcceptRideState extends State<AcceptRide>
                                     onRoute: _AcceptRidePanel(
                                       this,
                                     )._showTripOptions,
-                                    onSafety: () =>
-                                        showSafetyToolKitSheet(context),
+                                    onSafety: () => showSafetyToolKitSheet(
+                                      context,
+                                      duringTrip: true,
+                                    ),
                                     onWait: _AcceptRidePanel(
                                       this,
                                     )._openWaitingTime,

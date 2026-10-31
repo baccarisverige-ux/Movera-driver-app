@@ -48,7 +48,14 @@ enum ReminderFixTarget {
   joinFleet,
 
   /// Contract v0.18.3 (R4): My fleet › Start my own company.
-  startCompany;
+  startCompany,
+
+  /// Contract v0.18.5 (G2-D5.6): accept the fleet's invitation
+  /// (`POST /driver/fleet/invitations/{invitationId}/accept`).
+  acceptInvitation,
+
+  /// Contract v0.18.5 (G2-D5.6): decline it (`…/decline`).
+  declineInvitation;
 
   static ReminderFixTarget? of(Object? wire) => switch (wire) {
     'document' => document,
@@ -57,6 +64,8 @@ enum ReminderFixTarget {
     'pick_vehicle' => pickVehicle,
     'join_fleet' => joinFleet,
     'start_company' => startCompany,
+    'accept_invitation' => acceptInvitation,
+    'decline_invitation' => declineInvitation,
     _ => null,
   };
 }
@@ -69,6 +78,7 @@ class ReminderFix {
     this.scope,
     this.vehicleId,
     this.contentSlot,
+    this.invitationId,
   });
 
   static ReminderFix? fromJson(Object? json) {
@@ -81,6 +91,7 @@ class ReminderFix {
       scope: _text(json['scope']),
       vehicleId: _text(json['vehicleId']),
       contentSlot: _text(json['contentSlot']),
+      invitationId: _text(json['invitationId']),
     );
   }
 
@@ -89,6 +100,9 @@ class ReminderFix {
   final String? scope;
   final String? vehicleId;
   final String? contentSlot;
+
+  /// v0.18.5: the invitation an accept / decline button answers.
+  final String? invitationId;
 }
 
 /// `DriverReminder`.
@@ -107,6 +121,9 @@ class DriverReminder {
     this.reviewNote,
     this.fix,
     this.actions = const [],
+    this.renewalStatus,
+    this.invitationId,
+    this.fleetName,
   });
 
   factory DriverReminder.fromJson(Map<String, dynamic> json) => DriverReminder(
@@ -130,6 +147,9 @@ class DriverReminder {
         for (final row in raw)
           if (ReminderFix.fromJson(row) case final action?) action,
     ],
+    renewalStatus: _text(json['renewalStatus']),
+    invitationId: _text(json['invitationId']),
+    fleetName: _text(json['fleetName']),
   );
 
   /// `document_needed`, `document_expiring`, `fleet_no_approved_car`, …
@@ -152,6 +172,16 @@ class DriverReminder {
   /// Contract v0.18.3 (R4): the line's buttons, in order (`no_fleet`:
   /// Join a fleet, Start my own company); [fix] stays the tap on the line.
   final List<ReminderFix> actions;
+
+  /// Contract v0.18.5 (G2-D1): on an expiring / expired line, the renewal
+  /// the driver sent: `in_review` or `rejected` (the level never changes:
+  /// a renewal does not unblock).
+  final String? renewalStatus;
+
+  /// Contract v0.18.5 (G2-D5.6): a `fleet_invitation` line's invitation
+  /// and the fleet's name.
+  final String? invitationId;
+  final String? fleetName;
 
   bool get blocksOnline => level == ReminderLevel.blocksOnline;
 }
@@ -274,6 +304,8 @@ String reminderActionLabel(ReminderFixTarget target) => switch (target) {
   ReminderFixTarget.infoSession => tr.infoHowToBookShort,
   ReminderFixTarget.fleetVehicles => tr.myFleet,
   ReminderFixTarget.pickVehicle => tr.fleetChooseCar,
+  ReminderFixTarget.acceptInvitation => tr.remActionAcceptInvitation,
+  ReminderFixTarget.declineInvitation => tr.remActionDeclineInvitation,
 };
 
 /// R10 (owner 2026-10-30, "Bank details were rejected"): an English name
@@ -315,9 +347,29 @@ ReminderWords reminderWords(
       detail: reminder.reviewNote,
       action: tr.remUploadNew,
     ),
+    // v0.18.5 (G2-D1): the renewal the driver already sent is said; the
+    // line keeps its colour (only Movera's approval unblocks).
+    'document_expired' when reminder.renewalStatus == 'in_review' =>
+      ReminderWords(
+        tr.remDocumentExpired(document, plural),
+        detail: tr.remRenewalInReview,
+      ),
+    'document_expiring' when reminder.renewalStatus == 'in_review' =>
+      ReminderWords(
+        tr.remDocumentExpiring(
+          document,
+          _daysLabel(reminder.daysLeft ?? 0),
+          plural,
+        ),
+        detail: tr.remRenewalInReview,
+      ),
     'document_expired' => ReminderWords(
       tr.remDocumentExpired(document, plural),
-      detail: reminder.blocksOnline ? tr.remCantGoOnlineUntil : null,
+      detail: reminder.renewalStatus == 'rejected'
+          ? _rejectedRenewal(reminder.reviewNote)
+          : reminder.blocksOnline
+          ? tr.remCantGoOnlineUntil
+          : null,
       action: tr.remUploadNew,
     ),
     'document_expiring' => ReminderWords(
@@ -326,7 +378,14 @@ ReminderWords reminderWords(
         _daysLabel(reminder.daysLeft ?? 0),
         plural,
       ),
+      detail: reminder.renewalStatus == 'rejected'
+          ? _rejectedRenewal(reminder.reviewNote)
+          : null,
       action: tr.remUploadNew,
+    ),
+    // v0.18.5 (G2-D5.6): "<Fleet> invited you", Accept / Decline.
+    'fleet_invitation' => ReminderWords(
+      tr.remFleetInvitation(reminder.fleetName ?? tr.myFleet),
     ),
     'document_in_review' => ReminderWords(tr.remDocumentInReview(document)),
     'info_session_waiting' => ReminderWords(
@@ -367,6 +426,10 @@ ReminderWords reminderWords(
     ),
   };
 }
+
+/// v0.18.5 (G2-D1): the renewal was rejected, and why when Movera said.
+String _rejectedRenewal(String? note) =>
+    note == null ? tr.remRenewalRejected : '${tr.remRenewalRejected}: $note';
 
 /// "in 12 days", "tomorrow", "today".
 String _daysLabel(int days) => switch (days) {

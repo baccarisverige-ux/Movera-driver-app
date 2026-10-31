@@ -64,6 +64,8 @@ import 'package:movera/core/push/push_platform.dart';
 import 'package:movera/core/push/push_registrar.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
 import 'package:movera/presentation/driver/push/push_explanation.dart';
+import 'package:movera/core/legal/driver_legal.dart';
+import 'package:movera/core/platform/safe_area_insets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -236,7 +238,16 @@ class _MoveraAppState extends State<MoveraApp> {
         }),
       );
       live.attach(_session);
-      _lifecycle = AppLifecycleListener(onResume: live.resumed);
+      // Contract v0.18.5 `legal` (G1-B2): the country's terms and privacy
+      // policy (no token) on start and each time the app comes back.
+      final legal = DriverLegal.instance..api = _api;
+      unawaited(legal.start(country: defaultPhoneCountry().iso));
+      _lifecycle = AppLifecycleListener(
+        onResume: () {
+          live.resumed();
+          unawaited(legal.refresh());
+        },
+      );
       _dispatch = live.dispatch;
     } else {
       _dispatch = DemoDispatchRepository();
@@ -308,6 +319,8 @@ class _MoveraAppState extends State<MoveraApp> {
   Future<void> _sessionExpired() async {
     if (!DriverRuntimeConfig.current.authRequired) return;
     _live?.signedOut();
+    // Checker blocker 1 / HIGH 2: no terms screen over Sign in.
+    unawaited(DriverLegal.instance.signedOut());
     final navigator = _navigatorKey.currentState;
     if (navigator == null) return;
     showDriverSignIn(navigator, _signIn);
@@ -358,30 +371,36 @@ class _MoveraAppState extends State<MoveraApp> {
                   child: DriverContentGate(
                     session: _session,
                     navigatorKey: _navigatorKey,
-                    child: LayoutViewport(
-                      child: Column(
-                        children: [
-                          // A live build (round 4) has an account: no demo
-                          // banner, only the status-bar inset it would take.
-                          if (DriverRuntimeConfig.current.authRequired)
-                            const SafeArea(
-                              bottom: false,
-                              child: SizedBox.shrink(),
-                            )
-                          else
-                            const DemoModeBanner(),
-                          // The banner took the status-bar inset: the
-                          // screens below must not pad for it again.
-                          Expanded(
-                            child: Builder(
-                              builder: (viewport) => MediaQuery.removePadding(
-                                context: viewport,
-                                removeTop: true,
-                                child: child ?? const SizedBox.shrink(),
+                    // Owner 2026-10-30 "Map under the strip": a live
+                    // build draws edge to edge, under the status bar, like
+                    // a native app; every screen moves its own top by the
+                    // real inset (SafeArea, AppBar, or Home's buttons with
+                    // MediaQuery.paddingOf(context).top). In the browser
+                    // the inset comes from CSS (SafeAreaFromPage).
+                    child: SafeAreaFromPage(
+                      child: LayoutViewport(
+                        child: DriverRuntimeConfig.current.authRequired
+                            ? child ?? const SizedBox.shrink()
+                            : Column(
+                                children: [
+                                  const DemoModeBanner(),
+                                  // The banner took the status-bar inset:
+                                  // the screens below must not pad for it
+                                  // again.
+                                  Expanded(
+                                    child: Builder(
+                                      builder: (viewport) =>
+                                          MediaQuery.removePadding(
+                                            context: viewport,
+                                            removeTop: true,
+                                            child:
+                                                child ??
+                                                const SizedBox.shrink(),
+                                          ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),

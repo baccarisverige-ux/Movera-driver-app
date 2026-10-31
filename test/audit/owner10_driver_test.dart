@@ -104,7 +104,8 @@ Future<void> _toolkit(WidgetTester tester) async {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    const MaterialApp(home: Scaffold(body: SafetyToolKits())),
+    // v0.18.5 `safety.onlyDuringTrip`: Record audio is a trip tool.
+    const MaterialApp(home: Scaffold(body: SafetyToolKits(duringTrip: true))),
   );
   await tester.pumpAndSettle();
 }

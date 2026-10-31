@@ -228,6 +228,19 @@ extension _HomeAccount on _DriverHomeState {
       return;
     }
     final me = session.account;
+    // Contract v0.18.5 (G2-D5.6): Accept / Decline answer the invitation
+    // here, on Home.
+    if (fix.target == ReminderFixTarget.acceptInvitation ||
+        fix.target == ReminderFixTarget.declineInvitation) {
+      final id = fix.invitationId ?? reminder.invitationId;
+      if (id == null) return;
+      await _answerInvitation(
+        session,
+        id,
+        accept: fix.target == ReminderFixTarget.acceptInvitation,
+      );
+      return;
+    }
     final Widget page = switch (fix.target) {
       ReminderFixTarget.document => UploadGuideScreen(
         account: session,
@@ -246,11 +259,38 @@ extension _HomeAccount on _DriverHomeState {
       // Contract v0.18.3 (R4): the no_fleet line's two buttons.
       ReminderFixTarget.joinFleet => JoinFleetScreen(account: session),
       ReminderFixTarget.startCompany => StartCompanyScreen(account: session),
+      ReminderFixTarget.acceptInvitation ||
+      ReminderFixTarget.declineInvitation => MyFleetScreen(account: session),
     };
     await pushSingle(context, MaterialPageRoute<void>(builder: (_) => page));
     if (mounted) {
       _refreshLiveBadges();
     }
+  }
+
+  /// `POST /driver/fleet/invitations/{invitationId}/accept | decline`
+  /// (Idempotency-Key), then the reminders and the profile again.
+  Future<void> _answerInvitation(
+    DriverAccountSession session,
+    String invitationId, {
+    required bool accept,
+  }) async {
+    try {
+      if (accept) {
+        await session.repository.acceptInvitation(invitationId);
+      } else {
+        await session.repository.declineInvitation(invitationId);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      IslandMessages.show(
+        IslandMessage(
+          title: accountErrorMessage(error, fallback: tr.fleetInvitationGone),
+          tone: IslandTone.warning,
+        ),
+      );
+    }
+    if (mounted) _refreshLiveBadges();
   }
 
   /// The Home sheet box (live builds; nothing in the demo).

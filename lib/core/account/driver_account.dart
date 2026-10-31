@@ -29,6 +29,7 @@ class DocumentSummary {
     required this.type,
     required this.status,
     this.expiresAt,
+    this.renewalOf,
   });
 
   factory DocumentSummary.fromJson(Map<String, dynamic> json) =>
@@ -37,6 +38,7 @@ class DocumentSummary {
         type: _text(json['type']) ?? '',
         status: _text(json['status']) ?? 'missing',
         expiresAt: _time(json['expiresAt']),
+        renewalOf: _text(json['renewalOf']),
       );
 
   final String documentId;
@@ -45,6 +47,13 @@ class DocumentSummary {
   /// `missing`, `in_review`, `approved`, `rejected`, `expired`.
   final String status;
   final DateTime? expiresAt;
+
+  /// Contract v0.18.5 (G2-D1): a renewal waiting next to the approved
+  /// document it renews (that document's id); null for the document
+  /// itself.
+  final String? renewalOf;
+
+  bool get isRenewal => renewalOf != null;
 }
 
 /// `Document`, as `GET /driver/documents` and an upload answer it.
@@ -61,6 +70,7 @@ class AccountDocument {
     this.mediaType,
     this.uploadedAt,
     this.reviewNote,
+    this.renewalOf,
   });
 
   factory AccountDocument.fromJson(Map<String, dynamic> json) =>
@@ -76,6 +86,7 @@ class AccountDocument {
         mediaType: _text(json['mediaType']),
         uploadedAt: _time(json['uploadedAt']),
         reviewNote: _text(json['reviewNote']),
+        renewalOf: _text(json['renewalOf']),
       );
 
   final String documentId;
@@ -92,11 +103,19 @@ class AccountDocument {
   final DateTime? uploadedAt;
   final String? reviewNote;
 
+  /// Contract v0.18.5 (G2-D1, owner "Keep old until new approved"): the
+  /// approved document this upload renews; the approved one stays valid
+  /// until its own end date while this one waits.
+  final String? renewalOf;
+
+  bool get isRenewal => renewalOf != null;
+
   DocumentSummary get summary => DocumentSummary(
     documentId: documentId,
     type: type,
     status: status,
     expiresAt: expiresAt,
+    renewalOf: renewalOf,
   );
 }
 
@@ -592,6 +611,8 @@ class ServerNotification {
       kind == 'vehicle_approved' ||
       kind == 'vehicle_rejected' ||
       kind == 'vehicle_blocked' ||
+      // v0.18.5 (G2-D4): removed from / left the fleet.
+      kind == 'fleet_membership' ||
       deepLink == 'movera-driver://fleet';
 
   /// Contract v0.18.3 `reviewNotices` (R6): the document of a

@@ -253,8 +253,8 @@ void main() {
       expect(saveEnabled(tester), isFalse);
       await tester.enterText(find.byKey(const ValueKey('car-year')), '2022');
       await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('car-type-economy')));
-      await tester.pump();
+      // v0.18.5 (owner G2-D5.3): no ride-type choice; Movera gives them.
+      expect(find.byKey(const ValueKey('car-type-economy')), findsNothing);
       expect(saveEnabled(tester), isTrue);
       await back(tester);
     });

@@ -453,34 +453,42 @@ class AuthPhoneField extends StatelessWidget {
           child: AuthInputShell(
             focusNode: focusNode,
             hasError: hasError,
-            child: TextField(
-              key: const ValueKey('auth-phone-field'),
-              controller: controller,
-              focusNode: focusNode,
-              autofocus: autofocus,
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.done,
-              autofillHints: const [AutofillHints.telephoneNumber],
-              inputFormatters: [
-                // Before the filter drops the '+'.
-                NationalNumberFormatter(country: current, onCountry: onChanged),
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
-                LengthLimitingTextInputFormatter(18),
-              ],
-              onSubmitted: onSubmitted,
-              style: AuthText.input().copyWith(
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-              cursorColor: AuthColors.ink,
-              decoration: InputDecoration(
-                isCollapsed: true,
-                border: InputBorder.none,
-                hintText: phoneHintOf(current),
-                hintStyle: AuthText.input().copyWith(
-                  color: const Color(0xFF9AA79F),
-                  fontWeight: FontWeight.w400,
+            // Owner G1-B6: a screen reader says what the field is for
+            // (not only the example number).
+            child: Semantics(
+              label: tr.authPhoneFieldLabel(current.dialLabel),
+              child: TextField(
+                key: const ValueKey('auth-phone-field'),
+                controller: controller,
+                focusNode: focusNode,
+                autofocus: autofocus,
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.telephoneNumber],
+                inputFormatters: [
+                  // Before the filter drops the '+'.
+                  NationalNumberFormatter(
+                    country: current,
+                    onCountry: onChanged,
+                  ),
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
+                  LengthLimitingTextInputFormatter(18),
+                ],
+                onSubmitted: onSubmitted,
+                style: AuthText.input().copyWith(
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
-                semanticCounterText: '',
+                cursorColor: AuthColors.ink,
+                decoration: InputDecoration(
+                  isCollapsed: true,
+                  border: InputBorder.none,
+                  hintText: phoneHintOf(current),
+                  hintStyle: AuthText.input().copyWith(
+                    color: const Color(0xFF9AA79F),
+                    fontWeight: FontWeight.w400,
+                  ),
+                  semanticCounterText: '',
+                ),
               ),
             ),
           ),

@@ -43,7 +43,12 @@ class DriverAccountRepository {
   /// Driver group 3 (G3-R2): its `outsideArea` reaches [DriverAreaWatch].
   Future<DriverAccount> profile() async {
     final json = await _api.get(profilePath);
-    DriverAreaWatch.instance.observe(json);
+    // iPhone check 2026-10-30: the popup is about going online; an offline
+    // driver's profile (every app start, every reload) never shows it.
+    final status = json['onlineStatus'];
+    if (status == 'online' || status == 'on_trip') {
+      DriverAreaWatch.instance.observe(json);
+    }
     return DriverAccount.fromJson(json);
   }
 
@@ -156,7 +161,7 @@ class DriverAccountRepository {
     return [
       if (items is List)
         for (final item in items)
-          if (item is Map && item['kind'] != hiddenKind)
+          if (item is Map && !hiddenKinds.contains(item['kind']))
             ServerNotification.fromJson(Map<String, dynamic>.from(item)),
     ];
   }
@@ -164,6 +169,11 @@ class DriverAccountRepository {
   /// Contract v0.7.2 (contract.json, no notice on surges): drivers get no surge notice,
   /// so an old one the server still holds is never listed or counted.
   static const hiddenKind = 'surge_started';
+
+  /// Never listed: [hiddenKind], and (v0.18.5 `chat.appStorage.noBellNotice`,
+  /// owner "Never store messages between rider or driver in driver app")
+  /// a chat message, should an old server still send one.
+  static const hiddenKinds = <String>{hiddenKind, 'trip_message'};
 
   /// `POST /notifications/{id}/read`.
   Future<ServerNotification> markNotificationRead(
