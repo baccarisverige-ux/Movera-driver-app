@@ -1520,7 +1520,10 @@ class _AcceptRideState extends State<AcceptRide>
                                   child: AdaptiveTripIsland(
                                     banner: _navigation.snapshot.banner,
                                     status:
-                                        _navigation.snapshot.status ??
+                                        NavigationRouteStatus.shown(
+                                          _navigation.snapshot.status,
+                                          hasServerEta: _serverEta != null,
+                                        ) ??
                                         _islandStatus,
                                     address: _showArrivalApproach
                                         ? _approachAddress
@@ -1539,10 +1542,14 @@ class _AcceptRideState extends State<AcceptRide>
                                         ? _AcceptRideTrip(this)._paidWaitNow
                                         : null,
                                     waitingAtStop: _paidStopWait,
-                                    navigationStatus: _navigation.locationLost
-                                        ? _navigation.status
-                                        : _locationStatus ??
-                                              _navigation.snapshot.status,
+                                    navigationStatus:
+                                        NavigationRouteStatus.shown(
+                                          _navigation.locationLost
+                                              ? _navigation.status
+                                              : _locationStatus ??
+                                                    _navigation.snapshot.status,
+                                          hasServerEta: _serverEta != null,
+                                        ),
                                     reroutes: _navigation.reroutes,
                                     waitingMessage: _tripBarStatus,
                                     paidWait:

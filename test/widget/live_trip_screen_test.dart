@@ -13,6 +13,7 @@ import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
+import 'package:movera/presentation/driver/accept%20ride/adaptive_trip_island.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -150,6 +151,63 @@ void main() {
     expect(find.byKey(waiting), findsOneWidget);
     expect(live.trips.statusOf('live-trip'), 'arrived');
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('G5 live: the arrive answer\'s waiting.noShowAt gives the '
+      'no-show line its clock time (own echo is dropped on the stream)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: AcceptRide(
+            tripId: 'live-trip',
+            locationRepository: _NoGps(),
+            activeRideRepository: MemoryActiveRideRepository(),
+          ),
+        ),
+      ),
+    );
+    await frames(tester);
+    tester
+        .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+        .controller!
+        .animatePanelToSnapPoint();
+    await frames(tester, 16);
+    final noShowAt = DateTime.now().toUtc().add(const Duration(minutes: 5));
+    arriveAnswers.add(
+      () => json(200, {
+        'tripId': 'live-trip',
+        'status': 'arrived',
+        'version': 5,
+        'waiting': {
+          'arrivedAt': DateTime.now().toUtc().toIso8601String(),
+          'freeUntil': noShowAt.toIso8601String(),
+          'noShowAt': noShowAt.toIso8601String(),
+          'chargedSecondsNow': 0,
+        },
+      }),
+    );
+    final arrive = find.byKey(
+      const ValueKey<String>('active-ride-arrived-button'),
+    );
+    await tester.ensureVisible(arrive);
+    await tester.tap(arrive);
+    await frames(tester);
+    tester.widget<AdaptiveTripIsland>(find.byType(AdaptiveTripIsland)).onWait();
+    await frames(tester, 8);
+    final local = noShowAt.toLocal();
+    String two(int v) => v.toString().padLeft(2, '0');
+    final time = '${two(local.hour)}:${two(local.minute)}';
+    expect(find.text(tr.noShowFromTime(time)), findsOneWidget);
+    expect(find.textContaining('after 5 min'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });

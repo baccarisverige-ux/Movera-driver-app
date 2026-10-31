@@ -26,6 +26,17 @@ enum NavigationRouteStatus {
     unavailableRetry => tr.navRouteUnavailableRetry,
     unavailableCheckLocation => tr.navRouteUnavailableLocation,
   };
+
+  /// G5 live test: the server's road-route ETA (`TripProjection.eta`) is
+  /// the trip's ETA. When it is there, the phone's own failed route fetch
+  /// must not cover it: "Route unavailable" only without a server ETA.
+  static String? shown(String? status, {required bool hasServerEta}) {
+    if (!hasServerEta) return status;
+    return status == unavailableRetry.text ||
+            status == unavailableCheckLocation.text
+        ? null
+        : status;
+  }
 }
 
 class NavigationSnapshot {

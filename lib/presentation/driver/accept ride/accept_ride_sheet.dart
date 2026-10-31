@@ -76,7 +76,10 @@ extension _AcceptRideSheet on _AcceptRideState {
     });
   }
 
-  String? get _etaLabel => _routeDurationSeconds == null ? null : _routeEtaText;
+  /// The server's ETA counts even when the phone's own route failed.
+  String? get _etaLabel => _routeDurationSeconds == null && _serverEta == null
+      ? null
+      : _routeEtaText;
   String _withEta(String label, String? eta) =>
       eta == null ? label : '$label · $eta';
 

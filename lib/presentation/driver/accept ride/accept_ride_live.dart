@@ -37,6 +37,12 @@ extension _AcceptRideLive on _AcceptRideState {
       return false;
     }
     if (outcome.ok) {
+      // G5 live test: the answer's projection (after `arrive`: the
+      // server's `waiting.freeUntil` / `noShowAt`) reaches the screen
+      // here; its echo on the stream is this phone's own and is dropped.
+      if (trips.projectionOf(widget.tripId) case final known?) {
+        _AcceptRideTrip(this)._applyLive(TripLiveDetails.fromProjection(known));
+      }
       return true;
     }
     _showServerRefusal(outcome.message!);
