@@ -57,15 +57,59 @@ class DriverAreaWatch extends ChangeNotifier {
   }
 }
 
+/// Why the driver was set offline, as far as the app knows it (owner
+/// 2026-10-31 "new set offline message": the card says the real reason).
+enum DriverOfflineReason {
+  /// G3-R1: the server's job, no position for `noFixMinutes` (contract
+  /// `driverHome.setOffline` reason `no_position`, bell notice kind
+  /// `set_offline`).
+  noPosition,
+
+  /// Contract `autoOffline`: `missedExclusive` Exclusive offers in a row
+  /// missed or declined (the app's own count, or the offer event's
+  /// `driverOffline: true`).
+  missedOffers,
+
+  /// Decision 3: the app restarted while the driver was online (contract
+  /// `driverHome.setOffline` reason `app_restart`).
+  appRestart,
+
+  /// The server set the driver offline without saying why.
+  movera,
+}
+
 /// Decision 3 + G3-R1: the driver was set offline without asking (the app
-/// restarted while he was online, or the server's job after
-/// `autoOffline.noFixMinutes` without a position). Home shows "You were
-/// set offline – tap to go online again" until he goes online or taps it.
+/// restarted while he was online, the server's job after
+/// `autoOffline.noFixMinutes` without a position, missed offers, the
+/// server for another reason). Home shows the "You're offline" card with
+/// [reason] until he goes online, taps OK, or 2 minutes pass.
 class DriverSetOfflineNotice extends ValueNotifier<bool> {
   DriverSetOfflineNotice() : super(false);
 
   static final DriverSetOfflineNotice instance = DriverSetOfflineNotice();
 
-  void show() => value = true;
+  DriverOfflineReason _reason = DriverOfflineReason.movera;
+  int? _count;
+
+  /// Why; [DriverOfflineReason.movera] when nothing says.
+  DriverOfflineReason get reason => _reason;
+
+  /// [DriverOfflineReason.missedOffers]: how many in a row;
+  /// [DriverOfflineReason.noPosition]: the minutes without a position.
+  int? get count => _count;
+
+  void show({
+    DriverOfflineReason reason = DriverOfflineReason.movera,
+    int? count,
+  }) {
+    _reason = reason;
+    _count = count;
+    if (value) {
+      notifyListeners();
+    } else {
+      value = true;
+    }
+  }
+
   void clear() => value = false;
 }

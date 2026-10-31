@@ -161,7 +161,8 @@ extension _HomeAccount on _DriverHomeState {
       return;
     }
     // A claim with dispatch is answered first (Decision 3).
-    _HomeOfferRules(this)._forcedOffline();
+    // The radar's REST says why: no offline card.
+    _HomeOfferRules(this)._forcedOffline(() {});
   }
 
   void _restOver() {

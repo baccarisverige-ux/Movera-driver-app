@@ -109,7 +109,7 @@ void main() {
     final session = DriverSessionController();
     // As LiveDriverServices.attach wires them.
     presence.attach(session);
-    dispatch.onDriverOffline = () => session.setOnline(false);
+    dispatch.onDriverOffline = LiveDriverServices.missedOffersOffline(session);
     return (
       dispatch: dispatch,
       presence: presence,
@@ -207,6 +207,12 @@ void main() {
       await pumpEventQueue();
       expect(app.session.isOnline, isFalse);
       expect(availability, ['online', 'offline']);
+      // Owner 2026-10-31: the offline card says why.
+      expect(DriverSetOfflineNotice.instance.value, isTrue);
+      expect(
+        DriverSetOfflineNotice.instance.reason,
+        DriverOfflineReason.missedOffers,
+      );
       app.reporter.stop();
       await app.dispatch.dispose();
       app.session.dispose();

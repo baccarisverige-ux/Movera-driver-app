@@ -6598,4 +6598,55 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera väljer resetyperna när bilen godkänns.';
+
+  @override
+  String get offlineCardTitle => 'Du är offline';
+
+  @override
+  String offlineReasonNoPosition(int minutes) {
+    return 'Movera fick ingen position från din telefon på $minutes minuter.';
+  }
+
+  @override
+  String get offlineReasonAppRestart =>
+      'Appen startades om medan du var online.';
+
+  @override
+  String offlineReasonMissedOffers(int count) {
+    return '$count erbjudanden i rad missades eller avböjdes.';
+  }
+
+  @override
+  String get offlineReasonMovera => 'Movera har satt dig offline.';
+
+  @override
+  String get offlineCheckPhone => 'Kontrollera min telefon';
+
+  @override
+  String get offlineChecking => 'Kontrollerar…';
+
+  @override
+  String get offlineCheckLocation => 'Plats på och tillåten';
+
+  @override
+  String get offlineCheckInternet => 'Internet och Moveras server';
+
+  @override
+  String get offlineCheckBattery => 'Batterisparläge av';
+
+  @override
+  String get offlineCheckNotifications => 'Aviseringar tillåtna';
+
+  @override
+  String get offlineCheckUnknown => 'Kan inte kontrolleras här';
+
+  @override
+  String get offlineCheckBrowser =>
+      'Tillåt det i webbläsarens webbplatsinställningar';
+
+  @override
+  String get offlineFixTurnOn => 'Slå på';
+
+  @override
+  String get offlineGoOnline => 'Gå online';
 }

@@ -324,17 +324,25 @@ void main() {
     await leave(tester, home.live);
   });
 
-  testWidgets('decision 3: "You were set offline – tap to go online again"; '
-      'a tap goes online', (tester) async {
+  testWidgets('decision 3 (owner 2026-10-31: the line became the "You\'re '
+      'offline" card): Go online on it goes online', (tester) async {
     final home = await pumpHome(tester);
-    DriverSetOfflineNotice.instance.show();
+    DriverSetOfflineNotice.instance.show(
+      reason: DriverOfflineReason.appRestart,
+    );
     await frames(tester, 3);
-    final line = find.text('You were set offline – tap to go online again');
-    expect(line, findsOneWidget);
-    await tester.tap(line);
+    final card = find.byKey(const ValueKey<String>('home-offline-card'));
+    expect(card, findsOneWidget);
+    expect(
+      find.text('You were set offline – tap to go online again'),
+      findsNothing,
+    );
+    await tester.tap(
+      find.byKey(const ValueKey<String>('offline-card-go-online')),
+    );
     await frames(tester, 3);
     expect(home.session.isGoingOnline || home.session.isOnline, isTrue);
-    expect(line, findsNothing);
+    expect(card, findsNothing);
     await frames(tester, 30);
     await leave(tester, null);
   });

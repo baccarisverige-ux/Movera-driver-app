@@ -6590,4 +6590,54 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera chooses the ride types when it approves the car.';
+
+  @override
+  String get offlineCardTitle => 'You\'re offline';
+
+  @override
+  String offlineReasonNoPosition(int minutes) {
+    return 'Movera got no position from your phone for $minutes minutes.';
+  }
+
+  @override
+  String get offlineReasonAppRestart =>
+      'The app was restarted while you were online.';
+
+  @override
+  String offlineReasonMissedOffers(int count) {
+    return '$count offers in a row were missed or declined.';
+  }
+
+  @override
+  String get offlineReasonMovera => 'Movera set you offline.';
+
+  @override
+  String get offlineCheckPhone => 'Check my phone';
+
+  @override
+  String get offlineChecking => 'Checking…';
+
+  @override
+  String get offlineCheckLocation => 'Location on and allowed';
+
+  @override
+  String get offlineCheckInternet => 'Internet and Movera server';
+
+  @override
+  String get offlineCheckBattery => 'Battery saver off';
+
+  @override
+  String get offlineCheckNotifications => 'Notifications allowed';
+
+  @override
+  String get offlineCheckUnknown => 'Can\'t be checked here';
+
+  @override
+  String get offlineCheckBrowser => 'Allow it in the browser\'s site settings';
+
+  @override
+  String get offlineFixTurnOn => 'Turn on';
+
+  @override
+  String get offlineGoOnline => 'Go online';
 }

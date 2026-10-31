@@ -4,8 +4,10 @@ part of 'home.dart';
 // §29 `driverHome`): what Home tells the driver about going online.
 // - One reason card above the radar (never over Go online) instead of
 //   snackbars: the server's refusal, location off or not allowed with
-//   Open Settings, "You were set offline – tap to go online again", the
-//   one-time battery saver warning.
+//   Open Settings, the one-time battery saver warning.
+// - Owner 2026-10-31 ("new set offline message"): set offline without
+//   asking, the Home sheet shows the "You're offline" card in place of its
+//   icons (real reason, Check my phone, Go online, OK) for 2 minutes.
 // - "Starting the server…" while going online waits more than 5 s.
 // - "You are not eligible to drive in this area" when the server says the
 //   driver is outside his zones (once per entry).
@@ -42,6 +44,19 @@ class _HomeGateState {
   bool slowServerShown = false;
   VoidCallback? areaListener;
   VoidCallback? setOfflineListener;
+
+  /// The "You're offline" card is in the sheet; it goes after
+  /// [HomeOfflineCard.showsFor].
+  bool offlineCard = false;
+  Timer? offlineCardTimer;
+
+  /// The card's reason for a held forced offline (`_offlineHeld`), shown
+  /// once the driver is really offline.
+  VoidCallback? offlineHeldNotice;
+
+  /// When the driver last tapped Go online (phone clock): a `set_offline`
+  /// notice from before it is about an older offline.
+  DateTime? onlineAt;
 }
 
 /// Decision 2: the battery saver warning is shown once per install.
@@ -62,6 +77,7 @@ extension _HomeOnlineGate on _DriverHomeState {
 
   void _stopOnlineGate() {
     _gate.slowServerTimer?.cancel();
+    _gate.offlineCardTimer?.cancel();
     if (_gate.areaListener case final listener?) {
       DriverAreaWatch.instance.removeListener(listener);
     }
@@ -75,6 +91,7 @@ extension _HomeOnlineGate on _DriverHomeState {
   /// saver warns once.
   bool _blocksOnline() {
     if (_locationBlocksOnline()) return true;
+    _gate.onlineAt = DateTime.now();
     DriverSetOfflineNotice.instance.clear();
     _clearReason();
     unawaited(_warnBatterySaverOnce());
@@ -220,7 +237,7 @@ extension _HomeOnlineGate on _DriverHomeState {
   }
 
   /// G3-R1: the profile read every 60 s says the server set the driver
-  /// offline (no position for `autoOffline.noFixMinutes`).
+  /// offline (no position for `autoOffline.noFixMinutes`, or an admin).
   void _checkServerSetOffline(DriverAccountSession session) {
     final presence = LiveDriverServices.instance?.presence;
     final account = session.account;
@@ -234,29 +251,93 @@ extension _HomeOnlineGate on _DriverHomeState {
       return;
     }
     unawaited(_goOffline(notice: false));
-    DriverSetOfflineNotice.instance.show();
+    unawaited(_explainServerOffline(session));
   }
 
-  /// Decision 3 + G3-R1: "You were set offline – tap to go online again".
+  /// Why the server set him offline, from what it tells the app: its own
+  /// bell notice `set_offline` (contract `driverHome.setOffline.noticeKind`,
+  /// sent only by the no-position job). Anything else: "Movera set you
+  /// offline". An account put on hold shows HOLD on the radar instead.
+  Future<void> _explainServerOffline(DriverAccountSession session) async {
+    if (session.account?.isActive == false) return;
+    var reason = DriverOfflineReason.movera;
+    int? minutes;
+    try {
+      final notices = await session.repository
+          .notifications(limit: 5)
+          .timeout(const Duration(seconds: 6));
+      // Two minutes of slack for a phone clock that is a little off.
+      final since = (_gate.onlineAt ?? DateTime.now()).subtract(
+        const Duration(minutes: 2),
+      );
+      final noFix = notices.any(
+        (n) => n.kind == setOfflineNoticeKind && !n.read && n.at.isAfter(since),
+      );
+      if (noFix) {
+        reason = DriverOfflineReason.noPosition;
+        // Null: the card's default (contract 5).
+        minutes = LiveDriverServices.instance?.config.current?.noFixMinutes;
+      }
+    } catch (_) {
+      // No answer: the card says Movera set him offline.
+    }
+    if (!mounted || _driverSession.isOnline || _isGoingOnline) return;
+    DriverSetOfflineNotice.instance.show(reason: reason, count: minutes);
+  }
+
+  /// Contract `driverHome.setOffline.noticeKind`.
+  static const setOfflineNoticeKind = 'set_offline';
+
+  /// The notice changed: the "You're offline" card comes (for
+  /// [HomeOfflineCard.showsFor]) or goes.
   void _onSetOfflineNotice() {
     if (!mounted) return;
-    if (!DriverSetOfflineNotice.instance.value) {
-      _clearReason('set-offline');
+    final notice = DriverSetOfflineNotice.instance;
+    if (!notice.value) {
+      _gate.offlineCardTimer?.cancel();
+      _gate.offlineCardTimer = null;
+      if (_gate.offlineCard) _rebuild(() => _gate.offlineCard = false);
       return;
     }
     if (_driverSession.isOnline || _isGoingOnline) {
-      DriverSetOfflineNotice.instance.clear();
+      notice.clear();
       return;
     }
-    _showReason(
-      _HomeReason(
-        'set-offline',
-        tr.setOfflineLine,
-        tone: HomeReasonTone.info,
-        onTap: () {
-          DriverSetOfflineNotice.instance.clear();
-          _goOnline();
-        },
+    _gate.offlineCardTimer?.cancel();
+    _gate.offlineCardTimer = Timer(HomeOfflineCard.showsFor, notice.clear);
+    _rebuild(() => _gate.offlineCard = true);
+  }
+
+  /// The "You're offline" card is in the sheet.
+  bool get _offlineCardShown => _gate.offlineCard && !_isOnline;
+
+  /// The card in the Home sheet in place of its icons and the radar
+  /// (closed sheet only); [_HomeMapSheet._homeRadarLayer] puts it there.
+  Widget _offlineCardLayer() {
+    final notice = DriverSetOfflineNotice.instance;
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: ValueListenableBuilder<double>(
+        valueListenable: _panelSlidePosition,
+        builder: (context, position, child) =>
+            position > 0.05 ? const SizedBox.shrink() : child!,
+        child: PointerInterceptor(
+          child: HomeOfflineCard(
+            reason: offlineReasonText(notice),
+            onGoOnline: () {
+              notice.clear();
+              _goOnline();
+            },
+            onOk: notice.clear,
+            onLocationFixed: () {
+              if (!mounted) return;
+              DriverLocationService.allowPrompt();
+              unawaited(_HomeMapSheet(this)._startDriverLocation());
+            },
+          ),
+        ),
       ),
     );
   }
@@ -312,6 +393,8 @@ extension _HomeOnlineGate on _DriverHomeState {
     final reason = _gate.reason;
     final slow = _gate.slowServerShown;
     if (reason == null && !slow) return const SizedBox.shrink();
+    // The offline card has the sheet; nothing sits over it.
+    if (_offlineCardShown) return const SizedBox.shrink();
     if (_isOnline &&
         (_hasRideOffers ||
             _radarHomeOffers.isNotEmpty ||

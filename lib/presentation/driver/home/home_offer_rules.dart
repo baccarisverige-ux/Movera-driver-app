@@ -90,7 +90,12 @@ extension _HomeOfferRules on _DriverHomeState {
           DriverOfferRules.current.autoOfflineAfter,
         ),
       );
-      _forcedOffline();
+      _forcedOffline(
+        () => DriverSetOfflineNotice.instance.show(
+          reason: DriverOfflineReason.missedOffers,
+          count: DriverOfferRules.current.autoOfflineAfter,
+        ),
+      );
       return;
     }
     if (answers.lastBeforeOffline()) {
@@ -112,12 +117,15 @@ extension _HomeOfferRules on _DriverHomeState {
   /// Match or Accept with dispatch the app waits for its answer: won,
   /// the driver does that trip and is offline once it ends; lost,
   /// offline at once. Nothing dispatch gave this driver is dropped.
-  void _forcedOffline() {
+  /// [notice] puts the reason on the offline card once he is offline.
+  void _forcedOffline(VoidCallback notice) {
     if (_claimInFlight) {
       _offlineHeld = true;
+      _gate.offlineHeldNotice = notice;
       return;
     }
     unawaited(_goOffline());
+    notice();
   }
 
   /// The claim that held [_forcedOffline] back was answered.
@@ -129,6 +137,7 @@ extension _HomeOfferRules on _DriverHomeState {
       // Won: offline once this trip ends, like the driving limit on a
       // trip ([_drivingLimitReached]).
       _offlineHeld = false;
+      _gate.offlineHeldNotice = null;
       _driverSession.setOnline(false);
       return;
     }
@@ -137,6 +146,9 @@ extension _HomeOfferRules on _DriverHomeState {
       return;
     }
     _offlineHeld = false;
+    final notice = _gate.offlineHeldNotice;
+    _gate.offlineHeldNotice = null;
     unawaited(_goOffline());
+    notice?.call();
   }
 }

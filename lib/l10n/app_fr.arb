@@ -1879,5 +1879,20 @@
   "docRenewalRejected": "Nouveau document refusé",
   "remRenewalInReview": "Le nouveau est en cours de vérification",
   "remRenewalRejected": "Le nouveau a été refusé",
-  "carTypesByMovera": "Movera choisit les types de course quand la voiture est validée."
+  "carTypesByMovera": "Movera choisit les types de course quand la voiture est validée.",
+  "offlineCardTitle": "Vous êtes hors ligne",
+  "offlineReasonNoPosition": "Movera n'a reçu aucune position de votre téléphone pendant {minutes} minutes.",
+  "offlineReasonAppRestart": "L'application a redémarré pendant que vous étiez en ligne.",
+  "offlineReasonMissedOffers": "{count} offres d'affilée ont été manquées ou refusées.",
+  "offlineReasonMovera": "Movera vous a mis hors ligne.",
+  "offlineCheckPhone": "Vérifier mon téléphone",
+  "offlineChecking": "Vérification…",
+  "offlineCheckLocation": "Localisation activée et autorisée",
+  "offlineCheckInternet": "Internet et serveur Movera",
+  "offlineCheckBattery": "Économiseur de batterie désactivé",
+  "offlineCheckNotifications": "Notifications autorisées",
+  "offlineCheckUnknown": "Impossible à vérifier ici",
+  "offlineCheckBrowser": "Autorisez-le dans les réglages du site du navigateur",
+  "offlineFixTurnOn": "Activer",
+  "offlineGoOnline": "Passer en ligne"
 }

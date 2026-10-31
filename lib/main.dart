@@ -62,6 +62,7 @@ import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dar
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:movera/core/push/push_platform.dart';
 import 'package:movera/core/push/push_registrar.dart';
+import 'package:movera/core/phone/phone_checks.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
 import 'package:movera/presentation/driver/push/push_explanation.dart';
 import 'package:movera/core/legal/driver_legal.dart';
@@ -231,6 +232,8 @@ class _MoveraAppState extends State<MoveraApp> {
         explain: _explainPush,
       );
       pushPlatform.onOpen(_openPush);
+      // The offline card's "Turn on" notifications registers push too.
+      DevicePhoneChecks.notificationsAllowed = () => unawaited(push.signedIn());
       live.afterSignedIn = () => unawaited(
         push.signedIn().then((_) {
           final launch = pushPlatform.takeLaunchOpen();

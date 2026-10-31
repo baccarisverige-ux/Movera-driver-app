@@ -1879,5 +1879,20 @@
   "docRenewalRejected": "Nytt dokument avvisat",
   "remRenewalInReview": "Ditt nya granskas",
   "remRenewalRejected": "Ditt nya avvisades",
-  "carTypesByMovera": "Movera väljer resetyperna när bilen godkänns."
+  "carTypesByMovera": "Movera väljer resetyperna när bilen godkänns.",
+  "offlineCardTitle": "Du är offline",
+  "offlineReasonNoPosition": "Movera fick ingen position från din telefon på {minutes} minuter.",
+  "offlineReasonAppRestart": "Appen startades om medan du var online.",
+  "offlineReasonMissedOffers": "{count} erbjudanden i rad missades eller avböjdes.",
+  "offlineReasonMovera": "Movera har satt dig offline.",
+  "offlineCheckPhone": "Kontrollera min telefon",
+  "offlineChecking": "Kontrollerar…",
+  "offlineCheckLocation": "Plats på och tillåten",
+  "offlineCheckInternet": "Internet och Moveras server",
+  "offlineCheckBattery": "Batterisparläge av",
+  "offlineCheckNotifications": "Aviseringar tillåtna",
+  "offlineCheckUnknown": "Kan inte kontrolleras här",
+  "offlineCheckBrowser": "Tillåt det i webbläsarens webbplatsinställningar",
+  "offlineFixTurnOn": "Slå på",
+  "offlineGoOnline": "Gå online"
 }
