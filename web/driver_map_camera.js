@@ -114,6 +114,12 @@
   // Owner 2026-10-31 ("same in all zoom steps"): the halo is 60 pt on
   // screen at every zoom, and the arrow keeps one size at every zoom and tilt.
   const HALO = {color: '#7797A8', opacity: .35, radiusPx: 60};
+  // The halo is a screen-facing picture (a native marker), so it stays a
+  // 60 pt circle on a tilted map and never changes with the zoom.
+  const HALO_URL = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${HALO.radiusPx * 2}" height="${HALO.radiusPx * 2}">` +
+    `<circle cx="${HALO.radiusPx}" cy="${HALO.radiusPx}" r="${HALO.radiusPx}" ` +
+    `fill="${HALO.color}" fill-opacity="${HALO.opacity}"/></svg>`);
   const area2 = pts => pts.reduce((sum, a, i) => {
     const b = pts[(i + 1) % pts.length]; return sum + a[0] * b[1] - b[0] * a[1];
   }, 0);
@@ -229,10 +235,18 @@
   // its 1 pt stroke.
   const faceSymbol = layers => symbol(layers.face, ARROW.fill, 1,
     {strokeColor: ARROW.edge, strokeOpacity: 1, strokeWeight: ARROW_EDGE});
-  // The halo's radius in metres: radiusPx points on screen at this zoom
-  // (Google's world is 256 points wide at zoom 0).
-  const haloRadius = (lat, zoom) =>
-    HALO.radiusPx * 156543.03392 * Math.cos(clamp(lat, -85, 85) * Math.PI / 180) / 2 ** zoom;
+  // The arrow's layers by "rotation/tilt" (whole degrees), the most
+  // recently used kept.
+  const layerCache = new Map();
+  const cachedLayers = (rotation, tilt) => {
+    const key = rotation + '/' + tilt;
+    let layers = layerCache.get(key);
+    if (layers) { layerCache.delete(key); layerCache.set(key, layers); return layers; }
+    layers = arrowLayers(rotation, tilt);
+    layerCache.set(key, layers);
+    if (layerCache.size > 128) layerCache.delete(layerCache.keys().next().value);
+    return layers;
+  };
   // Raster tiles stop at about z18; closer, Google upscales them into giant
   // blurry street names. A vector map draws crisp at any zoom: no cap there.
   const RASTER_MAX_ZOOM = 18;
@@ -670,22 +684,27 @@
       shadowInner: [ARROW.shadow, .1],
       wallBottom: [ARROW.wallBottom, 1], wallTop: [ARROW.wallTop, 1], outline: [ARROW.outline, 1]};
     const ownVehicle = (marker, zIndex) => {
-      // Made bottom first: at one z-index, Maps paints the later one on top.
+      // Made bottom first (the halo, then the layers): at one z-index, Maps
+      // paints the later one on top.
+      const halo = new NativeMarker({
+        icon: {url: HALO_URL, scaledSize: new sdk.Size(HALO.radiusPx * 2, HALO.radiusPx * 2),
+          anchor: new sdk.Point(HALO.radiusPx, HALO.radiusPx)},
+        clickable: false, zIndex: (zIndex ?? 0) - 1, position: marker.getPosition(),
+      });
       const under = Object.fromEntries(LAYERS.map(name => [name, new NativeMarker({
         clickable: false, zIndex: (zIndex ?? 0) - 1, position: marker.getPosition(),
       })]));
-      const halo = new sdk.Circle({fillColor: HALO.color, fillOpacity: HALO.opacity,
-        strokeWeight: 0, strokeOpacity: 0, clickable: false, zIndex: 0, radius: 1});
       let heading = 0, state = null, listeners = [], drawn = '';
       const draw = () => {
         const map = marker.getMap();
-        const rotation = vehicleRotation(heading, map?.getHeading?.() || 0);
+        // Whole degrees: finer turns are not visible.
+        const rotation = Math.round(vehicleRotation(heading, map?.getHeading?.() || 0)) % 360;
         const rawTilt = Number(map?.getTilt?.()) || 0;
-        const tilt = rawTilt < ARROW_FLAT_TILT ? 0 : Math.round(rawTilt * 2) / 2;
+        const tilt = rawTilt < ARROW_FLAT_TILT ? 0 : Math.round(rawTilt);
         const key = rotation + '/' + tilt;
         if (key === drawn) return;
         drawn = key;
-        const layers = arrowLayers(rotation, tilt);
+        const layers = cachedLayers(rotation, tilt);
         marker.setIcon(faceSymbol(layers));
         for (const name of LAYERS) {
           const [color, opacity] = LAYER_STYLE[name];
@@ -693,16 +712,8 @@
           under[name].setVisible(!!layers[name] && marker.getVisible() !== false);
         }
       };
-      const sizeHalo = () => {
-        const map = marker.getMap(), at = marker.getPosition();
-        const zoom = Number(map?.getZoom?.());
-        if (!at || !Number.isFinite(zoom)) return;
-        const lat = typeof at.lat === 'function' ? at.lat() : Number(at.lat ?? at.y ?? 0);
-        const radius = haloRadius(lat, zoom);
-        if (Math.abs((halo.getRadius?.() || 0) - radius) > radius * 1e-4) halo.setRadius(radius);
-      };
       const car = {
-        turn(next) { heading = next; draw(); sizeHalo(); },
+        turn(next) { heading = next; draw(); },
         release() {
           listeners.forEach(l => l?.remove()); listeners = [];
           for (const name of LAYERS) under[name].setMap(null);
@@ -717,34 +728,32 @@
         const map = marker.getMap() ?? null;
         for (const name of LAYERS) under[name].setMap(map);
         halo.setMap(map);
-        halo.setCenter?.(marker.getPosition());
+        halo.setPosition(marker.getPosition());
         state = map ? byMap.get(map) ?? null : null;
         if (state) state.car = car;
-        // Every camera frame that turns or tilts the map redraws the arrow;
-        // every zoom frame sizes the halo.
+        // Every camera frame that turns or tilts the map redraws the arrow.
         if (map?.addListener) {
           listeners = [map.addListener('heading_changed', draw),
-            map.addListener('tilt_changed', draw),
-            map.addListener('zoom_changed', sizeHalo)];
+            map.addListener('tilt_changed', draw)];
         }
         drawn = '';
-        draw(); sizeHalo();
+        draw();
       };
       marker.addListener('position_changed', () => {
         const at = marker.getPosition();
         for (const name of LAYERS) under[name].setPosition(at);
-        halo.setCenter?.(at);
-        sizeHalo();
+        halo.setPosition(at);
       });
       marker.addListener('visible_changed', () => {
         const visible = marker.getVisible() !== false;
         drawn = '';
         draw();
         for (const name of LAYERS) if (!visible) under[name].setVisible(false);
-        halo.setVisible?.(visible);
+        halo.setVisible(visible);
       });
       marker.addListener('zindex_changed', () => {
         for (const name of LAYERS) under[name].setZIndex((marker.getZIndex() ?? 0) - 1);
+        halo.setZIndex((marker.getZIndex() ?? 0) - 1);
       });
       marker.addListener('map_changed', attach);
       attach();
@@ -824,9 +833,9 @@
       states.get(id)?.car?.turn(heading);
     },
     // Checks: the arrow's layer paths for a rotation on screen and a tilt,
-    // and the halo radius in metres.
+    // and the halo's picture.
     arrowLayers(rotation, tilt) { return arrowLayers(rotation, tilt); },
-    haloRadius(lat, zoom) { return haloRadius(lat, zoom); },
+    haloIcon() { return {url: HALO_URL, radiusPx: HALO.radiusPx}; },
     // Checks: the own vehicle's layer markers and halo on a map.
     vehicleParts(id) { return states.get(id)?.car?.parts() ?? null; },
     anchor(id) {

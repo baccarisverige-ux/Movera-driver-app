@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart'
-    show CircleUpdates, GoogleMapsFlutterPlatform, MarkerUpdates;
+    show GoogleMapsFlutterPlatform, MarkerUpdates;
 
 import '../core/l10n/driver_l10n.dart';
 import '../core/navigation/map_camera_report.dart';
@@ -155,12 +155,10 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     widget.onCameraMove?.call(position);
   }
 
-  /// The camera the own position arrow and its halo were last drawn for
-  /// (phones; web draws its own in web/driver_map_camera.js).
+  /// The camera the own position arrow was last drawn for (phones; web
+  /// draws its own in web/driver_map_camera.js).
   late double _vehicleBearing = widget.initialPosition?.bearing ?? 0;
   late double _vehicleTilt = widget.initialPosition?.tilt ?? 0;
-  late double _vehicleZoom =
-      widget.initialPosition?.zoom ?? _defaultPosition.zoom;
 
   static bool _isOwnVehicle(Marker marker) =>
       marker.markerId.value == 'driver' ||
@@ -174,23 +172,20 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   }
 
   /// The own position arrow keeps pointing along its heading as the camera
-  /// turns and lies in perspective as it tilts; its halo keeps its clamped
-  /// size as the camera zooms. Only a new arrow picture (a 2° / 3° bucket)
-  /// or a halo change over 2 % redraws, so a following camera does not
-  /// churn the markers.
+  /// turns and lies in perspective as it tilts. Only a new arrow picture
+  /// (a 2° / 3° bucket) redraws, so a following camera does not churn the
+  /// markers. The halo is one screen-facing picture: zoom and tilt never
+  /// change it.
   void _followCamera(CameraPosition camera) {
     if (kIsWeb || !mounted) return;
     final own = _ownVehicle;
     if (own == null) return;
     final shown = _arrowView(own, _vehicleBearing, _vehicleTilt);
     final wanted = _arrowView(own, camera.bearing, camera.tilt);
-    final halo = _haloRadius(own, _vehicleZoom);
-    final nextHalo = _haloRadius(own, camera.zoom);
-    if (shown != wanted || (nextHalo - halo).abs() > halo * .02) {
+    if (shown != wanted) {
       setState(() {
         _vehicleBearing = camera.bearing;
         _vehicleTilt = camera.tilt;
-        _vehicleZoom = camera.zoom;
       });
     }
   }
@@ -205,19 +200,14 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     tilt: tilt,
   );
 
-  static double _haloRadius(Marker own, double zoom) =>
-      MoveraVehicleMarker.haloRadiusMeters(
-        latitude: own.position.latitude,
-        zoom: zoom,
-      );
-
-  /// The arrow picture last shown (while a new one is being drawn).
-  PositionArrowView? _arrowShown;
-  BitmapDescriptor? _arrowIconShown;
-
   /// The own vehicle as the map gets it: the arrow picture for the camera,
   /// centred on the position; flat (turned by the heading) on a map seen
   /// from above, else a screen-facing picture drawn in perspective.
+  ///
+  /// While a tilted picture is still being drawn, the flat arrow stands in
+  /// (a flat marker turned by the heading, which Maps lays on the tilted
+  /// road): it never points the wrong way. The pictures around the one
+  /// shown are drawn ahead, so a twisting or tilting camera finds them.
   Marker _ownArrow(Marker marker) {
     var view = _arrowView(marker, _vehicleBearing, _vehicleTilt);
     var icon = MoveraVehicleMarker.iconFor(view);
@@ -228,23 +218,16 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
           setState(() {});
         }),
       );
-      final shown = _arrowShown;
-      if (shown != null && _arrowIconShown != null) {
-        view = shown;
-        icon = _arrowIconShown;
-      } else {
-        // Nothing drawn yet: the screen's own (flat) picture.
-        view = MoveraVehicleMarker.view(
-          heading: marker.rotation,
-          bearing: 0,
-          tilt: 0,
-        );
-        icon = marker.icon;
-      }
-    } else {
-      _arrowShown = view;
-      _arrowIconShown = icon;
+      view = MoveraVehicleMarker.view(
+        heading: marker.rotation,
+        bearing: 0,
+        tilt: 0,
+      );
+      icon = MoveraVehicleMarker.icon ?? marker.icon;
     }
+    MoveraVehicleMarker.prefetchAround(
+      _arrowView(marker, _vehicleBearing, _vehicleTilt),
+    );
     return marker.copyWith(
       iconParam: icon,
       flatParam: view.flat,
@@ -253,40 +236,23 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     );
   }
 
-  /// Phones: the halo under the own position (web draws it in
-  /// web/driver_map_camera.js, in step with every zoom frame).
-  Set<Circle> get _haloCircles {
-    if (kIsWeb) return const <Circle>{};
-    final own = _ownVehicle;
-    if (own == null || !own.visible) return const <Circle>{};
-    return {
-      Circle(
-        circleId: const CircleId(ownHaloId),
-        center: own.position,
-        radius: _haloRadius(own, _vehicleZoom),
-        fillColor: MoveraVehicleMarker.halo.withValues(
-          alpha: MoveraVehicleMarker.haloOpacity,
-        ),
-        strokeWidth: 0,
-        strokeColor: const Color(0x00000000),
-        zIndex: 0,
-      ),
-    };
+  /// Phones: the halo under the own position, a screen-facing picture
+  /// ([MoveraVehicleMarker.haloRadius] pt on screen at every zoom and
+  /// tilt), under the arrow and not tappable. Web draws its own in
+  /// web/driver_map_camera.js.
+  Marker? _halo(Marker own) {
+    final icon = MoveraVehicleMarker.haloIcon;
+    if (kIsWeb || icon == null || !own.visible) return null;
+    return Marker(
+      markerId: const MarkerId(MoveraVehicleMarker.haloId),
+      position: own.position,
+      icon: icon,
+      anchor: const Offset(.5, .5),
+      zIndexInt: own.zIndexInt - 1,
+      // Taps on it do nothing (no bubble, no camera move).
+      consumeTapEvents: true,
+    );
   }
-
-  /// The own position's halo's circle id.
-  static const String ownHaloId = 'own-position-halo';
-
-  Set<Circle> get _mapCircles => {...?widget.circles, ..._haloCircles};
-
-  /// What [GoogleMap] gets as circles, the halo included.
-  Set<Circle> get _mapCirclesSent {
-    _haloShown = _haloCircles;
-    return _mapCircles;
-  }
-
-  /// The halo as last given to the map.
-  Set<Circle> _haloShown = const <Circle>{};
 
   /// Every marker, the live one included.
   Iterable<Marker> get _allMarkers {
@@ -309,22 +275,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   Set<Marker> get _liveNow {
     final live = widget.liveMarker?.value;
     return live == null ? const <Marker>{} : _shown([live]);
-  }
-
-  /// Phones: the halo follows the live car between rebuilds.
-  void _pushHalo(int mapId) {
-    if (kIsWeb) return;
-    final next = _haloCircles;
-    final updates = CircleUpdates.from(_haloShown, next);
-    _haloShown = next;
-    if (updates.circlesToAdd.isEmpty &&
-        updates.circlesToChange.isEmpty &&
-        updates.circleIdsToRemove.isEmpty) {
-      return;
-    }
-    unawaited(
-      GoogleMapsFlutterPlatform.instance.updateCircles(updates, mapId: mapId),
-    );
   }
 
   bool _livePushQueued = false;
@@ -350,7 +300,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     final next = _liveNow;
     final updates = MarkerUpdates.from(_liveShown, next);
     _liveShown = next;
-    _pushHalo(controller.mapId);
     if (updates.markersToAdd.isEmpty &&
         updates.markersToChange.isEmpty &&
         updates.markerIdsToRemove.isEmpty) {
@@ -372,7 +321,11 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     if (kIsWeb) return markers.toSet();
     return {
       for (final marker in markers)
-        if (_isOwnVehicle(marker)) _ownArrow(marker) else marker,
+        if (_isOwnVehicle(marker)) ...[
+          _ownArrow(marker),
+          ?_halo(marker),
+        ] else
+          marker,
     };
   }
 
@@ -389,6 +342,13 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void initState() {
     super.initState();
     widget.liveMarker?.addListener(_onLiveMarker);
+    if (!kIsWeb && MoveraVehicleMarker.haloIcon == null) {
+      unawaited(
+        MoveraVehicleMarker.createHaloIcon().then((_) {
+          if (mounted) setState(() {});
+        }),
+      );
+    }
     if (_mapsReady) return;
     const poll = Duration(milliseconds: 50);
     _mapsReadyPoll = Timer.periodic(poll, (timer) {
@@ -418,6 +378,13 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     if (!identical(oldWidget.liveMarker, widget.liveMarker)) {
       oldWidget.liveMarker?.removeListener(_onLiveMarker);
       widget.liveMarker?.addListener(_onLiveMarker);
+      if (!kIsWeb && MoveraVehicleMarker.haloIcon == null) {
+        unawaited(
+          MoveraVehicleMarker.createHaloIcon().then((_) {
+            if (mounted) setState(() {});
+          }),
+        );
+      }
     }
     if (oldWidget.scrollGesturesEnabled != widget.scrollGesturesEnabled ||
         oldWidget.zoomGesturesEnabled != widget.zoomGesturesEnabled ||
@@ -556,7 +523,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
               initialCameraPosition: widget.initialPosition ?? _defaultPosition,
               markers: _mapMarkersSent,
               polylines: widget.polylines ?? {},
-              circles: _mapCirclesSent,
+              circles: widget.circles ?? {},
               polygons: widget.polygons ?? {},
               myLocationEnabled: widget.myLocationEnabled,
               myLocationButtonEnabled: widget.myLocationButtonEnabled,

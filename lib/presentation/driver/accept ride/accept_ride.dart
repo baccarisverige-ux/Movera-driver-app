@@ -456,9 +456,8 @@ class _AcceptRideState extends State<AcceptRide>
   late final WaybillRepository _waybills;
   late final NavigationController _navigation;
   late final LiveVehicleAnimator _vehicle;
-  BitmapDescriptor _driverVehicleIcon = BitmapDescriptor.defaultMarkerWithHue(
-    BitmapDescriptor.hueAzure,
-  );
+  // Until the arrow is drawn: one transparent pixel, never a Google pin.
+  BitmapDescriptor _driverVehicleIcon = MoveraVehicleMarker.placeholder;
   Map<RouteMarkKind, BitmapDescriptor> _pinIcons = const {};
   final GlobalKey<ScaffoldState> _rideScaffoldKey = GlobalKey<ScaffoldState>();
   // Manual browsing keeps the collapsed dock visible; recenter pulses.

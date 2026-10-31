@@ -482,9 +482,12 @@ const box = path => { const p = points(path);
   assert.ok(wall.bottom - t.bottom > 3 && wall.bottom - t.bottom < 4.5, 'A 3-4 pt thickness under it');
   assert.ok(tilted.wallTop, 'Two-tone wall');
 }
-for (const zoom of [11, 15, 17, 19]) {
-  const perPoint = 156543.03392 * Math.cos(59.33 * Math.PI / 180) / 2 ** zoom;
-  assert.ok(Math.abs(api.haloRadius(59.33, zoom) / perPoint - 60) < 1e-9, `Halo 60 pt on screen at zoom ${zoom}`);
+{
+  const {url, radiusPx} = api.haloIcon();
+  const svg = decodeURIComponent(url);
+  assert.equal(radiusPx, 60, 'Halo: 60 pt radius on screen');
+  assert.match(svg, /r="60"/); assert.match(svg, /fill="#7797A8"/); assert.match(svg, /fill-opacity="0.35"/);
+  assert.doesNotMatch(svg, /stroke/, 'No border');
 }
 
 const markersBefore = MarkerMock.all.length, circlesBefore = CircleMock.all.length;
@@ -516,6 +519,9 @@ api.vehicle(7, 45.004);
 const symbolAt45 = arrow();
 api.vehicle(7, 45.001);
 assert.equal(arrow(), symbolAt45, 'A hundredth of a degree is not a new icon');
+api.vehicle(7, 45.3);
+assert.equal(arrow(), symbolAt45, 'Whole degrees: a third of a degree is not a new icon');
+api.vehicle(7, 45);
 for (const zoom of [5, 11.7, 15, 18, 21]) {
   map.moveCamera({zoom, heading: 0, tilt: 0}); api.vehicle(7, 0);
   assert.equal(arrow().scale, 1, `Same size at zoom ${zoom}`);
@@ -524,7 +530,7 @@ for (const zoom of [5, 11.7, 15, 18, 21]) {
 // The layers: native markers under the face, following the car.
 const parts = api.vehicleParts(7);
 const layer = name => parts.under[name];
-assert.equal(MarkerMock.all.length - markersBefore, 7, 'The face and six layers under it');
+assert.equal(MarkerMock.all.length - markersBefore, 8, 'The face, six layers and the halo under it');
 assert.equal(layer('outline').getIcon().fillColor, '#F0FAFA', 'White outline');
 assert.equal(layer('outline').getIcon().path, api.arrowLayers(0, 0).outline);
 assert.equal(layer('shadowInner').getIcon().fillColor, '#000000', 'Dark shadow');
@@ -535,7 +541,10 @@ map.moveCamera({tilt: 67.5});
 assert.equal(layer('wallBottom').getVisible(), true, 'Tilted: the wall shows on that frame');
 assert.equal(layer('wallBottom').getIcon().fillColor, '#B0CCCC');
 assert.equal(layer('wallTop').getIcon().fillColor, '#C8E0E0');
-assert.equal(arrow().path, api.arrowLayers(0, 67.5).face, 'Tilting redraws the face in perspective');
+assert.equal(arrow().path, api.arrowLayers(0, 68).face, 'Tilting redraws the face in perspective (whole degrees)');
+const at68 = arrow();
+map.moveCamera({tilt: 67.8});
+assert.equal(arrow(), at68, 'A fraction of a degree of tilt is not a new icon');
 map.moveCamera({tilt: 0});
 for (const name of ['shadowOuter', 'shadowMid', 'shadowInner', 'wallBottom', 'wallTop', 'outline']) {
   const m = layer(name);
@@ -544,24 +553,30 @@ for (const name of ['shadowOuter', 'shadowMid', 'shadowInner', 'wallBottom', 'wa
   assert.equal(m.getZIndex(), 11, `${name} under the face`);
   assert.equal(m.options.clickable, false);
 }
-// The halo: one grey see-through circle, no border, clamped on screen.
+// The halo: one screen-facing native marker under the arrow (a 60 pt
+// circle on screen at every zoom and tilt), not clickable, no circle on
+// the ground.
 const halo = parts.halo;
-assert.equal(CircleMock.all.length - circlesBefore, 1, 'One halo');
-assert.equal(halo.options.fillColor, '#7797A8'); assert.equal(halo.options.fillOpacity, .35);
-assert.equal(halo.options.strokeWeight, 0, 'No border');
+assert.equal(CircleMock.all.length - circlesBefore, 0, 'No ground circle');
+assert.equal(halo.getIcon().url, api.haloIcon().url);
+assert.deepEqual([halo.getIcon().scaledSize.width, halo.getIcon().scaledSize.height], [120, 120]);
+assert.deepEqual([halo.getIcon().anchor.x, halo.getIcon().anchor.y], [60, 60], 'Centred on the car');
+assert.equal(halo.options.clickable, false, 'Not tappable');
+assert.equal(halo.getZIndex(), 11, 'Under the arrow');
 assert.equal(halo.getMap(), map);
-assert.deepEqual(halo.getCenter(), {x:1,y:2});
-// (a mock position {x, y}: its y stands for the latitude)
-map.moveCamera({zoom: 16}); api.vehicle(7, 0);
-const at16 = halo.getRadius();
-assert.ok(Math.abs(at16 - api.haloRadius(2, 16)) < 1e-9, 'Sized for the zoom');
-map.moveCamera({zoom: 12});
-assert.ok(Math.abs(halo.getRadius() - api.haloRadius(2, 12)) < 1e-9, 'Resized on the zoom frame itself: 60 pt again');
+assert.deepEqual(halo.getPosition(), {x:1,y:2});
+const haloIcon = halo.getIcon();
+for (const camera of [{zoom: 12}, {zoom: 19}, {zoom: 17, tilt: 67.5}, {heading: 90}]) {
+  map.moveCamera(camera);
+  assert.equal(halo.getIcon(), haloIcon, `Same halo picture at ${JSON.stringify(camera)}`);
+}
+map.moveCamera({heading: 0, tilt: 0});
 map.moveCamera({zoom: 16});
 marker.setOptions({position: {x:3,y:4}, zIndex: 20, visible: true, title: 'Driver camera vehicle',
   icon:{url:'vehicle.png',scaledSize:{width:64,height:64}}});
 assert.deepEqual(layer('outline').getPosition(), {x:3,y:4}, 'A Flutter marker update moves the layers with the car');
-assert.deepEqual(halo.getCenter(), {x:3,y:4}, 'and the halo');
+assert.deepEqual(halo.getPosition(), {x:3,y:4}, 'and the halo');
+assert.equal(halo.getZIndex(), 19);
 assert.equal(layer('outline').getZIndex(), 19);
 assert.equal(arrow().fillColor, '#00A8C0', 'The update keeps the Symbol arrow, not the raster');
 assert.equal(marker.options.title, undefined);

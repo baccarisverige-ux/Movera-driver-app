@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:collection';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -355,16 +357,59 @@ class MoveraVehicleMarker {
 
   static double _normal(double degrees) => (degrees % 360 + 360) % 360;
 
-  /// The halo's radius in metres: [haloRadius] points on screen at [zoom]
-  /// and [latitude] (Google's world is 256 points wide at zoom 0).
-  static double haloRadiusMeters({
-    required double latitude,
-    required double zoom,
-  }) {
-    final lat = latitude.clamp(-85.0, 85.0) * math.pi / 180;
-    final perPoint = 156543.03392 * math.cos(lat) / math.pow(2, zoom);
-    return haloRadius * perPoint;
+  /// The halo's picture box (points): its diameter.
+  static const double haloBox = haloRadius * 2;
+
+  /// The halo's marker id on phones (a screen-facing marker under the
+  /// arrow: a [haloRadius] pt circle on screen even on a tilted map).
+  static const String haloId = 'own-position-halo';
+
+  static BitmapDescriptor? _halo;
+
+  /// The halo's icon, ready once [createHaloIcon] has completed.
+  static BitmapDescriptor? get haloIcon => _halo;
+
+  /// The halo as a marker icon: a flat see-through grey disc, no border,
+  /// made once at the device pixel ratio.
+  static Future<BitmapDescriptor?> createHaloIcon() async {
+    if (_halo != null) return _halo;
+    final png = await haloPng();
+    if (png == null) return null;
+    return _halo ??=
+        WebMapBitmaps.of(png, width: haloBox, height: haloBox) ??
+        BitmapDescriptor.bytes(png, width: haloBox, height: haloBox);
   }
+
+  /// The halo drawn in its [haloBox] square at [density] pixels per point.
+  static Future<Uint8List?> haloPng({double? density}) async {
+    final ratio = density ?? devicePixelRatio;
+    final pixels = (haloBox * ratio).round();
+    final recorder = ui.PictureRecorder();
+    Canvas(recorder)
+      ..scale(ratio)
+      ..drawCircle(
+        const Offset(haloRadius, haloRadius),
+        haloRadius,
+        Paint()..color = halo.withValues(alpha: haloOpacity),
+      );
+    final image = await recorder.endRecording().toImage(pixels, pixels);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    return data?.buffer.asUint8List();
+  }
+
+  // A fully transparent 1 x 1 PNG.
+  static final Uint8List _clearPixel = base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGNgAAIAAAUAAXpeqz8AAAAASUVORK5CYII=',
+  );
+
+  static BitmapDescriptor? _placeholder;
+
+  /// What the own marker shows until its picture is drawn: one transparent
+  /// pixel, never a Google pin.
+  static BitmapDescriptor get placeholder => _placeholder ??=
+      WebMapBitmaps.of(_clearPixel, width: 1, height: 1) ??
+      BitmapDescriptor.bytes(_clearPixel, width: 1, height: 1);
 
   /// The pixel density the pictures are drawn at: the device's.
   static double get devicePixelRatio {
@@ -384,9 +429,7 @@ class MoveraVehicleMarker {
   static Future<BitmapDescriptor> createIcon() async {
     if (_icon != null) return _icon!;
     final png = await _png(rotation: 0, tilt: 0);
-    if (png == null) {
-      return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan);
-    }
+    if (png == null) return placeholder;
     // Web: one URL for the picture, not a new Blob URL per push
     // (driver-u174).
     return _icon ??=
@@ -394,12 +437,51 @@ class MoveraVehicleMarker {
         BitmapDescriptor.bytes(png, width: box, height: box);
   }
 
-  static final Map<String, BitmapDescriptor> _views = {};
+  /// The most tilted pictures kept (least recently used go first): about
+  /// 2 MB of PNGs at 3x.
+  static const int keptPictures = 64;
+
+  // Insertion order is use order: the first is the least recently used.
+  static final LinkedHashMap<String, BitmapDescriptor> _views =
+      LinkedHashMap<String, BitmapDescriptor>();
   static final Map<String, Future<BitmapDescriptor?>> _making = {};
 
+  /// Tests: how many tilted pictures are kept.
+  @visibleForTesting
+  static int get debugKeptPictures => _views.length;
+
   /// The picture for [view], if it was made already.
-  static BitmapDescriptor? iconFor(PositionArrowView view) =>
-      view.flat ? _icon : _views[view.key];
+  static BitmapDescriptor? iconFor(PositionArrowView view) {
+    if (view.flat) return _icon;
+    final icon = _views.remove(view.key);
+    if (icon != null) _views[view.key] = icon;
+    return icon;
+  }
+
+  /// The pictures next to [view] (rotation and tilt buckets around it),
+  /// so a twisting or tilting camera finds its next picture ready.
+  static List<PositionArrowView> neighbours(PositionArrowView view) {
+    if (view.flat) return const [];
+    return [
+      for (final dt in const [0.0, -tiltStep, tiltStep])
+        for (final dr in const [0, -1, 1, -2, 2, -3, 3])
+          if (dt != 0 || dr != 0)
+            if (view.tilt + dt >= tiltStep && view.tilt + dt <= maxTilt)
+              PositionArrowView._(
+                flat: false,
+                rotation: _normal(view.rotation + dr * rotationStep),
+                tilt: view.tilt + dt,
+                markerRotation: 0,
+              ),
+    ];
+  }
+
+  /// Starts drawing the pictures around [view] (see [neighbours]).
+  static void prefetchAround(PositionArrowView view) {
+    for (final next in neighbours(view)) {
+      if (!_views.containsKey(next.key)) unawaited(makeIcon(next));
+    }
+  }
 
   /// Makes the picture for [view] (once).
   static Future<BitmapDescriptor?> makeIcon(PositionArrowView view) {
@@ -410,11 +492,12 @@ class MoveraVehicleMarker {
         .then((png) {
           _making.remove(view.key);
           if (png == null) return null;
-          return _views[view.key] = BitmapDescriptor.bytes(
-            png,
-            width: box,
-            height: box,
-          );
+          final icon = BitmapDescriptor.bytes(png, width: box, height: box);
+          _views[view.key] = icon;
+          while (_views.length > keptPictures) {
+            _views.remove(_views.keys.first);
+          }
+          return icon;
         });
   }
 
@@ -422,6 +505,7 @@ class MoveraVehicleMarker {
   @visibleForTesting
   static void debugReset() {
     _icon = null;
+    _halo = null;
     _views.clear();
     _making.clear();
   }

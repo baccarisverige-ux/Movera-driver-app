@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -286,20 +285,86 @@ void main() {
   });
 
   group('halo', () {
-    test('60 pt on screen at every zoom', () {
-      const lat = 59.33;
-      double perPoint(double zoom) =>
-          156543.03392 * math.cos(lat * math.pi / 180) / math.pow(2, zoom);
-      for (final zoom in [5.0, 11.0, 13.5, 15.0, 17.0, 19.0, 21.0]) {
-        final metres = MoveraVehicleMarker.haloRadiusMeters(
-          latitude: lat,
-          zoom: zoom,
-        );
-        expect(metres / perPoint(zoom), closeTo(60, 1e-6), reason: '$zoom');
-      }
+    test('one 60 pt see-through grey disc, no border', () async {
       expect(MoveraVehicleMarker.haloRadius, 60);
-      expect(MoveraVehicleMarker.haloOpacity, .35);
-      expect(_rgb(MoveraVehicleMarker.halo), 0x7797A8);
+      expect(MoveraVehicleMarker.haloBox, 120);
+      final png = await MoveraVehicleMarker.haloPng(density: 1);
+      final image = await decodeImageFromList(png!);
+      expect(image.width, 120);
+      final data = (await image.toByteData(
+        format: ui.ImageByteFormat.rawStraightRgba,
+      ))!;
+      Color at(int x, int y) {
+        final i = (y * 120 + x) * 4;
+        return Color.fromARGB(
+          data.getUint8(i + 3),
+          data.getUint8(i),
+          data.getUint8(i + 1),
+          data.getUint8(i + 2),
+        );
+      }
+
+      final middle = at(60, 60);
+      expect(middle.a, closeTo(.35, .01));
+      // Straight (not premultiplied) colour of the halo: #7797A8.
+      expect(
+        _off(middle.withValues(alpha: 1), MoveraVehicleMarker.halo),
+        lessThan(4),
+      );
+      expect(at(60, 3).a, closeTo(.35, .01), reason: 'flat up to its edge');
+      expect(at(2, 2).a, 0, reason: 'a circle: nothing in the corner');
+    });
+  });
+
+  group('pictures', () {
+    test(
+      'never a Google pin: a transparent pixel until the arrow is drawn',
+      () async {
+        final placeholder = MoveraVehicleMarker.placeholder as BytesMapBitmap;
+        expect(placeholder.width, 1);
+        final image = await decodeImageFromList(placeholder.byteData);
+        expect([image.width, image.height], [1, 1]);
+        final data = (await image.toByteData())!;
+        expect(data.getUint8(3), 0, reason: 'fully transparent');
+      },
+    );
+
+    test(
+      'at most 64 tilted pictures are kept, least recently used first',
+      () async {
+        PositionArrowView v(double heading) =>
+            MoveraVehicleMarker.view(heading: heading, bearing: 0, tilt: 60);
+        final first = v(0);
+        await MoveraVehicleMarker.makeIcon(first);
+        for (var h = 2.0; h < 2 * 80; h += 2) {
+          await MoveraVehicleMarker.makeIcon(v(h));
+          // Keep the first one in use.
+          expect(MoveraVehicleMarker.iconFor(first), isNotNull);
+        }
+        expect(
+          MoveraVehicleMarker.debugKeptPictures,
+          MoveraVehicleMarker.keptPictures,
+        );
+        expect(MoveraVehicleMarker.iconFor(first), isNotNull, reason: 'in use');
+        expect(MoveraVehicleMarker.iconFor(v(2)), isNull, reason: 'evicted');
+      },
+    );
+
+    test('the pictures around the one shown are drawn ahead', () {
+      final view = MoveraVehicleMarker.view(heading: 90, bearing: 0, tilt: 60);
+      final around = MoveraVehicleMarker.neighbours(view);
+      expect(
+        around.map((n) => n.key),
+        containsAll(['88/60', '92/60', '84/60', '96/60', '90/57', '90/63']),
+      );
+      expect(around.map((n) => n.key), isNot(contains(view.key)));
+      expect(around.length, lessThan(MoveraVehicleMarker.keptPictures));
+      expect(
+        MoveraVehicleMarker.neighbours(
+          MoveraVehicleMarker.view(heading: 0, bearing: 0, tilt: 0),
+        ),
+        isEmpty,
+      );
     });
   });
 
@@ -315,9 +380,9 @@ void main() {
         tester.widget<GoogleMap>(find.byType(GoogleMap));
     Marker driver(WidgetTester tester) =>
         map(tester).markers.singleWhere((m) => m.markerId.value == 'driver');
-    Circle? halo(WidgetTester tester) => map(
-      tester,
-    ).circles.where((c) => c.circleId.value == 'own-position-halo').firstOrNull;
+    Marker? halo(WidgetTester tester) => map(tester).markers
+        .where((m) => m.markerId.value == MoveraVehicleMarker.haloId)
+        .firstOrNull;
 
     Future<void> move(
       WidgetTester tester,
@@ -466,12 +531,12 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
-    testWidgets('a grey halo under the position, 60 pt at every zoom', (
-      tester,
-    ) async {
+    testWidgets('a grey halo under the position: one screen-facing 60 pt '
+        'picture at every zoom and tilt, not tappable', (tester) async {
       final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
-      double sixtyPoints(double zoom) =>
-          MoveraVehicleMarker.haloRadiusMeters(latitude: 59.33, zoom: zoom);
+      final haloIcon = await tester.runAsync(
+        MoveraVehicleMarker.createHaloIcon,
+      );
       await tester.pumpWidget(
         MaterialApp(
           home: CustomGoogleMap(
@@ -484,23 +549,56 @@ void main() {
         ),
       );
       await tester.pump();
-      final circle = halo(tester)!;
-      expect(circle.center, const LatLng(59.33, 18.06));
-      expect(circle.radius, closeTo(sixtyPoints(18), 1e-6));
-      expect(circle.strokeWidth, 0, reason: 'no border');
-      expect(circle.fillColor.a, closeTo(.35, .01));
-      expect(_rgb(circle.fillColor), 0x7797A8);
-      for (final zoom in [14.0, 17.0, 19.0]) {
-        await move(
-          tester,
-          CameraPosition(target: const LatLng(59.33, 18.06), zoom: zoom),
-        );
-        expect(
-          halo(tester)!.radius,
-          closeTo(sixtyPoints(zoom), sixtyPoints(zoom) * .021),
-          reason: 'zoom $zoom',
-        );
+      final first = halo(tester)!;
+      expect(identical(first.icon, haloIcon), isTrue);
+      expect((first.icon as BytesMapBitmap).width, 120);
+      expect(first.position, const LatLng(59.33, 18.06));
+      expect(first.anchor, const Offset(.5, .5));
+      expect(first.flat, isFalse, reason: 'faces the screen: a circle');
+      expect(first.consumeTapEvents, isTrue, reason: 'taps do nothing');
+      expect(first.zIndexInt, driver(tester).zIndexInt - 1);
+      expect(map(tester).circles, isEmpty, reason: 'no ground circle');
+      for (final camera in const [
+        CameraPosition(target: LatLng(59.33, 18.06), zoom: 14),
+        CameraPosition(target: LatLng(59.33, 18.06), zoom: 17, tilt: 60),
+        CameraPosition(target: LatLng(59.33, 18.06), zoom: 19, tilt: 67.5),
+      ]) {
+        await move(tester, camera);
+        expect(halo(tester), first, reason: '$camera');
       }
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('while a tilted picture is drawn, the flat arrow stands in, '
+        'turned by the heading: never the wrong way', (tester) async {
+      final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CustomGoogleMap(
+            initialPosition: const CameraPosition(
+              target: LatLng(59.33, 18.06),
+              zoom: 16,
+              bearing: 10,
+              tilt: 60,
+            ),
+            markers: {_own(130, icon: icon)},
+          ),
+        ),
+      );
+      await tester.pump();
+      // No tilted picture yet for 130 - 10 = 120.
+      expect(driver(tester).flat, isTrue);
+      expect(driver(tester).rotation, 130);
+      expect(identical(driver(tester).icon, icon), isTrue);
+      await tester.runAsync(() async {
+        await MoveraVehicleMarker.makeIcon(
+          MoveraVehicleMarker.view(heading: 130, bearing: 10, tilt: 60),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      });
+      await tester.pump();
+      expect(driver(tester).flat, isFalse);
+      expect(driver(tester).rotation, 0);
       await tester.pumpWidget(const SizedBox.shrink());
     });
   });
