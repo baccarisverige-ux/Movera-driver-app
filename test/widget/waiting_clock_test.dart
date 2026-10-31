@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,10 +30,15 @@ void main() {
   testWidgets('dark banner clock in a paid wait before the no-show', (
     tester,
   ) async {
-    // Airport pickup: 15 free minutes, no-show from 20.
-    WaitingTerms.active = WaitingRules.current.termsFor(
-      type: WaitingRideType.airport,
+    // A zone with 15 free minutes and the no-show from 20 (served terms;
+    // the app has no airport rule of its own since contract v0.18.7).
+    WaitingTerms.active = const WaitingTerms(
+      freeMinutes: 15,
+      perMinute: Money(minorUnits: 1226),
+      noShowAfterMinutes: 20,
+      noShowFee: Money(minorUnits: 6500),
     );
+    addTearDown(() => WaitingTerms.active = WaitingRules.current.base);
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

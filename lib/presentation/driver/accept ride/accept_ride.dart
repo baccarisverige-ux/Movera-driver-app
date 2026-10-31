@@ -9,12 +9,15 @@ import 'package:movera/presentation/driver/sheets/sheet_trace.dart';
 import 'package:movera/core/location/location_freshness.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+
 import 'dart:async';
+
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/navigation/driver_map_zoom_change_detector.dart';
 import 'package:movera/core/navigation/map_zoom_sheet_settle.dart';
 import 'package:movera/core/navigation/trip_camera_sheet_inset.dart';
 import 'package:movera/widgets/google_driver_camera_port.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -39,6 +42,7 @@ import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/live/live_error_message.dart';
@@ -59,7 +63,10 @@ import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
+import 'package:movera/core/ride/trip_live_details.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
+import 'package:movera/core/settings/navigation_app.dart';
+import 'package:movera/presentation/driver/settings/trip_settings.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
@@ -90,7 +97,6 @@ import 'package:movera/core/money/money.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_route_lines.dart';
-import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/accept%20ride/rider_cancelled_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_outcome_sheet.dart';
 import 'package:movera/core/vehicle/local_vehicle_store.dart';
@@ -118,6 +124,7 @@ part 'accept_ride_panel.dart';
 part 'accept_ride_sheet.dart';
 part 'accept_ride_late_eta.dart';
 part 'accept_ride_live.dart';
+part 'accept_ride_pickup.dart';
 
 class AcceptRide extends StatefulWidget {
   const AcceptRide({
@@ -581,7 +588,15 @@ class _AcceptRideState extends State<AcceptRide>
   /// 2026-10-26).
   late LatLng _driverPosition =
       LiveDriverServices.instance?.reporter.lastKnownPoint?.toLatLng() ??
-      widget.pickupPosition;
+      _pickupPosition;
+
+  // Contract v0.18.7 (G5, see accept_ride_pickup.dart): the projection's
+  // extras, the pickup (moved by `pickup_moved`), and the 10 s poll.
+  TripLiveDetails? _live;
+  late LatLng _pickupPosition = widget.pickupPosition;
+  int _pickupMoves = 0;
+  Timer? _followPoll;
+
   List<GeoPoint> _roadGeoPoints = <GeoPoint>[];
   double? _routeDurationSeconds;
 
@@ -648,7 +663,7 @@ class _AcceptRideState extends State<AcceptRide>
     _locationService =
         DemoTripDrive.forTrip(
           widget.tripId,
-          pickup: GeoPointMaps.fromLatLng(widget.pickupPosition),
+          pickup: GeoPointMaps.fromLatLng(_pickupPosition),
           dropoff: GeoPointMaps.fromLatLng(widget.dropoffPosition),
         ) ??
         widget.locationRepository ??
@@ -667,6 +682,7 @@ class _AcceptRideState extends State<AcceptRide>
         LiveDriverServices.instance?.realtime() ??
         MemoryDriverRealtime();
     _AcceptRideLive(this)._beginLiveTrip();
+    _AcceptRidePickup(this)._beginPickupWaiting();
     _realtimeSubscription = _realtime
         .subscribe(widget.tripId)
         .listen(
@@ -832,6 +848,7 @@ class _AcceptRideState extends State<AcceptRide>
     _rideSheetPositionGuardTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _waitTimer?.cancel();
+    _followPoll?.cancel();
     _realtimeSubscription?.cancel();
     _realtime.unsubscribe();
     if (_ownsRealtime) {
@@ -886,7 +903,7 @@ class _AcceptRideState extends State<AcceptRide>
     if (_stage == ActiveRideStage.onTrip) {
       return widget.dropoffPosition;
     }
-    return widget.pickupPosition;
+    return _pickupPosition;
   }
 
   bool get _arrivalDemo => DriverRuntimeConfig.current.simulatedArrival;
@@ -899,7 +916,7 @@ class _AcceptRideState extends State<AcceptRide>
 
   LatLng? get _arrivalTarget {
     if (_stage == ActiveRideStage.headingToPickup) {
-      return widget.pickupPosition;
+      return _pickupPosition;
     }
     if (_stage == ActiveRideStage.onTrip &&
         !_paidStopWait &&
@@ -935,7 +952,7 @@ class _AcceptRideState extends State<AcceptRide>
   LatLng? get _approachTarget {
     if (_stage == ActiveRideStage.headingToPickup ||
         _stage == ActiveRideStage.waitingForRider) {
-      return widget.pickupPosition;
+      return _pickupPosition;
     }
     if (_stage == ActiveRideStage.onTrip &&
         _stopCursor < widget.stopAddresses.length) {
@@ -1011,11 +1028,11 @@ class _AcceptRideState extends State<AcceptRide>
   String get _tripBarStatus {
     switch (_stage) {
       case ActiveRideStage.headingToPickup:
-        return tr.pickingUpRiderName(widget.riderName);
+        return tr.pickingUpRiderName(_riderName);
       case ActiveRideStage.waitingForRider:
         return _riderOnTheWay
-            ? tr.riderNameIsOnWay(widget.riderName)
-            : tr.waitingForRiderName(widget.riderName);
+            ? tr.riderNameIsOnWay(_riderName)
+            : tr.waitingForRiderName(_riderName);
       case ActiveRideStage.onTrip:
         if (_paidStopWait) {
           return tr.waitingAtStopNumber(_stopCursor + 1);
@@ -1023,7 +1040,7 @@ class _AcceptRideState extends State<AcceptRide>
         if (_stopCursor < widget.stopAddresses.length) {
           return tr.headingToStopNumber(_stopCursor + 1);
         }
-        return tr.droppingOffRiderName(widget.riderName);
+        return tr.droppingOffRiderName(_riderName);
     }
   }
 
@@ -1031,11 +1048,11 @@ class _AcceptRideState extends State<AcceptRide>
   String get _tripBarInstruction {
     switch (_stage) {
       case ActiveRideStage.headingToPickup:
-        return tr.pickUpRiderName(widget.riderName);
+        return tr.pickUpRiderName(_riderName);
       case ActiveRideStage.waitingForRider:
         return _riderOnTheWay
-            ? tr.riderNameIsOnWay(widget.riderName)
-            : tr.waitingForRiderName(widget.riderName);
+            ? tr.riderNameIsOnWay(_riderName)
+            : tr.waitingForRiderName(_riderName);
       case ActiveRideStage.onTrip:
         if (_paidStopWait) {
           return tr.waitingAtStopNumber(_stopCursor + 1);
@@ -1043,7 +1060,7 @@ class _AcceptRideState extends State<AcceptRide>
         if (_stopCursor < widget.stopAddresses.length) {
           return tr.driveToStopNumber(_stopCursor + 1);
         }
-        return tr.dropOffRiderName(widget.riderName);
+        return tr.dropOffRiderName(_riderName);
     }
   }
 
@@ -1083,17 +1100,6 @@ class _AcceptRideState extends State<AcceptRide>
       return null;
     }
     return total * (1 - (_navigation.routeFraction ?? 0));
-  }
-
-  String get _routeEtaText {
-    final seconds = _routeDurationSeconds;
-    // Until a road route arrives, a calm word instead of a placeholder.
-    if (seconds == null) {
-      return tr.enRoute;
-    }
-    final left = seconds * (1 - (_navigation.routeFraction ?? 0));
-    final minutes = math.max(1, (left / 60).ceil());
-    return '$minutes min';
   }
 
   bool get _tripEndedTooQuickly {
@@ -1139,7 +1145,8 @@ class _AcceptRideState extends State<AcceptRide>
   /// Q19/Q20: free wait, price per minute, no-show time and fee, and the
   /// driver's share, from the waiting rules for this pickup (distance,
   /// ride type, category).
-  late final WaitingTerms _waitTerms = WaitingRules.current.termsFor(
+  ///
+  late final WaitingTerms _zoneWaitTerms = WaitingRules.current.termsFor(
     category: widget.category,
     type: WaitingRules.typeOf(
       matchedVia: widget.matchedVia,
@@ -1246,25 +1253,6 @@ class _AcceptRideState extends State<AcceptRide>
       case ActiveRideStage.waitingForRider:
       case ActiveRideStage.onTrip:
         return _onwardAddress;
-    }
-  }
-
-  String get _nextStopDetail {
-    switch (_stage) {
-      case ActiveRideStage.headingToPickup:
-        return tr.pickUpRiderName(widget.riderName);
-      case ActiveRideStage.waitingForRider:
-        return _riderOnTheWay
-            ? tr.riderNameIsOnWay(widget.riderName)
-            : tr.holdForRiderName(widget.riderName);
-      case ActiveRideStage.onTrip:
-        if (widget.stopAddresses.isEmpty) {
-          return widget.riderName;
-        }
-        if (widget.stopAddresses.length == 1) {
-          return tr.thenDropOff;
-        }
-        return tr.stop1OfStopAddressesLength(widget.stopAddresses.length);
     }
   }
 
@@ -1417,7 +1405,7 @@ class _AcceptRideState extends State<AcceptRide>
                               vehicle: _vehicle,
                               vehicleIcon: _driverVehicleIcon,
                               stage: _stage,
-                              pickupPosition: widget.pickupPosition,
+                              pickupPosition: _pickupPosition,
                               dropoffPosition: widget.dropoffPosition,
                               pickupAddress: _pickupAddress,
                               dropoffAddress: widget.dropoffAddress,
@@ -1602,6 +1590,10 @@ class _AcceptRideState extends State<AcceptRide>
                                     pointKind: _approachKind,
                                     pointLabel: _approachLabel,
                                     bags: widget.bags,
+                                    notice: _pickupMoves > 0
+                                        ? tr.pickupMovedIsland
+                                        : null,
+                                    noticeKey: _pickupMoves,
                                     nextTripFare:
                                         _onTripRadarState ==
                                             _OnTripRadarState.secured

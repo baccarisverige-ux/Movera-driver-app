@@ -94,10 +94,12 @@ void main() {
         waiting.termsFor(category: 'premium').perMinute.formatted,
         '16,90 kr',
       );
-      expect(waiting.termsFor(pickupKm: 7).noShowFee.formatted, '85,00 kr');
+      // Contract v0.18.7 (G5): no app-invented far-pickup or airport rule;
+      // the zone's served pricing is the only source.
+      expect(waiting.termsFor(pickupKm: 7).noShowFee.formatted, '65,00 kr');
       expect(
         waiting.termsFor(type: WaitingRideType.airport).noShowAfterMinutes,
-        20,
+        5,
       );
       expect(config.destinationMode.destinationsPerDay, 2);
       expect(config.nextTrips.withinMinutesOfDropoff, 10);
@@ -125,9 +127,10 @@ void main() {
       final premium = config.waiting.termsFor(category: 'Premium');
       expect(premium.perMinute.formatted, '5,100 DT');
       expect(premium.freeMinutes, 5);
+      // G5: a far pickup has the zone's own no-show fee (no app rule).
       expect(
         config.waiting.termsFor(pickupKm: 9).noShowFee.formatted,
-        '25,500 DT',
+        '19,500 DT',
       );
     });
 
@@ -162,7 +165,8 @@ void main() {
         expect(config.zoneId, DriverZones.defaultId);
         expect(config.currency, 'SEK');
         expect(config.waiting.base.noShowFee.formatted, '65,00 kr');
-        expect(config.waiting.termsFor(category: 'xl').freeMinutes, 3);
+        // G5: without a document there is no category rule either.
+        expect(config.waiting.termsFor(category: 'xl').freeMinutes, 5);
         expect(config.categoryIds, isNotEmpty);
       });
     }
@@ -257,7 +261,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.18.6');
+      expect(contract['version'], '0.18.7');
       expect(
         ZoneDefaults.paymentMethods,
         contract['zonePaymentMethods']['values'],
@@ -322,7 +326,7 @@ void main() {
           'google_pay',
         ]);
         expect(config.maxStops, 3);
-        expect(config.maxPickupMoveMeters, 500);
+        expect(config.maxPickupMoveMeters, 200);
         expect(config.autoOffline, isTrue);
         // G4-E2 (owner "Set 10 everywhere"): the seed said 3 until v0.18.6.
         expect(config.missedExclusiveBeforeOffline, 10);
@@ -360,7 +364,7 @@ void main() {
       expect(config.languages.driver, 'fr');
       expect(config.paymentMethods, ZoneDefaults.paymentMethods);
       expect(config.maxStops, 3);
-      expect(config.maxPickupMoveMeters, 500);
+      expect(config.maxPickupMoveMeters, 200);
       expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonus, isNull);
       expect(
@@ -397,7 +401,7 @@ void main() {
       expect(config.languages.rider, 'en');
       expect(config.paymentMethods, ['apple_pay', 'cash']);
       expect(config.maxStops, 3);
-      expect(config.maxPickupMoveMeters, 500);
+      expect(config.maxPickupMoveMeters, 200);
       expect(config.autoOffline, isTrue);
       expect(config.missedExclusiveBeforeOffline, 10);
       expect(config.driverBonus, isNull, reason: 'limit above the hard max');

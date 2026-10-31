@@ -267,18 +267,14 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
   if (json == null) {
     return WaitingRules(
       base: _rebaseTerms(base, currency),
-      farPickupKm: seed.farPickupKm,
-      farPickup: _rebase(seed.farPickup, currency),
       rideTypes: {
         for (final entry in seed.rideTypes.entries)
           entry.key: _rebase(entry.value, currency),
       },
-      categories: {
-        for (final entry in seed.categories.entries)
-          entry.key: _rebase(entry.value, currency),
-      },
     );
   }
+  // Contract v0.18.7 `pickupWaiting.servedConfig`: the top-level terms and
+  // `byCategory` are the zone's live pricing, in the zone's currency.
   final terms = WaitingTerms(
     freeMinutes: _int(json['freeWaitMin']) ?? base.freeMinutes,
     perMinute:
@@ -294,28 +290,9 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
         _percent(json['driverSharePct']) ?? base.driverShareNoShowPercent,
   );
 
-  final far = _map(json['farPickup']);
-  final farOn = far?['on'] is bool ? far!['on'] as bool : true;
-  final farKm = far?['km'];
-
-  final types = _map(json['rideTypes']);
-  final rideTypes = <WaitingRideType, WaitingRule>{};
-  for (final entry in seed.rideTypes.entries) {
-    final raw = _map(types?[entry.key.name]);
-    if (raw == null) {
-      rideTypes[entry.key] = _rebase(entry.value, currency);
-    } else if (raw['on'] != false) {
-      rideTypes[entry.key] = _rule(raw, entry.value.label, currency);
-    }
-  }
-
   final byCategory = _map(json['byCategory']);
   final categories = <String, WaitingRule>{};
-  if (byCategory == null) {
-    for (final entry in seed.categories.entries) {
-      categories[entry.key] = _rebase(entry.value, currency);
-    }
-  } else {
+  if (byCategory != null) {
     for (final entry in byCategory.entries) {
       final id = entry.key is String
           ? CategoryCatalog.canonicalId(entry.key as String)
@@ -346,15 +323,10 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
 
   return WaitingRules(
     base: terms,
-    farPickupKm: !farOn
-        ? double.infinity
-        : farKm is num && farKm.isFinite && farKm > 0
-        ? farKm.toDouble()
-        : seed.farPickupKm,
-    farPickup: far == null
-        ? _rebase(seed.farPickup, currency)
-        : _rule(far, seed.farPickup.label, currency),
-    rideTypes: rideTypes,
+    rideTypes: {
+      for (final entry in seed.rideTypes.entries)
+        entry.key: _rebase(entry.value, currency),
+    },
     categories: categories,
   );
 }

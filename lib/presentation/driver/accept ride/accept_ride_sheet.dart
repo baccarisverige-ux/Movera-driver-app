@@ -121,7 +121,7 @@ extension _AcceptRideSheet on _AcceptRideState {
         fare: widget.fare,
         points: points,
         footer:
-            '${categoryNameText(widget.category)} · ${widget.riderName.split(' ').first}',
+            '${categoryNameText(widget.category)} · ${_riderName.split(' ').first}',
         moreKey: const ValueKey<String>('current-trip-more'),
         onMore: _AcceptRidePanel(this)._showTripOptions,
         waybillKey: const ValueKey<String>('current-waybill-shortcut'),

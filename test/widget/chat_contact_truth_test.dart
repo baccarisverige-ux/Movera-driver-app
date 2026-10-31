@@ -101,9 +101,7 @@ void main() {
     expect(chat, isNot(contains('tel:')));
     expect(
       ride,
-      contains(
-        'Chat(riderDisplayName: widget.riderName, tripId: widget.tripId)',
-      ),
+      contains('Chat(riderDisplayName: _riderName, tripId: widget.tripId)'),
     );
   });
 }

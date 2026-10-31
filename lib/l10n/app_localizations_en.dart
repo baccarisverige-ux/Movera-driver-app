@@ -6684,4 +6684,72 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get offlineReasonAccountStatus =>
       'Your account is paused – contact Movera';
+
+  @override
+  String get tripSettings => 'Trip settings';
+
+  @override
+  String get navigationApp => 'Navigation app';
+
+  @override
+  String get navigationAppHint => 'Opens from the map button during a trip';
+
+  @override
+  String get navigateWithWaze => 'Navigate with Waze';
+
+  @override
+  String get wazeIsUnavailable => 'Waze is unavailable.';
+
+  @override
+  String noShowConfirmYouGet(Object amount) {
+    return 'Mark as no-show? You get $amount';
+  }
+
+  @override
+  String get noShowConfirmNoFee => 'Mark as no-show? No fee';
+
+  @override
+  String feeKindNoShow(Object amount) {
+    return 'No-show fee $amount';
+  }
+
+  @override
+  String feeKindCancel(Object amount) {
+    return 'Cancellation fee $amount';
+  }
+
+  @override
+  String etaArrivesIn(Object min, Object distance) {
+    return 'Arrives in $min min · $distance';
+  }
+
+  @override
+  String etaToDropoff(Object min, Object distance) {
+    return 'There in $min min · $distance';
+  }
+
+  @override
+  String distanceKm(Object value) {
+    return '$value km';
+  }
+
+  @override
+  String distanceM(Object value) {
+    return '$value m';
+  }
+
+  @override
+  String get pickupMovedIsland => 'Pickup moved';
+
+  @override
+  String waitingChargedSoFar(Object amount) {
+    return 'Waiting charged so far: $amount';
+  }
+
+  @override
+  String get cancelAfterArrivedNote =>
+      'Cancelling after the driver has arrived counts as a no-show';
+
+  @override
+  String get navigationAppSaveFailed => 'Navigation app not saved. Try again.';
 }

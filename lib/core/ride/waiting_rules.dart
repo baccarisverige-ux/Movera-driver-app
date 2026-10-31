@@ -140,7 +140,10 @@ class WaitingRule {
 class WaitingRules {
   const WaitingRules({
     // contract.json#configDefaults (owner Q41): 5 free minutes, and the
-    // no-show comes when they end.
+    // no-show comes when they end. A live build replaces every number with
+    // the zone's served pricing (`GET /driver/config` → `waiting`, contract
+    // v0.18.7 `pickupWaiting.servedConfig`) and each trip with its own
+    // `terms`; nothing here is a price the driver is ever shown on its own.
     this.base = const WaitingTerms(
       freeMinutes: 5,
       perMinute: Money(minorUnits: 1226),
@@ -149,35 +152,17 @@ class WaitingRules {
       driverShareWaitPercent: 100,
       driverShareNoShowPercent: 80,
     ),
-    this.farPickupKm = 5,
-    this.farPickup = const WaitingRule(
-      label: 'Pickup far away',
-      freeMinutes: 1,
-      noShowFee: Money(minorUnits: 8500),
-    ),
+    // Contract v0.18.7 (driver group 5): the app's own extra rules (far
+    // pickup, airport, event) are gone — the server never knew them
+    // (admin rules come with group 6). A scheduled ride still waits the
+    // reservation policy's included minutes (its server terms say the
+    // same); a category's own terms come from `waiting.byCategory`.
+    this.farPickupKm = double.infinity,
+    this.farPickup = const WaitingRule(label: ''),
     this.rideTypes = const {
-      // Its free wait is the reservation policy's included waiting
-      // (ScheduledRideRules.includedWaitingMinutes).
       WaitingRideType.scheduled: WaitingRule(label: 'Scheduled ride'),
-      WaitingRideType.airport: WaitingRule(
-        label: 'Airport pickup',
-        freeMinutes: 15,
-        noShowAfterMinutes: 20,
-      ),
-      WaitingRideType.event: WaitingRule(label: 'Event pickup', freeMinutes: 3),
     },
-    this.categories = const {
-      'premium': WaitingRule(
-        label: 'Premium',
-        freeMinutes: 5,
-        perMinute: Money(minorUnits: 1690),
-      ),
-      'xl': WaitingRule(
-        label: 'Movera XL',
-        freeMinutes: 3,
-        noShowAfterMinutes: 3,
-      ),
-    },
+    this.categories = const {},
   });
 
   /// The rules in use. Mirrors the admin defaults until a backend sets it.
@@ -242,7 +227,10 @@ class WaitingRules {
             : byType,
       );
     }
-    if (pickupKm != null && pickupKm > farPickupKm) {
+    if (pickupKm != null &&
+        pickupKm > farPickupKm &&
+        farPickupKm.isFinite &&
+        farPickup.label.isNotEmpty) {
       final km = farPickupKm == farPickupKm.roundToDouble()
           ? farPickupKm.toStringAsFixed(0)
           : farPickupKm.toStringAsFixed(1);

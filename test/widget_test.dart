@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
+import 'package:movera/presentation/driver/settings/trip_settings.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:movera/main.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
@@ -3003,7 +3004,7 @@ void main() {
         find.byKey(const ValueKey('active-ride-arrived-button')),
         findsNothing,
       );
-      expect(find.byTooltip('Ride preferences'), findsOneWidget);
+      expect(find.byTooltip('Trip settings'), findsOneWidget);
       expect(
         _activeRidePanel(tester).controller!.panelPosition,
         closeTo(0, .01),
@@ -3093,13 +3094,14 @@ void main() {
       findsOneWidget,
     );
 
-    // Preferences live on the lifted sheet.
+    // The trip settings live on the lifted sheet (G5: the trip settings,
+    // not the car types).
     await _middleActiveRideSheet(tester);
-    await tester.tap(find.byTooltip('Ride preferences'));
+    await tester.tap(find.byTooltip('Trip settings'));
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 60));
     }
-    expect(find.byType(Preferences), findsOneWidget);
+    expect(find.byType(TripSettings), findsOneWidget);
     _expectNoException(tester);
   });
 

@@ -393,6 +393,21 @@ class LiveTripCommands {
     if (versionOf(tripId) == null) await _current(tripId);
   }
 
+  /// `GET /trips/{tripId}` now (contract v0.18.7 `pickupWaiting.follow`):
+  /// the trip screen asks only while its event stream is down, every
+  /// `pollSeconds` (10), never faster. The answer is folded in like any
+  /// projection and returned; null when the server did not answer.
+  Future<Map<String, dynamic>?> refresh(String tripId) async {
+    try {
+      final answer = await _api.get('$_base/${Uri.encodeComponent(tripId)}');
+      observe(answer);
+      return answer;
+    } on ApiError catch (error) {
+      DriverLog.warn('trip $tripId not refreshed: ${error.code}', name: 'live');
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> _current(
     String tripId, {
     bool fresh = false,

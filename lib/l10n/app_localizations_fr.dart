@@ -6800,4 +6800,74 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get offlineReasonAccountStatus =>
       'Votre compte est en pause – contactez Movera';
+
+  @override
+  String get tripSettings => 'Réglages du trajet';
+
+  @override
+  String get navigationApp => 'Appli de navigation';
+
+  @override
+  String get navigationAppHint =>
+      'S’ouvre depuis le bouton carte pendant une course';
+
+  @override
+  String get navigateWithWaze => 'Naviguer avec Waze';
+
+  @override
+  String get wazeIsUnavailable => 'Waze est indisponible.';
+
+  @override
+  String noShowConfirmYouGet(Object amount) {
+    return 'Marquer comme client absent ? Vous recevez $amount';
+  }
+
+  @override
+  String get noShowConfirmNoFee => 'Marquer comme client absent ? Pas de frais';
+
+  @override
+  String feeKindNoShow(Object amount) {
+    return 'Frais de client absent $amount';
+  }
+
+  @override
+  String feeKindCancel(Object amount) {
+    return 'Frais d’annulation $amount';
+  }
+
+  @override
+  String etaArrivesIn(Object min, Object distance) {
+    return 'Arrive dans $min min · $distance';
+  }
+
+  @override
+  String etaToDropoff(Object min, Object distance) {
+    return 'Arrivée dans $min min · $distance';
+  }
+
+  @override
+  String distanceKm(Object value) {
+    return '$value km';
+  }
+
+  @override
+  String distanceM(Object value) {
+    return '$value m';
+  }
+
+  @override
+  String get pickupMovedIsland => 'Le point de départ a été déplacé';
+
+  @override
+  String waitingChargedSoFar(Object amount) {
+    return 'Attente facturée jusqu’ici : $amount';
+  }
+
+  @override
+  String get cancelAfterArrivedNote =>
+      'Annuler après l’arrivée du chauffeur compte comme un client absent';
+
+  @override
+  String get navigationAppSaveFailed =>
+      'Appli de navigation non enregistrée. Réessayez.';
 }

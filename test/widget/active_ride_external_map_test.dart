@@ -75,9 +75,7 @@ void main() {
       await _frames(tester);
       final launch = tester
           .widget<MapControlButton>(
-            find.byKey(
-              const ValueKey<String>('active-ride-google-maps-button'),
-            ),
+            find.byKey(const ValueKey<String>('active-ride-navigation-button')),
           )
           .onTap;
       launch();

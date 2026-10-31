@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
@@ -221,10 +222,23 @@ void main() {
     testWidgets('the sheet shows the rule, the amounts and the share', (
       tester,
     ) async {
-      final terms = WaitingRules.current.termsFor(
-        category: 'Premium',
-        type: WaitingRideType.scheduled,
-      );
+      // G5: the Premium rate comes from the served zone document.
+      final terms = DriverAppConfig.fromJson({
+        'currency': 'SEK',
+        'waiting': {
+          'freeWaitMin': 5,
+          'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+          'noShowAfterMin': 5,
+          'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+          'driverSharePct': 80,
+          'byCategory': {
+            'xl': {'freeWaitMin': 3, 'noShowAfterMin': 3},
+            'premium': {
+              'perMin': {'amountMinor': 1690, 'currency': 'SEK'},
+            },
+          },
+        },
+      }).waiting.termsFor(category: 'Premium', type: WaitingRideType.scheduled);
       WaitingTerms.active = terms;
       await tester.binding.setSurfaceSize(const Size(390, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));

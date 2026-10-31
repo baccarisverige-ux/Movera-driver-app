@@ -189,7 +189,7 @@ extension _AcceptRidePanel on _AcceptRideState {
 
   /// The trip's step on the island, e.g. "Waiting for Angelica".
   String get _islandStatus {
-    final first = widget.riderName.split(' ').first;
+    final first = _riderName.split(' ').first;
     return switch (_stage) {
       ActiveRideStage.headingToPickup => tr.headingToPickup,
       ActiveRideStage.waitingForRider => tr.waitingForFirst(first),
@@ -588,6 +588,11 @@ extension _AcceptRidePanel on _AcceptRideState {
       readSeconds: () => _waitSeconds,
       fullyPaid: _paidStopWait,
       terms: _waitTerms,
+      // Q5: the rider's waiting cost so far as the server counts it.
+      chargedSoFar: _paidStopWait ? null : _live?.waiting?.chargedSoFar,
+      // Q2: the zone's rule, from the trip's terms.
+      cancelAfterArrivedIsNoShow:
+          !_paidStopWait && (_live?.terms?.cancelAfterArrivedIsNoShow ?? false),
       onNoShow: _paidStopWait
           ? null
           : () {
@@ -601,10 +606,13 @@ extension _AcceptRidePanel on _AcceptRideState {
     );
   }
 
-  void _openRidePreferences() {
+  /// G5 re-check 2026-10-30: the trip sheet's "Trip settings" button
+  /// opened the car types; it opens the driver's trip settings (the
+  /// navigation app, status item 3), which lead to the car types.
+  void _openTripSettings() {
     pushSingle(
       context,
-      MaterialPageRoute<void>(builder: (_) => const Preferences()),
+      MaterialPageRoute<void>(builder: (_) => const TripSettings()),
     );
   }
 
@@ -652,16 +660,28 @@ extension _AcceptRidePanel on _AcceptRideState {
               ),
               if (!_browsing) ...[
                 const SizedBox(height: 12),
-                MapControlButton(
-                  key: const ValueKey<String>('active-ride-google-maps-button'),
-                  tooltip: tr.navigateWithGoogleMaps,
-                  size: 56,
-                  fill: MapControlButton.googleGrey,
-                  onTap: _openGoogleMaps,
-                  child: SvgPicture.asset(
-                    AppAssets.mapGoogle,
-                    width: 26,
-                    height: 26,
+                // G5 status item 3: the app the driver chose in Trip
+                // settings (Google Maps by default); only this button
+                // shows the Waze mark (owner "Use the Waze logo").
+                ValueListenableBuilder<NavigationApp>(
+                  valueListenable: NavigationAppSetting.current,
+                  builder: (context, app, _) => MapControlButton(
+                    key: const ValueKey<String>(
+                      'active-ride-navigation-button',
+                    ),
+                    tooltip: app == NavigationApp.waze
+                        ? tr.navigateWithWaze
+                        : tr.navigateWithGoogleMaps,
+                    size: 56,
+                    fill: MapControlButton.googleGrey,
+                    onTap: _openNavigationApp,
+                    child: SvgPicture.asset(
+                      app == NavigationApp.waze
+                          ? AppAssets.mapWaze
+                          : AppAssets.mapGoogle,
+                      width: 26,
+                      height: 26,
+                    ),
                   ),
                 ),
               ],
@@ -733,13 +753,11 @@ extension _AcceptRidePanel on _AcceptRideState {
     );
   }
 
-  Future<void> _openGoogleMaps() async {
+  Future<void> _openNavigationApp() async {
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     final target = _approachTarget ?? widget.dropoffPosition;
-    final uri = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1'
-      '&destination=${target.latitude},${target.longitude}&travelmode=driving',
-    );
+    final app = NavigationAppSetting.current.value;
+    final uri = app.directionsTo(target.latitude, target.longitude);
     final opened = await _externalMapAction.run(
       context,
       () =>
@@ -749,9 +767,15 @@ extension _AcceptRidePanel on _AcceptRideState {
     if (opened == false &&
         mounted &&
         ModalRoute.of(context)?.isCurrent == true) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr.googleMapsIsUnavailable)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            app == NavigationApp.waze
+                ? tr.wazeIsUnavailable
+                : tr.googleMapsIsUnavailable,
+          ),
+        ),
+      );
     }
   }
 
@@ -835,7 +859,7 @@ extension _AcceptRidePanel on _AcceptRideState {
               key: const ValueKey<String>('active-ride-compact-dock'),
               instruction: _tripBarInstruction,
               address: _tripBarAddress,
-              onPreferences: _openRidePreferences,
+              onPreferences: _openTripSettings,
               onTap: _showRideMiddle,
             )
           else ...[
@@ -843,7 +867,7 @@ extension _AcceptRidePanel on _AcceptRideState {
               key: const ValueKey<String>('active-ride-expanded-header'),
               instruction: _tripBarInstruction,
               address: _tripBarAddress,
-              onPreferences: _openRidePreferences,
+              onPreferences: _openTripSettings,
               onTap: full ? _showRideMiddle : _showRideFull,
             ),
             if (!full) ...[
@@ -945,15 +969,40 @@ extension _AcceptRidePanel on _AcceptRideState {
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: Text(
-                  widget.riderName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _AcceptRideState._ink,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        _riderName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: _AcceptRideState._ink,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    // Q1 (contract v0.18.7 `riderSummary`): the rider's
+                    // rating in the G4 offer card's chip, one decimal and a
+                    // star, only while the zone shows it and the server
+                    // sent one.
+                    if (_riderRating case final rating?
+                        when DriverOfferRules.current.card.riderRating) ...[
+                      const SizedBox(width: 8),
+                      Semantics(
+                        label:
+                            '${tr.riderRatingLabel} ${rating.toStringAsFixed(1)}',
+                        excludeSemantics: true,
+                        child: OfferBadge.riderRating(
+                          rating.toStringAsFixed(1),
+                          key: const ValueKey<String>(
+                            'active-ride-rider-rating',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -1022,7 +1071,7 @@ extension _AcceptRidePanel on _AcceptRideState {
     pushSingle(
       context,
       BottomToTopTransition(
-        Chat(riderDisplayName: widget.riderName, tripId: widget.tripId),
+        Chat(riderDisplayName: _riderName, tripId: widget.tripId),
       ),
     );
   }
@@ -1154,7 +1203,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    widget.riderName,
+                    _riderName,
                     style: const TextStyle(
                       color: _AcceptRideState._ink,
                       fontSize: 20,
@@ -1165,7 +1214,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                   Text(
                     // G4 decision 3: the rider's real rating only, and only
                     // while the zone shows it; else just the rides.
-                    switch (widget.riderRating) {
+                    switch (_riderRating) {
                       final rating?
                           when DriverOfferRules.current.card.riderRating =>
                         tr.ratingAndRides(
@@ -1324,6 +1373,13 @@ extension _AcceptRidePanel on _AcceptRideState {
         ? <_TripCancellationReason>[
             _AcceptRideState._noShowReason,
             ..._AcceptRideState._preTripCancellationReasons,
+          ]
+        // G5 re-check 2026-10-30 ("wrong cancel reason before arrival"):
+        // "Rider not at pickup" only once the driver is at the pickup.
+        : _stage == ActiveRideStage.headingToPickup
+        ? [
+            for (final reason in _AcceptRideState._preTripCancellationReasons)
+              if (reason.code != 'rider_not_at_pickup') reason,
           ]
         : _AcceptRideState._preTripCancellationReasons;
 

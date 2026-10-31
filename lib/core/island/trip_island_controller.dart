@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -235,9 +236,16 @@ class TripStripInput {
     this.pickupSide,
     this.toll = false,
     this.laneKey,
+    this.notice,
+    this.noticeKey = 0,
   });
 
   final TripLeg? leg;
+
+  /// A short line said once when [noticeKey] changes ("Pickup moved",
+  /// contract v0.18.7 `pickupMove.texts.island`).
+  final String? notice;
+  final int noticeKey;
 
   /// "Stop 1" while heading to that stop.
   final String? stopLabel;
@@ -360,6 +368,10 @@ class TripStripController extends ChangeNotifier {
       );
     }
     if (next.toll && !(last?.toll ?? false)) _say(tr.tollAhead);
+    if (next.notice case final notice?
+        when last != null && next.noticeKey != last.noticeKey) {
+      _say(notice);
+    }
 
     final lanes = next.laneKey;
     if (lanes != null && lanes != last?.laneKey) {

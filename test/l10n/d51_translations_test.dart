@@ -397,14 +397,15 @@ void main() {
 
   test('driver-u38: the waiting rule follows a language switch', () {
     speak('sv');
+    // Contract v0.18.7 (G5): no far-pickup rule of the app's own; a
+    // scheduled ride still names its rule.
     final terms = WaitingRules.current.termsFor(
       type: WaitingRideType.scheduled,
       pickupKm: 40,
     );
-    expect(terms.rule, contains(tr.waitingRuleScheduledRide));
+    expect(terms.rule, tr.waitingRuleScheduledRide);
     speak('fr');
-    expect(terms.rule, startsWith(tr.waitingRuleScheduledRide));
-    expect(terms.rule, contains(tr.pickupOverKmKm('5')));
+    expect(terms.rule, tr.waitingRuleScheduledRide);
     expect(terms.rule, isNot(contains('Upphämtning')));
   });
 

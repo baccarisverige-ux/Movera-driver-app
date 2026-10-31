@@ -21,7 +21,20 @@ void main() {
   });
 
   group('Q41: no-show wait = free wait', () {
-    const rules = WaitingRules();
+    // Contract v0.18.7 (G5): a category's terms come from the served
+    // `waiting.byCategory` (the zone's pricing), never from the app.
+    final rules = DriverAppConfig.fromJson({
+      'currency': 'SEK',
+      'waiting': {
+        'freeWaitMin': 5,
+        'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+        'noShowAfterMin': 5,
+        'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+        'byCategory': {
+          'xl': {'freeWaitMin': 3, 'noShowAfterMin': 3},
+        },
+      },
+    }).waiting;
 
     test('defaults: 5 min, XL 3 min (contract configDefaults)', () {
       final normal = rules.termsFor(category: 'economy');

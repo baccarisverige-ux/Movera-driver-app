@@ -19,6 +19,8 @@ Future<void> showRiderCancelledSheet(
   required String riderName,
   required bool wasOnTrip,
   Money? fee,
+  String? feeKind,
+  Money? riderFee,
 }) {
   return showMoveraModalSheet<void>(
     context: context,
@@ -31,6 +33,8 @@ Future<void> showRiderCancelledSheet(
       riderName: riderName,
       wasOnTrip: wasOnTrip,
       fee: fee,
+      feeKind: feeKind,
+      riderFee: riderFee,
       onAcknowledge: () => popOwned(sheetContext),
     ),
   );
@@ -43,11 +47,21 @@ class RiderCancelledSheet extends StatelessWidget {
     required this.wasOnTrip,
     required this.onAcknowledge,
     this.fee,
+    this.feeKind,
+    this.riderFee,
   });
 
   final String riderName;
   final bool wasOnTrip;
+
+  /// The driver's part (v0.18.7 `cancellation.driverShare`).
   final Money? fee;
+
+  /// Q2 (contract v0.18.7): `cancel` or `no_show`, which rule set the
+  /// rider's [riderFee] (a cancel after the driver arrived counts as a
+  /// no-show when the zone says so).
+  final String? feeKind;
+  final Money? riderFee;
   final VoidCallback onAcknowledge;
 
   @override
@@ -61,6 +75,14 @@ class RiderCancelledSheet extends StatelessWidget {
             ? tr.activeTripCancelledByRider
             : tr.pickupCancelledByRider) +
         HomeIslandNotices.feeSuffix(fee);
+    final riderCharged = riderFee;
+    final feeLine = riderCharged == null || riderCharged.isZero
+        ? null
+        : feeKind == 'no_show'
+        ? tr.feeKindNoShow(riderCharged.formattedShort)
+        : feeKind == 'cancel'
+        ? tr.feeKindCancel(riderCharged.formattedShort)
+        : null;
 
     // Sized by the sheet route: its usual height, taller only when the
     // text needs it. The text scrolls when even that is not enough, so the
@@ -179,13 +201,32 @@ class RiderCancelledSheet extends StatelessWidget {
                             ),
                             const SizedBox(width: 10),
                             Expanded(
-                              child: Text(
-                                status,
-                                style: const TextStyle(
-                                  color: _ink,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    status,
+                                    style: const TextStyle(
+                                      color: _ink,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  if (feeLine != null) ...[
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      feeLine,
+                                      key: const ValueKey<String>(
+                                        'rider-cancelled-fee-kind',
+                                      ),
+                                      style: const TextStyle(
+                                        color: _muted,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ],

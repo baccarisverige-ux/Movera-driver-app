@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 
@@ -23,7 +24,24 @@ void main() {
   });
 
   test('X12: category waiting rules apply by id and by driver label', () {
-    const rules = WaitingRules();
+    // Contract v0.18.7 (G5): category rules come from the served
+    // `waiting.byCategory`, never from the app.
+    final rules = DriverAppConfig.fromJson({
+      'currency': 'SEK',
+      'waiting': {
+        'freeWaitMin': 5,
+        'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+        'noShowAfterMin': 5,
+        'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+        'driverSharePct': 80,
+        'byCategory': {
+          'xl': {'freeWaitMin': 3, 'noShowAfterMin': 3},
+          'premium': {
+            'perMin': {'amountMinor': 1690, 'currency': 'SEK'},
+          },
+        },
+      },
+    }).waiting;
     for (final category in ['xl', CategoryCatalog.labelOf('xl'), 'XL']) {
       expect(
         rules.termsFor(category: category).freeMinutes,

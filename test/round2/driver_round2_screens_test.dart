@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
@@ -115,7 +116,23 @@ void main() {
     });
 
     testWidgets('XL: 3 min free, then the fee and the no-show', (tester) async {
-      final xl = const WaitingRules().termsFor(category: 'Movera XL');
+      // G5: the XL terms come from the served zone document.
+      final xl = DriverAppConfig.fromJson({
+        'currency': 'SEK',
+        'waiting': {
+          'freeWaitMin': 5,
+          'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+          'noShowAfterMin': 5,
+          'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+          'driverSharePct': 80,
+          'byCategory': {
+            'xl': {'freeWaitMin': 3, 'noShowAfterMin': 3},
+            'premium': {
+              'perMin': {'amountMinor': 1690, 'currency': 'SEK'},
+            },
+          },
+        },
+      }).waiting.termsFor(category: 'Movera XL');
       var seconds = 2 * 60 + 59;
       await _sheet(tester, () => seconds, xl);
       expect(find.byKey(_noShow), findsNothing);
