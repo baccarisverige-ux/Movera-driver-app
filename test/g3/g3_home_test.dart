@@ -325,7 +325,9 @@ void main() {
   });
 
   testWidgets('decision 3 (owner 2026-10-31: the line became the "You\'re '
-      'offline" card): Go online on it goes online', (tester) async {
+      'offline" card): its radar reads Go online and goes online', (
+    tester,
+  ) async {
     final home = await pumpHome(tester);
     DriverSetOfflineNotice.instance.show(
       reason: DriverOfflineReason.appRestart,
@@ -337,9 +339,7 @@ void main() {
       find.text('You were set offline – tap to go online again'),
       findsNothing,
     );
-    await tester.tap(
-      find.byKey(const ValueKey<String>('offline-card-go-online')),
-    );
+    await tester.tap(find.byType(MoveraRadarOrb).last);
     await frames(tester, 3);
     expect(home.session.isGoingOnline || home.session.isOnline, isTrue);
     expect(card, findsNothing);

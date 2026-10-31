@@ -14,6 +14,7 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/driver/driver_home_notices.dart';
 import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
 import 'package:movera/core/location/driver_start_position.dart';
@@ -35,7 +36,8 @@ import '../../integration_test/headless_map_platform.dart';
 /// Owner 2026-10-31 "new set offline message" (Rules decisions/driver-g3.md,
 /// "Reason + phone check"): set offline without asking, the Home sheet
 /// shows "You're offline" in place of its icons, with the real reason,
-/// "Check my phone" (✓/✗ with a fix), Go online and OK; it goes when he
+/// "Check my phone" (✓/✗ with a fix) and OK, with Home's radar reading
+/// "Go online" in the risen sheet's notch; it goes when he
 /// goes online, taps OK, or after 2 minutes.
 void main() {
   final previous = DriverRuntimeConfig.current;
@@ -168,15 +170,26 @@ void main() {
         find.text('You were set offline – tap to go online again'),
         findsNothing,
       );
-      // In the sheet: from the bottom of the screen, full width, over the
-      // dock's icons and the radar.
+      // The sheet rises from the bottom of the screen, full width, over
+      // the dock's icons.
       final rect = tester.getRect(card);
       expect(rect.bottom, 844);
       expect(rect.left, 0);
       expect(rect.right, 390);
-      // The radar (Go online) is in the card now, not over it.
-      expect(find.byType(MoveraRadarOrb), findsNothing);
       expect(rect.top, lessThan(844 - 108), reason: 'taller than the dock');
+      // Owner: the radar stays, on the sheet's top edge, reading Go online.
+      final radar = find.byType(MoveraRadarOrb);
+      expect(radar, findsOneWidget);
+      expect(
+        find.descendant(of: radar, matching: find.text('Go online')),
+        findsOneWidget,
+      );
+      final orb = tester.getRect(radar);
+      final sheetTop = rect.top + HomeOfflineCard.radarTop;
+      expect((orb.center.dy - sheetTop).abs(), lessThan(4));
+      expect(orb.center.dx, closeTo(195, 1));
+      // No second, separate Go online button.
+      expect(find.byType(FilledButton), findsNothing);
       await leave(tester, null);
     });
 
@@ -194,18 +207,20 @@ void main() {
       await leave(tester, null);
     });
 
-    testWidgets('Go online hides the card and goes online', (tester) async {
+    testWidgets('the radar\'s Go online hides the card and goes online', (
+      tester,
+    ) async {
       final home = await pumpHome(tester);
       DriverSetOfflineNotice.instance.show(
         reason: DriverOfflineReason.appRestart,
       );
       await frames(tester, 3);
-      await tester.tap(
-        find.byKey(const ValueKey<String>('offline-card-go-online')),
-      );
+      await tester.tap(find.byType(MoveraRadarOrb));
       await frames(tester, 3);
       expect(home.session.isGoingOnline || home.session.isOnline, isTrue);
       expect(card, findsNothing);
+      // Back on the usual radar.
+      expect(find.byType(MoveraRadarOrb), findsOneWidget);
       await frames(tester, 30);
       await leave(tester, null);
     });
@@ -336,7 +351,7 @@ void main() {
     Future<void> pumpCard(
       WidgetTester tester, {
       String reason = 'Movera set you offline.',
-      VoidCallback? onGoOnline,
+      Widget? radar,
       VoidCallback? onOk,
       VoidCallback? onLocationFixed,
     }) async {
@@ -349,7 +364,7 @@ void main() {
               alignment: Alignment.bottomCenter,
               child: HomeOfflineCard(
                 reason: reason,
-                onGoOnline: onGoOnline ?? () {},
+                radar: radar ?? const SizedBox.square(dimension: 104),
                 onOk: onOk ?? () {},
                 onLocationFixed: onLocationFixed,
               ),
@@ -540,13 +555,27 @@ void main() {
       }
     });
 
-    testWidgets('Go online and OK call their actions', (tester) async {
-      var online = 0;
+    testWidgets('the radar it is given sits in the notch; OK calls its '
+        'action', (tester) async {
       var ok = 0;
-      await pumpCard(tester, onGoOnline: () => online++, onOk: () => ok++);
-      await tester.tap(find.text('Go online'));
+      await pumpCard(
+        tester,
+        radar: const SizedBox.square(
+          key: ValueKey<String>('given-radar'),
+          dimension: 104,
+        ),
+        onOk: () => ok++,
+      );
+      final sheet = tester.getRect(
+        find.byKey(const ValueKey<String>('home-offline-card')),
+      );
+      final radar = tester.getRect(
+        find.byKey(const ValueKey<String>('given-radar')),
+      );
+      expect(radar.top, sheet.top);
+      expect(radar.center.dy, sheet.top + HomeOfflineCard.radarTop - 2);
       await tester.tap(find.text('OK'));
-      expect((online, ok), (1, 1));
+      expect(ok, 1);
     });
 
     testWidgets('every reason in its own words', (tester) async {
@@ -585,13 +614,14 @@ void main() {
       await pumpCard(tester);
       expect(find.text('Du är offline'), findsOneWidget);
       expect(find.text('Kontrollera min telefon'), findsOneWidget);
-      expect(find.text('Gå online'), findsOneWidget);
+      expect(tr.offlineGoOnline, 'Gå online');
       DriverAppTexts.language = 'fr';
       await tester.pumpWidget(const SizedBox());
       await pumpCard(tester);
       expect(find.text('Vous êtes hors ligne'), findsOneWidget);
       expect(find.text('Vérifier mon téléphone'), findsOneWidget);
-      expect(find.text('Passer en ligne'), findsOneWidget);
+      // The radar's label (Home builds the orb with it).
+      expect(tr.offlineGoOnline, 'Passer en ligne');
       final notice = DriverSetOfflineNotice()
         ..show(reason: DriverOfflineReason.appRestart);
       expect(

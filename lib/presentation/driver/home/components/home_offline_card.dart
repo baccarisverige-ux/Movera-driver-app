@@ -4,6 +4,7 @@ import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/driver/driver_home_notices.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/phone/phone_checks.dart';
+import 'package:movera/presentation/driver/home/components/driver_sheet_nav.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 
 /// The card's reason line for [notice], in the driver's language.
@@ -21,23 +22,27 @@ String offlineReasonText(DriverSetOfflineNotice notice) {
 }
 
 /// Owner 2026-10-31 ("new set offline message", decisions/driver-g3.md,
-/// "Reason + phone check"): the driver was set offline. Inside the Home
-/// sheet, in place of its icons: "You're offline" with Movera's warning
-/// mark, the real [reason], "Check my phone" (location, internet, battery
-/// saver, notifications, each ✓ or ✗ with its fix), a big Go online and
-/// OK. Only black, simple (owner 2026-10-31: no green text or outlines).
+/// "Reason + phone check", then the mockup of 2026-10-31): the driver was
+/// set offline. The Home sheet rises with Home's radar in its notch,
+/// reading "Go online", and holds, in place of its icons: "You're
+/// offline" with Movera's warning mark, the real [reason], "Check my
+/// phone" (location, internet, battery saver, notifications, each ✓ or ✗
+/// with its fix) and OK. Only black, simple (owner 2026-10-31: no green text or outlines).
 class HomeOfflineCard extends StatefulWidget {
   const HomeOfflineCard({
     super.key,
     required this.reason,
-    required this.onGoOnline,
+    required this.radar,
     required this.onOk,
     this.checks,
     this.onLocationFixed,
   });
 
   final String reason;
-  final VoidCallback onGoOnline;
+
+  /// Home's own radar orb reading "Go online" (owner: "keep radar there
+  /// and write on radar go online"); it sits in the sheet's notch.
+  final Widget radar;
   final VoidCallback onOk;
 
   /// The checks; [PhoneChecks.current] when null.
@@ -45,6 +50,11 @@ class HomeOfflineCard extends StatefulWidget {
 
   /// The location fix was done: Home reads the location again.
   final VoidCallback? onLocationFixed;
+
+  /// The radar's top above the sheet's top edge, and the notch it sits in
+  /// (the closed Home sheet's: 104 px radar, 58 px notch).
+  static const double radarTop = 54;
+  static const double notchDepth = 58;
 
   /// Owner: the card goes by itself after 2 minutes.
   static const Duration showsFor = Duration(minutes: 2);
@@ -96,141 +106,148 @@ class _HomeOfflineCardState extends State<HomeOfflineCard> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
     final results = _results;
+    final radarWidget = widget.radar;
     return MoveraDialogTheme(
-      child: Builder(
-        builder: (context) => Material(
-          key: const ValueKey<String>('home-offline-card'),
-          color: Colors.white,
-          elevation: 8,
-          shadowColor: const Color(0x3311181C),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20, 10, 20, 12 + bottom),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDADEE1),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
+      child: Stack(
+        key: const ValueKey<String>('home-offline-card'),
+        clipBehavior: Clip.none,
+        children: [
+          Padding(
+            // The radar's centre on the sheet's top edge, as when closed.
+            padding: const EdgeInsets.only(top: HomeOfflineCard.radarTop),
+            child: PhysicalShape(
+              clipper: const RadarSheetClipper(
+                notchWidth: 126,
+                notchDepth: HomeOfflineCard.notchDepth,
+                cornerRadius: 24,
+              ),
+              color: Colors.white,
+              elevation: 8,
+              shadowColor: const Color(0x3311181C),
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  HomeOfflineCard.notchDepth + 14,
+                  20,
+                  8 + bottom,
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const MoveraWarningMark(),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Semantics(
-                        liveRegion: true,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              tr.offlineCardTitle,
-                              key: const ValueKey<String>('offline-card-title'),
-                              style: const TextStyle(
-                                color: HomeOfflineCard.ink,
-                                fontSize: 21,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3,
-                              ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const MoveraWarningMark(),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Semantics(
+                            liveRegion: true,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  tr.offlineCardTitle,
+                                  key: const ValueKey<String>(
+                                    'offline-card-title',
+                                  ),
+                                  style: const TextStyle(
+                                    color: HomeOfflineCard.ink,
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.reason,
+                                  key: const ValueKey<String>(
+                                    'offline-card-reason',
+                                  ),
+                                  style: const TextStyle(
+                                    color: HomeOfflineCard.muted,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.reason,
-                              key: const ValueKey<String>(
-                                'offline-card-reason',
-                              ),
-                              style: const TextStyle(
-                                color: HomeOfflineCard.muted,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                height: 1.35,
-                              ),
-                            ),
-                          ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    if (results == null)
+                      OutlinedButton.icon(
+                        key: const ValueKey<String>('offline-card-check'),
+                        onPressed: _checkAll,
+                        icon: const Icon(Icons.fact_check_outlined, size: 20),
+                        label: Text(tr.offlineCheckPhone),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: HomeOfflineCard.ink,
+                          side: const BorderSide(
+                            color: HomeOfflineCard.ink,
+                            width: 1.4,
+                          ),
+                          minimumSize: const Size.fromHeight(46),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      )
+                    else
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F7F6),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Column(
+                            children: [
+                              for (final kind in PhoneCheckKind.values)
+                                _CheckLine(
+                                  kind: kind,
+                                  result: results[kind],
+                                  onFix: _fix,
+                                ),
+                            ],
+                          ),
                         ),
                       ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      key: const ValueKey<String>('offline-card-ok'),
+                      onPressed: widget.onOk,
+                      style: TextButton.styleFrom(
+                        foregroundColor: HomeOfflineCard.ink,
+                        minimumSize: const Size.fromHeight(44),
+                      ),
+                      child: Text(tr.ok),
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                if (results == null)
-                  OutlinedButton.icon(
-                    key: const ValueKey<String>('offline-card-check'),
-                    onPressed: _checkAll,
-                    icon: const Icon(Icons.fact_check_outlined, size: 20),
-                    label: Text(tr.offlineCheckPhone),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: HomeOfflineCard.ink,
-                      side: const BorderSide(
-                        color: HomeOfflineCard.ink,
-                        width: 1.4,
-                      ),
-                      minimumSize: const Size.fromHeight(46),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      textStyle: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  )
-                else
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F7F6),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Column(
-                        children: [
-                          for (final kind in PhoneCheckKind.values)
-                            _CheckLine(
-                              kind: kind,
-                              result: results[kind],
-                              onFix: _fix,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 14),
-                FilledButton(
-                  key: const ValueKey<String>('offline-card-go-online'),
-                  onPressed: widget.onGoOnline,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(54),
-                    textStyle: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  child: Text(tr.offlineGoOnline),
-                ),
-                const SizedBox(height: 2),
-                TextButton(
-                  key: const ValueKey<String>('offline-card-ok'),
-                  onPressed: widget.onOk,
-                  style: TextButton.styleFrom(
-                    foregroundColor: HomeOfflineCard.ink,
-                    minimumSize: const Size.fromHeight(44),
-                  ),
-                  child: Text(tr.ok),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: KeyedSubtree(
+                key: const ValueKey<String>('offline-card-radar'),
+                child: radarWidget,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -362,8 +379,8 @@ class _CheckLine extends StatelessWidget {
   }
 }
 
-/// Movera's own warning mark: a black disc with a white rounded triangle
-/// and a black "!" (no other company's look; only black, owner).
+/// Movera's own warning mark: a black disc with a white "!" (no other
+/// company's look; only black, owner).
 class MoveraWarningMark extends StatelessWidget {
   const MoveraWarningMark({super.key, this.size = 48});
 
@@ -385,40 +402,19 @@ class _WarningPainter extends CustomPainter {
     final s = size.shortestSide;
     final center = Offset(size.width / 2, size.height / 2);
     canvas.drawCircle(center, s / 2, Paint()..color = HomeOfflineCard.ink);
-    // A rounded triangle: the stroke's round joins soften the corners.
-    final top = Offset(center.dx, s * 0.25);
-    final left = Offset(s * 0.25, s * 0.71);
-    final right = Offset(s * 0.75, s * 0.71);
-    final triangle = Path()
-      ..moveTo(top.dx, top.dy)
-      ..lineTo(right.dx, right.dy)
-      ..lineTo(left.dx, left.dy)
-      ..close();
-    final white = Paint()
+    final mark = Paint()
       ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(triangle, white);
-    canvas.drawPath(
-      triangle,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = s * 0.08
-        ..strokeJoin = StrokeJoin.round,
-    );
-    final bar = Paint()
-      ..color = HomeOfflineCard.ink
-      ..strokeWidth = s * 0.065
+      ..strokeWidth = s * 0.1
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(
-      Offset(center.dx, s * 0.42),
+      Offset(center.dx, s * 0.3),
       Offset(center.dx, s * 0.56),
-      bar,
+      mark,
     );
     canvas.drawCircle(
-      Offset(center.dx, s * 0.645),
-      s * 0.036,
-      Paint()..color = HomeOfflineCard.ink,
+      Offset(center.dx, s * 0.71),
+      s * 0.055,
+      Paint()..color = Colors.white,
     );
   }
 

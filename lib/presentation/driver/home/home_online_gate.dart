@@ -309,10 +309,18 @@ extension _HomeOnlineGate on _DriverHomeState {
   }
 
   /// The "You're offline" card is in the sheet.
-  bool get _offlineCardShown => _gate.offlineCard && !_isOnline;
+  /// Not while the radar must say HOLD, REST or paused: that is the
+  /// reason then.
+  bool get _offlineCardShown =>
+      _gate.offlineCard &&
+      !_isOnline &&
+      !_HomeMapSheet(this)._homeSheetInactive &&
+      !_driverSession.isSuspended &&
+      _HomeAccount(this)._onlineHold() == null;
 
-  /// The card in the Home sheet in place of its icons and the radar
-  /// (closed sheet only); [_HomeMapSheet._homeRadarLayer] puts it there.
+  /// The risen Home sheet with the card, Home's radar in its notch reading
+  /// "Go online" (closed sheet only); [_HomeMapSheet._homeRadarLayer] puts
+  /// it in the radar's place.
   Widget _offlineCardLayer() {
     final notice = DriverSetOfflineNotice.instance;
     return Positioned(
@@ -326,10 +334,19 @@ extension _HomeOnlineGate on _DriverHomeState {
         child: PointerInterceptor(
           child: HomeOfflineCard(
             reason: offlineReasonText(notice),
-            onGoOnline: () {
-              notice.clear();
-              _goOnline();
-            },
+            radar: AnimatedBuilder(
+              animation: _goOnlinePulseController,
+              builder: (context, _) => _buildRadarOrb(
+                title: tr.radar,
+                status: tr.offlineGoOnline,
+                subtitle: tr.tapToScan,
+                onTap: () {
+                  notice.clear();
+                  _goOnline();
+                },
+                pulse: _goOnlinePulseController.value,
+              ),
+            ),
             onOk: notice.clear,
             onLocationFixed: () {
               if (!mounted) return;
