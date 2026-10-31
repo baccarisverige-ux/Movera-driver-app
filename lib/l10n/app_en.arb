@@ -4180,5 +4180,7 @@
   "feeKindNoShowShort": "No-show fee",
   "@feeKindNoShowShort": {"description": "G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown)."},
   "feeKindCancelShort": "Cancellation fee",
-  "@feeKindCancelShort": {"description": "G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown)."}
+  "@feeKindCancelShort": {"description": "G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown)."},
+  "noShowFromTime": "Can be applied from {time} if the rider has not arrived.",
+  "@noShowFromTime": {"description": "G5 checker round 2: the no-show moment from the server (waiting.noShowAt), local clock time.", "placeholders": {"time": {"type": "Object"}}}
 }

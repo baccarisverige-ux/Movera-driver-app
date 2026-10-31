@@ -317,6 +317,27 @@ void main() {
   });
 
   group('prices from the server only (owner rule 16)', () {
+    test('checker round 2: byCategory prices count as known', () {
+      final waiting = DriverAppConfig.fromJson({
+        'currency': 'EUR',
+        'waiting': {
+          'freeWaitMin': 5,
+          'byCategory': {
+            'xl': {
+              'freeWaitMin': 3,
+              'perMin': {'amountMinor': 150, 'currency': 'EUR'},
+              'noShowFee': {'amountMinor': 615, 'currency': 'EUR'},
+            },
+          },
+        },
+      }).waiting;
+      expect(waiting.base.pricesKnown, isFalse);
+      final xl = waiting.termsFor(category: 'xl');
+      expect(xl.pricesKnown, isTrue);
+      expect(xl.perMinute.formatted, '1,50 €');
+      expect(waiting.termsFor(category: 'economy').pricesKnown, isFalse);
+    });
+
     test('no server terms: no prices at all (time only)', () {
       const base = WaitingRules();
       expect(base.base.pricesKnown, isFalse);

@@ -22,6 +22,7 @@ Future<void> showWaitingTimeSheet(
   WaitingTerms? terms,
   Money? chargedSoFar,
   bool cancelAfterArrivedIsNoShow = false,
+  DateTime? noShowAt,
 }) {
   return showMoveraModalSheet<void>(
     context: context,
@@ -34,6 +35,7 @@ Future<void> showWaitingTimeSheet(
         terms: terms,
         chargedSoFar: chargedSoFar,
         cancelAfterArrivedIsNoShow: cancelAfterArrivedIsNoShow,
+        noShowAt: noShowAt,
       );
     },
   );
@@ -48,7 +50,12 @@ class WaitingTimeSheet extends StatefulWidget {
     this.terms,
     this.chargedSoFar,
     this.cancelAfterArrivedIsNoShow = false,
+    this.noShowAt,
   });
+
+  /// Checker round 2: the server's no-show moment (`waiting.noShowAt`);
+  /// the sheet says its clock time instead of the zone's minutes.
+  final DateTime? noShowAt;
 
   final int Function() readSeconds;
   final VoidCallback? onNoShow;
@@ -236,9 +243,9 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   const SizedBox(height: 8),
                   _PhaseCard(
                     title: tr.noShow,
-                    detail: tr.canBeAppliedAfterNoShow(
-                      terms.noShowAfterMinutes,
-                    ),
+                    detail: widget.noShowAt == null
+                        ? tr.canBeAppliedAfterNoShow(terms.noShowAfterMinutes)
+                        : tr.noShowFromTime(_clockTime(widget.noShowAt!)),
                     value: terms.pricesKnown ? terms.noShowFee.formatted : '',
                     tone: const Color(0xFF9E2B33),
                     state: seconds < _noShowSeconds
@@ -685,6 +692,13 @@ class _WaitingClockState extends State<WaitingClock>
       ),
     );
   }
+}
+
+/// "10:05" in the phone's time (24 h in every app language).
+String _clockTime(DateTime at) {
+  final local = at.toLocal();
+  String two(int v) => v.toString().padLeft(2, '0');
+  return '${two(local.hour)}:${two(local.minute)}';
 }
 
 String _clockLabel(int seconds) {

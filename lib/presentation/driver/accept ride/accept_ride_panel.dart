@@ -593,6 +593,7 @@ extension _AcceptRidePanel on _AcceptRideState {
       // Q2: the zone's rule, from the trip's terms.
       cancelAfterArrivedIsNoShow:
           !_paidStopWait && (_live?.terms?.cancelAfterArrivedIsNoShow ?? false),
+      noShowAt: _paidStopWait ? null : _live?.waiting?.noShowAt,
       onNoShow: _paidStopWait
           ? null
           : () {

@@ -6763,4 +6763,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feeKindCancelShort => 'Cancellation fee';
+
+  @override
+  String noShowFromTime(Object time) {
+    return 'Can be applied from $time if the rider has not arrived.';
+  }
 }

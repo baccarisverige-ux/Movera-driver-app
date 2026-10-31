@@ -311,6 +311,10 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
             ? null
             : rule.noShowAfterMinutes,
         noShowFee: rule.noShowFee == terms.noShowFee ? null : rule.noShowFee,
+        // Checker round 2: the category's own amounts count as known.
+        pricesKnown:
+            (rule.perMinute != null || perMin != null) &&
+            (rule.noShowFee != null || noShowFee != null),
       );
       if (changed.freeMinutes != null ||
           changed.perMinute != null ||

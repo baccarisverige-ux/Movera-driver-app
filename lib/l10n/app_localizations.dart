@@ -11676,6 +11676,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancellation fee'**
   String get feeKindCancelShort;
+
+  /// G5 checker round 2: the no-show moment from the server (waiting.noShowAt), local clock time.
+  ///
+  /// In en, this message translates to:
+  /// **'Can be applied from {time} if the rider has not arrived.'**
+  String noShowFromTime(Object time);
 }
 
 class _AppLocalizationsDelegate

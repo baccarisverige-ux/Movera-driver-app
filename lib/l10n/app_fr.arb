@@ -1925,5 +1925,6 @@
   "navigationAppSaveFailed": "Appli de navigation non enregistrée. Réessayez.",
   "etaLastKnown": "Dernière estimation : {eta}",
   "feeKindNoShowShort": "Frais de client absent",
-  "feeKindCancelShort": "Frais d’annulation"
+  "feeKindCancelShort": "Frais d’annulation",
+  "noShowFromTime": "Applicable à partir de {time} si le passager n’est pas arrivé."
 }

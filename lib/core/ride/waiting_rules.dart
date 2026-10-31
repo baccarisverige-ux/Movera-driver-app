@@ -129,7 +129,7 @@ class WaitingTerms {
     noShowFee: rule.noShowFee ?? noShowFee,
     driverShareWaitPercent: driverShareWaitPercent,
     driverShareNoShowPercent: driverShareNoShowPercent,
-    pricesKnown: pricesKnown,
+    pricesKnown: rule.pricesKnown ?? pricesKnown,
     ruleLabels: [
       ...ruleLabels,
       if ((label ?? rule.label).isNotEmpty) label ?? rule.label,
@@ -160,7 +160,12 @@ class WaitingRule {
     this.perMinute,
     this.noShowAfterMinutes,
     this.noShowFee,
+    this.pricesKnown,
   });
+
+  /// True when this rule's served terms (with the zone's) carry both
+  /// amounts (G5 checker round 2: `byCategory` may hold the prices).
+  final bool? pricesKnown;
 
   /// Shown to the driver, e.g. "Airport pickup".
   final String label;
@@ -245,6 +250,7 @@ class WaitingRules {
                 perMinute: byCategory.perMinute,
                 noShowAfterMinutes: byCategory.freeMinutes,
                 noShowFee: byCategory.noShowFee,
+                pricesKnown: byCategory.pricesKnown,
               )
             : byCategory,
       );

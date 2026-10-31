@@ -1925,5 +1925,6 @@
   "navigationAppSaveFailed": "Navigationsapp inte sparad. Försök igen.",
   "etaLastKnown": "Senast kända: {eta}",
   "feeKindNoShowShort": "Avgift för utebliven kund",
-  "feeKindCancelShort": "Avbokningsavgift"
+  "feeKindCancelShort": "Avbokningsavgift",
+  "noShowFromTime": "Kan användas från {time} om resenären inte har kommit."
 }

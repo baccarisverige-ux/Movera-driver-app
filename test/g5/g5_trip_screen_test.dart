@@ -657,6 +657,47 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('checker round 2: a reservation 20 min early → the no-show '
+      'line says the server time', (tester) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    await _pumpTrip(
+      tester,
+      realtime: realtime,
+      stage: ActiveRideStage.waitingForRider,
+      waitSeconds: 60,
+    );
+    final noShowAt = DateTime.utc(2026, 10, 31, 10, 5);
+    realtime.emit(
+      tripId: _trip,
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.arrived,
+      projection: _projection(
+        status: 'arrived',
+        eta: null,
+        waiting: {
+          'arrivedAt': '2026-10-31T09:40:00Z',
+          'freeUntil': '2026-10-31T10:05:00Z',
+          'noShowAt': noShowAt.toIso8601String(),
+          'chargedSeconds': 0,
+        },
+      ),
+    );
+    await _frames(tester);
+    _island(tester).onWait();
+    await _frames(tester, 8);
+    final local = noShowAt.toLocal();
+    String two(int v) => v.toString().padLeft(2, '0');
+    final time = '${two(local.hour)}:${two(local.minute)}';
+    expect(
+      find.text('Can be applied from $time if the rider has not arrived.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('after 5 min'), findsNothing);
+    expect(find.byKey(const ValueKey('waiting-no-show-cancel')), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('follow: poll every 10 s only while the stream is down', (
     tester,
   ) async {

@@ -6774,4 +6774,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get feeKindCancelShort => 'Avbokningsavgift';
+
+  @override
+  String noShowFromTime(Object time) {
+    return 'Kan användas från $time om resenären inte har kommit.';
+  }
 }
