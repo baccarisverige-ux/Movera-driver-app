@@ -80,7 +80,7 @@ extension _AcceptRideLateEta on _AcceptRideState {
     return Duration(
       minutes: SmartGap.driveMinutes(
         GeoPointMaps.fromLatLng(_driverPosition),
-        GeoPointMaps.fromLatLng(widget.pickupPosition),
+        GeoPointMaps.fromLatLng(_pickupPosition),
       ),
     );
   }

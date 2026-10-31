@@ -85,10 +85,12 @@ void main() {
   testWidgets('a restored far-pickup trip keeps its waiting terms and bags', (
     tester,
   ) async {
+    // Contract v0.18.7 (G5): a far pickup has the zone's own terms; the
+    // app's extra rule is gone.
     final far = WaitingRules.current.termsFor(category: 'Movera', pickupKm: 7);
     expect(
       far.freeSeconds,
-      isNot(WaitingRules.current.termsFor(category: 'Movera').freeSeconds),
+      WaitingRules.current.termsFor(category: 'Movera').freeSeconds,
     );
     final snapshot = PersistedActiveRide.fromJson({
       'schemaVersion': 2,

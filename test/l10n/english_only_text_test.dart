@@ -53,6 +53,8 @@ const _allowed = <String, Set<String>>{
     'Premium',
     'Apple Pay',
     'Google Pay',
+    'Google Maps',
+    'Waze',
     'Apple',
     'Google',
     'English',

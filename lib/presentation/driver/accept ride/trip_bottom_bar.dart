@@ -76,7 +76,8 @@ class TripBottomBar extends StatelessWidget {
           ),
         ),
         Tooltip(
-          message: tr.ridePreferences,
+          // G5: the driver's trip settings (navigation app, car types).
+          message: tr.tripSettings,
           child: Material(
             color: Colors.transparent,
             child: InkWell(

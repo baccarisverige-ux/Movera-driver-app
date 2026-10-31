@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/money/money.dart';
@@ -16,7 +18,36 @@ class WaitingTerms {
     this.driverShareWaitPercent = 100,
     this.driverShareNoShowPercent = 100,
     this.ruleLabels = const <String>[],
+    this.pricesKnown = true,
+    this.serverFreeSeconds,
+    this.serverNoShowSeconds,
   });
+
+  /// G5 checker round 1: the server's own moments, as seconds after the
+  /// driver arrived (`waiting.freeUntil` / `waiting.noShowAt` −
+  /// `arrivedAt`). A reservation reached early waits until its booked time
+  /// plus the free minutes; the phone's count follows the server.
+  final int? serverFreeSeconds;
+  final int? serverNoShowSeconds;
+
+  /// These terms with the server's moments (null leaves the local count).
+  WaitingTerms anchored({int? freeSeconds, int? noShowSeconds}) => WaitingTerms(
+    freeMinutes: freeMinutes,
+    perMinute: perMinute,
+    noShowAfterMinutes: noShowAfterMinutes,
+    noShowFee: noShowFee,
+    driverShareWaitPercent: driverShareWaitPercent,
+    driverShareNoShowPercent: driverShareNoShowPercent,
+    ruleLabels: ruleLabels,
+    pricesKnown: pricesKnown,
+    serverFreeSeconds: freeSeconds,
+    serverNoShowSeconds: noShowSeconds,
+  );
+
+  /// False when no server terms reached the phone yet (no zone document,
+  /// no trip `terms`): the screens then show the waiting TIME only, never
+  /// an amount the app made up (G5 checker round 1, owner rule 16).
+  final bool pricesKnown;
 
   /// The first minutes are part of the fare.
   final int freeMinutes;
@@ -47,8 +78,9 @@ class WaitingTerms {
   static String farPickupLabel(String km) => '$_farPickup$km';
   static const String _farPickup = 'pickupOverKm:';
 
-  int get freeSeconds => freeMinutes * 60;
-  int get noShowSeconds => noShowAfterMinutes * 60;
+  int get freeSeconds => serverFreeSeconds ?? freeMinutes * 60;
+  int get noShowSeconds =>
+      math.max(freeSeconds, serverNoShowSeconds ?? noShowAfterMinutes * 60);
 
   /// The driver's part of the no-show fee, in the fee's own currency and
   /// minor units (öre, cents, millimes).
@@ -97,6 +129,7 @@ class WaitingTerms {
     noShowFee: rule.noShowFee ?? noShowFee,
     driverShareWaitPercent: driverShareWaitPercent,
     driverShareNoShowPercent: driverShareNoShowPercent,
+    pricesKnown: rule.pricesKnown ?? pricesKnown,
     ruleLabels: [
       ...ruleLabels,
       if ((label ?? rule.label).isNotEmpty) label ?? rule.label,
@@ -127,7 +160,12 @@ class WaitingRule {
     this.perMinute,
     this.noShowAfterMinutes,
     this.noShowFee,
+    this.pricesKnown,
   });
+
+  /// True when this rule's served terms (with the zone's) carry both
+  /// amounts (G5 checker round 2: `byCategory` may hold the prices).
+  final bool? pricesKnown;
 
   /// Shown to the driver, e.g. "Airport pickup".
   final String label;
@@ -140,44 +178,32 @@ class WaitingRule {
 class WaitingRules {
   const WaitingRules({
     // contract.json#configDefaults (owner Q41): 5 free minutes, and the
-    // no-show comes when they end.
+    // no-show comes when they end. A live build replaces every number with
+    // the zone's served pricing (`GET /driver/config` → `waiting`, contract
+    // v0.18.7 `pickupWaiting.servedConfig`) and each trip with its own
+    // `terms`; nothing here is a price the driver is ever shown on its own.
+    // No prices of the app's own (G5 checker round 1): without server
+    // terms the amounts are zero and [WaitingTerms.pricesKnown] is false.
     this.base = const WaitingTerms(
       freeMinutes: 5,
-      perMinute: Money(minorUnits: 1226),
+      perMinute: Money(minorUnits: 0),
       noShowAfterMinutes: 5,
-      noShowFee: Money(minorUnits: 6500),
+      noShowFee: Money(minorUnits: 0),
       driverShareWaitPercent: 100,
       driverShareNoShowPercent: 80,
+      pricesKnown: false,
     ),
-    this.farPickupKm = 5,
-    this.farPickup = const WaitingRule(
-      label: 'Pickup far away',
-      freeMinutes: 1,
-      noShowFee: Money(minorUnits: 8500),
-    ),
+    // Contract v0.18.7 (driver group 5): the app's own extra rules (far
+    // pickup, airport, event) are gone — the server never knew them
+    // (admin rules come with group 6). A scheduled ride still waits the
+    // reservation policy's included minutes (its server terms say the
+    // same); a category's own terms come from `waiting.byCategory`.
+    this.farPickupKm = double.infinity,
+    this.farPickup = const WaitingRule(label: ''),
     this.rideTypes = const {
-      // Its free wait is the reservation policy's included waiting
-      // (ScheduledRideRules.includedWaitingMinutes).
       WaitingRideType.scheduled: WaitingRule(label: 'Scheduled ride'),
-      WaitingRideType.airport: WaitingRule(
-        label: 'Airport pickup',
-        freeMinutes: 15,
-        noShowAfterMinutes: 20,
-      ),
-      WaitingRideType.event: WaitingRule(label: 'Event pickup', freeMinutes: 3),
     },
-    this.categories = const {
-      'premium': WaitingRule(
-        label: 'Premium',
-        freeMinutes: 5,
-        perMinute: Money(minorUnits: 1690),
-      ),
-      'xl': WaitingRule(
-        label: 'Movera XL',
-        freeMinutes: 3,
-        noShowAfterMinutes: 3,
-      ),
-    },
+    this.categories = const {},
   });
 
   /// The rules in use. Mirrors the admin defaults until a backend sets it.
@@ -224,6 +250,7 @@ class WaitingRules {
                 perMinute: byCategory.perMinute,
                 noShowAfterMinutes: byCategory.freeMinutes,
                 noShowFee: byCategory.noShowFee,
+                pricesKnown: byCategory.pricesKnown,
               )
             : byCategory,
       );
@@ -242,7 +269,10 @@ class WaitingRules {
             : byType,
       );
     }
-    if (pickupKm != null && pickupKm > farPickupKm) {
+    if (pickupKm != null &&
+        pickupKm > farPickupKm &&
+        farPickupKm.isFinite &&
+        farPickup.label.isNotEmpty) {
       final km = farPickupKm == farPickupKm.roundToDouble()
           ? farPickupKm.toStringAsFixed(0)
           : farPickupKm.toStringAsFixed(1);

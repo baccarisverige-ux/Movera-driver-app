@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/ride/trip_live_details.dart';
 
 /// The words the rider app sends with [DriverRealtimeKind.riderOnTheWay];
 /// the driver reads its own translated line instead.
@@ -22,7 +23,11 @@ enum DriverRealtimeKind {
   riderOnTheWay('rider_on_the_way'),
   paymentUpdated('payment_updated'),
   ratingUpdated('rating_updated'),
-  message('message');
+  message('message'),
+
+  /// v0.18.7 (status item 4): the rider moved the pickup; carries the
+  /// projection (`pickup` changed, version + 1) like `trip_projection`.
+  pickupMoved('pickup_moved');
 
   const DriverRealtimeKind(this.wireName);
   final String wireName;
@@ -141,7 +146,10 @@ class DriverRealtimeEvent {
     this.chat,
     this.cancelFee,
     this.acceptedAt,
+    this.projection,
+    TripEta? eta,
   }) : _eventId = eventId,
+       _eta = eta,
        _status = status,
        _latitude = latitude,
        _longitude = longitude;
@@ -185,6 +193,9 @@ class DriverRealtimeEvent {
     DateTime? time(String key) => json[key] is String
         ? DateTime.parse(json[key] as String).toUtc()
         : null;
+    final projectionMap = projection is Map
+        ? Map<String, dynamic>.from(projection)
+        : null;
     return DriverRealtimeEvent(
       eventId: json['eventId'] as String?,
       tripId: json['tripId'] as String? ?? '',
@@ -207,6 +218,9 @@ class DriverRealtimeEvent {
           ? Money.fromJson(Map<String, dynamic>.from(cancelFee))
           : null,
       acceptedAt: accepted is String ? DateTime.parse(accepted).toUtc() : null,
+      projection: projectionMap,
+      // v0.18.7: the ETA tick rides on a location event.
+      eta: TripEta.tryParse(json['eta']),
     );
   }
 
@@ -242,6 +256,19 @@ class DriverRealtimeEvent {
   /// the live free-cancel clock counts from it (owner Q12).
   final DateTime? acceptedAt;
 
+  /// The whole `projection` the envelope carried (v0.18.7: `rider`,
+  /// `terms`, `eta`, `waiting`, `cancellation`, `pickup`); null without one.
+  final Map<String, dynamic>? projection;
+  final TripEta? _eta;
+
+  /// v0.18.7 (Q4): the server's ETA on a `location` event (every 30 s) or
+  /// on the projection of any other event; null without one.
+  TripEta? get eta => _eta ?? live?.eta;
+
+  /// What v0.18.7 adds to the projection; null without a projection.
+  TripLiveDetails? get live =>
+      projection == null ? null : TripLiveDetails.fromProjection(projection!);
+
   /// Server-assigned dedupe key. Envelopes without one (legacy in-process
   /// events) fall back to `tripId#sequence`.
   String get eventId => _eventId ?? '$tripId#$sequence';
@@ -262,7 +289,13 @@ class DriverRealtimeEvent {
     'kind': kind.wireName,
     'occurredAt': occurredAt.toIso8601String(),
     'serverTime': (serverTime ?? at).toUtc().toIso8601String(),
-    if (status != null || acceptedAt != null)
+    if (projection != null)
+      'projection': {
+        ...projection!,
+        if (status != null) 'status': status!.wireName,
+        if (acceptedAt != null) 'acceptedAt': acceptedAt!.toIso8601String(),
+      }
+    else if (status != null || acceptedAt != null)
       'projection': {
         if (status != null) 'status': status!.wireName,
         if (acceptedAt != null) 'acceptedAt': acceptedAt!.toIso8601String(),
@@ -273,6 +306,14 @@ class DriverRealtimeEvent {
       'location': {'lat': latitude, 'lng': longitude},
     if (etaSeconds != null) 'etaSeconds': etaSeconds,
     if (cancelFee != null) 'cancelFee': cancelFee!.toJson(),
+    if (_eta != null)
+      'eta': {
+        'etaSeconds': _eta.etaSeconds,
+        'distanceMeters': _eta.distanceMeters,
+        'target': _eta.target,
+        if (_eta.at != null) 'at': _eta.at!.toIso8601String(),
+        'source': _eta.source,
+      },
   };
 }
 
@@ -387,6 +428,7 @@ class MemoryDriverRealtime implements DriverRealtime {
     _sequencesByTrip[event.tripId] = event.sequence;
     // A location event never replaces the cached projection.
     if (event.kind == DriverRealtimeKind.tripProjection ||
+        event.kind == DriverRealtimeKind.pickupMoved ||
         event.kind == DriverRealtimeKind.riderCancelled) {
       _projectionsByTrip[event.tripId] = event;
     }
@@ -405,11 +447,13 @@ class MemoryDriverRealtime implements DriverRealtime {
     String? message,
     DateTime? at,
     Money? cancelFee,
+    Map<String, dynamic>? projection,
+    TripEta? eta,
   }) {
     if (_disposed) throw StateError('Realtime disposed');
     final nextSequence = (_sequencesByTrip[tripId] ?? 0) + 1;
     final previousVersion = _projectionsByTrip[tripId]?.version ?? 0;
-    final changesProjection = status != null;
+    final changesProjection = status != null || projection != null;
     final now = DateTime.now().toUtc();
     final event = DriverRealtimeEvent(
       eventId: 'mem-$tripId-$nextSequence',
@@ -426,6 +470,8 @@ class MemoryDriverRealtime implements DriverRealtime {
       longitude: longitude,
       message: message,
       cancelFee: cancelFee,
+      projection: projection,
+      eta: eta,
     );
     publish(event);
     return event;

@@ -1,5 +1,6 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -19,6 +20,9 @@ Future<void> showWaitingTimeSheet(
   VoidCallback? onNoShow,
   bool fullyPaid = false,
   WaitingTerms? terms,
+  Money? chargedSoFar,
+  bool cancelAfterArrivedIsNoShow = false,
+  DateTime? noShowAt,
 }) {
   return showMoveraModalSheet<void>(
     context: context,
@@ -29,6 +33,9 @@ Future<void> showWaitingTimeSheet(
         onNoShow: onNoShow,
         fullyPaid: fullyPaid,
         terms: terms,
+        chargedSoFar: chargedSoFar,
+        cancelAfterArrivedIsNoShow: cancelAfterArrivedIsNoShow,
+        noShowAt: noShowAt,
       );
     },
   );
@@ -41,14 +48,30 @@ class WaitingTimeSheet extends StatefulWidget {
     this.onNoShow,
     this.fullyPaid = false,
     this.terms,
+    this.chargedSoFar,
+    this.cancelAfterArrivedIsNoShow = false,
+    this.noShowAt,
   });
+
+  /// Checker round 2: the server's no-show moment (`waiting.noShowAt`);
+  /// the sheet says its clock time instead of the zone's minutes.
+  final DateTime? noShowAt;
 
   final int Function() readSeconds;
   final VoidCallback? onNoShow;
   final bool fullyPaid;
 
-  /// The waiting rules for this pickup; the trip's own by default.
+  /// The waiting rules for this pickup; the trip's own by default
+  /// (contract v0.18.7 `TripProjection.terms`, the zone's pricing).
   final WaitingTerms? terms;
+
+  /// Q5 (contract v0.18.7 `waiting.chargedSoFar`): the rider's waiting
+  /// cost so far as the server counts it, when the server said.
+  final Money? chargedSoFar;
+
+  /// Q2 (contract v0.18.7 `terms.cancelAfterArrivedIsNoShow`): the zone
+  /// charges a cancel after arrival as a no-show.
+  final bool cancelAfterArrivedIsNoShow;
 
   @override
   State<WaitingTimeSheet> createState() => _WaitingTimeSheetState();
@@ -154,11 +177,25 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                       ),
                       // Q42/Q43: once the free wait is over, the waiting
                       // fee counts up live; it is all the driver's.
-                      if (paidSeconds > 0) ...[
+                      if (paidSeconds > 0 && terms.pricesKnown) ...[
                         const SizedBox(height: 12),
                         WaitingFeeCounter(
                           fee: terms.driverWaitingFee(paidSeconds),
                           perMinute: terms.perMinute,
+                        ),
+                      ],
+                      if (widget.chargedSoFar case final charged?
+                          when !charged.isZero) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          tr.waitingChargedSoFar(charged.formatted),
+                          key: const ValueKey<String>('waiting-charged-so-far'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: _muted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ],
@@ -194,7 +231,9 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   detail: widget.fullyPaid
                       ? tr.addedFromFirstSecondAtThis
                       : tr.addedToFareWhenThisTrip,
-                  value: tr.perMinuteFormattedMin(terms.perMinute.formatted),
+                  value: terms.pricesKnown
+                      ? tr.perMinuteFormattedMin(terms.perMinute.formatted)
+                      : '',
                   tone: const Color(0xFF146B45),
                   state: widget.fullyPaid || seconds >= _graceSeconds
                       ? _PhaseState.now
@@ -204,14 +243,28 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   const SizedBox(height: 8),
                   _PhaseCard(
                     title: tr.noShow,
-                    detail: tr.canBeAppliedAfterNoShow(
-                      terms.noShowAfterMinutes,
-                    ),
-                    value: terms.noShowFee.formatted,
+                    detail: widget.noShowAt == null
+                        ? tr.canBeAppliedAfterNoShow(terms.noShowAfterMinutes)
+                        : tr.noShowFromTime(_clockTime(widget.noShowAt!)),
+                    value: terms.pricesKnown ? terms.noShowFee.formatted : '',
                     tone: const Color(0xFF9E2B33),
                     state: seconds < _noShowSeconds
                         ? _PhaseState.later
                         : _PhaseState.now,
+                  ),
+                ],
+                if (widget.cancelAfterArrivedIsNoShow) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    tr.cancelAfterArrivedNote,
+                    key: const ValueKey<String>('waiting-cancel-after-arrived'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 11.5,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
                 if (!widget.fullyPaid &&
@@ -245,25 +298,26 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                   ),
                 ],
                 const SizedBox(height: 14),
-                Text(
-                  widget.fullyPaid
-                      ? tr.youGetDriverShareWaitPercent(
-                          terms.driverShareWaitPercent,
-                        )
-                      : tr.youGetDriverShareWaitPercent2(
-                          terms.driverShareWaitPercent,
-                          terms.driverShareNoShowPercent,
-                          terms.driverNoShowFee.formatted,
-                        ),
-                  key: const ValueKey<String>('waiting-driver-share'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: _ink,
-                    fontSize: 12.5,
-                    height: 1.35,
-                    fontWeight: FontWeight.w600,
+                if (terms.pricesKnown)
+                  Text(
+                    widget.fullyPaid
+                        ? tr.youGetDriverShareWaitPercent(
+                            terms.driverShareWaitPercent,
+                          )
+                        : tr.youGetDriverShareWaitPercent2(
+                            terms.driverShareWaitPercent,
+                            terms.driverShareNoShowPercent,
+                            terms.driverNoShowFee.formatted,
+                          ),
+                    key: const ValueKey<String>('waiting-driver-share'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: _ink,
+                      fontSize: 12.5,
+                      height: 1.35,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 8),
                 Text(
                   tr.amountsCanChangeWithTaxesAnd,
@@ -638,6 +692,13 @@ class _WaitingClockState extends State<WaitingClock>
       ),
     );
   }
+}
+
+/// "10:05" in the phone's time (24 h in every app language).
+String _clockTime(DateTime at) {
+  final local = at.toLocal();
+  String two(int v) => v.toString().padLeft(2, '0');
+  return '${two(local.hour)}:${two(local.minute)}';
 }
 
 String _clockLabel(int seconds) {

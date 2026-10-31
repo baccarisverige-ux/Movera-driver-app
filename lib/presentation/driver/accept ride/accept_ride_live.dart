@@ -65,8 +65,8 @@ extension _AcceptRideLive on _AcceptRideState {
       return;
     }
     final found = await places.reverseGeocode(
-      widget.pickupPosition.latitude,
-      widget.pickupPosition.longitude,
+      _pickupPosition.latitude,
+      _pickupPosition.longitude,
     );
     if (!mounted || found == null) {
       return;

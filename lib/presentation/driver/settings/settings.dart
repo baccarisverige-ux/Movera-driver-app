@@ -9,6 +9,7 @@ import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dar
 import 'package:movera/presentation/driver/settings/accessibility/accessibility.dart';
 import 'package:movera/presentation/driver/settings/emergency_contacts.dart';
 import 'package:movera/presentation/driver/settings/sound%20&%20voice/sound_voice.dart';
+import 'package:movera/presentation/driver/settings/trip_settings.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
 class Settings extends StatefulWidget {
@@ -68,6 +69,16 @@ class _SettingsState extends State<Settings> {
                 RightToLeftTransition(const SoundAndVoice()),
               ),
             ),
+            // G5 status item 3: the navigation app (Google Maps / Waze).
+            _row(
+              key: const ValueKey<String>('settings-trip-settings'),
+              icon: Icons.navigation_outlined,
+              title: tr.tripSettings,
+              onTap: () => pushSingle(
+                context,
+                RightToLeftTransition(const TripSettings()),
+              ),
+            ),
             _row(
               icon: Icons.dark_mode_outlined,
               title: tr.darkMode,
@@ -124,6 +135,7 @@ class _SettingsState extends State<Settings> {
   }
 
   Widget _row({
+    Key? key,
     required IconData icon,
     required String title,
     String? detail,
@@ -131,6 +143,7 @@ class _SettingsState extends State<Settings> {
     VoidCallback? onTap,
   }) {
     return InkWell(
+      key: key,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),

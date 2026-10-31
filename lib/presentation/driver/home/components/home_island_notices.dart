@@ -45,9 +45,13 @@ class HomeIslandNotices {
 
   /// R15-7: "Rider cancelled · +45 kr" or "· no fee". Without a [fee]
   /// decision (null) only "Rider cancelled".
+  ///
+  /// [feeKind] (contract v0.18.7 `cancellation.feeKind`): said without an
+  /// amount when the server decided a fee but sent no driver share.
   static IslandMessage riderCancelledWithFee(
     Money? fee, {
     bool onTrip = false,
+    String? feeKind,
   }) => IslandMessage(
     title:
         driverText(
@@ -55,7 +59,9 @@ class HomeIslandNotices {
               ? DriverTexts.islandRiderEndedTrip
               : DriverTexts.islandRiderCancelled,
         ) +
-        feeSuffix(fee),
+        (fee == null && feeKind != null
+            ? ' · ${feeKind == 'no_show' ? tr.feeKindNoShowShort : tr.feeKindCancelShort}'
+            : feeSuffix(fee)),
     tone: IslandTone.alert,
     priority: IslandPriority.high,
   );

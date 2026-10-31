@@ -24,9 +24,7 @@ void main() {
       expect(panel, contains('Widget _buildRiderRow'));
       expect(
         panel,
-        contains(
-          'Chat(riderDisplayName: widget.riderName, tripId: widget.tripId)',
-        ),
+        contains('Chat(riderDisplayName: _riderName, tripId: widget.tripId)'),
       );
       expect(panel, isNot(contains('setState(')));
       // Phase 2: was < 1800 before `dart format` (tall style); same code

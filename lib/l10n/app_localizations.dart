@@ -11556,6 +11556,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your account is paused – contact Movera'**
   String get offlineReasonAccountStatus;
+
+  /// G5 status item 3: the trip sheet button and Settings row that open the driver's trip settings (navigation app).
+  ///
+  /// In en, this message translates to:
+  /// **'Trip settings'**
+  String get tripSettings;
+
+  /// G5 status item 3 (driver-g5.md): the Google Maps / Waze choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation app'**
+  String get navigationApp;
+
+  /// G5 status item 3: under the navigation app choice.
+  ///
+  /// In en, this message translates to:
+  /// **'Opens from the map button during a trip'**
+  String get navigationAppHint;
+
+  /// G5 status item 3: the trip map button when Waze is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate with Waze'**
+  String get navigateWithWaze;
+
+  /// G5 status item 3: Waze could not be opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Waze is unavailable.'**
+  String get wazeIsUnavailable;
+
+  /// Contract v0.18.7 pickupWaiting.feeAmountsShown.texts.noShowConfirm (G5 Q6): waiting.noShowDriverShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as no-show? You get {amount}'**
+  String noShowConfirmYouGet(Object amount);
+
+  /// Contract v0.18.7 pickupWaiting.feeAmountsShown.texts.noShowConfirmNoFee (G5 Q6).
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as no-show? No fee'**
+  String get noShowConfirmNoFee;
+
+  /// Contract v0.18.7 pickupWaiting.feeAmountsShown.texts.riderNoShowFee (G5 Q2/Q6): cancellation.feeKind no_show.
+  ///
+  /// In en, this message translates to:
+  /// **'No-show fee {amount}'**
+  String feeKindNoShow(Object amount);
+
+  /// Contract v0.18.7 pickupWaiting.feeAmountsShown.texts.riderFee (G5 Q2/Q6): cancellation.feeKind cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation fee {amount}'**
+  String feeKindCancel(Object amount);
+
+  /// Contract v0.18.7 pickupWaiting.eta.texts.arrivesIn (G5 Q4): the server's ETA to the pickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrives in {min} min · {distance}'**
+  String etaArrivesIn(Object min, Object distance);
+
+  /// Contract v0.18.7 pickupWaiting.eta.texts.toDropoff (G5 Q4): the server's ETA to the drop-off.
+  ///
+  /// In en, this message translates to:
+  /// **'There in {min} min · {distance}'**
+  String etaToDropoff(Object min, Object distance);
+
+  /// Contract v0.18.7 pickupWaiting.eta.distanceDisplay: kilometres with one decimal (the decimal mark is navDecimalMark).
+  ///
+  /// In en, this message translates to:
+  /// **'{value} km'**
+  String distanceKm(Object value);
+
+  /// Contract v0.18.7 pickupWaiting.eta.distanceDisplay: metres in 100 m / 10 m steps.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} m'**
+  String distanceM(Object value);
+
+  /// Contract v0.18.7 pickupWaiting.pickupMove.texts.island (G5 status item 4): realtime kind pickup_moved.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup moved'**
+  String get pickupMovedIsland;
+
+  /// Contract v0.18.7 pickupWaiting.runningTotal (G5 Q5): waiting.chargedSoFar while arrived.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting charged so far: {amount}'**
+  String waitingChargedSoFar(Object amount);
+
+  /// Contract v0.18.7 pickupWaiting.terms.texts.cancelAfterArrived (G5 Q2): shown when terms.cancelAfterArrivedIsNoShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling after the driver has arrived and the free waiting is over counts as a no-show'**
+  String get cancelAfterArrivedNote;
+
+  /// G5 status item 3: the trip settings could not be saved on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation app not saved. Try again.'**
+  String get navigationAppSaveFailed;
+
+  /// G5 checker M2: TripEta.source stale (no driver position for 2 min); the last ETA the server kept.
+  ///
+  /// In en, this message translates to:
+  /// **'Last known: {eta}'**
+  String etaLastKnown(Object eta);
+
+  /// G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown).
+  ///
+  /// In en, this message translates to:
+  /// **'No-show fee'**
+  String get feeKindNoShowShort;
+
+  /// G5 checker M3: rider-cancel island when the server sent the fee kind but not the driver share (no amount shown).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancellation fee'**
+  String get feeKindCancelShort;
+
+  /// G5 checker round 2: the no-show moment from the server (waiting.noShowAt), local clock time.
+  ///
+  /// In en, this message translates to:
+  /// **'Can be applied from {time} if the rider has not arrived.'**
+  String noShowFromTime(Object time);
 }
 
 class _AppLocalizationsDelegate

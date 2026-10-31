@@ -13,7 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   for (final (fee, title, status) in <(Money?, String, TripStatus?)>[
     (null, 'Rider cancelled', TripStatus.cancelledByRider),
-    (Money.sek(45), 'Rider cancelled · +45 kr', TripStatus.cancelledByRider),
+    // G5 checker round 1: `cancelFee` is the rider's fee, never the
+    // driver's money: without `cancellation.driverShare` no amount.
+    (Money.sek(45), 'Rider cancelled', TripStatus.cancelledByRider),
     (Money.ore(0), 'Rider cancelled · no fee', TripStatus.cancelledByRider),
     // driver-j2-4: a rider_cancelled event without a projection status.
     (null, 'Rider cancelled', null),

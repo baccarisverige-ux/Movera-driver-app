@@ -1,5 +1,6 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -54,6 +55,8 @@ class AdaptiveTripIsland extends StatefulWidget {
     this.pointKind,
     this.pointLabel,
     this.bags = 0,
+    this.notice,
+    this.noticeKey = 0,
     this.nextTripFare,
     this.sheetPosition,
     this.sheetRaisedAt = 1,
@@ -65,6 +68,11 @@ class AdaptiveTripIsland extends StatefulWidget {
 
   /// Bags from the booking; said once while heading to the pickup.
   final int bags;
+
+  /// A line the strip says once each time [noticeKey] changes (a moved
+  /// pickup, contract v0.18.7).
+  final String? notice;
+  final int noticeKey;
 
   /// Fare of a secured next trip; said once right after it is secured.
   final String? nextTripFare;
@@ -272,6 +280,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
         RegExp(r'^(\d+)\s*min').firstMatch(widget.eta)?.group(1) ?? '',
       ),
       bags: widget.bags,
+      notice: widget.notice,
+      noticeKey: widget.noticeKey,
       nextTripFare: widget.nextTripFare,
       pickupSide: b?.symbol == NavigationBannerSymbol.arriveLeft
           ? 'left'

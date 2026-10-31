@@ -267,55 +267,32 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
   if (json == null) {
     return WaitingRules(
       base: _rebaseTerms(base, currency),
-      farPickupKm: seed.farPickupKm,
-      farPickup: _rebase(seed.farPickup, currency),
       rideTypes: {
         for (final entry in seed.rideTypes.entries)
           entry.key: _rebase(entry.value, currency),
       },
-      categories: {
-        for (final entry in seed.categories.entries)
-          entry.key: _rebase(entry.value, currency),
-      },
     );
   }
+  // Contract v0.18.7 `pickupWaiting.servedConfig`: the top-level terms and
+  // `byCategory` are the zone's live pricing, in the zone's currency.
+  final perMin = _money(json['perMin'], currency);
+  final noShowFee = _money(json['noShowFee'], currency);
   final terms = WaitingTerms(
     freeMinutes: _int(json['freeWaitMin']) ?? base.freeMinutes,
-    perMinute:
-        _money(json['perMin'], currency) ??
-        _sameCurrency(base.perMinute, currency),
+    perMinute: perMin ?? _sameCurrency(base.perMinute, currency),
     noShowAfterMinutes: _int(json['noShowAfterMin']) ?? base.noShowAfterMinutes,
-    noShowFee:
-        _money(json['noShowFee'], currency) ??
-        _sameCurrency(base.noShowFee, currency),
+    noShowFee: noShowFee ?? _sameCurrency(base.noShowFee, currency),
     driverShareWaitPercent:
         _percent(json['driverShareWaitPct']) ?? base.driverShareWaitPercent,
     driverShareNoShowPercent:
         _percent(json['driverSharePct']) ?? base.driverShareNoShowPercent,
+    // Served pricing (v0.18.7): amounts only when the server sent them.
+    pricesKnown: perMin != null && noShowFee != null,
   );
-
-  final far = _map(json['farPickup']);
-  final farOn = far?['on'] is bool ? far!['on'] as bool : true;
-  final farKm = far?['km'];
-
-  final types = _map(json['rideTypes']);
-  final rideTypes = <WaitingRideType, WaitingRule>{};
-  for (final entry in seed.rideTypes.entries) {
-    final raw = _map(types?[entry.key.name]);
-    if (raw == null) {
-      rideTypes[entry.key] = _rebase(entry.value, currency);
-    } else if (raw['on'] != false) {
-      rideTypes[entry.key] = _rule(raw, entry.value.label, currency);
-    }
-  }
 
   final byCategory = _map(json['byCategory']);
   final categories = <String, WaitingRule>{};
-  if (byCategory == null) {
-    for (final entry in seed.categories.entries) {
-      categories[entry.key] = _rebase(entry.value, currency);
-    }
-  } else {
+  if (byCategory != null) {
     for (final entry in byCategory.entries) {
       final id = entry.key is String
           ? CategoryCatalog.canonicalId(entry.key as String)
@@ -334,6 +311,10 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
             ? null
             : rule.noShowAfterMinutes,
         noShowFee: rule.noShowFee == terms.noShowFee ? null : rule.noShowFee,
+        // Checker round 2: the category's own amounts count as known.
+        pricesKnown:
+            (rule.perMinute != null || perMin != null) &&
+            (rule.noShowFee != null || noShowFee != null),
       );
       if (changed.freeMinutes != null ||
           changed.perMinute != null ||
@@ -346,15 +327,10 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
 
   return WaitingRules(
     base: terms,
-    farPickupKm: !farOn
-        ? double.infinity
-        : farKm is num && farKm.isFinite && farKm > 0
-        ? farKm.toDouble()
-        : seed.farPickupKm,
-    farPickup: far == null
-        ? _rebase(seed.farPickup, currency)
-        : _rule(far, seed.farPickup.label, currency),
-    rideTypes: rideTypes,
+    rideTypes: {
+      for (final entry in seed.rideTypes.entries)
+        entry.key: _rebase(entry.value, currency),
+    },
     categories: categories,
   );
 }
@@ -386,6 +362,7 @@ WaitingTerms _rebaseTerms(WaitingTerms terms, String currency) => WaitingTerms(
   noShowFee: _sameCurrency(terms.noShowFee, currency),
   driverShareWaitPercent: terms.driverShareWaitPercent,
   driverShareNoShowPercent: terms.driverShareNoShowPercent,
+  pricesKnown: false,
 );
 
 Money _sameCurrency(Money seed, String currency) =>

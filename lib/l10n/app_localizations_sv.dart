@@ -45,7 +45,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get notNow => 'Inte nu';
 
   @override
-  String get ridePreferences => 'Reseinställningar';
+  String get ridePreferences => 'Biltyper';
 
   @override
   String get wallet => 'Plånbok';
@@ -6694,4 +6694,89 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get offlineReasonAccountStatus =>
       'Ditt konto är pausat – kontakta Movera';
+
+  @override
+  String get tripSettings => 'Reseinställningar';
+
+  @override
+  String get navigationApp => 'Navigationsapp';
+
+  @override
+  String get navigationAppHint => 'Öppnas från kartknappen under en resa';
+
+  @override
+  String get navigateWithWaze => 'Navigera med Waze';
+
+  @override
+  String get wazeIsUnavailable => 'Waze är inte tillgängligt.';
+
+  @override
+  String noShowConfirmYouGet(Object amount) {
+    return 'Markera som utebliven kund? Du får $amount';
+  }
+
+  @override
+  String get noShowConfirmNoFee => 'Markera som utebliven kund? Ingen avgift';
+
+  @override
+  String feeKindNoShow(Object amount) {
+    return 'Avgift för utebliven kund $amount';
+  }
+
+  @override
+  String feeKindCancel(Object amount) {
+    return 'Avbokningsavgift $amount';
+  }
+
+  @override
+  String etaArrivesIn(Object min, Object distance) {
+    return 'Anländer om $min min · $distance';
+  }
+
+  @override
+  String etaToDropoff(Object min, Object distance) {
+    return 'Framme om $min min · $distance';
+  }
+
+  @override
+  String distanceKm(Object value) {
+    return '$value km';
+  }
+
+  @override
+  String distanceM(Object value) {
+    return '$value m';
+  }
+
+  @override
+  String get pickupMovedIsland => 'Upphämtningen flyttades';
+
+  @override
+  String waitingChargedSoFar(Object amount) {
+    return 'Väntetid debiterad hittills: $amount';
+  }
+
+  @override
+  String get cancelAfterArrivedNote =>
+      'Avbokning efter att föraren anlänt och den fria väntetiden gått ut räknas som utebliven kund';
+
+  @override
+  String get navigationAppSaveFailed =>
+      'Navigationsapp inte sparad. Försök igen.';
+
+  @override
+  String etaLastKnown(Object eta) {
+    return 'Senast kända: $eta';
+  }
+
+  @override
+  String get feeKindNoShowShort => 'Avgift för utebliven kund';
+
+  @override
+  String get feeKindCancelShort => 'Avbokningsavgift';
+
+  @override
+  String noShowFromTime(Object time) {
+    return 'Kan användas från $time om resenären inte har kommit.';
+  }
 }

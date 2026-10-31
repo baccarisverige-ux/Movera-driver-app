@@ -48,8 +48,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       rideCheckFired: _rideCheckDetector.firedNames,
       nextOffersStopped: _onTripRadarState == _OnTripRadarState.stopped,
       nextTripId: securedOffer?.id,
-      riderName: widget.riderName,
-      riderRating: widget.riderRating,
+      riderName: _riderName,
+      riderRating: _riderRating,
       riderTrips: widget.riderTrips,
       fare: widget.fare,
       paidByCash: widget.paidByCash,
@@ -63,8 +63,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       dropoffAddress: widget.dropoffAddress,
       stopAddresses: widget.stopAddresses,
       stopPoints: widget.stopPositions.map(GeoPointMaps.fromLatLng).toList(),
-      pickupLat: widget.pickupPosition.latitude,
-      pickupLng: widget.pickupPosition.longitude,
+      pickupLat: _pickupPosition.latitude,
+      pickupLng: _pickupPosition.longitude,
       dropoffLat: widget.dropoffPosition.latitude,
       dropoffLng: widget.dropoffPosition.longitude,
       waitSeconds: _waitSeconds,
@@ -341,7 +341,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       fare: widget.fare,
       driverBonus: WaybillRecord.bonusLabel(widget.driverBonus),
       service: widget.category,
-      riderName: widget.riderName,
+      riderName: _riderName,
       pickup: _pickupAddress,
       dropoff: widget.dropoffAddress,
       source: widget.matchedVia,
@@ -504,6 +504,13 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (event.acceptedAt case final at?) {
       _acceptedAt = at;
     }
+    // Contract v0.18.7: the projection's rider, terms, ETA, waiting and
+    // pickup; the ETA tick rides on a location event (Q4, every 30 s).
+    if (event.live case final live?) {
+      _applyLive(live.withEta(event.eta));
+    } else if (event.eta case final eta?) {
+      _applyLive(TripLiveDetails(eta: eta));
+    }
     if (event.status != null ||
         event.kind == DriverRealtimeKind.riderCancelled) {
       _pendingProjection = event;
@@ -530,7 +537,7 @@ extension _AcceptRideTrip on _AcceptRideState {
               event.message?.trim().isNotEmpty == true &&
                       event.message!.trim() != riderOnTheWayMessage
                   ? event.message!
-                  : tr.riderNameIsOnWay(widget.riderName),
+                  : tr.riderNameIsOnWay(_riderName),
             ),
             backgroundColor: _AcceptRideState._ink,
             behavior: SnackBarBehavior.floating,
@@ -543,6 +550,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       // A rider cancel always goes through the projection drain above.
       case DriverRealtimeKind.riderCancelled:
       case DriverRealtimeKind.tripProjection:
+      case DriverRealtimeKind.pickupMoved:
       case DriverRealtimeKind.location:
       case DriverRealtimeKind.driverArrived:
       // Contract v0.3 kinds the driver screen does not show yet. A driver
@@ -573,6 +581,71 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
   }
 
+  /// Folds in what a projection (or the ETA tick) says beyond the
+  /// status: a moved pickup re-routes the map and the island says so.
+  ///
+  /// [initial]: what the server already said before the screen was built
+  /// (the accept answer, a restore read): taken as the starting point,
+  /// nothing is redrawn or re-routed yet.
+  void _applyLive(
+    TripLiveDetails next, {
+    bool rebuild = true,
+    bool initial = false,
+  }) {
+    _live = next.merge(_live);
+    // The waiting clocks on this trip follow its terms.
+    WaitingTerms.active = _waitTerms;
+    final moved = next.pickup;
+    final movedTo = moved?.point.toLatLng();
+    final pickupChanged =
+        movedTo != null &&
+        (movedTo.latitude != _pickupPosition.latitude ||
+            movedTo.longitude != _pickupPosition.longitude);
+    if (pickupChanged) {
+      _pickupPosition = movedTo;
+      if (moved?.address case final address?) {
+        _resolvedPickup = address;
+      }
+    }
+    if (initial) return;
+    if (mounted && (rebuild || pickupChanged)) {
+      _rebuild(() {
+        if (pickupChanged) _pickupMoves++;
+      });
+    }
+    if (pickupChanged) _afterPickupMoved();
+  }
+
+  /// Status item 4 (contract v0.18.7 `pickupMove`): the rider moved the
+  /// pickup (at most `terms.maxPickupMoveMeters`): the route, the pin, the
+  /// waybill and the saved trip follow it.
+  void _afterPickupMoved() {
+    if (!mounted) return;
+    final current = _waybills.current;
+    if (current != null && current.tripId == widget.tripId) {
+      _waybills.beginCurrent(current.copyWith(pickup: _pickupAddress));
+    }
+    _rideLifecycle.persistNow();
+    if (_stage == ActiveRideStage.headingToPickup) {
+      unawaited(_refreshRoadRoute(force: true));
+      unawaited(_fitRoute());
+    }
+  }
+
+  /// `pickupWaiting.follow`: while the event stream is down, read the
+  /// trip every 10 s so the ETA, the waiting and a moved pickup still
+  /// reach the screen; the stream itself replays what it missed.
+  Future<void> _followTick() async {
+    if (!mounted || _rideLifecycle.terminal || _liveUpdatesPaused) return;
+    final realtime = _realtime;
+    if (realtime is ApiDriverRealtime && realtime.connected) return;
+    final trips = _AcceptRideLive(this)._liveTrips;
+    if (trips == null) return;
+    final projection = await trips.refresh(widget.tripId);
+    if (!mounted || projection == null) return;
+    _applyLive(TripLiveDetails.fromProjection(projection));
+  }
+
   Future<void> _drainProjection() async {
     if (!mounted || _drainingProjection || _pendingProjection == null) {
       return;
@@ -600,7 +673,19 @@ extension _AcceptRideTrip on _AcceptRideState {
         : event.status!;
     try {
       if (status == TripStatus.cancelledByRider) {
-        await _handleRiderCancelled(fee: event.cancelFee);
+        // Q6 (contract v0.18.7): what the driver gets is
+        // `cancellation.driverShare`. `cancelFee` is the RIDER's fee: it is
+        // never shown as the driver's money (checker round 1); only "no
+        // fee" (zero) is safe to say from it.
+        final cancellation = event.live?.cancellation;
+        final riderFeeZero = event.cancelFee?.isZero == true
+            ? event.cancelFee
+            : null;
+        await _handleRiderCancelled(
+          fee: cancellation == null ? riderFeeZero : cancellation.driverEarns,
+          feeKind: cancellation?.feeKind,
+          riderFee: cancellation?.fee,
+        );
       } else if (status.isTerminal) {
         _flushNextTripMatch();
         final secured = _onTripRadarState == _OnTripRadarState.secured
@@ -616,7 +701,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
         ).finish(
           settled?.paid ?? _waybills.current ?? _buildCurrentWaybill(),
-          pickupPoint: GeoPointMaps.fromLatLng(widget.pickupPosition),
+          pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
           dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
           status: status,
           authoritative: true,
@@ -800,8 +885,14 @@ extension _AcceptRideTrip on _AcceptRideState {
     await showTripOutcomeSheet(context, status: status, hasNext: false);
   }
 
-  /// [fee]: the driver's cancel fee from the backend (R15-7), if decided.
-  Future<void> _handleRiderCancelled({Money? fee}) async {
+  /// [fee]: the driver's part of the cancel fee from the backend (R15-7,
+  /// v0.18.7 `cancellation.driverShare`), if decided. [feeKind] (Q2):
+  /// `cancel` or `no_show`, the rule that set the rider's [riderFee].
+  Future<void> _handleRiderCancelled({
+    Money? fee,
+    String? feeKind,
+    Money? riderFee,
+  }) async {
     if (!mounted || _handlingRiderCancellation || _releasedForLateEta) {
       return;
     }
@@ -823,7 +914,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
       ).finish(
         _waybills.current ?? _buildCurrentWaybill(),
-        pickupPoint: GeoPointMaps.fromLatLng(widget.pickupPosition),
+        pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
         dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
         status: TripStatus.cancelledByRider,
         authoritative: true,
@@ -849,7 +940,11 @@ extension _AcceptRideTrip on _AcceptRideState {
             action: SnackBarAction(
               label: tr.retry,
               onPressed: () {
-                _handleRiderCancelled(fee: fee);
+                _handleRiderCancelled(
+                  fee: fee,
+                  feeKind: feeKind,
+                  riderFee: riderFee,
+                );
               },
             ),
           ),
@@ -871,7 +966,11 @@ extension _AcceptRideTrip on _AcceptRideState {
     final home = _navigatorAtTripRoute();
     if (next == null && home.canPop()) {
       IslandMessages.show(
-        HomeIslandNotices.riderCancelledWithFee(fee, onTrip: wasOnTrip),
+        HomeIslandNotices.riderCancelledWithFee(
+          fee,
+          onTrip: wasOnTrip,
+          feeKind: riderFee != null && !riderFee.isZero ? feeKind : null,
+        ),
       );
       widget.sessionController?.stayOnlineAfterTrip();
       home.pop();
@@ -880,9 +979,11 @@ extension _AcceptRideTrip on _AcceptRideState {
 
     await showRiderCancelledSheet(
       context,
-      riderName: widget.riderName,
+      riderName: _riderName,
       wasOnTrip: wasOnTrip,
       fee: fee,
+      feeKind: feeKind,
+      riderFee: riderFee,
     );
     if (!mounted) {
       return;
@@ -1468,7 +1569,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       // taken off it again.
       fare: preview?.driverEarnings?.formatted ?? _fareWithWaiting,
       cash: preview?.cashDue.formatted ?? _cashToCollect,
-      riderName: widget.riderName,
+      riderName: _riderName,
       category: widget.category,
       recalculated: preview?.earlyEnd ?? false,
     );
@@ -1654,7 +1755,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
       ).finish(
         paid,
-        pickupPoint: GeoPointMaps.fromLatLng(widget.pickupPosition),
+        pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
         dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
         next: next,
         paymentMethod: widget.paidByCash ? 'Cash' : 'Card',
@@ -2147,6 +2248,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     bool nextTrip = false,
   }) async {
     final isOnTrip = !nextTrip && _stage == ActiveRideStage.onTrip;
+    final noShow =
+        !nextTrip && reason.code == CancelReasons.current.noShow.code;
 
     final confirmed = await showMoveraModalSheet<bool>(
       context: context,
@@ -2163,6 +2266,8 @@ extension _AcceptRideTrip on _AcceptRideState {
               Text(
                 nextTrip
                     ? tr.cancelNextTripQuestion
+                    : noShow
+                    ? _noShowConfirmTitle
                     : isOnTrip
                     ? tr.endThisTripEarlyQuestion
                     : tr.cancelThisTripQuestion,
@@ -2238,11 +2343,29 @@ extension _AcceptRideTrip on _AcceptRideState {
     _submitTripCancellation(reason);
   }
 
+  /// Q6 (contract v0.18.7 `feeAmountsShown`): the driver's part of the
+  /// no-show fee as the server set it at arrive (`waiting.noShowDriverShare`);
+  /// the trip's terms before a server sends it.
+  Money? get _noShowDriverShare =>
+      _live?.waiting?.noShowDriverShare ??
+      (_waitTerms.pricesKnown ? _waitTerms.driverNoShowFee : null);
+
+  /// "Mark as no-show? You get 52 kr" / "… No fee"; no amount the phone
+  /// does not know (no server terms).
+  String get _noShowConfirmTitle {
+    final share = _noShowDriverShare;
+    if (share == null) return tr.cancelThisTripQuestion;
+    return share.isZero
+        ? tr.noShowConfirmNoFee
+        : tr.noShowConfirmYouGet(share.formattedShort);
+  }
+
   /// A no-show's earnings for the driver: their share of the no-show fee
   /// plus their share of the paid wait (the waiting sheet's words).
   String? get _noShowEarned {
-    final fee = _waitTerms.driverNoShowFee;
+    final fee = _noShowDriverShare;
     final wait = _waitTerms.driverWaitingFee(_paidWaitTotal);
+    if (fee == null) return wait.minorUnits <= 0 ? null : wait.formatted;
     final total = wait.currency == fee.currency ? fee + wait : fee;
     return total.minorUnits <= 0 ? null : total.formatted;
   }
@@ -2290,7 +2413,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
       ).finish(
         _waybills.current ?? _buildCurrentWaybill(),
-        pickupPoint: GeoPointMaps.fromLatLng(widget.pickupPosition),
+        pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
         dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
         status: outcome,
         cancellationReasonCode: reason.code,
@@ -2395,8 +2518,8 @@ extension _AcceptRideTrip on _AcceptRideState {
 
   SafetyAlertTrip _safetyAlertTrip() => SafetyAlertTrip(
     tripId: widget.tripId,
-    riderName: widget.riderName,
-    riderRating: widget.riderRating,
+    riderName: _riderName,
+    riderRating: _riderRating,
     pickup: _pickupAddress,
     dropoff: widget.dropoffAddress,
     fare: widget.fare,

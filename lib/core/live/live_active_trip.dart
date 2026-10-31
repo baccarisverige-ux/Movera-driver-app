@@ -76,6 +76,11 @@ class LiveActiveTrip {
     }
     final cash = trip['paymentMethod'] == 'cash';
     final category = trip['categoryId'];
+    // Contract v0.18.7 (Q1): the rider's first name and rating as the
+    // server sends them to the driver; "Rider" when it has no name.
+    final rider = trip['rider'];
+    final riderName = rider is Map ? rider['firstName'] : null;
+    final riderRating = rider is Map ? rider['rating'] : null;
     final accepted = trip['acceptedAt'];
     // Contract `Waiting.arrivedAt`: the wait at the pickup counts from it.
     final waiting = trip['waiting'];
@@ -93,6 +98,16 @@ class LiveActiveTrip {
       // The trip screen's waiting clock restores from these seconds.
       waitSeconds: stage == ActiveRideStage.waitingForRider && arrivedAt != null
           ? math.max(0, DateTime.now().difference(arrivedAt).inSeconds)
+          : null,
+      riderName: riderName is String && riderName.trim().isNotEmpty
+          ? riderName.trim()
+          : null,
+      riderRating:
+          riderRating is num &&
+              riderRating.isFinite &&
+              riderRating >= 0 &&
+              riderRating <= 5
+          ? riderRating.toDouble()
           : null,
       fare: pay?.formatted,
       paidByCash: cash,

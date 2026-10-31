@@ -42,7 +42,7 @@ void main() {
       AppAssets.navMenuBranch,
     );
 
-    await tester.tap(find.byTooltip('Ride preferences'));
+    await tester.tap(find.byTooltip('Trip settings'));
     await tester.tap(find.byKey(const ValueKey('trip-bar-details')));
     expect(preferences, 1);
     expect(details, 1);
@@ -55,7 +55,7 @@ void main() {
   ) async {
     await tester.pumpWidget(_bar());
     final text = tester.getTopLeft(find.text('Pick up Michael'));
-    final button = tester.getCenter(find.byTooltip('Ride preferences'));
+    final button = tester.getCenter(find.byTooltip('Trip settings'));
     expect(text.dx, closeTo(20, 1));
     expect(button.dx, greaterThan(260));
     expect(tester.takeException(), isNull);

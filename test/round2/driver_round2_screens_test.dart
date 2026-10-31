@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
 import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/widgets/offer_badges.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
+
+// G5 checker round 1: the zone's served terms (the app has no prices).
+final _served = DriverAppConfig.fromJson({
+  'currency': 'SEK',
+  'waiting': {
+    'freeWaitMin': 5,
+    'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+    'noShowAfterMin': 5,
+    'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+    'driverSharePct': 80,
+  },
+}).waiting;
 
 const _fee = ValueKey<String>('waiting-fee-counter');
 const _feeAmount = ValueKey<String>('waiting-fee-amount');
@@ -93,7 +106,7 @@ void main() {
     testWidgets('free wait: no fee, no "Rider didn’t show" yet', (
       tester,
     ) async {
-      await _sheet(tester, () => 4 * 60 + 59, const WaitingRules().termsFor());
+      await _sheet(tester, () => 4 * 60 + 59, _served.termsFor());
       expect(find.byKey(_fee), findsNothing);
       expect(find.byKey(_noShow), findsNothing);
       expect(find.text('Rider didn’t show'), findsNothing);
@@ -101,7 +114,7 @@ void main() {
 
     testWidgets('after the free wait the fee counts up live', (tester) async {
       var seconds = 5 * 60 + 30;
-      await _sheet(tester, () => seconds, const WaitingRules().termsFor());
+      await _sheet(tester, () => seconds, _served.termsFor());
       // 30 s at 12,26 kr / min, all the driver's.
       expect(_amount(tester), '+6,13 kr');
       expect(find.text('waiting fee · 12,26 kr / min'), findsOneWidget);
@@ -115,7 +128,23 @@ void main() {
     });
 
     testWidgets('XL: 3 min free, then the fee and the no-show', (tester) async {
-      final xl = const WaitingRules().termsFor(category: 'Movera XL');
+      // G5: the XL terms come from the served zone document.
+      final xl = DriverAppConfig.fromJson({
+        'currency': 'SEK',
+        'waiting': {
+          'freeWaitMin': 5,
+          'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+          'noShowAfterMin': 5,
+          'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+          'driverSharePct': 80,
+          'byCategory': {
+            'xl': {'freeWaitMin': 3, 'noShowAfterMin': 3},
+            'premium': {
+              'perMin': {'amountMinor': 1690, 'currency': 'SEK'},
+            },
+          },
+        },
+      }).waiting.termsFor(category: 'Movera XL');
       var seconds = 2 * 60 + 59;
       await _sheet(tester, () => seconds, xl);
       expect(find.byKey(_noShow), findsNothing);
@@ -151,12 +180,7 @@ void main() {
     });
 
     testWidgets('a stop wait is paid from its first second', (tester) async {
-      await _sheet(
-        tester,
-        () => 60,
-        const WaitingRules().termsFor(),
-        fullyPaid: true,
-      );
+      await _sheet(tester, () => 60, _served.termsFor(), fullyPaid: true);
       expect(_amount(tester), '+12,26 kr');
       expect(find.byKey(_noShow), findsNothing);
     });

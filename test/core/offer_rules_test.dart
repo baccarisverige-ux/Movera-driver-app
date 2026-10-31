@@ -1,3 +1,4 @@
+import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/dispatch/exclusive_reasons.dart';
@@ -103,7 +104,18 @@ void main() {
   });
 
   group('waiting at pickup (Q19/Q20)', () {
-    const rules = WaitingRules();
+    // G5 checker round 1: the prices are the zone's served terms; the app
+    // has none of its own.
+    final rules = DriverAppConfig.fromJson({
+      'currency': 'SEK',
+      'waiting': {
+        'freeWaitMin': 5,
+        'perMin': {'amountMinor': 1226, 'currency': 'SEK'},
+        'noShowAfterMin': 5,
+        'noShowFee': {'amountMinor': 6500, 'currency': 'SEK'},
+        'driverSharePct': 80,
+      },
+    }).waiting;
 
     test('the zone\'s terms and the driver\'s share', () {
       final terms = rules.termsFor(category: 'Comfort');
@@ -122,19 +134,23 @@ void main() {
       final scheduled = rules.termsFor(type: WaitingRideType.scheduled);
       expect(scheduled.freeMinutes, 5);
       expect(scheduled.rule, 'Scheduled ride');
+      // Contract v0.18.7 (driver group 5): the app's own airport, event
+      // and far-pickup rules are gone; the server never knew them. A
+      // category's terms come from the served `waiting.byCategory` only.
       final airport = rules.termsFor(type: WaitingRideType.airport);
-      expect(airport.freeMinutes, 15);
-      expect(airport.noShowAfterMinutes, 20);
+      expect(airport.freeMinutes, 5);
+      expect(airport.noShowAfterMinutes, 5);
+      expect(airport.rule, '');
       final premium = rules.termsFor(
         category: 'Premium',
         type: WaitingRideType.scheduled,
       );
-      expect(premium.perMinute.formatted, '16,90 kr');
-      expect(premium.rule, 'Premium · Scheduled ride');
+      expect(premium.perMinute.formatted, '12,26 kr');
+      expect(premium.rule, 'Scheduled ride');
       final far = rules.termsFor(pickupKm: 7.5);
-      expect(far.freeMinutes, 1);
-      expect(far.noShowFee.formatted, '85,00 kr');
-      expect(far.rule, 'Pickup over 5 km');
+      expect(far.freeMinutes, 5);
+      expect(far.noShowFee.formatted, '65,00 kr');
+      expect(far.rule, '');
       expect(rules.termsFor(pickupKm: 4).rule, '');
     });
 
