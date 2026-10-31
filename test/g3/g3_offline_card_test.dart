@@ -405,7 +405,7 @@ void main() {
         find.byKey(const ValueKey<String>('offline-check-internet-fix')),
         findsNothing,
       );
-      expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle_outline_rounded), findsOneWidget);
       expect(find.byIcon(Icons.cancel_rounded), findsNWidgets(3));
     });
 
@@ -506,6 +506,38 @@ void main() {
       await tester.pumpAndSettle();
       expect(line(PhoneCheckKind.internet, 'unknown'), findsOneWidget);
       expect(line(PhoneCheckKind.location, 'ok'), findsOneWidget);
+    });
+
+    testWidgets('owner: only black, no green text or outlines (Check my '
+        'phone, OK, the fix actions, ✓)', (tester) async {
+      checks.answers[PhoneCheckKind.location] = const PhoneCheckResult(
+        PhoneCheckKind.location,
+        PhoneCheckState.problem,
+        fix: PhoneCheckFix.turnOn,
+      );
+      await pumpCard(tester);
+      const ink = Color(0xFF111614);
+      Color textColor(String text) =>
+          DefaultTextStyle.of(tester.element(find.text(text))).style.color!;
+      expect(textColor('Check my phone'), ink);
+      expect(textColor('OK'), ink);
+      final outlined = tester.widget<OutlinedButton>(
+        find.byKey(const ValueKey<String>('offline-card-check')),
+      );
+      expect(outlined.style!.side!.resolve(const <WidgetState>{})!.color, ink);
+      await tester.tap(find.text('Check my phone'));
+      await tester.pumpAndSettle();
+      expect(textColor('Turn on'), ink);
+      for (final icon in tester.widgetList<Icon>(
+        find.descendant(
+          of: find.byType(HomeOfflineCard),
+          matching: find.byType(Icon),
+        ),
+      )) {
+        final c = icon.color!;
+        final greenish = c.g > c.r + 0.15 && c.g > c.b + 0.1;
+        expect(greenish, isFalse, reason: '${icon.icon} is $c');
+      }
     });
 
     testWidgets('Go online and OK call their actions', (tester) async {

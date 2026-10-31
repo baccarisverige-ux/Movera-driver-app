@@ -25,7 +25,7 @@ String offlineReasonText(DriverSetOfflineNotice notice) {
 /// sheet, in place of its icons: "You're offline" with Movera's warning
 /// mark, the real [reason], "Check my phone" (location, internet, battery
 /// saver, notifications, each ✓ or ✗ with its fix), a big Go online and
-/// OK. Black/green like every Movera box (G3-D7).
+/// OK. Only black, simple (owner 2026-10-31: no green text or outlines).
 class HomeOfflineCard extends StatefulWidget {
   const HomeOfflineCard({
     super.key,
@@ -50,9 +50,7 @@ class HomeOfflineCard extends StatefulWidget {
   static const Duration showsFor = Duration(minutes: 2);
 
   static const Color ink = MoveraDialogTheme.ink;
-  static const Color green = MoveraDialogTheme.green;
   static const Color muted = MoveraDialogTheme.muted;
-  static const Color problem = Color(0xFFD03A2B);
   static const Color grey = Color(0xFF9AA3A0);
 
   @override
@@ -171,8 +169,11 @@ class _HomeOfflineCardState extends State<HomeOfflineCard> {
                     icon: const Icon(Icons.fact_check_outlined, size: 20),
                     label: Text(tr.offlineCheckPhone),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: HomeOfflineCard.green,
-                      side: const BorderSide(color: HomeOfflineCard.green),
+                      foregroundColor: HomeOfflineCard.ink,
+                      side: const BorderSide(
+                        color: HomeOfflineCard.ink,
+                        width: 1.4,
+                      ),
                       minimumSize: const Size.fromHeight(46),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -221,6 +222,7 @@ class _HomeOfflineCardState extends State<HomeOfflineCard> {
                   key: const ValueKey<String>('offline-card-ok'),
                   onPressed: widget.onOk,
                   style: TextButton.styleFrom(
+                    foregroundColor: HomeOfflineCard.ink,
                     minimumSize: const Size.fromHeight(44),
                   ),
                   child: Text(tr.ok),
@@ -263,17 +265,17 @@ class _CheckLine extends StatelessWidget {
         dimension: 18,
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          color: HomeOfflineCard.green,
+          color: HomeOfflineCard.ink,
         ),
       ),
       PhoneCheckState.ok => const Icon(
-        Icons.check_circle_rounded,
-        color: HomeOfflineCard.green,
+        Icons.check_circle_outline_rounded,
+        color: HomeOfflineCard.muted,
         size: 22,
       ),
       PhoneCheckState.problem => const Icon(
         Icons.cancel_rounded,
-        color: HomeOfflineCard.problem,
+        color: HomeOfflineCard.ink,
         size: 22,
       ),
       PhoneCheckState.unknown => const Icon(
@@ -341,11 +343,13 @@ class _CheckLine extends StatelessWidget {
                   key: ValueKey<String>('offline-check-$name-fix'),
                   onPressed: () => onFix(result),
                   style: TextButton.styleFrom(
+                    foregroundColor: HomeOfflineCard.ink,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     minimumSize: const Size(48, 36),
                     textStyle: const TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                   child: Text(action),
@@ -358,8 +362,8 @@ class _CheckLine extends StatelessWidget {
   }
 }
 
-/// Movera's own warning mark: a black disc with a green rounded triangle
-/// and a black "!" (no other company's look).
+/// Movera's own warning mark: a black disc with a white rounded triangle
+/// and a black "!" (no other company's look; only black, owner).
 class MoveraWarningMark extends StatelessWidget {
   const MoveraWarningMark({super.key, this.size = 48});
 
@@ -390,14 +394,14 @@ class _WarningPainter extends CustomPainter {
       ..lineTo(right.dx, right.dy)
       ..lineTo(left.dx, left.dy)
       ..close();
-    final green = Paint()
-      ..color = const Color(0xFF2FBE7B)
+    final white = Paint()
+      ..color = Colors.white
       ..style = PaintingStyle.fill;
-    canvas.drawPath(triangle, green);
+    canvas.drawPath(triangle, white);
     canvas.drawPath(
       triangle,
       Paint()
-        ..color = const Color(0xFF2FBE7B)
+        ..color = Colors.white
         ..style = PaintingStyle.stroke
         ..strokeWidth = s * 0.08
         ..strokeJoin = StrokeJoin.round,
