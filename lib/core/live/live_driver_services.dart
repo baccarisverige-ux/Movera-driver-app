@@ -7,6 +7,7 @@ import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
+import 'package:movera/core/dispatch/offer_rules.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_active_trip.dart';
@@ -177,12 +178,27 @@ class LiveDriverServices {
     chat: chat,
   );
 
+  /// Contract `autoOffline`: the offer event's `driverOffline: true`
+  /// (the server's run of missed offers) sets [session] offline, and the
+  /// offline card says why (owner 2026-10-31).
+  static void Function() missedOffersOffline(DriverSessionController session) =>
+      () {
+        final wasOnline = session.isOnline;
+        session.setOnline(false);
+        if (wasOnline) {
+          DriverSetOfflineNotice.instance.show(
+            reason: DriverOfflineReason.missedOffers,
+            count: DriverOfferRules.current.autoOfflineAfter,
+          );
+        }
+      };
+
   /// Follows the app's availability: the feed and location run while the
   /// driver is online or on a trip, and the server hears an offline that
   /// did not come from Home's switch (after a trip, a hold, sign-out).
   void attach(DriverSessionController session) {
     presence.attach(session);
-    dispatch.onDriverOffline = () => session.setOnline(false);
+    dispatch.onDriverOffline = missedOffersOffline(session);
     // Contract v0.18.2 `auth.beforeSignIn` (owner 2026-10-30, "Yes, stop
     // it"): the settings, their stream, the zones and the content need the
     // driver's session. Without one nothing is asked; [signedIn] starts
@@ -480,9 +496,11 @@ class LivePresence {
                 'onlineStatus': 'offline',
               },
             );
-            // Decision 3: "You were set offline – tap to go online again".
+            // Decision 3: the offline card says the app was restarted.
             if (profile['onlineStatus'] == 'offline') {
-              DriverSetOfflineNotice.instance.show();
+              DriverSetOfflineNotice.instance.show(
+                reason: DriverOfflineReason.appRestart,
+              );
             }
           } on ApiError catch (error) {
             final current = error.projection;

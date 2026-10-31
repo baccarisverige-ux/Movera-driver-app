@@ -456,9 +456,8 @@ class _AcceptRideState extends State<AcceptRide>
   late final WaybillRepository _waybills;
   late final NavigationController _navigation;
   late final LiveVehicleAnimator _vehicle;
-  BitmapDescriptor _driverVehicleIcon = BitmapDescriptor.defaultMarkerWithHue(
-    BitmapDescriptor.hueAzure,
-  );
+  // Until the arrow is drawn: one transparent pixel, never a Google pin.
+  BitmapDescriptor _driverVehicleIcon = MoveraVehicleMarker.placeholder;
   Map<RouteMarkKind, BitmapDescriptor> _pinIcons = const {};
   final GlobalKey<ScaffoldState> _rideScaffoldKey = GlobalKey<ScaffoldState>();
   // Manual browsing keeps the collapsed dock visible; recenter pulses.
@@ -1805,7 +1804,8 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
   Marker get _carMarker => Marker(
     markerId: const MarkerId('driver'),
     position: _pose.position,
-    // Compass heading of an upright arrow; CustomGoogleMap turns it.
+    // Compass heading; CustomGoogleMap draws the position arrow for the
+    // camera (flat or tilted) with its halo.
     rotation: _pose.headingDegrees,
     flat: false,
     anchor: MoveraVehicleMarker.anchor,

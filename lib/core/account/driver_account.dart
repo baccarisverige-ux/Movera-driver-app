@@ -171,6 +171,9 @@ class DriverAccount {
     this.requiredFleetDocuments = const [],
     this.onlineStatus,
     this.performance,
+    this.offlineReason,
+    this.offlineNote,
+    this.offlineAt,
   });
 
   factory DriverAccount.fromJson(Map<String, dynamic> json) {
@@ -200,6 +203,9 @@ class DriverAccount {
       requiredDocuments: _strings(json['requiredDocuments']),
       requiredFleetDocuments: _strings(json['requiredFleetDocuments']),
       onlineStatus: _text(json['onlineStatus']),
+      offlineReason: _text(json['offlineReason']),
+      offlineNote: _text(json['offlineNote']),
+      offlineAt: _time(json['offlineAt']),
       performance: json.containsKey('performance')
           ? DriverPerformanceConfig.fromServer(json['performance'])
           : null,
@@ -241,6 +247,19 @@ class DriverAccount {
   /// `offline`, `online` or `on_trip` (driver group 3: the server sets a
   /// driver without a position offline, G3-R1); null when not sent.
   final String? onlineStatus;
+
+  /// Contract v0.18.6 `driverHome.setOffline.offlineReason` (owner "Send
+  /// the real reason"): why the SERVER set him offline (`no_position`,
+  /// `missed_offers`, `vehicle_blocked`, `fleet_removed`,
+  /// `account_status`, `admin`), while offline; null when he went offline
+  /// himself or the server is older.
+  final String? offlineReason;
+
+  /// `vehicle_blocked`: the admin's note.
+  final String? offlineNote;
+
+  /// When the server set him offline.
+  final DateTime? offlineAt;
 
   /// G3-D2: `performance` (only `GET /driver/profile` sends it; command
   /// answers do not, so null here keeps the numbers the app has).

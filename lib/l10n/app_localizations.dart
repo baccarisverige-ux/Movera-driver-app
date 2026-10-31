@@ -11448,6 +11448,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pickup'**
   String get eventPickupNote;
+
+  /// Owner 2026-10-31 'new set offline message' (decisions/driver-g3.md): title of the offline card in the Home sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline'**
+  String get offlineCardTitle;
+
+  /// Offline card reason: server job G3-R1 (contract driverHome.setOffline reason no_position, bell notice kind set_offline).
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone sent no position for {minutes} min'**
+  String offlineReasonNoPosition(int minutes);
+
+  /// Offline card reason: decision 3 (contract driverHome.setOffline reason app_restart).
+  ///
+  /// In en, this message translates to:
+  /// **'The app was restarted while you were online'**
+  String get offlineReasonAppRestart;
+
+  /// Offline card reason: contract autoOffline (offers.autoOffline.missedExclusive, offer event driverOffline: true).
+  ///
+  /// In en, this message translates to:
+  /// **'You missed or declined {count} offers in a row'**
+  String offlineReasonMissedOffers(int count);
+
+  /// Offline card reason when the server does not say why.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera set you offline'**
+  String get offlineReasonMovera;
+
+  /// Offline card: runs the phone checks.
+  ///
+  /// In en, this message translates to:
+  /// **'Check my phone'**
+  String get offlineCheckPhone;
+
+  /// Offline card: a check is running.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
+  String get offlineChecking;
+
+  /// Offline card check line.
+  ///
+  /// In en, this message translates to:
+  /// **'Location on and allowed'**
+  String get offlineCheckLocation;
+
+  /// Offline card check line.
+  ///
+  /// In en, this message translates to:
+  /// **'Internet and Movera server'**
+  String get offlineCheckInternet;
+
+  /// Offline card check line.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery saver off'**
+  String get offlineCheckBattery;
+
+  /// Offline card check line.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications allowed'**
+  String get offlineCheckNotifications;
+
+  /// Offline card: this phone or browser cannot tell.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t be checked here'**
+  String get offlineCheckUnknown;
+
+  /// Offline card: blocked in the browser, which no button can open.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow it in the browser\'s site settings'**
+  String get offlineCheckBrowser;
+
+  /// Offline card fix action.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get offlineFixTurnOn;
+
+  /// Offline card main button.
+  ///
+  /// In en, this message translates to:
+  /// **'Go online'**
+  String get offlineGoOnline;
+
+  /// Contract v0.18.6 driverHome.setOffline.reasons.vehicle_blocked (owner 'Send the real reason'): the offline card's reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Your car cannot be used right now'**
+  String get offlineReasonVehicleBlocked;
+
+  /// Contract v0.18.6 driverHome.setOffline.reasons.fleet_removed (owner 'Send the real reason'): the offline card's reason.
+  ///
+  /// In en, this message translates to:
+  /// **'You are no longer in a fleet'**
+  String get offlineReasonFleetRemoved;
+
+  /// Contract v0.18.6 driverHome.setOffline.reasons.account_status (owner 'Send the real reason'): the offline card's reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is paused – contact Movera'**
+  String get offlineReasonAccountStatus;
 }
 
 class _AppLocalizationsDelegate

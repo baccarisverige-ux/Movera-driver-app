@@ -361,9 +361,8 @@ class _DriverHomeState extends State<DriverHome>
   StreamSubscription<DriverLocation>? _driverLocationSubscription;
   bool _hasLiveDriverLocation = false;
   bool _didCenterOnLiveLocation = false;
-  BitmapDescriptor _driverVehicleIcon = BitmapDescriptor.defaultMarkerWithHue(
-    BitmapDescriptor.hueGreen,
-  );
+  // Until the arrow is drawn: one transparent pixel, never a Google pin.
+  BitmapDescriptor _driverVehicleIcon = MoveraVehicleMarker.placeholder;
   double _driverHeading = 0;
   bool isPanelOpen = false;
   bool _blockMapGestures = false;

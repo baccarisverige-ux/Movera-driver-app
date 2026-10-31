@@ -6633,4 +6633,65 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get eventPickupNote => 'Upphämtning';
+
+  @override
+  String get offlineCardTitle => 'Du är offline';
+
+  @override
+  String offlineReasonNoPosition(int minutes) {
+    return 'Telefonen skickade ingen position på $minutes min';
+  }
+
+  @override
+  String get offlineReasonAppRestart =>
+      'Appen startades om medan du var online';
+
+  @override
+  String offlineReasonMissedOffers(int count) {
+    return 'Du missade eller nekade $count erbjudanden i rad';
+  }
+
+  @override
+  String get offlineReasonMovera => 'Movera satte dig offline';
+
+  @override
+  String get offlineCheckPhone => 'Kontrollera min telefon';
+
+  @override
+  String get offlineChecking => 'Kontrollerar…';
+
+  @override
+  String get offlineCheckLocation => 'Plats på och tillåten';
+
+  @override
+  String get offlineCheckInternet => 'Internet och Moveras server';
+
+  @override
+  String get offlineCheckBattery => 'Batterisparläge av';
+
+  @override
+  String get offlineCheckNotifications => 'Aviseringar tillåtna';
+
+  @override
+  String get offlineCheckUnknown => 'Kan inte kontrolleras här';
+
+  @override
+  String get offlineCheckBrowser =>
+      'Tillåt det i webbläsarens webbplatsinställningar';
+
+  @override
+  String get offlineFixTurnOn => 'Slå på';
+
+  @override
+  String get offlineGoOnline => 'Gå online';
+
+  @override
+  String get offlineReasonVehicleBlocked => 'Din bil kan inte användas just nu';
+
+  @override
+  String get offlineReasonFleetRemoved => 'Du är inte längre med i ett åkeri';
+
+  @override
+  String get offlineReasonAccountStatus =>
+      'Ditt konto är pausat – kontakta Movera';
 }

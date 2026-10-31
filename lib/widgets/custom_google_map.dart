@@ -151,38 +151,109 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     if (!MapCameraReport.isFrame(position)) return;
     final band = _styleBand.at(position.zoom);
     if (band != _styleBand && mounted) setState(() => _styleBand = band);
-    _turnVehicleWith(position);
+    _followCamera(position);
     widget.onCameraMove?.call(position);
   }
 
-  /// The map bearing the own vehicle's billboard rotation was last worked
-  /// out for (native maps; web turns its own native marker). Zoom and tilt
-  /// play no part: the marker keeps one size and one picture.
+  /// The camera the own position arrow was last drawn for (phones; web
+  /// draws its own in web/driver_map_camera.js).
   late double _vehicleBearing = widget.initialPosition?.bearing ?? 0;
+  late double _vehicleTilt = widget.initialPosition?.tilt ?? 0;
 
   static bool _isOwnVehicle(Marker marker) =>
       marker.markerId.value == 'driver' ||
       marker.markerId.value == 'driver_location';
 
-  /// A billboard turns with the screen: as the camera turns, turn the
-  /// arrow back onto its heading. Only a visible change (over 1.5°)
-  /// rebuilds the markers, so a following camera does not churn them.
-  void _turnVehicleWith(CameraPosition camera) {
-    if (kIsWeb || !mounted) return;
+  Marker? get _ownVehicle {
     for (final marker in _allMarkers) {
-      if (!_isOwnVehicle(marker) || marker.flat) continue;
-      final shown = MoveraVehicleMarker.screenRotation(
-        marker.rotation,
-        _vehicleBearing,
-      );
-      final wanted = MoveraVehicleMarker.screenRotation(
-        marker.rotation,
-        camera.bearing,
-      );
-      final change = ((wanted - shown + 540) % 360 - 180).abs();
-      if (change > 1.5) setState(() => _vehicleBearing = camera.bearing);
-      return;
+      if (_isOwnVehicle(marker)) return marker;
     }
+    return null;
+  }
+
+  /// The own position arrow keeps pointing along its heading as the camera
+  /// turns and lies in perspective as it tilts. Only a new arrow picture
+  /// (a 2° / 3° bucket) redraws, so a following camera does not churn the
+  /// markers. The halo is one screen-facing picture: zoom and tilt never
+  /// change it.
+  void _followCamera(CameraPosition camera) {
+    if (kIsWeb || !mounted) return;
+    final own = _ownVehicle;
+    if (own == null) return;
+    final shown = _arrowView(own, _vehicleBearing, _vehicleTilt);
+    final wanted = _arrowView(own, camera.bearing, camera.tilt);
+    if (shown != wanted) {
+      setState(() {
+        _vehicleBearing = camera.bearing;
+        _vehicleTilt = camera.tilt;
+      });
+    }
+  }
+
+  static PositionArrowView _arrowView(
+    Marker own,
+    double bearing,
+    double tilt,
+  ) => MoveraVehicleMarker.view(
+    heading: own.rotation,
+    bearing: bearing,
+    tilt: tilt,
+  );
+
+  /// The own vehicle as the map gets it: the arrow picture for the camera,
+  /// centred on the position; flat (turned by the heading) on a map seen
+  /// from above, else a screen-facing picture drawn in perspective.
+  ///
+  /// While a tilted picture is still being drawn, the flat arrow stands in
+  /// (a flat marker turned by the heading, which Maps lays on the tilted
+  /// road): it never points the wrong way. The pictures around the one
+  /// shown are drawn ahead, so a twisting or tilting camera finds them.
+  Marker _ownArrow(Marker marker) {
+    var view = _arrowView(marker, _vehicleBearing, _vehicleTilt);
+    var icon = MoveraVehicleMarker.iconFor(view);
+    if (icon == null) {
+      unawaited(
+        MoveraVehicleMarker.makeIcon(view).then((made) {
+          if (made == null || !mounted) return;
+          setState(() {});
+        }),
+      );
+      view = MoveraVehicleMarker.view(
+        heading: marker.rotation,
+        bearing: 0,
+        tilt: 0,
+      );
+      icon = MoveraVehicleMarker.icon ?? marker.icon;
+    }
+    MoveraVehicleMarker.prefetchAround(
+      _arrowView(marker, _vehicleBearing, _vehicleTilt),
+    );
+    return marker.copyWith(
+      iconParam: icon,
+      flatParam: view.flat,
+      rotationParam: view.markerRotation,
+      anchorParam: MoveraVehicleMarker.anchor,
+    );
+  }
+
+  /// Phones: the halo under the own position, a screen-facing picture
+  /// ([MoveraVehicleMarker.haloRadius] pt on screen at every zoom and
+  /// tilt), under the arrow and not tappable. Web draws its own in
+  /// web/driver_map_camera.js.
+  Marker? _halo(Marker own) {
+    final icon = MoveraVehicleMarker.haloIcon;
+    if (kIsWeb || icon == null || !own.visible) return null;
+    return Marker(
+      markerId: const MarkerId(MoveraVehicleMarker.haloId),
+      position: own.position,
+      icon: icon,
+      anchor: const Offset(.5, .5),
+      // 0: under every trip pin (pickup/drop-off 8, destination 6), so the
+      // grey disc never covers them and they keep their own taps.
+      zIndexInt: 0,
+      // Taps on it do nothing (no bubble, no camera move).
+      consumeTapEvents: true,
+    );
   }
 
   /// Every marker, the live one included.
@@ -245,21 +316,17 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     _updateWebVehicle(controller.mapId);
   }
 
-  /// The markers as the map gets them: the own vehicle (a billboard, its
-  /// rotation a compass heading) turned to the screen. One marker, one
-  /// size: the ring is in its picture.
+  /// The markers as the map gets them: the own vehicle (its rotation a
+  /// compass heading) as the position arrow for the camera ([_ownArrow]).
+  /// Web: as given; web/driver_map_camera.js draws the arrow.
   Set<Marker> _shown(Iterable<Marker> markers) {
     if (kIsWeb) return markers.toSet();
     return {
       for (final marker in markers)
-        if (_isOwnVehicle(marker) && !marker.flat)
-          marker.copyWith(
-            rotationParam: MoveraVehicleMarker.screenRotation(
-              marker.rotation,
-              _vehicleBearing,
-            ),
-          )
-        else
+        if (_isOwnVehicle(marker)) ...[
+          _ownArrow(marker),
+          ?_halo(marker),
+        ] else
           marker,
     };
   }
@@ -277,6 +344,13 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void initState() {
     super.initState();
     widget.liveMarker?.addListener(_onLiveMarker);
+    if (!kIsWeb && MoveraVehicleMarker.haloIcon == null) {
+      unawaited(
+        MoveraVehicleMarker.createHaloIcon().then((_) {
+          if (mounted) setState(() {});
+        }),
+      );
+    }
     if (_mapsReady) return;
     const poll = Duration(milliseconds: 50);
     _mapsReadyPoll = Timer.periodic(poll, (timer) {
@@ -306,6 +380,13 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     if (!identical(oldWidget.liveMarker, widget.liveMarker)) {
       oldWidget.liveMarker?.removeListener(_onLiveMarker);
       widget.liveMarker?.addListener(_onLiveMarker);
+      if (!kIsWeb && MoveraVehicleMarker.haloIcon == null) {
+        unawaited(
+          MoveraVehicleMarker.createHaloIcon().then((_) {
+            if (mounted) setState(() {});
+          }),
+        );
+      }
     }
     if (oldWidget.scrollGesturesEnabled != widget.scrollGesturesEnabled ||
         oldWidget.zoomGesturesEnabled != widget.zoomGesturesEnabled ||

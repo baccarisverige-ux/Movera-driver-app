@@ -55,6 +55,30 @@ class DriverLocationService implements DriverLocationRepository {
   /// check may show the system prompt again.
   static void allowPrompt() => _declined = false;
 
+  /// The offline card's "Turn on" (checker MEDIUM 2): the one shared,
+  /// guarded prompt (driver-r5-51), so Android never sees it twice; true
+  /// when allowed. A "Don't allow" this session is not asked again.
+  static Future<bool> requestPermissionOnce() async {
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied && !_declined) {
+        final prompt = _prompt ??= Geolocator.requestPermission().whenComplete(
+          () => _prompt = null,
+        );
+        permission = await prompt;
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          _declined = true;
+        }
+      }
+      return permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+    } catch (error) {
+      DriverLog.warn('Location prompt failed: ${error.runtimeType}');
+      return false;
+    }
+  }
+
   @visibleForTesting
   static void resetForTesting() {
     _prompt = null;
