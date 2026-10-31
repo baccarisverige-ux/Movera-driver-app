@@ -1982,9 +1982,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get islandCashOff => 'Cash rides off';
 
   @override
-  String get islandLastMissed => 'Next missed offer: offline';
-
-  @override
   String islandOfflineMissed(Object count) {
     return 'Offline: $count offers missed';
   }
@@ -6605,4 +6602,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get soundOffTapToAllow => 'Tap to allow sound';
+
+  @override
+  String riderRidesOnly(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rides',
+      one: '1 ride',
+    );
+    return '$_temp0';
+  }
 }

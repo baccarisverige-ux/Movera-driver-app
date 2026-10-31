@@ -20,6 +20,7 @@ import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/core/sound/device_sound_io.dart';
 import 'package:movera/core/sound/radar_offer_sound.dart';
+import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
@@ -28,6 +29,7 @@ import 'package:movera/presentation/driver/settings/accessibility/accessibility.
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:movera/widgets/radar_offer_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
@@ -99,10 +101,15 @@ http.Response _json(Object body, [int status = 200]) => http.Response(
 /// The contract adapter over a scripted server; each new Idempotency-Key
 /// is a new number.
 class _Api {
-  _Api({Duration answerTimeout = const Duration(seconds: 8)})
-    : _answerTimeout = answerTimeout;
+  _Api({
+    Duration answerTimeout = const Duration(seconds: 8),
+    this.checkFor = const Duration(milliseconds: 60),
+    this.stopwatch,
+  }) : _answerTimeout = answerTimeout;
 
   final Duration _answerTimeout;
+  final Duration checkFor;
+  final Stopwatch Function()? stopwatch;
   final List<http.BaseRequest> requests = <http.BaseRequest>[];
   final List<FutureOr<Object> Function(http.BaseRequest request)> answers = [];
   final List<Map<String, dynamic>> accepted = [];
@@ -121,7 +128,8 @@ class _Api {
     onAccepted: accepted.add,
     acceptAnswerTimeout: _answerTimeout,
     acceptCheckEvery: const Duration(milliseconds: 10),
-    acceptCheckFor: const Duration(milliseconds: 60),
+    acceptCheckFor: checkFor,
+    stopwatch: stopwatch,
   );
 
   Future<void> open(List<Map<String, dynamic>> offers) async {
@@ -139,6 +147,26 @@ class _Api {
   List<String?> get keys => [
     for (final r in requests) r.headers['Idempotency-Key'],
   ];
+}
+
+/// A stopwatch that moves on [step] each time it is read (fake time).
+class _JumpingStopwatch implements Stopwatch {
+  _JumpingStopwatch(this.step);
+  final Duration step;
+  Duration _now = Duration.zero;
+  int reads = 0;
+
+  @override
+  Duration get elapsed {
+    reads++;
+    return _now += step;
+  }
+
+  @override
+  void start() {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 const _accept = 'POST /api/v1/offers/o1/accept';
@@ -405,14 +433,32 @@ void main() {
       expect(OfferAlertSettings.vibrate.value, isFalse);
     });
 
-    testWidgets('switching Vibration for requests changes the offer alert '
-        'at once', (tester) async {
+    testWidgets('Vibration for requests starts on for every driver (owner '
+        '2026-10-31); turning it off stops the offer vibration at once', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({});
       await tester.pumpWidget(const MaterialApp(home: Accessibility()));
       await tester.pumpAndSettle();
-      expect(OfferAlertSettings.vibrate.value, isFalse);
+      expect(tester.widget<Switch>(find.byType(Switch).last).value, isTrue);
+      expect(OfferAlertSettings.vibrate.value, isTrue);
       await tester.tap(find.byType(Switch).last);
       await tester.pumpAndSettle();
+      expect(tester.widget<Switch>(find.byType(Switch).last).value, isFalse);
+      expect(OfferAlertSettings.vibrate.value, isFalse);
+      final saved = await tester.runAsync(
+        () => SettingsRepository().read('accessibility'),
+      );
+      expect(saved?['vibration'], isFalse);
+    });
+
+    test('nothing saved yet: the Vibrate setting is on', () async {
+      SharedPreferences.setMockInitialValues({});
+      OfferAlertSettings.vibrate.value = false;
+      await OfferAlertSettings.restore(repository: SettingsRepository());
+      expect(OfferAlertSettings.vibrate.value, isTrue);
+      OfferAlertSettings.vibrate.value = false;
+      OfferAlertSettings.reset();
       expect(OfferAlertSettings.vibrate.value, isTrue);
     });
 
@@ -424,12 +470,13 @@ void main() {
         onNewOffer: OfferVibration.forNewOffer,
       );
       sound.sync(['a']);
-      expect(buzz, isEmpty, reason: 'Vibrate off by default');
+      expect(buzz, [OfferAlertRule.vibratePattern], reason: 'on by default');
+      sound.sync(['a']);
+      expect(buzz, hasLength(1), reason: 'once per offer');
       sound.sync(const []);
-      OfferAlertSettings.vibrate.value = true;
+      OfferAlertSettings.vibrate.value = false;
       sound.sync(['b']);
-      sound.sync(['b']);
-      expect(buzz, [OfferAlertRule.vibratePattern]);
+      expect(buzz, hasLength(1), reason: 'turned off');
       sound.dispose();
     });
 
@@ -618,6 +665,56 @@ void main() {
     });
   });
 
+  group('decision 3 on the trip: the rider sheet', () {
+    for (final (rating, on, shown) in const [
+      (4.86, true, '4.9 ★ · 3 rides'),
+      (null, true, '3 rides'),
+      (4.86, false, '3 rides'),
+    ]) {
+      testWidgets('rating $rating, zone switch $on: "$shown"', (tester) async {
+        DriverOfferRules.current = DriverOfferRules.current.withOffers({
+          'offerCard': {'riderRating': on},
+        });
+        final maps = GoogleMapsFlutterPlatform.instance;
+        GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+        addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+        await tester.binding.setSurfaceSize(const Size(375, 812));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: AcceptRide(
+              riderName: 'Angelica',
+              riderRating: rating,
+              riderTrips: 3,
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 160));
+        // The rider row is on the middle sheet.
+        tester
+            .widgetList<SlidingUpPanel>(find.byType(SlidingUpPanel))
+            .last
+            .controller!
+            .animatePanelToSnapPoint();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 520));
+        await tester.pump(const Duration(milliseconds: 300));
+        final name = find.ancestor(
+          of: find.text('Angelica'),
+          matching: find.byType(InkWell),
+        );
+        tester.widget<InkWell>(name.first).onTap!();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.text(shown), findsOneWidget);
+        expect(find.textContaining('New'), findsNothing);
+        tester.takeException();
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(seconds: 1));
+      });
+    }
+  });
+
   group('decision 4: Accept on a bad connection', () {
     test('lost answer, the check says it is his: the trip opens', () async {
       final api = _Api();
@@ -741,6 +838,44 @@ void main() {
       expect([check['checkEverySeconds'], check['checkForSeconds']], [2, 20]);
     });
 
+    test('the check stops after checkForSeconds on a stopwatch, whatever '
+        'the number of checks left (fake time)', () async {
+      final watch = _JumpingStopwatch(const Duration(seconds: 5));
+      final api = _Api(
+        checkFor: const Duration(seconds: 20),
+        stopwatch: () => watch,
+      );
+      await api.open([_wire()]);
+      api.answers.add((_) => http.ClientException('connection dropped'));
+      for (var i = 0; i < 50; i++) {
+        api.answers.add((_) => http.ClientException('still offline'));
+      }
+      // 10 ms apart, 20 s would allow 2000 checks; the stopwatch says
+      // 5 s pass per check, so it stops at 20 s.
+      final result = await api.repo.claimOffer('o1');
+      expect(result.outcome, ClaimOutcome.networkError);
+      final checks = api.paths.where((p) => p == _check).length;
+      expect(checks, inInclusiveRange(3, 4));
+    });
+
+    test('a check that hangs is given up when the next one is due', () async {
+      final api = _Api();
+      await api.open([_wire()]);
+      api.answers.add((_) => http.ClientException('connection dropped'));
+      for (var i = 0; i < 20; i++) {
+        api.answers.add((_) => Completer<Object>().future);
+      }
+      final started = DateTime.now();
+      final result = await api.repo.claimOffer('o1');
+      expect(result.outcome, ClaimOutcome.networkError);
+      expect(api.paths.where((p) => p == _check).length, greaterThan(1));
+      expect(
+        DateTime.now().difference(started),
+        lessThan(const Duration(seconds: 3)),
+        reason: 'each check waits checkEverySeconds at most, not 8 s',
+      );
+    });
+
     testWidgets('Home: the first tap locks Accept and says "Accepting…"; '
         'gone after the check: "Offer no longer available", not a miss', (
       tester,
@@ -776,6 +911,109 @@ void main() {
       expect(IslandMessages.posted.map((m) => m.title), contains('Accepting…'));
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       await _closeHome(tester);
+    });
+  });
+
+  group('decision 7: no warning before auto-offline', () {
+    testWidgets('the 9th missed offer of 10 shows nothing on the island; '
+        'the driver stays online', (tester) async {
+      DriverOfferRules.current = const DriverOfferRules();
+      final answers = ExclusiveAnswers.instance..reset();
+      for (var i = 0; i < 8; i++) {
+        answers.missed();
+      }
+      final session = DriverSessionController();
+      final maps = GoogleMapsFlutterPlatform.instance;
+      GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+      addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+      await tester.binding.setSurfaceSize(const Size(375, 812));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        LayoutViewport(
+          child: ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            splitScreenMode: true,
+            useInheritedMediaQuery: true,
+            builder: (_, _) => MaterialApp(
+              home: DriverHome(
+                sessionController: session,
+                dispatchRepository: _Dispatch([
+                  OfferWire.parse(_wire(id: 'x1')),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      tester
+          .widget<GestureDetector>(
+            find.byKey(const ValueKey<String>('trip-radar-touch-target')),
+          )
+          .onTap!
+          .call();
+      final card = find.byKey(
+        const ValueKey<String>('exclusive-offer-card-x1'),
+      );
+      await _until(tester, card, const Duration(seconds: 5));
+      for (var i = 0; i < 15; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      IslandMessages.posted.clear();
+      await tester.tap(
+        find.byKey(const ValueKey<String>('direct-offer-dismiss')),
+      );
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(answers.missedInRow, 9);
+      expect(
+        IslandMessages.posted.map((m) => m.title),
+        isNot(contains(contains('offline'))),
+      );
+      expect(session.availableForOffers, isTrue);
+      expect(_arb('en').containsKey('islandLastMissed'), isFalse);
+      await _closeHome(tester);
+    });
+  });
+
+  group('decision 6 / E3: the phone counts like the server', () {
+    test('Exclusive and hand-sent count; reservations and scheduled rides '
+        'Movera assigned never; a live build leaves it to the server', () {
+      expect(
+        ExclusiveAnswers.counts(
+          live: false,
+          reservation: false,
+          scheduledAssignment: false,
+        ),
+        isTrue,
+      );
+      expect(
+        ExclusiveAnswers.counts(
+          live: false,
+          reservation: true,
+          scheduledAssignment: false,
+        ),
+        isFalse,
+      );
+      expect(
+        ExclusiveAnswers.counts(
+          live: false,
+          reservation: false,
+          scheduledAssignment: true,
+        ),
+        isFalse,
+      );
+      expect(
+        ExclusiveAnswers.counts(
+          live: true,
+          reservation: false,
+          scheduledAssignment: false,
+        ),
+        isFalse,
+      );
+      expect(_contract['autoOffline']['counts'], ['exclusive', 'assigned']);
     });
   });
 
@@ -841,9 +1079,9 @@ void main() {
   });
 
   group('re-check LOW: the Radar orb', () {
-    test('Swedish reads "Acceptera · MATCHA", not "Acceptera · TA"', () {
+    test('Swedish keeps "Acceptera · TA" (owner 2026-10-31)', () {
       expect(_arb('sv')['offerAccept'], 'Acceptera');
-      expect(_arb('sv')['orbMatch'], 'MATCHA');
+      expect(_arb('sv')['orbMatch'], 'TA');
     });
   });
 }

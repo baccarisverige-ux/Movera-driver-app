@@ -2002,9 +2002,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get islandCashOff => 'Courses en espèces désactivées';
 
   @override
-  String get islandLastMissed => 'Prochaine offre manquée : hors ligne';
-
-  @override
   String islandOfflineMissed(Object count) {
     return 'Hors ligne : $count offres manquées';
   }
@@ -6718,4 +6715,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get soundOffTapToAllow => 'Touchez pour autoriser le son';
+
+  @override
+  String riderRidesOnly(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count courses',
+      one: '$count course',
+    );
+    return '$_temp0';
+  }
 }

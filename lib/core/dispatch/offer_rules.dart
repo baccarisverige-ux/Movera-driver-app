@@ -300,6 +300,18 @@ class ExclusiveAnswers {
 
   int get missedInRow => _missedInRow;
 
+  /// Contract §6.7 / `autoOffline.counts` (G4 decision 6, E3): the phone
+  /// counts a missed or declined offer only as the server does: an
+  /// Exclusive or admin hand-sent (assigned) offer of a live trip; never a
+  /// reservation or a scheduled ride Movera assigned. A [live] build
+  /// counts nothing itself: the server counts, and its `driverOffline`
+  /// takes the driver offline, so the two never disagree.
+  static bool counts({
+    required bool live,
+    required bool reservation,
+    required bool scheduledAssignment,
+  }) => !live && !reservation && !scheduledAssignment;
+
   /// The driver accepted one: the row starts again.
   void accepted() => _missedInRow = 0;
 
@@ -313,12 +325,6 @@ class ExclusiveAnswers {
     }
     _missedInRow = 0;
     return true;
-  }
-
-  /// One more missed offer takes the driver offline.
-  bool lastBeforeOffline([DriverOfferRules? rules]) {
-    final limit = rules ?? DriverOfferRules.current;
-    return limit.autoOffline && _missedInRow == limit.autoOfflineAfter - 1;
   }
 
   void reset() => _missedInRow = 0;

@@ -28,23 +28,23 @@ abstract final class OfferAlertRule {
 /// for requests", kept on this phone): the offer alert and the web push
 /// vibrate only while it is on (G4-E6).
 abstract final class OfferAlertSettings {
-  static final ValueNotifier<bool> vibrate = ValueNotifier<bool>(false);
+  /// Owner 2026-10-31: on for every driver until he turns it off.
+  static final ValueNotifier<bool> vibrate = ValueNotifier<bool>(true);
 
-  /// Reads the saved setting (off when there is none or it cannot be
-  /// read).
+  /// Reads the saved setting (on when there is none).
   static Future<void> restore({SettingsRepository? repository}) async {
     try {
       final data = await (repository ?? SettingsRepository()).read(
         'accessibility',
       );
-      vibrate.value = data['vibration'] == true;
+      vibrate.value = data['vibration'] != false;
     } catch (_) {
       // Unreadable settings: keep what is known.
     }
   }
 
-  /// Sign-out: the next driver starts with the default (off).
-  static void reset() => vibrate.value = false;
+  /// Sign-out: the next driver starts with the default (on).
+  static void reset() => vibrate.value = true;
 }
 
 /// One vibration for an offer that rings, only with the setting on.

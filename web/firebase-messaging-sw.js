@@ -10,7 +10,7 @@
 // open app already shows the offer) and never after expiresAt. Exclusive
 // and hand-sent offers (sound "offer") make the phone's notification sound
 // and vibrate [300, 150, 300] (webVibratePattern) when vibrate is "true" and
-// the driver's own Vibrate setting is on; Radar (sound "none") is silent.
+// the driver's own Vibrate setting is on (the default); Radar (sound "none") is silent.
 'use strict';
 
 var OFFER_KIND = 'new_offer';
@@ -59,7 +59,8 @@ function showOffer(d, title, body) {
       icon: appRoot() + 'icons/Icon-192.png',
       data: { notificationId: d.notificationId || '', deepLink: d.deepLink || '', kind: d.kind || '', offerId: d.offerId || '' }
     };
-    if (loud && d.vibrate === 'true' && both[1].vibrate === true) options.vibrate = VIBRATE_PATTERN;
+    // The Vibrate setting is on unless the driver turned it off (owner 2026-10-31).
+    if (loud && d.vibrate === 'true' && both[1].vibrate !== false) options.vibrate = VIBRATE_PATTERN;
     return self.registration.showNotification(title, options).then(function () {
       return closeWhenGone(options.tag, expires);
     });

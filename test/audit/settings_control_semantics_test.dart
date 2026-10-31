@@ -15,6 +15,14 @@ void main() {
       (tester) async {
         final handle = tester.ensureSemantics();
         try {
+          // Both off first (vibration starts on by default, owner
+          // 2026-10-31), so each switch is seen turning on alone.
+          await tester.runAsync(
+            () => SettingsRepository().save('accessibility', {
+              'flash': false,
+              'vibration': false,
+            }),
+          );
           await tester.pumpWidget(const MaterialApp(home: Accessibility()));
           await tester.pumpAndSettle();
           final node = tester.getSemantics(find.byType(Switch).at(index));

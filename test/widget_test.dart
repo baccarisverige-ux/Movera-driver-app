@@ -583,6 +583,7 @@ void main() {
       addTearDown(() => RadarOfferSound.debugPlayer = null);
       final vibrations = <List<int>>[];
       OfferVibration.debugVibrate = vibrations.add;
+      OfferAlertSettings.reset();
       addTearDown(() => OfferVibration.debugVibrate = null);
       await _pumpHome(tester, const Size(375, 812));
 
@@ -606,7 +607,8 @@ void main() {
       // G4-E6 (owner "Sound + vibration"): the Exclusive offer rings; a
       // tap anywhere stops it.
       expect(sound.calls, ['start']);
-      expect(vibrations, isEmpty, reason: 'the Vibrate setting is off');
+      // Vibration is on by default (owner 2026-10-31): one for the offer.
+      expect(vibrations, [OfferAlertRule.vibratePattern]);
       // Exclusive keeps its own radar: no soft sweep.
       expect(
         find.descendant(

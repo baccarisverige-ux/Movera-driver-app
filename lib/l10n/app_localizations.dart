@@ -3525,12 +3525,6 @@ abstract class AppLocalizations {
   /// **'Cash rides off'**
   String get islandCashOff;
 
-  /// Admin text key island.lastMissed (Content › Driver app texts).
-  ///
-  /// In en, this message translates to:
-  /// **'Next missed offer: offline'**
-  String get islandLastMissed;
-
   /// Admin text key island.offlineMissed (Content › Driver app texts).
   ///
   /// In en, this message translates to:
@@ -11430,6 +11424,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to allow sound'**
   String get soundOffTapToAllow;
+
+  /// G4 decision 3: the rider's rides when there is no rating to show.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 ride} other{{count} rides}}'**
+  String riderRidesOnly(int count);
 }
 
 class _AppLocalizationsDelegate

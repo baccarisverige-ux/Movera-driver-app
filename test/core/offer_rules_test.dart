@@ -82,9 +82,8 @@ void main() {
       const three = DriverOfferRules(autoOfflineAfter: 3);
       final answers = ExclusiveAnswers.instance..reset();
       expect(answers.missed(three), isFalse);
-      expect(answers.lastBeforeOffline(three), isFalse);
       expect(answers.missed(three), isFalse);
-      expect(answers.lastBeforeOffline(three), isTrue);
+      expect(answers.missedInRow, 2);
       // Accept starts the row again.
       answers.accepted();
       expect(answers.missedInRow, 0);

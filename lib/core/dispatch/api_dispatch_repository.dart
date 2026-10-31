@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
@@ -171,7 +172,9 @@ class ApiDispatchRepository implements DispatchRepository {
     this.acceptAnswerTimeout = const Duration(seconds: 8),
     this.acceptCheckEvery = const Duration(seconds: 2),
     this.acceptCheckFor = const Duration(seconds: 20),
+    @visibleForTesting Stopwatch Function()? stopwatch,
   }) : _client = client,
+       _stopwatch = stopwatch ?? Stopwatch.new,
        _base = baseUri,
        _token = accessToken,
        _key = idempotencyKey ?? _randomKey,
@@ -250,6 +253,9 @@ class ApiDispatchRepository implements DispatchRepository {
   /// [acceptCheckFor] (`checkForSeconds`, 20).
   final Duration acceptCheckEvery;
   final Duration acceptCheckFor;
+
+  /// Measures the [acceptCheckFor] window (tests pass a fake one).
+  final Stopwatch Function() _stopwatch;
 
   final Map<String, RideOffer> _offers = <String, RideOffer>{};
   final Map<String, RideOffer> _nextTrips = <String, RideOffer>{};
@@ -753,10 +759,13 @@ class ApiDispatchRepository implements DispatchRepository {
   ///   available", not a miss).
   /// No answer to any check: a network error, as before.
   Future<ClaimResult> _checkLostAccept(String offerId, RideOffer offer) async {
-    // Counted in checks, not read off a clock: a phone clock that jumps
-    // does not stretch or cut the check.
+    // At most [acceptCheckFor] in all, on a stopwatch (a phone clock that
+    // jumps does not stretch or cut it), and never more checks than fit
+    // in it.
     final until = _CheckBudget(
       acceptCheckFor.inMicroseconds ~/ acceptCheckEvery.inMicroseconds,
+      _stopwatch()..start(),
+      acceptCheckFor,
     );
     var version = offer.version;
     while (true) {
@@ -767,7 +776,8 @@ class ApiDispatchRepository implements DispatchRepository {
               _uri('/driver/offers/${Uri.encodeComponent(offerId)}'),
               headers: await _headers(),
             )
-            .timeout(acceptAnswerTimeout);
+            // Each check waits at most until the next one is due.
+            .timeout(acceptCheckEvery);
       } catch (_) {
         if (!await _waitForNextCheck(until)) {
           return const ClaimResult.networkError();
@@ -810,6 +820,7 @@ class ApiDispatchRepository implements DispatchRepository {
         if (again != null && again.outcome != ClaimOutcome.networkError) {
           return again;
         }
+        if (until.over) return const ClaimResult.networkError();
         if (!await _waitForNextCheck(until)) {
           return const ClaimResult.networkError();
         }
@@ -890,13 +901,18 @@ class ApiDispatchRepository implements DispatchRepository {
 /// The checks after a lost Accept answer still allowed
 /// (`checkForSeconds / checkEverySeconds`, 10).
 class _CheckBudget {
-  _CheckBudget(this._left);
+  _CheckBudget(this._left, this._watch, this._window);
 
   int _left;
+  final Stopwatch _watch;
+  final Duration _window;
 
-  /// One more check, if any is left.
+  /// The [_window] (`checkForSeconds`) has run out.
+  bool get over => _watch.elapsed >= _window;
+
+  /// One more check, if any is left and the window is not over.
   bool take() {
-    if (_left <= 0) return false;
+    if (_left <= 0 || over) return false;
     _left--;
     return true;
   }

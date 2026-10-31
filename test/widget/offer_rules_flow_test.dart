@@ -148,9 +148,8 @@ void main() {
   tearDown(() => DriverOfferRules.current = const DriverOfferRules());
 
   group('Q16: missed Exclusive offers', () {
-    testWidgets('one before the limit the island warns; at it, offline', (
-      tester,
-    ) async {
+    testWidgets('one before the limit no warning (G4 decision 7); at it, '
+        'offline', (tester) async {
       DriverOfferRules.current = const DriverOfferRules(autoOfflineAfter: 2);
       final session = await _pumpHome(tester, _Dispatch());
       await _frames(tester, const Duration(milliseconds: 2600));
@@ -161,7 +160,9 @@ void main() {
       );
       // Its sheet goes down first.
       await _frames(tester, const Duration(milliseconds: 900));
-      expect(_said, contains('Next missed offer: offline'));
+      // G4 decision 7 (owner "No warning only when set offline").
+      expect(_said, isNot(contains('Next missed offer: offline')));
+      expect(_said.where((t) => t.contains('offline')), isEmpty);
       expect(session.availableForOffers, isTrue);
       expect(ExclusiveAnswers.instance.missedInRow, 1);
       await tester.pumpWidget(const SizedBox());

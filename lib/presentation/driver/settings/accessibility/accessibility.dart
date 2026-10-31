@@ -19,7 +19,9 @@ class _AccessibilityState extends State<Accessibility> {
   static const Color _line = Color(0xFFE6E8EA);
 
   bool _flash = false;
-  bool _vibration = false;
+  // Owner 2026-10-31 (G4): vibration for offers starts on for every
+  // driver; he can turn it off.
+  bool _vibration = true;
 
   late final _settings = widget.repository ?? SettingsRepository();
   bool _loading = true;

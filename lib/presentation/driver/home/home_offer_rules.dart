@@ -80,8 +80,9 @@ extension _HomeOfferRules on _DriverHomeState {
   }
 
   /// An Exclusive offer went by without Accept. At the admin's number in
-  /// a row the driver goes offline, with a notice on the island; one
-  /// before it, the island warns.
+  /// a row the driver goes offline, with a short line on the island. G4
+  /// decision 7 (owner "No warning only when set offline"): no warning
+  /// before it.
   void _exclusiveMissed() {
     final answers = ExclusiveAnswers.instance;
     if (answers.missed()) {
@@ -91,10 +92,6 @@ extension _HomeOfferRules on _DriverHomeState {
         ),
       );
       _forcedOffline();
-      return;
-    }
-    if (answers.lastBeforeOffline()) {
-      IslandMessages.show(HomeIslandNotices.lastMissedBeforeOffline);
     }
   }
 

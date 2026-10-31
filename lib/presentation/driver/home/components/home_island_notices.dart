@@ -319,13 +319,6 @@ class HomeIslandNotices {
     group: 'cash',
   );
 
-  /// Q16: one more missed Exclusive offer takes the driver offline.
-  static IslandMessage get lastMissedBeforeOffline => IslandMessage(
-    title: driverText(DriverTexts.islandLastMissed),
-    tone: IslandTone.warning,
-    group: 'missed',
-  );
-
   /// Q16: [count] Exclusive offers in a row went without Accept.
   static IslandMessage offlineAfterMissed(int count) => IslandMessage(
     title: driverText(DriverTexts.islandOfflineMissed, {'count': count}),

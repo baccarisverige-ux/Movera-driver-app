@@ -397,10 +397,17 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     // A ride Movera assigned may be waiting for this place.
     _HomeScheduled(this)._maybeShowAssignment();
-    if (missed && gone != null) {
+    if (missed && gone != null && _countsTowardOffline(gone)) {
       _HomeOfferRules(this)._exclusiveMissed();
     }
   }
+
+  /// See [ExclusiveAnswers.counts] (contract §6.7, G4 decision 6, E3).
+  bool _countsTowardOffline(_HomeDirectOffer offer) => ExclusiveAnswers.counts(
+    live: LiveDriverServices.active,
+    reservation: offer.reservation,
+    scheduledAssignment: offer.assigned,
+  );
 
   void _showRadarHomeOffer(_HomeDirectOffer offer) {
     if (!mounted ||

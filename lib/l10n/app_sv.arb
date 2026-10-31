@@ -569,7 +569,6 @@
   "lateEtaReassignedNote": "Resan gick till en annan förare — du skulle nå upphämtningen {time} ungefär {minutes} min för sent.",
   "islandCashOn": "Kontantresor på",
   "islandCashOff": "Kontantresor av",
-  "islandLastMissed": "Nästa missade erbjudande: offline",
   "islandOfflineMissed": "Offline: {count} missade erbjudanden",
   "islandDrivingLeft": "{minutes} min kvar att köra",
   "islandRestUntil": "Vila till {time}",
@@ -706,7 +705,7 @@
   "hideRequest": "Dölj förfrågan",
   "holdToGoOffline": "Håll för att gå offline",
   "tripOptions": "Resealternativ",
-  "orbMatch": "MATCHA",
+  "orbMatch": "TA",
   "orbWait": "VÄNTA",
   "orbOff": "AV",
   "orbOn": "PÅ",
@@ -1884,5 +1883,6 @@
   "offerNoLongerAvailable": "Erbjudandet är inte längre tillgängligt",
   "riderRatingLabel": "Kundens betyg",
   "soundOffNotice": "Ljudet är av – du kan missa erbjudanden",
-  "soundOffTapToAllow": "Tryck för att tillåta ljud"
+  "soundOffTapToAllow": "Tryck för att tillåta ljud",
+  "riderRidesOnly": "{count, plural, =1{1 resa} other{{count} resor}}"
 }

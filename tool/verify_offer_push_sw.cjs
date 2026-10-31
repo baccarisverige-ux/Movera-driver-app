@@ -75,10 +75,10 @@ function offer(kind, extra = {}) {
   assert.equal(sw.shown[0].options.silent, false);
   assert.equal(sw.shown[0].options.vibrate, undefined);
 
-  // No setting saved yet: the app's default (off) — no vibration.
+  // No setting saved yet: the default is on (owner 2026-10-31).
   sw = scope();
   await sw.push(offer('exclusive'));
-  assert.equal(sw.shown[0].options.vibrate, undefined);
+  assert.ok(sw.shown[0].options.vibrate);
 
   // Radar: quiet.
   sw = scope({ prefs: { vibrate: true } });

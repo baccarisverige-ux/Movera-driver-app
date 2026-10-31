@@ -1163,10 +1163,17 @@ extension _AcceptRidePanel on _AcceptRideState {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    tr.ratingAndRides(
-                      widget.riderRating?.toStringAsFixed(1) ?? tr.rrNew,
-                      widget.riderTrips,
-                    ),
+                    // G4 decision 3: the rider's real rating only, and only
+                    // while the zone shows it; else just the rides.
+                    switch (widget.riderRating) {
+                      final rating?
+                          when DriverOfferRules.current.card.riderRating =>
+                        tr.ratingAndRides(
+                          rating.toStringAsFixed(1),
+                          widget.riderTrips,
+                        ),
+                      _ => tr.riderRidesOnly(widget.riderTrips),
+                    },
                     style: const TextStyle(
                       color: _AcceptRideState._muted,
                       fontSize: 12,
