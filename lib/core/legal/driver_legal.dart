@@ -54,6 +54,7 @@ class LegalTexts {
     required this.terms,
     required this.privacy,
     this.source = 'default',
+    this.reacceptFrom,
   });
 
   factory LegalTexts.fromJson(Map<String, dynamic> json) => LegalTexts(
@@ -61,6 +62,7 @@ class LegalTexts {
     version: (json['version'] as num?)?.toInt() ?? 0,
     source: json['source'] as String? ?? 'default',
     reaccept: json['reaccept'] == true,
+    reacceptFrom: (json['reacceptFrom'] as num?)?.toInt(),
     terms: LegalDocument.fromJson(
       Map<String, dynamic>.from(json['terms'] as Map? ?? const {}),
     ),
@@ -77,6 +79,12 @@ class LegalTexts {
 
   /// The live version asks everyone to accept it again.
   final bool reaccept;
+
+  /// Contract v0.18.5 (df2cc45) `legal.accept`: the newest version
+  /// published with reaccept on, or null. A person must have accepted it
+  /// or any later version (accepting v3 covers v2); a later publish
+  /// without reaccept never lets off someone who did not accept it.
+  final int? reacceptFrom;
   final LegalDocument terms;
   final LegalDocument privacy;
 
@@ -85,6 +93,7 @@ class LegalTexts {
     'version': version,
     'source': source,
     'reaccept': reaccept,
+    'reacceptFrom': reacceptFrom,
     'terms': terms.toJson(),
     'privacy': privacy.toJson(),
   };
@@ -195,9 +204,12 @@ class DriverLegal extends ChangeNotifier {
   /// not accepted it).
   bool get due {
     final texts = current;
-    if (_driverId == null) return false;
-    if (texts == null || !texts.reaccept || texts.version <= 0) return false;
-    return (_accepted[_acceptKey(texts.country)] ?? -1) < texts.version;
+    if (_driverId == null || texts == null) return false;
+    // `legal.accept`: reacceptFrom decides, not the live version's own
+    // reaccept flag (v2 with reaccept, then v3 without: v2 still counts).
+    final from = texts.reacceptFrom;
+    if (from == null || from <= 0) return false;
+    return (_accepted[_acceptKey(texts.country)] ?? -1) < from;
   }
 
   /// The terms screen shows: only for a signed-in driver (never on the

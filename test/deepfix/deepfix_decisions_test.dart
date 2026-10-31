@@ -358,11 +358,13 @@ void main() {
     Map<String, Object?> legalAnswer({
       int version = 0,
       bool reaccept = false,
+      int? reacceptFrom,
     }) => {
       'country': 'FR',
       'version': version,
       'source': version == 0 ? 'default' : 'admin',
       'reaccept': reaccept,
+      'reacceptFrom': reacceptFrom ?? (reaccept ? version : null),
       'terms': {
         'title': {'sv': 'Villkor', 'fr': 'Conditions', 'en': 'Terms of use'},
         'text': {
@@ -486,6 +488,45 @@ void main() {
       await legal.signedOut();
       legal.useAccount(driverId: 'drv_a', country: 'FR');
       expect(legal.due, isTrue);
+    });
+
+    test('contract df2cc45 reacceptFrom: v2 with re-accept, then v3 '
+        'without the tick still asks; accepting v3 covers v2', () async {
+      var answer = legalAnswer(version: 2, reaccept: true);
+      final posted = <Object?>[];
+      final legal = DriverLegal(
+        api: ApiClient(
+          client: MockClient((request) async {
+            if (request.method == 'GET') return _json(200, answer);
+            posted.add(jsonDecode(request.body));
+            return http.Response('', 204);
+          }),
+          baseUri: _origin,
+          tokens: MemoryTokenStore()..save(access: 'a', refresh: 'r'),
+        ),
+        cache: MemoryDriverLegalCache(),
+      );
+      await legal.start(country: 'FR');
+      legal.useAccount(driverId: 'drv_a', country: 'FR');
+      expect(legal.due, isTrue);
+      // The admin publishes v3 without "ask everyone again": v2 still
+      // counts for a driver who never accepted it.
+      answer = legalAnswer(version: 3, reacceptFrom: 2);
+      await legal.refresh();
+      expect(legal.current?.reaccept, isFalse);
+      expect(legal.due, isTrue);
+      // Accepting sends the live version (3), which covers v2.
+      expect(await legal.accept(), isTrue);
+      expect(posted.single, {'country': 'FR', 'version': 3});
+      expect(legal.due, isFalse);
+      // Nothing published with re-accept: nobody is asked.
+      answer = legalAnswer(version: 4);
+      await legal.refresh();
+      expect(legal.due, isFalse);
+      expect(
+        (_contract['legal'] as Map)['read'] as String,
+        contains('reacceptFrom'),
+      );
     });
 
     test('version 0 (Movera drafts) needs no accept; a kept answer is '
