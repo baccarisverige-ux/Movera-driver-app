@@ -55,9 +55,15 @@ final String moveraMapStyleNear = _style(moveraParkNear);
 /// draws the edge, so a heavier edge reads as a wider, bolder road. Native
 /// SDKs and the raster web map honour `weight`; the cloud style (web Map
 /// ID) sets its own `strokeWeight` per zoom instead.
-const Map<String, num> moveraCloseRoadWeights = {
+///
+/// Whole numbers only: google_maps_flutter_web reads `weight` as an `int`
+/// (MapStyler.fromJson), so 2.5 threw "double is not a subtype of int?" and
+/// the web map stayed grey from zoom 15.5 (driver-03f). Arterials keep the
+/// local width and stay apart from local roads by their darker colour;
+/// highways are the widest.
+const Map<String, int> moveraCloseRoadWeights = {
   'road.local': 2,
-  'road.arterial': 2.5,
+  'road.arterial': 2,
   'road.highway': 3,
 };
 

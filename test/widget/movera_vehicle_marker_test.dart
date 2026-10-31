@@ -9,6 +9,25 @@ import 'package:movera/widgets/movera_vehicle_marker.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
+/// Owner 2026-10-31 (Rules plan/driver-pin/SPEC.md): the driver's own
+/// position is a teal navigation arrowhead with a notch at its back, a
+/// darker teal inner edge, a thin white outline and a soft shadow, about
+/// 18 x 21 pt seen from above, in perspective with a mint-grey thickness on
+/// a tilted map, ONE screen size at every zoom and tilt ("same in all zoom
+/// steps"), pointing along the heading whatever the map's bearing, over a
+/// grey halo of 60 pt on screen at every zoom.
+
+/// The longest distance between two of [points].
+double _diameter(List<Offset> points) {
+  var most = 0.0;
+  for (final a in points) {
+    for (final b in points) {
+      most = (a - b).distance > most ? (a - b).distance : most;
+    }
+  }
+  return most;
+}
+
 Marker _own(double heading, {BitmapDescriptor? icon, String id = 'driver'}) =>
     Marker(
       markerId: MarkerId(id),
@@ -20,17 +39,25 @@ Marker _own(double heading, {BitmapDescriptor? icon, String id = 'driver'}) =>
       zIndexInt: 12,
     );
 
-/// The pixels of [paint] drawn in a [box] x [box] square at 1x.
-Future<Color Function(int x, int y)> _pixels(
-  void Function(Canvas, double) paint,
-  double box,
-) async {
+/// The arrow for [rotation] and [tilt] drawn centred in a [size] square at
+/// 1x; its pixels by offset from the centre.
+Future<Color Function(double dx, double dy)> _arrow({
+  double rotation = 0,
+  double tilt = 0,
+  int size = 80,
+}) async {
   final recorder = ui.PictureRecorder();
-  paint(Canvas(recorder), box);
-  final image = await recorder.endRecording().toImage(box.round(), box.round());
+  MoveraVehicleMarker.paint(
+    Canvas(recorder),
+    Offset(size / 2, size / 2),
+    rotation: rotation,
+    tilt: tilt,
+  );
+  final image = await recorder.endRecording().toImage(size, size);
   final data = (await image.toByteData())!;
-  return (int x, int y) {
-    final i = (y * box.round() + x) * 4;
+  return (double dx, double dy) {
+    final x = (size / 2 + dx).floor(), y = (size / 2 + dy).floor();
+    final i = (y * size + x) * 4;
     return Color.fromARGB(
       data.getUint8(i + 3),
       data.getUint8(i),
@@ -40,238 +67,543 @@ Future<Color Function(int x, int y)> _pixels(
   };
 }
 
+int _rgb(Color c) =>
+    ((c.r * 255).round() << 16) |
+    ((c.g * 255).round() << 8) |
+    (c.b * 255).round();
+
+/// Colour distance, 0..255 per channel.
+double _off(Color a, Color b) =>
+    [
+      (a.r - b.r).abs(),
+      (a.g - b.g).abs(),
+      (a.b - b.b).abs(),
+    ].reduce((x, y) => x > y ? x : y) *
+    255;
+
 void main() {
-  group(
-    'the own vehicle is an upright arrow of one size over a small ring',
-    () {
-      test(
-        'its rotation is the heading minus the map bearing, nothing else',
-        () {
-          double r(double h, double b) =>
-              MoveraVehicleMarker.screenRotation(h, b);
-          // Heading-up guidance: the arrow points straight up.
-          expect(r(90, 90), closeTo(0, 1e-9));
-          // North-up map: the compass heading itself.
-          expect(r(135, 0), closeTo(135, 1e-9));
-          // A camera turned 30 deg: the arrow turns back by 30.
-          expect(r(90, 30), closeTo(60, 1e-9));
-          expect(r(10, 30), closeTo(340, 1e-9));
-          expect(r(-10, 0), closeTo(350, 1e-9));
-        },
+  tearDown(MoveraVehicleMarker.debugReset);
+
+  group('the shape and colours', () {
+    test('about 18 x 21 pt seen from above, centred on the position', () {
+      final flat = MoveraVehicleMarker.layers(rotation: 0, tilt: 0).bounds;
+      expect(flat.width, closeTo(18, .75));
+      expect(flat.height, closeTo(21, .75));
+      expect(flat.center.dx, closeTo(0, .1));
+      expect(flat.center.dy, closeTo(0, .1));
+      expect(
+        MoveraVehicleMarker.layers(rotation: 0, tilt: 0).wallBottom,
+        isEmpty,
+        reason: 'seen from above: no thickness',
       );
+    });
 
-      test('one bitmap holds the arrow and the ring, drawn at 3x', () async {
-        final icon = await MoveraVehicleMarker.createIcon() as BytesMapBitmap;
-        expect(identical(MoveraVehicleMarker.icon, icon), isTrue);
-        expect(icon.width, MoveraVehicleMarker.box);
-        expect(icon.height, MoveraVehicleMarker.box);
-        expect(MoveraVehicleMarker.box, greaterThan(MoveraVehicleMarker.size));
-        final image = await decodeImageFromList(icon.byteData);
-        expect(image.width, (MoveraVehicleMarker.box * 3).round());
-        expect(image.height, image.width);
-        // The ring: about 1.3 x the arrow's width (34 of 52 drawing units).
-        final arrowWidth = 34 / 52 * MoveraVehicleMarker.size;
-        expect(MoveraVehicleMarker.ringSize / arrowWidth, closeTo(1.3, .05));
-      });
+    test('a notch at its back, between two rounded wings', () {
+      final outline = MoveraVehicleMarker.outlinePoints(0);
+      double maxY(bool Function(Offset) where) =>
+          outline.where(where).map((p) => p.dy).reduce((a, b) => a > b ? a : b);
+      final back = maxY((p) => p.dx.abs() > 5);
+      final middle = maxY((p) => p.dx.abs() < .2);
+      expect(back - middle, greaterThan(1.5), reason: 'the back is notched');
+      // Rounded tip: no point at the raw corner (0, -12).
+      final tip = outline.map((p) => p.dy).reduce((a, b) => a < b ? a : b);
+      expect(tip, greaterThan(-11.5));
+    });
 
-      test(
-        'the ring sits centred under the arrow base, soft and grey',
-        () async {
-          const box = MoveraVehicleMarker.box;
-          final at = await _pixels(MoveraVehicleMarker.paintMarker, box);
-          final centre = Offset(
-            MoveraVehicleMarker.anchor.dx * box,
-            MoveraVehicleMarker.anchor.dy * box,
+    test('teal face, darker inner edge, white outline, soft shadow', () async {
+      final at = await _arrow();
+      expect(_off(at(0, 2), MoveraVehicleMarker.fill), lessThan(3));
+      expect(_rgb(MoveraVehicleMarker.fill), 0x00A8C0);
+      expect(_rgb(MoveraVehicleMarker.innerEdge), 0x0090A8);
+      // Walk left from the face across the left edge (y = 6, near the
+      // back): teal, then the darker edge, then the white outline, then the
+      // shadow, then nothing.
+      final row = [for (var x = 0.0; x > -16; x -= .5) at(x, 6)];
+      final edge = row.indexWhere(
+        (c) => _off(c, MoveraVehicleMarker.innerEdge) < 12,
+      );
+      final rim = row.indexWhere((c) => c.r > .9 && c.g > .9 && c.b > .9);
+      expect(edge, greaterThan(0), reason: 'darker teal inner edge');
+      expect(rim, greaterThan(edge), reason: 'white outline outside it');
+      // Past the outline's soft edge: the see-through shadow.
+      final outside = row.sublist(rim).indexWhere((c) => c.a < .5);
+      final shadow = row[rim + outside + 1];
+      expect(shadow.a, inExclusiveRange(0, .3), reason: 'soft shadow');
+      expect(shadow.r, lessThan(.3), reason: 'dark shadow');
+      expect(at(-39, -39).a, 0);
+    });
+
+    test('tilted: in perspective, with a mint-grey thickness', () async {
+      // Pointing across a fully tilted map: no longer than seen from above.
+      final across = MoveraVehicleMarker.layers(rotation: 90, tilt: 67.5);
+      final flatLong = _diameter(
+        MoveraVehicleMarker.layers(rotation: 0, tilt: 0).outline,
+      );
+      expect(_diameter(across.outline), closeTo(flatLong, .05));
+      // Pointing up it: foreshortened, in perspective.
+      expect(
+        MoveraVehicleMarker.layers(
+          rotation: 0,
+          tilt: 67.5,
+        ).outline.map((p) => p.dy).reduce((a, b) => a > b ? a : b),
+        lessThan(8),
+      );
+      final top = across.outline
+          .map((p) => p.dy)
+          .reduce((a, b) => a > b ? a : b);
+      final bottom = across.wallBottom
+          .map((p) => p.dy)
+          .reduce((a, b) => a > b ? a : b);
+      expect(bottom - top, inInclusiveRange(3, 4.5), reason: '3-4 pt thick');
+      // Its wall under the face is pale mint-grey.
+      // Pointing up the screen: under its back notch, just above the
+      // wall's foot.
+      final at = await _arrow(tilt: 67.5);
+      final up = MoveraVehicleMarker.layers(rotation: 0, tilt: 67.5);
+      final foot = up.wallBottom
+          .where((p) => p.dx.abs() < 1.5)
+          .map((p) => p.dy)
+          .reduce((a, b) => a > b ? a : b);
+      final wall = at(0, foot - 1.2);
+      expect(wall.a, 1);
+      expect(_off(wall, MoveraVehicleMarker.wallTop), lessThan(30));
+      expect(wall.g, greaterThan(wall.r), reason: 'mint, not plain grey');
+    });
+
+    test('one screen size at every tilt and rotation: the long side never '
+        'changes', () {
+      final flatLong = _diameter(
+        MoveraVehicleMarker.layers(rotation: 0, tilt: 0).outline,
+      );
+      expect(flatLong, closeTo(MoveraVehicleMarker.longSide, 1e-9));
+      // Tip to wing of the 18 x 21 pt arrow.
+      expect(flatLong, closeTo(22, 1));
+      for (final rotation in [0.0, 30.0, 90.0, 135.0, 270.0]) {
+        for (final tilt in [0.0, 10.0, 28.9, 45.0, 57.9, 67.5]) {
+          final layers = MoveraVehicleMarker.layers(
+            rotation: rotation,
+            tilt: tilt,
           );
-          final r = MoveraVehicleMarker.ringSize / 2;
-          // Beside the arrow's base and under its notch, inside the ring:
-          // translucent grey.
-          for (final d in [
-            Offset(-r + 3, 0),
-            Offset(r - 3, 0),
-            const Offset(0, 8),
-            const Offset(0, 12),
-          ]) {
-            final p = at(
-              (centre.dx + d.dx).round(),
-              (centre.dy + d.dy).round(),
-            );
-            expect(p.a, inInclusiveRange(.12, .35), reason: 'soft grey at $d');
-            expect((p.r - p.b).abs(), lessThan(.1), reason: 'grey, not blue');
-          }
-          // The edge fades out: just outside the ring nothing is drawn.
-          expect(at((centre.dx - r - 2).round(), centre.dy.round()).a, 0);
-          expect(at(1, 1).a, 0);
-          expect(at(box.round() - 2, box.round() - 2).a, 0);
-          // The arrow's blue face is over the ring's centre line.
-          final face = at(centre.dx.round(), (centre.dy - 6).round());
-          expect(face.a, 1);
-          expect(face.b, greaterThan(face.r));
-        },
+          expect(
+            _diameter(layers.outline),
+            closeTo(flatLong, .05),
+            reason: 'rotation $rotation, tilt $tilt',
+          );
+          // The whole picture (with its thickness) stays about that size.
+          final box = layers.bounds;
+          expect(
+            box.longestSide,
+            lessThan(flatLong + 4),
+            reason: 'rotation $rotation, tilt $tilt',
+          );
+        }
+      }
+    });
+
+    test('drawn at the device pixel ratio, centred', () async {
+      for (final density in [1.0, 2.0, 3.0]) {
+        final png = await MoveraVehicleMarker.png(density: density);
+        final image = await decodeImageFromList(png!);
+        expect(image.width, (MoveraVehicleMarker.box * density).round());
+        expect(image.height, image.width);
+      }
+      expect(MoveraVehicleMarker.anchor, const Offset(.5, .5));
+      final icon = await MoveraVehicleMarker.createIcon() as BytesMapBitmap;
+      expect(icon.width, MoveraVehicleMarker.box);
+      expect(icon.height, MoveraVehicleMarker.box);
+      final image = await decodeImageFromList(icon.byteData);
+      expect(
+        image.width,
+        (MoveraVehicleMarker.box * MoveraVehicleMarker.devicePixelRatio)
+            .round(),
       );
+    });
+  });
 
-      test('flat blue face, white outline, clear around it', () async {
-        // Drawn in its 52-unit design box so the pixel spots stay fixed.
-        final at = await _pixels(MoveraVehicleMarker.paintArrow, 52);
-        final face = at(26, 24);
-        expect(face.a, 1);
-        expect(face.b, greaterThan(face.r));
-        // White outline just outside the tip.
-        final rim = at(26, 6);
-        expect(rim.a, greaterThan(.9));
-        expect(rim.r, greaterThan(.9));
-        expect(rim.b, greaterThan(.9));
-        expect(at(2, 2).a, 0);
-      });
+  group('rotation', () {
+    test('screen rotation is the heading minus the map bearing', () {
+      double r(double h, double b) => MoveraVehicleMarker.screenRotation(h, b);
+      expect(r(90, 90), closeTo(0, 1e-9));
+      expect(r(135, 0), closeTo(135, 1e-9));
+      expect(r(90, 30), closeTo(60, 1e-9));
+      expect(r(10, 30), closeTo(340, 1e-9));
+      expect(r(-10, 0), closeTo(350, 1e-9));
+    });
 
-      testWidgets('CustomGoogleMap shows one billboard of the same size at '
-          'every zoom, and no halo marker', (tester) async {
-        final maps = GoogleMapsFlutterPlatform.instance;
-        GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
-        addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
-        final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
-        const other = Marker(markerId: MarkerId('pickup'), rotation: 40);
-        await tester.pumpWidget(
-          MaterialApp(
-            home: CustomGoogleMap(
-              initialPosition: const CameraPosition(
-                target: LatLng(59.33, 18.06),
-                zoom: 11,
-              ),
-              markers: {
-                _own(0, icon: icon),
-                other,
-              },
-            ),
-          ),
+    test('seen from above: one flat picture turned to the heading, so '
+        'Maps turns it with the map bearing', () {
+      for (final bearing in [0.0, 30.0, 200.0]) {
+        final v = MoveraVehicleMarker.view(
+          heading: 135,
+          bearing: bearing,
+          tilt: 0,
         );
-        await tester.pump();
-        GoogleMap map() => tester.widget<GoogleMap>(find.byType(GoogleMap));
-        Marker driver() =>
-            map().markers.singleWhere((m) => m.markerId.value == 'driver');
-        double width() => (driver().icon as BytesMapBitmap).width!;
+        expect(v.flat, isTrue);
+        expect(v.markerRotation, 135);
+        expect(v.rotation, 0);
+      }
+    });
+
+    test('tilted: the heading less the bearing drawn into the picture', () {
+      final v = MoveraVehicleMarker.view(heading: 90, bearing: 30, tilt: 60);
+      expect(v.flat, isFalse);
+      expect(v.markerRotation, 0);
+      expect(v.rotation, 60);
+      expect(v.tilt, 60);
+      // Heading-up: straight up.
+      expect(
+        MoveraVehicleMarker.view(heading: 45, bearing: 45, tilt: 58).rotation,
+        0,
+      );
+      // A half-degree wobble is the same picture.
+      expect(
+        MoveraVehicleMarker.view(heading: 45, bearing: 45.5, tilt: 58.4),
+        MoveraVehicleMarker.view(heading: 45, bearing: 45, tilt: 58),
+      );
+    });
+
+    test('the tip points along the rotation', () async {
+      for (final (rotation, tip, side) in [
+        (0.0, const Offset(0, -6), const Offset(6, 0)),
+        (90.0, const Offset(6, 0), const Offset(0, -6)),
+        (180.0, const Offset(0, 6), const Offset(-6, 0)),
+        (270.0, const Offset(-6, 0), const Offset(0, 6)),
+      ]) {
+        final at = await _arrow(rotation: rotation);
         expect(
-          map().markers.map((m) => m.markerId.value),
-          unorderedEquals(['driver', 'pickup']),
+          _off(at(tip.dx, tip.dy), MoveraVehicleMarker.fill),
+          lessThan(3),
+          reason: 'teal at the tip, rotation $rotation',
         );
-        expect(driver().flat, isFalse);
-        expect(driver().anchor, MoveraVehicleMarker.anchor);
-        final zoomedOut = width();
-        expect(zoomedOut, MoveraVehicleMarker.box);
-        // A zoom or tilt alone (inside one map style band) never rebuilds
-        // the markers.
-        final before = map().markers;
-        map().onCameraMove!(
-          const CameraPosition(
-            target: LatLng(59.33, 18.06),
-            zoom: 12,
-            tilt: 30,
+        expect(
+          _off(at(side.dx, side.dy), MoveraVehicleMarker.fill),
+          greaterThan(20),
+          reason: 'not teal beside the tip, rotation $rotation',
+        );
+      }
+    });
+  });
+
+  group('halo', () {
+    test('one 60 pt see-through grey disc, no border', () async {
+      expect(MoveraVehicleMarker.haloRadius, 60);
+      expect(MoveraVehicleMarker.haloBox, 120);
+      final png = await MoveraVehicleMarker.haloPng(density: 1);
+      final image = await decodeImageFromList(png!);
+      expect(image.width, 120);
+      final data = (await image.toByteData(
+        format: ui.ImageByteFormat.rawStraightRgba,
+      ))!;
+      Color at(int x, int y) {
+        final i = (y * 120 + x) * 4;
+        return Color.fromARGB(
+          data.getUint8(i + 3),
+          data.getUint8(i),
+          data.getUint8(i + 1),
+          data.getUint8(i + 2),
+        );
+      }
+
+      final middle = at(60, 60);
+      expect(middle.a, closeTo(.35, .01));
+      // Straight (not premultiplied) colour of the halo: #7797A8.
+      expect(
+        _off(middle.withValues(alpha: 1), MoveraVehicleMarker.halo),
+        lessThan(4),
+      );
+      expect(at(60, 3).a, closeTo(.35, .01), reason: 'flat up to its edge');
+      expect(at(2, 2).a, 0, reason: 'a circle: nothing in the corner');
+    });
+  });
+
+  group('pictures', () {
+    test(
+      'never a Google pin: a transparent pixel until the arrow is drawn',
+      () async {
+        final placeholder = MoveraVehicleMarker.placeholder as BytesMapBitmap;
+        expect(placeholder.width, 1);
+        final image = await decodeImageFromList(placeholder.byteData);
+        expect([image.width, image.height], [1, 1]);
+        final data = (await image.toByteData())!;
+        expect(data.getUint8(3), 0, reason: 'fully transparent');
+      },
+    );
+
+    test(
+      'at most 64 tilted pictures are kept, least recently used first',
+      () async {
+        PositionArrowView v(double heading) =>
+            MoveraVehicleMarker.view(heading: heading, bearing: 0, tilt: 60);
+        final first = v(0);
+        await MoveraVehicleMarker.makeIcon(first);
+        for (var h = 2.0; h < 2 * 80; h += 2) {
+          await MoveraVehicleMarker.makeIcon(v(h));
+          // Keep the first one in use.
+          expect(MoveraVehicleMarker.iconFor(first), isNotNull);
+        }
+        expect(
+          MoveraVehicleMarker.debugKeptPictures,
+          MoveraVehicleMarker.keptPictures,
+        );
+        expect(MoveraVehicleMarker.iconFor(first), isNotNull, reason: 'in use');
+        expect(MoveraVehicleMarker.iconFor(v(2)), isNull, reason: 'evicted');
+      },
+    );
+
+    test('the pictures around the one shown are drawn ahead', () {
+      final view = MoveraVehicleMarker.view(heading: 90, bearing: 0, tilt: 60);
+      final around = MoveraVehicleMarker.neighbours(view);
+      expect(
+        around.map((n) => n.key),
+        containsAll(['88/60', '92/60', '84/60', '96/60', '90/57', '90/63']),
+      );
+      expect(around.map((n) => n.key), isNot(contains(view.key)));
+      expect(around.length, lessThan(MoveraVehicleMarker.keptPictures));
+      expect(
+        MoveraVehicleMarker.neighbours(
+          MoveraVehicleMarker.view(heading: 0, bearing: 0, tilt: 0),
+        ),
+        isEmpty,
+      );
+    });
+  });
+
+  group('on the map (phones)', () {
+    late GoogleMapsFlutterPlatform maps;
+    setUp(() {
+      maps = GoogleMapsFlutterPlatform.instance;
+      GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
+    });
+    tearDown(() => GoogleMapsFlutterPlatform.instance = maps);
+
+    GoogleMap map(WidgetTester tester) =>
+        tester.widget<GoogleMap>(find.byType(GoogleMap));
+    Marker driver(WidgetTester tester) =>
+        map(tester).markers.singleWhere((m) => m.markerId.value == 'driver');
+    Marker? halo(WidgetTester tester) => map(tester).markers
+        .where((m) => m.markerId.value == MoveraVehicleMarker.haloId)
+        .firstOrNull;
+
+    Future<void> move(
+      WidgetTester tester,
+      CameraPosition camera, {
+      double heading = 0,
+    }) async {
+      map(tester).onCameraMove!(camera);
+      await tester.pump();
+      // Let a new picture finish drawing.
+      final view = MoveraVehicleMarker.view(
+        heading: heading,
+        bearing: camera.bearing,
+        tilt: camera.tilt,
+      );
+      await tester.runAsync(() async {
+        await MoveraVehicleMarker.makeIcon(view);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      });
+      await tester.pump();
+    }
+
+    testWidgets('the same size at every zoom; flat and centred from above', (
+      tester,
+    ) async {
+      final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
+      const other = Marker(markerId: MarkerId('pickup'), rotation: 40);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CustomGoogleMap(
+            initialPosition: const CameraPosition(
+              target: LatLng(59.33, 18.06),
+              zoom: 11,
+            ),
+            markers: {
+              _own(30, icon: icon),
+              other,
+            },
           ),
+        ),
+      );
+      await tester.pump();
+      expect(
+        map(tester).markers.map((m) => m.markerId.value),
+        unorderedEquals(['driver', 'pickup']),
+      );
+      expect(driver(tester).flat, isTrue);
+      expect(driver(tester).rotation, 30);
+      expect(driver(tester).anchor, const Offset(.5, .5));
+      expect(identical(driver(tester).icon, icon), isTrue);
+      for (final zoom in [5.0, 9.0, 11.9]) {
+        await move(
+          tester,
+          CameraPosition(target: const LatLng(59.33, 18.06), zoom: zoom),
+          heading: 30,
         );
-        await tester.pump();
-        expect(identical(map().markers, before), isTrue);
-        map().onCameraMove!(
-          const CameraPosition(
-            target: LatLng(59.33, 18.06),
-            zoom: 18,
+        expect(identical(driver(tester).icon, icon), isTrue, reason: '$zoom');
+      }
+      // Tilted: a picture of the same box at every zoom.
+      final sizes = <double>{};
+      for (final zoom in [15.5, 17.0, 19.0]) {
+        await move(
+          tester,
+          CameraPosition(
+            target: const LatLng(59.33, 18.06),
+            zoom: zoom,
             tilt: 67.5,
           ),
+          heading: 30,
         );
-        await tester.pump();
-        expect(width(), zoomedOut);
-        expect(
-          map().markers.map((m) => m.markerId.value),
-          unorderedEquals(['driver', 'pickup']),
-        );
-        await tester.pumpWidget(const SizedBox.shrink());
-      });
+        final tilted = driver(tester).icon as BytesMapBitmap;
+        sizes
+          ..add(tilted.width!)
+          ..add(tilted.height!);
+        expect(driver(tester).flat, isFalse);
+      }
+      expect(sizes, {MoveraVehicleMarker.box});
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
 
-      testWidgets('CustomGoogleMap turns the billboard by the map bearing '
-          'only, tilt or not, without churning on small turns', (tester) async {
-        final maps = GoogleMapsFlutterPlatform.instance;
-        GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
-        addTearDown(() => GoogleMapsFlutterPlatform.instance = maps);
-        final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
-        const other = Marker(markerId: MarkerId('pickup'), rotation: 40);
-        await tester.pumpWidget(
-          MaterialApp(
-            home: CustomGoogleMap(
-              initialPosition: const CameraPosition(
-                target: LatLng(59.33, 18.06),
-                zoom: 15,
-                bearing: 30,
-                tilt: 60,
-              ),
-              markers: {
-                _own(90, icon: icon),
-                other,
-              },
+    testWidgets('keeps pointing along the heading as the map turns', (
+      tester,
+    ) async {
+      final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CustomGoogleMap(
+            initialPosition: const CameraPosition(
+              target: LatLng(59.33, 18.06),
+              zoom: 11,
+              bearing: 30,
             ),
+            markers: {_own(90, icon: icon)},
           ),
-        );
-        await tester.pump();
-        GoogleMap map() => tester.widget<GoogleMap>(find.byType(GoogleMap));
-        Marker marker(String id) =>
-            map().markers.singleWhere((m) => m.markerId.value == id);
-        expect(marker('driver').rotation, closeTo(60, 1e-9));
-        expect(marker('pickup').rotation, 40);
+        ),
+      );
+      await tester.pump();
+      // From above: flat, turned by the compass heading; Maps turns a flat
+      // marker with the map.
+      expect(driver(tester).flat, isTrue);
+      expect(driver(tester).rotation, 90);
+      // Tilted, map turned 30: the picture is drawn turned 60 on screen.
+      await move(
+        tester,
+        const CameraPosition(
+          target: LatLng(59.33, 18.06),
+          zoom: 16,
+          bearing: 30,
+          tilt: 60,
+        ),
+        heading: 90,
+      );
+      final at60 = MoveraVehicleMarker.iconFor(
+        MoveraVehicleMarker.view(heading: 90, bearing: 30, tilt: 60),
+      );
+      expect(at60, isNotNull);
+      expect(identical(driver(tester).icon, at60), isTrue);
+      expect(driver(tester).rotation, 0);
+      expect(driver(tester).flat, isFalse);
+      // Heading-up: straight up.
+      await move(
+        tester,
+        const CameraPosition(
+          target: LatLng(59.33, 18.06),
+          zoom: 16,
+          bearing: 90,
+          tilt: 60,
+        ),
+        heading: 90,
+      );
+      final up = MoveraVehicleMarker.iconFor(
+        MoveraVehicleMarker.view(heading: 90, bearing: 90, tilt: 60),
+      );
+      expect(identical(driver(tester).icon, up), isTrue);
+      // A half-degree camera wobble does not rebuild the markers.
+      final before = map(tester).markers;
+      map(tester).onCameraMove!(
+        const CameraPosition(
+          target: LatLng(59.33, 18.06),
+          zoom: 16,
+          bearing: 90.5,
+          tilt: 60.3,
+        ),
+      );
+      await tester.pump();
+      expect(identical(map(tester).markers, before), isTrue);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
 
-        // A course across a tilted north-up view: the heading itself, not
-        // leaned by the tilt (that turned the arrow off the road).
-        map().onCameraMove!(
-          const CameraPosition(
-            target: LatLng(59.33, 18.06),
-            zoom: 15,
-            bearing: 0,
-            tilt: 60,
-          ),
-        );
-        await tester.pump();
-        expect(marker('driver').rotation, closeTo(90, 1e-9));
-        await tester.pumpWidget(
-          MaterialApp(
-            home: CustomGoogleMap(
-              initialPosition: const CameraPosition(
-                target: LatLng(59.33, 18.06),
-                zoom: 15,
-                bearing: 0,
-                tilt: 60,
-              ),
-              markers: {
-                _own(45, icon: icon),
-                other,
-              },
+    testWidgets('a grey halo under the position: one screen-facing 60 pt '
+        'picture at every zoom and tilt, not tappable', (tester) async {
+      final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
+      final haloIcon = await tester.runAsync(
+        MoveraVehicleMarker.createHaloIcon,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CustomGoogleMap(
+            initialPosition: const CameraPosition(
+              target: LatLng(59.33, 18.06),
+              zoom: 18,
             ),
+            markers: {_own(0, icon: icon)},
           ),
-        );
-        await tester.pump();
-        expect(marker('driver').rotation, closeTo(45, 1e-9));
+        ),
+      );
+      await tester.pump();
+      final first = halo(tester)!;
+      expect(identical(first.icon, haloIcon), isTrue);
+      expect((first.icon as BytesMapBitmap).width, 120);
+      expect(first.position, const LatLng(59.33, 18.06));
+      expect(first.anchor, const Offset(.5, .5));
+      expect(first.flat, isFalse, reason: 'faces the screen: a circle');
+      expect(first.consumeTapEvents, isTrue, reason: 'taps do nothing');
+      // Checker: 0 keeps it under the trip pins (pickup/drop-off 8,
+      // destination 6) as well as under the arrow.
+      expect(first.zIndexInt, 0);
+      expect(first.zIndexInt, lessThan(6));
+      expect(first.zIndexInt, lessThan(driver(tester).zIndexInt));
+      expect(map(tester).circles, isEmpty, reason: 'no ground circle');
+      for (final camera in const [
+        CameraPosition(target: LatLng(59.33, 18.06), zoom: 14),
+        CameraPosition(target: LatLng(59.33, 18.06), zoom: 17, tilt: 60),
+        CameraPosition(target: LatLng(59.33, 18.06), zoom: 19, tilt: 67.5),
+      ]) {
+        await move(tester, camera);
+        expect(halo(tester), first, reason: '$camera');
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
 
-        // Heading-up and tilted: points straight up.
-        map().onCameraMove!(
-          const CameraPosition(
-            target: LatLng(59.33, 18.06),
-            zoom: 15,
-            bearing: 45,
-            tilt: 58,
+    testWidgets('while a tilted picture is drawn, the flat arrow stands in, '
+        'turned by the heading: never the wrong way', (tester) async {
+      final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CustomGoogleMap(
+            initialPosition: const CameraPosition(
+              target: LatLng(59.33, 18.06),
+              zoom: 16,
+              bearing: 10,
+              tilt: 60,
+            ),
+            markers: {_own(130, icon: icon)},
           ),
+        ),
+      );
+      await tester.pump();
+      // No tilted picture yet for 130 - 10 = 120.
+      expect(driver(tester).flat, isTrue);
+      expect(driver(tester).rotation, 130);
+      expect(identical(driver(tester).icon, icon), isTrue);
+      await tester.runAsync(() async {
+        await MoveraVehicleMarker.makeIcon(
+          MoveraVehicleMarker.view(heading: 130, bearing: 10, tilt: 60),
         );
-        await tester.pump();
-        expect(marker('driver').rotation, closeTo(0, 1e-9));
-        // A half-degree camera wobble does not rebuild the markers.
-        final before = map().markers;
-        map().onCameraMove!(
-          const CameraPosition(
-            target: LatLng(59.33, 18.06),
-            zoom: 15,
-            bearing: 45.5,
-            tilt: 58,
-          ),
-        );
-        await tester.pump();
-        expect(identical(map().markers, before), isTrue);
-        await tester.pumpWidget(const SizedBox.shrink());
+        await Future<void>.delayed(const Duration(milliseconds: 20));
       });
-    },
-  );
+      await tester.pump();
+      expect(driver(tester).flat, isFalse);
+      expect(driver(tester).rotation, 0);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  });
 }
