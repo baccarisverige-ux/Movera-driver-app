@@ -295,11 +295,21 @@ extension _HomeOnlineGate on _DriverHomeState {
         _driverSession.isOnline ||
         _isGoingOnline ||
         _gate.offlineSeenAt == at ||
+        _alreadyShownFor(at) ||
         DateTime.now().difference(at).abs() > serverOfflineFresh) {
       return;
     }
     _gate.offlineSeenAt = at;
     _showServerReason(told, note: account?.offlineNote);
+  }
+
+  /// Checker MEDIUM 1: the app showed the card itself (missed offers, a
+  /// restart) and the server's offlineAt is from that same moment or
+  /// later: the same offline, not told twice.
+  bool _alreadyShownFor(DateTime at) {
+    final shown = DriverSetOfflineNotice.instance.shownAt;
+    return shown != null &&
+        !at.isBefore(shown.subtract(const Duration(seconds: 10)));
   }
 
   /// How long after the server set him offline the card still comes when
@@ -341,14 +351,16 @@ extension _HomeOnlineGate on _DriverHomeState {
   /// it in the radar's place.
   Widget _offlineCardLayer() {
     final notice = DriverSetOfflineNotice.instance;
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: ValueListenableBuilder<double>(
-        valueListenable: _panelSlidePosition,
-        builder: (context, position, child) =>
-            position > 0.05 ? const SizedBox.shrink() : child!,
+    // LOW 2: slid up, the sheet shows its own content under the usual
+    // radar; the card waits for the sheet to close again.
+    return ValueListenableBuilder<double>(
+      valueListenable: _panelSlidePosition,
+      builder: (context, position, child) =>
+          position > 0.05 ? _HomeMapSheet(this)._homeRadarLayerPlain() : child!,
+      child: Positioned(
+        left: 0,
+        right: 0,
+        bottom: 0,
         child: PointerInterceptor(
           child: HomeOfflineCard(
             reason: offlineReasonText(notice),
@@ -366,9 +378,10 @@ extension _HomeOnlineGate on _DriverHomeState {
               ),
             ),
             onOk: notice.clear,
+            // Checker MEDIUM 2: no second prompt; the check already ran
+            // the guarded one, Home only reads the location again.
             onLocationFixed: () {
               if (!mounted) return;
-              DriverLocationService.allowPrompt();
               unawaited(_HomeMapSheet(this)._startDriverLocation());
             },
           ),

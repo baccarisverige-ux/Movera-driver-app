@@ -2315,6 +2315,11 @@ extension _HomeMapSheet on _DriverHomeState {
     if (_HomeOnlineGate(this)._offlineCardShown) {
       return _HomeOnlineGate(this)._offlineCardLayer();
     }
+    return _homeRadarLayerPlain();
+  }
+
+  /// The radar as always (also under the slid sheet while the card shows).
+  Widget _homeRadarLayerPlain() {
     if (_homeSheetInactive) {
       // Account on hold: the radar rides the red sheet's notch.
       return ValueListenableBuilder<double>(

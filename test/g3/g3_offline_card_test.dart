@@ -31,6 +31,7 @@ import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dar
 import 'package:movera/widgets/layout_viewport.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 
@@ -438,7 +439,8 @@ void main() {
       );
     });
 
-    Future<LiveDriverServices?> pumpLive(
+    Future<({LiveDriverServices? live, DriverSessionController session})>
+    pumpLive(
       WidgetTester tester,
       Map<String, Object?> profile, {
       bool goOnlineFirst = false,
@@ -482,7 +484,7 @@ void main() {
           ),
         ),
       );
-      return home.live;
+      return (live: home.live, session: home.session);
     }
 
     testWidgets('server set him offline while online: the card gives the '
@@ -491,7 +493,7 @@ void main() {
         'onlineStatus': 'offline',
         'version': 3,
       };
-      final live = await pumpLive(tester, profile);
+      final live = (await pumpLive(tester, profile)).live;
       await tester.tap(find.byType(MoveraRadarOrb).last);
       await frames(tester, 40);
       profile
@@ -512,7 +514,7 @@ void main() {
 
     testWidgets('the app opens offline a few minutes after the server set '
         'him offline (from the push): the card says why, once', (tester) async {
-      final live = await pumpLive(tester, {
+      final live = (await pumpLive(tester, {
         'onlineStatus': 'offline',
         'version': 6,
         'offlineReason': 'fleet_removed',
@@ -520,7 +522,7 @@ void main() {
             .toUtc()
             .subtract(const Duration(minutes: 3))
             .toIso8601String(),
-      });
+      })).live;
       await frames(tester, 10);
       expect(text('You are no longer in a fleet'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey<String>('offline-card-ok')));
@@ -532,10 +534,43 @@ void main() {
       await leave(tester, live);
     });
 
+    testWidgets('checker MEDIUM 1: the app\'s own missed-offers card was '
+        'closed with OK; the server\'s profile with the same offline '
+        '(missed_offers, fresh offlineAt) does not bring it back', (
+      tester,
+    ) async {
+      final profile = <String, Object?>{
+        'onlineStatus': 'offline',
+        'version': 3,
+      };
+      final home = await pumpLive(tester, profile);
+      await tester.tap(find.byType(MoveraRadarOrb).last);
+      await frames(tester, 40);
+      // The feed's driverOffline: the app's own card.
+      LiveDriverServices.missedOffersOffline(home.session)();
+      await frames(tester, 5);
+      expect(card, findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey<String>('offline-card-ok')));
+      await frames(tester, 3);
+      expect(card, findsNothing);
+      profile
+        ..['onlineStatus'] = 'offline'
+        ..['version'] = 6
+        ..['offlineReason'] = 'missed_offers'
+        ..['offlineAt'] = DateTime.now()
+            .toUtc()
+            .add(const Duration(seconds: 2))
+            .toIso8601String();
+      await tester.pump(const Duration(seconds: 61));
+      await frames(tester, 20);
+      expect(card, findsNothing, reason: 'the same offline, already told');
+      await leave(tester, home.live);
+    });
+
     testWidgets('an old server offline (hours ago) or none: no card on open', (
       tester,
     ) async {
-      final live = await pumpLive(tester, {
+      final live = (await pumpLive(tester, {
         'onlineStatus': 'offline',
         'version': 6,
         'offlineReason': 'no_position',
@@ -543,11 +578,35 @@ void main() {
             .toUtc()
             .subtract(const Duration(hours: 3))
             .toIso8601String(),
-      });
+      })).live;
       await frames(tester, 10);
       expect(card, findsNothing);
       await leave(tester, live);
     });
+  });
+
+  testWidgets('LOW 2: the sheet slid up shows the usual radar, the card '
+      'waits', (tester) async {
+    await pumpHome(tester);
+    DriverSetOfflineNotice.instance.show(
+      reason: DriverOfflineReason.appRestart,
+    );
+    await frames(tester, 3);
+    expect(card, findsOneWidget);
+    tester
+        .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+        .controller!
+        .open();
+    await frames(tester, 20);
+    expect(card, findsNothing);
+    expect(find.byType(MoveraRadarOrb), findsOneWidget);
+    tester
+        .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+        .controller!
+        .close();
+    await frames(tester, 20);
+    expect(card, findsOneWidget, reason: 'closed again: the card is back');
+    await leave(tester, null);
   });
 
   group('the card alone', () {
@@ -677,6 +736,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(locationFixed, 1);
       expect(line(PhoneCheckKind.location, 'ok'), findsOneWidget);
+      // Checker MEDIUM 2: one prompt, the check's own; Home only reads.
+      expect(checks.fixes.length, 1);
     });
 
     testWidgets('internet ✗ has Retry; a browser-blocked permission says '

@@ -219,8 +219,7 @@ class DevicePhoneChecks extends PhoneChecks {
         }
       case PhoneCheckFix.turnOn:
         if (result.kind == PhoneCheckKind.location) {
-          DriverLocationService.allowPrompt();
-          await Geolocator.requestPermission();
+          await DriverLocationService.requestPermissionOnce();
         } else if (result.kind == PhoneCheckKind.notifications) {
           if (await _pushPlatform.requestPermission()) {
             notificationsAllowed?.call();

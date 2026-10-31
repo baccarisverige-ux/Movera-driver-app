@@ -113,6 +113,11 @@ class DriverSetOfflineNotice extends ValueNotifier<bool> {
   DriverOfflineReason _reason = DriverOfflineReason.movera;
   int? _count;
   String? _note;
+  DateTime? _shownAt;
+
+  /// When the card last came (phone clock); a server offlineAt at or
+  /// after it (less a few seconds) is the same offline, not a new one.
+  DateTime? get shownAt => _shownAt;
 
   /// Why; [DriverOfflineReason.movera] when nothing says.
   DriverOfflineReason get reason => _reason;
@@ -132,6 +137,7 @@ class DriverSetOfflineNotice extends ValueNotifier<bool> {
     _reason = reason;
     _count = count;
     _note = note;
+    _shownAt = DateTime.now();
     if (value) {
       notifyListeners();
     } else {
