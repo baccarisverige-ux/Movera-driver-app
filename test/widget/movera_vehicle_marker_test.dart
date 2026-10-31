@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -13,8 +14,20 @@ import '../../integration_test/headless_map_platform.dart';
 /// position is a teal navigation arrowhead with a notch at its back, a
 /// darker teal inner edge, a thin white outline and a soft shadow, about
 /// 18 x 21 pt seen from above, in perspective with a mint-grey thickness on
-/// a tilted map, the same size at every zoom, pointing along the heading
-/// whatever the map's bearing, over a grey accuracy halo (60-110 pt).
+/// a tilted map, ONE screen size at every zoom and tilt ("same in all zoom
+/// steps"), pointing along the heading whatever the map's bearing, over a
+/// grey halo of 60 pt on screen at every zoom.
+
+/// The longest distance between two of [points].
+double _diameter(List<Offset> points) {
+  var most = 0.0;
+  for (final a in points) {
+    for (final b in points) {
+      most = (a - b).distance > most ? (a - b).distance : most;
+    }
+  }
+  return most;
+}
 
 Marker _own(double heading, {BitmapDescriptor? icon, String id = 'driver'}) =>
     Marker(
@@ -122,11 +135,20 @@ void main() {
     });
 
     test('tilted: in perspective, with a mint-grey thickness', () async {
-      // Pointing across a fully tilted map: about 39 pt long.
+      // Pointing across a fully tilted map: no longer than seen from above.
       final across = MoveraVehicleMarker.layers(rotation: 90, tilt: 67.5);
-      final box = across.bounds;
-      expect(box.width, closeTo(39, 1.5));
-      expect(box.height, lessThan(21));
+      final flatLong = _diameter(
+        MoveraVehicleMarker.layers(rotation: 0, tilt: 0).outline,
+      );
+      expect(_diameter(across.outline), closeTo(flatLong, .05));
+      // Pointing up it: foreshortened, in perspective.
+      expect(
+        MoveraVehicleMarker.layers(
+          rotation: 0,
+          tilt: 67.5,
+        ).outline.map((p) => p.dy).reduce((a, b) => a > b ? a : b),
+        lessThan(8),
+      );
       final top = across.outline
           .map((p) => p.dy)
           .reduce((a, b) => a > b ? a : b);
@@ -147,6 +169,36 @@ void main() {
       expect(wall.a, 1);
       expect(_off(wall, MoveraVehicleMarker.wallTop), lessThan(30));
       expect(wall.g, greaterThan(wall.r), reason: 'mint, not plain grey');
+    });
+
+    test('one screen size at every tilt and rotation: the long side never '
+        'changes', () {
+      final flatLong = _diameter(
+        MoveraVehicleMarker.layers(rotation: 0, tilt: 0).outline,
+      );
+      expect(flatLong, closeTo(MoveraVehicleMarker.longSide, 1e-9));
+      // Tip to wing of the 18 x 21 pt arrow.
+      expect(flatLong, closeTo(22, 1));
+      for (final rotation in [0.0, 30.0, 90.0, 135.0, 270.0]) {
+        for (final tilt in [0.0, 10.0, 28.9, 45.0, 57.9, 67.5]) {
+          final layers = MoveraVehicleMarker.layers(
+            rotation: rotation,
+            tilt: tilt,
+          );
+          expect(
+            _diameter(layers.outline),
+            closeTo(flatLong, .05),
+            reason: 'rotation $rotation, tilt $tilt',
+          );
+          // The whole picture (with its thickness) stays about that size.
+          final box = layers.bounds;
+          expect(
+            box.longestSide,
+            lessThan(flatLong + 4),
+            reason: 'rotation $rotation, tilt $tilt',
+          );
+        }
+      }
     });
 
     test('drawn at the device pixel ratio, centred', () async {
@@ -234,26 +286,18 @@ void main() {
   });
 
   group('halo', () {
-    test('the accuracy in metres, kept between 60 and 110 pt', () {
+    test('60 pt on screen at every zoom', () {
       const lat = 59.33;
       double perPoint(double zoom) =>
-          MoveraVehicleMarker.haloRadiusMeters(
-            accuracyMeters: 0,
-            latitude: lat,
-            zoom: zoom,
-          ) /
-          60;
-      double radius(double? accuracy, double zoom) =>
-          MoveraVehicleMarker.haloRadiusMeters(
-            accuracyMeters: accuracy,
-            latitude: lat,
-            zoom: zoom,
-          );
-      expect(radius(5, 16) / perPoint(16), closeTo(60, 1e-6));
-      expect(radius(5000, 16) / perPoint(16), closeTo(110, 1e-6));
-      expect(radius(25, 18), 25);
-      expect(radius(null, 16) / perPoint(16), closeTo(60, 1e-6));
-      expect(perPoint(15) / perPoint(16), closeTo(2, 1e-9));
+          156543.03392 * math.cos(lat * math.pi / 180) / math.pow(2, zoom);
+      for (final zoom in [5.0, 11.0, 13.5, 15.0, 17.0, 19.0, 21.0]) {
+        final metres = MoveraVehicleMarker.haloRadiusMeters(
+          latitude: lat,
+          zoom: zoom,
+        );
+        expect(metres / perPoint(zoom), closeTo(60, 1e-6), reason: '$zoom');
+      }
+      expect(MoveraVehicleMarker.haloRadius, 60);
       expect(MoveraVehicleMarker.haloOpacity, .35);
       expect(_rgb(MoveraVehicleMarker.halo), 0x7797A8);
     });
@@ -422,11 +466,12 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
-    testWidgets('a grey halo under the position, clamped on screen', (
+    testWidgets('a grey halo under the position, 60 pt at every zoom', (
       tester,
     ) async {
       final icon = await tester.runAsync(MoveraVehicleMarker.createIcon);
-      MoveraVehicleMarker.accuracyMeters.value = 25;
+      double sixtyPoints(double zoom) =>
+          MoveraVehicleMarker.haloRadiusMeters(latitude: 59.33, zoom: zoom);
       await tester.pumpWidget(
         MaterialApp(
           home: CustomGoogleMap(
@@ -441,35 +486,21 @@ void main() {
       await tester.pump();
       final circle = halo(tester)!;
       expect(circle.center, const LatLng(59.33, 18.06));
-      expect(circle.radius, 25, reason: 'inside the clamps: the accuracy');
+      expect(circle.radius, closeTo(sixtyPoints(18), 1e-6));
       expect(circle.strokeWidth, 0, reason: 'no border');
       expect(circle.fillColor.a, closeTo(.35, .01));
       expect(_rgb(circle.fillColor), 0x7797A8);
-      // Zoomed out, the halo stays at least 60 pt.
-      await move(
-        tester,
-        const CameraPosition(target: LatLng(59.33, 18.06), zoom: 14),
-      );
-      expect(
-        halo(tester)!.radius,
-        closeTo(
-          MoveraVehicleMarker.haloRadiusMeters(
-            accuracyMeters: 25,
-            latitude: 59.33,
-            zoom: 14,
-          ),
-          1e-6,
-        ),
-      );
-      expect(halo(tester)!.radius, greaterThan(25));
-      // A rougher fix grows it (within the clamps).
-      await move(
-        tester,
-        const CameraPosition(target: LatLng(59.33, 18.06), zoom: 18),
-      );
-      MoveraVehicleMarker.accuracyMeters.value = 30;
-      await tester.pump();
-      expect(halo(tester)!.radius, 30);
+      for (final zoom in [14.0, 17.0, 19.0]) {
+        await move(
+          tester,
+          CameraPosition(target: const LatLng(59.33, 18.06), zoom: zoom),
+        );
+        expect(
+          halo(tester)!.radius,
+          closeTo(sixtyPoints(zoom), sixtyPoints(zoom) * .021),
+          reason: 'zoom $zoom',
+        );
+      }
       await tester.pumpWidget(const SizedBox.shrink());
     });
   });

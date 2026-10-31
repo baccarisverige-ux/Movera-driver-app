@@ -108,10 +108,12 @@
   const ARROW_RAW = [[0, -12], [8.9, 10], [0, 7.4], [-8.9, 10]];
   const ARROW_CONVEX = [true, true, false, true];
   const ARROW_CORNER = 1.8, ARROW_NOTCH = 2.5, ARROW_OUTLINE = 1.5, ARROW_EDGE = 1;
-  const ARROW_MAX_TILT = 67.5, ARROW_TILT_GROWTH = .86, ARROW_FLAT_TILT = 1;
+  const ARROW_FLAT_TILT = 1, ARROW_THICKNESS = 3.8;
   const ARROW = {fill: '#00A8C0', edge: '#0090A8', outline: '#F0FAFA',
     wallTop: '#C8E0E0', wallBottom: '#B0CCCC', shadow: '#000000'};
-  const HALO = {color: '#7797A8', opacity: .35, minPx: 60, maxPx: 110};
+  // Owner 2026-10-31 ("same in all zoom steps"): the halo is 60 pt on
+  // screen at every zoom, and the arrow keeps one size at every zoom and tilt.
+  const HALO = {color: '#7797A8', opacity: .35, radiusPx: 60};
   const area2 = pts => pts.reduce((sum, a, i) => {
     const b = pts[(i + 1) % pts.length]; return sum + a[0] * b[1] - b[0] * a[1];
   }, 0);
@@ -154,21 +156,36 @@
     outlineCache.set(offset, out);
     return out;
   };
-  const arrowScale = tilt => 1 + ARROW_TILT_GROWTH * clamp(tilt, 0, ARROW_MAX_TILT) / ARROW_MAX_TILT;
-  const arrowProject = (p, rotation, tilt, height) => {
-    const s = arrowScale(tilt), r = rotation * Math.PI / 180, t = clamp(tilt, 0, 89) * Math.PI / 180;
+  const arrowProject = (p, rotation, tilt, height, s = 1) => {
+    const r = rotation * Math.PI / 180, t = clamp(tilt, 0, 89) * Math.PI / 180;
     const x = p[0] * s, y = p[1] * s;
     const sy = x * Math.sin(r) + y * Math.cos(r);
     return [x * Math.cos(r) - y * Math.sin(r), sy * Math.cos(t) - height * Math.sin(t)];
+  };
+  const diameter = pts => {
+    let most = 0;
+    for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+      most = Math.max(most, Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]));
+    }
+    return most;
+  };
+  let longSide = null;
+  // The arrow's scale on the road so that its longest extent on screen is
+  // the flat arrow's (lib MoveraVehicleMarker.footprintScale).
+  const footprintScale = (rotation, tilt) => {
+    if (tilt < ARROW_FLAT_TILT) return 1;
+    longSide ??= diameter(arrowOutline(ARROW_OUTLINE));
+    const seen = diameter(arrowOutline(ARROW_OUTLINE).map(p => arrowProject(p, rotation, tilt, 0)));
+    return seen > 0 ? longSide / seen : 1;
   };
   const svgPath = pts => 'M' + pts.map(p => p[0].toFixed(2) + ' ' + p[1].toFixed(2)).join('L') + 'Z';
   // The arrow's layers (Symbol paths around the anchor) for its rotation on
   // screen and the map's tilt, bottom to top.
   const arrowLayers = (rotation, tilt) => {
     const tilted = tilt >= ARROW_FLAT_TILT;
-    const h = tilted ? 2.05 * arrowScale(tilt) : 0;
+    const h = tilted ? ARROW_THICKNESS : 0, scale = footprintScale(rotation, tilt);
     const at = (offset, height, dy = 0) => arrowOutline(offset).map(p => {
-      const q = arrowProject(p, rotation, tilt, height); return [q[0], q[1] + dy];
+      const q = arrowProject(p, rotation, tilt, height, scale); return [q[0], q[1] + dy];
     });
     const rim = at(ARROW_OUTLINE, h);
     let wall = null;
@@ -212,13 +229,10 @@
   // its 1 pt stroke.
   const faceSymbol = layers => symbol(layers.face, ARROW.fill, 1,
     {strokeColor: ARROW.edge, strokeOpacity: 1, strokeWeight: ARROW_EDGE});
-  // The halo's radius in metres: the fix's accuracy kept between minPx and
-  // maxPx points on screen (Google's world is 256 points wide at zoom 0).
-  const haloRadius = (lat, accuracy, zoom) => {
-    const perPoint = 156543.03392 * Math.cos(clamp(lat, -85, 85) * Math.PI / 180) / 2 ** zoom;
-    const meters = Number.isFinite(accuracy) && accuracy > 0 ? accuracy : 0;
-    return clamp(meters, HALO.minPx * perPoint, HALO.maxPx * perPoint);
-  };
+  // The halo's radius in metres: radiusPx points on screen at this zoom
+  // (Google's world is 256 points wide at zoom 0).
+  const haloRadius = (lat, zoom) =>
+    HALO.radiusPx * 156543.03392 * Math.cos(clamp(lat, -85, 85) * Math.PI / 180) / 2 ** zoom;
   // Raster tiles stop at about z18; closer, Google upscales them into giant
   // blurry street names. A vector map draws crisp at any zoom: no cap there.
   const RASTER_MAX_ZOOM = 18;
@@ -662,7 +676,7 @@
       })]));
       const halo = new sdk.Circle({fillColor: HALO.color, fillOpacity: HALO.opacity,
         strokeWeight: 0, strokeOpacity: 0, clickable: false, zIndex: 0, radius: 1});
-      let heading = 0, accuracy = NaN, state = null, listeners = [], drawn = '';
+      let heading = 0, state = null, listeners = [], drawn = '';
       const draw = () => {
         const map = marker.getMap();
         const rotation = vehicleRotation(heading, map?.getHeading?.() || 0);
@@ -684,15 +698,11 @@
         const zoom = Number(map?.getZoom?.());
         if (!at || !Number.isFinite(zoom)) return;
         const lat = typeof at.lat === 'function' ? at.lat() : Number(at.lat ?? at.y ?? 0);
-        const radius = haloRadius(lat, accuracy, zoom);
+        const radius = haloRadius(lat, zoom);
         if (Math.abs((halo.getRadius?.() || 0) - radius) > radius * 1e-4) halo.setRadius(radius);
       };
       const car = {
-        turn(next, nextAccuracy) {
-          heading = next;
-          if (nextAccuracy !== undefined) accuracy = Number(nextAccuracy);
-          draw(); sizeHalo();
-        },
+        turn(next) { heading = next; draw(); sizeHalo(); },
         release() {
           listeners.forEach(l => l?.remove()); listeners = [];
           for (const name of LAYERS) under[name].setMap(null);
@@ -809,15 +819,14 @@
     },
     // The arrow's rotation on screen (for checks; see vehicleRotation).
     vehicleRotation(heading, mapHeading) { return vehicleRotation(heading, mapHeading); },
-    // The own vehicle's compass heading (degrees, 0 north, clockwise) and
-    // its fix's accuracy in metres (NaN: unknown) for the halo.
-    vehicle(id, heading, accuracy) {
-      states.get(id)?.car?.turn(heading, accuracy);
+    // The own vehicle's compass heading (degrees, 0 north, clockwise).
+    vehicle(id, heading) {
+      states.get(id)?.car?.turn(heading);
     },
     // Checks: the arrow's layer paths for a rotation on screen and a tilt,
     // and the halo radius in metres.
     arrowLayers(rotation, tilt) { return arrowLayers(rotation, tilt); },
-    haloRadius(lat, accuracy, zoom) { return haloRadius(lat, accuracy, zoom); },
+    haloRadius(lat, zoom) { return haloRadius(lat, zoom); },
     // Checks: the own vehicle's layer markers and halo on a map.
     vehicleParts(id) { return states.get(id)?.car?.parts() ?? null; },
     anchor(id) {

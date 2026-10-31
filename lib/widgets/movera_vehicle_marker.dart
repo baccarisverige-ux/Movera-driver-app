@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
-import 'package:movera/core/location/own_position_accuracy.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'web_map_bitmap.dart';
@@ -58,17 +57,17 @@ class PositionArrowView {
 /// - A rounded arrowhead with a notch at its back, all corners rounded,
 ///   teal #00A8C0 with a darker teal inner edge #0090A8, a thin white
 ///   outline (#F0FAFA, 1.5 pt) and a soft dark shadow (blur ~3 pt, 25 %).
-/// - About 18 x 21 pt on a map seen from above, the same size at every
-///   zoom (a screen-fixed marker, drawn at the device pixel ratio).
+/// - About 18 x 21 pt on a map seen from above, drawn at the device pixel
+///   ratio. Owner (2026-10-31, "same in all zoom steps"): ONE screen size
+///   at every zoom and every tilt.
 /// - On a tilted map it lies on the road in perspective, with a pale
 ///   mint-grey thickness (#C8E0E0 top to #B0CCCC bottom) and its shadow
-///   under it; at the full driving tilt it is about 39 x 21 pt on screen
-///   when it points across the screen.
+///   under it, scaled so its longest extent on screen stays [longSide]
+///   ([footprintScale]).
 /// - It points along the driver's heading, and keeps pointing there when
 ///   the map turns ([view]).
-/// - Under it, a flat see-through grey halo for the GPS accuracy, kept
-///   between [haloMinRadius] and [haloMaxRadius] points on screen
-///   ([haloRadiusMeters]); no border, no pulse.
+/// - Under it, a flat see-through grey halo of [haloRadius] points on
+///   screen at every zoom ([haloRadiusMeters]); no border, no pulse.
 ///
 /// Phones get a bitmap per (rotation, tilt) bucket; web/driver_map_camera.js
 /// draws the same geometry as native Maps symbols ([webCameraTag]); keep the
@@ -126,18 +125,15 @@ class MoveraVehicleMarker {
   /// The marker anchor: the arrow's centre.
   static const Offset anchor = Offset(.5, .5);
 
-  /// The halo's radius on screen stays between these (points).
-  static const double haloMinRadius = 60;
-  static const double haloMaxRadius = 110;
+  /// The halo's radius on screen (points), the same at every zoom (owner
+  /// 2026-10-31: "same in all zoom steps").
+  static const double haloRadius = 60;
 
   /// The steepest driver map tilt (DriverCameraPolicy.maxTilt).
   static const double maxTilt = 67.5;
 
   /// A map tilted less than this is drawn as seen from above.
   static const double flatTilt = 1;
-
-  /// How much larger the arrow lies on a fully tilted map (39 / 21 pt).
-  static const double tiltGrowth = .86;
 
   /// Rotation and tilt buckets of the phone bitmaps (degrees).
   static const double rotationStep = 2;
@@ -156,13 +152,40 @@ class MoveraVehicleMarker {
   static const double _cornerRadius = 1.8;
   static const double _notchRadius = 2.5;
 
-  /// How much larger the arrow lies on the map at [tilt].
-  static double scaleForTilt(double tilt) =>
-      1 + tiltGrowth * (tilt.clamp(0, maxTilt) / maxTilt);
+  /// The arrow's thickness (height above the road): 3.5 pt on screen at
+  /// the full tilt, less on a flatter map.
+  static const double thickness = 3.8;
 
-  /// The arrow's thickness (height above the road) at [tilt]: 3.5 pt on
-  /// screen at the full tilt.
-  static double thickness(double tilt) => 2.05 * scaleForTilt(tilt);
+  /// The arrow's longest extent on screen (points, outline included): the
+  /// same at every zoom, tilt and rotation (owner: "same in all zoom
+  /// steps").
+  static final double longSide = _diameter(outlinePoints(outlineWidth));
+
+  /// How much the arrow is scaled on the road so that, seen at [tilt] and
+  /// turned [rotation] degrees, its longest extent on screen is
+  /// [longSide]: a tilted arrow lies in perspective but never grows or
+  /// shrinks.
+  static double footprintScale({
+    required double rotation,
+    required double tilt,
+  }) {
+    if (tilt < flatTilt) return 1;
+    final seen = _diameter([
+      for (final p in outlinePoints(outlineWidth))
+        project(p, rotation: rotation, tilt: tilt),
+    ]);
+    return seen > 0 ? longSide / seen : 1;
+  }
+
+  static double _diameter(List<Offset> points) {
+    var most = 0.0;
+    for (var i = 0; i < points.length; i++) {
+      for (var j = i + 1; j < points.length; j++) {
+        most = math.max(most, (points[i] - points[j]).distance);
+      }
+    }
+    return most;
+  }
 
   /// The arrow's outline, pointing up and centred on (0, 0), grown by
   /// [offset] points (negative: shrunk), its corners rounded.
@@ -187,15 +210,17 @@ class MoveraVehicleMarker {
   }
 
   /// [point] of the arrow (pointing up, centred on (0, 0)) on screen, with
-  /// the arrow turned [rotation] degrees clockwise, lying on a map tilted
-  /// [tilt] degrees, at [height] points above the road.
+  /// the arrow turned [rotation] degrees clockwise and scaled by [scale],
+  /// lying on a map tilted [tilt] degrees, at [height] points above the
+  /// road.
   static Offset project(
     Offset point, {
     required double rotation,
     required double tilt,
     double height = 0,
+    double scale = 1,
   }) {
-    final s = scaleForTilt(tilt);
+    final s = scale;
     final r = rotation * math.pi / 180;
     final t = tilt.clamp(0, 89) * math.pi / 180;
     final x = point.dx * s, y = point.dy * s;
@@ -210,10 +235,17 @@ class MoveraVehicleMarker {
     required double tilt,
   }) {
     final tilted = tilt >= flatTilt;
-    final h = tilted ? thickness(tilt) : 0.0;
+    final h = tilted ? thickness : 0.0;
+    final scale = footprintScale(rotation: rotation, tilt: tilt);
     List<Offset> at(double offset, double height) => [
       for (final p in outlinePoints(offset))
-        project(p, rotation: rotation, tilt: tilt, height: height),
+        project(
+          p,
+          rotation: rotation,
+          tilt: tilt,
+          height: height,
+          scale: scale,
+        ),
     ];
     final rim = at(outlineWidth, h);
     return PositionArrowLayers(
@@ -323,27 +355,16 @@ class MoveraVehicleMarker {
 
   static double _normal(double degrees) => (degrees % 360 + 360) % 360;
 
-  /// The halo's radius in metres: the fix's [accuracyMeters], kept between
-  /// [haloMinRadius] and [haloMaxRadius] points on screen at [zoom] and
-  /// [latitude] (Google's world is 256 points wide at zoom 0).
+  /// The halo's radius in metres: [haloRadius] points on screen at [zoom]
+  /// and [latitude] (Google's world is 256 points wide at zoom 0).
   static double haloRadiusMeters({
-    required double? accuracyMeters,
     required double latitude,
     required double zoom,
   }) {
     final lat = latitude.clamp(-85.0, 85.0) * math.pi / 180;
     final perPoint = 156543.03392 * math.cos(lat) / math.pow(2, zoom);
-    final accuracy =
-        accuracyMeters != null && accuracyMeters.isFinite && accuracyMeters > 0
-        ? accuracyMeters
-        : 0.0;
-    return accuracy.clamp(haloMinRadius * perPoint, haloMaxRadius * perPoint);
+    return haloRadius * perPoint;
   }
-
-  /// The latest GPS accuracy of the driver's own position (metres), for
-  /// the halo; null when unknown (the halo then keeps its smallest size).
-  static ValueNotifier<double?> get accuracyMeters =>
-      OwnPositionAccuracy.meters;
 
   /// The pixel density the pictures are drawn at: the device's.
   static double get devicePixelRatio {
@@ -403,7 +424,6 @@ class MoveraVehicleMarker {
     _icon = null;
     _views.clear();
     _making.clear();
-    accuracyMeters.value = null;
   }
 
   /// The arrow drawn in the [box] square at [density] pixels per point.

@@ -207,7 +207,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
 
   static double _haloRadius(Marker own, double zoom) =>
       MoveraVehicleMarker.haloRadiusMeters(
-        accuracyMeters: MoveraVehicleMarker.accuracyMeters.value,
         latitude: own.position.latitude,
         zoom: zoom,
       );
@@ -254,7 +253,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     );
   }
 
-  /// Phones: the accuracy halo under the own position (web draws it in
+  /// Phones: the halo under the own position (web draws it in
   /// web/driver_map_camera.js, in step with every zoom frame).
   Set<Circle> get _haloCircles {
     if (kIsWeb) return const <Circle>{};
@@ -275,7 +274,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
     };
   }
 
-  /// The own position's accuracy halo's circle id.
+  /// The own position's halo's circle id.
   static const String ownHaloId = 'own-position-halo';
 
   Set<Circle> get _mapCircles => {...?widget.circles, ..._haloCircles};
@@ -288,16 +287,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
 
   /// The halo as last given to the map.
   Set<Circle> _haloShown = const <Circle>{};
-
-  void _onAccuracy() {
-    if (!mounted) return;
-    if (kIsWeb) {
-      final controller = _mapController;
-      if (controller != null) _updateWebVehicle(controller.mapId);
-      return;
-    }
-    setState(() {});
-  }
 
   /// Every marker, the live one included.
   Iterable<Marker> get _allMarkers {
@@ -400,7 +389,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void initState() {
     super.initState();
     widget.liveMarker?.addListener(_onLiveMarker);
-    MoveraVehicleMarker.accuracyMeters.addListener(_onAccuracy);
     if (_mapsReady) return;
     const poll = Duration(milliseconds: 50);
     _mapsReadyPoll = Timer.periodic(poll, (timer) {
@@ -460,11 +448,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   void _updateWebVehicle(int mapId) {
     for (final marker in _allMarkers) {
       if (_isOwnVehicle(marker)) {
-        web.vehicle(
-          mapId,
-          marker.rotation,
-          MoveraVehicleMarker.accuracyMeters.value,
-        );
+        web.vehicle(mapId, marker.rotation);
       }
     }
   }
@@ -637,7 +621,6 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
   @override
   void dispose() {
     widget.liveMarker?.removeListener(_onLiveMarker);
-    MoveraVehicleMarker.accuracyMeters.removeListener(_onAccuracy);
     _mapsReadyPoll?.cancel();
     _removeWebGesture?.call();
     // A map replaced under a finger must not leave the camera held.

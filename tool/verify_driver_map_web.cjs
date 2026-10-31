@@ -439,7 +439,7 @@ assert.equal(map.camera.center.y, 224, '75% screen anchor above overlays');
 // map under a pinch; no size that steps with the zoom) drawn as Symbols:
 // the teal face on the car's marker, the white outline, the mint-grey
 // wall (tilted map only) and the shadow on native markers under it, and a
-// grey accuracy halo circle (lib MoveraVehicleMarker; keep in step).
+// grey halo circle (60 pt) (lib MoveraVehicleMarker; keep in step).
 assert.equal(api.vehicleRotation(90, 90), 0, 'Heading-up: the arrow points up');
 assert.equal(api.vehicleRotation(90, 30), 60, 'Map turned 30: the arrow turns back by 30');
 assert.equal(api.vehicleRotation(10, 30), 340);
@@ -463,27 +463,35 @@ const box = path => { const p = points(path);
   assert.ok(Math.abs(right.w - 21) < 1 && Math.abs(right.h - 18) < 1, 'Turned 90: 21 x 18');
   const tip = points(api.arrowLayers(90, 0).outline).reduce((a, q) => q[0] > a[0] ? q : a);
   assert.ok(Math.abs(tip[1]) < 1, 'Its tip is on the right, on the axis');
-  // Fully tilted, pointing across the screen: about 39 pt long, lying in
-  // perspective, with a thickness under its top face.
+  // Owner: one size at every zoom and tilt. Tilted, the arrow lies in
+  // perspective but its longest extent on screen stays the flat one's.
+  const diameter = path => { const p = points(path); let most = 0;
+    for (const a of p) for (const c of p) most = Math.max(most, Math.hypot(a[0] - c[0], a[1] - c[1]));
+    return most; };
+  const flatLong = diameter(flat.outline);
+  for (const rotation of [0, 45, 90, 180, 300]) for (const tilt of [0, 20, 45, 57.9, 67.5]) {
+    const road = api.arrowLayers(rotation, tilt);
+    assert.ok(Math.abs(diameter(road.outline) - flatLong) < .05,
+      `Same long side at rotation ${rotation}, tilt ${tilt}`);
+  }
   const tilted = api.arrowLayers(90, 67.5);
   const t = box(tilted.outline), wall = box(tilted.wallBottom);
-  assert.ok(Math.abs(t.w - 39) < 1.5, `Tilted, across: about 39 pt long (${t.w})`);
-  assert.ok(t.h < 18, 'Foreshortened on the tilted road');
+  assert.ok(t.w < flatLong + .1, `Tilted, across: no growth (${t.w})`);
+  const up = box(api.arrowLayers(0, 67.5).outline);
+  assert.ok(up.h < 14, 'Pointing up a tilted map: foreshortened');
   assert.ok(wall.bottom - t.bottom > 3 && wall.bottom - t.bottom < 4.5, 'A 3-4 pt thickness under it');
   assert.ok(tilted.wallTop, 'Two-tone wall');
 }
-const r = api.haloRadius(59.33, 5, 16);
-const perPoint = 156543.03392 * Math.cos(59.33 * Math.PI / 180) / 2 ** 16;
-assert.ok(Math.abs(r - 60 * perPoint) < 1e-9, 'A good fix: the halo keeps its 60 pt minimum');
-assert.ok(Math.abs(api.haloRadius(59.33, 5000, 16) - 110 * perPoint) < 1e-9, 'A rough fix: at most 110 pt');
-assert.equal(api.haloRadius(59.33, 25, 18), 25, 'Inside the clamps: the real accuracy in metres');
-assert.ok(Math.abs(api.haloRadius(59.33, NaN, 16) - 60 * perPoint) < 1e-9, 'Unknown accuracy: the minimum');
+for (const zoom of [11, 15, 17, 19]) {
+  const perPoint = 156543.03392 * Math.cos(59.33 * Math.PI / 180) / 2 ** zoom;
+  assert.ok(Math.abs(api.haloRadius(59.33, zoom) / perPoint - 60) < 1e-9, `Halo 60 pt on screen at zoom ${zoom}`);
+}
 
 const markersBefore = MarkerMock.all.length, circlesBefore = CircleMock.all.length;
 map.moveCamera({heading: 0, tilt: 0}); // the twist test left the map turned
 const marker = new maps.Marker({title:'Driver camera vehicle', position:{x:1,y:2},
   icon:{url:'vehicle.png',scaledSize:{width:64,height:64}}, visible:true, zIndex: 12});
-marker.setMap(map); api.vehicle(7, 90, 8);
+marker.setMap(map); api.vehicle(7, 90);
 assert.equal(marker.getVisible(), true, 'The own vehicle is the native marker itself');
 assert.equal(images.length + halos.length, 0, 'No DOM overlay for the vehicle');
 const arrow = () => marker.getIcon();
@@ -544,11 +552,11 @@ assert.equal(halo.options.strokeWeight, 0, 'No border');
 assert.equal(halo.getMap(), map);
 assert.deepEqual(halo.getCenter(), {x:1,y:2});
 // (a mock position {x, y}: its y stands for the latitude)
-map.moveCamera({zoom: 16}); api.vehicle(7, 0, 8);
+map.moveCamera({zoom: 16}); api.vehicle(7, 0);
 const at16 = halo.getRadius();
-assert.ok(Math.abs(at16 - api.haloRadius(2, 8, 16)) < 1e-9, 'Sized for the zoom');
+assert.ok(Math.abs(at16 - api.haloRadius(2, 16)) < 1e-9, 'Sized for the zoom');
 map.moveCamera({zoom: 12});
-assert.ok(Math.abs(halo.getRadius() - api.haloRadius(2, 8, 12)) < 1e-9, 'Resized on the zoom frame itself');
+assert.ok(Math.abs(halo.getRadius() - api.haloRadius(2, 12)) < 1e-9, 'Resized on the zoom frame itself: 60 pt again');
 map.moveCamera({zoom: 16});
 marker.setOptions({position: {x:3,y:4}, zIndex: 20, visible: true, title: 'Driver camera vehicle',
   icon:{url:'vehicle.png',scaledSize:{width:64,height:64}}});

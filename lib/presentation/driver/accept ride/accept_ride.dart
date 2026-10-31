@@ -1806,7 +1806,7 @@ class _ThrottledVehicleMapState extends State<_ThrottledVehicleMap> {
     markerId: const MarkerId('driver'),
     position: _pose.position,
     // Compass heading; CustomGoogleMap draws the position arrow for the
-    // camera (flat or tilted) with its accuracy halo.
+    // camera (flat or tilted) with its halo.
     rotation: _pose.headingDegrees,
     flat: false,
     anchor: MoveraVehicleMarker.anchor,

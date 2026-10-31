@@ -40,7 +40,7 @@ external void _anchor(JSNumber mapId);
 @JS('driverMapCamera.claim')
 external void _claim(JSNumber mapId, JSBoolean anchored, JSNumber lead);
 @JS('driverMapCamera.vehicle')
-external void _vehicle(JSNumber mapId, JSNumber heading, JSNumber accuracy);
+external void _vehicle(JSNumber mapId, JSNumber heading);
 @JS('driverMapCamera.configure')
 external void _configure(
   JSNumber mapId,
@@ -75,12 +75,8 @@ void claim(int mapId, {bool anchored = true, double? lead}) {
   if (ready) _claim(mapId.toJS, anchored.toJS, (lead ?? double.nan).toJS);
 }
 
-/// The own position arrow's compass [heading] and its fix's accuracy
-/// (metres; null when unknown) for its halo.
-void vehicle(int mapId, double heading, double? accuracyMeters) {
-  if (ready) {
-    _vehicle(mapId.toJS, heading.toJS, (accuracyMeters ?? double.nan).toJS);
-  }
+void vehicle(int mapId, double heading) {
+  if (ready) _vehicle(mapId.toJS, heading.toJS);
 }
 
 void configure(int mapId, double top, double bottom, double anchor) {

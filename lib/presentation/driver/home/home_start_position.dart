@@ -48,7 +48,7 @@ extension _HomeStartPosition on _DriverHomeState {
       infoWindow: InfoWindow(title: MoveraVehicleMarker.ownTitle),
       icon: _driverVehicleIcon,
       // Compass heading; CustomGoogleMap draws the position arrow for the
-      // camera (flat or tilted) with its accuracy halo.
+      // camera (flat or tilted) with its halo.
       flat: false,
       anchor: MoveraVehicleMarker.anchor,
       rotation: _driverHeading,
