@@ -1522,7 +1522,7 @@ class _AcceptRideState extends State<AcceptRide>
                                     status:
                                         NavigationRouteStatus.shown(
                                           _navigation.snapshot.status,
-                                          hasServerEta: _serverEta != null,
+                                          hasServerEta: _freshServerEta,
                                         ) ??
                                         _islandStatus,
                                     address: _showArrivalApproach
@@ -1548,7 +1548,7 @@ class _AcceptRideState extends State<AcceptRide>
                                               ? _navigation.status
                                               : _locationStatus ??
                                                     _navigation.snapshot.status,
-                                          hasServerEta: _serverEta != null,
+                                          hasServerEta: _freshServerEta,
                                         ),
                                     reroutes: _navigation.reroutes,
                                     waitingMessage: _tripBarStatus,

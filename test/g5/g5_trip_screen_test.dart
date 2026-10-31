@@ -282,6 +282,48 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   });
 
+  testWidgets('checker: a stale server ETA leaves the route warning shown', (
+    tester,
+  ) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    final runtime = DriverRuntimeConfig.current;
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      externalRouting: true,
+      liveMapTicker: false,
+      reservationPopup: false,
+      islandHint: false,
+      simulatedArrival: false,
+      skipAccountActivation: false,
+    );
+    addTearDown(() => DriverRuntimeConfig.current = runtime);
+    await _pumpTrip(tester, realtime: realtime, routes: _NoRoutes());
+    realtime.emit(
+      tripId: _trip,
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.driverToPickup,
+      projection: _projection(
+        eta: {
+          'etaSeconds': 303,
+          'distanceMeters': 1863,
+          'target': 'pickup',
+          'at': '2026-10-31T09:01:00Z',
+          'source': 'stale',
+        },
+      ),
+    );
+    await _frames(tester, 40);
+    final island = _island(tester);
+    final failed = {
+      tr.navRouteUnavailableRetry,
+      tr.navRouteUnavailableLocation,
+    };
+    expect(failed, contains(island.status));
+    expect(island.eta, 'Last known: 6 min');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('Q1: no rating → no chip; the zone switch hides it too', (
     tester,
   ) async {
