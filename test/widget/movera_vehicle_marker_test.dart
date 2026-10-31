@@ -556,7 +556,11 @@ void main() {
       expect(first.anchor, const Offset(.5, .5));
       expect(first.flat, isFalse, reason: 'faces the screen: a circle');
       expect(first.consumeTapEvents, isTrue, reason: 'taps do nothing');
-      expect(first.zIndexInt, driver(tester).zIndexInt - 1);
+      // Checker: 0 keeps it under the trip pins (pickup/drop-off 8,
+      // destination 6) as well as under the arrow.
+      expect(first.zIndexInt, 0);
+      expect(first.zIndexInt, lessThan(6));
+      expect(first.zIndexInt, lessThan(driver(tester).zIndexInt));
       expect(map(tester).circles, isEmpty, reason: 'no ground circle');
       for (final camera in const [
         CameraPosition(target: LatLng(59.33, 18.06), zoom: 14),

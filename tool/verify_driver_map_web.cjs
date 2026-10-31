@@ -562,7 +562,7 @@ assert.equal(halo.getIcon().url, api.haloIcon().url);
 assert.deepEqual([halo.getIcon().scaledSize.width, halo.getIcon().scaledSize.height], [120, 120]);
 assert.deepEqual([halo.getIcon().anchor.x, halo.getIcon().anchor.y], [60, 60], 'Centred on the car');
 assert.equal(halo.options.clickable, false, 'Not tappable');
-assert.equal(halo.getZIndex(), 11, 'Under the arrow');
+assert.equal(halo.getZIndex(), 0, 'Under the arrow and under the trip pins (6, 8)');
 assert.equal(halo.getMap(), map);
 assert.deepEqual(halo.getPosition(), {x:1,y:2});
 const haloIcon = halo.getIcon();
@@ -576,7 +576,7 @@ marker.setOptions({position: {x:3,y:4}, zIndex: 20, visible: true, title: 'Drive
   icon:{url:'vehicle.png',scaledSize:{width:64,height:64}}});
 assert.deepEqual(layer('outline').getPosition(), {x:3,y:4}, 'A Flutter marker update moves the layers with the car');
 assert.deepEqual(halo.getPosition(), {x:3,y:4}, 'and the halo');
-assert.equal(halo.getZIndex(), 19);
+assert.equal(halo.getZIndex(), 0, 'The halo stays under the trip pins when the car moves up');
 assert.equal(layer('outline').getZIndex(), 19);
 assert.equal(arrow().fillColor, '#00A8C0', 'The update keeps the Symbol arrow, not the raster');
 assert.equal(marker.options.title, undefined);

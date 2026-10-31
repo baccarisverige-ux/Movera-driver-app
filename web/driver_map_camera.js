@@ -689,7 +689,9 @@
       const halo = new NativeMarker({
         icon: {url: HALO_URL, scaledSize: new sdk.Size(HALO.radiusPx * 2, HALO.radiusPx * 2),
           anchor: new sdk.Point(HALO.radiusPx, HALO.radiusPx)},
-        clickable: false, zIndex: (zIndex ?? 0) - 1, position: marker.getPosition(),
+        // zIndex 0: under every trip pin (pickup/drop-off 8, destination 6),
+        // so the grey disc never covers them.
+        clickable: false, zIndex: 0, position: marker.getPosition(),
       });
       const under = Object.fromEntries(LAYERS.map(name => [name, new NativeMarker({
         clickable: false, zIndex: (zIndex ?? 0) - 1, position: marker.getPosition(),
@@ -752,8 +754,8 @@
         halo.setVisible(visible);
       });
       marker.addListener('zindex_changed', () => {
+        // The halo stays at 0, under the trip pins.
         for (const name of LAYERS) under[name].setZIndex((marker.getZIndex() ?? 0) - 1);
-        halo.setZIndex((marker.getZIndex() ?? 0) - 1);
       });
       marker.addListener('map_changed', attach);
       attach();

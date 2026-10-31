@@ -248,7 +248,9 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
       position: own.position,
       icon: icon,
       anchor: const Offset(.5, .5),
-      zIndexInt: own.zIndexInt - 1,
+      // 0: under every trip pin (pickup/drop-off 8, destination 6), so the
+      // grey disc never covers them and they keep their own taps.
+      zIndexInt: 0,
       // Taps on it do nothing (no bubble, no camera move).
       consumeTapEvents: true,
     );
