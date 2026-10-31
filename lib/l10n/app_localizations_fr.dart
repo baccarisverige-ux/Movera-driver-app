@@ -6702,4 +6702,67 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get carTypesByMovera =>
       'Movera choisit les types de course quand la voiture est validée.';
+
+  @override
+  String get offlineCardTitle => 'Vous êtes hors ligne';
+
+  @override
+  String offlineReasonNoPosition(int minutes) {
+    return 'Votre téléphone n’a envoyé aucune position pendant $minutes min';
+  }
+
+  @override
+  String get offlineReasonAppRestart =>
+      'L’application a redémarré pendant que vous étiez en ligne';
+
+  @override
+  String offlineReasonMissedOffers(int count) {
+    return 'Vous avez manqué ou refusé $count offres d’affilée';
+  }
+
+  @override
+  String get offlineReasonMovera => 'Movera vous a mis hors ligne';
+
+  @override
+  String get offlineCheckPhone => 'Vérifier mon téléphone';
+
+  @override
+  String get offlineChecking => 'Vérification…';
+
+  @override
+  String get offlineCheckLocation => 'Localisation activée et autorisée';
+
+  @override
+  String get offlineCheckInternet => 'Internet et serveur Movera';
+
+  @override
+  String get offlineCheckBattery => 'Économiseur de batterie désactivé';
+
+  @override
+  String get offlineCheckNotifications => 'Notifications autorisées';
+
+  @override
+  String get offlineCheckUnknown => 'Impossible à vérifier ici';
+
+  @override
+  String get offlineCheckBrowser =>
+      'Autorisez-le dans les réglages du site du navigateur';
+
+  @override
+  String get offlineFixTurnOn => 'Activer';
+
+  @override
+  String get offlineGoOnline => 'Passer en ligne';
+
+  @override
+  String get offlineReasonVehicleBlocked =>
+      'Votre voiture ne peut pas être utilisée pour le moment';
+
+  @override
+  String get offlineReasonFleetRemoved =>
+      'Vous ne faites plus partie d’une flotte';
+
+  @override
+  String get offlineReasonAccountStatus =>
+      'Votre compte est en pause – contactez Movera';
 }

@@ -9,6 +9,7 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/claim_lock.dart';
 import 'package:movera/core/dispatch/destination_mode_session.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/driver/driver_home_notices.dart';
 import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/onboarding/onboarding_settings.dart';
 import 'package:movera/core/l10n/driver_language.dart';
@@ -78,6 +79,8 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     DestinationModeRules.current = const DestinationModeRules();
     NextTripRules.current = const NextTripRules();
     DestinationModeSession.instance = DestinationModeSession();
+    // No "You're offline" card left over from the test before.
+    DriverSetOfflineNotice.instance.clear();
   });
   await testMain();
 }

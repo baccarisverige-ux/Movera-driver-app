@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 
+// Owner 2026-10-31: "You were set offline" grew into its own card in the
+// sheet; Home reads both reason cards from here.
+export 'package:movera/presentation/driver/home/components/home_offline_card.dart';
+
 /// Driver group 3 ("Already decided": a permanent Home reason card with
 /// tap-to-fix instead of a 6 s snackbar). Why the driver is not online, or
 /// what he should know before he goes: the server's refusal, "Turn on

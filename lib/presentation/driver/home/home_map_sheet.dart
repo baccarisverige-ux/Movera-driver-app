@@ -2310,6 +2310,16 @@ extension _HomeMapSheet on _DriverHomeState {
   /// sheet open and Radar on, the same radar reads "Hold · OFF" and a
   /// one-second hold goes offline.
   Widget _homeRadarLayer() {
+    // Owner 2026-10-31: set offline, the "You're offline" card takes the
+    // place of the radar and the dock's icons.
+    if (_HomeOnlineGate(this)._offlineCardShown) {
+      return _HomeOnlineGate(this)._offlineCardLayer();
+    }
+    return _homeRadarLayerPlain();
+  }
+
+  /// The radar as always (also under the slid sheet while the card shows).
+  Widget _homeRadarLayerPlain() {
     if (_homeSheetInactive) {
       // Account on hold: the radar rides the red sheet's notch.
       return ValueListenableBuilder<double>(

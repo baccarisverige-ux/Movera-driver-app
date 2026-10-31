@@ -472,6 +472,10 @@ void main() {
       await presence.settleAfterStart();
       expect(body(requests[1])['onlineStatus'], 'offline');
       expect(DriverSetOfflineNotice.instance.value, isTrue);
+      expect(
+        DriverSetOfflineNotice.instance.reason,
+        DriverOfflineReason.appRestart,
+      );
     });
 
     test('G3-R1: a later profile with onlineStatus offline is the server\'s '
