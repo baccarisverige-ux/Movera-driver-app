@@ -2458,7 +2458,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tripOptions => 'Resealternativ';
 
   @override
-  String get orbMatch => 'MATCHA';
+  String get orbMatch => 'TA';
 
   @override
   String get orbWait => 'VÄNTA';
@@ -6622,4 +6622,15 @@ class AppLocalizationsSv extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get eventRunning => 'Pågår nu';
+
+  @override
+  String eventStarts(String time) {
+    return 'Börjar $time';
+  }
+
+  @override
+  String get eventPickupNote => 'Upphämtning';
 }

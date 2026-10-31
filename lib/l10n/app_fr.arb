@@ -1884,5 +1884,8 @@
   "riderRatingLabel": "Note du client",
   "soundOffNotice": "Le son est coupé – vous risquez de manquer des offres",
   "soundOffTapToAllow": "Touchez pour autoriser le son",
-  "riderRidesOnly": "{count, plural, one{{count} course} other{{count} courses}}"
+  "riderRidesOnly": "{count, plural, one{{count} course} other{{count} courses}}",
+  "eventRunning": "En cours",
+  "eventStarts": "Commence à {time}",
+  "eventPickupNote": "Prise en charge"
 }

@@ -11430,6 +11430,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 ride} other{{count} rides}}'**
   String riderRidesOnly(int count);
+
+  /// Contract v0.18.6 dispatchTools.events.texts.running (G4-F6).
+  ///
+  /// In en, this message translates to:
+  /// **'Happening now'**
+  String get eventRunning;
+
+  /// Contract v0.18.6 dispatchTools.events.texts.upcoming (G4-F6).
+  ///
+  /// In en, this message translates to:
+  /// **'Starts {time}'**
+  String eventStarts(String time);
+
+  /// Contract v0.18.6 dispatchTools.events.texts.pickupNote (G4-F6).
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup'**
+  String get eventPickupNote;
 }
 
 class _AppLocalizationsDelegate

@@ -4098,5 +4098,11 @@
   "soundOffTapToAllow": "Tap to allow sound",
   "@soundOffTapToAllow": {"description": "G4 decision 2: the browser plays no sound before a tap."},
   "riderRidesOnly": "{count, plural, =1{1 ride} other{{count} rides}}",
-  "@riderRidesOnly": {"description": "G4 decision 3: the rider's rides when there is no rating to show.", "placeholders": {"count": {"type": "int"}}}
+  "@riderRidesOnly": {"description": "G4 decision 3: the rider's rides when there is no rating to show.", "placeholders": {"count": {"type": "int"}}},
+  "eventRunning": "Happening now",
+  "@eventRunning": {"description": "Contract v0.18.6 dispatchTools.events.texts.running (G4-F6)."},
+  "eventStarts": "Starts {time}",
+  "@eventStarts": {"description": "Contract v0.18.6 dispatchTools.events.texts.upcoming (G4-F6).", "placeholders": {"time": {"type": "String"}}},
+  "eventPickupNote": "Pickup",
+  "@eventPickupNote": {"description": "Contract v0.18.6 dispatchTools.events.texts.pickupNote (G4-F6)."}
 }

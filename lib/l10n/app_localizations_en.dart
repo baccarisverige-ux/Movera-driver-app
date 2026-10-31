@@ -6613,4 +6613,15 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get eventRunning => 'Happening now';
+
+  @override
+  String eventStarts(String time) {
+    return 'Starts $time';
+  }
+
+  @override
+  String get eventPickupNote => 'Pickup';
 }

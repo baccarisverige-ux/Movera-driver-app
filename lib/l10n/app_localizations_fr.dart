@@ -6726,4 +6726,15 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get eventRunning => 'En cours';
+
+  @override
+  String eventStarts(String time) {
+    return 'Commence à $time';
+  }
+
+  @override
+  String get eventPickupNote => 'Prise en charge';
 }

@@ -10,6 +10,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 
 class DriverHomeAdminConfig {
   const DriverHomeAdminConfig({
@@ -866,6 +867,64 @@ class DriverHomeAdminContentService {
   AppLanguages get languages =>
       (appConfig ?? const DriverAppConfig()).languages;
 
+  /// The demo's built-in "What's happening" list (never on live).
+  static const List<DriverEventConfig> demoEvents = [
+    DriverEventConfig(
+      id: 'stockholm-night-demand',
+      title: 'Stockholm evening demand',
+      category: 'Event',
+      dateLabel: 'Fri 25 Sep',
+      timeLabel: '18:00–22:30',
+      location: 'Central Stockholm',
+      description:
+          'Expect concentrated pickup activity around the city centre and waterfront after evening events finish.',
+      recommendedWindow: '18:30–22:00',
+      demandLabel: 'Higher demand expected',
+      driverNote:
+          'Be online before the main departure window and stay close to legal pickup zones.',
+      imageUrl:
+          'https://images.unsplash.com/photo-1670257876831-7e97238da208?auto=format&fit=crop&q=82&w=1400',
+      imageCredit: 'Håkon Grimstad · Unsplash',
+      enabled: true,
+    ),
+    DriverEventConfig(
+      id: 'stockholm-waterfront',
+      title: 'Waterfront traffic window',
+      category: 'Traffic',
+      dateLabel: 'Sat 26 Sep',
+      timeLabel: '16:30–20:00',
+      location: 'Stockholm waterfront',
+      description:
+          'Large visitor movements can create temporary traffic pressure and higher ride demand around waterfront routes.',
+      recommendedWindow: '17:00–19:30',
+      demandLabel: 'Busy pickup window',
+      driverNote:
+          'Go online before the crowd leaves and use live routing to avoid blocked curb areas.',
+      imageUrl:
+          'https://images.unsplash.com/photo-1781040761543-fc71fcc17eb2?auto=format&fit=crop&q=82&w=1400',
+      imageCredit: 'Rafael Peier · Unsplash',
+      enabled: true,
+    ),
+    DriverEventConfig(
+      id: 'stockholm-road-demand',
+      title: 'Road demand alert',
+      category: 'Demand',
+      dateLabel: 'Sat 26 Sep',
+      timeLabel: '22:00–02:00',
+      location: 'Greater Stockholm',
+      description:
+          'Night-time road conditions and event departures can shift demand quickly between central and outer zones.',
+      recommendedWindow: '22:30–01:30',
+      demandLabel: 'Late-night demand',
+      driverNote:
+          'Stay online through the busiest window and check destination direction before matching longer trips.',
+      imageUrl:
+          'https://images.unsplash.com/photo-1511443259588-05878425294f?auto=format&fit=crop&q=82&w=1400',
+      imageCredit: 'Federico Enni · Unsplash',
+      enabled: true,
+    ),
+  ];
+
   DriverHomeAdminConfig load() {
     final export = rulesExport;
     final config = appConfig;
@@ -904,62 +963,12 @@ class DriverHomeAdminContentService {
       ),
       eventsSectionTitle: 'What’s happening',
       eventsSectionSubtitle: 'Plan your shift around busy periods',
-      events: const [
-        DriverEventConfig(
-          id: 'stockholm-night-demand',
-          title: 'Stockholm evening demand',
-          category: 'Event',
-          dateLabel: 'Fri 25 Sep',
-          timeLabel: '18:00–22:30',
-          location: 'Central Stockholm',
-          description:
-              'Expect concentrated pickup activity around the city centre and waterfront after evening events finish.',
-          recommendedWindow: '18:30–22:00',
-          demandLabel: 'Higher demand expected',
-          driverNote:
-              'Be online before the main departure window and stay close to legal pickup zones.',
-          imageUrl:
-              'https://images.unsplash.com/photo-1670257876831-7e97238da208?auto=format&fit=crop&q=82&w=1400',
-          imageCredit: 'Håkon Grimstad · Unsplash',
-          enabled: true,
-        ),
-        DriverEventConfig(
-          id: 'stockholm-waterfront',
-          title: 'Waterfront traffic window',
-          category: 'Traffic',
-          dateLabel: 'Sat 26 Sep',
-          timeLabel: '16:30–20:00',
-          location: 'Stockholm waterfront',
-          description:
-              'Large visitor movements can create temporary traffic pressure and higher ride demand around waterfront routes.',
-          recommendedWindow: '17:00–19:30',
-          demandLabel: 'Busy pickup window',
-          driverNote:
-              'Go online before the crowd leaves and use live routing to avoid blocked curb areas.',
-          imageUrl:
-              'https://images.unsplash.com/photo-1781040761543-fc71fcc17eb2?auto=format&fit=crop&q=82&w=1400',
-          imageCredit: 'Rafael Peier · Unsplash',
-          enabled: true,
-        ),
-        DriverEventConfig(
-          id: 'stockholm-road-demand',
-          title: 'Road demand alert',
-          category: 'Demand',
-          dateLabel: 'Sat 26 Sep',
-          timeLabel: '22:00–02:00',
-          location: 'Greater Stockholm',
-          description:
-              'Night-time road conditions and event departures can shift demand quickly between central and outer zones.',
-          recommendedWindow: '22:30–01:30',
-          demandLabel: 'Late-night demand',
-          driverNote:
-              'Stay online through the busiest window and check destination direction before matching longer trips.',
-          imageUrl:
-              'https://images.unsplash.com/photo-1511443259588-05878425294f?auto=format&fit=crop&q=82&w=1400',
-          imageCredit: 'Federico Enni · Unsplash',
-          enabled: true,
-        ),
-      ],
+      // G4-F6 (contract v0.18.6 §32): a live build shows the admin's real
+      // events (`GET /driver/events`, the Home map); the demo's built-in
+      // list is the demo's only.
+      events: DriverRuntimeConfig.current.authRequired
+          ? const <DriverEventConfig>[]
+          : demoEvents,
       stockholmWork: const StockholmWorkStatsConfig(
         title: 'Work in Stockholm',
         subtitle: 'Inner city and the area around',

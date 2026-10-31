@@ -1884,5 +1884,8 @@
   "riderRatingLabel": "Kundens betyg",
   "soundOffNotice": "Ljudet är av – du kan missa erbjudanden",
   "soundOffTapToAllow": "Tryck för att tillåta ljud",
-  "riderRidesOnly": "{count, plural, =1{1 resa} other{{count} resor}}"
+  "riderRidesOnly": "{count, plural, =1{1 resa} other{{count} resor}}",
+  "eventRunning": "Pågår nu",
+  "eventStarts": "Börjar {time}",
+  "eventPickupNote": "Upphämtning"
 }

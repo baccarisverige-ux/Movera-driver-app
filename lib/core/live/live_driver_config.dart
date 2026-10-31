@@ -61,6 +61,7 @@ class LiveDriverConfig extends ChangeNotifier {
     this.renewSession,
     this.onContentPublished,
     this.onZonesPublished,
+    this.onEventsPublished,
     DriverConfigCache? cache,
     this.retryAfter = const Duration(seconds: 5),
     this.requestTimeout = const Duration(seconds: 60),
@@ -82,6 +83,11 @@ class LiveDriverConfig extends ChangeNotifier {
   /// Contract v0.11.0 §21: a `config_published` with doc `zones` (a zone
   /// was created, changed, opened or closed) goes here.
   final void Function()? onZonesPublished;
+
+  /// Contract v0.18.6 §32 (G4-F6): a `config_published` with doc `events`
+  /// (an event of the driver's country was created, changed or deleted)
+  /// goes here.
+  final void Function()? onEventsPublished;
   final Duration retryAfter;
   final Duration requestTimeout;
 
@@ -241,6 +247,10 @@ class LiveDriverConfig extends ChangeNotifier {
                 }
                 if (event['doc'] == 'zones') {
                   onZonesPublished?.call();
+                  return;
+                }
+                if (event['doc'] == 'events') {
+                  onEventsPublished?.call();
                   return;
                 }
                 final version = event['version'];
