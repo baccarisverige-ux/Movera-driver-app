@@ -1881,10 +1881,10 @@
   "remRenewalRejected": "Ditt nya avvisades",
   "carTypesByMovera": "Movera väljer resetyperna när bilen godkänns.",
   "offlineCardTitle": "Du är offline",
-  "offlineReasonNoPosition": "Movera fick ingen position från din telefon på {minutes} minuter.",
-  "offlineReasonAppRestart": "Appen startades om medan du var online.",
-  "offlineReasonMissedOffers": "{count} erbjudanden i rad missades eller avböjdes.",
-  "offlineReasonMovera": "Movera har satt dig offline.",
+  "offlineReasonNoPosition": "Telefonen skickade ingen position på {minutes} min",
+  "offlineReasonAppRestart": "Appen startades om medan du var online",
+  "offlineReasonMissedOffers": "Du missade eller nekade {count} erbjudanden i rad",
+  "offlineReasonMovera": "Movera satte dig offline",
   "offlineCheckPhone": "Kontrollera min telefon",
   "offlineChecking": "Kontrollerar…",
   "offlineCheckLocation": "Plats på och tillåten",
@@ -1894,5 +1894,8 @@
   "offlineCheckUnknown": "Kan inte kontrolleras här",
   "offlineCheckBrowser": "Tillåt det i webbläsarens webbplatsinställningar",
   "offlineFixTurnOn": "Slå på",
-  "offlineGoOnline": "Gå online"
+  "offlineGoOnline": "Gå online",
+  "offlineReasonVehicleBlocked": "Din bil kan inte användas just nu",
+  "offlineReasonFleetRemoved": "Du är inte längre med i ett åkeri",
+  "offlineReasonAccountStatus": "Ditt konto är pausat – kontakta Movera"
 }

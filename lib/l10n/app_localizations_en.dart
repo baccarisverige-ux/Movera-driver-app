@@ -6596,20 +6596,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String offlineReasonNoPosition(int minutes) {
-    return 'Movera got no position from your phone for $minutes minutes.';
+    return 'Your phone sent no position for $minutes min';
   }
 
   @override
   String get offlineReasonAppRestart =>
-      'The app was restarted while you were online.';
+      'The app was restarted while you were online';
 
   @override
   String offlineReasonMissedOffers(int count) {
-    return '$count offers in a row were missed or declined.';
+    return 'You missed or declined $count offers in a row';
   }
 
   @override
-  String get offlineReasonMovera => 'Movera set you offline.';
+  String get offlineReasonMovera => 'Movera set you offline';
 
   @override
   String get offlineCheckPhone => 'Check my phone';
@@ -6640,4 +6640,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineGoOnline => 'Go online';
+
+  @override
+  String get offlineReasonVehicleBlocked => 'Your car cannot be used right now';
+
+  @override
+  String get offlineReasonFleetRemoved => 'You are no longer in a fleet';
+
+  @override
+  String get offlineReasonAccountStatus =>
+      'Your account is paused – contact Movera';
 }

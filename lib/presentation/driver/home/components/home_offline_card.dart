@@ -7,9 +7,12 @@ import 'package:movera/core/phone/phone_checks.dart';
 import 'package:movera/presentation/driver/home/components/driver_sheet_nav.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 
-/// The card's reason line for [notice], in the driver's language.
+/// The card's reason line for [notice], in the driver's language
+/// (contract v0.18.6 `driverHome.setOffline.reasons`); a car blocked by an
+/// admin adds the admin's note on its own line.
 String offlineReasonText(DriverSetOfflineNotice notice) {
-  return switch (notice.reason) {
+  final note = notice.note?.trim() ?? '';
+  final text = switch (notice.reason) {
     DriverOfflineReason.noPosition => tr.offlineReasonNoPosition(
       notice.count ?? DriverAppConfig.defaultNoFixMinutes,
     ),
@@ -17,8 +20,12 @@ String offlineReasonText(DriverSetOfflineNotice notice) {
       notice.count ?? DriverOfferRules.current.autoOfflineAfter,
     ),
     DriverOfflineReason.appRestart => tr.offlineReasonAppRestart,
+    DriverOfflineReason.vehicleBlocked => tr.offlineReasonVehicleBlocked,
+    DriverOfflineReason.fleetRemoved => tr.offlineReasonFleetRemoved,
+    DriverOfflineReason.accountStatus => tr.offlineReasonAccountStatus,
     DriverOfflineReason.movera => tr.offlineReasonMovera,
   };
+  return note.isEmpty ? text : '$text\n$note';
 }
 
 /// Owner 2026-10-31 ("new set offline message", decisions/driver-g3.md,

@@ -1881,10 +1881,10 @@
   "remRenewalRejected": "Le nouveau a été refusé",
   "carTypesByMovera": "Movera choisit les types de course quand la voiture est validée.",
   "offlineCardTitle": "Vous êtes hors ligne",
-  "offlineReasonNoPosition": "Movera n'a reçu aucune position de votre téléphone pendant {minutes} minutes.",
-  "offlineReasonAppRestart": "L'application a redémarré pendant que vous étiez en ligne.",
-  "offlineReasonMissedOffers": "{count} offres d'affilée ont été manquées ou refusées.",
-  "offlineReasonMovera": "Movera vous a mis hors ligne.",
+  "offlineReasonNoPosition": "Votre téléphone n’a envoyé aucune position pendant {minutes} min",
+  "offlineReasonAppRestart": "L’application a redémarré pendant que vous étiez en ligne",
+  "offlineReasonMissedOffers": "Vous avez manqué ou refusé {count} offres d’affilée",
+  "offlineReasonMovera": "Movera vous a mis hors ligne",
   "offlineCheckPhone": "Vérifier mon téléphone",
   "offlineChecking": "Vérification…",
   "offlineCheckLocation": "Localisation activée et autorisée",
@@ -1894,5 +1894,8 @@
   "offlineCheckUnknown": "Impossible à vérifier ici",
   "offlineCheckBrowser": "Autorisez-le dans les réglages du site du navigateur",
   "offlineFixTurnOn": "Activer",
-  "offlineGoOnline": "Passer en ligne"
+  "offlineGoOnline": "Passer en ligne",
+  "offlineReasonVehicleBlocked": "Votre voiture ne peut pas être utilisée pour le moment",
+  "offlineReasonFleetRemoved": "Vous ne faites plus partie d’une flotte",
+  "offlineReasonAccountStatus": "Votre compte est en pause – contactez Movera"
 }

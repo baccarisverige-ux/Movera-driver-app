@@ -6604,20 +6604,20 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String offlineReasonNoPosition(int minutes) {
-    return 'Movera fick ingen position från din telefon på $minutes minuter.';
+    return 'Telefonen skickade ingen position på $minutes min';
   }
 
   @override
   String get offlineReasonAppRestart =>
-      'Appen startades om medan du var online.';
+      'Appen startades om medan du var online';
 
   @override
   String offlineReasonMissedOffers(int count) {
-    return '$count erbjudanden i rad missades eller avböjdes.';
+    return 'Du missade eller nekade $count erbjudanden i rad';
   }
 
   @override
-  String get offlineReasonMovera => 'Movera har satt dig offline.';
+  String get offlineReasonMovera => 'Movera satte dig offline';
 
   @override
   String get offlineCheckPhone => 'Kontrollera min telefon';
@@ -6649,4 +6649,14 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get offlineGoOnline => 'Gå online';
+
+  @override
+  String get offlineReasonVehicleBlocked => 'Din bil kan inte användas just nu';
+
+  @override
+  String get offlineReasonFleetRemoved => 'Du är inte längre med i ett åkeri';
+
+  @override
+  String get offlineReasonAccountStatus =>
+      'Ditt konto är pausat – kontakta Movera';
 }

@@ -54,9 +54,8 @@ class _HomeGateState {
   /// once the driver is really offline.
   VoidCallback? offlineHeldNotice;
 
-  /// When the driver last tapped Go online (phone clock): a `set_offline`
-  /// notice from before it is about an older offline.
-  DateTime? onlineAt;
+  /// The `offlineAt` the card was shown for on open.
+  DateTime? offlineSeenAt;
 }
 
 /// Decision 2: the battery saver warning is shown once per install.
@@ -91,7 +90,6 @@ extension _HomeOnlineGate on _DriverHomeState {
   /// saver warns once.
   bool _blocksOnline() {
     if (_locationBlocksOnline()) return true;
-    _gate.onlineAt = DateTime.now();
     DriverSetOfflineNotice.instance.clear();
     _clearReason();
     unawaited(_warnBatterySaverOnce());
@@ -251,42 +249,62 @@ extension _HomeOnlineGate on _DriverHomeState {
       return;
     }
     unawaited(_goOffline(notice: false));
-    unawaited(_explainServerOffline(session));
+    _explainServerOffline(session);
   }
 
-  /// Why the server set him offline, from what it tells the app: its own
-  /// bell notice `set_offline` (contract `driverHome.setOffline.noticeKind`,
-  /// sent only by the no-position job). Anything else: "Movera set you
-  /// offline". An account put on hold shows HOLD on the radar instead.
-  Future<void> _explainServerOffline(DriverAccountSession session) async {
-    if (session.account?.isActive == false) return;
-    var reason = DriverOfflineReason.movera;
-    int? minutes;
-    try {
-      final notices = await session.repository
-          .notifications(limit: 5)
-          .timeout(const Duration(seconds: 6));
-      // Two minutes of slack for a phone clock that is a little off.
-      final since = (_gate.onlineAt ?? DateTime.now()).subtract(
-        const Duration(minutes: 2),
-      );
-      final noFix = notices.any(
-        (n) => n.kind == setOfflineNoticeKind && !n.read && n.at.isAfter(since),
-      );
-      if (noFix) {
-        reason = DriverOfflineReason.noPosition;
-        // Null: the card's default (contract 5).
-        minutes = LiveDriverServices.instance?.config.current?.noFixMinutes;
-      }
-    } catch (_) {
-      // No answer: the card says Movera set him offline.
+  /// Why the server set him offline: `Driver.offlineReason` (+ note) of the
+  /// profile (contract v0.18.6, owner "Send the real reason"), read only
+  /// when sent (an older server: "Movera set you offline").
+  void _explainServerOffline(DriverAccountSession session) {
+    final account = session.account;
+    _showServerReason(
+      DriverOfflineReason.fromServer(account?.offlineReason) ??
+          DriverOfflineReason.movera,
+      note: account?.offlineNote,
+    );
+    if (account?.offlineAt case final at?) _gate.offlineSeenAt = at;
+  }
+
+  /// The card with a server reason; the counts are the zone's settings,
+  /// as the server's (contract: minutes = noFixMinutes, count =
+  /// missedExclusive).
+  void _showServerReason(DriverOfflineReason reason, {String? note}) {
+    DriverSetOfflineNotice.instance.show(
+      reason: reason,
+      count: switch (reason) {
+        DriverOfflineReason.noPosition =>
+          LiveDriverServices.instance?.config.current?.noFixMinutes,
+        DriverOfflineReason.missedOffers =>
+          DriverOfferRules.current.autoOfflineAfter,
+        _ => null,
+      },
+      note: reason == DriverOfflineReason.vehicleBlocked ? note : null,
+    );
+  }
+
+  /// Contract v0.18.6: the app opens (or comes back) offline and the
+  /// server set him offline a short while ago (a push "You were set
+  /// offline" brought him here): the card says why, once per time.
+  void _serverOfflineOnOpen(DriverAccountSession session) {
+    final account = session.account;
+    final told = DriverOfflineReason.fromServer(account?.offlineReason);
+    final at = account?.offlineAt;
+    if (told == null ||
+        at == null ||
+        account?.onlineStatus != 'offline' ||
+        _driverSession.isOnline ||
+        _isGoingOnline ||
+        _gate.offlineSeenAt == at ||
+        DateTime.now().difference(at).abs() > serverOfflineFresh) {
+      return;
     }
-    if (!mounted || _driverSession.isOnline || _isGoingOnline) return;
-    DriverSetOfflineNotice.instance.show(reason: reason, count: minutes);
+    _gate.offlineSeenAt = at;
+    _showServerReason(told, note: account?.offlineNote);
   }
 
-  /// Contract `driverHome.setOffline.noticeKind`.
-  static const setOfflineNoticeKind = 'set_offline';
+  /// How long after the server set him offline the card still comes when
+  /// the app opens.
+  static const serverOfflineFresh = Duration(minutes: 30);
 
   /// The notice changed: the "You're offline" card comes (for
   /// [HomeOfflineCard.showsFor]) or goes.

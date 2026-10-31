@@ -74,8 +74,30 @@ enum DriverOfflineReason {
   /// `driverHome.setOffline` reason `app_restart`).
   appRestart,
 
-  /// The server set the driver offline without saying why.
-  movera,
+  /// v0.18.6 `vehicle_blocked`: an admin rejected or blocked his car
+  /// (with the admin's note).
+  vehicleBlocked,
+
+  /// v0.18.6 `fleet_removed`: removed from his fleet, or the fleet was
+  /// blocked.
+  fleetRemoved,
+
+  /// v0.18.6 `account_status`: an admin paused the account.
+  accountStatus,
+
+  /// v0.18.6 `admin`, or the server set him offline without saying why.
+  movera;
+
+  /// `Driver.offlineReason` (contract v0.18.6); null for an unknown one.
+  static DriverOfflineReason? fromServer(String? reason) => switch (reason) {
+    'no_position' => noPosition,
+    'missed_offers' => missedOffers,
+    'vehicle_blocked' => vehicleBlocked,
+    'fleet_removed' => fleetRemoved,
+    'account_status' => accountStatus,
+    'admin' => movera,
+    _ => null,
+  };
 }
 
 /// Decision 3 + G3-R1: the driver was set offline without asking (the app
@@ -90,6 +112,7 @@ class DriverSetOfflineNotice extends ValueNotifier<bool> {
 
   DriverOfflineReason _reason = DriverOfflineReason.movera;
   int? _count;
+  String? _note;
 
   /// Why; [DriverOfflineReason.movera] when nothing says.
   DriverOfflineReason get reason => _reason;
@@ -98,12 +121,17 @@ class DriverSetOfflineNotice extends ValueNotifier<bool> {
   /// [DriverOfflineReason.noPosition]: the minutes without a position.
   int? get count => _count;
 
+  /// [DriverOfflineReason.vehicleBlocked]: the admin's note.
+  String? get note => _note;
+
   void show({
     DriverOfflineReason reason = DriverOfflineReason.movera,
     int? count,
+    String? note,
   }) {
     _reason = reason;
     _count = count;
+    _note = note;
     if (value) {
       notifyListeners();
     } else {

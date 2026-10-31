@@ -11410,25 +11410,25 @@ abstract class AppLocalizations {
   /// Offline card reason: server job G3-R1 (contract driverHome.setOffline reason no_position, bell notice kind set_offline).
   ///
   /// In en, this message translates to:
-  /// **'Movera got no position from your phone for {minutes} minutes.'**
+  /// **'Your phone sent no position for {minutes} min'**
   String offlineReasonNoPosition(int minutes);
 
   /// Offline card reason: decision 3 (contract driverHome.setOffline reason app_restart).
   ///
   /// In en, this message translates to:
-  /// **'The app was restarted while you were online.'**
+  /// **'The app was restarted while you were online'**
   String get offlineReasonAppRestart;
 
   /// Offline card reason: contract autoOffline (offers.autoOffline.missedExclusive, offer event driverOffline: true).
   ///
   /// In en, this message translates to:
-  /// **'{count} offers in a row were missed or declined.'**
+  /// **'You missed or declined {count} offers in a row'**
   String offlineReasonMissedOffers(int count);
 
   /// Offline card reason when the server does not say why.
   ///
   /// In en, this message translates to:
-  /// **'Movera set you offline.'**
+  /// **'Movera set you offline'**
   String get offlineReasonMovera;
 
   /// Offline card: runs the phone checks.
@@ -11490,6 +11490,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go online'**
   String get offlineGoOnline;
+
+  /// Contract v0.18.6 driverHome.setOffline.reasons.vehicle_blocked (owner 'Send the real reason'): the offline card's reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Your car cannot be used right now'**
+  String get offlineReasonVehicleBlocked;
+
+  /// Contract v0.18.6 driverHome.setOffline.reasons.fleet_removed (owner 'Send the real reason'): the offline card's reason.
+  ///
+  /// In en, this message translates to:
+  /// **'You are no longer in a fleet'**
+  String get offlineReasonFleetRemoved;
+
+  /// Contract v0.18.6 driverHome.setOffline.reasons.account_status (owner 'Send the real reason'): the offline card's reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is paused – contact Movera'**
+  String get offlineReasonAccountStatus;
 }
 
 class _AppLocalizationsDelegate

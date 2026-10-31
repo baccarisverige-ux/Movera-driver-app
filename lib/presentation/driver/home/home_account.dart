@@ -524,6 +524,7 @@ extension _HomeAccount on _DriverHomeState {
           _rebuild(() {});
           // G3-R1: the server set the driver offline (no position).
           _HomeOnlineGate(this)._checkServerSetOffline(session);
+          _HomeOnlineGate(this)._serverOfflineOnOpen(session);
         }
       }),
     );

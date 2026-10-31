@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/api/api_client.dart';
@@ -163,7 +164,7 @@ void main() {
       expect(card, findsOneWidget);
       expect(text("You're offline"), findsOneWidget);
       expect(
-        text('The app was restarted while you were online.'),
+        text('The app was restarted while you were online'),
         findsOneWidget,
       );
       expect(
@@ -258,21 +259,21 @@ void main() {
       await pumpHome(tester);
       DriverSetOfflineNotice.instance.show();
       await frames(tester, 3);
-      expect(text('Movera set you offline.'), findsOneWidget);
+      expect(text('Movera set you offline'), findsOneWidget);
       DriverSetOfflineNotice.instance.show(
         reason: DriverOfflineReason.missedOffers,
         count: 10,
       );
       await frames(tester, 3);
-      expect(
-        text('10 offers in a row were missed or declined.'),
-        findsOneWidget,
-      );
+      expect(text('You missed or declined 10 offers in a row'), findsOneWidget);
       await leave(tester, null);
     });
 
     testWidgets('G3-R1 live: the server set him offline and its bell notice '
-        'set_offline says why: "no position for 5 minutes"', (tester) async {
+        'reason no_position says why; a server without offlineReason (before '
+        'v0.18.6) gets "Movera set you offline", never a guess', (
+      tester,
+    ) async {
       DriverRuntimeConfig.current = const DriverRuntimeConfig(
         simulatedArrival: false,
         externalRouting: false,
@@ -285,6 +286,7 @@ void main() {
       var status = 'offline';
       var version = 3;
       var noticeSent = false;
+      String? reason;
       final home = await pumpHome(
         tester,
         answer: (request) async => switch ((request.method, request.url.path)) {
@@ -295,6 +297,7 @@ void main() {
             'country': 'SE',
             'onlineStatus': status,
             'version': version,
+            'offlineReason': ?reason,
           }),
           ('POST', '/api/v1/driver/availability') => json(200, {
             'driverId': 'd1',
@@ -335,22 +338,222 @@ void main() {
       status = 'offline';
       version = 6;
       noticeSent = true;
+      reason = 'no_position';
       await tester.pump(const Duration(seconds: 61));
       await frames(tester, 20);
       expect(home.session.isOnline, isFalse);
       expect(card, findsOneWidget);
-      expect(
-        text('Movera got no position from your phone for 5 minutes.'),
-        findsOneWidget,
-      );
+      expect(text('Your phone sent no position for 5 min'), findsOneWidget);
+      // Again, from an older server: a set_offline notice but no reason.
+      await tester.tap(find.byKey(const ValueKey<String>('offline-card-ok')));
+      await frames(tester, 3);
+      await tester.tap(find.byType(MoveraRadarOrb).last);
+      await frames(tester, 40);
+      expect(home.session.isOnline, isTrue);
+      status = 'offline';
+      version = 8;
+      reason = null;
+      await tester.pump(const Duration(seconds: 61));
+      await frames(tester, 20);
+      expect(home.session.isOnline, isFalse);
+      expect(text('Movera set you offline'), findsOneWidget);
       await leave(tester, home.live);
+    });
+  });
+
+  group('contract v0.18.6 offlineReason (owner "Send the real reason")', () {
+    test('the profile carries offlineReason, offlineNote and offlineAt', () {
+      final account = DriverAccount.fromJson(const {
+        'driverId': 'd1',
+        'accountStatus': 'active',
+        'firstName': 'Amira',
+        'version': 7,
+        'onlineStatus': 'offline',
+        'offlineReason': 'vehicle_blocked',
+        'offlineNote': 'Brake light broken',
+        'offlineAt': '2026-10-31T10:00:00Z',
+      });
+      expect(account.offlineReason, 'vehicle_blocked');
+      expect(account.offlineNote, 'Brake light broken');
+      expect(account.offlineAt, DateTime.utc(2026, 10, 31, 10));
+      expect(
+        DriverOfflineReason.fromServer(account.offlineReason),
+        DriverOfflineReason.vehicleBlocked,
+      );
+      expect(
+        [
+          for (final r in [
+            'no_position',
+            'missed_offers',
+            'fleet_removed',
+            'account_status',
+            'admin',
+            'something_new',
+            null,
+          ])
+            DriverOfflineReason.fromServer(r),
+        ],
+        [
+          DriverOfflineReason.noPosition,
+          DriverOfflineReason.missedOffers,
+          DriverOfflineReason.fleetRemoved,
+          DriverOfflineReason.accountStatus,
+          DriverOfflineReason.movera,
+          null,
+          null,
+        ],
+      );
+    });
+
+    test('every server reason in its contract words, the admin\'s note on '
+        'its own line', () {
+      String reasonOf(DriverOfflineReason reason, {String? note}) =>
+          offlineReasonText(
+            DriverSetOfflineNotice()..show(reason: reason, note: note),
+          );
+      expect(
+        reasonOf(
+          DriverOfflineReason.vehicleBlocked,
+          note: 'Brake light broken',
+        ),
+        'Your car cannot be used right now\nBrake light broken',
+      );
+      expect(
+        reasonOf(DriverOfflineReason.fleetRemoved),
+        'You are no longer in a fleet',
+      );
+      expect(
+        reasonOf(DriverOfflineReason.accountStatus),
+        'Your account is paused – contact Movera',
+      );
+      DriverAppTexts.language = 'sv';
+      expect(
+        reasonOf(DriverOfflineReason.vehicleBlocked),
+        'Din bil kan inte användas just nu',
+      );
+      DriverAppTexts.language = 'fr';
+      expect(
+        reasonOf(DriverOfflineReason.fleetRemoved),
+        'Vous ne faites plus partie d’une flotte',
+      );
+    });
+
+    Future<LiveDriverServices?> pumpLive(
+      WidgetTester tester,
+      Map<String, Object?> profile, {
+      bool goOnlineFirst = false,
+      void Function()? afterOnline,
+    }) async {
+      DriverRuntimeConfig.current = const DriverRuntimeConfig(
+        simulatedArrival: false,
+        externalRouting: false,
+        skipAccountActivation: true,
+        liveMapTicker: false,
+        reservationPopup: false,
+        islandHint: false,
+        authRequired: true,
+      );
+      final home = await pumpHome(
+        tester,
+        answer: (request) async => switch ((request.method, request.url.path)) {
+          ('GET', '/api/v1/driver/profile') => json(200, {
+            'driverId': 'd1',
+            'accountStatus': 'active',
+            'firstName': 'Amira',
+            'country': 'SE',
+            ...profile,
+          }),
+          ('POST', '/api/v1/driver/availability') => json(200, {
+            'driverId': 'd1',
+            'accountStatus': 'active',
+            'onlineStatus': profile['onlineStatus'] = 'online',
+            'version': profile['version'] = 4,
+          }),
+          ('GET', '/api/v1/notifications') => json(200, {'items': []}),
+          _ => http.Response('', 503),
+        },
+        account: (client) => DriverAccountSession(
+          repository: DriverAccountRepository(
+            ApiClient(
+              client: client,
+              baseUri: Uri.parse('https://api.test.movera.se'),
+              tokens: MemoryTokenStore()..save(access: 'a1', refresh: 'r1'),
+            ),
+          ),
+        ),
+      );
+      return home.live;
+    }
+
+    testWidgets('server set him offline while online: the card gives the '
+        'profile\'s offlineReason and the admin\'s note', (tester) async {
+      final profile = <String, Object?>{
+        'onlineStatus': 'offline',
+        'version': 3,
+      };
+      final live = await pumpLive(tester, profile);
+      await tester.tap(find.byType(MoveraRadarOrb).last);
+      await frames(tester, 40);
+      profile
+        ..['onlineStatus'] = 'offline'
+        ..['version'] = 6
+        ..['offlineReason'] = 'vehicle_blocked'
+        ..['offlineNote'] = 'Brake light broken'
+        ..['offlineAt'] = DateTime.now().toUtc().toIso8601String();
+      await tester.pump(const Duration(seconds: 61));
+      await frames(tester, 20);
+      expect(card, findsOneWidget);
+      expect(
+        text('Your car cannot be used right now\nBrake light broken'),
+        findsOne,
+      );
+      await leave(tester, live);
+    });
+
+    testWidgets('the app opens offline a few minutes after the server set '
+        'him offline (from the push): the card says why, once', (tester) async {
+      final live = await pumpLive(tester, {
+        'onlineStatus': 'offline',
+        'version': 6,
+        'offlineReason': 'fleet_removed',
+        'offlineAt': DateTime.now()
+            .toUtc()
+            .subtract(const Duration(minutes: 3))
+            .toIso8601String(),
+      });
+      await frames(tester, 10);
+      expect(text('You are no longer in a fleet'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey<String>('offline-card-ok')));
+      await frames(tester, 3);
+      expect(card, findsNothing);
+      await tester.pump(const Duration(seconds: 61));
+      await frames(tester, 10);
+      expect(card, findsNothing, reason: 'the same offline is not told twice');
+      await leave(tester, live);
+    });
+
+    testWidgets('an old server offline (hours ago) or none: no card on open', (
+      tester,
+    ) async {
+      final live = await pumpLive(tester, {
+        'onlineStatus': 'offline',
+        'version': 6,
+        'offlineReason': 'no_position',
+        'offlineAt': DateTime.now()
+            .toUtc()
+            .subtract(const Duration(hours: 3))
+            .toIso8601String(),
+      });
+      await frames(tester, 10);
+      expect(card, findsNothing);
+      await leave(tester, live);
     });
   });
 
   group('the card alone', () {
     Future<void> pumpCard(
       WidgetTester tester, {
-      String reason = 'Movera set you offline.',
+      String reason = 'Movera set you offline',
       Widget? radar,
       VoidCallback? onOk,
       VoidCallback? onLocationFixed,
@@ -587,26 +790,26 @@ void main() {
 
       expect(
         reasonOf(DriverOfflineReason.noPosition, count: 5),
-        'Movera got no position from your phone for 5 minutes.',
+        'Your phone sent no position for 5 min',
       );
       expect(
         reasonOf(DriverOfflineReason.missedOffers, count: 10),
-        '10 offers in a row were missed or declined.',
+        'You missed or declined 10 offers in a row',
       );
       expect(
         reasonOf(DriverOfflineReason.appRestart),
-        'The app was restarted while you were online.',
+        'The app was restarted while you were online',
       );
       // Defaults when the count is not known: the contract's 5 and 10.
       expect(
         reasonOf(DriverOfflineReason.noPosition),
-        'Movera got no position from your phone for 5 minutes.',
+        'Your phone sent no position for 5 min',
       );
       expect(
         reasonOf(DriverOfflineReason.missedOffers),
-        '10 offers in a row were missed or declined.',
+        'You missed or declined 10 offers in a row',
       );
-      expect(reasonOf(DriverOfflineReason.movera), 'Movera set you offline.');
+      expect(reasonOf(DriverOfflineReason.movera), 'Movera set you offline');
     });
 
     testWidgets('Swedish and French', (tester) async {
@@ -626,7 +829,7 @@ void main() {
         ..show(reason: DriverOfflineReason.appRestart);
       expect(
         offlineReasonText(notice),
-        "L'application a redémarré pendant que vous étiez en ligne.",
+        'L’application a redémarré pendant que vous étiez en ligne',
       );
     });
   });

@@ -6708,20 +6708,20 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String offlineReasonNoPosition(int minutes) {
-    return 'Movera n\'a reçu aucune position de votre téléphone pendant $minutes minutes.';
+    return 'Votre téléphone n’a envoyé aucune position pendant $minutes min';
   }
 
   @override
   String get offlineReasonAppRestart =>
-      'L\'application a redémarré pendant que vous étiez en ligne.';
+      'L’application a redémarré pendant que vous étiez en ligne';
 
   @override
   String offlineReasonMissedOffers(int count) {
-    return '$count offres d\'affilée ont été manquées ou refusées.';
+    return 'Vous avez manqué ou refusé $count offres d’affilée';
   }
 
   @override
-  String get offlineReasonMovera => 'Movera vous a mis hors ligne.';
+  String get offlineReasonMovera => 'Movera vous a mis hors ligne';
 
   @override
   String get offlineCheckPhone => 'Vérifier mon téléphone';
@@ -6753,4 +6753,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get offlineGoOnline => 'Passer en ligne';
+
+  @override
+  String get offlineReasonVehicleBlocked =>
+      'Votre voiture ne peut pas être utilisée pour le moment';
+
+  @override
+  String get offlineReasonFleetRemoved =>
+      'Vous ne faites plus partie d’une flotte';
+
+  @override
+  String get offlineReasonAccountStatus =>
+      'Votre compte est en pause – contactez Movera';
 }
