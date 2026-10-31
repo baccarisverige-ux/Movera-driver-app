@@ -14,6 +14,10 @@ import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/ride/trip_live_details.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
+import 'package:movera/core/geo/geo_point.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/routing/route_repository.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/core/settings/navigation_app.dart';
 import 'package:movera/core/settings/settings_repository.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
@@ -100,6 +104,7 @@ Future<void> _pumpTrip(
   int waitSeconds = 0,
   Future<bool> Function(Uri)? launch,
   bool home = false,
+  RouteRepository? routes,
 }) async {
   final maps = GoogleMapsFlutterPlatform.instance;
   GoogleMapsFlutterPlatform.instance = HeadlessMapPlatform();
@@ -116,6 +121,8 @@ Future<void> _pumpTrip(
     activeRideRepository: MemoryActiveRideRepository(),
     realtime: realtime,
     launchExternalMap: launch,
+    routeRepository: routes,
+    locationRepository: routes == null ? null : FixedGps(),
   );
   await tester.pumpWidget(
     ScreenUtilInit(
@@ -230,6 +237,92 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  testWidgets('G5 live: the server ETA wins over the phone\'s failed route', (
+    tester,
+  ) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    final runtime = DriverRuntimeConfig.current;
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      externalRouting: true,
+      liveMapTicker: false,
+      reservationPopup: false,
+      islandHint: false,
+      simulatedArrival: false,
+      skipAccountActivation: false,
+    );
+    addTearDown(() => DriverRuntimeConfig.current = runtime);
+    await _pumpTrip(tester, realtime: realtime, routes: _NoRoutes());
+    realtime.emit(
+      tripId: _trip,
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.driverToPickup,
+      projection: _projection(
+        eta: {
+          'etaSeconds': 303,
+          'distanceMeters': 1863,
+          'target': 'pickup',
+          'at': '2026-10-31T09:01:00Z',
+          'source': 'osrm',
+        },
+      ),
+    );
+    await _frames(tester, 40);
+    final island = _island(tester);
+    final failed = {
+      tr.navRouteUnavailableRetry,
+      tr.navRouteUnavailableLocation,
+    };
+    expect(failed, isNot(contains(island.status)));
+    expect(failed, isNot(contains(island.navigationStatus)));
+    expect(island.eta, '6 min');
+    expect(island.detail, 'Arrives in 6 min · 1.8 km');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('checker: a stale server ETA leaves the route warning shown', (
+    tester,
+  ) async {
+    final realtime = MemoryDriverRealtime();
+    addTearDown(realtime.dispose);
+    final runtime = DriverRuntimeConfig.current;
+    DriverRuntimeConfig.current = const DriverRuntimeConfig(
+      externalRouting: true,
+      liveMapTicker: false,
+      reservationPopup: false,
+      islandHint: false,
+      simulatedArrival: false,
+      skipAccountActivation: false,
+    );
+    addTearDown(() => DriverRuntimeConfig.current = runtime);
+    await _pumpTrip(tester, realtime: realtime, routes: _NoRoutes());
+    realtime.emit(
+      tripId: _trip,
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.driverToPickup,
+      projection: _projection(
+        eta: {
+          'etaSeconds': 303,
+          'distanceMeters': 1863,
+          'target': 'pickup',
+          'at': '2026-10-31T09:01:00Z',
+          'source': 'stale',
+        },
+      ),
+    );
+    await _frames(tester, 40);
+    final island = _island(tester);
+    final failed = {
+      tr.navRouteUnavailableRetry,
+      tr.navRouteUnavailableLocation,
+    };
+    expect(failed, contains(island.status));
+    expect(island.eta, 'Last known: 6 min');
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
 
   testWidgets('Q1: no rating → no chip; the zone switch hides it too', (
     tester,
@@ -767,4 +860,15 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });
+}
+
+/// The phone's own route fetch fails (live test: GET /routes/driving…).
+class _NoRoutes implements RouteRepository {
+  @override
+  Future<RoadRoute> drivingRoute({
+    required GeoPoint origin,
+    required GeoPoint destination,
+  }) async {
+    throw StateError('route_unavailable');
+  }
 }

@@ -70,6 +70,10 @@ extension _AcceptRidePickup on _AcceptRideState {
     }
   }
 
+  /// A server ETA that is not `stale`: only then does it hide the phone's
+  /// own route warning (a stale one means no fresh position).
+  bool get _freshServerEta => _serverEta?.isStale == false;
+
   String get _routeEtaText {
     // Q4 (contract v0.18.7 `pickupWaiting.eta`): the server's road-route
     // ETA, the same number the rider and the admin see; the app's own

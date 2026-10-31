@@ -443,7 +443,7 @@ class LivePresence {
         DriverSetOfflineNotice.instance.clear();
         // G3-R2: online, but outside his zones the popup says so.
         DriverAreaWatch.instance.observe(profile);
-        _startOnline();
+        _startOnline(first: fix);
         return null;
       } catch (error) {
         _wantOnline = false;
@@ -556,8 +556,8 @@ class LivePresence {
   /// The feed is open (or reconnecting by itself) until [_stopOnline].
   bool _feedOpen = false;
 
-  void _startOnline() {
-    _reporter.start();
+  void _startOnline({LiveFix? first}) {
+    _reporter.start(first: first);
     if (_feedOpen) return;
     _feedOpen = true;
     unawaited(_dispatch.connect());
@@ -693,7 +693,12 @@ class LiveLocationReporter {
 
   bool get running => _timer != null;
 
-  void start() {
+  /// [first]: the fix the server just took with Go online (G5 live test:
+  /// an emulator standing still answered no one-shot read and the server
+  /// got no `POST /driver/location` for minutes). It goes out at once, so
+  /// the position never waits for the GPS to move; the ticks follow every
+  /// [every] whether the position changed or not.
+  void start({LiveFix? first}) {
     if (_timer != null) return;
     _timer = Timer.periodic(every, (_) => unawaited(sendNow()));
     onRunning?.call(true);
@@ -702,7 +707,7 @@ class LiveLocationReporter {
       // Back on screen: ask for a fresh fix now, not the held one.
       if (visible && running) unawaited(sendNow(fresh: true));
     });
-    unawaited(sendNow());
+    unawaited(sendNow(first: first));
   }
 
   void stop() {
@@ -786,13 +791,13 @@ class LiveLocationReporter {
 
   /// Reads the position and sends it; a failure waits for the next tick.
   /// With [fresh] the held fix is skipped and a new one is read.
-  Future<bool> sendNow({bool fresh = false}) async {
+  Future<bool> sendNow({bool fresh = false, LiveFix? first}) async {
     // A hidden web tab sends nothing, so the server's auto-offline works.
     if (_restamp && !_pageVisible) return false;
     if (_sending) return false;
     _sending = true;
     try {
-      var fix = fresh ? null : _heldFix();
+      var fix = first ?? (fresh ? null : _heldFix());
       if (fix == null) {
         final read = await _readOnce();
         if (read != null && _restamp) _hold(read);
