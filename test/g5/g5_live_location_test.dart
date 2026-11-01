@@ -9,6 +9,7 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/driver_location_service.dart';
 
 /// G5 live test 2026-10-31 (bug 6): after Go online no
 /// `POST /driver/location` went out for about 6 min, until the emulated
@@ -112,6 +113,8 @@ void main() {
     reporter.stop();
     expect(locations().length, greaterThanOrEqualTo(4));
   });
+
+  webGroup(() => sent, api);
 }
 
 /// A GPS that never reports a change on its stream (the car stands).
@@ -132,4 +135,117 @@ class _StillGps implements DriverLocationRepository {
   @override
   Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
       const Stream.empty();
+}
+
+/// G5 live re-test round 2 (web build on GitHub Pages): Chromium gives a
+/// still position once (the Go online read) and then nothing: the watch
+/// only errors (timeout) and one-shot reads time out.
+class _WebStillGps implements DriverLocationRepository {
+  _WebStillGps(this.now);
+  final DateTime Function() now;
+  int reads = 0;
+  final StreamController<DriverLocation> stream =
+      StreamController<DriverLocation>.broadcast();
+
+  @override
+  Future<DriverLocation> getCurrentPosition() async {
+    reads++;
+    if (reads > 1) throw TimeoutException('no new position');
+    return DriverLocation(
+      point: const GeoPoint(59.3326, 18.0649),
+      accuracyMeters: 20,
+      measuredAt: now(),
+    );
+  }
+
+  @override
+  Stream<DriverLocation> watchPosition({int distanceFilterMeters = 8}) =>
+      stream.stream;
+}
+
+void webGroup(List<http.Request> Function() sent, ApiClient Function() api) {
+  test('web: a still tab keeps sending the held fix (stamped now) every '
+      'tick for 6 min; a re-online takes the held fix', () async {
+    var now = DateTime.utc(2026, 11, 1, 1, 52, 53);
+    final gps = _WebStillGps(() => now);
+    final reporter = LiveLocationReporter(
+      api: api(),
+      location: gps,
+      every: const Duration(hours: 1),
+      now: () => now,
+      restampHeldFix: true,
+    );
+    final first = await reporter.freshFix();
+    expect(first, isNotNull);
+    reporter.start(first: first);
+    await pumpEventQueue();
+    // Chromium's watch: only timeout errors for a still position.
+    gps.stream.addError(TimeoutException('watch timeout'));
+    await pumpEventQueue();
+    for (var i = 0; i < 36; i++) {
+      now = now.add(LiveLocationReporter.defaultEvery);
+      expect(await reporter.sendNow(), isTrue, reason: 'tick $i');
+    }
+    final posts = sent()
+        .where((r) => r.url.path == LiveLocationReporter.locationPath)
+        .toList();
+    expect(posts, hasLength(37));
+    final last =
+        (((jsonDecode(posts.last.body) as Map)['fixes'] as List).single as Map);
+    expect(last['measuredAt'], now.toIso8601String());
+    // Offline, then Go online again: the held fix answers (stamped now).
+    reporter.stop();
+    now = now.add(const Duration(minutes: 1));
+    final again = await reporter.freshFix();
+    expect(again?['measuredAt'], now.toIso8601String());
+    await gps.stream.close();
+  });
+
+  test(
+    'checker: the web re-stamp stops 30 min after the real fix; a '
+    'next-day Go online gets no held fix; a permission error clears it',
+    () async {
+      var now = DateTime.utc(2026, 11, 1, 1, 52, 53);
+      final gps = _WebStillGps(() => now);
+      final reporter = LiveLocationReporter(
+        api: api(),
+        location: gps,
+        every: const Duration(hours: 1),
+        now: () => now,
+        restampHeldFix: true,
+      );
+      final first = await reporter.freshFix();
+      reporter.start(first: first);
+      await pumpEventQueue();
+      now = now.add(const Duration(minutes: 29));
+      expect(await reporter.sendNow(), isTrue);
+      now = now.add(const Duration(minutes: 2));
+      expect(await reporter.sendNow(), isFalse, reason: 'past 30 min');
+      reporter.stop();
+      now = now.add(const Duration(days: 1));
+      expect(await reporter.freshFix(), isNull, reason: 'yesterday\'s fix');
+
+      // A permission error on the watch clears the held fix.
+      now = DateTime.utc(2026, 11, 3, 9);
+      final gps2 = _WebStillGps(() => now);
+      final reporter2 = LiveLocationReporter(
+        api: api(),
+        location: gps2,
+        every: const Duration(hours: 1),
+        now: () => now,
+        restampHeldFix: true,
+      );
+      final held = await reporter2.freshFix();
+      reporter2.start(first: held);
+      await pumpEventQueue();
+      gps2.stream.addError(const LocationPermissionDeniedException());
+      await pumpEventQueue();
+      now = now.add(const Duration(minutes: 1));
+      expect(await reporter2.sendNow(), isFalse);
+      reporter2.stop();
+      expect(await reporter2.freshFix(), isNull);
+      await gps.stream.close();
+      await gps2.stream.close();
+    },
+  );
 }
