@@ -32,6 +32,7 @@ class TripLiveDetails {
     this.pickup,
     this.rideCheck,
     this.routeChange,
+    this.stopVisits,
   });
 
   /// Reads the fields it knows; anything missing or broken is simply
@@ -50,6 +51,7 @@ class TripLiveDetails {
       pickup: TripPlace.tryParse(json['pickup']),
       rideCheck: TripRideCheck.tryParse(json['rideCheck']),
       routeChange: TripRouteChange.tryParse(json['routeChange']),
+      stopVisits: TripStopVisit.tryParseList(json['stops']),
     );
   }
 
@@ -67,6 +69,20 @@ class TripLiveDetails {
 
   /// Contract v0.18.9 `TripProjection.routeChange` (G7 decision 3).
   final TripRouteChange? routeChange;
+
+  /// Contract v0.7.1 `TripProjection.stops[i].arrivedAt / leftAt`: the
+  /// server's record of each middle stop (G7 live fix: an arrival sent from
+  /// another device or the API is picked up). Null when not carried.
+  final List<TripStopVisit>? stopVisits;
+
+  /// The server's arrival at middle stop [index] while the driver has not
+  /// left it yet; null otherwise.
+  DateTime? openStopArrival(int index) {
+    final visits = stopVisits;
+    if (visits == null || index < 0 || index >= visits.length) return null;
+    final visit = visits[index];
+    return visit.leftAt == null ? visit.arrivedAt : null;
+  }
 
   bool get isEmpty =>
       rider == null &&
@@ -92,6 +108,7 @@ class TripLiveDetails {
           pickup: pickup ?? older.pickup,
           rideCheck: rideCheck ?? older.rideCheck,
           routeChange: routeChange ?? older.routeChange,
+          stopVisits: stopVisits ?? older.stopVisits,
         );
 
   TripLiveDetails withEta(TripEta? eta) => TripLiveDetails(
@@ -105,7 +122,30 @@ class TripLiveDetails {
     pickup: pickup,
     rideCheck: rideCheck,
     routeChange: routeChange,
+    stopVisits: stopVisits,
   );
+}
+
+/// One `TripProjection.stops[i]`: when the driver arrived at and left it.
+class TripStopVisit {
+  const TripStopVisit({this.arrivedAt, this.leftAt});
+
+  static List<TripStopVisit>? tryParseList(Object? json) {
+    if (json is! List) return null;
+    return [
+      for (final stop in json)
+        TripStopVisit(
+          arrivedAt: stop is Map ? _time(stop['arrivedAt']) : null,
+          leftAt: stop is Map ? _time(stop['leftAt']) : null,
+        ),
+    ];
+  }
+
+  static DateTime? _time(Object? value) =>
+      value is String ? DateTime.tryParse(value)?.toUtc() : null;
+
+  final DateTime? arrivedAt;
+  final DateTime? leftAt;
 }
 
 /// `RiderSummary { firstName, rating? }` (Q1).
