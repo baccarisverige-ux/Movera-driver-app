@@ -1942,5 +1942,20 @@
   "g6AlertNoShow": "Vous pouvez maintenant signaler un client absent",
   "g6StopFreeWait": "Attente gratuite à l’arrêt : {min} min",
   "g6PinBlocked": "Trop de codes incorrects. Appelez le support Movera",
-  "g6PinNotNow": "Le code se saisit une fois arrivé au point de prise en charge"
+  "g6PinNotNow": "Le code se saisit une fois arrivé au point de prise en charge",
+  "g7RouteAsk": "Le passager souhaite modifier l'itinéraire",
+  "g7RouteEarnings": "Nouveau gain {earnings} ({difference})",
+  "g7RouteAccept": "Accepter",
+  "g7RouteRefuse": "Refuser",
+  "g7RouteChanged": "Le passager a modifié l'itinéraire.",
+  "g7StopPrice": "Attente à un arrêt : {perMin}/min",
+  "g7StopFree": "{min} min gratuites à chaque arrêt, puis {perMin}/min",
+  "g7MaxStops": "Vous pouvez ajouter au maximum {max} arrêts.",
+  "g7RouteSecondsLeft": "{seconds} s pour répondre",
+  "g7RouteNewDestination": "Nouvelle destination",
+  "g7RouteStops": "Arrêts : {count} (max {max})",
+  "g7RouteAcceptedIsland": "Nouvel itinéraire accepté",
+  "g7RouteRefusedIsland": "Changement refusé. Continuez vers la première destination",
+  "g7RouteExpiredIsland": "Pas de réponse à temps. L'itinéraire reste le même",
+  "g7RouteWithdrawnIsland": "Le passager a retiré le changement"
 }

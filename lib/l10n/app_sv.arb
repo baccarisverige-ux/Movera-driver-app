@@ -1942,5 +1942,20 @@
   "g6AlertNoShow": "Du kan nu markera utebliven kund",
   "g6StopFreeWait": "Gratis väntan vid stopp: {min} min",
   "g6PinBlocked": "För många fel koder. Ring Movera support",
-  "g6PinNotNow": "Koden kan skrivas när du är framme vid upphämtningen"
+  "g6PinNotNow": "Koden kan skrivas när du är framme vid upphämtningen",
+  "g7RouteAsk": "Resenären vill ändra resan",
+  "g7RouteEarnings": "Ny intjäning {earnings} ({difference})",
+  "g7RouteAccept": "Godkänn",
+  "g7RouteRefuse": "Neka",
+  "g7RouteChanged": "Resenären har ändrat resan.",
+  "g7StopPrice": "Väntan vid stopp: {perMin}/min",
+  "g7StopFree": "{min} min gratis vid varje stopp, sedan {perMin}/min",
+  "g7MaxStops": "Du kan lägga till högst {max} stopp.",
+  "g7RouteSecondsLeft": "{seconds} s kvar att svara",
+  "g7RouteNewDestination": "Ny destination",
+  "g7RouteStops": "Stopp: {count} (högst {max})",
+  "g7RouteAcceptedIsland": "Ny resa godkänd",
+  "g7RouteRefusedIsland": "Ändringen nekad. Fortsätt till den första destinationen",
+  "g7RouteExpiredIsland": "Inget svar i tid. Resan är oförändrad",
+  "g7RouteWithdrawnIsland": "Resenären drog tillbaka ändringen"
 }

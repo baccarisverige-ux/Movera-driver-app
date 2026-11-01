@@ -403,6 +403,48 @@ class LiveTripCommands {
         known['pinVerified'] != true;
   }
 
+  /// Contract v0.18.9 (G7 decision 3): the driver's answer to the rider's
+  /// route change, `POST /trips/{tripId}/route-change/accept|refuse
+  /// { expectedVersion, changeId }`. An accept changes the drop-off, the
+  /// stops and the earnings at once (the answer's projection).
+  Future<LiveTripOutcome> answerRouteChange(
+    String tripId, {
+    required String changeId,
+    required bool accept,
+  }) async {
+    final verb = accept ? 'accept' : 'refuse';
+    final path = '$_base/${Uri.encodeComponent(tripId)}/route-change/$verb';
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final current = await _current(tripId, fresh: attempt > 0);
+      if (current == null) return _unknown;
+      final payload = {
+        'expectedVersion': versionOf(tripId),
+        'changeId': changeId,
+      };
+      final signature = '$path ${jsonEncode(payload)}';
+      final key = _keys.putIfAbsent(signature, ApiClient.randomKey);
+      try {
+        observe(await _api.post(path, body: payload, idempotencyKey: key));
+        _keys.remove(signature);
+        return const LiveTripOutcome.ok();
+      } on ApiError catch (error) {
+        if (!error.isRetryable) _keys.remove(signature);
+        final projection = error.projection;
+        if (projection != null) observe({'tripId': tripId, ...projection});
+        if (error.code == 'version_mismatch' && attempt == 0) continue;
+        DriverLog.warn(
+          'route change $verb refused: ${error.detail}',
+          name: 'live',
+        );
+        return LiveTripOutcome.failed(
+          liveTripErrorMessage(error),
+          error: error,
+        );
+      }
+    }
+    return _unknown;
+  }
+
   /// The rider did not come (`no-show`, after the zone's wait).
   Future<LiveTripOutcome> noShow(String tripId, {String? reasonCode}) => _step(
     tripId,

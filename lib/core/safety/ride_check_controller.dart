@@ -111,7 +111,15 @@ class RideCheckController extends ChangeNotifier {
 
   /// Opens the card; completes with the answered record. While a check is
   /// already open, a new one is not stacked on top of it.
-  Future<RideCheckRecord> open(RideCheckEvent event, {bool instant = false}) {
+  ///
+  /// [serverCheckId] (contract v0.18.9, G7 decision 1): the server asked
+  /// ("srv_…"): its id is the check's id for the answer, and no "shown"
+  /// report is sent (the server already knows).
+  Future<RideCheckRecord> open(
+    RideCheckEvent event, {
+    bool instant = false,
+    String? serverCheckId,
+  }) {
     if (_disposed) {
       return Future<RideCheckRecord>.error(StateError('Ride check closed'));
     }
@@ -140,7 +148,9 @@ class RideCheckController extends ChangeNotifier {
     _sending = false;
     _closing = false;
     _record = RideCheckRecord(
-      id: 'ride-check-$tripId-${event.at.microsecondsSinceEpoch}',
+      id:
+          serverCheckId ??
+          'ride-check-$tripId-${event.at.microsecondsSinceEpoch}',
       tripId: tripId,
       trigger: event.trigger,
       reason: event.reason.english,
@@ -148,15 +158,17 @@ class RideCheckController extends ChangeNotifier {
       openedAt: event.at,
     );
     _save();
-    _report(
-      'shown',
-      () => services.alerts.shown(
-        checkId: _record!.id,
-        tripId: tripId,
-        trigger: event.trigger,
-        at: event.at,
-      ),
-    );
+    if (serverCheckId == null) {
+      _report(
+        'shown',
+        () => services.alerts.shown(
+          checkId: _record!.id,
+          tripId: tripId,
+          trigger: event.trigger,
+          at: event.at,
+        ),
+      );
+    }
     // A possible crash opens at once, with Call 112 on top.
     final now = instant || event.trigger == RideCheckTrigger.possibleCrash;
     _phase = now ? RideCheckPhase.card : RideCheckPhase.pill;

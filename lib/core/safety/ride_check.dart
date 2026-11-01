@@ -45,8 +45,12 @@ class RideCheckRules {
   /// long stop" minutes.
   factory RideCheckRules.fromAdmin(RideCheckAdminConfig config) =>
       RideCheckRules(
+        droppedFar: config.on,
         farDropMeters: config.finishFarFromDropoffMeters,
+        longStop: config.on,
         longStopMinutes: config.longStopMinutes,
+        offRoute: config.on,
+        offRouteKm: config.offRouteKm,
       );
 
   /// The driver tapped Finish more than [farDropMeters] from the drop-off.

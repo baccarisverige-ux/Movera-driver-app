@@ -30,6 +30,8 @@ class TripLiveDetails {
     this.waiting,
     this.cancellation,
     this.pickup,
+    this.rideCheck,
+    this.routeChange,
   });
 
   /// Reads the fields it knows; anything missing or broken is simply
@@ -46,6 +48,8 @@ class TripLiveDetails {
       waiting: TripWaitingNow.tryParse(json['waiting']),
       cancellation: TripCancellationInfo.tryParse(json['cancellation']),
       pickup: TripPlace.tryParse(json['pickup']),
+      rideCheck: TripRideCheck.tryParse(json['rideCheck']),
+      routeChange: TripRouteChange.tryParse(json['routeChange']),
     );
   }
 
@@ -57,6 +61,12 @@ class TripLiveDetails {
   final TripWaitingNow? waiting;
   final TripCancellationInfo? cancellation;
   final TripPlace? pickup;
+
+  /// Contract v0.18.9 `TripProjection.rideCheck` (G7 decision 1).
+  final TripRideCheck? rideCheck;
+
+  /// Contract v0.18.9 `TripProjection.routeChange` (G7 decision 3).
+  final TripRouteChange? routeChange;
 
   bool get isEmpty =>
       rider == null &&
@@ -80,6 +90,8 @@ class TripLiveDetails {
           waiting: waiting ?? older.waiting,
           cancellation: cancellation ?? older.cancellation,
           pickup: pickup ?? older.pickup,
+          rideCheck: rideCheck ?? older.rideCheck,
+          routeChange: routeChange ?? older.routeChange,
         );
 
   TripLiveDetails withEta(TripEta? eta) => TripLiveDetails(
@@ -91,6 +103,8 @@ class TripLiveDetails {
     waiting: waiting,
     cancellation: cancellation,
     pickup: pickup,
+    rideCheck: rideCheck,
+    routeChange: routeChange,
   );
 }
 
@@ -130,6 +144,7 @@ class TripTerms {
     this.cancelAfterArrivedIsNoShow = true,
     this.maxPickupMoveMeters = 200,
     this.stopFreeWaitMinutes = 0,
+    this.stopWaitPerMin,
   });
 
   static TripTerms? tryParse(Object? json) {
@@ -164,6 +179,7 @@ class TripTerms {
       cancelAfterArrivedIsNoShow: json['cancelAfterArrivedIsNoShow'] != false,
       maxPickupMoveMeters: move is num && move >= 0 ? move.toInt() : 200,
       stopFreeWaitMinutes: _minutes(json['stopFreeWaitMin']) ?? 0,
+      stopWaitPerMin: _money(json['stopWaitPerMin'], currency),
     );
   }
 
@@ -186,6 +202,10 @@ class TripTerms {
   /// Contract v0.18.8 `terms.stopFreeWaitMin`: free minutes at each middle
   /// stop before its paid wait starts (0 = paid from the first second).
   final int stopFreeWaitMinutes;
+
+  /// Contract v0.18.9 `terms.stopWaitPerMin` (G7 decision 4): the price of
+  /// each waiting minute at a middle stop; null from an older server.
+  final Money? stopWaitPerMin;
 }
 
 /// `TripEta` (Q4): the server's road-route ETA to the pickup or drop-off.
@@ -418,6 +438,152 @@ class TripPlace {
 
   final GeoPoint point;
   final String? address;
+}
+
+/// `RideCheck` of v0.18.9: the server's "Is everything OK?" asked to the
+/// rider and the driver; each side answers for itself.
+class TripRideCheck {
+  const TripRideCheck({
+    required this.checkId,
+    required this.trigger,
+    this.askedAt,
+    this.answerBy,
+    this.riderAnswer,
+    this.driverAnswer,
+    this.alertedAt,
+  });
+
+  static const triggers = {'long_stop', 'off_route', 'dropped_far'};
+
+  static TripRideCheck? tryParse(Object? json) {
+    if (json is! Map) return null;
+    final id = json['checkId'];
+    final trigger = json['trigger'];
+    if (id is! String || id.isEmpty || trigger is! String) return null;
+    if (!triggers.contains(trigger)) return null;
+    final answers = json['answers'];
+    String? answer(String who) {
+      if (answers is! Map) return null;
+      final value = answers[who];
+      if (value is String) return value;
+      if (value is Map && value['answer'] is String) {
+        return value['answer'] as String;
+      }
+      return null;
+    }
+
+    return TripRideCheck(
+      checkId: id,
+      trigger: trigger,
+      askedAt: _time(json['askedAt']),
+      answerBy: _time(json['answerBy']),
+      riderAnswer: answer('rider'),
+      driverAnswer: answer('driver'),
+      alertedAt: _time(json['alertedAt']),
+    );
+  }
+
+  final String checkId;
+
+  /// `long_stop`, `off_route` or `dropped_far`.
+  final String trigger;
+  final DateTime? askedAt;
+  final DateTime? answerBy;
+  final String? riderAnswer;
+  final String? driverAnswer;
+  final DateTime? alertedAt;
+
+  /// True while the driver still has to answer it (before `answerBy`).
+  bool openForDriver(DateTime now) =>
+      driverAnswer == null && (answerBy == null || now.isBefore(answerBy!));
+}
+
+/// `RouteChange` of v0.18.9: the rider's new drop-off / stops waiting for
+/// the driver's Accept or Refuse; earnings only in the driver's view.
+class TripRouteChange {
+  const TripRouteChange({
+    required this.changeId,
+    required this.status,
+    this.dropoff,
+    this.stops = const <TripPlace>[],
+    this.askedAt,
+    this.answerBy,
+    this.answeredBy,
+    this.driverEarnings,
+    this.earningsDifference,
+  });
+
+  static const statuses = {
+    'pending',
+    'accepted',
+    'refused',
+    'expired',
+    'withdrawn',
+  };
+
+  static TripRouteChange? tryParse(Object? json) {
+    if (json is! Map) return null;
+    final id = json['changeId'];
+    final status = json['status'];
+    if (id is! String || id.isEmpty || !statuses.contains(status)) {
+      return null;
+    }
+    final stops = json['stops'];
+    final by = json['answeredBy'];
+    return TripRouteChange(
+      changeId: id,
+      status: status as String,
+      dropoff: TripPlace.tryParse(json['dropoff']),
+      stops: [
+        if (stops is List)
+          for (final stop in stops)
+            if (TripPlace.tryParse(stop) case final place?) place,
+      ],
+      askedAt: _time(json['askedAt']),
+      answerBy: _time(json['answerBy']),
+      answeredBy: by is String ? by : null,
+      driverEarnings: _signedMoney(json['driverEarnings']),
+      earningsDifference: _signedMoney(json['earningsDifference']),
+    );
+  }
+
+  final String changeId;
+  final String status;
+  final TripPlace? dropoff;
+  final List<TripPlace> stops;
+  final DateTime? askedAt;
+  final DateTime? answerBy;
+
+  /// `driver`, `rider` or `system` (switched off "driver can refuse").
+  final String? answeredBy;
+  final Money? driverEarnings;
+  final Money? earningsDifference;
+
+  bool get pending => status == 'pending';
+  bool get accepted => status == 'accepted';
+
+  /// Seconds left to answer; 0 once the time is up.
+  int secondsLeft(DateTime now) {
+    final by = answerBy;
+    if (by == null) return 0;
+    return math.max(0, by.difference(now).inSeconds);
+  }
+}
+
+/// "+12,00 kr" / "−8,00 kr": a price difference with its sign.
+String signedMoneyLabel(Money money) =>
+    money.minorUnits < 0 ? money.formatted : '+${money.formatted}';
+
+DateTime? _time(Object? value) =>
+    value is String ? DateTime.tryParse(value)?.toUtc() : null;
+
+Money? _signedMoney(Object? json) {
+  if (json is! Map) return null;
+  try {
+    return Money.fromJson(Map<String, dynamic>.from(json));
+  } on Object {
+    return null;
+  }
 }
 
 /// The known rule ids of `waiting.rules` / `terms.waitingRules`.

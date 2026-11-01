@@ -11778,6 +11778,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter the code once you have arrived at the pickup'**
   String get g6PinNotNow;
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'The rider wants to change the route'**
+  String get g7RouteAsk;
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'New earnings {earnings} ({difference})'**
+  String g7RouteEarnings(String earnings, String difference);
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get g7RouteAccept;
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'Refuse'**
+  String get g7RouteRefuse;
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'The route was changed by the rider.'**
+  String get g7RouteChanged;
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting at a stop: {perMin}/min'**
+  String g7StopPrice(String perMin);
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'{min} min free at each stop, then {perMin}/min'**
+  String g7StopFree(int min, String perMin);
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'You can add at most {max} stops.'**
+  String g7MaxStops(int max);
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s left to answer'**
+  String g7RouteSecondsLeft(int seconds);
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'New destination'**
+  String get g7RouteNewDestination;
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'Stops: {count} (max {max})'**
+  String g7RouteStops(int count, int max);
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'New route accepted'**
+  String get g7RouteAcceptedIsland;
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'Route change refused. Continue to the first destination'**
+  String get g7RouteRefusedIsland;
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'No answer in time. The route stays the same'**
+  String get g7RouteExpiredIsland;
+
+  /// Driver G7 (contract 0.18.9 onTrip).
+  ///
+  /// In en, this message translates to:
+  /// **'The rider withdrew the route change'**
+  String get g7RouteWithdrawnIsland;
 }
 
 class _AppLocalizationsDelegate

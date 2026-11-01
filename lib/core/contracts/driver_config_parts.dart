@@ -1,3 +1,4 @@
+import 'package:movera/core/admin/on_trip_config.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/admin/ride_check_admin_config.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
@@ -17,7 +18,11 @@ class DriverConfigParts {
     this.texts,
     this.noticesOff,
     this.cancelFees,
+    this.onTrip,
   });
+
+  /// Contract v0.18.9 (G7): max stops and the route change switches.
+  final OnTripConfig? onTrip;
 
   /// `offers` as published (timers, card, reasons, Exclusive while
   /// driving); [DriverOfferRules.withOffers] reads it.
@@ -40,6 +45,9 @@ class DriverConfigParts {
       texts: _texts(json['texts']),
       noticesOff: _noticesOff(json['notices']),
       cancelFees: DriverCancelFees.fromJson(json['cancelFees']),
+      onTrip: json['booking'] is Map || json['routeChange'] is Map
+          ? OnTripConfig.fromJson(json)
+          : null,
     );
   }
 
@@ -52,6 +60,7 @@ class DriverConfigParts {
       DriverNoticeRules.current = DriverNoticeRules(off: value);
     }
     if (cancelFees case final value?) DriverCancelFees.current = value;
+    if (onTrip case final value?) OnTripConfig.current = value;
   }
 
   static double? _major(Object? raw, String currency) {
@@ -115,9 +124,18 @@ class DriverConfigParts {
     if (raw is! Map) return null;
     final stop = raw['stopMinutes'];
     final far = raw['finishFarFromDropoffKm'];
+    // Contract v0.18.9 (G7): `endFarMeters`, `offRouteKm`, `on`.
+    final endFar = raw['endFarMeters'];
+    final offRoute = raw['offRouteKm'];
     return const RideCheckAdminConfig().copyWith(
       longStopMinutes: stop is int && stop >= 1 ? stop : null,
-      finishFarFromDropoffKm: far is num && far > 0 ? far.toDouble() : null,
+      finishFarFromDropoffKm: endFar is num && endFar > 0
+          ? endFar / 1000
+          : far is num && far > 0
+          ? far.toDouble()
+          : null,
+      on: raw['on'] is bool ? raw['on'] as bool : null,
+      offRouteKm: offRoute is num && offRoute > 0 ? offRoute.toDouble() : null,
     );
   }
 

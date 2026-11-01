@@ -42,7 +42,7 @@ class ApiClient {
 
   /// `X-Contract-Version` on every request (contract v0.18.8
   /// `arrivedWaiting.pin.compat`): without it the server skips the PIN.
-  static const contractVersion = '0.18.8';
+  static const contractVersion = '0.18.9';
 
   /// The longest a request waits for the server's answer.
   static const requestTimeout = Duration(seconds: 15);

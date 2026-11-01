@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6825,4 +6826,63 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get g6PinNotNow =>
       'Enter the code once you have arrived at the pickup';
+
+  @override
+  String get g7RouteAsk => 'The rider wants to change the route';
+
+  @override
+  String g7RouteEarnings(String earnings, String difference) {
+    return 'New earnings $earnings ($difference)';
+  }
+
+  @override
+  String get g7RouteAccept => 'Accept';
+
+  @override
+  String get g7RouteRefuse => 'Refuse';
+
+  @override
+  String get g7RouteChanged => 'The route was changed by the rider.';
+
+  @override
+  String g7StopPrice(String perMin) {
+    return 'Waiting at a stop: $perMin/min';
+  }
+
+  @override
+  String g7StopFree(int min, String perMin) {
+    return '$min min free at each stop, then $perMin/min';
+  }
+
+  @override
+  String g7MaxStops(int max) {
+    return 'You can add at most $max stops.';
+  }
+
+  @override
+  String g7RouteSecondsLeft(int seconds) {
+    return '$seconds s left to answer';
+  }
+
+  @override
+  String get g7RouteNewDestination => 'New destination';
+
+  @override
+  String g7RouteStops(int count, int max) {
+    return 'Stops: $count (max $max)';
+  }
+
+  @override
+  String get g7RouteAcceptedIsland => 'New route accepted';
+
+  @override
+  String get g7RouteRefusedIsland =>
+      'Route change refused. Continue to the first destination';
+
+  @override
+  String get g7RouteExpiredIsland =>
+      'No answer in time. The route stays the same';
+
+  @override
+  String get g7RouteWithdrawnIsland => 'The rider withdrew the route change';
 }

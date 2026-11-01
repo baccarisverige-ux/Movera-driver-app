@@ -60,13 +60,13 @@ extension _AcceptRideTrip on _AcceptRideState {
       matchedVia: widget.matchedVia,
       pickupAddress: _pickupAddress,
       pickupArea: widget.pickupArea,
-      dropoffAddress: widget.dropoffAddress,
-      stopAddresses: widget.stopAddresses,
-      stopPoints: widget.stopPositions.map(GeoPointMaps.fromLatLng).toList(),
+      dropoffAddress: _dropoffAddress,
+      stopAddresses: _stopAddresses,
+      stopPoints: _stopPositions.map(GeoPointMaps.fromLatLng).toList(),
       pickupLat: _pickupPosition.latitude,
       pickupLng: _pickupPosition.longitude,
-      dropoffLat: widget.dropoffPosition.latitude,
-      dropoffLng: widget.dropoffPosition.longitude,
+      dropoffLat: _dropoffPosition.latitude,
+      dropoffLng: _dropoffPosition.longitude,
       waitSeconds: _waitSeconds,
       paidWaitSeconds: _paidWaitSeconds + (starting ? _paidWaitNow : 0),
       acceptedAt: _acceptedAt,
@@ -344,7 +344,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       service: widget.category,
       riderName: _riderName,
       pickup: _pickupAddress,
-      dropoff: widget.dropoffAddress,
+      dropoff: _dropoffAddress,
       source: widget.matchedVia,
       driverName: _driverName,
       riderFare: widget.riderFare,
@@ -475,10 +475,10 @@ extension _AcceptRideTrip on _AcceptRideState {
   }
 
   LatLng? _stopPoint(int index) {
-    if (index < 0 || index >= widget.stopPositions.length) {
+    if (index < 0 || index >= _stopPositions.length) {
       return null;
     }
-    return widget.stopPositions[index];
+    return _stopPositions[index];
   }
 
   void _syncNavigationStage() {
@@ -609,6 +609,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       }
     }
     final alert = _newWaitingAlert(next.waiting, initial: initial);
+    // G7 (contract v0.18.9): the server's ride check and route change.
+    _AcceptRideRouteChange(this)._onTripExtras(next);
     if (initial) return;
     if (mounted && (rebuild || pickupChanged || alert != null)) {
       _rebuild(() {
@@ -733,7 +735,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         ).finish(
           settled?.paid ?? _waybills.current ?? _buildCurrentWaybill(),
           pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
-          dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
+          dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
           status: status,
           authoritative: true,
           next: next,
@@ -946,7 +948,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       ).finish(
         _waybills.current ?? _buildCurrentWaybill(),
         pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
-        dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
+        dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
         status: TripStatus.cancelledByRider,
         authoritative: true,
         // The rider's own reason code is not sent to the driver yet.
@@ -1130,7 +1132,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     if (_stage == ActiveRideStage.onTrip &&
         !_paidStopWait &&
-        _stopCursor < widget.stopAddresses.length) {
+        _stopCursor < _stopAddresses.length) {
       // Contract v0.7.1 §3.8: the server charges the stop wait from this
       // tap, so a live build tells it first.
       final stop = _stopCursor;
@@ -1419,7 +1421,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       destination: GeoPointMaps.fromLatLng(target),
       targetLabel:
           _stage == ActiveRideStage.onTrip &&
-              _stopCursor < widget.stopAddresses.length
+              _stopCursor < _stopAddresses.length
           ? tr.stopNumber(_stopCursor + 1)
           : null,
       force: force,
@@ -1685,7 +1687,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           unawaited(_refreshOnTripRoute());
           return;
         }
-        if (_stopCursor < widget.stopAddresses.length) {
+        if (_stopCursor < _stopAddresses.length) {
           _stageTransitioning = false;
           return;
         }
@@ -1785,7 +1787,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       ).finish(
         paid,
         pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
-        dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
+        dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
         next: next,
         paymentMethod: widget.paidByCash ? 'Cash' : 'Card',
         cashCollected: cash,
@@ -1951,7 +1953,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       return true;
     }
     return OnTripDestination.follows(
-      from: GeoPointMaps.fromLatLng(widget.dropoffPosition),
+      from: GeoPointMaps.fromLatLng(_dropoffPosition),
       destination: GeoPointMaps.fromLatLng(destination),
       dropoff: GeoPointMaps.fromLatLng(dropoff),
     );
@@ -2028,14 +2030,14 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (_hasLiveLocation) {
       metersToDropoff = GeoPointMaps.fromLatLng(
         _driverPosition,
-      ).distanceMetersTo(GeoPointMaps.fromLatLng(widget.dropoffPosition));
+      ).distanceMetersTo(GeoPointMaps.fromLatLng(_dropoffPosition));
       if (metersToDropoff > _AcceptRideState._nextTripRadarRadiusMeters) {
         return;
       }
     }
     // R13-18: only on the way to the final drop-off, within admin's km
     // and/or minutes of it. The demo keeps next trips as they were.
-    final toFinal = _stopCursor >= widget.stopAddresses.length;
+    final toFinal = _stopCursor >= _stopAddresses.length;
     if (!NextTripGate.allows(
       demo: !driverProductionRequested,
       onTrip: _stage == ActiveRideStage.onTrip,
@@ -2443,7 +2445,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       ).finish(
         _waybills.current ?? _buildCurrentWaybill(),
         pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
-        dropoffPoint: GeoPointMaps.fromLatLng(widget.dropoffPosition),
+        dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
         status: outcome,
         cancellationReasonCode: reason.code,
         cancellationActor: 'driver',
@@ -2550,7 +2552,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     riderName: _riderName,
     riderRating: _riderRating,
     pickup: _pickupAddress,
-    dropoff: widget.dropoffAddress,
+    dropoff: _dropoffAddress,
     fare: widget.fare,
     category: widget.category,
     driverName: _driverName,
@@ -2591,7 +2593,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       '$_stopCursor',
       route.points,
       route.durationSeconds,
-      wholeTrip: widget.stopAddresses.isEmpty,
+      wholeTrip: _stopAddresses.isEmpty,
     );
   }
 
@@ -2646,7 +2648,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           : _rideCheckDetector.demo(
               RideCheckTrigger.droppedFar,
               _rideCheckNow,
-              destination: widget.dropoffAddress,
+              destination: _dropoffAddress,
             );
     }
     if ((_arrivalDemo && _demoDrive == null) ||
@@ -2657,8 +2659,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     return _rideCheckDetector.finish(
       driver: GeoPointMaps.fromLatLng(_driverPosition),
-      dropoff: GeoPointMaps.fromLatLng(widget.dropoffPosition),
-      dropoffAddress: widget.dropoffAddress,
+      dropoff: GeoPointMaps.fromLatLng(_dropoffPosition),
+      dropoffAddress: _dropoffAddress,
       at: _rideCheckNow,
     );
   }
@@ -2674,7 +2676,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         _stage == ActiveRideStage.onTrip &&
         !_paidStopWait &&
         !_stageTransitioning &&
-        _stopCursor >= widget.stopAddresses.length) {
+        _stopCursor >= _stopAddresses.length) {
       _rideCheckFinishDemo = true;
       unawaited(
         _advanceRide().whenComplete(() => _rideCheckFinishDemo = false),
@@ -2686,7 +2688,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         trigger,
         _rideCheckNow,
         place: _rideCheckPlace,
-        destination: widget.dropoffAddress,
+        destination: _dropoffAddress,
       ),
     );
   }

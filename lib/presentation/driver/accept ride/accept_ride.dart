@@ -1,3 +1,4 @@
+import 'package:movera/presentation/driver/accept ride/route_change_sheet.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';
@@ -127,6 +128,7 @@ part 'accept_ride_sheet.dart';
 part 'accept_ride_late_eta.dart';
 part 'accept_ride_live.dart';
 part 'accept_ride_pickup.dart';
+part 'accept_ride_route_change.dart';
 
 class AcceptRide extends StatefulWidget {
   const AcceptRide({
@@ -597,6 +599,8 @@ class _AcceptRideState extends State<AcceptRide>
   TripLiveDetails? _live;
   late LatLng _pickupPosition = widget.pickupPosition;
 
+  _ChangedRoute? _changedRoute; // G7, accept_ride_route_change.dart
+  final Set<String> _routeChangesSeen = {}, _serverChecksOpened = {};
   // Strip line (moved pickup) and G6 island alert, each said once per key.
   int _islandNoticeKey = 0, _waitingAlertKey = 0;
   String? _islandNotice, _waitingAlert;
@@ -670,7 +674,7 @@ class _AcceptRideState extends State<AcceptRide>
         DemoTripDrive.forTrip(
           widget.tripId,
           pickup: GeoPointMaps.fromLatLng(_pickupPosition),
-          dropoff: GeoPointMaps.fromLatLng(widget.dropoffPosition),
+          dropoff: GeoPointMaps.fromLatLng(_dropoffPosition),
         ) ??
         widget.locationRepository ??
         const DriverLocationService();
@@ -717,7 +721,7 @@ class _AcceptRideState extends State<AcceptRide>
     final restored = widget.restoredSnapshot;
     _stopCursor = math.min(
       math.max(0, restored?.stopIndex ?? 0),
-      widget.stopAddresses.length,
+      _stopAddresses.length,
     );
     _paidStopWait = restored?.paidStopWait == true;
     _onTripStartedAt = restored?.startedAt;
@@ -903,11 +907,11 @@ class _AcceptRideState extends State<AcceptRide>
 
   LatLng? get _routeTarget {
     if (_stage == ActiveRideStage.onTrip &&
-        _stopCursor < widget.stopAddresses.length) {
+        _stopCursor < _stopAddresses.length) {
       return _AcceptRideTrip(this)._stopPoint(_stopCursor);
     }
     if (_stage == ActiveRideStage.onTrip) {
-      return widget.dropoffPosition;
+      return _dropoffPosition;
     }
     return _pickupPosition;
   }
@@ -926,7 +930,7 @@ class _AcceptRideState extends State<AcceptRide>
     }
     if (_stage == ActiveRideStage.onTrip &&
         !_paidStopWait &&
-        _stopCursor < widget.stopAddresses.length) {
+        _stopCursor < _stopAddresses.length) {
       return _AcceptRideTrip(this)._stopPoint(_stopCursor);
     }
     return null;
@@ -961,11 +965,11 @@ class _AcceptRideState extends State<AcceptRide>
       return _pickupPosition;
     }
     if (_stage == ActiveRideStage.onTrip &&
-        _stopCursor < widget.stopAddresses.length) {
+        _stopCursor < _stopAddresses.length) {
       return _AcceptRideTrip(this)._stopPoint(_stopCursor);
     }
     if (_stage == ActiveRideStage.onTrip) {
-      return widget.dropoffPosition;
+      return _dropoffPosition;
     }
     return null;
   }
@@ -975,7 +979,7 @@ class _AcceptRideState extends State<AcceptRide>
         _stage == ActiveRideStage.waitingForRider) {
       return ArrivalPointKind.pickup;
     }
-    if (_stopCursor < widget.stopAddresses.length) {
+    if (_stopCursor < _stopAddresses.length) {
       return ArrivalPointKind.stop;
     }
     return ArrivalPointKind.destination;
@@ -992,8 +996,8 @@ class _AcceptRideState extends State<AcceptRide>
   String get _approachAddress {
     return switch (_approachKind) {
       ArrivalPointKind.pickup => _pickupAddress,
-      ArrivalPointKind.stop => widget.stopAddresses[_stopCursor],
-      ArrivalPointKind.destination => widget.dropoffAddress,
+      ArrivalPointKind.stop => _stopAddresses[_stopCursor],
+      ArrivalPointKind.destination => _dropoffAddress,
     };
   }
 
@@ -1043,7 +1047,7 @@ class _AcceptRideState extends State<AcceptRide>
         if (_paidStopWait) {
           return tr.waitingAtStopNumber(_stopCursor + 1);
         }
-        if (_stopCursor < widget.stopAddresses.length) {
+        if (_stopCursor < _stopAddresses.length) {
           return tr.headingToStopNumber(_stopCursor + 1);
         }
         return tr.droppingOffRiderName(_riderName);
@@ -1063,7 +1067,7 @@ class _AcceptRideState extends State<AcceptRide>
         if (_paidStopWait) {
           return tr.waitingAtStopNumber(_stopCursor + 1);
         }
-        if (_stopCursor < widget.stopAddresses.length) {
+        if (_stopCursor < _stopAddresses.length) {
           return tr.driveToStopNumber(_stopCursor + 1);
         }
         return tr.dropOffRiderName(_riderName);
@@ -1160,7 +1164,7 @@ class _AcceptRideState extends State<AcceptRide>
       widget.paidByCash &&
       _stage == ActiveRideStage.onTrip &&
       !_paidStopWait &&
-      _stopCursor >= widget.stopAddresses.length;
+      _stopCursor >= _stopAddresses.length;
 
   /// R8-4: the cash taken from the rider; the fare unless a promotion
   /// changed it.
@@ -1177,12 +1181,7 @@ class _AcceptRideState extends State<AcceptRide>
       !_paidStopWait && _waitSeconds < _includedWaitSeconds;
 
   String get _waitBarStatus {
-    if (_paidStopWait) {
-      final free = _live?.terms?.stopFreeWaitMinutes ?? 0;
-      return free > 0 && _waitSeconds < _stopFreeSeconds
-          ? tr.g6StopFreeWait(free)
-          : tr.paidWaitAtStopNumber(_stopCursor + 1);
-    }
+    if (_paidStopWait) return _AcceptRideRouteChange(this)._stopWaitStatus();
     if (_inIncludedWait) {
       return tr.includedWaitThenPaid;
     }
@@ -1208,7 +1207,7 @@ class _AcceptRideState extends State<AcceptRide>
     // Q30: the main trip buttons read admin's Driver app texts.
     if (_paidStopWait) {
       final next = _stopCursor + 2;
-      if (next <= widget.stopAddresses.length) {
+      if (next <= _stopAddresses.length) {
         return driverText(DriverTexts.tripGoToStop, {
           'stop': _AcceptRideTrip(this)._stopWord(next),
         });
@@ -1218,11 +1217,11 @@ class _AcceptRideState extends State<AcceptRide>
     return driverText(switch (_stage) {
       ActiveRideStage.headingToPickup => DriverTexts.tripArrived,
       ActiveRideStage.waitingForRider =>
-        widget.stopAddresses.isEmpty
+        _stopAddresses.isEmpty
             ? DriverTexts.tripStart
             : DriverTexts.tripStartFirstStop,
       ActiveRideStage.onTrip =>
-        _stopCursor < widget.stopAddresses.length
+        _stopCursor < _stopAddresses.length
             ? DriverTexts.tripArriveAtStop
             : DriverTexts.tripComplete,
     });
@@ -1230,7 +1229,7 @@ class _AcceptRideState extends State<AcceptRide>
 
   String get _slideConfirmedLabel {
     if (_paidStopWait) {
-      return _stopCursor + 1 < widget.stopAddresses.length
+      return _stopCursor + 1 < _stopAddresses.length
           ? tr.nextStop
           : tr.toDropOff;
     }
@@ -1242,12 +1241,12 @@ class _AcceptRideState extends State<AcceptRide>
   }
 
   String get _onwardAddress {
-    if (_stopCursor < widget.stopAddresses.length &&
+    if (_stopCursor < _stopAddresses.length &&
         (_stage == ActiveRideStage.onTrip ||
             _stage == ActiveRideStage.waitingForRider)) {
-      return widget.stopAddresses[_stopCursor];
+      return _stopAddresses[_stopCursor];
     }
-    return widget.dropoffAddress;
+    return _dropoffAddress;
   }
 
   String get _nextStopAddress {
@@ -1410,10 +1409,10 @@ class _AcceptRideState extends State<AcceptRide>
                               vehicleIcon: _driverVehicleIcon,
                               stage: _stage,
                               pickupPosition: _pickupPosition,
-                              dropoffPosition: widget.dropoffPosition,
+                              dropoffPosition: _dropoffPosition,
                               pickupAddress: _pickupAddress,
-                              dropoffAddress: widget.dropoffAddress,
-                              stopPositions: widget.stopPositions,
+                              dropoffAddress: _dropoffAddress,
+                              stopPositions: _stopPositions,
                               stopCursor: _stopCursor,
                               pinIcons: _pinIcons,
                               routeLines: _routeLines,
@@ -1667,6 +1666,7 @@ class _AcceptRideState extends State<AcceptRide>
                         child: _AcceptRidePanel(this)._buildIncomingRideCard(),
                       ),
                     ),
+                  _AcceptRideRouteChange(this)._buildRouteChangeLayer(context),
                   // Above the sheet and offers; nothing under it works until
                   // the driver answers.
                   Positioned.fill(

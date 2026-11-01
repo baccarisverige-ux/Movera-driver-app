@@ -87,7 +87,7 @@ extension _AcceptRideSheet on _AcceptRideState {
   Widget _buildCurrentTripCard() {
     final onTrip = _stage == ActiveRideStage.onTrip;
     final eta = _etaLabel;
-    final stops = widget.stopAddresses;
+    final stops = _stopAddresses;
     final toDropoff = onTrip && !_paidStopWait && _stopCursor >= stops.length;
     final points = <TripCardPoint>[
       TripCardPoint(
@@ -111,7 +111,7 @@ extension _AcceptRideSheet on _AcceptRideState {
         ),
       TripCardPoint(
         label: toDropoff ? _withEta(tr.dropOff, eta) : tr.dropOff,
-        address: widget.dropoffAddress,
+        address: _dropoffAddress,
         color: TripCard.ink,
         square: true,
       ),
