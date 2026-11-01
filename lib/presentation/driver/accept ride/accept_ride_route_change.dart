@@ -60,6 +60,7 @@ extension _AcceptRideRouteChange on _AcceptRideState {
         (_) => _openServerRideCheck(check),
       );
     }
+    _adoptServerStopArrival(next);
     final change = next.routeChange;
     if (change == null || change.pending) return;
     if (!_routeChangesSeen.add('${change.changeId}:${change.status}')) return;
@@ -71,6 +72,29 @@ extension _AcceptRideRouteChange on _AcceptRideState {
       _islandNotice = line;
       _islandNoticeKey++;
     });
+  }
+
+  /// G7 live fix: a stop arrival the server recorded (this phone's tap on
+  /// another try, another device, the API) starts the stop wait here too,
+  /// counted from the server's `arrivedAt`, so the stop-wait line shows
+  /// from minute 1.
+  void _adoptServerStopArrival(TripLiveDetails next) {
+    if (_rideLifecycle.terminal ||
+        _stage != ActiveRideStage.onTrip ||
+        _paidStopWait ||
+        _stopCursor >= _stopAddresses.length) {
+      return;
+    }
+    final arrivedAt = next.openStopArrival(_stopCursor);
+    if (arrivedAt == null) return;
+    final now = (widget.waitNow?.call() ?? DateTime.now()).toUtc();
+    _rebuild(() {
+      _paidStopWait = true;
+      _waitSeconds = math.max(0, now.difference(arrivedAt).inSeconds);
+      _waitAnchorAt = null;
+      _startWaitTimer();
+    });
+    unawaited(_rideLifecycle.persistNow());
   }
 
   void _openServerRideCheck(TripRideCheck check) {
