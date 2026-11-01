@@ -7051,7 +7051,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le chauffeur a terminé la course avant la destination.';
 
   @override
-  String get g8DebtLine => 'Ancien frais impayé (pour cette course-là)';
+  String get g8DebtLine => 'Anciens frais impayés (pour cette course-là)';
 
   @override
   String get g8Continue => 'Continuer';

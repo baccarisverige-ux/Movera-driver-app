@@ -6930,7 +6930,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get g8BookedPriceStands => 'Det bokade priset gäller.';
 
   @override
-  String get g8EndedEarly => 'Avslutad tidigt';
+  String get g8EndedEarly => 'Avslutad i förtid';
 
   @override
   String get g8RiderEnded => 'Resenären avslutade resan i förtid.';

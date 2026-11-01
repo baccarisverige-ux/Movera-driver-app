@@ -1968,7 +1968,7 @@
   "g8RiderEndedCollect": "Resenären avslutade resan. Ta betalt {amount}.",
   "g8PricedForDriven": "Priset gäller sträckan som körts.",
   "g8BookedPriceStands": "Det bokade priset gäller.",
-  "g8EndedEarly": "Avslutad tidigt",
+  "g8EndedEarly": "Avslutad i förtid",
   "g8RiderEnded": "Resenären avslutade resan i förtid.",
   "g8DriverEnded": "Föraren avslutade resan före målet.",
   "g8DebtLine": "Tidigare obetald avgift (till den resan)",
