@@ -51,10 +51,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       riderName: _riderName,
       riderRating: _riderRating,
       riderTrips: widget.riderTrips,
-      fare: widget.fare,
+      fare: _fare,
       paidByCash: widget.paidByCash,
       cashToCollect: widget.cashToCollect,
-      riderFare: widget.riderFare,
+      riderFare: _changedRoute?.riderFare ?? widget.riderFare,
       driverBonus: widget.driverBonus,
       category: widget.category,
       matchedVia: widget.matchedVia,
@@ -106,10 +106,8 @@ extension _AcceptRideTrip on _AcceptRideState {
   int get _paidWaitTotal => _paidWaitSeconds + _paidWaitNow;
 
   /// Q43: the fare with the driver's waiting fee in it, for the earnings.
-  String get _fareWithWaiting => WaitingTerms.addFee(
-    widget.fare,
-    _waitTerms.driverWaitingFee(_paidWaitTotal),
-  );
+  String get _fareWithWaiting =>
+      WaitingTerms.addFee(_fare, _waitTerms.driverWaitingFee(_paidWaitTotal));
 
   /// The cash of a cash trip saved before the trip's fare became the
   /// driver's own pay (owner decision 2026-10-26): the fare without
@@ -119,11 +117,11 @@ extension _AcceptRideTrip on _AcceptRideState {
   String get _riderFare {
     final bonus = widget.driverBonus;
     if (bonus == null || bonus.minorUnits <= 0) {
-      return widget.fare;
+      return _fare;
     }
-    final fare = Money.parseLabel(widget.fare, currency: bonus.currency);
+    final fare = Money.parseLabel(_fare, currency: bonus.currency);
     if (fare == null || fare.minorUnits < bonus.minorUnits) {
-      return widget.fare;
+      return _fare;
     }
     return (fare - bonus).formatted;
   }
@@ -339,12 +337,12 @@ extension _AcceptRideTrip on _AcceptRideState {
       tripId: widget.tripId,
       statusLabel: WaybillRecord.currentTrip,
       issuedAt: DateTime.now(),
-      fare: widget.fare,
+      fare: _fare,
       driverBonus: WaybillRecord.bonusLabel(widget.driverBonus),
       service: widget.category,
       riderName: _riderName,
       pickup: _pickupAddress,
-      dropoff: _dropoffAddress,
+      dropoff: waybillRouteLabel(_dropoffAddress, _stopAddresses),
       source: widget.matchedVia,
       driverName: _driverName,
       riderFare: widget.riderFare,
@@ -2553,7 +2551,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     riderRating: _riderRating,
     pickup: _pickupAddress,
     dropoff: _dropoffAddress,
-    fare: widget.fare,
+    fare: _fare,
     category: widget.category,
     driverName: _driverName,
     vehicle: _vehicleLabel,

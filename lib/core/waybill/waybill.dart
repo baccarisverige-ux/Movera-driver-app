@@ -164,6 +164,7 @@ class WaybillRecord {
     String? riderFare,
     String? driverName,
     String? pickup,
+    String? dropoff,
   }) {
     return WaybillRecord(
       tripId: tripId,
@@ -173,7 +174,7 @@ class WaybillRecord {
       service: service,
       riderName: riderName,
       pickup: pickup ?? this.pickup,
-      dropoff: dropoff,
+      dropoff: dropoff ?? this.dropoff,
       source: source,
       driverName: driverName ?? this.driverName,
       vehicle: vehicle ?? this.vehicle,

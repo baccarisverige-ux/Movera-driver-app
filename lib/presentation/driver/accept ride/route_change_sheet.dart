@@ -176,3 +176,23 @@ class _RouteChangeSheetState extends State<RouteChangeSheet> {
     );
   }
 }
+
+/// Contract v0.18.9: the island's one line once the rider's route change
+/// has an answer (accepted, refused, expired, withdrawn); null while it
+/// still waits for the driver.
+String? routeChangeIslandLine(TripRouteChange change) =>
+    switch (change.status) {
+      'accepted' =>
+        change.answeredBy == 'system'
+            ? tr.g7RouteChanged
+            : tr.g7RouteAcceptedIsland,
+      'refused' => tr.g7RouteRefusedIsland,
+      'expired' => tr.g7RouteExpiredIsland,
+      'withdrawn' => tr.g7RouteWithdrawnIsland,
+      _ => null,
+    };
+
+/// The waybill's "To" after a route change: the stops on the way, then the
+/// drop-off ("Fridhemsplan → Brommaplan").
+String waybillRouteLabel(String dropoff, List<String> stops) =>
+    stops.isEmpty ? dropoff : [...stops, dropoff].join(' → ');

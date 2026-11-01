@@ -511,6 +511,7 @@ class TripRouteChange {
     this.answeredBy,
     this.driverEarnings,
     this.earningsDifference,
+    this.total,
   });
 
   static const statuses = {
@@ -544,6 +545,7 @@ class TripRouteChange {
       answeredBy: by is String ? by : null,
       driverEarnings: _signedMoney(json['driverEarnings']),
       earningsDifference: _signedMoney(json['earningsDifference']),
+      total: _signedMoney(json['total']),
     );
   }
 
@@ -558,6 +560,9 @@ class TripRouteChange {
   final String? answeredBy;
   final Money? driverEarnings;
   final Money? earningsDifference;
+
+  /// What the rider pays for the new route (the waybill's rider fare).
+  final Money? total;
 
   bool get pending => status == 'pending';
   bool get accepted => status == 'accepted';

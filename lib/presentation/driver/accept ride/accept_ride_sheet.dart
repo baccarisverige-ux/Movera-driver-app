@@ -121,7 +121,7 @@ extension _AcceptRideSheet on _AcceptRideState {
       builder: (context, record, _) => TripCard(
         key: const ValueKey<String>('active-ride-current-trip-card'),
         title: onTrip ? tr.currentTrip : tr.yourTrip,
-        fare: widget.fare,
+        fare: _fare,
         points: points,
         footer:
             '${categoryNameText(widget.category)} · ${_riderName.split(' ').first}',

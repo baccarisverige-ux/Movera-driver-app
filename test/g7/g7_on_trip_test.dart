@@ -7,6 +7,8 @@ import 'package:http/testing.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/island/trip_island_controller.dart';
+import 'package:movera/core/l10n/driver_l10n.dart' as l10n;
 import 'package:movera/core/contracts/driver_config_parts.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/ride/trip_live_details.dart';
@@ -249,5 +251,131 @@ void main() {
       expect(live.terms!.stopFreeWaitMinutes, 0);
       expect(live.terms!.stopWaitPerMin!.minorUnits, 45);
     });
+  });
+
+  group('4. island lines after the driver\'s answer (no map)', () {
+    for (final (language, accepted, refused) in [
+      (
+        'en',
+        'New route accepted',
+        'Route change refused. Continue to the first destination',
+      ),
+      (
+        'sv',
+        'Ny resa godkänd',
+        'Ändringen nekad. Fortsätt till den första destinationen',
+      ),
+      (
+        'fr',
+        'Nouvel itinéraire accepté',
+        'Changement refusé. Continuez vers la première destination',
+      ),
+    ]) {
+      testWidgets('each answer is said once on the island ($language)', (
+        tester,
+      ) async {
+        DriverAppTexts.language = language;
+        String line(String status, {String? by}) => routeChangeIslandLine(
+          TripRouteChange.tryParse({
+            ...change(status, 'SEK'),
+            'answeredBy': ?by,
+          })!,
+        )!;
+        expect(line('accepted', by: 'driver'), accepted);
+        expect(line('refused', by: 'driver'), refused);
+        expect(line('expired'), l10n.tr.g7RouteExpiredIsland);
+        expect(line('withdrawn', by: 'rider'), l10n.tr.g7RouteWithdrawnIsland);
+        expect(line('accepted', by: 'system'), l10n.tr.g7RouteChanged);
+        expect(
+          routeChangeIslandLine(
+            TripRouteChange.tryParse(change('pending', 'SEK'))!,
+          ),
+          isNull,
+        );
+        // The island's strip says it once (4 s), then goes back to the ETA.
+        final strip = TripStripController();
+        strip.update(const TripStripInput(leg: TripLeg.dropoff));
+        strip.update(
+          TripStripInput(
+            leg: TripLeg.dropoff,
+            notice: line('refused', by: 'driver'),
+            noticeKey: 1,
+          ),
+        );
+        expect(strip.current.text, refused);
+        await tester.pump(const Duration(seconds: 5));
+        expect(strip.current, TripStripItem.eta);
+        strip.dispose();
+      });
+    }
+
+    test('the waybill "To" lists the new stops, then the drop-off', () {
+      expect(waybillRouteLabel('Brommaplan', const []), 'Brommaplan');
+      expect(
+        waybillRouteLabel('Brommaplan', const ['Fridhemsplan']),
+        'Fridhemsplan → Brommaplan',
+      );
+    });
+  });
+
+  group('5. Godkänn / Neka call the server', () {
+    for (final (accept, label, path) in [
+      (true, 'Godkänn', '/api/v1/trips/t1/route-change/accept'),
+      (false, 'Neka', '/api/v1/trips/t1/route-change/refuse'),
+    ]) {
+      testWidgets('tap $label', (tester) async {
+        DriverAppTexts.language = 'sv';
+        final requests = <http.Request>[];
+        final trips = LiveTripCommands(
+          api: ApiClient(
+            client: MockClient((request) async {
+              requests.add(request);
+              return http.Response(
+                jsonEncode({
+                  'tripId': 't1',
+                  'status': 'in_trip',
+                  'version': 10,
+                  'routeChange': change(accept ? 'accepted' : 'refused', 'SEK'),
+                }),
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }),
+            baseUri: Uri.parse('https://api.example.test'),
+            tokens: MemoryTokenStore()..save(access: 'a1', refresh: 'r1'),
+          ),
+        )..observe({'tripId': 't1', 'status': 'in_trip', 'version': 9});
+        final rc = TripRouteChange.tryParse(change('pending', 'SEK'))!;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: RouteChangeSheet(
+                change: rc,
+                maxStops: 3,
+                now: () => DateTime.utc(2026, 11, 2, 10, 0, 10),
+                onAnswer: (yes) => trips
+                    .answerRouteChange('t1', changeId: rc.changeId, accept: yes)
+                    .then((_) {}),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text(label));
+        await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+        await tester.pump();
+        expect(requests.single.url.path, path);
+        expect(jsonDecode(requests.single.body), {
+          'expectedVersion': 9,
+          'changeId': 'rc_1',
+        });
+        expect(
+          TripLiveDetails.fromProjection(
+            trips.projectionOf('t1')!,
+          ).routeChange!.status,
+          accept ? 'accepted' : 'refused',
+        );
+        await tester.pumpWidget(const SizedBox());
+      });
+    }
   });
 }

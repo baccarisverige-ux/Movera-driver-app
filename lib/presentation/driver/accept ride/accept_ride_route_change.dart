@@ -14,6 +14,8 @@ typedef _ChangedRoute = ({
   LatLng dropoff,
   List<String> stops,
   List<LatLng> stopPoints,
+  String? fare,
+  String? riderFare,
 });
 
 extension _AcceptRideRouteChange on _AcceptRideState {
@@ -27,6 +29,10 @@ extension _AcceptRideRouteChange on _AcceptRideState {
       _changedRoute?.stops ?? widget.stopAddresses;
   List<LatLng> get _stopPositions =>
       _changedRoute?.stopPoints ?? widget.stopPositions;
+
+  /// The driver's earnings: the accepted change's new earnings, else the
+  /// trip's own.
+  String get _fare => _changedRoute?.fare ?? widget.fare;
 
   /// G7 decision 4 (`terms.stopWaitPerMin`): the stop's price per minute
   /// from the first minute (or after its free ones).
@@ -55,20 +61,9 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     final change = next.routeChange;
     if (change == null || change.pending) return;
     if (!_routeChangesSeen.add('${change.changeId}:${change.status}')) return;
-    final String line;
-    switch (change.status) {
-      case 'accepted':
-        _applyChangedRoute(change);
-        line = change.answeredBy == 'system'
-            ? tr.g7RouteChanged
-            : tr.g7RouteAcceptedIsland;
-      case 'refused':
-        line = tr.g7RouteRefusedIsland;
-      case 'expired':
-        line = tr.g7RouteExpiredIsland;
-      default:
-        line = tr.g7RouteWithdrawnIsland;
-    }
+    if (change.accepted) _applyChangedRoute(change);
+    final line = routeChangeIslandLine(change);
+    if (line == null) return;
     if (!mounted) return;
     _rebuild(() {
       _islandNotice = line;
@@ -175,7 +170,20 @@ extension _AcceptRideRouteChange on _AcceptRideState {
                   '${stop.point.longitude.toStringAsFixed(5)}',
       ],
       stopPoints: [for (final stop in change.stops) stop.point.toLatLng()],
+      fare: change.driverEarnings?.formatted ?? _changedRoute?.fare,
+      riderFare: change.total?.formatted ?? _changedRoute?.riderFare,
     );
+    // The waybill follows: new "To" (stops, drop-off) and the new money.
+    final current = _waybills.current;
+    if (current != null && current.tripId == widget.tripId) {
+      _waybills.beginCurrent(
+        current.copyWith(
+          dropoff: waybillRouteLabel(_dropoffAddress, _stopAddresses),
+          fare: _changedRoute?.fare,
+          riderFare: _changedRoute?.riderFare,
+        ),
+      );
+    }
     unawaited(_rideLifecycle.persistNow());
     if (_stage == ActiveRideStage.onTrip) {
       unawaited(_AcceptRideTrip(this)._refreshOnTripRoute(fitCamera: true));
