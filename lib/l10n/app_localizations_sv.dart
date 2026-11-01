@@ -6779,4 +6779,54 @@ class AppLocalizationsSv extends AppLocalizations {
   String noShowFromTime(Object time) {
     return 'Kan användas från $time om resenären inte har kommit.';
   }
+
+  @override
+  String g6RuleFarPickup(Object km) {
+    return 'Upphämtning över $km km bort';
+  }
+
+  @override
+  String get g6RuleAirport => 'Hämtning på flygplats';
+
+  @override
+  String get g6RuleScheduled => 'Bokad resa';
+
+  @override
+  String get g6RuleEvent => 'Hämtning vid evenemang';
+
+  @override
+  String get g6PinAsk => 'Fråga resenären efter den fyrsiffriga koden';
+
+  @override
+  String g6PinWrong(Object left) {
+    return 'Fel kod. $left försök kvar';
+  }
+
+  @override
+  String g6PinLocked(Object min) {
+    return 'För många försök. Försök igen om $min min';
+  }
+
+  @override
+  String get g6PinTitle => 'Resenärens kod';
+
+  @override
+  String get g6PinConfirm => 'Bekräfta och starta';
+
+  @override
+  String get g6PinFourDigits => 'Skriv fyra siffror';
+
+  @override
+  String get g6PinNeeded => 'Den här resan behöver resenärens kod innan start';
+
+  @override
+  String get g6AlertPaid => 'Betald väntetid har börjat';
+
+  @override
+  String get g6AlertNoShow => 'Du kan nu markera utebliven kund';
+
+  @override
+  String g6StopFreeWait(Object min) {
+    return 'Gratis väntan vid stopp: $min min';
+  }
 }

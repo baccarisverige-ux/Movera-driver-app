@@ -94,13 +94,10 @@ void main() {
         waiting.termsFor(category: 'premium').perMinute.formatted,
         '16,90 kr',
       );
-      // Contract v0.18.7 (G5): no app-invented far-pickup or airport rule;
-      // the zone's served pricing is the only source.
-      expect(waiting.termsFor(pickupKm: 7).noShowFee.formatted, '65,00 kr');
-      expect(
-        waiting.termsFor(type: WaitingRideType.airport).noShowAfterMinutes,
-        5,
-      );
+      // Contract v0.18.8 (G6): far-pickup and airport rules are the
+      // server's; the zone's served pricing is all the app has.
+      expect(waiting.termsFor().noShowFee.formatted, '65,00 kr');
+      expect(waiting.termsFor().noShowAfterMinutes, 5);
       expect(config.destinationMode.destinationsPerDay, 2);
       expect(config.nextTrips.withinMinutesOfDropoff, 10);
       expect(config.cancelReasons['driverBeforeTrip'], hasLength(6));
@@ -127,11 +124,8 @@ void main() {
       final premium = config.waiting.termsFor(category: 'Premium');
       expect(premium.perMinute.formatted, '5,100 DT');
       expect(premium.freeMinutes, 5);
-      // G5: a far pickup has the zone's own no-show fee (no app rule).
-      expect(
-        config.waiting.termsFor(pickupKm: 9).noShowFee.formatted,
-        '19,500 DT',
-      );
+      // G6: a far pickup's fee is the server's (no app rule).
+      expect(config.waiting.termsFor().noShowFee.formatted, '19,500 DT');
     });
 
     test('apply() puts the zone rules in use', () {
@@ -227,7 +221,8 @@ void main() {
       expect(waiting.base.noShowFee.formatted, '0,00 kr');
       expect(waiting.base.pricesKnown, isFalse);
       expect(waiting.base.driverShareNoShowPercent, 80);
-      expect(waiting.rideTypes.containsKey(WaitingRideType.airport), isFalse);
+      // A broken far-pickup block keeps the label's default distance.
+      expect(waiting.farPickupKm, 5);
       expect(waiting.termsFor(category: 'pet').freeMinutes, 4);
       expect(waiting.termsFor(category: 'xl').freeMinutes, 5);
       expect(config.cancelReasons['scheduled'], ['scheduled_other']);
@@ -242,7 +237,7 @@ void main() {
           'perMin': {'amountMinor': 500, 'currency': 'SEK'},
         },
       });
-      final terms = config.waiting.termsFor(category: 'Premium', pickupKm: 9);
+      final terms = config.waiting.termsFor(category: 'Premium');
       expect(terms.perMinute.currency, 'TND');
       expect(terms.noShowFee.currency, 'TND');
       expect(terms.driverNoShowFee.currency, 'TND');
@@ -265,7 +260,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.18.7');
+      expect(contract['version'], '0.18.8');
       expect(
         ZoneDefaults.paymentMethods,
         contract['zonePaymentMethods']['values'],

@@ -57,6 +57,8 @@ class AdaptiveTripIsland extends StatefulWidget {
     this.bags = 0,
     this.notice,
     this.noticeKey = 0,
+    this.alert,
+    this.alertKey = 0,
     this.nextTripFare,
     this.sheetPosition,
     this.sheetRaisedAt = 1,
@@ -73,6 +75,11 @@ class AdaptiveTripIsland extends StatefulWidget {
   /// pickup, contract v0.18.7).
   final String? notice;
   final int noticeKey;
+
+  /// Contract v0.18.8 `waiting.alerts` (owner G6 decision 6): a one-off
+  /// island message, no sound, said once each time [alertKey] changes.
+  final String? alert;
+  final int alertKey;
 
   /// Fare of a secured next trip; said once right after it is secured.
   final String? nextTripFare;
@@ -158,6 +165,8 @@ class _AdaptiveTripIslandState extends State<AdaptiveTripIsland>
     waitingAtStop: widget.waitingAtStop,
     navigationStatus: widget.navigationStatus,
     reroutes: widget.reroutes,
+    alert: widget.alert,
+    alertKey: widget.alertKey,
   );
   void _changed() {
     if (mounted) setState(() {});

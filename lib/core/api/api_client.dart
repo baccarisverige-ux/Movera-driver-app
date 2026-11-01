@@ -431,6 +431,7 @@ class ApiClient {
     Map<String, dynamic>? projection;
     Map<String, dynamic>? preview;
     var details = const <String>[];
+    int? bodyRetrySeconds;
     try {
       final decoded = jsonDecode(response.body);
       if (decoded is Map<String, dynamic>) {
@@ -457,6 +458,12 @@ class ApiClient {
         if (rawProjection is Map) {
           projection = Map<String, dynamic>.from(rawProjection);
         }
+        // Contract v0.18.8 `pin_locked` (and the OTP limits) also carry
+        // the wait in the body as whole seconds.
+        final rawRetry = decoded['retryAfterSeconds'];
+        if (rawRetry is num && rawRetry.isFinite && rawRetry >= 0) {
+          bodyRetrySeconds = rawRetry.ceil();
+        }
         final rawPreview = decoded['preview'];
         if (rawPreview is Map) {
           preview = Map<String, dynamic>.from(rawPreview);
@@ -465,9 +472,9 @@ class ApiClient {
     } on FormatException {
       // A non-JSON error body still keeps the HTTP status and request id.
     }
-    final retrySeconds = int.tryParse(
-      response.headers['retry-after']?.trim() ?? '',
-    );
+    final retrySeconds =
+        int.tryParse(response.headers['retry-after']?.trim() ?? '') ??
+        bodyRetrySeconds;
     return ApiError(
       code: code,
       message: message,

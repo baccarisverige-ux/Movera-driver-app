@@ -9,7 +9,6 @@ import 'package:movera/core/money/money.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
-import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
 /// Round 2 driver features read from `DriverAppConfig` (contract 0.4.0,
 /// owner Q12, Q16–Q18, Q41–Q46).
@@ -64,19 +63,19 @@ void main() {
     });
 
     test('never a no-show before the free wait ends', () {
-      addTearDown(
-        () => ScheduledRideRules.current = const ScheduledRideRules(),
-      );
-      ScheduledRideRules.current = const ScheduledRideRules(
-        includedWaitingMinutes: 7,
-      );
-      final terms = rules.termsFor(
-        category: 'xl',
-        type: WaitingRideType.scheduled,
-      );
+      final terms = DriverAppConfig.fromJson({
+        'currency': 'SEK',
+        'waiting': {
+          'freeWaitMin': 5,
+          'noShowAfterMin': 5,
+          'byCategory': {
+            'xl': {'freeWaitMin': 7, 'noShowAfterMin': 3},
+          },
+        },
+      }).waiting.termsFor(category: 'xl');
       expect(terms.freeMinutes, 7);
       expect(terms.noShowAfterMinutes, 7);
-      expect(terms.rule, 'Movera XL · Scheduled ride');
+      expect(terms.rule, 'Movera XL');
     });
   });
 

@@ -1926,5 +1926,19 @@
   "etaLastKnown": "Senast kända: {eta}",
   "feeKindNoShowShort": "Avgift för utebliven kund",
   "feeKindCancelShort": "Avbokningsavgift",
-  "noShowFromTime": "Kan användas från {time} om resenären inte har kommit."
+  "noShowFromTime": "Kan användas från {time} om resenären inte har kommit.",
+  "g6RuleFarPickup": "Upphämtning över {km} km bort",
+  "g6RuleAirport": "Hämtning på flygplats",
+  "g6RuleScheduled": "Bokad resa",
+  "g6RuleEvent": "Hämtning vid evenemang",
+  "g6PinAsk": "Fråga resenären efter den fyrsiffriga koden",
+  "g6PinWrong": "Fel kod. {left} försök kvar",
+  "g6PinLocked": "För många försök. Försök igen om {min} min",
+  "g6PinTitle": "Resenärens kod",
+  "g6PinConfirm": "Bekräfta och starta",
+  "g6PinFourDigits": "Skriv fyra siffror",
+  "g6PinNeeded": "Den här resan behöver resenärens kod innan start",
+  "g6AlertPaid": "Betald väntetid har börjat",
+  "g6AlertNoShow": "Du kan nu markera utebliven kund",
+  "g6StopFreeWait": "Gratis väntan vid stopp: {min} min"
 }

@@ -64,6 +64,7 @@ import 'package:movera/core/dispatch/trip_occurrence.dart';
 import 'package:movera/core/admin/pickup_pay_config.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/ride/trip_live_details.dart';
+import 'package:movera/core/ride/pickup_pin.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/settings/navigation_app.dart';
 import 'package:movera/presentation/driver/settings/trip_settings.dart';
@@ -83,6 +84,7 @@ import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
 import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_banner.dart';
+import 'package:movera/presentation/driver/accept%20ride/pickup_pin_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_bottom_bar.dart';
@@ -594,7 +596,11 @@ class _AcceptRideState extends State<AcceptRide>
   // extras, the pickup (moved by `pickup_moved`), and the 10 s poll.
   TripLiveDetails? _live;
   late LatLng _pickupPosition = widget.pickupPosition;
-  int _pickupMoves = 0;
+
+  // Strip line (moved pickup) and G6 island alert, each said once per key.
+  int _islandNoticeKey = 0, _waitingAlertKey = 0;
+  String? _islandNotice, _waitingAlert;
+  final Set<String> _waitingAlertsShown = <String>{};
   Timer? _followPoll;
 
   List<GeoPoint> _roadGeoPoints = <GeoPoint>[];
@@ -1142,17 +1148,10 @@ class _AcceptRideState extends State<AcceptRide>
       _onTripRadarState == _OnTripRadarState.offerAvailable &&
       _nextTripRadarOffer != null;
 
-  /// Q19/Q20: free wait, price per minute, no-show time and fee, and the
-  /// driver's share, from the waiting rules for this pickup (distance,
-  /// ride type, category).
-  ///
+  /// Q19/Q20: the zone's served terms until the trip's own arrive (G6:
+  /// far / airport / event / scheduled rules are the server's only).
   late final WaitingTerms _zoneWaitTerms = WaitingRules.current.termsFor(
     category: widget.category,
-    type: WaitingRules.typeOf(
-      matchedVia: widget.matchedVia,
-      pickupAddress: _pickupAddress,
-    ),
-    pickupKm: widget.pickupKm,
   );
 
   /// Q24: the last leg of a cash trip, cash not collected yet: the main
@@ -1170,6 +1169,8 @@ class _AcceptRideState extends State<AcceptRide>
     _waitTerms.waitingFee(_AcceptRideTrip(this)._paidWaitTotal),
   );
   int get _includedWaitSeconds => _waitTerms.freeSeconds;
+  // G6 `terms.stopFreeWaitMin` in seconds.
+  int get _stopFreeSeconds => (_live?.terms?.stopFreeWaitMinutes ?? 0) * 60;
   int get _noShowWaitSeconds => _waitTerms.noShowSeconds;
 
   bool get _inIncludedWait =>
@@ -1177,7 +1178,10 @@ class _AcceptRideState extends State<AcceptRide>
 
   String get _waitBarStatus {
     if (_paidStopWait) {
-      return tr.paidWaitAtStopNumber(_stopCursor + 1);
+      final free = _live?.terms?.stopFreeWaitMinutes ?? 0;
+      return free > 0 && _waitSeconds < _stopFreeSeconds
+          ? tr.g6StopFreeWait(free)
+          : tr.paidWaitAtStopNumber(_stopCursor + 1);
     }
     if (_inIncludedWait) {
       return tr.includedWaitThenPaid;
@@ -1601,10 +1605,10 @@ class _AcceptRideState extends State<AcceptRide>
                                     pointKind: _approachKind,
                                     pointLabel: _approachLabel,
                                     bags: widget.bags,
-                                    notice: _pickupMoves > 0
-                                        ? tr.pickupMovedIsland
-                                        : null,
-                                    noticeKey: _pickupMoves,
+                                    notice: _islandNotice,
+                                    noticeKey: _islandNoticeKey,
+                                    alert: _waitingAlert,
+                                    alertKey: _waitingAlertKey,
                                     nextTripFare:
                                         _onTripRadarState ==
                                             _OnTripRadarState.secured

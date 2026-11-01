@@ -95,12 +95,13 @@ extension _AcceptRideTrip on _AcceptRideState {
     );
   }
 
-  /// Q42: paid seconds of the wait running now (a stop wait is paid
-  /// from its first second).
+  /// Q42: paid seconds of the wait running now. Contract v0.18.8: a stop
+  /// wait is paid after the trip's `terms.stopFreeWaitMin` (0 = from its
+  /// first second).
   int get _paidWaitNow => !_countingWait
       ? 0
       : _paidStopWait
-      ? _waitSeconds
+      ? math.max(0, _waitSeconds - _stopFreeSeconds)
       : math.max(0, _waitSeconds - _includedWaitSeconds);
   int get _paidWaitTotal => _paidWaitSeconds + _paidWaitNow;
 
@@ -607,13 +608,43 @@ extension _AcceptRideTrip on _AcceptRideState {
         _resolvedPickup = address;
       }
     }
+    final alert = _newWaitingAlert(next.waiting, initial: initial);
     if (initial) return;
-    if (mounted && (rebuild || pickupChanged)) {
+    if (mounted && (rebuild || pickupChanged || alert != null)) {
       _rebuild(() {
-        if (pickupChanged) _pickupMoves++;
+        if (pickupChanged) {
+          _islandNotice = tr.pickupMovedIsland;
+          _islandNoticeKey++;
+        }
+        if (alert != null) {
+          _waitingAlert = alert;
+          _waitingAlertKey++;
+        }
       });
     }
     if (pickupChanged) _afterPickupMoved();
+  }
+
+  /// Contract v0.18.8 `waiting.alerts` (owner G6 decision 6): the first
+  /// time a kind appears on this trip the island says it once, with no
+  /// sound; the newest new kind wins. Alerts already there when the screen
+  /// opens ([initial]) are marked as said, never replayed.
+  String? _newWaitingAlert(TripWaitingNow? waiting, {required bool initial}) {
+    if (waiting == null) return null;
+    String? line;
+    for (final kind in const [
+      TripWaitingNow.paidWaitingStarted,
+      TripWaitingNow.noShowPossible,
+    ]) {
+      if (!waiting.alerts.contains(kind) || !_waitingAlertsShown.add(kind)) {
+        continue;
+      }
+      if (initial) continue;
+      line = kind == TripWaitingNow.noShowPossible
+          ? tr.g6AlertNoShow
+          : tr.g6AlertPaid;
+    }
+    return _stage == ActiveRideStage.waitingForRider ? line : null;
   }
 
   /// Status item 4 (contract v0.18.7 `pickupMove`): the rider moved the
@@ -1593,9 +1624,7 @@ extension _AcceptRideTrip on _AcceptRideState {
 
       case ActiveRideStage.waitingForRider:
         if (LiveDriverServices.active &&
-            (!await _AcceptRideLive(
-                  this,
-                )._serverStep((trips) => trips.start(widget.tripId)) ||
+            (!await _AcceptRideLive(this)._startOnServer() ||
                 !mounted ||
                 _rideLifecycle.terminal ||
                 _stage != ActiveRideStage.waitingForRider)) {

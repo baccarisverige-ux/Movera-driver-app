@@ -201,11 +201,15 @@ class LiveTripCommands {
   }
 
   /// "Start trip": the app's one slide is the contract's `board` then
-  /// `start` (`rider_onboard` → `in_trip`).
-  Future<LiveTripOutcome> start(String tripId) async {
+  /// `start` (`rider_onboard` → `in_trip`). [pin]: the rider's 4-digit
+  /// code when the trip has `pinRequired` (contract v0.18.8), sent in the
+  /// body of `board`; the server answers `pin_wrong` / `pin_locked` /
+  /// `pin_required` (see `PickupPinOutcome`).
+  Future<LiveTripOutcome> start(String tripId, {String? pin}) async {
     final boarded = await _step(
       tripId,
       'board',
+      body: {if (pin != null) 'pin': pin},
       done: _onboard,
       leadsTo: const {'rider_onboard'},
     );
@@ -354,6 +358,15 @@ class LiveTripCommands {
       }
     }
     return _unknown;
+  }
+
+  /// Contract v0.18.8: true when the trip needs the rider's PIN before
+  /// Start and the server has not seen the right one yet.
+  bool needsPin(String tripId) {
+    final known = _trips[tripId];
+    return known != null &&
+        known['pinRequired'] == true &&
+        known['pinVerified'] != true;
   }
 
   /// The rider did not come (`no-show`, after the zone's wait).

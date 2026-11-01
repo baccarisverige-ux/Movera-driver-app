@@ -358,12 +358,7 @@ void main() {
     test('the app has no far-pickup, airport or event rule of its own', () {
       const rules = WaitingRules();
       final base = rules.termsFor();
-      for (final terms in [
-        rules.termsFor(pickupKm: 40),
-        rules.termsFor(type: WaitingRideType.airport),
-        rules.termsFor(type: WaitingRideType.event),
-        rules.termsFor(category: 'Premium'),
-      ]) {
+      for (final terms in [rules.termsFor(category: 'Premium')]) {
         expect(terms.freeMinutes, base.freeMinutes);
         expect(terms.noShowAfterMinutes, base.noShowAfterMinutes);
         expect(terms.perMinute, base.perMinute);
@@ -392,7 +387,7 @@ void main() {
               'noShowFee': {'amountMinor': 615, 'currency': 'EUR'},
             },
           },
-          // Never read: the server does not know these (G6 item 1).
+          // G6: the server applies these; the app keeps only the km.
           'farPickup': {
             'km': 5,
             'freeWaitMin': 1,
@@ -409,11 +404,10 @@ void main() {
       expect(waiting.base.driverNoShowFee.formatted, '4,92 €');
       expect(waiting.termsFor(category: 'xl').freeMinutes, 3);
       expect(waiting.termsFor(category: 'xl').perMinute.formatted, '1,50 €');
-      expect(waiting.termsFor(pickupKm: 9).noShowFee.formatted, '6,15 €');
-      expect(
-        waiting.termsFor(type: WaitingRideType.airport).noShowAfterMinutes,
-        5,
-      );
+      // G6: these rules are the server's; only the label's km is kept.
+      expect(waiting.termsFor().noShowFee.formatted, '6,15 €');
+      expect(waiting.termsFor().noShowAfterMinutes, 5);
+      expect(waiting.farPickupKm, 5);
     });
   });
 
