@@ -253,7 +253,10 @@ void main() {
       expect(find.text('Rule for this pickup: Premium'), findsOneWidget);
       expect(find.text('5 min'), findsOneWidget);
       expect(find.text('16,90 kr / min'), findsOneWidget);
-      expect(find.text('65,00 kr'), findsOneWidget);
+      // G6 live fix 5: the no-show row is the driver's share, not the
+      // rider's 65 kr fee.
+      expect(find.text('52,00 kr'), findsOneWidget);
+      expect(find.text('65,00 kr'), findsNothing);
       expect(
         find.text(
           'You get 100% of the wait time and 80% of the no-show fee '
