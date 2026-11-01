@@ -48,7 +48,9 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     return perMin == null ? paid : '$paid · ${tr.g7StopPrice(perMin)}';
   }
 
-  void _onTripExtras(TripLiveDetails next) {
+  /// [initial]: the trip as the server had it when the screen opened (a
+  /// restart): an accepted change is applied again without an island line.
+  void _onTripExtras(TripLiveDetails next, {bool initial = false}) {
     final check = next.rideCheck;
     if (check != null &&
         !_rideLifecycle.terminal &&
@@ -63,7 +65,7 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     if (!_routeChangesSeen.add('${change.changeId}:${change.status}')) return;
     if (change.accepted) _applyChangedRoute(change);
     final line = routeChangeIslandLine(change);
-    if (line == null) return;
+    if (line == null || initial) return;
     if (!mounted) return;
     _rebuild(() {
       _islandNotice = line;
@@ -73,23 +75,11 @@ extension _AcceptRideRouteChange on _AcceptRideState {
 
   void _openServerRideCheck(TripRideCheck check) {
     if (!mounted || _rideLifecycle.terminal || _rideCheck.active) return;
-    final config = RideCheckAdminConfig.current;
-    final reason = switch (check.trigger) {
-      'off_route' => RideCheckReason.offRoute(
-        config.offRouteKm * 1000,
-        _dropoffAddress,
-      ),
-      'dropped_far' => RideCheckReason.droppedFar(
-        config.finishFarFromDropoffMeters,
-        _dropoffAddress,
-      ),
-      _ => RideCheckReason.longStop(config.longStopMinutes, null),
-    };
-    final trigger = switch (check.trigger) {
-      'off_route' => RideCheckTrigger.offRoute,
-      'dropped_far' => RideCheckTrigger.droppedFar,
-      _ => RideCheckTrigger.longStop,
-    };
+    final (trigger, reason) = serverRideCheckReason(
+      check,
+      RideCheckAdminConfig.current,
+      _dropoffAddress,
+    );
     _rideCheckDetector.unwatched();
     unawaited(
       _rideCheck.open(

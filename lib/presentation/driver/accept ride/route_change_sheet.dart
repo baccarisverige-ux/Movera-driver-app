@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/admin/ride_check_admin_config.dart';
 import 'package:movera/core/ride/trip_live_details.dart';
+import 'package:movera/core/safety/ride_check.dart';
 
 // The trip screen's part file reads the zone's on-trip settings with it.
 export 'package:movera/core/admin/on_trip_config.dart';
@@ -196,3 +198,28 @@ String? routeChangeIslandLine(TripRouteChange change) =>
 /// drop-off ("Fridhemsplan → Brommaplan").
 String waybillRouteLabel(String dropoff, List<String> stops) =>
     stops.isEmpty ? dropoff : [...stops, dropoff].join(' → ');
+
+/// The card's trigger and reason line for the server's "Is everything OK?":
+/// its numbers are the zone's published `DriverAppConfig.rideCheck` ([config],
+/// put in use from `GET /driver/config`), never an app default.
+(RideCheckTrigger, RideCheckReason) serverRideCheckReason(
+  TripRideCheck check,
+  RideCheckAdminConfig config,
+  String dropoffAddress,
+) => switch (check.trigger) {
+  'off_route' => (
+    RideCheckTrigger.offRoute,
+    RideCheckReason.offRoute(config.offRouteKm * 1000, dropoffAddress),
+  ),
+  'dropped_far' => (
+    RideCheckTrigger.droppedFar,
+    RideCheckReason.droppedFar(
+      config.finishFarFromDropoffMeters,
+      dropoffAddress,
+    ),
+  ),
+  _ => (
+    RideCheckTrigger.longStop,
+    RideCheckReason.longStop(config.longStopMinutes, null),
+  ),
+};

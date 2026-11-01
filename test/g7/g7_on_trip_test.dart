@@ -11,6 +11,8 @@ import 'package:movera/core/island/trip_island_controller.dart';
 import 'package:movera/core/l10n/driver_l10n.dart' as l10n;
 import 'package:movera/core/contracts/driver_config_parts.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
+import 'package:movera/core/ride/active_ride_repository.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/ride/trip_live_details.dart';
 import 'package:movera/core/safety/ride_check.dart';
 import 'package:movera/presentation/driver/accept%20ride/route_change_sheet.dart';
@@ -377,5 +379,58 @@ void main() {
         await tester.pumpWidget(const SizedBox());
       });
     }
+  });
+
+  group('6. checker round', () {
+    test('the ride check reason uses the zone\'s published numbers (FR)', () {
+      DriverConfigParts.fromJson({
+        'rideCheck': {
+          'on': true,
+          'stopMinutes': 4,
+          'offRouteKm': 3,
+          'endFarMeters': 800,
+        },
+      }, 'EUR').apply();
+      final config = RideCheckAdminConfig.current;
+      RideCheckReason reason(String trigger) => serverRideCheckReason(
+        TripRideCheck.tryParse({'checkId': 'srv_1', 'trigger': trigger})!,
+        config,
+        'Gare de Lyon',
+      ).$2;
+      expect(reason('off_route').number, 3000);
+      expect(reason('dropped_far').number, 800);
+      expect(reason('long_stop').number, 4);
+      expect(
+        serverRideCheckReason(
+          TripRideCheck.tryParse({'checkId': 'srv_1', 'trigger': 'off_route'})!,
+          config,
+          'x',
+        ).$1,
+        RideCheckTrigger.offRoute,
+      );
+    });
+
+    test('an accepted route survives a restart (saved trip round trip)', () {
+      final saved = PersistedActiveRide(
+        tripId: 't1',
+        stage: ActiveRideStage.onTrip,
+        fare: '205,00 kr',
+        riderFare: '282,00 kr',
+        dropoffAddress: 'Brommaplan',
+        dropoffLat: 59.3383,
+        dropoffLng: 17.9393,
+        stopAddresses: const ['Fridhemsplan'],
+        stopPoints: const [GeoPoint(59.3326, 18.0296)],
+      );
+      final back = PersistedActiveRide.fromJson(
+        jsonDecode(jsonEncode(saved.toJson())) as Map<String, dynamic>,
+      )!;
+      expect(back.dropoffAddress, 'Brommaplan');
+      expect(back.dropoffLat, 59.3383);
+      expect(back.stopAddresses, ['Fridhemsplan']);
+      expect(back.stopPoints.single.latitude, 59.3326);
+      expect(back.fare, '205,00 kr');
+      expect(back.riderFare, '282,00 kr');
+    });
   });
 }

@@ -608,7 +608,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     final alert = _newWaitingAlert(next.waiting, initial: initial);
     // G7 (contract v0.18.9): the server's ride check and route change.
-    _AcceptRideRouteChange(this)._onTripExtras(next);
+    _AcceptRideRouteChange(this)._onTripExtras(next, initial: initial);
     if (initial) return;
     if (mounted && (rebuild || pickupChanged || alert != null)) {
       _rebuild(() {
