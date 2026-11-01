@@ -1,3 +1,4 @@
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -82,7 +83,9 @@ class _SettingsState extends State<Settings> {
             _row(
               icon: Icons.dark_mode_outlined,
               title: tr.darkMode,
-              detail: tr.unavailableInDemo,
+              detail: LiveDriverServices.active
+                  ? tr.acctComingSoon
+                  : tr.unavailableInDemo,
             ),
             _languageRow(),
           ]),

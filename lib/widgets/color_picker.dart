@@ -124,3 +124,29 @@ class _ColorPicker extends StatelessWidget {
     );
   }
 }
+
+/// Audit 2026-11-01: car colours are stored as plain words (often English
+/// from the server, e.g. "Black", "Grey"). Show them in the app language;
+/// an unknown word is shown as stored.
+String localizedCarColor(String raw) {
+  final key = raw.trim().toLowerCase();
+  if (key.isEmpty) return raw;
+  final names = <String Function(), List<String>>{
+    () => tr.colorRed: ['red', 'röd', 'rouge'],
+    () => tr.colorBlue: ['blue', 'blå', 'bleu'],
+    () => tr.colorGreen: ['green', 'grön', 'vert'],
+    () => tr.colorBlack: ['black', 'svart', 'noir'],
+    () => tr.colorWhite: ['white', 'vit', 'blanc', 'blanche'],
+    () => tr.colorGray: ['gray', 'grey', 'grå', 'gris', 'grise'],
+    () => tr.colorSilver: ['silver', 'argent', 'argenté', 'silvrig'],
+    () => tr.colorYellow: ['yellow', 'gul', 'jaune'],
+    () => tr.colorOrange: ['orange'],
+    () => tr.colorBrown: ['brown', 'brun', 'marron'],
+    () => tr.colorPurple: ['purple', 'lila', 'violet'],
+    () => tr.colorPink: ['pink', 'rosa', 'rose'],
+  };
+  for (final entry in names.entries) {
+    if (entry.value.contains(key)) return entry.key();
+  }
+  return raw;
+}

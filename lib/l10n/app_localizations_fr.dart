@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6946,4 +6947,43 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get g6PinNotNow =>
       'Le code se saisit une fois arrivé au point de prise en charge';
+
+  @override
+  String get liveDrivingLogsSoon =>
+      'Vos heures en ligne et vos temps de repos s’afficheront ici quand Movera les comptera sur le serveur. Aucun chiffre d’exemple n’est affiché.';
+
+  @override
+  String get livePromotionsSoon =>
+      'Les campagnes ne sont pas encore connectées à l’appli. Les bonus de vos courses apparaissent dans vos gains.';
+
+  @override
+  String get liveBankSoon =>
+      'L’ajout d’un compte de versement dans l’appli arrive bientôt.';
+
+  @override
+  String get livePinSoon =>
+      'Movera décide par zone si un code PIN est demandé à la prise en charge. Dans ce cas, l’appli vous demande le code du passager à votre arrivée.';
+
+  @override
+  String get liveAnalyticsSoon =>
+      'Vos statistiques de courses s’afficheront ici quand Movera les comptera sur le serveur.';
+
+  @override
+  String get walletThisWeek => 'Cette semaine';
+
+  @override
+  String get walletLiveBalanceNote => 'Gagné cette semaine, selon Movera.';
+
+  @override
+  String get walletLiveNoPayouts => 'Aucun versement pour l’instant.';
+
+  @override
+  String get walletLiveUnavailable =>
+      'Impossible de charger vos gains. Réessayez plus tard.';
+
+  @override
+  String get walletPayoutPaid => 'Versé';
+
+  @override
+  String get walletPayoutPending => 'En attente';
 }

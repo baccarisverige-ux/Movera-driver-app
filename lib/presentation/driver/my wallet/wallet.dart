@@ -2,9 +2,12 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
+import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/live/live_earnings.dart';
 
 Widget _solarIcon(
   String asset, {
@@ -148,7 +151,10 @@ class WalletScreen extends StatelessWidget {
                     SizedBox(width: 7),
                     Flexible(
                       child: Text(
-                        tr.previewOnly,
+                        // Audit 2026-11-01: live shows the server's week.
+                        LiveDriverServices.active
+                            ? tr.walletThisWeek
+                            : tr.previewOnly,
                         style: TextStyle(
                           color: _text,
                           fontSize: 10.5,
@@ -172,25 +178,29 @@ class WalletScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          const Text(
-            '0,00 kr',
-            style: TextStyle(
-              color: _text,
-              fontSize: 38,
-              height: 1,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1.2,
+          if (LiveDriverServices.active)
+            const _LiveWeekBalance()
+          else ...[
+            const Text(
+              '0,00 kr',
+              style: TextStyle(
+                color: _text,
+                fontSize: 38,
+                height: 1,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1.2,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            tr.noPayoutBalanceUntilPaymentService,
-            style: TextStyle(
-              color: _muted,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: 6),
+            Text(
+              tr.noPayoutBalanceUntilPaymentService,
+              style: TextStyle(
+                color: _muted,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -286,6 +296,7 @@ class WalletScreen extends StatelessWidget {
   }
 
   Widget _recentPayouts() {
+    if (LiveDriverServices.active) return const _LivePayouts();
     return Container(
       decoration: BoxDecoration(
         color: _white,
@@ -371,6 +382,160 @@ class WalletScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Audit 2026-11-01: this week's earnings from `GET /driver/earnings`, so the
+/// wallet agrees with Earnings & history instead of a fixed 0 kr.
+class _LiveWeekBalance extends StatefulWidget {
+  const _LiveWeekBalance();
+
+  @override
+  State<_LiveWeekBalance> createState() => _LiveWeekBalanceState();
+}
+
+class _LiveWeekBalanceState extends State<_LiveWeekBalance> {
+  late final Future<Money?> _week = LiveDriverServices.instance!.earnings
+      .thisWeek();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Money?>(
+      future: _week,
+      builder: (context, snap) {
+        final failed = snap.hasError;
+        final done = snap.connectionState == ConnectionState.done;
+        final label = !done || failed ? '—' : (snap.data?.formatted ?? '—');
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              key: const ValueKey<String>('wallet-live-week'),
+              style: const TextStyle(
+                color: WalletScreen._text,
+                fontSize: 38,
+                height: 1,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1.2,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              failed ? tr.walletLiveUnavailable : tr.walletLiveBalanceNote,
+              style: const TextStyle(
+                color: WalletScreen._muted,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Audit 2026-11-01: the driver's own payouts from `GET /driver/payouts`.
+class _LivePayouts extends StatefulWidget {
+  const _LivePayouts();
+
+  @override
+  State<_LivePayouts> createState() => _LivePayoutsState();
+}
+
+class _LivePayoutsState extends State<_LivePayouts> {
+  late final Future<List<DriverPayout>> _payouts = LiveDriverServices
+      .instance!
+      .earnings
+      .payouts();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: WalletScreen._white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: WalletScreen._line),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: FutureBuilder<List<DriverPayout>>(
+        future: _payouts,
+        builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
+            return const SizedBox(
+              height: 24,
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          }
+          final items = snap.data ?? const <DriverPayout>[];
+          if (snap.hasError || items.isEmpty) {
+            return Text(
+              snap.hasError ? tr.walletLiveUnavailable : tr.walletLiveNoPayouts,
+              style: const TextStyle(
+                color: WalletScreen._muted,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            );
+          }
+          return Column(
+            children: [
+              for (final payout in items)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${DriverDates.dayMonth(payout.periodStart.toLocal())} – '
+                              '${DriverDates.dayMonth(payout.periodEnd.toLocal().subtract(const Duration(seconds: 1)))}',
+                              style: const TextStyle(
+                                color: WalletScreen._text,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              payout.paid
+                                  ? tr.walletPayoutPaid
+                                  : tr.walletPayoutPending,
+                              style: const TextStyle(
+                                color: WalletScreen._muted,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        payout.amount.formatted,
+                        style: const TextStyle(
+                          color: WalletScreen._text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

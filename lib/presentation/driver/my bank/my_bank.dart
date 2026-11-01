@@ -1,3 +1,4 @@
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
@@ -37,14 +38,19 @@ class MyBank extends StatelessWidget {
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
+        // Audit 2026-11-01: no preview form on a live build.
         actions: [
-          IconButton(
-            tooltip: tr.bankPreviewAccountDetails,
-            onPressed: () {
-              pushSingle(context, TopToBottomTransition(const AddNewAccount()));
-            },
-            icon: Icon(Icons.add_rounded, size: ResSize.h * 25),
-          ),
+          if (!LiveDriverServices.active)
+            IconButton(
+              tooltip: tr.bankPreviewAccountDetails,
+              onPressed: () {
+                pushSingle(
+                  context,
+                  TopToBottomTransition(const AddNewAccount()),
+                );
+              },
+              icon: Icon(Icons.add_rounded, size: ResSize.h * 25),
+            ),
         ],
       ),
       body: ListView(
@@ -60,15 +66,22 @@ class MyBank extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            tr.bankLocalPreviewOnly,
-            style: TextStyle(color: Color(0xFF7D898F), height: 1.4),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            tr.bankCheckInPreview,
-            style: TextStyle(color: Color(0xFF7D898F), height: 1.4),
-          ),
+          if (LiveDriverServices.active)
+            Text(
+              tr.liveBankSoon,
+              style: TextStyle(color: Color(0xFF7D898F), height: 1.4),
+            )
+          else ...[
+            Text(
+              tr.bankLocalPreviewOnly,
+              style: TextStyle(color: Color(0xFF7D898F), height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              tr.bankCheckInPreview,
+              style: TextStyle(color: Color(0xFF7D898F), height: 1.4),
+            ),
+          ],
         ],
       ),
     );
