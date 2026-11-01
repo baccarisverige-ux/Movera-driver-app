@@ -193,10 +193,7 @@ extension _AcceptRidePanel on _AcceptRideState {
     return switch (_stage) {
       ActiveRideStage.headingToPickup => tr.headingToPickup,
       ActiveRideStage.waitingForRider => tr.waitingForFirst(first),
-      _ =>
-        _stopCursor < widget.stopAddresses.length
-            ? tr.toNextStop
-            : tr.toDropOff,
+      _ => _stopCursor < _stopAddresses.length ? tr.toNextStop : tr.toDropOff,
     };
   }
 
@@ -778,7 +775,7 @@ extension _AcceptRidePanel on _AcceptRideState {
 
   Future<void> _openNavigationApp() async {
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
-    final target = _approachTarget ?? widget.dropoffPosition;
+    final target = _approachTarget ?? _dropoffPosition;
     final app = NavigationAppSetting.current.value;
     final uri = app.directionsTo(target.latitude, target.longitude);
     final opened = await _externalMapAction.run(
@@ -1111,7 +1108,7 @@ extension _AcceptRidePanel on _AcceptRideState {
         _stage == ActiveRideStage.headingToPickup ||
         (_stage == ActiveRideStage.onTrip &&
             !_paidStopWait &&
-            _stopCursor < widget.stopAddresses.length);
+            _stopCursor < _stopAddresses.length);
     if (arrival) {
       final near = _nearArrivalTarget;
       // driver-u67: still a live button when not near (it says why), so
@@ -1314,7 +1311,7 @@ extension _AcceptRidePanel on _AcceptRideState {
                   _CleanRow(
                     key: const ValueKey<String>('current-trip-waybill-option'),
                     title: tr.currentWaybill,
-                    subtitle: '$_pickupAddress → ${widget.dropoffAddress}',
+                    subtitle: '$_pickupAddress → $_dropoffAddress',
                     onTap: () {
                       if (!popOwned(sheetContext)) return;
                       final record = _waybills.current;

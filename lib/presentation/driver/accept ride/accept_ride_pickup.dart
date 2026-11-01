@@ -26,9 +26,7 @@ extension _AcceptRidePickup on _AcceptRideState {
       ActiveRideStage.headingToPickup => eta.toPickup ? eta : null,
       ActiveRideStage.waitingForRider => null,
       ActiveRideStage.onTrip =>
-        !eta.toPickup && _stopCursor >= widget.stopAddresses.length
-            ? eta
-            : null,
+        !eta.toPickup && _stopCursor >= _stopAddresses.length ? eta : null,
     };
   }
 
@@ -116,13 +114,13 @@ extension _AcceptRidePickup on _AcceptRideState {
             ? tr.riderNameIsOnWay(_riderName)
             : tr.holdForRiderName(_riderName);
       case ActiveRideStage.onTrip:
-        if (widget.stopAddresses.isEmpty) {
+        if (_stopAddresses.isEmpty) {
           return _riderName;
         }
-        if (widget.stopAddresses.length == 1) {
+        if (_stopAddresses.length == 1) {
           return tr.thenDropOff;
         }
-        return tr.stop1OfStopAddressesLength(widget.stopAddresses.length);
+        return tr.stop1OfStopAddressesLength(_stopAddresses.length);
     }
   }
 }

@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6947,6 +6946,65 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get g6PinNotNow =>
       'Le code se saisit une fois arrivé au point de prise en charge';
+
+  @override
+  String get g7RouteAsk => 'Le passager souhaite modifier l\'itinéraire';
+
+  @override
+  String g7RouteEarnings(String earnings, String difference) {
+    return 'Nouveau gain $earnings ($difference)';
+  }
+
+  @override
+  String get g7RouteAccept => 'Accepter';
+
+  @override
+  String get g7RouteRefuse => 'Refuser';
+
+  @override
+  String get g7RouteChanged => 'Le passager a modifié l\'itinéraire.';
+
+  @override
+  String g7StopPrice(String perMin) {
+    return 'Attente à un arrêt : $perMin/min';
+  }
+
+  @override
+  String g7StopFree(int min, String perMin) {
+    return '$min min gratuites à chaque arrêt, puis $perMin/min';
+  }
+
+  @override
+  String g7MaxStops(int max) {
+    return 'Vous pouvez ajouter au maximum $max arrêts.';
+  }
+
+  @override
+  String g7RouteSecondsLeft(int seconds) {
+    return '$seconds s pour répondre';
+  }
+
+  @override
+  String get g7RouteNewDestination => 'Nouvelle destination';
+
+  @override
+  String g7RouteStops(int count, int max) {
+    return 'Arrêts : $count (max $max)';
+  }
+
+  @override
+  String get g7RouteAcceptedIsland => 'Nouvel itinéraire accepté';
+
+  @override
+  String get g7RouteRefusedIsland =>
+      'Changement refusé. Continuez vers la première destination';
+
+  @override
+  String get g7RouteExpiredIsland =>
+      'Pas de réponse à temps. L\'itinéraire reste le même';
+
+  @override
+  String get g7RouteWithdrawnIsland => 'Le passager a retiré le changement';
 
   @override
   String get liveDrivingLogsSoon =>
