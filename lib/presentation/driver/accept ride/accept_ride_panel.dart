@@ -902,7 +902,23 @@ extension _AcceptRidePanel on _AcceptRideState {
                 child: Padding(
                   key: _middleActionKey,
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: _buildPrimaryAction(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // G7 live fix: the stop wait and its price show on
+                      // the middle sheet from minute 1, not only in the
+                      // full sheet.
+                      if (_paidStopWait) ...[
+                        _waitPhaseChip(
+                          key: const ValueKey<String>(
+                            'active-ride-stop-wait-line',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      _buildPrimaryAction(),
+                    ],
+                  ),
                 ),
               ),
             ] else
@@ -951,10 +967,10 @@ extension _AcceptRidePanel on _AcceptRideState {
     ],
     _AcceptRideSheet(this)._buildRadarDock(),
   ];
-  Widget _waitPhaseChip() {
+  Widget _waitPhaseChip({Key key = const ValueKey('active-ride-wait-phase')}) {
     final color = _waitBarColor;
     return InkWell(
-      key: const ValueKey<String>('active-ride-wait-phase'),
+      key: key,
       onTap: _openWaitingTime,
       borderRadius: BorderRadius.circular(99),
       child: Container(
@@ -1110,7 +1126,9 @@ extension _AcceptRidePanel on _AcceptRideState {
             !_paidStopWait &&
             _stopCursor < _stopAddresses.length);
     if (arrival) {
-      final near = _nearArrivalTarget;
+      // G7 live fix: an aged fix is no reason to look disabled; the tap
+      // asks for a fresh one and only then decides near or far.
+      final near = _nearArrivalTarget || _AcceptRideTrip(this)._arrivalFixAged;
       // driver-u67: still a live button when not near (it says why), so
       // its label stays readable, and a screen reader hears the reason.
       return SizedBox(

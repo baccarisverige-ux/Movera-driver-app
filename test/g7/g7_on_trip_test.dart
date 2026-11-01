@@ -253,6 +253,37 @@ void main() {
       expect(live.terms!.stopFreeWaitMinutes, 0);
       expect(live.terms!.stopWaitPerMin!.minorUnits, 45);
     });
+
+    test('G7 live fix: the server\'s stop arrival is read from the '
+        'projection (arrived and not left)', () {
+      final live = TripLiveDetails.fromProjection({
+        'tripId': 't1',
+        'version': 7,
+        'stops': [
+          {
+            'lat': 59.33,
+            'lng': 18.06,
+            'address': 'Stop 1',
+            'arrivedAt': '2026-11-01T18:20:00Z',
+            'leftAt': '2026-11-01T18:22:00Z',
+          },
+          {
+            'lat': 59.34,
+            'lng': 18.07,
+            'address': 'Stop 2',
+            'arrivedAt': '2026-11-01T18:25:00Z',
+          },
+          {'lat': 59.35, 'lng': 18.08, 'address': 'Stop 3'},
+        ],
+      });
+      expect(live.openStopArrival(0), isNull, reason: 'already left');
+      expect(live.openStopArrival(1), DateTime.utc(2026, 11, 1, 18, 25));
+      expect(live.openStopArrival(2), isNull);
+      expect(live.openStopArrival(3), isNull);
+      // A later projection without stops keeps the known visits.
+      final merged = TripLiveDetails.fromProjection({'version': 8}).merge(live);
+      expect(merged.openStopArrival(1), DateTime.utc(2026, 11, 1, 18, 25));
+    });
   });
 
   group('4. island lines after the driver\'s answer (no map)', () {

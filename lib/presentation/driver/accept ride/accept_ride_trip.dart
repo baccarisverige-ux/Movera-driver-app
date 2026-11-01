@@ -1237,7 +1237,23 @@ extension _AcceptRideTrip on _AcceptRideState {
     );
   }
 
+  /// A last fix exists but is too old to judge the distance; the arrival
+  /// tap asks for a fresh one (G7 live fix). No fix at all is not aged.
+  bool get _arrivalFixAged =>
+      _arrivalTarget != null &&
+      _lastLocation != null &&
+      _lastLocation?.isUsableAt(DateTime.now()) != true;
+
   Future<void> _onArrivedTap() async {
+    if (!_nearArrivalTarget && _arrivalFixAged) {
+      // G7 live fix: a parked phone (a browser above all) may send no new
+      // fix while it stands still, so the last one ages past its 30 s and
+      // the tap was refused although the car is at the stop. Ask for one
+      // fresh fix before saying no (only for an aged fix: no fix at all
+      // says "location unavailable" at once). A missing road route never blocks.
+      await _freshFixForArrival();
+      if (!mounted) return;
+    }
     if (!_nearArrivalTarget) {
       _blockedArrival();
       return;
@@ -1358,6 +1374,22 @@ extension _AcceptRideTrip on _AcceptRideState {
       _driverVehicleIcon = icon;
       _pinIcons = pins;
     });
+  }
+
+  Future<void> _freshFixForArrival() async {
+    if (_liveUpdatesPaused) return;
+    final epoch = _locationEpoch;
+    try {
+      final position = await _locationService.getCurrentPosition().timeout(
+        const Duration(seconds: 8),
+      );
+      if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) return;
+      // The fix is taken at once; the road route it asks for may be slow or
+      // unavailable and never holds the arrival back.
+      unawaited(_applyDriverPosition(position));
+    } catch (_) {
+      // The usual "location unavailable" answer follows.
+    }
   }
 
   Future<void> _startLiveLocation() async {
