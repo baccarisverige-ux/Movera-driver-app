@@ -4244,5 +4244,16 @@
   "g7RouteExpiredIsland": "No answer in time. The route stays the same",
   "@g7RouteExpiredIsland": {"description": "Driver G7 (contract 0.18.9 onTrip)."},
   "g7RouteWithdrawnIsland": "The rider withdrew the route change",
-  "@g7RouteWithdrawnIsland": {"description": "Driver G7 (contract 0.18.9 onTrip)."}
+  "@g7RouteWithdrawnIsland": {"description": "Driver G7 (contract 0.18.9 onTrip)."},
+  "liveDrivingLogsSoon": "Your online hours and rest times will show here once Movera counts them on the server. No example figures are shown.",
+  "livePromotionsSoon": "Campaigns are not connected to the app yet. Bonuses added to your trips show in your earnings.",
+  "liveBankSoon": "Adding a payout account in the app is coming soon.",
+  "livePinSoon": "Movera decides per area whether a PIN is asked at pickup. When it is, the app asks for the rider's code when you arrive.",
+  "liveAnalyticsSoon": "Your trip statistics will show here once Movera counts them on the server.",
+  "walletThisWeek": "This week",
+  "walletLiveBalanceNote": "Earned this week, as Movera counts it.",
+  "walletLiveNoPayouts": "No payouts yet.",
+  "walletLiveUnavailable": "Could not load your earnings. Try again later.",
+  "walletPayoutPaid": "Paid",
+  "walletPayoutPending": "Waiting"
 }

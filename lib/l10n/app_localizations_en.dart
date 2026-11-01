@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6885,4 +6884,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get g7RouteWithdrawnIsland => 'The rider withdrew the route change';
+
+  @override
+  String get liveDrivingLogsSoon =>
+      'Your online hours and rest times will show here once Movera counts them on the server. No example figures are shown.';
+
+  @override
+  String get livePromotionsSoon =>
+      'Campaigns are not connected to the app yet. Bonuses added to your trips show in your earnings.';
+
+  @override
+  String get liveBankSoon =>
+      'Adding a payout account in the app is coming soon.';
+
+  @override
+  String get livePinSoon =>
+      'Movera decides per area whether a PIN is asked at pickup. When it is, the app asks for the rider\'s code when you arrive.';
+
+  @override
+  String get liveAnalyticsSoon =>
+      'Your trip statistics will show here once Movera counts them on the server.';
+
+  @override
+  String get walletThisWeek => 'This week';
+
+  @override
+  String get walletLiveBalanceNote => 'Earned this week, as Movera counts it.';
+
+  @override
+  String get walletLiveNoPayouts => 'No payouts yet.';
+
+  @override
+  String get walletLiveUnavailable =>
+      'Could not load your earnings. Try again later.';
+
+  @override
+  String get walletPayoutPaid => 'Paid';
+
+  @override
+  String get walletPayoutPending => 'Waiting';
 }

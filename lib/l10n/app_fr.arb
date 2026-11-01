@@ -1957,5 +1957,16 @@
   "g7RouteAcceptedIsland": "Nouvel itinéraire accepté",
   "g7RouteRefusedIsland": "Changement refusé. Continuez vers la première destination",
   "g7RouteExpiredIsland": "Pas de réponse à temps. L'itinéraire reste le même",
-  "g7RouteWithdrawnIsland": "Le passager a retiré le changement"
+  "g7RouteWithdrawnIsland": "Le passager a retiré le changement",
+  "liveDrivingLogsSoon": "Vos heures en ligne et vos temps de repos s’afficheront ici quand Movera les comptera sur le serveur. Aucun chiffre d’exemple n’est affiché.",
+  "livePromotionsSoon": "Les campagnes ne sont pas encore connectées à l’appli. Les bonus de vos courses apparaissent dans vos gains.",
+  "liveBankSoon": "L’ajout d’un compte de versement dans l’appli arrive bientôt.",
+  "livePinSoon": "Movera décide par zone si un code PIN est demandé à la prise en charge. Dans ce cas, l’appli vous demande le code du passager à votre arrivée.",
+  "liveAnalyticsSoon": "Vos statistiques de courses s’afficheront ici quand Movera les comptera sur le serveur.",
+  "walletThisWeek": "Cette semaine",
+  "walletLiveBalanceNote": "Gagné cette semaine, selon Movera.",
+  "walletLiveNoPayouts": "Aucun versement pour l’instant.",
+  "walletLiveUnavailable": "Impossible de charger vos gains. Réessayez plus tard.",
+  "walletPayoutPaid": "Versé",
+  "walletPayoutPending": "En attente"
 }

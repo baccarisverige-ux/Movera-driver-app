@@ -24,6 +24,26 @@ class LiveEarnings {
     }
   }
 
+  /// This week's `net` (audit 2026-11-01: the wallet's balance on live);
+  /// throws when the server could not answer, null when nothing is earned.
+  Future<Money?> thisWeek({DateTime? now}) async {
+    final report = await _api.get('$path?period=week');
+    return todayOf(report, now ?? DateTime.now());
+  }
+
+  /// `GET /driver/payouts` (newest first): the driver's own payouts.
+  /// Throws when the server could not answer.
+  Future<List<DriverPayout>> payouts({int limit = 10}) async {
+    final page = await _api.get('/api/v1/driver/payouts?limit=$limit');
+    final items = page['items'];
+    if (items is! List) return const [];
+    return [
+      for (final item in items)
+        if (item is Map)
+          ?DriverPayout.tryParse(Map<String, dynamic>.from(item)),
+    ];
+  }
+
   /// The period holding [now] (else the newest one) of an
   /// `EarningsReport`; its `net`. Null when there is none.
   static Money? todayOf(Map<String, dynamic> report, DateTime now) {
@@ -47,6 +67,41 @@ class LiveEarnings {
     if (net is! Map) return null;
     try {
       return Money.fromJson(Map<String, dynamic>.from(net));
+    } on FormatException {
+      return null;
+    }
+  }
+}
+
+/// One payout of `GET /driver/payouts` (contract Payout, driver view).
+class DriverPayout {
+  const DriverPayout({
+    required this.amount,
+    required this.paid,
+    required this.periodStart,
+    required this.periodEnd,
+    required this.tripCount,
+  });
+
+  final Money amount;
+  final bool paid;
+  final DateTime periodStart;
+  final DateTime periodEnd;
+  final int tripCount;
+
+  static DriverPayout? tryParse(Map<String, dynamic> json) {
+    final amount = json['amount'];
+    final start = DateTime.tryParse('${json['periodStart']}');
+    final end = DateTime.tryParse('${json['periodEnd']}');
+    if (amount is! Map || start == null || end == null) return null;
+    try {
+      return DriverPayout(
+        amount: Money.fromJson(Map<String, dynamic>.from(amount)),
+        paid: json['status'] == 'paid',
+        periodStart: start,
+        periodEnd: end,
+        tripCount: (json['tripCount'] as num?)?.toInt() ?? 0,
+      );
     } on FormatException {
       return null;
     }

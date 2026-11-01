@@ -193,12 +193,16 @@ class DriverSideMenu extends StatelessWidget {
                       ),
                     ],
                   ),
+                  // Audit 2026-11-01: the status card scrolls with the list
+                  // so it can never cover "Support" / "Settings" on short
+                  // phones (it used to be pinned under the list).
+                  _groupGap(),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(14, 0, 14, bottomInset + 12),
+                    child: _buildMoveraFooter(),
+                  ),
                 ],
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(14, 0, 14, bottomInset + 12),
-              child: _buildMoveraFooter(),
             ),
           ],
         ),

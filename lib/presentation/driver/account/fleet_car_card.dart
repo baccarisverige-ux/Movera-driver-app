@@ -1,3 +1,4 @@
+import 'package:movera/widgets/color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
@@ -78,7 +79,7 @@ class FleetCarCard extends StatelessWidget {
           Text(
             [
               vehicle.plate,
-              vehicle.color,
+              localizedCarColor(vehicle.color),
               tr.fleetCarSeatsCount(vehicle.seats),
             ].where((s) => s.isNotEmpty).join(' · '),
             style: AccountStyle.hint(),

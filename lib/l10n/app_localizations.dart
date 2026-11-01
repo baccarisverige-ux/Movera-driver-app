@@ -11868,6 +11868,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The rider withdrew the route change'**
   String get g7RouteWithdrawnIsland;
+
+  /// No description provided for @liveDrivingLogsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Your online hours and rest times will show here once Movera counts them on the server. No example figures are shown.'**
+  String get liveDrivingLogsSoon;
+
+  /// No description provided for @livePromotionsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Campaigns are not connected to the app yet. Bonuses added to your trips show in your earnings.'**
+  String get livePromotionsSoon;
+
+  /// No description provided for @liveBankSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding a payout account in the app is coming soon.'**
+  String get liveBankSoon;
+
+  /// No description provided for @livePinSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera decides per area whether a PIN is asked at pickup. When it is, the app asks for the rider\'s code when you arrive.'**
+  String get livePinSoon;
+
+  /// No description provided for @liveAnalyticsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trip statistics will show here once Movera counts them on the server.'**
+  String get liveAnalyticsSoon;
+
+  /// No description provided for @walletThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get walletThisWeek;
+
+  /// No description provided for @walletLiveBalanceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Earned this week, as Movera counts it.'**
+  String get walletLiveBalanceNote;
+
+  /// No description provided for @walletLiveNoPayouts.
+  ///
+  /// In en, this message translates to:
+  /// **'No payouts yet.'**
+  String get walletLiveNoPayouts;
+
+  /// No description provided for @walletLiveUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your earnings. Try again later.'**
+  String get walletLiveUnavailable;
+
+  /// No description provided for @walletPayoutPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get walletPayoutPaid;
+
+  /// No description provided for @walletPayoutPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get walletPayoutPending;
 }
 
 class _AppLocalizationsDelegate
