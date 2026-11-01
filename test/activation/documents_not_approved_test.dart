@@ -111,4 +111,36 @@ void main() {
       expect(find.byKey(const ValueKey('car-pick-V1')), findsOneWidget);
     },
   );
+
+  // Page audit round 2 (2026-11-01): Fordon showed "…Prioritet · " when a
+  // category id was empty; the category line never ends with " · ".
+  testWidgets('the category line has no stray separator', (tester) async {
+    final base = car('approved');
+    final vehicle = FleetVehicle(
+      vehicleId: base.vehicleId,
+      make: base.make,
+      model: base.model,
+      year: base.year,
+      color: base.color,
+      plate: base.plate,
+      seats: base.seats,
+      categoryIds: const ['standard', 'priority', '', ' '],
+      status: base.status,
+      version: base.version,
+      documents: base.documents,
+      requiredDocuments: base.requiredDocuments,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FleetCarCard(vehicle: vehicle, myDriverId: 'D1', onPick: () {}),
+        ),
+      ),
+    );
+    expect(find.text('standard · Priority'), findsOneWidget);
+    final texts = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data ?? '');
+    expect(texts.where((t) => t.trimRight().endsWith('·')), isEmpty);
+  });
 }
