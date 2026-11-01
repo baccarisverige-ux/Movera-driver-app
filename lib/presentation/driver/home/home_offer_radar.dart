@@ -624,6 +624,12 @@ extension _HomeOfferRadar on _DriverHomeState {
     // its route and pins go too, and the map follows the car again.
     _clearRadarRouteIfNoCards();
     if (_radarHomeOffers.isEmpty && _pendingRadarHomeOffers.isEmpty) {
+      // G6 live fix 1: an Exclusive offer held back by the cards that just
+      // left comes up now (it was never shown again before).
+      final admin = _pendingAdminAssign;
+      if (admin != null && _isOnline && LiveDriverServices.active) {
+        unawaited(_showOutsideRadarOffer(admin));
+      }
       _maybeShowSoonReservation();
       _HomeScheduled(this)._maybeShowAssignment();
     }
@@ -728,6 +734,24 @@ extension _HomeOfferRadar on _DriverHomeState {
       // A reservation that just joined Radar (its Radar time, or back
       // after a cancel) comes onto the deck too, once its Exclusive step
       // on this phone is over.
+      // G6 live fix 1: an admin Exclusive offer replaces this driver's
+      // automatic Radar offer for the same trip (the server withdraws it).
+      // The old card leaves at once, without "Trip not available", so the
+      // Exclusive offer can come up now instead of being held behind it.
+      final ids = offers.map((item) => item.id).toSet();
+      final replacedTrips = {
+        for (final offer in offers)
+          if (offer.isExclusive && !known.contains(offer.id)) offer.tripId,
+      }..remove(null);
+      if (replacedTrips.isNotEmpty) {
+        for (final card in [..._radarHomeOffers, ..._pendingRadarHomeOffers]) {
+          if (replacedTrips.contains(card.tripId) &&
+              !ids.contains(card.id) &&
+              card.id != _homeRadarMatchingOfferId) {
+            _dismissRadarHomeOffer(card);
+          }
+        }
+      }
       for (final offer in offers) {
         // Q16: an admin direct assign or dispatch's Exclusive offer
         // arriving now is an Exclusive offer.
@@ -755,7 +779,6 @@ extension _HomeOfferRadar on _DriverHomeState {
           _showRadarHomeOffer(_homeOfferFromDispatch(offer));
         }
       }
-      final ids = offers.map((item) => item.id).toSet();
       // An admin direct assign on screen that left dispatch is gone.
       final up = _outsideRadarOffer;
       if (up != null &&
