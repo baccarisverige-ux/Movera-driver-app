@@ -60,6 +60,45 @@ void main() {
     reporter.stop();
   });
 
+  test('G5 live re-test: a still phone keeps sending its last OS fix every '
+      'tick for > 3 min (fake time), never re-stamped; the server would '
+      'otherwise mark it stale after 120 s', () async {
+    var now = DateTime.utc(2026, 11, 1, 12);
+    final reporter = LiveLocationReporter(
+      api: api(),
+      location: _StillGps(answers: false),
+      every: const Duration(hours: 1),
+      now: () => now,
+      restampHeldFix: false,
+    );
+    final first = <String, Object?>{
+      'lat': 59.3326,
+      'lng': 18.0649,
+      'accuracy': 5.0,
+      'measuredAt': now.toIso8601String(),
+    };
+    reporter.start(first: first);
+    await pumpEventQueue();
+    // Ticks every 10 s for 4 minutes: every one sends.
+    for (var i = 0; i < 24; i++) {
+      now = now.add(LiveLocationReporter.defaultEvery);
+      expect(await reporter.sendNow(), isTrue, reason: 'tick $i');
+    }
+    expect(locations(), hasLength(25));
+    final stamps = {
+      for (final r in locations())
+        (((jsonDecode(r.body) as Map)['fixes'] as List).single
+            as Map)['measuredAt'],
+    };
+    expect(stamps, {'2026-11-01T12:00:00.000Z'}, reason: 'the OS time kept');
+    // Checker: a fresh ask never falls back to the old fix.
+    expect(await reporter.sendNow(fresh: true), isFalse);
+    // Past the server's 10 min limit the old fix is not sent.
+    now = now.add(const Duration(minutes: 7));
+    expect(await reporter.sendNow(), isFalse);
+    reporter.stop();
+  });
+
   test('a phone standing still (no stream event) still sends every '
       'interval', () async {
     final reporter = LiveLocationReporter(

@@ -1518,7 +1518,11 @@ class _AcceptRideState extends State<AcceptRide>
                                 child: Opacity(
                                   opacity: _rideCheck.covering ? 0 : 1,
                                   child: AdaptiveTripIsland(
-                                    banner: _navigation.snapshot.banner,
+                                    banner:
+                                        NavigationRouteStatus.bannerWithServerEta(
+                                          _navigation.snapshot.banner,
+                                          _freshServerEtaText,
+                                        ),
                                     status:
                                         NavigationRouteStatus.shown(
                                           _navigation.snapshot.status,
