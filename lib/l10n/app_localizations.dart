@@ -3813,12 +3813,6 @@ abstract class AppLocalizations {
   /// **'Complete ride'**
   String get tripCompleteRide;
 
-  /// Admin text key trip.finishCategory (Content › Driver app texts).
-  ///
-  /// In en, this message translates to:
-  /// **'Finish {category}'**
-  String tripFinishCategory(Object category);
-
   /// Admin text key trip.finishRide (Content › Driver app texts).
   ///
   /// In en, this message translates to:
@@ -11868,6 +11862,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The rider withdrew the route change'**
   String get g7RouteWithdrawnIsland;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Trip'**
+  String get g8LineTrip;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup'**
+  String get g8LinePickupPay;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus'**
+  String get g8LineBonus;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Tip'**
+  String get g8LineTip;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Changed by Movera'**
+  String get g8LineAdjustment;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Your share'**
+  String get g8YourShare;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Tip from the rider: {amount}'**
+  String g8TipGot(String amount);
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'The rider gives you a {amount} tip in cash.'**
+  String g8TipCash(String amount);
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'The rider ended the trip. Collect {amount}.'**
+  String g8RiderEndedCollect(String amount);
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'The price is for the distance driven.'**
+  String get g8PricedForDriven;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'The booked price applies.'**
+  String get g8BookedPriceStands;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Ended early'**
+  String get g8EndedEarly;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'The rider ended the trip early.'**
+  String get g8RiderEnded;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'The driver ended the trip before the destination.'**
+  String get g8DriverEnded;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier unpaid fee (to that trip)'**
+  String get g8DebtLine;
+
+  /// Driver G8 (contract 0.18.10 finish).
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get g8Continue;
 }
 
 class _AppLocalizationsDelegate

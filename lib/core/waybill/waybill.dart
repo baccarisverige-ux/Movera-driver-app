@@ -1,5 +1,6 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/live/trip_finish.dart';
 import 'package:movera/core/money/money.dart';
 
 class WaybillRecord {
@@ -21,6 +22,10 @@ class WaybillRecord {
     this.driverBonus,
     this.paidByCash = false,
     this.riderFare,
+    this.earningsBreakdown = const [],
+    this.tip,
+    this.debtCollected,
+    this.endedEarlyBy,
   });
 
   final String tripId;
@@ -57,6 +62,21 @@ class WaybillRecord {
   /// is the server's final fare. Null when not known (older saves, a
   /// sample trip).
   final String? riderFare;
+
+  /// v0.18.10 (owner G8 Q3): the lines of [fare] ("Din andel"): trip,
+  /// pickup pay, bonus, tip, Movera's changes. Empty from an older server.
+  final List<EarningsLine> earningsBreakdown;
+
+  /// The rider's tip (in [fare], outside [riderFare]); null for none.
+  final TripTipInfo? tip;
+
+  /// An earlier unpaid fee in [riderFare] that goes to that trip, not to
+  /// Movera's commission; null for none.
+  final Money? debtCollected;
+
+  /// `rider | driver` when the trip ended before the drop-off; null when
+  /// it did not.
+  final String? endedEarlyBy;
 
   /// Stored values of [statusLabel] and [source]. They stay in English in
   /// storage; the screens show them in the driver's language.
@@ -165,6 +185,10 @@ class WaybillRecord {
     String? driverName,
     String? pickup,
     String? dropoff,
+    List<EarningsLine>? earningsBreakdown,
+    TripTipInfo? tip,
+    Money? debtCollected,
+    String? endedEarlyBy,
   }) {
     return WaybillRecord(
       tripId: tripId,
@@ -184,6 +208,10 @@ class WaybillRecord {
       driverBonus: driverBonus,
       paidByCash: paidByCash ?? this.paidByCash,
       riderFare: riderFare ?? this.riderFare,
+      earningsBreakdown: earningsBreakdown ?? this.earningsBreakdown,
+      tip: tip ?? this.tip,
+      debtCollected: debtCollected ?? this.debtCollected,
+      endedEarlyBy: endedEarlyBy ?? this.endedEarlyBy,
     );
   }
 }

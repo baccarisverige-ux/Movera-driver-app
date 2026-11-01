@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2144,11 +2143,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripCompleteRide => 'Complete ride';
-
-  @override
-  String tripFinishCategory(Object category) {
-    return 'Finish $category';
-  }
 
   @override
   String get tripFinishRide => 'Finish ride';
@@ -6885,4 +6879,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get g7RouteWithdrawnIsland => 'The rider withdrew the route change';
+
+  @override
+  String get g8LineTrip => 'Trip';
+
+  @override
+  String get g8LinePickupPay => 'Pickup';
+
+  @override
+  String get g8LineBonus => 'Bonus';
+
+  @override
+  String get g8LineTip => 'Tip';
+
+  @override
+  String get g8LineAdjustment => 'Changed by Movera';
+
+  @override
+  String get g8YourShare => 'Your share';
+
+  @override
+  String g8TipGot(String amount) {
+    return 'Tip from the rider: $amount';
+  }
+
+  @override
+  String g8TipCash(String amount) {
+    return 'The rider gives you a $amount tip in cash.';
+  }
+
+  @override
+  String g8RiderEndedCollect(String amount) {
+    return 'The rider ended the trip. Collect $amount.';
+  }
+
+  @override
+  String get g8PricedForDriven => 'The price is for the distance driven.';
+
+  @override
+  String get g8BookedPriceStands => 'The booked price applies.';
+
+  @override
+  String get g8EndedEarly => 'Ended early';
+
+  @override
+  String get g8RiderEnded => 'The rider ended the trip early.';
+
+  @override
+  String get g8DriverEnded =>
+      'The driver ended the trip before the destination.';
+
+  @override
+  String get g8DebtLine => 'Earlier unpaid fee (to that trip)';
+
+  @override
+  String get g8Continue => 'Continue';
 }

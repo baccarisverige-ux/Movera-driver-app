@@ -65,7 +65,7 @@ void main() {
     await _pump(tester, _record());
     expect(find.text('Trip total'), findsOneWidget);
     expect(find.text('Movera commission'), findsOneWidget);
-    expect(find.text('You get'), findsOneWidget);
+    expect(find.text('Your share'), findsOneWidget);
     expect(_text(tester, 'ride-completed-total'), '184,00 kr');
     expect(_text(tester, 'ride-completed-commission'), '−17,00 kr');
     expect(_text(tester, 'ride-completed-fare'), '167,00 kr');
@@ -85,7 +85,7 @@ void main() {
     await _pump(tester, _record());
     expect(find.text('Resans totalpris'), findsOneWidget);
     expect(find.text('Moveras provision'), findsOneWidget);
-    expect(find.text('Du får'), findsOneWidget);
+    expect(find.text('Din andel'), findsOneWidget);
   });
 
   testWidgets('an older save without the rider fare shows the amount only', (

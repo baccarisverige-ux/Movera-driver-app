@@ -1,3 +1,4 @@
+import 'package:movera/core/live/trip_finish.dart';
 import 'package:movera/core/money/money.dart';
 
 /// The money of a live trip as its projection carries it (contract §2,
@@ -18,6 +19,11 @@ class LiveTripMoney {
     this.driverBonus,
     this.waitingFee,
     Money? cashToCollect,
+    this.driverTotal,
+    this.earningsBreakdown = const [],
+    this.tip,
+    this.debtCollected,
+    this.finish,
   }) : _cashToCollect = cashToCollect;
 
   /// The projection's money, or null without a `fare` and
@@ -50,7 +56,26 @@ class LiveTripMoney {
     }
     final pickupPay = money(projection['pickupPay']);
     final bonus = money(projection['driverBonus']);
+    final finish = TripFinishInfo.tryParse(projection['finish']);
+    final total = money(projection['driverTotal']) ?? finish?.driverTotal;
+    final debt = money(projection['debtCollected']);
     return LiveTripMoney(
+      driverTotal: total != null && total.currency == earnings.currency
+          ? total
+          : null,
+      earningsBreakdown: EarningsLine.parseList(
+        projection['earningsBreakdown'] ??
+            (projection['finish'] is Map
+                ? (projection['finish'] as Map)['earningsBreakdown']
+                : null),
+        currency: earnings.currency,
+      ),
+      tip: TripTipInfo.tryParse(projection['tip']),
+      debtCollected:
+          debt != null && debt.currency == fare.currency && debt.minorUnits > 0
+          ? debt
+          : null,
+      finish: finish,
       riderFare: fare,
       driverEarnings: earnings,
       pickupPay: pickupPay != null && pickupPay.currency == earnings.currency
@@ -60,7 +85,8 @@ class LiveTripMoney {
           ? bonus
           : null,
       waitingFee: waiting != null && waiting.minorUnits > 0 ? waiting : null,
-      cashToCollect: money(projection['cashToCollect']),
+      cashToCollect:
+          money(projection['cashToCollect']) ?? finish?.cashToCollect,
     );
   }
 
@@ -82,9 +108,26 @@ class LiveTripMoney {
 
   final Money? _cashToCollect;
 
+  /// Contract v0.18.10 (owner G8 Q3 "One number"): the server's one driver
+  /// money number (earnings + pickup pay + bonus + tip + Movera's changes);
+  /// null from an older server.
+  final Money? driverTotal;
+  final List<EarningsLine> earningsBreakdown;
+
+  /// The rider's tip, all the driver's; null for none.
+  final TripTipInfo? tip;
+
+  /// An earlier unpaid fee the rider paid with this trip: it goes to that
+  /// trip, never Movera's commission (G8 live bug 318 kr).
+  final Money? debtCollected;
+
+  /// How the trip ended (rider or driver ended early).
+  final TripFinishInfo? finish;
+
   /// The driver's own money for the trip ("You get"): earnings plus
   /// pickup pay plus bonus, so `fare − commission` is exactly this.
   Money get driverPay {
+    if (driverTotal case final total?) return total;
     var pay = driverEarnings;
     if (pickupPay case final extra?) pay = pay + extra;
     if (driverBonus case final extra?) pay = pay + extra;

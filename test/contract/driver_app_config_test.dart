@@ -260,7 +260,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.18.9');
+      expect(contract['version'], '0.18.10');
       expect(
         ZoneDefaults.paymentMethods,
         contract['zonePaymentMethods']['values'],
@@ -322,7 +322,6 @@ void main() {
           'cash',
           'card',
           'apple_pay',
-          'google_pay',
         ]);
         expect(config.maxStops, 3);
         expect(config.maxPickupMoveMeters, 200);

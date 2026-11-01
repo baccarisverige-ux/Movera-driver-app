@@ -451,12 +451,6 @@ class DriverTexts {
     DriverTextArea.trip,
   );
 
-  /// R8-4: the Collect cash sheet's button, e.g. "Finish Comfort".
-  static const tripFinishCategory = DriverTextKey(
-    'trip.finishCategory',
-    'Finish {category}',
-    DriverTextArea.trip,
-  );
   static const tripFinishRide = DriverTextKey(
     'trip.finishRide',
     'Finish ride',
@@ -537,7 +531,6 @@ class DriverTexts {
     tripGoToStop,
     tripGoToDropoff,
     tripCollectCash,
-    tripFinishCategory,
     tripFinishRide,
   ];
 }

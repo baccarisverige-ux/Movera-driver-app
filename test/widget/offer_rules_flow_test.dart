@@ -467,7 +467,7 @@ void main() {
     });
 
     testWidgets('Q24 / R8-4: a cash trip ends with "Collect cash" → amount → '
-        '"Finish Comfort"', (tester) async {
+        '"Finish ride"', (tester) async {
       await pumpTrip(
         tester,
         const AcceptRide(
@@ -502,7 +502,7 @@ void main() {
       // off again) − 250 cash.
       expect(find.text('−50,00 kr'), findsOneWidget);
       expect(find.text('Movera fee'), findsNothing);
-      expect(find.text('Finish Comfort'), findsOneWidget);
+      expect(find.text('Finish ride'), findsOneWidget);
       await tester.tap(
         find.byKey(const ValueKey<String>('cash-complete-ride')),
       );

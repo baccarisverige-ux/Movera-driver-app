@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -2165,11 +2164,6 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tripCompleteRide => 'Terminer la course';
-
-  @override
-  String tripFinishCategory(Object category) {
-    return 'Terminer $category';
-  }
 
   @override
   String get tripFinishRide => 'Terminer la course';
@@ -7006,4 +7000,59 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get g7RouteWithdrawnIsland => 'Le passager a retiré le changement';
+
+  @override
+  String get g8LineTrip => 'Course';
+
+  @override
+  String get g8LinePickupPay => 'Approche';
+
+  @override
+  String get g8LineBonus => 'Bonus';
+
+  @override
+  String get g8LineTip => 'Pourboire';
+
+  @override
+  String get g8LineAdjustment => 'Modifié par Movera';
+
+  @override
+  String get g8YourShare => 'Votre part';
+
+  @override
+  String g8TipGot(String amount) {
+    return 'Pourboire du passager : $amount';
+  }
+
+  @override
+  String g8TipCash(String amount) {
+    return 'Le passager vous donne $amount de pourboire en espèces.';
+  }
+
+  @override
+  String g8RiderEndedCollect(String amount) {
+    return 'Le passager a terminé la course. Encaissez $amount.';
+  }
+
+  @override
+  String get g8PricedForDriven => 'Le prix correspond au trajet effectué.';
+
+  @override
+  String get g8BookedPriceStands => 'Le prix réservé s’applique.';
+
+  @override
+  String get g8EndedEarly => 'Terminée plus tôt';
+
+  @override
+  String get g8RiderEnded => 'Le passager a terminé la course plus tôt.';
+
+  @override
+  String get g8DriverEnded =>
+      'Le chauffeur a terminé la course avant la destination.';
+
+  @override
+  String get g8DebtLine => 'Ancien frais impayé (pour cette course-là)';
+
+  @override
+  String get g8Continue => 'Continuer';
 }

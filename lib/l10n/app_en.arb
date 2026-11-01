@@ -1540,15 +1540,6 @@
   "@tripCompleteRide": {
     "description": "Admin text key trip.completeRide (Content › Driver app texts)."
   },
-  "tripFinishCategory": "Finish {category}",
-  "@tripFinishCategory": {
-    "description": "Admin text key trip.finishCategory (Content › Driver app texts).",
-    "placeholders": {
-      "category": {
-        "type": "Object"
-      }
-    }
-  },
   "tripFinishRide": "Finish ride",
   "@tripFinishRide": {
     "description": "Admin text key trip.finishRide (Content › Driver app texts)."
@@ -4244,5 +4235,37 @@
   "g7RouteExpiredIsland": "No answer in time. The route stays the same",
   "@g7RouteExpiredIsland": {"description": "Driver G7 (contract 0.18.9 onTrip)."},
   "g7RouteWithdrawnIsland": "The rider withdrew the route change",
-  "@g7RouteWithdrawnIsland": {"description": "Driver G7 (contract 0.18.9 onTrip)."}
+  "@g7RouteWithdrawnIsland": {"description": "Driver G7 (contract 0.18.9 onTrip)."},
+  "g8LineTrip": "Trip",
+  "@g8LineTrip": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8LinePickupPay": "Pickup",
+  "@g8LinePickupPay": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8LineBonus": "Bonus",
+  "@g8LineBonus": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8LineTip": "Tip",
+  "@g8LineTip": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8LineAdjustment": "Changed by Movera",
+  "@g8LineAdjustment": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8YourShare": "Your share",
+  "@g8YourShare": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8TipGot": "Tip from the rider: {amount}",
+  "@g8TipGot": {"description": "Driver G8 (contract 0.18.10 finish).", "placeholders": {"amount": {"type": "String"}}},
+  "g8TipCash": "The rider gives you a {amount} tip in cash.",
+  "@g8TipCash": {"description": "Driver G8 (contract 0.18.10 finish).", "placeholders": {"amount": {"type": "String"}}},
+  "g8RiderEndedCollect": "The rider ended the trip. Collect {amount}.",
+  "@g8RiderEndedCollect": {"description": "Driver G8 (contract 0.18.10 finish).", "placeholders": {"amount": {"type": "String"}}},
+  "g8PricedForDriven": "The price is for the distance driven.",
+  "@g8PricedForDriven": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8BookedPriceStands": "The booked price applies.",
+  "@g8BookedPriceStands": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8EndedEarly": "Ended early",
+  "@g8EndedEarly": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8RiderEnded": "The rider ended the trip early.",
+  "@g8RiderEnded": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8DriverEnded": "The driver ended the trip before the destination.",
+  "@g8DriverEnded": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8DebtLine": "Earlier unpaid fee (to that trip)",
+  "@g8DebtLine": {"description": "Driver G8 (contract 0.18.10 finish)."},
+  "g8Continue": "Continue",
+  "@g8Continue": {"description": "Driver G8 (contract 0.18.10 finish)."}
 }

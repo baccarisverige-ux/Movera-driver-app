@@ -437,18 +437,29 @@ extension _AcceptRideTrip on _AcceptRideState {
     var cash = widget.paidByCash ? _cashToCollect : null;
     final money = _AcceptRideLive(this)._settledMoney();
     if (money != null) {
-      paid = paid.copyWith(
-        fare: money.driverPay.formatted,
-        riderFare: money.riderFare.formatted,
-        waitingFee: money.waitingFee?.formatted,
-        clearWaitingFee: money.waitingFee == null,
-      );
+      paid = _withMoney(paid, money);
       if (widget.paidByCash) {
         cash = money.cash.formatted;
       }
     }
     return (paid: paid, cash: cash);
   }
+
+  /// The server's money on the waybill (v0.18.10: one driver number with
+  /// its lines, the tip, an old fee, an early end).
+  WaybillRecord _withMoney(WaybillRecord paid, LiveTripMoney money) =>
+      paid.copyWith(
+        fare: money.driverPay.formatted,
+        riderFare: money.riderFare.formatted,
+        waitingFee: money.waitingFee?.formatted,
+        clearWaitingFee: money.waitingFee == null,
+        earningsBreakdown: money.earningsBreakdown,
+        tip: money.tip,
+        debtCollected: money.debtCollected,
+        endedEarlyBy: money.finish?.endedEarly == true
+            ? money.finish?.endedBy ?? 'driver'
+            : null,
+      );
 
   WaybillRecord _buildNextWaybill(_NextTripRadarOffer offer) {
     return WaybillRecord(
@@ -712,11 +723,23 @@ extension _AcceptRideTrip on _AcceptRideState {
         final riderFeeZero = event.cancelFee?.isZero == true
             ? event.cancelFee
             : null;
-        await _handleRiderCancelled(
-          fee: cancellation == null ? riderFeeZero : cancellation.driverEarns,
-          feeKind: cancellation?.feeKind,
-          riderFee: cancellation?.fee,
-        );
+        // v0.18.10 (owner G8 Q1): the rider ended the trip on board: the
+        // driver gets the finish (cash sheet with the amount, then the
+        // rating), never straight Home.
+        final projection = event.projection;
+        final money = projection == null
+            ? null
+            : LiveTripMoney.tryParse(projection);
+        if (money?.finish?.riderEndedEarly == true &&
+            _stage == ActiveRideStage.onTrip) {
+          await _finishAfterRiderEnded(money!);
+        } else {
+          await _handleRiderCancelled(
+            fee: cancellation == null ? riderFeeZero : cancellation.driverEarns,
+            feeKind: cancellation?.feeKind,
+            riderFee: cancellation?.fee,
+          );
+        }
       } else if (status.isTerminal) {
         _flushNextTripMatch();
         final secured = _onTripRadarState == _OnTripRadarState.secured
@@ -914,6 +937,101 @@ extension _AcceptRideTrip on _AcceptRideState {
       IslandMessages.show(notice);
     }
     await showTripOutcomeSheet(context, status: status, hasNext: false);
+  }
+
+  /// Owner G8 Q1 (contract v0.18.10 `finish.earlyEnd.rider`): the rider
+  /// ended the trip on board. A cash trip shows the cash sheet with
+  /// `finish.cashToCollect` ("The rider ended the trip. Collect …"), then
+  /// the finished screen with "Din andel" and the rating, then Home.
+  Future<void> _finishAfterRiderEnded(LiveTripMoney money) async {
+    if (!mounted || _handlingRiderCancellation || _releasedForLateEta) {
+      return;
+    }
+    if (_completionInFlight || _cancellationInFlight) {
+      return;
+    }
+    _handlingRiderCancellation = true;
+    final finish = money.finish!;
+    final cash = widget.paidByCash ? money.cash : null;
+    _flushNextTripMatch();
+    final offer = _onTripRadarState == _OnTripRadarState.secured
+        ? _nextTripRadarOffer
+        : null;
+    final next = offer == null ? null : _snapshotForOffer(offer);
+    if (cash != null && cash.minorUnits > 0) {
+      await showCashCollectSheet(
+        context,
+        fare: money.driverPay.formatted,
+        cash: cash.formatted,
+        riderName: _riderName,
+        category: widget.category,
+        breakdown: money.earningsBreakdown,
+        riderEnded: true,
+      );
+      if (!mounted) {
+        _handlingRiderCancellation = false;
+        return;
+      }
+    }
+    final paid = _withMoney(
+      _paidWaybill(),
+      money,
+    ).copyWith(endedEarlyBy: 'rider');
+    try {
+      await CompletionJournal(
+        active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
+      ).finish(
+        paid,
+        pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
+        dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
+        status: TripStatus.cancelledByRider,
+        authoritative: true,
+        cancellationActor: 'rider',
+        next: next,
+        paymentMethod: widget.paidByCash ? 'Cash' : 'Card',
+        cashCollected: cash?.formatted,
+      );
+      if (!mounted) {
+        return;
+      }
+      if (!await _rideLifecycle.applyProjection(TripStatus.cancelledByRider)) {
+        _handlingRiderCancellation = false;
+        _scheduleProjectionRetry();
+        return;
+      }
+    } catch (error, stack) {
+      DriverLog.error('Rider early end journal failed', error, stack);
+      _handlingRiderCancellation = false;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr.couldNotSaveRiderCancellationRetry)),
+        );
+      }
+      _scheduleProjectionRetry();
+      return;
+    }
+    _waitTimer?.cancel();
+    _nextTripRadarDemoTimer?.cancel();
+    _nextTripRadarMatchTimer?.cancel();
+    _pauseLiveUpdates();
+    _waybills.beginCurrent(paid);
+    _waybills.completeCurrent();
+    if (!mounted) {
+      return;
+    }
+    final nextRide = offer == null ? null : _nextRideFor(offer);
+    _navigatorAtTripRoute().pushReplacement(
+      BottomToTopTransition(
+        DriverRideCompleted(
+          waybillRepository: _waybills,
+          sessionController: widget.sessionController,
+          activeRideRepository: widget.activeRideRepository,
+          nextRide: nextRide,
+          paidByCash: widget.paidByCash,
+          ratingAllowed: finish.ratingAllowed,
+        ),
+      ),
+    );
   }
 
   /// [fee]: the driver's part of the cancel fee from the backend (R15-7,
@@ -1598,11 +1716,21 @@ extension _AcceptRideTrip on _AcceptRideState {
       context,
       // The driver's own money (owner decision 2026-10-26): no fee is
       // taken off it again.
-      fare: preview?.driverEarnings?.formatted ?? _fareWithWaiting,
+      // v0.18.10 (owner G8 Q3): "Din andel" = driverTotal, the same
+      // number as the finished screen.
+      fare: preview?.yourShare?.formatted ?? _fareWithWaiting,
       cash: preview?.cashDue.formatted ?? _cashToCollect,
       riderName: _riderName,
       category: widget.category,
       recalculated: preview?.earlyEnd ?? false,
+      earlyEndNote: preview == null || !preview.earlyEnd
+          ? null
+          : switch (preview.repriced) {
+              true => tr.g8PricedForDriven,
+              false => tr.g8BookedPriceStands,
+              null => null,
+            },
+      breakdown: preview?.earningsBreakdown ?? const [],
     );
     if (!complete || !mounted || !_collectsCashNow) {
       return;

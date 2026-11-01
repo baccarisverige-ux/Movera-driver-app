@@ -122,6 +122,9 @@ Future<bool?> showMoveraConfirm(
   context: context,
   builder: (context) => MoveraDialogTheme(
     child: AlertDialog(
+      // G8: the box is read by its title; without this Flutter reads the
+      // generic "Alert" ("Varning") on Android and web.
+      semanticLabel: title,
       title: Text(title),
       content: Text(body),
       actions: [
