@@ -318,11 +318,7 @@ void main() {
           ],
           [lang, lang, lang],
         );
-        expect(config.paymentMethods, [
-          'cash',
-          'card',
-          'apple_pay',
-        ]);
+        expect(config.paymentMethods, ['cash', 'card', 'apple_pay']);
         expect(config.maxStops, 3);
         expect(config.maxPickupMoveMeters, 200);
         expect(config.autoOffline, isTrue);
