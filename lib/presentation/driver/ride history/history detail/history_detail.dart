@@ -22,6 +22,7 @@ import 'package:movera/presentation/driver/ride%20history/history%20detail/ride_
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/driver_route_style.dart';
+import 'package:movera/core/live/trip_finish.dart';
 import 'package:movera/widgets/map_control_button.dart';
 import 'package:movera/widgets/responsive_size.dart';
 import 'package:movera/widgets/route_mark_pins.dart';
@@ -40,6 +41,22 @@ Future<TripPath?> loadPastRidePath(TripHistoryRecord record) async {
   return pickup != null && dropoff != null
       ? TripPath.pinsOnly(pickup, dropoff)
       : null;
+}
+
+/// v0.18.10 (owner G8 item 1): a tip the rider gave after the driver left
+/// the finished screen: the server's receipt (`GET /driver/trips/{id}/
+/// receipt`) has it. Null without a live build, a tip or an answer.
+Future<String?> loadPastRideTip(TripHistoryRecord record) async {
+  final api = LiveDriverServices.instance?.api;
+  if (api == null) return null;
+  try {
+    final receipt = await api.get(
+      '/api/v1/driver/trips/${Uri.encodeComponent(record.tripId)}/receipt',
+    );
+    return TripTipInfo.tryParse(receipt['tip'])?.amount.formatted;
+  } catch (_) {
+    return null;
+  }
 }
 
 /// The Movera line icon of a ride category (the Preferences grid's icons);
@@ -66,6 +83,7 @@ class DriverRideHistoryDetail extends StatefulWidget {
     required this.record,
     this.loadRideChecks,
     this.loadPath,
+    this.loadTip,
   });
 
   final TripHistoryRecord record;
@@ -75,6 +93,9 @@ class DriverRideHistoryDetail extends StatefulWidget {
 
   /// The ride's route; [loadPastRidePath] by default.
   final Future<TripPath?> Function(TripHistoryRecord record)? loadPath;
+
+  /// v0.18.10: reads a tip given after the trip (tests pass their own).
+  final Future<String?> Function(TripHistoryRecord record)? loadTip;
 
   /// Share of the screen height the map takes.
   static const double mapShare = 0.4;
@@ -97,6 +118,20 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
   );
 
   TripHistoryRecord get _ride => widget.record;
+
+  /// The server's tip, once read (a tip given after the trip).
+  String? _serverTip;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_ride.status == TripStatus.completed ||
+        _ride.status == TripStatus.cancelledByRider) {
+      (widget.loadTip ?? loadPastRideTip)(_ride).then((tip) {
+        if (mounted && tip != null) setState(() => _serverTip = tip);
+      });
+    }
+  }
 
   /// When the trip ended, in the driver's language; the saved words for
   /// an older record without a time.
@@ -487,7 +522,7 @@ class _DriverRideHistoryDetailState extends State<DriverRideHistoryDetail> {
           completed ? _ride.fare : _ride.feeEarned ?? '—',
         ),
         16.height,
-        _detailRow(tr.tip, _ride.tip),
+        _detailRow(tr.tip, _serverTip ?? _ride.tip),
         16.height,
         _detailRow(
           tr.paymentMethod,
