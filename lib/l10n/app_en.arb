@@ -4210,5 +4210,9 @@
   "g6AlertNoShow": "You can now mark a no-show",
   "@g6AlertNoShow": {"description": "Driver G6 (contract 0.18.8 arrivedWaiting)."},
   "g6StopFreeWait": "Free wait at this stop: {min} min",
-  "@g6StopFreeWait": {"description": "Driver G6 (contract 0.18.8 arrivedWaiting).", "placeholders": {"min": {"type": "Object"}}}
+  "@g6StopFreeWait": {"description": "Driver G6 (contract 0.18.8 arrivedWaiting).", "placeholders": {"min": {"type": "Object"}}},
+  "g6PinBlocked": "Too many wrong codes. Call Movera support",
+  "@g6PinBlocked": {"description": "Driver G6 round 1 (contract 0.18.8)."},
+  "g6PinNotNow": "Enter the code once you have arrived at the pickup",
+  "@g6PinNotNow": {"description": "Driver G6 round 1 (contract 0.18.8)."}
 }

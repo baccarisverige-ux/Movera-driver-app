@@ -1940,5 +1940,7 @@
   "g6PinNeeded": "Cette course demande le code du passager avant le départ",
   "g6AlertPaid": "L’attente payante a commencé",
   "g6AlertNoShow": "Vous pouvez maintenant signaler un client absent",
-  "g6StopFreeWait": "Attente gratuite à l’arrêt : {min} min"
+  "g6StopFreeWait": "Attente gratuite à l’arrêt : {min} min",
+  "g6PinBlocked": "Trop de codes incorrects. Appelez le support Movera",
+  "g6PinNotNow": "Le code se saisit une fois arrivé au point de prise en charge"
 }

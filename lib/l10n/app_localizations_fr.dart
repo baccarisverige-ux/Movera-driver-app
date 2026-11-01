@@ -6938,4 +6938,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String g6StopFreeWait(Object min) {
     return 'Attente gratuite à l’arrêt : $min min';
   }
+
+  @override
+  String get g6PinBlocked =>
+      'Trop de codes incorrects. Appelez le support Movera';
+
+  @override
+  String get g6PinNotNow =>
+      'Le code se saisit une fois arrivé au point de prise en charge';
 }

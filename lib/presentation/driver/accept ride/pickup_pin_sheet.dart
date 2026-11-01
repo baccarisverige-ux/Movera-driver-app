@@ -63,6 +63,7 @@ class _PickupPinSheetState extends State<PickupPinSheet> {
   }
 
   bool get _locked =>
+      _outcome?.result == PickupPinResult.blocked ||
       _lockedUntil != null && DateTime.now().isBefore(_lockedUntil!);
 
   void _show(PickupPinOutcome? outcome) {

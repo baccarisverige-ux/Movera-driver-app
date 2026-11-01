@@ -40,6 +40,10 @@ class ApiClient {
   /// `X-Api-Version` on every request: contract v0.5.
   static const apiVersion = '0.5';
 
+  /// `X-Contract-Version` on every request (contract v0.18.8
+  /// `arrivedWaiting.pin.compat`): without it the server skips the PIN.
+  static const contractVersion = '0.18.8';
+
   /// The longest a request waits for the server's answer.
   static const requestTimeout = Duration(seconds: 15);
 
@@ -174,6 +178,7 @@ class ApiClient {
         if (build == null) 'Content-Type': 'application/json',
         'X-Request-Id': requestId,
         'X-Api-Version': apiVersion,
+        'X-Contract-Version': contractVersion,
         if (access != null && access.isNotEmpty)
           'Authorization': 'Bearer $access',
         if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
@@ -367,6 +372,7 @@ class ApiClient {
                 'Content-Type': 'application/json',
                 'X-Request-Id': _requestId(),
                 'X-Api-Version': apiVersion,
+                'X-Contract-Version': contractVersion,
               },
               body: jsonEncode({'refreshToken': refresh}),
             )

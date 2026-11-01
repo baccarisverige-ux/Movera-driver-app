@@ -1940,5 +1940,7 @@
   "g6PinNeeded": "Den här resan behöver resenärens kod innan start",
   "g6AlertPaid": "Betald väntetid har börjat",
   "g6AlertNoShow": "Du kan nu markera utebliven kund",
-  "g6StopFreeWait": "Gratis väntan vid stopp: {min} min"
+  "g6StopFreeWait": "Gratis väntan vid stopp: {min} min",
+  "g6PinBlocked": "För många fel koder. Ring Movera support",
+  "g6PinNotNow": "Koden kan skrivas när du är framme vid upphämtningen"
 }

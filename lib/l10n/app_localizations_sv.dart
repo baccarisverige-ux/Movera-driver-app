@@ -6829,4 +6829,11 @@ class AppLocalizationsSv extends AppLocalizations {
   String g6StopFreeWait(Object min) {
     return 'Gratis väntan vid stopp: $min min';
   }
+
+  @override
+  String get g6PinBlocked => 'För många fel koder. Ring Movera support';
+
+  @override
+  String get g6PinNotNow =>
+      'Koden kan skrivas när du är framme vid upphämtningen';
 }

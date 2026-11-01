@@ -11766,6 +11766,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Free wait at this stop: {min} min'**
   String g6StopFreeWait(Object min);
+
+  /// Driver G6 round 1 (contract 0.18.8).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong codes. Call Movera support'**
+  String get g6PinBlocked;
+
+  /// Driver G6 round 1 (contract 0.18.8).
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code once you have arrived at the pickup'**
+  String get g6PinNotNow;
 }
 
 class _AppLocalizationsDelegate

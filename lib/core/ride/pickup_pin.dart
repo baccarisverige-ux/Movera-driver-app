@@ -3,7 +3,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 
 /// What the server said to the rider's PIN (contract v0.18.8
 /// `arrivedWaiting.pin.check`, owner G6 decision 2).
-enum PickupPinResult { ok, wrong, locked, required, failed }
+enum PickupPinResult { ok, wrong, locked, blocked, notNow, required, failed }
 
 /// One answer to a PIN try, with the plain words the driver reads.
 class PickupPinOutcome {
@@ -17,7 +17,8 @@ class PickupPinOutcome {
   const PickupPinOutcome.ok() : this(PickupPinResult.ok);
 
   /// The refusal in [error]: `400 pin_wrong` (`details: attemptsLeft=N`),
-  /// `429 pin_locked` (`retryAfterSeconds`), `409 pin_required`; anything
+  /// `429 pin_locked` (`retryAfterSeconds`), `429 pin_blocked` (no wait:
+  /// call support), `409 pin_not_now` (not arrived), `409 pin_required`; anything
   /// else is [PickupPinResult.failed] with [fallback] as its words.
   factory PickupPinOutcome.fromError(Object? error, {String? fallback}) {
     if (error is ApiError) {
@@ -32,6 +33,10 @@ class PickupPinOutcome {
             PickupPinResult.locked,
             lockedFor: error.retryAfter ?? const Duration(minutes: 5),
           );
+        case 'pin_blocked':
+          return const PickupPinOutcome(PickupPinResult.blocked);
+        case 'pin_not_now':
+          return const PickupPinOutcome(PickupPinResult.notNow);
         case 'pin_required':
           return const PickupPinOutcome(PickupPinResult.required);
       }
@@ -56,6 +61,7 @@ class PickupPinOutcome {
   bool get aboutPin =>
       result == PickupPinResult.wrong ||
       result == PickupPinResult.locked ||
+      result == PickupPinResult.blocked ||
       result == PickupPinResult.required;
 
   /// Whole minutes of the lock, rounded up, at least 1.
@@ -70,6 +76,8 @@ class PickupPinOutcome {
     PickupPinResult.ok => '',
     PickupPinResult.wrong => tr.g6PinWrong(attemptsLeft ?? 0),
     PickupPinResult.locked => tr.g6PinLocked(lockedMinutes),
+    PickupPinResult.blocked => tr.g6PinBlocked,
+    PickupPinResult.notNow => tr.g6PinNotNow,
     PickupPinResult.required => tr.g6PinAsk,
     PickupPinResult.failed => message ?? '',
   };

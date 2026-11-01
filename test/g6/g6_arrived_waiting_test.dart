@@ -162,29 +162,51 @@ void main() {
       expect(wrong.attemptsLeft, 2);
       expect(locked.lockedMinutes, 2);
       expect(required.aboutPin, isTrue);
+      final blocked = PickupPinOutcome.fromError(
+        const ApiError(
+          code: 'rate_limited',
+          message: 'x',
+          reason: 'pin_blocked',
+          statusCode: 429,
+        ),
+      );
+      final notNow = PickupPinOutcome.fromError(
+        const ApiError(
+          code: 'invalid_transition',
+          message: 'x',
+          reason: 'pin_not_now',
+          statusCode: 409,
+        ),
+      );
+      expect(blocked.result, PickupPinResult.blocked);
+      expect(notNow.result, PickupPinResult.notNow);
       expect(other.aboutPin, isFalse);
       expect(other.text, 'Try again');
-      for (final (language, w, l, r) in [
+      for (final (language, w, l, r, b) in [
         (
           'sv',
           'Fel kod. 2 försök kvar',
           'För många försök. Försök igen om 2 min',
           'Fråga resenären efter den fyrsiffriga koden',
+          'För många fel koder. Ring Movera support',
         ),
         (
           'fr',
           'Code incorrect. Encore 2 essais',
           'Trop d’essais. Réessayez dans 2 min',
           'Demandez au passager son code à 4 chiffres',
+          'Trop de codes incorrects. Appelez le support Movera',
         ),
         (
           'en',
           'Wrong code. 2 tries left',
           'Too many tries. Try again in 2 min',
           'Ask the rider for the 4-digit code',
+          'Too many wrong codes. Call Movera support',
         ),
       ]) {
         DriverAppTexts.language = language;
+        expect(blocked.text, b);
         expect(wrong.text, w);
         expect(locked.text, l);
         expect(required.text, r);
@@ -231,21 +253,33 @@ void main() {
         'pinVerified': status != 'arrived',
       };
 
-      test('the PIN rides on board; then start', () async {
+      test('pin/verify first, then board and start from its version', () async {
         final trips = LiveTripCommands(api: api())..observe(trip('arrived', 5));
         expect(trips.needsPin('t1'), isTrue);
         answers
-          ..add((_) => json(200, trip('rider_onboard', 6)))
-          ..add((_) => json(200, trip('in_trip', 7)));
+          ..add(
+            (_) => json(200, {
+              'verifiedPinToken': 'tok',
+              'expiresAt': '2026-11-01T12:00:00Z',
+              'version': 6,
+            }),
+          )
+          ..add((_) => json(200, trip('rider_onboard', 7)))
+          ..add((_) => json(200, trip('in_trip', 8)));
         final outcome = await trips.start('t1', pin: '0420');
         expect(outcome.ok, isTrue);
-        expect(requests.first.url.path, '/api/v1/trips/t1/board');
-        expect(jsonDecode(requests.first.body), {
-          'pin': '0420',
-          'expectedVersion': 5,
-        });
-        expect(requests.last.url.path, '/api/v1/trips/t1/start');
-        expect(jsonDecode(requests.last.body), {'expectedVersion': 6});
+        expect(requests.map((r) => r.url.path), [
+          '/api/v1/trips/t1/pin/verify',
+          '/api/v1/trips/t1/board',
+          '/api/v1/trips/t1/start',
+        ]);
+        expect(jsonDecode(requests[0].body), {'pin': '0420'});
+        expect(jsonDecode(requests[1].body), {'expectedVersion': 6});
+        expect(jsonDecode(requests[2].body), {'expectedVersion': 7});
+        // Without it the server skips the PIN (round 1 compat).
+        for (final request in requests) {
+          expect(request.headers['X-Contract-Version'], '0.18.8');
+        }
         expect(trips.needsPin('t1'), isFalse);
       });
 
@@ -350,6 +384,24 @@ void main() {
       expect(sent, ['1111', '0420']);
       expect(await result, isTrue);
       expect(find.byType(PickupPinSheet), findsNothing);
+    });
+
+    testWidgets('blocked: the field stays closed, call support', (
+      tester,
+    ) async {
+      await openSheet(
+        tester,
+        (_) async => const PickupPinOutcome.ok(),
+        first: const PickupPinOutcome(PickupPinResult.blocked),
+      );
+      expect(
+        find.text('Too many wrong codes. Call Movera support'),
+        findsOneWidget,
+      );
+      final field = find.byKey(const ValueKey('pickup-pin-field'));
+      expect(tester.widget<TextField>(field).enabled, isFalse);
+      await tester.pump(const Duration(minutes: 30));
+      expect(tester.widget<TextField>(field).enabled, isFalse);
     });
 
     testWidgets('locked: the field waits until the lock is over (sv)', (
