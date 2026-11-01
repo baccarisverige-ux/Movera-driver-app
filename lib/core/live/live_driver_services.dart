@@ -808,7 +808,8 @@ class LiveLocationReporter {
       // time, on every tick; the server counts the send (received_at), so
       // the driver is not stale after 120 s. Never re-stamped on a phone;
       // older than [maxResendAge] the server drops it anyway.
-      if (fix == null && !_restamp) fix = _lastOsFix();
+      // A [fresh] ask (the tab shows again, a resume) wants a new read only.
+      if (fix == null && !_restamp && !fresh) fix = _lastOsFix();
       if (fix == null) return false;
       final ack = await _api.post(
         locationPath,

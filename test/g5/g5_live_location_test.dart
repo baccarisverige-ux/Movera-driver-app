@@ -91,6 +91,8 @@ void main() {
             as Map)['measuredAt'],
     };
     expect(stamps, {'2026-11-01T12:00:00.000Z'}, reason: 'the OS time kept');
+    // Checker: a fresh ask never falls back to the old fix.
+    expect(await reporter.sendNow(fresh: true), isFalse);
     // Past the server's 10 min limit the old fix is not sent.
     now = now.add(const Duration(minutes: 7));
     expect(await reporter.sendNow(), isFalse);
