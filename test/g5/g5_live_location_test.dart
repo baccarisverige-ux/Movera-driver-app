@@ -9,6 +9,7 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/location/driver_location_service.dart';
 
 /// G5 live test 2026-10-31 (bug 6): after Go online no
 /// `POST /driver/location` went out for about 6 min, until the emulated
@@ -199,4 +200,52 @@ void webGroup(List<http.Request> Function() sent, ApiClient Function() api) {
     expect(again?['measuredAt'], now.toIso8601String());
     await gps.stream.close();
   });
+
+  test(
+    'checker: the web re-stamp stops 30 min after the real fix; a '
+    'next-day Go online gets no held fix; a permission error clears it',
+    () async {
+      var now = DateTime.utc(2026, 11, 1, 1, 52, 53);
+      final gps = _WebStillGps(() => now);
+      final reporter = LiveLocationReporter(
+        api: api(),
+        location: gps,
+        every: const Duration(hours: 1),
+        now: () => now,
+        restampHeldFix: true,
+      );
+      final first = await reporter.freshFix();
+      reporter.start(first: first);
+      await pumpEventQueue();
+      now = now.add(const Duration(minutes: 29));
+      expect(await reporter.sendNow(), isTrue);
+      now = now.add(const Duration(minutes: 2));
+      expect(await reporter.sendNow(), isFalse, reason: 'past 30 min');
+      reporter.stop();
+      now = now.add(const Duration(days: 1));
+      expect(await reporter.freshFix(), isNull, reason: 'yesterday\'s fix');
+
+      // A permission error on the watch clears the held fix.
+      now = DateTime.utc(2026, 11, 3, 9);
+      final gps2 = _WebStillGps(() => now);
+      final reporter2 = LiveLocationReporter(
+        api: api(),
+        location: gps2,
+        every: const Duration(hours: 1),
+        now: () => now,
+        restampHeldFix: true,
+      );
+      final held = await reporter2.freshFix();
+      reporter2.start(first: held);
+      await pumpEventQueue();
+      gps2.stream.addError(const LocationPermissionDeniedException());
+      await pumpEventQueue();
+      now = now.add(const Duration(minutes: 1));
+      expect(await reporter2.sendNow(), isFalse);
+      reporter2.stop();
+      expect(await reporter2.freshFix(), isNull);
+      await gps.stream.close();
+      await gps2.stream.close();
+    },
+  );
 }

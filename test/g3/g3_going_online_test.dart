@@ -139,7 +139,6 @@ void main() {
         now: () => now,
         restampHeldFix: true,
         visibility: page,
-        noFixMinutes: () => 5,
       );
       reporter.start();
       await pumpEventQueue();
@@ -160,7 +159,7 @@ void main() {
     });
 
     test('G5 live re-test round 2: a visible stationary tab keeps '
-        're-sending past noFixMinutes (stamped now)', () async {
+        're-sending past noFixMinutes (stamped now), up to 30 min', () async {
       final gps = _FirstReadOnly(firstFails: true);
       final page = _FakeVisibility();
       var now = DateTime.utc(2026, 10, 30, 12);
@@ -171,7 +170,6 @@ void main() {
         now: () => now,
         restampHeldFix: true,
         visibility: page,
-        noFixMinutes: () => 5,
       );
       reporter.start();
       await pumpEventQueue();
@@ -182,9 +180,12 @@ void main() {
       now = now.add(const Duration(seconds: 20));
       requests.clear();
       expect(await reporter.sendNow(), isTrue);
-      now = now.add(const Duration(minutes: 30));
+      now = now.add(const Duration(minutes: 20));
       expect(await reporter.sendNow(), isTrue);
       expect(sends(), 2);
+      // Checker: never past LiveLocationReporter.restampLimit (30 min).
+      now = now.add(const Duration(minutes: 10));
+      expect(await reporter.sendNow(), isFalse);
       reporter.stop();
       await gps.stream.close();
     });
@@ -198,7 +199,6 @@ void main() {
         every: const Duration(hours: 1),
         restampHeldFix: true,
         visibility: page,
-        noFixMinutes: () => 5,
       );
       reporter.start();
       await pumpEventQueue();

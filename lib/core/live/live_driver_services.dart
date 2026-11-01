@@ -15,7 +15,6 @@ import 'package:movera/core/live/live_driver_config.dart';
 import 'package:movera/core/live/live_driver_content.dart';
 import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
-import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
@@ -55,8 +54,6 @@ class LiveDriverServices {
       api: api,
       location: location,
       every: locationEvery,
-      noFixMinutes: () =>
-          config.current?.noFixMinutes ?? DriverAppConfig.defaultNoFixMinutes,
       // Decision 1: while sending, the phone keeps sending when locked.
       onRunning: location is DriverLocationService
           ? (running) => unawaited(
@@ -598,9 +595,6 @@ class LiveLocationReporter {
     DateTime Function()? now,
     bool? restampHeldFix,
     PageVisibility? visibility,
-    // G5 live re-test round 2: no longer limits the web re-send (kept so
-    // callers need no change).
-    int Function()? noFixMinutes,
     this.onRunning,
   }) : _api = api,
        _location = location,
@@ -708,9 +702,7 @@ class LiveLocationReporter {
     _visibilityWatch = null;
     // G5 live re-test round 2: the web keeps its last real position, so a
     // Go online from a still laptop (Chromium gives nothing new) takes it.
-    if (!_restamp) {
-      _held = null;
-    }
+    if (!_restamp) _forgetHeld();
     onRunning?.call(false);
   }
 
@@ -720,11 +712,13 @@ class LiveLocationReporter {
         .listen(
           _hold,
           // No signal or no permission: the next tick reads once instead.
-          onError: (Object _) {
+          onError: (Object error) {
             // Chromium's watch reports timeouts for a position that does
-            // not change: on the web the held fix stays (G5 re-test).
-            if (_restamp) return;
-            _held = null;
+            // not change: on the web the held fix stays (G5 re-test). A
+            // revoked permission, location off or any other error clears
+            // it (checker).
+            if (_restamp && error is TimeoutException) return;
+            _forgetHeld();
           },
           cancelOnError: false,
         );
@@ -732,6 +726,29 @@ class LiveLocationReporter {
 
   void _hold(DriverLocation location) {
     _held = location;
+    _heldAt = location.measuredAt ?? _now();
+  }
+
+  void _forgetHeld() {
+    _held = null;
+    _heldAt = null;
+  }
+
+  /// When the held fix was really measured (or received, if undated).
+  DateTime? _heldAt;
+
+  /// Checker on G5 re-test round 2: a visible web tab re-sends its held
+  /// fix stamped now for at most this long after the real measurement, so
+  /// a dead GPS never looks fresh to dispatch forever.
+  static const restampLimit = Duration(minutes: 30);
+
+  /// Go online on the web takes the held fix (stamped now) only when it
+  /// was really measured within this time (never yesterday's position).
+  static const onlineHeldLimit = Duration(minutes: 10);
+
+  bool _heldWithin(Duration limit) {
+    final since = _heldAt;
+    return since != null && _now().difference(since) < limit;
   }
 
   /// The stream's latest fix when it can go out now, else null.
@@ -743,11 +760,13 @@ class LiveLocationReporter {
     if (age != null && age <= heldFresh && age >= -gpsClockSkewTolerance) {
       return _wire(held);
     }
-    if (!_restamp || !_pageVisible) return null;
-    // G5 live re-test round 2 (coordinator): a visible tab keeps sending
-    // its held fix stamped now on every tick, however long it stands
-    // still (the old noFixMinutes limit set a still laptop offline at
-    // 5 min). A hidden tab still sends nothing.
+    if (!_restamp || !_pageVisible || !_heldWithin(restampLimit)) {
+      return null;
+    }
+    // G5 live re-test round 2: a visible tab keeps sending its held fix
+    // stamped now on every tick for [restampLimit] after the real fix
+    // (the old noFixMinutes limit set a still laptop offline at 5 min).
+    // A hidden tab still sends nothing.
     return _wire(held, measuredAt: _now());
   }
 
@@ -766,7 +785,12 @@ class LiveLocationReporter {
       // Web, G5 re-test round 2: no answer for a still position; the last
       // real position, stamped now, while the tab is visible.
       final held = _held;
-      if (!_restamp || !_pageVisible || held == null) return null;
+      if (!_restamp ||
+          !_pageVisible ||
+          held == null ||
+          !_heldWithin(onlineHeldLimit)) {
+        return null;
+      }
       return _wire(held, measuredAt: _now());
     }
     if (_restamp) _hold(read);
