@@ -8,6 +8,8 @@ import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/cash_collect_sheet.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
+import 'package:movera/core/history/trip_history.dart';
+import 'package:movera/presentation/driver/ride%20history/history%20detail/history_detail.dart';
 
 Map<String, Object> _m(int minor, [String currency = 'SEK']) => {
   'amountMinor': minor,
@@ -243,5 +245,44 @@ void main() {
       );
       waybills.reset();
     });
+  });
+
+  testWidgets('history: a tip given after the trip comes from the receipt', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final asked = <String>[];
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, _) => MaterialApp(
+          home: DriverRideHistoryDetail(
+            record: const TripHistoryRecord(
+              tripId: 'trp_tip',
+              riderName: 'Anna',
+              whenLabel: '01/11/2026, 12:00',
+              pickup: 'A',
+              dropoff: 'B',
+              fare: '80,00 kr',
+              category: 'Comfort',
+              paymentMethod: 'Cash',
+            ),
+            loadRideChecks: (_) async => const [],
+            loadPath: (_) async => null,
+            loadTip: (record) async {
+              asked.add(record.tripId);
+              return '20,00 kr';
+            },
+          ),
+        ),
+      ),
+    );
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(asked, ['trp_tip']);
+    expect(find.text('20,00 kr'), findsOneWidget);
   });
 }
