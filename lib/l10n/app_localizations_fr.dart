@@ -6886,4 +6886,64 @@ class AppLocalizationsFr extends AppLocalizations {
   String noShowFromTime(Object time) {
     return 'Applicable à partir de $time si le passager n’est pas arrivé.';
   }
+
+  @override
+  String g6RuleFarPickup(Object km) {
+    return 'Prise en charge à plus de $km km';
+  }
+
+  @override
+  String get g6RuleAirport => 'Prise en charge à l’aéroport';
+
+  @override
+  String get g6RuleScheduled => 'Course réservée';
+
+  @override
+  String get g6RuleEvent => 'Prise en charge à un événement';
+
+  @override
+  String get g6PinAsk => 'Demandez au passager son code à 4 chiffres';
+
+  @override
+  String g6PinWrong(Object left) {
+    return 'Code incorrect. Encore $left essais';
+  }
+
+  @override
+  String g6PinLocked(Object min) {
+    return 'Trop d’essais. Réessayez dans $min min';
+  }
+
+  @override
+  String get g6PinTitle => 'Code du passager';
+
+  @override
+  String get g6PinConfirm => 'Confirmer et démarrer';
+
+  @override
+  String get g6PinFourDigits => 'Saisissez 4 chiffres';
+
+  @override
+  String get g6PinNeeded =>
+      'Cette course demande le code du passager avant le départ';
+
+  @override
+  String get g6AlertPaid => 'L’attente payante a commencé';
+
+  @override
+  String get g6AlertNoShow =>
+      'Vous pouvez maintenant signaler un client absent';
+
+  @override
+  String g6StopFreeWait(Object min) {
+    return 'Attente gratuite à l’arrêt : $min min';
+  }
+
+  @override
+  String get g6PinBlocked =>
+      'Trop de codes incorrects. Appelez le support Movera';
+
+  @override
+  String get g6PinNotNow =>
+      'Le code se saisit une fois arrivé au point de prise en charge';
 }

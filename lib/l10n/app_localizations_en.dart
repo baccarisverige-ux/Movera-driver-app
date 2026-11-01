@@ -6768,4 +6768,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String noShowFromTime(Object time) {
     return 'Can be applied from $time if the rider has not arrived.';
   }
+
+  @override
+  String g6RuleFarPickup(Object km) {
+    return 'Pickup over $km km away';
+  }
+
+  @override
+  String get g6RuleAirport => 'Airport pickup';
+
+  @override
+  String get g6RuleScheduled => 'Booked ride';
+
+  @override
+  String get g6RuleEvent => 'Event pickup';
+
+  @override
+  String get g6PinAsk => 'Ask the rider for the 4-digit code';
+
+  @override
+  String g6PinWrong(Object left) {
+    return 'Wrong code. $left tries left';
+  }
+
+  @override
+  String g6PinLocked(Object min) {
+    return 'Too many tries. Try again in $min min';
+  }
+
+  @override
+  String get g6PinTitle => 'Rider’s code';
+
+  @override
+  String get g6PinConfirm => 'Confirm and start';
+
+  @override
+  String get g6PinFourDigits => 'Enter 4 digits';
+
+  @override
+  String get g6PinNeeded => 'This trip needs the rider’s code before it starts';
+
+  @override
+  String get g6AlertPaid => 'Paid waiting has started';
+
+  @override
+  String get g6AlertNoShow => 'You can now mark a no-show';
+
+  @override
+  String g6StopFreeWait(Object min) {
+    return 'Free wait at this stop: $min min';
+  }
+
+  @override
+  String get g6PinBlocked => 'Too many wrong codes. Call Movera support';
+
+  @override
+  String get g6PinNotNow =>
+      'Enter the code once you have arrived at the pickup';
 }

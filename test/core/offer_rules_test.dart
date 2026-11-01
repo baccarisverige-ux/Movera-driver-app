@@ -8,8 +8,6 @@ import 'package:movera/core/history/trip_history.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/ride/completion_journal.dart';
-import 'package:movera/core/ride/waiting_rules.dart';
-import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -130,39 +128,12 @@ void main() {
       expect(terms.rule, '');
     });
 
-    test('by ride type, category and pickup distance', () {
-      final scheduled = rules.termsFor(type: WaitingRideType.scheduled);
-      expect(scheduled.freeMinutes, 5);
-      expect(scheduled.rule, 'Scheduled ride');
-      // Contract v0.18.7 (driver group 5): the app's own airport, event
-      // and far-pickup rules are gone; the server never knew them. A
-      // category's terms come from the served `waiting.byCategory` only.
-      final airport = rules.termsFor(type: WaitingRideType.airport);
-      expect(airport.freeMinutes, 5);
-      expect(airport.noShowAfterMinutes, 5);
-      expect(airport.rule, '');
-      final premium = rules.termsFor(
-        category: 'Premium',
-        type: WaitingRideType.scheduled,
-      );
+    test('G6: no ride-type or distance rules of the app\'s own', () {
+      // Contract v0.18.8: far pickup, airport, event and scheduled rules
+      // are the server's; the zone's terms only differ by category.
+      final premium = rules.termsFor(category: 'Premium');
       expect(premium.perMinute.formatted, '12,26 kr');
-      expect(premium.rule, 'Scheduled ride');
-      final far = rules.termsFor(pickupKm: 7.5);
-      expect(far.freeMinutes, 5);
-      expect(far.noShowFee.formatted, '65,00 kr');
-      expect(far.rule, '');
-      expect(rules.termsFor(pickupKm: 4).rule, '');
-    });
-
-    test('a scheduled ride waits the reservation policy\'s included time', () {
-      addTearDown(
-        () => ScheduledRideRules.current = const ScheduledRideRules(),
-      );
-      expect(const ScheduledRideRules().includedWaitingMinutes, 5);
-      ScheduledRideRules.current = const ScheduledRideRules(
-        includedWaitingMinutes: 7,
-      );
-      expect(rules.termsFor(type: WaitingRideType.scheduled).freeMinutes, 7);
+      expect(premium.rule, '');
       expect(rules.termsFor().freeMinutes, 5);
     });
 
@@ -170,37 +141,6 @@ void main() {
       const offers = DriverOfferRules();
       expect(offers.exclusiveAcceptTime, const Duration(seconds: 15));
       expect(offers.radarTime, const Duration(seconds: 15));
-    });
-
-    test('the kind of trip from how it was matched and where it starts', () {
-      expect(
-        WaitingRules.typeOf(
-          matchedVia: 'Scheduled ride',
-          pickupAddress: 'Gamla vägen, Stockholm',
-        ),
-        WaitingRideType.scheduled,
-      );
-      expect(
-        WaitingRules.typeOf(
-          matchedVia: 'Exclusive reservation',
-          pickupAddress: 'Gamla vägen',
-        ),
-        WaitingRideType.scheduled,
-      );
-      expect(
-        WaitingRules.typeOf(
-          matchedVia: 'Movera Radar',
-          pickupAddress: 'Arlanda Terminal 5',
-        ),
-        WaitingRideType.airport,
-      );
-      expect(
-        WaitingRules.typeOf(
-          matchedVia: 'Movera Radar',
-          pickupAddress: 'Kungsgatan',
-        ),
-        WaitingRideType.normal,
-      );
     });
   });
 

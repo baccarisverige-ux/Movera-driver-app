@@ -201,8 +201,16 @@ class LiveTripCommands {
   }
 
   /// "Start trip": the app's one slide is the contract's `board` then
-  /// `start` (`rider_onboard` → `in_trip`).
-  Future<LiveTripOutcome> start(String tripId) async {
+  /// `start` (`rider_onboard` → `in_trip`). [pin]: the rider's 4-digit
+  /// code when the trip has `pinRequired` (contract v0.18.8 round 1):
+  /// `POST /pin/verify` first, then board / start from the version it
+  /// returns; refusals `pin_wrong` / `pin_locked` / `pin_blocked` /
+  /// `pin_not_now` / `pin_required` (see `PickupPinOutcome`).
+  Future<LiveTripOutcome> start(String tripId, {String? pin}) async {
+    if (pin != null && needsPin(tripId)) {
+      final verified = await verifyPin(tripId, pin);
+      if (!verified.ok) return verified;
+    }
     final boarded = await _step(
       tripId,
       'board',
@@ -354,6 +362,45 @@ class LiveTripCommands {
       }
     }
     return _unknown;
+  }
+
+  /// `POST /trips/{tripId}/pin/verify { pin }` → `{ verifiedPinToken,
+  /// expiresAt, version }`: a right PIN is its own change (version + 1),
+  /// kept so board / start send it as `expectedVersion`.
+  Future<LiveTripOutcome> verifyPin(String tripId, String pin) async {
+    final path = '$_base/${Uri.encodeComponent(tripId)}/pin/verify';
+    try {
+      final answer = await _api.post(
+        path,
+        body: {'pin': pin},
+        idempotencyKey: ApiClient.randomKey(),
+      );
+      final known = _trips[tripId];
+      final version = answer['version'];
+      if (known != null) {
+        _trips[tripId] = {
+          ...known,
+          'pinVerified': true,
+          if (version is num && version.toInt() > (versionOf(tripId) ?? 0))
+            'version': version.toInt(),
+        };
+      }
+      return const LiveTripOutcome.ok();
+    } on ApiError catch (error) {
+      final projection = error.projection;
+      if (projection != null) observe({'tripId': tripId, ...projection});
+      DriverLog.warn('pin refused: ${error.detail}', name: 'live');
+      return LiveTripOutcome.failed(liveTripErrorMessage(error), error: error);
+    }
+  }
+
+  /// Contract v0.18.8: true when the trip needs the rider's PIN before
+  /// Start and the server has not seen the right one yet.
+  bool needsPin(String tripId) {
+    final known = _trips[tripId];
+    return known != null &&
+        known['pinRequired'] == true &&
+        known['pinVerified'] != true;
   }
 
   /// The rider did not come (`no-show`, after the zone's wait).

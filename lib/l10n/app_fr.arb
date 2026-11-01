@@ -1926,5 +1926,21 @@
   "etaLastKnown": "Dernière estimation : {eta}",
   "feeKindNoShowShort": "Frais de client absent",
   "feeKindCancelShort": "Frais d’annulation",
-  "noShowFromTime": "Applicable à partir de {time} si le passager n’est pas arrivé."
+  "noShowFromTime": "Applicable à partir de {time} si le passager n’est pas arrivé.",
+  "g6RuleFarPickup": "Prise en charge à plus de {km} km",
+  "g6RuleAirport": "Prise en charge à l’aéroport",
+  "g6RuleScheduled": "Course réservée",
+  "g6RuleEvent": "Prise en charge à un événement",
+  "g6PinAsk": "Demandez au passager son code à 4 chiffres",
+  "g6PinWrong": "Code incorrect. Encore {left} essais",
+  "g6PinLocked": "Trop d’essais. Réessayez dans {min} min",
+  "g6PinTitle": "Code du passager",
+  "g6PinConfirm": "Confirmer et démarrer",
+  "g6PinFourDigits": "Saisissez 4 chiffres",
+  "g6PinNeeded": "Cette course demande le code du passager avant le départ",
+  "g6AlertPaid": "L’attente payante a commencé",
+  "g6AlertNoShow": "Vous pouvez maintenant signaler un client absent",
+  "g6StopFreeWait": "Attente gratuite à l’arrêt : {min} min",
+  "g6PinBlocked": "Trop de codes incorrects. Appelez le support Movera",
+  "g6PinNotNow": "Le code se saisit une fois arrivé au point de prise en charge"
 }

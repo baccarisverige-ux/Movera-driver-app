@@ -16,7 +16,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
-import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 
@@ -147,10 +146,12 @@ final _exclusiveRadar = find.byKey(
   const ValueKey<String>('home-radar-exclusive'),
 );
 
-WaitingRideType _typeOf(AcceptRide trip) => WaitingRules.typeOf(
-  matchedVia: trip.matchedVia,
-  pickupAddress: trip.pickupAddress,
-);
+/// Contract v0.18.8: the server picks the waiting rule; the app only
+/// keeps the matched-via key that names a reservation.
+bool _scheduled(AcceptRide trip) {
+  final via = trip.matchedVia.toLowerCase();
+  return via.contains('scheduled') || via.contains('reservation');
+}
 
 void main() {
   for (final language in ['sv', 'fr']) {
@@ -181,7 +182,7 @@ void main() {
         final trip = _trip0(tester);
         expect(DriverAppTexts.language, language);
         expect(trip.matchedVia, 'Exclusive reservation');
-        expect(_typeOf(trip), WaitingRideType.scheduled);
+        expect(_scheduled(trip), isTrue);
         await _end(tester);
       });
 
@@ -195,7 +196,7 @@ void main() {
         final trip = _trip0(tester);
         expect(DriverAppTexts.language, language);
         expect(trip.matchedVia, 'Scheduled ride');
-        expect(_typeOf(trip), WaitingRideType.scheduled);
+        expect(_scheduled(trip), isTrue);
         await _end(tester);
       });
 

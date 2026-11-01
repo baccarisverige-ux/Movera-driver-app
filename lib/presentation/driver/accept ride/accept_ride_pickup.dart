@@ -37,7 +37,11 @@ extension _AcceptRidePickup on _AcceptRideState {
   /// is in euro); they win over the zone's served config. Nothing here is
   /// an app constant (owner rule 16).
   WaitingTerms get _waitTerms {
-    final terms = _live?.terms?.waiting ?? _zoneWaitTerms;
+    final served = _live?.terms?.waiting ?? _zoneWaitTerms;
+    // Contract v0.18.8: the rules the server picked at arrive name the
+    // terms ("Airport pickup"); before arrive the trip's terms have none.
+    final rules = _live?.waiting?.rules;
+    final terms = rules == null ? served : served.withRules(rules);
     // Checker round 1: the free / no-show moments are the server's
     // (`waiting.freeUntil` / `noShowAt`); the local count only without them.
     final waiting = _live?.waiting;

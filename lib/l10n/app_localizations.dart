@@ -11682,6 +11682,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Can be applied from {time} if the rider has not arrived.'**
   String noShowFromTime(Object time);
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup over {km} km away'**
+  String g6RuleFarPickup(Object km);
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Airport pickup'**
+  String get g6RuleAirport;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Booked ride'**
+  String get g6RuleScheduled;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Event pickup'**
+  String get g6RuleEvent;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the rider for the 4-digit code'**
+  String get g6PinAsk;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong code. {left} tries left'**
+  String g6PinWrong(Object left);
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Try again in {min} min'**
+  String g6PinLocked(Object min);
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Rider’s code'**
+  String get g6PinTitle;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm and start'**
+  String get g6PinConfirm;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 4 digits'**
+  String get g6PinFourDigits;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'This trip needs the rider’s code before it starts'**
+  String get g6PinNeeded;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Paid waiting has started'**
+  String get g6AlertPaid;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'You can now mark a no-show'**
+  String get g6AlertNoShow;
+
+  /// Driver G6 (contract 0.18.8 arrivedWaiting).
+  ///
+  /// In en, this message translates to:
+  /// **'Free wait at this stop: {min} min'**
+  String g6StopFreeWait(Object min);
+
+  /// Driver G6 round 1 (contract 0.18.8).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong codes. Call Movera support'**
+  String get g6PinBlocked;
+
+  /// Driver G6 round 1 (contract 0.18.8).
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code once you have arrived at the pickup'**
+  String get g6PinNotNow;
 }
 
 class _AppLocalizationsDelegate
