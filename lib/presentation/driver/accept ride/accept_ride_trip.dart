@@ -1120,11 +1120,15 @@ extension _AcceptRideTrip on _AcceptRideState {
   }
 
   Future<void> _onArrivedTap() async {
-    if (!_nearArrivalTarget && _arrivalTarget != null) {
+    if (!_nearArrivalTarget &&
+        _arrivalTarget != null &&
+        _lastLocation != null &&
+        _lastLocation?.isUsableAt(DateTime.now()) != true) {
       // G7 live fix: a parked phone (a browser above all) may send no new
       // fix while it stands still, so the last one ages past its 30 s and
       // the tap was refused although the car is at the stop. Ask for one
-      // fresh fix before saying no. A missing road route never blocks.
+      // fresh fix before saying no (only for an aged fix: no fix at all
+      // says "location unavailable" at once). A missing road route never blocks.
       await _freshFixForArrival();
       if (!mounted) return;
     }
