@@ -937,7 +937,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         reason == _RadarOfferGone.takenElsewhere) {
       IslandMessages.show(HomeIslandNotices.takenByOther);
     } else if (wasMatching || wasFront) {
-      IslandMessages.show(HomeIslandNotices.tripUnavailable);
+      _showTripUnavailableUnlessOfferedAgain(offer.tripId);
     }
 
     // Each lost offer leaves on its own timer: two lost together both go.
@@ -1203,6 +1203,31 @@ extension _HomeOfferRadar on _DriverHomeState {
     _dismissRadarHomeOffer(offer);
   }
 
+  /// Owner live test 2026-11-01: the automatic radar sends the same trip
+  /// again every round (the old offer leaves, a new one comes at once), and
+  /// an admin exclusive replaces the automatic offer. That is not "Trip not
+  /// available": the island says so only when no offer for the trip came
+  /// back within a moment.
+  void _showTripUnavailableUnlessOfferedAgain(String? tripId) {
+    if (tripId == null) {
+      IslandMessages.show(HomeIslandNotices.tripUnavailable);
+      return;
+    }
+    Timer(const Duration(milliseconds: 1500), () {
+      if (!mounted || !_isOnline || _hasOfferForTrip(tripId)) return;
+      IslandMessages.show(HomeIslandNotices.tripUnavailable);
+    });
+  }
+
+  bool _hasOfferForTrip(String tripId) =>
+      _outsideRadarOffer?.tripId == tripId ||
+      _radarHomeOffers.any(
+        (o) =>
+            o.tripId == tripId &&
+            _homeRadarStateFor(o.id) == _HomeRadarMatchState.available,
+      ) ||
+      _pendingRadarHomeOffers.any((o) => o.tripId == tripId);
+
   /// Dispatch withdrew an offer: another driver took it (a radar group's
   /// first Accept, or the trip locked), it expired, or it was taken back.
   void _onOfferWithdrawn(OfferWithdrawal gone) {
@@ -1220,11 +1245,11 @@ extension _HomeOfferRadar on _DriverHomeState {
         _dismissOutsideRadarOffer(missed: true);
         return;
       }
-      IslandMessages.show(
-        taken
-            ? HomeIslandNotices.takenByOther
-            : HomeIslandNotices.tripUnavailable,
-      );
+      if (taken) {
+        IslandMessages.show(HomeIslandNotices.takenByOther);
+      } else {
+        _showTripUnavailableUnlessOfferedAgain(gone.tripId);
+      }
       _dismissOutsideRadarOffer();
       return;
     }
