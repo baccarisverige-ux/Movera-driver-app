@@ -1,3 +1,4 @@
+import 'package:movera/widgets/live_soon_notice.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -118,6 +119,9 @@ class _PromotionsState extends State<Promotions> {
 
   @override
   Widget build(BuildContext context) {
+    // Audit 2026-11-01: a live build has no campaign source yet, so it
+    // shows no example campaigns or codes.
+    if (LiveDriverServices.active) return _liveSoon(context);
     final items = _visible;
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F7),
@@ -297,6 +301,37 @@ class _PromotionsState extends State<Promotions> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _liveSoon(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F6F7),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          tooltip: tr.back,
+          onPressed: () => maybePopOwned(context),
+          icon: const Icon(Icons.arrow_back_rounded, color: _ink),
+        ),
+        titleSpacing: 0,
+        title: Text(
+          tr.promotions,
+          style: const TextStyle(
+            color: _ink,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.3,
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+        children: [LiveSoonNotice(message: tr.livePromotionsSoon)],
       ),
     );
   }

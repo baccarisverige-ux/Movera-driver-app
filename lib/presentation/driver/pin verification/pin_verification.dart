@@ -1,3 +1,5 @@
+import 'package:movera/widgets/live_soon_notice.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:flutter/material.dart';
@@ -49,45 +51,50 @@ class _PinVerificationState extends State<PinVerification> {
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-        children: [
-          Text(
-            tr.pinPreviewNotSaved,
-            style: TextStyle(
-              color: _muted,
-              fontSize: 13,
-              height: 1.35,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 14),
-          for (var i = 0; i < _options.length; i++) ...[
-            _option(i),
-            if (i != _options.length - 1) const SizedBox(height: 8),
-          ],
-          const SizedBox(height: 18),
-          SizedBox(
-            height: 50,
-            child: FilledButton(
-              onPressed: () {
-                final messenger = ScaffoldMessenger.of(context);
-                if (!popOwned(context)) return;
-                messenger.showSnackBar(
-                  SnackBar(content: Text(tr.pinNotConnected)),
-                );
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: _ink,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+        children: LiveDriverServices.active
+            // Audit 2026-11-01: on live the pickup PIN is the zone's
+            // admin setting (contract pickupPin.required), not a phone
+            // preference; no preview options.
+            ? [LiveSoonNotice(message: tr.livePinSoon)]
+            : [
+                Text(
+                  tr.pinPreviewNotSaved,
+                  style: TextStyle(
+                    color: _muted,
+                    fontSize: 13,
+                    height: 1.35,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              child: Text(
-                tr.closePreview,
-                style: TextStyle(fontWeight: FontWeight.w800),
-              ),
-            ),
-          ),
-        ],
+                const SizedBox(height: 14),
+                for (var i = 0; i < _options.length; i++) ...[
+                  _option(i),
+                  if (i != _options.length - 1) const SizedBox(height: 8),
+                ],
+                const SizedBox(height: 18),
+                SizedBox(
+                  height: 50,
+                  child: FilledButton(
+                    onPressed: () {
+                      final messenger = ScaffoldMessenger.of(context);
+                      if (!popOwned(context)) return;
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(tr.pinNotConnected)),
+                      );
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _ink,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      tr.closePreview,
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+              ],
       ),
     );
   }
