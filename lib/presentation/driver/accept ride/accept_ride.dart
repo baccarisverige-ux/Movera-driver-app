@@ -738,6 +738,14 @@ class _AcceptRideState extends State<AcceptRide>
       final elapsed = DateTime.now().difference(restored.savedAt!).inSeconds;
       _waitSeconds += math.max(0, elapsed);
     }
+    // G7 live fix 2: the server's read at restore was applied before the
+    // saved stop / wait above replaced it. A stop the server says the
+    // driver is at (`stops[i].arrivedAt`, not left) wins over the saved
+    // "driving to the stop", so a reopened app shows the stop wait.
+    if (_live case final live?) {
+      _AcceptRideRouteChange(this)._adoptServerStops(live);
+    }
+    unawaited(_AcceptRideRouteChange(this)._readServerStopsAtRestore());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
