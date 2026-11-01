@@ -30,12 +30,46 @@ enum NavigationRouteStatus {
   /// G5 live test: the server's road-route ETA (`TripProjection.eta`) is
   /// the trip's ETA. When it is there, the phone's own failed route fetch
   /// must not cover it: "Route unavailable" only without a server ETA.
+  /// G5 live re-test: "Location updating…" (no fresh phone fix yet) is
+  /// hidden too while the server has a fresh ETA for the trip.
   static String? shown(String? status, {required bool hasServerEta}) {
     if (!hasServerEta) return status;
     return status == unavailableRetry.text ||
-            status == unavailableCheckLocation.text
+            status == unavailableCheckLocation.text ||
+            status == updating.text ||
+            status == tr.locationUpdatingEllipsis
         ? null
         : status;
+  }
+
+  /// The island's header (the banner) with the server's fresh ETA: its
+  /// route faults are dropped ([shown]) and a banner without route
+  /// progress (no phone route, "Route updating…") says "4 min · 1,2 km".
+  /// [etaText] null (no fresh server ETA) leaves the banner as it is.
+  static NavigationBanner? bannerWithServerEta(
+    NavigationBanner? banner,
+    String? etaText,
+  ) {
+    if (banner == null || etaText == null) return banner;
+    final status = shown(banner.status, hasServerEta: true);
+    final noProgress = banner.distanceMeters == null;
+    return NavigationBanner(
+      primary: banner.primary,
+      distanceLabel: noProgress ? etaText : banner.distanceLabel,
+      instruction: banner.instruction,
+      distanceMeters: banner.distanceMeters,
+      exitRef: banner.exitRef,
+      roadName: banner.roadName,
+      symbol: banner.symbol,
+      status: status,
+      exitNumber: banner.exitNumber,
+      exitAngleDegrees: banner.exitAngleDegrees,
+      shields: banner.shields,
+      towards: banner.towards,
+      lanes: banner.lanes,
+      laneModifier: banner.laneModifier,
+      toll: banner.toll,
+    );
   }
 }
 

@@ -278,6 +278,19 @@ void main() {
     expect(failed, isNot(contains(island.navigationStatus)));
     expect(island.eta, '6 min');
     expect(island.detail, 'Arrives in 6 min · 1.8 km');
+    // Live re-test: the header (the island's banner) says the server ETA,
+    // never the phone's route fault or "Location updating…".
+    final banner = island.banner;
+    expect(banner, isNotNull);
+    expect(banner!.status, isNull);
+    expect(banner.distanceLabel, '6 min · 1.8 km');
+    expect(
+      find.descendant(
+        of: find.byType(AdaptiveTripIsland),
+        matching: find.textContaining(tr.navRouteUnavailableRetry),
+      ),
+      findsNothing,
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });

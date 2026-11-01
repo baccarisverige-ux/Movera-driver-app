@@ -74,6 +74,14 @@ extension _AcceptRidePickup on _AcceptRideState {
   /// own route warning (a stale one means no fresh position).
   bool get _freshServerEta => _serverEta?.isStale == false;
 
+  /// "4 min · 1,2 km" from a fresh server ETA for the island header;
+  /// null without one (or a stale one).
+  String? get _freshServerEtaText {
+    final eta = _serverEta;
+    if (eta == null || eta.isStale) return null;
+    return '${eta.minutesLabel} · ${eta.distanceLabel}';
+  }
+
   String get _routeEtaText {
     // Q4 (contract v0.18.7 `pickupWaiting.eta`): the server's road-route
     // ETA, the same number the rider and the admin see; the app's own

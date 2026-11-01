@@ -803,6 +803,12 @@ class LiveLocationReporter {
         if (read != null && _restamp) _hold(read);
         fix = read == null ? null : _wire(read);
       }
+      // G5 live re-test: a phone standing still (no stream event, no
+      // one-shot answer) sends its last OS fix again, with the OS's own
+      // time, on every tick; the server counts the send (received_at), so
+      // the driver is not stale after 120 s. Never re-stamped on a phone;
+      // older than [maxResendAge] the server drops it anyway.
+      if (fix == null && !_restamp) fix = _lastOsFix();
       if (fix == null) return false;
       final ack = await _api.post(
         locationPath,
@@ -820,6 +826,29 @@ class LiveLocationReporter {
     } finally {
       _sending = false;
     }
+  }
+
+  /// The server drops a fix measured longer ago than this (10 min).
+  static const maxResendAge = Duration(minutes: 10);
+
+  /// The newest real fix of the phone (the stream's, else the last sent),
+  /// unchanged, when the server still takes it.
+  LiveFix? _lastOsFix() {
+    DateTime? timeOf(LiveFix? fix) =>
+        DateTime.tryParse('${fix?['measuredAt']}');
+    final held = _held;
+    final stream = held?.measuredAt == null ? null : _wire(held!);
+    final sent = lastFix;
+    final streamAt = timeOf(stream), sentAt = timeOf(sent);
+    final candidate =
+        streamAt != null && (sentAt == null || streamAt.isAfter(sentAt))
+        ? stream
+        : sent;
+    final at = timeOf(candidate);
+    if (candidate == null || at == null) return null;
+    final age = _now().difference(at);
+    if (age > maxResendAge || age < -gpsClockSkewTolerance) return null;
+    return candidate;
   }
 
   LiveFix? _wire(DriverLocation location, {DateTime? measuredAt}) {

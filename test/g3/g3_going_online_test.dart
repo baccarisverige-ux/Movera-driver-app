@@ -99,8 +99,8 @@ void main() {
       await gps.stream.close();
     });
 
-    test('a phone (no restamp): an old stream fix is not passed off as new; '
-        'a one-shot read is tried', () async {
+    test('a phone (no restamp): an old stream fix is not passed off as new '
+        '(G5 live re-test: it is sent again with its own OS time)', () async {
       final gps = _FirstReadOnly(firstFails: true);
       var now = DateTime.utc(2026, 10, 30, 12);
       final reporter = LiveLocationReporter(
@@ -116,8 +116,9 @@ void main() {
       await pumpEventQueue();
       now = now.add(const Duration(minutes: 3));
       requests.clear();
-      expect(await reporter.sendNow(), isFalse);
-      expect(requests, isEmpty);
+      expect(await reporter.sendNow(), isTrue);
+      final fix = (body(requests.single)['fixes'] as List).single as Map;
+      expect(fix['measuredAt'], '2026-10-30T12:00:00.000Z');
       reporter.stop();
       await gps.stream.close();
     });
