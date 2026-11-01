@@ -598,14 +598,15 @@ class LiveLocationReporter {
     DateTime Function()? now,
     bool? restampHeldFix,
     PageVisibility? visibility,
+    // G5 live re-test round 2: no longer limits the web re-send (kept so
+    // callers need no change).
     int Function()? noFixMinutes,
     this.onRunning,
   }) : _api = api,
        _location = location,
        _now = now ?? DateTime.now,
        _restamp = restampHeldFix ?? kIsWeb,
-       _visibility = visibility ?? PageVisibility.platform(),
-       _noFixMinutes = noFixMinutes;
+       _visibility = visibility ?? PageVisibility.platform();
 
   static const defaultEvery = Duration(seconds: 10);
 
@@ -619,9 +620,10 @@ class LiveLocationReporter {
   /// position stream open while running and sends its latest fix.
   /// A browser's stream reports only when the position changes, so a
   /// laptop standing still sends no new fix. On the web ([_restamp]) the
-  /// last real fix is sent again stamped now, but only (checker, PR #412)
-  /// while the page is visible ([_visibility]) and for at most
-  /// `autoOffline.noFixMinutes` ([_noFixMinutes]) after that real fix.
+  /// last real fix is sent again stamped now while the page is visible
+  /// ([_visibility]). G5 live re-test round 2 (coordinator 2026-11-01):
+  /// the PR #412 limit of `autoOffline.noFixMinutes` after the real fix is
+  /// gone; a still laptop's Chromium gives no new fix and was set offline.
   /// A hidden tab sends nothing at all: Chrome throttles its timer and its
   /// geolocation watch goes quiet without an error, so re-sending there
   /// would keep a driver who left the laptop online forever and defeat
@@ -639,23 +641,9 @@ class LiveLocationReporter {
   /// The page's visibility on the web; null elsewhere (always visible).
   final PageVisibility? _visibility;
 
-  /// The published `autoOffline.noFixMinutes` (default 5).
-  final int Function()? _noFixMinutes;
-
   StreamSubscription<bool>? _visibilityWatch;
 
-  /// When the held fix was really measured (or received, if undated).
-  DateTime? _heldAt;
-
   bool get _pageVisible => _visibility?.visible ?? true;
-
-  Duration get _restampLimit {
-    final minutes =
-        _noFixMinutes?.call() ?? DriverAppConfig.defaultNoFixMinutes;
-    return Duration(
-      minutes: minutes > 0 ? minutes : DriverAppConfig.defaultNoFixMinutes,
-    );
-  }
 
   /// Called with true when sending starts and false when it stops
   /// (decision 1: the background location mode follows it).
@@ -718,8 +706,11 @@ class LiveLocationReporter {
     _watch = null;
     unawaited(_visibilityWatch?.cancel());
     _visibilityWatch = null;
-    _held = null;
-    _heldAt = null;
+    // G5 live re-test round 2: the web keeps its last real position, so a
+    // Go online from a still laptop (Chromium gives nothing new) takes it.
+    if (!_restamp) {
+      _held = null;
+    }
     onRunning?.call(false);
   }
 
@@ -730,8 +721,10 @@ class LiveLocationReporter {
           _hold,
           // No signal or no permission: the next tick reads once instead.
           onError: (Object _) {
+            // Chromium's watch reports timeouts for a position that does
+            // not change: on the web the held fix stays (G5 re-test).
+            if (_restamp) return;
             _held = null;
-            _heldAt = null;
           },
           cancelOnError: false,
         );
@@ -739,7 +732,6 @@ class LiveLocationReporter {
 
   void _hold(DriverLocation location) {
     _held = location;
-    _heldAt = location.measuredAt ?? _now();
   }
 
   /// The stream's latest fix when it can go out now, else null.
@@ -752,8 +744,10 @@ class LiveLocationReporter {
       return _wire(held);
     }
     if (!_restamp || !_pageVisible) return null;
-    final since = _heldAt;
-    if (since == null || _now().difference(since) > _restampLimit) return null;
+    // G5 live re-test round 2 (coordinator): a visible tab keeps sending
+    // its held fix stamped now on every tick, however long it stands
+    // still (the old noFixMinutes limit set a still laptop offline at
+    // 5 min). A hidden tab still sends nothing.
     return _wire(held, measuredAt: _now());
   }
 
@@ -768,7 +762,14 @@ class LiveLocationReporter {
   /// held fix of the stream is never used for going online.
   Future<LiveFix?> freshFix() async {
     final read = await _readOnce();
-    if (read == null) return null;
+    if (read == null) {
+      // Web, G5 re-test round 2: no answer for a still position; the last
+      // real position, stamped now, while the tab is visible.
+      final held = _held;
+      if (!_restamp || !_pageVisible || held == null) return null;
+      return _wire(held, measuredAt: _now());
+    }
+    if (_restamp) _hold(read);
     final at = read.measuredAt;
     // The bound: this read is a one-shot asked of the browser with
     // `maximumAge` 30 s (DriverLocationService.webMaximumAge), so the
