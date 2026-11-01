@@ -138,7 +138,9 @@ void main() {
       ),
     );
     expect(find.text('standard · Priority'), findsOneWidget);
-    final texts = tester.widgetList<Text>(find.byType(Text)).map((t) => t.data ?? '');
+    final texts = tester
+        .widgetList<Text>(find.byType(Text))
+        .map((t) => t.data ?? '');
     expect(texts.where((t) => t.trimRight().endsWith('·')), isEmpty);
   });
 }
