@@ -1119,11 +1119,15 @@ extension _AcceptRideTrip on _AcceptRideState {
     );
   }
 
+  /// A last fix exists but is too old to judge the distance; the arrival
+  /// tap asks for a fresh one (G7 live fix). No fix at all is not aged.
+  bool get _arrivalFixAged =>
+      _arrivalTarget != null &&
+      _lastLocation != null &&
+      _lastLocation?.isUsableAt(DateTime.now()) != true;
+
   Future<void> _onArrivedTap() async {
-    if (!_nearArrivalTarget &&
-        _arrivalTarget != null &&
-        _lastLocation != null &&
-        _lastLocation?.isUsableAt(DateTime.now()) != true) {
+    if (!_nearArrivalTarget && _arrivalFixAged) {
       // G7 live fix: a parked phone (a browser above all) may send no new
       // fix while it stands still, so the last one ages past its 30 s and
       // the tap was refused although the car is at the stop. Ask for one
