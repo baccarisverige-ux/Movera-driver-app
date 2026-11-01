@@ -238,7 +238,7 @@ void main() {
             },
           },
         },
-      }).waiting.termsFor(category: 'Premium', type: WaitingRideType.scheduled);
+      }).waiting.termsFor(category: 'Premium');
       WaitingTerms.active = terms;
       await tester.binding.setSurfaceSize(const Size(390, 900));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -250,10 +250,7 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(
-        find.text('Rule for this pickup: Premium · Scheduled ride'),
-        findsOneWidget,
-      );
+      expect(find.text('Rule for this pickup: Premium'), findsOneWidget);
       expect(find.text('5 min'), findsOneWidget);
       expect(find.text('16,90 kr / min'), findsOneWidget);
       expect(find.text('65,00 kr'), findsOneWidget);

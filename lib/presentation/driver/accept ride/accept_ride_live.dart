@@ -49,6 +49,69 @@ extension _AcceptRideLive on _AcceptRideState {
     return false;
   }
 
+  /// "Start trip" on the server (`board` then `start`). Contract v0.18.8
+  /// (owner G6 decision 2): a trip with `pinRequired` first asks the
+  /// driver for the rider's 4-digit code; a `pin_required` / `pin_wrong` /
+  /// `pin_locked` answer opens the same step. True once started.
+  Future<bool> _startOnServer() async {
+    final trips = _liveTrips;
+    if (trips == null) return true;
+    if (trips.needsPin(widget.tripId)) return _startWithPin(trips);
+    final LiveTripOutcome outcome;
+    try {
+      outcome = await trips.start(widget.tripId);
+    } catch (error, stack) {
+      DriverLog.error('Trip step failed', error, stack);
+      _showServerRefusal(liveTripErrorMessage(error));
+      return false;
+    }
+    if (outcome.ok) {
+      _applyKnown(trips);
+      return true;
+    }
+    final pin = PickupPinOutcome.fromError(outcome.error);
+    if (pin.aboutPin) return _startWithPin(trips, first: pin);
+    _showServerRefusal(outcome.message!);
+    return false;
+  }
+
+  Future<bool> _startWithPin(
+    LiveTripCommands trips, {
+    PickupPinOutcome? first,
+  }) async {
+    if (!mounted) return false;
+    return showPickupPinSheet(
+      context,
+      first: first,
+      submit: (pin) async {
+        final LiveTripOutcome outcome;
+        try {
+          outcome = await trips.start(widget.tripId, pin: pin);
+        } catch (error, stack) {
+          DriverLog.error('Trip step failed', error, stack);
+          return PickupPinOutcome(
+            PickupPinResult.failed,
+            message: liveTripErrorMessage(error),
+          );
+        }
+        if (outcome.ok) {
+          _applyKnown(trips);
+          return const PickupPinOutcome.ok();
+        }
+        return PickupPinOutcome.fromError(
+          outcome.error,
+          fallback: outcome.message,
+        );
+      },
+    );
+  }
+
+  void _applyKnown(LiveTripCommands trips) {
+    if (trips.projectionOf(widget.tripId) case final known?) {
+      _AcceptRideTrip(this)._applyLive(TripLiveDetails.fromProjection(known));
+    }
+  }
+
   /// The server's final money for this trip once it is completed (the
   /// answer to `complete`, or the completed event), else null: the demo,
   /// a projection without the money, or a trip not completed.

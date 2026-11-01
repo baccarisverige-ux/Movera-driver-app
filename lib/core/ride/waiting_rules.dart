@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
 import 'package:movera/core/money/money.dart';
-import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 
 /// Waiting at pickup (Round 3, Q19/Q20), the same rules admin sets in
 /// Dispatch › Waiting for one zone or all zones. Today the app uses
@@ -64,19 +63,15 @@ class WaitingTerms {
   final int driverShareWaitPercent;
   final int driverShareNoShowPercent;
 
-  /// The rules that set these terms as admin wrote them (or
-  /// [farPickupLabel] for the distance rule); empty for the zone's own
-  /// terms. Kept untranslated, so a language switch mid-trip shows them
-  /// in the new language (driver-u38).
+  /// The server's rule ids (`far_pickup`, `airport`, `scheduled`,
+  /// `event`) or a category name; empty for the zone's own terms.
+  /// Kept untranslated, so a language switch mid-trip shows them in the
+  /// new language (driver-u38).
   final List<String> ruleLabels;
 
   /// The rules, e.g. "Scheduled ride", in the driver's language; '' for
   /// the zone's own terms.
   String get rule => ruleLabels.map(_shown).join(' · ');
-
-  /// The distance rule's label for pickups over [km] km.
-  static String farPickupLabel(String km) => '$_farPickup$km';
-  static const String _farPickup = 'pickupOverKm:';
 
   int get freeSeconds => serverFreeSeconds ?? freeMinutes * 60;
   int get noShowSeconds =>
@@ -122,7 +117,7 @@ class WaitingTerms {
   /// The terms of the trip on screen now: the waiting clocks read them.
   static WaitingTerms active = WaitingRules.current.base;
 
-  WaitingTerms _with(WaitingRule rule, {String? label}) => WaitingTerms(
+  WaitingTerms _with(WaitingRule rule) => WaitingTerms(
     freeMinutes: rule.freeMinutes ?? freeMinutes,
     perMinute: rule.perMinute ?? perMinute,
     noShowAfterMinutes: rule.noShowAfterMinutes ?? noShowAfterMinutes,
@@ -130,27 +125,38 @@ class WaitingTerms {
     driverShareWaitPercent: driverShareWaitPercent,
     driverShareNoShowPercent: driverShareNoShowPercent,
     pricesKnown: rule.pricesKnown ?? pricesKnown,
-    ruleLabels: [
-      ...ruleLabels,
-      if ((label ?? rule.label).isNotEmpty) label ?? rule.label,
-    ],
+    ruleLabels: [...ruleLabels, if (rule.label.isNotEmpty) rule.label],
   );
 
-  /// An admin default label still as shipped, in the app's language.
+  /// These terms with the server's rule ids (`waiting.rules` /
+  /// `terms.waitingRules`, contract v0.18.8) as their labels.
+  WaitingTerms withRules(List<String> rules) => WaitingTerms(
+    freeMinutes: freeMinutes,
+    perMinute: perMinute,
+    noShowAfterMinutes: noShowAfterMinutes,
+    noShowFee: noShowFee,
+    driverShareWaitPercent: driverShareWaitPercent,
+    driverShareNoShowPercent: driverShareNoShowPercent,
+    ruleLabels: rules,
+    pricesKnown: pricesKnown,
+    serverFreeSeconds: serverFreeSeconds,
+    serverNoShowSeconds: serverNoShowSeconds,
+  );
+
+  /// A label in the app's language: the server's rule ids
+  /// (`arrivedWaiting.rules.texts`), a category name as it came.
   static String _shown(String label) => switch (label) {
-    _ when label.startsWith(_farPickup) => tr.pickupOverKmKm(
-      label.substring(_farPickup.length).replaceAll('.', tr.navDecimalMark),
-    ),
-    'Pickup far away' => tr.waitingRulePickupFarAway,
-    'Scheduled ride' => tr.waitingRuleScheduledRide,
-    'Airport pickup' => tr.waitingRuleAirportPickup,
-    'Event pickup' => tr.waitingRuleEventPickup,
+    'far_pickup' => tr.g6RuleFarPickup(_km(WaitingRules.current.farPickupKm)),
+    'airport' => tr.g6RuleAirport,
+    'scheduled' => tr.g6RuleScheduled,
+    'event' => tr.g6RuleEvent,
     _ => label,
   };
-}
 
-/// Kinds of trip a waiting rule can be for.
-enum WaitingRideType { normal, scheduled, airport, event }
+  static String _km(double km) =>
+      (km == km.roundToDouble() ? km.toStringAsFixed(0) : km.toStringAsFixed(1))
+          .replaceAll('.', tr.navDecimalMark);
+}
 
 /// One extra rule: it changes only the values it sets.
 class WaitingRule {
@@ -179,11 +185,10 @@ class WaitingRules {
   const WaitingRules({
     // contract.json#configDefaults (owner Q41): 5 free minutes, and the
     // no-show comes when they end. A live build replaces every number with
-    // the zone's served pricing (`GET /driver/config` → `waiting`, contract
-    // v0.18.7 `pickupWaiting.servedConfig`) and each trip with its own
-    // `terms`; nothing here is a price the driver is ever shown on its own.
-    // No prices of the app's own (G5 checker round 1): without server
-    // terms the amounts are zero and [WaitingTerms.pricesKnown] is false.
+    // the zone's served pricing (`GET /driver/config` → `waiting`) and each
+    // trip with its own `terms`; nothing here is a price the driver is ever
+    // shown on its own. Without server terms the amounts are zero and
+    // [WaitingTerms.pricesKnown] is false.
     this.base = const WaitingTerms(
       freeMinutes: 5,
       perMinute: Money(minorUnits: 0),
@@ -193,30 +198,22 @@ class WaitingRules {
       driverShareNoShowPercent: 80,
       pricesKnown: false,
     ),
-    // Contract v0.18.7 (driver group 5): the app's own extra rules (far
-    // pickup, airport, event) are gone — the server never knew them
-    // (admin rules come with group 6). A scheduled ride still waits the
-    // reservation policy's included minutes (its server terms say the
-    // same); a category's own terms come from `waiting.byCategory`.
-    this.farPickupKm = double.infinity,
-    this.farPickup = const WaitingRule(label: ''),
-    this.rideTypes = const {
-      WaitingRideType.scheduled: WaitingRule(label: 'Scheduled ride'),
-    },
+    // Contract v0.18.8 (driver group 6): far pickup, airport, event and
+    // scheduled rules are the server's; it picks them at arrive and sends
+    // the numbers on the trip (`waiting`, `terms`). The app keeps only the
+    // served far-pickup distance, for the rule's label "over {km} km".
+    this.farPickupKm = 5,
     this.categories = const {},
   });
 
-  /// The rules in use. Mirrors the admin defaults until a backend sets it.
+  /// The rules in use (the zone's served config).
   static WaitingRules current = const WaitingRules();
 
   /// The zone's terms when no extra rule applies.
   final WaitingTerms base;
 
-  /// Over this many km to the pickup, [farPickup] applies.
+  /// `waiting.farPickup.km` of the served config: only for the label.
   final double farPickupKm;
-  final WaitingRule farPickup;
-
-  final Map<WaitingRideType, WaitingRule> rideTypes;
 
   /// By ride category id (`contract.json#categories`), e.g. `premium`.
   final Map<String, WaitingRule> categories;
@@ -231,13 +228,9 @@ class WaitingRules {
     return id == null ? null : categories[id];
   }
 
-  /// The terms for one pickup. Category first, then ride type, then the
-  /// distance rule: a later rule wins where it sets a value.
-  WaitingTerms termsFor({
-    String category = '',
-    WaitingRideType type = WaitingRideType.normal,
-    double? pickupKm,
-  }) {
+  /// The zone's served terms for one category, until the trip's own
+  /// `terms` arrive (they always win).
+  WaitingTerms termsFor({String category = ''}) {
     var terms = base;
     final byCategory = ruleForCategory(category);
     if (byCategory != null) {
@@ -255,56 +248,11 @@ class WaitingRules {
             : byCategory,
       );
     }
-    final byType = rideTypes[type];
-    if (byType != null) {
-      terms = terms._with(
-        type == WaitingRideType.scheduled
-            ? WaitingRule(
-                label: byType.label,
-                freeMinutes: ScheduledRideRules.current.includedWaitingMinutes,
-                perMinute: byType.perMinute,
-                noShowAfterMinutes: byType.noShowAfterMinutes,
-                noShowFee: byType.noShowFee,
-              )
-            : byType,
-      );
-    }
-    if (pickupKm != null &&
-        pickupKm > farPickupKm &&
-        farPickupKm.isFinite &&
-        farPickup.label.isNotEmpty) {
-      final km = farPickupKm == farPickupKm.roundToDouble()
-          ? farPickupKm.toStringAsFixed(0)
-          : farPickupKm.toStringAsFixed(1);
-      terms = terms._with(farPickup, label: WaitingTerms.farPickupLabel(km));
-    }
     // Never a no-show before the free wait is over (Q41).
     return terms.noShowAfterMinutes >= terms.freeMinutes
         ? terms
         : terms._with(
             WaitingRule(label: '', noShowAfterMinutes: terms.freeMinutes),
-            label: '',
           );
-  }
-
-  /// The kind of trip, from how it was matched and where it starts.
-  static WaitingRideType typeOf({
-    required String matchedVia,
-    required String pickupAddress,
-  }) {
-    if (RegExp(
-      r'airport|arlanda|terminal',
-      caseSensitive: false,
-    ).hasMatch(pickupAddress)) {
-      return WaitingRideType.airport;
-    }
-    final via = matchedVia.toLowerCase();
-    if (via.contains('scheduled') || via.contains('reservation')) {
-      return WaitingRideType.scheduled;
-    }
-    if (via.contains('event')) {
-      return WaitingRideType.event;
-    }
-    return WaitingRideType.normal;
   }
 }

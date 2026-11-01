@@ -129,6 +129,7 @@ class TripTerms {
     this.cancelDriverSharePercent = 100,
     this.cancelAfterArrivedIsNoShow = true,
     this.maxPickupMoveMeters = 200,
+    this.stopFreeWaitMinutes = 0,
   });
 
   static TripTerms? tryParse(Object? json) {
@@ -153,6 +154,8 @@ class TripTerms {
         noShowFee: noShowFee,
         driverShareWaitPercent: 100,
         driverShareNoShowPercent: _percent(json['noShowDriverSharePct']) ?? 100,
+        // Contract v0.18.8: the server's rules from arrive (`[]` before).
+        ruleLabels: _ruleIds(json['waitingRules']),
       ),
       cancelFreeMinutes: freeCancel is num && freeCancel >= 0
           ? freeCancel.toDouble()
@@ -160,6 +163,7 @@ class TripTerms {
       cancelDriverSharePercent: _percent(json['cancelDriverSharePct']) ?? 100,
       cancelAfterArrivedIsNoShow: json['cancelAfterArrivedIsNoShow'] != false,
       maxPickupMoveMeters: move is num && move >= 0 ? move.toInt() : 200,
+      stopFreeWaitMinutes: _minutes(json['stopFreeWaitMin']) ?? 0,
     );
   }
 
@@ -178,6 +182,10 @@ class TripTerms {
 
   /// Status item 4: how far the rider may move the pickup (default 200 m).
   final int maxPickupMoveMeters;
+
+  /// Contract v0.18.8 `terms.stopFreeWaitMin`: free minutes at each middle
+  /// stop before its paid wait starts (0 = paid from the first second).
+  final int stopFreeWaitMinutes;
 }
 
 /// `TripEta` (Q4): the server's road-route ETA to the pickup or drop-off.
@@ -276,6 +284,8 @@ class TripWaitingNow {
     this.noShowDriverShare,
     this.chargedSecondsNow,
     this.chargedSoFar,
+    this.rules,
+    this.alerts = const <String>{},
   });
 
   static TripWaitingNow? tryParse(Object? json) {
@@ -295,8 +305,27 @@ class TripWaitingNow {
           ? seconds.toInt()
           : null,
       chargedSoFar: _money(json['chargedSoFar']),
+      rules: json['rules'] is List ? _ruleIds(json['rules']) : null,
+      alerts: {
+        if (json['alerts'] case final List list)
+          for (final alert in list)
+            if (alert is Map &&
+                (alert['kind'] == paidWaitingStarted ||
+                    alert['kind'] == noShowPossible))
+              alert['kind'] as String,
+      },
     );
   }
+
+  /// `waiting.alerts[].kind` (contract v0.18.8, decision 6).
+  static const paidWaitingStarted = 'paid_waiting_started';
+  static const noShowPossible = 'no_show_possible';
+
+  /// The server's rule ids picked at arrive; null from an older server.
+  final List<String>? rules;
+
+  /// The island alerts the server has raised for this wait so far.
+  final Set<String> alerts;
 
   final DateTime? arrivedAt;
 
@@ -390,6 +419,15 @@ class TripPlace {
   final GeoPoint point;
   final String? address;
 }
+
+/// The known rule ids of `waiting.rules` / `terms.waitingRules`.
+List<String> _ruleIds(Object? json) => [
+  if (json is List)
+    for (final id in json)
+      if (id is String &&
+          const {'far_pickup', 'airport', 'scheduled', 'event'}.contains(id))
+        id,
+];
 
 Money? _money(Object? json, [String? currency]) {
   if (json is! Map) return null;

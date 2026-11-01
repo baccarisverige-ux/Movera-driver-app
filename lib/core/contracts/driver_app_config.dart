@@ -265,13 +265,7 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
   const seed = WaitingRules();
   final base = seed.base;
   if (json == null) {
-    return WaitingRules(
-      base: _rebaseTerms(base, currency),
-      rideTypes: {
-        for (final entry in seed.rideTypes.entries)
-          entry.key: _rebase(entry.value, currency),
-      },
-    );
+    return WaitingRules(base: _rebaseTerms(base, currency));
   }
   // Contract v0.18.7 `pickupWaiting.servedConfig`: the top-level terms and
   // `byCategory` are the zone's live pricing, in the zone's currency.
@@ -325,12 +319,15 @@ WaitingRules _waiting(Map<dynamic, dynamic>? json, String currency) {
     }
   }
 
+  // Contract v0.18.8: the far-pickup rule is the server's; its distance
+  // is kept only for the rule's label ("Pickup over 5 km away").
+  final far = _map(json['farPickup']);
+  final km = far?['km'];
   return WaitingRules(
     base: terms,
-    rideTypes: {
-      for (final entry in seed.rideTypes.entries)
-        entry.key: _rebase(entry.value, currency),
-    },
+    farPickupKm: km is num && km.isFinite && km > 0
+        ? km.toDouble()
+        : seed.farPickupKm,
     categories: categories,
   );
 }
@@ -345,15 +342,6 @@ WaitingRule _rule(Map<dynamic, dynamic> json, String label, String currency) =>
       noShowAfterMinutes: _int(json['noShowAfterMin']),
       noShowFee: _money(json['noShowFee'], currency),
     );
-
-/// A seed rule without amounts in another currency.
-WaitingRule _rebase(WaitingRule rule, String currency) => WaitingRule(
-  label: rule.label,
-  freeMinutes: rule.freeMinutes,
-  perMinute: rule.perMinute?.currency == currency ? rule.perMinute : null,
-  noShowAfterMinutes: rule.noShowAfterMinutes,
-  noShowFee: rule.noShowFee?.currency == currency ? rule.noShowFee : null,
-);
 
 WaitingTerms _rebaseTerms(WaitingTerms terms, String currency) => WaitingTerms(
   freeMinutes: terms.freeMinutes,

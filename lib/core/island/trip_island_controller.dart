@@ -21,6 +21,8 @@ class TripIslandInput {
     this.waitingAtStop = false,
     this.navigationStatus,
     this.reroutes = 0,
+    this.alert,
+    this.alertKey = 0,
   });
   final NavigationBanner? banner;
   final String status, address, waitingMessage;
@@ -31,6 +33,11 @@ class TripIslandInput {
   /// Routes replaced after the driver left the route; each new one says
   /// "Route updated". A first route, a retry or a silent refresh does not.
   final int reroutes;
+
+  /// Contract v0.18.8 `waiting.alerts`: a one-off message ("Paid waiting
+  /// has started"), shown once each time [alertKey] changes, no sound.
+  final String? alert;
+  final int alertKey;
 }
 
 class TripIslandFace {
@@ -72,6 +79,8 @@ class TripIslandController extends ChangeNotifier {
     }
     if (wasWaiting && input.waitingSeconds == null) {
       _showNotice(previous.waitingAtStop ? input.status : tr.tripStarted);
+    } else if (input.alertKey != previous.alertKey && input.alert != null) {
+      _showNotice(input.alert!, seconds: 4);
     } else if (input.reroutes > previous.reroutes) {
       // Only after a real reroute. It never hides a maneuver (see [face]).
       _showNotice(tr.routeUpdated);
@@ -99,10 +108,10 @@ class TripIslandController extends ChangeNotifier {
       fault == tr.preciseLocationOffShort ||
       fault.contains('Location');
 
-  void _showNotice(String title) {
+  void _showNotice(String title, {int seconds = 2}) {
     _noticeTimer?.cancel();
     _notice = TripIslandFace(TripIslandKind.status, title, '', 'notice-$title');
-    _noticeTimer = Timer(const Duration(seconds: 2), () {
+    _noticeTimer = Timer(Duration(seconds: seconds), () {
       if (_disposed) return;
       _notice = null;
       notifyListeners();

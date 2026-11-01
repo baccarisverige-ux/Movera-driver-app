@@ -116,8 +116,6 @@ const _allowed = <String, Set<String>>{
     'Trip & rider', 'Wallet & payments', 'Scheduled rides',
     'Account & documents', 'Technical issue', 'Something else',
     'LOCAL DRAFT',
-    // Waiting rules (WaitingTerms._shown).
-    'Pickup far away', 'Airport pickup', 'Event pickup',
     // Exclusive offer reasons (by id).
     'Best match', "Rider's favourite", 'Finishing nearby', 'Airport queue',
     'Pickup soon', 'Only for you · nearby',
@@ -320,12 +318,8 @@ Map<String, String> _shownLabels() {
     'waybill vehicle': record('x', 'y').vehicleText,
     'waybill plate': record('x', 'y').licensePlateText,
     'waybill rider': record('x', 'y').riderNameText,
-    for (final label in [
-      'Pickup far away',
-      'Scheduled ride',
-      'Airport pickup',
-      'Event pickup',
-    ])
+    // Contract v0.18.8: the server's rule ids.
+    for (final label in ['far_pickup', 'scheduled', 'airport', 'event'])
       'waiting $label': WaitingTerms(
         freeMinutes: 1,
         perMinute: Money(minorUnits: 1),

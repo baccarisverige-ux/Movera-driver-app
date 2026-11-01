@@ -9,7 +9,6 @@ import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
-import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
@@ -143,10 +142,12 @@ Future<AcceptRide> _acceptAssign(WidgetTester tester, RideOffer offer) async {
   return tester.widget<AcceptRide>(find.byType(AcceptRide));
 }
 
-WaitingRideType _typeOf(AcceptRide trip) => WaitingRules.typeOf(
-  matchedVia: trip.matchedVia,
-  pickupAddress: trip.pickupAddress,
-);
+/// Contract v0.18.8: the server picks the waiting rule; the app only
+/// keeps the matched-via key that names a reservation.
+bool _scheduled(AcceptRide trip) {
+  final via = trip.matchedVia.toLowerCase();
+  return via.contains('scheduled') || via.contains('reservation');
+}
 
 void main() {
   setUp(() {
@@ -164,7 +165,7 @@ void main() {
         tester,
         _assign(reservationTime: '07:40'),
       );
-      expect(_typeOf(trip), WaitingRideType.scheduled);
+      expect(_scheduled(trip), isTrue);
       // The waybill still says Movera assigned it.
       final record = WaybillRecord(
         tripId: 't',
@@ -209,7 +210,7 @@ void main() {
   ) async {
     final trip = await _acceptAssign(tester, _assign());
     expect(trip.matchedVia, WaybillRecord.assignedByMoveraSource);
-    expect(_typeOf(trip), WaitingRideType.normal);
+    expect(_scheduled(trip), isFalse);
     tester.takeException();
     await tester.pumpWidget(const SizedBox());
   });
