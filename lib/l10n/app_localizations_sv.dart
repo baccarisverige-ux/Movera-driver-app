@@ -6943,4 +6943,43 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get g8Continue => 'Fortsätt';
+
+  @override
+  String get liveDrivingLogsSoon =>
+      'Dina timmar online och vilotider visas här när Movera räknar dem på servern. Inga exempelsiffror visas.';
+
+  @override
+  String get livePromotionsSoon =>
+      'Kampanjer är inte anslutna till appen än. Bonusar på dina resor syns i dina intäkter.';
+
+  @override
+  String get liveBankSoon =>
+      'Att lägga till ett utbetalningskonto i appen kommer snart.';
+
+  @override
+  String get livePinSoon =>
+      'Movera bestämmer per område om en PIN-kod krävs vid upphämtning. När den krävs ber appen om resenärens kod när du är framme.';
+
+  @override
+  String get liveAnalyticsSoon =>
+      'Din resestatistik visas här när Movera räknar den på servern.';
+
+  @override
+  String get walletThisWeek => 'Den här veckan';
+
+  @override
+  String get walletLiveBalanceNote => 'Intjänat den här veckan enligt Movera.';
+
+  @override
+  String get walletLiveNoPayouts => 'Inga utbetalningar än.';
+
+  @override
+  String get walletLiveUnavailable =>
+      'Det gick inte att hämta dina intäkter. Försök igen senare.';
+
+  @override
+  String get walletPayoutPaid => 'Utbetald';
+
+  @override
+  String get walletPayoutPending => 'Väntar';
 }

@@ -1972,5 +1972,16 @@
   "g8RiderEnded": "Resenären avslutade resan i förtid.",
   "g8DriverEnded": "Föraren avslutade resan före målet.",
   "g8DebtLine": "Tidigare obetald avgift (till den resan)",
-  "g8Continue": "Fortsätt"
+  "g8Continue": "Fortsätt",
+  "liveDrivingLogsSoon": "Dina timmar online och vilotider visas här när Movera räknar dem på servern. Inga exempelsiffror visas.",
+  "livePromotionsSoon": "Kampanjer är inte anslutna till appen än. Bonusar på dina resor syns i dina intäkter.",
+  "liveBankSoon": "Att lägga till ett utbetalningskonto i appen kommer snart.",
+  "livePinSoon": "Movera bestämmer per område om en PIN-kod krävs vid upphämtning. När den krävs ber appen om resenärens kod när du är framme.",
+  "liveAnalyticsSoon": "Din resestatistik visas här när Movera räknar den på servern.",
+  "walletThisWeek": "Den här veckan",
+  "walletLiveBalanceNote": "Intjänat den här veckan enligt Movera.",
+  "walletLiveNoPayouts": "Inga utbetalningar än.",
+  "walletLiveUnavailable": "Det gick inte att hämta dina intäkter. Försök igen senare.",
+  "walletPayoutPaid": "Utbetald",
+  "walletPayoutPending": "Väntar"
 }

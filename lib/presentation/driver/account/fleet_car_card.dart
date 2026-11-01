@@ -1,3 +1,4 @@
+import 'package:movera/widgets/color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/contracts/category_catalog.dart';
@@ -48,10 +49,12 @@ class FleetCarCard extends StatelessWidget {
     final mine = vehicle.driverId == myDriverId;
     final takenByOther = vehicle.driverId != null && !mine;
     final (statusLabel, statusColor) = statusOf(vehicle.status);
+    // Page audit round 2: an empty or unknown category id adds nothing, so the line never ends with " · ".
     final types = [
       for (final id in vehicle.categoryIds)
-        categoryNameText(CategoryCatalog.driverLabels[id] ?? id),
-    ].join(' · ');
+        if (id.trim().isNotEmpty)
+          categoryNameText(CategoryCatalog.driverLabels[id] ?? id).trim(),
+    ].where((s) => s.isNotEmpty).toSet().join(' · ');
     return Container(
       key: ValueKey('car-${vehicle.vehicleId}'),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -78,7 +81,7 @@ class FleetCarCard extends StatelessWidget {
           Text(
             [
               vehicle.plate,
-              vehicle.color,
+              localizedCarColor(vehicle.color),
               tr.fleetCarSeatsCount(vehicle.seats),
             ].where((s) => s.isNotEmpty).join(' · '),
             style: AccountStyle.hint(),
