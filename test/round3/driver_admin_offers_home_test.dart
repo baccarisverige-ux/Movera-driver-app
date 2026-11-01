@@ -8,6 +8,7 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/dispatch/demo_dispatch_repository.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/dispatch/offer_rules.dart';
+import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
@@ -35,8 +36,10 @@ class _Dispatch implements DispatchRepository {
   }
 
   /// Contract `offer_withdrawn`: first the reason, then the list without it.
-  void withdraw(String id, OfferGoneReason reason) {
-    _withdrawals.add(OfferWithdrawal(offerId: id, reason: reason));
+  void withdraw(String id, OfferGoneReason reason, {String? tripId}) {
+    _withdrawals.add(
+      OfferWithdrawal(offerId: id, tripId: tripId, reason: reason),
+    );
     publish([
       for (final offer in offers)
         if (offer.id != id) offer,
@@ -158,6 +161,47 @@ Future<void> _accept(WidgetTester tester) async {
   await _frames(tester, const Duration(milliseconds: 900));
 }
 
+const _first = RideOffer(
+  id: 'same-1',
+  tripId: 'trip-same',
+  riderName: 'Karim',
+  riderTrips: 64,
+  category: 'Movera',
+  fare: Money(minorUnits: 12860),
+  source: OfferSource.admin,
+  rating: '4.88',
+  pickupMinutes: 3,
+  pickupKm: 0.8,
+  tripMinutes: 14,
+  tripKm: 7.9,
+  pickup: 'Tegnérgatan 8, Stockholm',
+  dropoff: 'Hammarby sjöstad, Stockholm',
+  pickupPosition: GeoPoint(59.3378, 18.0570),
+  dropoffPosition: GeoPoint(59.3030, 18.1000),
+  isNearby: true,
+  followsDestination: false,
+);
+const _second = RideOffer(
+  id: 'same-2',
+  tripId: 'trip-same',
+  riderName: 'Karim',
+  riderTrips: 64,
+  category: 'Movera',
+  fare: Money(minorUnits: 12860),
+  source: OfferSource.admin,
+  rating: '4.88',
+  pickupMinutes: 3,
+  pickupKm: 0.8,
+  tripMinutes: 14,
+  tripKm: 7.9,
+  pickup: 'Tegnérgatan 8, Stockholm',
+  dropoff: 'Hammarby sjöstad, Stockholm',
+  pickupPosition: GeoPoint(59.3378, 18.0570),
+  dropoffPosition: GeoPoint(59.3030, 18.1000),
+  isNearby: true,
+  followsDestination: false,
+);
+
 /// Round 3: the driver's side of admin direct assigns and radar groups.
 void main() {
   setUp(() {
@@ -246,6 +290,42 @@ void main() {
       expect(find.byKey(_assignCard), findsNothing);
       expect(_said, contains('Taken by another driver'));
       expect(ExclusiveAnswers.instance.missedInRow, 0);
+      await _leave(tester);
+    });
+
+    testWidgets('owner live test 2026-11-01: the same trip withdrawn and '
+        'offered again at once never says "Trip unavailable"', (tester) async {
+      final dispatch = await _online(tester, [_first]);
+      await _until(
+        tester,
+        find.byKey(const ValueKey<String>('exclusive-offer-card-same-1')),
+      );
+      dispatch.withdraw(
+        'same-1',
+        OfferGoneReason.withdrawn,
+        tripId: 'trip-same',
+      );
+      dispatch.publish([_second]);
+      await _frames(tester, const Duration(milliseconds: 2500));
+      expect(_said, isNot(contains('Trip unavailable')));
+      await _leave(tester);
+    });
+
+    testWidgets('withdrawn and not offered again: "Trip unavailable"', (
+      tester,
+    ) async {
+      final dispatch = await _online(tester, [_first]);
+      await _until(
+        tester,
+        find.byKey(const ValueKey<String>('exclusive-offer-card-same-1')),
+      );
+      dispatch.withdraw(
+        'same-1',
+        OfferGoneReason.withdrawn,
+        tripId: 'trip-same',
+      );
+      await _frames(tester, const Duration(milliseconds: 2500));
+      expect(_said, contains('Trip unavailable'));
       await _leave(tester);
     });
   });
