@@ -330,6 +330,78 @@ void main() {
     });
   });
 
+  group('Exclusive replaces the Radar offer of the same trip', () {
+    testWidgets('G6 live fix 1: the Radar card leaves at once and the '
+        'Exclusive offer comes up, no "Trip unavailable"', (tester) async {
+      const radar = RideOffer(
+        id: 'auto-1',
+        tripId: 'trip-x',
+        riderName: 'Astrid',
+        riderTrips: 38,
+        category: 'Comfort',
+        fare: Money(minorUnits: 15240),
+        priority: true,
+        source: OfferSource.admin,
+        groupId: 'radar-g',
+        rating: '4.92',
+        pickupMinutes: 4,
+        pickupKm: 1.3,
+        tripMinutes: 16,
+        tripKm: 9.4,
+        pickup: 'Birger Jarlsgatan 12, Stockholm',
+        dropoff: 'Liljeholmstorget, Stockholm',
+        pickupPosition: GeoPoint(59.3362, 18.0735),
+        dropoffPosition: GeoPoint(59.3103, 18.0231),
+        isNearby: true,
+        followsDestination: false,
+      );
+      const exclusive = RideOffer(
+        id: 'excl-1',
+        tripId: 'trip-x',
+        riderName: 'Astrid',
+        riderTrips: 38,
+        category: 'Comfort',
+        fare: Money(minorUnits: 15240),
+        source: OfferSource.admin,
+        rating: '4.92',
+        pickupMinutes: 4,
+        pickupKm: 1.3,
+        tripMinutes: 16,
+        tripKm: 9.4,
+        pickup: 'Birger Jarlsgatan 12, Stockholm',
+        dropoff: 'Liljeholmstorget, Stockholm',
+        pickupPosition: GeoPoint(59.3362, 18.0735),
+        dropoffPosition: GeoPoint(59.3103, 18.0231),
+        isNearby: true,
+        followsDestination: false,
+      );
+      final dispatch = await _online(tester, [radar]);
+      await _until(
+        tester,
+        find.byKey(const ValueKey<String>('radar-offer-priority-auto-1')),
+      );
+      IslandMessages.reset();
+      dispatch.withdraw('auto-1', OfferGoneReason.withdrawn, tripId: 'trip-x');
+      dispatch.publish([exclusive]);
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(
+        find.byKey(const ValueKey<String>('radar-offer-priority-auto-1')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-offer-card-excl-1')),
+        findsOneWidget,
+      );
+      await _frames(tester, const Duration(milliseconds: 2500));
+      expect(_said, isNot(contains('Trip unavailable')));
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-offer-card-excl-1')),
+        findsOneWidget,
+      );
+      await _leave(tester);
+    });
+  });
+
   group('Radar group (Radar card, first to accept wins)', () {
     testWidgets('Match claims it through dispatch', (tester) async {
       final dispatch = await _online(tester, [DemoAdminOffers.radarGroup]);

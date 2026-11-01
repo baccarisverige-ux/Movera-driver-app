@@ -23,6 +23,7 @@ Future<void> showWaitingTimeSheet(
   Money? chargedSoFar,
   bool cancelAfterArrivedIsNoShow = false,
   DateTime? noShowAt,
+  Money? noShowDriverShare,
 }) {
   return showMoveraModalSheet<void>(
     context: context,
@@ -36,6 +37,7 @@ Future<void> showWaitingTimeSheet(
         chargedSoFar: chargedSoFar,
         cancelAfterArrivedIsNoShow: cancelAfterArrivedIsNoShow,
         noShowAt: noShowAt,
+        noShowDriverShare: noShowDriverShare,
       );
     },
   );
@@ -51,7 +53,13 @@ class WaitingTimeSheet extends StatefulWidget {
     this.chargedSoFar,
     this.cancelAfterArrivedIsNoShow = false,
     this.noShowAt,
+    this.noShowDriverShare,
   });
+
+  /// G6 live fix 5: the driver's part of the no-show fee as the server set
+  /// it at arrive (`waiting.noShowDriverShare`), the same amount the
+  /// confirm dialog says. Null: the share of [terms].
+  final Money? noShowDriverShare;
 
   /// Checker round 2: the server's no-show moment (`waiting.noShowAt`);
   /// the sheet says its clock time instead of the zone's minutes.
@@ -105,6 +113,11 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
     final seconds = _seconds;
     final terms = widget.terms ?? WaitingTerms.active;
     final phase = _WaitPhase.of(seconds);
+    final driverNoShow = widget.noShowDriverShare ?? terms.driverNoShowFee;
+    final canNoShow =
+        !widget.fullyPaid &&
+        seconds >= _noShowSeconds &&
+        widget.onNoShow != null;
     final paidSeconds = widget.fullyPaid
         ? seconds
         : math.max(0, seconds - terms.freeSeconds);
@@ -246,7 +259,8 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                     detail: widget.noShowAt == null
                         ? tr.canBeAppliedAfterNoShow(terms.noShowAfterMinutes)
                         : tr.noShowFromTime(_clockTime(widget.noShowAt!)),
-                    value: terms.pricesKnown ? terms.noShowFee.formatted : '',
+                    // The driver's share, not the rider's fee (G6 fix 5).
+                    value: terms.pricesKnown ? driverNoShow.formatted : '',
                     tone: const Color(0xFF9E2B33),
                     state: seconds < _noShowSeconds
                         ? _PhaseState.later
@@ -267,36 +281,6 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                     ),
                   ),
                 ],
-                if (!widget.fullyPaid &&
-                    seconds >= _noShowSeconds &&
-                    widget.onNoShow != null) ...[
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: OutlinedButton(
-                      key: const ValueKey<String>('waiting-no-show-cancel'),
-                      onPressed: () {
-                        if (!popOwned(context)) return;
-                        widget.onNoShow?.call();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF9E2B33),
-                        side: const BorderSide(color: Color(0xFF9E2B33)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        tr.riderDidnTShow,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
                 const SizedBox(height: 14),
                 if (terms.pricesKnown)
                   Text(
@@ -307,7 +291,7 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
                         : tr.youGetDriverShareWaitPercent2(
                             terms.driverShareWaitPercent,
                             terms.driverShareNoShowPercent,
-                            terms.driverNoShowFee.formatted,
+                            driverNoShow.formatted,
                           ),
                     key: const ValueKey<String>('waiting-driver-share'),
                     textAlign: TextAlign.center,
@@ -333,24 +317,62 @@ class _WaitingTimeSheetState extends State<WaitingTimeSheet> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: FilledButton(
-                onPressed: () => popOwned(context),
-                style: FilledButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: _ink,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // G6 live fix 6: "Rider didn't show" sits in the fixed bottom
+                // bar above Close, never under it at the end of the list.
+                if (canNoShow) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      key: const ValueKey<String>('waiting-no-show-cancel'),
+                      onPressed: () {
+                        if (!popOwned(context)) return;
+                        widget.onNoShow?.call();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF9E2B33),
+                        side: const BorderSide(color: Color(0xFF9E2B33)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        tr.riderDidnTShow,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: () => popOwned(context),
+                    style: FilledButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: _ink,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      tr.close,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
                 ),
-                child: Text(
-                  tr.close,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-                ),
-              ),
+              ],
             ),
           ),
         ],

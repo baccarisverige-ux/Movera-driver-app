@@ -594,6 +594,7 @@ extension _AcceptRidePanel on _AcceptRideState {
       cancelAfterArrivedIsNoShow:
           !_paidStopWait && (_live?.terms?.cancelAfterArrivedIsNoShow ?? false),
       noShowAt: _paidStopWait ? null : _live?.waiting?.noShowAt,
+      noShowDriverShare: _paidStopWait ? null : _noShowDriverShare,
       onNoShow: _paidStopWait
           ? null
           : () {
