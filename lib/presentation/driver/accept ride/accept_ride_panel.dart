@@ -660,8 +660,8 @@ extension _AcceptRidePanel on _AcceptRideState {
               if (!_browsing) ...[
                 const SizedBox(height: 12),
                 // G5 status item 3: the app the driver chose in Trip
-                // settings (Google Maps by default). Checker round 1: no
-                // brand mark, a neutral navigation icon and the app's name.
+                // settings (Google Maps by default): Waze logo (owner G5-3)
+                // or a neutral navigation icon, plus the app's name.
                 ValueListenableBuilder<NavigationApp>(
                   valueListenable: NavigationAppSetting.current,
                   builder: (context, app, _) => MapControlButton(
@@ -679,11 +679,24 @@ extension _AcceptRidePanel on _AcceptRideState {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.navigation_outlined,
-                            size: 22,
-                            color: Color(0xFF252E3A),
-                          ),
+                          // Owner G5-3: the Waze logo when Waze is chosen
+                          // (the one brand mark the rules allow); Google Maps
+                          // keeps the neutral navigation icon.
+                          if (app == NavigationApp.waze)
+                            SvgPicture.asset(
+                              AppAssets.mapWaze,
+                              key: const ValueKey<String>(
+                                'active-ride-navigation-waze-logo',
+                              ),
+                              width: 22,
+                              height: 22,
+                            )
+                          else
+                            const Icon(
+                              Icons.navigation_outlined,
+                              size: 22,
+                              color: Color(0xFF252E3A),
+                            ),
                           FittedBox(
                             fit: BoxFit.scaleDown,
                             child: Text(

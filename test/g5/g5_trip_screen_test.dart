@@ -740,28 +740,53 @@ void main() {
     });
   }
 
-  testWidgets('checker M4: the map button has a neutral icon and the name', (
-    tester,
-  ) async {
-    final realtime = MemoryDriverRealtime();
-    addTearDown(realtime.dispose);
-    await _pumpTrip(tester, realtime: realtime);
-    final label = find.byKey(
-      const ValueKey<String>('active-ride-navigation-label'),
-    );
-    expect(tester.widget<Text>(label).data, 'Google Maps');
-    await NavigationAppSetting.save(NavigationApp.waze, SettingsRepository());
-    await _frames(tester, 4);
-    expect(tester.widget<Text>(label).data, 'Waze');
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey<String>('active-ride-navigation-button')),
-        matching: find.byIcon(Icons.navigation_outlined),
-      ),
-      findsOneWidget,
-    );
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
+  testWidgets(
+    'owner G5-3: Google Maps shows a neutral icon, Waze its logo; both show the name',
+    (tester) async {
+      final realtime = MemoryDriverRealtime();
+      addTearDown(realtime.dispose);
+      await _pumpTrip(tester, realtime: realtime);
+      final label = find.byKey(
+        const ValueKey<String>('active-ride-navigation-label'),
+      );
+      expect(tester.widget<Text>(label).data, 'Google Maps');
+      await NavigationAppSetting.save(NavigationApp.waze, SettingsRepository());
+      await _frames(tester, 4);
+      expect(tester.widget<Text>(label).data, 'Waze');
+      expect(
+        find.byKey(const ValueKey<String>('active-ride-navigation-waze-logo')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(
+            const ValueKey<String>('active-ride-navigation-button'),
+          ),
+          matching: find.byIcon(Icons.navigation_outlined),
+        ),
+        findsNothing,
+      );
+      await NavigationAppSetting.save(
+        NavigationApp.googleMaps,
+        SettingsRepository(),
+      );
+      await _frames(tester, 4);
+      expect(
+        find.descendant(
+          of: find.byKey(
+            const ValueKey<String>('active-ride-navigation-button'),
+          ),
+          matching: find.byIcon(Icons.navigation_outlined),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('active-ride-navigation-waze-logo')),
+        findsNothing,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 
   testWidgets('checker round 2: a reservation 20 min early → the no-show '
       'line says the server time', (tester) async {
