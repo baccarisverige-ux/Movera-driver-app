@@ -74,6 +74,14 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     });
   }
 
+  /// G7 live fix 2: the server's read at restore was applied before the
+  /// saved stop / wait replaced it; the server's stop visits win, and a
+  /// device-copy restore reads the trip once.
+  void _restoreServerStops() {
+    if (_live case final live?) _adoptServerStops(live);
+    unawaited(_readServerStopsAtRestore());
+  }
+
   /// G7 live fix 2 (restore): the server's stop visits. Stops it says
   /// were left are behind the driver; the stop it says the driver is at
   /// starts the stop wait (`stops[i].arrivedAt`).
