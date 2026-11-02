@@ -1197,6 +1197,9 @@ extension _AcceptRideTrip on _AcceptRideState {
   }
 
   void _blockedArrival() {
+    // G7 live fix 3: an earlier message with an action stays until closed
+    // (Flutter's SnackBar.persist) and queued this one out of sight.
+    ScaffoldMessenger.of(context).clearSnackBars();
     if (_arrivalTarget == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(tr.thisStopNeedsVerifiedMapLocation)),
@@ -1245,7 +1248,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       _lastLocation?.isUsableAt(DateTime.now()) != true;
 
   Future<void> _onArrivedTap() async {
-    if (!_nearArrivalTarget && _arrivalFixAged) {
+    // G7 live fix 3: a held fix at the target counts at once; the tap no
+    // longer waits for a one-shot read a still browser never answers.
+    final near = _nearArrivalTarget || _AcceptRideLive(this)._nearByHeldFix;
+    if (!near && _arrivalFixAged) {
       // G7 live fix: a parked phone (a browser above all) may send no new
       // fix while it stands still, so the last one ages past its 30 s and
       // the tap was refused although the car is at the stop. Ask for one
@@ -1254,7 +1260,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       await _freshFixForArrival();
       if (!mounted) return;
     }
-    if (!_nearArrivalTarget) {
+    if (!near && !_nearArrivalTarget) {
       _blockedArrival();
       return;
     }

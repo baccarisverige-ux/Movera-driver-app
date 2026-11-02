@@ -162,4 +162,22 @@ extension _AcceptRideLive on _AcceptRideState {
       ),
     );
   }
+
+  /// G7 live fix 3 (round 2 item 2): a still car's position stream goes
+  /// quiet (a browser with a fixed position gives one fix, then nothing,
+  /// and its one-shot read never answers once that fix is 30 s old). The
+  /// last real fix, accurate and at most 2 min old, within
+  /// 100 m of the target counts for the arrival tap at once.
+  bool get _nearByHeldFix {
+    final target = _arrivalTarget, fix = _lastLocation;
+    if (target == null || fix == null) return false;
+    final at = fix.measuredAt, accuracy = fix.accuracyMeters;
+    if (at == null || accuracy == null || !accuracy.isFinite) return false;
+    if (accuracy < 0 || accuracy > 50) return false;
+    final age = DateTime.now().difference(at);
+    if (age < -gpsClockSkewTolerance || age > const Duration(minutes: 2)) {
+      return false;
+    }
+    return fix.point.distanceMetersTo(GeoPointMaps.fromLatLng(target)) <= 100;
+  }
 }
