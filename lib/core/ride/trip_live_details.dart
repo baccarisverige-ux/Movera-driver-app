@@ -51,7 +51,10 @@ class TripLiveDetails {
       pickup: TripPlace.tryParse(json['pickup']),
       rideCheck: TripRideCheck.tryParse(json['rideCheck']),
       routeChange: TripRouteChange.tryParse(json['routeChange']),
-      stopVisits: TripStopVisit.tryParseList(json['stops']),
+      stopVisits: TripStopVisit.tryParseList(
+        json['stops'],
+        visits: json['stopVisits'],
+      ),
     );
   }
 
@@ -130,14 +133,32 @@ class TripLiveDetails {
 class TripStopVisit {
   const TripStopVisit({this.arrivedAt, this.leftAt});
 
-  static List<TripStopVisit>? tryParseList(Object? json) {
+  /// Contract `TripProjection.stops[i].arrivedAt / leftAt` (canonical,
+  /// `contract.json#stopWaits.projection`). G7 live fix 3: a server that
+  /// sent the taps only as `stopVisits [{stopIndex, arrivedAt, leftAt?}]`
+  /// (live 2026-11-02) is read from there for a stop without its own.
+  static List<TripStopVisit>? tryParseList(Object? json, {Object? visits}) {
     if (json is! List) return null;
+    final mirror = <int, Map<Object?, Object?>>{};
+    if (visits is List) {
+      for (final visit in visits) {
+        if (visit is Map && visit['stopIndex'] is num) {
+          mirror[(visit['stopIndex'] as num).toInt()] = visit;
+        }
+      }
+    }
     return [
-      for (final stop in json)
-        TripStopVisit(
-          arrivedAt: stop is Map ? _time(stop['arrivedAt']) : null,
-          leftAt: stop is Map ? _time(stop['leftAt']) : null,
-        ),
+      for (final (i, stop) in json.indexed)
+        if (stop is Map && stop['arrivedAt'] != null)
+          TripStopVisit(
+            arrivedAt: _time(stop['arrivedAt']),
+            leftAt: _time(stop['leftAt']),
+          )
+        else
+          TripStopVisit(
+            arrivedAt: _time(mirror[i]?['arrivedAt']),
+            leftAt: _time(mirror[i]?['leftAt']),
+          ),
     ];
   }
 

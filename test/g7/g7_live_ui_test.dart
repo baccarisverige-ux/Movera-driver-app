@@ -36,7 +36,7 @@ class _Gps implements DriverLocationRepository {
       updates.stream;
 }
 
-const _pickup = GeoPoint(59.3279, 18.0615);
+/// The demo trip's pickup (AcceptRide's default) is at 59.3279, 18.0615.
 
 Future<void> _frames(WidgetTester tester, [int count = 12]) async {
   for (var i = 0; i < count; i++) {
@@ -105,7 +105,9 @@ void main() {
       await _frames(tester);
       gps.requests.single.complete(
         DriverLocation(
-          point: _pickup,
+          // G7 live fix 3: a held fix AT the target now counts at once
+          // (g7_live_fix_round3_test); this one is ~290 m short of the pickup.
+          point: const GeoPoint(59.3305, 18.0615),
           // Taken while fresh, then the parked phone sends nothing more
           // and it ages past its 30 s.
           measuredAt: DateTime.now().subtract(const Duration(seconds: 29)),
