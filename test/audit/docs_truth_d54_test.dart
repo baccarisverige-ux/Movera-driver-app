@@ -8,9 +8,9 @@ String _read(String path) => File(path).readAsStringSync();
 
 void main() {
   test('driver-2: DECISIONS.md names the contract version the copy pins', () {
-    final version = RegExp(
-      r'"version": "([\d.]+)"',
-    ).firstMatch(_read('contracts/contract.json'))!.group(1)!;
+    final version = RegExp(r'"version": "([\d.]+)"')
+        .firstMatch(_read('contracts/contract.json'))!
+        .group(1)!;
     final decisions = _read('docs/DECISIONS.md');
     expect(decisions, contains('`contracts/contract.json` (v$version,'));
     expect(decisions, contains('shared Movera contract v$version'));
@@ -20,9 +20,8 @@ void main() {
   test('driver-3: DECISIONS.md describes the live car marker as built', () {
     final decisions = _read('docs/DECISIONS.md');
     // Whitespace-insensitive: `dart format` may wrap the expression.
-    final trip = _read(
-      'lib/presentation/driver/accept ride/accept_ride.dart',
-    ).replaceAll(RegExp(r'\s+'), ' ');
+    final trip = _read('lib/presentation/driver/accept ride/accept_ride.dart')
+        .replaceAll(RegExp(r'\s+'), ' ');
     expect(trip, contains('Timer.periodic(const Duration(milliseconds: 33)'));
     expect(decisions, isNot(contains('5Hz')));
     expect(decisions, contains('33 ms'));
@@ -43,9 +42,9 @@ void main() {
   test('driver-4: the documented key referrer is the path Pages serves', () {
     // The demo build's base (the live build under /live/ sits below it,
     // so the same referrer covers both).
-    final base = RegExp(
-      r'--base-href "(/[^"]+/)"[^\n]*MOVERA_DEMO_ARRIVAL',
-    ).firstMatch(_read('.github/workflows/deploy-pages.yml'))!.group(1)!;
+    final base = RegExp(r'--base-href "(/[^"]+/)"[^\n]*MOVERA_DEMO_ARRIVAL')
+        .firstMatch(_read('.github/workflows/deploy-pages.yml'))!
+        .group(1)!;
     expect(base, '/Movera-driver-app/');
     expect(
       _read('docs/PRIVACY_SECURITY.md'),
@@ -61,9 +60,8 @@ void main() {
     final doc = _read('docs/driver-camera-architecture.md');
     String n(double v) => v == v.roundToDouble() ? '${v.toInt()}' : '$v';
     // Whitespace-insensitive: `dart format` may wrap the expression.
-    final trip = _read(
-      'lib/presentation/driver/accept ride/accept_ride.dart',
-    ).replaceAll(RegExp(r'\s+'), ' ');
+    final trip = _read('lib/presentation/driver/accept ride/accept_ride.dart')
+        .replaceAll(RegExp(r'\s+'), ' ');
     expect(trip, contains('DriverCameraMode.following ? .75 : .5'));
     expect(doc, contains('**75% of screen height**'));
     expect(doc, isNot(contains('72%')));

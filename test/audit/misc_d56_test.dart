@@ -246,9 +246,8 @@ void main() {
     );
     expect(gate({'CONFIGURATION': 'Release'}).exitCode, 0);
     // The Runner target runs it before it builds anything.
-    final project = File(
-      'ios/Runner.xcodeproj/project.pbxproj',
-    ).readAsStringSync();
+    final project = File('ios/Runner.xcodeproj/project.pbxproj')
+        .readAsStringSync();
     expect(project, contains(r'\"$SRCROOT/scripts/require_maps_key.sh\"'));
     expect(
       RegExp(

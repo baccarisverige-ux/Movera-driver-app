@@ -75,25 +75,22 @@ void main() {
     });
 
     test('EUR: 90 s at 0,50 € / min', () {
-      final fee = terms(
-        const Money(minorUnits: 50, currency: 'EUR'),
-      ).driverWaitingFee(90);
+      final fee = terms(const Money(minorUnits: 50, currency: 'EUR'))
+          .driverWaitingFee(90);
       expect(fee, const Money(minorUnits: 75, currency: 'EUR'));
       expect(WaitingTerms.addFee('24,00 €', fee), '24,75 €');
     });
 
     test('TND: 90 s at 0,300 DT / min, three decimals', () {
-      final fee = terms(
-        const Money(minorUnits: 300, currency: 'TND'),
-      ).driverWaitingFee(90);
+      final fee = terms(const Money(minorUnits: 300, currency: 'TND'))
+          .driverWaitingFee(90);
       expect(fee, const Money(minorUnits: 450, currency: 'TND'));
       expect(WaitingTerms.addFee('12,500 DT', fee), '12,950 DT');
     });
 
     test('a fare in another currency than the fee is left alone', () {
-      final fee = terms(
-        const Money(minorUnits: 50, currency: 'EUR'),
-      ).driverWaitingFee(90);
+      final fee = terms(const Money(minorUnits: 50, currency: 'EUR'))
+          .driverWaitingFee(90);
       expect(WaitingTerms.addFee('100,00 kr', fee), '100,00 kr');
     });
 
@@ -139,9 +136,8 @@ void main() {
     test('the earnings history keeps it after completion', () async {
       SharedPreferences.setMockInitialValues({});
       CompletionJournal.resetForTesting();
-      await CompletionJournal(
-        active: MemoryActiveRideRepository(),
-      ).finish(_record());
+      await CompletionJournal(active: MemoryActiveRideRepository())
+          .finish(_record());
       final rows = await PrefsTripHistoryRepository().list();
       expect(rows.single.driverBonus, '30 kr');
       expect(rows.single.fare, '128,60 kr');

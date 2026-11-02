@@ -876,14 +876,11 @@ class DriverHomeAdminContentService {
       dateLabel: 'Fri 25 Sep',
       timeLabel: '18:00–22:30',
       location: 'Central Stockholm',
-      description:
-          'Expect concentrated pickup activity around the city centre and waterfront after evening events finish.',
+      description: 'Expect concentrated pickup activity around the city centre and waterfront after evening events finish.',
       recommendedWindow: '18:30–22:00',
       demandLabel: 'Higher demand expected',
-      driverNote:
-          'Be online before the main departure window and stay close to legal pickup zones.',
-      imageUrl:
-          'https://images.unsplash.com/photo-1670257876831-7e97238da208?auto=format&fit=crop&q=82&w=1400',
+      driverNote: 'Be online before the main departure window and stay close to legal pickup zones.',
+      imageUrl: 'https://images.unsplash.com/photo-1670257876831-7e97238da208?auto=format&fit=crop&q=82&w=1400',
       imageCredit: 'Håkon Grimstad · Unsplash',
       enabled: true,
     ),
@@ -894,14 +891,11 @@ class DriverHomeAdminContentService {
       dateLabel: 'Sat 26 Sep',
       timeLabel: '16:30–20:00',
       location: 'Stockholm waterfront',
-      description:
-          'Large visitor movements can create temporary traffic pressure and higher ride demand around waterfront routes.',
+      description: 'Large visitor movements can create temporary traffic pressure and higher ride demand around waterfront routes.',
       recommendedWindow: '17:00–19:30',
       demandLabel: 'Busy pickup window',
-      driverNote:
-          'Go online before the crowd leaves and use live routing to avoid blocked curb areas.',
-      imageUrl:
-          'https://images.unsplash.com/photo-1781040761543-fc71fcc17eb2?auto=format&fit=crop&q=82&w=1400',
+      driverNote: 'Go online before the crowd leaves and use live routing to avoid blocked curb areas.',
+      imageUrl: 'https://images.unsplash.com/photo-1781040761543-fc71fcc17eb2?auto=format&fit=crop&q=82&w=1400',
       imageCredit: 'Rafael Peier · Unsplash',
       enabled: true,
     ),
@@ -912,14 +906,11 @@ class DriverHomeAdminContentService {
       dateLabel: 'Sat 26 Sep',
       timeLabel: '22:00–02:00',
       location: 'Greater Stockholm',
-      description:
-          'Night-time road conditions and event departures can shift demand quickly between central and outer zones.',
+      description: 'Night-time road conditions and event departures can shift demand quickly between central and outer zones.',
       recommendedWindow: '22:30–01:30',
       demandLabel: 'Late-night demand',
-      driverNote:
-          'Stay online through the busiest window and check destination direction before matching longer trips.',
-      imageUrl:
-          'https://images.unsplash.com/photo-1511443259588-05878425294f?auto=format&fit=crop&q=82&w=1400',
+      driverNote: 'Stay online through the busiest window and check destination direction before matching longer trips.',
+      imageUrl: 'https://images.unsplash.com/photo-1511443259588-05878425294f?auto=format&fit=crop&q=82&w=1400',
       imageCredit: 'Federico Enni · Unsplash',
       enabled: true,
     ),
@@ -955,8 +946,7 @@ class DriverHomeAdminContentService {
         latestVersion: '1.0.0',
         minimumVersion: '1.0.0',
         title: 'Movera Driver update available',
-        message:
-            'A newer version is ready with stability and trip-flow improvements.',
+        message: 'A newer version is ready with stability and trip-flow improvements.',
         actionLabel: 'Update app',
         dismissLabel: 'Later',
         mandatory: false,

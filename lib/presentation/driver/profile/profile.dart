@@ -1,5 +1,7 @@
 import 'package:movera/widgets/movera_dialog_theme.dart';
+
 import 'dart:async';
+
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -533,9 +535,8 @@ class _DriverProfileState extends State<DriverProfile> {
         context.mounted &&
         ModalRoute.of(context)?.isCurrent == true) {
       if (!await signOutDriver(context) && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr.profCouldNotClear)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(tr.profCouldNotClear)));
       }
     }
   }

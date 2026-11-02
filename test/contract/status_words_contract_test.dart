@@ -10,19 +10,16 @@ import 'package:movera/l10n/app_localizations.dart';
 /// (contracts/contract.json#statusWords), never its own. Fails when an ARB
 /// word differs from the contract (run tool/gen_status_words.py).
 void main() {
-  final contract =
-      jsonDecode(File('contracts/contract.json').readAsStringSync())
-          as Map<String, dynamic>;
+  final contract = jsonDecode(
+    File('contracts/contract.json').readAsStringSync(),
+  ) as Map<String, dynamic>;
   final families =
       (contract['statusWords'] as Map<String, dynamic>)['families']
           as Map<String, dynamic>;
   // Every Swedish text the app ships (data, read once like the contract).
-  final svWords =
-      (jsonDecode(File('lib/l10n/app_sv.arb').readAsStringSync())
-              as Map<String, dynamic>)
-          .values
-          .whereType<String>()
-          .toList();
+  final svWords = (jsonDecode(
+    File('lib/l10n/app_sv.arb').readAsStringSync(),
+  ) as Map<String, dynamic>).values.whereType<String>().toList();
 
   for (final lang in const ['sv', 'fr', 'en']) {
     test('$lang status words equal contract.json#statusWords', () {

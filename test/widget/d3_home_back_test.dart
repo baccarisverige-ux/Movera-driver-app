@@ -102,9 +102,8 @@ Future<void> _pumpHome(
         useInheritedMediaQuery: true,
         builder: (_, __) => MaterialApp(
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: const TextScaler.linear(_scale)),
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(_scale)),
             child: child!,
           ),
           home: DriverHome(

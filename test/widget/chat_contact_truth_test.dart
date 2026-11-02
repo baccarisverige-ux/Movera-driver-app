@@ -82,19 +82,15 @@ void main() {
   });
 
   test('reachable chat source has no hard-coded tel target', () {
-    final appBar = File(
-      'lib/presentation/common/chat/components/appbar.dart',
-    ).readAsStringSync();
-    final chat = File(
-      'lib/presentation/common/chat/chat.dart',
-    ).readAsStringSync();
+    final appBar = File('lib/presentation/common/chat/components/appbar.dart')
+        .readAsStringSync();
+    final chat = File('lib/presentation/common/chat/chat.dart')
+        .readAsStringSync();
     final ride =
-        File(
-          'lib/presentation/driver/accept ride/accept_ride.dart',
-        ).readAsStringSync() +
-        File(
-          'lib/presentation/driver/accept ride/accept_ride_panel.dart',
-        ).readAsStringSync();
+        File('lib/presentation/driver/accept ride/accept_ride.dart')
+            .readAsStringSync() +
+        File('lib/presentation/driver/accept ride/accept_ride_panel.dart')
+            .readAsStringSync();
     expect(appBar, isNot(contains('tel:')));
     expect(appBar, isNot(contains('46701234567')));
     expect(appBar, isNot(contains('url_launcher')));

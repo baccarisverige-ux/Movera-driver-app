@@ -1,4 +1,5 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -81,9 +82,8 @@ class _DestinationConfirmScreenState extends State<DestinationConfirmScreen>
   void initState() {
     super.initState();
     // Until the road route answers: straight line x1.3 at ~40 km/h.
-    final straight = GeoPointMaps.fromLatLng(
-      widget.origin,
-    ).distanceMetersTo(GeoPointMaps.fromLatLng(widget.destination.position));
+    final straight = GeoPointMaps.fromLatLng(widget.origin)
+        .distanceMetersTo(GeoPointMaps.fromLatLng(widget.destination.position));
     _meters = straight * 1.3;
     _seconds = _meters / (40 / 3.6);
     unawaited(_loadRoute());

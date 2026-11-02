@@ -108,9 +108,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
       if (onAdded != null) {
         onAdded(context, vehicle);
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr.fleetCarAdded)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(tr.fleetCarAdded)));
         // Owner item 11: the four photos next (when the admin asks them).
         final photos = _rules?.carPhotos ?? const <String>[];
         if (photos.isNotEmpty) {

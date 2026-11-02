@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
@@ -31,18 +32,15 @@ void main() {
       ),
     ],
   );
-  test(
-    'sparse polyline midpoint is on the route and has along-route remaining distance',
-    () {
-      final progress = const RouteProgressCalculator().measure(
-        route: route,
-        position: const GeoPoint(0, 0.001),
-      );
-      expect(progress.offRoute, isFalse);
-      expect(progress.distanceFromRouteMeters, lessThan(1));
-      expect(progress.remainingMeters, closeTo(111, 2));
-    },
-  );
+  test('sparse polyline midpoint is on the route and has along-route remaining distance', () {
+    final progress = const RouteProgressCalculator().measure(
+      route: route,
+      position: const GeoPoint(0, 0.001),
+    );
+    expect(progress.offRoute, isFalse);
+    expect(progress.distanceFromRouteMeters, lessThan(1));
+    expect(progress.remainingMeters, closeTo(111, 2));
+  });
   test(
     'route response after disposal never notifies a dead controller',
     () async {

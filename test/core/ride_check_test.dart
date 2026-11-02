@@ -355,9 +355,8 @@ void main() {
         );
         expect(services.rules.farDropMeters, 5000);
         expect(services.rules.longStopMinutes, 10);
-        final demo = RideCheckDetector(
-          rules: services.rules,
-        ).demo(RideCheckTrigger.longStop, _t0, destination: 'Solna');
+        final demo = RideCheckDetector(rules: services.rules)
+            .demo(RideCheckTrigger.longStop, _t0, destination: 'Solna');
         expect(demo.reason.bold, '10 min');
       });
     });

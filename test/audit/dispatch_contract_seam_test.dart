@@ -361,13 +361,10 @@ void main() {
   });
 
   test('driver-r4-8: destinationMode.perDay and nextTrips.on are read', () {
-    final json =
-        jsonDecode(
-              File(
-                'contracts/fixtures/config/driver_app_config.json',
-              ).readAsStringSync(),
-            )
-            as Map<String, dynamic>;
+    final json = jsonDecode(
+      File('contracts/fixtures/config/driver_app_config.json')
+          .readAsStringSync(),
+    ) as Map<String, dynamic>;
     var config = DriverAppConfig.fromJson({
       ...json,
       'destinationMode': {'perDay': 1},

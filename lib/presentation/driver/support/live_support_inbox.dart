@@ -47,9 +47,8 @@ class _LiveSupportInboxState extends State<LiveSupportInbox> {
     );
     if (sent == true) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr.supportSentToMovera)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(tr.supportSentToMovera)));
       }
       _reload();
     }

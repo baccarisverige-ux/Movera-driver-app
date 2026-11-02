@@ -469,8 +469,9 @@ void main() {
         'Add car: no ride-type choice (Movera gives them), then 4 photos',
         (tester) async {
           final server = FakeServer({
-            'GET ${DriverAccountRepository.onboardingSettingsPath}':
-                (_) async => jsonResponse(200, settingsJson(country)),
+            'GET ${DriverAccountRepository.onboardingSettingsPath}': (
+              _,
+            ) async => jsonResponse(200, settingsJson(country)),
             'POST ${DriverAccountRepository.vehiclesPath}': (request) async {
               final body = jsonDecode(request.body) as Map<String, dynamic>;
               return jsonResponse(201, {
@@ -620,8 +621,9 @@ void main() {
                     },
                   ],
                 }),
-            'GET ${DriverAccountRepository.onboardingSettingsPath}':
-                (_) async => jsonResponse(200, settingsJson(country)),
+            'GET ${DriverAccountRepository.onboardingSettingsPath}': (
+              _,
+            ) async => jsonResponse(200, settingsJson(country)),
           });
           await _host(tester, LiveDocumentsScreen(account: server.session()));
           await tester.pumpAndSettle();

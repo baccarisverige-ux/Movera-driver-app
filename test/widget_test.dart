@@ -973,130 +973,135 @@ void main() {
     _expectNoException(tester);
   });
 
-  testWidgets('Destination Mode: confirm shows it on the island, no popup card', (
-    WidgetTester tester,
-  ) async {
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await _pumpHome(tester, const Size(375, 812));
+  testWidgets(
+    'Destination Mode: confirm shows it on the island, no popup card',
+    (WidgetTester tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await _pumpHome(tester, const Size(375, 812));
 
-    final openDestination = find.byKey(
-      const ValueKey<String>('destination-mode-open'),
-    );
-    expect(openDestination, findsOneWidget);
-    final destinationControl = tester.widget<InkWell>(openDestination);
-    expect(destinationControl.onTap, isNotNull);
-    destinationControl.onTap!.call();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 520));
+      final openDestination = find.byKey(
+        const ValueKey<String>('destination-mode-open'),
+      );
+      expect(openDestination, findsOneWidget);
+      final destinationControl = tester.widget<InkWell>(openDestination);
+      expect(destinationControl.onTap, isNotNull);
+      destinationControl.onTap!.call();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 520));
 
-    expect(find.byType(DriverDestinationPicker), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey<String>('destination-search')),
-      findsOneWidget,
-    );
-    expect(find.byType(CustomGoogleMap), findsNothing);
-    expect(
-      find.byKey(const ValueKey<String>('destination-result-solna')),
-      findsOneWidget,
-    );
-    _expectNoException(tester);
+      expect(find.byType(DriverDestinationPicker), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey<String>('destination-search')),
+        findsOneWidget,
+      );
+      expect(find.byType(CustomGoogleMap), findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('destination-result-solna')),
+        findsOneWidget,
+      );
+      _expectNoException(tester);
 
-    await tester.tap(
-      find.byKey(const ValueKey<String>('destination-result-solna')),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 420));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('destination-result-solna')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 420));
 
-    // Choose-destination step: one option, then Confirm.
-    expect(find.text('Fastest route to your destination'), findsOneWidget);
-    expect(find.textContaining('closer to Solna centrum'), findsOneWidget);
-    expect(find.textContaining('Arrive by '), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey<String>('destination-confirm')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 420));
-    await tester.pump(const Duration(milliseconds: 420));
+      // Choose-destination step: one option, then Confirm.
+      expect(find.text('Fastest route to your destination'), findsOneWidget);
+      expect(find.textContaining('closer to Solna centrum'), findsOneWidget);
+      expect(find.textContaining('Arrive by '), findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey<String>('destination-confirm')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 420));
+      await tester.pump(const Duration(milliseconds: 420));
 
-    expect(find.byType(DriverHome), findsOneWidget);
-    // No popup card on the map.
-    expect(find.text('On your way'), findsNothing);
-    expect(
-      find.byKey(const ValueKey<String>('destination-mode-home-tab')),
-      findsNothing,
-    );
-    // R13-9: no white popup on the map; the island shows the destination.
-    expect(
-      find.byKey(const ValueKey<String>('destination-mode-bar')),
-      findsNothing,
-    );
-    expect(find.textContaining('Destination mode until '), findsNothing);
-    expect(find.text('STARTING'), findsOneWidget);
+      expect(find.byType(DriverHome), findsOneWidget);
+      // No popup card on the map.
+      expect(find.text('On your way'), findsNothing);
+      expect(
+        find.byKey(const ValueKey<String>('destination-mode-home-tab')),
+        findsNothing,
+      );
+      // R13-9: no white popup on the map; the island shows the destination.
+      expect(
+        find.byKey(const ValueKey<String>('destination-mode-bar')),
+        findsNothing,
+      );
+      expect(find.textContaining('Destination mode until '), findsNothing);
+      expect(find.text('STARTING'), findsOneWidget);
 
-    final map = tester.widget<CustomGoogleMap>(
-      find.byType(CustomGoogleMap).first,
-    );
-    // Routing is real-road only. In widget tests there is no live GPS/provider,
-    // so Destination Mode must not invent a straight two-point route.
-    expect(
-      map.polylines!.any(
-        (polyline) => polyline.polylineId.value == 'destination_mode_route',
-      ),
-      isFalse,
-    );
-    // Exactly one destination pin and no offer stops in Destination mode.
-    expect(
-      map.markers!.where(
-        (marker) => marker.markerId.value == 'destination_mode_target',
-      ),
-      hasLength(1),
-    );
-    expect(
-      map.markers!.where((m) => m.markerId.value.startsWith('radar_')),
-      isEmpty,
-    );
+      final map = tester.widget<CustomGoogleMap>(
+        find.byType(CustomGoogleMap).first,
+      );
+      // Routing is real-road only. In widget tests there is no live GPS/provider,
+      // so Destination Mode must not invent a straight two-point route.
+      expect(
+        map.polylines!.any(
+          (polyline) => polyline.polylineId.value == 'destination_mode_route',
+        ),
+        isFalse,
+      );
+      // Exactly one destination pin and no offer stops in Destination mode.
+      expect(
+        map.markers!.where(
+          (marker) => marker.markerId.value == 'destination_mode_target',
+        ),
+        hasLength(1),
+      );
+      expect(
+        map.markers!.where((m) => m.markerId.value.startsWith('radar_')),
+        isEmpty,
+      );
 
-    await tester.pump(const Duration(milliseconds: 1550));
-    expect(find.text('LIVE'), findsOneWidget);
-    _expectNoException(tester);
+      await tester.pump(const Duration(milliseconds: 1550));
+      expect(find.text('LIVE'), findsOneWidget);
+      _expectNoException(tester);
 
-    // Once the online notices pass, the island shows the destination.
-    final face = find.byKey(const ValueKey<String>('island-destination-face'));
-    for (var i = 0; i < 24 && face.evaluate().isEmpty; i++) {
-      await tester.pump(const Duration(milliseconds: 500));
-    }
-    expect(face, findsOneWidget);
-    expect(
-      find.descendant(of: face, matching: find.textContaining('Solna Torg')),
-      findsOneWidget,
-    );
-    expect(find.text('On your way'), findsNothing);
+      // Once the online notices pass, the island shows the destination.
+      final face = find.byKey(
+        const ValueKey<String>('island-destination-face'),
+      );
+      for (var i = 0; i < 24 && face.evaluate().isEmpty; i++) {
+        await tester.pump(const Duration(milliseconds: 500));
+      }
+      expect(face, findsOneWidget);
+      expect(
+        find.descendant(of: face, matching: find.textContaining('Solna Torg')),
+        findsOneWidget,
+      );
+      expect(find.text('On your way'), findsNothing);
 
-    // Tap the island: details with "Turn off destination".
-    tester
-        .widget<InkWell>(
-          find.byKey(const ValueKey<String>('last-trip-launcher')),
-        )
-        .onTap!
-        .call();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 420));
-    expect(find.text('Turn off destination'), findsOneWidget);
-    await tester.tap(
-      find.byKey(const ValueKey<String>('destination-mode-end')),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 420));
+      // Tap the island: details with "Turn off destination".
+      tester
+          .widget<InkWell>(
+            find.byKey(const ValueKey<String>('last-trip-launcher')),
+          )
+          .onTap!
+          .call();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 420));
+      expect(find.text('Turn off destination'), findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey<String>('destination-mode-end')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 420));
 
-    expect(
-      find.byKey(const ValueKey<String>('island-destination-face')),
-      findsNothing,
-    );
-    expect(
-      find.byKey(const ValueKey<String>('destination-mode-bar')),
-      findsNothing,
-    );
-    expect(find.text('LIVE'), findsOneWidget);
-    _expectNoException(tester);
-  });
+      expect(
+        find.byKey(const ValueKey<String>('island-destination-face')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('destination-mode-bar')),
+        findsNothing,
+      );
+      expect(find.text('LIVE'), findsOneWidget);
+      _expectNoException(tester);
+    },
+  );
 
   testWidgets('Home destination control does not block the map area', (
     WidgetTester tester,

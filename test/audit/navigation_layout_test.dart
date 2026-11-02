@@ -81,9 +81,8 @@ void main() {
             builder: (_, __) => MaterialApp(
               navigatorKey: nav,
               builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(textScaler: TextScaler.linear(2)),
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.linear(2)),
                 child: child!,
               ),
               home: const Scaffold(body: Text('Crawl root')),
@@ -145,9 +144,8 @@ void main() {
       expect(bytes, isNotNull);
       expect(bytes!.lengthInBytes, greaterThan(100));
       Directory('build/test-evidence').createSync(recursive: true);
-      File(
-        'build/test-evidence/upload-guide.png',
-      ).writeAsBytesSync(bytes.buffer.asUint8List());
+      File('build/test-evidence/upload-guide.png')
+          .writeAsBytesSync(bytes.buffer.asUint8List());
       image.dispose();
     });
   });

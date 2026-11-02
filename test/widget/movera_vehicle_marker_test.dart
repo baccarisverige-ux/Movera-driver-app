@@ -380,9 +380,10 @@ void main() {
         tester.widget<GoogleMap>(find.byType(GoogleMap));
     Marker driver(WidgetTester tester) =>
         map(tester).markers.singleWhere((m) => m.markerId.value == 'driver');
-    Marker? halo(WidgetTester tester) => map(tester).markers
-        .where((m) => m.markerId.value == MoveraVehicleMarker.haloId)
-        .firstOrNull;
+    Marker? halo(WidgetTester tester) =>
+        map(tester).markers
+            .where((m) => m.markerId.value == MoveraVehicleMarker.haloId)
+            .firstOrNull;
 
     Future<void> move(
       WidgetTester tester,

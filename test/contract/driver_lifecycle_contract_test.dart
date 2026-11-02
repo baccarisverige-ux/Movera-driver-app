@@ -167,9 +167,8 @@ void main() {
         }),
       });
       expect(
-        await CompletionJournal(
-          active: MemoryActiveRideRepository(),
-        ).reconcile(),
+        await CompletionJournal(active: MemoryActiveRideRepository())
+            .reconcile(),
         JournalReplayOutcome.applied,
       );
       final rows = await PrefsTripHistoryRepository().list();

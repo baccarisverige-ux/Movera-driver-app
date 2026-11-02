@@ -328,9 +328,8 @@ extension _HomeMapSheet on _DriverHomeState {
 
     var roadPoints = const <LatLng>[];
     try {
-      roadPoints = await _HomeOfferRoute(
-        this,
-      )._offerRoad(pickup, stops, dropoff);
+      roadPoints = await _HomeOfferRoute(this)
+          ._offerRoad(pickup, stops, dropoff);
       if (!isCurrent()) return;
     } catch (_) {
       if (!isCurrent()) return;
@@ -877,17 +876,17 @@ extension _HomeMapSheet on _DriverHomeState {
                         ),
                       ),
                       // Round 4b: invitations waiting for an answer.
-                      if ((accountSessionOf(
-                                context,
-                              )?.account?.pendingFleetInvitations ??
+                      if ((accountSessionOf(context)
+                                  ?.account
+                                  ?.pendingFleetInvitations ??
                               0) >
                           0)
                         Padding(
                           padding: const EdgeInsets.only(left: 8),
                           child: InvitationBadge(
-                            accountSessionOf(
-                              context,
-                            )!.account!.pendingFleetInvitations,
+                            accountSessionOf(context)!
+                                .account!
+                                .pendingFleetInvitations,
                           ),
                         ),
                     ],
@@ -1236,9 +1235,9 @@ extension _HomeMapSheet on _DriverHomeState {
                   buildingsEnabled: true,
                   indoorViewEnabled: false,
                   mapType: MapType.normal,
-                  padding: _HomeOfferRoute(
-                    this,
-                  )._homeMapInsets(context).edgeInsets,
+                  padding: _HomeOfferRoute(this)
+                      ._homeMapInsets(context)
+                      .edgeInsets,
                   onMapCreated: (GoogleMapController controller) {
                     _mapController = controller;
                     _cameraPort = GoogleDriverCameraPort(
@@ -2315,9 +2314,8 @@ extension _HomeMapSheet on _DriverHomeState {
             ? const SizedBox.shrink()
             : ColoredBox(
                 key: const ValueKey<String>('home-map-dim'),
-                color: const Color(
-                  0xFF0A0E10,
-                ).withValues(alpha: 0.22 * position.clamp(0.0, 1.0)),
+                color: const Color(0xFF0A0E10)
+                    .withValues(alpha: 0.22 * position.clamp(0.0, 1.0)),
               ),
       ),
     );
@@ -2637,9 +2635,8 @@ extension _HomeMapSheet on _DriverHomeState {
                   activeTrackColor: const Color(0xFF1C6B45),
                   onChanged: _HomeOfferRules(this)._setAcceptsCash,
                 ),
-                onTap: () => _HomeOfferRules(
-                  this,
-                )._setAcceptsCash(!DriverOfferPreferences.acceptsCash.value),
+                onTap: () => _HomeOfferRules(this)
+                    ._setAcceptsCash(!DriverOfferPreferences.acceptsCash.value),
               ),
             ),
             if (showPerformance)

@@ -581,9 +581,8 @@ extension _HomeReservation on _DriverHomeState {
         ScheduledRideStore.take(offer.id);
         _reservation.wonId = offer.id;
         IslandMessages.show(HomeIslandNotices.reservationAccepted);
-        _HomeOfferRadar(
-          this,
-        )._openWonOffer(offer, WaybillRecord.exclusiveReservationSource);
+        _HomeOfferRadar(this)
+            ._openWonOffer(offer, WaybillRecord.exclusiveReservationSource);
       case ClaimOutcome.networkError:
         // Nothing decided: the offer counts down again.
         _HomeExclusive(this)._restartExclusiveTimeout(

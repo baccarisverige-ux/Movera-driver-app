@@ -402,9 +402,9 @@ void main() {
           matching: find.byType(Text),
         ),
       );
-      final stayColor = DefaultTextStyle.of(
-        tester.element(find.byWidget(stay)),
-      ).style.color;
+      final stayColor = DefaultTextStyle.of(tester.element(find.byWidget(stay)))
+          .style
+          .color;
       expect(stayColor, const Color(0xFF19865C));
     });
   });

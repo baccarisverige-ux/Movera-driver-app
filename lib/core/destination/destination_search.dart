@@ -236,9 +236,9 @@ class RecentDestinations {
       if (raw == null) return const [];
       final list = jsonDecode(raw);
       if (list is! List) return const [];
-      return [
-        for (final item in list) ?DestinationPlace.fromJson(item),
-      ].take(max).toList();
+      return [for (final item in list) ?DestinationPlace.fromJson(item)]
+          .take(max)
+          .toList();
     } catch (error) {
       DriverLog.warn('recent destinations unreadable: $error');
       return const [];

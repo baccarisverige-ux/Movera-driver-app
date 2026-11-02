@@ -1347,9 +1347,8 @@ extension _AcceptRideTrip on _AcceptRideState {
 
     _stageTransitioning = true;
     if (LiveDriverServices.active &&
-        (!await _AcceptRideLive(
-              this,
-            )._serverStep((trips) => trips.arrive(widget.tripId)) ||
+        (!await _AcceptRideLive(this)
+                ._serverStep((trips) => trips.arrive(widget.tripId)) ||
             !mounted ||
             _rideLifecycle.terminal ||
             _stage != ActiveRideStage.headingToPickup)) {
@@ -1999,9 +1998,8 @@ extension _AcceptRideTrip on _AcceptRideState {
       _completionInFlight = false;
       _stageTransitioning = false;
       // v0.18.1 §26: 409 price_changed: the sheet again with the new price.
-      final changed = _AcceptRideLive(
-        this,
-      )._liveTrips?.takePriceChanged(widget.tripId);
+      final changed = _AcceptRideLive(this)._liveTrips
+          ?.takePriceChanged(widget.tripId);
       if (changed != null && mounted) {
         unawaited(_collectCash(changed: changed));
       }
@@ -2260,9 +2258,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     // Offers are explicitly simulated. A future live adapter must pass the freshness gate.
     double? metersToDropoff;
     if (_hasLiveLocation) {
-      metersToDropoff = GeoPointMaps.fromLatLng(
-        _driverPosition,
-      ).distanceMetersTo(GeoPointMaps.fromLatLng(_dropoffPosition));
+      metersToDropoff = GeoPointMaps.fromLatLng(_driverPosition)
+          .distanceMetersTo(GeoPointMaps.fromLatLng(_dropoffPosition));
       if (metersToDropoff > _AcceptRideState._nextTripRadarRadiusMeters) {
         return;
       }
@@ -2768,9 +2765,8 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
     final target = _routeTarget;
     return target != null &&
-        GeoPointMaps.fromLatLng(
-              _driverPosition,
-            ).distanceMetersTo(GeoPointMaps.fromLatLng(target)) <=
+        GeoPointMaps.fromLatLng(_driverPosition)
+                .distanceMetersTo(GeoPointMaps.fromLatLng(target)) <=
             RideCheckRules.plannedStopRadiusMeters;
   }
 

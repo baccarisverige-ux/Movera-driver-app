@@ -75,9 +75,9 @@ void main() {
             body: Center(
               child: TextButton(
                 key: const ValueKey('open'),
-                onPressed: () => Navigator.of(
-                  context,
-                ).push(MaterialPageRoute<void>(builder: (_) => screen)),
+                onPressed: () =>
+                    Navigator.of(context)
+                        .push(MaterialPageRoute<void>(builder: (_) => screen)),
                 child: const Text('open'),
               ),
             ),

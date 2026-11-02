@@ -95,9 +95,8 @@ void main() {
         _truncated('"schemaVersion":2,"tripId":"T-1",'),
       );
       expect(
-        await CompletionJournal(
-          active: PrefsActiveRideRepository(),
-        ).reconcile(),
+        await CompletionJournal(active: PrefsActiveRideRepository())
+            .reconcile(),
         JournalReplayOutcome.quarantinedCorrupt,
       );
       _expectClean(lines);

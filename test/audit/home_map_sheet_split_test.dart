@@ -4,12 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('Home map and sheet presentation sit outside the widget file', () {
-    final home = File(
-      'lib/presentation/driver/home/home.dart',
-    ).readAsStringSync();
-    final sheet = File(
-      'lib/presentation/driver/home/home_map_sheet.dart',
-    ).readAsStringSync();
+    final home = File('lib/presentation/driver/home/home.dart')
+        .readAsStringSync();
+    final sheet = File('lib/presentation/driver/home/home_map_sheet.dart')
+        .readAsStringSync();
 
     expect(home, contains("part 'home_map_sheet.dart';"));
     expect(home, contains('class DriverHome'));

@@ -1,4 +1,5 @@
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -111,30 +112,27 @@ void main() {
     expect(DriverRuntimeConfig.production.skipAccountActivation, isFalse);
   });
 
-  test(
-    'D-12: release builds enforce the 100 m arrival check unless they are the demo',
-    () {
-      bool resolve({
-        required bool release,
-        bool production = false,
-        bool? define,
-      }) => DriverRuntimeConfig.simulatedArrivalFor(
-        releaseBuild: release,
-        productionBuild: production,
-        demoArrivalDefine: define,
-      );
-      // Store / APK / iOS / web release without the demo define: gated.
-      expect(resolve(release: true), isFalse);
-      // The GitHub Pages demo passes MOVERA_DEMO_ARRIVAL=true: free.
-      expect(resolve(release: true, define: true), isTrue);
-      // Local debug or profile runs stay free unless told otherwise.
-      expect(resolve(release: false), isTrue);
-      expect(resolve(release: false, define: false), isFalse);
-      // A production composition is always gated, even with the demo define.
-      expect(resolve(release: true, production: true, define: true), isFalse);
-      expect(resolve(release: false, production: true), isFalse);
-    },
-  );
+  test('D-12: release builds enforce the 100 m arrival check unless they are the demo', () {
+    bool resolve({
+      required bool release,
+      bool production = false,
+      bool? define,
+    }) => DriverRuntimeConfig.simulatedArrivalFor(
+      releaseBuild: release,
+      productionBuild: production,
+      demoArrivalDefine: define,
+    );
+    // Store / APK / iOS / web release without the demo define: gated.
+    expect(resolve(release: true), isFalse);
+    // The GitHub Pages demo passes MOVERA_DEMO_ARRIVAL=true: free.
+    expect(resolve(release: true, define: true), isTrue);
+    // Local debug or profile runs stay free unless told otherwise.
+    expect(resolve(release: false), isTrue);
+    expect(resolve(release: false, define: false), isFalse);
+    // A production composition is always gated, even with the demo define.
+    expect(resolve(release: true, production: true, define: true), isFalse);
+    expect(resolve(release: false, production: true), isFalse);
+  });
 
   test('D-12: only the Pages demo build passes the free-arrival define', () {
     final pages = File('.github/workflows/deploy-pages.yml').readAsStringSync();

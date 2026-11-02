@@ -35,9 +35,8 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
   static const Color _red = Color(0xFFC2453A);
 
   late final Future<List<RideCheckRecord>> _checks =
-      (widget.load ?? PrefsRideCheckLog().forTrip)(
-        widget.tripId,
-      ).catchError((Object _) => const <RideCheckRecord>[]);
+      (widget.load ?? PrefsRideCheckLog().forTrip)(widget.tripId)
+          .catchError((Object _) => const <RideCheckRecord>[]);
 
   static String _time(DateTime at) =>
       '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';

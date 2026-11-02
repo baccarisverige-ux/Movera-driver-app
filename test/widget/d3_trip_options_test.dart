@@ -26,9 +26,8 @@ Future<void> _pumpTrip(WidgetTester tester, Size size) async {
     LayoutViewport(
       child: MaterialApp(
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(_scale)),
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(_scale)),
           child: child!,
         ),
         home: const AcceptRide(),

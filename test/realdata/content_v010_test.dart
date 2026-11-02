@@ -151,9 +151,9 @@ void main() {
 
     test('below min blocks, below recommended asks, else nothing', () {
       const app = AppVersion(1, 2, 0);
-      UpdateNeed need(String min, String rec) => _content([
-        _item('app-versions', versions: _versions(min, rec)),
-      ]).updateNeed(app, _now);
+      UpdateNeed need(String min, String rec) =>
+          _content([_item('app-versions', versions: _versions(min, rec))])
+              .updateNeed(app, _now);
       expect(need('1.3.0', '1.4.0'), UpdateNeed.required);
       expect(need('1.0.0', '1.4.0'), UpdateNeed.recommended);
       expect(need('1.0.0', '1.2.0'), UpdateNeed.none);

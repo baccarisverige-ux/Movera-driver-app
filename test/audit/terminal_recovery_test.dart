@@ -114,10 +114,8 @@ void main() {
     expect(ride.isFreshAt(now), false);
     expect(PersistedActiveRide.fromJson(ride.toJson())?.tripId, 'A');
     expect(
-      PersistedActiveRide.fromJson({
-        'tripId': 'old',
-        'stage': 'onTrip',
-      })?.tripId,
+      PersistedActiveRide.fromJson({'tripId': 'old', 'stage': 'onTrip'})
+          ?.tripId,
       'old',
     );
     expect(

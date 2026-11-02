@@ -121,9 +121,9 @@ void main() {
 
   group('decision 4: a wait is shown in minutes', () {
     test('fixtures/sign_in.json#waitDisplay', () {
-      final fixture =
-          jsonDecode(File('contracts/fixtures/sign_in.json').readAsStringSync())
-              as Map<String, dynamic>;
+      final fixture = jsonDecode(
+        File('contracts/fixtures/sign_in.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
       for (final raw in fixture['waitDisplay'] as List) {
         final c = raw as Map<String, dynamic>;
         final expect_ = c['expect'] as Map<String, dynamic>;
@@ -189,9 +189,9 @@ void main() {
 
     test('every sign-in call is given 60 s', () {
       expect(ApiClient.signInTimeout, const Duration(seconds: 60));
-      final contract =
-          jsonDecode(File('contracts/contract.json').readAsStringSync())
-              as Map<String, dynamic>;
+      final contract = jsonDecode(
+        File('contracts/contract.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
       final slow =
           (contract['auth'] as Map<String, dynamic>)['slowStart']
               as Map<String, dynamic>;

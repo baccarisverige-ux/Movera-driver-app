@@ -88,9 +88,10 @@ void main() {
         },
       };
       expect(
-        DriverHomeAdminContentService(
-          rulesExport: legacy,
-        ).load().destinationMode!.destinationsPerDay,
+        DriverHomeAdminContentService(rulesExport: legacy)
+            .load()
+            .destinationMode!
+            .destinationsPerDay,
         5,
       );
       final current = <String, dynamic>{

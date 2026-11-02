@@ -178,9 +178,8 @@ abstract final class DriverRouteStyle {
         ..strokeWidth = width
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
-        ..shader = LinearGradient(
-          colors: const [pickupColor, destinationColor],
-        ).createShader(Rect.fromPoints(start, end)),
+        ..shader = LinearGradient(colors: const [pickupColor, destinationColor])
+            .createShader(Rect.fromPoints(start, end)),
     );
   }
 }

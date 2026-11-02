@@ -455,15 +455,12 @@ class PersistedActiveRide {
       tripId: tripId,
       stage: stage.first,
       nextTripId: json['nextTripId'] as String?,
-      arrivedAt: DateTime.tryParse(
-        json['arrivedAt'] as String? ?? '',
-      )?.toLocal(),
-      acceptedAt: DateTime.tryParse(
-        json['acceptedAt'] as String? ?? '',
-      )?.toLocal(),
-      startedAt: DateTime.tryParse(
-        json['startedAt'] as String? ?? '',
-      )?.toLocal(),
+      arrivedAt: DateTime.tryParse(json['arrivedAt'] as String? ?? '')
+          ?.toLocal(),
+      acceptedAt: DateTime.tryParse(json['acceptedAt'] as String? ?? '')
+          ?.toLocal(),
+      startedAt: DateTime.tryParse(json['startedAt'] as String? ?? '')
+          ?.toLocal(),
       savedAt: DateTime.tryParse(json['savedAt'] as String? ?? '')?.toLocal(),
       riderName: json['riderName'] as String?,
       riderRating: (json['riderRating'] as num?)?.toDouble(),

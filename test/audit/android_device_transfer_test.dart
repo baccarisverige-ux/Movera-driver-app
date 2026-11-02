@@ -13,9 +13,10 @@ Set<String> _excluded(String xml, String section) {
     dotAll: true,
   ).firstMatch(xml)?.group(1);
   expect(body, isNotNull, reason: '<$section> is missing');
-  return RegExp(
-    r'<exclude\s+domain="([^"]+)"\s+path="\."\s*/>',
-  ).allMatches(body!).map((m) => m.group(1)!).toSet();
+  return RegExp(r'<exclude\s+domain="([^"]+)"\s+path="\."\s*/>')
+      .allMatches(body!)
+      .map((m) => m.group(1)!)
+      .toSet();
 }
 
 void main() {

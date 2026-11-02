@@ -53,9 +53,9 @@ void main() {
     await history.archive(receipt('trp_old'));
     expect((await history.list()).single.pickupPoint, isNull);
     final prefs = await SharedPreferences.getInstance();
-    final stored =
-        jsonDecode(prefs.getString(PrefsTripHistoryRepository.key)!)
-            as Map<String, dynamic>;
+    final stored = jsonDecode(
+      prefs.getString(PrefsTripHistoryRepository.key)!,
+    ) as Map<String, dynamic>;
     final row = (stored['rows'] as List).single as Map<String, dynamic>;
     row['pickupLat'] = 120;
     row['pickupLng'] = 18;

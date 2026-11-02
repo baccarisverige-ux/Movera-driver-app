@@ -174,11 +174,11 @@ class _DriverSignInState extends State<DriverSignIn>
 
   Future<void> _loadTestAccounts() async {
     final auth = _auth;
-    // A test build that talks to a server (not a store build, not the demo).
-    final testBuild =
-        !driverProductionRequested &&
-        DriverRuntimeConfig.current.apiBaseUrl.isNotEmpty;
-    if (!(widget.showTestAccounts ?? testBuild) || auth == null) {
+    // Owner 2026-11-02 (driver-g1 "Driver sign-in screen look"): no
+    // test-numbers list on the sign-in screen in any build; test numbers
+    // still sign in when typed. Only an explicit `showTestAccounts: true`
+    // (a test harness) shows it.
+    if (widget.showTestAccounts != true || auth == null) {
       return;
     }
     try {

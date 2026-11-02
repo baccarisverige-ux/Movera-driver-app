@@ -106,9 +106,8 @@ void main() {
         .controller!
         .animatePanelToSnapPoint();
     await frames(tester, 16);
-    ScaffoldMessenger.of(
-      tester.element(find.byType(AcceptRide)),
-    ).clearSnackBars();
+    ScaffoldMessenger.of(tester.element(find.byType(AcceptRide)))
+        .clearSnackBars();
     await frames(tester);
 
     const waiting = ValueKey<String>('active-ride-panel-waitingForRider');
@@ -136,9 +135,8 @@ void main() {
     expect(find.text(tr.liveTripNotAtPickup), findsOneWidget);
     expect(find.byKey(waiting), findsNothing);
 
-    ScaffoldMessenger.of(
-      tester.element(find.byType(AcceptRide)),
-    ).clearSnackBars();
+    ScaffoldMessenger.of(tester.element(find.byType(AcceptRide)))
+        .clearSnackBars();
     await frames(tester);
     arriveAnswers.add(
       () =>

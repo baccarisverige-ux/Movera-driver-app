@@ -174,9 +174,8 @@ class _GateError extends StatefulWidget {
 class _GateErrorState extends State<_GateError> {
   bool _signingOut = false;
 
-  void _contact() => Navigator.of(
-    context,
-  ).push(MaterialPageRoute<void>(builder: (_) => widget.supportBuilder()));
+  void _contact() => Navigator.of(context)
+      .push(MaterialPageRoute<void>(builder: (_) => widget.supportBuilder()));
 
   Future<void> _signOut() async {
     setState(() => _signingOut = true);

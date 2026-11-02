@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/ride/active_ride_controller.dart';
@@ -16,42 +17,33 @@ class _DelayedSession implements DriverSessionRepository {
 }
 
 void main() {
-  test(
-    'authoritative projection can skip live stages and end with every terminal outcome',
-    () async {
-      for (final status in TripStatus.values.where((s) => s.isTerminal)) {
-        final ride = ActiveRideController(tripId: 'projection-${status.name}');
-        expect(await ride.applyProjection(TripStatus.inTrip), isTrue);
-        expect(ride.stage, ActiveRideStage.onTrip);
-        expect(await ride.applyProjection(status), isTrue);
-        expect(ride.terminalStatus, status);
-        expect(
-          await ride.transitionTo(ActiveRideStage.headingToPickup),
-          isFalse,
-        );
-        ride.dispose();
-      }
-    },
-  );
-  test(
-    'duplicate terminal projection is ignored, authoritative correction is kept',
-    () async {
-      final ride = ActiveRideController(tripId: 'terminal-correction');
-      addTearDown(ride.dispose);
+  test('authoritative projection can skip live stages and end with every terminal outcome', () async {
+    for (final status in TripStatus.values.where((s) => s.isTerminal)) {
+      final ride = ActiveRideController(tripId: 'projection-${status.name}');
       expect(await ride.applyProjection(TripStatus.inTrip), isTrue);
-      expect(await ride.applyProjection(TripStatus.completed), isTrue);
-      expect(ride.terminalStatus, TripStatus.completed);
-      expect(await ride.applyProjection(TripStatus.completed), isFalse);
-      // A server-authoritative rider cancellation may correct tentative local
-      // completion without resurrecting the active ride.
-      expect(await ride.applyProjection(TripStatus.cancelledByRider), isTrue);
-      expect(ride.terminalStatus, TripStatus.cancelledByRider);
-      expect(await ride.applyProjection(TripStatus.cancelledByRider), isFalse);
-      expect(await ride.applyProjection(TripStatus.inTrip), isFalse);
-      expect(ride.terminalStatus, TripStatus.cancelledByRider);
-      expect(ride.tripStatus, TripStatus.cancelledByRider);
-    },
-  );
+      expect(ride.stage, ActiveRideStage.onTrip);
+      expect(await ride.applyProjection(status), isTrue);
+      expect(ride.terminalStatus, status);
+      expect(await ride.transitionTo(ActiveRideStage.headingToPickup), isFalse);
+      ride.dispose();
+    }
+  });
+  test('duplicate terminal projection is ignored, authoritative correction is kept', () async {
+    final ride = ActiveRideController(tripId: 'terminal-correction');
+    addTearDown(ride.dispose);
+    expect(await ride.applyProjection(TripStatus.inTrip), isTrue);
+    expect(await ride.applyProjection(TripStatus.completed), isTrue);
+    expect(ride.terminalStatus, TripStatus.completed);
+    expect(await ride.applyProjection(TripStatus.completed), isFalse);
+    // A server-authoritative rider cancellation may correct tentative local
+    // completion without resurrecting the active ride.
+    expect(await ride.applyProjection(TripStatus.cancelledByRider), isTrue);
+    expect(ride.terminalStatus, TripStatus.cancelledByRider);
+    expect(await ride.applyProjection(TripStatus.cancelledByRider), isFalse);
+    expect(await ride.applyProjection(TripStatus.inTrip), isFalse);
+    expect(ride.terminalStatus, TripStatus.cancelledByRider);
+    expect(ride.tripStatus, TripStatus.cancelledByRider);
+  });
 
   test(
     'delayed restore cannot overwrite an explicit availability change',

@@ -81,9 +81,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
       if (mounted) {
         setState(() => _restoreFailed = true);
         if (recover && ModalRoute.of(context)?.isCurrent == true) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(tr.supportCouldNotRecover)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(tr.supportCouldNotRecover)));
         }
       }
     } finally {
@@ -350,9 +349,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                                 : () async {
                                     if (saving ||
                                         !sheetContext.mounted ||
-                                        ModalRoute.of(
-                                              sheetContext,
-                                            )?.isCurrent !=
+                                        ModalRoute.of(sheetContext)
+                                                ?.isCurrent !=
                                             true) {
                                       return;
                                     }
@@ -391,9 +389,8 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                                       return;
                                     }
                                     if (!sheetContext.mounted ||
-                                        ModalRoute.of(
-                                              sheetContext,
-                                            )?.isCurrent !=
+                                        ModalRoute.of(sheetContext)
+                                                ?.isCurrent !=
                                             true) {
                                       return;
                                     }

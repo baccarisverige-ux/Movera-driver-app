@@ -321,14 +321,12 @@ class _SoundAndVoiceState extends State<SoundAndVoice> {
   }
 
   void _onTestAlerts() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(tr.playingAlertSoundMock)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(tr.playingAlertSoundMock)));
   }
 
   void _onTestVoice() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(tr.playingVoiceSoundMock)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(tr.playingVoiceSoundMock)));
   }
 }

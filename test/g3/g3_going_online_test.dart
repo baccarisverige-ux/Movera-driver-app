@@ -293,13 +293,11 @@ void main() {
     });
 
     test('iOS: background updates on, with the blue indicator', () {
-      final settings =
-          DriverLocationService.onlineSettings(
-                platform: TargetPlatform.iOS,
-                notificationTitle: 't',
-                notificationText: 'b',
-              )
-              as AppleSettings;
+      final settings = DriverLocationService.onlineSettings(
+        platform: TargetPlatform.iOS,
+        notificationTitle: 't',
+        notificationText: 'b',
+      ) as AppleSettings;
       expect(settings.allowBackgroundLocationUpdates, isTrue);
       expect(settings.showBackgroundLocationIndicator, isTrue);
       expect(settings.pauseLocationUpdatesAutomatically, isFalse);
@@ -335,9 +333,8 @@ void main() {
     });
 
     test('Android manifest: foreground location service permissions', () {
-      final manifest = File(
-        'android/app/src/main/AndroidManifest.xml',
-      ).readAsStringSync();
+      final manifest = File('android/app/src/main/AndroidManifest.xml')
+          .readAsStringSync();
       expect(manifest, contains('android.permission.FOREGROUND_SERVICE"'));
       expect(
         manifest,
@@ -501,9 +498,9 @@ void main() {
   });
 
   test('every new text is the contract\'s driverHome text in sv, fr, en', () {
-    final contract =
-        jsonDecode(File('contracts/contract.json').readAsStringSync())
-            as Map<String, dynamic>;
+    final contract = jsonDecode(
+      File('contracts/contract.json').readAsStringSync(),
+    ) as Map<String, dynamic>;
     final home = contract['driverHome'] as Map<String, dynamic>;
     Map<String, dynamic> at(List<String> path) {
       Object? node = home;
@@ -529,9 +526,9 @@ void main() {
       'outsideAreaOk': ['outsideArea', 'text', 'ok'],
     };
     for (final lang in ['sv', 'fr', 'en']) {
-      final arb =
-          jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())
-              as Map<String, dynamic>;
+      final arb = jsonDecode(
+        File('lib/l10n/app_$lang.arb').readAsStringSync(),
+      ) as Map<String, dynamic>;
       keys.forEach((key, path) {
         expect(arb[key], at(path)[lang], reason: '$lang $key');
       });

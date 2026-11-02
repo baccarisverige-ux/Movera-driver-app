@@ -110,9 +110,8 @@ class _AddVehicleState extends State<AddVehicle> {
       );
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr.vehCouldNotSaveDraft)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(tr.vehCouldNotSaveDraft)));
       }
     } finally {
       if (mounted) {
@@ -504,16 +503,14 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
       _draft = updated;
     } on VehiclePhotoBudgetExceeded catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.message)));
       }
       return;
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr.vehPhotoCouldNotSave)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(tr.vehPhotoCouldNotSave)));
       }
       return;
     }
@@ -634,9 +631,8 @@ class _VehicleDocumentsState extends State<VehicleDocuments> {
         await _store.remove(widget.vehicleId!);
       } catch (_) {
         if (mounted && ModalRoute.of(context)?.isCurrent == true) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(tr.vehCouldNotRemoveDraft)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(tr.vehCouldNotRemoveDraft)));
         }
         return;
       }

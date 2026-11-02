@@ -147,9 +147,8 @@ void main() {
 
   test('the browser build wires localStorage as the store and '
       'sessionStorage only as the old copy', () {
-    final src = File(
-      'lib/core/auth/web_session_token_store_web.dart',
-    ).readAsStringSync();
+    final src = File('lib/core/auth/web_session_token_store_web.dart')
+        .readAsStringSync();
     expect(
       src,
       contains('persistent: _WebStorage(() => web.window.localStorage)'),

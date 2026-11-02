@@ -76,9 +76,9 @@ abstract class PhoneChecks {
   /// Every check, side by side, each within [limit].
   Future<List<PhoneCheckResult>> all() => Future.wait([
     for (final kind in PhoneCheckKind.values)
-      check(
-        kind,
-      ).timeout(limit).catchError((Object _) => PhoneCheckResult.unknown(kind)),
+      check(kind)
+          .timeout(limit)
+          .catchError((Object _) => PhoneCheckResult.unknown(kind)),
   ]);
 }
 

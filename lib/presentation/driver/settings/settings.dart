@@ -269,9 +269,8 @@ class _SettingsState extends State<Settings> {
       await DriverLanguage.choose(picked, _settings);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr.languageSaveFailed)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr.languageSaveFailed)));
     }
   }
 }

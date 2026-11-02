@@ -121,12 +121,12 @@ class _Server {
         });
       case DriverAccountRepository.documentsPath:
         uploads.add(request);
-        final type = RegExp(
-          r'name="type"\r\n\r\n(\w+)',
-        ).firstMatch(latin1.decode(request.bodyBytes))!.group(1);
-        final owner = RegExp(
-          r'name="ownerId"\r\n\r\n(\w+)',
-        ).firstMatch(latin1.decode(request.bodyBytes))?.group(1);
+        final type = RegExp(r'name="type"\r\n\r\n(\w+)')
+            .firstMatch(latin1.decode(request.bodyBytes))!
+            .group(1);
+        final owner = RegExp(r'name="ownerId"\r\n\r\n(\w+)')
+            .firstMatch(latin1.decode(request.bodyBytes))
+            ?.group(1);
         return json(201, {
           'documentId': 'doc_new',
           'ownerId': owner ?? 'drv_1',

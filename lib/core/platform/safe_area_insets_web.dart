@@ -58,14 +58,14 @@ class _CssSafeArea implements SafeAreaSource {
 
     _subscriptions
       ..add(
-        web.EventStreamProvider<web.Event>(
-          'resize',
-        ).forTarget(web.window).listen(later),
+        web.EventStreamProvider<web.Event>('resize')
+            .forTarget(web.window)
+            .listen(later),
       )
       ..add(
-        web.EventStreamProvider<web.Event>(
-          'orientationchange',
-        ).forTarget(web.window).listen(later),
+        web.EventStreamProvider<web.Event>('orientationchange')
+            .forTarget(web.window)
+            .listen(later),
       );
   }
 

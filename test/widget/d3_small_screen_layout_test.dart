@@ -38,9 +38,8 @@ Future<void> _pumpAt(WidgetTester tester, Size size, Widget home) async {
         useInheritedMediaQuery: true,
         builder: (_, __) => MaterialApp(
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: const TextScaler.linear(_scale)),
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(_scale)),
             child: child!,
           ),
           home: home,
