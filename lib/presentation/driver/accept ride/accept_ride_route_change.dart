@@ -74,6 +74,46 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     });
   }
 
+  /// G7 live fix 2: the server's read at restore was applied before the
+  /// saved stop / wait replaced it; the server's stop visits win, and a
+  /// device-copy restore reads the trip once.
+  void _restoreServerStops() {
+    if (_live case final live?) _adoptServerStops(live);
+    unawaited(_readServerStopsAtRestore());
+  }
+
+  /// G7 live fix 2 (restore): the server's stop visits. Stops it says
+  /// were left are behind the driver; the stop it says the driver is at
+  /// starts the stop wait (`stops[i].arrivedAt`).
+  void _adoptServerStops(TripLiveDetails live) {
+    final visits = live.stopVisits ?? const <TripStopVisit>[];
+    var left = 0;
+    while (left < visits.length &&
+        left < _stopAddresses.length &&
+        visits[left].leftAt != null) {
+      left++;
+    }
+    if (left > _stopCursor) {
+      _stopCursor = left;
+      _paidStopWait = false;
+    }
+    _adoptServerStopArrival(live);
+  }
+
+  /// G7 live fix 2: a reopened app that restored the trip from the device
+  /// copy has no server read yet (the event stream does not replay the
+  /// stop visits): read the trip once so the server's stop arrival wins.
+  Future<void> _readServerStopsAtRestore() async {
+    if (widget.restoredSnapshot == null || _stopAddresses.isEmpty) return;
+    final trips = LiveDriverServices.instance?.trips;
+    if (trips == null) return;
+    final projection = await trips.refresh(widget.tripId);
+    if (!mounted || projection == null || _rideLifecycle.terminal) return;
+    final live = TripLiveDetails.fromProjection(projection);
+    _AcceptRideTrip(this)._applyLive(live);
+    _adoptServerStops(live);
+  }
+
   /// G7 live fix: a stop arrival the server recorded (this phone's tap on
   /// another try, another device, the API) starts the stop wait here too,
   /// counted from the server's `arrivedAt`, so the stop-wait line shows

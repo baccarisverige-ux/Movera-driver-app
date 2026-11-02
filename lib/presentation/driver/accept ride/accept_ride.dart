@@ -738,10 +738,9 @@ class _AcceptRideState extends State<AcceptRide>
       final elapsed = DateTime.now().difference(restored.savedAt!).inSeconds;
       _waitSeconds += math.max(0, elapsed);
     }
+    _AcceptRideRouteChange(this)._restoreServerStops();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       widget.sessionController?.beginTrip(widget.tripId);
       if (_waybills.current?.tripId != widget.tripId) {
         _waybills.beginCurrent(_AcceptRideTrip(this)._buildCurrentWaybill());
