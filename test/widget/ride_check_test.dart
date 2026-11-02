@@ -239,6 +239,7 @@ void main() {
       testWidgets('demo tools on the trip island: ${trigger.label}', (
         tester,
       ) async {
+        final semantics = tester.ensureSemantics();
         SafetyAudioOption.debugEnabled =
             true; // owner decision 10: offered again
         addTearDown(() => SafetyAudioOption.debugEnabled = null);
@@ -279,7 +280,19 @@ void main() {
             findsOneWidget,
             reason: topic.label,
           );
+          // Live G8 a11y: each answer is a named button for a screen reader.
+          expect(
+            tester.getSemantics(
+              find.byKey(ValueKey('ride-check-row-${topic.name}')),
+            ),
+            matchesSemantics(
+              label: topic.label,
+              isButton: true,
+              hasTapAction: true,
+            ),
+          );
         }
+        semantics.dispose();
         // Exactly these rows, top to bottom, red ones first.
         final shown =
             RideCheckTopic.values

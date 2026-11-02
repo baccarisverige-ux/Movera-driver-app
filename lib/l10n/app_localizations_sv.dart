@@ -6982,4 +6982,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get walletPayoutPending => 'Väntar';
+
+  @override
+  String g8StarLabel(int stars) {
+    return '$stars av 5 stjärnor';
+  }
 }

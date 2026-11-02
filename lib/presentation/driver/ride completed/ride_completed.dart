@@ -536,7 +536,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     return Column(
       children: [
         // Q37/Q38: optional, whole stars 1–5; Done without a rating skips.
-        RatingBar(
+        // Live G8 a11y: each star is a named button ("3 of 5 stars").
+        RatingBar.builder(
           initialRating: _rating,
           minRating: 1,
           allowHalfRating: false,
@@ -544,10 +545,14 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
           itemCount: 5,
           itemSize: 34,
           itemPadding: const EdgeInsets.symmetric(horizontal: 6),
-          ratingWidget: RatingWidget(
-            full: _starIcon(AppAssets.offerStar, _starOn),
-            half: _starIcon(AppAssets.offerStar, _starOn),
-            empty: _starIcon(AppAssets.solarStar, _star),
+          itemBuilder: (context, index) => Semantics(
+            key: ValueKey<String>('rider-rating-star-${index + 1}'),
+            button: true,
+            selected: index < _rating.round(),
+            label: tr.g8StarLabel(index + 1),
+            child: index < _rating.round()
+                ? _starIcon(AppAssets.offerStar, _starOn)
+                : _starIcon(AppAssets.solarStar, _star),
           ),
           onRatingUpdate: (rating) {
             setState(() => _rating = rating);

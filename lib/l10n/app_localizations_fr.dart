@@ -7094,4 +7094,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get walletPayoutPending => 'En attente';
+
+  @override
+  String g8StarLabel(int stars) {
+    return '$stars étoile(s) sur 5';
+  }
 }
