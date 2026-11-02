@@ -58,8 +58,8 @@ class _LiveVehiclesScreenState extends State<LiveVehiclesScreen> {
       // The server's active car first (live sweep 2026-11-02 H-2).
       final active = widget.account.account?.vehicleId;
       final sorted = [
-        ...cars.where((c) => c.vehicleId == active),
-        ...cars.where((c) => c.vehicleId != active),
+        ...cars.where((c) => c.active ?? c.vehicleId == active),
+        ...cars.where((c) => !(c.active ?? c.vehicleId == active)),
       ];
       setState(() => _cars = sorted);
     } catch (error) {

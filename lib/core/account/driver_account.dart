@@ -335,6 +335,7 @@ class FleetVehicle {
     this.fuel,
     this.pickable,
     this.notPickableReason,
+    this.active,
   });
 
   factory FleetVehicle.fromJson(Map<String, dynamic> json) => FleetVehicle(
@@ -360,7 +361,12 @@ class FleetVehicle {
     fuel: _text(json['fuel']),
     pickable: json['pickable'] is bool ? json['pickable'] as bool : null,
     notPickableReason: _text(json['notPickableReason']),
+    active: json['active'] is bool ? json['active'] as bool : null,
   );
+
+  /// Contract v0.18.14 `deepFix1.vehicles`: the driver's active car
+  /// (`Driver.vehicleId`, listed first); null from an older server.
+  final bool? active;
 
   final String vehicleId;
   final String make;

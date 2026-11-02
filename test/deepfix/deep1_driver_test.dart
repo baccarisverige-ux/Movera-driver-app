@@ -192,6 +192,42 @@ void main() {
         findsOneWidget,
       );
     });
+    testWidgets('v0.18.14 Vehicle.active from GET /driver/vehicles marks the '
+        'car, even before the profile names it', (tester) async {
+      final active = FleetVehicle.fromJson({
+        'vehicleId': 'veh-own',
+        'make': 'Kia',
+        'model': 'Niro',
+        'status': 'approved',
+        'active': true,
+      });
+      final other = FleetVehicle.fromJson({
+        'vehicleId': 'veh-fleet',
+        'make': 'Kia',
+        'model': 'Ceed',
+        'status': 'approved',
+        'driverId': 'd1',
+        'active': false,
+      });
+      expect(active.active, isTrue);
+      await _pump(
+        tester,
+        Column(
+          children: [
+            FleetCarCard(vehicle: active, myDriverId: 'd1'),
+            FleetCarCard(vehicle: other, myDriverId: 'd1', onPick: () {}),
+          ],
+        ),
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey<String>('car-veh-own')),
+          matching: find.text(tr.fleetYourCar),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text(tr.fleetYourCar), findsOneWidget);
+    });
   });
 
   group('B7 toll icon', () {

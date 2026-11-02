@@ -52,7 +52,10 @@ class FleetCarCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = activeVehicleId;
-    final mine = active != null
+    // v0.18.14: the server says which car is the active one.
+    final mine = vehicle.active != null
+        ? vehicle.active!
+        : active != null
         ? vehicle.vehicleId == active
         : vehicle.driverId == myDriverId;
     final takenByOther = vehicle.driverId != null && !mine;
