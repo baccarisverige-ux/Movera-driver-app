@@ -130,13 +130,59 @@ extension _HomeBack on _DriverHomeState {
 // item: an opaque route, driver-r5-28) hides Home and pauses it; a sheet or a dialog leaves Home visible
 // and online. Whatever waited for Home to be on top (a won trip, a held
 // offline, a late scheduled ride) goes on when any route over it closes.
+/// Live sweep 2026-11-02 H-3: while a menu page covers Home, a new
+/// Exclusive offer brings Home back to the front (one watch per Home).
+final _coverOfferWatches = Expando<StreamSubscription<List<RideOffer>>>();
+
 extension _HomeRoutes on _DriverHomeState {
+  void _stopCoverWatch() {
+    _coverOfferWatches[this]?.cancel();
+    _coverOfferWatches[this] = null;
+  }
+
   void _pageCovered() {
     _routeVisible = false;
     _HomeUpdates(this)._pauseHomeUpdates();
+    _watchOffersWhileCovered();
+  }
+
+  /// Live sweep 2026-11-02 H-3: an Exclusive offer must not expire unseen
+  /// behind a menu page (History, Profile, Settings…). While a page covers
+  /// Home and the driver is free for offers, a new Exclusive offer pops
+  /// the pages so Home shows it (with its sound) at once.
+  void _watchOffersWhileCovered() {
+    _stopCoverWatch();
+    if (!LiveDriverServices.active ||
+        !_driverSession.availableForOffers ||
+        _driverSession.activeTripId != null) {
+      return;
+    }
+    final home = ModalRoute.of(context);
+    final known = {for (final offer in _latestDispatchOffers) offer.id};
+    _coverOfferWatches[this] = _dispatch.watchNearbyOffers().listen((offers) {
+      if (!mounted) {
+        // Home is gone (disposed under the page): the watch ends.
+        _stopCoverWatch();
+        return;
+      }
+      if (_routeVisible || !_driverSession.availableForOffers) {
+        return;
+      }
+      final fresh = offers.any(
+        (offer) =>
+            offer.isExclusive &&
+            !offer.isReservation &&
+            !known.contains(offer.id) &&
+            !_adminAssignsShown.contains(offer.id),
+      );
+      if (!fresh || home == null) return;
+      _stopCoverWatch();
+      Navigator.of(context).popUntil((route) => route == home);
+    });
   }
 
   void _pageUncovered() {
+    _stopCoverWatch();
     _routeVisible = true;
     _HomeUpdates(this)._resumeHomeUpdates();
     _HomeMapSheet(this)._adoptSessionDestination(); // driver-u65

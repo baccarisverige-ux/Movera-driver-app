@@ -39,6 +39,52 @@ class DriverAccountRepository {
   static String notificationReadPath(String notificationId) =>
       '$notificationsPath/${Uri.encodeComponent(notificationId)}/read';
 
+  /// Contract v0.18.14 `deepFix1.accountChange` (decision driver-g1 "One
+  /// phone at a time"): the new number gets a code; `409 phone_taken`.
+  /// Returns the code session's id.
+  Future<String> changePhone(String phone) async {
+    final answer = await _api.post(
+      '/api/v1/account/phone/change',
+      body: {'phone': phone},
+    );
+    return '${answer['sessionId']}';
+  }
+
+  /// The code sent to the new number; the saved number.
+  Future<String> verifyPhone({
+    required String phone,
+    required String sessionId,
+    required String code,
+  }) async {
+    final answer = await _api.post(
+      '/api/v1/account/phone/verify',
+      body: {'phone': phone, 'sessionId': sessionId, 'code': code},
+    );
+    return '${answer['phone'] ?? phone}';
+  }
+
+  /// The new e-mail address gets a code (once an e-mail provider is
+  /// connected: `delivery: pending_provider`). Returns the challenge id.
+  Future<String> changeEmail(String email) async {
+    final answer = await _api.post(
+      '/api/v1/account/email/change',
+      body: {'email': email},
+    );
+    return '${answer['challengeId']}';
+  }
+
+  /// The code sent to the new address; the saved address.
+  Future<String> verifyEmail({
+    required String challengeId,
+    required String code,
+  }) async {
+    final answer = await _api.post(
+      '/api/v1/account/email/verify',
+      body: {'challengeId': challengeId, 'code': code},
+    );
+    return '${answer['email'] ?? ''}';
+  }
+
   /// `GET /driver/profile`.
   /// Driver group 3 (G3-R2): its `outsideArea` reaches [DriverAreaWatch].
   Future<DriverAccount> profile() async {

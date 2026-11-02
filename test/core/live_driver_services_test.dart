@@ -9,6 +9,7 @@ import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/dispatch/api_dispatch_repository.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/live/api_driver_realtime.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
@@ -381,6 +382,17 @@ void main() {
       },
     );
 
+    test('an answer without a version: a same-status projection is not '
+        'dropped as the own echo', () async {
+      answers
+        ..add((_) => json(200, {'tripId': 't1', 'status': 'driver_to_pickup'}))
+        ..add((_) => json(200, {'tripId': 't1', 'status': 'arrived'}));
+      final outcome = await trips.arrive('t1');
+      expect(outcome.ok, isTrue);
+      expect(trips.isOwnEcho('t1', 'arrived'), isFalse);
+      expect(trips.isOwnEcho('t1', 'arrived', version: 9), isFalse);
+    });
+
     test('not at the pickup: refused in plain words, the echo is not '
         'waited for', () async {
       trips.observe(trip('driver_to_pickup', 4));
@@ -398,6 +410,53 @@ void main() {
       expect(outcome.ok, isFalse);
       expect(outcome.message, tr.liveTripNotAtPickup);
       expect(trips.isOwnEcho('t1', 'arrived'), isFalse);
+    });
+
+    test('contract v0.18.14 positionMaxAge: a 409 position_stale asks one '
+        'fresh fix and arrives again with it; still stale says so', () async {
+      var asked = 0;
+      final withFresh = LiveTripCommands(
+        api: api(),
+        lastFix: () => {'lat': 59.33, 'lng': 18.06, 'measuredAt': 'old'},
+        freshFix: () async {
+          asked++;
+          return {'lat': 59.34, 'lng': 18.07, 'measuredAt': 'now'};
+        },
+      );
+      withFresh.observe(trip('driver_to_pickup', 4));
+      http.Response stale() => json(
+        409,
+        error(
+          'invalid_transition',
+          reason: 'position_stale',
+          projection: trip('driver_to_pickup', 4),
+        ),
+      );
+      answers
+        ..add((_) => stale())
+        ..add((_) => json(200, trip('arrived', 5)));
+      requests.clear();
+      expect((await withFresh.arrive('t1')).ok, isTrue);
+      expect(asked, 1);
+      final arrives = requests
+          .where((r) => r.url.path.endsWith('/arrive'))
+          .toList();
+      expect(arrives, hasLength(2));
+      expect(body(arrives.last)['location']['measuredAt'], 'now');
+
+      withFresh.observe(trip('driver_to_pickup', 6));
+      answers
+        ..add((_) => stale())
+        ..add((_) => stale());
+      final outcome = await withFresh.arrive('t1');
+      expect(outcome.ok, isFalse);
+      expect(outcome.message, tr.liveTripPositionStale);
+      DriverAppTexts.language = 'sv';
+      expect(
+        tr.liveTripPositionStale,
+        'Din position är för gammal – slå på platstjänster',
+      );
+      DriverAppTexts.language = 'en';
     });
 
     test('contract v0.18.1 §26: the final price before Collect cash, and '
@@ -734,6 +793,31 @@ void main() {
       streams.single.add(utf8.encode(sse(6, 'location', version: 9)));
       await pumpEventQueue();
       expect(events.map((e) => e.kind), [DriverRealtimeKind.location]);
+      await sub.cancel();
+    });
+
+    test('a route change after Start keeps in_trip but is newer than this '
+        'phone\'s own step: it reaches the trip screen', () async {
+      trips.observe({'tripId': 't1', 'status': 'in_trip', 'version': 8});
+      answers.add(
+        (_) => json(200, {'tripId': 't1', 'status': 'completed', 'version': 9}),
+      );
+      await trips.complete('t1');
+      final events = <DriverRealtimeEvent>[];
+      final sub = realtime.subscribe('t1').listen(events.add);
+      await pumpEventQueue();
+      // The echo of the own step (version 9) is dropped; a later change
+      // with the same status (version 10) is news.
+      streams.single.add(
+        utf8.encode(sse(5, 'trip_projection', status: 'completed', version: 9)),
+      );
+      streams.single.add(
+        utf8.encode(
+          sse(6, 'trip_projection', status: 'completed', version: 10),
+        ),
+      );
+      await pumpEventQueue();
+      expect(events.map((e) => e.sequence), [6]);
       await sub.cancel();
     });
 

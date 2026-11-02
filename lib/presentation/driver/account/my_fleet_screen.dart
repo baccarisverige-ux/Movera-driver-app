@@ -462,6 +462,7 @@ class _MyFleetScreenState extends State<MyFleetScreen>
             FleetCarCard(
               vehicle: vehicle,
               myDriverId: me?.driverId ?? '',
+              activeVehicleId: me?.vehicleId,
               pickedByName: owner
                   ? view.drivers
                         .where((d) => d.driverId == vehicle.driverId)

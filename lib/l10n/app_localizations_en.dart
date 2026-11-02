@@ -7010,6 +7010,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suspendedShortBody => 'Your account is paused. Contact support.';
 
   @override
+  String get offlineReasonDocumentsExpired =>
+      'A document has expired. Upload the new one to drive again.';
+
+  @override
+  String get liveTripPositionStale =>
+      'Your position is too old – turn on location';
+
+  @override
+  String get authSignedOutElsewhere => 'Signed in on another phone';
+
+  @override
+  String get authErrLockedToday =>
+      'Too many wrong codes today. Try again later.';
+
+  @override
+  String get contactChangePhone => 'Change phone number';
+
+  @override
+  String get contactChangeEmail => 'Change e-mail';
+
+  @override
+  String get contactNewPhone => 'New phone number';
+
+  @override
+  String get contactNewEmail => 'New e-mail';
+
+  @override
+  String get contactSendCode => 'Send code';
+
+  @override
+  String get contactCodeSentPhone => 'We sent a code to the new number.';
+
+  @override
+  String get contactCodeSentEmail => 'We send a code to the new e-mail.';
+
+  @override
+  String get contactCode => 'Code';
+
+  @override
+  String get contactSave => 'Save';
+
+  @override
+  String get contactPhoneSaved => 'Phone number changed';
+
+  @override
+  String get contactEmailSaved => 'E-mail changed';
+
+  @override
+  String get contactPhoneTaken =>
+      'This number is already used by another account';
+
+  @override
+  String get contactEmailTaken =>
+      'This e-mail is already used by another account';
+
+  @override
+  String get contactChangeFailed => 'Could not change it. Try again.';
+
+  @override
+  String get contactReauthRequired =>
+      'Sign in again first, then change your number/e-mail';
+
+  @override
+  String get contactChangeTooMany => 'Too many changes — try again in an hour';
+
+  @override
   String get supportTopicRideDispute => 'Problem with a ride';
 
   @override

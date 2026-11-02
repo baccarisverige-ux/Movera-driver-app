@@ -224,7 +224,7 @@ extension _AcceptRideRouteChange on _AcceptRideState {
                   '${stop.point.longitude.toStringAsFixed(5)}',
       ],
       stopPoints: [for (final stop in change.stops) stop.point.toLatLng()],
-      fare: change.driverEarnings?.formatted ?? _changedRoute?.fare,
+      fare: _routeChangeDriverTotal(change)?.formatted ?? _changedRoute?.fare,
       riderFare: change.total?.formatted ?? _changedRoute?.riderFare,
     );
     // The waybill follows: new "To" (stops, drop-off) and the new money.
@@ -244,6 +244,19 @@ extension _AcceptRideRouteChange on _AcceptRideState {
     }
   }
 
+  /// G8 Q3 one number (P2-M4): the change's earnings plus the pickup pay
+  /// and bonus the trip already pays, as the cash sheet shows them.
+  Money? _routeChangeDriverTotal(TripRouteChange change) {
+    final projection = _liveTrips?.projectionOf(widget.tripId);
+    final money = projection == null
+        ? null
+        : LiveTripMoney.tryParse(projection);
+    return change.driverTotalWith(
+      currentTotal: money?.driverPay,
+      currentEarnings: money?.driverEarnings,
+    );
+  }
+
   /// The sheet over the trip screen while a change waits for the driver.
   Widget _buildRouteChangeLayer(BuildContext context) {
     final change = _pendingRouteChange;
@@ -259,6 +272,7 @@ extension _AcceptRideRouteChange on _AcceptRideState {
           change: change,
           maxStops: OnTripConfig.current.maxStops,
           canRefuse: OnTripConfig.current.driverCanRefuse,
+          driverTotal: _routeChangeDriverTotal(change),
           onAnswer: (accept) => _answerRouteChange(change, accept),
         ),
       ),

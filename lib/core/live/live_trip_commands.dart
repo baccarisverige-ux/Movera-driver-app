@@ -109,12 +109,18 @@ class LiveTripCommands {
   LiveTripCommands({
     required ApiClient api,
     LiveFix? Function()? lastFix,
+    Future<LiveFix?> Function()? freshFix,
     this.onEnded,
   }) : _api = api,
-       _lastFix = lastFix ?? (() => null);
+       _lastFix = lastFix ?? (() => null),
+       _freshFix = freshFix;
 
   final ApiClient _api;
   final LiveFix? Function() _lastFix;
+
+  /// A position read just now (contract v0.18.14 `positionMaxAge`): asked
+  /// once when arrive is `409 position_stale`.
+  final Future<LiveFix?> Function()? _freshFix;
 
   /// Told when a projection says the trip is over (contract.json
   /// `tripStatus.terminal`): the chat closes at drop-off (v0.13.0 §22).
@@ -155,6 +161,16 @@ class LiveTripCommands {
   /// the trip's event stream is not news for the screen.
   final Map<String, Set<String>> _own = {};
 
+  /// The version this phone's own last command left [tripId] at (its
+  /// answer). Contract v0.18.14 `onTrip.routeChange.driverPush`: a
+  /// projection newer than that is never an echo (a route change keeps
+  /// the trip's status, so a status-only check dropped it).
+  final Map<String, int> _ownVersion = {};
+
+  /// Trips whose last own command answer carried no version: nothing on
+  /// the stream is dropped as their echo.
+  final Set<String> _versionless = {};
+
   /// One Idempotency-Key per command (path and body) until it is answered.
   final Map<String, String> _keys = {};
 
@@ -184,8 +200,19 @@ class LiveTripCommands {
 
   /// True when [status] is where one of this phone's own commands took
   /// [tripId] (its echo on the event stream).
-  bool isOwnEcho(String tripId, String? status) =>
-      status != null && (_own[tripId]?.contains(status) ?? false);
+  /// A [version] above the one this phone's last command left the trip
+  /// at is news, whatever its status.
+  bool isOwnEcho(String tripId, String? status, {int? version}) {
+    if (status == null || !(_own[tripId]?.contains(status) ?? false)) {
+      return false;
+    }
+    final mine = _ownVersion[tripId];
+    // Own version unknown (the answer carried none): any projection may
+    // be newer, so it is never dropped as an echo.
+    if (_versionless.contains(tripId)) return false;
+    if (version != null && mine != null && version > mine) return false;
+    return true;
+  }
 
   /// Forgets a trip that is over for this phone.
   void forget(String tripId) {
@@ -194,6 +221,8 @@ class LiveTripCommands {
     _changed.remove(tripId);
     _unsupported.remove(tripId);
     _own.remove(tripId);
+    _ownVersion.remove(tripId);
+    _versionless.remove(tripId);
   }
 
   /// The trip screen opened: an accepted trip is on its way to the pickup
@@ -216,10 +245,28 @@ class LiveTripCommands {
     final begun = await begin(tripId);
     if (!begun.ok) return begun;
     final fix = _lastFix();
-    return _step(
+    final first = await _step(
       tripId,
       'arrive',
       body: {if (fix != null) 'location': fix},
+      done: const {'arrived', ..._onboard},
+      leadsTo: const {'arrived'},
+    );
+    // Contract v0.18.14 `positionMaxAge`: the position sent (or the
+    // server's latest) is too old. One fresh fix, asked now, and arrive
+    // again; still none → "Your position is too old – turn on location".
+    final refused = first.error;
+    if (refused is! ApiError ||
+        refused.detail != 'position_stale' ||
+        _freshFix == null) {
+      return first;
+    }
+    final fresh = await _freshFix();
+    if (fresh == null) return first;
+    return _step(
+      tripId,
+      'arrive',
+      body: {'location': fresh},
       done: const {'arrived', ..._onboard},
       leadsTo: const {'arrived'},
     );
@@ -232,16 +279,37 @@ class LiveTripCommands {
   /// returns; refusals `pin_wrong` / `pin_locked` / `pin_blocked` /
   /// `pin_not_now` / `pin_required` (see `PickupPinOutcome`).
   Future<LiveTripOutcome> start(String tripId, {String? pin}) async {
+    var verifiedNow = false;
     if (pin != null && needsPin(tripId)) {
       final verified = await verifyPin(tripId, pin);
       if (!verified.ok) return verified;
+      verifiedNow = true;
     }
-    final boarded = await _step(
+    var boarded = await _step(
       tripId,
       'board',
       done: _onboard,
       leadsTo: const {'rider_onboard'},
     );
+    // Contract v0.18.14 `deepFix1.pin`: board never skips the PIN. A
+    // `409 pin_required` while this phone did not know the trip needs one
+    // (no `pinRequired` read yet): the code the driver typed is sent now,
+    // then board again.
+    final refused = boarded.error;
+    if (!boarded.ok &&
+        pin != null &&
+        !verifiedNow &&
+        refused is ApiError &&
+        refused.detail == 'pin_required') {
+      final verified = await verifyPin(tripId, pin);
+      if (!verified.ok) return verified;
+      boarded = await _step(
+        tripId,
+        'board',
+        done: _onboard,
+        leadsTo: const {'rider_onboard'},
+      );
+    }
     if (!boarded.ok) return boarded;
     return _step(
       tripId,
@@ -564,6 +632,17 @@ class LiveTripCommands {
         );
         _keys.remove(signature);
         observe(answer);
+        final answered = answer['version'];
+        // An answer without a version leaves this phone's own version
+        // unknown: then nothing is filtered as its echo (a newer
+        // same-status projection must not be dropped).
+        if (answered is num) {
+          _ownVersion[tripId] = answered.toInt();
+          _versionless.remove(tripId);
+        } else {
+          _ownVersion.remove(tripId);
+          _versionless.add(tripId);
+        }
         return const LiveTripOutcome.ok();
       } on ApiError catch (error) {
         if (!error.isRetryable) _keys.remove(signature);

@@ -854,23 +854,62 @@ class ApiDispatchRepository implements DispatchRepository {
   }
 
   /// `POST /offers/{offerId}/decline` with the offer's version.
+  ///
+  /// Live sweep 2026-11-02 M-4: a 409 kept the card ("1 offer · radar").
+  /// A stale version (`version_mismatch`, e.g. the Exclusive turned into a
+  /// Radar offer) is declined again once with the server's version; an
+  /// offer that is no longer open (`invalid_transition`) leaves with its
+  /// reason, so the screen says it was removed. True when it is gone.
   @override
   Future<bool> declineOffer(String offerId, {String? reasonCode}) async {
     final offer = _find(offerId);
     if (offer == null) return false;
+    var version = offer.version;
     try {
-      final response =
-          await _command('/offers/${Uri.encodeComponent(offerId)}/decline', {
-            'expectedVersion': offer.version,
-            if (reasonCode != null) 'reasonCode': reasonCode,
-          });
-      if (response.statusCode != 200 && response.statusCode != 409) {
-        return false;
+      for (var attempt = 0; attempt < 2; attempt++) {
+        final response =
+            await _command('/offers/${Uri.encodeComponent(offerId)}/decline', {
+              'expectedVersion': version,
+              if (reasonCode != null) 'reasonCode': reasonCode,
+            });
+        if (response.statusCode == 200) {
+          _goneDuringLoad.add(offerId);
+          _offers.remove(offerId);
+          _nextTrips.remove(offerId);
+          _emit();
+          return true;
+        }
+        if (response.statusCode != 409) return false;
+        final body = _json(response.body);
+        final projection = body?['projection'];
+        final status = projection is Map ? projection['status'] : null;
+        final fresh = projection is Map ? projection['version'] : null;
+        if (body?['code'] == 'version_mismatch' &&
+            status == 'open' &&
+            fresh is num &&
+            attempt == 0) {
+          version = fresh.toInt();
+          continue;
+        }
+        // Already declined (an earlier tap): just gone.
+        if (status == 'declined') {
+          _goneDuringLoad.add(offerId);
+          _offers.remove(offerId);
+          _nextTrips.remove(offerId);
+          _emit();
+          return true;
+        }
+        // Not open any more (or unreadable): it is gone, with its reason.
+        _withdraw(
+          offerId,
+          status == null || status == 'open'
+              ? OfferGoneReason.withdrawn
+              : OfferGoneReason.fromWire(status),
+          emit: true,
+        );
+        return true;
       }
-      _offers.remove(offerId);
-      _nextTrips.remove(offerId);
-      _emit();
-      return response.statusCode == 200;
+      return false;
     } catch (_) {
       return false;
     }

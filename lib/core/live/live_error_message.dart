@@ -67,6 +67,8 @@ String liveTripErrorMessage(Object? error) {
   return _transportMessage(error) ??
       switch (error.detail) {
         'not_at_pickup' => tr.liveTripNotAtPickup,
+        // v0.18.14 `positionMaxAge`: arrive with a too old position.
+        'position_stale' => tr.liveTripPositionStale,
         'price_changed' => tr.cashPriceChanged,
         'no_show_too_early' => tr.liveTripNoShowTooEarly,
         'version_mismatch' || 'invalid_transition' => tr.liveTripChanged,

@@ -12,6 +12,7 @@ import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
+import 'package:movera/core/auth/auth_error_message.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_repository.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
@@ -331,6 +332,30 @@ void main() {
         await refusedRefresh(reason);
         expect(SignedOutNotice.kind.value, SignedOutNotice.revoked);
       }
+      // v0.18.14: a sign-in on another phone says so.
+      SignedOutNotice.clear();
+      await refusedRefresh('signed_in_elsewhere');
+      expect(SignedOutNotice.kind.value, SignedOutNotice.elsewhere);
+      DriverAppTexts.language = 'sv';
+      expect(tr.authSignedOutElsewhere, 'Inloggad på en annan telefon');
+      DriverAppTexts.language = 'fr';
+      expect(
+        tr.authSignedOutElsewhere,
+        (_contract['auth'] as Map)['signedOut']['elsewhereTexts']['fr'],
+      );
+      DriverAppTexts.language = 'en';
+      expect(
+        authErrorMessage(
+          ApiError(
+            statusCode: 429,
+            code: 'rate_limited',
+            reason: 'otp_locked_today',
+            message: 'x',
+          ),
+          AuthAction.sendCode,
+        ),
+        'Too many wrong codes today. Try again later.',
+      );
       final reasons = (_contract['auth'] as Map)['signedOut']['reasons'] as Map;
       expect(reasons, SignedOutNotice.reasons);
     });

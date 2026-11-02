@@ -21,6 +21,11 @@ bool isProviderComingSoon(Object error) {
 bool isTooManyWrongCodes(Object error) =>
     error is ApiError && error.detail == 'otp_too_many_attempts';
 
+/// Contract v0.18.14 `auth.signInErrors.otp_locked_today`: Send code is
+/// off until the server's wait is over.
+bool isLockedToday(Object error) =>
+    error is ApiError && error.detail == 'otp_locked_today';
+
 /// A wrong code (`invalid_otp_code`): contract v0.18.2
 /// `auth.codeClearOnWrong` empties the boxes.
 bool isWrongCode(Object error) =>
@@ -55,6 +60,14 @@ String authErrorMessage(Object error, AuthAction action) {
     final status = error.statusCode ?? 0;
     // Contract v0.15.0 (owner 2026-10-29, decision 3): after 5 wrong codes
     // the session is spent; a new code is the way on.
+    // v0.18.14: too many wrong codes for this number today
+    // (countryLimits.wrongCodesPerDay), with the server's wait.
+    if (isLockedToday(error)) {
+      final wait = error.retryAfter;
+      return wait == null || wait <= Duration.zero
+          ? tr.authErrLockedToday
+          : '${tr.authErrLockedToday} (${authWaitText(wait)})';
+    }
     if (isTooManyWrongCodes(error)) {
       return tr.authErrTooManyWrongCodes(tr.authResendCode);
     }

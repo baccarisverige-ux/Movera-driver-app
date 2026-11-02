@@ -12073,6 +12073,126 @@ abstract class AppLocalizations {
   /// **'Your account is paused. Contact support.'**
   String get suspendedShortBody;
 
+  /// Contract v0.18.14 driverHome.setOffline reason documents_expired: the offline card's reason.
+  ///
+  /// In en, this message translates to:
+  /// **'A document has expired. Upload the new one to drive again.'**
+  String get offlineReasonDocumentsExpired;
+
+  /// Contract v0.18.14 positionMaxAge: arrive refused 409 position_stale even after a fresh fix.
+  ///
+  /// In en, this message translates to:
+  /// **'Your position is too old – turn on location'**
+  String get liveTripPositionStale;
+
+  /// Contract v0.18.14 sign-in (authSignedOutElsewhere).
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in on another phone'**
+  String get authSignedOutElsewhere;
+
+  /// Contract v0.18.14 sign-in (authErrLockedToday).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong codes today. Try again later.'**
+  String get authErrLockedToday;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'Change phone number'**
+  String get contactChangePhone;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'Change e-mail'**
+  String get contactChangeEmail;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'New phone number'**
+  String get contactNewPhone;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'New e-mail'**
+  String get contactNewEmail;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get contactSendCode;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to the new number.'**
+  String get contactCodeSentPhone;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'We send a code to the new e-mail.'**
+  String get contactCodeSentEmail;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get contactCode;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get contactSave;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number changed'**
+  String get contactPhoneSaved;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail changed'**
+  String get contactEmailSaved;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'This number is already used by another account'**
+  String get contactPhoneTaken;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'This e-mail is already used by another account'**
+  String get contactEmailTaken;
+
+  /// Decision driver-g1 phone / e-mail change (contract v0.18.14 accountChange).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change it. Try again.'**
+  String get contactChangeFailed;
+
+  /// 403 reauth_required on phone/e-mail change.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again first, then change your number/e-mail'**
+  String get contactReauthRequired;
+
+  /// 429 change_too_many on phone/e-mail change.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many changes — try again in an hour'**
+  String get contactChangeTooMany;
+
   /// No description provided for @supportTopicRideDispute.
   ///
   /// In en, this message translates to:
