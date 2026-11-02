@@ -66,6 +66,28 @@ class DriverAccountSession extends ChangeNotifier {
     await refreshUnread();
   }
 
+  /// The driver picked [code] (Settings, the sign-in globe, the details
+  /// step): saved to the account (contract v0.18.12) so the server's
+  /// notices follow the app language — one language per screen (G9 live
+  /// 2026-11-02). Only once the account was read (signed in); a changed
+  /// profile is read again and the save tried once more. Quiet on failure:
+  /// the app keeps the language on this phone.
+  Future<void> saveLanguage(String code) async {
+    final account = _account;
+    if (account == null || account.language == code) return;
+    try {
+      replace(await _repository.saveLanguage(code, account.version));
+    } catch (_) {
+      try {
+        final fresh = await refresh();
+        if (fresh.language == code) return;
+        replace(await _repository.saveLanguage(code, fresh.version));
+      } catch (_) {
+        // Offline or refused: the phone keeps the choice.
+      }
+    }
+  }
+
   /// Takes the account a command answered with.
   DriverAccount replace(DriverAccount account) {
     _account = account;

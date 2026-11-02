@@ -1078,7 +1078,11 @@ extension _AcceptRidePanel on _AcceptRideState {
           isLabelVisible: unread > 0,
           backgroundColor: const Color(0xFFE0474C),
           child: button(
-            unread > 0 ? tr.chatNewMessages(unread) : tr.messageRider,
+            unread == 0
+                ? tr.messageRider
+                : chat.thread(widget.tripId).unreadFromSupport > 0
+                ? tr.chatNewMessagesAny(unread)
+                : tr.chatNewMessages(unread),
           ),
         );
       },

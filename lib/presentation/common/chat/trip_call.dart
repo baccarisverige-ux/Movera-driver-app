@@ -23,12 +23,19 @@ Future<void> callRider(
   LiveTripChat? chat,
   TripCallDialer dial = _launchDialer,
   SnackBar Function(String text)? snackBar,
+  void Function(String text)? onSay,
 }) async {
   final live = chat ?? LiveDriverServices.instance?.chat;
   final messenger = ScaffoldMessenger.maybeOf(context);
-  void say(String text) => messenger?.showSnackBar(
-    snackBar?.call(text) ?? SnackBar(content: Text(text)),
-  );
+  // In Chat the text shows above the write field ([onSay]) so it never
+  // covers the field or the send button (G9 live 2026-11-02).
+  void say(String text) {
+    if (onSay != null) return onSay(text);
+    messenger?.showSnackBar(
+      snackBar?.call(text) ?? SnackBar(content: Text(text)),
+    );
+  }
+
   if (live == null || tripId == null || tripId.isEmpty) {
     say(tr.callUnavailableUseChat);
     return;

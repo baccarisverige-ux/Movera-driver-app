@@ -236,6 +236,19 @@ class DriverAccountRepository {
     ),
   );
 
+  /// `PATCH /driver/profile { language }` (contract v0.18.12): the app
+  /// language saved to the account, so the server's notices and pushes
+  /// come in it (G9 live 2026-11-02, as the rider's PATCH /rider/profile).
+  Future<DriverAccount> saveLanguage(
+    String language,
+    int expectedVersion,
+  ) async => DriverAccount.fromJson(
+    await _api.patch(
+      profilePath,
+      body: {'expectedVersion': expectedVersion, 'language': language},
+    ),
+  );
+
   /// `GET /driver/documents`: the account's and its cars' documents.
   Future<List<AccountDocument>> documents() async {
     final page = await _api.get(documentsPath);

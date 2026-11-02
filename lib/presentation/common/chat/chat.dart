@@ -68,6 +68,13 @@ class _ChatState extends State<Chat> {
   final ScrollController _scroll = ScrollController();
   bool showSendIcon = false;
 
+  /// The call answer ("Calls coming soon – use the chat"), shown above the
+  /// write field for a few seconds so it never covers the field or the
+  /// send button (G9 live 2026-11-02).
+  String? _callNotice;
+  Timer? _callNoticeTimer;
+  int _shown = 0;
+
   @override
   void initState() {
     super.initState();
@@ -97,13 +104,48 @@ class _ChatState extends State<Chat> {
     if (widget.tripId case final tripId? when _thread != null) {
       _live?.close(tripId);
     }
+    _callNoticeTimer?.cancel();
     _scroll.dispose();
     _messageController.dispose();
     super.dispose();
   }
 
   void _onThread() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    final count = _thread?.messages.length ?? 0;
+    if (count > _shown) {
+      _shown = count;
+      _scrollToNewest();
+    }
+  }
+
+  void _showCallNotice(String text) {
+    if (!mounted) return;
+    _callNoticeTimer?.cancel();
+    setState(() => _callNotice = text);
+    _callNoticeTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _callNotice = null);
+    });
+  }
+
+  /// The conversation starts at the top (owner decision G9 2c); a new
+  /// message scrolls to the newest one when the list is longer than the
+  /// screen.
+  void _scrollToNewest() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final end = _scroll.position.maxScrollExtent;
+      if (MediaQuery.disableAnimationsOf(context)) {
+        _scroll.jumpTo(end);
+      } else {
+        _scroll.animateTo(
+          end,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   /// Opened on the live trip: the history is read once (then the trip's
@@ -140,19 +182,7 @@ class _ChatState extends State<Chat> {
     }
     setState(() {});
     _messageController.clear();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted &&
-          ModalRoute.of(context)?.isCurrent == true &&
-          _scroll.hasClients) {
-        _scroll.animateTo(
-          0,
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+    if (ModalRoute.of(context)?.isCurrent == true) _scrollToNewest();
   }
 
   /// The server's answer to a send (or a retry): a refusal is said the
@@ -207,6 +237,7 @@ class _ChatState extends State<Chat> {
   Widget _liveMessage(TripChatMessage message) {
     if (!message.own) {
       return RiderMessage(
+        sender: message.fromSupport ? tr.chatSupportSender : null,
         text: message.text,
         label: DriverDates.time(message.at.toLocal()),
       );
@@ -238,13 +269,12 @@ class _ChatState extends State<Chat> {
         child: ChatAppBar(
           riderDisplayName: widget.riderDisplayName,
           tripId: widget.tripId,
-          onCall: widget.liveChat == null
-              ? null
-              : () => callRider(
-                  context,
-                  tripId: widget.tripId,
-                  chat: widget.liveChat,
-                ),
+          onCall: () => callRider(
+            context,
+            tripId: widget.tripId,
+            chat: widget.liveChat,
+            onSay: _showCallNotice,
+          ),
         ),
       ),
       body: Column(
@@ -252,18 +282,17 @@ class _ChatState extends State<Chat> {
           Expanded(
             child: ListView.builder(
               controller: _scroll,
-              reverse: true,
               itemCount: count + 1,
               itemBuilder: (_, index) {
-                if (index == count) {
+                if (index == 0) {
                   if (!live) return _localNotice();
                   return _historyFailed
                       ? _notice(tr.chatHistoryFailed, onRetry: _loadAgain)
                       : const SizedBox.shrink();
                 }
                 return live
-                    ? _liveMessage(thread.messages[count - 1 - index])
-                    : SenderMessage(text: _messages[count - 1 - index]);
+                    ? _liveMessage(thread.messages[index - 1])
+                    : SenderMessage(text: _messages[index - 1]);
               },
             ),
           ),
@@ -279,6 +308,29 @@ class _ChatState extends State<Chat> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (_callNotice case final notice?)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Container(
+                          key: const ValueKey<String>('chat-call-notice'),
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF252E3A),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(
+                            notice,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
                     if (closed)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
@@ -420,7 +472,16 @@ class SenderMessage extends StatelessWidget {
 /// The rider's (or support's) message: on the left, in a white bubble,
 /// with the time under it.
 class RiderMessage extends StatelessWidget {
-  const RiderMessage({super.key, required this.text, required this.label});
+  const RiderMessage({
+    super.key,
+    required this.text,
+    required this.label,
+    this.sender,
+  });
+
+  /// Over the bubble: "Movera" for a support message, so it never looks
+  /// like the rider's (G9 live 2026-11-02). None for the rider.
+  final String? sender;
 
   final String text;
   final String label;
@@ -436,6 +497,18 @@ class RiderMessage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (sender case final name?) ...[
+            Text(
+              name,
+              key: const ValueKey<String>('chat-support-sender'),
+              style: const TextStyle(
+                color: Color(0xFF5C656C),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            4.height,
+          ],
           Container(
             key: const ValueKey<String>('chat-rider-message'),
             padding: EdgeInsets.symmetric(

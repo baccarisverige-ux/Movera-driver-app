@@ -53,6 +53,9 @@ class TripChatMessage {
   /// Written on this phone.
   bool get own => from == 'driver';
 
+  /// Written by Movera support: shown as "Movera", never as the rider.
+  bool get fromSupport => from == 'support';
+
   /// Still this phone's copy, not the server's.
   bool get local => state != TripChatSendState.sent;
 
@@ -73,6 +76,7 @@ class TripChatThread extends ChangeNotifier {
   final String tripId;
   final List<TripChatMessage> _messages = [];
   int _unread = 0;
+  int _unreadSupport = 0;
   int _open = 0;
   bool _loaded = false;
   bool _closed = false;
@@ -89,6 +93,7 @@ class TripChatThread extends ChangeNotifier {
   void _forget() {
     _messages.clear();
     _unread = 0;
+    _unreadSupport = 0;
     _loaded = true;
     _closed = true;
     notifyListeners();
@@ -99,6 +104,11 @@ class TripChatThread extends ChangeNotifier {
 
   /// Messages from the rider (or support) the driver has not opened yet.
   int get unread => _unread;
+
+  /// Unread messages written by Movera support (`from: support`): then the
+  /// trip screen says "new messages", not "from the rider" (G9 live
+  /// 2026-11-02).
+  int get unreadFromSupport => _unreadSupport;
 
   /// A Chat screen shows this thread now.
   bool get isOpen => _open > 0;
@@ -147,6 +157,7 @@ class TripChatThread extends ChangeNotifier {
   void _read() {
     if (_unread == 0) return;
     _unread = 0;
+    _unreadSupport = 0;
     notifyListeners();
   }
 
@@ -156,6 +167,7 @@ class TripChatThread extends ChangeNotifier {
     final fresh = _put(message, replacing: replacing);
     if (fresh && !message.own && !isOpen) {
       _unread++;
+      if (message.fromSupport) _unreadSupport++;
       notifyListeners();
     }
   }

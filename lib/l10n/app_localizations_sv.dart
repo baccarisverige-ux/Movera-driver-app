@@ -4112,8 +4112,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get emFamily => 'Familj';
 
   @override
-  String get callUnavailableUseChat =>
-      'Samtal är inte tillgängliga än – använd chatten';
+  String get callUnavailableUseChat => 'Samtal kommer snart – använd chatten';
 
   @override
   String get chatClosedAfterTrip => 'Chatten är stängd efter resan';
@@ -4123,7 +4122,7 @@ class AppLocalizationsSv extends AppLocalizations {
       'Lokal demochatt · meddelanden skickas inte till resenären.';
 
   @override
-  String get chatSendMessageHint => 'skicka meddelande…';
+  String get chatSendMessageHint => 'Skicka meddelande…';
 
   @override
   String get chatSaveLocally => 'Spara meddelandet lokalt';
@@ -6986,5 +6985,19 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String g8StarLabel(int stars) {
     return '$stars av 5 stjärnor';
+  }
+
+  @override
+  String get chatSupportSender => 'Movera';
+
+  @override
+  String chatNewMessagesAny(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nya meddelanden',
+      one: '1 nytt meddelande',
+    );
+    return '$_temp0';
   }
 }

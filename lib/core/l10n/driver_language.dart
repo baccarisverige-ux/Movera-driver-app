@@ -104,6 +104,10 @@ abstract final class DriverLanguage {
     return current.value;
   }
 
+  /// A live build: saves a pick to the account too (contract v0.18.12,
+  /// `PATCH /driver/profile { language }`); null in the demo and tests.
+  static Future<void> Function(String code)? saveToAccount;
+
   /// The driver picks [code] in Settings: used now and saved.
   static Future<void> choose(String code, [SettingsRepository? repository]) {
     final usable = _usable(code);
@@ -112,6 +116,7 @@ abstract final class DriverLanguage {
     }
     _choice = usable;
     _apply();
+    saveToAccount?.call(usable).ignore();
     return (repository ?? SettingsRepository()).save(section, {key: usable});
   }
 

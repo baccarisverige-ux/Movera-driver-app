@@ -521,6 +521,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     } else if (event.eta case final eta?) {
       _applyLive(TripLiveDetails(eta: eta));
     }
+    if (event.status case final status? when !status.isTerminal) {
+      _sawOpenTrip = true;
+    }
     if (event.status != null ||
         event.kind == DriverRealtimeKind.riderCancelled) {
       _pendingProjection = event;
@@ -881,7 +884,21 @@ extension _AcceptRideTrip on _AcceptRideState {
     } else {
       _waybills.discardCurrent();
     }
-    await showTripOutcomeSheet(context, status: status, hasNext: next != null);
+    // G9 live 2026-11-02: a trip restored on opening the app that the
+    // server already finished before this open (no open status seen here)
+    // goes Home quietly: no old "Trip completed" sheet from an earlier trip.
+    final endedBeforeOpen =
+        status == TripStatus.completed &&
+        next == null &&
+        widget.restoredSnapshot != null &&
+        !_sawOpenTrip;
+    if (!endedBeforeOpen) {
+      await showTripOutcomeSheet(
+        context,
+        status: status,
+        hasNext: next != null,
+      );
+    }
     if (!mounted) {
       return;
     }

@@ -278,7 +278,7 @@ void main() {
         expect(jsonDecode(requests[2].body), {'expectedVersion': 7});
         // Without it the server skips the PIN (round 1 compat).
         for (final request in requests) {
-          expect(request.headers['X-Contract-Version'], '0.18.10');
+          expect(request.headers['X-Contract-Version'], '0.18.12');
         }
         expect(trips.needsPin('t1'), isFalse);
       });
