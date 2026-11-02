@@ -1986,5 +1986,10 @@
   "walletPayoutPending": "En attente",
   "g8StarLabel": "{stars} étoile(s) sur 5",
   "chatSupportSender": "Movera",
-  "chatNewMessagesAny": "{count, plural, =1{1 nouveau message} other{{count} nouveaux messages}}"
+  "chatNewMessagesAny": "{count, plural, =1{1 nouveau message} other{{count} nouveaux messages}}",
+  "safetyAudioComingSoon": "L’enregistrement audio arrive bientôt.",
+  "safetyTripSharingComingSoon": "Le partage de course arrive bientôt.",
+  "accessibilitySavedOnPhone": "Ces préférences sont enregistrées sur ce téléphone.",
+  "hearingComingSoon": "Informer les passagers de votre audition arrive bientôt.",
+  "suspendedShortBody": "Votre compte est en pause. Contactez le support."
 }

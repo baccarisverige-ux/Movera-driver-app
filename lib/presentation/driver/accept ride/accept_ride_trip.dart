@@ -2271,7 +2271,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     // and/or minutes of it. The demo keeps next trips as they were.
     final toFinal = _stopCursor >= _stopAddresses.length;
     if (!NextTripGate.allows(
-      demo: !driverProductionRequested,
+      demo: driverDemoFeatures,
       onTrip: _stage == ActiveRideStage.onTrip,
       toFinalDropoff: toFinal,
       metersToDropoff: metersToDropoff,

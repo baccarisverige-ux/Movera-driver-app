@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
 
@@ -376,7 +377,10 @@ class _SweepPainter extends CustomPainter {
 /// "Updating" face: the four dots of the hidden total ripple while the
 /// last trip's money is still coming in.
 class DigitalUpdatingFace extends StatefulWidget {
-  const DigitalUpdatingFace({super.key});
+  const DigitalUpdatingFace({super.key, this.unit = 'kr'});
+
+  /// The money's symbol, e.g. `kr` or `€` ([DigitalIslandParts.unitOf]).
+  final String unit;
 
   @override
   State<DigitalUpdatingFace> createState() => _DigitalUpdatingFaceState();
@@ -427,9 +431,9 @@ class _DigitalUpdatingFaceState extends State<DigitalUpdatingFace>
             children: [
               for (var i = 0; i < 4; i++) _dot(i),
               const SizedBox(width: 6),
-              const Text(
-                'kr',
-                style: TextStyle(
+              Text(
+                widget.unit,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
@@ -775,13 +779,28 @@ class DigitalIslandParts {
     letterSpacing: 1.6,
   );
 
-  /// The hidden total, "•••• kr".
-  static Widget hiddenFace() => Center(
+  /// The symbol a money label ends with (`kr`, `€`, `DT`), so the island
+  /// shows the trip's currency (audit B7: a France driver saw kr). Without
+  /// one: today's total's symbol, else kr.
+  static String unitOf(String? label) {
+    for (final candidate in [label, TodayEarnings.label.value]) {
+      final text = candidate?.trim() ?? '';
+      for (final entry in Money.symbols.entries) {
+        if (text.endsWith(entry.value) || text.endsWith(entry.key)) {
+          return entry.value;
+        }
+      }
+    }
+    return Money.symbols['SEK']!;
+  }
+
+  /// The hidden total, "•••• kr" (or "•••• €").
+  static Widget hiddenFace({String unit = 'kr'}) => Center(
     key: const ValueKey<String>('island-hidden'),
     child: _fit(
-      const Text(
-        '•••• kr',
-        style: TextStyle(
+      Text(
+        '•••• $unit',
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 17,
           fontWeight: FontWeight.w700,

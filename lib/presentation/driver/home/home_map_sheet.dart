@@ -1310,7 +1310,9 @@ extension _HomeMapSheet on _DriverHomeState {
                   // The top island is drawn above the scrim, further down.
                   const SizedBox(height: _homeMapButtonSize),
                   // Destination mode shows on the island (R10-9).
-                  if (isDestinationPanel)
+                  // Audit B3: the airport queue is a sample until the real
+                  // queue is built (G15 Q5); demo builds only.
+                  if (isDestinationPanel && driverDemoFeatures)
                     Padding(
                       padding: EdgeInsets.only(top: ResSize.h * 12),
                       child: InAirportQueue(),
@@ -1813,11 +1815,14 @@ extension _HomeMapSheet on _DriverHomeState {
   Widget _islandFaceView() {
     switch (_islandFace) {
       case _IslandFace.hidden:
-        return DigitalIslandParts.hiddenFace();
+        return DigitalIslandParts.hiddenFace(
+          unit: DigitalIslandParts.unitOf(_waybills.last?.fare),
+        );
       case _IslandFace.lastTrip:
         if (_lastTripSettling) {
-          return const DigitalUpdatingFace(
-            key: ValueKey<String>('island-updating'),
+          return DigitalUpdatingFace(
+            key: const ValueKey<String>('island-updating'),
+            unit: DigitalIslandParts.unitOf(_waybills.last?.fare),
           );
         }
         return DigitalIslandParts.amountFace(

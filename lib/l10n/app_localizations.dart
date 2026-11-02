@@ -12042,6 +12042,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 new message} other{{count} new messages}}'**
   String chatNewMessagesAny(int count);
+
+  /// No description provided for @safetyAudioComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio recording is coming soon.'**
+  String get safetyAudioComingSoon;
+
+  /// No description provided for @safetyTripSharingComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip sharing is coming soon.'**
+  String get safetyTripSharingComingSoon;
+
+  /// No description provided for @accessibilitySavedOnPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'These preferences are saved on this phone.'**
+  String get accessibilitySavedOnPhone;
+
+  /// No description provided for @hearingComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Telling riders about your hearing is coming soon.'**
+  String get hearingComingSoon;
+
+  /// No description provided for @suspendedShortBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is paused. Contact support.'**
+  String get suspendedShortBody;
 }
 
 class _AppLocalizationsDelegate

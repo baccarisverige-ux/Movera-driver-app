@@ -1,3 +1,4 @@
+import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/widgets/live_soon_notice.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
@@ -178,12 +179,15 @@ class Analytics extends StatelessWidget {
             ),
             const SizedBox(height: 16),
           ],
-          _link(
-            context,
-            title: tr.earnings,
-            detail: tr.anaSamePeriodHome,
-            page: const EarningStatsScreen(),
-          ),
+          // Audit B2: the earnings page is a sample (Stockholm trips, a demo
+          // rider); never on a build that signs in to a real server.
+          if (driverDemoFeatures)
+            _link(
+              context,
+              title: tr.earnings,
+              detail: tr.anaSamePeriodHome,
+              page: const EarningStatsScreen(),
+            ),
           if (DriverPerformanceConfig.featureOn) ...[
             const SizedBox(height: 8),
             _link(

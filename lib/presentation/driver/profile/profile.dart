@@ -5,9 +5,7 @@ import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 import 'package:movera/widgets/single_route_entry.dart';
 import 'package:flutter/material.dart';
-import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/vehicle/local_vehicle_store.dart';
-import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/core/account/driver_account.dart';
@@ -17,13 +15,12 @@ import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
+import 'package:movera/presentation/driver/auth/driver_sign_out.dart';
 import 'package:movera/presentation/driver/documents/documents.dart';
-import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
 import 'package:movera/presentation/driver/settings/settings.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
-import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/presentation/driver/vehicles/vehicles.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
@@ -516,39 +513,11 @@ class _DriverProfileState extends State<DriverProfile> {
     if (leave == true &&
         context.mounted &&
         ModalRoute.of(context)?.isCurrent == true) {
-      final runtime = DriverRuntimeScope.maybeOf(context);
-      try {
-        if (runtime?.logout != null) {
-          await runtime!.logout!();
-        } else {
-          await clearLocalUserData();
-          ScheduledRideStore.reset();
-          IslandMessages.clear(); // driver-r5-27
-          runtime?.session.reset();
-        }
-      } catch (_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(tr.profCouldNotClear)));
-        }
-        return;
+      if (!await signOutDriver(context) && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr.profCouldNotClear)));
       }
-      if (!context.mounted) {
-        return;
-      }
-      // uat-d2: the demo landing screen is gone; a logged-out driver is
-      // back on Home (demo mode). Round 4: a build that requires a session
-      // lands on Sign in instead (driverRootAfterSignOut).
-      final home = driverRootAfterSignOut(runtime);
-      if (home == null) {
-        Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
-        return;
-      }
-      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-        MaterialPageRoute<void>(builder: (_) => home()),
-        (route) => false,
-      );
     }
   }
 }

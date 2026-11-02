@@ -102,7 +102,7 @@ class DriverRuntimeConfig {
     ),
     externalRouting: _externalRouting,
     skipAccountActivation: _skipAccountActivation,
-    adminDemoOffers: !driverProductionRequested,
+    adminDemoOffers: !driverProductionRequested && !_authRequired,
     authRequired: _authRequired,
     apiBaseUrl: _apiBaseUrl,
   );

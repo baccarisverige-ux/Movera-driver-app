@@ -1,6 +1,9 @@
-import 'package:movera/core/l10n/driver_l10n.dart';
-import 'package:movera/widgets/owned_route_exit.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/presentation/driver/auth/driver_sign_out.dart';
+import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/widgets/movera_modal_sheet.dart';
 
 const Color _ink = Color(0xFF202A31);
@@ -8,24 +11,42 @@ const Color _muted = Color(0xFF667177);
 const Color _warning = Color(0xFF9A6414);
 const Color _warningSoft = Color(0xFFFFF3DE);
 
+/// G16 Q16-3: a paused account sees a short message with Contact support
+/// and Sign out. The sheet cannot be closed: no barrier tap, no back.
 Future<void> showDriverSuspendedSheet(BuildContext context) {
   return showMoveraModalSheet<void>(
     context: context,
     heightFactor: 0.48,
+    fitContent: true,
+    barrierDismissible: false,
     barrierColor: const Color(0x730D1519),
-    builder: (sheetContext) =>
-        DriverSuspendedSheet(onAcknowledge: () => popOwned(sheetContext)),
+    builder: (sheetContext) => PopScope(
+      canPop: false,
+      child: DriverSuspendedSheet(
+        onContactSupport: () => unawaited(
+          Navigator.of(sheetContext).push(
+            MaterialPageRoute<void>(builder: (_) => const SupportInboxScreen()),
+          ),
+        ),
+        onSignOut: () => unawaited(signOutDriver(sheetContext)),
+      ),
+    ),
   );
 }
 
 /// Presentation for the authoritative DriverOnlineStatus.suspended state.
 ///
 /// It deliberately does not invent a suspension reason, duration or appeal
-/// result. Those fields must come from the future backend contract.
+/// result.
 class DriverSuspendedSheet extends StatelessWidget {
-  const DriverSuspendedSheet({super.key, required this.onAcknowledge});
+  const DriverSuspendedSheet({
+    super.key,
+    required this.onContactSupport,
+    required this.onSignOut,
+  });
 
-  final VoidCallback onAcknowledge;
+  final VoidCallback onContactSupport;
+  final VoidCallback onSignOut;
 
   @override
   Widget build(BuildContext context) {
@@ -35,24 +56,13 @@ class DriverSuspendedSheet extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
           child: Column(
             key: const ValueKey<String>('driver-suspended-state'),
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD8DEDC),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 22),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     width: 50,
@@ -69,86 +79,36 @@ class DriverSuspendedSheet extends StatelessWidget {
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          tr.driverStatus,
-                          style: TextStyle(
-                            color: _muted,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.9,
-                          ),
-                        ),
-                        SizedBox(height: 3),
-                        Text(
-                          tr.accountAccessPaused,
-                          style: TextStyle(
-                            color: _ink,
-                            fontSize: 22,
-                            height: 1.15,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      tr.accountAccessPaused,
+                      style: const TextStyle(
+                        color: _ink,
+                        fontSize: 22,
+                        height: 1.15,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.4,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               Text(
-                tr.yourDriverStatusIsCurrentlySuspended,
-                style: TextStyle(
+                tr.suspendedShortBody,
+                style: const TextStyle(
                   color: _muted,
-                  fontSize: 14,
-                  height: 1.5,
+                  fontSize: 15,
+                  height: 1.45,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 13,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE3E9E6)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.sync_rounded,
-                      size: 20,
-                      color: Color(0xFF526168),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        tr.moveraWillUseAuthoritativeAccountStatus,
-                        style: TextStyle(
-                          color: _ink,
-                          fontSize: 12.5,
-                          height: 1.4,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 height: 54,
                 child: FilledButton(
-                  key: const ValueKey<String>('driver-suspended-acknowledge'),
-                  onPressed: onAcknowledge,
+                  key: const ValueKey<String>('driver-suspended-support'),
+                  onPressed: onContactSupport,
                   style: FilledButton.styleFrom(
                     elevation: 0,
                     backgroundColor: _ink,
@@ -158,8 +118,28 @@ class DriverSuspendedSheet extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    tr.gotIt,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                    tr.contactSupport,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: TextButton(
+                  key: const ValueKey<String>('driver-suspended-sign-out'),
+                  onPressed: onSignOut,
+                  style: TextButton.styleFrom(foregroundColor: _ink),
+                  child: Text(
+                    tr.logOut,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),

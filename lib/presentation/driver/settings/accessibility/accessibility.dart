@@ -1,3 +1,4 @@
+import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
@@ -150,7 +151,11 @@ class _AccessibilityState extends State<Accessibility> {
               onPressed: _restoreSettings,
               child: Text(tr.couldNotLoadSavedPreferencesRetry),
             ),
-          Text(tr.localDemoPreferencesSavedOnThis),
+          Text(
+            driverDemoFeatures
+                ? tr.localDemoPreferencesSavedOnThis
+                : tr.accessibilitySavedOnPhone,
+          ),
           _tile(
             title: tr.hearing,
             detail: tr.tellRidersIfYouAreDeaf,
@@ -167,7 +172,11 @@ class _AccessibilityState extends State<Accessibility> {
                     child: AlertDialog(
                       backgroundColor: Colors.white,
                       title: Text(tr.hearing),
-                      content: Text(tr.demoPreviewNoInformationIsShared),
+                      content: Text(
+                        driverDemoFeatures
+                            ? tr.demoPreviewNoInformationIsShared
+                            : tr.hearingComingSoon,
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => popOwned(dialogContext),
@@ -176,7 +185,9 @@ class _AccessibilityState extends State<Accessibility> {
                         FilledButton(
                           onPressed: () => popOwned(dialogContext),
                           style: FilledButton.styleFrom(backgroundColor: _ink),
-                          child: Text(tr.closePreview),
+                          child: Text(
+                            driverDemoFeatures ? tr.closePreview : tr.close,
+                          ),
                         ),
                       ],
                     ),

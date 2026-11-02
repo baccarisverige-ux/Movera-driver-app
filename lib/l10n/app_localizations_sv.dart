@@ -3861,7 +3861,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get legalPrivacyBody =>
-      'Movera Driver använder plats-, rese- och fordonsdata för att tilldela resor, visa rutter och spara en körjournal på enheten.\n\nDemoversioner sparar informationen i telefonens minne. Inget säljs till annonsörer. Du kan logga ut när som helst från Profil.\n\nNär en riktig server är ansluten används samma text tills en signerad version publiceras.';
+      'Movera Förare använder plats-, rese- och fordonsdata för att tilldela resor, visa rutter och spara en körjournal på enheten.\n\nDemoversioner sparar informationen i telefonens minne. Inget säljs till annonsörer. Du kan logga ut när som helst från Profil.\n\nNär en riktig server är ansluten används samma text tills en signerad version publiceras.';
 
   @override
   String get legalTermsBody =>
@@ -5118,7 +5118,7 @@ class AppLocalizationsSv extends AppLocalizations {
     Object owner,
     Object email,
   ) {
-    return 'Gå med i $name på Movera Driver. Kod: $code. Ägare: $owner, $email.';
+    return 'Gå med i $name på Movera Förare. Kod: $code. Ägare: $owner, $email.';
   }
 
   @override
@@ -5632,7 +5632,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get contentUpdateBody =>
-      'Den här versionen av Movera Driver kan inte längre användas. Uppdatera den för att fortsätta köra.';
+      'Den här versionen av Movera Förare kan inte längre användas. Uppdatera den för att fortsätta köra.';
 
   @override
   String get contentUpdateStore => 'Öppna butiken';
@@ -7000,4 +7000,21 @@ class AppLocalizationsSv extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get safetyAudioComingSoon => 'Ljudinspelning kommer snart.';
+
+  @override
+  String get safetyTripSharingComingSoon => 'Delning av resa kommer snart.';
+
+  @override
+  String get accessibilitySavedOnPhone =>
+      'De här inställningarna sparas på den här telefonen.';
+
+  @override
+  String get hearingComingSoon =>
+      'Att berätta för resenärer om din hörsel kommer snart.';
+
+  @override
+  String get suspendedShortBody => 'Ditt konto är pausat. Kontakta support.';
 }

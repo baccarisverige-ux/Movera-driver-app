@@ -5,7 +5,6 @@ import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/presentation/driver/accept ride/rider_cancelled_sheet.dart';
 import 'package:movera/presentation/driver/accept ride/trip_outcome_sheet.dart';
 import 'package:movera/presentation/driver/accept ride/waiting_time_sheet.dart';
-import 'package:movera/presentation/driver/home/components/driver_suspended_sheet.dart';
 import 'package:movera/presentation/driver/home/components/trip_problem_sheet.dart';
 import 'package:movera/presentation/driver/my queue position/my_queue_pos.dart';
 
@@ -57,7 +56,8 @@ void main() {
       ),
       'trip-outcome-acknowledge',
     ),
-    'suspension': (showDriverSuspendedSheet, 'driver-suspended-acknowledge'),
+    // The paused-account sheet cannot be closed (G16 Q16-3): its own test
+    // is in test/audit/live_cleanup_test.dart.
   };
   for (final entry in sheets.entries) {
     testWidgets(

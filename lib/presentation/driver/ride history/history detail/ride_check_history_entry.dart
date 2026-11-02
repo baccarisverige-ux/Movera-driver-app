@@ -1,3 +1,4 @@
+import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/safety/ride_check_l10n.dart';
 import 'package:flutter/material.dart';
@@ -154,7 +155,9 @@ class _RideCheckHistoryEntryState extends State<RideCheckHistoryEntry> {
                         child: Text(
                           check.alertReachedMovera
                               ? tr.moveraSafetyTeamAlerted
-                              : tr.safetyAlertKeptOnPhoneDemo,
+                              : driverDemoFeatures
+                              ? tr.safetyAlertKeptOnPhoneDemo
+                              : tr.safetyAlertNotSentLive,
                           style: TextStyle(
                             color: _red,
                             fontSize: 12.5,

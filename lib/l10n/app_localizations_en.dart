@@ -6991,4 +6991,21 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get safetyAudioComingSoon => 'Audio recording is coming soon.';
+
+  @override
+  String get safetyTripSharingComingSoon => 'Trip sharing is coming soon.';
+
+  @override
+  String get accessibilitySavedOnPhone =>
+      'These preferences are saved on this phone.';
+
+  @override
+  String get hearingComingSoon =>
+      'Telling riders about your hearing is coming soon.';
+
+  @override
+  String get suspendedShortBody => 'Your account is paused. Contact support.';
 }
