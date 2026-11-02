@@ -1983,5 +1983,6 @@
   "walletLiveNoPayouts": "Inga utbetalningar än.",
   "walletLiveUnavailable": "Det gick inte att hämta dina intäkter. Försök igen senare.",
   "walletPayoutPaid": "Utbetald",
-  "walletPayoutPending": "Väntar"
+  "walletPayoutPending": "Väntar",
+  "g8StarLabel": "{stars} av 5 stjärnor"
 }

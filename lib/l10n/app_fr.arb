@@ -1983,5 +1983,6 @@
   "walletLiveNoPayouts": "Aucun versement pour l’instant.",
   "walletLiveUnavailable": "Impossible de charger vos gains. Réessayez plus tard.",
   "walletPayoutPaid": "Versé",
-  "walletPayoutPending": "En attente"
+  "walletPayoutPending": "En attente",
+  "g8StarLabel": "{stars} étoile(s) sur 5"
 }

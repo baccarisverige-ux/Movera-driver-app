@@ -161,7 +161,16 @@ class ActiveRideController extends ChangeNotifier {
     }
   }
 
+  /// Test seam (live G8 fix 1): the next [complete] is refused, as when a
+  /// write still holds the lifecycle.
+  @visibleForTesting
+  static bool debugRefuseNextComplete = false;
+
   Future<bool> complete({bool clearSnapshot = true}) async {
+    if (debugRefuseNextComplete) {
+      debugRefuseNextComplete = false;
+      return false;
+    }
     if (_backgroundSave != null) {
       await _afterBackgroundSave();
     }

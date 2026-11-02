@@ -4278,5 +4278,13 @@
   "walletLiveNoPayouts": "No payouts yet.",
   "walletLiveUnavailable": "Could not load your earnings. Try again later.",
   "walletPayoutPaid": "Paid",
-  "walletPayoutPending": "Waiting"
+  "walletPayoutPending": "Waiting",
+  "g8StarLabel": "{stars} of 5 stars",
+  "@g8StarLabel": {
+    "placeholders": {
+      "stars": {
+        "type": "int"
+      }
+    }
+  }
 }
