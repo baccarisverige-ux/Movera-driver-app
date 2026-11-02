@@ -160,7 +160,12 @@ extension _HomeRoutes on _DriverHomeState {
     final home = ModalRoute.of(context);
     final known = {for (final offer in _latestDispatchOffers) offer.id};
     _coverOfferWatches[this] = _dispatch.watchNearbyOffers().listen((offers) {
-      if (!mounted || _routeVisible || !_driverSession.availableForOffers) {
+      if (!mounted) {
+        // Home is gone (disposed under the page): the watch ends.
+        _stopCoverWatch();
+        return;
+      }
+      if (_routeVisible || !_driverSession.availableForOffers) {
         return;
       }
       final fresh = offers.any(
