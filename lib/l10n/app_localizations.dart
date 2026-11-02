@@ -12078,6 +12078,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A document has expired. Upload the new one to drive again.'**
   String get offlineReasonDocumentsExpired;
+
+  /// Contract v0.18.14 positionMaxAge: arrive refused 409 position_stale even after a fresh fix.
+  ///
+  /// In en, this message translates to:
+  /// **'Your position is too old – turn on location'**
+  String get liveTripPositionStale;
 }
 
 class _AppLocalizationsDelegate

@@ -109,12 +109,18 @@ class LiveTripCommands {
   LiveTripCommands({
     required ApiClient api,
     LiveFix? Function()? lastFix,
+    Future<LiveFix?> Function()? freshFix,
     this.onEnded,
   }) : _api = api,
-       _lastFix = lastFix ?? (() => null);
+       _lastFix = lastFix ?? (() => null),
+       _freshFix = freshFix;
 
   final ApiClient _api;
   final LiveFix? Function() _lastFix;
+
+  /// A position read just now (contract v0.18.14 `positionMaxAge`): asked
+  /// once when arrive is `409 position_stale`.
+  final Future<LiveFix?> Function()? _freshFix;
 
   /// Told when a projection says the trip is over (contract.json
   /// `tripStatus.terminal`): the chat closes at drop-off (v0.13.0 §22).
@@ -231,10 +237,28 @@ class LiveTripCommands {
     final begun = await begin(tripId);
     if (!begun.ok) return begun;
     final fix = _lastFix();
-    return _step(
+    final first = await _step(
       tripId,
       'arrive',
       body: {if (fix != null) 'location': fix},
+      done: const {'arrived', ..._onboard},
+      leadsTo: const {'arrived'},
+    );
+    // Contract v0.18.14 `positionMaxAge`: the position sent (or the
+    // server's latest) is too old. One fresh fix, asked now, and arrive
+    // again; still none → "Your position is too old – turn on location".
+    final refused = first.error;
+    if (refused is! ApiError ||
+        refused.detail != 'position_stale' ||
+        _freshFix == null) {
+      return first;
+    }
+    final fresh = await _freshFix();
+    if (fresh == null) return first;
+    return _step(
+      tripId,
+      'arrive',
+      body: {'location': fresh},
       done: const {'arrived', ..._onboard},
       leadsTo: const {'arrived'},
     );

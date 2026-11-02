@@ -7012,4 +7012,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get offlineReasonDocumentsExpired =>
       'A document has expired. Upload the new one to drive again.';
+
+  @override
+  String get liveTripPositionStale =>
+      'Your position is too old – turn on location';
 }

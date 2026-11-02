@@ -7021,4 +7021,8 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get offlineReasonDocumentsExpired =>
       'Ett dokument har gått ut. Ladda upp det nya för att köra igen.';
+
+  @override
+  String get liveTripPositionStale =>
+      'Din position är för gammal – slå på platstjänster';
 }

@@ -7136,4 +7136,8 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get offlineReasonDocumentsExpired =>
       'Un document a expiré. Envoyez le nouveau pour rouler à nouveau.';
+
+  @override
+  String get liveTripPositionStale =>
+      'Votre position est trop ancienne – activez la localisation';
 }
