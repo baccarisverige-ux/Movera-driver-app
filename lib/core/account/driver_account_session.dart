@@ -4,6 +4,7 @@ import 'package:movera/core/admin/driver_home_admin_content.dart';
 import 'package:movera/core/account/driver_account_repository.dart';
 import 'package:movera/core/l10n/driver_language.dart';
 import 'package:movera/core/legal/driver_legal.dart';
+import 'package:movera/core/session/driving_time_clock.dart';
 
 /// The live account (`GET /driver/profile`) for the life of the session:
 /// read at the gate, after the details screen and whenever a screen
@@ -94,6 +95,14 @@ class DriverAccountSession extends ChangeNotifier {
     // G3-D2: the driver's real numbers (Home, side menu, Analytics).
     if (account.performance case final performance?) {
       DriverPerformanceConfig.live.value = performance;
+    }
+    // Contract v0.18.13 `Driver.drivingTime`: the server's count, so a
+    // reload does not reset the 12 h counter.
+    if (account.drivingTime case final driving?) {
+      DrivingTimeClock.instance.loadServer(
+        drivenMinutes: driving.drivenMinutes,
+        maxMinutes: driving.maxMinutes,
+      );
     }
     // Contract v0.18.2 `auth.firstLanguage`: an account's language wins
     // over the phone's when nothing was picked on this phone.

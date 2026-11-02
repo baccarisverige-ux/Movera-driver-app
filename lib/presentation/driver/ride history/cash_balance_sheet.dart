@@ -46,7 +46,8 @@ class CashBalanceSheet extends StatelessWidget {
       for (final trip in trips)
         if (trip.cashBalance case final balance?) (trip, balance),
     ];
-    final total = CashBalance.total(rows.map((row) => row.$2));
+    final totals = CashBalance.totals(rows.map((row) => row.$2));
+    final total = totals.first;
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.8,
@@ -141,7 +142,7 @@ class CashBalanceSheet extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        CashBalance.signed(total),
+                        CashBalance.signedAll(totals),
                         style: TextStyle(
                           color: colorFor(total.minorUnits),
                           fontSize: 16,

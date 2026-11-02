@@ -1362,6 +1362,7 @@ class _DriverHomeState extends State<DriverHome>
     _destinationOpenTimer?.cancel();
     _radarSubscription?.cancel();
     _withdrawalSubscription?.cancel();
+    _HomeRoutes(this)._stopCoverWatch();
     _homeSheetPositionGuardTimer?.cancel();
     _goOnlinePulseController.dispose();
     _surgeMap?.dispose();

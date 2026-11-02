@@ -55,7 +55,13 @@ class _LiveVehiclesScreenState extends State<LiveVehiclesScreen> {
     try {
       final cars = await widget.account.repository.vehicles();
       if (!mounted) return;
-      setState(() => _cars = cars);
+      // The server's active car first (live sweep 2026-11-02 H-2).
+      final active = widget.account.account?.vehicleId;
+      final sorted = [
+        ...cars.where((c) => c.vehicleId == active),
+        ...cars.where((c) => c.vehicleId != active),
+      ];
+      setState(() => _cars = sorted);
     } catch (error) {
       if (!mounted) return;
       setState(
@@ -156,6 +162,7 @@ class _LiveVehiclesScreenState extends State<LiveVehiclesScreen> {
                 FleetCarCard(
                   vehicle: car,
                   myDriverId: me?.driverId ?? '',
+                  activeVehicleId: me?.vehicleId,
                   busy: _busyId == car.vehicleId,
                   owner: owner,
                   onPick: () => _pick(car),

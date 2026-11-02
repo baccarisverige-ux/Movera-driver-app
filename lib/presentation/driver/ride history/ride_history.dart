@@ -138,14 +138,15 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
   }
 
   String get _periodEarnings {
-    var total = 0;
+    final amounts = <Money>[];
     for (final ride in _periodRidesList) {
       if (ride.fareMoney == null) {
         return tr.unavailable;
       }
-      total += ride.fareMoney!.minorUnits;
+      amounts.add(ride.fareMoney!);
     }
-    return Money.ore(total).formatted;
+    // Live sweep 2026-11-02 M-5: one total per currency (kr · €).
+    return Money.formatTotals(amounts);
   }
 
   /// R8-4: completed cash trips of the period, for "Other earnings".
@@ -156,8 +157,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
 
   /// Fare − cash over the period's cash trips: owed to (+) or by (−) the
   /// driver.
-  Money get _periodCashBalance =>
-      CashBalance.total(_periodCashTrips.map((trip) => trip.cashBalance!));
+  List<Money> get _periodCashBalance =>
+      CashBalance.totals(_periodCashTrips.map((trip) => trip.cashBalance!));
 
   String get _periodRides => _periodRidesList
       .where((ride) => ride.status == TripStatus.completed)
@@ -671,8 +672,8 @@ class _DriverRideHistoryState extends State<DriverRideHistory> {
               label: trips.isEmpty
                   ? tr.otherEarnings
                   : tr.otherEarningsTripsLengthCash(trips.length),
-              value: CashBalance.signed(balance),
-              valueColor: CashBalanceSheet.colorFor(balance.minorUnits),
+              value: CashBalance.signedAll(balance),
+              valueColor: CashBalanceSheet.colorFor(balance.first.minorUnits),
             ),
           ),
           const SizedBox(width: 4),

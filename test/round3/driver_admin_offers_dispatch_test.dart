@@ -227,6 +227,47 @@ void main() {
       expect(await repo.watchNearbyOffers().first, isEmpty);
     });
 
+    test('deep-1 M-4: a stale decline (409 version_mismatch) is sent again '
+        'with the server version and the offer leaves', () async {
+      final server = _Server();
+      final repo = await _withOffers(server, [_offer()]);
+      server.answer = (request) =>
+          jsonDecode(request.body)['expectedVersion'] == 3
+          ? _json({
+              'code': 'version_mismatch',
+              'message': 'stale',
+              'projection': _offer(version: 4, kind: 'radar'),
+            }, 409)
+          : _json(_offer(version: 5, status: 'declined'), 200);
+      expect(await repo.declineOffer('off-1'), isTrue);
+      expect(
+        server.requests.map((r) => jsonDecode(r.body)['expectedVersion']),
+        [3, 4],
+      );
+      expect(await repo.watchNearbyOffers().first, isEmpty);
+    });
+
+    test('deep-1 M-4: a decline of an offer no longer open (409) removes '
+        'it with its reason, so the screen can say why', () async {
+      final server = _Server();
+      final repo = await _withOffers(server, [_offer()]);
+      final reasons = <String>[];
+      final sub = repo.watchWithdrawals().listen(
+        (w) => reasons.add('${w.offerId}:${w.reason.name}'),
+      );
+      server.answer = (_) => _json({
+        'code': 'invalid_transition',
+        'message': 'gone',
+        'reason': 'offer_expired',
+        'projection': _offer(version: 4, status: 'expired'),
+      }, 409);
+      expect(await repo.declineOffer('off-1'), isTrue);
+      await Future<void>.delayed(Duration.zero);
+      expect(reasons, ['off-1:expired']);
+      expect(await repo.watchNearbyOffers().first, isEmpty);
+      await sub.cancel();
+    });
+
     test('offer_withdrawn and assignment_locked take offers away', () async {
       final server = _Server();
       final repo = await _withOffers(server, [

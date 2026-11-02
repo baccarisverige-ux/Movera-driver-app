@@ -74,7 +74,16 @@ class CashBalance {
       ? tr.cashMoveraOwesYou
       : tr.cashSettled;
 
-  /// The sum of several trips' balances.
-  static Money total(Iterable<CashBalance> balances) =>
-      balances.fold(Money.ore(0), (sum, item) => sum + item.balance);
+  /// The sum of several trips' balances in one currency (the first one's;
+  /// see [totals] for trips in several currencies).
+  static Money total(Iterable<CashBalance> balances) => totals(balances).first;
+
+  /// Live sweep 2026-11-02 M-5: one sum per currency, never € added into
+  /// kr. In the order the currencies first appear; none = 0 kr.
+  static List<Money> totals(Iterable<CashBalance> balances) =>
+      Money.totals(balances.map((item) => item.balance));
+
+  /// "+100,00 kr · −2,00 €".
+  static String signedAll(List<Money> amounts) =>
+      amounts.map(signed).join(' · ');
 }
