@@ -271,16 +271,37 @@ class LiveTripCommands {
   /// returns; refusals `pin_wrong` / `pin_locked` / `pin_blocked` /
   /// `pin_not_now` / `pin_required` (see `PickupPinOutcome`).
   Future<LiveTripOutcome> start(String tripId, {String? pin}) async {
+    var verifiedNow = false;
     if (pin != null && needsPin(tripId)) {
       final verified = await verifyPin(tripId, pin);
       if (!verified.ok) return verified;
+      verifiedNow = true;
     }
-    final boarded = await _step(
+    var boarded = await _step(
       tripId,
       'board',
       done: _onboard,
       leadsTo: const {'rider_onboard'},
     );
+    // Contract v0.18.14 `deepFix1.pin`: board never skips the PIN. A
+    // `409 pin_required` while this phone did not know the trip needs one
+    // (no `pinRequired` read yet): the code the driver typed is sent now,
+    // then board again.
+    final refused = boarded.error;
+    if (!boarded.ok &&
+        pin != null &&
+        !verifiedNow &&
+        refused is ApiError &&
+        refused.detail == 'pin_required') {
+      final verified = await verifyPin(tripId, pin);
+      if (!verified.ok) return verified;
+      boarded = await _step(
+        tripId,
+        'board',
+        done: _onboard,
+        leadsTo: const {'rider_onboard'},
+      );
+    }
     if (!boarded.ok) return boarded;
     return _step(
       tripId,
