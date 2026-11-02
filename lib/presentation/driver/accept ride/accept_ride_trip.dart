@@ -1901,6 +1901,9 @@ extension _AcceptRideTrip on _AcceptRideState {
     if (_completionInFlight &&
         pending?.kind != DriverRealtimeKind.riderCancelled &&
         pending?.status == TripStatus.completed) {
+      // Live G8 fix 1: kept until the local finish is saved; if that save
+      // fails the server's outcome is shown instead (never stuck on the trip).
+      _ownCompletionEcho = pending;
       _pendingProjection = null;
       return false;
     }
@@ -1909,6 +1912,14 @@ extension _AcceptRideTrip on _AcceptRideState {
     _stageTransitioning = false;
     await _drainProjection();
     return true;
+  }
+
+  void _restoreOwnCompletionEcho() {
+    final echo = _ownCompletionEcho;
+    _ownCompletionEcho = null;
+    if (echo == null || !mounted) return;
+    _pendingProjection ??= echo;
+    unawaited(_drainProjection());
   }
 
   Future<void> _completeCurrentTrip() async {
@@ -1969,8 +1980,10 @@ extension _AcceptRideTrip on _AcceptRideState {
       if (!await _rideLifecycle.complete(clearSnapshot: false)) {
         _completionInFlight = false;
         _stageTransitioning = false;
+        _restoreOwnCompletionEcho();
         return;
       }
+      _ownCompletionEcho = null;
     } catch (error, stack) {
       DriverLog.error('Trip completion journal failed', error, stack);
       _completionInFlight = false;

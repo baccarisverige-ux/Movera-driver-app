@@ -19,6 +19,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_outcome_sheet.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
@@ -217,7 +218,10 @@ void main() {
     }
   }
 
-  Future<List<http.Request>> openCashSheet(WidgetTester tester) async {
+  Future<List<http.Request>> openCashSheet(
+    WidgetTester tester, {
+    bool openSheet = true,
+  }) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -259,6 +263,7 @@ void main() {
       ),
     );
     await frames(tester, 20);
+    if (!openSheet) return requests;
     tester
         .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
         .controller!
@@ -329,6 +334,52 @@ void main() {
       await close(tester);
     });
   }
+
+  testWidgets('live G8 fix 1: the finish save fails while the server has '
+      'already completed: the driver is not stuck on the trip', (tester) async {
+    DriverAppTexts.language = 'sv';
+    addTearDown(() => DriverAppTexts.reset());
+    await openCashSheet(tester);
+    ActiveRideController.debugRefuseNextComplete = true;
+    addTearDown(() => ActiveRideController.debugRefuseNextComplete = false);
+    await tester.tap(find.byKey(const ValueKey<String>('cash-complete-ride')));
+    for (var i = 0; i < 120; i++) {
+      await tester.pump(const Duration(milliseconds: 25));
+    }
+    expect(
+      find.byType(TripOutcomeSheet).evaluate().isNotEmpty ||
+          find.byType(DriverRideCompleted).evaluate().isNotEmpty,
+      isTrue,
+      reason: 'the server already completed: an outcome, never the trip',
+    );
+    await close(tester);
+  });
+
+  testWidgets('live G8 fix 1: a completion from outside (admin) during a '
+      'normal trip still shows the outcome', (tester) async {
+    DriverAppTexts.language = 'sv';
+    addTearDown(() => DriverAppTexts.reset());
+    await openCashSheet(tester, openSheet: false);
+    realtime.emit(
+      tripId: 'live-trip',
+      kind: DriverRealtimeKind.tripProjection,
+      status: TripStatus.completed,
+      projection: {
+        ...completed,
+        'version': 11,
+        'finish': {
+          ...(completed['finish'] as Map),
+          'endedBy': 'admin',
+          'endedEarly': false,
+        },
+      },
+    );
+    for (var i = 0; i < 80; i++) {
+      await tester.pump(const Duration(milliseconds: 25));
+    }
+    expect(find.byType(TripOutcomeSheet), findsOneWidget);
+    await close(tester);
+  });
 }
 
 class _NoGps implements DriverLocationRepository {

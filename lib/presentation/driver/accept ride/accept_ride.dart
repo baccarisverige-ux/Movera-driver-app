@@ -616,7 +616,7 @@ class _AcceptRideState extends State<AcceptRide>
   DriverLocation? _lastLocation;
   int _locationEpoch = 0;
   bool _stageTransitioning = false;
-  DriverRealtimeEvent? _pendingProjection;
+  DriverRealtimeEvent? _pendingProjection, _ownCompletionEcho;
   bool _drainingProjection = false;
   Timer? _projectionRetry;
   String _vehicleLabel = WaybillRecord.vehicleUnavailable;
