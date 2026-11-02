@@ -13,6 +13,7 @@ import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/location/driver_location_repository.dart';
+import 'package:movera/core/session/driver_route_observer.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
@@ -108,6 +109,7 @@ void main() {
           splitScreenMode: true,
           useInheritedMediaQuery: true,
           builder: (_, __) => MaterialApp(
+            navigatorObservers: [driverRouteObserver],
             home: DriverHome(
               sessionController: session,
               dispatchRepository: live.dispatch,
@@ -188,6 +190,37 @@ void main() {
             key.value != 'exclusive-offer-card-srv-offer-1';
       }),
       findsNothing,
+    );
+    await leave(tester);
+  });
+
+  testWidgets('deep-1 H-3: an Exclusive offer arriving while a menu page '
+      'covers Home brings Home back and shows the offer', (tester) async {
+    availability = (request) =>
+        json(200, {'driverId': 'd1', 'onlineStatus': 'online', 'version': 2});
+    openOffers = [];
+    final session = await goOnline(tester);
+    expect(session.status, DriverOnlineStatus.online);
+    final home = tester.element(find.byType(DriverHome));
+    unawaited(
+      Navigator.of(home).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(
+            body: Text('History page', key: ValueKey<String>('menu-page')),
+          ),
+        ),
+      ),
+    );
+    await frames(tester, const Duration(seconds: 1));
+    expect(find.byKey(const ValueKey<String>('menu-page')), findsOneWidget);
+    // The server sends an Exclusive offer while History is open.
+    openOffers = [_exclusiveOffer()];
+    live.dispatch.refreshOffers();
+    await frames(tester, const Duration(seconds: 4));
+    expect(find.byKey(const ValueKey<String>('menu-page')), findsNothing);
+    expect(
+      find.byKey(const ValueKey<String>('exclusive-offer-card-srv-offer-1')),
+      findsOneWidget,
     );
     await leave(tester);
   });

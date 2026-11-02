@@ -1,3 +1,4 @@
+import 'package:movera/core/money/money.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -22,7 +23,12 @@ class RouteChangeSheet extends StatefulWidget {
     required this.onAnswer,
     this.canRefuse = true,
     this.now = DateTime.now,
+    this.driverTotal,
   });
+
+  /// The new money as one number (earnings + pickup pay + bonus, G8 Q3);
+  /// null = the change's `driverEarnings`.
+  final Money? driverTotal;
 
   final TripRouteChange change;
 
@@ -72,7 +78,7 @@ class _RouteChangeSheetState extends State<RouteChangeSheet> {
   Widget build(BuildContext context) {
     final change = widget.change;
     final left = change.secondsLeft(widget.now().toUtc());
-    final earnings = change.driverEarnings;
+    final earnings = widget.driverTotal ?? change.driverEarnings;
     final difference = change.earningsDifference;
     final theme = Theme.of(context);
     return Material(

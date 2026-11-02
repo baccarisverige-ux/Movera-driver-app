@@ -282,6 +282,24 @@ extension _HomeOfferRadar on _DriverHomeState {
     if (wait * held > lifetime) {
       return;
     }
+    // Live sweep 2026-11-02 H-3: a live Exclusive offer needs the driver
+    // now. The side menu and the expanded home sheet go down for it
+    // instead of holding it until it expires unseen.
+    final drawerOpen = _scaffoldKey.currentState?.isDrawerOpen ?? false;
+    final sheetUp = _mainPanelPosition > 0.04 || isPanelOpen;
+    if (mounted &&
+        LiveDriverServices.active &&
+        !RideCheckGate.open &&
+        (drawerOpen || sheetUp)) {
+      if (drawerOpen) _scaffoldKey.currentState?.closeDrawer();
+      if (sheetUp && _panelController.isAttached) _panelController.close();
+      _directOfferTimer?.cancel();
+      _directOfferTimer = Timer(
+        const Duration(milliseconds: 400),
+        () => _showOutsideRadarOffer(offer, held: held + 1),
+      );
+      return;
+    }
     // So does an open Ride check (R10-2) until the driver answers, and
     // the side menu, which would cover it (driver-u115).
     if (mounted &&

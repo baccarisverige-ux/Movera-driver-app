@@ -20,7 +20,12 @@ class FleetCarCard extends StatelessWidget {
     this.onPick,
     this.busy = false,
     this.owner = true,
+    this.activeVehicleId,
   });
+
+  /// The server's active car (`Driver.vehicleId`): the one marked "Your
+  /// car", whatever the car row's driver says (live sweep 2026-11-02 H-2).
+  final String? activeVehicleId;
 
   /// The fleet owner sees which car documents are missing; a member driver
   /// only sees why the car can't be driven (owner decision 19).
@@ -46,7 +51,13 @@ class FleetCarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mine = vehicle.driverId == myDriverId;
+    final active = activeVehicleId;
+    // v0.18.14: the server says which car is the active one.
+    final mine = vehicle.active != null
+        ? vehicle.active!
+        : active != null
+        ? vehicle.vehicleId == active
+        : vehicle.driverId == myDriverId;
     final takenByOther = vehicle.driverId != null && !mine;
     final (statusLabel, statusColor) = statusOf(vehicle.status);
     // Page audit round 2: an empty or unknown category id adds nothing, so the line never ends with " · ".

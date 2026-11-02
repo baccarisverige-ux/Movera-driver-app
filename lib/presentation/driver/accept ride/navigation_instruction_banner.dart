@@ -1,3 +1,5 @@
+import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/geo/driver_distance.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'dart:math' as math;
@@ -595,7 +597,17 @@ class NavigationCuePainter extends CustomPainter {
     this.exitNumber,
     this.exitAngleDegrees,
     this.fontFamily,
+    this.tollUnit,
   });
+
+  /// The money symbol on the toll coin; null = the zone's currency
+  /// (`DriverAppConfig.currency`), so a France driver sees € (audit B7).
+  final String? tollUnit;
+
+  static String zoneTollUnit() {
+    final currency = LiveDriverServices.instance?.config.current?.currency;
+    return Money.symbols[currency] ?? Money.symbols['SEK']!;
+  }
 
   final Color color;
   final String? exitNumber;
@@ -841,7 +853,7 @@ class NavigationCuePainter extends CustomPainter {
       canvas.drawCircle(p(11, 12.6), 4.6 * s, stroke);
       final text = TextPainter(
         text: TextSpan(
-          text: 'kr',
+          text: tollUnit ?? zoneTollUnit(),
           style: TextStyle(
             color: color,
             fontSize: 4.9 * s,

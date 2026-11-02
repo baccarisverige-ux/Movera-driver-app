@@ -19,7 +19,11 @@ class DrivingTimeClock {
 
   /// The country's rule; [DriverAccountRules.current] unless given.
   DrivingRestRule get rule => _rule ?? DriverAccountRules.current.rest;
-  Duration get workLimit => rule.work;
+  Duration get workLimit => _serverLimit ?? rule.work;
+
+  /// Contract v0.18.13 `Driver.drivingTime.maxMinutes` once the server sent
+  /// it (0 = no limit is kept as the country rule).
+  Duration? _serverLimit;
   Duration get restLength => rule.rest;
 
   Duration _banked = Duration.zero;
@@ -68,8 +72,23 @@ class DrivingTimeClock {
     _offSince = offlineSince ?? _now();
   }
 
+  /// Contract v0.18.13 `Driver.drivingTime` (`GET /driver/profile`): the
+  /// SERVER's count wins, so a reload never starts again from zero (live
+  /// sweep 2026-11-02 M-10). A running count keeps running from now.
+  void loadServer({required int drivenMinutes, int? maxMinutes}) {
+    _banked = Duration(minutes: drivenMinutes < 0 ? 0 : drivenMinutes);
+    if (maxMinutes != null && maxMinutes > 0) {
+      _serverLimit = Duration(minutes: maxMinutes);
+    }
+    if (_since != null) {
+      _since = _now();
+    }
+    _offSince = null;
+  }
+
   /// Back to zero and offline.
   void reset() {
+    _serverLimit = null;
     _banked = Duration.zero;
     _since = null;
     _offSince = null;

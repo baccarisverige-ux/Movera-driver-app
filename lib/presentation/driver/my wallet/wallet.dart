@@ -396,20 +396,42 @@ class _LiveWeekBalance extends StatefulWidget {
 }
 
 class _LiveWeekBalanceState extends State<_LiveWeekBalance> {
-  late final Future<Money?> _week = LiveDriverServices.instance!.earnings
-      .thisWeek();
+  late Future<EarningsWeek> _week = LiveDriverServices.instance!.earnings
+      .week();
+
+  /// v0.18.14: another currency of the report (kr / €), asked again.
+  void _pick(String currency) => setState(
+    () =>
+        _week = LiveDriverServices.instance!.earnings.week(currency: currency),
+  );
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Money?>(
+    return FutureBuilder<EarningsWeek>(
       future: _week,
       builder: (context, snap) {
         final failed = snap.hasError;
         final done = snap.connectionState == ConnectionState.done;
-        final label = !done || failed ? '—' : (snap.data?.formatted ?? '—');
+        final report = snap.data;
+        final label = !done || failed ? '—' : (report?.net?.formatted ?? '—');
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (report != null && report.currencies.length > 1) ...[
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final c in report.currencies)
+                    ChoiceChip(
+                      key: ValueKey<String>('wallet-currency-$c'),
+                      label: Text(Money.symbols[c] ?? c),
+                      selected: c == report.currency,
+                      onSelected: (_) => _pick(c),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
             Text(
               label,
               key: const ValueKey<String>('wallet-live-week'),

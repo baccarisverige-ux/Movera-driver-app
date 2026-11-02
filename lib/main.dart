@@ -480,6 +480,9 @@ class _MoveraAppState extends State<MoveraApp> {
       );
       return;
     }
+    // A route-change push: the trip screen (already open on the active
+    // trip) hears the change on its stream; no bell list over it.
+    if (open.routeChangeTripId != null) return;
     unawaited(
       navigator.push(
         MaterialPageRoute<void>(

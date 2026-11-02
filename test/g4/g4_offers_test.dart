@@ -344,6 +344,23 @@ void main() {
       );
     });
 
+    test('a route-change push tap (contract v0.18.14 driverPush) knows its '
+        'trip, from the contract\'s deep link', () {
+      final link =
+          (_contract['onTrip']['routeChange']['driverPush']['deepLink']
+                  as String)
+              .replaceAll('{tripId}', 'trp_7');
+      expect(
+        PushOpen(notificationId: 'ntf_9', deepLink: link).routeChangeTripId,
+        'trp_7',
+      );
+      expect(PushOpen(notificationId: 'ntf_9', deepLink: link).offerId, isNull);
+      expect(
+        _contract['onTrip']['routeChange']['driverPush']['kind'],
+        'route_change',
+      );
+    });
+
     test('a new-offer push tap knows its offer; other pushes do not', () {
       expect(
         const PushOpen(

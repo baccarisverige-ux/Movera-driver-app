@@ -11,6 +11,7 @@ import 'package:movera/presentation/driver/analytics/analytics.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
+import 'package:movera/presentation/driver/account/contact_change_screen.dart';
 import 'package:movera/presentation/driver/account/driver_details_screen.dart';
 import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
@@ -277,6 +278,24 @@ class _DriverProfileState extends State<DriverProfile> {
                     },
                   ),
                 ),
+              if (_liveSession != null) ...[
+                _item(
+                  Icons.phone_outlined,
+                  tr.contactChangePhone,
+                  ContactChangeScreen(
+                    account: _liveSession!,
+                    kind: ContactKind.phone,
+                  ),
+                ),
+                _item(
+                  Icons.alternate_email_rounded,
+                  tr.contactChangeEmail,
+                  ContactChangeScreen(
+                    account: _liveSession!,
+                    kind: ContactKind.email,
+                  ),
+                ),
+              ],
               if (_liveSession != null)
                 _item(
                   Icons.groups_outlined,

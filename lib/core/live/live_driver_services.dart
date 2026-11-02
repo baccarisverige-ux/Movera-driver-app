@@ -72,6 +72,7 @@ class LiveDriverServices {
     trips = LiveTripCommands(
       api: api,
       lastFix: () => reporter.lastFix,
+      freshFix: reporter.freshFix,
       onEnded: chat.markClosed,
     );
     places = LiveAddressLookup(api: api);

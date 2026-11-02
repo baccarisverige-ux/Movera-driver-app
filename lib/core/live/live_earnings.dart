@@ -26,9 +26,19 @@ class LiveEarnings {
 
   /// This week's `net` (audit 2026-11-01: the wallet's balance on live);
   /// throws when the server could not answer, null when nothing is earned.
-  Future<Money?> thisWeek({DateTime? now}) async {
-    final report = await _api.get('$path?period=week');
-    return todayOf(report, now ?? DateTime.now());
+  Future<Money?> thisWeek({DateTime? now}) async => (await week(now: now)).net;
+
+  /// Contract v0.18.14 `deepFix1.earnings`: this week's report in one
+  /// [currency] (`?currency=SEK|EUR`; the server's default without it:
+  /// the currency of the driver's first zone) with every currency he
+  /// earned in, for a kr / € switch. Throws when the server could not
+  /// answer.
+  Future<EarningsWeek> week({String? currency, DateTime? now}) async {
+    final query = currency == null
+        ? 'period=week'
+        : 'period=week&currency=${Uri.encodeQueryComponent(currency)}';
+    final report = await _api.get('$path?$query');
+    return EarningsWeek.of(report, now ?? DateTime.now());
   }
 
   /// `GET /driver/payouts` (newest first): the driver's own payouts.
@@ -106,4 +116,31 @@ class DriverPayout {
       return null;
     }
   }
+}
+
+/// One currency of an `EarningsReport` (contract v0.18.14): its `net` for
+/// the period holding now, the report's `currency` and `currencies`.
+class EarningsWeek {
+  const EarningsWeek({this.net, this.currency, this.currencies = const []});
+
+  factory EarningsWeek.of(Map<String, dynamic> report, DateTime now) {
+    final listed = report['currencies'];
+    return EarningsWeek(
+      net: LiveEarnings.todayOf(report, now),
+      currency: report['currency'] is String
+          ? report['currency'] as String
+          : null,
+      currencies: [
+        if (listed is List)
+          for (final c in listed)
+            if (c is String && c.isNotEmpty) c,
+      ],
+    );
+  }
+
+  final Money? net;
+  final String? currency;
+
+  /// Every currency earned in during the range; two or more → the switch.
+  final List<String> currencies;
 }

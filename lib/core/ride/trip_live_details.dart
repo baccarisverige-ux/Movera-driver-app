@@ -628,6 +628,25 @@ class TripRouteChange {
   bool get pending => status == 'pending';
   bool get accepted => status == 'accepted';
 
+  /// G8 Q3 "one number" (deep re-check P2-M4): the driver's new money as
+  /// the cash sheet and the finished screen show it — [driverEarnings]
+  /// plus what the trip pays on top of its earnings today (pickup pay,
+  /// bonus, tip: `driverTotal − driverEarnings` of the projection). The
+  /// server keeps those out of the change's `driverEarnings`. Without
+  /// them, or in another currency: [driverEarnings].
+  Money? driverTotalWith({Money? currentTotal, Money? currentEarnings}) {
+    final earnings = driverEarnings;
+    if (earnings == null) return null;
+    if (currentTotal == null ||
+        currentEarnings == null ||
+        currentTotal.currency != earnings.currency ||
+        currentEarnings.currency != earnings.currency) {
+      return earnings;
+    }
+    final extras = currentTotal - currentEarnings;
+    return extras.minorUnits > 0 ? earnings + extras : earnings;
+  }
+
   /// Seconds left to answer; 0 once the time is up.
   int secondsLeft(DateTime now) {
     final by = answerBy;

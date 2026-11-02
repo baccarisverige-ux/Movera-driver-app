@@ -21,6 +21,18 @@ class PushOpen {
     final id = match == null ? null : Uri.decodeComponent(match.group(1)!);
     return id == null || id.isEmpty ? null : id;
   }
+
+  static final RegExp _tripLink = RegExp(r'^movera-driver://trips/([^/?#]+)$');
+
+  /// Contract v0.18.14 `onTrip.routeChange.driverPush` (kind
+  /// `route_change`, bell false): the trip of a route-change push
+  /// (`movera-driver://trips/{tripId}`), else null. Not a bell notice: the
+  /// tap brings back the trip screen, where the change is asked.
+  String? get routeChangeTripId {
+    final match = _tripLink.firstMatch(deepLink?.trim() ?? '');
+    final id = match == null ? null : Uri.decodeComponent(match.group(1)!);
+    return id == null || id.isEmpty ? null : id;
+  }
 }
 
 /// The device side of push: the permission, the FCM token and taps.

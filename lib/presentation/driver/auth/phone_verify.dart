@@ -1,3 +1,4 @@
+import 'package:movera/core/api/api_error.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -111,6 +112,16 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
   /// long gap, so the wait left is measured, not counted per callback:
   /// whichever of the wall clock and the timer's own tick count has seen
   /// more time pass.
+  /// Contract v0.18.14 `otp_locked_today`: Send code stays off for the
+  /// server's wait (and no code is taken meanwhile).
+  void _lockedToday(Object error) {
+    if (!isLockedToday(error)) return;
+    _tooManyWrong = true;
+    if (error is ApiError && error.retryAfter != null) {
+      _startResendWindow(error.retryAfter!);
+    }
+  }
+
   void _startResendWindow(Duration wait) {
     _ticker?.cancel();
     final seconds = wait.inSeconds + (wait.inMilliseconds % 1000 == 0 ? 0 : 1);
@@ -153,6 +164,7 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = authErrorMessage(error, AuthAction.sendCode));
+      _lockedToday(error);
     } finally {
       if (mounted) setState(() => _resending = false);
     }
@@ -199,6 +211,7 @@ class _DriverPhoneVerificationState extends State<DriverPhoneVerification> {
         _error = authErrorMessage(error, AuthAction.verifyCode);
         if (isTooManyWrongCodes(error)) _tooManyWrong = true;
       });
+      _lockedToday(error);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

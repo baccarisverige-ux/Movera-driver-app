@@ -147,6 +147,30 @@ class FleetSummary {
   bool get isOwner => role == 'owner';
 }
 
+/// Contract v0.18.13 `Driver.drivingTime { drivenMinutes, maxMinutes,
+/// reached, resetAfterOfflineHours, canDriveAt? }`: the server's count.
+class DriverDrivingTime {
+  const DriverDrivingTime({
+    required this.drivenMinutes,
+    required this.maxMinutes,
+    this.reached = false,
+    this.canDriveAt,
+  });
+
+  factory DriverDrivingTime.fromJson(Map<String, dynamic> json) =>
+      DriverDrivingTime(
+        drivenMinutes: _whole(json['drivenMinutes']),
+        maxMinutes: _whole(json['maxMinutes']),
+        reached: json['reached'] == true,
+        canDriveAt: _time(json['canDriveAt']),
+      );
+
+  final int drivenMinutes;
+  final int maxMinutes;
+  final bool reached;
+  final DateTime? canDriveAt;
+}
+
 /// `Driver` (`GET /driver/profile`).
 class DriverAccount {
   const DriverAccount({
@@ -174,6 +198,7 @@ class DriverAccount {
     this.offlineReason,
     this.offlineNote,
     this.offlineAt,
+    this.drivingTime,
   });
 
   factory DriverAccount.fromJson(Map<String, dynamic> json) {
@@ -206,6 +231,9 @@ class DriverAccount {
       offlineReason: _text(json['offlineReason']),
       offlineNote: _text(json['offlineNote']),
       offlineAt: _time(json['offlineAt']),
+      drivingTime: json['drivingTime'] is Map
+          ? DriverDrivingTime.fromJson(_map(json['drivingTime']))
+          : null,
       performance: json.containsKey('performance')
           ? DriverPerformanceConfig.fromServer(json['performance'])
           : null,
@@ -261,6 +289,9 @@ class DriverAccount {
   /// When the server set him offline.
   final DateTime? offlineAt;
 
+  /// Contract v0.18.13 `Driver.drivingTime`; null from an older server.
+  final DriverDrivingTime? drivingTime;
+
   /// G3-D2: `performance` (only `GET /driver/profile` sends it; command
   /// answers do not, so null here keeps the numbers the app has).
   final DriverPerformanceConfig? performance;
@@ -304,6 +335,7 @@ class FleetVehicle {
     this.fuel,
     this.pickable,
     this.notPickableReason,
+    this.active,
   });
 
   factory FleetVehicle.fromJson(Map<String, dynamic> json) => FleetVehicle(
@@ -329,7 +361,12 @@ class FleetVehicle {
     fuel: _text(json['fuel']),
     pickable: json['pickable'] is bool ? json['pickable'] as bool : null,
     notPickableReason: _text(json['notPickableReason']),
+    active: json['active'] is bool ? json['active'] as bool : null,
   );
+
+  /// Contract v0.18.14 `deepFix1.vehicles`: the driver's active car
+  /// (`Driver.vehicleId`, listed first); null from an older server.
+  final bool? active;
 
   final String vehicleId;
   final String make;

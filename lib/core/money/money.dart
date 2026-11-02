@@ -166,6 +166,24 @@ class Money {
     return '$sign${abs ~/ unit}.${(abs % unit).toString().padLeft(n, '0')}';
   }
 
+  /// One sum per currency, in the order the currencies first appear (live
+  /// sweep 2026-11-02 M-5: never € added into kr). None = `0,00 kr`.
+  static List<Money> totals(Iterable<Money> amounts) {
+    final sums = <String, int>{};
+    for (final amount in amounts) {
+      sums[amount.currency] = (sums[amount.currency] ?? 0) + amount.minorUnits;
+    }
+    if (sums.isEmpty) return [Money.ore(0)];
+    return [
+      for (final entry in sums.entries)
+        Money(minorUnits: entry.value, currency: entry.key),
+    ];
+  }
+
+  /// "104,80 kr · 4,80 €".
+  static String formatTotals(Iterable<Money> amounts) =>
+      totals(amounts).map((m) => m.formatted).join(' · ');
+
   Money operator +(Money other) {
     _sameCurrency(other);
     return Money(minorUnits: minorUnits + other.minorUnits, currency: currency);

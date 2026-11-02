@@ -278,9 +278,40 @@ void main() {
         expect(jsonDecode(requests[2].body), {'expectedVersion': 7});
         // Without it the server skips the PIN (round 1 compat).
         for (final request in requests) {
-          expect(request.headers['X-Contract-Version'], '0.18.12');
+          expect(request.headers['X-Contract-Version'], '0.18.14');
         }
         expect(trips.needsPin('t1'), isFalse);
+      });
+
+      test('v0.18.14: a trip not known to need a PIN answers board 409 '
+          'pin_required: the typed PIN is sent, then board again', () async {
+        final trips = LiveTripCommands(api: api())
+          ..observe({'tripId': 't1', 'status': 'arrived', 'version': 5});
+        expect(trips.needsPin('t1'), isFalse);
+        answers
+          ..add(
+            (_) => json(409, {
+              'code': 'invalid_transition',
+              'reason': 'pin_required',
+              'message': 'PIN required',
+            }),
+          )
+          ..add(
+            (_) => json(200, {
+              'verifiedPinToken': 'tok',
+              'expiresAt': '2026-11-01T12:00:00Z',
+              'version': 6,
+            }),
+          )
+          ..add((_) => json(200, trip('rider_onboard', 7)))
+          ..add((_) => json(200, trip('in_trip', 8)));
+        expect((await trips.start('t1', pin: '0420')).ok, isTrue);
+        expect(requests.map((r) => r.url.path), [
+          '/api/v1/trips/t1/board',
+          '/api/v1/trips/t1/pin/verify',
+          '/api/v1/trips/t1/board',
+          '/api/v1/trips/t1/start',
+        ]);
       });
 
       test('pin_wrong and pin_locked come back as PIN refusals', () async {

@@ -612,6 +612,7 @@ class SignedOutLine extends StatelessWidget {
         final detail = switch (kind) {
           SignedOutNotice.expired => tr.authSignedOutDetailExpired,
           SignedOutNotice.revoked => tr.authSignedOutDetailRevoked,
+          SignedOutNotice.elsewhere => tr.authSignedOutElsewhere,
           _ => null,
         };
         return Padding(
