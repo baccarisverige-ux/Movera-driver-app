@@ -12,6 +12,7 @@ import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/trip_live_details.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
@@ -77,6 +78,45 @@ void main() {
   });
 
   group('M-5 earnings per currency', () {
+    test('v0.18.14 GET /driver/earnings?currency=: one currency per '
+        'report and the list for the kr / € switch', () async {
+      final asked = <Uri>[];
+      final api = ApiClient(
+        client: MockClient((request) async {
+          asked.add(request.url);
+          final eur = request.url.queryParameters['currency'] == 'EUR';
+          return http.Response(
+            jsonEncode({
+              'currency': eur ? 'EUR' : 'SEK',
+              'currencies': ['SEK', 'EUR'],
+              'periods': [
+                {
+                  'periodStart': '2026-11-02T00:00:00Z',
+                  'periodEnd': '2026-11-09T00:00:00Z',
+                  'net': {
+                    'amountMinor': eur ? 480 : 13458,
+                    'currency': eur ? 'EUR' : 'SEK',
+                  },
+                },
+              ],
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+        baseUri: Uri.parse('https://api.test.movera.se'),
+        tokens: MemoryTokenStore()..save(access: 'a', refresh: 'r'),
+      );
+      final earnings = LiveEarnings(api: api);
+      final now = DateTime.utc(2026, 11, 3);
+      final first = await earnings.week(now: now);
+      expect(first.currency, 'SEK');
+      expect(first.currencies, ['SEK', 'EUR']);
+      final euros = await earnings.week(currency: 'EUR', now: now);
+      expect(asked.last.queryParameters, {'period': 'week', 'currency': 'EUR'});
+      expect(euros.net, const Money(minorUnits: 480, currency: 'EUR'));
+    });
+
     test('kr and € are summed apart, never € into kr', () {
       final text = Money.formatTotals([
         const Money(minorUnits: 13458, currency: 'SEK'),
