@@ -60,9 +60,22 @@ void main() {
     await tester.pump(const Duration(seconds: 6));
   }
 
-  testWidgets('live build: no test-numbers list on the screen', (tester) async {
+  testWidgets('live test build: the list is closed; "Test numbers" opens it', (
+    tester,
+  ) async {
     await pumpLive(tester);
     expect(find.byKey(const ValueKey('auth-test-accounts')), findsNothing);
+    final button = find.byKey(const ValueKey('auth-test-numbers-button'));
+    expect(button, findsOneWidget);
+    expect(find.text(tr.authTestNumbersButton), findsOneWidget);
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pump();
+    expect(find.byKey(const ValueKey('auth-test-accounts')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('auth-test-+46700000000')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('the picture is tall enough to show the city skyline', (
