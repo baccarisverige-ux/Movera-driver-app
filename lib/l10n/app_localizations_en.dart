@@ -7011,5 +7011,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineReasonDocumentsExpired =>
-      'A document has expired – send a new one in Documents to go online again';
+      'A document has expired. Upload the new one to drive again.';
 }

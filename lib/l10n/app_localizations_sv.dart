@@ -7020,5 +7020,5 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get offlineReasonDocumentsExpired =>
-      'Ett dokument har gått ut – skicka ett nytt under Dokument för att kunna gå online igen';
+      'Ett dokument har gått ut. Ladda upp det nya för att köra igen.';
 }

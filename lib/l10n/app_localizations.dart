@@ -12076,7 +12076,7 @@ abstract class AppLocalizations {
   /// Contract v0.18.14 driverHome.setOffline reason documents_expired: the offline card's reason.
   ///
   /// In en, this message translates to:
-  /// **'A document has expired – send a new one in Documents to go online again'**
+  /// **'A document has expired. Upload the new one to drive again.'**
   String get offlineReasonDocumentsExpired;
 }
 

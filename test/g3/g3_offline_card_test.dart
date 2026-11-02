@@ -436,14 +436,12 @@ void main() {
       );
       expect(
         reasonOf(DriverOfflineReason.documentsExpired),
-        'Ett dokument har gått ut – skicka ett nytt under Dokument för att '
-        'kunna gå online igen',
+        'Ett dokument har gått ut. Ladda upp det nya för att köra igen.',
       );
       DriverAppTexts.language = 'fr';
       expect(
         reasonOf(DriverOfflineReason.documentsExpired),
-        'Un document a expiré – envoyez-en un nouveau dans Documents pour '
-        'repasser en ligne',
+        'Un document a expiré. Envoyez le nouveau pour rouler à nouveau.',
       );
       expect(
         reasonOf(DriverOfflineReason.fleetRemoved),
