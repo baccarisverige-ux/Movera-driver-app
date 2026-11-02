@@ -737,6 +737,31 @@ void main() {
       await sub.cancel();
     });
 
+    test('a route change after Start keeps in_trip but is newer than this '
+        'phone\'s own step: it reaches the trip screen', () async {
+      trips.observe({'tripId': 't1', 'status': 'in_trip', 'version': 8});
+      answers.add(
+        (_) => json(200, {'tripId': 't1', 'status': 'completed', 'version': 9}),
+      );
+      await trips.complete('t1');
+      final events = <DriverRealtimeEvent>[];
+      final sub = realtime.subscribe('t1').listen(events.add);
+      await pumpEventQueue();
+      // The echo of the own step (version 9) is dropped; a later change
+      // with the same status (version 10) is news.
+      streams.single.add(
+        utf8.encode(sse(5, 'trip_projection', status: 'completed', version: 9)),
+      );
+      streams.single.add(
+        utf8.encode(
+          sse(6, 'trip_projection', status: 'completed', version: 10),
+        ),
+      );
+      await pumpEventQueue();
+      expect(events.map((e) => e.sequence), [6]);
+      await sub.cancel();
+    });
+
     test('a dropped stream resumes after the last sequence', () async {
       final sub = realtime.subscribe('t1').listen((_) {});
       await pumpEventQueue();

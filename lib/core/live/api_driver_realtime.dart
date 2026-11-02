@@ -226,7 +226,12 @@ class ApiDriverRealtime implements DriverRealtime {
     // (also when the end is this driver's own step, echoed below).
     if (status != null && _isTerminal(status)) _chat?.tripEnded(tripId);
     if (json['kind'] == 'trip_projection' &&
-        (_trips?.isOwnEcho(tripId, status) ?? false)) {
+        (_trips?.isOwnEcho(
+              tripId,
+              status,
+              version: version is num ? version.toInt() : null,
+            ) ??
+            false)) {
       return;
     }
     final event = DriverRealtimeEvent.tryParse(json);

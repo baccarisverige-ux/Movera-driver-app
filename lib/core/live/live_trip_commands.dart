@@ -155,6 +155,12 @@ class LiveTripCommands {
   /// the trip's event stream is not news for the screen.
   final Map<String, Set<String>> _own = {};
 
+  /// The version this phone's own last command left [tripId] at (its
+  /// answer). Contract v0.18.14 `onTrip.routeChange.driverPush`: a
+  /// projection newer than that is never an echo (a route change keeps
+  /// the trip's status, so a status-only check dropped it).
+  final Map<String, int> _ownVersion = {};
+
   /// One Idempotency-Key per command (path and body) until it is answered.
   final Map<String, String> _keys = {};
 
@@ -184,8 +190,16 @@ class LiveTripCommands {
 
   /// True when [status] is where one of this phone's own commands took
   /// [tripId] (its echo on the event stream).
-  bool isOwnEcho(String tripId, String? status) =>
-      status != null && (_own[tripId]?.contains(status) ?? false);
+  /// A [version] above the one this phone's last command left the trip
+  /// at is news, whatever its status.
+  bool isOwnEcho(String tripId, String? status, {int? version}) {
+    if (status == null || !(_own[tripId]?.contains(status) ?? false)) {
+      return false;
+    }
+    final mine = _ownVersion[tripId];
+    if (version != null && mine != null && version > mine) return false;
+    return true;
+  }
 
   /// Forgets a trip that is over for this phone.
   void forget(String tripId) {
@@ -194,6 +208,7 @@ class LiveTripCommands {
     _changed.remove(tripId);
     _unsupported.remove(tripId);
     _own.remove(tripId);
+    _ownVersion.remove(tripId);
   }
 
   /// The trip screen opened: an accepted trip is on its way to the pickup
@@ -564,6 +579,10 @@ class LiveTripCommands {
         );
         _keys.remove(signature);
         observe(answer);
+        final answered = answer['version'];
+        _ownVersion[tripId] = answered is num
+            ? answered.toInt()
+            : (versionOf(tripId) ?? 0);
         return const LiveTripOutcome.ok();
       } on ApiError catch (error) {
         if (!error.isRetryable) _keys.remove(signature);
