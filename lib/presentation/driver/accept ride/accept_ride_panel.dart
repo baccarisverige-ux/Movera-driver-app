@@ -660,8 +660,7 @@ extension _AcceptRidePanel on _AcceptRideState {
               if (!_browsing) ...[
                 const SizedBox(height: 12),
                 // G5 status item 3: the app the driver chose in Trip
-                // settings (Google Maps by default): Waze logo (owner G5-3)
-                // or a neutral navigation icon, plus the app's name.
+                // settings (Google Maps by default), shown as its logo (owner G5-3).
                 ValueListenableBuilder<NavigationApp>(
                   valueListenable: NavigationAppSetting.current,
                   builder: (context, app, _) => MapControlButton(
@@ -674,46 +673,19 @@ extension _AcceptRidePanel on _AcceptRideState {
                     size: 56,
                     fill: MapControlButton.googleGrey,
                     onTap: _openNavigationApp,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Owner G5-3: the Waze logo when Waze is chosen
-                          // (the one brand mark the rules allow); Google Maps
-                          // keeps the neutral navigation icon.
-                          if (app == NavigationApp.waze)
-                            SvgPicture.asset(
-                              AppAssets.mapWaze,
-                              key: const ValueKey<String>(
-                                'active-ride-navigation-waze-logo',
-                              ),
-                              width: 22,
-                              height: 22,
-                            )
-                          else
-                            const Icon(
-                              Icons.navigation_outlined,
-                              size: 22,
-                              color: Color(0xFF252E3A),
-                            ),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              app.displayName,
-                              key: const ValueKey<String>(
-                                'active-ride-navigation-label',
-                              ),
-                              maxLines: 1,
-                              style: const TextStyle(
-                                color: Color(0xFF252E3A),
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ],
+                    // Owner G5-3: the original look — the chosen app's logo
+                    // (Google Maps keeps its logo; Waze its logo), no text.
+                    child: SvgPicture.asset(
+                      app == NavigationApp.waze
+                          ? AppAssets.mapWaze
+                          : AppAssets.mapGoogle,
+                      key: ValueKey<String>(
+                        app == NavigationApp.waze
+                            ? 'active-ride-navigation-waze-logo'
+                            : 'active-ride-navigation-google-logo',
                       ),
+                      width: 26,
+                      height: 26,
                     ),
                   ),
                 ),

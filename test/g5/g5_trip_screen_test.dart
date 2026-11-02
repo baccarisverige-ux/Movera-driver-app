@@ -741,49 +741,29 @@ void main() {
   }
 
   testWidgets(
-    'owner G5-3: Google Maps shows a neutral icon, Waze its logo; both show the name',
+    'owner G5-3: the nav button shows the Google Maps logo, or the Waze logo when Waze is chosen',
     (tester) async {
       final realtime = MemoryDriverRealtime();
       addTearDown(realtime.dispose);
       await _pumpTrip(tester, realtime: realtime);
-      final label = find.byKey(
-        const ValueKey<String>('active-ride-navigation-label'),
+      final google = find.byKey(
+        const ValueKey<String>('active-ride-navigation-google-logo'),
       );
-      expect(tester.widget<Text>(label).data, 'Google Maps');
+      final waze = find.byKey(
+        const ValueKey<String>('active-ride-navigation-waze-logo'),
+      );
+      expect(google, findsOneWidget);
+      expect(waze, findsNothing);
       await NavigationAppSetting.save(NavigationApp.waze, SettingsRepository());
       await _frames(tester, 4);
-      expect(tester.widget<Text>(label).data, 'Waze');
-      expect(
-        find.byKey(const ValueKey<String>('active-ride-navigation-waze-logo')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: find.byKey(
-            const ValueKey<String>('active-ride-navigation-button'),
-          ),
-          matching: find.byIcon(Icons.navigation_outlined),
-        ),
-        findsNothing,
-      );
+      expect(waze, findsOneWidget);
+      expect(google, findsNothing);
       await NavigationAppSetting.save(
         NavigationApp.googleMaps,
         SettingsRepository(),
       );
       await _frames(tester, 4);
-      expect(
-        find.descendant(
-          of: find.byKey(
-            const ValueKey<String>('active-ride-navigation-button'),
-          ),
-          matching: find.byIcon(Icons.navigation_outlined),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey<String>('active-ride-navigation-waze-logo')),
-        findsNothing,
-      );
+      expect(google, findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
