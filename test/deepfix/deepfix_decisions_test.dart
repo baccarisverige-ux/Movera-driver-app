@@ -868,9 +868,8 @@ void main() {
     });
 
     test('D5.3: Add car has no ride-type choice and sends none', () {
-      final source = File(
-        'lib/presentation/driver/account/add_car_screen.dart',
-      ).readAsStringSync();
+      final source = File('lib/presentation/driver/account/add_car_screen.dart')
+          .readAsStringSync();
       expect(source, isNot(contains('FilterChip(')));
       expect(source, contains('categoryIds: const []'));
     });

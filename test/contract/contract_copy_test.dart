@@ -9,9 +9,10 @@ import 'package:movera/core/contracts/trip_transitions.dart';
 void main() {
   test('every contracts/ file matches contracts/CHECKSUMS', () {
     final dir = Directory('contracts');
-    final lines = File(
-      'contracts/CHECKSUMS',
-    ).readAsLinesSync().where((line) => line.trim().isNotEmpty).toList();
+    final lines = File('contracts/CHECKSUMS')
+        .readAsLinesSync()
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
     expect(lines, isNotEmpty);
     final listed = <String, String>{};
     for (final line in lines) {

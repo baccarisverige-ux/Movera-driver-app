@@ -372,8 +372,9 @@ void main() {
                 },
               ],
             }),
-        'POST ${DriverAccountRepository.notificationsPath}/n1/read':
-            (_) async => jsonResponse(204, {}),
+        'POST ${DriverAccountRepository.notificationsPath}/n1/read': (
+          _,
+        ) async => jsonResponse(204, {}),
       });
       final session = server.session()
         ..replace(DriverAccount.fromJson(profileJson(status: 'on_hold')));

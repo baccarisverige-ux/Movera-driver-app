@@ -75,9 +75,8 @@ extension _HomeAccount on _DriverHomeState {
     _feed.changes.addListener(onFeed);
     final onReminders = account.remindersListener = _onRemindersChanged;
     DriverRemindersStore.instance.addListener(onReminders);
-    final onCategories = account.categoriesListener = _HomeOfferRules(
-      this,
-    )._onCategoriesChanged;
+    final onCategories = account.categoriesListener = _HomeOfferRules(this)
+        ._onCategoriesChanged;
     DriverCategoryChoice.off.addListener(onCategories);
     _syncDrivingLimit();
     account.refreshTimer = Timer.periodic(onboardingRefreshEvery, (_) {

@@ -301,9 +301,8 @@ class MoveraRadarOrb extends StatelessWidget {
                   Material(
                     color: Colors.transparent,
                     elevation: 16,
-                    shadowColor: const Color(
-                      0xFF12201C,
-                    ).withValues(alpha: 0.38),
+                    shadowColor: const Color(0xFF12201C)
+                        .withValues(alpha: 0.38),
                     shape: const CircleBorder(),
                     clipBehavior: Clip.antiAlias,
                     child: Ink(

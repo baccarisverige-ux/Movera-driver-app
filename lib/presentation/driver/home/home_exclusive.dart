@@ -276,8 +276,8 @@ extension _HomeExclusive on _DriverHomeState {
               : (context) => AnimatedBuilder(
                   // The pill counts the seconds down.
                   animation: _exclusive.clock,
-                  builder: (context, _) =>
-                      _HomeOfferRadar(this)._buildOutsideRadarOfferCard(
+                  builder: (context, _) => _HomeOfferRadar(this)
+                      ._buildOutsideRadarOfferCard(
                         offer,
                         secondsLeft: _exclusiveSecondsLeft,
                       ),

@@ -135,9 +135,9 @@ void main() {
     });
 
     test('Home reads destination mode from the document', () {
-      final json =
-          _read('test/fixtures/config/driver_app_config.Z001.json')
-              as Map<String, dynamic>;
+      final json = _read(
+        'test/fixtures/config/driver_app_config.Z001.json',
+      ) as Map<String, dynamic>;
       (json['destinationMode'] as Map)['destinationsPerDay'] = 7;
       final home = DriverHomeAdminContentService(
         appConfig: DriverAppConfig.fromJson(json),
@@ -482,9 +482,9 @@ void main() {
     });
 
     test('the contract fixture\'s reservations are read as sent', () {
-      final json =
-          _read('contracts/fixtures/config/driver_app_config.json')
-              as Map<String, dynamic>;
+      final json = _read(
+        'contracts/fixtures/config/driver_app_config.json',
+      ) as Map<String, dynamic>;
       final config = DriverAppConfig.fromJson(json);
       expect(_reservations(config.reservations), json['reservations']);
     });

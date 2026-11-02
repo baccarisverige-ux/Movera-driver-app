@@ -35,10 +35,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../integration_test/headless_map_platform.dart';
+
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/safety/ride_check_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
+
 import '../audit/phase5/live_fixture.dart';
 
 /// The default demo drop-off of [AcceptRide].

@@ -121,9 +121,8 @@ void main() {
       }
       // Not known anywhere: the raw type, never a crash.
       expect(
-        OnboardingSettings.fromJson(
-          settingsJson('SE'),
-        ).nameOf('custom_zz', 'en'),
+        OnboardingSettings.fromJson(settingsJson('SE'))
+            .nameOf('custom_zz', 'en'),
         'custom_zz',
       );
     });
@@ -232,10 +231,8 @@ void main() {
       );
       expect(car.toJson()['fuel'], 'hybrid');
       expect(
-        FleetVehicle.fromJson(const {
-          'vehicleId': 'v',
-          'fuel': 'electric',
-        }).fuel,
+        FleetVehicle.fromJson(const {'vehicleId': 'v', 'fuel': 'electric'})
+            .fuel,
         'electric',
       );
       for (final type in OnboardingSettings.photoTypes) {
@@ -285,9 +282,8 @@ void main() {
           );
         }
         expect(
-          ServerNotification.fromJson({
-            'kind': 'fleet_invitation',
-          }).opensDocuments,
+          ServerNotification.fromJson({'kind': 'fleet_invitation'})
+              .opensDocuments,
           isFalse,
         );
       },

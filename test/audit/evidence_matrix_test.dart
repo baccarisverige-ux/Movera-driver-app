@@ -8,9 +8,8 @@ void main() {
       'tool/check_evidence_matrix.py',
     ]);
     expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
-    final matrix = File(
-      'docs/certification/RELEASE_EVIDENCE_MATRIX.md',
-    ).readAsStringSync();
+    final matrix = File('docs/certification/RELEASE_EVIDENCE_MATRIX.md')
+        .readAsStringSync();
     expect(matrix, contains('| iphone |'));
     expect(matrix, contains('| chrome |'));
     expect(matrix, contains('| perf-soak |'));

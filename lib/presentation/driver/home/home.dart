@@ -8,7 +8,9 @@ import 'package:movera/presentation/driver/sheets/sheet_trace.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/contracts/trip_transitions.dart';
+
 import 'dart:async';
+
 import 'package:movera/core/navigation/driver_camera_controller.dart';
 import 'package:movera/core/navigation/map_preview_generation.dart';
 import 'package:movera/core/navigation/coalescing_map_route_refresh.dart';
@@ -16,6 +18,7 @@ import 'package:movera/core/navigation/moving_route_refresh.dart';
 import 'package:movera/widgets/google_driver_camera_port.dart';
 import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/core/session/driver_route_observer.dart';
+
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -198,9 +201,7 @@ class _DriverHomeState extends State<DriverHome>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _HomeAccount(
-      this,
-    )._refreshLiveBadgesOnce(); // round 4b: the scope is read here, not in initState
+    _HomeAccount(this)._refreshLiveBadgesOnce(); // round 4b: the scope is read here, not in initState
     final route = ModalRoute.of(context);
     if (route != null) {
       driverRouteObserver.subscribe(this, route);
@@ -811,9 +812,8 @@ class _DriverHomeState extends State<DriverHome>
       return;
     }
     _HomeRadarMotion(this)._syncRadarAnimation();
-    _HomeOfferRules(
-      this,
-    )._releaseHeldOffline(); // Decision 3: a won trip began.
+    _HomeOfferRules(this)
+        ._releaseHeldOffline(); // Decision 3: a won trip began.
     _HomeScheduled(this)._recheckLateScheduled();
     if (_driverSession.activeTripId != null && _radarHomeOffers.isNotEmpty) {
       _HomeOfferRadar(this)._cancelAllOfferTimers();
@@ -894,15 +894,12 @@ class _DriverHomeState extends State<DriverHome>
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
-                                  const Color(
-                                    0xFF172027,
-                                  ).withValues(alpha: 0.46),
-                                  const Color(
-                                    0xFF6F7D80,
-                                  ).withValues(alpha: 0.16),
-                                  const Color(
-                                    0xFFF4F7F8,
-                                  ).withValues(alpha: 0.24),
+                                  const Color(0xFF172027)
+                                      .withValues(alpha: 0.46),
+                                  const Color(0xFF6F7D80)
+                                      .withValues(alpha: 0.16),
+                                  const Color(0xFFF4F7F8)
+                                      .withValues(alpha: 0.24),
                                 ],
                                 stops: const [0.0, 0.45, 1.0],
                               ),
@@ -922,12 +919,10 @@ class _DriverHomeState extends State<DriverHome>
                         dispatchRepository: _dispatch,
                         activeRideRepository: widget.activeRideRepository,
                         offerFilter: _HomeOfferRules(this)._rideAllowed,
-                        followsDestination: (o) => _HomeOfferRadar(
-                          this,
-                        )._followsDestination(o.dropoffPosition.toLatLng()),
-                        towardPickupTime: _HomeScheduled(
-                          this,
-                        )._towardPickupTime,
+                        followsDestination: (o) => _HomeOfferRadar(this)
+                            ._followsDestination(o.dropoffPosition.toLatLng()),
+                        towardPickupTime: _HomeScheduled(this)
+                            ._towardPickupTime,
                         claimPending: _radarListClaiming,
                         hiddenTrips: _radarHidden,
                         onCloseRides: (hasOffers) {
@@ -971,9 +966,8 @@ class _DriverHomeState extends State<DriverHome>
                         // open, never in between.
                         panelSnapping: false,
                         defaultPanelState: PanelState.CLOSED,
-                        maxHeight: _HomeMapSheet(
-                          this,
-                        )._homeExpandedHeight(context),
+                        maxHeight: _HomeMapSheet(this)
+                            ._homeExpandedHeight(context),
                         // The map rises with the sheet, about a third as far, on the
                         // same spring.
                         parallaxEnabled: true,
@@ -982,14 +976,12 @@ class _DriverHomeState extends State<DriverHome>
                           _mainPanelPosition = pos;
                           _panelSlidePosition.value = pos;
                           if (!_sheetPointerActive) {
-                            _HomeMapSheet(
-                              this,
-                            )._scheduleHomeSheetPositionGuard();
+                            _HomeMapSheet(this)
+                                ._scheduleHomeSheetPositionGuard();
                           }
                           if (pos > 0.04) {
-                            _HomeMapSheet(
-                              this,
-                            )._closeHomeFloatingPopupsForSheet();
+                            _HomeMapSheet(this)
+                                ._closeHomeFloatingPopupsForSheet();
                           }
                           final nextPanelOpen = pos > 0.3;
                           // A settled sheet covers only its own region. The exposed map
@@ -1007,12 +999,10 @@ class _DriverHomeState extends State<DriverHome>
                           _homeSheetPositionGuardTimer?.cancel();
                           _mainPanelPosition = 1;
                           _panelSlidePosition.value = 1;
-                          _HomeMapSheet(
-                            this,
-                          )._closeHomeFloatingPopupsForSheet();
-                          _HomeMapSheet(
-                            this,
-                          )._setMapGesturesBlocked(_sheetPointerActive);
+                          _HomeMapSheet(this)
+                              ._closeHomeFloatingPopupsForSheet();
+                          _HomeMapSheet(this)
+                              ._setMapGesturesBlocked(_sheetPointerActive);
                         },
                         onPanelClosed: () {
                           _homeSheetPositionGuardTimer?.cancel();
@@ -1036,18 +1026,14 @@ class _DriverHomeState extends State<DriverHome>
                             PointerInterceptor(
                               child: Listener(
                                 behavior: HitTestBehavior.opaque,
-                                onPointerDown: _HomeMapSheet(
-                                  this,
-                                )._onSheetPointerDown,
-                                onPointerMove: _HomeMapSheet(
-                                  this,
-                                )._onSheetPointerMove,
-                                onPointerUp: _HomeMapSheet(
-                                  this,
-                                )._onSheetPointerEnd,
-                                onPointerCancel: _HomeMapSheet(
-                                  this,
-                                )._onSheetPointerEnd,
+                                onPointerDown: _HomeMapSheet(this)
+                                    ._onSheetPointerDown,
+                                onPointerMove: _HomeMapSheet(this)
+                                    ._onSheetPointerMove,
+                                onPointerUp: _HomeMapSheet(this)
+                                    ._onSheetPointerEnd,
+                                onPointerCancel: _HomeMapSheet(this)
+                                    ._onSheetPointerEnd,
                                 child: _activationHold && !isAccountActivated
                                     ? _HomeMapSheet(this)._inactiveSheetFace()
                                     : _HomeMapSheet(this).panelColumn(sc),

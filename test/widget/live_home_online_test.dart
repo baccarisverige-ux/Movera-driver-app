@@ -163,15 +163,9 @@ void main() {
     final session = await goOnline(tester);
     expect(session.status, DriverOnlineStatus.online);
     expect(live.presence.serverOnline, isTrue);
-    final sent =
-        jsonDecode(
-              seen
-                  .firstWhere(
-                    (r) => r.url.path == '/api/v1/driver/availability',
-                  )
-                  .body,
-            )
-            as Map;
+    final sent = jsonDecode(
+      seen.firstWhere((r) => r.url.path == '/api/v1/driver/availability').body,
+    ) as Map;
     expect(sent['expectedVersion'], 1);
     expect(sent['onlineStatus'], 'online');
     expect(seen.any((r) => r.url.path == '/api/v1/driver/location'), isTrue);

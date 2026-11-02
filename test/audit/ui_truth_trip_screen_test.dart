@@ -110,9 +110,9 @@ Future<void> _trip(WidgetTester tester, AcceptRide ride) async {
   await _frames(tester, 16);
 }
 
-void _clearSnackBars(WidgetTester tester) => ScaffoldMessenger.of(
-  tester.element(find.byType(AcceptRide)),
-).clearSnackBars();
+void _clearSnackBars(WidgetTester tester) =>
+    ScaffoldMessenger.of(tester.element(find.byType(AcceptRide)))
+        .clearSnackBars();
 
 Widget _island({String? status, double width = 390}) => MaterialApp(
   home: Scaffold(

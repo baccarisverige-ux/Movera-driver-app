@@ -231,9 +231,8 @@ void main() {
     });
 
     test('both Home maps tell the camera about fingers on the map', () {
-      final src = File(
-        'lib/presentation/driver/home/home_map_sheet.dart',
-      ).readAsStringSync();
+      final src = File('lib/presentation/driver/home/home_map_sheet.dart')
+          .readAsStringSync();
       expect(
         'onTouching: (down) => _camera.touching = down'.allMatches(src).length,
         2,

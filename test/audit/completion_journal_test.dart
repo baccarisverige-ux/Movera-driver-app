@@ -133,12 +133,10 @@ void main() {
           ),
           throwsStateError,
         );
-        await CompletionJournal(
-          active: PrefsActiveRideRepository(),
-        ).reconcile();
-        await CompletionJournal(
-          active: PrefsActiveRideRepository(),
-        ).reconcile();
+        await CompletionJournal(active: PrefsActiveRideRepository())
+            .reconcile();
+        await CompletionJournal(active: PrefsActiveRideRepository())
+            .reconcile();
         expect(
           (await PrefsTripHistoryRepository().list())
               .where((r) => r.tripId == 'A')

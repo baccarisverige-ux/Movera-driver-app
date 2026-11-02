@@ -196,9 +196,11 @@ class IslandWaitingSignals {
   }
 
   /// "18:00–22:30" → "18:00".
-  static String? _start(String label) => RegExp(
-    r'\b(\d{1,2}):(\d{2})',
-  ).firstMatch(label)?.group(0)?.padLeft(5, '0');
+  static String? _start(String label) =>
+      RegExp(r'\b(\d{1,2}):(\d{2})')
+          .firstMatch(label)
+          ?.group(0)
+          ?.padLeft(5, '0');
 
   static int _minutes(String hhmm) {
     final parts = hhmm.split(':');

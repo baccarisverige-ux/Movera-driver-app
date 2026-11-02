@@ -11,9 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 // and Wallet broke "Utbetalningsdatum" in the middle of the word.
 Widget _at200(Widget child) => MaterialApp(
   builder: (context, child) => MediaQuery(
-    data: MediaQuery.of(
-      context,
-    ).copyWith(textScaler: const TextScaler.linear(2)),
+    data: MediaQuery.of(context)
+        .copyWith(textScaler: const TextScaler.linear(2)),
     child: child!,
   ),
   home: Scaffold(body: Center(child: child)),

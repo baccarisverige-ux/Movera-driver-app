@@ -80,9 +80,8 @@ class _StartCompanyScreenState extends State<StartCompanyScreen> {
       }
       if (!mounted || result == null) return;
       session.replace(result);
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(tr.startCompanySent)));
+      ScaffoldMessenger.maybeOf(context)
+          ?.showSnackBar(SnackBar(content: Text(tr.startCompanySent)));
       popOwned<DriverAccount>(context, result);
     } catch (error) {
       if (!mounted) return;

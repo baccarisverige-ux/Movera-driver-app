@@ -277,9 +277,8 @@ extension _AcceptRideSheet on _AcceptRideState {
                   if (!popOwned(sheetContext)) {
                     return;
                   }
-                  _AcceptRidePanel(
-                    this,
-                  )._showCancellationReasons(nextTrip: true);
+                  _AcceptRidePanel(this)
+                      ._showCancellationReasons(nextTrip: true);
                 },
               ),
             ],

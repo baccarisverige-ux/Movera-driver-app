@@ -867,11 +867,13 @@ class ApiDispatchRepository implements DispatchRepository {
     var version = offer.version;
     try {
       for (var attempt = 0; attempt < 2; attempt++) {
-        final response =
-            await _command('/offers/${Uri.encodeComponent(offerId)}/decline', {
-              'expectedVersion': version,
-              if (reasonCode != null) 'reasonCode': reasonCode,
-            });
+        final response = await _command(
+          '/offers/${Uri.encodeComponent(offerId)}/decline',
+          {
+            'expectedVersion': version,
+            if (reasonCode != null) 'reasonCode': reasonCode,
+          },
+        );
         if (response.statusCode == 200) {
           _goneDuringLoad.add(offerId);
           _offers.remove(offerId);

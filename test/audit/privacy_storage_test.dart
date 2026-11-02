@@ -98,9 +98,8 @@ void main() {
   );
 
   test('Android excludes app data from backup and device transfer', () {
-    final manifest = File(
-      'android/app/src/main/AndroidManifest.xml',
-    ).readAsStringSync();
+    final manifest = File('android/app/src/main/AndroidManifest.xml')
+        .readAsStringSync();
     expect(manifest, contains('android:allowBackup="false"'));
     expect(
       manifest,
@@ -109,12 +108,10 @@ void main() {
     expect(manifest, contains('android:fullBackupContent="@xml/backup_rules"'));
     // driver-u186: check what each section excludes, not only that the tags
     // exist. `root` covers app_flutter (Ride-check audio); `file` does not.
-    final rules = File(
-      'android/app/src/main/res/xml/data_extraction_rules.xml',
-    ).readAsStringSync();
-    final legacy = File(
-      'android/app/src/main/res/xml/backup_rules.xml',
-    ).readAsStringSync();
+    final rules = File('android/app/src/main/res/xml/data_extraction_rules.xml')
+        .readAsStringSync();
+    final legacy = File('android/app/src/main/res/xml/backup_rules.xml')
+        .readAsStringSync();
     for (final (name, body) in [
       ('cloud-backup', _section(rules, 'cloud-backup')),
       ('device-transfer', _section(rules, 'device-transfer')),
@@ -125,9 +122,10 @@ void main() {
         isNot(contains('<include')),
         reason: '$name must not include data',
       );
-      final excluded = RegExp(
-        r'<exclude\s+domain="([^"]+)"\s+path="\."\s*/>',
-      ).allMatches(body).map((m) => m.group(1)).toSet();
+      final excluded = RegExp(r'<exclude\s+domain="([^"]+)"\s+path="\."\s*/>')
+          .allMatches(body)
+          .map((m) => m.group(1))
+          .toSet();
       expect(
         excluded,
         containsAll(_appDomains),

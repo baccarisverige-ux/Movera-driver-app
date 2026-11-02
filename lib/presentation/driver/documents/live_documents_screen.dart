@@ -105,9 +105,8 @@ class _LiveDocumentsScreenState extends State<LiveDocumentsScreen>
       final results = await Future.wait([
         repository.documents(),
         repository.vehicles().catchError((Object _) => <FleetVehicle>[]),
-        refreshOnboardingSettings(
-          widget.account,
-        ).then<Object?>((s) => s, onError: (Object _) => null),
+        refreshOnboardingSettings(widget.account)
+            .then<Object?>((s) => s, onError: (Object _) => null),
         if (widget.account.account == null)
           widget.account.refresh()
         else

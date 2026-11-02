@@ -12,8 +12,6 @@ import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
-import 'package:movera/core/session/driver_composition_guard.dart';
-import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/auth/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_controls.dart';
@@ -174,11 +172,11 @@ class _DriverSignInState extends State<DriverSignIn>
 
   Future<void> _loadTestAccounts() async {
     final auth = _auth;
-    // A test build that talks to a server (not a store build, not the demo).
-    final testBuild =
-        !driverProductionRequested &&
-        DriverRuntimeConfig.current.apiBaseUrl.isNotEmpty;
-    if (!(widget.showTestAccounts ?? testBuild) || auth == null) {
+    // Owner 2026-11-02 (driver-g1 "Driver sign-in screen look"): no
+    // test-numbers list on the sign-in screen in any build; test numbers
+    // still sign in when typed. Only an explicit `showTestAccounts: true`
+    // (a test harness) shows it.
+    if (widget.showTestAccounts != true || auth == null) {
       return;
     }
     try {

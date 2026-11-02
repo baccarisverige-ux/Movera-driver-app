@@ -95,9 +95,8 @@ Future<void> _pumpHome(WidgetTester tester, {bool reduceMotion = false}) async {
         useInheritedMediaQuery: true,
         builder: (_, __) => MaterialApp(
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(disableAnimations: reduceMotion),
+            data: MediaQuery.of(context)
+                .copyWith(disableAnimations: reduceMotion),
             child: child!,
           ),
           home: DriverHome(

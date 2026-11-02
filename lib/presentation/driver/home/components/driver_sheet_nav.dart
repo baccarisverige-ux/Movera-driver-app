@@ -152,9 +152,8 @@ class DriverSheetNav {
             child: IgnorePointer(
               child: Container(
                 height: 1,
-                color: const Color(
-                  0xFFEEF0F2,
-                ).withValues(alpha: topRuleOpacity.clamp(0.0, 1.0)),
+                color: const Color(0xFFEEF0F2)
+                    .withValues(alpha: topRuleOpacity.clamp(0.0, 1.0)),
               ),
             ),
           ),

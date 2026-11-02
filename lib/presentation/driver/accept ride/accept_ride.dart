@@ -502,9 +502,8 @@ class _AcceptRideState extends State<AcceptRide>
   final PanelController _ridePanelController = PanelController();
   final ValueNotifier<double> _ridePanelPosition = ValueNotifier<double>(0);
   late final MoveraSnapSheetController _snapSheet;
-  late final TripSheetMotion _tripMotion = _AcceptRidePanel(
-    this,
-  )._newTripMotion();
+  late final TripSheetMotion _tripMotion = _AcceptRidePanel(this)
+      ._newTripMotion();
   // Measured middle sheet: down to the stage's main action.
   final GlobalKey _middleActionKey = GlobalKey();
   final GlobalKey _ridePanelKey = GlobalKey();
@@ -538,15 +537,12 @@ class _AcceptRideState extends State<AcceptRide>
   final TripRouteLines _routeLines = TripRouteLines();
   Timer? _waitTimer;
   StreamSubscription<DriverRealtimeEvent>? _realtimeSubscription;
-  late final VoidCallback _onNavigationChangedListener = _AcceptRideTrip(
-    this,
-  )._onNavigationChanged;
-  late final VoidCallback _onRideCheckGateListener = _AcceptRideTrip(
-    this,
-  )._onRideCheckGate;
-  late final VoidCallback _syncNavigationStageListener = _AcceptRideTrip(
-    this,
-  )._syncNavigationStage;
+  late final VoidCallback _onNavigationChangedListener = _AcceptRideTrip(this)
+      ._onNavigationChanged;
+  late final VoidCallback _onRideCheckGateListener = _AcceptRideTrip(this)
+      ._onRideCheckGate;
+  late final VoidCallback _syncNavigationStageListener = _AcceptRideTrip(this)
+      ._syncNavigationStage;
   late final void Function(CameraPosition) _onCameraMoveListener =
       _AcceptRideTrip(this)._onCameraMove;
   late final DriverRealtime _realtime;
@@ -655,9 +651,8 @@ class _AcceptRideState extends State<AcceptRide>
 
   /// Late ETA: an ETA was known at least once on this trip.
   bool _lateEtaMeasured = false;
-  late final VoidCallback _syncLateEtaListener = _AcceptRideLateEta(
-    this,
-  )._syncLateEtaWatch;
+  late final VoidCallback _syncLateEtaListener = _AcceptRideLateEta(this)
+      ._syncLateEtaWatch;
 
   late final SheetTrace _sheetTrace = SheetTrace(
     'active',
@@ -948,9 +943,8 @@ class _AcceptRideState extends State<AcceptRide>
         _lastLocation?.isUsableAt(DateTime.now()) != true) {
       return false;
     }
-    return GeoPointMaps.fromLatLng(
-          _driverPosition,
-        ).distanceMetersTo(GeoPointMaps.fromLatLng(target)) <=
+    return GeoPointMaps.fromLatLng(_driverPosition)
+            .distanceMetersTo(GeoPointMaps.fromLatLng(target)) <=
         100;
   }
 
@@ -1011,9 +1005,8 @@ class _AcceptRideState extends State<AcceptRide>
         _lastLocation?.isUsableAt(DateTime.now()) != true) {
       return null;
     }
-    return GeoPointMaps.fromLatLng(
-      _driverPosition,
-    ).distanceMetersTo(GeoPointMaps.fromLatLng(target));
+    return GeoPointMaps.fromLatLng(_driverPosition)
+        .distanceMetersTo(GeoPointMaps.fromLatLng(target));
   }
 
   bool get _showArrivalApproach {
@@ -1330,9 +1323,8 @@ class _AcceptRideState extends State<AcceptRide>
                             TripCameraSheetInset.minFreeMap,
                       );
                       if (!_ridePointerActive) {
-                        _AcceptRidePanel(
-                          this,
-                        )._scheduleRideSheetPositionGuard();
+                        _AcceptRidePanel(this)
+                            ._scheduleRideSheetPositionGuard();
                       }
                     },
                     onPanelOpened: () {
@@ -1348,18 +1340,14 @@ class _AcceptRideState extends State<AcceptRide>
                         : _AcceptRidePanel(this)._mapOverlay(
                             child: Listener(
                               behavior: HitTestBehavior.translucent,
-                              onPointerDown: _AcceptRidePanel(
-                                this,
-                              )._onRideSheetPointerDown,
-                              onPointerMove: _AcceptRidePanel(
-                                this,
-                              )._onRideSheetPointerMove,
-                              onPointerUp: _AcceptRidePanel(
-                                this,
-                              )._onRideSheetPointerEnd,
-                              onPointerCancel: _AcceptRidePanel(
-                                this,
-                              )._onRideSheetPointerEnd,
+                              onPointerDown: _AcceptRidePanel(this)
+                                  ._onRideSheetPointerDown,
+                              onPointerMove: _AcceptRidePanel(this)
+                                  ._onRideSheetPointerMove,
+                              onPointerUp: _AcceptRidePanel(this)
+                                  ._onRideSheetPointerEnd,
+                              onPointerCancel: _AcceptRidePanel(this)
+                                  ._onRideSheetPointerEnd,
                               child: KeyedSubtree(
                                 key: _ridePanelKey,
                                 child: _AcceptRidePanel(this)._buildRidePanel(),
@@ -1457,17 +1445,16 @@ class _AcceptRideState extends State<AcceptRide>
                                         mounted &&
                                         ModalRoute.of(context)?.isCurrent ==
                                             true) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(status),
-                                          action: SnackBarAction(
-                                            label: tr.retry,
-                                            onPressed: _camera.recenter,
-                                          ),
-                                        ),
-                                      );
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                            SnackBar(
+                                              content: Text(status),
+                                              action: SnackBarAction(
+                                                label: tr.retry,
+                                                onPressed: _camera.recenter,
+                                              ),
+                                            ),
+                                          );
                                     }
                                   },
                                   onFrame: (position) {
@@ -1572,9 +1559,8 @@ class _AcceptRideState extends State<AcceptRide>
                                         _onTripRadarState !=
                                             _OnTripRadarState.secured,
                                     radarOn: _onTripRadarOn,
-                                    onRadar: _AcceptRideTrip(
-                                      this,
-                                    )._toggleOnTripRadar,
+                                    onRadar: _AcceptRideTrip(this)
+                                        ._toggleOnTripRadar,
                                     onMenu: () => _rideScaffoldKey.currentState
                                         ?.openDrawer(),
                                     onSearch: _openDestinationPicker,
@@ -1585,21 +1571,18 @@ class _AcceptRideState extends State<AcceptRide>
                                             const DriverRideHistory(),
                                       ),
                                     ),
-                                    onRoute: _AcceptRidePanel(
-                                      this,
-                                    )._showTripOptions,
+                                    onRoute: _AcceptRidePanel(this)
+                                        ._showTripOptions,
                                     onSafety: () => showSafetyToolKitSheet(
                                       context,
                                       duringTrip: true,
                                     ),
-                                    onWait: _AcceptRidePanel(
-                                      this,
-                                    )._openWaitingTime,
+                                    onWait: _AcceptRidePanel(this)
+                                        ._openWaitingTime,
                                     rideCheck: _rideCheck.active,
                                     onRideCheckDemo: driverDemoFeatures
-                                        ? _AcceptRideTrip(
-                                            this,
-                                          )._openRideCheckDemo
+                                        ? _AcceptRideTrip(this)
+                                              ._openRideCheckDemo
                                         : null,
                                     pointKind: _approachKind,
                                     pointLabel: _approachLabel,
@@ -2078,9 +2061,8 @@ class _SlideRideActionState extends State<_SlideRideAction> {
                                   : const Duration(milliseconds: 240),
                               curve: Curves.easeOutCubic,
                               width: _thumb + maxTravel * _fraction,
-                              color: const Color(
-                                0xFF111614,
-                              ).withValues(alpha: 0.08),
+                              color: const Color(0xFF111614)
+                                  .withValues(alpha: 0.08),
                             ),
                           ),
                         ),

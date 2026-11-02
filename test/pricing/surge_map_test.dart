@@ -189,9 +189,9 @@ void main() {
         ).tips().where((t) => t.id == 'boost'),
         isEmpty,
       );
-      final demo = IslandWaitingSignals.demo(
-        config,
-      ).tips().where((t) => t.id == 'boost');
+      final demo = IslandWaitingSignals.demo(config)
+          .tips()
+          .where((t) => t.id == 'boost');
       expect(demo.single.title, 'High boost nearby');
     });
   });
@@ -373,9 +373,8 @@ void main() {
     }
     expect(offenders, isEmpty);
     expect(
-      File(
-        'lib/presentation/driver/notifications/surge_notice_banner.dart',
-      ).existsSync(),
+      File('lib/presentation/driver/notifications/surge_notice_banner.dart')
+          .existsSync(),
       isFalse,
     );
   });

@@ -370,15 +370,13 @@ void main() {
       expect(half.driverLateCancelHours, 1.5);
       expect(half.driverLateCancel, const Duration(minutes: 90));
       expect(
-        ScheduledRideRules.fromJson({
-          'driverLateCancelHours': 0.5,
-        }).driverLateCancel,
+        ScheduledRideRules.fromJson({'driverLateCancelHours': 0.5})
+            .driverLateCancel,
         const Duration(minutes: 30),
       );
       expect(
-        ScheduledRideRules.fromJson({
-          'driverLateCancelHours': 2,
-        }).driverLateCancel,
+        ScheduledRideRules.fromJson({'driverLateCancelHours': 2})
+            .driverLateCancel,
         const Duration(hours: 2),
       );
     },

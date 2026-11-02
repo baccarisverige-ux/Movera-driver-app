@@ -59,9 +59,8 @@ extension _AcceptRidePickup on _AcceptRideState {
       widget.tripId,
     );
     if (known != null) {
-      _AcceptRideTrip(
-        this,
-      )._applyLive(TripLiveDetails.fromProjection(known), initial: true);
+      _AcceptRideTrip(this)
+          ._applyLive(TripLiveDetails.fromProjection(known), initial: true);
     }
     unawaited(NavigationAppSetting.load());
     if (LiveDriverServices.active) {

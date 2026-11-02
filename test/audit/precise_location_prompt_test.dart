@@ -76,9 +76,8 @@ void main() {
       ),
     );
     await _frames(tester);
-    ScaffoldMessenger.of(
-      tester.element(find.byType(AcceptRide)),
-    ).clearSnackBars();
+    ScaffoldMessenger.of(tester.element(find.byType(AcceptRide)))
+        .clearSnackBars();
     await _frames(tester, 4);
     tester
         .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))

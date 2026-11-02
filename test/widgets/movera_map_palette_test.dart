@@ -35,9 +35,9 @@ void main() {
   test('the palette is the cloud style linked to the web Map ID', () {
     // Same colours as the cloud style for the Map ID (reference palette).
     // Footpaths are drawn maps only, so the cloud style has no path colour.
-    final cloud = File(
-      'docs/movera_driver_map_style.json',
-    ).readAsStringSync().toUpperCase();
+    final cloud = File('docs/movera_driver_map_style.json')
+        .readAsStringSync()
+        .toUpperCase();
     for (final color in MoveraMapPalette.all) {
       expect(cloud, contains(MoveraMapPalette.hex(color)));
     }

@@ -254,9 +254,8 @@ class DriverSideMenu extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(
-                          0xFF172027,
-                        ).withValues(alpha: accountActive ? 0.18 : 0.10),
+                        color: const Color(0xFF172027)
+                            .withValues(alpha: accountActive ? 0.18 : 0.10),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),

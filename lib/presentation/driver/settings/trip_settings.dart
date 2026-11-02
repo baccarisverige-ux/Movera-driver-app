@@ -37,9 +37,8 @@ class _TripSettingsState extends State<TripSettings> {
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     final saved = await NavigationAppSetting.save(app, _settings);
     if (!saved && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr.navigationAppSaveFailed)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr.navigationAppSaveFailed)));
     }
   }
 

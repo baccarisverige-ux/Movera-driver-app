@@ -125,16 +125,14 @@ void main() {
           CompletionJournal.key,
           journal('new', '2026-10-25T00:30:00.000Z'),
         );
-        await CompletionJournal(
-          active: PrefsActiveRideRepository(),
-        ).reconcile();
+        await CompletionJournal(active: PrefsActiveRideRepository())
+            .reconcile();
         await prefs.setString(
           CompletionJournal.key,
           journal('old', '2026-10-01T10:00:00.000'),
         );
-        await CompletionJournal(
-          active: PrefsActiveRideRepository(),
-        ).reconcile();
+        await CompletionJournal(active: PrefsActiveRideRepository())
+            .reconcile();
         final rows = {
           for (final row in await PrefsTripHistoryRepository().list())
             row.tripId: row,

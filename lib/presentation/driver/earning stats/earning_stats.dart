@@ -83,9 +83,8 @@ class _EarningStatsScreenState extends State<EarningStatsScreen> {
                         },
                         child: Container(
                           height:
-                              MediaQuery.textScalerOf(
-                                context,
-                              ).scale(ResSize.setSp(16)) +
+                              MediaQuery.textScalerOf(context)
+                                  .scale(ResSize.setSp(16)) +
                               24,
                           padding: EdgeInsets.symmetric(
                             horizontal: ResSize.w * 16,

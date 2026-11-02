@@ -348,9 +348,10 @@ void main() {
         isFalse,
       );
       expect(
-        TripLiveDetails.fromProjection(
-          _projection(),
-        ).terms!.waiting.pricesKnown,
+        TripLiveDetails.fromProjection(_projection())
+            .terms!
+            .waiting
+            .pricesKnown,
         isTrue,
       );
     });

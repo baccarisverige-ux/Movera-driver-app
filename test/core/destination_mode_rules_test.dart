@@ -40,16 +40,13 @@ void main() {
       rules: rules,
     );
 
-    test(
-      'Stockholm → Arlanda: Arlanda, Väsby, Sollentuna yes; Södertälje, Nacka no',
-      () {
-        expect(follows('Arlanda'), isTrue);
-        expect(follows('Upplands Väsby'), isTrue);
-        expect(follows('Sollentuna'), isTrue);
-        expect(follows('Södertälje'), isFalse);
-        expect(follows('Nacka'), isFalse);
-      },
-    );
+    test('Stockholm → Arlanda: Arlanda, Väsby, Sollentuna yes; Södertälje, Nacka no', () {
+      expect(follows('Arlanda'), isTrue);
+      expect(follows('Upplands Väsby'), isTrue);
+      expect(follows('Sollentuna'), isTrue);
+      expect(follows('Södertälje'), isFalse);
+      expect(follows('Nacka'), isFalse);
+    });
 
     test('focus: final only near Arlanda, on the way only along the route', () {
       const finalOnly = DestinationModeRules(focusOnTheWayOn: false);
@@ -166,40 +163,37 @@ void main() {
     );
   });
 
-  test(
-    'R13-18: next trips only on the final leg, within km or min; demo unchanged',
-    () {
-      bool allows({
-        bool demo = false,
-        bool onTrip = true,
-        bool toFinal = true,
-        double? meters,
-        double? seconds,
-        NextTripRules rules = const NextTripRules(),
-      }) => NextTripGate.allows(
-        demo: demo,
-        onTrip: onTrip,
-        toFinalDropoff: toFinal,
-        metersToDropoff: meters,
-        secondsToDropoff: seconds,
-        rules: rules,
-      );
+  test('R13-18: next trips only on the final leg, within km or min; demo unchanged', () {
+    bool allows({
+      bool demo = false,
+      bool onTrip = true,
+      bool toFinal = true,
+      double? meters,
+      double? seconds,
+      NextTripRules rules = const NextTripRules(),
+    }) => NextTripGate.allows(
+      demo: demo,
+      onTrip: onTrip,
+      toFinalDropoff: toFinal,
+      metersToDropoff: meters,
+      secondsToDropoff: seconds,
+      rules: rules,
+    );
 
-      expect(allows(onTrip: false, meters: 100), isFalse);
-      expect(allows(toFinal: false, meters: 100), isFalse);
-      expect(allows(meters: 4000, seconds: 1200), isTrue);
-      expect(allows(meters: 9000, seconds: 500), isTrue);
-      expect(allows(meters: 9000, seconds: 1200), isFalse);
-      const kmOnly = NextTripRules(withinMinutesOfDropoffOn: false);
-      expect(allows(meters: 9000, seconds: 500, rules: kmOnly), isFalse);
-      const wholeLeg = NextTripRules(
-        withinKmOfDropoffOn: false,
-        withinMinutesOfDropoffOn: false,
-      );
-      expect(allows(meters: 40000, seconds: 3600, rules: wholeLeg), isTrue);
-      // Demo: as before, no limits (also on the way to a stop).
-      expect(allows(demo: true, toFinal: false, meters: 25000), isTrue);
-      expect(allows(demo: true, onTrip: false), isFalse);
-    },
-  );
+    expect(allows(onTrip: false, meters: 100), isFalse);
+    expect(allows(toFinal: false, meters: 100), isFalse);
+    expect(allows(meters: 4000, seconds: 1200), isTrue);
+    expect(allows(meters: 9000, seconds: 500), isTrue);
+    expect(allows(meters: 9000, seconds: 1200), isFalse);
+    const kmOnly = NextTripRules(withinMinutesOfDropoffOn: false);
+    expect(allows(meters: 9000, seconds: 500, rules: kmOnly), isFalse);
+    const wholeLeg = NextTripRules(
+      withinKmOfDropoffOn: false,
+      withinMinutesOfDropoffOn: false,
+    );
+    expect(allows(meters: 40000, seconds: 3600, rules: wholeLeg), isTrue);
+    // Demo: as before, no limits (also on the way to a stop).
+    expect(allows(demo: true, toFinal: false, meters: 25000), isTrue);
+    expect(allows(demo: true, onTrip: false), isFalse);
+  });
 }

@@ -65,28 +65,25 @@ void main() {
       ));
     },
   );
-  test(
-    'single photo budget accepts its exact decoded limit and rejects one byte more',
-    () async {
-      final store = LocalVehicleStore();
-      final atLimit = base64Encode(Uint8List(LocalVehicleStore.maxPhotoBytes));
-      await store.upsert({
+  test('single photo budget accepts its exact decoded limit and rejects one byte more', () async {
+    final store = LocalVehicleStore();
+    final atLimit = base64Encode(Uint8List(LocalVehicleStore.maxPhotoBytes));
+    await store.upsert({
+      ...LocalVehicleStore.demo,
+      'registrationPhoto': atLimit,
+    });
+    expect((await store.list()).first['registrationPhoto'], atLimit);
+    await expectLater(
+      store.upsert({
         ...LocalVehicleStore.demo,
-        'registrationPhoto': atLimit,
-      });
-      expect((await store.list()).first['registrationPhoto'], atLimit);
-      await expectLater(
-        store.upsert({
-          ...LocalVehicleStore.demo,
-          'registrationPhoto': base64Encode(
-            Uint8List(LocalVehicleStore.maxPhotoBytes + 1),
-          ),
-        }),
-        throwsA(isA<VehiclePhotoBudgetExceeded>()),
-      );
-      expect((await store.list()).first['registrationPhoto'], atLimit);
-    },
-  );
+        'registrationPhoto': base64Encode(
+          Uint8List(LocalVehicleStore.maxPhotoBytes + 1),
+        ),
+      }),
+      throwsA(isA<VehiclePhotoBudgetExceeded>()),
+    );
+    expect((await store.list()).first['registrationPhoto'], atLimit);
+  });
 
   test('combined photo budget uses decoded bytes at its exact limit', () async {
     final store = LocalVehicleStore();

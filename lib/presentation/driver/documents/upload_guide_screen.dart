@@ -78,9 +78,8 @@ class _UploadGuideScreenState extends State<UploadGuideScreen> {
 
   Future<void> _chooseHow() async {
     if (widget.account == null) {
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(tr.docPreviewNotAvailable)));
+      ScaffoldMessenger.maybeOf(context)
+          ?.showSnackBar(SnackBar(content: Text(tr.docPreviewNotAvailable)));
       return;
     }
     final choice = await showMoveraModalSheet<String>(
@@ -180,9 +179,8 @@ class _UploadGuideScreenState extends State<UploadGuideScreen> {
         ownerId: widget.isCar ? widget.ownerId : null,
       );
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(tr.docUploaded)));
+      ScaffoldMessenger.maybeOf(context)
+          ?.showSnackBar(SnackBar(content: Text(tr.docUploaded)));
       popOwned<AccountDocument>(context, doc);
     } catch (error) {
       if (!mounted) return;
@@ -279,9 +277,8 @@ class _UploadGuideScreenState extends State<UploadGuideScreen> {
                 ),
               const SizedBox(height: 10),
               Theme(
-                data: Theme.of(
-                  context,
-                ).copyWith(dividerColor: Colors.transparent),
+                data: Theme.of(context)
+                    .copyWith(dividerColor: Colors.transparent),
                 child: ExpansionTile(
                   key: const ValueKey('guide-tips'),
                   tilePadding: EdgeInsets.zero,

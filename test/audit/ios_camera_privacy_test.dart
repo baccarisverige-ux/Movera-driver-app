@@ -30,9 +30,8 @@ void main() {
       'NSPhotoLibraryUsageDescription',
       'NSAppleMusicUsageDescription',
     ]) {
-      final purpose = RegExp(
-        '<key>$key</key>\\s*<string>([^<]+)</string>',
-      ).firstMatch(plist);
+      final purpose = RegExp('<key>$key</key>\\s*<string>([^<]+)</string>')
+          .firstMatch(plist);
       expect(purpose, isNotNull, reason: key);
       expect(purpose!.group(1), contains('only if you choose'), reason: key);
     }

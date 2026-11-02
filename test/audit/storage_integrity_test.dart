@@ -110,9 +110,9 @@ void main() {
           expect(prefs.getString(CompletionJournal.key), isNull);
           expect(await repo.read(), isNull);
           expect(LocalQuarantine.keys(prefs), hasLength(1));
-          final stored =
-              jsonDecode(prefs.getString(LocalQuarantine.keys(prefs).single)!)
-                  as Map;
+          final stored = jsonDecode(
+            prefs.getString(LocalQuarantine.keys(prefs).single)!,
+          ) as Map;
           expect(stored['raw'], corrupt);
         },
       );
@@ -122,9 +122,8 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(CompletionJournal.key, '{broken');
       expect(
-        await CompletionJournal(
-          active: PrefsActiveRideRepository(),
-        ).reconcile(),
+        await CompletionJournal(active: PrefsActiveRideRepository())
+            .reconcile(),
         JournalReplayOutcome.quarantinedCorrupt,
       );
     });
@@ -175,9 +174,9 @@ void main() {
           ),
         );
         expect((await repo.read())?.tripId, 'B');
-        final stored =
-            jsonDecode(prefs.getString(LocalQuarantine.keys(prefs).single)!)
-                as Map;
+        final stored = jsonDecode(
+          prefs.getString(LocalQuarantine.keys(prefs).single)!,
+        ) as Map;
         expect(stored['raw'], raw);
       },
     );
@@ -237,9 +236,9 @@ void main() {
         final repo = SettingsRepository();
         expect(await repo.read('contacts'), isEmpty);
         await repo.save('contacts', {'rows': []});
-        final stored =
-            jsonDecode(prefs.getString(LocalQuarantine.keys(prefs).single)!)
-                as Map;
+        final stored = jsonDecode(
+          prefs.getString(LocalQuarantine.keys(prefs).single)!,
+        ) as Map;
         expect(stored['raw'], '{broken');
         expect(stored['source'], 'settings');
       },

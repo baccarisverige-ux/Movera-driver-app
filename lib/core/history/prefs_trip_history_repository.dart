@@ -69,9 +69,8 @@ class PrefsTripHistoryRepository {
             // Saved in UTC (driver-r4-14); older rows in local time.
             pickupPoint: pointOf(data['pickupLat'], data['pickupLng']),
             dropoffPoint: pointOf(data['dropoffLat'], data['dropoffLng']),
-            completedAt: DateTime.tryParse(
-              data['completedAt'] as String? ?? '',
-            )?.toLocal(),
+            completedAt: DateTime.tryParse(data['completedAt'] as String? ?? '')
+                ?.toLocal(),
           ),
         )
         .toList(growable: false);

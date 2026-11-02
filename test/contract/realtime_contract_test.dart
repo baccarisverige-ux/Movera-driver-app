@@ -118,8 +118,7 @@ void main() {
       await sub.cancel();
       bus.dispose();
     });
-    return Future<void>.delayed(
-      Duration.zero,
-    ).then((_) => expect(seen, [DriverRealtimeKind.paymentUpdated]));
+    return Future<void>.delayed(Duration.zero)
+        .then((_) => expect(seen, [DriverRealtimeKind.paymentUpdated]));
   });
 }

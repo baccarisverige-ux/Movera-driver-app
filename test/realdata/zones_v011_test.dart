@@ -44,12 +44,12 @@ http.Response _json(Object body, [int status = 200]) => http.Response(
 );
 
 void main() {
-  final fixture =
-      jsonDecode(File('contracts/fixtures/zones.json').readAsStringSync())
-          as Map<String, dynamic>;
-  final contract =
-      jsonDecode(File('contracts/contract.json').readAsStringSync())
-          as Map<String, dynamic>;
+  final fixture = jsonDecode(
+    File('contracts/fixtures/zones.json').readAsStringSync(),
+  ) as Map<String, dynamic>;
+  final contract = jsonDecode(
+    File('contracts/contract.json').readAsStringSync(),
+  ) as Map<String, dynamic>;
   final seeds = {
     for (final s in (contract['zones'] as Map)['seed'] as List)
       (s as Map)['zoneId']: s,

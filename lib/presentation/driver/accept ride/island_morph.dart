@@ -220,9 +220,8 @@ class _IslandMorphState extends State<IslandMorph>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(
-                    0x40000000,
-                  ).withValues(alpha: .25 * _visibleShell),
+                  color: const Color(0x40000000)
+                      .withValues(alpha: .25 * _visibleShell),
                   blurRadius: 10,
                   offset: const Offset(0, 3),
                 ),

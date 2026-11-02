@@ -650,9 +650,8 @@ void main() {
         '(default on)', () {
       expect(const DriverOfferRules().card.riderRating, isTrue);
       final sample = jsonDecode(
-        File(
-          'contracts/fixtures/config/driver_app_config.json',
-        ).readAsStringSync(),
+        File('contracts/fixtures/config/driver_app_config.json')
+            .readAsStringSync(),
       );
       expect(sample['offers']['offerCard']['riderRating'], isTrue);
       expect(
@@ -1037,13 +1036,10 @@ void main() {
   group('decision 6 / E2: auto-offline after 10 in every seed zone', () {
     for (final zone in ['Z001', 'FR-PC', 'TN-TC']) {
       test('$zone seed config: 10, no exclusiveReasons', () {
-        final json =
-            jsonDecode(
-                  File(
-                    'test/fixtures/config/driver_app_config.$zone.json',
-                  ).readAsStringSync(),
-                )
-                as Map<String, dynamic>;
+        final json = jsonDecode(
+          File('test/fixtures/config/driver_app_config.$zone.json')
+              .readAsStringSync(),
+        ) as Map<String, dynamic>;
         expect(json['offers']['autoOffline']['missedExclusive'], 10);
         expect((json['offers'] as Map).containsKey('exclusiveReasons'), false);
         final config = DriverAppConfig.fromJson(json);
@@ -1065,9 +1061,8 @@ void main() {
     test('the Exclusive pill says "Exclusive for you", or "Assigned by '
         'Movera" for a hand-sent one', () {
       expect(ExclusiveRequestSheet.pillLabel(9), 'Exclusive for you · 9 s');
-      final source = File(
-        'lib/presentation/driver/home/home_offer_radar.dart',
-      ).readAsStringSync();
+      final source = File('lib/presentation/driver/home/home_offer_radar.dart')
+          .readAsStringSync();
       expect(source, isNot(contains('offer.reasonCode')));
     });
   });

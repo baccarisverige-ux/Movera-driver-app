@@ -107,9 +107,8 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
   }
 
   bool _validPhone(String phone) =>
-      RegExp(
-        r'^\+?[0-9]{7,15}$',
-      ).hasMatch(phone.replaceAll(RegExp(r'[\s()-]'), '')) ||
+      RegExp(r'^\+?[0-9]{7,15}$')
+          .hasMatch(phone.replaceAll(RegExp(r'[\s()-]'), '')) ||
       phone == '112';
   Future<void> _addContact() async {
     if (!mounted ||
@@ -179,9 +178,8 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
     if (opened == false &&
         mounted &&
         ModalRoute.of(context)?.isCurrent == true) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(tr.dialerIsUnavailable)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr.dialerIsUnavailable)));
     }
   }
 

@@ -202,9 +202,8 @@ extension _AcceptRidePanel on _AcceptRideState {
   void _openDestinationPicker() {
     final refusal = OnTripDestination.refusalText();
     if (refusal != null) {
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(refusal)));
+      ScaffoldMessenger.maybeOf(context)
+          ?.showSnackBar(SnackBar(content: Text(refusal)));
       return;
     }
     // UI-07: one picker per tap burst. UI-08: from the car, so a place
@@ -598,9 +597,8 @@ extension _AcceptRidePanel on _AcceptRideState {
               if (_waitSeconds < _noShowWaitSeconds || !mounted) {
                 return;
               }
-              _AcceptRideTrip(
-                this,
-              )._confirmCancellationReason(_AcceptRideState._noShowReason);
+              _AcceptRideTrip(this)
+                  ._confirmCancellationReason(_AcceptRideState._noShowReason);
             },
     );
   }
@@ -909,9 +907,8 @@ extension _AcceptRidePanel on _AcceptRideState {
             ] else
               Expanded(
                 child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(
-                    context,
-                  ).copyWith(overscroll: false),
+                  behavior: ScrollConfiguration.of(context)
+                      .copyWith(overscroll: false),
                   child: SingleChildScrollView(
                     key: _fullScrollKey,
                     controller: _tripMotion.fullScroll,
@@ -1466,9 +1463,8 @@ extension _AcceptRidePanel on _AcceptRideState {
     if (!mounted || reason == null) {
       return;
     }
-    await _AcceptRideTrip(
-      this,
-    )._confirmCancellationReason(reason, nextTrip: nextTrip);
+    await _AcceptRideTrip(this)
+        ._confirmCancellationReason(reason, nextTrip: nextTrip);
   }
 }
 

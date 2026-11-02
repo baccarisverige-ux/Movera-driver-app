@@ -402,9 +402,9 @@ void main() {
           'changeId': 'rc_1',
         });
         expect(
-          TripLiveDetails.fromProjection(
-            trips.projectionOf('t1')!,
-          ).routeChange!.status,
+          TripLiveDetails.fromProjection(trips.projectionOf('t1')!)
+              .routeChange!
+              .status,
           accept ? 'accepted' : 'refused',
         );
         await tester.pumpWidget(const SizedBox());

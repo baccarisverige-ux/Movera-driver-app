@@ -4,9 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('AcceptRide trip orchestration is outside the widget file', () {
-    final ride = File(
-      'lib/presentation/driver/accept ride/accept_ride.dart',
-    ).readAsStringSync();
+    final ride = File('lib/presentation/driver/accept ride/accept_ride.dart')
+        .readAsStringSync();
     final trip = File(
       'lib/presentation/driver/accept ride/accept_ride_trip.dart',
     ).readAsStringSync();

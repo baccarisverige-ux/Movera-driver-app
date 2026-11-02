@@ -104,9 +104,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
       );
       if (!mounted) return;
       if (outcome == RiderRatingOutcome.failed) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(tr.ratingCouldNotSend)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(tr.ratingCouldNotSend)));
       }
       setState(() => _finishing = false);
     }
@@ -559,9 +558,8 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
             // Only the demo says the rating is not sent; live sends it on Done.
             if (_ratingNoticeShown || _ratings.live) return;
             _ratingNoticeShown = true;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(tr.ratingNotSentDemo)));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(tr.ratingNotSentDemo)));
           },
           updateOnDrag: true,
         ),

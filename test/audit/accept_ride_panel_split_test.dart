@@ -6,9 +6,8 @@ void main() {
   test(
     'AcceptRide panel and contact presentation sit outside the widget file',
     () {
-      final ride = File(
-        'lib/presentation/driver/accept ride/accept_ride.dart',
-      ).readAsStringSync();
+      final ride = File('lib/presentation/driver/accept ride/accept_ride.dart')
+          .readAsStringSync();
       final panel = File(
         'lib/presentation/driver/accept ride/accept_ride_panel.dart',
       ).readAsStringSync();

@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-Iterable<File> _dart(String dir) => Directory(dir)
-    .listSync(recursive: true)
-    .whereType<File>()
-    .where((file) => file.path.endsWith('.dart'));
+Iterable<File> _dart(String dir) =>
+    Directory(dir)
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((file) => file.path.endsWith('.dart'));
 
 void main() {
   test('every IconButton has a tooltip for screen readers', () {
@@ -32,9 +33,8 @@ void main() {
   });
 
   test('every declared AppAssets constant is used and exists', () {
-    final declarations = RegExp(
-      r"static const String (\w+)\s*=\s*'([^']+)'",
-    ).allMatches(File('lib/constants/appassets.dart').readAsStringSync());
+    final declarations = RegExp(r"static const String (\w+)\s*=\s*'([^']+)'")
+        .allMatches(File('lib/constants/appassets.dart').readAsStringSync());
     final code = [
       for (final dir in ['lib', 'test'])
         ..._dart(dir).map((f) => f.readAsStringSync()),

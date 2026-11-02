@@ -19,9 +19,9 @@ void main() {
 
   for (final language in ['en', 'fr', 'sv']) {
     test('$language: no breakdown texts are left', () {
-      final arb =
-          jsonDecode(File('lib/l10n/app_$language.arb').readAsStringSync())
-              as Map<String, dynamic>;
+      final arb = jsonDecode(
+        File('lib/l10n/app_$language.arb').readAsStringSync(),
+      ) as Map<String, dynamic>;
       for (final key in [
         'moveraBonus',
         'inclBonusMoveraBonus',

@@ -102,8 +102,7 @@ const localDataInventory = <LocalDataRecord>[
   LocalDataRecord(
     key: '${LocalQuarantine.prefix}*',
     dataClass: LocalDataClass.personal,
-    purpose:
-        'Unreadable or conflicting trip/settings records set aside so the driver is not blocked.',
+    purpose: 'Unreadable or conflicting trip/settings records set aside so the driver is not blocked.',
     retention: 'Newest ${LocalQuarantine.maxEntries} entries, until logout.',
   ),
 ];
