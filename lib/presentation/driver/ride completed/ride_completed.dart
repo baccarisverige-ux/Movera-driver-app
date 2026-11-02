@@ -27,6 +27,7 @@ class DriverRideCompleted extends StatefulWidget {
     this.nextRide,
     this.paidByCash,
     this.ratingSender,
+    this.ratingAllowed = true,
   });
 
   final WaybillRepository? waybillRepository;
@@ -34,13 +35,16 @@ class DriverRideCompleted extends StatefulWidget {
   final ActiveRideRepository? activeRideRepository;
   final Widget? nextRide;
 
-  /// True for a cash trip, false for one paid in the app (card, Apple Pay,
-  /// Google Pay, Swish …); null shows a dash.
+  /// True for a cash trip, false for one paid in the app (card, Apple Pay
+  /// …); null shows a dash.
   final bool? paidByCash;
 
   /// Contract v0.9.0: sends the rating of the rider (stars, tags, comment).
   /// Defaults to the live build's client; the demo sends nothing.
   final RiderRatingSender? ratingSender;
+
+  /// v0.18.10 `finish.ratingAllowed`: false hides the stars.
+  final bool ratingAllowed;
 
   @override
   State<DriverRideCompleted> createState() => _DriverRideCompletedState();
@@ -220,13 +224,29 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: _muted, fontSize: 14),
                     ),
+                    if (record?.endedEarlyBy case final by?) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        '${tr.g8EndedEarly} · '
+                        '${by == 'rider' ? tr.g8RiderEnded : tr.g8DriverEnded}',
+                        key: const ValueKey<String>('ride-completed-early'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF7A5200),
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 22),
                     _money(record),
                     const SizedBox(height: 12),
                     Center(child: _chip(record)),
                     const SizedBox(height: 26),
-                    _stars(rider),
-                    const SizedBox(height: 22),
+                    if (widget.ratingAllowed) ...[
+                      _stars(rider),
+                      const SizedBox(height: 22),
+                    ],
                     const Divider(height: 1, thickness: 1, color: _line),
                     const SizedBox(height: 20),
                     _stop(
@@ -338,22 +358,32 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
     fontWeight: FontWeight.w600,
   );
 
-  /// Owner decision 2026-10-27: exactly three lines, Trip total (what the
-  /// rider pays), Movera commission (minus) and You get (pickup pay,
-  /// waiting and any bonus in it). The commission is the difference, so
-  /// the lines always add up (the server's `commission` is the same:
-  /// fare − driverEarnings − pickupPay − driverBonus). Without the
-  /// rider's fare (an older save) only the driver's amount shows.
+  /// Owner decision 2026-10-27: Trip total (what the rider pays), Movera
+  /// commission (minus) and the driver's money. v0.18.10 (owner G8 Q3):
+  /// the driver's money is "Din andel" (driverTotal) with its lines under
+  /// it; an earlier unpaid fee the rider paid with this trip is its own
+  /// line and never Movera's commission (live bug 318 kr / −257,95 kr); a
+  /// tip is all the driver's, outside the fare. The commission is what is
+  /// left, so the lines always add up.
   Widget _money(WaybillRecord? record) {
     final get = record == null ? null : Money.parseLabel(record.fare);
     final paid = record?.riderFare == null || get == null
         ? null
         : Money.parseLabel(record!.riderFare!, currency: get.currency);
     if (get == null || paid == null) return _fare(record?.fare);
-    final commission = paid - get;
+    final debt = record!.debtCollected?.currency == get.currency
+        ? record.debtCollected
+        : null;
+    final tip = record.tip?.amount.currency == get.currency
+        ? record.tip!.amount
+        : null;
+    var commission = paid - get;
+    if (debt != null) commission = commission - debt;
+    if (tip != null) commission = commission + tip;
     final share = commission.minorUnits < 0
-        ? '+${(get - paid).formatted}'
+        ? '+${Money(minorUnits: -commission.minorUnits, currency: get.currency).formatted}'
         : '−${commission.formatted}';
+    final lines = record.earningsBreakdown;
     return Column(
       key: const ValueKey<String>('ride-completed-money'),
       children: [
@@ -365,6 +395,15 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
             style: _value,
           ),
         ),
+        if (debt != null)
+          _row(
+            tr.g8DebtLine,
+            Text(
+              '−${debt.formatted}',
+              key: const ValueKey<String>('ride-completed-debt'),
+              style: _value,
+            ),
+          ),
         _row(
           tr.rcMoveraCommission,
           Text(
@@ -373,9 +412,18 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
             style: _value,
           ),
         ),
+        if (tip != null)
+          _row(
+            tr.g8LineTip,
+            Text(
+              '+${tip.formatted}',
+              key: const ValueKey<String>('ride-completed-tip'),
+              style: _value,
+            ),
+          ),
         const Divider(height: 14, thickness: 1, color: _line),
         _row(
-          tr.rcYouGet,
+          tr.g8YourShare,
           Text.rich(
             key: const ValueKey<String>('ride-completed-fare'),
             TextSpan(text: get.formatted),
@@ -386,6 +434,24 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
             ),
           ),
         ),
+        if (lines.length > 1)
+          for (final line in lines)
+            _row(
+              '   ${line.label}',
+              Text(
+                line.amount.formatted,
+                key: ValueKey<String>('ride-completed-line-${line.code}'),
+                style: const TextStyle(color: _muted, fontSize: 13.5),
+              ),
+            ),
+        if (record.tip case final tipInfo?) ...[
+          const SizedBox(height: 6),
+          Text(
+            tipInfo.text,
+            key: const ValueKey<String>('ride-completed-tip-note'),
+            style: const TextStyle(color: _muted, fontSize: 13.5),
+          ),
+        ],
       ],
     );
   }

@@ -129,6 +129,8 @@ class CompletionJournal {
         if (record.waitingFee != null) 'waitingFee': record.waitingFee,
         // driver-r5-13: the cancel or no-show fee the driver earned.
         if (feeEarned != null) 'feeEarned': feeEarned,
+        // v0.18.10 (owner G8 item 1): the rider's tip, all the driver's.
+        if (record.tip != null) 'tip': record.tip!.amount.formatted,
         // v0.17.0: the past-ride map's pins without the server.
         if (pickupPoint != null && dropoffPoint != null) ...{
           'pickupLat': pickupPoint.latitude,
@@ -228,6 +230,7 @@ class CompletionJournal {
         feeEarned: row['feeEarned'] is String
             ? row['feeEarned'] as String
             : null,
+        tip: row['tip'] is String ? row['tip'] as String : null,
         pickupPoint: PrefsTripHistoryRepository.pointOf(
           row['pickupLat'],
           row['pickupLng'],

@@ -356,7 +356,6 @@ void main() {
     String payment(String id) =>
         OfferWire.parse(_wire(paymentMethod: id)).payment;
     expect(payment('apple'), 'Apple Pay');
-    expect(payment('google'), 'Google Pay');
     expect(payment('wallet'), 'Wallet');
     expect(payment('cash'), 'Cash');
   });
