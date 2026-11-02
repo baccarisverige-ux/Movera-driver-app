@@ -4101,8 +4101,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emFamily => 'Family';
 
   @override
-  String get callUnavailableUseChat =>
-      'Calls aren\'t available yet – use the chat';
+  String get callUnavailableUseChat => 'Calls coming soon – use the chat';
 
   @override
   String get chatClosedAfterTrip => 'The chat is closed after the trip';
@@ -4112,7 +4111,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Local demo chat · messages are not sent to the rider.';
 
   @override
-  String get chatSendMessageHint => 'send message...';
+  String get chatSendMessageHint => 'Send message…';
 
   @override
   String get chatSaveLocally => 'Save message locally';
@@ -6977,5 +6976,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String g8StarLabel(int stars) {
     return '$stars of 5 stars';
+  }
+
+  @override
+  String get chatSupportSender => 'Movera';
+
+  @override
+  String chatNewMessagesAny(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count new messages',
+      one: '1 new message',
+    );
+    return '$_temp0';
   }
 }

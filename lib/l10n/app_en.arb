@@ -2804,10 +2804,10 @@
   "emEmergency": "Emergency",
   "emAlreadyInContacts": "This number is already in your contacts.",
   "emFamily": "Family",
-  "callUnavailableUseChat": "Calls aren't available yet – use the chat",
+  "callUnavailableUseChat": "Calls coming soon – use the chat",
   "chatClosedAfterTrip": "The chat is closed after the trip",
   "chatLocalDemo": "Local demo chat · messages are not sent to the rider.",
-  "chatSendMessageHint": "send message...",
+  "chatSendMessageHint": "Send message…",
   "chatSaveLocally": "Save message locally",
   "chatLocalNotSent": "Local preview · not sent",
   "chatSend": "Send message",
@@ -4286,5 +4286,8 @@
         "type": "int"
       }
     }
-  }
+  },
+  "chatSupportSender": "Movera",
+  "chatNewMessagesAny": "{count, plural, =1{1 new message} other{{count} new messages}}",
+  "@chatNewMessagesAny": {"placeholders": {"count": {"type": "int"}}}
 }

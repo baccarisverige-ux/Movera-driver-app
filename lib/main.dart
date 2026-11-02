@@ -198,6 +198,10 @@ class _MoveraAppState extends State<MoveraApp> {
       onSignedOut: () => _live?.signedOut(),
     );
     _account = DriverAccountSession(repository: DriverAccountRepository(_api));
+    // G9 live 2026-11-02: a language pick is saved to the account (live).
+    DriverLanguage.saveToAccount = DriverRuntimeConfig.current.authRequired
+        ? _account.saveLanguage
+        : null;
     _sessionStore = MemoryDriverSessionRepository();
     _session = DriverSessionController(repository: _sessionStore);
     _waybills = InMemoryWaybillRepository.instance;

@@ -4163,7 +4163,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get callUnavailableUseChat =>
-      'Les appels ne sont pas encore disponibles – utilisez le chat';
+      'Appels bientôt disponibles – utilisez le chat';
 
   @override
   String get chatClosedAfterTrip => 'Le chat est fermé après la course';
@@ -4173,7 +4173,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Discussion de démo locale · les messages ne sont pas envoyés au passager.';
 
   @override
-  String get chatSendMessageHint => 'envoyer un message…';
+  String get chatSendMessageHint => 'Envoyer un message…';
 
   @override
   String get chatSaveLocally => 'Enregistrer le message localement';
@@ -7098,5 +7098,19 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String g8StarLabel(int stars) {
     return '$stars étoile(s) sur 5';
+  }
+
+  @override
+  String get chatSupportSender => 'Movera';
+
+  @override
+  String chatNewMessagesAny(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nouveaux messages',
+      one: '1 nouveau message',
+    );
+    return '$_temp0';
   }
 }

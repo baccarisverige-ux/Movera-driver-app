@@ -7122,7 +7122,7 @@ abstract class AppLocalizations {
   /// No description provided for @callUnavailableUseChat.
   ///
   /// In en, this message translates to:
-  /// **'Calls aren\'t available yet – use the chat'**
+  /// **'Calls coming soon – use the chat'**
   String get callUnavailableUseChat;
 
   /// No description provided for @chatClosedAfterTrip.
@@ -7140,7 +7140,7 @@ abstract class AppLocalizations {
   /// No description provided for @chatSendMessageHint.
   ///
   /// In en, this message translates to:
-  /// **'send message...'**
+  /// **'Send message…'**
   String get chatSendMessageHint;
 
   /// No description provided for @chatSaveLocally.
@@ -12030,6 +12030,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{stars} of 5 stars'**
   String g8StarLabel(int stars);
+
+  /// No description provided for @chatSupportSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera'**
+  String get chatSupportSender;
+
+  /// No description provided for @chatNewMessagesAny.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 new message} other{{count} new messages}}'**
+  String chatNewMessagesAny(int count);
 }
 
 class _AppLocalizationsDelegate

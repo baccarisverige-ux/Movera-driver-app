@@ -1168,10 +1168,10 @@
   "emEmergency": "Nödsituation",
   "emAlreadyInContacts": "Numret finns redan bland dina kontakter.",
   "emFamily": "Familj",
-  "callUnavailableUseChat": "Samtal är inte tillgängliga än – använd chatten",
+  "callUnavailableUseChat": "Samtal kommer snart – använd chatten",
   "chatClosedAfterTrip": "Chatten är stängd efter resan",
   "chatLocalDemo": "Lokal demochatt · meddelanden skickas inte till resenären.",
-  "chatSendMessageHint": "skicka meddelande…",
+  "chatSendMessageHint": "Skicka meddelande…",
   "chatSaveLocally": "Spara meddelandet lokalt",
   "chatLocalNotSent": "Lokal förhandsvisning · inte skickat",
   "chatSend": "Skicka meddelande",
@@ -1984,5 +1984,7 @@
   "walletLiveUnavailable": "Det gick inte att hämta dina intäkter. Försök igen senare.",
   "walletPayoutPaid": "Utbetald",
   "walletPayoutPending": "Väntar",
-  "g8StarLabel": "{stars} av 5 stjärnor"
+  "g8StarLabel": "{stars} av 5 stjärnor",
+  "chatSupportSender": "Movera",
+  "chatNewMessagesAny": "{count, plural, =1{1 nytt meddelande} other{{count} nya meddelanden}}"
 }

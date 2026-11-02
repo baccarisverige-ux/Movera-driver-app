@@ -388,6 +388,7 @@ class _TripCancellationReason {
 
 class _AcceptRideState extends State<AcceptRide>
     with TickerProviderStateMixin, WidgetsBindingObserver, RouteAware {
+  bool _sawOpenTrip = false; // G9 live: trip seen open here.
   final DriverRealtimeSequenceGate _realtimeGate = DriverRealtimeSequenceGate();
   static const Color _ink = Color(0xFF252E3A);
   static const Color _panel = Color(0xFFFFFFFF);

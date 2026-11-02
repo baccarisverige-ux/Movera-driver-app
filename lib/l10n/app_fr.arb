@@ -1168,10 +1168,10 @@
   "emEmergency": "Urgence",
   "emAlreadyInContacts": "Ce numéro figure déjà dans vos contacts.",
   "emFamily": "Famille",
-  "callUnavailableUseChat": "Les appels ne sont pas encore disponibles – utilisez le chat",
+  "callUnavailableUseChat": "Appels bientôt disponibles – utilisez le chat",
   "chatClosedAfterTrip": "Le chat est fermé après la course",
   "chatLocalDemo": "Discussion de démo locale · les messages ne sont pas envoyés au passager.",
-  "chatSendMessageHint": "envoyer un message…",
+  "chatSendMessageHint": "Envoyer un message…",
   "chatSaveLocally": "Enregistrer le message localement",
   "chatLocalNotSent": "Aperçu local · non envoyé",
   "chatSend": "Envoyer le message",
@@ -1984,5 +1984,7 @@
   "walletLiveUnavailable": "Impossible de charger vos gains. Réessayez plus tard.",
   "walletPayoutPaid": "Versé",
   "walletPayoutPending": "En attente",
-  "g8StarLabel": "{stars} étoile(s) sur 5"
+  "g8StarLabel": "{stars} étoile(s) sur 5",
+  "chatSupportSender": "Movera",
+  "chatNewMessagesAny": "{count, plural, =1{1 nouveau message} other{{count} nouveaux messages}}"
 }
