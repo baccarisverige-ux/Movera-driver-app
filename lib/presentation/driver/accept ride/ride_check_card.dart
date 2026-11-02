@@ -559,10 +559,11 @@ class RideCheckCard extends StatelessWidget {
     );
   }
 
-  // Live G8 a11y: each answer is a named button for a screen reader.
+  // Live G8 a11y: each answer is a named button for a screen reader, in the
+  // driver's language (live G8 fix 2: SV/FR read the English record value).
   Widget _row(RideCheckTopic topic, {required bool last}) => Semantics(
     button: true,
-    label: topic.label,
+    label: topic.text,
     excludeSemantics: true,
     onTap: () => controller.choose(topic),
     child: Material(
