@@ -1043,10 +1043,9 @@ class _ProviderChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (provider == 'apple')
-            const Icon(Icons.apple, size: 13, color: AuthColors.green)
-          else
-            Image.asset('assets/images/google.png', width: 12, height: 12),
+          // Branding rule: Apple/Google logos only on their sign-in
+          // buttons; here the provider is named in text.
+          const Icon(Icons.link_rounded, size: 13, color: AuthColors.green),
           const SizedBox(width: 5),
           Text(
             tr.acctFromProvider(label),

@@ -103,6 +103,8 @@ class AppAssets {
   static const String rideBooster = 'assets/icons/ride_booster.svg';
   // Active ride sheet and map controls
   static const String mapSafety = 'assets/icons/map_safety.svg';
+  // Owner 2026-10-29 G5-3 "Use the Waze logo": the only brand mark allowed, on the navigation button.
+  static const String mapWaze = 'assets/icons/map_waze.svg';
   static const String mapRecenter = 'assets/icons/map_recenter.svg';
   // Side menu line icons
   static const String menuProfile = 'assets/icons/menu_profile.svg';

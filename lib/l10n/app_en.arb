@@ -4289,5 +4289,10 @@
   },
   "chatSupportSender": "Movera",
   "chatNewMessagesAny": "{count, plural, =1{1 new message} other{{count} new messages}}",
-  "@chatNewMessagesAny": {"placeholders": {"count": {"type": "int"}}}
+  "@chatNewMessagesAny": {"placeholders": {"count": {"type": "int"}}},
+  "safetyAudioComingSoon": "Audio recording is coming soon.",
+  "safetyTripSharingComingSoon": "Trip sharing is coming soon.",
+  "accessibilitySavedOnPhone": "These preferences are saved on this phone.",
+  "hearingComingSoon": "Telling riders about your hearing is coming soon.",
+  "suspendedShortBody": "Your account is paused. Contact support."
 }

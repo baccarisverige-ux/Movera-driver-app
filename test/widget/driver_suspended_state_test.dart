@@ -14,15 +14,19 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('suspended state sheet is explicit and dismissible', (
+  testWidgets('suspended state sheet offers Contact support and Log out', (
     tester,
   ) async {
-    var acknowledged = false;
+    var support = false;
+    var signOut = false;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: DriverSuspendedSheet(onAcknowledge: () => acknowledged = true),
+          body: DriverSuspendedSheet(
+            onContactSupport: () => support = true,
+            onSignOut: () => signOut = true,
+          ),
         ),
       ),
     );
@@ -32,14 +36,17 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Account access paused'), findsOneWidget);
-    expect(find.text('Got it'), findsOneWidget);
 
     await tester.tap(
-      find.byKey(const ValueKey<String>('driver-suspended-acknowledge')),
+      find.byKey(const ValueKey<String>('driver-suspended-support')),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey<String>('driver-suspended-sign-out')),
     );
     await tester.pump();
 
-    expect(acknowledged, isTrue);
+    expect(support, isTrue);
+    expect(signOut, isTrue);
     expect(tester.takeException(), isNull);
   });
 

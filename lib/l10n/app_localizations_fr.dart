@@ -7113,4 +7113,23 @@ class AppLocalizationsFr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get safetyAudioComingSoon => 'L’enregistrement audio arrive bientôt.';
+
+  @override
+  String get safetyTripSharingComingSoon =>
+      'Le partage de course arrive bientôt.';
+
+  @override
+  String get accessibilitySavedOnPhone =>
+      'Ces préférences sont enregistrées sur ce téléphone.';
+
+  @override
+  String get hearingComingSoon =>
+      'Informer les passagers de votre audition arrive bientôt.';
+
+  @override
+  String get suspendedShortBody =>
+      'Votre compte est en pause. Contactez le support.';
 }

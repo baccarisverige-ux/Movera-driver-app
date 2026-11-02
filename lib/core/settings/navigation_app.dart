@@ -14,7 +14,7 @@ enum NavigationApp {
   const NavigationApp(this.storedName);
   final String storedName;
 
-  /// The app's own name, shown as a word (never its logo).
+  /// The app's own name, shown under the icon (Waze also shows its logo, owner G5-3).
   String get displayName => switch (this) {
     NavigationApp.googleMaps => 'Google Maps',
     NavigationApp.waze => 'Waze',

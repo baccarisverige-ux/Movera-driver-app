@@ -1596,11 +1596,11 @@ class _AcceptRideState extends State<AcceptRide>
                                       this,
                                     )._openWaitingTime,
                                     rideCheck: _rideCheck.active,
-                                    onRideCheckDemo: driverProductionRequested
-                                        ? null
-                                        : _AcceptRideTrip(
+                                    onRideCheckDemo: driverDemoFeatures
+                                        ? _AcceptRideTrip(
                                             this,
-                                          )._openRideCheckDemo,
+                                          )._openRideCheckDemo
+                                        : null,
                                     pointKind: _approachKind,
                                     pointLabel: _approachLabel,
                                     bags: widget.bags,
