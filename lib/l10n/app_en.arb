@@ -4294,5 +4294,19 @@
   "safetyTripSharingComingSoon": "Trip sharing is coming soon.",
   "accessibilitySavedOnPhone": "These preferences are saved on this phone.",
   "hearingComingSoon": "Telling riders about your hearing is coming soon.",
-  "suspendedShortBody": "Your account is paused. Contact support."
+  "suspendedShortBody": "Your account is paused. Contact support.",
+  "supportTopicRideDispute": "Problem with a ride",
+  "supportTopicHelp": "Help with the app",
+  "supportTopicLostItem": "Lost item",
+  "supportTopicPayment": "Payment or pay",
+  "supportTopicAccount": "Account and documents",
+  "supportTopicSafety": "Safety",
+  "supportTopicOther": "Something else",
+  "supportMovera": "Movera Support",
+  "supportAgentLine": "{name} · Movera Support",
+  "@supportAgentLine": {"placeholders": {"name": {"type": "String"}}},
+  "supportReplyHint": "Write a message",
+  "supportReplySend": "Send",
+  "supportTicketClosedNote": "This conversation is closed. Write a new message to Movera if you need more help.",
+  "supportReplyFailed": "The message was not sent. Try again."
 }

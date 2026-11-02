@@ -1991,5 +1991,18 @@
   "safetyTripSharingComingSoon": "Le partage de course arrive bientôt.",
   "accessibilitySavedOnPhone": "Ces préférences sont enregistrées sur ce téléphone.",
   "hearingComingSoon": "Informer les passagers de votre audition arrive bientôt.",
-  "suspendedShortBody": "Votre compte est en pause. Contactez le support."
+  "suspendedShortBody": "Votre compte est en pause. Contactez le support.",
+  "supportTopicRideDispute": "Problème avec une course",
+  "supportTopicHelp": "Aide avec l'application",
+  "supportTopicLostItem": "Objet perdu",
+  "supportTopicPayment": "Paiement ou rémunération",
+  "supportTopicAccount": "Compte et documents",
+  "supportTopicSafety": "Sécurité",
+  "supportTopicOther": "Autre chose",
+  "supportMovera": "Support Movera",
+  "supportAgentLine": "{name} · Support Movera",
+  "supportReplyHint": "Écrire un message",
+  "supportReplySend": "Envoyer",
+  "supportTicketClosedNote": "Cette conversation est fermée. Écrivez un nouveau message à Movera si vous avez encore besoin d'aide.",
+  "supportReplyFailed": "Le message n'a pas été envoyé. Réessayez."
 }

@@ -7132,4 +7132,46 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get suspendedShortBody =>
       'Votre compte est en pause. Contactez le support.';
+
+  @override
+  String get supportTopicRideDispute => 'Problème avec une course';
+
+  @override
+  String get supportTopicHelp => 'Aide avec l\'application';
+
+  @override
+  String get supportTopicLostItem => 'Objet perdu';
+
+  @override
+  String get supportTopicPayment => 'Paiement ou rémunération';
+
+  @override
+  String get supportTopicAccount => 'Compte et documents';
+
+  @override
+  String get supportTopicSafety => 'Sécurité';
+
+  @override
+  String get supportTopicOther => 'Autre chose';
+
+  @override
+  String get supportMovera => 'Support Movera';
+
+  @override
+  String supportAgentLine(String name) {
+    return '$name · Support Movera';
+  }
+
+  @override
+  String get supportReplyHint => 'Écrire un message';
+
+  @override
+  String get supportReplySend => 'Envoyer';
+
+  @override
+  String get supportTicketClosedNote =>
+      'Cette conversation est fermée. Écrivez un nouveau message à Movera si vous avez encore besoin d\'aide.';
+
+  @override
+  String get supportReplyFailed => 'Le message n\'a pas été envoyé. Réessayez.';
 }

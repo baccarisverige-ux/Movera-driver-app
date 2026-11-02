@@ -1991,5 +1991,18 @@
   "safetyTripSharingComingSoon": "Delning av resa kommer snart.",
   "accessibilitySavedOnPhone": "De här inställningarna sparas på den här telefonen.",
   "hearingComingSoon": "Att berätta för resenärer om din hörsel kommer snart.",
-  "suspendedShortBody": "Ditt konto är pausat. Kontakta support."
+  "suspendedShortBody": "Ditt konto är pausat. Kontakta support.",
+  "supportTopicRideDispute": "Problem med en resa",
+  "supportTopicHelp": "Hjälp med appen",
+  "supportTopicLostItem": "Borttappad sak",
+  "supportTopicPayment": "Betalning eller ersättning",
+  "supportTopicAccount": "Konto och dokument",
+  "supportTopicSafety": "Säkerhet",
+  "supportTopicOther": "Något annat",
+  "supportMovera": "Movera Support",
+  "supportAgentLine": "{name} · Movera Support",
+  "supportReplyHint": "Skriv ett meddelande",
+  "supportReplySend": "Skicka",
+  "supportTicketClosedNote": "Den här konversationen är stängd. Skriv ett nytt meddelande till Movera om du behöver mer hjälp.",
+  "supportReplyFailed": "Meddelandet skickades inte. Försök igen."
 }

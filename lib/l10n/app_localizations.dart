@@ -12072,6 +12072,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your account is paused. Contact support.'**
   String get suspendedShortBody;
+
+  /// No description provided for @supportTopicRideDispute.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem with a ride'**
+  String get supportTopicRideDispute;
+
+  /// No description provided for @supportTopicHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help with the app'**
+  String get supportTopicHelp;
+
+  /// No description provided for @supportTopicLostItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost item'**
+  String get supportTopicLostItem;
+
+  /// No description provided for @supportTopicPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment or pay'**
+  String get supportTopicPayment;
+
+  /// No description provided for @supportTopicAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account and documents'**
+  String get supportTopicAccount;
+
+  /// No description provided for @supportTopicSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety'**
+  String get supportTopicSafety;
+
+  /// No description provided for @supportTopicOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get supportTopicOther;
+
+  /// No description provided for @supportMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera Support'**
+  String get supportMovera;
+
+  /// No description provided for @supportAgentLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · Movera Support'**
+  String supportAgentLine(String name);
+
+  /// No description provided for @supportReplyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a message'**
+  String get supportReplyHint;
+
+  /// No description provided for @supportReplySend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get supportReplySend;
+
+  /// No description provided for @supportTicketClosedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation is closed. Write a new message to Movera if you need more help.'**
+  String get supportTicketClosedNote;
+
+  /// No description provided for @supportReplyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The message was not sent. Try again.'**
+  String get supportReplyFailed;
 }
 
 class _AppLocalizationsDelegate
