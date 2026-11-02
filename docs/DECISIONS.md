@@ -23,7 +23,7 @@ Terminal:
 
 `completed` · `cancelled_by_rider` · `cancelled_by_driver` · `cancelled_by_admin` · `cancelled_by_system` · `no_show` · `expired` · `failed`
 
-The source of truth is now `contracts/contract.json` (v0.18.13, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
+The source of truth is now `contracts/contract.json` (v0.18.14, copied byte-for-byte from the `movera-contracts` repository; see "Contract v0.3" and "Contract v0.4" below).
 
 Driver `ActiveRideStage` maps onto the live slice only:
 
