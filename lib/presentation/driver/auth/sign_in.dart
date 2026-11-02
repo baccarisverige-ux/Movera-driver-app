@@ -83,6 +83,10 @@ class _DriverSignInState extends State<DriverSignIn>
   List<TestAccount> _testAccounts = const [];
   bool _testAccountsAsked = false;
 
+  /// Owner 2026-11-02 (PR #443): the test numbers sit behind one button;
+  /// closed, the picture with the skyline and "Need help?" stay visible.
+  bool _testListOpen = false;
+
   /// Round 4b: which provider button is working, and which ones the
   /// server or this platform said are not ready ("Coming soon").
   String? _providerBusy;
@@ -178,7 +182,9 @@ class _DriverSignInState extends State<DriverSignIn>
     final testBuild =
         !driverProductionRequested &&
         DriverRuntimeConfig.current.apiBaseUrl.isNotEmpty;
-    if (!(widget.showTestAccounts ?? testBuild) || auth == null) {
+    if (driverProductionRequested ||
+        !(widget.showTestAccounts ?? testBuild) ||
+        auth == null) {
       return;
     }
     try {
@@ -498,11 +504,33 @@ class _DriverSignInState extends State<DriverSignIn>
                 ),
               ),
             ),
-          if (_testAccounts.isNotEmpty) _testAccountList(),
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: NeedHelpLink(),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: _testAccounts.isEmpty
+                ? const NeedHelpLink()
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const NeedHelpLink(),
+                      TextButton(
+                        key: const ValueKey('auth-test-numbers-button'),
+                        onPressed: () =>
+                            setState(() => _testListOpen = !_testListOpen),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AuthColors.muted,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(
+                          tr.authTestNumbersButton,
+                          style: AuthText.small(),
+                        ),
+                      ),
+                    ],
+                  ),
           ),
+          if (_testAccounts.isNotEmpty) ...[
+            if (_testListOpen) _testAccountList(),
+          ],
         ],
       ),
     );
@@ -549,11 +577,10 @@ class _DriverSignInState extends State<DriverSignIn>
   Widget _testAccountList() {
     return Padding(
       key: const ValueKey('auth-test-accounts'),
-      padding: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.only(top: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(tr.authTestNumbersTitle, style: AuthText.small()),
           for (final account in _testAccounts)
             InkWell(
               key: ValueKey('auth-test-${account.phone}'),

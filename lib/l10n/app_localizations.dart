@@ -9901,6 +9901,12 @@ abstract class AppLocalizations {
   /// **'Test numbers (test build only)'**
   String get authTestNumbersTitle;
 
+  /// No description provided for @authTestNumbersButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Test numbers'**
+  String get authTestNumbersButton;
+
   /// No description provided for @authTestStatusNew.
   ///
   /// In en, this message translates to:
