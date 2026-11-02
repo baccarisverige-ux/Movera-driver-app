@@ -207,33 +207,37 @@ void main() {
   });
 
   group('Q16/Q18: admin offers', () {
-    test('a bonus or priority shows the Priority badge', () {
-      expect(DemoAdminOffers.radarGroup.isPriority, isTrue);
-      expect(DemoAdminOffers.radarGroup.isAdminDirectAssign, isFalse);
-      expect(DemoAdminOffers.directAssign.isAdminDirectAssign, isTrue);
-      final bonusOnly = RideOffer(
-        id: 'b',
-        category: 'Movera',
-        fare: const Money(minorUnits: 10000),
-        driverBonus: const Money(minorUnits: 2000),
-        rating: '4.9',
-        pickupMinutes: 2,
-        pickupKm: 1,
-        tripMinutes: 10,
-        tripKm: 5,
-        pickup: 'A',
-        dropoff: 'B',
-        pickupPosition: DemoRideCheckTrips.farDropoff.pickupPosition,
-        dropoffPosition: DemoRideCheckTrips.farDropoff.dropoffPosition,
-        isNearby: true,
-        followsDestination: false,
-      );
-      expect(bonusOnly.isPriority, isTrue);
-      expect(DemoRideCheckTrips.farDropoff.isPriority, isFalse);
-      expect(OfferSource.fromWire('admin'), OfferSource.admin);
-      expect(OfferSource.fromWire('system'), OfferSource.system);
-      expect(OfferSource.fromWire(null), OfferSource.system);
-    });
+    test(
+      'only a priority offer shows the Priority badge, money alone does not',
+      () {
+        expect(DemoAdminOffers.radarGroup.isPriority, isTrue);
+        expect(DemoAdminOffers.radarGroup.isAdminDirectAssign, isFalse);
+        expect(DemoAdminOffers.directAssign.isAdminDirectAssign, isTrue);
+        final bonusOnly = RideOffer(
+          id: 'b',
+          category: 'Movera',
+          fare: const Money(minorUnits: 10000),
+          driverBonus: const Money(minorUnits: 2000),
+          rating: '4.9',
+          pickupMinutes: 2,
+          pickupKm: 1,
+          tripMinutes: 10,
+          tripKm: 5,
+          pickup: 'A',
+          dropoff: 'B',
+          pickupPosition: DemoRideCheckTrips.farDropoff.pickupPosition,
+          dropoffPosition: DemoRideCheckTrips.farDropoff.dropoffPosition,
+          isNearby: true,
+          followsDestination: false,
+        );
+        expect(bonusOnly.isPriority, isFalse);
+        expect(bonusOnly.driverBonus?.minorUnits, 2000);
+        expect(DemoRideCheckTrips.farDropoff.isPriority, isFalse);
+        expect(OfferSource.fromWire('admin'), OfferSource.admin);
+        expect(OfferSource.fromWire('system'), OfferSource.system);
+        expect(OfferSource.fromWire(null), OfferSource.system);
+      },
+    );
 
     test('the fare already includes the bonus (one total)', () {
       // 112,40 kr trip + 40 kr bonus.
