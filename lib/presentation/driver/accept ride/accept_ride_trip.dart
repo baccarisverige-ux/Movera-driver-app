@@ -126,10 +126,31 @@ extension _AcceptRideTrip on _AcceptRideState {
     return (fare - bonus).formatted;
   }
 
+  /// This trip's waybill: the current one only when it is this trip's.
+  /// Live G8 fix 2 (re-check 2026-11-02): an earlier trip's waybill was
+  /// still the current one (beginCurrent keeps an active record of another
+  /// trip), so this trip's finished screen showed that trip's old fee
+  /// ("Tidigare obetald avgift −35,00 kr", commission "+2,78 kr").
+  WaybillRecord _ownWaybill() {
+    final current = _waybills.current;
+    return current != null && current.tripId == widget.tripId
+        ? current
+        : _buildCurrentWaybill();
+  }
+
+  /// Makes [paid] (this trip's, finished on the server) the current
+  /// waybill. An earlier trip's record still held as current is dropped
+  /// first: beginCurrent kept it, and completeCurrent then made it the
+  /// finished screen's record (live G8 fix 2).
+  void _setOwnWaybill(WaybillRecord paid) {
+    if (_waybills.current?.tripId != paid.tripId) _waybills.discardCurrent();
+    _waybills.beginCurrent(paid);
+  }
+
   /// The current trip's waybill with the waiting fee in its fare.
   WaybillRecord _paidWaybill() {
     final fee = _waitTerms.driverWaitingFee(_paidWaitTotal);
-    return (_waybills.current ?? _buildCurrentWaybill()).copyWith(
+    return _ownWaybill().copyWith(
       fare: _fareWithWaiting,
       waitingFee: fee.isZero ? null : fee.formatted,
       paidByCash: widget.paidByCash,
@@ -454,11 +475,16 @@ extension _AcceptRideTrip on _AcceptRideState {
         waitingFee: money.waitingFee?.formatted,
         clearWaitingFee: money.waitingFee == null,
         earningsBreakdown: money.earningsBreakdown,
+        // The server's money replaces what the waybill held: no tip, old
+        // fee or early end the server does not send (live G8 fix 2).
         tip: money.tip,
+        clearTip: money.tip == null,
         debtCollected: money.debtCollected,
+        clearDebtCollected: money.debtCollected == null,
         endedEarlyBy: money.finish?.endedEarly == true
             ? money.finish?.endedBy ?? 'driver'
             : null,
+        clearEndedEarlyBy: money.finish?.endedEarly != true,
       );
 
   WaybillRecord _buildNextWaybill(_NextTripRadarOffer offer) {
@@ -754,7 +780,7 @@ extension _AcceptRideTrip on _AcceptRideState {
         await CompletionJournal(
           active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
         ).finish(
-          settled?.paid ?? _waybills.current ?? _buildCurrentWaybill(),
+          settled?.paid ?? _ownWaybill(),
           pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
           dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
           status: status,
@@ -876,7 +902,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     _pauseLiveUpdates();
     if (paid != null) {
       // Home's last trip is this one, as after the driver's own finish.
-      _waybills.beginCurrent(paid);
+      _setOwnWaybill(paid);
       _waybills.completeCurrent();
     } else {
       _waybills.discardCurrent();
@@ -1014,7 +1040,7 @@ extension _AcceptRideTrip on _AcceptRideState {
     _nextTripRadarDemoTimer?.cancel();
     _nextTripRadarMatchTimer?.cancel();
     _pauseLiveUpdates();
-    _waybills.beginCurrent(paid);
+    _setOwnWaybill(paid);
     _waybills.completeCurrent();
     if (!mounted) {
       return;
@@ -1062,7 +1088,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       await CompletionJournal(
         active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
       ).finish(
-        _waybills.current ?? _buildCurrentWaybill(),
+        _ownWaybill(),
         pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
         dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
         status: TripStatus.cancelledByRider,
@@ -1968,7 +1994,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       // Q43: the waiting fee is the driver's, in the trip's earnings;
       // N9: a live trip takes the server's final numbers.
       final (:paid, :cash) = _settledPaid();
-      _waybills.beginCurrent(paid);
+      _setOwnWaybill(paid);
       await CompletionJournal(
         active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
       ).finish(
@@ -2632,7 +2658,7 @@ extension _AcceptRideTrip on _AcceptRideState {
       await CompletionJournal(
         active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
       ).finish(
-        _waybills.current ?? _buildCurrentWaybill(),
+        _ownWaybill(),
         pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
         dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
         status: outcome,

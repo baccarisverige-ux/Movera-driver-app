@@ -194,6 +194,9 @@ class WaybillRecord {
     TripTipInfo? tip,
     Money? debtCollected,
     String? endedEarlyBy,
+    bool clearTip = false,
+    bool clearDebtCollected = false,
+    bool clearEndedEarlyBy = false,
   }) {
     return WaybillRecord(
       tripId: tripId,
@@ -214,9 +217,13 @@ class WaybillRecord {
       paidByCash: paidByCash ?? this.paidByCash,
       riderFare: riderFare ?? this.riderFare,
       earningsBreakdown: earningsBreakdown ?? this.earningsBreakdown,
-      tip: tip ?? this.tip,
-      debtCollected: debtCollected ?? this.debtCollected,
-      endedEarlyBy: endedEarlyBy ?? this.endedEarlyBy,
+      tip: clearTip ? null : tip ?? this.tip,
+      debtCollected: clearDebtCollected
+          ? null
+          : debtCollected ?? this.debtCollected,
+      endedEarlyBy: clearEndedEarlyBy
+          ? null
+          : endedEarlyBy ?? this.endedEarlyBy,
     );
   }
 }

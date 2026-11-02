@@ -23,6 +23,7 @@ import 'package:movera/core/ride/active_ride_controller.dart';
 import 'package:movera/core/ride/active_ride_repository.dart';
 import 'package:movera/core/session/driver_runtime_scope.dart';
 import 'package:movera/core/session/driver_session_controller.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/accept%20ride/accept_ride.dart';
 import 'package:movera/presentation/driver/ride%20completed/ride_completed.dart';
@@ -331,6 +332,94 @@ void main() {
       // Live G8: never the demo radar name on a live trip.
       expect(find.textContaining(tr.waybillDemoRadar), findsNothing);
       semantics.dispose();
+      await close(tester);
+    });
+  }
+
+  for (final language in ['sv', 'fr']) {
+    testWidgets('live G8 fix 2: the finished screen shows exactly the '
+        'server\'s money — no old fee from an earlier trip\'s waybill, '
+        'commission = fare − driverTotal ($language)', (tester) async {
+      DriverAppTexts.language = language;
+      addTearDown(() => DriverAppTexts.reset());
+      // Live re-check 2026-11-02 (trp_…RV38KY): the waybill of an earlier
+      // trip (a rider who owed a 35 kr fee) was still the current one.
+      InMemoryWaybillRepository.instance.beginCurrent(
+        WaybillRecord(
+          tripId: 'earlier-trip',
+          statusLabel: WaybillRecord.currentTrip,
+          issuedAt: DateTime(2026, 11, 2, 1),
+          fare: '80,93 kr',
+          service: 'Movera',
+          riderName: 'Earlier rider',
+          pickup: 'Earlier pickup',
+          dropoff: 'Earlier drop-off',
+          source: WaybillRecord.exclusiveOfferSource,
+          driverName: 'D',
+          vehicle: 'V',
+          licensePlate: 'P',
+          passengerCapacity: 4,
+          riderFare: '145,00 kr',
+          debtCollected: const Money(minorUnits: 3500, currency: 'SEK'),
+        ),
+      );
+      // The server: 139 kr, Din andel 106,78 kr, Movera 32,22 kr, no old fee.
+      final saved = Map<String, dynamic>.of(completed);
+      addTearDown(
+        () => completed
+          ..clear()
+          ..addAll(saved),
+      );
+      completed['fare'] = money(13900);
+      completed['driverEarnings'] = money(10598);
+      completed['pickupPay'] = money(80);
+      completed['commission'] = money(3222);
+      completed['driverTotal'] = money(10678);
+      completed['earningsBreakdown'] = [
+        {'code': 'trip', 'amount': money(10598)},
+        {'code': 'pickup', 'amount': money(80)},
+      ];
+      completed['finish'] = {
+        ...(completed['finish'] as Map),
+        'total': money(13900),
+        'cashToCollect': money(13900),
+        'driverTotal': money(10678),
+        'earningsBreakdown': completed['earningsBreakdown'],
+      };
+      preview = () => json(200, {
+        'previewId': 'cpv_first',
+        'tripId': 'live-trip',
+        'total': money(13900),
+        'cashDue': money(13900),
+        'driverEarnings': money(10598),
+        'driverTotal': money(10678),
+        'earlyEnd': true,
+        'fareLines': completed['fareLines'],
+      });
+      await openCashSheet(tester);
+      await tester.tap(
+        find.byKey(const ValueKey<String>('cash-complete-ride')),
+      );
+      for (var i = 0; i < 80; i++) {
+        await tester.pump(const Duration(milliseconds: 25));
+      }
+      expect(find.byType(DriverRideCompleted), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 1200));
+      String text(String key) {
+        final widget = tester.widget<Text>(find.byKey(ValueKey<String>(key)));
+        return widget.data ?? widget.textSpan!.toPlainText();
+      }
+
+      expect(
+        find.byKey(const ValueKey<String>('ride-completed-debt')),
+        findsNothing,
+      );
+      expect(text('ride-completed-total'), contains('139'));
+      expect(text('ride-completed-commission'), startsWith('−'));
+      expect(text('ride-completed-commission'), contains('32'));
+      expect(text('ride-completed-commission'), contains('22'));
+      expect(text('ride-completed-fare'), contains('106'));
+      expect(find.textContaining('Earlier'), findsNothing);
       await close(tester);
     });
   }

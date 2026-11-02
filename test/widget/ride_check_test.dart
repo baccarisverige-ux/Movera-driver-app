@@ -36,6 +36,8 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../integration_test/headless_map_platform.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/safety/ride_check_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import '../audit/phase5/live_fixture.dart';
 
@@ -739,6 +741,32 @@ void main() {
     );
     await _end(tester, controller);
   });
+
+  for (final language in ['sv', 'fr', 'en']) {
+    testWidgets('live G8 fix 2: the rows are named in the driver\'s language '
+        'for a screen reader ($language)', (tester) async {
+      DriverAppTexts.language = language;
+      addTearDown(() => DriverAppTexts.reset());
+      final semantics = tester.ensureSemantics();
+      final kit = _Kit();
+      final controller = await _card(tester, kit);
+      for (final topic in [
+        RideCheckTopic.accident,
+        RideCheckTopic.hurt,
+        RideCheckTopic.carProblem,
+        RideCheckTopic.riderAskedStop,
+        RideCheckTopic.traffic,
+        RideCheckTopic.somethingElse,
+      ]) {
+        expect(find.bySemanticsLabel(topic.text), findsOneWidget);
+        if (language != 'en') {
+          expect(find.bySemanticsLabel(topic.label), findsNothing);
+        }
+      }
+      semantics.dispose();
+      await _end(tester, controller);
+    });
+  }
 
   testWidgets("I'm OK closes the card and saves the answer", (tester) async {
     final kit = _Kit();
