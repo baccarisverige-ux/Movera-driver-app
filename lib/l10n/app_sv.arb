@@ -1991,5 +1991,6 @@
   "safetyTripSharingComingSoon": "Delning av resa kommer snart.",
   "accessibilitySavedOnPhone": "De här inställningarna sparas på den här telefonen.",
   "hearingComingSoon": "Att berätta för resenärer om din hörsel kommer snart.",
-  "suspendedShortBody": "Ditt konto är pausat. Kontakta support."
+  "suspendedShortBody": "Ditt konto är pausat. Kontakta support.",
+  "offlineReasonDocumentsExpired": "Ett dokument har gått ut – skicka ett nytt under Dokument för att kunna gå online igen"
 }

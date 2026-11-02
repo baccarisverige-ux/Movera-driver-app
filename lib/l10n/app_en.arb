@@ -4294,5 +4294,7 @@
   "safetyTripSharingComingSoon": "Trip sharing is coming soon.",
   "accessibilitySavedOnPhone": "These preferences are saved on this phone.",
   "hearingComingSoon": "Telling riders about your hearing is coming soon.",
-  "suspendedShortBody": "Your account is paused. Contact support."
+  "suspendedShortBody": "Your account is paused. Contact support.",
+  "offlineReasonDocumentsExpired": "A document has expired – send a new one in Documents to go online again",
+  "@offlineReasonDocumentsExpired": {"description": "Contract v0.18.14 driverHome.setOffline reason documents_expired: the offline card's reason."}
 }

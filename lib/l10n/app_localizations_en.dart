@@ -7008,4 +7008,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suspendedShortBody => 'Your account is paused. Contact support.';
+
+  @override
+  String get offlineReasonDocumentsExpired =>
+      'A document has expired – send a new one in Documents to go online again';
 }

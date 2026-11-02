@@ -389,6 +389,7 @@ void main() {
             'fleet_removed',
             'account_status',
             'admin',
+            'documents_expired',
             'something_new',
             null,
           ])
@@ -400,6 +401,7 @@ void main() {
           DriverOfflineReason.fleetRemoved,
           DriverOfflineReason.accountStatus,
           DriverOfflineReason.movera,
+          DriverOfflineReason.documentsExpired,
           null,
           null,
         ],
@@ -432,7 +434,17 @@ void main() {
         reasonOf(DriverOfflineReason.vehicleBlocked),
         'Din bil kan inte användas just nu',
       );
+      expect(
+        reasonOf(DriverOfflineReason.documentsExpired),
+        'Ett dokument har gått ut – skicka ett nytt under Dokument för att '
+        'kunna gå online igen',
+      );
       DriverAppTexts.language = 'fr';
+      expect(
+        reasonOf(DriverOfflineReason.documentsExpired),
+        'Un document a expiré – envoyez-en un nouveau dans Documents pour '
+        'repasser en ligne',
+      );
       expect(
         reasonOf(DriverOfflineReason.fleetRemoved),
         'Vous ne faites plus partie d’une flotte',

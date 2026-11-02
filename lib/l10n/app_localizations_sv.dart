@@ -7017,4 +7017,8 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get suspendedShortBody => 'Ditt konto är pausat. Kontakta support.';
+
+  @override
+  String get offlineReasonDocumentsExpired =>
+      'Ett dokument har gått ut – skicka ett nytt under Dokument för att kunna gå online igen';
 }

@@ -12072,6 +12072,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your account is paused. Contact support.'**
   String get suspendedShortBody;
+
+  /// Contract v0.18.14 driverHome.setOffline reason documents_expired: the offline card's reason.
+  ///
+  /// In en, this message translates to:
+  /// **'A document has expired – send a new one in Documents to go online again'**
+  String get offlineReasonDocumentsExpired;
 }
 
 class _AppLocalizationsDelegate

@@ -85,6 +85,10 @@ enum DriverOfflineReason {
   /// v0.18.6 `account_status`: an admin paused the account.
   accountStatus,
 
+  /// v0.18.14 `documents_expired`: the expiry sweep set him offline (a
+  /// document past its end date; no offer until a new one is approved).
+  documentsExpired,
+
   /// v0.18.6 `admin`, or the server set him offline without saying why.
   movera;
 
@@ -95,6 +99,7 @@ enum DriverOfflineReason {
     'vehicle_blocked' => vehicleBlocked,
     'fleet_removed' => fleetRemoved,
     'account_status' => accountStatus,
+    'documents_expired' => documentsExpired,
     'admin' => movera,
     _ => null,
   };
