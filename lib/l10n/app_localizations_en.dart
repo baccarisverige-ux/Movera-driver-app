@@ -7067,4 +7067,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactChangeFailed => 'Could not change it. Try again.';
+
+  @override
+  String get contactReauthRequired =>
+      'Sign in again first, then change your number/e-mail';
+
+  @override
+  String get contactChangeTooMany => 'Too many changes — try again in an hour';
 }

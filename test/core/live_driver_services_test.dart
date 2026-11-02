@@ -382,6 +382,17 @@ void main() {
       },
     );
 
+    test('an answer without a version: a same-status projection is not '
+        'dropped as the own echo', () async {
+      answers
+        ..add((_) => json(200, {'tripId': 't1', 'status': 'driver_to_pickup'}))
+        ..add((_) => json(200, {'tripId': 't1', 'status': 'arrived'}));
+      final outcome = await trips.arrive('t1');
+      expect(outcome.ok, isTrue);
+      expect(trips.isOwnEcho('t1', 'arrived'), isFalse);
+      expect(trips.isOwnEcho('t1', 'arrived', version: 9), isFalse);
+    });
+
     test('not at the pickup: refused in plain words, the echo is not '
         'waited for', () async {
       trips.observe(trip('driver_to_pickup', 4));

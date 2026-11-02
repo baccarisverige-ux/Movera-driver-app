@@ -12180,6 +12180,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not change it. Try again.'**
   String get contactChangeFailed;
+
+  /// 403 reauth_required on phone/e-mail change.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again first, then change your number/e-mail'**
+  String get contactReauthRequired;
+
+  /// 429 change_too_many on phone/e-mail change.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many changes — try again in an hour'**
+  String get contactChangeTooMany;
 }
 
 class _AppLocalizationsDelegate

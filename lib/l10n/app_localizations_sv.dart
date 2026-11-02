@@ -7077,4 +7077,12 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get contactChangeFailed => 'Det gick inte att ändra. Försök igen.';
+
+  @override
+  String get contactReauthRequired =>
+      'Logga in igen först och ändra sedan ditt nummer/din e-post';
+
+  @override
+  String get contactChangeTooMany =>
+      'För många ändringar – försök igen om en timme';
 }

@@ -358,6 +358,26 @@ void main() {
       expect(find.text(tr.contactPhoneTaken), findsOneWidget);
     });
 
+    for (final (status, reason, text) in [
+      (403, 'reauth_required', () => tr.contactReauthRequired),
+      (429, 'change_too_many', () => tr.contactChangeTooMany),
+    ]) {
+      testWidgets('$status $reason has its own message', (tester) async {
+        await run(
+          tester,
+          ContactKind.email,
+          'new@example.test',
+          (_) => {
+            '_status': status,
+            'code': 'refused',
+            'reason': reason,
+            'message': 'x',
+          },
+        );
+        expect(find.text(text()), findsOneWidget);
+      });
+    }
+
     testWidgets('a new e-mail: change, then verify with its challenge', (
       tester,
     ) async {

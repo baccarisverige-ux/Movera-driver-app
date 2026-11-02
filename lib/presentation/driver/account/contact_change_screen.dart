@@ -55,6 +55,10 @@ class _ContactChangeScreenState extends State<ContactChangeScreen> {
           return tr.authCodeExpired;
         case 'invalid_phone':
           return tr.authInvalidMobileNumber;
+        case 'reauth_required':
+          return tr.contactReauthRequired;
+        case 'change_too_many':
+          return tr.contactChangeTooMany;
       }
     }
     return accountErrorMessage(error, fallback: tr.contactChangeFailed);

@@ -7192,4 +7192,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get contactChangeFailed => 'Impossible de le modifier. Réessayez.';
+
+  @override
+  String get contactReauthRequired =>
+      'Reconnectez-vous d\'abord, puis modifiez votre numéro/e-mail';
+
+  @override
+  String get contactChangeTooMany =>
+      'Trop de modifications — réessayez dans une heure';
 }

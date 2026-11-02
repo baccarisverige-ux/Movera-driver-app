@@ -167,6 +167,10 @@ class LiveTripCommands {
   /// the trip's status, so a status-only check dropped it).
   final Map<String, int> _ownVersion = {};
 
+  /// Trips whose last own command answer carried no version: nothing on
+  /// the stream is dropped as their echo.
+  final Set<String> _versionless = {};
+
   /// One Idempotency-Key per command (path and body) until it is answered.
   final Map<String, String> _keys = {};
 
@@ -203,6 +207,9 @@ class LiveTripCommands {
       return false;
     }
     final mine = _ownVersion[tripId];
+    // Own version unknown (the answer carried none): any projection may
+    // be newer, so it is never dropped as an echo.
+    if (_versionless.contains(tripId)) return false;
     if (version != null && mine != null && version > mine) return false;
     return true;
   }
@@ -215,6 +222,7 @@ class LiveTripCommands {
     _unsupported.remove(tripId);
     _own.remove(tripId);
     _ownVersion.remove(tripId);
+    _versionless.remove(tripId);
   }
 
   /// The trip screen opened: an accepted trip is on its way to the pickup
@@ -625,9 +633,16 @@ class LiveTripCommands {
         _keys.remove(signature);
         observe(answer);
         final answered = answer['version'];
-        _ownVersion[tripId] = answered is num
-            ? answered.toInt()
-            : (versionOf(tripId) ?? 0);
+        // An answer without a version leaves this phone's own version
+        // unknown: then nothing is filtered as its echo (a newer
+        // same-status projection must not be dropped).
+        if (answered is num) {
+          _ownVersion[tripId] = answered.toInt();
+          _versionless.remove(tripId);
+        } else {
+          _ownVersion.remove(tripId);
+          _versionless.add(tripId);
+        }
         return const LiveTripOutcome.ok();
       } on ApiError catch (error) {
         if (!error.isRetryable) _keys.remove(signature);

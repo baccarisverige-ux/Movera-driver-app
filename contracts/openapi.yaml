@@ -247,9 +247,11 @@ paths:
         one at once. v0.18.5 (owner G1-D3 "Show a message (Recommended)"): when POST /auth/refresh answers 401 the app signs
         out and its sign-in screen shows why, in sv / fr / en. The 401 reason says which. Reasons: session_expired = expired,
         session_ended = revoked, refresh_token_reused = revoked, refresh_token_unknown = revoked, signed_in_elsewhere = revoked.
-        v0.18.14: 6-digit code (test code 123456); otp_locked_today; countryLimits; one phone at a time for drivers: a new
-        driver sign-in ends his other sessions — their calls and POST /auth/refresh answer 401 reason signed_in_elsewhere
-        (auth.signedOut.reasons) and a notice kind signed_in_elsewhere is sent. Riders keep several phones.'
+        v0.18.14: Codes stay 4 digits (owner). otp_locked_today per number + address; admin unlock; countryLimits (wrongCodesPerDay,
+        codesPerAddressPerHour, codesPerPhonePerHour, uploadsPerHour). One phone at a time for drivers: a new driver sign-in
+        ends his other sessions — their calls and POST /auth/refresh answer 401 reason signed_in_elsewhere (auth.signedOut.reasons);
+        the old phone is set offline (the driver goes online again from the new phone) and a notice kind signed_in_elsewhere
+        is sent. Riders keep several phones.'
       tags:
       - Auth
       x-actor:
@@ -12861,15 +12863,66 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/Unavailable'
+  /admin/auth/sign-in-locks/unlock:
+    post:
+      operationId: unlockSignIn
+      summary: Lift a number's wrong-code lock
+      description: 'v0.18.14: POST /auth/otp/request → { requestId, sessionId, expiresAt, retryAfterSeconds }; POST /auth/otp/verify
+        { phone, sessionId, code } → tokens. A wrong code is 400 invalid_request (reason invalid_otp_code), an expired session
+        410 otp_expired, too many attempts 429 rate_limited (reason otp_too_many_attempts). v0.15.0: see auth.signInErrors.
+        v0.18.5 (G1-B3): the wrong code that reaches maxAttempts is itself answered 429 otp_too_many_attempts (the server
+        counts before it answers), so the 5th wrong code shows "Too many wrong tries". v0.18.14 (deep fix 2026-11-02, g1-g3
+        H2; owner "Keep 4 digits"): wrong codes are locked per number AND source (client address): after countryLimits.wrongCodesPerDay
+        wrong codes in 24 h from one address for one number, that address gets 429 rate_limited reason otp_locked_today for
+        that number (Retry-After = until the oldest leaves the 24 h window), on request and verify; an admin can lift it (POST
+        /admin/auth/sign-in-locks/unlock { phone }). Codes per number per hour and per address per hour are admin settings
+        (countryLimits).'
+      tags:
+      - Admin · Auth
+      x-actor:
+      - admin
+      parameters:
+      - $ref: '#/components/parameters/RequestId'
+      - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInUnlock'
+      responses:
+        '200':
+          description: No content
+          headers:
+            X-Request-Id:
+              description: Echo of the request id (server-generated if absent).
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /account/phone/change:
     post:
       operationId: startPhoneChange
       summary: 'Change my phone number: send a code to the new one'
-      description: 'v0.18.14: POST /account/phone/change { phone } → OtpChallenge (code to the new number; 409 phone_taken);
-        POST /account/phone/verify { phone, sessionId, code } → { phone } and a notice phone_changed. POST /account/email/change
-        { email } → { challengeId, expiresAt, delivery: pending_provider } (code to the new address once an e-mail provider
-        is connected); POST /account/email/verify { challengeId, code } → { email } and a notice email_changed. Wrong code
-        400 invalid_otp_code, 5 tries, 5 minutes (auth.otp).'
+      description: 'v0.18.14: POST /account/phone/change { phone } → OtpChallenge; POST /account/phone/verify { phone, sessionId,
+        code } → { phone }. POST /account/email/change { email } → { challengeId, expiresAt, delivery: pending_provider };
+        POST /account/email/verify { challengeId, code } → { email }. Only within 10 minutes of signing in on this phone (403
+        reauth_required: sign in again first); at most 3 starts per hour per account and kind (429 change_too_many). A number
+        or address that already has any account (rider or driver) gets the same answer and no code, and the verify fails like
+        a wrong session (invalid_otp_session / invalid_email_challenge) — the answer never tells. Wrong tries carry over a
+        restart (5 per hour, auth.otp). After the change: a notice to the OLD number / OLD address (sent by SMS / e-mail once
+        a provider is connected; recorded as pending until then), an in-app notice (phone_changed / email_changed), and every
+        other session of the account ends.'
       tags:
       - Account
       x-actor:
@@ -12912,11 +12965,15 @@ paths:
     post:
       operationId: verifyPhoneChange
       summary: Save the new phone number with its code
-      description: 'v0.18.14: POST /account/phone/change { phone } → OtpChallenge (code to the new number; 409 phone_taken);
-        POST /account/phone/verify { phone, sessionId, code } → { phone } and a notice phone_changed. POST /account/email/change
-        { email } → { challengeId, expiresAt, delivery: pending_provider } (code to the new address once an e-mail provider
-        is connected); POST /account/email/verify { challengeId, code } → { email } and a notice email_changed. Wrong code
-        400 invalid_otp_code, 5 tries, 5 minutes (auth.otp).'
+      description: 'v0.18.14: POST /account/phone/change { phone } → OtpChallenge; POST /account/phone/verify { phone, sessionId,
+        code } → { phone }. POST /account/email/change { email } → { challengeId, expiresAt, delivery: pending_provider };
+        POST /account/email/verify { challengeId, code } → { email }. Only within 10 minutes of signing in on this phone (403
+        reauth_required: sign in again first); at most 3 starts per hour per account and kind (429 change_too_many). A number
+        or address that already has any account (rider or driver) gets the same answer and no code, and the verify fails like
+        a wrong session (invalid_otp_session / invalid_email_challenge) — the answer never tells. Wrong tries carry over a
+        restart (5 per hour, auth.otp). After the change: a notice to the OLD number / OLD address (sent by SMS / e-mail once
+        a provider is connected; recorded as pending until then), an in-app notice (phone_changed / email_changed), and every
+        other session of the account ends.'
       tags:
       - Account
       x-actor:
@@ -12955,11 +13012,15 @@ paths:
     post:
       operationId: startEmailChange
       summary: 'Change my e-mail: send a code to the new one'
-      description: 'v0.18.14: POST /account/phone/change { phone } → OtpChallenge (code to the new number; 409 phone_taken);
-        POST /account/phone/verify { phone, sessionId, code } → { phone } and a notice phone_changed. POST /account/email/change
-        { email } → { challengeId, expiresAt, delivery: pending_provider } (code to the new address once an e-mail provider
-        is connected); POST /account/email/verify { challengeId, code } → { email } and a notice email_changed. Wrong code
-        400 invalid_otp_code, 5 tries, 5 minutes (auth.otp).'
+      description: 'v0.18.14: POST /account/phone/change { phone } → OtpChallenge; POST /account/phone/verify { phone, sessionId,
+        code } → { phone }. POST /account/email/change { email } → { challengeId, expiresAt, delivery: pending_provider };
+        POST /account/email/verify { challengeId, code } → { email }. Only within 10 minutes of signing in on this phone (403
+        reauth_required: sign in again first); at most 3 starts per hour per account and kind (429 change_too_many). A number
+        or address that already has any account (rider or driver) gets the same answer and no code, and the verify fails like
+        a wrong session (invalid_otp_session / invalid_email_challenge) — the answer never tells. Wrong tries carry over a
+        restart (5 per hour, auth.otp). After the change: a notice to the OLD number / OLD address (sent by SMS / e-mail once
+        a provider is connected; recorded as pending until then), an in-app notice (phone_changed / email_changed), and every
+        other session of the account ends.'
       tags:
       - Account
       x-actor:
@@ -13002,11 +13063,15 @@ paths:
     post:
       operationId: verifyEmailChange
       summary: Save the new e-mail with its code
-      description: 'v0.18.14: POST /account/phone/change { phone } → OtpChallenge (code to the new number; 409 phone_taken);
-        POST /account/phone/verify { phone, sessionId, code } → { phone } and a notice phone_changed. POST /account/email/change
-        { email } → { challengeId, expiresAt, delivery: pending_provider } (code to the new address once an e-mail provider
-        is connected); POST /account/email/verify { challengeId, code } → { email } and a notice email_changed. Wrong code
-        400 invalid_otp_code, 5 tries, 5 minutes (auth.otp).'
+      description: 'v0.18.14: POST /account/phone/change { phone } → OtpChallenge; POST /account/phone/verify { phone, sessionId,
+        code } → { phone }. POST /account/email/change { email } → { challengeId, expiresAt, delivery: pending_provider };
+        POST /account/email/verify { challengeId, code } → { email }. Only within 10 minutes of signing in on this phone (403
+        reauth_required: sign in again first); at most 3 starts per hour per account and kind (429 change_too_many). A number
+        or address that already has any account (rider or driver) gets the same answer and no code, and the verify fails like
+        a wrong session (invalid_otp_session / invalid_email_challenge) — the answer never tells. Wrong tries carry over a
+        restart (5 per hour, auth.otp). After the change: a notice to the OLD number / OLD address (sent by SMS / e-mail once
+        a provider is connected; recorded as pending until then), an in-app notice (phone_changed / email_changed), and every
+        other session of the account ends.'
       tags:
       - Account
       x-actor:
@@ -15257,7 +15322,8 @@ components:
             the driver''s active car (Driver.vehicleId) first even when it is not one of his fleet''s cars; every item has
             active: true|false. Dispatch offers a trip only when the active car is approved and has the trip''s category (a
             Komfort trip needs a Komfort car); re-approving a car without a ride type removes it from the chosen types of
-            its drivers.'
+            its drivers. An approved car with no categories stored does not narrow the driver''s chosen types (older rows;
+            the admin should re-approve it with its categories).'
     DriverAccountType:
       type: string
       enum:
@@ -17867,7 +17933,7 @@ components:
           $ref: '#/components/schemas/Language'
     OtpChallenge:
       type: object
-      description: The code is 6 digits and lives 300 s; at most 5 attempts.
+      description: The code is 4 digits and lives 300 s; at most 5 attempts.
       required:
       - requestId
       - sessionId
@@ -17897,7 +17963,7 @@ components:
           $ref: '#/components/schemas/Id'
         code:
           type: string
-          pattern: ^[0-9]{6}$
+          pattern: ^[0-9]{4}$
         linkToken:
           type: string
           minLength: 1
@@ -26432,8 +26498,8 @@ components:
           type: integer
           minimum: 3
           maximum: 100
-          description: Wrong sign-in codes per phone number in 24 h before the number is locked (429 otp_locked_today) until
-            the oldest leaves the window. Range 3–100.
+          description: Wrong sign-in codes for one phone number from one client address in 24 h before that address is locked
+            for that number (429 otp_locked_today) until the oldest leaves the window; admins can unlock. Range 3–100.
           default: 15
         codesPerAddressPerHour:
           type: integer
@@ -26448,6 +26514,12 @@ components:
           description: Document uploads per driver per hour (429 rate_limited reason upload_limit); the driver's country.
             Range 10–500.
           default: 30
+        codesPerPhonePerHour:
+          type: integer
+          minimum: 3
+          maximum: 60
+          description: Sign-in codes per phone number and app per hour (429 otp_too_many). Range 3–60.
+          default: 10
     AccountPhoneChange:
       type: object
       required:
@@ -26468,7 +26540,7 @@ components:
           $ref: '#/components/schemas/Id'
         code:
           type: string
-          pattern: ^[0-9]{6}$
+          pattern: ^[0-9]{4}$
     AccountEmailChange:
       type: object
       required:
@@ -26503,3 +26575,10 @@ components:
           $ref: '#/components/schemas/Id'
         code:
           type: string
+    SignInUnlock:
+      type: object
+      required:
+      - phone
+      properties:
+        phone:
+          $ref: '#/components/schemas/PhoneE164'
