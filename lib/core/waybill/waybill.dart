@@ -1,5 +1,6 @@
 import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/foundation.dart';
+import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/live/trip_finish.dart';
 import 'package:movera/core/money/money.dart';
 
@@ -160,6 +161,10 @@ class WaybillRecord {
   String get sourceText => switch (source) {
     exclusiveOfferSource => tr.exclusiveOffer,
     localDemoSource => tr.waybillLocalDemo,
+    // Live G8: a live trip restored without its source fell back to the
+    // demo name ("Movera · Demoradar" on live); live trips come from
+    // Movera Radar, the demo name is for the demo build only.
+    demoRadarSource when LiveDriverServices.active => tr.moveraRadar,
     demoRadarSource => tr.waybillDemoRadar,
     exclusiveReservationSource => tr.exclusiveReservation,
     scheduledRideSource => tr.scheduledRide,

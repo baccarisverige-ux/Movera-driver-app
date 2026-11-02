@@ -1892,6 +1892,18 @@ extension _AcceptRideTrip on _AcceptRideState {
 
   Future<bool> _yieldToAuthoritativeTerminal() async {
     if (!_pendingTerminal) return false;
+    // Live G8 3a: the server's `completed` echo of this driver's own
+    // finish (it arrives while the finish is saved) is not someone else's
+    // outcome: the driver's finish goes on to the finished screen ("Din
+    // andel", "Avslutad tidigt", the rating), never the generic
+    // "Trip completed / OK" sheet and Home.
+    final pending = _pendingProjection;
+    if (_completionInFlight &&
+        pending?.kind != DriverRealtimeKind.riderCancelled &&
+        pending?.status == TripStatus.completed) {
+      _pendingProjection = null;
+      return false;
+    }
     _completionInFlight = false;
     _cancellationInFlight = false;
     _stageTransitioning = false;

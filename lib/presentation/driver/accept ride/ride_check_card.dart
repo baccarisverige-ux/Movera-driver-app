@@ -559,57 +559,68 @@ class RideCheckCard extends StatelessWidget {
     );
   }
 
-  Widget _row(RideCheckTopic topic, {required bool last}) => Material(
-    type: MaterialType.transparency,
-    child: InkWell(
-      key: ValueKey('ride-check-row-${topic.name}'),
-      onTap: () => controller.choose(topic),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 9),
-        decoration: BoxDecoration(
-          border: last
-              ? null
-              : Border(
-                  bottom: BorderSide(
-                    color: RideCheckStyle.white(.12),
-                    width: .5,
+  // Live G8 a11y: each answer is a named button for a screen reader.
+  Widget _row(RideCheckTopic topic, {required bool last}) => Semantics(
+    button: true,
+    label: topic.label,
+    excludeSemantics: true,
+    onTap: () => controller.choose(topic),
+    child: Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        key: ValueKey('ride-check-row-${topic.name}'),
+        onTap: () => controller.choose(topic),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 9),
+          decoration: BoxDecoration(
+            border: last
+                ? null
+                : Border(
+                    bottom: BorderSide(
+                      color: RideCheckStyle.white(.12),
+                      width: .5,
+                    ),
+                  ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: topic.red
+                      ? RideCheckStyle.red.withValues(alpha: .22)
+                      : RideCheckStyle.white(.08),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: _solar(
+                  RideCheckStyle.topicIcon(topic),
+                  topic.red ? RideCheckStyle.redRowIcon : Colors.white,
+                  18,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Text(
+                  topic.text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    height: 1.25,
                   ),
                 ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: topic.red
-                    ? RideCheckStyle.red.withValues(alpha: .22)
-                    : RideCheckStyle.white(.08),
-                borderRadius: BorderRadius.circular(11),
               ),
-              child: _solar(
-                RideCheckStyle.topicIcon(topic),
-                topic.red ? RideCheckStyle.redRowIcon : Colors.white,
-                18,
+              const SizedBox(width: 8),
+              _solar(
+                AppAssets.solarAltArrowRight,
+                RideCheckStyle.white(.35),
+                15,
               ),
-            ),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Text(
-                topic.text,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  height: 1.25,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            _solar(AppAssets.solarAltArrowRight, RideCheckStyle.white(.35), 15),
-          ],
+            ],
+          ),
         ),
       ),
     ),

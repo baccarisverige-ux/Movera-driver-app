@@ -12024,6 +12024,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting'**
   String get walletPayoutPending;
+
+  /// No description provided for @g8StarLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{stars} of 5 stars'**
+  String g8StarLabel(int stars);
 }
 
 class _AppLocalizationsDelegate

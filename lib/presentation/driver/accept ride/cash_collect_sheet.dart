@@ -392,27 +392,33 @@ class CashCollectSheet extends StatelessWidget {
   }
 
   Widget _row(String label, String value, {Color? color, bool strong = false}) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: strong ? color ?? _ink : _muted,
-              fontSize: 13.5,
-              fontWeight: strong ? FontWeight.w800 : FontWeight.w600,
+    // Live G8 a11y: one line "label value" for a screen reader.
+    return Semantics(
+      container: true,
+      label: '$label $value',
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: strong ? color ?? _ink : _muted,
+                fontSize: 13.5,
+                fontWeight: strong ? FontWeight.w800 : FontWeight.w600,
+              ),
             ),
           ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: color ?? _ink,
-            fontSize: strong ? 15 : 13.5,
-            fontWeight: strong ? FontWeight.w900 : FontWeight.w700,
+          Text(
+            value,
+            style: TextStyle(
+              color: color ?? _ink,
+              fontSize: strong ? 15 : 13.5,
+              fontWeight: strong ? FontWeight.w900 : FontWeight.w700,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
