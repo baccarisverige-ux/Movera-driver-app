@@ -16,6 +16,7 @@ import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/core/ride/trip_live_details.dart';
 import 'package:movera/core/session/driving_time_clock.dart';
+import 'package:movera/presentation/driver/account/contact_change_screen.dart';
 import 'package:movera/presentation/driver/account/fleet_car_card.dart';
 import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_banner.dart';
 import 'package:movera/presentation/driver/accept%20ride/route_change_sheet.dart';
@@ -267,6 +268,121 @@ void main() {
         findsOneWidget,
       );
       expect(find.text(tr.fleetYourCar), findsOneWidget);
+    });
+  });
+
+  group('driver-g1 phone / e-mail change', () {
+    Future<List<http.Request>> run(
+      WidgetTester tester,
+      ContactKind kind,
+      String value,
+      Map<String, Object?> Function(http.Request) answer,
+    ) async {
+      final sent = <http.Request>[];
+      final api = ApiClient(
+        client: MockClient((request) async {
+          sent.add(request);
+          final body = answer(request);
+          return http.Response(
+            jsonEncode(body),
+            (body['_status'] as int?) ?? 200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+        baseUri: Uri.parse('https://api.test.movera.se'),
+        tokens: MemoryTokenStore()..save(access: 'a', refresh: 'r'),
+      );
+      final session = DriverAccountSession(
+        repository: DriverAccountRepository(api),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ContactChangeScreen(account: session, kind: kind),
+        ),
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('contact-value')),
+        value,
+      );
+      await tester.tap(find.byKey(const ValueKey('contact-submit')));
+      await tester.pumpAndSettle();
+      return sent;
+    }
+
+    testWidgets('a new number: change, then the code to verify', (
+      tester,
+    ) async {
+      final sent = await run(tester, ContactKind.phone, '+46701112233', (r) {
+        if (r.url.path.endsWith('/phone/change')) {
+          return {
+            'sessionId': 'ses_1',
+            'requestId': 'req_1',
+            'expiresAt': '2026-11-02T12:05:00Z',
+            'retryAfterSeconds': 30,
+          };
+        }
+        if (r.url.path.endsWith('/phone/verify')) {
+          return {'phone': '+46701112233'};
+        }
+        return {'driverId': 'd1', 'phone': '+46701112233'};
+      });
+      expect(sent.single.url.path, '/api/v1/account/phone/change');
+      expect(jsonDecode(sent.single.body), {'phone': '+46701112233'});
+      await tester.enterText(
+        find.byKey(const ValueKey('contact-code')),
+        '1234',
+      );
+      await tester.tap(find.byKey(const ValueKey('contact-submit')));
+      await tester.pumpAndSettle();
+      expect(sent[1].url.path, '/api/v1/account/phone/verify');
+      expect(jsonDecode(sent[1].body), {
+        'phone': '+46701112233',
+        'sessionId': 'ses_1',
+        'code': '1234',
+      });
+      expect(find.text(tr.contactPhoneSaved), findsOneWidget);
+    });
+
+    testWidgets('a number already used says so', (tester) async {
+      await run(
+        tester,
+        ContactKind.phone,
+        '+46701112233',
+        (_) => {
+          '_status': 409,
+          'code': 'conflict',
+          'reason': 'phone_taken',
+          'message': 'x',
+        },
+      );
+      expect(find.text(tr.contactPhoneTaken), findsOneWidget);
+    });
+
+    testWidgets('a new e-mail: change, then verify with its challenge', (
+      tester,
+    ) async {
+      final sent = await run(tester, ContactKind.email, 'ny@example.test', (r) {
+        if (r.url.path.endsWith('/email/change')) {
+          return {
+            'challengeId': 'ch_1',
+            'expiresAt': '2026-11-02T12:05:00Z',
+            'delivery': 'pending_provider',
+          };
+        }
+        if (r.url.path.endsWith('/email/verify')) {
+          return {'email': 'ny@example.test'};
+        }
+        return {'driverId': 'd1'};
+      });
+      expect(sent.single.url.path, '/api/v1/account/email/change');
+      await tester.enterText(
+        find.byKey(const ValueKey('contact-code')),
+        '4321',
+      );
+      await tester.tap(find.byKey(const ValueKey('contact-submit')));
+      await tester.pumpAndSettle();
+      expect(jsonDecode(sent[1].body), {'challengeId': 'ch_1', 'code': '4321'});
+      expect(find.text(tr.contactEmailSaved), findsOneWidget);
     });
   });
 

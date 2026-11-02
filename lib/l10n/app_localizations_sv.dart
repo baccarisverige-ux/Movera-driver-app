@@ -7032,4 +7032,49 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get authErrLockedToday =>
       'För många fel koder i dag. Försök igen senare.';
+
+  @override
+  String get contactChangePhone => 'Ändra telefonnummer';
+
+  @override
+  String get contactChangeEmail => 'Ändra e-post';
+
+  @override
+  String get contactNewPhone => 'Nytt telefonnummer';
+
+  @override
+  String get contactNewEmail => 'Ny e-postadress';
+
+  @override
+  String get contactSendCode => 'Skicka kod';
+
+  @override
+  String get contactCodeSentPhone =>
+      'Vi har skickat en kod till det nya numret.';
+
+  @override
+  String get contactCodeSentEmail =>
+      'Vi skickar en kod till den nya e-postadressen.';
+
+  @override
+  String get contactCode => 'Kod';
+
+  @override
+  String get contactSave => 'Spara';
+
+  @override
+  String get contactPhoneSaved => 'Telefonnumret har ändrats';
+
+  @override
+  String get contactEmailSaved => 'E-postadressen har ändrats';
+
+  @override
+  String get contactPhoneTaken => 'Numret används redan av ett annat konto';
+
+  @override
+  String get contactEmailTaken =>
+      'E-postadressen används redan av ett annat konto';
+
+  @override
+  String get contactChangeFailed => 'Det gick inte att ändra. Försök igen.';
 }

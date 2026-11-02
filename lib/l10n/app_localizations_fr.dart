@@ -7147,4 +7147,49 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get authErrLockedToday =>
       'Trop de codes erronés aujourd’hui. Réessayez plus tard.';
+
+  @override
+  String get contactChangePhone => 'Changer de numéro de téléphone';
+
+  @override
+  String get contactChangeEmail => 'Changer d’e-mail';
+
+  @override
+  String get contactNewPhone => 'Nouveau numéro de téléphone';
+
+  @override
+  String get contactNewEmail => 'Nouvel e-mail';
+
+  @override
+  String get contactSendCode => 'Envoyer le code';
+
+  @override
+  String get contactCodeSentPhone =>
+      'Nous avons envoyé un code au nouveau numéro.';
+
+  @override
+  String get contactCodeSentEmail => 'Nous envoyons un code au nouvel e-mail.';
+
+  @override
+  String get contactCode => 'Code';
+
+  @override
+  String get contactSave => 'Enregistrer';
+
+  @override
+  String get contactPhoneSaved => 'Numéro de téléphone modifié';
+
+  @override
+  String get contactEmailSaved => 'E-mail modifié';
+
+  @override
+  String get contactPhoneTaken =>
+      'Ce numéro est déjà utilisé par un autre compte';
+
+  @override
+  String get contactEmailTaken =>
+      'Cet e-mail est déjà utilisé par un autre compte';
+
+  @override
+  String get contactChangeFailed => 'Impossible de le modifier. Réessayez.';
 }
