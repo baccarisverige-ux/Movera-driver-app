@@ -343,8 +343,18 @@ void main() {
   testWidgets(
     'owner "Can\'t write": a solved ticket has no box and offers New ticket',
     (tester) async {
+      final seen = <http.Request>[];
       final tickets = ServerSupportTickets(
-        api: _api(<http.Request>[], (request) {
+        api: _api(seen, (request) {
+          if (request.url.path.endsWith('/feedback')) {
+            return _json({
+              ..._ticket('tkt_1', 'resolved', answer: true),
+              'feedback': {
+                'text': 'Snabb hjälp, tack!',
+                'at': '2026-10-27T10:00:00Z',
+              },
+            }, 201);
+          }
           if (request.url.path.endsWith('/tkt_1')) {
             return _json(_ticket('tkt_1', 'resolved', answer: true));
           }
@@ -365,6 +375,20 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('live-ticket-reply')), findsNothing);
       expect(find.text(tr.supportTicketClosedNote), findsOneWidget);
+      // Owner "Not rating only comment suggestions": no stars, a comment.
+      await tester.enterText(
+        find.byKey(const ValueKey('live-ticket-comment')),
+        'Snabb hjälp, tack!',
+      );
+      await tester.tap(find.byKey(const ValueKey('live-ticket-comment-send')));
+      await tester.pumpAndSettle();
+      final sent = seen.lastWhere((r) => r.method == 'POST');
+      expect(sent.url.path, '/api/v1/support/tickets/tkt_1/feedback');
+      expect(jsonDecode(sent.body), {'text': 'Snabb hjälp, tack!'});
+      expect(
+        find.byKey(const ValueKey('live-ticket-comment-done')),
+        findsOneWidget,
+      );
       await tester.tap(find.byKey(const ValueKey('live-ticket-new-again')));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('live-ticket-send')), findsOneWidget);

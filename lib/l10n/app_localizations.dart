@@ -12276,6 +12276,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New ticket'**
   String get supportNewTicket;
+
+  /// No description provided for @supportCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Any comment or idea for us? (optional)'**
+  String get supportCommentHint;
+
+  /// No description provided for @supportCommentSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send comment'**
+  String get supportCommentSend;
+
+  /// No description provided for @supportCommentThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for your comment.'**
+  String get supportCommentThanks;
 }
 
 class _AppLocalizationsDelegate

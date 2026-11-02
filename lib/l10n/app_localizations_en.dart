@@ -7119,4 +7119,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportNewTicket => 'New ticket';
+
+  @override
+  String get supportCommentHint => 'Any comment or idea for us? (optional)';
+
+  @override
+  String get supportCommentSend => 'Send comment';
+
+  @override
+  String get supportCommentThanks => 'Thanks for your comment.';
 }

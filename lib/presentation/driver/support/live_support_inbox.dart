@@ -196,6 +196,30 @@ class _LiveTicketState extends State<_LiveTicket> {
     }
   }
 
+  /// Owner "Not rating only comment suggestions": no stars, an optional
+  /// comment once the ticket is solved.
+  Future<void> _comment() async {
+    final text = _reply.text.trim();
+    if (text.isEmpty || _sending) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      final next = await widget.tickets.comment(widget.ticketId, text);
+      _reply.clear();
+      setState(() {
+        _ticket = Future.value(next);
+        _sending = false;
+      });
+    } catch (_) {
+      setState(() {
+        _sending = false;
+        _error = tr.supportReplyFailed;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tr.support)),
@@ -275,6 +299,30 @@ class _LiveTicketState extends State<_LiveTicket> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(tr.supportTicketClosedNote),
+                    const SizedBox(height: 8),
+                    if (ticket.feedback != null)
+                      Text(
+                        tr.supportCommentThanks,
+                        key: const ValueKey<String>('live-ticket-comment-done'),
+                      )
+                    else ...[
+                      TextField(
+                        key: const ValueKey<String>('live-ticket-comment'),
+                        controller: _reply,
+                        maxLength: 2000,
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: tr.supportCommentHint,
+                          counterText: '',
+                        ),
+                      ),
+                      TextButton(
+                        key: const ValueKey<String>('live-ticket-comment-send'),
+                        onPressed: _sending ? null : _comment,
+                        child: Text(tr.supportCommentSend),
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     FilledButton(
                       key: const ValueKey<String>('live-ticket-new-again'),

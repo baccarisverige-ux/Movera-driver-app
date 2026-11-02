@@ -7245,4 +7245,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportNewTicket => 'Nouveau ticket';
+
+  @override
+  String get supportCommentHint =>
+      'Un commentaire ou une idée pour nous ? (facultatif)';
+
+  @override
+  String get supportCommentSend => 'Envoyer le commentaire';
+
+  @override
+  String get supportCommentThanks => 'Merci pour votre commentaire.';
 }

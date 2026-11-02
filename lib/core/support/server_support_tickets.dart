@@ -39,6 +39,7 @@ class ServerTicket {
     required this.category,
     required this.status,
     this.messages = const <ServerTicketMessage>[],
+    this.feedback,
   });
 
   final String id;
@@ -49,11 +50,16 @@ class ServerTicket {
   final String status;
   final List<ServerTicketMessage> messages;
 
+  /// v0.18.15 (owner "Not rating only comment suggestions"): the driver's
+  /// optional comment after the ticket was solved.
+  final String? feedback;
+
   static ServerTicket fromJson(Map<String, dynamic> json) => ServerTicket(
     id: json['ticketId']?.toString() ?? '',
     subject: json['subject']?.toString() ?? '',
     category: json['category']?.toString() ?? '',
     status: json['status']?.toString() ?? 'open',
+    feedback: (json['feedback'] as Map?)?['text']?.toString(),
     messages: [
       for (final item in (json['messages'] as List? ?? const []))
         if (item is Map)
@@ -127,6 +133,16 @@ class ServerSupportTickets {
           '/api/v1/support/tickets/${Uri.encodeComponent(ticketId)}/messages',
           body: {'text': text.trim()},
           idempotencyKey: 'ticket-msg-${ApiClient.randomKey()}',
+        ),
+      );
+
+  /// v0.18.15: an optional comment once the ticket is solved (no stars).
+  Future<ServerTicket> comment(String ticketId, String text) async =>
+      ServerTicket.fromJson(
+        await _api.post(
+          '/api/v1/support/tickets/${Uri.encodeComponent(ticketId)}/feedback',
+          body: {'text': text.trim()},
+          idempotencyKey: 'ticket-fb-${ApiClient.randomKey()}',
         ),
       );
 

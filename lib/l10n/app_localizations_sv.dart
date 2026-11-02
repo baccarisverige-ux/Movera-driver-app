@@ -7130,4 +7130,14 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get supportNewTicket => 'Nytt ärende';
+
+  @override
+  String get supportCommentHint =>
+      'Har du en kommentar eller idé till oss? (valfritt)';
+
+  @override
+  String get supportCommentSend => 'Skicka kommentar';
+
+  @override
+  String get supportCommentThanks => 'Tack för din kommentar.';
 }
