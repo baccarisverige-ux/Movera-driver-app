@@ -83,7 +83,7 @@ class DriverAppConfig {
   /// App languages and the country's default per app (Q48/Q49).
   final AppLanguages languages;
 
-  /// Zone payment methods (`cash`, `card`, `apple_pay`, `google_pay`; Q7).
+  /// Zone payment methods (`cash`, `card`, `apple_pay`; Q7; v0.18.10 no Google Pay).
   final List<String> paymentMethods;
 
   /// `booking.maxStops` (Q39).

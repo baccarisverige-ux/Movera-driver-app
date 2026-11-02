@@ -81,18 +81,11 @@ abstract final class ZoneDefaults {
   static const languages = <String>['en', 'fr', 'sv'];
 
   /// `contract.json#zonePaymentMethods` (owner Q7). No Swish, no D17.
-  static const paymentMethods = <String>[
-    'cash',
-    'card',
-    'apple_pay',
-    'google_pay',
-  ];
+  /// v0.18.10 (owner G8 item 2): Google Pay is gone.
+  static const paymentMethods = <String>['cash', 'card', 'apple_pay'];
 
   /// v0.3 ids read as their v0.4 names for one release.
-  static const paymentMethodAliases = <String, String>{
-    'apple': 'apple_pay',
-    'google': 'google_pay',
-  };
+  static const paymentMethodAliases = <String, String>{'apple': 'apple_pay'};
 
   static const maxStops = 3;
   // Contract v0.18.7 (G5 status item 4, note check 2026-10-29): 200 m.

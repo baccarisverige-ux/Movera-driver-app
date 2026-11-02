@@ -17,7 +17,6 @@ abstract final class OfferWire {
     'cash': 'Cash',
     'card': 'Card',
     'apple_pay': 'Apple Pay',
-    'google_pay': 'Google Pay',
     'wallet': 'Wallet',
   };
 

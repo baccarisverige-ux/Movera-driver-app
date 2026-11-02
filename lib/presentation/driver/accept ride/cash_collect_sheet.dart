@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/earnings/cash_balance.dart';
+import 'package:movera/core/live/trip_finish.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:movera/widgets/owned_route_exit.dart';
 
@@ -18,6 +19,9 @@ Future<bool> showCashCollectSheet(
   required String riderName,
   String category = '',
   bool recalculated = false,
+  String? earlyEndNote,
+  List<EarningsLine> breakdown = const [],
+  bool riderEnded = false,
 }) async {
   final done = await showModalBottomSheet<bool>(
     context: context,
@@ -30,7 +34,12 @@ Future<bool> showCashCollectSheet(
       riderName: riderName,
       category: category,
       recalculated: recalculated,
+      earlyEndNote: earlyEndNote,
+      breakdown: breakdown,
+      riderEnded: riderEnded,
     ),
+    isDismissible: !riderEnded,
+    enableDrag: !riderEnded,
   );
   return done == true;
 }
@@ -43,6 +52,9 @@ class CashCollectSheet extends StatelessWidget {
     required this.riderName,
     this.category = '',
     this.recalculated = false,
+    this.earlyEndNote,
+    this.breakdown = const [],
+    this.riderEnded = false,
   }) : cash = cash ?? fare;
 
   /// The driver's own money for the trip, after Movera's commission
@@ -60,6 +72,17 @@ class CashCollectSheet extends StatelessWidget {
   /// the sheet says so above the amount.
   final bool recalculated;
 
+  /// v0.18.10 (owner G8 Q2): "The price is for the distance driven." or
+  /// "The booked price applies." in place of the older notice.
+  final String? earlyEndNote;
+
+  /// v0.18.10 (owner G8 Q3): the lines of [fare] ("Din andel").
+  final List<EarningsLine> breakdown;
+
+  /// Owner G8 Q1: the rider ended the trip on board; the trip is already
+  /// over, so there is no "Not yet" and the button goes on to the rating.
+  final bool riderEnded;
+
   /// Share of the screen the sheet covers.
   static const double heightFactor = 0.76;
 
@@ -74,11 +97,10 @@ class CashCollectSheet extends StatelessWidget {
   static String _short(String label) =>
       Money.parseLabel(label)?.formattedShort ?? label;
 
-  String get _finishLabel => category.trim().isEmpty
-      ? driverText(DriverTexts.tripFinishRide)
-      : driverText(DriverTexts.tripFinishCategory, {
-          'category': category.trim(),
-        });
+  /// G8 (live 2026-11-01): the button names the action, "Avsluta resan",
+  /// never the category's brand name ("Avsluta Movera").
+  String get _finishLabel =>
+      riderEnded ? tr.g8Continue : driverText(DriverTexts.tripFinishRide);
 
   @override
   Widget build(BuildContext context) {
@@ -125,9 +147,12 @@ class CashCollectSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  first.isEmpty
+                  riderEnded
+                      ? tr.g8RiderEndedCollect(amount)
+                      : first.isEmpty
                       ? tr.takeCashBeforeYouFinish
                       : tr.takeCashFromFirstBeforeYou(first),
+                  key: const ValueKey<String>('cash-collect-subtitle'),
                   style: const TextStyle(
                     color: _muted,
                     fontSize: 13.5,
@@ -140,7 +165,7 @@ class CashCollectSheet extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (recalculated) ...[
+                        if (earlyEndNote != null || recalculated) ...[
                           _recalculatedNotice(),
                           const SizedBox(height: 12),
                         ],
@@ -177,18 +202,19 @@ class CashCollectSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                TextButton(
-                  key: const ValueKey<String>('cash-not-yet'),
-                  onPressed: () => popOwned(context, false),
-                  child: Text(
-                    tr.notYet,
-                    style: TextStyle(
-                      color: _ink,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                if (!riderEnded)
+                  TextButton(
+                    key: const ValueKey<String>('cash-not-yet'),
+                    onPressed: () => popOwned(context, false),
+                    child: Text(
+                      tr.notYet,
+                      style: TextStyle(
+                        color: _ink,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -212,7 +238,7 @@ class CashCollectSheet extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              tr.cashPriceRecalculatedEarlyEnd,
+              earlyEndNote ?? tr.cashPriceRecalculatedEarlyEnd,
               style: const TextStyle(
                 color: Color(0xFF5C3D00),
                 fontSize: 14,
@@ -326,7 +352,13 @@ class CashCollectSheet extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _row(tr.yourEarnings, _short(fare)),
+          _row(tr.g8YourShare, _short(fare), strong: true),
+          for (final line in breakdown)
+            if (breakdown.length > 1 || line.code != 'trip')
+              Padding(
+                padding: const EdgeInsets.only(top: 4, left: 10),
+                child: _row(line.label, line.amount.formattedShort),
+              ),
           const SizedBox(height: 8),
           _row(tr.cashFromRider, _short(cash)),
           const Padding(

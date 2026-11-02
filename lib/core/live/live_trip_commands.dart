@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/live/live_error_message.dart';
+import 'package:movera/core/live/trip_finish.dart';
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/money/money.dart';
 
@@ -30,6 +31,9 @@ class CompletePreview {
     required this.cashDue,
     required this.earlyEnd,
     this.driverEarnings,
+    this.driverTotal,
+    this.earningsBreakdown = const [],
+    this.repriced,
   });
 
   /// The answer's money, or null when it is not a `CompletePreview`.
@@ -41,6 +45,8 @@ class CompletePreview {
       final earnings = json['driverEarnings'];
       if (total is! Map || cash is! Map || early is! bool) return null;
       final id = json['previewId'];
+      final driverTotal = json['driverTotal'];
+      final repriced = json['repriced'];
       final parsed = CompletePreview(
         previewId: id is String && id.isNotEmpty ? id : null,
         total: Money.fromJson(Map<String, dynamic>.from(total)),
@@ -49,6 +55,11 @@ class CompletePreview {
         driverEarnings: earnings is Map
             ? Money.fromJson(Map<String, dynamic>.from(earnings))
             : null,
+        driverTotal: driverTotal is Map
+            ? Money.fromJson(Map<String, dynamic>.from(driverTotal))
+            : null,
+        earningsBreakdown: EarningsLine.parseList(json['earningsBreakdown']),
+        repriced: repriced is bool ? repriced : null,
       );
       return parsed.cashDue.currency == parsed.total.currency ? parsed : null;
     } on FormatException {
@@ -65,6 +76,20 @@ class CompletePreview {
 
   /// The driver's part of [total]; null from a server that leaves it out.
   final Money? driverEarnings;
+
+  /// v0.18.10 (owner G8 Q3): "Din andel", the same number as the finished
+  /// screen (pickup pay, bonus, tip and Movera's changes in it).
+  final Money? driverTotal;
+  final List<EarningsLine> earningsBreakdown;
+
+  /// v0.18.10 (owner G8 Q2): on an early end, true when the price was
+  /// worked out again for the distance driven, false when the booked price
+  /// stands; null from an older server.
+  final bool? repriced;
+
+  /// The driver's money for the sheet: [driverTotal], else the older
+  /// [driverEarnings].
+  Money? get yourShare => driverTotal ?? driverEarnings;
 }
 
 /// A device fix as the contract's `GeoFix` (`{lat, lng, accuracy,

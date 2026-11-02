@@ -83,7 +83,6 @@ String? driverTextTemplate(AppLocalizations l, String id) => switch (id) {
   'trip.goToDropoff' => l.tripGoToDropoff,
   'trip.collectCash' => l.tripCollectCash,
   'trip.completeRide' => l.tripCompleteRide,
-  'trip.finishCategory' => l.tripFinishCategory('{category}'),
   'trip.finishRide' => l.tripFinishRide,
   _ => null,
 };

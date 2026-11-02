@@ -2146,11 +2146,6 @@ class AppLocalizationsSv extends AppLocalizations {
   String get tripCompleteRide => 'Avsluta resan';
 
   @override
-  String tripFinishCategory(Object category) {
-    return 'Avsluta $category';
-  }
-
-  @override
   String get tripFinishRide => 'Avsluta resan';
 
   @override
@@ -6894,6 +6889,60 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get g7RouteWithdrawnIsland => 'Resenären drog tillbaka ändringen';
+
+  @override
+  String get g8LineTrip => 'Resa';
+
+  @override
+  String get g8LinePickupPay => 'Upphämtning';
+
+  @override
+  String get g8LineBonus => 'Bonus';
+
+  @override
+  String get g8LineTip => 'Dricks';
+
+  @override
+  String get g8LineAdjustment => 'Ändrat av Movera';
+
+  @override
+  String get g8YourShare => 'Din andel';
+
+  @override
+  String g8TipGot(String amount) {
+    return 'Dricks från resenären: $amount';
+  }
+
+  @override
+  String g8TipCash(String amount) {
+    return 'Resenären ger dig $amount i dricks kontant.';
+  }
+
+  @override
+  String g8RiderEndedCollect(String amount) {
+    return 'Resenären avslutade resan. Ta betalt $amount.';
+  }
+
+  @override
+  String get g8PricedForDriven => 'Priset gäller sträckan som körts.';
+
+  @override
+  String get g8BookedPriceStands => 'Det bokade priset gäller.';
+
+  @override
+  String get g8EndedEarly => 'Avslutad i förtid';
+
+  @override
+  String get g8RiderEnded => 'Resenären avslutade resan i förtid.';
+
+  @override
+  String get g8DriverEnded => 'Föraren avslutade resan före målet.';
+
+  @override
+  String get g8DebtLine => 'Tidigare obetald avgift (till den resan)';
+
+  @override
+  String get g8Continue => 'Fortsätt';
 
   @override
   String get liveDrivingLogsSoon =>
