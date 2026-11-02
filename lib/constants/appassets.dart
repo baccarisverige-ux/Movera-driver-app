@@ -105,6 +105,8 @@ class AppAssets {
   static const String mapSafety = 'assets/icons/map_safety.svg';
   // Owner 2026-10-29 G5-3 "Use the Waze logo": the only brand mark allowed, on the navigation button.
   static const String mapWaze = 'assets/icons/map_waze.svg';
+  // Owner G5-3: "Google Maps keeps current" — its logo on the navigation button.
+  static const String mapGoogle = 'assets/icons/map_google.svg';
   static const String mapRecenter = 'assets/icons/map_recenter.svg';
   // Side menu line icons
   static const String menuProfile = 'assets/icons/menu_profile.svg';
