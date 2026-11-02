@@ -7123,8 +7123,11 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get supportTicketClosedNote =>
-      'Den här konversationen är stängd. Skriv ett nytt meddelande till Movera om du behöver mer hjälp.';
+      'Det här ärendet är löst. Öppna ett nytt ärende om du behöver mer hjälp.';
 
   @override
   String get supportReplyFailed => 'Meddelandet skickades inte. Försök igen.';
+
+  @override
+  String get supportNewTicket => 'Nytt ärende';
 }

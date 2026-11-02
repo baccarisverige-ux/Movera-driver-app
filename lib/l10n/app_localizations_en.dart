@@ -7112,8 +7112,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportTicketClosedNote =>
-      'This conversation is closed. Write a new message to Movera if you need more help.';
+      'This conversation is solved. Open a new ticket if you need more help.';
 
   @override
   String get supportReplyFailed => 'The message was not sent. Try again.';
+
+  @override
+  String get supportNewTicket => 'New ticket';
 }

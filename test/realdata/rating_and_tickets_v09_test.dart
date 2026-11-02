@@ -340,6 +340,37 @@ void main() {
     });
   });
 
+  testWidgets(
+    'owner "Can\'t write": a solved ticket has no box and offers New ticket',
+    (tester) async {
+      final tickets = ServerSupportTickets(
+        api: _api(<http.Request>[], (request) {
+          if (request.url.path.endsWith('/tkt_1')) {
+            return _json(_ticket('tkt_1', 'resolved', answer: true));
+          }
+          if (request.url.path.endsWith('/topics')) {
+            return _json({'topics': supportTopics});
+          }
+          return _json({
+            'items': [_ticket('tkt_1', 'resolved')],
+            'nextCursor': null,
+          });
+        }),
+      );
+      await tester.pumpWidget(
+        MaterialApp(home: LiveSupportInbox(tickets: tickets)),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('live-ticket-tkt_1')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('live-ticket-reply')), findsNothing);
+      expect(find.text(tr.supportTicketClosedNote), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('live-ticket-new-again')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('live-ticket-send')), findsOneWidget);
+    },
+  );
+
   testWidgets('live inbox: a failed load offers retry', (tester) async {
     final tickets = ServerSupportTickets(
       api: _api(

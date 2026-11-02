@@ -12262,7 +12262,7 @@ abstract class AppLocalizations {
   /// No description provided for @supportTicketClosedNote.
   ///
   /// In en, this message translates to:
-  /// **'This conversation is closed. Write a new message to Movera if you need more help.'**
+  /// **'This conversation is solved. Open a new ticket if you need more help.'**
   String get supportTicketClosedNote;
 
   /// No description provided for @supportReplyFailed.
@@ -12270,6 +12270,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The message was not sent. Try again.'**
   String get supportReplyFailed;
+
+  /// No description provided for @supportNewTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'New ticket'**
+  String get supportNewTicket;
 }
 
 class _AppLocalizationsDelegate

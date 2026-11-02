@@ -7238,8 +7238,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportTicketClosedNote =>
-      'Cette conversation est fermée. Écrivez un nouveau message à Movera si vous avez encore besoin d\'aide.';
+      'Ce ticket est résolu. Ouvrez un nouveau ticket si vous avez encore besoin d\'aide.';
 
   @override
   String get supportReplyFailed => 'Le message n\'a pas été envoyé. Réessayez.';
+
+  @override
+  String get supportNewTicket => 'Nouveau ticket';
 }

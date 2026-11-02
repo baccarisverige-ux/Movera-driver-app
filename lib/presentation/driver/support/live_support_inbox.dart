@@ -42,8 +42,9 @@ class _LiveSupportInboxState extends State<LiveSupportInbox> {
     );
     if (sent == true) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(tr.supportSentToMovera)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr.supportSentToMovera)));
       }
       _reload();
     }
@@ -101,14 +102,18 @@ class _LiveSupportInboxState extends State<LiveSupportInbox> {
                 title: Text(ticket.subject),
                 subtitle: Text(liveTicketStatus(ticket.status)),
                 trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => _LiveTicket(
-                      ticketId: ticket.id,
-                      tickets: widget.tickets,
+                onTap: () async {
+                  // Owner "Can't write": a solved ticket offers "New ticket".
+                  final again = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute<bool>(
+                      builder: (_) => _LiveTicket(
+                        ticketId: ticket.id,
+                        tickets: widget.tickets,
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                  if (again == true && mounted) await _write();
+                },
               ),
             ),
         ],
@@ -260,11 +265,24 @@ class _LiveTicketState extends State<_LiveTicket> {
                 ],
               ),
             ),
-            if (ticket.status == 'closed')
+            // Owner 2026-11-02 "Can't write": solved and closed tickets take no
+            // more messages; the driver opens a new ticket.
+            if (ticket.status == 'closed' || ticket.status == 'resolved')
               Padding(
                 key: const ValueKey<String>('live-ticket-closed'),
                 padding: const EdgeInsets.all(16),
-                child: Text(tr.supportTicketClosedNote),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(tr.supportTicketClosedNote),
+                    const SizedBox(height: 8),
+                    FilledButton(
+                      key: const ValueKey<String>('live-ticket-new-again'),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: Text(tr.supportNewTicket),
+                    ),
+                  ],
+                ),
               )
             else
               SafeArea(
