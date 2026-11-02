@@ -7025,4 +7025,11 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get liveTripPositionStale =>
       'Din position är för gammal – slå på platstjänster';
+
+  @override
+  String get authSignedOutElsewhere => 'Inloggad på en annan telefon';
+
+  @override
+  String get authErrLockedToday =>
+      'För många fel koder i dag. Försök igen senare.';
 }

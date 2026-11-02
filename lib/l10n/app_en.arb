@@ -4298,5 +4298,9 @@
   "offlineReasonDocumentsExpired": "A document has expired. Upload the new one to drive again.",
   "@offlineReasonDocumentsExpired": {"description": "Contract v0.18.14 driverHome.setOffline reason documents_expired: the offline card's reason."},
   "liveTripPositionStale": "Your position is too old – turn on location",
-  "@liveTripPositionStale": {"description": "Contract v0.18.14 positionMaxAge: arrive refused 409 position_stale even after a fresh fix."}
+  "@liveTripPositionStale": {"description": "Contract v0.18.14 positionMaxAge: arrive refused 409 position_stale even after a fresh fix."},
+  "authSignedOutElsewhere": "Signed in on another phone",
+  "@authSignedOutElsewhere": {"description": "Contract v0.18.14 sign-in (authSignedOutElsewhere)."},
+  "authErrLockedToday": "Too many wrong codes today. Try again later.",
+  "@authErrLockedToday": {"description": "Contract v0.18.14 sign-in (authErrLockedToday)."}
 }

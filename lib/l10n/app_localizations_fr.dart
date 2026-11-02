@@ -7140,4 +7140,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get liveTripPositionStale =>
       'Votre position est trop ancienne – activez la localisation';
+
+  @override
+  String get authSignedOutElsewhere => 'Connecté sur un autre téléphone';
+
+  @override
+  String get authErrLockedToday =>
+      'Trop de codes erronés aujourd’hui. Réessayez plus tard.';
 }

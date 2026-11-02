@@ -12084,6 +12084,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your position is too old – turn on location'**
   String get liveTripPositionStale;
+
+  /// Contract v0.18.14 sign-in (authSignedOutElsewhere).
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in on another phone'**
+  String get authSignedOutElsewhere;
+
+  /// Contract v0.18.14 sign-in (authErrLockedToday).
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong codes today. Try again later.'**
+  String get authErrLockedToday;
 }
 
 class _AppLocalizationsDelegate

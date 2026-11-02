@@ -1993,5 +1993,7 @@
   "hearingComingSoon": "Informer les passagers de votre audition arrive bientôt.",
   "suspendedShortBody": "Votre compte est en pause. Contactez le support.",
   "offlineReasonDocumentsExpired": "Un document a expiré. Envoyez le nouveau pour rouler à nouveau.",
-  "liveTripPositionStale": "Votre position est trop ancienne – activez la localisation"
+  "liveTripPositionStale": "Votre position est trop ancienne – activez la localisation",
+  "authSignedOutElsewhere": "Connecté sur un autre téléphone",
+  "authErrLockedToday": "Trop de codes erronés aujourd’hui. Réessayez plus tard."
 }

@@ -13,10 +13,16 @@ abstract final class SignedOutNotice {
     'session_ended': revoked,
     'refresh_token_reused': revoked,
     'refresh_token_unknown': revoked,
+    'signed_in_elsewhere': revoked,
   };
 
   static const String expired = 'expired';
   static const String revoked = 'revoked';
+
+  /// Contract v0.18.14 `auth.signedOut.elsewhereTexts`: one phone at a
+  /// time for a driver; a sign-in on another phone ended this one ("Signed
+  /// in on another phone" as the detail line).
+  static const String elsewhere = 'elsewhere';
 
   /// The kind to show on Sign in ([expired], [revoked], or '' when the
   /// server gave no known reason: the message without a detail line);
@@ -25,7 +31,9 @@ abstract final class SignedOutNotice {
 
   /// The refresh was refused with this 401 [reason].
   static void sessionRefused(String? reason) {
-    kind.value = reasons[reason] ?? '';
+    kind.value = reason == 'signed_in_elsewhere'
+        ? elsewhere
+        : reasons[reason] ?? '';
   }
 
   /// The driver's own Sign out, or a new sign-in: nothing to say.
