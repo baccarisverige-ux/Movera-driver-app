@@ -257,9 +257,10 @@ class RideOffer {
   /// first to accept wins). Null for a direct assign.
   final String? groupId;
 
-  /// Q18: the "Priority" badge shows when admin marked the offer or added
-  /// money to it.
-  bool get isPriority => priority || (driverBonus?.minorUnits ?? 0) > 0;
+  /// Q18: the "Priority" badge shows when the offer is marked priority. Admin
+  /// marks added money as priority by default and can untick it, so the
+  /// money alone never shows the badge (live test 2026-11-02).
+  bool get isPriority => priority;
 
   /// Contract §3.1: an admin direct assign (`source: admin`, no radar
   /// group). It is an Exclusive offer for this driver, never a Radar trip.
