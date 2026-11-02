@@ -255,6 +255,11 @@ void main() {
     testWidgets('a test build lists the driver numbers with their status; a '
         'tap fills the phone field', (tester) async {
       await _pumpSignIn(tester, _controller(accounts), showTestAccounts: true);
+      expect(find.byKey(const ValueKey('auth-test-accounts')), findsNothing);
+      final button = find.byKey(const ValueKey('auth-test-numbers-button'));
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
       expect(find.byKey(const ValueKey('auth-test-accounts')), findsOneWidget);
       expect(find.text(tr.authTestStatusNew), findsOneWidget);
       expect(find.text(tr.swDriverAccountStatusActive), findsOneWidget);

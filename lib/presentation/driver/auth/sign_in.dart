@@ -12,6 +12,8 @@ import 'package:movera/core/auth/signed_out_notice.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/contracts/status_words.g.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/session/driver_composition_guard.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/auth/phone_verify.dart';
 import 'package:movera/presentation/driver/auth/widgets/auth_controls.dart';
@@ -80,6 +82,10 @@ class _DriverSignInState extends State<DriverSignIn>
   /// Owner decision 6: the test numbers (test builds only).
   List<TestAccount> _testAccounts = const [];
   bool _testAccountsAsked = false;
+
+  /// Owner 2026-11-02 (PR #443): the test numbers sit behind one button;
+  /// closed, the picture with the skyline and "Need help?" stay visible.
+  bool _testListOpen = false;
 
   /// Round 4b: which provider button is working, and which ones the
   /// server or this platform said are not ready ("Coming soon").
@@ -172,11 +178,13 @@ class _DriverSignInState extends State<DriverSignIn>
 
   Future<void> _loadTestAccounts() async {
     final auth = _auth;
-    // Owner 2026-11-02 (driver-g1 "Driver sign-in screen look"): no
-    // test-numbers list on the sign-in screen in any build; test numbers
-    // still sign in when typed. Only an explicit `showTestAccounts: true`
-    // (a test harness) shows it.
-    if (widget.showTestAccounts != true || auth == null) {
+    // A test build that talks to a server (not a store build, not the demo).
+    final testBuild =
+        !driverProductionRequested &&
+        DriverRuntimeConfig.current.apiBaseUrl.isNotEmpty;
+    if (driverProductionRequested ||
+        !(widget.showTestAccounts ?? testBuild) ||
+        auth == null) {
       return;
     }
     try {
@@ -496,11 +504,33 @@ class _DriverSignInState extends State<DriverSignIn>
                 ),
               ),
             ),
-          if (_testAccounts.isNotEmpty) _testAccountList(),
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: NeedHelpLink(),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: _testAccounts.isEmpty
+                ? const NeedHelpLink()
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const NeedHelpLink(),
+                      TextButton(
+                        key: const ValueKey('auth-test-numbers-button'),
+                        onPressed: () =>
+                            setState(() => _testListOpen = !_testListOpen),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AuthColors.muted,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: Text(
+                          tr.authTestNumbersButton,
+                          style: AuthText.small(),
+                        ),
+                      ),
+                    ],
+                  ),
           ),
+          if (_testAccounts.isNotEmpty) ...[
+            if (_testListOpen) _testAccountList(),
+          ],
         ],
       ),
     );
@@ -547,11 +577,10 @@ class _DriverSignInState extends State<DriverSignIn>
   Widget _testAccountList() {
     return Padding(
       key: const ValueKey('auth-test-accounts'),
-      padding: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.only(top: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(tr.authTestNumbersTitle, style: AuthText.small()),
           for (final account in _testAccounts)
             InkWell(
               key: ValueKey('auth-test-${account.phone}'),
