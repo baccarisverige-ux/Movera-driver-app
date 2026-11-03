@@ -301,6 +301,19 @@ void main() {
       tester,
     ) async {
       // 08:05 Premium: reminders 60 and 15 min before; online 45 before.
+      // v0.18.17 (owner Q5): the default first reminder is now 2 h; this
+      // zone sets 60 and 15 for Premium, as the test always checked.
+      final before = ScheduledRideRules.current;
+      ScheduledRideRules.current = const ScheduledRideRules(
+        kinds: {
+          ScheduledRideKind.normal: ScheduledRideKindRule(onlineBeforeMinutes: 30, reminderMinutes: [60, 15]),
+          ScheduledRideKind.airport: ScheduledRideKindRule(onlineBeforeMinutes: 60, reminderMinutes: [60, 15]),
+          ScheduledRideKind.longTrip: ScheduledRideKindRule(onlineBeforeMinutes: 60, reminderMinutes: [60, 15]),
+          ScheduledRideKind.comfortPremium: ScheduledRideKindRule(onlineBeforeMinutes: 45, reminderMinutes: [60, 15]),
+          ScheduledRideKind.event: ScheduledRideKindRule(onlineBeforeMinutes: 45, reminderMinutes: [60, 15]),
+        },
+      );
+      addTearDown(() => ScheduledRideRules.current = before);
       ScheduledRideStore.answer('Högsätravägen, Lidingö', accepted: true);
       await _pumpHome(tester, _Dispatch());
       await _frames(tester, const Duration(seconds: 11));

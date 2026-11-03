@@ -13,6 +13,8 @@ import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/scheduled/reservation_when.dart';
+import 'package:movera/core/live/live_reservations.dart';
+import 'package:movera/core/scheduled/server_reservations.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
@@ -75,6 +77,10 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   void initState() {
     super.initState();
     _store.addListener(_storeChanged);
+    // Contract v0.18.17 Book later: on live the lists are the server's.
+    if (LiveDriverServices.instance?.reservations case final live?) {
+      unawaited(ScheduledRideStore.syncFromServer(live));
+    }
   }
 
   void _storeChanged() {
@@ -311,7 +317,11 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       }
       // An open reservation goes back out to drivers (notes R24): where it
       // goes follows the admin rule, Radar trips too close to pickup.
-      if (ride.id.isNotEmpty && !ride.assigned) {
+      if (LiveDriverServices.instance?.reservations case final live?
+          when ride.id.isNotEmpty) {
+        // Contract v0.18.17: the server takes it back and lists it again.
+        unawaited(live.release(ride.id));
+      } else if (ride.id.isNotEmpty && !ride.assigned) {
         widget.dispatchRepository?.releaseReservation(ride.id);
       }
       _notice(tr.schedReservationCancelled);
@@ -323,6 +333,12 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   /// the list and the driver is told it is no longer available. The
   /// answer applies even after this screen closed (driver-94).
   Future<bool> _claim(_ScheduledRide ride) async {
+    // Contract v0.18.17: on live the server gives a booked ride to the
+    // first driver who taps Accept (`POST /driver/reservations/{id}/accept`).
+    if (LiveDriverServices.instance?.reservations case final live?
+        when ride.id.isNotEmpty) {
+      return _claimOnServer(live, ride);
+    }
     final dispatch = widget.dispatchRepository;
     if (dispatch == null || ride.id.isEmpty) return true;
     if (!ScheduledRideStore.beginClaim(ride.id)) return false;
@@ -346,6 +362,27 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
         if (mounted) _notice(tr.islandNoLongerAvailable);
         return false;
     }
+  }
+
+  Future<bool> _claimOnServer(LiveReservations live, _ScheduledRide ride) async {
+    if (!ScheduledRideStore.beginClaim(ride.id)) return false;
+    final refused = await live.accept(ride.id);
+    ScheduledRideStore.endClaim(ride.id);
+    if (refused == null) return true;
+    if (refused == ReservationRefusal.network) {
+      if (mounted) _notice(tr.islandNoConnection);
+      return false;
+    }
+    ScheduledRideStore.take(ride.id);
+    if (mounted) {
+      _notice(
+        refused == ReservationRefusal.clash
+            ? tr.schedServerClash
+            : tr.islandNoLongerAvailable,
+      );
+    }
+    unawaited(ScheduledRideStore.syncFromServer(live));
+    return false;
   }
 
   void _notice(String message) {
@@ -765,6 +802,43 @@ class ScheduledRideStore {
     }
     openRequests.value = _visibleRequests.length;
     _revision.value++;
+  }
+
+  /// Contract v0.18.17 Book later: the open and accepted lists become the
+  /// server's (`GET /driver/reservations`). A claim still out keeps its
+  /// row. A failed read keeps what is shown.
+  static Future<void> syncFromServer(LiveReservations live) async {
+    final ServerReservations page;
+    try {
+      page = await live.load();
+    } catch (_) {
+      return;
+    }
+    ReservationRequestPreview preview(ServerReservation r) => r.toPreview(
+      dayWord: (at) => _dayWordOf(at, _now),
+      pickupLabel: (time) => tr.schedSeedTime(_dayWordOf(r.scheduledAt, _now), time),
+    );
+    final claiming = _requests.where((ride) => _claims.contains(ride.id)).toList();
+    _requests
+      ..clear()
+      ..addAll(claiming)
+      ..addAll([
+        for (final r in page.open)
+          if (!claiming.any((ride) => ride.id == r.tripId)) _ScheduledRide.request(preview(r)),
+      ]);
+    _accepted
+      ..clear()
+      ..addAll([for (final r in page.accepted) _ScheduledRide.fromRoute(preview(r))]);
+    _changed();
+  }
+
+  /// "Today", "Tomorrow" or "5 Nov" for a pickup at [at].
+  static String _dayWordOf(DateTime at, DateTime now) {
+    final local = at.toLocal();
+    final days = DateTime.utc(local.year, local.month, local.day).difference(DateTime.utc(now.year, now.month, now.day)).inDays;
+    if (days == 0) return tr.today;
+    if (days == 1) return tr.tomorrow;
+    return '${local.day}/${local.month}';
   }
 
   /// The ride of reservation [id], open or accepted; null when unknown.

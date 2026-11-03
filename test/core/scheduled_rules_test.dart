@@ -48,7 +48,8 @@ void main() {
       for (final kind in ScheduledRideKind.values) {
         expect(_rules.ruleFor(kind).spareMinutes, 15, reason: '$kind');
       }
-      expect(_rules.ruleFor(ScheduledRideKind.normal).onlineBeforeMinutes, 30);
+      // v0.18.17 owner Q5: 60 min before a normal ride.
+      expect(_rules.ruleFor(ScheduledRideKind.normal).onlineBeforeMinutes, 60);
       expect(_rules.ruleFor(ScheduledRideKind.airport).onlineBeforeMinutes, 60);
       expect(
         _rules.ruleFor(ScheduledRideKind.longTrip).onlineBeforeMinutes,

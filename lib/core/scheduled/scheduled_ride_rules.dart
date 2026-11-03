@@ -102,7 +102,8 @@ class ScheduledRideKindRule {
   const ScheduledRideKindRule({
     required this.onlineBeforeMinutes,
     this.spareMinutes = 15,
-    this.reminderMinutes = const [60, 15],
+    // v0.18.17 (owner Q5 2026-11-03): the first reminder 2 h before.
+    this.reminderMinutes = const [120, 15],
   });
 
   /// The driver should be online this long before pickup.
@@ -152,7 +153,8 @@ class ScheduledRideRules {
     this.backupAfterMinutes = 5,
     this.longTripKm = 50,
     this.kinds = const {
-      ScheduledRideKind.normal: ScheduledRideKindRule(onlineBeforeMinutes: 30),
+      // v0.18.17 (owner Q5): online 60 min before (the zone may set 30).
+      ScheduledRideKind.normal: ScheduledRideKindRule(onlineBeforeMinutes: 60),
       ScheduledRideKind.airport: ScheduledRideKindRule(onlineBeforeMinutes: 60),
       ScheduledRideKind.longTrip: ScheduledRideKindRule(
         onlineBeforeMinutes: 60,
@@ -169,7 +171,12 @@ class ScheduledRideRules {
     this.assignAcceptTime = const Duration(seconds: 30),
     this.includedWaitingMinutes = 5,
     this.lateEta = const LateEtaRule(),
+    this.bookLater = const BookLaterRules(),
   });
+
+  /// Contract v0.18.17 Book later: the zone's booking policy and who sees
+  /// a booked ride (the server applies them; the app shows them).
+  final BookLaterRules bookLater;
 
   /// The rules in use. Mirrors the admin defaults until a zone's config
   /// sets it (`DriverAppConfig.apply`).
@@ -247,6 +254,7 @@ class ScheduledRideRules {
           ? seed.assignAcceptTime
           : Duration(seconds: assign),
       lateEta: LateEtaRule.fromJson(json['lateEta']),
+      bookLater: BookLaterRules.fromJson(json),
     );
   }
 
@@ -371,4 +379,101 @@ T? _enum<T extends Enum>(Object? json, List<T> values) {
     if (value.name == json) return value;
   }
   return null;
+}
+
+/// Contract v0.18.17 Book later (`contract.json#bookLater`, owner
+/// 2026-11-03 Q1–Q6): the zone's `DriverAppConfig.reservations` fields of
+/// the booking policy. Every field optional; a bad one keeps the default.
+class BookLaterRules {
+  const BookLaterRules({
+    this.minAheadMin = 15,
+    this.maxAheadDays = 90,
+    this.soonBeforeMin = 30,
+    this.listTo = 'all',
+    this.listMinRating = 4.5,
+    this.listGroupSize = 10,
+    this.listNearKm = 5,
+    this.listAreaTrips = 5,
+    this.listGroupId,
+    this.listOpenAll = true,
+    this.listOpenAllAfterMin = 30,
+    this.noticeOn = true,
+    this.noticeMaxDrivers = 20,
+    this.homePopup = true,
+    this.noDriverAlertMin = 10,
+    this.riderReminderMin = 60,
+    this.freeChangeBeforeMin = 60,
+    this.maxTripKm = 60,
+  });
+
+  final int minAheadMin;
+  final int maxAheadDays;
+
+  /// Booked closer than this to pickup: sent at once like a live ride.
+  final int soonBeforeMin;
+  final String listTo;
+  final double listMinRating;
+  final int listGroupSize;
+  final double listNearKm;
+  final int listAreaTrips;
+  final String? listGroupId;
+  final bool listOpenAll;
+  final int listOpenAllAfterMin;
+  final bool noticeOn;
+  final int noticeMaxDrivers;
+  final bool homePopup;
+  final int noDriverAlertMin;
+  final int riderReminderMin;
+  final int freeChangeBeforeMin;
+  final double maxTripKm;
+
+  static const listToValues = ['all', 'category', 'rating', 'random', 'nearNow', 'group', 'areaRegulars', 'homeNear', 'favourites'];
+
+  factory BookLaterRules.fromJson(Map<dynamic, dynamic> json) {
+    const seed = BookLaterRules();
+    final listTo = json['listTo'];
+    final group = json['listGroupId'];
+    return BookLaterRules(
+      minAheadMin: _intIn(json['minAheadMin'], 5, 240) ?? seed.minAheadMin,
+      maxAheadDays: _intIn(json['maxAheadDays'], 1, 365) ?? seed.maxAheadDays,
+      soonBeforeMin: _intIn(json['soonBeforeMin'], 0, 240) ?? seed.soonBeforeMin,
+      listTo: listTo is String && listToValues.contains(listTo) ? listTo : seed.listTo,
+      listMinRating: _numIn(json['listMinRating'], 1, 5) ?? seed.listMinRating,
+      listGroupSize: _intIn(json['listGroupSize'], 1, 500) ?? seed.listGroupSize,
+      listNearKm: _numIn(json['listNearKm'], 0.5, 50) ?? seed.listNearKm,
+      listAreaTrips: _intIn(json['listAreaTrips'], 1, 200) ?? seed.listAreaTrips,
+      listGroupId: group is String && group.isNotEmpty ? group : null,
+      listOpenAll: _bool(json['listOpenAll']) ?? seed.listOpenAll,
+      listOpenAllAfterMin: _intIn(json['listOpenAllAfterMin'], 1, 1440) ?? seed.listOpenAllAfterMin,
+      noticeOn: _bool(json['noticeOn']) ?? seed.noticeOn,
+      noticeMaxDrivers: _intIn(json['noticeMaxDrivers'], 1, 500) ?? seed.noticeMaxDrivers,
+      homePopup: _bool(json['homePopup']) ?? seed.homePopup,
+      noDriverAlertMin: _intIn(json['noDriverAlertMin'], 1, 120) ?? seed.noDriverAlertMin,
+      riderReminderMin: _intIn(json['riderReminderMin'], 0, 1440) ?? seed.riderReminderMin,
+      freeChangeBeforeMin: _intIn(json['freeChangeBeforeMin'], 0, 1440) ?? seed.freeChangeBeforeMin,
+      maxTripKm: _numIn(json['maxTripKm'], 1, 1000) ?? seed.maxTripKm,
+    );
+  }
+
+  /// The contract's keys, as the zone document sends them.
+  Map<String, Object?> toJson() => {
+    'minAheadMin': minAheadMin,
+    'maxAheadDays': maxAheadDays,
+    'soonBeforeMin': soonBeforeMin,
+    'listTo': listTo,
+    'listMinRating': listMinRating,
+    'listGroupSize': listGroupSize,
+    'listNearKm': listNearKm,
+    'listAreaTrips': listAreaTrips,
+    'listGroupId': listGroupId,
+    'listOpenAll': listOpenAll,
+    'listOpenAllAfterMin': listOpenAllAfterMin,
+    'noticeOn': noticeOn,
+    'noticeMaxDrivers': noticeMaxDrivers,
+    'homePopup': homePopup,
+    'noDriverAlertMin': noDriverAlertMin,
+    'riderReminderMin': riderReminderMin,
+    'freeChangeBeforeMin': freeChangeBeforeMin,
+    'maxTripKm': maxTripKm,
+  };
 }

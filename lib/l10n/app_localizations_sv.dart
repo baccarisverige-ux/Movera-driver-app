@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -7143,4 +7144,8 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get supportCommentThanks => 'Tack för din kommentar.';
+
+  @override
+  String get schedServerClash =>
+      'Den här resan ligger för nära en annan bokad resa du har.';
 }

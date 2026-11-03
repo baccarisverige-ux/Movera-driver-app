@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -7258,4 +7259,8 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get supportCommentThanks => 'Merci pour votre commentaire.';
+
+  @override
+  String get schedServerClash =>
+      'Cette course est trop proche d\'une autre course réservée que vous avez.';
 }

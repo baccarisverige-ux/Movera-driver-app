@@ -12300,6 +12300,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thanks for your comment.'**
   String get supportCommentThanks;
+
+  /// Contract v0.18.17: the server refused a booked ride that clashes with one the driver holds.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride is too close to another booked ride you have.'**
+  String get schedServerClash;
 }
 
 class _AppLocalizationsDelegate

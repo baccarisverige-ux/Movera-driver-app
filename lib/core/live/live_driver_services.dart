@@ -1,3 +1,4 @@
+import 'package:movera/core/live/live_reservations.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -77,6 +78,9 @@ class LiveDriverServices {
     );
     places = LiveAddressLookup(api: api);
     activeTrip = LiveActiveTrip(api: api);
+    // v0.18.17 Book later: Scheduled rides from the server; a started ride
+    // becomes the current trip like an accepted offer.
+    reservations = LiveReservations(api: api, onStarted: trips.observe);
     earnings = LiveEarnings(api: api);
     surgeMap = ApiSurgeMapSource(api: api);
     dispatch = ApiDispatchRepository(
@@ -137,6 +141,9 @@ class LiveDriverServices {
 
   /// The trip the server holds for this driver (D-3).
   late final LiveActiveTrip activeTrip;
+
+  /// Contract v0.18.17: the driver's booked rides on the server.
+  late final LiveReservations reservations;
 
   /// Today's earnings from the server (audit R3).
   late final LiveEarnings earnings;
