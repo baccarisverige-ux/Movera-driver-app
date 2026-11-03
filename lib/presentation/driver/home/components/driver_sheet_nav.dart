@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/presentation/driver/home/components/radar_edge_dash.dart';
-import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/widgets/movera_radar_orb.dart';
@@ -91,7 +91,7 @@ class DriverSheetNav {
                                 pushSingle(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => const WalletScreen(),
+                                    builder: (_) => walletScreen(),
                                   ),
                                 );
                               },
@@ -222,7 +222,7 @@ class DriverSheetNav {
             onTap: () {
               pushSingle(
                 context,
-                MaterialPageRoute(builder: (_) => const WalletScreen()),
+                MaterialPageRoute(builder: (_) => walletScreen()),
               );
             },
           ),

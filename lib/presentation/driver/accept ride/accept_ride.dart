@@ -83,7 +83,6 @@ import 'package:movera/core/safety/ride_check_services.dart';
 import 'package:movera/core/safety/safety_alert_repository.dart';
 import 'package:movera/core/session/driver_composition_guard.dart';
 import 'package:movera/presentation/driver/accept%20ride/ride_check_card.dart';
-import 'package:movera/presentation/common/chat/chat.dart';
 import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_banner.dart';
 import 'package:movera/presentation/driver/accept%20ride/pickup_pin_sheet.dart';
 import 'package:movera/presentation/driver/accept%20ride/waiting_time_sheet.dart';
@@ -110,7 +109,7 @@ import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dar
 import 'package:movera/presentation/driver/waybill/waybill_sheet.dart';
 import 'package:movera/presentation/driver/destination%20mode/destination_picker.dart';
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
-import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/side%20menu/side_menu.dart';
 import 'package:movera/widgets/custom_google_map.dart';
 import 'package:movera/widgets/layout_viewport.dart';
@@ -1581,8 +1580,7 @@ class _AcceptRideState extends State<AcceptRide>
                                     onHistory: () => pushSingle(
                                       context,
                                       MaterialPageRoute<void>(
-                                        builder: (_) =>
-                                            const DriverRideHistory(),
+                                        builder: (_) => rideHistoryScreen(),
                                       ),
                                     ),
                                     onRoute: _AcceptRidePanel(

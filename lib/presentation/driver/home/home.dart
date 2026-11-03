@@ -123,7 +123,7 @@ import 'package:movera/presentation/driver/home/components/home_offer_sheet.dart
 import 'package:movera/presentation/driver/home/components/exclusive_request_sheet.dart';
 import 'package:movera/presentation/driver/home/components/route_fade.dart';
 import 'package:movera/presentation/driver/my%20queue%20position/components/in_airport_queue.dart';
-import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/presentation/driver/safety%20toolkits/safety_toolkits.dart';

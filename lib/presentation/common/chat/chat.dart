@@ -10,28 +10,15 @@ import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/presentation/common/chat/components/appbar.dart';
 import 'package:movera/presentation/common/chat/trip_call.dart';
+import 'package:movera/presentation/common/chat/local_chat_messages.dart';
 import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/custom_textfield.dart';
 import 'package:movera/widgets/responsive_size.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
-/// driver-u54: the driver's local chat messages, per trip, kept on this
-/// phone while the app runs so closing Chat does not lose them. Nothing is
-/// sent; logout clears them. The demo only: a live build's chat is the
-/// trip's on the server ([LiveTripChat]).
-class LocalChatMessages {
-  LocalChatMessages._();
-
-  static final Map<String, List<String>> _byTrip = {};
-
-  /// The trip's list (shared by every Chat opened for it); without a trip
-  /// id, a list for this Chat only.
-  static List<String> forTrip(String? tripId) => tripId == null
-      ? <String>[]
-      : _byTrip.putIfAbsent(tripId, () => <String>[]);
-
-  static void reset() => _byTrip.clear();
-}
+// Moved to its own file (LT-4) so the app can clear it at sign-out without
+// loading Chat; still exported here for older imports.
+export 'package:movera/presentation/common/chat/local_chat_messages.dart';
 
 class Chat extends StatefulWidget {
   const Chat({

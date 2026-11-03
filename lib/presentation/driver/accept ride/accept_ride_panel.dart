@@ -1096,7 +1096,7 @@ extension _AcceptRidePanel on _AcceptRideState {
     pushSingle(
       context,
       BottomToTopTransition(
-        Chat(riderDisplayName: _riderName, tripId: widget.tripId),
+        chatScreen(riderDisplayName: _riderName, tripId: widget.tripId),
       ),
     );
   }

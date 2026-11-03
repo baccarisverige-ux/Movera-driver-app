@@ -179,9 +179,9 @@ void main() {
     await _tap(tester, 'details-country');
     await tester.pump();
     expect(find.text(tr.acctChooseCountry), findsOneWidget);
-    expect(find.text('🇸🇪'), findsWidgets);
-    expect(find.text('🇫🇷'), findsOneWidget);
-    expect(find.text('🇹🇳'), findsOneWidget);
+    expect(find.byKey(const ValueKey('country-flag-SE')), findsWidgets);
+    expect(find.byKey(const ValueKey('country-flag-FR')), findsOneWidget);
+    expect(find.byKey(const ValueKey('country-flag-TN')), findsOneWidget);
     expect(find.text(tr.acctComingSoon.toUpperCase()), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('pick-country-TN')));
     await tester.pump();
@@ -199,7 +199,10 @@ void main() {
     await tester.pump();
     expect(find.byKey(const ValueKey('pick-city-paris')), findsOneWidget);
     expect(find.byKey(const ValueKey('pick-city-stockholm_lan')), findsNothing);
-    expect(find.text('🇫🇷'), findsOneWidget); // only the box, not the sheet
+    expect(
+      find.byKey(const ValueKey('country-flag-FR')),
+      findsOneWidget,
+    ); // only the box, not the sheet
     await tester.tap(find.byKey(const ValueKey('pick-city-paris')));
     await tester.pump();
     await tester.pumpWidget(const SizedBox.shrink());
@@ -219,7 +222,10 @@ void main() {
     expect(find.byKey(const ValueKey('pick-language-sv')), findsOneWidget);
     expect(find.byKey(const ValueKey('pick-language-fr')), findsOneWidget);
     expect(find.byKey(const ValueKey('pick-language-en')), findsOneWidget);
-    expect(find.text('🇸🇪'), findsOneWidget); // the country box only
+    expect(
+      find.byKey(const ValueKey('country-flag-SE')),
+      findsOneWidget,
+    ); // the country box only
     await tester.tap(find.byKey(const ValueKey('pick-language-sv')));
     await tester.pump();
     await tester.pump();
