@@ -42,7 +42,7 @@ class ApiClient {
 
   /// `X-Contract-Version` on every request (contract v0.18.8
   /// `arrivedWaiting.pin.compat`): without it the server skips the PIN.
-  static const contractVersion = '0.18.15';
+  static const contractVersion = '0.18.17';
 
   /// The longest a request waits for the server's answer.
   static const requestTimeout = Duration(seconds: 15);
@@ -109,6 +109,20 @@ class ApiClient {
     body: body,
     idempotencyKey: idempotencyKey ?? _idempotencyKey(),
     authenticated: authenticated,
+  );
+
+  /// `PUT path` with a JSON [body] and an `Idempotency-Key` (v0.18.17
+  /// `PUT /driver/home-area`).
+  Future<Map<String, dynamic>> put(
+    String path, {
+    Map<String, dynamic>? body,
+    String? idempotencyKey,
+  }) => _send(
+    'PUT',
+    path,
+    body: body,
+    idempotencyKey: idempotencyKey ?? _idempotencyKey(),
+    authenticated: true,
   );
 
   /// `DELETE path`.

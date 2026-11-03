@@ -13,6 +13,8 @@ import 'package:movera/core/dispatch/pickup_pay.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/cancel_reasons.dart';
 import 'package:movera/core/scheduled/reservation_when.dart';
+import 'package:movera/core/live/live_reservations.dart';
+import 'package:movera/core/scheduled/server_reservations.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
 import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/smart_gap.dart';
@@ -75,6 +77,74 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   void initState() {
     super.initState();
     _store.addListener(_storeChanged);
+    // Contract v0.18.17 Book later: on live the lists are the server's.
+    if (LiveDriverServices.instance?.reservations case final live?) {
+      ScheduledRideStore.keepQuestions.addListener(_askToKeep);
+      unawaited(ScheduledRideStore.syncFromServer(live));
+    }
+  }
+
+  bool _asking = false;
+
+  /// Owner BL-Q6: "Keep it at the new time?" Yes keeps it; No gives it back.
+  Future<void> _askToKeep() async {
+    final live = LiveDriverServices.instance?.reservations;
+    final asks = ScheduledRideStore.keepQuestions.value;
+    if (live == null || asks.isEmpty || _asking || !mounted) return;
+    _asking = true;
+    final ride = asks.first;
+    final keep = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(tr.schedKeepTitle),
+        content: Text(
+          tr.schedKeepBody(
+            ServerReservation.clockOf(ride.previousAt ?? ride.scheduledAt),
+            ServerReservation.clockOf(ride.scheduledAt),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(tr.schedKeepNo),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(tr.schedKeepYes),
+          ),
+        ],
+      ),
+    );
+    _asking = false;
+    if (keep == null || !mounted) return;
+    final refused = await live.keep(ride.tripId, keep: keep);
+    await ScheduledRideStore.syncFromServer(live);
+    if (!mounted) return;
+    _notice(
+      refused == null
+          ? (keep
+                ? tr.schedKeptAt(ServerReservation.clockOf(ride.scheduledAt))
+                : tr.schedGaveBack)
+          : refused == ReservationRefusal.network
+          ? tr.islandNoConnection
+          : tr.islandNoLongerAvailable,
+    );
+  }
+
+  /// Owner BL-Q4: the driver's home area is where the phone is now.
+  Future<void> _setHomeArea() async {
+    final services = LiveDriverServices.instance;
+    final point = services?.reporter.lastKnownPoint;
+    if (services == null) return;
+    if (point == null) {
+      _notice(tr.schedHomeAreaNoFix);
+      return;
+    }
+    final saved = await services.reservations.setHomeArea(
+      point.latitude,
+      point.longitude,
+    );
+    if (mounted) _notice(saved ? tr.schedHomeAreaSaved : tr.islandNoConnection);
   }
 
   void _storeChanged() {
@@ -84,6 +154,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   @override
   void dispose() {
     _store.removeListener(_storeChanged);
+    ScheduledRideStore.keepQuestions.removeListener(_askToKeep);
     super.dispose();
   }
 
@@ -294,6 +365,19 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     } else if (action == _ScheduledRideAction.cancelled ||
         action == _ScheduledRideAction.cancelledNotCounted) {
       if (!_accepted.contains(ride)) return;
+      // Checker M2: on live the server takes it back first; failed, the ride stays and the driver is told.
+      if (LiveDriverServices.instance?.reservations case final live?
+          when ride.id.isNotEmpty) {
+        final given = await live.release(
+          ride.id,
+          reasonCode: giveBackReasonCode(ScheduledRideStore.lastGiveBackReason),
+        );
+        ScheduledRideStore.lastGiveBackReason = null;
+        if (!given) {
+          if (mounted) _notice(tr.schedGiveBackFailed);
+          return;
+        }
+      }
       final paused = ScheduledRideStore._cancelAccepted(
         ride,
         counts: action == _ScheduledRideAction.cancelled,
@@ -311,7 +395,9 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       }
       // An open reservation goes back out to drivers (notes R24): where it
       // goes follows the admin rule, Radar trips too close to pickup.
-      if (ride.id.isNotEmpty && !ride.assigned) {
+      if (LiveDriverServices.active && ride.id.isNotEmpty) {
+        // Contract v0.18.17: already taken back by the server above.
+      } else if (ride.id.isNotEmpty && !ride.assigned) {
         widget.dispatchRepository?.releaseReservation(ride.id);
       }
       _notice(tr.schedReservationCancelled);
@@ -323,6 +409,12 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   /// the list and the driver is told it is no longer available. The
   /// answer applies even after this screen closed (driver-94).
   Future<bool> _claim(_ScheduledRide ride) async {
+    // Contract v0.18.17: on live the server gives a booked ride to the
+    // first driver who taps Accept (`POST /driver/reservations/{id}/accept`).
+    if (LiveDriverServices.instance?.reservations case final live?
+        when ride.id.isNotEmpty) {
+      return _claimOnServer(live, ride);
+    }
     final dispatch = widget.dispatchRepository;
     if (dispatch == null || ride.id.isEmpty) return true;
     if (!ScheduledRideStore.beginClaim(ride.id)) return false;
@@ -346,6 +438,50 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
         if (mounted) _notice(tr.islandNoLongerAvailable);
         return false;
     }
+  }
+
+  Future<bool> _claimOnServer(
+    LiveReservations live,
+    _ScheduledRide ride,
+  ) async {
+    if (!ScheduledRideStore.beginClaim(ride.id)) return false;
+    // Checker M1: the version this driver saw; the server refuses a ride that changed since.
+    final refused = await live.accept(
+      ride.id,
+      version: ScheduledRideStore.serverRow(ride.id)?.version,
+    );
+    ScheduledRideStore.endClaim(ride.id);
+    if (refused == null) return true;
+    if (refused == ReservationRefusal.network) {
+      if (mounted) _notice(tr.islandNoConnection);
+      return false;
+    }
+    if (refused == ReservationRefusal.changed) {
+      // The rider changed it: show the new time and price, the driver decides again.
+      await ScheduledRideStore.syncFromServer(live);
+      final now = ScheduledRideStore.serverRow(ride.id);
+      if (mounted) {
+        _notice(
+          now == null
+              ? tr.islandNoLongerAvailable
+              : tr.schedRideChanged(
+                  ServerReservation.clockOf(now.scheduledAt),
+                  now.earnings.formatted,
+                ),
+        );
+      }
+      return false;
+    }
+    ScheduledRideStore.take(ride.id);
+    if (mounted) {
+      _notice(
+        refused == ReservationRefusal.clash
+            ? tr.schedServerClash
+            : tr.islandNoLongerAvailable,
+      );
+    }
+    unawaited(ScheduledRideStore.syncFromServer(live));
+    return false;
   }
 
   void _notice(String message) {
@@ -391,6 +527,12 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               ],
             ),
           ),
+          if (LiveDriverServices.active)
+            IconButton(
+              tooltip: tr.schedHomeArea,
+              onPressed: _setHomeArea,
+              icon: const Icon(Icons.home_outlined, color: Color(0xFF425058)),
+            ),
           Container(
             height: 38,
             width: 38,
@@ -765,6 +907,74 @@ class ScheduledRideStore {
     }
     openRequests.value = _visibleRequests.length;
     _revision.value++;
+  }
+
+  /// Contract v0.18.17 Book later: the open and accepted lists become the
+  /// server's (`GET /driver/reservations`). A claim still out keeps its
+  /// row. A failed read keeps what is shown.
+  static Future<void> syncFromServer(LiveReservations live) async {
+    final ServerReservations page;
+    try {
+      page = await live.load();
+    } catch (_) {
+      return;
+    }
+    ReservationRequestPreview preview(ServerReservation r) => r.toPreview(
+      dayWord: (at) => _dayWordOf(at, _now),
+      pickupLabel: (time) =>
+          tr.schedSeedTime(_dayWordOf(r.scheduledAt, _now), time),
+    );
+    final claiming = _requests
+        .where((ride) => _claims.contains(ride.id))
+        .toList();
+    _requests
+      ..clear()
+      ..addAll(claiming)
+      ..addAll([
+        for (final r in page.open)
+          if (!claiming.any((ride) => ride.id == r.tripId))
+            _ScheduledRide.request(preview(r)),
+      ]);
+    _accepted
+      ..clear()
+      ..addAll([
+        for (final r in page.accepted) _ScheduledRide.fromRoute(preview(r)),
+      ]);
+    // Owner BL-Q6: the rider changed a ride this driver holds.
+    keepQuestions.value = [
+      for (final r in page.accepted)
+        if (r.asksToKeep) r,
+    ];
+    _serverRows
+      ..clear()
+      ..addAll({
+        for (final r in [...page.open, ...page.accepted]) r.tripId: r,
+      });
+    _changed();
+  }
+
+  /// The server's rows by trip id (the version an Accept sends).
+  static final Map<String, ServerReservation> _serverRows = {};
+  static ServerReservation? serverRow(String id) => _serverRows[id];
+
+  /// Booked rides whose rider changed the time: "Keep it at the new time?".
+  static final ValueNotifier<List<ServerReservation>> keepQuestions =
+      ValueNotifier(const []);
+
+  /// The reason the driver picked when giving a ride back (sent to the server).
+  static String? lastGiveBackReason;
+
+  /// "Today", "Tomorrow" or "5 Nov" for a pickup at [at].
+  static String _dayWordOf(DateTime at, DateTime now) {
+    final local = at.toLocal();
+    final days = DateTime.utc(
+      local.year,
+      local.month,
+      local.day,
+    ).difference(DateTime.utc(now.year, now.month, now.day)).inDays;
+    if (days == 0) return tr.today;
+    if (days == 1) return tr.tomorrow;
+    return '${local.day}/${local.month}';
   }
 
   /// The ride of reservation [id], open or accepted; null when unknown.
@@ -2312,6 +2522,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
     );
 
     if (confirmed == true && context.mounted) {
+      ScheduledRideStore.lastGiveBackReason = reason.code;
       _popScheduledRoute(
         context,
         reason.counts

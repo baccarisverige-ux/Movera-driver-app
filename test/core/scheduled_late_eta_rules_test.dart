@@ -104,7 +104,8 @@ void main() {
             kind.name: rules.ruleFor(kind).onlineBeforeMinutes,
         };
         expect(online, {
-          'normal': 30,
+          // v0.18.17 owner Q5: 60.
+          'normal': 60,
           'airport': 60,
           'longTrip': 60,
           'comfortPremium': 45,
@@ -112,7 +113,9 @@ void main() {
         });
         for (final kind in ScheduledRideKind.values) {
           expect(rules.ruleFor(kind).spareMinutes, 15);
-          expect(rules.ruleFor(kind).reminderMinutes, [60, 15]);
+          expect(rules.ruleFor(kind).reminderMinutes, [
+            120,
+          ], reason: "owner M6-a: one reminder 2 h before");
         }
       }
     });
@@ -173,7 +176,8 @@ void main() {
       final normal = rules.ruleFor(ScheduledRideKind.normal);
       expect(normal.onlineBeforeMinutes, 20);
       expect(normal.spareMinutes, 15);
-      expect(normal.reminderMinutes, [60, 15]);
+      // v0.18.17 owner Q5: one reminder 2 h before (owner M6-a).
+      expect(normal.reminderMinutes, [120]);
       final airport = rules.ruleFor(ScheduledRideKind.airport);
       expect(airport.onlineBeforeMinutes, 90);
       expect(airport.spareMinutes, 25);

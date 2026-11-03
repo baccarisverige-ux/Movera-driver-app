@@ -4353,5 +4353,47 @@
   "supportNewTicket": "New ticket",
   "supportCommentHint": "Any comment or idea for us? (optional)",
   "supportCommentSend": "Send comment",
-  "supportCommentThanks": "Thanks for your comment."
+  "supportCommentThanks": "Thanks for your comment.",
+  "schedServerClash": "This ride is too close to another booked ride you have.",
+  "@schedServerClash": {
+    "description": "Contract v0.18.17: the server refused a booked ride that clashes with one the driver holds."
+  },
+  "schedKeepTitle": "Keep it at the new time?",
+  "schedKeepBody": "The rider changed the {oldTime} ride to {newTime}.",
+  "@schedKeepBody": {
+    "placeholders": {
+      "oldTime": {
+        "type": "String"
+      },
+      "newTime": {
+        "type": "String"
+      }
+    }
+  },
+  "schedKeepYes": "Yes, keep it",
+  "schedKeepNo": "No, give it back",
+  "schedHomeArea": "Set home area here",
+  "schedHomeAreaSaved": "Home area saved. Booked rides near it can come to you.",
+  "schedHomeAreaNoFix": "Turn on location first.",
+  "schedRideChanged": "This ride changed: pickup {time}, you get {price}. Check it and tap Accept again.",
+  "@schedRideChanged": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "schedGiveBackFailed": "Couldn't give the ride back. It is still yours. Try again.",
+  "schedKeptAt": "You kept the ride at {time}.",
+  "@schedKeptAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedGaveBack": "The ride went back to Booked rides."
 }

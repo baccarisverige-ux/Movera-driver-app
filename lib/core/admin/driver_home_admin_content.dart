@@ -251,6 +251,7 @@ class ReservationRequestPreview {
     this.fareBoost,
     this.kind,
     this.scheduledAt,
+    this.earnings,
   });
 
   /// Dispatch id; claiming it decides which driver gets the reservation.
@@ -292,7 +293,13 @@ class ReservationRequestPreview {
   /// Movera's commission ([OfferCardDetails.fare]); a preview carries no
   /// server earnings, so it is the demo's share. Pickup pay, when the
   /// ride has it, comes on top.
-  String get driverPayLabel => DriverOfferRules.current.card.fare(fareLabel);
+  String get driverPayLabel =>
+      DriverOfferRules.current.card.fare(fareLabel, earnings: earnings);
+
+  /// Contract v0.18.17 (`DriverReservation.earnings`): the server's own
+  /// driver money for a booked ride from `GET /driver/reservations`; null
+  /// for a demo ride (then [driverPayLabel] is the demo's share).
+  final String? earnings;
 
   final String pickupLabel;
   final String pickupAddress;
@@ -434,6 +441,7 @@ class ReservationRequestPreview {
         fareBoost: fareBoost,
         kind: kind,
         scheduledAt: at,
+        earnings: earnings,
       );
 }
 

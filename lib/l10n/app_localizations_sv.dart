@@ -7143,4 +7143,49 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get supportCommentThanks => 'Tack för din kommentar.';
+
+  @override
+  String get schedServerClash =>
+      'Den här resan ligger för nära en annan bokad resa du har.';
+
+  @override
+  String get schedKeepTitle => 'Behålla den på den nya tiden?';
+
+  @override
+  String schedKeepBody(String oldTime, String newTime) {
+    return 'Resenären ändrade resan kl. $oldTime till $newTime.';
+  }
+
+  @override
+  String get schedKeepYes => 'Ja, behåll';
+
+  @override
+  String get schedKeepNo => 'Nej, lämna tillbaka';
+
+  @override
+  String get schedHomeArea => 'Ange hemområde här';
+
+  @override
+  String get schedHomeAreaSaved =>
+      'Hemområde sparat. Bokade resor nära det kan komma till dig.';
+
+  @override
+  String get schedHomeAreaNoFix => 'Slå på platstjänster först.';
+
+  @override
+  String schedRideChanged(String time, String price) {
+    return 'Resan har ändrats: hämtning $time, du får $price. Kontrollera och tryck Acceptera igen.';
+  }
+
+  @override
+  String get schedGiveBackFailed =>
+      'Kunde inte lämna tillbaka resan. Den är fortfarande din. Försök igen.';
+
+  @override
+  String schedKeptAt(String time) {
+    return 'Du behöll resan kl. $time.';
+  }
+
+  @override
+  String get schedGaveBack => 'Resan gick tillbaka till Bokade resor.';
 }

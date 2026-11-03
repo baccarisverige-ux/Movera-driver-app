@@ -12300,6 +12300,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thanks for your comment.'**
   String get supportCommentThanks;
+
+  /// Contract v0.18.17: the server refused a booked ride that clashes with one the driver holds.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride is too close to another booked ride you have.'**
+  String get schedServerClash;
+
+  /// No description provided for @schedKeepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it at the new time?'**
+  String get schedKeepTitle;
+
+  /// No description provided for @schedKeepBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The rider changed the {oldTime} ride to {newTime}.'**
+  String schedKeepBody(String oldTime, String newTime);
+
+  /// No description provided for @schedKeepYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, keep it'**
+  String get schedKeepYes;
+
+  /// No description provided for @schedKeepNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, give it back'**
+  String get schedKeepNo;
+
+  /// No description provided for @schedHomeArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Set home area here'**
+  String get schedHomeArea;
+
+  /// No description provided for @schedHomeAreaSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Home area saved. Booked rides near it can come to you.'**
+  String get schedHomeAreaSaved;
+
+  /// No description provided for @schedHomeAreaNoFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on location first.'**
+  String get schedHomeAreaNoFix;
+
+  /// No description provided for @schedRideChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride changed: pickup {time}, you get {price}. Check it and tap Accept again.'**
+  String schedRideChanged(String time, String price);
+
+  /// No description provided for @schedGiveBackFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t give the ride back. It is still yours. Try again.'**
+  String get schedGiveBackFailed;
+
+  /// No description provided for @schedKeptAt.
+  ///
+  /// In en, this message translates to:
+  /// **'You kept the ride at {time}.'**
+  String schedKeptAt(String time);
+
+  /// No description provided for @schedGaveBack.
+  ///
+  /// In en, this message translates to:
+  /// **'The ride went back to Booked rides.'**
+  String get schedGaveBack;
 }
 
 class _AppLocalizationsDelegate

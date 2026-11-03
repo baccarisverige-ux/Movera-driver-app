@@ -64,7 +64,11 @@ enum TripCommand {
   reassign('reassign'),
   expire('expire'),
   systemCancel('system_cancel'),
-  fail('fail');
+  fail('fail'),
+  // v0.18.17 Book later (contract.json#bookLater).
+  release('release'),
+  unassign('unassign'),
+  reschedule('reschedule');
 
   const TripCommand(this.wireName);
   final String wireName;
@@ -125,7 +129,7 @@ class InvalidTripTransition implements Exception {
 }
 
 abstract final class TripTransitions {
-  static const String contractVersion = '0.18.15';
+  static const String contractVersion = '0.18.17';
 
   static const List<TripTransition> table = [
     TripTransition(TripCommand.quote, TripActor.system, [
@@ -221,6 +225,28 @@ abstract final class TripTransitions {
       TripActor.driver,
       [TripStatus.driverToPickup, TripStatus.arrived],
       TripStatus.searching,
+      when: TripKind.scheduled,
+    ),
+    // v0.18.17 Book later: offline driver loses it, admin unassign, rider change.
+    TripTransition(
+      TripCommand.release,
+      TripActor.system,
+      [TripStatus.accepted],
+      TripStatus.requested,
+      when: TripKind.scheduled,
+    ),
+    TripTransition(
+      TripCommand.unassign,
+      TripActor.admin,
+      [TripStatus.accepted],
+      TripStatus.requested,
+      when: TripKind.scheduled,
+    ),
+    TripTransition(
+      TripCommand.reschedule,
+      TripActor.rider,
+      [TripStatus.requested],
+      TripStatus.requested,
       when: TripKind.scheduled,
     ),
     TripTransition(TripCommand.cancel, TripActor.driver, [

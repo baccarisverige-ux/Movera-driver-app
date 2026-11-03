@@ -7131,4 +7131,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportCommentThanks => 'Thanks for your comment.';
+
+  @override
+  String get schedServerClash =>
+      'This ride is too close to another booked ride you have.';
+
+  @override
+  String get schedKeepTitle => 'Keep it at the new time?';
+
+  @override
+  String schedKeepBody(String oldTime, String newTime) {
+    return 'The rider changed the $oldTime ride to $newTime.';
+  }
+
+  @override
+  String get schedKeepYes => 'Yes, keep it';
+
+  @override
+  String get schedKeepNo => 'No, give it back';
+
+  @override
+  String get schedHomeArea => 'Set home area here';
+
+  @override
+  String get schedHomeAreaSaved =>
+      'Home area saved. Booked rides near it can come to you.';
+
+  @override
+  String get schedHomeAreaNoFix => 'Turn on location first.';
+
+  @override
+  String schedRideChanged(String time, String price) {
+    return 'This ride changed: pickup $time, you get $price. Check it and tap Accept again.';
+  }
+
+  @override
+  String get schedGiveBackFailed =>
+      'Couldn\'t give the ride back. It is still yours. Try again.';
+
+  @override
+  String schedKeptAt(String time) {
+    return 'You kept the ride at $time.';
+  }
+
+  @override
+  String get schedGaveBack => 'The ride went back to Booked rides.';
 }

@@ -2029,5 +2029,17 @@
   "supportNewTicket": "Nouveau ticket",
   "supportCommentHint": "Un commentaire ou une idée pour nous ? (facultatif)",
   "supportCommentSend": "Envoyer le commentaire",
-  "supportCommentThanks": "Merci pour votre commentaire."
+  "supportCommentThanks": "Merci pour votre commentaire.",
+  "schedServerClash": "Cette course est trop proche d'une autre course réservée que vous avez.",
+  "schedKeepTitle": "La garder à la nouvelle heure ?",
+  "schedKeepBody": "Le passager a changé la course de {oldTime} pour {newTime}.",
+  "schedKeepYes": "Oui, la garder",
+  "schedKeepNo": "Non, la rendre",
+  "schedHomeArea": "Définir la zone de domicile ici",
+  "schedHomeAreaSaved": "Zone de domicile enregistrée. Les courses réservées proches peuvent vous être proposées.",
+  "schedHomeAreaNoFix": "Activez d'abord la localisation.",
+  "schedRideChanged": "Cette course a changé : prise en charge à {time}, vous recevez {price}. Vérifiez et appuyez de nouveau sur Accepter.",
+  "schedGiveBackFailed": "Impossible de rendre la course. Elle est toujours à vous. Réessayez.",
+  "schedKeptAt": "Vous avez gardé la course à {time}.",
+  "schedGaveBack": "La course est retournée dans Courses réservées."
 }

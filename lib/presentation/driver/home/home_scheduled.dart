@@ -327,6 +327,25 @@ extension _HomeScheduled on _DriverHomeState {
   }
 
   void _startScheduledTrip(ReservationRequestPreview ride) {
+    // Contract v0.18.17 Book later: on live the server starts the booked
+    // ride first (`POST /driver/reservations/{id}/start`); its trip then
+    // opens as the current trip. Refused (too early, offline, another
+    // trip): the ride stays late, as when Home was busy.
+    if (LiveDriverServices.instance?.reservations case final live?
+        when ride.id.isNotEmpty &&
+            !_serverStartedReservations.contains(ride.id)) {
+      unawaited(() async {
+        final refused = await live.start(ride.id);
+        if (!mounted || !identical(_scheduled.ride, ride)) return;
+        if (refused == null) {
+          _serverStartedReservations.add(ride.id);
+          _startScheduledTrip(ride);
+        } else {
+          _lateScheduled(ride);
+        }
+      }());
+      return;
+    }
     _scheduled.planning = true;
     final started = ScheduledRideStore.start(ride);
     _scheduled.planning = false;
@@ -604,3 +623,7 @@ extension _HomeScheduled on _DriverHomeState {
     IslandMessages.show(HomeIslandNotices.assignmentNotAccepted);
   }
 }
+
+/// Contract v0.18.17: booked rides the server already started on this
+/// phone (Leave now asked once; the trip then opens locally).
+final Set<String> _serverStartedReservations = <String>{};

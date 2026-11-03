@@ -41,6 +41,8 @@ Map<String, Object?> _reservations(ScheduledRideRules rules) => {
         'reminderMin': rules.ruleFor(kind).reminderMinutes,
       },
   },
+  // v0.18.17 Book later (contract.json#bookLater): the booking policy keys.
+  ...rules.bookLater.toJson(),
   'lateEta': {
     'on': rules.lateEta.on,
     'toleranceMin': rules.lateEta.toleranceMinutes,
@@ -260,7 +262,7 @@ void main() {
     test('ZoneDefaults equal contract.json#configDefaults', () {
       final contract = _read('contracts/contract.json') as Map<String, dynamic>;
       final defaults = contract['configDefaults'] as Map<String, dynamic>;
-      expect(contract['version'], '0.18.15');
+      expect(contract['version'], '0.18.17');
       expect(
         ZoneDefaults.paymentMethods,
         contract['zonePaymentMethods']['values'],
