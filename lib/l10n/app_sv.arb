@@ -1631,6 +1631,7 @@
   "authWaitlistSaved": "Du står på väntelistan. Vi hör av oss när inloggningen öppnar för ditt nummer.",
   "authTestNumbersTitle": "Testnummer (endast testversion)",
   "authTestNumbersButton": "Testnummer",
+  "authTestNumbersAskAdmin": "Be en admin om testnumren",
   "authTestStatusNew": "Test · inget konto än",
   "gateSignOut": "Logga ut",
   "gateTryAgain": "Försök igen",

@@ -9907,6 +9907,12 @@ abstract class AppLocalizations {
   /// **'Test numbers'**
   String get authTestNumbersButton;
 
+  /// No description provided for @authTestNumbersAskAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask an admin for the test numbers'**
+  String get authTestNumbersAskAdmin;
+
   /// No description provided for @authTestStatusNew.
   ///
   /// In en, this message translates to:

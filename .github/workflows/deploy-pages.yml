@@ -98,6 +98,9 @@ jobs:
         if: ${{ vars.MOVERA_LIVE_API_URL != '' }}
         env:
           LIVE_API: ${{ vars.MOVERA_LIVE_API_URL }}
+          # Owner 2026-11-03: the test numbers (numbers only) from the repository
+          # secret MOVERA_TEST_NUMBERS; empty -> the app says to ask an admin.
+          MOVERA_TEST_NUMBERS: ${{ secrets.MOVERA_TEST_NUMBERS }}
         run: |
           case "$LIVE_API" in https://*) ;; *) echo "::error::MOVERA_LIVE_API_URL must start with https://"; exit 1 ;; esac
           # Contract v0.16.0: crash reports name the pubspec version.
@@ -105,7 +108,8 @@ jobs:
           flutter build web --release --base-href "/Movera-driver-app/live/" \
             --dart-define=MOVERA_AUTH_REQUIRED=true \
             --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
-            --dart-define=MOVERA_APP_VERSION="$app_version"
+            --dart-define=MOVERA_APP_VERSION="$app_version" \
+            --dart-define=MOVERA_TEST_NUMBERS="$MOVERA_TEST_NUMBERS"
           rm -rf "$RUNNER_TEMP/drider-live"
           mv build/web "$RUNNER_TEMP/drider-live"
 

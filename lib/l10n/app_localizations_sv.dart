@@ -5753,6 +5753,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String get authTestNumbersButton => 'Testnummer';
 
   @override
+  String get authTestNumbersAskAdmin => 'Be en admin om testnumren';
+
+  @override
   String get authTestStatusNew => 'Test · inget konto än';
 
   @override

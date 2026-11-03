@@ -5838,6 +5838,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authTestNumbersButton => 'Numéros de test';
 
   @override
+  String get authTestNumbersAskAdmin =>
+      'Demandez les numéros de test à un admin';
+
+  @override
   String get authTestStatusNew => 'Test · pas encore de compte';
 
   @override
