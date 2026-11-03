@@ -411,6 +411,8 @@ class BookLaterRules {
     this.listAtTimeMin = 30,
     this.changeAnswerMin = 15,
     this.arriveEarlyMin = 10,
+    this.raiseFare = true,
+    this.raiseMax,
   });
 
   final int dispatchBeforeMin;
@@ -421,6 +423,11 @@ class BookLaterRules {
 
   /// v0.18.19 (owner leave on time): arrive this many minutes early.
   final int arriveEarlyMin;
+
+  /// v0.18.19 (owner C): an admin may raise a booked ride's fare; the
+  /// highest raise in the zone's money (null: the live-ride limit only).
+  final bool raiseFare;
+  final double? raiseMax;
 
   final int minAheadMin;
   final int maxAheadDays;
@@ -503,6 +510,14 @@ class BookLaterRules {
           _intIn(json['changeAnswerMin'], 1, 120) ?? seed.changeAnswerMin,
       arriveEarlyMin:
           _intIn(json['arriveEarlyMin'], 0, 60) ?? seed.arriveEarlyMin,
+      raiseFare: json['raiseFare'] is bool
+          ? json['raiseFare'] as bool
+          : seed.raiseFare,
+      raiseMax: json['raiseMax'] is num
+          ? (json['raiseMax'] as num).toDouble()
+          : json.containsKey('raiseMax')
+          ? null
+          : seed.raiseMax,
     );
   }
 
@@ -532,5 +547,7 @@ class BookLaterRules {
     'listAtTimeMin': listAtTimeMin,
     'changeAnswerMin': changeAnswerMin,
     'arriveEarlyMin': arriveEarlyMin,
+    'raiseFare': raiseFare,
+    'raiseMax': raiseMax,
   };
 }
