@@ -78,7 +78,9 @@ class ServerReservation {
       throw const FormatException('DriverReservation.earnings missing');
     }
     final reservation = json['reservation'];
-    final ask = json['changeAsk'] ?? (reservation is Map ? reservation['changeAsk'] : null);
+    final ask =
+        json['changeAsk'] ??
+        (reservation is Map ? reservation['changeAsk'] : null);
     final pickup = place('pickup');
     final dropoff = place('dropoff');
     return ServerReservation(
@@ -86,7 +88,9 @@ class ServerReservation {
       version: (json['version'] as num?)?.toInt() ?? 1,
       scheduledAt: time('scheduledAt'),
       categoryId: text('categoryId'),
-      rideType: json['rideType'] is String ? json['rideType'] as String : 'normal',
+      rideType: json['rideType'] is String
+          ? json['rideType'] as String
+          : 'normal',
       pickupAddress: pickup['address'] as String? ?? '',
       dropoffAddress: dropoff['address'] as String? ?? '',
       pickup: point(pickup),
@@ -160,7 +164,19 @@ class ServerReservations {
 }
 
 /// Contract v0.18.17 `bookLater.errors`: why an Accept or Start was refused.
-enum ReservationRefusal { taken, inDispatch, clash, notOpen, off, tooEarly, notOnline, onTrip, network, other }
+enum ReservationRefusal {
+  changed,
+  taken,
+  inDispatch,
+  clash,
+  notOpen,
+  off,
+  tooEarly,
+  notOnline,
+  onTrip,
+  network,
+  other,
+}
 
 ReservationRefusal reservationRefusalOf(int status, Object? body) {
   final reason = body is Map ? body['reason'] : null;
@@ -188,6 +204,15 @@ ReservationRefusal reservationRefusalOf(int status, Object? body) {
 /// The code sent when the driver gives a booked ride back: the reason he
 /// picked when it is a contract scheduled code, else `scheduled_other`.
 String giveBackReasonCode(String? picked) {
-  const scheduled = {'scheduled_cannot_make_time', 'scheduled_vehicle_issue', 'scheduled_personal_emergency', 'scheduled_pickup_too_far', 'scheduled_trip_details', 'scheduled_other'};
-  return picked != null && scheduled.contains(picked) ? picked : 'scheduled_other';
+  const scheduled = {
+    'scheduled_cannot_make_time',
+    'scheduled_vehicle_issue',
+    'scheduled_personal_emergency',
+    'scheduled_pickup_too_far',
+    'scheduled_trip_details',
+    'scheduled_other',
+  };
+  return picked != null && scheduled.contains(picked)
+      ? picked
+      : 'scheduled_other';
 }

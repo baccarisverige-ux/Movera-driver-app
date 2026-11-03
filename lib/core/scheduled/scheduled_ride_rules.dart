@@ -103,7 +103,8 @@ class ScheduledRideKindRule {
     required this.onlineBeforeMinutes,
     this.spareMinutes = 15,
     // v0.18.17 (owner Q5 2026-11-03): the first reminder 2 h before.
-    this.reminderMinutes = const [120, 15],
+    // Owner M6-a: one reminder, 2 h before (no 15-min one).
+    this.reminderMinutes = const [120],
   });
 
   /// The driver should be online this long before pickup.
@@ -436,10 +437,22 @@ class BookLaterRules {
   final int noDriverAlertMin;
   final int riderReminderMin;
   final int freeChangeBeforeMin;
+
   /// Null: no limit (owner BL-Q5).
   final double? maxTripKm;
 
-  static const listToValues = ['all', 'category', 'rating', 'random', 'nearNow', 'group', 'areaRegulars', 'homeNear', 'favourites', 'nearAtTime'];
+  static const listToValues = [
+    'all',
+    'category',
+    'rating',
+    'random',
+    'nearNow',
+    'group',
+    'areaRegulars',
+    'homeNear',
+    'favourites',
+    'nearAtTime',
+  ];
 
   factory BookLaterRules.fromJson(Map<dynamic, dynamic> json) {
     const seed = BookLaterRules();
@@ -448,27 +461,42 @@ class BookLaterRules {
     return BookLaterRules(
       minAheadMin: _intIn(json['minAheadMin'], 5, 240) ?? seed.minAheadMin,
       maxAheadDays: _intIn(json['maxAheadDays'], 1, 365) ?? seed.maxAheadDays,
-      soonBeforeMin: _intIn(json['soonBeforeMin'], 0, 240) ?? seed.soonBeforeMin,
-      listTo: listTo is String && listToValues.contains(listTo) ? listTo : seed.listTo,
+      soonBeforeMin:
+          _intIn(json['soonBeforeMin'], 0, 240) ?? seed.soonBeforeMin,
+      listTo: listTo is String && listToValues.contains(listTo)
+          ? listTo
+          : seed.listTo,
       listMinRating: _numIn(json['listMinRating'], 1, 5) ?? seed.listMinRating,
-      listGroupSize: _intIn(json['listGroupSize'], 1, 500) ?? seed.listGroupSize,
+      listGroupSize:
+          _intIn(json['listGroupSize'], 1, 500) ?? seed.listGroupSize,
       listNearKm: _numIn(json['listNearKm'], 0.5, 50) ?? seed.listNearKm,
-      listAreaTrips: _intIn(json['listAreaTrips'], 1, 200) ?? seed.listAreaTrips,
+      listAreaTrips:
+          _intIn(json['listAreaTrips'], 1, 200) ?? seed.listAreaTrips,
       listGroupId: group is String && group.isNotEmpty ? group : null,
       listOpenAll: _bool(json['listOpenAll']) ?? seed.listOpenAll,
-      listOpenAllAfterMin: _intIn(json['listOpenAllAfterMin'], 1, 1440) ?? seed.listOpenAllAfterMin,
+      listOpenAllAfterMin:
+          _intIn(json['listOpenAllAfterMin'], 1, 1440) ??
+          seed.listOpenAllAfterMin,
       noticeOn: _bool(json['noticeOn']) ?? seed.noticeOn,
-      noticeMaxDrivers: _intIn(json['noticeMaxDrivers'], 1, 500) ?? seed.noticeMaxDrivers,
+      noticeMaxDrivers:
+          _intIn(json['noticeMaxDrivers'], 1, 500) ?? seed.noticeMaxDrivers,
       homePopup: _bool(json['homePopup']) ?? seed.homePopup,
-      noDriverAlertMin: _intIn(json['noDriverAlertMin'], 1, 120) ?? seed.noDriverAlertMin,
-      riderReminderMin: _intIn(json['riderReminderMin'], 0, 1440) ?? seed.riderReminderMin,
-      freeChangeBeforeMin: _intIn(json['freeChangeBeforeMin'], 0, 1440) ?? seed.freeChangeBeforeMin,
+      noDriverAlertMin:
+          _intIn(json['noDriverAlertMin'], 1, 120) ?? seed.noDriverAlertMin,
+      riderReminderMin:
+          _intIn(json['riderReminderMin'], 0, 1440) ?? seed.riderReminderMin,
+      freeChangeBeforeMin:
+          _intIn(json['freeChangeBeforeMin'], 0, 1440) ??
+          seed.freeChangeBeforeMin,
       maxTripKm: _numIn(json['maxTripKm'], 1, 1000),
-      dispatchBeforeMin: _intIn(json['dispatchBeforeMin'], 5, 240) ?? seed.dispatchBeforeMin,
+      dispatchBeforeMin:
+          _intIn(json['dispatchBeforeMin'], 5, 240) ?? seed.dispatchBeforeMin,
       listHomeKm: _numIn(json['listHomeKm'], 0.5, 50) ?? seed.listHomeKm,
       listAtTimeKm: _numIn(json['listAtTimeKm'], 0.5, 50) ?? seed.listAtTimeKm,
-      listAtTimeMin: _intIn(json['listAtTimeMin'], 5, 240) ?? seed.listAtTimeMin,
-      changeAnswerMin: _intIn(json['changeAnswerMin'], 1, 120) ?? seed.changeAnswerMin,
+      listAtTimeMin:
+          _intIn(json['listAtTimeMin'], 5, 240) ?? seed.listAtTimeMin,
+      changeAnswerMin:
+          _intIn(json['changeAnswerMin'], 1, 120) ?? seed.changeAnswerMin,
     );
   }
 

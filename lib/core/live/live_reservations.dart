@@ -36,19 +36,25 @@ class LiveReservations {
 
   /// `POST /driver/reservations/{tripId}/accept`: null when this driver
   /// got the ride (the first tap wins), else why not.
-  Future<ReservationRefusal?> accept(String tripId, {int? version}) =>
-      _run(() => _api.post(
-        commandPath(tripId, 'accept'),
-        body: {if (version != null) 'expectedVersion': version},
-      ));
+  Future<ReservationRefusal?> accept(String tripId, {int? version}) => _run(
+    () => _api.post(
+      commandPath(tripId, 'accept'),
+      body: {if (version != null) 'expectedVersion': version},
+    ),
+  );
 
   /// `POST /driver/reservations/{tripId}/release`: the ride goes back to
   /// the list. True when the server took it back.
-  Future<bool> release(String tripId, {String reasonCode = 'scheduled_other'}) async =>
-      await _run(() => _api.post(
-        commandPath(tripId, 'release'),
-        body: {'reasonCode': reasonCode},
-      )) ==
+  Future<bool> release(
+    String tripId, {
+    String reasonCode = 'scheduled_other',
+  }) async =>
+      await _run(
+        () => _api.post(
+          commandPath(tripId, 'release'),
+          body: {'reasonCode': reasonCode},
+        ),
+      ) ==
       null;
 
   /// Owner BL-Q6: `POST /driver/reservations/{tripId}/keep { keep }`.
@@ -58,7 +64,17 @@ class LiveReservations {
   /// Owner BL-Q4: `PUT /driver/home-area` (where "home nearby" booked
   /// rides are measured from). True when the server saved it.
   Future<bool> setHomeArea(double lat, double lng, {String? label}) async =>
-      await _run(() => _api.put('/api/v1/driver/home-area', body: {'lat': lat, 'lng': lng, if (label != null && label.isNotEmpty) 'label': label})) == null;
+      await _run(
+        () => _api.put(
+          '/api/v1/driver/home-area',
+          body: {
+            'lat': lat,
+            'lng': lng,
+            if (label != null && label.isNotEmpty) 'label': label,
+          },
+        ),
+      ) ==
+      null;
 
   /// `POST /driver/reservations/{tripId}/start`: head to the pickup. The
   /// trip opens as the current trip ([onStarted]).
@@ -68,7 +84,9 @@ class LiveReservations {
     return trip;
   });
 
-  Future<ReservationRefusal?> _run(Future<Map<String, dynamic>> Function() call) async {
+  Future<ReservationRefusal?> _run(
+    Future<Map<String, dynamic>> Function() call,
+  ) async {
     try {
       await call();
       return null;
@@ -76,7 +94,10 @@ class LiveReservations {
       if (error.code == ApiError.network || error.code == ApiError.timeout) {
         return ReservationRefusal.network;
       }
-      return reservationRefusalOf(error.statusCode ?? 0, {'reason': error.reason});
+      if (error.code == 'version_mismatch') return ReservationRefusal.changed;
+      return reservationRefusalOf(error.statusCode ?? 0, {
+        'reason': error.reason,
+      });
     }
   }
 }

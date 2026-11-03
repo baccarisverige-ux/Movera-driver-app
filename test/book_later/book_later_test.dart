@@ -31,38 +31,69 @@ Map<String, Object?> row(String id, {String status = 'requested'}) => {
 };
 
 void main() {
-  test('a DriverReservation becomes the Scheduled rides card with the server money', () {
-    final ride = ServerReservation.fromJson(Map<String, dynamic>.from(row('trp_1')));
-    expect(ride.tripId, 'trp_1');
-    expect(ride.earnings.minorUnits, 17360);
-    expect(ride.accepted, isFalse);
-    final card = ride.toPreview(dayWord: (_) => 'Tomorrow', pickupLabel: (t) => 'Tomorrow $t');
-    expect(card.id, 'trp_1');
-    expect(card.tripKm, 8.0);
-    expect(card.tripMinutes, 18);
-    expect(card.earnings, ride.earnings.formatted);
-    expect(card.driverPayLabel, ride.earnings.formatted, reason: 'the server earnings, never the demo share');
-    expect(card.pickupAddress, 'Sergels torg');
-  });
+  test(
+    'a DriverReservation becomes the Scheduled rides card with the server money',
+    () {
+      final ride = ServerReservation.fromJson(
+        Map<String, dynamic>.from(row('trp_1')),
+      );
+      expect(ride.tripId, 'trp_1');
+      expect(ride.earnings.minorUnits, 17360);
+      expect(ride.accepted, isFalse);
+      final card = ride.toPreview(
+        dayWord: (_) => 'Tomorrow',
+        pickupLabel: (t) => 'Tomorrow $t',
+      );
+      expect(card.id, 'trp_1');
+      expect(card.tripKm, 8.0);
+      expect(card.tripMinutes, 18);
+      expect(card.earnings, ride.earnings.formatted);
+      expect(
+        card.driverPayLabel,
+        ride.earnings.formatted,
+        reason: 'the server earnings, never the demo share',
+      );
+      expect(card.pickupAddress, 'Sergels torg');
+    },
+  );
 
   test('a broken row is left out, never a crash', () {
     final rows = ServerReservations.parsePage({
-      'items': [row('trp_1'), {'tripId': 'trp_bad'}, 'x'],
+      'items': [
+        row('trp_1'),
+        {'tripId': 'trp_bad'},
+        'x',
+      ],
     });
     expect(rows.map((r) => r.tripId), ['trp_1']);
   });
 
   test('every server refusal has its reason', () {
-    expect(reservationRefusalOf(409, {'reason': 'reservation_taken'}), ReservationRefusal.taken);
-    expect(reservationRefusalOf(409, {'reason': 'reservation_clash'}), ReservationRefusal.clash);
-    expect(reservationRefusalOf(409, {'reason': 'reservation_too_early'}), ReservationRefusal.tooEarly);
-    expect(reservationRefusalOf(409, {'reason': 'reservation_in_dispatch'}), ReservationRefusal.inDispatch);
+    expect(
+      reservationRefusalOf(409, {'reason': 'reservation_taken'}),
+      ReservationRefusal.taken,
+    );
+    expect(
+      reservationRefusalOf(409, {'reason': 'reservation_clash'}),
+      ReservationRefusal.clash,
+    );
+    expect(
+      reservationRefusalOf(409, {'reason': 'reservation_too_early'}),
+      ReservationRefusal.tooEarly,
+    );
+    expect(
+      reservationRefusalOf(409, {'reason': 'reservation_in_dispatch'}),
+      ReservationRefusal.inDispatch,
+    );
     expect(reservationRefusalOf(404, null), ReservationRefusal.notOpen);
   });
 
   group('LiveReservations on the server', () {
     late List<http.Request> requests;
-    LiveReservations live(http.Response Function(http.Request) answer, {void Function(Map<String, dynamic>)? started}) {
+    LiveReservations live(
+      http.Response Function(http.Request) answer, {
+      void Function(Map<String, dynamic>)? started,
+    }) {
       requests = [];
       return LiveReservations(
         api: ApiClient(
@@ -77,59 +108,145 @@ void main() {
       );
     }
 
-    http.Response json(Object body, [int status = 200]) => http.Response(jsonEncode(body), status, headers: {'content-type': 'application/json'});
+    http.Response json(Object body, [int status = 200]) => http.Response(
+      jsonEncode(body),
+      status,
+      headers: {'content-type': 'application/json'},
+    );
 
     test('load reads the open and the accepted list', () async {
-      final api = live((r) => json({'items': [row(r.url.queryParameters['scope'] == 'open' ? 'trp_open' : 'trp_mine', status: r.url.queryParameters['scope'] == 'open' ? 'requested' : 'accepted')], 'nextCursor': null}));
+      final api = live(
+        (r) => json({
+          'items': [
+            row(
+              r.url.queryParameters['scope'] == 'open'
+                  ? 'trp_open'
+                  : 'trp_mine',
+              status: r.url.queryParameters['scope'] == 'open'
+                  ? 'requested'
+                  : 'accepted',
+            ),
+          ],
+          'nextCursor': null,
+        }),
+      );
       final page = await api.load();
       expect(page.open.single.tripId, 'trp_open');
       expect(page.accepted.single.tripId, 'trp_mine');
-      expect(requests.map((r) => '${r.method} ${r.url.path}?${r.url.query}'), ['GET /api/v1/driver/reservations?scope=open', 'GET /api/v1/driver/reservations?scope=accepted']);
+      expect(requests.map((r) => '${r.method} ${r.url.path}?${r.url.query}'), [
+        'GET /api/v1/driver/reservations?scope=open',
+        'GET /api/v1/driver/reservations?scope=accepted',
+      ]);
     });
 
     test('reservations off in the zone: an empty open list', () async {
-      final api = live((r) => r.url.queryParameters['scope'] == 'open' ? json({'code': 'forbidden', 'message': 'off', 'reason': 'reservations_off'}, 403) : json({'items': [], 'nextCursor': null}));
+      final api = live(
+        (r) => r.url.queryParameters['scope'] == 'open'
+            ? json({
+                'code': 'forbidden',
+                'message': 'off',
+                'reason': 'reservations_off',
+              }, 403)
+            : json({'items': [], 'nextCursor': null}),
+      );
       expect((await api.load()).open, isEmpty);
     });
 
-    test('accept: the first tap wins; another driver first is "taken"', () async {
-      var api = live((_) => json({'tripId': 'trp_1', 'status': 'accepted', 'version': 4}));
-      expect(await api.accept('trp_1', version: 3), isNull);
-      expect(requests.single.url.path, '/api/v1/driver/reservations/trp_1/accept');
-      expect(jsonDecode(requests.single.body), {'expectedVersion': 3});
-      api = live((_) => json({'code': 'conflict', 'message': 'taken', 'reason': 'reservation_taken'}, 409));
-      expect(await api.accept('trp_1'), ReservationRefusal.taken);
-    });
+    test(
+      'accept: the first tap wins; another driver first is "taken"',
+      () async {
+        var api = live(
+          (_) => json({'tripId': 'trp_1', 'status': 'accepted', 'version': 4}),
+        );
+        expect(await api.accept('trp_1', version: 3), isNull);
+        expect(
+          requests.single.url.path,
+          '/api/v1/driver/reservations/trp_1/accept',
+        );
+        expect(jsonDecode(requests.single.body), {'expectedVersion': 3});
+        api = live(
+          (_) => json({
+            'code': 'conflict',
+            'message': 'taken',
+            'reason': 'reservation_taken',
+          }, 409),
+        );
+        expect(await api.accept('trp_1'), ReservationRefusal.taken);
+      },
+    );
 
-    test('give back sends the scheduled reason; start opens the trip', () async {
-      var api = live((_) => http.Response('', 204));
-      expect(await api.release('trp_1'), isTrue);
-      expect(jsonDecode(requests.single.body), {'reasonCode': 'scheduled_other'});
-      Map<String, dynamic>? opened;
-      api = live((_) => json({'tripId': 'trp_1', 'status': 'driver_to_pickup', 'version': 6}), started: (t) => opened = t);
-      expect(await api.start('trp_1'), isNull);
-      expect(requests.single.url.path, '/api/v1/driver/reservations/trp_1/start');
-      expect(opened?['status'], 'driver_to_pickup');
-      api = live((_) => json({'code': 'conflict', 'message': 'early', 'reason': 'reservation_too_early'}, 409));
-      expect(await api.start('trp_1'), ReservationRefusal.tooEarly);
-    });
+    test(
+      'give back sends the scheduled reason; start opens the trip',
+      () async {
+        var api = live((_) => http.Response('', 204));
+        expect(await api.release('trp_1'), isTrue);
+        expect(jsonDecode(requests.single.body), {
+          'reasonCode': 'scheduled_other',
+        });
+        Map<String, dynamic>? opened;
+        api = live(
+          (_) => json({
+            'tripId': 'trp_1',
+            'status': 'driver_to_pickup',
+            'version': 6,
+          }),
+          started: (t) => opened = t,
+        );
+        expect(await api.start('trp_1'), isNull);
+        expect(
+          requests.single.url.path,
+          '/api/v1/driver/reservations/trp_1/start',
+        );
+        expect(opened?['status'], 'driver_to_pickup');
+        api = live(
+          (_) => json({
+            'code': 'conflict',
+            'message': 'early',
+            'reason': 'reservation_too_early',
+          }, 409),
+        );
+        expect(await api.start('trp_1'), ReservationRefusal.tooEarly);
+      },
+    );
   });
 
-  test('owner BL-Q6: a changed ride carries the keep question; the reason picked is sent', () {
-    final ride = ServerReservation.fromJson(Map<String, dynamic>.from({...row('trp_1', status: 'accepted'), 'changeAsk': {'until': '2026-11-05T05:15:00Z', 'previousAt': '2026-11-05T06:30:00Z'}}));
-    expect(ride.asksToKeep, isTrue);
-    expect(ride.previousAt, DateTime.utc(2026, 11, 5, 6, 30));
-    expect(ServerReservation.fromJson(Map<String, dynamic>.from(row('trp_2'))).asksToKeep, isFalse);
-    expect(giveBackReasonCode('scheduled_vehicle_issue'), 'scheduled_vehicle_issue');
-    expect(giveBackReasonCode('traffic'), 'scheduled_other');
-    expect(giveBackReasonCode(null), 'scheduled_other');
-  });
+  test(
+    'owner BL-Q6: a changed ride carries the keep question; the reason picked is sent',
+    () {
+      final ride = ServerReservation.fromJson(
+        Map<String, dynamic>.from({
+          ...row('trp_1', status: 'accepted'),
+          'changeAsk': {
+            'until': '2026-11-05T05:15:00Z',
+            'previousAt': '2026-11-05T06:30:00Z',
+          },
+        }),
+      );
+      expect(ride.asksToKeep, isTrue);
+      expect(ride.previousAt, DateTime.utc(2026, 11, 5, 6, 30));
+      expect(
+        ServerReservation.fromJson(
+          Map<String, dynamic>.from(row('trp_2')),
+        ).asksToKeep,
+        isFalse,
+      );
+      expect(
+        giveBackReasonCode('scheduled_vehicle_issue'),
+        'scheduled_vehicle_issue',
+      );
+      expect(giveBackReasonCode('traffic'), 'scheduled_other');
+      expect(giveBackReasonCode(null), 'scheduled_other');
+    },
+  );
 
   test('owner BL-Q2/Q5 defaults: search 30 min before, no distance limit', () {
     const rules = BookLaterRules();
     expect(rules.dispatchBeforeMin, 30);
     expect(rules.maxTripKm, isNull);
-    expect(BookLaterRules.fromJson({'listTo': 'nearAtTime', 'maxTripKm': 80}).listTo, 'nearAtTime');
+    expect(
+      BookLaterRules.fromJson({'listTo': 'nearAtTime', 'maxTripKm': 80}).listTo,
+      'nearAtTime',
+    );
     expect(BookLaterRules.fromJson({'maxTripKm': 80}).maxTripKm, 80);
   });
 
@@ -139,7 +256,11 @@ void main() {
       api: ApiClient(
         client: MockClient((r) async {
           requests.add(r);
-          return http.Response(jsonEncode({'tripId': 'trp_1', 'status': 'accepted', 'version': 5}), 200, headers: {'content-type': 'application/json'});
+          return http.Response(
+            jsonEncode({'tripId': 'trp_1', 'status': 'accepted', 'version': 5}),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
         }),
         baseUri: Uri.parse('https://api.example.test'),
         tokens: MemoryTokenStore()..save(access: 'a1', refresh: 'r1'),
@@ -151,5 +272,51 @@ void main() {
     expect(await api.setHomeArea(59.3, 18.0), isTrue);
     expect(requests.last.method, 'PUT');
     expect(requests.last.url.path, '/api/v1/driver/home-area');
+  });
+
+  test(
+    'checker M1: a ride changed since the driver saw it is "changed" (new time and price shown)',
+    () async {
+      final api = LiveReservations(
+        api: ApiClient(
+          client: MockClient(
+            (r) async => http.Response(
+              jsonEncode({'code': 'version_mismatch', 'message': 'changed'}),
+              409,
+              headers: {'content-type': 'application/json'},
+            ),
+          ),
+          baseUri: Uri.parse('https://api.example.test'),
+          tokens: MemoryTokenStore()..save(access: 'a1', refresh: 'r1'),
+        ),
+      );
+      expect(await api.accept('trp_1', version: 3), ReservationRefusal.changed);
+    },
+  );
+
+  test('checker M2: a failed give-back is reported (the ride stays)', () async {
+    final api = LiveReservations(
+      api: ApiClient(
+        client: MockClient(
+          (r) async => http.Response(
+            jsonEncode({'code': 'invalid_transition', 'message': 'no'}),
+            409,
+            headers: {'content-type': 'application/json'},
+          ),
+        ),
+        baseUri: Uri.parse('https://api.example.test'),
+        tokens: MemoryTokenStore()..save(access: 'a1', refresh: 'r1'),
+      ),
+    );
+    expect(await api.release('trp_1'), isFalse);
+  });
+
+  test('owner M6-a: one driver reminder, 2 h before', () {
+    expect(
+      const ScheduledRideRules()
+          .ruleFor(ScheduledRideKind.normal)
+          .reminderMinutes,
+      [120],
+    );
   });
 }

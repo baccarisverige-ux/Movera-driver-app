@@ -7286,4 +7286,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get schedHomeAreaNoFix => 'Activez d\'abord la localisation.';
+
+  @override
+  String schedRideChanged(String time, String price) {
+    return 'Cette course a changé : prise en charge à $time, vous recevez $price. Vérifiez et appuyez de nouveau sur Accepter.';
+  }
+
+  @override
+  String get schedGiveBackFailed =>
+      'Impossible de rendre la course. Elle est toujours à vous. Réessayez.';
+
+  @override
+  String schedKeptAt(String time) {
+    return 'Vous avez gardé la course à $time.';
+  }
+
+  @override
+  String get schedGaveBack => 'La course est retournée dans Courses réservées.';
 }

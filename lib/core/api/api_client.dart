@@ -117,7 +117,13 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? body,
     String? idempotencyKey,
-  }) => _send('PUT', path, body: body, idempotencyKey: idempotencyKey ?? _idempotencyKey(), authenticated: true);
+  }) => _send(
+    'PUT',
+    path,
+    body: body,
+    idempotencyKey: idempotencyKey ?? _idempotencyKey(),
+    authenticated: true,
+  );
 
   /// `DELETE path`.
   Future<Map<String, dynamic>> delete(

@@ -2037,5 +2037,9 @@
   "schedKeepNo": "Non, la rendre",
   "schedHomeArea": "Définir la zone de domicile ici",
   "schedHomeAreaSaved": "Zone de domicile enregistrée. Les courses réservées proches peuvent vous être proposées.",
-  "schedHomeAreaNoFix": "Activez d'abord la localisation."
+  "schedHomeAreaNoFix": "Activez d'abord la localisation.",
+  "schedRideChanged": "Cette course a changé : prise en charge à {time}, vous recevez {price}. Vérifiez et appuyez de nouveau sur Accepter.",
+  "schedGiveBackFailed": "Impossible de rendre la course. Elle est toujours à vous. Réessayez.",
+  "schedKeptAt": "Vous avez gardé la course à {time}.",
+  "schedGaveBack": "La course est retournée dans Courses réservées."
 }

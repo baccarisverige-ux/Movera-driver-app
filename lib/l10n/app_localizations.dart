@@ -12348,6 +12348,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn on location first.'**
   String get schedHomeAreaNoFix;
+
+  /// No description provided for @schedRideChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'This ride changed: pickup {time}, you get {price}. Check it and tap Accept again.'**
+  String schedRideChanged(String time, String price);
+
+  /// No description provided for @schedGiveBackFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t give the ride back. It is still yours. Try again.'**
+  String get schedGiveBackFailed;
+
+  /// No description provided for @schedKeptAt.
+  ///
+  /// In en, this message translates to:
+  /// **'You kept the ride at {time}.'**
+  String schedKeptAt(String time);
+
+  /// No description provided for @schedGaveBack.
+  ///
+  /// In en, this message translates to:
+  /// **'The ride went back to Booked rides.'**
+  String get schedGaveBack;
 }
 
 class _AppLocalizationsDelegate

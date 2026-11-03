@@ -2037,5 +2037,9 @@
   "schedKeepNo": "Nej, lämna tillbaka",
   "schedHomeArea": "Ange hemområde här",
   "schedHomeAreaSaved": "Hemområde sparat. Bokade resor nära det kan komma till dig.",
-  "schedHomeAreaNoFix": "Slå på platstjänster först."
+  "schedHomeAreaNoFix": "Slå på platstjänster först.",
+  "schedRideChanged": "Resan har ändrats: hämtning {time}, du får {price}. Kontrollera och tryck Acceptera igen.",
+  "schedGiveBackFailed": "Kunde inte lämna tillbaka resan. Den är fortfarande din. Försök igen.",
+  "schedKeptAt": "Du behöll resan kl. {time}.",
+  "schedGaveBack": "Resan gick tillbaka till Bokade resor."
 }

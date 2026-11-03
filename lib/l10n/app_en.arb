@@ -4374,5 +4374,26 @@
   "schedKeepNo": "No, give it back",
   "schedHomeArea": "Set home area here",
   "schedHomeAreaSaved": "Home area saved. Booked rides near it can come to you.",
-  "schedHomeAreaNoFix": "Turn on location first."
+  "schedHomeAreaNoFix": "Turn on location first.",
+  "schedRideChanged": "This ride changed: pickup {time}, you get {price}. Check it and tap Accept again.",
+  "@schedRideChanged": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "schedGiveBackFailed": "Couldn't give the ride back. It is still yours. Try again.",
+  "schedKeptAt": "You kept the ride at {time}.",
+  "@schedKeptAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedGaveBack": "The ride went back to Booked rides."
 }

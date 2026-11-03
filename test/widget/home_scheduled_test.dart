@@ -306,11 +306,26 @@ void main() {
       final before = ScheduledRideRules.current;
       ScheduledRideRules.current = const ScheduledRideRules(
         kinds: {
-          ScheduledRideKind.normal: ScheduledRideKindRule(onlineBeforeMinutes: 30, reminderMinutes: [60, 15]),
-          ScheduledRideKind.airport: ScheduledRideKindRule(onlineBeforeMinutes: 60, reminderMinutes: [60, 15]),
-          ScheduledRideKind.longTrip: ScheduledRideKindRule(onlineBeforeMinutes: 60, reminderMinutes: [60, 15]),
-          ScheduledRideKind.comfortPremium: ScheduledRideKindRule(onlineBeforeMinutes: 45, reminderMinutes: [60, 15]),
-          ScheduledRideKind.event: ScheduledRideKindRule(onlineBeforeMinutes: 45, reminderMinutes: [60, 15]),
+          ScheduledRideKind.normal: ScheduledRideKindRule(
+            onlineBeforeMinutes: 30,
+            reminderMinutes: [60, 15],
+          ),
+          ScheduledRideKind.airport: ScheduledRideKindRule(
+            onlineBeforeMinutes: 60,
+            reminderMinutes: [60, 15],
+          ),
+          ScheduledRideKind.longTrip: ScheduledRideKindRule(
+            onlineBeforeMinutes: 60,
+            reminderMinutes: [60, 15],
+          ),
+          ScheduledRideKind.comfortPremium: ScheduledRideKindRule(
+            onlineBeforeMinutes: 45,
+            reminderMinutes: [60, 15],
+          ),
+          ScheduledRideKind.event: ScheduledRideKindRule(
+            onlineBeforeMinutes: 45,
+            reminderMinutes: [60, 15],
+          ),
         },
       );
       addTearDown(() => ScheduledRideRules.current = before);

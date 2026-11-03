@@ -332,7 +332,8 @@ extension _HomeScheduled on _DriverHomeState {
     // opens as the current trip. Refused (too early, offline, another
     // trip): the ride stays late, as when Home was busy.
     if (LiveDriverServices.instance?.reservations case final live?
-        when ride.id.isNotEmpty && !_serverStartedReservations.contains(ride.id)) {
+        when ride.id.isNotEmpty &&
+            !_serverStartedReservations.contains(ride.id)) {
       unawaited(() async {
         final refused = await live.start(ride.id);
         if (!mounted || !identical(_scheduled.ride, ride)) return;

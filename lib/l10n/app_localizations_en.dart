@@ -7159,4 +7159,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get schedHomeAreaNoFix => 'Turn on location first.';
+
+  @override
+  String schedRideChanged(String time, String price) {
+    return 'This ride changed: pickup $time, you get $price. Check it and tap Accept again.';
+  }
+
+  @override
+  String get schedGiveBackFailed =>
+      'Couldn\'t give the ride back. It is still yours. Try again.';
+
+  @override
+  String schedKeptAt(String time) {
+    return 'You kept the ride at $time.';
+  }
+
+  @override
+  String get schedGaveBack => 'The ride went back to Booked rides.';
 }

@@ -7171,4 +7171,21 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get schedHomeAreaNoFix => 'Slå på platstjänster först.';
+
+  @override
+  String schedRideChanged(String time, String price) {
+    return 'Resan har ändrats: hämtning $time, du får $price. Kontrollera och tryck Acceptera igen.';
+  }
+
+  @override
+  String get schedGiveBackFailed =>
+      'Kunde inte lämna tillbaka resan. Den är fortfarande din. Försök igen.';
+
+  @override
+  String schedKeptAt(String time) {
+    return 'Du behöll resan kl. $time.';
+  }
+
+  @override
+  String get schedGaveBack => 'Resan gick tillbaka till Bokade resor.';
 }

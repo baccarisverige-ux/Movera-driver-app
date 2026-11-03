@@ -97,17 +97,38 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(tr.schedKeepTitle),
-        content: Text(tr.schedKeepBody(ServerReservation.clockOf(ride.previousAt ?? ride.scheduledAt), ServerReservation.clockOf(ride.scheduledAt))),
+        content: Text(
+          tr.schedKeepBody(
+            ServerReservation.clockOf(ride.previousAt ?? ride.scheduledAt),
+            ServerReservation.clockOf(ride.scheduledAt),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(tr.schedKeepNo)),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(tr.schedKeepYes)),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(tr.schedKeepNo),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(tr.schedKeepYes),
+          ),
         ],
       ),
     );
     _asking = false;
     if (keep == null || !mounted) return;
-    await live.keep(ride.tripId, keep: keep);
+    final refused = await live.keep(ride.tripId, keep: keep);
     await ScheduledRideStore.syncFromServer(live);
+    if (!mounted) return;
+    _notice(
+      refused == null
+          ? (keep
+                ? tr.schedKeptAt(ServerReservation.clockOf(ride.scheduledAt))
+                : tr.schedGaveBack)
+          : refused == ReservationRefusal.network
+          ? tr.islandNoConnection
+          : tr.islandNoLongerAvailable,
+    );
   }
 
   /// Owner BL-Q4: the driver's home area is where the phone is now.
@@ -119,7 +140,10 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       _notice(tr.schedHomeAreaNoFix);
       return;
     }
-    final saved = await services.reservations.setHomeArea(point.latitude, point.longitude);
+    final saved = await services.reservations.setHomeArea(
+      point.latitude,
+      point.longitude,
+    );
     if (mounted) _notice(saved ? tr.schedHomeAreaSaved : tr.islandNoConnection);
   }
 
@@ -341,6 +365,19 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     } else if (action == _ScheduledRideAction.cancelled ||
         action == _ScheduledRideAction.cancelledNotCounted) {
       if (!_accepted.contains(ride)) return;
+      // Checker M2: on live the server takes it back first; failed, the ride stays and the driver is told.
+      if (LiveDriverServices.instance?.reservations case final live?
+          when ride.id.isNotEmpty) {
+        final given = await live.release(
+          ride.id,
+          reasonCode: giveBackReasonCode(ScheduledRideStore.lastGiveBackReason),
+        );
+        ScheduledRideStore.lastGiveBackReason = null;
+        if (!given) {
+          if (mounted) _notice(tr.schedGiveBackFailed);
+          return;
+        }
+      }
       final paused = ScheduledRideStore._cancelAccepted(
         ride,
         counts: action == _ScheduledRideAction.cancelled,
@@ -358,11 +395,8 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       }
       // An open reservation goes back out to drivers (notes R24): where it
       // goes follows the admin rule, Radar trips too close to pickup.
-      if (LiveDriverServices.instance?.reservations case final live?
-          when ride.id.isNotEmpty) {
-        // Contract v0.18.17: the server takes it back and lists it again.
-        unawaited(live.release(ride.id, reasonCode: giveBackReasonCode(ScheduledRideStore.lastGiveBackReason)));
-        ScheduledRideStore.lastGiveBackReason = null;
+      if (LiveDriverServices.active && ride.id.isNotEmpty) {
+        // Contract v0.18.17: already taken back by the server above.
       } else if (ride.id.isNotEmpty && !ride.assigned) {
         widget.dispatchRepository?.releaseReservation(ride.id);
       }
@@ -406,13 +440,36 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     }
   }
 
-  Future<bool> _claimOnServer(LiveReservations live, _ScheduledRide ride) async {
+  Future<bool> _claimOnServer(
+    LiveReservations live,
+    _ScheduledRide ride,
+  ) async {
     if (!ScheduledRideStore.beginClaim(ride.id)) return false;
-    final refused = await live.accept(ride.id);
+    // Checker M1: the version this driver saw; the server refuses a ride that changed since.
+    final refused = await live.accept(
+      ride.id,
+      version: ScheduledRideStore.serverRow(ride.id)?.version,
+    );
     ScheduledRideStore.endClaim(ride.id);
     if (refused == null) return true;
     if (refused == ReservationRefusal.network) {
       if (mounted) _notice(tr.islandNoConnection);
+      return false;
+    }
+    if (refused == ReservationRefusal.changed) {
+      // The rider changed it: show the new time and price, the driver decides again.
+      await ScheduledRideStore.syncFromServer(live);
+      final now = ScheduledRideStore.serverRow(ride.id);
+      if (mounted) {
+        _notice(
+          now == null
+              ? tr.islandNoLongerAvailable
+              : tr.schedRideChanged(
+                  ServerReservation.clockOf(now.scheduledAt),
+                  now.earnings.formatted,
+                ),
+        );
+      }
       return false;
     }
     ScheduledRideStore.take(ride.id);
@@ -864,26 +921,45 @@ class ScheduledRideStore {
     }
     ReservationRequestPreview preview(ServerReservation r) => r.toPreview(
       dayWord: (at) => _dayWordOf(at, _now),
-      pickupLabel: (time) => tr.schedSeedTime(_dayWordOf(r.scheduledAt, _now), time),
+      pickupLabel: (time) =>
+          tr.schedSeedTime(_dayWordOf(r.scheduledAt, _now), time),
     );
-    final claiming = _requests.where((ride) => _claims.contains(ride.id)).toList();
+    final claiming = _requests
+        .where((ride) => _claims.contains(ride.id))
+        .toList();
     _requests
       ..clear()
       ..addAll(claiming)
       ..addAll([
         for (final r in page.open)
-          if (!claiming.any((ride) => ride.id == r.tripId)) _ScheduledRide.request(preview(r)),
+          if (!claiming.any((ride) => ride.id == r.tripId))
+            _ScheduledRide.request(preview(r)),
       ]);
     _accepted
       ..clear()
-      ..addAll([for (final r in page.accepted) _ScheduledRide.fromRoute(preview(r))]);
+      ..addAll([
+        for (final r in page.accepted) _ScheduledRide.fromRoute(preview(r)),
+      ]);
     // Owner BL-Q6: the rider changed a ride this driver holds.
-    keepQuestions.value = [for (final r in page.accepted) if (r.asksToKeep) r];
+    keepQuestions.value = [
+      for (final r in page.accepted)
+        if (r.asksToKeep) r,
+    ];
+    _serverRows
+      ..clear()
+      ..addAll({
+        for (final r in [...page.open, ...page.accepted]) r.tripId: r,
+      });
     _changed();
   }
 
+  /// The server's rows by trip id (the version an Accept sends).
+  static final Map<String, ServerReservation> _serverRows = {};
+  static ServerReservation? serverRow(String id) => _serverRows[id];
+
   /// Booked rides whose rider changed the time: "Keep it at the new time?".
-  static final ValueNotifier<List<ServerReservation>> keepQuestions = ValueNotifier(const []);
+  static final ValueNotifier<List<ServerReservation>> keepQuestions =
+      ValueNotifier(const []);
 
   /// The reason the driver picked when giving a ride back (sent to the server).
   static String? lastGiveBackReason;
@@ -891,7 +967,11 @@ class ScheduledRideStore {
   /// "Today", "Tomorrow" or "5 Nov" for a pickup at [at].
   static String _dayWordOf(DateTime at, DateTime now) {
     final local = at.toLocal();
-    final days = DateTime.utc(local.year, local.month, local.day).difference(DateTime.utc(now.year, now.month, now.day)).inDays;
+    final days = DateTime.utc(
+      local.year,
+      local.month,
+      local.day,
+    ).difference(DateTime.utc(now.year, now.month, now.day)).inDays;
     if (days == 0) return tr.today;
     if (days == 1) return tr.tomorrow;
     return '${local.day}/${local.month}';
