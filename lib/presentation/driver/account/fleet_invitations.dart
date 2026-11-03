@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/widgets/country_flag.dart';
 import 'package:flutter/services.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
@@ -341,10 +342,7 @@ class _InviteDriverFormState extends State<_InviteDriverForm> {
                 ).copyWith(
                   prefixIcon: Padding(
                     padding: const EdgeInsets.only(left: 14, right: 8),
-                    child: Text(
-                      _country.flag,
-                      style: const TextStyle(fontSize: 22),
-                    ),
+                    child: CountryFlag(_country.iso),
                   ),
                   prefixIconConstraints: const BoxConstraints(minWidth: 0),
                 ),

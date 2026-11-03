@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/widgets/country_flag.dart';
 import 'package:movera/core/admin/trip_rules_admin_config.dart';
 import 'package:movera/core/contracts/driver_onboarding_rules.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -44,10 +45,7 @@ Future<String?> showDetailsCountryPicker(
         PickerRow(
           value: code,
           key: 'pick-country-$code',
-          leading: Text(
-            countryFlag(code),
-            style: const TextStyle(fontSize: 30, height: 1),
-          ),
+          leading: CountryFlag(code, width: 32),
           title: countryName(code),
           enabled: DriverOnboardingRules.isOpen(code),
           tag: DriverOnboardingRules.isOpen(code) ? null : tr.acctComingSoon,

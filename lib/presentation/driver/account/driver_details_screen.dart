@@ -1,4 +1,5 @@
 import 'package:movera/widgets/movera_dialog_theme.dart';
+import 'package:movera/widgets/country_flag.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -644,10 +645,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
         _label(tr.acctCountry),
         _PickBox(
           key: const ValueKey('details-country'),
-          leading: Text(
-            countryFlag(_country),
-            style: const TextStyle(fontSize: 24, height: 1),
-          ),
+          leading: CountryFlag(_country, width: 26),
           title: countryName(_country),
           onTap: _busy ? null : _pickCountry,
           error: _errors[DetailsField.country],

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:movera/widgets/country_flag.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:movera/core/auth/phone_country.dart';
@@ -546,7 +547,7 @@ class _CountryButton extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(country.flag, style: const TextStyle(fontSize: 22)),
+                  CountryFlag(country.iso),
                   if (onTap != null) ...[
                     const SizedBox(width: 6),
                     const Icon(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/widgets/country_flag.dart';
 import 'package:movera/core/auth/phone_country.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -192,7 +193,7 @@ class _CountryRow extends StatelessWidget {
               : null,
           child: Row(
             children: [
-              Text(country.flag, style: const TextStyle(fontSize: 22)),
+              CountryFlag(country.iso),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
