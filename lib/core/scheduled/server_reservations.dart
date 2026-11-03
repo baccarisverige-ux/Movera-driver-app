@@ -22,7 +22,15 @@ class ServerReservation {
     required this.status,
     required this.mustBeOnlineAt,
     this.popup = false,
+    this.changeAskUntil,
+    this.previousAt,
   });
+
+  /// Owner BL-Q6: the rider changed this ride; answer "Keep it at the new
+  /// time?" before [changeAskUntil]. [previousAt] is the old pickup time.
+  final DateTime? changeAskUntil;
+  final DateTime? previousAt;
+  bool get asksToKeep => changeAskUntil != null;
 
   final String tripId;
   final int version;
@@ -69,6 +77,8 @@ class ServerReservation {
     if (earnings is! Map) {
       throw const FormatException('DriverReservation.earnings missing');
     }
+    final reservation = json['reservation'];
+    final ask = json['changeAsk'] ?? (reservation is Map ? reservation['changeAsk'] : null);
     final pickup = place('pickup');
     final dropoff = place('dropoff');
     return ServerReservation(
@@ -87,6 +97,8 @@ class ServerReservation {
       status: text('status'),
       mustBeOnlineAt: time('mustBeOnlineAt'),
       popup: json['popup'] == true,
+      changeAskUntil: ask is Map ? DateTime.tryParse('${ask['until']}') : null,
+      previousAt: ask is Map ? DateTime.tryParse('${ask['previousAt']}') : null,
     );
   }
 
@@ -171,4 +183,11 @@ ReservationRefusal reservationRefusalOf(int status, Object? body) {
       return ReservationRefusal.onTrip;
   }
   return status == 404 ? ReservationRefusal.notOpen : ReservationRefusal.other;
+}
+
+/// The code sent when the driver gives a booked ride back: the reason he
+/// picked when it is a contract scheduled code, else `scheduled_other`.
+String giveBackReasonCode(String? picked) {
+  const scheduled = {'scheduled_cannot_make_time', 'scheduled_vehicle_issue', 'scheduled_personal_emergency', 'scheduled_pickup_too_far', 'scheduled_trip_details', 'scheduled_other'};
+  return picked != null && scheduled.contains(picked) ? picked : 'scheduled_other';
 }

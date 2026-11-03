@@ -111,6 +111,14 @@ class ApiClient {
     authenticated: authenticated,
   );
 
+  /// `PUT path` with a JSON [body] and an `Idempotency-Key` (v0.18.17
+  /// `PUT /driver/home-area`).
+  Future<Map<String, dynamic>> put(
+    String path, {
+    Map<String, dynamic>? body,
+    String? idempotencyKey,
+  }) => _send('PUT', path, body: body, idempotencyKey: idempotencyKey ?? _idempotencyKey(), authenticated: true);
+
   /// `DELETE path`.
   Future<Map<String, dynamic>> delete(
     String path, {

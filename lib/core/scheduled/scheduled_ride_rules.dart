@@ -403,8 +403,19 @@ class BookLaterRules {
     this.noDriverAlertMin = 10,
     this.riderReminderMin = 60,
     this.freeChangeBeforeMin = 60,
-    this.maxTripKm = 60,
+    this.maxTripKm,
+    this.dispatchBeforeMin = 30,
+    this.listHomeKm = 5,
+    this.listAtTimeKm = 5,
+    this.listAtTimeMin = 30,
+    this.changeAnswerMin = 15,
   });
+
+  final int dispatchBeforeMin;
+  final double listHomeKm;
+  final double listAtTimeKm;
+  final int listAtTimeMin;
+  final int changeAnswerMin;
 
   final int minAheadMin;
   final int maxAheadDays;
@@ -425,9 +436,10 @@ class BookLaterRules {
   final int noDriverAlertMin;
   final int riderReminderMin;
   final int freeChangeBeforeMin;
-  final double maxTripKm;
+  /// Null: no limit (owner BL-Q5).
+  final double? maxTripKm;
 
-  static const listToValues = ['all', 'category', 'rating', 'random', 'nearNow', 'group', 'areaRegulars', 'homeNear', 'favourites'];
+  static const listToValues = ['all', 'category', 'rating', 'random', 'nearNow', 'group', 'areaRegulars', 'homeNear', 'favourites', 'nearAtTime'];
 
   factory BookLaterRules.fromJson(Map<dynamic, dynamic> json) {
     const seed = BookLaterRules();
@@ -451,7 +463,12 @@ class BookLaterRules {
       noDriverAlertMin: _intIn(json['noDriverAlertMin'], 1, 120) ?? seed.noDriverAlertMin,
       riderReminderMin: _intIn(json['riderReminderMin'], 0, 1440) ?? seed.riderReminderMin,
       freeChangeBeforeMin: _intIn(json['freeChangeBeforeMin'], 0, 1440) ?? seed.freeChangeBeforeMin,
-      maxTripKm: _numIn(json['maxTripKm'], 1, 1000) ?? seed.maxTripKm,
+      maxTripKm: _numIn(json['maxTripKm'], 1, 1000),
+      dispatchBeforeMin: _intIn(json['dispatchBeforeMin'], 5, 240) ?? seed.dispatchBeforeMin,
+      listHomeKm: _numIn(json['listHomeKm'], 0.5, 50) ?? seed.listHomeKm,
+      listAtTimeKm: _numIn(json['listAtTimeKm'], 0.5, 50) ?? seed.listAtTimeKm,
+      listAtTimeMin: _intIn(json['listAtTimeMin'], 5, 240) ?? seed.listAtTimeMin,
+      changeAnswerMin: _intIn(json['changeAnswerMin'], 1, 120) ?? seed.changeAnswerMin,
     );
   }
 
@@ -475,5 +492,10 @@ class BookLaterRules {
     'riderReminderMin': riderReminderMin,
     'freeChangeBeforeMin': freeChangeBeforeMin,
     'maxTripKm': maxTripKm,
+    'dispatchBeforeMin': dispatchBeforeMin,
+    'listHomeKm': listHomeKm,
+    'listAtTimeKm': listAtTimeKm,
+    'listAtTimeMin': listAtTimeMin,
+    'changeAnswerMin': changeAnswerMin,
   };
 }

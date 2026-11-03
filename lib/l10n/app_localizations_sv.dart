@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -7148,4 +7147,28 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get schedServerClash =>
       'Den här resan ligger för nära en annan bokad resa du har.';
+
+  @override
+  String get schedKeepTitle => 'Behålla den på den nya tiden?';
+
+  @override
+  String schedKeepBody(String oldTime, String newTime) {
+    return 'Resenären ändrade resan kl. $oldTime till $newTime.';
+  }
+
+  @override
+  String get schedKeepYes => 'Ja, behåll';
+
+  @override
+  String get schedKeepNo => 'Nej, lämna tillbaka';
+
+  @override
+  String get schedHomeArea => 'Ange hemområde här';
+
+  @override
+  String get schedHomeAreaSaved =>
+      'Hemområde sparat. Bokade resor nära det kan komma till dig.';
+
+  @override
+  String get schedHomeAreaNoFix => 'Slå på platstjänster först.';
 }

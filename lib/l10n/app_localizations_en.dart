@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -7136,4 +7135,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get schedServerClash =>
       'This ride is too close to another booked ride you have.';
+
+  @override
+  String get schedKeepTitle => 'Keep it at the new time?';
+
+  @override
+  String schedKeepBody(String oldTime, String newTime) {
+    return 'The rider changed the $oldTime ride to $newTime.';
+  }
+
+  @override
+  String get schedKeepYes => 'Yes, keep it';
+
+  @override
+  String get schedKeepNo => 'No, give it back';
+
+  @override
+  String get schedHomeArea => 'Set home area here';
+
+  @override
+  String get schedHomeAreaSaved =>
+      'Home area saved. Booked rides near it can come to you.';
+
+  @override
+  String get schedHomeAreaNoFix => 'Turn on location first.';
 }

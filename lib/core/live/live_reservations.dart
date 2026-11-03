@@ -51,6 +51,15 @@ class LiveReservations {
       )) ==
       null;
 
+  /// Owner BL-Q6: `POST /driver/reservations/{tripId}/keep { keep }`.
+  Future<ReservationRefusal?> keep(String tripId, {required bool keep}) =>
+      _run(() => _api.post(commandPath(tripId, 'keep'), body: {'keep': keep}));
+
+  /// Owner BL-Q4: `PUT /driver/home-area` (where "home nearby" booked
+  /// rides are measured from). True when the server saved it.
+  Future<bool> setHomeArea(double lat, double lng, {String? label}) async =>
+      await _run(() => _api.put('/api/v1/driver/home-area', body: {'lat': lat, 'lng': lng, if (label != null && label.isNotEmpty) 'label': label})) == null;
+
   /// `POST /driver/reservations/{tripId}/start`: head to the pickup. The
   /// trip opens as the current trip ([onStarted]).
   Future<ReservationRefusal?> start(String tripId) => _run(() async {

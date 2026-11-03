@@ -2030,5 +2030,12 @@
   "supportCommentHint": "Har du en kommentar eller idé till oss? (valfritt)",
   "supportCommentSend": "Skicka kommentar",
   "supportCommentThanks": "Tack för din kommentar.",
-  "schedServerClash": "Den här resan ligger för nära en annan bokad resa du har."
+  "schedServerClash": "Den här resan ligger för nära en annan bokad resa du har.",
+  "schedKeepTitle": "Behålla den på den nya tiden?",
+  "schedKeepBody": "Resenären ändrade resan kl. {oldTime} till {newTime}.",
+  "schedKeepYes": "Ja, behåll",
+  "schedKeepNo": "Nej, lämna tillbaka",
+  "schedHomeArea": "Ange hemområde här",
+  "schedHomeAreaSaved": "Hemområde sparat. Bokade resor nära det kan komma till dig.",
+  "schedHomeAreaNoFix": "Slå på platstjänster först."
 }

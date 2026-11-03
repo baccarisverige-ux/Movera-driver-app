@@ -79,8 +79,48 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     _store.addListener(_storeChanged);
     // Contract v0.18.17 Book later: on live the lists are the server's.
     if (LiveDriverServices.instance?.reservations case final live?) {
+      ScheduledRideStore.keepQuestions.addListener(_askToKeep);
       unawaited(ScheduledRideStore.syncFromServer(live));
     }
+  }
+
+  bool _asking = false;
+
+  /// Owner BL-Q6: "Keep it at the new time?" Yes keeps it; No gives it back.
+  Future<void> _askToKeep() async {
+    final live = LiveDriverServices.instance?.reservations;
+    final asks = ScheduledRideStore.keepQuestions.value;
+    if (live == null || asks.isEmpty || _asking || !mounted) return;
+    _asking = true;
+    final ride = asks.first;
+    final keep = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(tr.schedKeepTitle),
+        content: Text(tr.schedKeepBody(ServerReservation.clockOf(ride.previousAt ?? ride.scheduledAt), ServerReservation.clockOf(ride.scheduledAt))),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(tr.schedKeepNo)),
+          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(tr.schedKeepYes)),
+        ],
+      ),
+    );
+    _asking = false;
+    if (keep == null || !mounted) return;
+    await live.keep(ride.tripId, keep: keep);
+    await ScheduledRideStore.syncFromServer(live);
+  }
+
+  /// Owner BL-Q4: the driver's home area is where the phone is now.
+  Future<void> _setHomeArea() async {
+    final services = LiveDriverServices.instance;
+    final point = services?.reporter.lastKnownPoint;
+    if (services == null) return;
+    if (point == null) {
+      _notice(tr.schedHomeAreaNoFix);
+      return;
+    }
+    final saved = await services.reservations.setHomeArea(point.latitude, point.longitude);
+    if (mounted) _notice(saved ? tr.schedHomeAreaSaved : tr.islandNoConnection);
   }
 
   void _storeChanged() {
@@ -90,6 +130,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   @override
   void dispose() {
     _store.removeListener(_storeChanged);
+    ScheduledRideStore.keepQuestions.removeListener(_askToKeep);
     super.dispose();
   }
 
@@ -320,7 +361,8 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
       if (LiveDriverServices.instance?.reservations case final live?
           when ride.id.isNotEmpty) {
         // Contract v0.18.17: the server takes it back and lists it again.
-        unawaited(live.release(ride.id));
+        unawaited(live.release(ride.id, reasonCode: giveBackReasonCode(ScheduledRideStore.lastGiveBackReason)));
+        ScheduledRideStore.lastGiveBackReason = null;
       } else if (ride.id.isNotEmpty && !ride.assigned) {
         widget.dispatchRepository?.releaseReservation(ride.id);
       }
@@ -428,6 +470,12 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
               ],
             ),
           ),
+          if (LiveDriverServices.active)
+            IconButton(
+              tooltip: tr.schedHomeArea,
+              onPressed: _setHomeArea,
+              icon: const Icon(Icons.home_outlined, color: Color(0xFF425058)),
+            ),
           Container(
             height: 38,
             width: 38,
@@ -829,8 +877,16 @@ class ScheduledRideStore {
     _accepted
       ..clear()
       ..addAll([for (final r in page.accepted) _ScheduledRide.fromRoute(preview(r))]);
+    // Owner BL-Q6: the rider changed a ride this driver holds.
+    keepQuestions.value = [for (final r in page.accepted) if (r.asksToKeep) r];
     _changed();
   }
+
+  /// Booked rides whose rider changed the time: "Keep it at the new time?".
+  static final ValueNotifier<List<ServerReservation>> keepQuestions = ValueNotifier(const []);
+
+  /// The reason the driver picked when giving a ride back (sent to the server).
+  static String? lastGiveBackReason;
 
   /// "Today", "Tomorrow" or "5 Nov" for a pickup at [at].
   static String _dayWordOf(DateTime at, DateTime now) {
@@ -2386,6 +2442,7 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
     );
 
     if (confirmed == true && context.mounted) {
+      ScheduledRideStore.lastGiveBackReason = reason.code;
       _popScheduledRoute(
         context,
         reason.counts

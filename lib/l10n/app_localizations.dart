@@ -12306,6 +12306,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This ride is too close to another booked ride you have.'**
   String get schedServerClash;
+
+  /// No description provided for @schedKeepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it at the new time?'**
+  String get schedKeepTitle;
+
+  /// No description provided for @schedKeepBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The rider changed the {oldTime} ride to {newTime}.'**
+  String schedKeepBody(String oldTime, String newTime);
+
+  /// No description provided for @schedKeepYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, keep it'**
+  String get schedKeepYes;
+
+  /// No description provided for @schedKeepNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, give it back'**
+  String get schedKeepNo;
+
+  /// No description provided for @schedHomeArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Set home area here'**
+  String get schedHomeArea;
+
+  /// No description provided for @schedHomeAreaSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Home area saved. Booked rides near it can come to you.'**
+  String get schedHomeAreaSaved;
+
+  /// No description provided for @schedHomeAreaNoFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on location first.'**
+  String get schedHomeAreaNoFix;
 }
 
 class _AppLocalizationsDelegate

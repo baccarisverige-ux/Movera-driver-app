@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -7263,4 +7262,28 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get schedServerClash =>
       'Cette course est trop proche d\'une autre course réservée que vous avez.';
+
+  @override
+  String get schedKeepTitle => 'La garder à la nouvelle heure ?';
+
+  @override
+  String schedKeepBody(String oldTime, String newTime) {
+    return 'Le passager a changé la course de $oldTime pour $newTime.';
+  }
+
+  @override
+  String get schedKeepYes => 'Oui, la garder';
+
+  @override
+  String get schedKeepNo => 'Non, la rendre';
+
+  @override
+  String get schedHomeArea => 'Définir la zone de domicile ici';
+
+  @override
+  String get schedHomeAreaSaved =>
+      'Zone de domicile enregistrée. Les courses réservées proches peuvent vous être proposées.';
+
+  @override
+  String get schedHomeAreaNoFix => 'Activez d\'abord la localisation.';
 }

@@ -245,7 +245,7 @@ abstract final class TripTransitions {
     TripTransition(
       TripCommand.reschedule,
       TripActor.rider,
-      [TripStatus.requested, TripStatus.accepted],
+      [TripStatus.requested],
       TripStatus.requested,
       when: TripKind.scheduled,
     ),

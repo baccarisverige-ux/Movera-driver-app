@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/auth/token_store.dart';
 import 'package:movera/core/live/live_reservations.dart';
+import 'package:movera/core/scheduled/scheduled_ride_rules.dart';
 import 'package:movera/core/scheduled/server_reservations.dart';
 
 /// Contract v0.18.17 Book later (owner 2026-11-03): the live driver app
@@ -112,5 +113,43 @@ void main() {
       api = live((_) => json({'code': 'conflict', 'message': 'early', 'reason': 'reservation_too_early'}, 409));
       expect(await api.start('trp_1'), ReservationRefusal.tooEarly);
     });
+  });
+
+  test('owner BL-Q6: a changed ride carries the keep question; the reason picked is sent', () {
+    final ride = ServerReservation.fromJson(Map<String, dynamic>.from({...row('trp_1', status: 'accepted'), 'changeAsk': {'until': '2026-11-05T05:15:00Z', 'previousAt': '2026-11-05T06:30:00Z'}}));
+    expect(ride.asksToKeep, isTrue);
+    expect(ride.previousAt, DateTime.utc(2026, 11, 5, 6, 30));
+    expect(ServerReservation.fromJson(Map<String, dynamic>.from(row('trp_2'))).asksToKeep, isFalse);
+    expect(giveBackReasonCode('scheduled_vehicle_issue'), 'scheduled_vehicle_issue');
+    expect(giveBackReasonCode('traffic'), 'scheduled_other');
+    expect(giveBackReasonCode(null), 'scheduled_other');
+  });
+
+  test('owner BL-Q2/Q5 defaults: search 30 min before, no distance limit', () {
+    const rules = BookLaterRules();
+    expect(rules.dispatchBeforeMin, 30);
+    expect(rules.maxTripKm, isNull);
+    expect(BookLaterRules.fromJson({'listTo': 'nearAtTime', 'maxTripKm': 80}).listTo, 'nearAtTime');
+    expect(BookLaterRules.fromJson({'maxTripKm': 80}).maxTripKm, 80);
+  });
+
+  test('keep and home area go to the server', () async {
+    final requests = <http.Request>[];
+    final api = LiveReservations(
+      api: ApiClient(
+        client: MockClient((r) async {
+          requests.add(r);
+          return http.Response(jsonEncode({'tripId': 'trp_1', 'status': 'accepted', 'version': 5}), 200, headers: {'content-type': 'application/json'});
+        }),
+        baseUri: Uri.parse('https://api.example.test'),
+        tokens: MemoryTokenStore()..save(access: 'a1', refresh: 'r1'),
+      ),
+    );
+    expect(await api.keep('trp_1', keep: false), isNull);
+    expect(jsonDecode(requests.last.body), {'keep': false});
+    expect(requests.last.url.path, '/api/v1/driver/reservations/trp_1/keep');
+    expect(await api.setHomeArea(59.3, 18.0), isTrue);
+    expect(requests.last.method, 'PUT');
+    expect(requests.last.url.path, '/api/v1/driver/home-area');
   });
 }
