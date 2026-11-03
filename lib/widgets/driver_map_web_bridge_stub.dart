@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 bool get ready => true;
+void requestMaps() {}
 String? createBlobUrl(Uint8List bytes) => null;
 void revokeBlobUrl(String url) {}
 void applyAnchor(int mapId) {}

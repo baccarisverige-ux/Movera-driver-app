@@ -55,7 +55,7 @@ import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/onboarding/onboarding_settings.dart';
-import 'package:movera/presentation/common/chat/chat.dart';
+import 'package:movera/presentation/common/chat/local_chat_messages.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/home.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';

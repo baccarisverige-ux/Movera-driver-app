@@ -55,7 +55,9 @@
        stares at an empty page for several seconds and assumes the app is
        broken rather than loading. Dart clears it on its first frame. */
     #movera-boot {
-      position: fixed;
+      /* absolute, not fixed: owner 2026-10-31 "Go back to before" keeps
+         any fixed layer off this page; inset 0 still covers the screen. */
+      position: absolute;
       inset: 0;
       z-index: 2147483647;
       display: flex;
@@ -105,13 +107,49 @@
   </style>
   <link rel="manifest" href="manifest.json">
 
-  <!-- Replaced with the newmap131189 repository secret during deployment.
-       A browser key is always public: it must be restricted to this site's
-       HTTP referrers and to the Maps JavaScript API (docs/PRIVACY_SECURITY.md).
-       async: a slow or stalled Maps request must not hold up the app; the
-       adapter below and the map widget wait for it (driver-r4-24). -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY" async></script>
+  <!-- GOOGLE_MAPS_API_KEY is replaced with the newmap131189 repository secret
+       during deployment. A browser key is always public: it must be
+       restricted to this site's HTTP referrers and to the Maps JavaScript API
+       (docs/PRIVACY_SECURITY.md).
+       Owner 2026-11-03 (LT-4 "load on open"): Maps JavaScript is no longer
+       loaded with the page; the first map on screen calls
+       moveraLoadGoogleMaps() (lib/widgets/custom_google_map.dart), so the
+       sign-in screen does not wait for it. async as before: the adapter
+       below and the map widget wait for it (driver-r4-24). -->
+  <script>
+    window.moveraLoadGoogleMaps = function() {
+      if (window.moveraGoogleMapsRequested) return;
+      window.moveraGoogleMapsRequested = true;
+      var script = document.createElement('script');
+      script.src = 'https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY';
+      script.async = true;
+      document.head.appendChild(script);
+    };
+  </script>
   <script src="driver_map_camera.js"></script>
+  <script>
+    // Owner 2026-11-03 (LT-4 "load on open"): the google_sign_in web plugin
+    // adds Google's sign-in script (about 100 kB) at every start, but the
+    // web build never signs in with Google (the button says "Coming soon",
+    // lib/core/auth/provider_token_source.dart). Hold that script back until
+    // moveraLoadGoogleSignIn() asks for it.
+    (function() {
+      var head = document.head;
+      var append = head.appendChild;
+      var held = null;
+      head.appendChild = function(node) {
+        var src = node && node.tagName === 'SCRIPT' ? String(node.src || '') : '';
+        if (held === null && src.indexOf('https://accounts.google.com/gsi/client') === 0) {
+          held = node;
+          return node;
+        }
+        return append.call(head, node);
+      };
+      window.moveraLoadGoogleSignIn = function() {
+        if (held && !held.parentNode) append.call(head, held);
+      };
+    })();
+  </script>
   <!-- Contract v0.18.3 R7: push (settings come from the server at run time). -->
   <script src="movera_push.js"></script>
 </head>

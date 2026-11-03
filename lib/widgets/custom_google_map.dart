@@ -23,6 +23,11 @@ class CustomGoogleMap extends StatefulWidget {
   @visibleForTesting
   static bool Function() mapsReadyProbe = () => web.ready;
 
+  /// Web: asks the page to load Maps JavaScript (owner 2026-11-03, LT-4:
+  /// it is no longer loaded with the page). Tests replace it.
+  @visibleForTesting
+  static void Function() requestMaps = web.requestMaps;
+
   /// driver-99: how long the map waits for Maps JavaScript before it says
   /// the map is unavailable (a blocker, a rejected key, offline). It still
   /// shows the map if the script arrives later.
@@ -352,6 +357,7 @@ class _CustomGoogleMapState extends State<CustomGoogleMap> {
       );
     }
     if (_mapsReady) return;
+    CustomGoogleMap.requestMaps();
     const poll = Duration(milliseconds: 50);
     _mapsReadyPoll = Timer.periodic(poll, (timer) {
       if (!CustomGoogleMap.mapsReadyProbe()) {

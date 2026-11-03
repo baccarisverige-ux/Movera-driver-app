@@ -23,6 +23,19 @@ void revokeBlobUrl(String url) => _revokeObjectUrl(url.toJS);
 @JS('driverMapCamera')
 external JSObject? get _adapter;
 
+@JS('moveraLoadGoogleMaps')
+external JSFunction? get _loadGoogleMaps;
+
+/// Owner 2026-11-03 (LT-4): web/index.html loads Maps JavaScript only when
+/// the first map asks for it. Safe to call often; the page loads it once.
+void requestMaps() {
+  try {
+    _loadGoogleMaps?.callAsFunction();
+  } catch (_) {
+    // The map keeps waiting and says it is unavailable after a while.
+  }
+}
+
 /// Maps JavaScript and web/driver_map_camera.js are installed. Before that
 /// no map may be built and no adapter call made: either one throws, and a
 /// throw while Home rebuilds drops its overlays (popup, offer cards) from

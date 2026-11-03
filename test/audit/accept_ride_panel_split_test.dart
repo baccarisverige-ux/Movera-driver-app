@@ -24,7 +24,10 @@ void main() {
       expect(panel, contains('Widget _buildRiderRow'));
       expect(
         panel,
-        contains('Chat(riderDisplayName: _riderName, tripId: widget.tripId)'),
+        // LT-4 (owner 2026-11-03): Chat now opens through its loader.
+        contains(
+          'chatScreen(riderDisplayName: _riderName, tripId: widget.tripId)',
+        ),
       );
       expect(panel, isNot(contains('setState(')));
       // Phase 2: was < 1800 before `dart format` (tall style); same code

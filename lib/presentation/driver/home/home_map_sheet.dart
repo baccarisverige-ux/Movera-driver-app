@@ -2047,7 +2047,7 @@ extension _HomeMapSheet on _DriverHomeState {
     _rebuild(() => _islandFace = _IslandFace.hidden);
     pushSingle(
       context,
-      MaterialPageRoute<void>(builder: (_) => const DriverRideHistory()),
+      MaterialPageRoute<void>(builder: (_) => rideHistoryScreen()),
     );
   }
 

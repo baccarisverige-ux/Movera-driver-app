@@ -8,7 +8,7 @@ import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/dispatch/dispatch_repository.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/presentation/driver/driving%20logs/driving_logs.dart';
-import 'package:movera/presentation/driver/my%20wallet/wallet.dart';
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/presentation/driver/notifications/driver_notifications_screen.dart';
 import 'package:movera/presentation/driver/notifications/server_notifications_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
@@ -16,7 +16,6 @@ import 'package:movera/core/account/driver_account_session.dart';
 import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/profile/profile.dart';
 import 'package:movera/presentation/driver/promotions/promotions.dart';
-import 'package:movera/presentation/driver/ride%20history/ride_history.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
 import 'package:movera/presentation/driver/settings/settings.dart';
 import 'package:movera/presentation/driver/support/support_inbox.dart';
@@ -117,13 +116,13 @@ class DriverSideMenu extends StatelessWidget {
                         asset: AppAssets.menuWallet,
                         title: tr.wallet,
                         subtitle: tr.earningsAndWeeklyPayouts,
-                        onTap: () => _open(context, const WalletScreen()),
+                        onTap: () => _open(context, walletScreen()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuHistory,
                         title: tr.rideHistory,
                         subtitle: tr.completedAndPreviousRides,
-                        onTap: () => _open(context, const DriverRideHistory()),
+                        onTap: () => _open(context, rideHistoryScreen()),
                       ),
                       // Q31: ride alerts, demand and account messages.
                       _MenuAction(

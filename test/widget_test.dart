@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/core/safety/safety_audio_option.dart';
 import 'package:movera/constants/appassets.dart';
 import 'package:movera/core/session/driver_runtime_config.dart';
@@ -288,6 +289,9 @@ Future<void> seedCompletedRideForHistory() async {
 }
 
 void main() {
+  // LT-4 (owner 2026-11-03): Wallet, Ride history and Chat load on open; a
+  // deferred load does not finish inside a widget test's fake clock.
+  setUpAll(loadDeferredScreens);
   setUp(() {
     CompletionJournal.resetForTesting();
     SharedPreferences.setMockInitialValues({});
@@ -1889,6 +1893,8 @@ void main() {
 
     await tester.fling(launcher, const Offset(120, 0), 800);
     await _advanceAnimation(tester, const Duration(milliseconds: 420));
+    // LT-4: Ride history now loads on open (one more frame here).
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byType(DriverRideHistory), findsOneWidget);
     expect(find.text('Earnings & history'), findsOneWidget);
