@@ -3687,6 +3687,7 @@
   "authWaitlistSaved": "You’re on the waiting list. We’ll let you know when sign-in opens for your number.",
   "authTestNumbersTitle": "Test numbers (test build only)",
   "authTestNumbersButton": "Test numbers",
+  "authTestNumbersAskAdmin": "Ask an admin for the test numbers",
   "authTestStatusNew": "Test · no account yet",
   "gateSignOut": "Sign out",
   "gateTryAgain": "Try again",

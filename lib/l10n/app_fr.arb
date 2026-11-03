@@ -1631,6 +1631,7 @@
   "authWaitlistSaved": "Vous êtes sur la liste d’attente. Nous vous préviendrons quand la connexion ouvrira pour votre numéro.",
   "authTestNumbersTitle": "Numéros de test (version de test uniquement)",
   "authTestNumbersButton": "Numéros de test",
+  "authTestNumbersAskAdmin": "Demandez les numéros de test à un admin",
   "authTestStatusNew": "Test · pas encore de compte",
   "gateSignOut": "Se déconnecter",
   "gateTryAgain": "Réessayer",

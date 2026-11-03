@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -5751,6 +5752,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get authTestNumbersButton => 'Testnummer';
+
+  @override
+  String get authTestNumbersAskAdmin => 'Be en admin om testnumren';
 
   @override
   String get authTestStatusNew => 'Test · inget konto än';

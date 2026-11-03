@@ -274,6 +274,31 @@ void main() {
       expect(typed, contains('701740606'));
     });
 
+    testWidgets('owner 2026-11-03 "Close it now": signed out the list is '
+        'admin-only (401); the button stays and says to ask an admin, and a '
+        'typed number still asks for a code', (tester) async {
+      final closed = _Server((request) {
+        if (request.url.path == AuthRepository.testAccountsPath) {
+          return _json(401, {'code': 'unauthenticated', 'message': 'x'});
+        }
+        return _json(404, {'code': 'not_found', 'message': 'x'});
+      });
+      await _pumpSignIn(tester, _controller(closed), showTestAccounts: true);
+      final button = find.byKey(const ValueKey('auth-test-numbers-button'));
+      expect(button, findsOneWidget);
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump();
+      expect(find.byKey(const ValueKey('auth-test-accounts')), findsNothing);
+      expect(find.text(tr.authTestNumbersAskAdmin), findsOneWidget);
+      await _continueWith(tester, '705551234');
+      await tester.pump(const Duration(seconds: 1));
+      expect(
+        closed.requests.map((r) => r.url.path),
+        contains(AuthRepository.requestPath),
+      );
+    });
+
     testWidgets('a store build never asks', (tester) async {
       final before = accounts.requests.length;
       await _pumpSignIn(tester, _controller(accounts));
