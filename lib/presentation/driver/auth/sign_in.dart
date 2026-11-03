@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:movera/core/auth/auth_controller.dart';
 import 'package:movera/core/auth/auth_error_message.dart';
 import 'package:movera/core/auth/auth_repository.dart';
+import 'package:movera/core/auth/build_test_numbers.dart';
 import 'package:movera/core/auth/otp_challenge.dart';
 import 'package:movera/core/auth/phone_country.dart';
 import 'package:movera/core/auth/phone_country_default.dart';
@@ -31,7 +32,12 @@ import 'package:movera/widgets/single_route_entry.dart';
 /// drivers, the consent tick and Continue, then Apple and Google (round
 /// 4b). The rider app's sign-in with "Driver" under the wordmark.
 class DriverSignIn extends StatefulWidget {
-  const DriverSignIn({super.key, this.controller, this.showTestAccounts});
+  const DriverSignIn({
+    super.key,
+    this.controller,
+    this.showTestAccounts,
+    this.buildTestNumbers,
+  });
 
   /// Null: the app root's controller ([DriverRuntimeScope.auth]).
   final AuthController? controller;
@@ -41,6 +47,9 @@ class DriverSignIn extends StatefulWidget {
   /// a server (`MOVERA_API_BASE_URL`) that is not a store build
   /// (`MOVERA_PRODUCTION`).
   final bool? showTestAccounts;
+
+  /// Test numbers given at build time; null reads MOVERA_TEST_NUMBERS.
+  final List<String>? buildTestNumbers;
 
   @override
   State<DriverSignIn> createState() => _DriverSignInState();
@@ -193,10 +202,22 @@ class _DriverSignInState extends State<DriverSignIn>
     if (mounted) setState(() => _testNumbersButton = true);
     try {
       final accounts = await auth.testAccounts();
-      if (mounted) setState(() => _testAccounts = accounts);
+      if (accounts.isNotEmpty) {
+        if (mounted) setState(() => _testAccounts = accounts);
+        return;
+      }
     } catch (_) {
-      // Signed out the server answers 401 (admin only since v0.18.18);
-      // the open button then shows tr.authTestNumbersAskAdmin.
+      // Signed out the server answers 401 (admin only since v0.18.18).
+    }
+    // Owner 2026-11-03: the numbers this test build was given (no status,
+    // no names); none -> the open button shows tr.authTestNumbersAskAdmin.
+    final numbers = widget.buildTestNumbers ?? parseTestNumbers();
+    if (mounted && numbers.isNotEmpty) {
+      setState(
+        () => _testAccounts = [
+          for (final phone in numbers) TestAccount(phone: phone, status: ''),
+        ],
+      );
     }
   }
 
@@ -612,21 +633,22 @@ class _DriverSignInState extends State<DriverSignIn>
                         style: AuthText.small().copyWith(color: AuthColors.ink),
                       ),
                     ),
-                    Text(
-                      account.status == 'test'
-                          ? tr.authTestStatusNew
-                          : statusWord(
-                                  tr,
-                                  'driverAccountStatus',
+                    if (account.status.isNotEmpty)
+                      Text(
+                        account.status == 'test'
+                            ? tr.authTestStatusNew
+                            : statusWord(
+                                    tr,
+                                    'driverAccountStatus',
+                                    account.status,
+                                  ) ??
                                   account.status,
-                                ) ??
-                                account.status,
-                      style: AuthText.small().copyWith(
-                        color: account.status == 'active'
-                            ? AuthColors.green
-                            : AuthColors.muted,
+                        style: AuthText.small().copyWith(
+                          color: account.status == 'active'
+                              ? AuthColors.green
+                              : AuthColors.muted,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
