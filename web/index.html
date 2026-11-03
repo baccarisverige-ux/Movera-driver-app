@@ -47,6 +47,62 @@
        takes taps; only the image is hidden. */
     .gm-style img[src*="/mapfiles/transparent.png"] { visibility: hidden !important; }
   </style>
+  <style>
+    /* Owner 2026-11-03 (LT-2): the same loading screen as the rider app,
+       copied from movera-rider-app web/index.html. */
+    /* Boot screen. Plain HTML and CSS so it paints in milliseconds, while the
+       app bundle is still downloading and compiling. Without it the driver
+       stares at an empty page for several seconds and assumes the app is
+       broken rather than loading. Dart clears it on its first frame. */
+    #movera-boot {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      background: #eef1e8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      opacity: 1;
+      transition: opacity 240ms ease-out;
+    }
+    #movera-boot.movera-boot-done {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #movera-boot .movera-boot-mark {
+      font-size: 34px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      color: #1d252c;
+      text-transform: uppercase;
+    }
+    #movera-boot .movera-boot-track {
+      width: 132px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(29, 37, 44, 0.12);
+      overflow: hidden;
+    }
+    #movera-boot .movera-boot-fill {
+      display: block;
+      width: 40%;
+      height: 100%;
+      border-radius: 999px;
+      background: #1d252c;
+      animation: movera-boot-slide 1150ms ease-in-out infinite;
+    }
+    @keyframes movera-boot-slide {
+      0%   { transform: translateX(-110%); }
+      100% { transform: translateX(360%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #movera-boot .movera-boot-fill { animation: none; width: 100%; }
+      #movera-boot { transition: none; }
+    }
+  </style>
   <link rel="manifest" href="manifest.json">
 
   <!-- Replaced with the newmap131189 repository secret during deployment.
@@ -60,6 +116,31 @@
   <script src="movera_push.js"></script>
 </head>
 <body>
+  <div id="movera-boot" role="status" aria-live="polite" aria-label="Loading Movera Driver">
+    <div class="movera-boot-mark">Movera</div>
+    <div class="movera-boot-track"><span class="movera-boot-fill"></span></div>
+  </div>
+  <script>
+    // Dart calls this from its first post-frame callback. The timer is only a
+    // fallback: if the app fails to boot the driver should see whatever Flutter
+    // did render (or the empty page and its own reload button) rather than a
+    // loading screen that never ends.
+    (function() {
+      var cleared = false;
+      function clear() {
+        if (cleared) return;
+        cleared = true;
+        var boot = document.getElementById('movera-boot');
+        if (!boot) return;
+        boot.classList.add('movera-boot-done');
+        setTimeout(function() {
+          if (boot.parentNode) boot.parentNode.removeChild(boot);
+        }, 280);
+      }
+      window.moveraAppReady = clear;
+      setTimeout(clear, 20000);
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

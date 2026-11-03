@@ -69,6 +69,7 @@ import 'package:movera/presentation/driver/notifications/server_notifications_sc
 import 'package:movera/presentation/driver/push/push_explanation.dart';
 import 'package:movera/core/legal/driver_legal.dart';
 import 'package:movera/core/platform/safe_area_insets.dart';
+import 'package:movera/core/web/web_splash.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -95,6 +96,9 @@ Future<void> main() async {
     // The phone's language stays.
   }
   runApp(const MoveraApp());
+  // Owner 2026-11-03 (LT-2): index.html shows the Movera loading screen while
+  // the app downloads; clear it once Flutter has painted its first frame.
+  WidgetsBinding.instance.addPostFrameCallback((_) => dismissWebSplash());
 }
 
 /// App composition root.
