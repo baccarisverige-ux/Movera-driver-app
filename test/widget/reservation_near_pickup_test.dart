@@ -204,7 +204,7 @@ void main() {
       );
       expect(badge, findsOneWidget);
       expect(
-        find.descendant(of: badge, matching: find.text('Reservation · 07:40')),
+        find.descendant(of: badge, matching: find.text('Booked ride · 07:40')),
         findsOneWidget,
       );
       expect(_said, contains('Exclusive reservation'));
@@ -228,7 +228,7 @@ void main() {
       expect(
         find.descendant(
           of: find.byKey(_radarBadge),
-          matching: find.text('Reservation · 07:40'),
+          matching: find.text('Booked ride · 07:40'),
         ),
         findsOneWidget,
       );
@@ -366,7 +366,7 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Reservation · 07:40'), findsOneWidget);
+    expect(find.text('Booked ride · 07:40'), findsOneWidget);
     expect(find.textContaining('Exclusive'), findsNothing);
     expect(find.text('Cash'), findsNothing);
     expect(tester.takeException(), isNull);

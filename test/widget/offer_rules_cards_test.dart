@@ -79,7 +79,7 @@ void main() {
       expect(find.text('9.4 km'), findsOneWidget);
       expect(find.text('1 stop'), findsOneWidget);
       expect(find.text('Cash'), findsOneWidget);
-      expect(find.text('Reservation · 07:40'), findsOneWidget);
+      expect(find.text('Booked ride · 07:40'), findsOneWidget);
       expect(find.text('+20 kr'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

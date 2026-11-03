@@ -12378,6 +12378,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The ride went back to Booked rides.'**
   String get schedGaveBack;
+
+  /// No description provided for @schedKeepNewPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'New price for you: {price}'**
+  String schedKeepNewPrice(String price);
+
+  /// No description provided for @schedLeaveIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Start in {minutes} min'**
+  String schedLeaveIn(String minutes);
+
+  /// No description provided for @schedLeaveNowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start now towards the pickup'**
+  String get schedLeaveNowTitle;
+
+  /// No description provided for @schedLeaveArrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrive {early} min before {time}.'**
+  String schedLeaveArrive(String early, String time);
+
+  /// No description provided for @schedBookedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked ride · {time}'**
+  String schedBookedBadge(String time);
 }
 
 class _AppLocalizationsDelegate

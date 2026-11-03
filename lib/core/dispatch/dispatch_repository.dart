@@ -64,6 +64,7 @@ class RideOffer {
     this.bags = 0,
     this.payment = 'Card',
     this.reservationTime,
+    this.bookedTime,
     this.riderName = '',
     this.riderTrips = 0,
     this.stops = const <ReservationStop>[],
@@ -231,6 +232,15 @@ class RideOffer {
   String? get cashToCollectLabel => cashToCollect?.formatted;
 
   bool get isReservation => reservationTime != null;
+
+  /// Owner 2026-11-03 (contract v0.18.19 `bookLater.liveFixes.badge`): a
+  /// booked ride sent as a normal, Exclusive or Radar offer
+  /// (`Offer.reservation`): its pickup time, for the "Booked ride" badge.
+  /// It changes no flow; [isReservation] still decides that.
+  final String? bookedTime;
+
+  /// The time on the "Booked ride" badge, whatever way the ride came.
+  String? get badgeTime => reservationTime ?? bookedTime;
 
   /// Movera-paid extra for this driver (contract `Offer.driverBonus`, owner
   /// Q16). [fare] already includes it: the driver sees one total.

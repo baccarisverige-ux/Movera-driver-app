@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:movera/widgets/movera_dialog_theme.dart';
+import 'package:movera/core/location/driver_start_position.dart';
 
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/live/live_driver_services.dart';
@@ -22,6 +24,8 @@ import 'package:movera/core/vehicle/ride_categories.dart';
 import 'package:movera/presentation/driver/home/components/home_island_notices.dart';
 import 'package:movera/presentation/driver/home/components/island_messages.dart';
 import 'package:movera/presentation/driver/home/components/reservation_route_map.dart';
+import 'package:movera/core/routing/road_route_service.dart';
+import 'package:movera/core/session/driver_runtime_config.dart';
 import 'package:movera/styles/movera_map_palette.dart';
 import 'package:movera/widgets/driver_route_style.dart';
 import 'package:movera/widgets/led_count_badge.dart';
@@ -93,28 +97,7 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
     if (live == null || asks.isEmpty || _asking || !mounted) return;
     _asking = true;
     final ride = asks.first;
-    final keep = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(tr.schedKeepTitle),
-        content: Text(
-          tr.schedKeepBody(
-            ServerReservation.clockOf(ride.previousAt ?? ride.scheduledAt),
-            ServerReservation.clockOf(ride.scheduledAt),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(tr.schedKeepNo),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(tr.schedKeepYes),
-          ),
-        ],
-      ),
-    );
+    final keep = await askKeepAtNewTime(context, ride);
     _asking = false;
     if (keep == null || !mounted) return;
     final refused = await live.keep(ride.tripId, keep: keep);
@@ -134,8 +117,13 @@ class _ScheduledRidesScreenState extends State<ScheduledRidesScreen> {
   /// Owner BL-Q4: the driver's home area is where the phone is now.
   Future<void> _setHomeArea() async {
     final services = LiveDriverServices.instance;
-    final point = services?.reporter.lastKnownPoint;
     if (services == null) return;
+    // Live test MED 5: offline the reporter has no fix yet; the saved or
+    // platform position is used then, so the home area still saves.
+    final point = await ScheduledRideStore.homeAreaPoint(
+      services.reporter.lastKnownPoint,
+    );
+    if (!mounted) return;
     if (point == null) {
       _notice(tr.schedHomeAreaNoFix);
       return;
@@ -953,6 +941,20 @@ class ScheduledRideStore {
     _changed();
   }
 
+  /// Live test MED 5: where "Set home area here" is. The live fix while
+  /// online, else the phone's saved or last known position.
+  static Future<GeoPoint?> homeAreaPoint(
+    GeoPoint? live, {
+    Future<GeoPoint?> Function()? fallback,
+  }) async {
+    if (live != null && live.isValid) return live;
+    try {
+      return await (fallback ?? DriverStartPosition.load)();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// The server's rows by trip id (the version an Accept sends).
   static final Map<String, ServerReservation> _serverRows = {};
   static ServerReservation? serverRow(String id) => _serverRows[id];
@@ -1404,6 +1406,16 @@ class _ScheduledRideCard extends StatelessWidget {
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.4,
+                              ),
+                            ),
+                            // Owner 2026-11-03: a booked ride always
+                            // shows its badge, here too.
+                            OfferBadge.reservation(
+                              RegExp(
+                                r'\d{1,2}:\d{2}',
+                              ).firstMatch(ride.time)?.group(0),
+                              key: ValueKey<String>(
+                                'scheduled-booked-${ride.pickup}',
                               ),
                             ),
                             // Admin raised the fare; the price has it.
@@ -1904,6 +1916,24 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
                 children: [
+                  if (ScheduledRideStore.serverRow(ride.id) case final row?
+                      when row.asksToKeep) ...[
+                    _KeepCard(ride: row),
+                    const SizedBox(height: 14),
+                  ],
+                  if (ScheduledRideStore.serverRow(ride.id) case final row?
+                      when row.accepted && row.leaveAt != null) ...[
+                    LeaveCountdown(
+                      leaveAt: row.leaveAt!,
+                      pickupAt: row.scheduledAt,
+                      // What the server planned: pickup − drive − leaveAt.
+                      earlyMin:
+                          (row.scheduledAt.difference(row.leaveAt!).inSeconds -
+                              (row.driveSeconds ?? 0)) ~/
+                          60,
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   _buildHero(),
                   const SizedBox(height: 14),
                   _buildRouteMap(context),
@@ -1927,6 +1957,40 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
 
   Widget _buildRouteMap(BuildContext context) {
     final route = ride.route;
+    // Live test 2026-11-03 HIGH 3: a real booking shows the real map with
+    // its road route (the same map as the Home popup and the route screen),
+    // never the illustrated sample.
+    if (route != null && ride.id.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: SizedBox(
+          key: const ValueKey<String>('scheduled-details-real-map'),
+          height: 220 * MediaQuery.textScalerOf(context).scale(11) / 11,
+          width: double.infinity,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _RealReservationMap(request: route),
+              // Tapping the map opens the same full route screen as the
+              // Home reservation popup (notes R26), as before.
+              Positioned.fill(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Semantics(
+                    label: tr.schedViewRoute,
+                    button: true,
+                    child: InkWell(
+                      key: const ValueKey<String>('scheduled-route-open'),
+                      onTap: () => openReservationRoute(context, route),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: SizedBox(
@@ -2155,7 +2219,9 @@ class _ScheduledRideDetailsScreen extends StatelessWidget {
                                 Flexible(
                                   child: Text(
                                     ride.accepted
-                                        ? tr.schedDemoAccepted
+                                        ? (ride.id.isEmpty
+                                              ? tr.schedDemoAccepted
+                                              : tr.schedAcceptedBadge)
                                         : tr.schedAvailable,
                                     style: TextStyle(
                                       color: ride.accepted ? _green : _muted,
@@ -2923,16 +2989,17 @@ class _CancelConfirmationSheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 _LateCancelWarning(ride: ride),
               ],
-              const SizedBox(height: 8),
-              Text(
-                tr.schedRemovesSample,
-                style: TextStyle(
-                  color: Color(0xFF7D888E),
-                  fontSize: 12,
-                  height: 1.4,
-                  fontWeight: FontWeight.w500,
+              if ((ride?.id ?? "").isEmpty) const SizedBox(height: 8),
+              if ((ride?.id ?? "").isEmpty)
+                Text(
+                  tr.schedRemovesSample,
+                  style: TextStyle(
+                    color: Color(0xFF7D888E),
+                    fontSize: 12,
+                    height: 1.4,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -2973,6 +3040,282 @@ class _CancelConfirmationSheet extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The real map of a live booking: the road route loads once, the waypoints
+/// show meanwhile (and when routing is off or fails).
+class _RealReservationMap extends StatefulWidget {
+  const _RealReservationMap({required this.request});
+
+  final ReservationRequestPreview request;
+
+  @override
+  State<_RealReservationMap> createState() => _RealReservationMapState();
+}
+
+class _RealReservationMapState extends State<_RealReservationMap> {
+  late final Future<List<GeoPoint>> _route = _load();
+
+  Future<List<GeoPoint>> _load() {
+    final routes = DriverRuntimeConfig.current.externalRouting
+        ? RoadRouteService(api: LiveDriverServices.instance?.api)
+        : null;
+    final loaded = loadReservationRoute(widget.request, routes);
+    if (routes != null) unawaited(loaded.whenComplete(routes.dispose));
+    return loaded;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<GeoPoint>>(
+      future: _route,
+      initialData: reservationWaypoints(widget.request),
+      builder: (context, snapshot) => ReservationRouteMap(
+        request: widget.request,
+        route: snapshot.data ?? reservationWaypoints(widget.request),
+        labelled: true,
+        fitPadding: 36,
+      ),
+    );
+  }
+}
+
+/// Owner BL-Q6 / live test HIGH 2: "Keep it at the new time?" with the old
+/// and new time and the NEW price. True keeps it, false gives it back,
+/// null: no answer yet. The list, the notice tap and the details screen
+/// all ask with it.
+Future<bool?> askKeepAtNewTime(BuildContext context, ServerReservation ride) =>
+    showDialog<bool>(
+      context: context,
+      // G3-D7: Movera black / green, never the default purple.
+      builder: (dialogContext) => MoveraDialogTheme(
+        child: AlertDialog(
+          key: const ValueKey<String>('scheduled-keep-dialog'),
+          title: Text(tr.schedKeepTitle),
+          content: _KeepWords(ride: ride),
+          actions: [
+            TextButton(
+              key: const ValueKey<String>('scheduled-keep-no'),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(tr.schedKeepNo),
+            ),
+            FilledButton(
+              key: const ValueKey<String>('scheduled-keep-yes'),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(tr.schedKeepYes),
+            ),
+          ],
+        ),
+      ),
+    );
+
+/// Sends the driver's answer, reads the list again and says what happened.
+Future<void> answerKeepAtNewTime(
+  BuildContext context,
+  ServerReservation ride,
+  bool keep,
+) async {
+  final live = LiveDriverServices.instance?.reservations;
+  if (live == null) return;
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  final refused = await live.keep(ride.tripId, keep: keep);
+  await ScheduledRideStore.syncFromServer(live);
+  messenger?.showSnackBar(
+    SnackBar(
+      content: Text(
+        refused == null
+            ? (keep
+                  ? tr.schedKeptAt(ServerReservation.clockOf(ride.scheduledAt))
+                  : tr.schedGaveBack)
+            : refused == ReservationRefusal.network
+            ? tr.islandNoConnection
+            : tr.islandNoLongerAvailable,
+      ),
+    ),
+  );
+}
+
+class _KeepWords extends StatelessWidget {
+  const _KeepWords({required this.ride});
+
+  final ServerReservation ride;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        tr.schedKeepBody(
+          ServerReservation.clockOf(ride.previousAt ?? ride.scheduledAt),
+          ServerReservation.clockOf(ride.scheduledAt),
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        tr.schedKeepNewPrice(ride.earnings.formatted),
+        key: const ValueKey<String>('scheduled-keep-price'),
+        style: const TextStyle(fontWeight: FontWeight.w800),
+      ),
+    ],
+  );
+}
+
+/// The Keep-it question on the booking details screen (live test HIGH 2).
+class _KeepCard extends StatelessWidget {
+  const _KeepCard({required this.ride});
+
+  final ServerReservation ride;
+
+  @override
+  Widget build(BuildContext context) => MoveraDialogTheme(
+    child: Container(
+      key: const ValueKey<String>('scheduled-keep-card'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF6E5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF0C46B)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            tr.schedKeepTitle,
+            style: const TextStyle(
+              color: Color(0xFF252E3A),
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          _KeepWords(ride: ride),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  key: const ValueKey<String>('scheduled-keep-card-no'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: MoveraDialogTheme.ink,
+                    side: const BorderSide(color: MoveraDialogTheme.ink),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () async {
+                    await answerKeepAtNewTime(context, ride, false);
+                    if (context.mounted) Navigator.of(context).maybePop();
+                  },
+                  child: Text(tr.schedKeepNo, textAlign: TextAlign.center),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  key: const ValueKey<String>('scheduled-keep-card-yes'),
+                  onPressed: () async {
+                    await answerKeepAtNewTime(context, ride, true);
+                    if (context.mounted) Navigator.of(context).maybePop();
+                  },
+                  child: Text(tr.schedKeepYes, textAlign: TextAlign.center),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Owner leave on time: "Start in 12 min", then "Start now towards the
+/// pickup", from the server's leaveAt (live position, road route).
+class LeaveCountdown extends StatefulWidget {
+  const LeaveCountdown({
+    super.key,
+    required this.leaveAt,
+    required this.pickupAt,
+    required this.earlyMin,
+    this.now,
+  });
+
+  final DateTime leaveAt;
+  final DateTime pickupAt;
+  final int earlyMin;
+  final DateTime Function()? now;
+
+  @override
+  State<LeaveCountdown> createState() => _LeaveCountdownState();
+}
+
+class _LeaveCountdownState extends State<LeaveCountdown> {
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 20), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = (widget.now ?? DateTime.now)();
+    final left = widget.leaveAt.difference(now);
+    final go = left.inSeconds <= 0;
+    final minutes = (left.inSeconds / 60).ceil();
+    return Container(
+      key: const ValueKey<String>('scheduled-leave-countdown'),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: go ? const Color(0xFF19865C) : const Color(0xFFE9F4EF),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.directions_car_rounded,
+            color: go ? Colors.white : const Color(0xFF19865C),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  go ? tr.schedLeaveNowTitle : tr.schedLeaveIn('$minutes'),
+                  style: TextStyle(
+                    color: go ? Colors.white : const Color(0xFF19865C),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  tr.schedLeaveArrive(
+                    '${widget.earlyMin}',
+                    ServerReservation.clockOf(widget.pickupAt),
+                  ),
+                  style: TextStyle(
+                    color: go ? Colors.white : const Color(0xFF3E4A50),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

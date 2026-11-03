@@ -24,7 +24,14 @@ class ServerReservation {
     this.popup = false,
     this.changeAskUntil,
     this.previousAt,
+    this.leaveAt,
+    this.driveSeconds,
   });
+
+  /// Owner 2026-11-03 leave on time (v0.18.19): when to start towards the
+  /// pickup, from the server's live road-route ETA; null until known.
+  final DateTime? leaveAt;
+  final int? driveSeconds;
 
   /// Owner BL-Q6: the rider changed this ride; answer "Keep it at the new
   /// time?" before [changeAskUntil]. [previousAt] is the old pickup time.
@@ -100,6 +107,12 @@ class ServerReservation {
       earnings: Money.fromJson(Map<String, dynamic>.from(earnings)),
       status: text('status'),
       mustBeOnlineAt: time('mustBeOnlineAt'),
+      leaveAt: reservation is Map && reservation['leaveAt'] is String
+          ? DateTime.tryParse(reservation['leaveAt'] as String)
+          : null,
+      driveSeconds: reservation is Map && reservation['driveSeconds'] is num
+          ? (reservation['driveSeconds'] as num).toInt()
+          : null,
       popup: json['popup'] == true,
       changeAskUntil: ask is Map ? DateTime.tryParse('${ask['until']}') : null,
       previousAt: ask is Map ? DateTime.tryParse('${ask['previousAt']}') : null,

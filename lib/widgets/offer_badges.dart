@@ -45,7 +45,7 @@ class OfferBadge extends StatelessWidget {
   OfferBadge.reservation(String? time, {super.key, this.vertical = 3})
     : _label = time == null || time.isEmpty
           ? tr.reservation
-          : tr.reservationTime(time),
+          : tr.schedBookedBadge(time),
       _kind = _BadgeText.given,
       icon = AppAssets.solarCalendar,
       iconColor = null,

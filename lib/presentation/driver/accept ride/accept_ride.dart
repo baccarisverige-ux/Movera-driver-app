@@ -172,6 +172,7 @@ class AcceptRide extends StatefulWidget {
     this.dispatchRepository,
     this.scheduledPickupAt,
     this.scheduledRideId,
+    this.bookedTime,
   }) : tripId = tripId ?? 'demo-radar-offer';
 
   /// A scheduled ride opened at "Leave now": its pickup time, on
@@ -182,6 +183,7 @@ class AcceptRide extends StatefulWidget {
 
   /// That reservation's id; empty for a sample ride.
   final String? scheduledRideId;
+  final String? bookedTime; // "Booked ride" badge (owner 2026-11-03)
 
   /// Bags the rider said they bring; the trip island mentions them.
   final int bags;

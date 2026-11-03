@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:movera/presentation/driver/scheduled rides/scheduled_rides.dart';
 import 'package:movera/core/account/account_error_message.dart';
 import 'package:movera/core/account/driver_account.dart';
 import 'package:movera/core/account/driver_account_rules.dart';
@@ -138,6 +139,14 @@ class _ServerNotificationsScreenState extends State<ServerNotificationsScreen>
             status: 'rejected',
           ),
         ),
+      );
+      if (mounted) await _load();
+    } else if (notice.kind.startsWith('reservation_')) {
+      // Live test HIGH 2: a booked-ride notice opens Booked rides, which
+      // reads the server's list and asks "Keep it at the new time?" there.
+      await pushSingle(
+        context,
+        RightToLeftTransition(const ScheduledRidesScreen()),
       );
       if (mounted) await _load();
     } else if (notice.opensDocuments) {

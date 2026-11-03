@@ -871,7 +871,7 @@ class _RideRequestsState extends State<RideRequests> {
         pickup: trip.pickup,
         dropoff: trip.dropoff,
         bags: trip.bags,
-        reservationTime: trip.reservationTime,
+        reservationTime: trip.reservationTime ?? trip.source.bookedTime,
         fareBoost: trip.source.fareBoostLabel,
         stops: trip.source.stops.length,
         riderTrips: trip.source.riderTrips,

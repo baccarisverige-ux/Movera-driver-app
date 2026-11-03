@@ -431,7 +431,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.descendant(of: card, matching: find.text('Reservation · 09:30')),
+        find.descendant(of: card, matching: find.text('Booked ride · 09:30')),
         findsOneWidget,
       );
       // The admin's time to accept runs on the radar's hairline ring.

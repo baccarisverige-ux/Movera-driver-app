@@ -51,6 +51,9 @@ class _HomeDirectOffer {
 
   /// A reservation's pickup time, e.g. "07:40".
   final String? pickupTime;
+
+  /// A booked ride sent as a normal offer: its time, for the badge only.
+  final String? bookedTime;
   final bool driverSigned = false;
 
   /// The rider, for the trip screen.
@@ -154,6 +157,7 @@ class _HomeDirectOffer {
     this.dispatchExclusive = false,
     this.driverEarnings,
     this.serverPickupPay,
+    this.bookedTime,
   });
 
   /// A dispatch offer on Home. A reservation keeps its pickup time for
@@ -185,6 +189,7 @@ class _HomeDirectOffer {
     cashToCollect: offer.cashToCollectLabel,
     reservation: offer.isReservation,
     pickupTime: offer.reservationTime,
+    bookedTime: offer.bookedTime,
     riderName: offer.riderName,
     riderTrips: offer.riderTrips,
     stops: offer.stops,
@@ -1415,6 +1420,13 @@ extension _HomeOfferRadar on _DriverHomeState {
           destinationPosition: _destinationPosition,
           scheduledPickupAt: scheduledPickupAt,
           scheduledRideId: scheduledRideId,
+          bookedTime:
+              offer.bookedTime ??
+              (offer.reservation ? offer.pickupTime : null) ??
+              (scheduledPickupAt == null
+                  ? null
+                  : '${scheduledPickupAt.hour.toString().padLeft(2, '0')}:'
+                        '${scheduledPickupAt.minute.toString().padLeft(2, '0')}'),
         ),
       ),
     );
@@ -1519,7 +1531,7 @@ extension _HomeOfferRadar on _DriverHomeState {
     pickup: offer.pickup,
     dropoff: offer.dropoff,
     bags: offer.bags,
-    reservationTime: offer.reservation ? offer.pickupTime : null,
+    reservationTime: offer.reservation ? offer.pickupTime : offer.bookedTime,
     fareBoost: offer.fareBoost,
     stops: offer.stops.length,
     riderTrips: offer.riderTrips,
@@ -1601,8 +1613,8 @@ extension _HomeOfferRadar on _DriverHomeState {
     return ExclusiveRequestSheet(
       offer: _radarOfferView(offer),
       secondsLeft: secondsLeft,
-      reservation: reservation,
-      reservationTime: reservation ? offer.pickupTime : null,
+      reservation: reservation || offer.bookedTime != null,
+      reservationTime: reservation ? offer.pickupTime : offer.bookedTime,
       // Destination mode, or trips toward the next scheduled pickup.
       onYourWay:
           _destinationModeActive ||

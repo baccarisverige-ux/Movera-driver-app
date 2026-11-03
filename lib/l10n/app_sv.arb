@@ -2042,5 +2042,10 @@
   "schedRideChanged": "Resan har ändrats: hämtning {time}, du får {price}. Kontrollera och tryck Acceptera igen.",
   "schedGiveBackFailed": "Kunde inte lämna tillbaka resan. Den är fortfarande din. Försök igen.",
   "schedKeptAt": "Du behöll resan kl. {time}.",
-  "schedGaveBack": "Resan gick tillbaka till Bokade resor."
+  "schedGaveBack": "Resan gick tillbaka till Bokade resor.",
+  "schedKeepNewPrice": "Nytt pris för dig: {price}",
+  "schedLeaveIn": "Starta om {minutes} min",
+  "schedLeaveNowTitle": "Starta nu mot upphämtningen",
+  "schedLeaveArrive": "Var framme {early} min före kl. {time}.",
+  "schedBookedBadge": "Bokad resa · {time}"
 }

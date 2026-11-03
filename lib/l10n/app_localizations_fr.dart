@@ -7307,4 +7307,27 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get schedGaveBack => 'La course est retournée dans Courses réservées.';
+
+  @override
+  String schedKeepNewPrice(String price) {
+    return 'Nouveau prix pour vous : $price';
+  }
+
+  @override
+  String schedLeaveIn(String minutes) {
+    return 'Partez dans $minutes min';
+  }
+
+  @override
+  String get schedLeaveNowTitle => 'Partez maintenant vers la prise en charge';
+
+  @override
+  String schedLeaveArrive(String early, String time) {
+    return 'Arrivez $early min avant $time.';
+  }
+
+  @override
+  String schedBookedBadge(String time) {
+    return 'Course réservée · $time';
+  }
 }

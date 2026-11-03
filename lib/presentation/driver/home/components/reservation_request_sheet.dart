@@ -247,6 +247,11 @@ class ReservationRequestSheet extends StatelessWidget {
       keyPrefix: 'reservation',
       category: request.category,
       chips: [
+        // Owner 2026-11-03: a booked ride always shows its badge.
+        OfferBadge.reservation(
+          RegExp(r'\d{1,2}:\d{2}').firstMatch(request.pickupTime)?.group(0),
+          key: const ValueKey<String>('reservation-booked'),
+        ),
         // Payment only when the rider pays cash (notes R2).
         if (_show.badges && request.paidByCash)
           OfferSheetBody.cashChip('reservation'),

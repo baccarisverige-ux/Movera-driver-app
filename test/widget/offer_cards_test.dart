@@ -205,13 +205,15 @@ void main() {
       expect(ExclusiveRequestSheet.pillLabel(-1), 'Exclusive for you · 0 s');
     });
 
-    testWidgets('reservation: "Reservation · 07:40" badge', (tester) async {
+    testWidgets('reservation: "Booked ride · 07:40" badge (owner 2026-11-03)', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _exclusive(reservation: true, reservationTime: '07:40'),
       );
       expect(find.byKey(_reservationKey), findsOneWidget);
-      expect(find.text('Reservation · 07:40'), findsOneWidget);
+      expect(find.text('Booked ride · 07:40'), findsOneWidget);
       expect(find.byKey(_cashKey), findsNothing);
       expect(tester.takeException(), isNull);
     });

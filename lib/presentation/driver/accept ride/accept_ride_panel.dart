@@ -866,6 +866,7 @@ extension _AcceptRidePanel on _AcceptRideState {
               address: _tripBarAddress,
               onPreferences: _openTripSettings,
               onTap: _showRideMiddle,
+              bookedTime: widget.bookedTime,
             )
           else ...[
             TripBottomBar(
@@ -874,6 +875,7 @@ extension _AcceptRidePanel on _AcceptRideState {
               address: _tripBarAddress,
               onPreferences: _openTripSettings,
               onTap: full ? _showRideMiddle : _showRideFull,
+              bookedTime: widget.bookedTime,
             ),
             if (!full) ...[
               _AcceptRideSheet(this)._buildFullAhead(),

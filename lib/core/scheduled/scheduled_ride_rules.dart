@@ -410,6 +410,7 @@ class BookLaterRules {
     this.listAtTimeKm = 5,
     this.listAtTimeMin = 30,
     this.changeAnswerMin = 15,
+    this.arriveEarlyMin = 10,
   });
 
   final int dispatchBeforeMin;
@@ -417,6 +418,9 @@ class BookLaterRules {
   final double listAtTimeKm;
   final int listAtTimeMin;
   final int changeAnswerMin;
+
+  /// v0.18.19 (owner leave on time): arrive this many minutes early.
+  final int arriveEarlyMin;
 
   final int minAheadMin;
   final int maxAheadDays;
@@ -497,6 +501,8 @@ class BookLaterRules {
           _intIn(json['listAtTimeMin'], 5, 240) ?? seed.listAtTimeMin,
       changeAnswerMin:
           _intIn(json['changeAnswerMin'], 1, 120) ?? seed.changeAnswerMin,
+      arriveEarlyMin:
+          _intIn(json['arriveEarlyMin'], 0, 60) ?? seed.arriveEarlyMin,
     );
   }
 
@@ -525,5 +531,6 @@ class BookLaterRules {
     'listAtTimeKm': listAtTimeKm,
     'listAtTimeMin': listAtTimeMin,
     'changeAnswerMin': changeAnswerMin,
+    'arriveEarlyMin': arriveEarlyMin,
   };
 }
