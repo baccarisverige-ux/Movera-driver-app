@@ -131,9 +131,14 @@ const context = {google: {maps}, performance: {now: () => clock},
 // kept Flutter from starting at all (blank page).
 {
   const html = fs.readFileSync('web/index.html', 'utf8');
-  const tag = /<script\b[^>]*maps\.googleapis\.com[^>]*>/.exec(html)?.[0];
-  assert.ok(tag, 'index.html loads Maps JavaScript');
-  assert.match(tag, /\s(async|defer)[\s>=]/, 'Maps JavaScript never blocks the Flutter bootstrap');
+  // LT-4 (owner 2026-11-03): Maps JavaScript is added by the first map
+  // through moveraLoadGoogleMaps(), never as a parser-blocking tag.
+  assert.doesNotMatch(html, /<script\b[^>]*src="https:\/\/maps\.googleapis\.com/, 'No Maps tag at start');
+  const start = html.indexOf('window.moveraLoadGoogleMaps = function()');
+  assert.ok(start >= 0, 'index.html has the Maps loader');
+  const loader = html.slice(start, html.indexOf('};', start));
+  assert.match(loader, /maps\.googleapis\.com\/maps\/api\/js\?key=GOOGLE_MAPS_API_KEY/, 'Key placeholder inside the loader');
+  assert.match(loader, /script\.async = true/, 'Maps JavaScript never blocks the Flutter bootstrap');
 }
 vm.runInNewContext(fs.readFileSync('web/driver_map_camera.js', 'utf8'), context);
 assert.equal(context.driverMapCamera.ready(), true);

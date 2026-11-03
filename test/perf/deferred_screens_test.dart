@@ -123,6 +123,8 @@ void main() {
     );
     await tester.pump();
     expect(find.byKey(const ValueKey('deferred-screen-retry')), findsOneWidget);
+    // and a back button to leave
+    expect(find.byKey(const ValueKey('deferred-screen-back')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('deferred-screen-retry')));
     await tester.pump();
     await tester.pump();
