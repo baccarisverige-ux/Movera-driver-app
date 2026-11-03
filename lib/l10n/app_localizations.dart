@@ -12198,6 +12198,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many changes — try again in an hour'**
   String get contactChangeTooMany;
+
+  /// No description provided for @supportTopicRideDispute.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem with a ride'**
+  String get supportTopicRideDispute;
+
+  /// No description provided for @supportTopicHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help with the app'**
+  String get supportTopicHelp;
+
+  /// No description provided for @supportTopicLostItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost item'**
+  String get supportTopicLostItem;
+
+  /// No description provided for @supportTopicPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment or pay'**
+  String get supportTopicPayment;
+
+  /// No description provided for @supportTopicAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account and documents'**
+  String get supportTopicAccount;
+
+  /// No description provided for @supportTopicSafety.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety'**
+  String get supportTopicSafety;
+
+  /// No description provided for @supportTopicOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get supportTopicOther;
+
+  /// No description provided for @supportMovera.
+  ///
+  /// In en, this message translates to:
+  /// **'Movera Support'**
+  String get supportMovera;
+
+  /// No description provided for @supportAgentLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · Movera Support'**
+  String supportAgentLine(String name);
+
+  /// No description provided for @supportReplyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a message'**
+  String get supportReplyHint;
+
+  /// No description provided for @supportReplySend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get supportReplySend;
+
+  /// No description provided for @supportTicketClosedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation is solved. Open a new ticket if you need more help.'**
+  String get supportTicketClosedNote;
+
+  /// No description provided for @supportReplyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The message was not sent. Try again.'**
+  String get supportReplyFailed;
+
+  /// No description provided for @supportNewTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'New ticket'**
+  String get supportNewTicket;
+
+  /// No description provided for @supportCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Any comment or idea for us? (optional)'**
+  String get supportCommentHint;
+
+  /// No description provided for @supportCommentSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send comment'**
+  String get supportCommentSend;
+
+  /// No description provided for @supportCommentThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for your comment.'**
+  String get supportCommentThanks;
 }
 
 class _AppLocalizationsDelegate

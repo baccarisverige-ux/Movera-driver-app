@@ -13,6 +13,7 @@ import 'package:movera/core/support/server_support_tickets.dart';
 import 'package:movera/core/waybill/waybill.dart';
 import 'package:movera/presentation/driver/ride completed/ride_completed.dart';
 import 'package:movera/presentation/driver/support/live_support_inbox.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 
 /// Contract v0.9.0 §16 (owner, part 3): the driver rates the rider with
 /// stars, tags from the fixed list and an optional comment; help requests
@@ -231,13 +232,168 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       jsonDecode(seen.firstWhere((r) => r.method == 'POST').body)['category'],
-      'help',
+      'ride_dispute',
     );
     expect(find.byKey(const ValueKey('live-ticket-tkt_1')), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('live-ticket-tkt_1')));
     await tester.pumpAndSettle();
     expect(find.text('Den kommer måndag.'), findsOneWidget);
   });
+
+  group('v0.18.15 support desk (owner QO-1, QO-2, QO-4)', () {
+    test('write again on a ticket, and the topics that are on', () async {
+      final seen = <http.Request>[];
+      final tickets = ServerSupportTickets(
+        api: _api(seen, (request) {
+          if (request.url.path.endsWith('/topics')) {
+            return _json({
+              'country': 'SE',
+              'topics': ['help', 'payment', 'made_up'],
+            });
+          }
+          return _json(_ticket('tkt_1', 'open', answer: true), 201);
+        }),
+      );
+      final next = await tickets.write('tkt_1', ' Tack! ');
+      expect(seen.last.url.path, '/api/v1/support/tickets/tkt_1/messages');
+      expect(jsonDecode(seen.last.body), {'text': 'Tack!'});
+      expect(next.status, 'open');
+      expect(await tickets.topics(), ['help', 'payment']);
+    });
+
+    test('an older server without topics gives all seven', () async {
+      final tickets = ServerSupportTickets(
+        api: _api(<http.Request>[], (_) => _json({}, 404)),
+      );
+      expect(await tickets.topics(), supportTopics);
+      expect(supportTopics, hasLength(7));
+    });
+
+    test('the agent line: first name · Movera Support, never an e-mail', () {
+      expect(
+        supportSenderLine(
+          const ServerTicketMessage(
+            fromSupport: true,
+            text: 'x',
+            supportName: 'Ada',
+          ),
+        ),
+        tr.supportAgentLine('Ada'),
+      );
+      expect(
+        supportSenderLine(
+          const ServerTicketMessage(
+            fromSupport: true,
+            text: 'x',
+            adminName: 'ada@movera.se',
+          ),
+        ),
+        tr.supportMovera,
+      );
+    });
+
+    testWidgets('the driver answers in the ticket; a closed one has no box', (
+      tester,
+    ) async {
+      final seen = <http.Request>[];
+      var status = 'pending';
+      final tickets = ServerSupportTickets(
+        api: _api(seen, (request) {
+          if (request.method == 'POST') {
+            status = 'open';
+            return _json(_ticket('tkt_1', 'open', answer: true), 201);
+          }
+          if (request.url.path.endsWith('/tkt_1')) {
+            return _json(_ticket('tkt_1', status, answer: true));
+          }
+          return _json({
+            'items': [_ticket('tkt_1', status)],
+            'nextCursor': null,
+          });
+        }),
+      );
+      await tester.pumpWidget(
+        MaterialApp(home: LiveSupportInbox(tickets: tickets)),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('live-ticket-tkt_1')));
+      await tester.pumpAndSettle();
+      expect(find.text(tr.supportAgentLine('Ada')), findsNothing);
+      expect(find.text(tr.supportMovera), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('live-ticket-reply')),
+        'Tack, den kom.',
+      );
+      await tester.tap(find.byKey(const ValueKey('live-ticket-reply-send')));
+      await tester.pumpAndSettle();
+      final post = seen.lastWhere((r) => r.method == 'POST');
+      expect(post.url.path, '/api/v1/support/tickets/tkt_1/messages');
+      expect(jsonDecode(post.body), {'text': 'Tack, den kom.'});
+      expect(find.text(liveTicketStatus('open')), findsOneWidget);
+      status = 'closed';
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('live-ticket-tkt_1')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('live-ticket-closed')), findsOneWidget);
+      expect(find.byKey(const ValueKey('live-ticket-reply')), findsNothing);
+    });
+  });
+
+  testWidgets(
+    'owner "Can\'t write": a solved ticket has no box and offers New ticket',
+    (tester) async {
+      final seen = <http.Request>[];
+      final tickets = ServerSupportTickets(
+        api: _api(seen, (request) {
+          if (request.url.path.endsWith('/feedback')) {
+            return _json({
+              ..._ticket('tkt_1', 'resolved', answer: true),
+              'feedback': {
+                'text': 'Snabb hjälp, tack!',
+                'at': '2026-10-27T10:00:00Z',
+              },
+            }, 201);
+          }
+          if (request.url.path.endsWith('/tkt_1')) {
+            return _json(_ticket('tkt_1', 'resolved', answer: true));
+          }
+          if (request.url.path.endsWith('/topics')) {
+            return _json({'topics': supportTopics});
+          }
+          return _json({
+            'items': [_ticket('tkt_1', 'resolved')],
+            'nextCursor': null,
+          });
+        }),
+      );
+      await tester.pumpWidget(
+        MaterialApp(home: LiveSupportInbox(tickets: tickets)),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('live-ticket-tkt_1')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('live-ticket-reply')), findsNothing);
+      expect(find.text(tr.supportTicketClosedNote), findsOneWidget);
+      // Owner "Not rating only comment suggestions": no stars, a comment.
+      await tester.enterText(
+        find.byKey(const ValueKey('live-ticket-comment')),
+        'Snabb hjälp, tack!',
+      );
+      await tester.tap(find.byKey(const ValueKey('live-ticket-comment-send')));
+      await tester.pumpAndSettle();
+      final sent = seen.lastWhere((r) => r.method == 'POST');
+      expect(sent.url.path, '/api/v1/support/tickets/tkt_1/feedback');
+      expect(jsonDecode(sent.body), {'text': 'Snabb hjälp, tack!'});
+      expect(
+        find.byKey(const ValueKey('live-ticket-comment-done')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('live-ticket-new-again')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('live-ticket-send')), findsOneWidget);
+    },
+  );
 
   testWidgets('live inbox: a failed load offers retry', (tester) async {
     final tickets = ServerSupportTickets(

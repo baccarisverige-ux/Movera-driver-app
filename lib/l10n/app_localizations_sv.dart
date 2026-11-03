@@ -7088,4 +7088,59 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get contactChangeTooMany =>
       'För många ändringar – försök igen om en timme';
+
+  @override
+  String get supportTopicRideDispute => 'Problem med en resa';
+
+  @override
+  String get supportTopicHelp => 'Hjälp med appen';
+
+  @override
+  String get supportTopicLostItem => 'Borttappad sak';
+
+  @override
+  String get supportTopicPayment => 'Betalning eller ersättning';
+
+  @override
+  String get supportTopicAccount => 'Konto och dokument';
+
+  @override
+  String get supportTopicSafety => 'Säkerhet';
+
+  @override
+  String get supportTopicOther => 'Något annat';
+
+  @override
+  String get supportMovera => 'Movera Support';
+
+  @override
+  String supportAgentLine(String name) {
+    return '$name · Movera Support';
+  }
+
+  @override
+  String get supportReplyHint => 'Skriv ett meddelande';
+
+  @override
+  String get supportReplySend => 'Skicka';
+
+  @override
+  String get supportTicketClosedNote =>
+      'Det här ärendet är löst. Öppna ett nytt ärende om du behöver mer hjälp.';
+
+  @override
+  String get supportReplyFailed => 'Meddelandet skickades inte. Försök igen.';
+
+  @override
+  String get supportNewTicket => 'Nytt ärende';
+
+  @override
+  String get supportCommentHint =>
+      'Har du en kommentar eller idé till oss? (valfritt)';
+
+  @override
+  String get supportCommentSend => 'Skicka kommentar';
+
+  @override
+  String get supportCommentThanks => 'Tack för din kommentar.';
 }

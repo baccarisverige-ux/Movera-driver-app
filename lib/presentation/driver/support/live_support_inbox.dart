@@ -23,14 +23,6 @@ String liveTicketStatus(String status) =>
 
 class _LiveSupportInboxState extends State<LiveSupportInbox> {
   late Future<List<ServerTicket>> _list = widget.tickets.mine();
-  static const _categories = [
-    'Trip & rider',
-    'Wallet & payments',
-    'Scheduled rides',
-    'Account & documents',
-    'Technical issue',
-    'Something else',
-  ];
 
   void _reload() {
     setState(() {
@@ -39,11 +31,14 @@ class _LiveSupportInboxState extends State<LiveSupportInbox> {
   }
 
   Future<void> _write() async {
+    // v0.18.15 (owner QO-4): the same seven topics as the rider app, as the
+    // server has them on for the driver's country.
+    final topics = await widget.tickets.topics();
+    if (!mounted) return;
     final sent = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (_) =>
-          _WriteSheet(tickets: widget.tickets, categories: _categories),
+      builder: (_) => _WriteSheet(tickets: widget.tickets, categories: topics),
     );
     if (sent == true) {
       if (mounted) {
@@ -107,14 +102,18 @@ class _LiveSupportInboxState extends State<LiveSupportInbox> {
                 title: Text(ticket.subject),
                 subtitle: Text(liveTicketStatus(ticket.status)),
                 trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => _LiveTicket(
-                      ticketId: ticket.id,
-                      tickets: widget.tickets,
+                onTap: () async {
+                  // Owner "Can't write": a solved ticket offers "New ticket".
+                  final again = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute<bool>(
+                      builder: (_) => _LiveTicket(
+                        ticketId: ticket.id,
+                        tickets: widget.tickets,
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                  if (again == true && mounted) await _write();
+                },
               ),
             ),
         ],
@@ -123,8 +122,16 @@ class _LiveSupportInboxState extends State<LiveSupportInbox> {
   );
 }
 
-/// A saved category (kept in English) in the driver's language.
+/// A topic code (contract.json#support.categories) or an older saved
+/// category (kept in English) in the driver's language.
 String supportCategoryLabel(String category) => switch (category) {
+  'ride_dispute' => tr.supportTopicRideDispute,
+  'help' => tr.supportTopicHelp,
+  'lost_item' => tr.supportTopicLostItem,
+  'payment' => tr.supportTopicPayment,
+  'account' => tr.supportTopicAccount,
+  'safety' => tr.supportTopicSafety,
+  'other' => tr.supportTopicOther,
   'Trip & rider' => tr.supportCatTripRider,
   'Wallet & payments' => tr.supportCatWallet,
   'Scheduled rides' => tr.scheduledRides,
@@ -134,17 +141,90 @@ String supportCategoryLabel(String category) => switch (category) {
   _ => category,
 };
 
-class _LiveTicket extends StatelessWidget {
+/// v0.18.15 (owner QO-2 "Agent first name"): "`<first name>` · Movera Support",
+/// or "Movera Support" without a name; never an e-mail.
+String supportSenderLine(ServerTicketMessage message) {
+  final name = message.supportName?.trim();
+  return name == null || name.isEmpty || name.contains('@')
+      ? tr.supportMovera
+      : tr.supportAgentLine(name);
+}
+
+/// One ticket as a chat (owner QO-1): Movera's answers and the driver's
+/// messages, and a box to write again while the ticket is not closed.
+class _LiveTicket extends StatefulWidget {
   const _LiveTicket({required this.ticketId, required this.tickets});
 
   final String ticketId;
   final ServerSupportTickets tickets;
 
   @override
+  State<_LiveTicket> createState() => _LiveTicketState();
+}
+
+class _LiveTicketState extends State<_LiveTicket> {
+  late Future<ServerTicket> _ticket = widget.tickets.one(widget.ticketId);
+  final _reply = TextEditingController();
+  bool _sending = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _reply.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final text = _reply.text.trim();
+    if (text.isEmpty || _sending) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      final next = await widget.tickets.write(widget.ticketId, text);
+      _reply.clear();
+      setState(() {
+        _ticket = Future.value(next);
+        _sending = false;
+      });
+    } catch (_) {
+      setState(() {
+        _sending = false;
+        _error = tr.supportReplyFailed;
+      });
+    }
+  }
+
+  /// Owner "Not rating only comment suggestions": no stars, an optional
+  /// comment once the ticket is solved.
+  Future<void> _comment() async {
+    final text = _reply.text.trim();
+    if (text.isEmpty || _sending) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      final next = await widget.tickets.comment(widget.ticketId, text);
+      _reply.clear();
+      setState(() {
+        _ticket = Future.value(next);
+        _sending = false;
+      });
+    } catch (_) {
+      setState(() {
+        _sending = false;
+        _error = tr.supportReplyFailed;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tr.support)),
     body: FutureBuilder<ServerTicket>(
-      future: tickets.one(ticketId),
+      future: _ticket,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
@@ -153,48 +233,142 @@ class _LiveTicket extends StatelessWidget {
         if (ticket == null) {
           return Center(child: Text(tr.supportCouldNotLoadRetry));
         }
-        return ListView(
-          padding: const EdgeInsets.all(16),
+        return Column(
           children: [
-            Text(
-              ticket.subject,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            Text(liveTicketStatus(ticket.status)),
-            const SizedBox(height: 16),
-            for (final message in ticket.messages)
-              Align(
-                alignment: message.fromSupport
-                    ? Alignment.centerLeft
-                    : Alignment.centerRight,
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(12),
-                  constraints: const BoxConstraints(maxWidth: 300),
-                  decoration: BoxDecoration(
-                    color: message.fromSupport
-                        ? const Color(0xFFF1F2F4)
-                        : const Color(0xFF202A30),
-                    borderRadius: BorderRadius.circular(14),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text(
+                    ticket.subject,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (message.fromSupport)
-                        Text(
-                          message.adminName ?? tr.supportTicketMovera,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      Text(
-                        message.text,
-                        style: TextStyle(
+                  Text(liveTicketStatus(ticket.status)),
+                  const SizedBox(height: 16),
+                  for (final message in ticket.messages)
+                    Align(
+                      alignment: message.fromSupport
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        constraints: const BoxConstraints(maxWidth: 300),
+                        decoration: BoxDecoration(
                           color: message.fromSupport
-                              ? const Color(0xFF202A30)
-                              : Colors.white,
+                              ? const Color(0xFFF1F2F4)
+                              : const Color(0xFF202A30),
+                          borderRadius: BorderRadius.circular(14),
                         ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (message.fromSupport)
+                              Text(
+                                supportSenderLine(message),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            Text(
+                              message.text,
+                              style: TextStyle(
+                                color: message.fromSupport
+                                    ? const Color(0xFF202A30)
+                                    : Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            // Owner 2026-11-02 "Can't write": solved and closed tickets take no
+            // more messages; the driver opens a new ticket.
+            if (ticket.status == 'closed' || ticket.status == 'resolved')
+              Padding(
+                key: const ValueKey<String>('live-ticket-closed'),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(tr.supportTicketClosedNote),
+                    const SizedBox(height: 8),
+                    if (ticket.feedback != null)
+                      Text(
+                        tr.supportCommentThanks,
+                        key: const ValueKey<String>('live-ticket-comment-done'),
+                      )
+                    else ...[
+                      TextField(
+                        key: const ValueKey<String>('live-ticket-comment'),
+                        controller: _reply,
+                        maxLength: 2000,
+                        minLines: 1,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: tr.supportCommentHint,
+                          counterText: '',
+                        ),
+                      ),
+                      TextButton(
+                        key: const ValueKey<String>('live-ticket-comment-send'),
+                        onPressed: _sending ? null : _comment,
+                        child: Text(tr.supportCommentSend),
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    FilledButton(
+                      key: const ValueKey<String>('live-ticket-new-again'),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: Text(tr.supportNewTicket),
+                    ),
+                  ],
+                ),
+              )
+            else
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_error != null)
+                        Text(
+                          _error!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              key: const ValueKey<String>('live-ticket-reply'),
+                              controller: _reply,
+                              maxLength: 5000,
+                              minLines: 1,
+                              maxLines: 4,
+                              decoration: InputDecoration(
+                                hintText: tr.supportReplyHint,
+                                counterText: '',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton(
+                            key: const ValueKey<String>(
+                              'live-ticket-reply-send',
+                            ),
+                            onPressed: _sending ? null : _send,
+                            child: Text(tr.supportReplySend),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -290,7 +464,9 @@ class _WriteSheetState extends State<_WriteSheet> {
                   });
                   try {
                     await widget.tickets.open(
-                      category: ServerSupportTickets.categoryOf(_category),
+                      category: supportTopics.contains(_category)
+                          ? _category
+                          : ServerSupportTickets.categoryOf(_category),
                       subject: _subject.text,
                       text: _message.text,
                     );
