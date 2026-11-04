@@ -146,6 +146,9 @@ import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 part 'home_offer_radar.dart';
 part 'home_map_sheet.dart';
+part 'home_map_destination.dart';
+part 'home_map_island.dart';
+part 'home_map_panels.dart';
 part 'home_reservation.dart';
 part 'home_scheduled.dart';
 part 'home_offer_rules.dart';
@@ -826,18 +829,6 @@ class _DriverHomeState extends State<DriverHome>
       return;
     }
     setState(() {});
-  }
-
-  String get _destinationShortLabel {
-    final address = _destinationAddress?.trim();
-    if (address == null || address.isEmpty) {
-      return tr.destination;
-    }
-    final firstPart = address.split(',').first.trim();
-    if (firstPart.length <= 24) {
-      return firstPart;
-    }
-    return '${firstPart.substring(0, 21)}…';
   }
 
   void _skipActivationDemo() {
