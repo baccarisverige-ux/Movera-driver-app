@@ -1,4 +1,3 @@
-import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/presentation/driver/accept ride/route_change_sheet.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/contracts/category_name_text.dart';
@@ -347,12 +346,6 @@ class AcceptRide extends StatefulWidget {
       destinationPosition: snapshot.destinationPoint?.toLatLng(),
       scheduledPickupAt: snapshot.scheduledPickupAt,
       scheduledRideId: snapshot.scheduledRideId,
-      // Job 3 / L13: a restored booked ride keeps its badge.
-      bookedTime:
-          snapshot.bookedTime ??
-          (snapshot.scheduledPickupAt == null
-              ? null
-              : zoneClock(snapshot.scheduledPickupAt!)),
       pickupKm: snapshot.pickupKm,
       bags: snapshot.bags,
     );

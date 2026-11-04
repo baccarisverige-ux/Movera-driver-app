@@ -57,7 +57,7 @@ void main() {
     );
     final back = PersistedActiveRide.fromJson(saved.stamped().toJson())!;
     expect(back.bookedTime, '10:00');
-    expect(AcceptRide.fromPersisted(back).bookedTime, '10:00');
+    expect(AcceptRide.fromPersisted(back).restoredSnapshot?.badgeTime, '10:00');
   });
 
   test('L13: an older save with only the pickup instant still gets the '
@@ -71,6 +71,9 @@ void main() {
       dropoffLat: 48.8443,
       dropoffLng: 2.3744,
     );
-    expect(AcceptRide.fromPersisted(saved).bookedTime, '10:00');
+    expect(
+      AcceptRide.fromPersisted(saved).restoredSnapshot?.badgeTime,
+      '10:00',
+    );
   });
 }

@@ -1,3 +1,4 @@
+import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/geo/geo_point.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -214,6 +215,12 @@ class PersistedActiveRide {
   /// Job 3 / L13: the "Booked ride" badge time (zone clock, "HH:mm") of a
   /// booked ride, whatever way it was accepted; kept across a restore.
   final String? bookedTime;
+
+  /// The badge time to show: [bookedTime], or for an older save the
+  /// pickup instant on the zone's clock.
+  String? get badgeTime =>
+      bookedTime ??
+      (scheduledPickupAt == null ? null : zoneClock(scheduledPickupAt!));
 
   /// driver-u56: how far the pickup was at accept, so a restored trip keeps
   /// the waiting terms it was accepted under (Q20). Null when not known.
