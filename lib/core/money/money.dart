@@ -96,6 +96,15 @@ class Money {
   /// currency's exponent of digits. Null when it is not an amount, or its
   /// symbol is another currency than [currency]. SEK reads exactly like
   /// [parseSekLabel].
+  /// Job 3 / L12: the driver's zone currency (`DriverAppConfig.currency`),
+  /// put in use with the zone's settings. SEK (the home zone) until a
+  /// config arrives. Every "no currency known" fallback uses this, so a
+  /// France driver never sees "kr".
+  static String zoneCurrency = 'SEK';
+
+  /// The zone currency's symbol: `kr`, `€` or `DT`.
+  static String get zoneSymbol => symbols[zoneCurrency] ?? zoneCurrency;
+
   static Money? parseLabel(String label, {String? currency}) {
     var value = label.trim().replaceAll('−', '-').replaceAll('\u00a0', ' ');
     String? found;
@@ -107,7 +116,7 @@ class Money {
       }
     }
     if (found != null && currency != null && found != currency) return null;
-    final code = found ?? currency ?? 'SEK';
+    final code = found ?? currency ?? zoneCurrency;
     final exponent = exponents[code];
     if (exponent == null) return null;
     if (code == 'SEK') return parseSekLabel(value);

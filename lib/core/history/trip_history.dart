@@ -139,7 +139,7 @@ class TripHistoryRecord {
       // The label names the currency (a Paris trip is in euros, R3).
       : Money(
           minorUnits: fareMinorUnits!,
-          currency: Money.parseLabel(fare)?.currency ?? 'SEK',
+          currency: Money.parseLabel(fare)?.currency ?? Money.zoneCurrency,
         );
 }
 
