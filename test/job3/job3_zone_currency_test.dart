@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/contracts/driver_app_config.dart';
 import 'package:movera/core/history/today_earnings.dart';
 import 'package:movera/core/money/money.dart';
+import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/presentation/driver/accept%20ride/navigation_instruction_banner.dart';
 import 'package:movera/presentation/driver/home/components/digital_island.dart';
 
@@ -44,5 +45,14 @@ void main() {
     );
     expect(find.text('•••• €'), findsOneWidget);
     expect(find.textContaining('kr'), findsNothing);
+  });
+
+  test('FR: money with no currency of its own, and the waiting defaults, '
+      'are in €', () {
+    france();
+    expect(const Money(minorUnits: 500).currency, 'EUR');
+    expect(Money.ore(500).currency, 'EUR');
+    expect(Money.sek(5).currency, 'EUR');
+    expect(const WaitingRules().base.perMinute.currency, 'EUR');
   });
 }

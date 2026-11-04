@@ -96,6 +96,10 @@ class LiveDriverConfig extends ChangeNotifier {
   StreamSubscription<String>? _stream;
   Timer? _retry;
   bool _watching = false;
+
+  /// Job 3 / L19: each [_connect] has its own number; only the newest one
+  /// may keep a stream or reconnect, so a resume never leaves two open.
+  int _generation = 0;
   bool _disposed = false;
 
   /// The document in use, or null while the app runs on its own settings.
@@ -194,6 +198,8 @@ class LiveDriverConfig extends ChangeNotifier {
 
   Future<void> _connect() async {
     if (_disposed || !_watching) return;
+    final generation = ++_generation;
+    bool stale() => generation != _generation || _disposed || !_watching;
     try {
       // Contract v0.18.2 `auth.beforeSignIn`: no session, no stream; the
       // app starts watching again once the driver signs in ([watch]).
@@ -208,6 +214,12 @@ class LiveDriverConfig extends ChangeNotifier {
           if (_current != null) 'Last-Event-ID': '${_current!.version}',
         });
       final response = await _client.send(request).timeout(requestTimeout);
+      if (stale()) {
+        // A newer connect (or stop) took over while this one waited: its
+        // response is closed at once, never kept open beside the new one.
+        unawaited(response.stream.listen(null).cancel());
+        return;
+      }
       if (response.statusCode != 200) {
         unawaited(response.stream.drain<void>().catchError((_) {}));
         if (response.statusCode == 401) {
@@ -261,13 +273,17 @@ class LiveDriverConfig extends ChangeNotifier {
                 // A broken event is skipped; the next one or a restart fixes it.
               }
             },
-            onDone: _reconnect,
-            onError: (Object _) => _reconnect(),
+            onDone: () {
+              if (!stale()) _reconnect();
+            },
+            onError: (Object _) {
+              if (!stale()) _reconnect();
+            },
             cancelOnError: true,
           );
     } catch (error) {
       DriverLog.warn('driver_config.stream_failed: $error');
-      _reconnect();
+      if (!stale()) _reconnect();
     }
   }
 
@@ -290,6 +306,7 @@ class LiveDriverConfig extends ChangeNotifier {
   /// session); [watch] starts it again.
   void stop() {
     _watching = false;
+    _generation++;
     _retry?.cancel();
     _retry = null;
     unawaited(_stream?.cancel());

@@ -3,10 +3,14 @@
 ///
 /// Wire JSON is `{amountMinor, currency}` (`contracts/contract.json#wire`).
 class Money {
-  const Money({required this.minorUnits, this.currency = 'SEK'});
+  /// Job 3 / L12: with no [currency] the amount is in the zone's currency
+  /// ([zoneCurrency]), never SEK by default.
+  const Money({required this.minorUnits, String? currency})
+    : _currency = currency;
 
   factory Money.ore(int ore) => Money(minorUnits: ore);
 
+  /// Whole units (kronor, euros) of the zone currency's two-decimal kind.
   factory Money.sek(num kronor) => Money(minorUnits: (kronor * 100).round());
 
   /// Contract wire form. Throws [FormatException] for anything else: a
@@ -144,7 +148,10 @@ class Money {
   }
 
   final int minorUnits;
-  final String currency;
+  final String? _currency;
+
+  /// The ISO code; the zone's currency when none was given.
+  String get currency => _currency ?? zoneCurrency;
 
   /// Contract name of [minorUnits].
   int get amountMinor => minorUnits;

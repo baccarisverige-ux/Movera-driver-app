@@ -319,17 +319,12 @@ extension _HomeOfferRadar on _DriverHomeState {
       return;
     }
     // Job 3 / L4: dispatch's Exclusive offer is for this driver only and
-    // runs out; it is never hidden behind Radar cards. They step aside
-    // (kept, off screen) and come back when the Exclusive offer leaves.
-    // A Radar Match already sent is answered first.
-    if (mounted &&
-        _isOnline &&
-        offer.claimedViaDispatch &&
-        _outsideRadarOffer == null &&
-        !_exclusive.leaving &&
-        _homeRadarMatchingOfferId == null) {
-      _setRadarCardsAside();
-    }
+    // runs out; it is never hidden behind Radar cards. Once every other
+    // check passes they step aside (kept, off screen) and come back when
+    // it leaves. A Radar Match already sent is answered first; the offer
+    // is tried again when it settles ([_retryHeldExclusive]).
+    final cardsStepAside =
+        offer.claimedViaDispatch && _homeRadarMatchingOfferId == null;
     if (!mounted ||
         !_isOnline ||
         showRideRequests ||
@@ -339,7 +334,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         _outsideRadarOffer != null ||
         // Its card is sliding down: it is leaving.
         _exclusive.leaving ||
-        _radarHomeOffers.isNotEmpty ||
+        (_radarHomeOffers.isNotEmpty && !cardsStepAside) ||
         // Radar trips waiting off screen hold an Exclusive offer back,
         // but not a reservation close to pickup: it needs a driver soon.
         (!offer.reservation &&
@@ -356,6 +351,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       return;
     }
 
+    if (cardsStepAside) _setRadarCardsAside();
     _outsideOfferTimeoutTimer?.cancel();
     _rebuild(() {
       _outsideRadarOffer = offer;
@@ -755,7 +751,22 @@ extension _HomeOfferRadar on _DriverHomeState {
     }
     if (_homeRadarMatchingOfferId == null) {
       _HomeScheduled(this)._afterClaimResolved();
+      _retryHeldExclusive();
     }
+  }
+
+  /// Job 3 / L4: an Exclusive offer held behind a Radar Match comes up
+  /// once the Match settles without a trip, while it is still valid
+  /// (`_pendingAdminAssign` skips shown and expired ones).
+  void _retryHeldExclusive() {
+    if (!mounted ||
+        !_isOnline ||
+        _homeRadarMatchingOfferId != null ||
+        _outsideRadarOffer != null) {
+      return;
+    }
+    final held = _pendingAdminAssign;
+    if (held != null) unawaited(_showOutsideRadarOffer(held));
   }
 
   void _watchDispatchRadar() {
@@ -1005,6 +1016,7 @@ extension _HomeOfferRadar on _DriverHomeState {
       }
       _homeRadarMatchStates[offer.id] = _HomeRadarMatchState.claimedElsewhere;
     });
+    if (wasMatching) _retryHeldExclusive();
     // The island says why when this driver tapped Match, or when the
     // trip was the front card they were reading.
     final wasFront = offer.id == _radarExpandedOfferId;

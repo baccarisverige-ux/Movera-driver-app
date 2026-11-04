@@ -30,6 +30,9 @@ class _Dispatch implements DispatchRepository {
   ClaimResult Function(String id) answer = (_) =>
       const ClaimResult.unavailable();
 
+  /// When set, a claim waits for it (a Match still in flight).
+  Completer<void>? hold;
+
   void publish(List<RideOffer> next) {
     offers = List<RideOffer>.unmodifiable(next);
     _nearby.add(offers);
@@ -72,6 +75,7 @@ class _Dispatch implements DispatchRepository {
   @override
   Future<ClaimResult> claimOffer(String offerId) async {
     claims.add(offerId);
+    await hold?.future;
     final result = answer(offerId);
     if (result.isSuccess) {
       publish([
@@ -446,6 +450,91 @@ void main() {
         findsNothing,
       );
       await _until(tester, find.byKey(radarCard));
+      await _leave(tester);
+    });
+  });
+
+  group('Job 3 / L4 checker fixes', () {
+    const card = RideOffer(
+      id: 'auto-card',
+      tripId: 'trip-card',
+      riderName: 'Astrid',
+      riderTrips: 38,
+      category: 'Comfort',
+      fare: Money(minorUnits: 15240, currency: 'SEK'),
+      priority: true,
+      source: OfferSource.admin,
+      groupId: 'radar-g',
+      rating: '4.92',
+      pickupMinutes: 4,
+      pickupKm: 1.3,
+      tripMinutes: 16,
+      tripKm: 9.4,
+      pickup: 'Birger Jarlsgatan 12, Stockholm',
+      dropoff: 'Liljeholmstorget, Stockholm',
+      pickupPosition: GeoPoint(59.3362, 18.0735),
+      dropoffPosition: GeoPoint(59.3103, 18.0231),
+      isNearby: true,
+      followsDestination: false,
+    );
+    const cardKey = ValueKey<String>('radar-offer-priority-auto-card');
+
+    testWidgets('an Exclusive offer that is not shown (a cash ride while '
+        'cash is off) never hides the Radar cards', (tester) async {
+      DriverOfferPreferences.acceptsCash.value = false;
+      addTearDown(() => DriverOfferPreferences.acceptsCash.value = true);
+      const cash = RideOffer(
+        id: 'cash-1',
+        tripId: 'trip-cash',
+        riderName: 'Karim',
+        riderTrips: 64,
+        category: 'Comfort',
+        fare: Money(minorUnits: 12860, currency: 'SEK'),
+        payment: 'Cash',
+        source: OfferSource.admin,
+        rating: '4.88',
+        pickupMinutes: 3,
+        pickupKm: 0.8,
+        tripMinutes: 14,
+        tripKm: 7.9,
+        pickup: 'Tegnérgatan 8, Stockholm',
+        dropoff: 'Hammarby sjöstad, Stockholm',
+        pickupPosition: GeoPoint(59.3378, 18.0570),
+        dropoffPosition: GeoPoint(59.3030, 18.1000),
+        isNearby: true,
+        followsDestination: false,
+      );
+      final dispatch = await _online(tester, [card]);
+      await _until(tester, find.byKey(cardKey));
+      dispatch.publish([card, cash]);
+      await _frames(tester, const Duration(milliseconds: 800));
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-offer-card-cash-1')),
+        findsNothing,
+      );
+      expect(find.byKey(cardKey), findsOneWidget);
+      await _leave(tester);
+    });
+
+    testWidgets('an Exclusive offer held behind a Match comes up when the '
+        'Match is lost', (tester) async {
+      final dispatch = await _online(tester, [card]);
+      await _until(tester, find.byKey(cardKey));
+      dispatch.hold = Completer<void>();
+      await tester.tap(find.byKey(const ValueKey('radar-match-auto-card')));
+      await _frames(tester, const Duration(milliseconds: 300));
+      expect(dispatch.claims, ['auto-card']);
+      dispatch.publish([card, _first]);
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-offer-card-same-1')),
+        findsNothing,
+      );
+      dispatch.hold!.complete();
+      await _until(
+        tester,
+        find.byKey(const ValueKey<String>('exclusive-offer-card-same-1')),
+      );
       await _leave(tester);
     });
   });
