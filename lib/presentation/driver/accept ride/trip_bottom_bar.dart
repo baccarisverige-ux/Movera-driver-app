@@ -2,6 +2,7 @@ import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:movera/constants/appassets.dart';
+import 'package:movera/widgets/offer_badges.dart';
 
 /// The trip sheet's header: what to do next and where, plus Ride
 /// preferences. Waiting clocks belong exclusively to the island.
@@ -12,7 +13,12 @@ class TripBottomBar extends StatelessWidget {
     required this.address,
     required this.onPreferences,
     required this.onTap,
+    this.bookedTime,
   });
+
+  /// Owner 2026-11-03: a booked ride shows "Booked ride · 07:40" on the
+  /// accepted trip too; null for any other trip.
+  final String? bookedTime;
 
   /// The next step, e.g. "Pick up Angelica".
   final String instruction;
@@ -75,6 +81,14 @@ class TripBottomBar extends StatelessWidget {
             ),
           ),
         ),
+        if (bookedTime case final time?)
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: OfferBadge.reservation(
+              time,
+              key: const ValueKey<String>('trip-bar-booked'),
+            ),
+          ),
         Tooltip(
           // G5: the driver's trip settings (navigation app, car types).
           message: tr.tripSettings,

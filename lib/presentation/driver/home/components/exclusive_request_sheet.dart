@@ -78,7 +78,8 @@ class ExclusiveRequestSheet extends StatelessWidget {
           ),
         if (show.badges && offer.cash)
           OfferBadge.cash(key: ValueKey<String>('exclusive-offer-cash-$id')),
-        if (show.badges && reservation)
+        // Owner 2026-11-03: a booked ride always shows its badge.
+        if (reservation)
           OfferBadge.reservation(
             reservationTime,
             key: ValueKey<String>('exclusive-offer-reservation-$id'),

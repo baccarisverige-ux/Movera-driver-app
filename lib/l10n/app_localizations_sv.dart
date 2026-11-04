@@ -7191,4 +7191,27 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get schedGaveBack => 'Resan gick tillbaka till Bokade resor.';
+
+  @override
+  String schedKeepNewPrice(String price) {
+    return 'Nytt pris för dig: $price';
+  }
+
+  @override
+  String schedLeaveIn(String minutes) {
+    return 'Starta om $minutes min';
+  }
+
+  @override
+  String get schedLeaveNowTitle => 'Starta nu mot upphämtningen';
+
+  @override
+  String schedLeaveArrive(String early, String time) {
+    return 'Var framme $early min före kl. $time.';
+  }
+
+  @override
+  String schedBookedBadge(String time) {
+    return 'Bokad resa · $time';
+  }
 }

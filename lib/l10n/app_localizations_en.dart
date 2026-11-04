@@ -7179,4 +7179,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get schedGaveBack => 'The ride went back to Booked rides.';
+
+  @override
+  String schedKeepNewPrice(String price) {
+    return 'New price for you: $price';
+  }
+
+  @override
+  String schedLeaveIn(String minutes) {
+    return 'Start in $minutes min';
+  }
+
+  @override
+  String get schedLeaveNowTitle => 'Start now towards the pickup';
+
+  @override
+  String schedLeaveArrive(String early, String time) {
+    return 'Arrive $early min before $time.';
+  }
+
+  @override
+  String schedBookedBadge(String time) {
+    return 'Booked ride · $time';
+  }
 }

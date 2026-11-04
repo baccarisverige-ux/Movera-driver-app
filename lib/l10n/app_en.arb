@@ -4396,5 +4396,41 @@
       }
     }
   },
-  "schedGaveBack": "The ride went back to Booked rides."
+  "schedGaveBack": "The ride went back to Booked rides.",
+  "schedKeepNewPrice": "New price for you: {price}",
+  "@schedKeepNewPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLeaveIn": "Start in {minutes} min",
+  "@schedLeaveIn": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "schedLeaveNowTitle": "Start now towards the pickup",
+  "schedLeaveArrive": "Arrive {early} min before {time}.",
+  "@schedLeaveArrive": {
+    "placeholders": {
+      "early": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "schedBookedBadge": "Booked ride · {time}",
+  "@schedBookedBadge": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

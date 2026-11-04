@@ -247,7 +247,8 @@ class RadarOfferCard extends StatelessWidget {
                           'radar-offer-priority-${offer.id}',
                         ),
                       ),
-                    if (show.badges && offer.reservationTime != null)
+                    // Owner 2026-11-03: a booked ride always shows its badge.
+                    if (offer.reservationTime != null)
                       OfferBadge.reservation(
                         offer.reservationTime,
                         key: ValueKey<String>(

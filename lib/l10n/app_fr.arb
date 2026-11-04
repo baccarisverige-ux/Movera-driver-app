@@ -2042,5 +2042,10 @@
   "schedRideChanged": "Cette course a changé : prise en charge à {time}, vous recevez {price}. Vérifiez et appuyez de nouveau sur Accepter.",
   "schedGiveBackFailed": "Impossible de rendre la course. Elle est toujours à vous. Réessayez.",
   "schedKeptAt": "Vous avez gardé la course à {time}.",
-  "schedGaveBack": "La course est retournée dans Courses réservées."
+  "schedGaveBack": "La course est retournée dans Courses réservées.",
+  "schedKeepNewPrice": "Nouveau prix pour vous : {price}",
+  "schedLeaveIn": "Partez dans {minutes} min",
+  "schedLeaveNowTitle": "Partez maintenant vers la prise en charge",
+  "schedLeaveArrive": "Arrivez {early} min avant {time}.",
+  "schedBookedBadge": "Course réservée · {time}"
 }

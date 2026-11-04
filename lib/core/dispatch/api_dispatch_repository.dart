@@ -113,6 +113,9 @@ abstract final class OfferWire {
       reservationTime: json['kind'] == 'reservation' && at != null
           ? '${two(at.hour)}:${two(at.minute)}'
           : null,
+      bookedTime: json['reservation'] == true && at != null
+          ? '${two(at.hour)}:${two(at.minute)}'
+          : null,
       // The server already sent only what this driver may see.
       isNearby: true,
       followsDestination: true,
