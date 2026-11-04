@@ -14,6 +14,7 @@ import 'package:movera/core/driver/driver_home_notices.dart';
 import 'package:movera/core/onboarding/driver_reminders.dart';
 import 'package:movera/core/onboarding/onboarding_settings.dart';
 import 'package:movera/core/l10n/driver_language.dart';
+import 'package:movera/core/money/money.dart';
 import 'package:movera/core/notifications/driver_notifications.dart';
 import 'package:movera/core/ride/waiting_rules.dart';
 import 'package:movera/core/scheduled/scheduled_clock.dart';
@@ -62,6 +63,9 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   // run out, no notifications, every allowed category on and the app's
   // own texts.
   setUp(() {
+    // Job 3 / L12: each test starts in the home zone's currency (a config
+    // applied by an earlier test never leaks into the next one).
+    Money.zoneCurrency = 'SEK';
     ScheduledClock.instance.reset();
     DriverOfferPreferences.reset();
     ClaimLock.set(false);

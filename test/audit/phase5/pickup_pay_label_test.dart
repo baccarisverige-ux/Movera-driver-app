@@ -11,7 +11,7 @@ import 'package:movera/core/money/money.dart';
 void main() {
   test('the pickup pay is in the one total', () {
     final terms = const PickupPayQuote(
-      pay: Money(minorUnits: 155),
+      pay: Money(minorUnits: 155, currency: 'SEK'),
       leg: PickupLeg(km: 2.4, minutes: 5),
     ).termsOf(fare: '120,00 kr');
     expect(terms.fare, '121,55 kr');

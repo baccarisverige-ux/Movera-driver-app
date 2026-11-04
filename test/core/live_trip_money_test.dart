@@ -34,20 +34,23 @@ void main() {
   test('the driver\'s pay is the earnings plus the pickup pay; the rider '
       'pays the final fare, not the booked one', () {
     final parsed = LiveTripMoney.tryParse(completed)!;
-    expect(parsed.riderFare, Money.ore(5400));
-    expect(parsed.driverEarnings, Money.ore(3920));
-    expect(parsed.driverPay, Money.ore(4000));
+    expect(parsed.riderFare, Money(minorUnits: 5400, currency: 'SEK'));
+    expect(parsed.driverEarnings, Money(minorUnits: 3920, currency: 'SEK'));
+    expect(parsed.driverPay, Money(minorUnits: 4000, currency: 'SEK'));
     expect(parsed.driverPay.formatted, '40,00 kr');
     expect(parsed.riderFare.formatted, '54,00 kr');
     expect(parsed.waitingFee, isNull);
     // Cash: the whole fare unless a wallet paid part of it.
-    expect(parsed.cash, Money.ore(5400));
+    expect(parsed.cash, Money(minorUnits: 5400, currency: 'SEK'));
     final wallet = {
       ...completed,
       'walletApplied': money(1000),
       'cashToCollect': money(4400),
     };
-    expect(LiveTripMoney.tryParse(wallet)!.cash, Money.ore(4400));
+    expect(
+      LiveTripMoney.tryParse(wallet)!.cash,
+      Money(minorUnits: 4400, currency: 'SEK'),
+    );
   });
 
   test('the waiting lines are the driver\'s waiting fee', () {
@@ -59,7 +62,10 @@ void main() {
         {'code': 'stop_waiting', 'amount': money(300)},
       ],
     };
-    expect(LiveTripMoney.tryParse(waited)!.waitingFee, Money.ore(1500));
+    expect(
+      LiveTripMoney.tryParse(waited)!.waitingFee,
+      Money(minorUnits: 1500, currency: 'SEK'),
+    );
   });
 
   test('without the driver\'s money there is nothing to take', () {
@@ -69,7 +75,10 @@ void main() {
     );
     expect(LiveTripMoney.tryParse({'status': 'completed'}), isNull);
     final noPickupPay = {...completed}..remove('pickupPay');
-    expect(LiveTripMoney.tryParse(noPickupPay)!.driverPay, Money.ore(3920));
+    expect(
+      LiveTripMoney.tryParse(noPickupPay)!.driverPay,
+      Money(minorUnits: 3920, currency: 'SEK'),
+    );
   });
 
   test('owner 2026-10-27: You get = fare − commission, bonus included', () {
@@ -80,7 +89,7 @@ void main() {
       'commission': money(1100),
     };
     final parsed = LiveTripMoney.tryParse(bonused)!;
-    expect(parsed.driverPay, Money.ore(4300));
+    expect(parsed.driverPay, Money(minorUnits: 4300, currency: 'SEK'));
     for (final trip in [completed, bonused]) {
       final money = LiveTripMoney.tryParse(trip)!;
       final commission = Money.fromJson(

@@ -73,7 +73,7 @@ void main() {
     expect(reservation.isReservation, isTrue);
     expect(reservation.reservationTime, '07:40');
     expect(reservation.isNearby, isTrue);
-    expect(reservation.fare, const Money(minorUnits: 12675));
+    expect(reservation.fare, const Money(minorUnits: 12675, currency: 'SEK'));
     expect(reservation.fareLabel, '126,75 kr');
 
     // Taken from Radar: it leaves Radar at once.

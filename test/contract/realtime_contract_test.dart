@@ -70,7 +70,7 @@ void main() {
     expect(event.occurredAt.isUtc, isTrue);
     expect(event.serverTime!.isUtc, isTrue);
     expect(event.latitude, 59.33);
-    expect(event.cancelFee, const Money(minorUnits: 4500));
+    expect(event.cancelFee, const Money(minorUnits: 4500, currency: 'SEK'));
     final back = event.toJson();
     expect(back['kind'], 'rider_cancelled');
     expect(back['occurredAt'], '2026-10-19T08:30:00.000Z');

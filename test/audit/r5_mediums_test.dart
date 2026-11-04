@@ -247,8 +247,8 @@ void main() {
     test("an API offer's card shows the server's driverEarnings and "
         'pickupPay', () {
       final offer = OfferWire.parse(_wireOffer());
-      expect(offer.driverEarnings, Money.ore(17000));
-      expect(offer.pickupPay, Money.ore(900));
+      expect(offer.driverEarnings, Money(minorUnits: 17000, currency: 'SEK'));
+      expect(offer.pickupPay, Money(minorUnits: 900, currency: 'SEK'));
       // The server's pickup pay, even where the local rules have none.
       final quote = PickupPayCalculator.quote(
         category: offer.category,
@@ -256,7 +256,7 @@ void main() {
         leg: const PickupLeg(km: 0.2, minutes: 1),
         serverPay: offer.pickupPay,
       );
-      expect(quote.pay, Money.ore(900));
+      expect(quote.pay, Money(minorUnits: 900, currency: 'SEK'));
       final view = RadarOfferView(
         id: offer.id,
         category: offer.category,
@@ -279,7 +279,7 @@ void main() {
         '170,00 kr',
       );
       expect(view.shownFare(const OfferCardDetails()), '170,00 kr');
-      expect(offer.driverPay, Money.ore(17000));
+      expect(offer.driverPay, Money(minorUnits: 17000, currency: 'SEK'));
     });
   });
 
@@ -298,7 +298,7 @@ void main() {
       // The accepted terms keep it beside the driver's pay plus the pickup
       // pay; the pickup pay is Movera's.
       final quote = PickupPayQuote(
-        pay: Money.ore(1300),
+        pay: Money(minorUnits: 1300, currency: 'SEK'),
         leg: const PickupLeg(km: 4, minutes: 6),
       );
       final terms = quote.termsOf(
@@ -307,7 +307,7 @@ void main() {
         cashToCollect: offer.riderCashLabel,
       );
       expect(terms.fare, '183,00 kr');
-      expect(terms.driverBonus, Money.ore(5300));
+      expect(terms.driverBonus, Money(minorUnits: 5300, currency: 'SEK'));
       expect(terms.cashToCollect, '112,40 kr');
       // A server cash amount still wins, and none is invented.
       expect(
@@ -587,18 +587,18 @@ void main() {
       ScheduledRideStore.take(
         demoReservationId,
         upcoming: true,
-        pickupPay: Money.ore(1395),
+        pickupPay: Money(minorUnits: 1395, currency: 'SEK'),
       );
-      final total = (base + Money.ore(1395)).formatted;
+      final total = (base + Money(minorUnits: 1395, currency: 'SEK')).formatted;
       expect(
         ScheduledRideStore.acceptedPickupPay(demoReservationId),
-        Money.ore(1395),
+        Money(minorUnits: 1395, currency: 'SEK'),
       );
       await _pumpHome(tester);
       await _frames(tester, const Duration(seconds: 50));
       final trip = tester.widget<AcceptRide>(find.byType(AcceptRide));
       expect(trip.fare, total);
-      expect(trip.driverBonus, Money.ore(1395));
+      expect(trip.driverBonus, Money(minorUnits: 1395, currency: 'SEK'));
       await _end(tester);
     });
   });
@@ -692,7 +692,10 @@ void main() {
       final byId = {for (final row in rows) row.tripId: row};
       expect(byId['cancelled']!.feeEarned, '45,00 kr');
       expect(byId['no-show']!.feeEarned, '52,00 kr');
-      expect(byId['cancelled']!.earnedMoney, Money.ore(4500));
+      expect(
+        byId['cancelled']!.earnedMoney,
+        Money(minorUnits: 4500, currency: 'SEK'),
+      );
       // 120 + 45 + 52.
       expect(TodayEarnings.totalOf(rows, DateTime.now()), '217,00 kr');
     });
@@ -708,7 +711,7 @@ void main() {
       });
       final rows = await PrefsTripHistoryRepository().list();
       expect(rows.single.feeEarned, isNull);
-      expect(rows.single.earnedMoney, Money.ore(0));
+      expect(rows.single.earnedMoney, Money(minorUnits: 0, currency: 'SEK'));
     });
   });
 }

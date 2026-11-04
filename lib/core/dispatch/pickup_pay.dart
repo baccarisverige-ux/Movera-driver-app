@@ -86,11 +86,11 @@ abstract final class PickupPayCalculator {
   }) {
     final rules = config ?? PickupPayConfig.current;
     if (!rules.kindOn(kind)) {
-      return Money.ore(0);
+      return Money.zone(0);
     }
     final rate = rules.rateFor(category);
     if (!rate.enabled) {
-      return Money.ore(0);
+      return Money.zone(0);
     }
     final km = math.max(0.0, leg.km - (rate.freeKmOn ? rate.freeKm : 0));
     final minutes = math.max(
@@ -102,7 +102,9 @@ abstract final class PickupPayCalculator {
         km * rate.krPerKmFor(leg.km) + minutes * rate.krPerMinuteFor(leg.km);
     // Round once, to öre; the tiny epsilon keeps 12.6 from being 12.5999….
     final ore = (kronor * 100 + 1e-6).round();
-    return Money.ore(math.max(0, ore));
+    // Job 3 / L12: the rates are the zone's pickup pay settings
+    // (`DriverAppConfig.pickupPay`), so the pay is in the zone's currency.
+    return Money.zone(math.max(0, ore));
   }
 
   /// The quote an offer card shows now. [serverPay] is the offer's own

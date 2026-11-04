@@ -169,7 +169,7 @@ void main() {
   group('the driver\'s money for an offer', () {
     test('a server offer: driverEarnings, with the pickup pay on top', () {
       final offer = OfferWire.parse(_wire());
-      expect(offer.driverPay, Money.ore(17000));
+      expect(offer.driverPay, Money(minorUnits: 17000, currency: 'SEK'));
       expect(offer.driverPayLabel, '170,00 kr');
       expect(_view(offer).shownFare(const OfferCardDetails()), '179,00 kr');
       // The rider's fare is only the cash to collect, on a cash trip.
@@ -180,7 +180,10 @@ void main() {
         'never to 0', () {
       final old = OfferWire.parse(_wire()..remove('driverEarnings'));
       expect(old.driverEarnings, isNull);
-      expect(old.driverPay, WaybillPayment.shareOf(Money.ore(20000)));
+      expect(
+        old.driverPay,
+        WaybillPayment.shareOf(Money(minorUnits: 20000, currency: 'SEK')),
+      );
       expect(old.driverPayLabel, '150,00 kr');
       expect(_view(old).shownFare(const OfferCardDetails()), '159,00 kr');
     });
@@ -191,8 +194,14 @@ void main() {
       expect(DemoRideCheckTrips.farDropoff.driverPayLabel, '126,00 kr');
       // 152,40 kr with a 40 kr Movera bonus in it: commission on 112,40 kr
       // only → 152,40 − 28,10 = 124,30 kr.
-      expect(DemoAdminOffers.radarGroup.fare, Money.ore(15240));
-      expect(DemoAdminOffers.radarGroup.driverBonus, Money.ore(4000));
+      expect(
+        DemoAdminOffers.radarGroup.fare,
+        Money(minorUnits: 15240, currency: 'SEK'),
+      );
+      expect(
+        DemoAdminOffers.radarGroup.driverBonus,
+        Money(minorUnits: 4000, currency: 'SEK'),
+      );
       expect(DemoAdminOffers.radarGroup.driverPayLabel, '124,30 kr');
       for (final offer in [
         DemoRideCheckTrips.farDropoff,
@@ -300,7 +309,7 @@ void main() {
       find.byType(AcceptRide, skipOffstage: false),
     );
     expect(trip.fare, '179,00 kr');
-    expect(trip.driverBonus, Money.ore(900));
+    expect(trip.driverBonus, Money(minorUnits: 900, currency: 'SEK'));
     expect(trip.paidByCash, isTrue);
     expect(trip.cashToCollect, '200,00 kr');
     // Owner N11: the rider's fare travels with the trip for the waybill.

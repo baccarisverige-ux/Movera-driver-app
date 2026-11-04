@@ -104,7 +104,7 @@ Future<_Routes> _homeWithRadarTrip(WidgetTester tester) async {
     RideOffer(
       id: 'route-trip',
       category: 'Comfort',
-      fare: Money(minorUnits: 16800),
+      fare: Money(minorUnits: 16800, currency: 'SEK'),
       rating: '4.92',
       pickupMinutes: 7,
       pickupKm: 2.1,

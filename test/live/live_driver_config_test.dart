@@ -214,4 +214,69 @@ void main() {
       expect(answers.missed(rules), isTrue);
     },
   );
+
+  test('Job 3 / L19: back in the foreground, the settings are read again '
+      'and a newer version is put in use', () async {
+    var version = 4;
+    var gets = 0;
+    final config = LiveDriverConfig(
+      client: MockClient((request) async {
+        if (request.url.path.endsWith('/driver/config')) gets++;
+        return http.Response(
+          jsonEncode(document(version, radarSeconds: 25 + version)),
+          200,
+        );
+      }),
+      apiBase: base,
+      accessToken: () async => 'token-1',
+      cache: MemoryDriverConfigCache(),
+    );
+    addTearDown(config.dispose);
+    await config.start();
+    expect(config.current?.version, 4);
+    // Admin published while the phone was in the background.
+    version = 5;
+    await config.resumed();
+    expect(gets, 2);
+    expect(config.current?.version, 5);
+    expect(DriverOfferRules.current.radarTime, const Duration(seconds: 30));
+  });
+
+  test('Job 3 / L19: a resume while a connect is in flight leaves one '
+      'settings stream, not two', () async {
+    var open = 0;
+    final gate = Completer<void>();
+    final config = LiveDriverConfig(
+      client: MockClient.streaming((request, _) async {
+        if (request.url.path.endsWith('/driver/config')) {
+          return http.StreamedResponse(
+            Stream.value(utf8.encode(jsonEncode(document(4)))),
+            200,
+          );
+        }
+        // The first stream answers late (still connecting at resume).
+        if (!gate.isCompleted) await gate.future;
+        late final StreamController<List<int>> body;
+        body = StreamController<List<int>>(
+          onListen: () => open++,
+          onCancel: () => open--,
+        );
+        return http.StreamedResponse(body.stream, 200);
+      }),
+      apiBase: base,
+      accessToken: () async => 'token-1',
+      cache: MemoryDriverConfigCache(),
+    );
+    addTearDown(config.dispose);
+    await config.start();
+    unawaited(config.watch());
+    await Future<void>.delayed(Duration.zero);
+    final resumed = config.resumed();
+    gate.complete();
+    await resumed;
+    for (var i = 0; i < 10; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(open, 1);
+  });
 }
