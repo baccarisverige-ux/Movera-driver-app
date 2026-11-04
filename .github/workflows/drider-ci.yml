@@ -155,6 +155,9 @@ jobs:
             --dart-define=MOVERA_AUTH_REQUIRED=true \
             --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
             --dart-define=MOVERA_APP_VERSION="$app_version"
+          # B9: the wasm build keeps the JS fallback next to it.
+          test -f build/web/main.dart.wasm
+          test -f build/web/main.dart.js
 
   android-release:
     name: Android release signing and preview
