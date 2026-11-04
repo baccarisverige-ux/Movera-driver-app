@@ -105,7 +105,10 @@ jobs:
           case "$LIVE_API" in https://*) ;; *) echo "::error::MOVERA_LIVE_API_URL must start with https://"; exit 1 ;; esac
           # Contract v0.16.0: crash reports name the pubspec version.
           app_version="$(sed -n 's/^version: *//p' pubspec.yaml)"
-          flutter build web --release --base-href "/Movera-driver-app/live/" \
+          # Owner 2026-11-04 (B9, "Yes, both apps"): --wasm builds main.dart.wasm
+          # (skwasm) AND main.dart.js; flutter_bootstrap.js picks wasm where the
+          # browser supports it and falls back to JS elsewhere (older Safari).
+          flutter build web --release --wasm --base-href "/Movera-driver-app/live/" \
             --dart-define=MOVERA_AUTH_REQUIRED=true \
             --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
             --dart-define=MOVERA_APP_VERSION="$app_version" \
@@ -118,7 +121,7 @@ jobs:
       # The Pages site is the owner's demo: arrival works away from the
       # demo pickup. Store and other release builds keep the 100 m check (D-12).
       - name: Build Drider web
-        run: flutter build web --release --base-href "/Movera-driver-app/" --dart-define=MOVERA_DEMO_ARRIVAL=true
+        run: flutter build web --release --wasm --base-href "/Movera-driver-app/" --dart-define=MOVERA_DEMO_ARRIVAL=true
 
       - name: Add the live build under /live/
         if: ${{ vars.MOVERA_LIVE_API_URL != '' }}

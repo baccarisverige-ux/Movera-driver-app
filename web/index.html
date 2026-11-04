@@ -117,7 +117,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- MOVERA_API_PRECONNECT -->
   <link rel="preload" href="flutter_bootstrap.js" as="script">
-  <link rel="preload" href="main.dart.js" as="script">
+  <!-- No main.dart.js preload: the wasm build (owner 2026-11-04) loads
+       main.dart.wasm where the browser supports it and main.dart.js only as
+       the fallback, so preloading it would waste the download. -->
   <!-- GOOGLE_MAPS_API_KEY is replaced with the newmap131189 repository secret
        during deployment. A browser key is always public: it must be
        restricted to this site's HTTP referrers and to the Maps JavaScript API
