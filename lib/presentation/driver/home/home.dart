@@ -146,6 +146,7 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 part 'home_offer_radar.dart';
+part 'home_offer_radar_claims.dart';
 part 'home_map_sheet.dart';
 part 'home_map_destination.dart';
 part 'home_map_island.dart';
