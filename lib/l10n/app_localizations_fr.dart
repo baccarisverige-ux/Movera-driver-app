@@ -7330,4 +7330,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String schedBookedBadge(String time) {
     return 'Course réservée · $time';
   }
+
+  @override
+  String get previewBanner => 'Aperçu';
+
+  @override
+  String get previewNotSent => 'Aperçu – non envoyé';
 }

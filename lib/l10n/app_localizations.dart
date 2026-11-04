@@ -12408,6 +12408,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Booked ride · {time}'**
   String schedBookedBadge(String time);
+
+  /// No description provided for @previewBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get previewBanner;
+
+  /// No description provided for @previewNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview – not sent'**
+  String get previewNotSent;
 }
 
 class _AppLocalizationsDelegate

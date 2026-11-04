@@ -7202,4 +7202,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String schedBookedBadge(String time) {
     return 'Booked ride · $time';
   }
+
+  @override
+  String get previewBanner => 'Preview';
+
+  @override
+  String get previewNotSent => 'Preview – not sent';
 }
