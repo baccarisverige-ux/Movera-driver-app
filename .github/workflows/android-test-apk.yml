@@ -24,7 +24,7 @@ jobs:
     env:
       LIVE_API: https://movera-server.onrender.com
       # android/app/build.gradle.kts reads GOOGLE_MAPS_API_KEY.
-      GOOGLE_MAPS_API_KEY: ${{ secrets.MAPS_API_KEY || secrets.GOOGLE_MAPS_API_KEY || secrets.ANDROID_MAPS_API_KEY }}
+      GOOGLE_MAPS_API_KEY: ${{ secrets.ANDROID_MAPS_API_KEY || secrets.MAPS_API_KEY || secrets.GOOGLE_MAPS_API_KEY }}
       MOVERA_TEST_NUMBERS: ${{ secrets.MOVERA_TEST_NUMBERS }}
     steps:
       - uses: actions/checkout@v4
