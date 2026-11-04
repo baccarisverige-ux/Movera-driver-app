@@ -26,11 +26,14 @@ env:
   FLUTTER_VERSION: 3.47.6
 
 jobs:
-  verify:
-    name: Analyze, test and build web
+  # B15 (faster CI): the old single "verify" job (18 min) is split into
+  # parallel jobs; the suite runs in four shards. The job that keeps the
+  # check name "Analyze, test and build web" joins the shard coverage, keeps
+  # the lib/core floor and fails unless every part passed.
+  static:
+    name: Format, analyze and release contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 40
-
+    timeout-minutes: 20
     steps:
       - name: Checkout Drider
         uses: actions/checkout@v4
@@ -42,8 +45,51 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
+
+      - name: Resolve dependencies
+        run: flutter pub get --enforce-lockfile
+
       - name: Flutter version
         run: flutter --version
+
+      - name: Format
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze --fatal-infos
+
+      - name: Frontend release evidence contracts
+        run: |
+          python3 -m unittest discover -s tool/tests -p 'test_*.py' -v
+          python3 tool/check_frontend_release.py docs/frontend-completion/09-release-candidate.json
+
+      - name: Driver web camera gesture contracts
+        run: node tool/verify_driver_map_web.cjs
+
+  test:
+    name: Tests (shard ${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout Drider
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
 
       - name: Cache pub packages
         uses: actions/cache@v4
@@ -55,34 +101,50 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get --enforce-lockfile
 
-      - name: Format
-        run: dart format --output=none --set-exit-if-changed .
+      - name: Test shard with coverage
+        run: flutter test --coverage --total-shards=4 --shard-index=$(( ${{ matrix.shard }} - 1 ))
 
-      - name: Analyze
-        run: flutter analyze --fatal-infos
+      - name: Upload shard coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver-coverage-shard-${{ matrix.shard }}
+          path: coverage/lcov.info
+          if-no-files-found: error
 
-      - name: Test with coverage
-        run: flutter test --coverage
-
-      - name: Coverage floor for lib/core
-        # 91.8 % on main at the Phase 2 audit (baseline-2026-10.md section 5).
-        run: python3 tool/check_coverage.py coverage/lcov.info lib/core/ 91.5
-
-      - name: Upload coverage
+      - name: Upload verification evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: driver-coverage-${{ github.sha }}
-          path: coverage/lcov.info
+          name: driver-verification-${{ github.sha }}-shard-${{ matrix.shard }}
+          path: |
+            build/test-evidence/
+            test/failures/
           if-no-files-found: ignore
 
-      - name: Frontend release evidence contracts
-        run: |
-          python3 -m unittest discover -s tool/tests -p 'test_*.py' -v
-          python3 tool/check_frontend_release.py docs/frontend-completion/09-release-candidate.json
+  lifecycle-web:
+    name: Critical lifecycle and web build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout Drider
+        uses: actions/checkout@v4
 
-      - name: Driver web camera gesture contracts
-        run: node tool/verify_driver_map_web.cjs
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ runner.os }}-${{ env.FLUTTER_VERSION }}-
+
+      - name: Resolve dependencies
+        run: flutter pub get --enforce-lockfile
 
       - name: Critical lifecycle
         run: flutter test integration_test/driver_lifecycle_test.dart -d flutter-tester
@@ -97,10 +159,50 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: driver-verification-${{ github.sha }}
+          name: driver-verification-${{ github.sha }}-lifecycle
           path: |
             build/test-evidence/
             test/failures/
+          if-no-files-found: ignore
+
+  verify:
+    name: Analyze, test and build web
+    if: always()
+    needs: [static, test, lifecycle-web]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Drider
+        uses: actions/checkout@v4
+
+      - name: Every part passed
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          echo "$RESULTS"
+          echo "$RESULTS" | python3 -c 'import json,sys; r=json.load(sys.stdin); sys.exit(0 if r and all(x=="success" for x in r) else 1)'
+
+      - name: Download shard coverage
+        uses: actions/download-artifact@v4
+        with:
+          pattern: driver-coverage-shard-*
+          path: shards
+
+      - name: Join shard coverage
+        run: |
+          mkdir -p coverage
+          python3 tool/merge_lcov.py coverage/lcov.info shards/*/lcov.info
+
+      - name: Coverage floor for lib/core
+        # 91.8 % on main at the Phase 2 audit (baseline-2026-10.md section 5).
+        run: python3 tool/check_coverage.py coverage/lcov.info lib/core/ 91.5
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver-coverage-${{ github.sha }}
+          path: coverage/lcov.info
           if-no-files-found: ignore
 
   secret-scan:
@@ -260,3 +362,15 @@ jobs:
             exit 1
           fi
           grep -q "Native release requires GOOGLE_MAPS_API_KEY" /tmp/movera-ios-maps.txt
+
+  # B15: was its own workflow "Contract copy"; same job id and check name.
+  contract-copy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      # Fails when contracts/ differs from movera-contracts main at the version
+      # it claims (or from its own CHECKSUMS). The message says how to sync.
+      - run: bash tool/check_contract_copy.sh
+        env:
+          CONTRACTS_TOKEN: ${{ secrets.CONTRACTS_TOKEN }}
