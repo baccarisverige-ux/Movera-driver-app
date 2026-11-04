@@ -318,6 +318,18 @@ extension _HomeOfferRadar on _DriverHomeState {
       );
       return;
     }
+    // Job 3 / L4: dispatch's Exclusive offer is for this driver only and
+    // runs out; it is never hidden behind Radar cards. They step aside
+    // (kept, off screen) and come back when the Exclusive offer leaves.
+    // A Radar Match already sent is answered first.
+    if (mounted &&
+        _isOnline &&
+        offer.claimedViaDispatch &&
+        _outsideRadarOffer == null &&
+        !_exclusive.leaving &&
+        _homeRadarMatchingOfferId == null) {
+      _setRadarCardsAside();
+    }
     if (!mounted ||
         !_isOnline ||
         showRideRequests ||
@@ -331,6 +343,7 @@ extension _HomeOfferRadar on _DriverHomeState {
         // Radar trips waiting off screen hold an Exclusive offer back,
         // but not a reservation close to pickup: it needs a driver soon.
         (!offer.reservation &&
+            !offer.claimedViaDispatch &&
             (_pendingRadarHomeOffers.isNotEmpty || _hasRideOffers)) ||
         !_directOfferFollowsDestination(offer) ||
         !_HomeScheduled(this)._fitsSchedule(offer) ||
@@ -375,6 +388,22 @@ extension _HomeOfferRadar on _DriverHomeState {
       // Ran out without Accept: it counts as missed (Q16).
       _dismissOutsideRadarOffer(missed: true);
     });
+  }
+
+  /// Job 3 / L4: the Radar cards on Home wait off screen (first in the
+  /// queue, same order) while an Exclusive offer is up.
+  void _setRadarCardsAside() {
+    if (_radarHomeOffers.isEmpty) {
+      return;
+    }
+    _rebuild(() {
+      final aside = [..._radarHomeOffers];
+      _radarHomeOffers.clear();
+      _pendingRadarHomeOffers
+        ..removeWhere((item) => aside.any((card) => card.id == item.id))
+        ..insertAll(0, aside);
+    });
+    _clearRadarRouteIfNoCards();
   }
 
   /// The Exclusive offer leaves. [missed]: it ran out or the driver

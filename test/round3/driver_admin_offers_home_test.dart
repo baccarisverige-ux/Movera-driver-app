@@ -402,6 +402,54 @@ void main() {
     });
   });
 
+  group('Job 3 / L4: an Exclusive offer is never hidden behind Radar', () {
+    testWidgets('a Radar card of another trip is on Home: the Exclusive '
+        'offer comes up at once; the Radar card is back after it', (
+      tester,
+    ) async {
+      const radar = RideOffer(
+        id: 'auto-other',
+        tripId: 'trip-other',
+        riderName: 'Astrid',
+        riderTrips: 38,
+        category: 'Comfort',
+        fare: Money(minorUnits: 15240),
+        priority: true,
+        source: OfferSource.admin,
+        groupId: 'radar-g',
+        rating: '4.92',
+        pickupMinutes: 4,
+        pickupKm: 1.3,
+        tripMinutes: 16,
+        tripKm: 9.4,
+        pickup: 'Birger Jarlsgatan 12, Stockholm',
+        dropoff: 'Liljeholmstorget, Stockholm',
+        pickupPosition: GeoPoint(59.3362, 18.0735),
+        dropoffPosition: GeoPoint(59.3103, 18.0231),
+        isNearby: true,
+        followsDestination: false,
+      );
+      final dispatch = await _online(tester, [radar]);
+      const radarCard = ValueKey<String>('radar-offer-priority-auto-other');
+      await _until(tester, find.byKey(radarCard));
+      dispatch.publish([radar, _first]);
+      await _frames(tester, const Duration(milliseconds: 600));
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-offer-card-same-1')),
+        findsOneWidget,
+      );
+      // The driver says no: the Radar card he had comes back.
+      await dispatch.declineOffer('same-1');
+      await _frames(tester, const Duration(seconds: 3));
+      expect(
+        find.byKey(const ValueKey<String>('exclusive-offer-card-same-1')),
+        findsNothing,
+      );
+      await _until(tester, find.byKey(radarCard));
+      await _leave(tester);
+    });
+  });
+
   group('Radar group (Radar card, first to accept wins)', () {
     testWidgets('Match claims it through dispatch', (tester) async {
       final dispatch = await _online(tester, [DemoAdminOffers.radarGroup]);
