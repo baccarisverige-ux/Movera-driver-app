@@ -41,10 +41,10 @@ void main() {
   });
 
   test('driver-4: the documented key referrer is the path Pages serves', () {
-    // The demo build's base (the live build under /live/ sits below it,
-    // so the same referrer covers both).
+    // The site base above the live build (/live/ sits below it, so the
+    // documented referrer covers it; the root demo is gone, Demo Q2).
     final base = RegExp(
-      r'--base-href "(/[^"]+/)"[^\n]*MOVERA_DEMO_ARRIVAL',
+      r'--base-href "(/[^/"]+/)live/"',
     ).firstMatch(_read('.github/workflows/deploy-pages.yml'))!.group(1)!;
     expect(base, '/Movera-driver-app/');
     expect(
