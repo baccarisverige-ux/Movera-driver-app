@@ -4,9 +4,11 @@ import 'package:movera/core/storage/local_write_session.dart';
 
 import 'package:movera/core/logging/driver_log.dart';
 import 'package:movera/core/storage/local_quarantine.dart';
+import 'package:movera/core/settings/server_settings_sync.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Local-only settings persistence.
+/// Settings persistence: on the phone, and (BASE B13, contract v0.18.26 §47)
+/// on the server for the sections [remote] handles.
 ///
 /// New writes are section-isolated so malformed data in one settings surface
 /// cannot erase unrelated sections. The legacy aggregate key remains readable
@@ -31,7 +33,30 @@ class SettingsRepository {
 
   String _sectionKey(String section) => '$_sectionPrefix$section';
 
-  Future<Map<String, dynamic>> read(String section) => _enqueue(() async {
+  /// BASE B13: the server copy of Ride preferences and Emergency contacts,
+  /// set by a live build (main.dart); null in the demo and in tests.
+  static RemoteSettings? remote;
+
+  /// The section's values: the server's when [remote] covers it and answers
+  /// (the phone copy is then updated), else the phone copy.
+  Future<Map<String, dynamic>> read(String section) async {
+    final local = await _readLocal(section);
+    final server = remote;
+    if (server == null || !server.handles(section)) return local;
+    try {
+      final values = await server.read(section, local);
+      if (!identical(values, local)) await _saveLocal(section, values);
+      return values;
+    } catch (error) {
+      // Offline or signed out: the phone copy is shown.
+      DriverLog.warn(
+        'Settings $section from server failed: ${DriverLog.scrub(error)}',
+      );
+      return local;
+    }
+  }
+
+  Future<Map<String, dynamic>> _readLocal(String section) => _enqueue(() async {
     final prefs = await _load();
     LocalWriteSession.check(_generation);
 
@@ -92,7 +117,17 @@ class SettingsRepository {
     }
   }
 
-  Future<void> save(String section, Map<String, dynamic> values) {
+  /// Saves on the phone, then on the server for a section [remote] covers;
+  /// a refused server save throws, so the screen offers Retry.
+  Future<void> save(String section, Map<String, dynamic> values) async {
+    await _saveLocal(section, values);
+    final server = remote;
+    if (server != null && server.handles(section)) {
+      await server.save(section, values);
+    }
+  }
+
+  Future<void> _saveLocal(String section, Map<String, dynamic> values) {
     // Capture the requested value now, before queued storage awaits. Callers
     // may keep editing nested lists/maps while an earlier write is pending.
     final String payload;

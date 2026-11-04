@@ -42,6 +42,7 @@ import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/core/settings/server_settings_sync.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/live_safety_alert_repository.dart';
@@ -227,6 +228,9 @@ class _MoveraAppState extends State<MoveraApp> {
         location: _location,
       );
       LiveDriverServices.instance = live;
+      // BASE B13 (contract v0.18.26 §47): Ride preferences and Emergency
+      // contacts are kept on the server too.
+      SettingsRepository.remote = ServerSettingsSync(api: _api);
       // G3-D2: a live build never shows the demo's sample performance.
       DriverPerformanceConfig.liveBuild = true;
       // G3-D1: one real notification list (the server's), no demo list.
