@@ -100,7 +100,7 @@ void main() {
     await _trip(
       tester,
       fare: '128,60 kr',
-      bonus: const Money(minorUnits: 3000),
+      bonus: const Money(minorUnits: 3000, currency: 'SEK'),
     );
     final last = InMemoryWaybillRepository.instance.last!;
     expect(last.fare, '128,60 kr');

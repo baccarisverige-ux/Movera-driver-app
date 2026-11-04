@@ -70,7 +70,9 @@ void main() {
     );
 
     test('SEK', () {
-      final fee = terms(const Money(minorUnits: 1226)).driverWaitingFee(90);
+      final fee = terms(
+        const Money(minorUnits: 1226, currency: 'SEK'),
+      ).driverWaitingFee(90);
       expect(WaitingTerms.addFee('100,00 kr', fee), '118,39 kr');
     });
 
@@ -119,8 +121,16 @@ void main() {
     });
 
     test('labels', () {
-      expect(WaybillRecord.bonusLabel(const Money(minorUnits: 3000)), '30 kr');
-      expect(WaybillRecord.bonusLabel(const Money(minorUnits: 0)), isNull);
+      expect(
+        WaybillRecord.bonusLabel(
+          const Money(minorUnits: 3000, currency: 'SEK'),
+        ),
+        '30 kr',
+      );
+      expect(
+        WaybillRecord.bonusLabel(const Money(minorUnits: 0, currency: 'SEK')),
+        isNull,
+      );
       expect(WaybillRecord.bonusLabel(null), isNull);
       expect(_record().copyWith(fare: '130,00 kr').driverBonus, '30 kr');
     });
@@ -130,10 +140,10 @@ void main() {
         tripId: 'bonus-trip',
         stage: ActiveRideStage.onTrip,
         fare: '128,60 kr',
-        driverBonus: const Money(minorUnits: 3000),
+        driverBonus: const Money(minorUnits: 3000, currency: 'SEK'),
       );
       final back = PersistedActiveRide.fromJson(saved.toJson());
-      expect(back?.driverBonus, const Money(minorUnits: 3000));
+      expect(back?.driverBonus, const Money(minorUnits: 3000, currency: 'SEK'));
     });
 
     test('the earnings history keeps it after completion', () async {

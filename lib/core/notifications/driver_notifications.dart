@@ -406,7 +406,7 @@ class DriverNotices {
       body: () => tr.noticeScheduledBody(
         tr.tomorrow,
         '07:40',
-        Money.sek(126).formattedShort,
+        Money.units(126, currency: 'SEK').formattedShort,
       ),
       at: now.subtract(const Duration(minutes: 18)),
       action: DriverNoticeAction.viewScheduledRides,
@@ -420,7 +420,7 @@ class DriverNotices {
         '18',
         '25',
         '7',
-        Money.sek(350).formattedShort,
+        Money.units(350, currency: 'SEK').formattedShort,
       ),
       at: now.subtract(const Duration(hours: 3)),
     ),
@@ -428,7 +428,8 @@ class DriverNotices {
       id: 'demo-payout',
       kind: DriverNoticeKind.payoutSent,
       title: () => tr.noticePayoutSentTitle,
-      body: () => tr.noticePayoutSentBody(Money.sek(2450).formatted),
+      body: () =>
+          tr.noticePayoutSentBody(Money.units(2450, currency: 'SEK').formatted),
       at: now.subtract(const Duration(days: 1, hours: 2)),
     ),
   ];

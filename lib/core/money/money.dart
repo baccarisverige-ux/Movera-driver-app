@@ -3,15 +3,18 @@
 ///
 /// Wire JSON is `{amountMinor, currency}` (`contracts/contract.json#wire`).
 class Money {
-  /// Job 3 / L12: with no [currency] the amount is in the zone's currency
-  /// ([zoneCurrency]), never SEK by default.
-  const Money({required this.minorUnits, String? currency})
-    : _currency = currency;
+  /// Job 3 / L12: every amount names its currency when it is made; there
+  /// is no SEK default. [Money.zone] takes the zone's currency at creation.
+  const Money({required this.minorUnits, required this.currency});
 
-  factory Money.ore(int ore) => Money(minorUnits: ore);
+  /// [minorUnits] in the zone's currency ([zoneCurrency]), fixed now: a
+  /// later zone switch never changes it.
+  factory Money.zone(int minorUnits) =>
+      Money(minorUnits: minorUnits, currency: zoneCurrency);
 
-  /// Whole units (kronor, euros) of the zone currency's two-decimal kind.
-  factory Money.sek(num kronor) => Money(minorUnits: (kronor * 100).round());
+  /// Whole [units] (kronor, euros) of [currency], a two-decimal currency.
+  factory Money.units(num units, {required String currency}) =>
+      Money(minorUnits: (units * 100).round(), currency: currency);
 
   /// Contract wire form. Throws [FormatException] for anything else: a
   /// non-integer amount, a missing or non-ISO currency, a currency without a
@@ -81,7 +84,7 @@ class Money {
     if (major == null) {
       return null;
     }
-    return Money.ore(sign * (major * 100 + fraction));
+    return Money(minorUnits: sign * (major * 100 + fraction), currency: 'SEK');
   }
 
   /// Label suffixes (`symbols` and ISO codes) → currency.
@@ -148,10 +151,7 @@ class Money {
   }
 
   final int minorUnits;
-  final String? _currency;
-
-  /// The ISO code; the zone's currency when none was given.
-  String get currency => _currency ?? zoneCurrency;
+  final String currency;
 
   /// Contract name of [minorUnits].
   int get amountMinor => minorUnits;
@@ -189,7 +189,7 @@ class Money {
     for (final amount in amounts) {
       sums[amount.currency] = (sums[amount.currency] ?? 0) + amount.minorUnits;
     }
-    if (sums.isEmpty) return [Money.ore(0)];
+    if (sums.isEmpty) return [Money.zone(0)];
     return [
       for (final entry in sums.entries)
         Money(minorUnits: entry.value, currency: entry.key),

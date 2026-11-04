@@ -171,7 +171,7 @@ const _first = RideOffer(
   riderName: 'Karim',
   riderTrips: 64,
   category: 'Movera',
-  fare: Money(minorUnits: 12860),
+  fare: Money(minorUnits: 12860, currency: 'SEK'),
   source: OfferSource.admin,
   rating: '4.88',
   pickupMinutes: 3,
@@ -191,7 +191,7 @@ const _second = RideOffer(
   riderName: 'Karim',
   riderTrips: 64,
   category: 'Movera',
-  fare: Money(minorUnits: 12860),
+  fare: Money(minorUnits: 12860, currency: 'SEK'),
   source: OfferSource.admin,
   rating: '4.88',
   pickupMinutes: 3,
@@ -233,7 +233,7 @@ void main() {
       // no commission on its 30 kr bonus) plus 0,80 kr pickup pay (3 min
       // to pickup); the pickup pay is Movera's, on top of the bonus.
       expect(trip.fare, '104,75 kr');
-      expect(trip.driverBonus, const Money(minorUnits: 3080));
+      expect(trip.driverBonus, const Money(minorUnits: 3080, currency: 'SEK'));
       expect(trip.matchedVia, 'Assigned by Movera');
       expect(ExclusiveAnswers.instance.missedInRow, 0);
       tester.takeException();
@@ -343,7 +343,7 @@ void main() {
         riderName: 'Astrid',
         riderTrips: 38,
         category: 'Comfort',
-        fare: Money(minorUnits: 15240),
+        fare: Money(minorUnits: 15240, currency: 'SEK'),
         priority: true,
         source: OfferSource.admin,
         groupId: 'radar-g',
@@ -365,7 +365,7 @@ void main() {
         riderName: 'Astrid',
         riderTrips: 38,
         category: 'Comfort',
-        fare: Money(minorUnits: 15240),
+        fare: Money(minorUnits: 15240, currency: 'SEK'),
         source: OfferSource.admin,
         rating: '4.92',
         pickupMinutes: 4,
@@ -417,7 +417,7 @@ void main() {
         riderName: 'Astrid',
         riderTrips: 38,
         category: 'Comfort',
-        fare: Money(minorUnits: 15240),
+        fare: Money(minorUnits: 15240, currency: 'SEK'),
         priority: true,
         source: OfferSource.admin,
         groupId: 'radar-g',

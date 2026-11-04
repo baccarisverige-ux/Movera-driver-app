@@ -89,7 +89,10 @@ void main() {
       addTearDown(demo.dispose);
       final claim = await demo.claimOffer(DemoAdminOffers.directAssign.id);
       expect(claim.isSuccess, isTrue);
-      expect(claim.offer?.driverBonus, const Money(minorUnits: 3000));
+      expect(
+        claim.offer?.driverBonus,
+        const Money(minorUnits: 3000, currency: 'SEK'),
+      );
 
       expect(await demo.declineOffer(DemoAdminOffers.radarGroup.id), isTrue);
       // Gone: a second No and an Accept both find nothing.

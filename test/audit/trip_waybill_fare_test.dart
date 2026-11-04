@@ -68,7 +68,7 @@ String? _row(WidgetTester tester, String label) {
 void main() {
   group('driver-32: a fare of 1 000 kr or more', () {
     test('the waybill reads every digit group of a grouped fare', () {
-      final label = Money.ore(123450).formatted;
+      final label = Money(minorUnits: 123450, currency: 'SEK').formatted;
       expect(label, '1 234,50 kr');
       final payment = WaybillPayment.fromFare(label)!;
       expect(payment.fare, '1 234,50 kr');

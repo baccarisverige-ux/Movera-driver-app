@@ -38,7 +38,7 @@ import '../../integration_test/headless_map_platform.dart';
 RideOffer _far({String id = 'far', bool cash = false}) => RideOffer(
   id: id,
   category: 'Comfort',
-  fare: const Money(minorUnits: 12000),
+  fare: const Money(minorUnits: 12000, currency: 'SEK'),
   rating: '4.92',
   riderName: 'Sara',
   pickupMinutes: 8,
@@ -130,30 +130,32 @@ void main() {
 
   test('the accepted terms carry the pickup pay', () {
     final quote = PickupPayQuote(
-      pay: Money.ore(380),
+      pay: Money(minorUnits: 380, currency: 'SEK'),
       leg: const PickupLeg(km: 1.6, minutes: 4),
     );
     // The terms start from the driver's pay (RideOffer.driverPay): 128,40
     // kr fare → 96,30 kr share, plus the pickup pay.
-    final share = WaybillPayment.shareOf(Money.ore(12840));
-    expect(share, Money.ore(9630));
+    final share = WaybillPayment.shareOf(
+      Money(minorUnits: 12840, currency: 'SEK'),
+    );
+    expect(share, Money(minorUnits: 9630, currency: 'SEK'));
     final card = quote.termsOf(fare: share.formatted);
     expect(card.fare, '100,10 kr');
-    expect(card.driverBonus, Money.ore(380));
+    expect(card.driverBonus, Money(minorUnits: 380, currency: 'SEK'));
     expect(card.cashToCollect, isNull);
     // A cash trip: the rider's cash (their fare without Movera's bonus,
     // RideOffer.riderCash) is kept as given, never worked out from the
     // driver's pay; the pickup pay is Movera's.
     final cash = quote.termsOf(
       fare: share.formatted,
-      driverBonus: Money.ore(4000),
+      driverBonus: Money(minorUnits: 4000, currency: 'SEK'),
       cashToCollect: '88,40 kr',
     );
     expect(cash.fare, '100,10 kr');
-    expect(cash.driverBonus, Money.ore(4380));
+    expect(cash.driverBonus, Money(minorUnits: 4380, currency: 'SEK'));
     expect(cash.cashToCollect, '88,40 kr');
     final none = PickupPayQuote(
-      pay: Money.ore(0),
+      pay: Money(minorUnits: 0, currency: 'SEK'),
       leg: const PickupLeg(km: 0.5, minutes: 1),
     ).termsOf(fare: share.formatted);
     expect(none.fare, '96,30 kr');
@@ -161,7 +163,10 @@ void main() {
     expect(none.cashToCollect, isNull);
 
     // The driver gets all of the pickup pay on top of the share.
-    expect(Money.parseSekLabel(card.fare)! - share, Money.ore(380));
+    expect(
+      Money.parseSekLabel(card.fare)! - share,
+      Money(minorUnits: 380, currency: 'SEK'),
+    );
   });
 
   test('a secured next trip saved with the live ride keeps its pickup pay', () {
@@ -176,11 +181,11 @@ void main() {
       pickupLng: 18.06,
       dropoffLat: 59.34,
       dropoffLng: 18.07,
-      pickupPay: Money.ore(380),
+      pickupPay: Money(minorUnits: 380, currency: 'SEK'),
     );
     expect(
       PersistedQueuedTrip.fromJson(next.toJson())!.pickupPay,
-      Money.ore(380),
+      Money(minorUnits: 380, currency: 'SEK'),
     );
   });
 
@@ -203,7 +208,9 @@ void main() {
     // The card: the driver's share of the 120 kr fare plus the pickup pay;
     // the fare itself is nowhere on the list.
     final total =
-        (WaybillPayment.shareOf(Money.ore(12000)) + _radarPay()).formatted;
+        (WaybillPayment.shareOf(Money(minorUnits: 12000, currency: 'SEK')) +
+                _radarPay())
+            .formatted;
     expect(find.text(total), findsWidgets);
     expect(find.text('120,00 kr'), findsNothing);
     final match = find.byKey(const ValueKey<String>('radar-match-far'));
@@ -261,7 +268,9 @@ void main() {
     final card = find.byKey(const ValueKey<String>('radar-offer-card-far'));
     expect(card, findsOneWidget);
     final total =
-        (WaybillPayment.shareOf(Money.ore(12000)) + _radarPay()).formatted;
+        (WaybillPayment.shareOf(Money(minorUnits: 12000, currency: 'SEK')) +
+                _radarPay())
+            .formatted;
     expect(
       find.descendant(of: card, matching: find.text(total)),
       findsOneWidget,
@@ -339,11 +348,14 @@ void main() {
     final next = WaybillStore.next;
     expect(next, isNotNull);
     expect(next!.fare, '100,10 kr');
-    expect(next.driverBonus, WaybillRecord.bonusLabel(Money.ore(380)));
+    expect(
+      next.driverBonus,
+      WaybillRecord.bonusLabel(Money(minorUnits: 380, currency: 'SEK')),
+    );
     // The pay without the pickup pay is the share of the demo fare.
     expect(
-      Money.parseSekLabel(next.fare)! - Money.ore(380),
-      WaybillPayment.shareOf(Money.ore(12840)),
+      Money.parseSekLabel(next.fare)! - Money(minorUnits: 380, currency: 'SEK'),
+      WaybillPayment.shareOf(Money(minorUnits: 12840, currency: 'SEK')),
     );
     expect(tester.takeException(), isNull);
   });

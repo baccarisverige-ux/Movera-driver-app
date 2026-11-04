@@ -42,10 +42,10 @@ class InMemoryEarningsRepository implements EarningsRepository {
         EarningsPeriod(
           periodId: '2026-W38',
           label: 'This week',
-          gross: Money.sek(1724.15),
-          commission: Money.sek(325.40),
-          tips: Money.sek(84.00),
-          adjustments: Money.ore(0),
+          gross: Money.units(1724.15, currency: 'SEK'),
+          commission: Money.units(325.40, currency: 'SEK'),
+          tips: Money.units(84.00, currency: 'SEK'),
+          adjustments: Money(minorUnits: 0, currency: 'SEK'),
         ),
       );
     }

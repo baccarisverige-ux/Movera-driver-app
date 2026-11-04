@@ -118,7 +118,7 @@ class TripHistoryRecord {
   Money? get earnedMoney {
     if (status == TripStatus.completed) return fareMoney;
     final fee = feeEarned;
-    return fee == null ? Money.ore(0) : Money.parseLabel(fee);
+    return fee == null ? Money.zone(0) : Money.parseLabel(fee);
   }
 
   /// The rider paid cash in the car (Q23).

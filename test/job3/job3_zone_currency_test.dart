@@ -47,12 +47,24 @@ void main() {
     expect(find.textContaining('kr'), findsNothing);
   });
 
-  test('FR: money with no currency of its own, and the waiting defaults, '
-      'are in €', () {
+  test('FR: zone money takes € when made, and keeps it after a zone '
+      'switch (equality never moves)', () {
     france();
-    expect(const Money(minorUnits: 500).currency, 'EUR');
-    expect(Money.ore(500).currency, 'EUR');
-    expect(Money.sek(5).currency, 'EUR');
+    final fee = Money.zone(500);
+    expect(fee.currency, 'EUR');
     expect(const WaitingRules().base.perMinute.currency, 'EUR');
+    Money.zoneCurrency = 'SEK';
+    expect(fee.currency, 'EUR');
+    expect(fee, const Money(minorUnits: 500, currency: 'EUR'));
+    expect(
+      fee.hashCode,
+      const Money(minorUnits: 500, currency: 'EUR').hashCode,
+    );
+  });
+
+  test('FR: a kronor label stays SEK', () {
+    france();
+    expect(Money.parseSekLabel('12,50 kr')?.currency, 'SEK');
+    expect(Money.parseLabel('12,50 kr')?.currency, 'SEK');
   });
 }
