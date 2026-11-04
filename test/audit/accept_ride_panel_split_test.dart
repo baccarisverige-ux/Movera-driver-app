@@ -32,7 +32,8 @@ void main() {
       expect(panel, isNot(contains('setState(')));
       // Phase 2: was < 1800 before `dart format` (tall style); same code
       // measured 1798 → 2146 lines, so the limit scales by the same factor.
-      expect(ride.split('\n').length, lessThan(2150));
+      // Base job B8: +3 `part` lines for the trip part files (2149 → 2152).
+      expect(ride.split('\n').length, lessThan(2153));
     },
   );
 }

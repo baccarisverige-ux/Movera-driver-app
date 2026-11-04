@@ -878,6 +878,26 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
   }
 
+  void _watchLiveLocation(int epoch) {
+    _positionSubscription?.cancel();
+    _positionSubscription = _locationService
+        .watchPosition(distanceFilterMeters: 0)
+        .listen(
+          (position) {
+            if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) {
+              return;
+            }
+            _applyDriverPosition(position);
+          },
+          onError: (Object error) {
+            if (!mounted || _liveUpdatesPaused || epoch != _locationEpoch) {
+              return;
+            }
+            _locationFailed(error);
+          },
+        );
+  }
+
   /// The map's route lines for the route, the car's progress and zoom.
   void _syncRouteLines() => _routeLines.sync(
     _roadGeoPoints,
@@ -1122,6 +1142,100 @@ extension _AcceptRideTrip on _AcceptRideState {
         await _completeCurrentTrip();
         return;
     }
+  }
+
+  Future<void> _completeCurrentTrip() async {
+    if (_completionInFlight ||
+        _cancellationInFlight ||
+        _handlingRiderCancellation ||
+        !mounted ||
+        _rideLifecycle.terminal) {
+      return;
+    }
+    _completionInFlight = true;
+    _stageTransitioning = true;
+    _flushNextTripMatch();
+    final offer = _nextTripRadarOffer;
+    final queuedNext =
+        _onTripRadarState == _OnTripRadarState.secured && offer != null;
+    final next = queuedNext ? _snapshotForOffer(offer) : null;
+    if (LiveDriverServices.active &&
+        (!await _AcceptRideLive(this)._serverStep(
+              (trips) => trips.complete(
+                widget.tripId,
+                preview: trips.previewOf(widget.tripId),
+                cash: widget.paidByCash,
+              ),
+            ) ||
+            !mounted ||
+            _rideLifecycle.terminal)) {
+      _completionInFlight = false;
+      _stageTransitioning = false;
+      // v0.18.1 §26: 409 price_changed: the sheet again with the new price.
+      final changed = _AcceptRideLive(
+        this,
+      )._liveTrips?.takePriceChanged(widget.tripId);
+      if (changed != null && mounted) {
+        unawaited(_collectCash(changed: changed));
+      }
+      return;
+    }
+    try {
+      // Q43: the waiting fee is the driver's, in the trip's earnings;
+      // N9: a live trip takes the server's final numbers.
+      final (:paid, :cash) = _settledPaid();
+      _setOwnWaybill(paid);
+      await CompletionJournal(
+        active: widget.activeRideRepository ?? MemoryActiveRideRepository(),
+      ).finish(
+        paid,
+        pickupPoint: GeoPointMaps.fromLatLng(_pickupPosition),
+        dropoffPoint: GeoPointMaps.fromLatLng(_dropoffPosition),
+        next: next,
+        paymentMethod: widget.paidByCash ? 'Cash' : 'Card',
+        cashCollected: cash,
+      );
+      if (!mounted) {
+        return;
+      }
+      if (await _yieldToAuthoritativeTerminal()) return;
+      if (!await _rideLifecycle.complete(clearSnapshot: false)) {
+        _completionInFlight = false;
+        _stageTransitioning = false;
+        _restoreOwnCompletionEcho();
+        return;
+      }
+      _ownCompletionEcho = null;
+    } catch (error, stack) {
+      DriverLog.error('Trip completion journal failed', error, stack);
+      _completionInFlight = false;
+      _stageTransitioning = false;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr.couldNotFinishSavingThisTrip)),
+        );
+      }
+      return;
+    }
+    _waitTimer?.cancel();
+    _nextTripRadarDemoTimer?.cancel();
+    _nextTripRadarMatchTimer?.cancel();
+    if (!mounted) {
+      return;
+    }
+    _waybills.completeCurrent();
+    final nextRide = queuedNext ? _nextRideFor(offer) : null;
+    Navigator.of(context).pushReplacement(
+      BottomToTopTransition(
+        DriverRideCompleted(
+          waybillRepository: _waybills,
+          sessionController: widget.sessionController,
+          activeRideRepository: widget.activeRideRepository,
+          nextRide: nextRide,
+          paidByCash: widget.paidByCash,
+        ),
+      ),
+    );
   }
 
   Future<void> _refreshOnTripRoute({bool fitCamera = false}) async {
