@@ -230,7 +230,10 @@ class _MoveraAppState extends State<MoveraApp> {
       LiveDriverServices.instance = live;
       // BASE B13 (contract v0.18.26 §47): Ride preferences and Emergency
       // contacts are kept on the server too.
-      SettingsRepository.remote = ServerSettingsSync(api: _api);
+      SettingsRepository.remote = ServerSettingsSync(
+        api: _api,
+        signedIn: () async => (await _tokens.readAccess())?.isNotEmpty == true,
+      );
       // G3-D2: a live build never shows the demo's sample performance.
       DriverPerformanceConfig.liveBuild = true;
       // G3-D1: one real notification list (the server's), no demo list.

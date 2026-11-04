@@ -23,9 +23,17 @@ abstract class RemoteSettings {
 }
 
 class ServerSettingsSync implements RemoteSettings {
-  ServerSettingsSync({required ApiClient api}) : _api = api;
+  ServerSettingsSync({
+    required ApiClient api,
+    Future<bool> Function()? signedIn,
+  }) : _api = api,
+       _signedIn = signedIn;
 
   final ApiClient _api;
+
+  /// Contract `auth.beforeSignIn`: no signed-in call without a session; the
+  /// phone copy is used until then.
+  final Future<bool> Function()? _signedIn;
 
   static const categoriesSection = DriverCategoryChoice.section;
   static const contactsSection = 'contacts';
@@ -41,6 +49,7 @@ class ServerSettingsSync implements RemoteSettings {
     String section,
     Map<String, dynamic> local,
   ) async {
+    if (_signedIn != null && !await _signedIn()) return local;
     final path = section == categoriesSection ? _preferences : _contacts;
     final answer = await _api.get(path);
     if (answer['updatedAt'] == null) {
