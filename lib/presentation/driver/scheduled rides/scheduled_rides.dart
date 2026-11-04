@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:movera/core/zones/zone_clock.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'package:movera/core/location/driver_start_position.dart';
 
@@ -968,7 +969,9 @@ class ScheduledRideStore {
 
   /// "Today", "Tomorrow" or "5 Nov" for a pickup at [at].
   static String _dayWordOf(DateTime at, DateTime now) {
-    final local = at.toLocal();
+    // Job 3 / L18: both on the zone's clock, never the phone's.
+    final local = zoneWallTime(at);
+    now = zoneWallTime(now);
     final days = DateTime.utc(
       local.year,
       local.month,

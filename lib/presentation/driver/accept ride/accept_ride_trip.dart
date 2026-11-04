@@ -43,6 +43,7 @@ extension _AcceptRideTrip on _AcceptRideState {
           : GeoPointMaps.fromLatLng(_destinationPosition!),
       scheduledPickupAt: widget.scheduledPickupAt,
       scheduledRideId: widget.scheduledRideId,
+      bookedTime: widget.bookedTime,
       pickupKm: widget.pickupKm,
       bags: widget.bags,
       rideCheckFired: _rideCheckDetector.firedNames,
