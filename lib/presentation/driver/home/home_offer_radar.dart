@@ -1452,9 +1452,7 @@ extension _HomeOfferRadar on _DriverHomeState {
           bookedTime:
               offer.bookedTime ??
               (offer.reservation ? offer.pickupTime : null) ??
-              (scheduledPickupAt == null
-                  ? null
-                  : zoneClock(scheduledPickupAt)),
+              (scheduledPickupAt == null ? null : zoneClock(scheduledPickupAt)),
         ),
       ),
     );

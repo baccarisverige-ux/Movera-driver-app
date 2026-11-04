@@ -271,6 +271,21 @@ class LiveDriverConfig extends ChangeNotifier {
     }
   }
 
+  /// Job 3 / L19: the app is on screen again. The settings are read again
+  /// (a phone in the background may have missed `config_published`, and
+  /// its stream may have died without a word); a followed stream opens
+  /// again at once.
+  Future<DriverAppConfig?> resumed() {
+    if (_watching && !_disposed) {
+      _retry?.cancel();
+      _retry = null;
+      unawaited(_stream?.cancel());
+      _stream = null;
+      unawaited(_connect());
+    }
+    return refresh();
+  }
+
   /// Stops following the stream (signed out, or the server refused the
   /// session); [watch] starts it again.
   void stop() {

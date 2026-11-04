@@ -250,7 +250,11 @@ class LiveDriverServices {
   /// read again (G4-F6).
   void resumed() {
     presence.resumed();
-    if (_signedInStarted) unawaited(events.refresh());
+    if (_signedInStarted) {
+      unawaited(events.refresh());
+      // Job 3 / L19: settings changed while the app was away apply now.
+      unawaited(config.resumed());
+    }
   }
 
   Future<void> dispose() async {
