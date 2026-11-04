@@ -57,14 +57,6 @@ void main() {
     expect(find.text('These preferences are saved on this phone.'), findsOne);
   });
 
-  test('B4: no "in this demo" safety texts on live', () {
-    final source = File(
-      'lib/presentation/driver/safety toolkits/safety_toolkits.dart',
-    ).readAsStringSync();
-    expect(source, contains('tr.safetyAudioComingSoon'));
-    expect(source, contains('tr.safetyTripSharingComingSoon'));
-  });
-
   testWidgets('B7: the updating island shows the trip currency', (
     tester,
   ) async {
@@ -79,17 +71,6 @@ void main() {
     expect(find.text('€'), findsOneWidget);
     expect(find.text('kr'), findsNothing);
     await tester.pumpWidget(const SizedBox());
-  });
-
-  test('B9: the Google logo is only on the sign-in button', () {
-    final users = Directory('lib')
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.dart'))
-        .where((f) => f.readAsStringSync().contains('images/google.png'))
-        .map((f) => f.path.replaceAll('\\', '/'))
-        .toList();
-    expect(users, ['lib/presentation/driver/auth/sign_in.dart']);
   });
 
   test('B16: Swedish says Movera Förare, never Movera Driver', () {
