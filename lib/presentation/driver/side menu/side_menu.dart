@@ -17,8 +17,6 @@ import 'package:movera/presentation/driver/preferences/preferences.dart';
 import 'package:movera/presentation/driver/profile/profile.dart';
 import 'package:movera/presentation/driver/promotions/promotions.dart';
 import 'package:movera/presentation/driver/scheduled%20rides/scheduled_rides.dart';
-import 'package:movera/presentation/driver/settings/settings.dart';
-import 'package:movera/presentation/driver/support/support_inbox.dart';
 
 class DriverSideMenu extends StatelessWidget {
   const DriverSideMenu({
@@ -182,13 +180,13 @@ class DriverSideMenu extends StatelessWidget {
                         asset: AppAssets.menuSupport,
                         title: tr.support,
                         subtitle: tr.messagesAndSupportTickets,
-                        onTap: () => _open(context, const SupportScreen()),
+                        onTap: () => _open(context, supportScreen()),
                       ),
                       _MenuAction(
                         asset: AppAssets.menuSettings,
                         title: tr.settings,
                         subtitle: tr.appAndDriverSettings,
-                        onTap: () => _open(context, const Settings()),
+                        onTap: () => _open(context, settingsScreen()),
                       ),
                     ],
                   ),

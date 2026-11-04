@@ -1,3 +1,4 @@
+import 'package:movera/presentation/driver/deferred_screens.dart';
 import 'package:movera/widgets/movera_dialog_theme.dart';
 import 'dart:async';
 import 'package:movera/core/l10n/driver_l10n.dart';
@@ -17,11 +18,8 @@ import 'package:movera/presentation/driver/account/fleet_invitations.dart';
 import 'package:movera/presentation/driver/account/my_fleet_screen.dart';
 import 'package:movera/presentation/driver/auth/auth_navigation.dart';
 import 'package:movera/presentation/driver/auth/driver_sign_out.dart';
-import 'package:movera/presentation/driver/documents/documents.dart';
 import 'package:movera/presentation/driver/my%20bank/my_bank.dart';
 import 'package:movera/presentation/driver/profile/legal_document.dart';
-import 'package:movera/presentation/driver/settings/settings.dart';
-import 'package:movera/presentation/driver/support/support_inbox.dart';
 import 'package:movera/presentation/driver/vehicles/vehicles.dart';
 import 'package:movera/widgets/navigation_transition.dart';
 
@@ -184,7 +182,7 @@ class _DriverProfileState extends State<DriverProfile> {
               tooltip: tr.settings,
               onPressed: _logoutBusy
                   ? null
-                  : () => _openPage(context, const Settings()),
+                  : () => _openPage(context, settingsScreen()),
               icon: const Icon(Icons.tune_rounded, color: _ink, size: 22),
             ),
           ],
@@ -308,7 +306,7 @@ class _DriverProfileState extends State<DriverProfile> {
               _item(
                 Icons.description_outlined,
                 tr.documents,
-                const DriverDocuments(),
+                driverDocumentsScreen(),
               ),
             ]),
             const SizedBox(height: 12),
@@ -323,11 +321,7 @@ class _DriverProfileState extends State<DriverProfile> {
                 tr.termsOfService,
                 LegalDocumentScreen.terms,
               ),
-              _item(
-                Icons.help_outline_rounded,
-                tr.helpCenter,
-                const SupportScreen(),
-              ),
+              _item(Icons.help_outline_rounded, tr.helpCenter, supportScreen()),
             ]),
             const SizedBox(height: 12),
             Material(

@@ -173,4 +173,52 @@ void main() {
     ];
     expect(offenders, isEmpty);
   });
+  // B9 "Fast app start" (owner 2026-11-04).
+  testWidgets('Settings still opens, through its loader', (tester) async {
+    await open(tester, () => settingsScreen());
+    expect(screenNamed('Settings'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('Documents still opens, through its loader', (tester) async {
+    await open(tester, () => driverDocumentsScreen());
+    expect(screenNamed('DriverDocuments'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('Help still opens, through its loader', (tester) async {
+    await open(tester, () => supportScreen());
+    expect(screenNamed('SupportScreen'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  test('B9: the load-on-open screens are not imported eagerly in lib/', () {
+    const screens = [
+      'presentation/driver/settings/settings.dart',
+      'presentation/driver/documents/documents.dart',
+      'presentation/driver/support/support_inbox.dart',
+    ];
+    final eager = <String>[];
+    for (final file in Directory('lib').listSync(recursive: true)) {
+      if (file is! File || !file.path.endsWith('.dart')) continue;
+      final lines = file.readAsLinesSync();
+      for (var i = 0; i < lines.length; i++) {
+        final line = lines[i];
+        if (!line.startsWith('import ')) continue;
+        final target = screens.where(line.contains);
+        if (target.isEmpty) continue;
+        final next = i + 1 < lines.length ? lines[i + 1] : '';
+        if (line.contains(' deferred as ') || next.contains('deferred as ')) {
+          continue;
+        }
+        // A screen's own folder may import its siblings.
+        final folder = target.first.substring(0, target.first.lastIndexOf('/'));
+        if (file.path.contains(folder.replaceAll('%20', ' '))) {
+          continue;
+        }
+        eager.add('${file.path}: $line');
+      }
+    }
+    expect(eager, isEmpty);
+  });
 }

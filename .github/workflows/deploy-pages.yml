@@ -110,6 +110,8 @@ jobs:
             --dart-define=MOVERA_API_BASE_URL="$LIVE_API" \
             --dart-define=MOVERA_APP_VERSION="$app_version" \
             --dart-define=MOVERA_TEST_NUMBERS="$MOVERA_TEST_NUMBERS"
+          # B9: let the page open the API connection early (hint only).
+          sed -i "s|  <!-- MOVERA_API_PRECONNECT -->|  <link rel=\"preconnect\" href=\"${LIVE_API%/}\" crossorigin>|" build/web/index.html
           rm -rf "$RUNNER_TEMP/drider-live"
           mv build/web "$RUNNER_TEMP/drider-live"
 
