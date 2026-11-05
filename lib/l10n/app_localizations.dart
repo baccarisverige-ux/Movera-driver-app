@@ -10663,390 +10663,6 @@ abstract class AppLocalizations {
   /// **'Can\'t be driven – the fleet owner must finish its documents'**
   String get vehDocsMissingOwnerUploads;
 
-  /// Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Draft'**
-  String get swTripStatusDraft;
-
-  /// Contract status word statusWords.families.tripStatus.quoted (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Quoted'**
-  String get swTripStatusQuoted;
-
-  /// Contract status word statusWords.families.tripStatus.requested (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Requested'**
-  String get swTripStatusRequested;
-
-  /// Contract status word statusWords.families.tripStatus.searching (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Searching'**
-  String get swTripStatusSearching;
-
-  /// Contract status word statusWords.families.tripStatus.offered (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Offered'**
-  String get swTripStatusOffered;
-
-  /// Contract status word statusWords.families.tripStatus.accepted (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Accepted'**
-  String get swTripStatusAccepted;
-
-  /// Contract status word statusWords.families.tripStatus.driver_to_pickup (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Driver to pickup'**
-  String get swTripStatusDriverToPickup;
-
-  /// Contract status word statusWords.families.tripStatus.arrived (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Arrived'**
-  String get swTripStatusArrived;
-
-  /// Contract status word statusWords.families.tripStatus.rider_onboard (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Rider onboard'**
-  String get swTripStatusRiderOnboard;
-
-  /// Contract status word statusWords.families.tripStatus.in_trip (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'In trip'**
-  String get swTripStatusInTrip;
-
-  /// Contract status word statusWords.families.tripStatus.approaching_dropoff (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Approaching drop-off'**
-  String get swTripStatusApproachingDropoff;
-
-  /// Contract status word statusWords.families.tripStatus.completed (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Completed'**
-  String get swTripStatusCompleted;
-
-  /// Contract status word statusWords.families.tripStatus.cancelled_by_rider (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Cancelled by rider'**
-  String get swTripStatusCancelledByRider;
-
-  /// Contract status word statusWords.families.tripStatus.cancelled_by_driver (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Cancelled by driver'**
-  String get swTripStatusCancelledByDriver;
-
-  /// Contract status word statusWords.families.tripStatus.cancelled_by_admin (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Cancelled by admin'**
-  String get swTripStatusCancelledByAdmin;
-
-  /// Contract status word statusWords.families.tripStatus.cancelled_by_system (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Cancelled by system'**
-  String get swTripStatusCancelledBySystem;
-
-  /// Contract status word statusWords.families.tripStatus.no_show (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'No show'**
-  String get swTripStatusNoShow;
-
-  /// Contract status word statusWords.families.tripStatus.expired (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Expired'**
-  String get swTripStatusExpired;
-
-  /// Contract status word statusWords.families.tripStatus.failed (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Failed'**
-  String get swTripStatusFailed;
-
-  /// Contract status word statusWords.families.driverAccountStatus.pending (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get swDriverAccountStatusPending;
-
-  /// Contract status word statusWords.families.driverAccountStatus.active (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Active'**
-  String get swDriverAccountStatusActive;
-
-  /// Contract status word statusWords.families.driverAccountStatus.on_hold (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Awaiting review'**
-  String get swDriverAccountStatusOnHold;
-
-  /// Contract status word statusWords.families.driverAccountStatus.suspended (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Suspended'**
-  String get swDriverAccountStatusSuspended;
-
-  /// Contract status word statusWords.families.driverOnlineStatus.offline (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Offline'**
-  String get swDriverOnlineStatusOffline;
-
-  /// Contract status word statusWords.families.driverOnlineStatus.going_online (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Going online'**
-  String get swDriverOnlineStatusGoingOnline;
-
-  /// Contract status word statusWords.families.driverOnlineStatus.online (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Online'**
-  String get swDriverOnlineStatusOnline;
-
-  /// Contract status word statusWords.families.driverOnlineStatus.on_trip (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'On a trip'**
-  String get swDriverOnlineStatusOnTrip;
-
-  /// Contract status word statusWords.families.driverOnlineStatus.suspended (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Suspended'**
-  String get swDriverOnlineStatusSuspended;
-
-  /// Contract status word statusWords.families.paymentStatus.pending (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get swPaymentStatusPending;
-
-  /// Contract status word statusWords.families.paymentStatus.authorized (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Authorized'**
-  String get swPaymentStatusAuthorized;
-
-  /// Contract status word statusWords.families.paymentStatus.captured (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Captured'**
-  String get swPaymentStatusCaptured;
-
-  /// Contract status word statusWords.families.paymentStatus.failed (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Failed'**
-  String get swPaymentStatusFailed;
-
-  /// Contract status word statusWords.families.paymentStatus.refunded (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Refunded'**
-  String get swPaymentStatusRefunded;
-
-  /// Contract status word statusWords.families.paymentStatus.partially_refunded (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Partially refunded'**
-  String get swPaymentStatusPartiallyRefunded;
-
-  /// Contract status word statusWords.families.feeStatus.paid (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Paid'**
-  String get swFeeStatusPaid;
-
-  /// Contract status word statusWords.families.feeStatus.owed (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Owed'**
-  String get swFeeStatusOwed;
-
-  /// Contract status word statusWords.families.feeStatus.waived (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Waived'**
-  String get swFeeStatusWaived;
-
-  /// Contract status word statusWords.families.payoutStatus.pending (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get swPayoutStatusPending;
-
-  /// Contract status word statusWords.families.payoutStatus.paid (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Paid'**
-  String get swPayoutStatusPaid;
-
-  /// Contract status word statusWords.families.documentStatus.needed (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Needed'**
-  String get swDocumentStatusNeeded;
-
-  /// Contract status word statusWords.families.documentStatus.in_review (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'In review'**
-  String get swDocumentStatusInReview;
-
-  /// Contract status word statusWords.families.documentStatus.approved (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Approved'**
-  String get swDocumentStatusApproved;
-
-  /// Contract status word statusWords.families.documentStatus.rejected (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Rejected'**
-  String get swDocumentStatusRejected;
-
-  /// Contract status word statusWords.families.documentStatus.expired (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Expired'**
-  String get swDocumentStatusExpired;
-
-  /// Contract status word statusWords.families.documentStatus.expiring (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Expiring'**
-  String get swDocumentStatusExpiring;
-
-  /// Contract status word statusWords.families.documentStatus.missing (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Missing'**
-  String get swDocumentStatusMissing;
-
-  /// Contract status word statusWords.families.documentStatus.waiting_for_movera (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for Movera'**
-  String get swDocumentStatusWaitingForMovera;
-
-  /// Contract status word statusWords.families.ticketStatus.open (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Open'**
-  String get swTicketStatusOpen;
-
-  /// Contract status word statusWords.families.ticketStatus.pending (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get swTicketStatusPending;
-
-  /// Contract status word statusWords.families.ticketStatus.resolved (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Resolved'**
-  String get swTicketStatusResolved;
-
-  /// Contract status word statusWords.families.ticketStatus.closed (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Closed'**
-  String get swTicketStatusClosed;
-
-  /// Contract status word statusWords.families.vehicleReviewStatus.in_review (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'In review'**
-  String get swVehicleReviewStatusInReview;
-
-  /// Contract status word statusWords.families.vehicleReviewStatus.approved (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Approved'**
-  String get swVehicleReviewStatusApproved;
-
-  /// Contract status word statusWords.families.vehicleReviewStatus.rejected (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Rejected'**
-  String get swVehicleReviewStatusRejected;
-
-  /// Contract status word statusWords.families.offerStatus.open (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Open'**
-  String get swOfferStatusOpen;
-
-  /// Contract status word statusWords.families.offerStatus.claimed (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Claimed'**
-  String get swOfferStatusClaimed;
-
-  /// Contract status word statusWords.families.offerStatus.claimed_elsewhere (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Claimed elsewhere'**
-  String get swOfferStatusClaimedElsewhere;
-
-  /// Contract status word statusWords.families.offerStatus.declined (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Declined'**
-  String get swOfferStatusDeclined;
-
-  /// Contract status word statusWords.families.offerStatus.expired (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Expired'**
-  String get swOfferStatusExpired;
-
-  /// Contract status word statusWords.families.offerStatus.withdrawn (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Withdrawn'**
-  String get swOfferStatusWithdrawn;
-
-  /// Contract status word statusWords.families.ratingStatus.not_requested (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Not requested'**
-  String get swRatingStatusNotRequested;
-
-  /// Contract status word statusWords.families.ratingStatus.pending (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Pending'**
-  String get swRatingStatusPending;
-
-  /// Contract status word statusWords.families.ratingStatus.submitted (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Submitted'**
-  String get swRatingStatusSubmitted;
-
-  /// Contract status word statusWords.families.ratingStatus.skipped (tool/gen_status_words.py).
-  ///
-  /// In en, this message translates to:
-  /// **'Skipped'**
-  String get swRatingStatusSkipped;
-
   /// No description provided for @docFleetOwnerOnly.
   ///
   /// In en, this message translates to:
@@ -12420,6 +12036,402 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview – not sent'**
   String get previewNotSent;
+
+  /// Fix job 0 (A2-2, contract 0.18.39 outstandingFee.receiptText.driver): under the earlier unpaid fee line on the finished trip.
+  ///
+  /// In en, this message translates to:
+  /// **'The rider had an unpaid fee from an earlier trip. It is in the price and goes to Movera.'**
+  String get fixJob0DebtNote;
+
+  /// Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get swTripStatusDraft;
+
+  /// Contract status word statusWords.families.tripStatus.quoted (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Quoted'**
+  String get swTripStatusQuoted;
+
+  /// Contract status word statusWords.families.tripStatus.requested (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get swTripStatusRequested;
+
+  /// Contract status word statusWords.families.tripStatus.searching (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Searching'**
+  String get swTripStatusSearching;
+
+  /// Contract status word statusWords.families.tripStatus.offered (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Offered'**
+  String get swTripStatusOffered;
+
+  /// Contract status word statusWords.families.tripStatus.accepted (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get swTripStatusAccepted;
+
+  /// Contract status word statusWords.families.tripStatus.driver_to_pickup (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Driver to pickup'**
+  String get swTripStatusDriverToPickup;
+
+  /// Contract status word statusWords.families.tripStatus.arrived (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived'**
+  String get swTripStatusArrived;
+
+  /// Contract status word statusWords.families.tripStatus.rider_onboard (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Rider onboard'**
+  String get swTripStatusRiderOnboard;
+
+  /// Contract status word statusWords.families.tripStatus.in_trip (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'In trip'**
+  String get swTripStatusInTrip;
+
+  /// Contract status word statusWords.families.tripStatus.approaching_dropoff (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Approaching drop-off'**
+  String get swTripStatusApproachingDropoff;
+
+  /// Contract status word statusWords.families.tripStatus.completed (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get swTripStatusCompleted;
+
+  /// Contract status word statusWords.families.tripStatus.cancelled_by_rider (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled by rider'**
+  String get swTripStatusCancelledByRider;
+
+  /// Contract status word statusWords.families.tripStatus.cancelled_by_driver (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled by driver'**
+  String get swTripStatusCancelledByDriver;
+
+  /// Contract status word statusWords.families.tripStatus.cancelled_by_admin (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled by admin'**
+  String get swTripStatusCancelledByAdmin;
+
+  /// Contract status word statusWords.families.tripStatus.cancelled_by_system (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled by system'**
+  String get swTripStatusCancelledBySystem;
+
+  /// Contract status word statusWords.families.tripStatus.no_show (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'No show'**
+  String get swTripStatusNoShow;
+
+  /// Contract status word statusWords.families.tripStatus.expired (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get swTripStatusExpired;
+
+  /// Contract status word statusWords.families.tripStatus.failed (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get swTripStatusFailed;
+
+  /// Contract status word statusWords.families.driverAccountStatus.pending (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get swDriverAccountStatusPending;
+
+  /// Contract status word statusWords.families.driverAccountStatus.active (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get swDriverAccountStatusActive;
+
+  /// Contract status word statusWords.families.driverAccountStatus.on_hold (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting review'**
+  String get swDriverAccountStatusOnHold;
+
+  /// Contract status word statusWords.families.driverAccountStatus.suspended (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get swDriverAccountStatusSuspended;
+
+  /// Contract status word statusWords.families.driverOnlineStatus.offline (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get swDriverOnlineStatusOffline;
+
+  /// Contract status word statusWords.families.driverOnlineStatus.going_online (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Going online'**
+  String get swDriverOnlineStatusGoingOnline;
+
+  /// Contract status word statusWords.families.driverOnlineStatus.online (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get swDriverOnlineStatusOnline;
+
+  /// Contract status word statusWords.families.driverOnlineStatus.on_trip (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'On a trip'**
+  String get swDriverOnlineStatusOnTrip;
+
+  /// Contract status word statusWords.families.driverOnlineStatus.suspended (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get swDriverOnlineStatusSuspended;
+
+  /// Contract status word statusWords.families.paymentStatus.pending (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get swPaymentStatusPending;
+
+  /// Contract status word statusWords.families.paymentStatus.authorized (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Authorized'**
+  String get swPaymentStatusAuthorized;
+
+  /// Contract status word statusWords.families.paymentStatus.captured (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Captured'**
+  String get swPaymentStatusCaptured;
+
+  /// Contract status word statusWords.families.paymentStatus.failed (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get swPaymentStatusFailed;
+
+  /// Contract status word statusWords.families.paymentStatus.refunded (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded'**
+  String get swPaymentStatusRefunded;
+
+  /// Contract status word statusWords.families.paymentStatus.partially_refunded (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Partially refunded'**
+  String get swPaymentStatusPartiallyRefunded;
+
+  /// Contract status word statusWords.families.feeStatus.paid (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get swFeeStatusPaid;
+
+  /// Contract status word statusWords.families.feeStatus.owed (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Owed'**
+  String get swFeeStatusOwed;
+
+  /// Contract status word statusWords.families.feeStatus.waived (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Waived'**
+  String get swFeeStatusWaived;
+
+  /// Contract status word statusWords.families.payoutStatus.pending (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get swPayoutStatusPending;
+
+  /// Contract status word statusWords.families.payoutStatus.pending_approval (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for approval'**
+  String get swPayoutStatusPendingApproval;
+
+  /// Contract status word statusWords.families.payoutStatus.paid (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get swPayoutStatusPaid;
+
+  /// Contract status word statusWords.families.documentStatus.needed (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Needed'**
+  String get swDocumentStatusNeeded;
+
+  /// Contract status word statusWords.families.documentStatus.in_review (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get swDocumentStatusInReview;
+
+  /// Contract status word statusWords.families.documentStatus.approved (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get swDocumentStatusApproved;
+
+  /// Contract status word statusWords.families.documentStatus.rejected (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get swDocumentStatusRejected;
+
+  /// Contract status word statusWords.families.documentStatus.expired (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get swDocumentStatusExpired;
+
+  /// Contract status word statusWords.families.documentStatus.expiring (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Expiring'**
+  String get swDocumentStatusExpiring;
+
+  /// Contract status word statusWords.families.documentStatus.missing (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Missing'**
+  String get swDocumentStatusMissing;
+
+  /// Contract status word statusWords.families.documentStatus.waiting_for_movera (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for Movera'**
+  String get swDocumentStatusWaitingForMovera;
+
+  /// Contract status word statusWords.families.ticketStatus.open (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get swTicketStatusOpen;
+
+  /// Contract status word statusWords.families.ticketStatus.pending (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get swTicketStatusPending;
+
+  /// Contract status word statusWords.families.ticketStatus.resolved (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get swTicketStatusResolved;
+
+  /// Contract status word statusWords.families.ticketStatus.closed (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get swTicketStatusClosed;
+
+  /// Contract status word statusWords.families.vehicleReviewStatus.in_review (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get swVehicleReviewStatusInReview;
+
+  /// Contract status word statusWords.families.vehicleReviewStatus.approved (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get swVehicleReviewStatusApproved;
+
+  /// Contract status word statusWords.families.vehicleReviewStatus.rejected (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get swVehicleReviewStatusRejected;
+
+  /// Contract status word statusWords.families.offerStatus.open (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get swOfferStatusOpen;
+
+  /// Contract status word statusWords.families.offerStatus.claimed (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Claimed'**
+  String get swOfferStatusClaimed;
+
+  /// Contract status word statusWords.families.offerStatus.claimed_elsewhere (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Claimed elsewhere'**
+  String get swOfferStatusClaimedElsewhere;
+
+  /// Contract status word statusWords.families.offerStatus.declined (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get swOfferStatusDeclined;
+
+  /// Contract status word statusWords.families.offerStatus.expired (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get swOfferStatusExpired;
+
+  /// Contract status word statusWords.families.offerStatus.withdrawn (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawn'**
+  String get swOfferStatusWithdrawn;
+
+  /// Contract status word statusWords.families.ratingStatus.not_requested (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Not requested'**
+  String get swRatingStatusNotRequested;
+
+  /// Contract status word statusWords.families.ratingStatus.pending (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get swRatingStatusPending;
+
+  /// Contract status word statusWords.families.ratingStatus.submitted (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Submitted'**
+  String get swRatingStatusSubmitted;
+
+  /// Contract status word statusWords.families.ratingStatus.skipped (tool/gen_status_words.py).
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get swRatingStatusSkipped;
 }
 
 class _AppLocalizationsDelegate
