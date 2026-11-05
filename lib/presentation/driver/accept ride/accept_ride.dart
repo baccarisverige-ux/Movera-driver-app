@@ -486,16 +486,6 @@ class _AcceptRideState extends State<AcceptRide>
   int _mapPointers = 0;
   final MapZoomSheetSettle _mapZoomSettle = MapZoomSheetSettle();
   double _browseReturnPos = 0;
-  void _finishBrowseSheetCollapse() {
-    if (!mounted ||
-        !_browsing ||
-        !_ridePanelController.isAttached ||
-        _browseReturnPos <= 0.001) {
-      return;
-    }
-    unawaited(_snapSheet.springTo(0));
-  }
-
   late final AnimationController _browsePulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2000),

@@ -215,4 +215,16 @@ extension _AcceptRideTripCover on _AcceptRideState {
   }
 
   /// The completed trip's waybill and, for cash, what was collected:
+
+  // Rule 25 (fix job 5): moved word for word out of accept_ride.dart so it
+  // stays under its size guard after gaining this part.
+  void _finishBrowseSheetCollapse() {
+    if (!mounted ||
+        !_browsing ||
+        !_ridePanelController.isAttached ||
+        _browseReturnPos <= 0.001) {
+      return;
+    }
+    unawaited(_snapSheet.springTo(0));
+  }
 }
