@@ -25,4 +25,23 @@ void main() {
     // measured 1198 → 1407 lines, so the limit scales by the same factor.
     expect(home.split('\n').length, lessThan(1410));
   });
+
+  test('Job 9 split: top island sits in its own part, every part < 1500', () {
+    final home = File(
+      'lib/presentation/driver/home/home.dart',
+    ).readAsStringSync();
+    final sheet = File(
+      'lib/presentation/driver/home/home_map_sheet.dart',
+    ).readAsStringSync();
+    final island = File(
+      'lib/presentation/driver/home/home_map_top_island.dart',
+    ).readAsStringSync();
+    expect(home, contains("part 'home_map_top_island.dart';"));
+    expect(island, contains("part of 'home.dart';"));
+    expect(island, contains('extension _HomeMapTopIsland on _DriverHomeState'));
+    expect(island, contains('Widget _buildTopIsland(double viewportWidth)'));
+    expect(sheet, isNot(contains('Widget _buildTopIsland(')));
+    expect(sheet.split('\n').length, lessThan(1500));
+    expect(island.split('\n').length, lessThan(1500));
+  });
 }

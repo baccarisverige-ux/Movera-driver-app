@@ -355,8 +355,9 @@ extension _HomeOnlineGate on _DriverHomeState {
     // radar; the card waits for the sheet to close again.
     return ValueListenableBuilder<double>(
       valueListenable: _panelSlidePosition,
-      builder: (context, position, child) =>
-          position > 0.05 ? _HomeMapSheet(this)._homeRadarLayerPlain() : child!,
+      builder: (context, position, child) => position > 0.05
+          ? _HomeMapTopIsland(this)._homeRadarLayerPlain()
+          : child!,
       child: Positioned(
         left: 0,
         right: 0,
