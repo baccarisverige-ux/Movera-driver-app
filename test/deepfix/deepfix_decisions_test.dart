@@ -215,10 +215,7 @@ void main() {
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(
         MaterialApp(
-          home: DriverSignIn(
-            controller: _auth((_) async => _json(404, {})),
-            showTestAccounts: false,
-          ),
+          home: DriverSignIn(controller: _auth((_) async => _json(404, {}))),
         ),
       );
       await tester.pump(const Duration(seconds: 6));
@@ -240,9 +237,7 @@ void main() {
         return second.future;
       });
       await tester.pumpWidget(
-        MaterialApp(
-          home: DriverSignIn(controller: auth, showTestAccounts: false),
-        ),
+        MaterialApp(home: DriverSignIn(controller: auth)),
       );
       await tester.pump(const Duration(seconds: 6));
       await tester.enterText(
@@ -366,9 +361,7 @@ void main() {
       final auth = _auth((_) async => _json(404, {}));
       SignedOutNotice.sessionRefused('session_expired');
       await tester.pumpWidget(
-        MaterialApp(
-          home: DriverSignIn(controller: auth, showTestAccounts: false),
-        ),
+        MaterialApp(home: DriverSignIn(controller: auth)),
       );
       await tester.pump(const Duration(seconds: 6));
       expect(find.text(tr.authSignedOutExpired), findsOneWidget);

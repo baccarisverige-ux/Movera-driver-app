@@ -795,20 +795,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous êtes sur la liste d’attente. Nous vous préviendrons quand la connexion ouvrira pour votre numéro.';
 
   @override
-  String get authTestNumbersTitle =>
-      'Numéros de test (version de test uniquement)';
-
-  @override
-  String get authTestNumbersButton => 'Numéros de test';
-
-  @override
-  String get authTestNumbersAskAdmin =>
-      'Demandez les numéros de test à un admin';
-
-  @override
-  String get authTestStatusNew => 'Test · pas encore de compte';
-
-  @override
   String get authNeedHelp => 'Besoin d’aide ?';
 
   @override

@@ -13,11 +13,13 @@ import 'package:movera/presentation/driver/auth/widgets/auth_scene.dart';
 
 /// Owner 2026-11-02, decisions/driver-g1.md "Driver sign-in screen look":
 /// the picture shows the city skyline, "Need help?" sits under Apple and
-/// Google, and no test-numbers list is on the screen of the live build.
+/// Google, and (job A12) no test-numbers button or list in any build.
 void main() {
+  final asked = <String>[];
   AuthController controller() {
     final store = MemoryTokenStore();
     final client = MockClient((request) async {
+      asked.add(request.url.path);
       if (request.url.path.contains('test')) {
         return http.Response(
           '{"accounts":[{"phone":"+46700000000","app":"driver",'
@@ -60,22 +62,20 @@ void main() {
     await tester.pump(const Duration(seconds: 6));
   }
 
-  testWidgets('live test build: the list is closed; "Test numbers" opens it', (
-    tester,
-  ) async {
+  testWidgets('job A12 (owner 2026-11-05 "Remove everywhere"): a live '
+      'test build has no test-numbers button or list and never asks for '
+      'test accounts', (tester) async {
+    asked.clear();
     await pumpLive(tester);
-    expect(find.byKey(const ValueKey('auth-test-accounts')), findsNothing);
-    final button = find.byKey(const ValueKey('auth-test-numbers-button'));
-    expect(button, findsOneWidget);
-    expect(find.text(tr.authTestNumbersButton), findsOneWidget);
-    await tester.ensureVisible(button);
-    await tester.tap(button);
-    await tester.pump();
-    expect(find.byKey(const ValueKey('auth-test-accounts')), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('auth-test-+46700000000')),
-      findsOneWidget,
+      find.byKey(const ValueKey('auth-test-numbers-button')),
+      findsNothing,
     );
+    expect(find.byKey(const ValueKey('auth-test-accounts')), findsNothing);
+    for (final w in const ['Test numbers', 'Numéros de test', 'Testnummer']) {
+      expect(find.textContaining(w), findsNothing);
+    }
+    expect(asked, isNot(contains('/api/v1/auth/test-accounts')));
   });
 
   testWidgets('the picture is tall enough to show the city skyline', (

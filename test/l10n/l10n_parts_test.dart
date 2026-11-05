@@ -64,8 +64,8 @@ void main() {
     }
   });
 
-  test('the split kept every message (2705 en entries, 2064 fr / sv)', () {
-    const counts = {'en': 2705, 'fr': 2064, 'sv': 2064};
+  test('the split kept every message (2701 en entries, 2060 fr / sv)', () {
+    const counts = {'en': 2701, 'fr': 2060, 'sv': 2060};
     for (final lang in _langs) {
       final arb =
           jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())
