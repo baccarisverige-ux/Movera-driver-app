@@ -42,6 +42,7 @@ import 'package:movera/core/ride/prefs_active_ride_repository.dart';
 import 'package:movera/core/ride/completion_journal.dart';
 import 'package:movera/core/privacy/local_data.dart';
 import 'package:movera/core/settings/settings_repository.dart';
+import 'package:movera/core/settings/server_settings_sync.dart';
 import 'package:movera/core/routing/road_route_service.dart';
 import 'package:movera/core/safety/demo_safety_alert_repository.dart';
 import 'package:movera/core/safety/live_safety_alert_repository.dart';
@@ -70,9 +71,11 @@ import 'package:movera/presentation/driver/push/push_explanation.dart';
 import 'package:movera/core/legal/driver_legal.dart';
 import 'package:movera/core/platform/safe_area_insets.dart';
 import 'package:movera/core/web/web_splash.dart';
+import 'package:movera/core/preview/preview_mode.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  PreviewMode.readFromUrl();
   validateDriverComposition(production: driverProductionRequested);
   installGlobalErrorHooks();
   // Round 4: the zone's default language, then the driver's saved choice.
@@ -169,7 +172,11 @@ class _MoveraAppState extends State<MoveraApp> {
     // Round 4 sign-in: the real API, with the session's tokens. With
     // MOVERA_AUTH_REQUIRED off (the demo) nothing here is called until a
     // logout, which then only clears a session that was never there.
-    _tokens = widget.tokenStore ?? SecureTokenStore();
+    // Contract v0.18.25: an admin preview runs on its read-only token only.
+    final preview = PreviewMode.current;
+    _tokens = preview.active
+        ? PreviewTokenStore(preview.token!)
+        : widget.tokenStore ?? SecureTokenStore();
     _http = widget.httpClient ?? http.Client();
     _api = ApiClient(
       client: _http,
@@ -227,6 +234,12 @@ class _MoveraAppState extends State<MoveraApp> {
         location: _location,
       );
       LiveDriverServices.instance = live;
+      // BASE B13 (contract v0.18.26 §47): Ride preferences and Emergency
+      // contacts are kept on the server too.
+      SettingsRepository.remote = ServerSettingsSync(
+        api: _api,
+        signedIn: () async => (await _tokens.readAccess())?.isNotEmpty == true,
+      );
       // G3-D2: a live build never shows the demo's sample performance.
       DriverPerformanceConfig.liveBuild = true;
       // G3-D1: one real notification list (the server's), no demo list.
@@ -410,7 +423,9 @@ class _MoveraAppState extends State<MoveraApp> {
                           children: [
                             // A live build (round 4) has an account: no demo
                             // banner, only the status-bar inset it would take.
-                            if (DriverRuntimeConfig.current.authRequired)
+                            if (PreviewMode.current.active)
+                              const PreviewBanner()
+                            else if (DriverRuntimeConfig.current.authRequired)
                               const SafeArea(
                                 bottom: false,
                                 child: SizedBox.shrink(),

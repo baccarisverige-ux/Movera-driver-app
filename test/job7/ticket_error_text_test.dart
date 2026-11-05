@@ -4,7 +4,7 @@ import 'package:movera/core/api/api_error.dart';
 import 'package:movera/core/support/ticket_error_text.dart';
 import 'package:movera/l10n/app_localizations.dart';
 
-/// FIX JOB 7 (contract v0.18.32): the ticket form tells the driver why the
+/// FIX JOB 7 (contract v0.18.30): the ticket form tells the driver why the
 /// server refused a new ticket.
 void main() {
   for (final lang in ['sv', 'fr', 'en']) {

@@ -16,7 +16,7 @@ void main() {
     expect(workflow, contains("driver_map_camera.js?v="));
     expect(
       workflow.indexOf('Version map zoom/gesture adapter'),
-      lessThan(workflow.indexOf('Build Drider web')),
+      lessThan(workflow.indexOf('Build live Drider web')),
     );
   });
 }

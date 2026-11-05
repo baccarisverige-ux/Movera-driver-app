@@ -404,6 +404,17 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
               style: _value,
             ),
           ),
+        // Fix job 0 (owner A2-2, contract 0.18.29 outstandingFee.receiptText):
+        // the rider's earlier unpaid fee was added by itself to this trip.
+        if (debt != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              tr.fixJob0DebtNote,
+              key: const ValueKey<String>('ride-completed-debt-note'),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF6F7B82)),
+            ),
+          ),
         _row(
           tr.rcMoveraCommission,
           Text(
