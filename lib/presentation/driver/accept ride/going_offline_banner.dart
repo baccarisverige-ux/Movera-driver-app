@@ -75,10 +75,13 @@ class UndoButton extends StatelessWidget {
       foregroundColor: AppColor.primary,
       minimumSize: const Size(48, 48),
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
     ),
     onPressed: onPressed,
-    child: Text(tr.goingOfflineUndo),
+    // Weight on the Text (merged with the theme font), not styleFrom textStyle (it drops the font family).
+    child: Text(
+      tr.goingOfflineUndo,
+      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+    ),
   );
 }
 
