@@ -557,6 +557,31 @@ class AppLocalizationsFr extends AppLocalizations {
       'Trop de modifications — réessayez dans une heure';
 
   @override
+  String get airportQueueTitle => 'File de l\'aéroport';
+
+  @override
+  String airportQueuePlace(Object place) {
+    return 'Vous êtes numéro $place dans la file';
+  }
+
+  @override
+  String airportQueueAheadWaiting(Object ahead, Object minutes) {
+    return '$ahead chauffeurs devant vous · attente $minutes min';
+  }
+
+  @override
+  String get airportQueueHow =>
+      'Les courses de l\'aéroport vont d\'abord au premier chauffeur de la file. Restez dans la zone d\'attente pour garder votre place.';
+
+  @override
+  String get airportQueueLeft => 'Vous avez quitté la file de l\'aéroport';
+
+  @override
+  String tipAirportQueuePlace(Object place) {
+    return 'File de l\'aéroport : vous êtes numéro $place';
+  }
+
+  @override
   String get phoneVibratesWhenRequestArrives =>
       'Le téléphone vibre à l’arrivée d’une demande.';
 

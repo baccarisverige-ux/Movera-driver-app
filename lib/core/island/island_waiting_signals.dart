@@ -30,6 +30,7 @@ class IslandWaitingSignals {
     this.demandRising = false,
     this.expectTripSoon = false,
     this.airportQueue,
+    this.airportQueuePlace,
     this.peakStart,
     this.streak = 0,
     this.topZone = false,
@@ -51,6 +52,10 @@ class IslandWaitingSignals {
 
   /// Drivers waiting in the airport queue.
   final int? airportQueue;
+
+  /// Fix job 9 (contract v0.18.39 §63): his own place in an airport queue,
+  /// from GET /driver/airport-queue (null when he is in none).
+  final int? airportQueuePlace;
 
   /// When the next busy window starts, "16:00".
   final String? peakStart;
@@ -81,6 +86,7 @@ class IslandWaitingSignals {
     int streak = 0,
     bool boostNearby = false,
     Iterable<DriverEvent> liveEvents = const [],
+    int? airportQueuePlace,
   }) {
     String? peak = _peakOfLive(liveEvents, now);
     for (final event in peak == null ? config.events : const []) {
@@ -97,6 +103,7 @@ class IslandWaitingSignals {
       peakStart: peak,
       streak: streak,
       boostNearby: boostNearby,
+      airportQueuePlace: airportQueuePlace,
     );
   }
 
@@ -149,7 +156,13 @@ class IslandWaitingSignals {
         ),
     if (busyArea)
       IslandWaitingTip('busy', tr.tipBusyArea, IslandTipLook.demand),
-    if (airportQueue case final queue?)
+    if (airportQueuePlace case final place?)
+      IslandWaitingTip(
+        'airport',
+        tr.tipAirportQueuePlace('$place'),
+        IslandTipLook.info,
+      )
+    else if (airportQueue case final queue?)
       IslandWaitingTip(
         'airport',
         tr.tipAirportQueue('$queue'),

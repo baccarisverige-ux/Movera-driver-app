@@ -546,6 +546,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactChangeTooMany => 'Too many changes — try again in an hour';
 
   @override
+  String get airportQueueTitle => 'Airport queue';
+
+  @override
+  String airportQueuePlace(Object place) {
+    return 'You are number $place in line';
+  }
+
+  @override
+  String airportQueueAheadWaiting(Object ahead, Object minutes) {
+    return '$ahead drivers ahead · waiting $minutes min';
+  }
+
+  @override
+  String get airportQueueHow =>
+      'Airport trips go first to the first driver in line. Stay inside the waiting area to keep your place.';
+
+  @override
+  String get airportQueueLeft => 'You left the airport queue';
+
+  @override
+  String tipAirportQueuePlace(Object place) {
+    return 'Airport queue: you are number $place';
+  }
+
+  @override
   String get phoneVibratesWhenRequestArrives =>
       'The phone vibrates when a request arrives.';
 
