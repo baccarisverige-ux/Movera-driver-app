@@ -58,6 +58,9 @@ jobs:
       - name: Format
         run: dart format --output=none --set-exit-if-changed .
 
+      - name: ARBs match lib/l10n/parts (rule 25 split)
+        run: python3 tool/l10n_parts.py --check
+
       - name: Analyze
         run: flutter analyze --fatal-infos
 

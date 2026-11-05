@@ -1,0 +1,919 @@
+{
+  "n1Stop": "1 stop",
+  "notNow": "Not now",
+  "scheduled": "Scheduled",
+  "recommendations": "Recommendations",
+  "moveraWillUseAuthoritativeAccountStatus": "Movera will use the authoritative account status. This screen does not guess a reason or unlock time.",
+  "showRoute": "Show route",
+  "turnOffDestination": "Turn off destination",
+  "versionLatestVersion": "Version {latestVersion}",
+  "@versionLatestVersion": {
+    "placeholders": {
+      "latestVersion": {
+        "type": "Object"
+      }
+    }
+  },
+  "openingUpdateEllipsis": "Opening update…",
+  "updating": "UPDATING",
+  "slideToOpen": "SLIDE TO OPEN",
+  "youStopGettingTripOffersUntil": "You stop getting trip offers until you go online again.",
+  "stayOnline": "Stay online",
+  "restUntilTime": "Rest until {time}",
+  "@restUntilTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "timeLeftToDrive": "{time} left to drive",
+  "@timeLeftToDrive": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "paused": "Paused",
+  "untilTime": "Until {time}",
+  "@untilTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "skipExclusiveOffer": "Skip Exclusive offer",
+  "pleaseWait": "Please wait",
+  "tapToAccept": "Tap here",
+  "scheduledRide": "Scheduled ride",
+  "matching": "Matching",
+  "recenter": "Recenter",
+  "skipDemo": "Skip demo",
+  "retry": "Retry",
+  "menu": "Menu",
+  "searchDestination": "Search destination",
+  "lastTrip": "LAST TRIP",
+  "rightNow": "Right now",
+  "performance": "Performance",
+  "latestWaybill": "Latest waybill",
+  "noneYet": "None yet",
+  "worked": "Worked",
+  "leftBeforeRest": "Left before rest",
+  "restUntil": "Rest until",
+  "workLimit": "Work limit",
+  "restAfterIt": "Rest after it",
+  "today": "Today",
+  "moveraRadar": "Movera Radar",
+  "savedTripCouldNotBeOpened": "The saved trip could not be opened.",
+  "unresolvedTrip": "Unresolved trip",
+  "thisSavedTripIsOlderThan": "This saved trip is older than six hours. Resume it or close it explicitly.",
+  "savedRouteCoordinatesAreUnavailableClose": "Saved route coordinates are unavailable. Close this trip explicitly before accepting another.",
+  "resumeTrip": "Resume trip",
+  "savedTripCouldNotBeClosed": "The saved trip could not be closed.",
+  "savedTripCannotBeRead": "Saved trip cannot be read",
+  "savedTripCouldNotBeRead": "A saved trip could not be read. Close it to go online.",
+  "review": "Review",
+  "unreadableTripCouldNotBeClosed": "The unreadable trip could not be closed.",
+  "openSavedTrip": "Open saved trip",
+  "radar": "Radar",
+  "tapForDetails": "Tap for details",
+  "notActive": "Not active",
+  "tapToScan": "Tap to scan",
+  "tapForAll": "Tap for all",
+  "scanning": "Scanning",
+  "retryNow": "Retry now",
+  "thisStopNeedsVerifiedMapLocation": "This stop needs a verified map location before arrival.",
+  "locationUnavailableEnableLocationToConfirm": "Location unavailable. Enable location to confirm arrival.",
+  "preciseLocationOff": "Precise location is off. Turn it on in Settings to show your position and confirm arrival.",
+  "preciseLocationOffShort": "Precise location off",
+  "locationUpdatingEllipsis": "Location updating…",
+  "reasonTitle": "Reason: {title}",
+  "@reasonTitle": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  },
+  "onlyEndTripAfterYouHave": "Only end the trip after you have stopped in a safe place and the rider can exit safely.",
+  "thisTripCannotBeCancelledRight": "This trip cannot be cancelled right now.",
+  "now": "Now",
+  "turnExclusiveOffersOff": "Turn Exclusive offers off",
+  "turnExclusiveOffersOn": "Turn Exclusive offers on",
+  "paidByCard": "Paid by card",
+  "routeProgress": "Route progress",
+  "unavailable": "Unavailable",
+  "pickingUpRiderName": "Picking up {riderName}",
+  "@pickingUpRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "pickUpRiderName": "Pick up {riderName}",
+  "@pickUpRiderName": {
+    "placeholders": {
+      "riderName": {
+        "type": "Object"
+      }
+    }
+  },
+  "paidWaitAtStopNumber": "Paid wait at stop {number}",
+  "@paidWaitAtStopNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "paidWaitRunning": "Paid wait running",
+  "paidWaitNoShowAvailable": "Paid wait · no-show available",
+  "toDropOff": "To drop-off",
+  "thenDropOff": "Then drop-off",
+  "youPickedUpRiderMinutesMin": "You picked up the rider {minutes} min ago. Finish only if the trip really ended.",
+  "@youPickedUpRiderMinutesMin": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "orTellUsWhatSHappening": "Or tell us what's happening",
+  "whatIsHappeningQuestion": "What is happening?",
+  "thanksThisIsSavedToTrip": "Thanks, this is saved to the trip.",
+  "moveraCouldNotBeAlerted": "Movera could not be alerted",
+  "moveraSafetyTeamAlerted": "Movera safety team alerted",
+  "tellUsInFewWords": "Tell us in a few words",
+  "recordingTime": "Recording {time}",
+  "@recordingTime": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "savedOnlyOnThisPhone": "saved only on this phone",
+  "recordAudio": "Record audio",
+  "onlyOnThisPhone": "only on this phone",
+  "notAvailableOnThisDevice": "not available on this device",
+  "moveraRecordedThisTripAsCompleted": "Movera recorded this trip as completed.",
+  "moveraCancelledThisTripStopIn": "Movera cancelled this trip. Stop in a safe place before leaving this screen.",
+  "moveraClosedThisTripStopIn": "Movera closed this trip. Stop in a safe place before leaving this screen.",
+  "thisTripWasCancelledFromYour": "This trip was cancelled from your account.",
+  "thisPickupWasClosedBecauseRider": "This pickup was closed because the rider did not arrive.",
+  "thisTripIsNoLongerActive": "This trip is no longer active.",
+  "moveraGaveThisTripBackTo": "Movera gave this trip back to dispatch. Stop in a safe place before leaving this screen.",
+  "toNextStop": "To next stop",
+  "onYourWay": "On your way",
+  "onThisRide": "On this ride",
+  "navigateWithGoogleMaps": "Navigate with Google Maps",
+  "messageRider": "Message rider",
+  "retryRoute": "Retry route",
+  "routeUnavailableYourTripRemainsActive": "Route unavailable. Your trip remains active.",
+  "shareTripRecordAudioGetHelp": "Share trip, record audio, get help",
+  "shareTripGetHelp": "Share trip, get help",
+  "whyAreYouCancellingNextTripQuestion": "Why are you cancelling the next trip?",
+  "whyAreYouEndingTripQuestion": "Why are you ending the trip?",
+  "whyAreYouCancellingQuestion": "Why are you cancelling?",
+  "pickReasonThatFitsBest": "Pick the reason that fits best.",
+  "returnToRequests": "Return to requests",
+  "takeCashBeforeYouFinish": "Take the cash before you finish.",
+  "takeCashFromFirstBeforeYou": "Take the cash from {first} before you finish.",
+  "@takeCashFromFirstBeforeYou": {
+    "placeholders": {
+      "first": {
+        "type": "Object"
+      }
+    }
+  },
+  "notYet": "Not yet",
+  "to": "TO",
+  "openWaybill": "Open waybill",
+  "waybill": "Waybill",
+  "thisStopHasNoFreeMinutes": "This stop has no free minutes. The whole wait is added to the fare.",
+  "ruleForThisPickupRule": "Rule for this pickup: {rule}",
+  "@ruleForThisPickupRule": {
+    "placeholders": {
+      "rule": {
+        "type": "Object"
+      }
+    }
+  },
+  "openingMinutesStayInsideFare": "The opening minutes stay inside the fare.",
+  "waitTime": "Wait time",
+  "perMinuteFormattedMin": "{perMinuteFormatted} / min",
+  "@perMinuteFormattedMin": {
+    "placeholders": {
+      "perMinuteFormatted": {
+        "type": "Object"
+      }
+    }
+  },
+  "youGetDriverShareWaitPercent": "You get {driverShareWaitPercent}% of the wait time.",
+  "@youGetDriverShareWaitPercent": {
+    "placeholders": {
+      "driverShareWaitPercent": {
+        "type": "Object"
+      }
+    }
+  },
+  "youGetDriverShareWaitPercent2": "You get {driverShareWaitPercent}% of the wait time and {driverShareNoShowPercent}% of the no-show fee ({driverNoShowFeeFormatted}).",
+  "@youGetDriverShareWaitPercent2": {
+    "placeholders": {
+      "driverShareWaitPercent": {
+        "type": "Object"
+      },
+      "driverShareNoShowPercent": {
+        "type": "Object"
+      },
+      "driverNoShowFeeFormatted": {
+        "type": "Object"
+      }
+    }
+  },
+  "later": "Later",
+  "theseFirstMinutesAreAlreadyPart": "These first minutes are already part of the fare.",
+  "waitTimeIsRunning": "Wait time is running",
+  "payment": "Payment",
+  "lastWaybill": "Last waybill",
+  "open": "Open",
+  "rateRider": "Rate {rider}",
+  "@rateRider": {
+    "placeholders": {
+      "rider": {
+        "type": "Object"
+      }
+    }
+  },
+  "time": "Time",
+  "passenger": "Passenger",
+  "via": "Via",
+  "to2": "To",
+  "licensePlate": "License plate",
+  "passengerCapacity": "Passenger capacity",
+  "paidByPassenger": "Paid by the passenger",
+  "moveraFee": "Movera fee",
+  "roundToNearestWholeKronaIn": "* Round to the nearest whole krona in the taximeter.",
+  "samplePeriod": "Sample period",
+  "sampleDistance": "Sample distance",
+  "sample": "Sample",
+  "samplePickupStockholm": "Sample pickup, Stockholm",
+  "sampleDropOffStockholm": "Sample drop-off, Stockholm",
+  "pastRideRouteDriven": "Route driven",
+  "pastRidePlannedRoute": "Planned route",
+  "pastRideRouteUnavailable": "Route not available",
+  "paymentMethod": "Payment Method",
+  "settledInYourNextPayout": "Settled in your next payout",
+  "previous": "Previous",
+  "last7Days": "Last 7 days",
+  "loadingRideHistoryEllipsis": "Loading ride history…",
+  "online": "Online",
+  "rides": "Rides",
+  "latestRides": "Latest rides",
+  "viewAllVisibleRideCountRides": "View all {visibleRideCount} rides",
+  "@viewAllVisibleRideCountRides": {
+    "placeholders": {
+      "visibleRideCount": {
+        "type": "Object"
+      }
+    }
+  },
+  "periodRidesRidesInPeriodLabel": "{periodRides} rides in {periodLabel}",
+  "@periodRidesRidesInPeriodLabel": {
+    "placeholders": {
+      "periodRides": {
+        "type": "Object"
+      },
+      "periodLabel": {
+        "type": "Object"
+      }
+    }
+  },
+  "week": "Week",
+  "month": "Month",
+  "recordedFares": "Recorded earnings",
+  "tipsAndFees": "Tips and fees",
+  "notAvailable": "Not available",
+  "otherEarnings": "Other earnings",
+  "otherEarningsTripsLengthCash": "Other earnings · {tripsLength} cash",
+  "@otherEarningsTripsLengthCash": {
+    "placeholders": {
+      "tripsLength": {
+        "type": "Object"
+      }
+    }
+  },
+  "totalYouOweMovera": "Total you owe Movera",
+  "totalMoveraOwesYou": "Total Movera owes you",
+  "totalBalance": "Total balance",
+  "settledInYourNextPayout2": "Settled in your next payout.",
+  "notifications": "Notifications",
+  "work": "WORK",
+  "scheduledRides": "Scheduled rides",
+  "reservationsAndAcceptedTrips": "Reservations and accepted trips",
+  "promotions": "Promotions",
+  "messagesAndSupportTickets": "Messages and support tickets",
+  "settings": "Settings",
+  "sampleRating": "Sample rating {rating}",
+  "@sampleRating": {
+    "placeholders": {
+      "rating": {
+        "type": "Object"
+      }
+    }
+  },
+  "pending": "Pending",
+  "soundVoice": "Sound & voice",
+  "savingPreferencesEllipsis": "Saving preferences…",
+  "localDemoPreferencesSavedOnThis": "Local demo preferences — saved on this device; effects are previews.",
+  "volume": "Volume",
+  "playsEvenWhenPhoneIsSilent": "Plays even when the phone is silent",
+  "voice": "Voice",
+  "voiceNavigation": "Voice navigation",
+  "spokenTurnsWhileYouDrive": "Spoken turns while you drive",
+  "readRiderMessages": "Read rider messages",
+  "readsNewChatMessagesAloud": "Reads new chat messages aloud",
+  "testAlerts": "Test alerts",
+  "testVoice": "Test voice",
+  "playingAlertSoundMock": "Playing alert sound (mock)",
+  "playingVoiceSoundMock": "Playing voice sound (mock)",
+  "tellRidersIfYouAreDeaf": "Tell riders if you are deaf or hard of hearing.",
+  "screenFlashesWhenRequestArrives": "The screen flashes when a request arrives.",
+  "vibrationForRequests": "Vibration for requests",
+  "unavailableInDemo": "Unavailable in demo",
+  "language": "Language",
+  "trustedContact": "Trusted contact",
+  "trustedContactsStayOnThisDevice": "Trusted contacts stay on this device. Calling opens your dialer.",
+  "name": "Name",
+  "relation": "Relation",
+  "savingContactEllipsis": "Saving contact…",
+  "saveContact": "Save contact",
+  "recentPayouts": "Recent payouts",
+  "seeAll": "See all",
+  "previewOnly": "Preview only",
+  "notSet": "Not set",
+  "priority": "Priority",
+  "labelUnavailableInDemo": "{label} — unavailable in demo",
+  "@labelUnavailableInDemo": {
+    "placeholders": {
+      "label": {
+        "type": "Object"
+      }
+    }
+  },
+  "routeUpdated": "Route updated",
+  "paidWaiting": "Paid waiting",
+  "nearValue": "Near {value}",
+  "@nearValue": {
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "trafficAheadValueMin": "Traffic ahead · +{value} min",
+  "@trafficAheadValueMin": {
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "tollAhead": "Toll ahead",
+  "lateEtaReassignedTitle": "Ride given to another driver",
+  "@lateEtaReassignedTitle": {
+    "description": "Notification title: a scheduled ride was reassigned because the driver's ETA was too late."
+  },
+  "lateEtaReassignedNote": "Ride given to another driver — you would reach the {time} pickup about {minutes} min late.",
+  "@lateEtaReassignedNote": {
+    "description": "Why a scheduled ride was reassigned early: the driver's ETA to the pickup was too late.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "languageTitle": "Language",
+  "languageZoneDefault": "Default for your zone",
+  "languageSaveFailed": "Language not saved. Try again.",
+  "tomorrow": "Tomorrow",
+  "todayCaps": "TODAY",
+  "statusRest": "REST",
+  "statusHold": "HOLD",
+  "whenInMinutes": "In {minutes} min",
+  "@whenInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "whenInHours": "In {hours} h",
+  "@whenInHours": {
+    "placeholders": {
+      "hours": {
+        "type": "Object"
+      }
+    }
+  },
+  "whenToday": "Today {time}",
+  "@whenToday": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "whenTomorrow": "Tomorrow {time}",
+  "@whenTomorrow": {
+    "placeholders": {
+      "time": {
+        "type": "Object"
+      }
+    }
+  },
+  "menuOnline": "ONLINE",
+  "menuOffline": "OFFLINE",
+  "menuReady": "READY",
+  "menuPending": "PENDING",
+  "ok": "OK",
+  "tripsCount": "{count, plural, =1{1 trip} other{{count} trips}}",
+  "@tripsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stopsCount": "{count, plural, =1{1 stop} other{{count} stops}}",
+  "@stopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "licensePlateNumber": "License plate number",
+  "termsOfUse": "Terms of Use",
+  "privacyPolicy": "Privacy Policy",
+  "verificationUnavailableDemo": "Verification is unavailable in this demo.",
+  "welcomeBackRiding": "Welcome back! Let’s get you riding",
+  "socialSignInNeedsService": "Apple and Google sign-in require the account service.",
+  "todayLower": "today",
+  "tomorrowLower": "tomorrow",
+  "youCanGoOnlineNow": "You can go online now.",
+  "uploadNew": "Upload new",
+  "vehicle": "Vehicle",
+  "reminder": "Reminder",
+  "laterLower": "later",
+  "route": "Route",
+  "tomorrowAtClock": "tomorrow {clock}",
+  "@tomorrowAtClock": {
+    "placeholders": {
+      "clock": {
+        "type": "String"
+      }
+    }
+  },
+  "subject": "Subject",
+  "tellUsWhatHappened": "Tell us what happened",
+  "preview": "Preview",
+  "vehicles": "Vehicles",
+  "year": "Year",
+  "make": "Make",
+  "searchByMake": "Search by make",
+  "model": "Model",
+  "searchByModel": "Search by model",
+  "selectEllipsis": "Select...",
+  "requiredMark": "* Required",
+  "takingPhoto": "Taking photo…",
+  "takePhoto": "Take photo",
+  "waybillLocalDemo": "Local demo",
+  "waybillDemoRadar": "Demo Radar",
+  "vehicleDataUnavailable": "Vehicle data unavailable",
+  "positionOfCount": "{position} of {count}",
+  "@positionOfCount": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "moveraDriver": "Movera Driver",
+  "legalPrivacyBody": "Movera Driver uses location, trip and vehicle data to assign rides, show routes and keep a waybill on this device.\n\nDemo builds keep this information in memory on the phone. Nothing is sold to advertisers. You can log out at any time from Profile.\n\nWhen a live backend is connected, the same screens will keep using this policy text until a signed version is published.",
+  "legalTermsBody": "You agree to drive only with a valid licence, insurance and a vehicle that matches the documents in this app.\n\nRadar offers are first-come. Matching another order while on a trip is optional. Completing a trip creates a waybill you can reopen from Home.\n\nMovera may suspend a demo account that misuses Safety tools or emergency calling.\n\nCrash and error reports: when the app crashes or shows an error, it automatically sends a report to Movera so we can fix it: the error, where in the app it happened, the app version, the platform and the time. Names, phone numbers, e-mail addresses, addresses and locations are removed before the report leaves your device. Reports are kept for 30 days.",
+  "privacyPolicyTitle": "Privacy policy",
+  "termsOfService": "Terms of service",
+  "profSampleDriver": "Sample driver profile",
+  "profDemoNoVerified": "Demo — no verified account",
+  "myBank": "My bank",
+  "logOut": "Log out",
+  "logOutQ": "Log out?",
+  "profLogOutClears": "Local preview data on this device will be cleared, including trip history, contacts, and drafts. You will return to the sign-in screen offline.",
+  "stay": "Stay",
+  "profCouldNotClear": "Could not clear local data. You are still signed in. Please retry.",
+  "minutesAgo": "{minutes} min ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "yesterday": "Yesterday",
+  "logsPreview": "Driving log preview",
+  "logsSampleNotLive": "Sample driving-time data · not live",
+  "logsSampleWeek": "Sample week",
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "logsOnlineFromTo": "Online {from} – {to}",
+  "@logsOnlineFromTo": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "logsSampleOnlineState": "Sample online state",
+  "logsDemoCompliance": "Demo compliance copy only. Driving and break limits are not connected to live account or regulatory data.",
+  "notYourRealRateYet": "not your real rate yet",
+  "tripsConfirmed": "Trips confirmed",
+  "sampleNumbersNotReal": "Sample numbers for this preview, not your real rate.",
+  "moreInformation": "More Information",
+  "view": "View",
+  "selectCountry": "Select Country",
+  "searchCountry": "Search Country",
+  "moveWithin100MOfPickup": "Move within 100 m of the pickup to arrive.",
+  "moveWithin100MOfStop": "Move within 100 m of the stop to arrive.",
+  "recordAudioStarting": "starting…",
+  "photoTooLargeForDevice": "Photo is too large to keep on this device.",
+  "photoStorageFull": "Photo storage on this device is full. Remove photos from another vehicle first.",
+  "paymentCard": "Card",
+  "@paymentCard": {
+    "description": "Payment method: paid by card in the app."
+  },
+  "offersBadge": "OFFERS",
+  "@offersBadge": {
+    "description": "Label after the live offer count on the Radar list."
+  },
+  "locationNotAllowed": "Movera can't see your location, so trips can't reach you.",
+  "locationBlockedSettings": "Location is blocked for Movera. Allow it in Settings to get trips.",
+  "myFleet": "My fleet",
+  "notifCouldNotLoad": "Couldn’t load your notifications.",
+  "notifNone": "No notifications yet. Fleet invitations and answers show here.",
+  "profLiveNoNameYet": "Your details are not sent yet",
+  "@profLiveNoNameYet": {
+    "description": "Profile header (live): profLiveNoNameYet"
+  },
+  "message": "Message",
+  "swTripStatusDraft": "Draft",
+  "@swTripStatusDraft": {
+    "description": "Contract status word statusWords.families.tripStatus.draft (tool/gen_status_words.py)."
+  },
+  "swTripStatusQuoted": "Quoted",
+  "@swTripStatusQuoted": {
+    "description": "Contract status word statusWords.families.tripStatus.quoted (tool/gen_status_words.py)."
+  },
+  "swTripStatusRequested": "Requested",
+  "@swTripStatusRequested": {
+    "description": "Contract status word statusWords.families.tripStatus.requested (tool/gen_status_words.py)."
+  },
+  "swTripStatusSearching": "Searching",
+  "@swTripStatusSearching": {
+    "description": "Contract status word statusWords.families.tripStatus.searching (tool/gen_status_words.py)."
+  },
+  "swTripStatusOffered": "Offered",
+  "@swTripStatusOffered": {
+    "description": "Contract status word statusWords.families.tripStatus.offered (tool/gen_status_words.py)."
+  },
+  "swTripStatusAccepted": "Accepted",
+  "@swTripStatusAccepted": {
+    "description": "Contract status word statusWords.families.tripStatus.accepted (tool/gen_status_words.py)."
+  },
+  "swTripStatusDriverToPickup": "Driver to pickup",
+  "@swTripStatusDriverToPickup": {
+    "description": "Contract status word statusWords.families.tripStatus.driver_to_pickup (tool/gen_status_words.py)."
+  },
+  "swTripStatusArrived": "Arrived",
+  "@swTripStatusArrived": {
+    "description": "Contract status word statusWords.families.tripStatus.arrived (tool/gen_status_words.py)."
+  },
+  "swTripStatusRiderOnboard": "Rider onboard",
+  "@swTripStatusRiderOnboard": {
+    "description": "Contract status word statusWords.families.tripStatus.rider_onboard (tool/gen_status_words.py)."
+  },
+  "swTripStatusInTrip": "In trip",
+  "@swTripStatusInTrip": {
+    "description": "Contract status word statusWords.families.tripStatus.in_trip (tool/gen_status_words.py)."
+  },
+  "swTripStatusApproachingDropoff": "Approaching drop-off",
+  "@swTripStatusApproachingDropoff": {
+    "description": "Contract status word statusWords.families.tripStatus.approaching_dropoff (tool/gen_status_words.py)."
+  },
+  "swTripStatusCompleted": "Completed",
+  "@swTripStatusCompleted": {
+    "description": "Contract status word statusWords.families.tripStatus.completed (tool/gen_status_words.py)."
+  },
+  "swTripStatusCancelledByRider": "Cancelled by rider",
+  "@swTripStatusCancelledByRider": {
+    "description": "Contract status word statusWords.families.tripStatus.cancelled_by_rider (tool/gen_status_words.py)."
+  },
+  "swTripStatusCancelledByDriver": "Cancelled by driver",
+  "@swTripStatusCancelledByDriver": {
+    "description": "Contract status word statusWords.families.tripStatus.cancelled_by_driver (tool/gen_status_words.py)."
+  },
+  "swTripStatusCancelledByAdmin": "Cancelled by admin",
+  "@swTripStatusCancelledByAdmin": {
+    "description": "Contract status word statusWords.families.tripStatus.cancelled_by_admin (tool/gen_status_words.py)."
+  },
+  "swTripStatusCancelledBySystem": "Cancelled by system",
+  "@swTripStatusCancelledBySystem": {
+    "description": "Contract status word statusWords.families.tripStatus.cancelled_by_system (tool/gen_status_words.py)."
+  },
+  "swTripStatusNoShow": "No show",
+  "@swTripStatusNoShow": {
+    "description": "Contract status word statusWords.families.tripStatus.no_show (tool/gen_status_words.py)."
+  },
+  "swTripStatusExpired": "Expired",
+  "@swTripStatusExpired": {
+    "description": "Contract status word statusWords.families.tripStatus.expired (tool/gen_status_words.py)."
+  },
+  "swTripStatusFailed": "Failed",
+  "@swTripStatusFailed": {
+    "description": "Contract status word statusWords.families.tripStatus.failed (tool/gen_status_words.py)."
+  },
+  "swDriverAccountStatusPending": "Pending",
+  "@swDriverAccountStatusPending": {
+    "description": "Contract status word statusWords.families.driverAccountStatus.pending (tool/gen_status_words.py)."
+  },
+  "swDriverAccountStatusActive": "Active",
+  "@swDriverAccountStatusActive": {
+    "description": "Contract status word statusWords.families.driverAccountStatus.active (tool/gen_status_words.py)."
+  },
+  "swDriverAccountStatusOnHold": "Awaiting review",
+  "@swDriverAccountStatusOnHold": {
+    "description": "Contract status word statusWords.families.driverAccountStatus.on_hold (tool/gen_status_words.py)."
+  },
+  "swDriverAccountStatusSuspended": "Suspended",
+  "@swDriverAccountStatusSuspended": {
+    "description": "Contract status word statusWords.families.driverAccountStatus.suspended (tool/gen_status_words.py)."
+  },
+  "swDriverOnlineStatusOffline": "Offline",
+  "@swDriverOnlineStatusOffline": {
+    "description": "Contract status word statusWords.families.driverOnlineStatus.offline (tool/gen_status_words.py)."
+  },
+  "swDriverOnlineStatusGoingOnline": "Going online",
+  "@swDriverOnlineStatusGoingOnline": {
+    "description": "Contract status word statusWords.families.driverOnlineStatus.going_online (tool/gen_status_words.py)."
+  },
+  "swDriverOnlineStatusOnline": "Online",
+  "@swDriverOnlineStatusOnline": {
+    "description": "Contract status word statusWords.families.driverOnlineStatus.online (tool/gen_status_words.py)."
+  },
+  "swDriverOnlineStatusOnTrip": "On a trip",
+  "@swDriverOnlineStatusOnTrip": {
+    "description": "Contract status word statusWords.families.driverOnlineStatus.on_trip (tool/gen_status_words.py)."
+  },
+  "swDriverOnlineStatusSuspended": "Suspended",
+  "@swDriverOnlineStatusSuspended": {
+    "description": "Contract status word statusWords.families.driverOnlineStatus.suspended (tool/gen_status_words.py)."
+  },
+  "swPaymentStatusPending": "Pending",
+  "@swPaymentStatusPending": {
+    "description": "Contract status word statusWords.families.paymentStatus.pending (tool/gen_status_words.py)."
+  },
+  "swPaymentStatusAuthorized": "Authorized",
+  "@swPaymentStatusAuthorized": {
+    "description": "Contract status word statusWords.families.paymentStatus.authorized (tool/gen_status_words.py)."
+  },
+  "swPaymentStatusCaptured": "Captured",
+  "@swPaymentStatusCaptured": {
+    "description": "Contract status word statusWords.families.paymentStatus.captured (tool/gen_status_words.py)."
+  },
+  "swPaymentStatusFailed": "Failed",
+  "@swPaymentStatusFailed": {
+    "description": "Contract status word statusWords.families.paymentStatus.failed (tool/gen_status_words.py)."
+  },
+  "swPaymentStatusRefunded": "Refunded",
+  "@swPaymentStatusRefunded": {
+    "description": "Contract status word statusWords.families.paymentStatus.refunded (tool/gen_status_words.py)."
+  },
+  "swPaymentStatusPartiallyRefunded": "Partially refunded",
+  "@swPaymentStatusPartiallyRefunded": {
+    "description": "Contract status word statusWords.families.paymentStatus.partially_refunded (tool/gen_status_words.py)."
+  },
+  "swFeeStatusPaid": "Paid",
+  "@swFeeStatusPaid": {
+    "description": "Contract status word statusWords.families.feeStatus.paid (tool/gen_status_words.py)."
+  },
+  "swFeeStatusOwed": "Owed",
+  "@swFeeStatusOwed": {
+    "description": "Contract status word statusWords.families.feeStatus.owed (tool/gen_status_words.py)."
+  },
+  "swFeeStatusWaived": "Waived",
+  "@swFeeStatusWaived": {
+    "description": "Contract status word statusWords.families.feeStatus.waived (tool/gen_status_words.py)."
+  },
+  "swPayoutStatusPending": "Pending",
+  "@swPayoutStatusPending": {
+    "description": "Contract status word statusWords.families.payoutStatus.pending (tool/gen_status_words.py)."
+  },
+  "swPayoutStatusPaid": "Paid",
+  "@swPayoutStatusPaid": {
+    "description": "Contract status word statusWords.families.payoutStatus.paid (tool/gen_status_words.py)."
+  },
+  "swDocumentStatusNeeded": "Needed",
+  "@swDocumentStatusNeeded": {
+    "description": "Contract status word statusWords.families.documentStatus.needed (tool/gen_status_words.py)."
+  },
+  "swDocumentStatusInReview": "In review",
+  "@swDocumentStatusInReview": {
+    "description": "Contract status word statusWords.families.documentStatus.in_review (tool/gen_status_words.py)."
+  },
+  "swDocumentStatusApproved": "Approved",
+  "@swDocumentStatusApproved": {
+    "description": "Contract status word statusWords.families.documentStatus.approved (tool/gen_status_words.py)."
+  },
+  "swDocumentStatusRejected": "Rejected",
+  "@swDocumentStatusRejected": {
+    "description": "Contract status word statusWords.families.documentStatus.rejected (tool/gen_status_words.py)."
+  },
+  "swDocumentStatusExpired": "Expired",
+  "@swDocumentStatusExpired": {
+    "description": "Contract status word statusWords.families.documentStatus.expired (tool/gen_status_words.py)."
+  },
+  "swDocumentStatusExpiring": "Expiring",
+  "@swDocumentStatusExpiring": {
+    "description": "Contract status word statusWords.families.documentStatus.expiring (tool/gen_status_words.py)."
+  },
+  "swDocumentStatusMissing": "Missing",
+  "@swDocumentStatusMissing": {
+    "description": "Contract status word statusWords.families.documentStatus.missing (tool/gen_status_words.py)."
+  },
+  "swDocumentStatusWaitingForMovera": "Waiting for Movera",
+  "@swDocumentStatusWaitingForMovera": {
+    "description": "Contract status word statusWords.families.documentStatus.waiting_for_movera (tool/gen_status_words.py)."
+  },
+  "swTicketStatusOpen": "Open",
+  "@swTicketStatusOpen": {
+    "description": "Contract status word statusWords.families.ticketStatus.open (tool/gen_status_words.py)."
+  },
+  "swTicketStatusPending": "Pending",
+  "@swTicketStatusPending": {
+    "description": "Contract status word statusWords.families.ticketStatus.pending (tool/gen_status_words.py)."
+  },
+  "swTicketStatusResolved": "Resolved",
+  "@swTicketStatusResolved": {
+    "description": "Contract status word statusWords.families.ticketStatus.resolved (tool/gen_status_words.py)."
+  },
+  "swTicketStatusClosed": "Closed",
+  "@swTicketStatusClosed": {
+    "description": "Contract status word statusWords.families.ticketStatus.closed (tool/gen_status_words.py)."
+  },
+  "swVehicleReviewStatusInReview": "In review",
+  "@swVehicleReviewStatusInReview": {
+    "description": "Contract status word statusWords.families.vehicleReviewStatus.in_review (tool/gen_status_words.py)."
+  },
+  "swVehicleReviewStatusApproved": "Approved",
+  "@swVehicleReviewStatusApproved": {
+    "description": "Contract status word statusWords.families.vehicleReviewStatus.approved (tool/gen_status_words.py)."
+  },
+  "swVehicleReviewStatusRejected": "Rejected",
+  "@swVehicleReviewStatusRejected": {
+    "description": "Contract status word statusWords.families.vehicleReviewStatus.rejected (tool/gen_status_words.py)."
+  },
+  "swOfferStatusOpen": "Open",
+  "@swOfferStatusOpen": {
+    "description": "Contract status word statusWords.families.offerStatus.open (tool/gen_status_words.py)."
+  },
+  "swOfferStatusClaimed": "Claimed",
+  "@swOfferStatusClaimed": {
+    "description": "Contract status word statusWords.families.offerStatus.claimed (tool/gen_status_words.py)."
+  },
+  "swOfferStatusClaimedElsewhere": "Claimed elsewhere",
+  "@swOfferStatusClaimedElsewhere": {
+    "description": "Contract status word statusWords.families.offerStatus.claimed_elsewhere (tool/gen_status_words.py)."
+  },
+  "swOfferStatusDeclined": "Declined",
+  "@swOfferStatusDeclined": {
+    "description": "Contract status word statusWords.families.offerStatus.declined (tool/gen_status_words.py)."
+  },
+  "swOfferStatusExpired": "Expired",
+  "@swOfferStatusExpired": {
+    "description": "Contract status word statusWords.families.offerStatus.expired (tool/gen_status_words.py)."
+  },
+  "swOfferStatusWithdrawn": "Withdrawn",
+  "@swOfferStatusWithdrawn": {
+    "description": "Contract status word statusWords.families.offerStatus.withdrawn (tool/gen_status_words.py)."
+  },
+  "swRatingStatusNotRequested": "Not requested",
+  "@swRatingStatusNotRequested": {
+    "description": "Contract status word statusWords.families.ratingStatus.not_requested (tool/gen_status_words.py)."
+  },
+  "swRatingStatusPending": "Pending",
+  "@swRatingStatusPending": {
+    "description": "Contract status word statusWords.families.ratingStatus.pending (tool/gen_status_words.py)."
+  },
+  "swRatingStatusSubmitted": "Submitted",
+  "@swRatingStatusSubmitted": {
+    "description": "Contract status word statusWords.families.ratingStatus.submitted (tool/gen_status_words.py)."
+  },
+  "swRatingStatusSkipped": "Skipped",
+  "@swRatingStatusSkipped": {
+    "description": "Contract status word statusWords.families.ratingStatus.skipped (tool/gen_status_words.py)."
+  },
+  "pushAskTitle": "Get notices when the app is closed?",
+  "@pushAskTitle": {
+    "description": "Contract v0.18.3 R7 push (owner 2026-10-30)."
+  },
+  "pushAskBody": "Movera tells you when a document is about to expire, when Movera has checked your documents or car, about fleet invitations and messages from riders. You can turn this off at any time in your browser or phone settings.",
+  "@pushAskBody": {
+    "description": "Contract v0.18.3 R7 push (owner 2026-10-30)."
+  },
+  "pushAskAllow": "Turn on",
+  "@pushAskAllow": {
+    "description": "Contract v0.18.3 R7 push (owner 2026-10-30)."
+  },
+  "pushAskLater": "Not now",
+  "@pushAskLater": {
+    "description": "Contract v0.18.3 R7 push (owner 2026-10-30)."
+  },
+  "locationRequired": "Turn on location to go online",
+  "@locationRequired": {
+    "description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."
+  },
+  "locationOpenSettings": "Open Settings",
+  "@locationOpenSettings": {
+    "description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."
+  },
+  "setOfflineLine": "You were set offline – tap to go online again",
+  "@setOfflineLine": {
+    "description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."
+  },
+  "outsideAreaTitle": "You are not eligible to drive in this area",
+  "@outsideAreaTitle": {
+    "description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."
+  },
+  "outsideAreaBody": "You get no trips here. Drive back to {zones} to get trips.",
+  "@outsideAreaBody": {
+    "description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30).",
+    "placeholders": {
+      "zones": {
+        "type": "String"
+      }
+    }
+  },
+  "outsideAreaOk": "OK",
+  "@outsideAreaOk": {
+    "description": "Contract v0.18.4 driverHome (driver group 3, owner 2026-10-30)."
+  },
+  "legalCouldNotLoad": "Couldn’t load the text. Check the connection and try again.",
+  "@legalCouldNotLoad": {
+    "description": "Contract v0.18.5 legal (G1-B2)."
+  },
+  "soundOffNotice": "Sound is off – you may miss offers",
+  "@soundOffNotice": {
+    "description": "G4 decision 2: online with the sound off (app text; not in contract v0.18.6)."
+  },
+  "soundOffTapToAllow": "Tap to allow sound",
+  "@soundOffTapToAllow": {
+    "description": "G4 decision 2: the browser plays no sound before a tap."
+  },
+  "navigationApp": "Navigation app",
+  "@navigationApp": {
+    "description": "G5 status item 3 (driver-g5.md): the Google Maps / Waze choice."
+  },
+  "navigationAppHint": "Opens from the map button during a trip",
+  "@navigationAppHint": {
+    "description": "G5 status item 3: under the navigation app choice."
+  },
+  "navigateWithWaze": "Navigate with Waze",
+  "@navigateWithWaze": {
+    "description": "G5 status item 3: the trip map button when Waze is chosen."
+  },
+  "wazeIsUnavailable": "Waze is unavailable.",
+  "@wazeIsUnavailable": {
+    "description": "G5 status item 3: Waze could not be opened."
+  },
+  "navigationAppSaveFailed": "Navigation app not saved. Try again.",
+  "@navigationAppSaveFailed": {
+    "description": "G5 status item 3: the trip settings could not be saved on the phone."
+  },
+  "suspendedShortBody": "Your account is paused. Contact support.",
+  "previewBanner": "Preview",
+  "previewNotSent": "Preview – not sent"
+}
