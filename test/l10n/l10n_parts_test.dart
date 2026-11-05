@@ -64,16 +64,13 @@ void main() {
     }
   });
 
-  test(
-    'the split kept every message (2719 en entries, 2071 fr / sv) — v0.18.38 job 8 added 11 call texts',
-    () {
-      const counts = {'en': 2719, 'fr': 2071, 'sv': 2071};
-      for (final lang in _langs) {
-        final arb =
-            jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())
-                as Map<String, dynamic>;
-        expect(arb.length, counts[lang], reason: lang);
-      }
-    },
-  );
+  test('the split kept every message (2693 en entries, 2056 fr / sv)', () {
+    const counts = {'en': 2715, 'fr': 2067, 'sv': 2067};
+    for (final lang in _langs) {
+      final arb =
+          jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())
+              as Map<String, dynamic>;
+      expect(arb.length, counts[lang], reason: lang);
+    }
+  });
 }

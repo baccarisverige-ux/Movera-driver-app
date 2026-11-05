@@ -45,9 +45,7 @@ void main() {
       // The legal page sizes itself with ScreenUtil, as in the app.
       ScreenUtilInit(
         designSize: const Size(390, 844),
-        builder: (_, _) => MaterialApp(
-          home: DriverSignIn(controller: auth, showTestAccounts: false),
-        ),
+        builder: (_, _) => MaterialApp(home: DriverSignIn(controller: auth)),
       ),
     );
     await tester.pump(const Duration(seconds: 6));
