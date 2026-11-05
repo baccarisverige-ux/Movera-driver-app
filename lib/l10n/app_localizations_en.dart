@@ -7208,4 +7208,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get previewNotSent => 'Preview – not sent';
+
+  @override
+  String leaveNowTimeToDriveName(String name) {
+    return 'Time to drive to pickup · $name';
+  }
 }

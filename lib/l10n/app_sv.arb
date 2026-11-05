@@ -2049,5 +2049,6 @@
   "schedLeaveArrive": "Var framme {early} min före kl. {time}.",
   "schedBookedBadge": "Bokad resa · {time}",
   "previewBanner": "Förhandsvisning",
-  "previewNotSent": "Förhandsvisning – inte skickat"
+  "previewNotSent": "Förhandsvisning – inte skickat",
+  "leaveNowTimeToDriveName": "Dags att köra till upphämtningen · {name}"
 }

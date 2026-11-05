@@ -7220,4 +7220,9 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get previewNotSent => 'Förhandsvisning – inte skickat';
+
+  @override
+  String leaveNowTimeToDriveName(String name) {
+    return 'Dags att köra till upphämtningen · $name';
+  }
 }

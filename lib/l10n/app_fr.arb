@@ -2049,5 +2049,6 @@
   "schedLeaveArrive": "Arrivez {early} min avant {time}.",
   "schedBookedBadge": "Course réservée · {time}",
   "previewBanner": "Aperçu",
-  "previewNotSent": "Aperçu – non envoyé"
+  "previewNotSent": "Aperçu – non envoyé",
+  "leaveNowTimeToDriveName": "C'est l'heure d'aller à la prise en charge · {name}"
 }

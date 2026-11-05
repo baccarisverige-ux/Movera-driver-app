@@ -12420,6 +12420,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview – not sent'**
   String get previewNotSent;
+
+  /// v0.18.32 leave-now popup with the rider's first name (contract bookedRideSeen.leaveNowName).
+  ///
+  /// In en, this message translates to:
+  /// **'Time to drive to pickup · {name}'**
+  String leaveNowTimeToDriveName(String name);
 }
 
 class _AppLocalizationsDelegate

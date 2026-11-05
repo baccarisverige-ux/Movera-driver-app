@@ -7336,4 +7336,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get previewNotSent => 'Aperçu – non envoyé';
+
+  @override
+  String leaveNowTimeToDriveName(String name) {
+    return 'C\'est l\'heure d\'aller à la prise en charge · $name';
+  }
 }

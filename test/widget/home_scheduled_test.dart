@@ -263,7 +263,7 @@ void main() {
         expect(trip.riderName, 'Karin');
         expect(trip.riderTrips, 128);
         expect(trip.riderRating, 4.94);
-        expect(_said, contains('Leave now for 07:40 pickup'));
+        expect(_said, anyElement(startsWith('Time to drive to pickup · ')));
         // It is the current trip now, no longer waiting in Accepted.
         expect(
           ScheduledRideStore.upcoming,
