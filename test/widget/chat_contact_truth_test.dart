@@ -70,7 +70,8 @@ void main() {
     await tester.tap(find.byTooltip(tr.callRider));
     await tester.pump();
 
-    expect(find.text(tr.callUnavailableUseChat), findsWidgets);
+    // v0.18.38 §62 (owner G15 "Just 'Call failed'"): no live call here.
+    expect(find.text(tr.callFailed), findsWidgets);
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));

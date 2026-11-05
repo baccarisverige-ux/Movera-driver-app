@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/contracts/trip_status.dart';
+import 'package:movera/core/live/live_trip_calls.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/logging/driver_log.dart';
@@ -30,8 +31,10 @@ class ApiDriverRealtime implements DriverRealtime {
     this.renewSession,
     LiveTripCommands? trips,
     LiveTripChat? chat,
+    LiveTripCalls? calls,
     Duration Function(int attempt)? reconnectDelay,
   }) : _client = client,
+       _calls = calls,
        _base = apiBase,
        _token = accessToken,
        _trips = trips,
@@ -43,6 +46,7 @@ class ApiDriverRealtime implements DriverRealtime {
   final Future<String?> Function() _token;
   final LiveTripCommands? _trips;
   final LiveTripChat? _chat;
+  final LiveTripCalls? _calls;
   final Duration Function(int attempt) _delay;
   final Future<void> Function()? renewSession;
 
@@ -207,7 +211,16 @@ class ApiDriverRealtime implements DriverRealtime {
     // message never changes the trip, so its version says nothing about
     // that: it always comes through (a replay after a drop carries the
     // version of its time).
-    final isMessage = json['kind'] == 'message';
+    // v0.18.38 §62: a call event never changes the trip either.
+    final kind = json['kind'];
+    final isCall = kind is String && kind.startsWith('call_');
+    final isMessage = kind == 'message' || isCall;
+    if (isCall) {
+      final payload = json[kind == 'call_signal' ? 'signal' : 'call'];
+      if (payload is Map) {
+        _calls?.receive(tripId, kind, Map<String, dynamic>.from(payload));
+      }
+    }
     final known = _trips?.versionOf(tripId);
     if (!isMessage &&
         version is num &&

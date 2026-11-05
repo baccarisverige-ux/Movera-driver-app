@@ -1,5 +1,7 @@
 import 'package:movera/core/contracts/category_name_text.dart';
 import 'package:movera/core/l10n/driver_l10n.dart';
+import 'package:movera/core/live/live_driver_services.dart';
+import 'package:movera/presentation/common/chat/trip_call.dart';
 import 'package:movera/core/money/money.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -307,6 +309,57 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                 ),
               ),
             ),
+            // v0.18.38 §62 (fix job 8, owner G15): the rider can be called
+            // in the app for a while after the drop-off (the server keeps
+            // the window, default 60 min; outside it the answer is "Call
+            // failed").
+            if (record != null && LiveDriverServices.instance != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                child: SizedBox(
+                  height: 48,
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const ValueKey<String>('ride-completed-call'),
+                    onPressed: () => callRider(
+                      context,
+                      tripId: record.tripId,
+                      riderName: record.riderName,
+                      // Above the Call rider and Done buttons, never over them.
+                      snackBar: (text) => SnackBar(
+                        content: Text(text),
+                        behavior: SnackBarBehavior.floating,
+                        margin: EdgeInsets.fromLTRB(
+                          24,
+                          0,
+                          24,
+                          MediaQuery.paddingOf(context).bottom +
+                              16 +
+                              56 +
+                              10 +
+                              48 +
+                              12,
+                        ),
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _ink,
+                      side: const BorderSide(color: _ink, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    icon: const Icon(Icons.call),
+                    label: Text(
+                      tr.callRider,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             Padding(
               padding: EdgeInsets.fromLTRB(
                 24,

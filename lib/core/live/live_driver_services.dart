@@ -18,6 +18,7 @@ import 'package:movera/core/live/live_driver_zones.dart';
 import 'package:movera/core/content/driver_content_store.dart';
 import 'package:movera/core/live/live_earnings.dart';
 import 'package:movera/core/live/live_error_message.dart';
+import 'package:movera/core/live/live_trip_calls.dart';
 import 'package:movera/core/live/live_trip_chat.dart';
 import 'package:movera/core/live/live_trip_commands.dart';
 import 'package:movera/core/live/offline_after_trips.dart';
@@ -71,6 +72,8 @@ class LiveDriverServices {
           : null,
     );
     chat = LiveTripChat(api: api);
+    // v0.18.38 §62 (fix job 8): in-app calls with the rider.
+    calls = LiveTripCalls(api: api);
     trips = LiveTripCommands(
       api: api,
       lastFix: () => reporter.lastFix,
@@ -137,6 +140,9 @@ class LiveDriverServices {
   /// The trip's chat with the rider (messages and unread count per trip).
   late final LiveTripChat chat;
 
+  /// v0.18.38 §62: the in-app call with the trip's rider.
+  late final LiveTripCalls calls;
+
   /// Addresses for points the offer came without (owner N11).
   late final LiveAddressLookup places;
 
@@ -182,6 +188,7 @@ class LiveDriverServices {
     renewSession: _api.renewAccess,
     trips: trips,
     chat: chat,
+    calls: calls,
   );
 
   /// Contract `autoOffline`: the offer event's `driverOffline: true`

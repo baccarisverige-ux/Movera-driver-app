@@ -329,12 +329,15 @@ void main() {
   }
 
   for (final code in languages) {
-    testWidgets('v0.13.0: calls not available yet in $code', (tester) async {
-      await show(tester, code, const Chat(riderDisplayName: 'Maya'));
-      await tester.tap(find.byTooltip(tr.callRider));
-      await tester.pump();
-      expect(find.text(tr.callUnavailableUseChat), findsOneWidget);
-    });
+    testWidgets(
+      'v0.18.38: a call that cannot start says Call failed in $code',
+      (tester) async {
+        await show(tester, code, const Chat(riderDisplayName: 'Maya'));
+        await tester.tap(find.byTooltip(tr.callRider));
+        await tester.pump();
+        expect(find.text(tr.callFailed), findsOneWidget);
+      },
+    );
   }
 
   for (final code in languages) {
