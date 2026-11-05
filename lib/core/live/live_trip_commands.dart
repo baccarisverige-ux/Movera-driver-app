@@ -198,6 +198,16 @@ class LiveTripCommands {
     return null;
   }
 
+  /// Owner Q3 (2026-11-05): reads the queued trip again from the server, so
+  /// a rider's cancel takes it (and the trip sheet's card) away.
+  Future<Map<String, dynamic>?> refreshQueuedAfter(String tripId) async {
+    final queued = queuedAfter(tripId);
+    final id = queued?['tripId'];
+    if (id is! String) return null;
+    await _current(id, fresh: true);
+    return queuedAfter(tripId);
+  }
+
   /// Folds a projection in: kept when it is not older than the one known.
   void observe(Map<String, dynamic> projection) {
     final id = projection['tripId'];

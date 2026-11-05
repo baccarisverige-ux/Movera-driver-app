@@ -79,6 +79,25 @@ void main() {
     );
   });
 
+  test('after the trip ends: the queued trip, or a booked ride the server '
+      'started; a live trip nobody queued is not a next trip', () {
+    final queued = NextTrip.fromQueued(queuedTrip);
+    expect(
+      nextTripOfProjection(const {
+        'tripId': 'trp_next',
+      }, queued: queued)?.riderName,
+      'Anna',
+    );
+    final booked = nextTripOfProjection(const {
+      'tripId': 'trp_b',
+      'kind': 'scheduled',
+      'scheduledAt': '2026-11-05T12:40:00Z',
+      'pickup': {'address': 'Sergels torg'},
+    });
+    expect(booked?.booked, isTrue);
+    expect(nextTripOfProjection(const {'tripId': 'x', 'kind': 'live'}), isNull);
+  });
+
   test('the words in sv / fr / en', () {
     expect(
       DriverL10n.strings.nextTripAfterThis('Anna'),

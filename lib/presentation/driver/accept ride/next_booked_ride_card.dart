@@ -62,6 +62,12 @@ class _NextTripCardState extends State<NextTripCard> {
 
   Future<void> _refresh() async {
     try {
+      // Owner Q3: the queued trip read again, so a rider's cancel removes it.
+      if (widget.queued == null) {
+        await LiveDriverServices.instance?.trips.refreshQueuedAfter(
+          widget.currentTripId,
+        );
+      }
       final queued = _queued?.call(widget.currentTripId);
       final load = _load;
       final accepted = queued == null && load != null

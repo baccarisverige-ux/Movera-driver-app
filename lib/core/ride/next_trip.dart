@@ -84,35 +84,47 @@ NextTrip? nextTripAfter(
 /// (owner: information only, one OK button).
 final ValueNotifier<NextTrip?> nextTripNotice = ValueNotifier<NextTrip?>(null);
 
-/// Right after Complete (live build): the next trip opened on the server and
-/// read back as the driver's current trip, or null. A queued live trip
-/// already became current on the server; a near booked ride is started
-/// (`POST /driver/reservations/{id}/start`).
+/// Right after the current trip ends (live build): the trip the server
+/// started next, read back as the driver's current trip, or null. The server
+/// starts a queued live trip at once and a held booked ride only when its
+/// leave time has come (owner Q4 2026-11-05); otherwise he is simply free.
 Future<({NextTrip next, PersistedActiveRide ride})?> openNextTripAfter(
-  String currentTripId, {
-  DateTime Function() now = DateTime.now,
-}) async {
+  String currentTripId,
+) async {
   final live = LiveDriverServices.instance;
   if (live == null) return null;
   try {
-    final queued = live.trips.queuedAfter(currentTripId);
-    var accepted = const <ServerReservation>[];
-    if (queued == null) accepted = (await live.reservations.load()).accepted;
-    final next = nextTripAfter(
-      currentTripId,
-      queued: queued,
-      accepted: accepted,
-      now: now(),
-    );
-    if (next == null) return null;
-    if (next.booked && await live.reservations.start(next.tripId) != null) {
-      return null;
-    }
+    final queued = NextTrip.fromQueued(live.trips.queuedAfter(currentTripId));
     final found = await live.activeTrip.fetch();
-    if (found == null || found.ride.tripId != next.tripId) return null;
+    if (found == null || found.ride.tripId == currentTripId) return null;
     live.trips.observe(found.projection);
+    final next = nextTripOfProjection(found.projection, queued: queued);
+    if (next == null) return null;
     return (next: next, ride: found.ride.stamped());
   } catch (_) {
     return null;
   }
+}
+
+/// The started trip as the popup tells it: the queued live trip, or a
+/// booked ride (`kind` scheduled) at its pickup time.
+NextTrip? nextTripOfProjection(
+  Map<String, dynamic> projection, {
+  NextTrip? queued,
+}) {
+  final id = projection['tripId'];
+  if (id is! String) return null;
+  if (queued != null && queued.tripId == id) return queued;
+  if (projection['kind'] != 'scheduled') return null;
+  final pickup = projection['pickup'];
+  final at = projection['scheduledAt'];
+  return NextTrip(
+    tripId: id,
+    riderName: '',
+    pickupAddress: pickup is Map && pickup['address'] is String
+        ? pickup['address'] as String
+        : '',
+    pickupAt: at is String ? DateTime.tryParse(at) : null,
+    booked: true,
+  );
 }
