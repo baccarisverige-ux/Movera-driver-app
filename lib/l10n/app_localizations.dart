@@ -11629,6 +11629,18 @@ abstract class AppLocalizations {
   /// **'Your position is too old – turn on location'**
   String get liveTripPositionStale;
 
+  /// Fix job 5 (v0.18.33, owner Q7): the trip sheet card for the booked ride the driver holds next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: booked ride at {time}'**
+  String nextBookedRideAt(String time);
+
+  /// Fix job 5: under the next booked ride card.
+  ///
+  /// In en, this message translates to:
+  /// **'After this trip, drive to the pickup'**
+  String get nextBookedRideHint;
+
   /// No description provided for @docInsuranceLetter.
   ///
   /// In en, this message translates to:

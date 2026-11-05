@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -6757,6 +6756,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get liveTripPositionStale =>
       'Your position is too old – turn on location';
+
+  @override
+  String nextBookedRideAt(String time) {
+    return 'Next: booked ride at $time';
+  }
+
+  @override
+  String get nextBookedRideHint => 'After this trip, drive to the pickup';
 
   @override
   String get docInsuranceLetter => 'Insurance letter';

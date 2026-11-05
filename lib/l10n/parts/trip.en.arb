@@ -877,5 +877,18 @@
   "liveTripPositionStale": "Your position is too old – turn on location",
   "@liveTripPositionStale": {
     "description": "Contract v0.18.14 positionMaxAge: arrive refused 409 position_stale even after a fresh fix."
+  },
+  "nextBookedRideAt": "Next: booked ride at {time}",
+  "@nextBookedRideAt": {
+    "description": "Fix job 5 (v0.18.33, owner Q7): the trip sheet card for the booked ride the driver holds next.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "nextBookedRideHint": "After this trip, drive to the pickup",
+  "@nextBookedRideHint": {
+    "description": "Fix job 5: under the next booked ride card."
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/live/live_driver_services.dart';
 import 'package:movera/core/scheduled/next_booked_ride.dart';
 import 'package:movera/core/scheduled/server_reservations.dart';
@@ -95,7 +96,7 @@ class _NextBookedRideCardState extends State<NextBookedRideCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    NextBookedRideTexts.title(time),
+                    tr.nextBookedRideAt(time),
                     style: const TextStyle(
                       color: _ink,
                       fontSize: 15,
@@ -111,7 +112,7 @@ class _NextBookedRideCardState extends State<NextBookedRideCard> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    NextBookedRideTexts.hint,
+                    tr.nextBookedRideHint,
                     style: const TextStyle(color: _muted, fontSize: 12),
                   ),
                 ],

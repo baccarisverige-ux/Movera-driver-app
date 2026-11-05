@@ -333,5 +333,7 @@
   "livePinSoon": "Movera décide par zone si un code PIN est demandé à la prise en charge. Dans ce cas, l’appli vous demande le code du passager à votre arrivée.",
   "liveAnalyticsSoon": "Vos statistiques de courses s’afficheront ici quand Movera les comptera sur le serveur.",
   "offlineReasonDocumentsExpired": "Un document a expiré. Envoyez le nouveau pour rouler à nouveau.",
-  "liveTripPositionStale": "Votre position est trop ancienne – activez la localisation"
+  "liveTripPositionStale": "Votre position est trop ancienne – activez la localisation",
+  "nextBookedRideAt": "Suivante : course réservée à {time}",
+  "nextBookedRideHint": "Après cette course, allez à la prise en charge"
 }

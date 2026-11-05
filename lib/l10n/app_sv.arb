@@ -1918,6 +1918,8 @@
   "liveAnalyticsSoon": "Din resestatistik visas här när Movera räknar den på servern.",
   "offlineReasonDocumentsExpired": "Ett dokument har gått ut. Ladda upp det nya för att köra igen.",
   "liveTripPositionStale": "Din position är för gammal – slå på platstjänster",
+  "nextBookedRideAt": "Nästa: bokad resa kl. {time}",
+  "nextBookedRideHint": "Efter den här resan, kör till upphämtningen",
   "docInsuranceLetter": "Försäkringsbrev",
   "docTaxiDriverLicense": "Taxiförarlegitimation",
   "docTaxiLicenseShort": "Taxilegitimation",

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/content/driver_app_texts.dart';
+import 'package:movera/core/l10n/driver_l10n.dart';
 import 'package:movera/core/scheduled/next_booked_ride.dart';
 import 'package:movera/core/scheduled/server_reservations.dart';
 import 'package:movera/presentation/driver/accept%20ride/trip_card.dart';
@@ -45,12 +46,18 @@ void main() {
   });
 
   test('the words in sv / fr / en', () {
-    expect(NextBookedRideTexts.title('14:05'), 'Next: booked ride at 14:05');
+    expect(
+      DriverL10n.strings.nextBookedRideAt('14:05'),
+      'Next: booked ride at 14:05',
+    );
     DriverAppTexts.language = 'sv';
-    expect(NextBookedRideTexts.title('14:05'), 'Nästa: bokad resa kl. 14:05');
+    expect(
+      DriverL10n.strings.nextBookedRideAt('14:05'),
+      'Nästa: bokad resa kl. 14:05',
+    );
     DriverAppTexts.language = 'fr';
     expect(
-      NextBookedRideTexts.title('14:05'),
+      DriverL10n.strings.nextBookedRideAt('14:05'),
       'Suivante : course réservée à 14:05',
     );
   });
