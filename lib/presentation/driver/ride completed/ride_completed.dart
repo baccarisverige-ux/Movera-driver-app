@@ -348,13 +348,15 @@ class _DriverRideCompletedState extends State<DriverRideCompleted> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      textStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
                     ),
                     icon: const Icon(Icons.call),
-                    label: Text(tr.callRider),
+                    label: Text(
+                      tr.callRider,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
                 ),
               ),
