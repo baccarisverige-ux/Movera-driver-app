@@ -188,7 +188,8 @@ void main() {
     expect(find.byType(SnackBar), findsNothing);
     final notice = find.byKey(const ValueKey<String>('chat-call-notice'));
     expect(notice, findsOneWidget);
-    expect(find.text('Calls coming soon – use the chat'), findsOneWidget);
+    // v0.18.38 §62 (owner G15 "Just 'Call failed'").
+    expect(find.text('Call failed'), findsOneWidget);
     final field = tester.getRect(find.byType(TextFormField));
     final send = tester.getRect(find.byTooltip(tr.chatSend));
     expect(tester.getRect(notice).bottom, lessThanOrEqualTo(field.top));

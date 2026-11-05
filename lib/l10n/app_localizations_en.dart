@@ -851,6 +851,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Too many wrong codes today. Try again later.';
 
   @override
+  String get callFailed => 'Call failed';
+
+  @override
+  String get callCalling => 'Calling…';
+
+  @override
+  String get callConnecting => 'Connecting…';
+
+  @override
+  String get callConnected => 'In call';
+
+  @override
+  String get callIncomingFromRider => 'The rider is calling';
+
+  @override
+  String get callAnswer => 'Answer';
+
+  @override
+  String get callDecline => 'Decline';
+
+  @override
+  String get callEnd => 'End';
+
+  @override
+  String get callMute => 'Mute';
+
+  @override
+  String get callSpeaker => 'Speaker';
+
+  @override
+  String get callEnded => 'Call ended';
+
+  @override
   String get cancelNextTripQuestion => 'Cancel the next trip?';
 
   @override

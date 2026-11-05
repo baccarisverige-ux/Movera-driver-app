@@ -868,6 +868,39 @@ class AppLocalizationsFr extends AppLocalizations {
       'Trop de codes erronés aujourd’hui. Réessayez plus tard.';
 
   @override
+  String get callFailed => 'L\'appel a échoué';
+
+  @override
+  String get callCalling => 'Appel en cours…';
+
+  @override
+  String get callConnecting => 'Connexion…';
+
+  @override
+  String get callConnected => 'En communication';
+
+  @override
+  String get callIncomingFromRider => 'Le passager appelle';
+
+  @override
+  String get callAnswer => 'Répondre';
+
+  @override
+  String get callDecline => 'Refuser';
+
+  @override
+  String get callEnd => 'Raccrocher';
+
+  @override
+  String get callMute => 'Muet';
+
+  @override
+  String get callSpeaker => 'Haut-parleur';
+
+  @override
+  String get callEnded => 'Appel terminé';
+
+  @override
   String get cancelNextTripQuestion => 'Annuler la prochaine course ?';
 
   @override

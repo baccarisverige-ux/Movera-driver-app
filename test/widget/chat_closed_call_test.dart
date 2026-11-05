@@ -64,18 +64,19 @@ void main() {
     expect(field.enabled, isFalse);
   });
 
-  testWidgets('503 call_unavailable: use the chat, nothing dialled', (
-    tester,
-  ) async {
-    final chat = live();
-    await pump(tester, chat);
-    answers.add(error(503, 'unavailable', 'call_unavailable'));
-    answers.add(error(503, 'unavailable', 'call_unavailable'));
-    await tester.tap(find.byTooltip(tr.callRider));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text(tr.callUnavailableUseChat), findsOneWidget);
-  });
+  testWidgets(
+    'v0.18.38 (owner G15): a refused call says only Call failed, nothing dialled',
+    (tester) async {
+      final chat = live();
+      await pump(tester, chat);
+      answers.add(error(503, 'unavailable', 'call_unavailable'));
+      answers.add(error(503, 'unavailable', 'call_unavailable'));
+      await tester.tap(find.byTooltip(tr.callRider));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text(tr.callFailed), findsOneWidget);
+    },
+  );
 
   testWidgets('a proxy number is dialled; 409 closes the chat', (tester) async {
     final chat = live();
