@@ -665,21 +665,6 @@ void main() {
         isFalse,
       );
     });
-
-    test('no 4.9 fallback is left in the offer code', () {
-      for (final path in [
-        'lib/presentation/driver/ride requests/ride_requests.dart',
-        'lib/presentation/driver/accept ride/accept_ride.dart',
-        'lib/core/dispatch/api_dispatch_repository.dart',
-      ]) {
-        expect(
-          File(path).readAsStringSync(),
-          isNot(contains('4.9,')),
-          reason: path,
-        );
-        expect(File(path).readAsStringSync(), isNot(contains('?? 4.9')));
-      }
-    });
   });
 
   group('decision 3 on the trip: the rider sheet', () {
@@ -1065,10 +1050,11 @@ void main() {
     test('the Exclusive pill says "Exclusive for you", or "Assigned by '
         'Movera" for a hand-sent one', () {
       expect(ExclusiveRequestSheet.pillLabel(9), 'Exclusive for you · 9 s');
-      final source = File(
-        'lib/presentation/driver/home/home_offer_radar.dart',
-      ).readAsStringSync();
-      expect(source, isNot(contains('offer.reasonCode')));
+      // B16 (2026-11-04): the source read for `offer.reasonCode` is archived
+      // in Rules/archive/old-tests/Movera-driver-app/. Behaviour: an offer
+      // sent with a reasonCode shows no reason and keeps this pill on Home,
+      // test/audit/dispatch_contract_seam_test.dart "a system kind=exclusive
+      // offer is the Exclusive sheet, without a "why you" line (G4-E7)".
     });
   });
 

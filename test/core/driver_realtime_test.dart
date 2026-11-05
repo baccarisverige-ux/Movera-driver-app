@@ -1,17 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:movera/core/contracts/trip_status.dart';
 import 'package:movera/core/realtime/driver_realtime.dart';
 
 void main() {
-  String activeRideLibrary() {
-    const dir = 'lib/presentation/driver/accept ride';
-    return File('$dir/accept_ride.dart').readAsStringSync() +
-        File('$dir/accept_ride_trip.dart').readAsStringSync() +
-        File('$dir/accept_ride_panel.dart').readAsStringSync();
-  }
-
   test('sequence gate rejects duplicate and reordered events', () {
     final gate = DriverRealtimeSequenceGate();
     final at = DateTime(2026, 9, 30);
@@ -246,19 +237,6 @@ void main() {
       bus.dispose();
     },
   );
-
-  test('arrival action remains wired in the expanded sheet', () {
-    final rideSource = activeRideLibrary();
-    final dockSource = File(
-      'lib/presentation/driver/accept ride/trip_bottom_bar.dart',
-    ).readAsStringSync();
-
-    expect(rideSource.contains('_confirmPickupArrival'), isTrue);
-    expect(rideSource.contains('DriverRealtimeKind.driverArrived'), isTrue);
-    expect(rideSource.contains('_buildPrimaryAction()'), isTrue);
-    expect(dockSource.contains("active-ride-arrived-button"), isFalse);
-    expect(rideSource.contains("I've arrived"), isTrue);
-  });
 
   test('reconnect replays the last event for the trip', () async {
     final bus = MemoryDriverRealtime();

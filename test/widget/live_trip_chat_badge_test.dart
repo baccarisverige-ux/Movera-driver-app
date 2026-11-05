@@ -77,6 +77,52 @@ void main() {
     }
   }
 
+  // B16 (2026-11-04): replaces the source-reading chat-contact guard
+  // (archived in Rules/archive/old-tests/Movera-driver-app/).
+  // Calls: test/widget/chat_closed_call_test.dart (only the server's masked
+  // number is dialled) and chat_contact_truth_test.dart (no dial offline).
+  testWidgets('the trip screen opens Chat for this trip and rider, with no '
+      'number of its own', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: AcceptRide(
+            tripId: 'live-trip',
+            locationRepository: _NoGps(),
+            activeRideRepository: MemoryActiveRideRepository(),
+          ),
+        ),
+      ),
+    );
+    await frames(tester);
+    tester
+        .widget<SlidingUpPanel>(find.byType(SlidingUpPanel))
+        .controller!
+        .animatePanelToSnapPoint();
+    await frames(tester, 16);
+    final button = find.byKey(
+      const ValueKey<String>('active-ride-message-rider'),
+    );
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await frames(tester, 16);
+    final chat = tester.widget<Chat>(find.byType(Chat));
+    expect(chat.tripId, 'live-trip');
+    expect(chat.riderDisplayName.trim(), isNotEmpty);
+    expect(find.text(chat.riderDisplayName), findsWidgets);
+    // No number of its own anywhere on the Chat screen.
+    expect(find.textContaining(RegExp(r'\+?46\d{6,}')), findsNothing);
+    expect(find.textContaining('tel:'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('a rider\'s message counts on the chat button; opening Chat '
       'reads it', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
