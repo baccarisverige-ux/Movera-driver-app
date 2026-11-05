@@ -74,12 +74,12 @@ void main() {
         'debtCollected': _m(24000),
         'tip': {'amount': _m(2000), 'method': 'cash'},
       })!;
-      expect(money.driverPay, Money.ore(6005));
+      expect(money.driverPay, Money(minorUnits: 6005, currency: 'SEK'));
       expect(money.earningsBreakdown.map((l) => l.code), [
         'trip',
         'pickup_pay',
       ]);
-      expect(money.debtCollected, Money.ore(24000));
+      expect(money.debtCollected, Money(minorUnits: 24000, currency: 'SEK'));
       expect(money.tip!.cash, isTrue);
     });
 
@@ -89,7 +89,7 @@ void main() {
         'driverEarnings': _m(8000),
         'pickupPay': _m(300),
       })!;
-      expect(money.driverPay, Money.ore(8300));
+      expect(money.driverPay, Money(minorUnits: 8300, currency: 'SEK'));
       expect(money.finish, isNull);
     });
 
@@ -109,8 +109,8 @@ void main() {
       })!;
       expect(money.finish!.riderEndedEarly, isTrue);
       expect(money.finish!.ratingAllowed, isTrue);
-      expect(money.cash, Money.ore(5400));
-      expect(money.driverPay, Money.ore(4300));
+      expect(money.cash, Money(minorUnits: 5400, currency: 'SEK'));
+      expect(money.driverPay, Money(minorUnits: 4300, currency: 'SEK'));
     });
 
     test('France: euros', () {
@@ -137,7 +137,7 @@ void main() {
         ],
         'repriced': false,
       })!;
-      expect(preview.yourShare, Money.ore(7360));
+      expect(preview.yourShare, Money(minorUnits: 7360, currency: 'SEK'));
       expect(preview.repriced, isFalse);
       expect(preview.earningsBreakdown, hasLength(2));
     });
@@ -194,10 +194,10 @@ void main() {
       final waybills = InMemoryWaybillRepository.instance..reset();
       waybills.beginCurrent(
         _record(
-          debt: Money.ore(24000),
+          debt: Money(minorUnits: 24000, currency: 'SEK'),
           lines: [
-            EarningsLine('trip', Money.ore(5645)),
-            EarningsLine('pickup_pay', Money.ore(360)),
+            EarningsLine('trip', Money(minorUnits: 5645, currency: 'SEK')),
+            EarningsLine('pickup_pay', Money(minorUnits: 360, currency: 'SEK')),
           ],
           endedBy: 'rider',
         ),
@@ -207,7 +207,10 @@ void main() {
       final commission = tester.widget<Text>(
         find.byKey(const ValueKey('ride-completed-commission')),
       );
-      expect(commission.data, '−${Money.ore(1795).formatted}');
+      expect(
+        commission.data,
+        '−${Money(minorUnits: 1795, currency: 'SEK').formatted}',
+      );
       expect(find.byKey(const ValueKey('ride-completed-debt')), findsOneWidget);
       expect(find.text('Your share'), findsOneWidget);
       expect(
@@ -229,7 +232,10 @@ void main() {
         _record(
           riderFare: '100,00 kr',
           fare: '100,00 kr',
-          tip: TripTipInfo(amount: Money.ore(2000), method: 'cash'),
+          tip: TripTipInfo(
+            amount: Money(minorUnits: 2000, currency: 'SEK'),
+            method: 'cash',
+          ),
         ),
       );
       waybills.completeCurrent();
@@ -237,7 +243,10 @@ void main() {
       final commission = tester.widget<Text>(
         find.byKey(const ValueKey('ride-completed-commission')),
       );
-      expect(commission.data, '−${Money.ore(2000).formatted}');
+      expect(
+        commission.data,
+        '−${Money(minorUnits: 2000, currency: 'SEK').formatted}',
+      );
       expect(find.byKey(const ValueKey('ride-completed-tip')), findsOneWidget);
       expect(
         find.text('The rider gives you a 20 kr tip in cash.'),

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -67,12 +65,35 @@ void main() {
       ),
       findsNothing,
     );
-    for (final file in Directory('lib').listSync(recursive: true)) {
-      if (file is! File || !file.path.endsWith('.dart')) continue;
-      final source = file.readAsStringSync();
-      expect(source, isNot(contains('3D unavailable')), reason: file.path);
-      expect(source, isNot(contains('show3DNotice')), reason: file.path);
+    // B16 (2026-11-04): was a scan of lib/ for "3D unavailable" (archived in
+    // Rules/archive/old-tests/Movera-driver-app/). Now the map is driven
+    // where the old chip appeared: tilted at street zoom, long enough for
+    // any "unavailable" notice to show.
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: CustomGoogleMap(
+            myLocationEnabled: false,
+            initialPosition: CameraPosition(
+              target: LatLng(59.33, 18.06),
+              zoom: 18,
+              tilt: 67.5,
+            ),
+          ),
+        ),
+      ),
+    );
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(seconds: 1));
     }
+    expect(
+      find.descendant(
+        of: find.byType(CustomGoogleMap),
+        matching: find.byType(Text),
+      ),
+      findsNothing,
+    );
+    expect(find.textContaining('3D'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   });

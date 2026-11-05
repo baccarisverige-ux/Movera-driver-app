@@ -70,7 +70,10 @@ class TodayEarnings {
       }
       total += fare.minorUnits;
     }
-    return Money(minorUnits: total, currency: currency ?? 'SEK').formatted;
+    return Money(
+      minorUnits: total,
+      currency: currency ?? Money.zoneCurrency,
+    ).formatted;
   }
 
   @visibleForTesting

@@ -449,7 +449,7 @@ void main() {
     }
 
     final pay = PickupPayQuote(
-      pay: Money.ore(2160),
+      pay: Money(minorUnits: 2160, currency: 'SEK'),
       leg: const PickupLeg(km: 4.2, minutes: 9),
     );
     // An exclusive reservation: one total, the driver's share of the fare

@@ -28,7 +28,7 @@ import '../../integration_test/headless_map_platform.dart';
 const _reservationTrip = RideOffer(
   id: demoReservationId,
   category: 'Comfort',
-  fare: Money(minorUnits: 12675),
+  fare: Money(minorUnits: 12675, currency: 'SEK'),
   rating: '4.94',
   pickupMinutes: 16,
   pickupKm: 2.1,

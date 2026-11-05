@@ -13,7 +13,7 @@ import 'package:movera/presentation/driver/ride%20requests/ride_requests.dart';
 const _offer = RideOffer(
   id: 'controlled-offer',
   category: 'Comfort',
-  fare: Money(minorUnits: 10000),
+  fare: Money(minorUnits: 10000, currency: 'SEK'),
   rating: '4.9',
   pickupMinutes: 2,
   pickupKm: 1,

@@ -118,7 +118,7 @@ class TripHistoryRecord {
   Money? get earnedMoney {
     if (status == TripStatus.completed) return fareMoney;
     final fee = feeEarned;
-    return fee == null ? Money.ore(0) : Money.parseLabel(fee);
+    return fee == null ? Money.zone(0) : Money.parseLabel(fee);
   }
 
   /// The rider paid cash in the car (Q23).
@@ -139,7 +139,7 @@ class TripHistoryRecord {
       // The label names the currency (a Paris trip is in euros, R3).
       : Money(
           minorUnits: fareMinorUnits!,
-          currency: Money.parseLabel(fare)?.currency ?? 'SEK',
+          currency: Money.parseLabel(fare)?.currency ?? Money.zoneCurrency,
         );
 }
 

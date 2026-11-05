@@ -104,7 +104,7 @@ void main() {
                 context,
                 riderName: 'Alexandra Lindqvist',
                 wasOnTrip: wasOnTrip,
-                fee: Money.sek(4500),
+                fee: Money.units(4500, currency: 'SEK'),
               ),
             ),
           );
