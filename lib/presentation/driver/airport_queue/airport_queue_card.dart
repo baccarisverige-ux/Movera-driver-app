@@ -9,7 +9,7 @@ import 'package:movera/widgets/custom_text_widget.dart';
 import 'package:movera/widgets/responsive_size.dart';
 import 'package:movera/widgets/sizedbox_extention.dart';
 
-/// Fix job 9 (contract v0.18.39 §63): the Home card with the driver's real
+/// Fix job 9 (contract v0.18.36 §60): the Home card with the driver's real
 /// place in the airport queue (server), shown only while he is in one; when
 /// he leaves it the app says "You left the airport queue".
 class AirportQueueCard extends StatefulWidget {

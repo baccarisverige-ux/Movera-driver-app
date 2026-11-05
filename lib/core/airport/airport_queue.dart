@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:movera/core/api/api_client.dart';
 import 'package:movera/core/logging/driver_log.dart';
 
-/// Fix job 9 (contract v0.18.39 §63, `contract.json#airportQueue`): the
+/// Fix job 9 (contract v0.18.36 §60, `contract.json#airportQueue`): the
 /// driver's place in an airport queue, as `GET /driver/airport-queue` sends
 /// it. The server keeps the queue (the app never works out a place itself).
 @immutable

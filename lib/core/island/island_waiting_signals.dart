@@ -53,7 +53,7 @@ class IslandWaitingSignals {
   /// Drivers waiting in the airport queue.
   final int? airportQueue;
 
-  /// Fix job 9 (contract v0.18.39 §63): his own place in an airport queue,
+  /// Fix job 9 (contract v0.18.36 §60): his own place in an airport queue,
   /// from GET /driver/airport-queue (null when he is in none).
   final int? airportQueuePlace;
 

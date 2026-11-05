@@ -8,7 +8,7 @@ import 'package:movera/core/airport/airport_queue.dart';
 import 'package:movera/core/island/island_waiting_signals.dart';
 import 'package:movera/presentation/driver/airport_queue/airport_queue_card.dart';
 
-/// Fix job 9 (contract v0.18.39 §63, owner G15 Q5 "Build it for real"): the
+/// Fix job 9 (contract v0.18.36 §60, owner G15 Q5 "Build it for real"): the
 /// driver sees his real place in the airport queue from
 /// GET /driver/airport-queue; no sample texts; "You left the airport queue"
 /// when he leaves it.
