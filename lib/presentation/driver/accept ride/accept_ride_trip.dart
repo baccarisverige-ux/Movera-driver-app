@@ -5,6 +5,21 @@ part of 'accept_ride.dart';
 // This extension is the only place that advances that lifecycle.
 
 extension _AcceptRideTrip on _AcceptRideState {
+  // Rule 25 split (fix job 5): these live in accept_ride_trip_cover.dart;
+  // accept_ride.dart still calls them through this extension.
+  void _pauseLiveUpdates() =>
+      _AcceptRideTripCover(this)._pauseLiveUpdatesMoved();
+  void _resumeLiveUpdates() =>
+      _AcceptRideTripCover(this)._resumeLiveUpdatesMoved();
+  void _coverTrip() => _AcceptRideTripCover(this)._coverTripMoved();
+  void _uncoverTrip() => _AcceptRideTripCover(this)._uncoverTripMoved();
+  void _menuChanged(bool open) =>
+      _AcceptRideTripCover(this)._menuChangedMoved(open);
+  void _hideTrip() => _AcceptRideTripCover(this)._hideTripMoved();
+  void _showTrip() => _AcceptRideTripCover(this)._showTripMoved();
+  Future<void> _loadVehicleIdentity() =>
+      _AcceptRideTripCover(this)._loadVehicleIdentityMoved();
+
   /// Closes whatever this trip opened on top of it (chat, preferences, a
   /// sheet, the side menu) so a trip exit pops or replaces the trip
   /// screen itself.
@@ -218,141 +233,6 @@ extension _AcceptRideTrip on _AcceptRideState {
     }
   }
 
-  void _pauseLiveUpdates() {
-    _camera.suspend();
-    if (_liveUpdatesPaused) {
-      return;
-    }
-    _syncWaitClock();
-    _waitTimer?.cancel();
-    _liveUpdatesPaused = true;
-    _rideCheckDetector.unwatched(); // driver-u45
-    // D-05: no next-trip offer comes or runs out while the driver cannot
-    // see the trip; the offer up keeps its deadline for the resume.
-    _nextTripRadarDemoTimer?.cancel();
-    _nextTripOfferExpiry?.cancel();
-    _locationEpoch++;
-    _hasLiveLocation = false;
-    _positionSubscription?.cancel();
-    _positionSubscription = null;
-    if (_radarPulseController.isAnimating) {
-      _radarPulseController.stop();
-    }
-    if (_radarSweepController.isAnimating) {
-      _radarSweepController.stop();
-    }
-  }
-
-  void _resumeLiveUpdates() {
-    if (!_liveUpdatesPaused) {
-      return;
-    }
-    _liveUpdatesPaused = false;
-    if (_countingWait) {
-      _syncWaitClock();
-      _startWaitTimer();
-      _rebuild(() {});
-    }
-    if (!_tripHidden) {
-      _camera.resume();
-    }
-    if (!MediaQuery.disableAnimationsOf(context) &&
-        !_radarPulseController.isAnimating) {
-      _radarPulseController.repeat(reverse: true);
-    }
-    if (!MediaQuery.disableAnimationsOf(context) &&
-        !_radarSweepController.isAnimating) {
-      _radarSweepController.repeat();
-    }
-    unawaited(_startLiveLocation());
-    _resumeOnTripOffer();
-  }
-
-  /// D-05 / driver-u80: a route (History, Chat, Support, a sheet) covers
-  /// the trip: no offer comes, the one up keeps its deadline.
-  void _coverTrip() {
-    _tripCovered = true;
-    _nextTripRadarDemoTimer?.cancel();
-    _nextTripOfferExpiry?.cancel();
-  }
-
-  void _uncoverTrip() {
-    if (!_tripCovered) {
-      return;
-    }
-    _tripCovered = false;
-    if (!_liveUpdatesPaused) {
-      _resumeOnTripOffer();
-    }
-  }
-
-  /// driver-r5-33: the side menu covers the trip like a route (as
-  /// driver-u115 on Home): no offer comes and the one up keeps its
-  /// deadline; when the menu closes it gets the time left, or leaves
-  /// unseen (not a miss). Its own flag: a menu page pushed as the
-  /// drawer closes keeps the trip covered through _tripCovered.
-  void _menuChanged(bool open) {
-    if (_menuOpen == open) {
-      return;
-    }
-    _menuOpen = open;
-    if (open) {
-      _nextTripRadarDemoTimer?.cancel();
-      _nextTripOfferExpiry?.cancel();
-    } else if (!_liveUpdatesPaused) {
-      _resumeOnTripOffer();
-    }
-  }
-
-  /// driver-u59: no camera moves on the hidden map. Only a full screen
-  /// hides it; under a sheet or a dialog the camera keeps following the
-  /// car (driver-r5-31).
-  void _hideTrip() {
-    _tripHidden = true;
-    _camera.suspend();
-  }
-
-  void _showTrip() {
-    if (!_tripHidden) {
-      return;
-    }
-    _tripHidden = false;
-    if (!_liveUpdatesPaused) {
-      _camera.resume();
-    }
-  }
-
-  /// Next-trip offers wait: the app is hidden or a route covers the trip.
-  bool get _offersHeld => _liveUpdatesPaused || _tripCovered || _menuOpen;
-
-  /// D-05: back on screen. An offer whose time ran out while hidden
-  /// leaves without counting as a miss (as on Home); one with time left
-  /// counts down the rest. Radar then looks for the next one.
-  void _resumeOnTripOffer() {
-    if (!mounted ||
-        _tripCovered ||
-        _menuOpen ||
-        _stage != ActiveRideStage.onTrip ||
-        _rideLifecycle.terminal) {
-      return;
-    }
-    if (_onTripRadarState == _OnTripRadarState.offerAvailable) {
-      final deadline = _nextTripOfferDeadline;
-      final left = deadline?.difference(_offerNow());
-      if (left != null && left > Duration.zero) {
-        _armOnTripOfferExpiry(left: left);
-        return;
-      }
-      _nextTripOfferDeadline = null;
-      _rebuild(() {
-        _nextTripRadarOffer = null;
-        _onTripRadarState = _OnTripRadarState.scanning;
-      });
-      _restoreRideSheet();
-    }
-    _maybeScheduleOnTripRadarDemoOffer();
-  }
-
   DateTime _offerNow() => widget.waitNow?.call() ?? DateTime.now();
   WaybillRecord _buildCurrentWaybill() {
     return WaybillRecord(
@@ -375,80 +255,6 @@ extension _AcceptRideTrip on _AcceptRideState {
     );
   }
 
-  /// Waybills show the driver and the car as the server knows them
-  /// (owner N11, live test 2026-10-26): the signed-in driver's name and
-  /// the car on the profile (`vehicleId`, else the first car), never
-  /// the demo's "Movera Driver" / "MVR 418". The demo keeps the local
-  /// vehicle store, the same vehicle as Profile and Vehicles.
-  Future<void> _loadVehicleIdentity() async {
-    final live = DriverRuntimeScope.maybeOf(context)?.account;
-    if (live != null) {
-      await _loadLiveIdentity(live);
-    } else {
-      final identity = await LocalVehicleStore().primaryIdentity();
-      if (!mounted || identity == null) {
-        return;
-      }
-      _vehicleLabel = identity.vehicle;
-      _vehiclePlate = identity.plate;
-    }
-    if (!mounted) {
-      return;
-    }
-    for (final (record, apply) in [
-      (_waybills.current, _waybills.beginCurrent),
-      (_waybills.next, _waybills.secureNext),
-    ]) {
-      if (record != null &&
-          (record.vehicle != _vehicleLabel ||
-              record.licensePlate != _vehiclePlate ||
-              record.driverName != _driverName) &&
-          (record.tripId == widget.tripId ||
-              record.tripId == _nextTripRadarOffer?.id)) {
-        apply(
-          record.copyWith(
-            vehicle: _vehicleLabel,
-            licensePlate: _vehiclePlate,
-            driverName: _driverName,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _loadLiveIdentity(DriverAccountSession live) async {
-    var account = live.account;
-    if (account == null) {
-      try {
-        account = await live.refresh();
-      } catch (_) {
-        /* offline: the name stays */
-      }
-    }
-    if (!mounted) {
-      return;
-    }
-    final name = account?.fullName ?? '';
-    if (name.isNotEmpty) {
-      _driverName = name;
-    }
-    try {
-      final cars = await live.repository.vehicles();
-      if (!mounted || cars.isEmpty) {
-        return;
-      }
-      final car = cars.firstWhere(
-        (c) => c.vehicleId == account?.vehicleId,
-        orElse: () => cars.first,
-      );
-      _vehicleLabel = car.title;
-      _vehiclePlate = car.plate;
-    } catch (error) {
-      DriverLog.warn('waybill car not read: $error', name: 'live');
-    }
-  }
-
-  /// The completed trip's waybill and, for cash, what was collected:
   /// the server's final money when the live trip's completed projection
   /// carries it (owner N9: a finish away from the drop-off is priced by
   /// what was driven, never below the minimum, never above the booked

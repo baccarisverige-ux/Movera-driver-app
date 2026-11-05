@@ -125,6 +125,7 @@ part 'accept_ride_trip.dart';
 part 'accept_ride_trip_outcome.dart';
 part 'accept_ride_trip_drive.dart';
 part 'accept_ride_trip_next.dart';
+part 'accept_ride_trip_cover.dart';
 part 'accept_ride_panel.dart';
 part 'accept_ride_sheet.dart';
 part 'accept_ride_late_eta.dart';
